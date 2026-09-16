@@ -86,8 +86,6 @@ def permute
 
         -- swap top with pos
         | some ⟨pos, hpos⟩ =>
-          -- `pos` is misplaced but `top` is in place, so `pos ≠ top`
-          -- `pos < top` by congruence on `perm[·]` (if `pos = top` then `perm[pos] = perm[top] = top = pos`).
           have hlt : (pos : ℕ) < top := by have := pos.isLt; grind
           let idx := current.length - 1 - pos
           let stack' := current.swap (current.length - 1) (current.length - 1 - idx)
