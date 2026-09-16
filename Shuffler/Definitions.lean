@@ -34,12 +34,6 @@ def apply_permutation (source : Stack) (perm : Permutation source) : Stack :=
     (List.range source.length)
     (List.finRange source.length)
 
-def ApplyPermutation
-  (source : Stack)
-  (perm : List (Fin source.length))
-  : Stack
-  := perm.map (λ i => source[i])
-
 -- permute takes a stack and a permutation, and returns the series of swap
 -- operations required to transform the source into the result of applying the
 -- permutation to it.
