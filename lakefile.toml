@@ -8,3 +8,13 @@ name = "Shuffler.Lean"
 [[lean_exe]]
 name = "shuffler-lean"
 root = "Main"
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.34.0"
+
+[[require]]
+name = "batteries"
+scope = "leanprover-community"
+rev = "v4.34.0"
