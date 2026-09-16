@@ -33,7 +33,7 @@ def ApplyPermutation
   (source : Stack)
   (perm : List (Fin source.length))
   : Stack
-  := sorry
+  := perm.map (λ i => source[i])
 
 def permute
   (source : Stack)
