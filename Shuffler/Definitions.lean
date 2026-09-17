@@ -1,16 +1,11 @@
 import Init.Data.List.Basic
 import Mathlib.Data.Nat.Basic
+import Mathlib.GroupTheory.Perm.Support
 
 abbrev Value := ℕ
 
 abbrev Stack := List Value
-abbrev Permutation (source : Stack) := Vector (Fin source.length) source.length
-
-def List.swap
-  {α : Type u} (xs : List α) (i j : ℕ)
-  (hi : i < xs.length := by get_elem_tactic)
-  (hj : j < xs.length := by get_elem_tactic)
-  := (xs.set i xs[j]).set j xs[i]
+abbrev Permutation (source : Stack) := Equiv.Perm (Fin source.length)
 
 inductive Trace : Stack → Stack → Type where
   | Lit : (s : Stack) → Trace s s
@@ -28,11 +23,14 @@ def TraceLitProducesExactStack : Trace Source Source := Trace.Lit Source
 def Swap2Swaps2 : Trace Source Target := Trace.Swap 2
   (by dsimp[Source]; simp) (by simp) (by simp) (Trace.Lit Source)
 
+-- applies the permutation perm to the source stack via the inverse equivalence
+-- every proper permutation has an inverse
 def apply_permutation (source : Stack) (perm : Permutation source) : Stack :=
-  List.foldl
-    (λ res idx => res.set (perm[idx].val) source[idx])
-    (List.range source.length)
-    (List.finRange source.length)
+  List.ofFn (λ k => source[perm.symm k])
+
+-- swap offsets 1 and 3
+def swap13 : Permutation Source := Equiv.swap (1 : Fin 4) (3 : Fin 4)
+example : apply_permutation Source swap13 = [0, 3, 2, 1] := by rfl
 
 -- permute takes a stack and a permutation, and returns the series of swap
 -- operations required to transform the source into the result of applying the
@@ -46,9 +44,10 @@ def permute
   := go source perm (.Lit source) (by simp)
   where
     go (current : Stack) (perm : Permutation source) (trace : Trace source current) (hlen : current.length = source.length) : (result : Stack) × Trace source result :=
-      let top := current.length - 1
+      let top : Fin source.length := ⟨source.length - 1, by omega⟩
+      have htop : top.val = source.length - 1 := rfl
       -- if the top is out of place, we swap it into position
-      if ht : perm[top] ≠ top
+      if ht : perm top ≠ top
       then
         -- We want to swap the top element into position `perm[top]`. But `Trace.Swap`
         -- is parameterised by depth below the top, not an absolute index: it swaps
@@ -61,38 +60,44 @@ def permute
         --   Trace.Swap idx  swaps  (len-1)  with  (len-1) - idx
         --   want that lower position to be perm[top]:
         --       (len-1) - idx = perm[top]  ⟹  idx = (len-1) - perm[top] = top - perm[top]
-        let idx := top - perm[top]
+
+        -- Fins have modulo arithmetic, nats don't
+        let idx : ℕ := top.val - (perm top).val
 
         let stack' := current.swap (current.length - 1) (current.length - 1 - idx)
-        let perm' := perm.swap top perm[top]
+        let perm' := perm * Equiv.swap top (perm top)
 
         have h1 : idx < current.length := by rw [hlen]; grind only [= Lean.Grind.toInt_fin]
-        have h2 : 1 ≤ idx := by omega
+        have h2 : 1 ≤ idx := by
+          -- we need the isLt proof of it
+          have hlt := (perm top).isLt
+          omega
         have h3 : idx < 17 := by omega
         let trace' := .Swap idx h1 h2 h3 trace
 
-        go stack' perm' trace' (by dsimp[stack']; simp [List.swap, hlen])
+        go stack' perm' trace' (by dsimp[stack']; simp [hlen])
 
       -- search for the shallowest out of place element
       else
         -- we make pos a subtype that carries a proof that pos is out of place.
         -- we need this later for the range proofs when generating the trace
-        let pos : Option {i : Fin current.length // (perm[(i : ℕ)]'(hlen ▸ i.isLt) : ℕ) ≠ (i : ℕ)} :=
-          (List.finRange current.length).foldl
-            (λ p (i : Fin current.length) =>
-              if h : (perm[(i : ℕ)]'(hlen ▸ i.isLt) : ℕ) ≠ (i : ℕ) then .some ⟨i, h⟩ else p)
+        let pos : Option {i : Fin source.length // perm i ≠ i} :=
+          (List.finRange source.length).foldl
+            (λ p (i : Fin source.length) =>
+              if h : perm i ≠ i then .some ⟨i, h⟩ else p)
             .none
         match pos with
 
         -- swap top with pos
         | some ⟨pos, hpos⟩ =>
+
           have hlt : (pos : ℕ) < top := by have := pos.isLt; grind
           let idx := current.length - 1 - pos
           let stack' := current.swap (current.length - 1) (current.length - 1 - idx)
-          let perm' := perm.swap top pos
+          let perm' := perm * Equiv.swap top pos
 
           let trace' := .Swap idx (by omega) (by omega) (by omega) trace
-          go stack' perm' trace' (by dsimp[stack']; simp [List.swap, hlen])
+          go stack' perm' trace' (by dsimp[stack']; simp [hlen])
 
         -- we're done
         | none => ⟨current, trace⟩
