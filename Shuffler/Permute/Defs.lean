@@ -1,6 +1,4 @@
-import Init.Data.List.Basic
-import Mathlib.Data.Nat.Basic
-import Mathlib.GroupTheory.Perm.Support
+import Shuffler.Permute.Lemmas
 
 namespace Shuffler.Permute
 
@@ -18,62 +16,6 @@ inductive Trace : Stack → Stack → Type where
     → (hhi : idx < 17)
     → Trace start prev
     → Trace start (prev.swap (prev.length - 1) (prev.length - 1 - idx))
-
--- Termination measure for `permute.go`: the number of out-of-place elements
--- other than `top`, then whether `top` itself is in place (1) or not (0).
--- Compared lexicographically.
-def Permutation.measure {source : Stack} (perm : Permutation source) (top : Fin source.length) : ℕ×ℕ :=
-  ((perm.support.erase top).card, if perm top = top then 1 else 0)
-
--- When `top` is out of place, swapping it into place decreases the first component
--- of the measure
-lemma Permutation.measure_place_top_lt {source : Stack} (perm : Permutation source)
-    (top : Fin source.length) (ht : perm top ≠ top) :
-    ((perm * Equiv.swap top (perm top)).measure top).1 < (perm.measure top).1 := by
-  -- the swap puts `perm top` in place and leaves everyone else's status unchanged
-  have hset : (perm * Equiv.swap top (perm top)).support.erase top
-      = (perm.support.erase top).erase (perm top) := by
-    ext x
-    simp only [Finset.mem_erase, Equiv.Perm.mem_support, Equiv.Perm.mul_apply]
-    cases eq_or_ne x top with
-    | inl hx =>
-      subst hx
-      simp
-    | inr hx =>
-      cases eq_or_ne x (perm top) with
-      | inl hx' =>
-        subst hx'
-        simp
-      | inr hx' =>
-        rw [Equiv.swap_apply_of_ne_of_ne hx hx']
-        simp [hx, hx']
-  simp only [Permutation.measure, hset]
-  exact Finset.card_erase_lt_of_mem (by simp [ht])
-
--- When `top` is in place, swapping it with an out-of-place `pos` keeps the
--- first component and puts `top` out of place, decreasing the second component
-lemma Permutation.measure_swap_pos_lt {source : Stack} (perm : Permutation source)
-    (top pos : Fin source.length) (ht : perm top = top) (hpos : perm pos ≠ pos) :
-    ((perm * Equiv.swap top pos).measure top).1 = (perm.measure top).1 ∧
-    ((perm * Equiv.swap top pos).measure top).2 < (perm.measure top).2 := by
-  -- the swap moves `top` out of place and leaves everyone else's status unchanged
-  have hset : (perm * Equiv.swap top pos).support.erase top = perm.support.erase top := by
-    ext x
-    simp only [Finset.mem_erase, Equiv.Perm.mem_support, Equiv.Perm.mul_apply]
-    cases eq_or_ne x top with
-    | inl hx =>
-      subst hx
-      simp
-    | inr hx =>
-      cases eq_or_ne x pos with
-      | inl hx' =>
-        subst hx'
-        simp [ht, hx, hpos, Ne.symm hx]
-      | inr hx' =>
-        rw [Equiv.swap_apply_of_ne_of_ne hx hx']
-  -- `top` is a fixed point and `perm` is injective, so `pos` can't map to it
-  have : perm pos ≠ top := fun h => hpos (by rw [perm.injective (h.trans ht.symm)]; exact ht)
-  simp [Permutation.measure, hset, ht, this]
 
 -- permute takes a stack and a permutation, and returns the series of swap
 -- operations required to transform the source into the result of applying the
@@ -152,5 +94,42 @@ def permute
       · exact Prod.Lex.left _ _ (Permutation.measure_place_top_lt perm _ ht)
       · obtain ⟨heq, hlt⟩ := Permutation.measure_swap_pos_lt perm _ pos (not_not.mp ht) hpos
         exact Prod.Lex.right' _ heq.le hlt
+
+-- applies the permutation perm to the source stack via the inverse equivalence
+-- every proper permutation has an inverse
+def apply_permutation (source : Stack) (perm : Permutation source) : Stack :=
+  List.ofFn (λ k => source[perm.symm k])
+
+-- The induction principle for `permute.go` follows its two recursive branches
+-- and its terminal branch. Each swap preserves the applied permutation.
+theorem permute_applies_permutation
+  (source : Stack)
+  (perm : Permutation source)
+  (hlo : source.length > 0)
+  (hhi : source.length < 17) :
+    (permute source perm hlo hhi).1 = apply_permutation source perm := by
+  change (permute.go source hlo hhi source perm (.Lit source) rfl).1
+    = apply_permutation' source perm rfl
+  apply permute.go.induct source hlo hhi
+    (motive := fun current remaining trace hlen =>
+      (permute.go source hlo hhi current remaining trace hlen).1
+        = apply_permutation' current remaining hlen)
+  · intro current perm trace hlen top htop ht idx stack' perm' h1 h2 h3 trace' ih
+    rw [permute.go.eq_1, dite_eq_left ht, ih]
+    simpa only [stack', perm', idx, hlen, htop,
+      Nat.sub_sub_self (Nat.le_sub_one_of_lt (perm top).isLt)] using
+      apply_permutation'_swap current perm hlen top (perm top)
+  · intro current perm trace hlen top htop ht search pos hpos hsearch hne hlt idx stack' perm' trace' ih
+    dsimp only [search] at hsearch
+    rw [permute.go.eq_1, dite_eq_right ht, hsearch, ih]
+    simpa only [stack', perm', idx, hlen, htop,
+      Nat.sub_sub_self (Nat.le_sub_one_of_lt pos.isLt)] using
+      apply_permutation'_swap current perm hlen top pos
+  · intro current perm trace hlen top htop ht search hsearch
+    dsimp only [search] at hsearch
+    rw [permute.go.eq_1, dite_eq_right ht, hsearch]
+    have hperm : perm = 1 := Equiv.ext fun i =>
+      (foldl_find_out_of_place_none perm _ none hsearch).2 i (List.mem_finRange i)
+    simpa only [hperm] using (apply_permutation'_one current hlen).symm
 
 end Shuffler.Permute
