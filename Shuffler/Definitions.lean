@@ -39,6 +39,17 @@ example : apply_permutation Source swap13 = [0, 3, 2, 1] := by rfl
 def Permutation.measure {source : Stack} (perm : Permutation source) (top : Fin source.length) : ℕ×ℕ :=
   ((perm.support.erase top).card, if perm top = top then 1 else 0)
 
+-- When `top` is out of place, swapping it into place decreases the first component
+-- of the measure
+theorem Permutation.measure_place_top_lt
+  {source : Stack}
+  (perm : Permutation source)
+  (top : Fin source.length)
+  (ht : perm top ≠ top) :
+  (((perm * Equiv.swap top (perm top)).measure top).1 < (perm.measure top).1)
+  :=
+  sorry
+
 -- When `top` is in place, swapping it with an out-of-place `pos` keeps the
 -- first component and puts `top` out of place, decreasing the second component
 theorem Permutation.measure_swap_pos_lt {source : Stack} (perm : Permutation source)
@@ -136,7 +147,7 @@ def permute
         | none => ⟨current, trace⟩
     termination_by Permutation.measure perm ⟨source.length - 1, by omega⟩
     decreasing_by
-      · sorry -- TODO: first call, perm * swap top (perm top)
+      · exact Prod.Lex.left _ _ (Permutation.measure_place_top_lt perm _ ht)
       · obtain ⟨heq, hlt⟩ := Permutation.measure_swap_pos_lt perm _ pos (not_not.mp ht) hpos
         exact Prod.Lex.right' _ heq.le hlt
 
