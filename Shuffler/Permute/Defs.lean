@@ -1,4 +1,4 @@
-import Shuffler.Permute.Lemmas
+import Shuffler.Permute.Cycles
 
 namespace Shuffler.Permute
 
@@ -18,6 +18,10 @@ inductive Trace : Stack → Stack → Type where
     → (hhi : idx < 17)
     → Trace start prev
     → Trace start (prev.swap (prev.length - 1) (prev.length - 1 - idx))
+
+def Trace.swapCount : Trace source result → ℕ
+  | .Lit _ => 0
+  | .Swap _ _ _ _ trace => trace.swapCount + 1
 
 inductive PermuteErr : Type where
   | Blocked : ℕ → PermuteErr
@@ -176,5 +180,70 @@ theorem permute_applies_permutation_reachable
   · rename_i hne
     obtain rfl : source = [] := by simpa using Nat.eq_zero_of_not_pos hne
     exact ⟨[], .Lit [], rfl, by simp [apply_permutation]⟩
+
+-- Every successful run uses exactly the count determined by its initial cycles.
+-- Arbitrary traces need not satisfy this: they may contain redundant swaps.
+theorem permute_swapCount
+    (source : Stack) (perm : Permutation source) (hne : 0 < source.length)
+    {res : Stack} {resultTrace : Trace source res}
+    (hresult : permute source perm = .ok ⟨res, resultTrace⟩) :
+    resultTrace.swapCount = Permutation.swapCount perm ⟨source.length - 1, by omega⟩ := by
+  rw [permute, dite_eq_left hne] at hresult
+  have hgo := permute.go.induct source hne
+    (motive := fun current remaining trace hlen =>
+      ∀ {res : Stack} {resultTrace : Trace source res},
+        permute.go source current remaining trace hne hlen = .ok ⟨res, resultTrace⟩ →
+          resultTrace.swapCount = trace.swapCount +
+            Permutation.swapCount remaining ⟨source.length - 1, by omega⟩)
+    ?_ ?_ ?_ ?_ ?_ source perm (.Lit source) rfl hresult
+  · simpa [Trace.swapCount] using hgo
+  · intro current perm trace hlen top htop ht idx hdepth res resultTrace hresult
+    rw [permute.go.eq_1, dite_eq_left ht, dite_eq_left hdepth] at hresult
+    contradiction
+  · intro current perm trace hlen top htop ht idx hdepth stack' perm' h1 h2 h3 trace' ih
+      res resultTrace hresult
+    rw [permute.go.eq_1, dite_eq_left ht, dite_eq_right hdepth] at hresult
+    have hcount := ih hresult
+    have hstep := Permutation.swapCount_place_top perm top ht
+    change resultTrace.swapCount = (trace.swapCount + 1) +
+      Permutation.swapCount (perm * Equiv.swap top (perm top)) top at hcount
+    change resultTrace.swapCount = trace.swapCount + Permutation.swapCount perm top
+    omega
+  · intro current perm trace hlen top htop ht search pos hpos hsearch idx hdepth
+      res resultTrace hresult
+    dsimp only [search, idx] at hsearch hdepth
+    rw [permute.go.eq_1, dite_eq_right ht] at hresult
+    simp only [hsearch, dite_eq_left hdepth] at hresult
+    contradiction
+  · intro current perm trace hlen top htop ht search pos hpos hsearch idx hdepth hpos_ne hlt
+      stack' perm' h1 h2 h3 trace' ih res resultTrace hresult
+    dsimp only [search, idx] at hsearch hdepth
+    rw [permute.go.eq_1, dite_eq_right ht] at hresult
+    simp only [hsearch, dite_eq_right hdepth] at hresult
+    have hcount := ih hresult
+    have hstep := Permutation.swapCount_swap_pos perm top pos (not_not.mp ht) hpos
+    change resultTrace.swapCount = (trace.swapCount + 1) +
+      Permutation.swapCount (perm * Equiv.swap top pos) top at hcount
+    change resultTrace.swapCount = trace.swapCount + Permutation.swapCount perm top
+    omega
+  · intro current perm trace hlen top htop ht search hsearch res resultTrace hresult
+    dsimp only [search] at hsearch
+    rw [permute.go.eq_1, dite_eq_right ht, hsearch] at hresult
+    have hperm := foldl_find_out_of_place_eq_one perm hsearch
+    cases hresult
+    simp [hperm]
+
+-- This bound also covers the empty stack. Fixed points are not counted as cycles.
+theorem permute_swapCount_le
+    (source : Stack) (perm : Permutation source)
+    {res : Stack} {trace : Trace source res}
+    (hresult : permute source perm = .ok ⟨res, trace⟩) :
+    trace.swapCount ≤ perm.support.card + perm.cycleFactorsFinset.card := by
+  by_cases hne : 0 < source.length
+  · rw [permute_swapCount source perm hne hresult]
+    exact Permutation.swapCount_le perm _
+  · rw [permute, dite_eq_right hne] at hresult
+    cases hresult
+    simp [Trace.swapCount]
 
 end Shuffler.Permute

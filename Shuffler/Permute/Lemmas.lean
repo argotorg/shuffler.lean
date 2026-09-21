@@ -14,11 +14,10 @@ variable {ι : Type*} [Fintype ι] [DecidableEq ι]
 def measure (perm : Equiv.Perm ι) (top : ι) : ℕ × ℕ :=
   ((perm.support.erase top).card, if perm top = top then 1 else 0)
 
--- When `top` is out of place, swapping it into place decreases the first component
--- of the measure
-lemma measure_place_top_lt (perm : Equiv.Perm ι)
+-- Placing the top fixes exactly one position below it.
+lemma measure_place_top (perm : Equiv.Perm ι)
     (top : ι) (ht : perm top ≠ top) :
-    (measure (perm * Equiv.swap top (perm top)) top).1 < (measure perm top).1 := by
+    (measure (perm * Equiv.swap top (perm top)) top).1 + 1 = (measure perm top).1 := by
   -- the swap puts `perm top` in place and leaves everyone else's status unchanged
   have hset : (perm * Equiv.swap top (perm top)).support.erase top
       = (perm.support.erase top).erase (perm top) := by
@@ -37,7 +36,13 @@ lemma measure_place_top_lt (perm : Equiv.Perm ι)
         rw [Equiv.swap_apply_of_ne_of_ne hx hx']
         simp [hx, hx']
   simp only [measure, hset]
-  exact Finset.card_erase_lt_of_mem (by simp [ht])
+  exact Finset.card_erase_add_one (by simp [ht])
+
+lemma measure_place_top_lt (perm : Equiv.Perm ι)
+    (top : ι) (ht : perm top ≠ top) :
+    (measure (perm * Equiv.swap top (perm top)) top).1 < (measure perm top).1 := by
+  have := measure_place_top perm top ht
+  omega
 
 -- When `top` is in place, swapping it with an out-of-place `pos` keeps the
 -- first component and puts `top` out of place, decreasing the second component
