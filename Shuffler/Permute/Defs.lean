@@ -124,40 +124,26 @@ theorem permute_blocks_unreachable
   rw [permute]
   split
   · rename_i hne
-    refine permute.go.induct source hne
-      (motive := fun current remaining trace hlen =>
+    refine permute.go.induct_unfolding source hne
+      (motive := fun _ remaining _ _ result =>
         ¬all_swaps_reachable remaining →
-          ∃ x, permute.go source current remaining trace hne hlen = .error (.Blocked x)
+          ∃ x, result = .error (.Blocked x)
             ∧ x > 0
             ∧ ∃ i ∈ remaining.support, i.rev.val = x + MAX_SWAP_DEPTH)
-      ?_ ?_ ?_ ?_ ?_ source perm (.Lit source) rfl hnreachable
-    · intro current perm trace hlen top htop ht idx hdepth _
-      rw [permute.go.eq_1, dite_eq_left ht, dite_eq_left hdepth]
-      exact ⟨idx - MAX_SWAP_DEPTH, rfl, by omega, perm top,
-        Equiv.Perm.apply_mem_support.mpr (Equiv.Perm.mem_support.mpr ht), by omega⟩
-    · intro current perm trace hlen top htop ht idx hdepth stack' perm' h1 h2 h3 trace' ih hnreach
-      rw [permute.go.eq_1, dite_eq_left ht, dite_eq_right hdepth]
-      exact blocked_of_reachable_swap perm top (perm top)
+      ?blocked_top ?swap_top ?blocked_pos ?swap_pos ?done source perm (.Lit source) rfl hnreachable
+      <;> intro current perm trace hlen top htop <;> intros
+    case blocked_top ht idx hdepth _ =>
+      exact ⟨idx - MAX_SWAP_DEPTH, rfl, by omega, perm top, by simpa using ht, by omega⟩
+    case swap_top ih hnreach | swap_pos ih hnreach =>
+      exact blocked_of_reachable_swap _ _ _
         (by dsimp [Fin.rev]; omega) (by omega) ih hnreach
-    · intro current perm trace hlen top htop ht search pos hpos hsearch idx hdepth _
-      dsimp only [search, idx] at hsearch hdepth
-      rw [permute.go.eq_1, dite_eq_right ht]
-      simp only [hsearch, dite_eq_left hdepth]
-      exact ⟨idx - MAX_SWAP_DEPTH, rfl, by omega, pos,
-        Equiv.Perm.mem_support.mpr hpos, by omega⟩
-    · intro current perm trace hlen top htop ht search pos hpos hsearch idx hdepth hpos_ne hlt
-        stack' perm' h1 h2 h3 trace' ih hnreach
-      dsimp only [search, idx] at hsearch hdepth
-      rw [permute.go.eq_1, dite_eq_right ht]
-      simp only [hsearch, dite_eq_right hdepth]
-      exact blocked_of_reachable_swap perm top pos
-        (by dsimp [Fin.rev]; omega) (by omega) ih hnreach
-    · intro current perm trace hlen top htop ht search hsearch hnreach
-      have hperm := foldl_find_out_of_place_eq_one perm hsearch
-      exact False.elim (hnreach (by simp [all_swaps_reachable, hperm]))
+    case blocked_pos pos hpos _ idx hdepth _ =>
+      exact ⟨idx - MAX_SWAP_DEPTH, rfl, by omega, pos, by simpa using hpos, by omega⟩
+    case done hsearch hnreach =>
+      exact False.elim (hnreach (by
+        simp [all_swaps_reachable, foldl_find_out_of_place_eq_one perm hsearch]))
   · rename_i hne
-    have hsource : source = [] := by simpa using Nat.eq_zero_of_not_pos hne
-    subst source
+    obtain rfl : source = [] := by simpa using Nat.eq_zero_of_not_pos hne
     exact False.elim (hnreachable (fun i => Fin.elim0 i))
 
 theorem permute_applies_permutation_reachable
@@ -168,46 +154,27 @@ theorem permute_applies_permutation_reachable
   rw [permute]
   split
   · rename_i hne
-    refine permute.go.induct source hne
-      (motive := fun current remaining trace hlen =>
+    refine permute.go.induct_unfolding source hne
+      (motive := fun current remaining _ hlen result =>
         all_swaps_reachable remaining →
-          ∃ (res : Stack) (resultTrace : Trace source res),
-            permute.go source current remaining trace hne hlen = .ok ⟨res, resultTrace⟩
-              ∧ res = apply_permutation' current remaining hlen)
-      ?_ ?_ ?_ ?_ ?_ source perm (.Lit source) rfl hreachable
-    · intro current perm trace hlen top htop ht idx hdepth hreach
-      have := hreach (perm top)
-        (Equiv.Perm.apply_mem_support.mpr (Equiv.Perm.mem_support.mpr ht))
-      omega
-    · intro current perm trace hlen top htop ht idx hdepth stack' perm' h1 h2 h3 trace' ih hreach
-      rw [permute.go.eq_1, dite_eq_left ht, dite_eq_right hdepth]
-      obtain ⟨res, resultTrace, heq, hres⟩ := ih
-        ((all_swaps_reachable_swap_iff perm top (perm top)
+          ∃ res resultTrace, result = .ok ⟨res, resultTrace⟩
+            ∧ res = apply_permutation' current remaining hlen)
+      ?blocked_top ?swap_top ?blocked_pos ?swap_pos ?done source perm (.Lit source) rfl hreachable
+      <;> intro current perm trace hlen top htop <;> intros
+    case blocked_top ht idx hdepth hreach =>
+      exact (not_le_of_gt hdepth (hreach (perm top) (by simpa using ht))).elim
+    case swap_top ih hreach | swap_pos ih hreach =>
+      simpa +zetaDelta only [apply_permutation'_swap_top current perm hlen top htop _] using ih
+        ((all_swaps_reachable_swap_iff _ _ _
           (by dsimp [Fin.rev]; omega) (by omega)).mpr hreach)
-      exact ⟨res, resultTrace, heq,
-        hres.trans (apply_permutation'_swap_top current perm hlen top htop (perm top))⟩
-    · intro current perm trace hlen top htop ht search pos hpos hsearch idx hdepth hreach
-      have := hreach pos (Equiv.Perm.mem_support.mpr hpos)
-      omega
-    · intro current perm trace hlen top htop ht search pos hpos hsearch idx hdepth hpos_ne hlt
-        stack' perm' h1 h2 h3 trace' ih hreach
-      dsimp only [search, idx] at hsearch hdepth
-      rw [permute.go.eq_1, dite_eq_right ht]
-      simp only [hsearch, dite_eq_right hdepth]
-      obtain ⟨res, resultTrace, heq, hres⟩ := ih
-        ((all_swaps_reachable_swap_iff perm top pos
-          (by dsimp [Fin.rev]; omega) (by omega)).mpr hreach)
-      exact ⟨res, resultTrace, heq,
-        hres.trans (apply_permutation'_swap_top current perm hlen top htop pos)⟩
-    · intro current perm trace hlen top htop ht search hsearch _
-      dsimp only [search] at hsearch
-      rw [permute.go.eq_1, dite_eq_right ht, hsearch]
-      have hperm := foldl_find_out_of_place_eq_one perm hsearch
-      exact ⟨current, trace, rfl,
-        by simpa [hperm] using (apply_permutation'_one current hlen).symm⟩
+    case blocked_pos pos hpos _ idx hdepth hreach =>
+      exact (not_le_of_gt hdepth (hreach pos (by simpa using hpos))).elim
+    case done hsearch _ =>
+      exact ⟨current, trace, rfl, by
+        simpa [foldl_find_out_of_place_eq_one perm hsearch] using
+          (apply_permutation'_one current hlen).symm⟩
   · rename_i hne
-    have hsource : source = [] := by simpa using Nat.eq_zero_of_not_pos hne
-    subst source
+    obtain rfl : source = [] := by simpa using Nat.eq_zero_of_not_pos hne
     exact ⟨[], .Lit [], rfl, by simp [apply_permutation]⟩
 
 end Shuffler.Permute
