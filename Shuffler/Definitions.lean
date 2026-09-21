@@ -47,8 +47,54 @@ theorem Permutation.measure_place_top_lt
   (top : Fin source.length)
   (ht : perm top ≠ top) :
   (((perm * Equiv.swap top (perm top)).measure top).1 < (perm.measure top).1)
-  :=
-  sorry
+  := by
+
+  simp only [Permutation.measure]
+
+  -- the swap fixes `perm top` and leaves everything else's status unchanged
+  have hset : (perm * Equiv.swap top (perm top)).support.erase top
+      = (perm.support.erase top).erase (perm top) := by
+      simp_all only [ne_eq]
+      ext a : 1
+      simp_all only [Finset.mem_erase, ne_eq, Equiv.Perm.mem_support, Equiv.Perm.coe_mul, Function.comp_apply,
+        Equiv.swap_apply_def]
+      apply Iff.intro
+      · intro a_1
+        simp_all only [not_false_eq_true, true_and]
+        obtain ⟨left, right⟩ := a_1
+        simp_all only [↓reduceIte]
+        apply And.intro
+        · apply Aesop.BuiltinRules.not_intro
+          intro a_1
+          subst a_1
+          simp_all only [not_false_eq_true, ↓reduceIte, not_true_eq_false]
+        · apply Aesop.BuiltinRules.not_intro
+          intro a_1
+          split at right
+          next h =>
+            subst h
+            simp_all only [not_false_eq_true, EmbeddingLike.apply_eq_iff_eq]
+          next h => simp_all only
+      · intro a_1
+        simp_all only [not_false_eq_true, ↓reduceIte, and_self]
+  rw [hset]
+  simp_all only [ne_eq, Finset.mem_erase, not_false_eq_true, Equiv.Perm.mem_support,
+    EmbeddingLike.apply_eq_iff_eq, and_self, Finset.card_erase_of_mem, gt_iff_lt]
+  have : (Equiv.Perm.support perm).card ≥ 2 := by
+    have : {top, perm top} ⊆ Equiv.Perm.support perm := by
+      refine Finset.insert_subset ?_ ?_
+      · simp_all only [Equiv.Perm.mem_support, ne_eq, not_false_eq_true]
+      · simp_all only [Finset.singleton_subset_iff, Equiv.Perm.mem_support, ne_eq, EmbeddingLike.apply_eq_iff_eq,
+        not_false_eq_true]
+    refine Equiv.Perm.two_le_card_support_of_ne_one ?_
+    simp_all only [ne_eq]
+    apply Aesop.BuiltinRules.not_intro
+    intro a
+    subst a
+    simp_all only [Equiv.Perm.coe_one, id_eq, not_true_eq_false]
+  simp_all only [ge_iff_le, gt_iff_lt]
+  refine Nat.sub_succ_lt_self ((Equiv.Perm.support perm).card - 1) 0 ?_
+  omega
 
 -- When `top` is in place, swapping it with an out-of-place `pos` keeps the
 -- first component and puts `top` out of place, decreasing the second component
