@@ -168,6 +168,135 @@ def permute
         exact Prod.Lex.right' _ heq.le hlt
 
 
+
+-- `apply_permutation` generalised to a stack whose length is merely propositionally
+-- equal to the permutation's domain size.  `permute.go` needs this because `current`
+-- is not syntactically `source`.
+def apply_permutation' (current : Stack) {n : ℕ} (perm : Equiv.Perm (Fin n))
+    (hlen : current.length = n) : Stack :=
+  List.ofFn (fun k : Fin n => current[(perm.symm k).val]'(by have := (perm.symm k).isLt; omega))
+
+-- Swapping two entries of the stack and composing the permutation with the same swap
+-- leaves the applied result unchanged.
+theorem apply_permutation'_swap (current : Stack) {n : ℕ} (perm : Equiv.Perm (Fin n))
+    (hlen : current.length = n) (a b : Fin n) :
+    apply_permutation' (current.swap a.val b.val) (perm * Equiv.swap a b) (by simp [hlen])
+      = apply_permutation' current perm hlen := by
+  unfold apply_permutation'
+  rw [List.ofFn_inj]
+  funext k
+  have hsymm : (perm * Equiv.swap a b).symm k = Equiv.swap a b (perm.symm k) := by
+    rw [← Equiv.Perm.inv_def, mul_inv_rev, Equiv.Perm.mul_apply, Equiv.swap_inv, Equiv.Perm.inv_def]
+  simp only [hsymm, List.getElem_swap]
+  have ha := a.isLt
+  have hb := b.isLt
+  cases eq_or_ne (perm.symm k) a with
+  | inl h =>
+    simp [h, Equiv.swap_apply_left, hlen]
+    intro e
+    simp [e]
+  | inr h =>
+    cases eq_or_ne (perm.symm k) b with
+    | inl h' =>
+      simp [h', Equiv.swap_apply_right, hlen]
+    | inr h' =>
+      have h1 : (perm.symm k).val ≠ a.val := fun e => h (Fin.ext e)
+      have h2 : (perm.symm k).val ≠ b.val := fun e => h' (Fin.ext e)
+      simp [Equiv.swap_apply_of_ne_of_ne h h', h1, h2]
+
+-- If the linear search for an out-of-place element comes back empty, every element
+-- of the searched list is a fixed point (and the accumulator was empty to begin with).
+theorem foldl_find_out_of_place_none {n : ℕ} (perm : Equiv.Perm (Fin n)) (l : List (Fin n))
+    (p : Option {i : Fin n // perm i ≠ i}) :
+    l.foldl (fun p (i : Fin n) => if h : perm i ≠ i then some ⟨i, h⟩ else p) p = none →
+      p = none ∧ ∀ i ∈ l, perm i = i := by
+  induction l generalizing p with
+  | nil =>
+    intro h
+    exact ⟨h, fun i hi => absurd hi (List.not_mem_nil)⟩
+  | cons x xs ih =>
+    intro h
+    rw [List.foldl_cons] at h
+    obtain ⟨hp, hxs⟩ := ih _ h
+    have hx : perm x = x := by
+      by_contra hne
+      simp [hne] at hp
+    have hp' : p = none := by
+      simpa [hx] using hp
+    refine ⟨hp', fun i hi => ?_⟩
+    rw [List.mem_cons] at hi
+    cases hi with
+    | inl e => rw [e]; exact hx
+    | inr hi => exact hxs i hi
+
+-- `apply_permutation'` only depends on the stack up to propositional equality
+theorem apply_permutation'_congr {l₁ l₂ : Stack} (h : l₁ = l₂) {n : ℕ} (perm : Equiv.Perm (Fin n))
+    (h₁ : l₁.length = n) (h₂ : l₂.length = n) :
+    apply_permutation' l₁ perm h₁ = apply_permutation' l₂ perm h₂ := by
+  subst h
+  rfl
+
+-- Invariant of the recursion: the stack `go` returns is the remaining permutation
+-- applied to the current stack.
+theorem permute_go_spec (source : Stack) (hlo : source.length > 0) (hhi : source.length < 17)
+    (current : Stack) (perm : Permutation source) (trace : Trace source current)
+    (hlen : current.length = source.length) :
+    (permute.go source hlo hhi current perm trace hlen).1 = apply_permutation' current perm hlen := by
+  induction current, perm, trace, hlen using permute.go.induct source hlo hhi with
+  | case1 current perm trace hlen top htop ht idx stack' perm' h1 h2 h3 trace' ih =>
+    rw [permute.go.eq_1]
+    split
+    · refine ih.trans ?_
+      have e1 : current.length - 1 = top.val := by omega
+      have e2 : current.length - 1 - idx = (perm top).val := by
+        have := (perm top).isLt
+        omega
+      have hs : stack' = current.swap top.val (perm top).val := by
+        show current.swap (current.length - 1) (current.length - 1 - idx) = _
+        rw [e2, e1]
+      rw [← apply_permutation'_swap current perm hlen top (perm top)]
+      exact apply_permutation'_congr hs _ _ _
+    · exact absurd ht ‹_›
+  | case2 current perm trace hlen top htop ht pos pos1 hpos hposeq hne hlt idx stack' perm' trace' ih =>
+    rw [permute.go.eq_1]
+    split
+    · exact absurd ‹_› ht
+    · dsimp only
+      split
+      · next p hp heq =>
+        have hp' : p = pos1 :=
+          (Subtype.mk.inj (Option.some.inj (hposeq.symm.trans heq))).symm
+        subst hp'
+        refine ih.trans ?_
+        have e1 : current.length - 1 = top.val := by omega
+        have e2 : current.length - 1 - idx = p.val := by
+          have := p.isLt
+          omega
+        have hs : stack' = current.swap top.val p.val := by
+          show current.swap (current.length - 1) (current.length - 1 - idx) = _
+          rw [e2, e1]
+        rw [← apply_permutation'_swap current perm hlen top p]
+        exact apply_permutation'_congr hs _ _ _
+      · next heq => exact absurd (hposeq.symm.trans heq) (Option.some_ne_none _)
+  | case3 current perm trace hlen top htop ht pos hnone =>
+    rw [permute.go.eq_1]
+    split
+    · exact absurd ‹_› ht
+    · dsimp only
+      split
+      · next p hp heq => exact absurd (hnone.symm.trans heq).symm (Option.some_ne_none _)
+      · have hfix : ∀ i, perm i = i := fun i =>
+          (foldl_find_out_of_place_none perm _ none hnone).2 i (List.mem_finRange i)
+        have hsymm : ∀ k, perm.symm k = k := fun k => by
+          rw [Equiv.symm_apply_eq]
+          exact (hfix k).symm
+        show current = _
+        unfold apply_permutation'
+        apply List.ext_getElem
+        · simp [hlen]
+        · intro i h₁ h₂
+          simp [hsymm]
+
 -- the stack returned by permute is always the result of applying the permutation perm to the source
 theorem permute_applies_permutation
   (source : Stack)
@@ -175,4 +304,7 @@ theorem permute_applies_permutation
   (hlo : source.length > 0)
   (hhi : source.length < 17) :
     (permute source perm hlo hhi).1 = apply_permutation source perm
-  := sorry
+  := by
+    unfold permute
+    rw [permute_go_spec]
+    rfl
