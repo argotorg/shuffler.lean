@@ -32,6 +32,39 @@ def apply_permutation (source : Stack) (perm : Permutation source) : Stack :=
 def swap13 : Permutation Source := Equiv.swap (1 : Fin 4) (3 : Fin 4)
 example : apply_permutation Source swap13 = [0, 3, 2, 1] := by rfl
 
+
+-- Termination measure for `permute.go`: the number of out-of-place elements
+-- other than `top`, then whether `top` itself is in place (1) or not (0).
+-- Compared lexicographically.
+def Permutation.measure {source : Stack} (perm : Permutation source) (top : Fin source.length) : ℕ×ℕ :=
+  ((perm.support.erase top).card, if perm top = top then 1 else 0)
+
+-- When `top` is in place, swapping it with an out-of-place `pos` keeps the
+-- first component and puts `top` out of place, decreasing the second component
+theorem Permutation.measure_swap_pos_lt {source : Stack} (perm : Permutation source)
+    (top pos : Fin source.length) (ht : perm top = top) (hpos : perm pos ≠ pos) :
+    ((perm * Equiv.swap top pos).measure top).1 = (perm.measure top).1 ∧
+    ((perm * Equiv.swap top pos).measure top).2 < (perm.measure top).2 := by
+  -- top is already in place so pos can't be top
+  have hne : pos ≠ top := by
+    intro (h : pos = top)
+    simp_all
+  -- unfolds the measure on both sides (i.e, it's about the tuple components)
+  simp only [Permutation.measure]
+  -- disentangles the conjunction `∧` into its components
+  constructor
+  · congr 1
+    ext x  -- two finsets are equal if they have the same members
+    simp only [Finset.mem_erase, Equiv.Perm.mem_support, Equiv.Perm.mul_apply]
+    by_cases hxtop : x = top
+    · simp [hxtop]
+    · by_cases hxpos : x = pos
+      · subst hxpos
+        simp [Equiv.swap_apply_right, ht, hxtop, hpos, Ne.symm hxtop]
+      · rw [Equiv.swap_apply_of_ne_of_ne hxtop hxpos]
+  · have : perm pos ≠ top := fun h => hne (perm.injective (h.trans ht.symm))
+    simp [Equiv.Perm.mul_apply, Equiv.swap_apply_left, ht, this]
+
 -- permute takes a stack and a permutation, and returns the series of swap
 -- operations required to transform the source into the result of applying the
 -- permutation to it.
@@ -101,6 +134,11 @@ def permute
 
         -- we're done
         | none => ⟨current, trace⟩
+    termination_by Permutation.measure perm ⟨source.length - 1, by omega⟩
+    decreasing_by
+      · sorry -- TODO: first call, perm * swap top (perm top)
+      · obtain ⟨heq, hlt⟩ := Permutation.measure_swap_pos_lt perm _ pos (not_not.mp ht) hpos
+        exact Prod.Lex.right' _ heq.le hlt
 
 
 -- the stack returned by permute is always the result of applying the permutation perm to the source
