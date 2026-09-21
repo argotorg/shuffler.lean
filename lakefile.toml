@@ -1,13 +1,9 @@
 name = "shuffler-lean"
 version = "0.1.0"
-defaultTargets = ["shuffler-lean"]
+defaultTargets = ["Shuffler"]
 
 [[lean_lib]]
-name = "Shuffler.Lean"
-
-[[lean_exe]]
-name = "shuffler-lean"
-root = "Main"
+name = "Shuffler"
 
 [[require]]
 name = "mathlib"
