@@ -1,17 +1,8 @@
-import Shuffler.Permute.Lemmas
-import Mathlib.GroupTheory.Perm.Cycle.Factors
+import Shuffler.Permute.Defs
 
 namespace Shuffler.Permute.Permutation
 
 variable {ι : Type*} [Fintype ι] [DecidableEq ι]
-
--- Mathlib's cycle factors exclude fixed points.
-def cyclesAwayFromTop (perm : Equiv.Perm ι) (top : ι) : Finset (Equiv.Perm ι) :=
-  perm.cycleFactorsFinset.filter (fun cycle => cycle top = top)
-
--- A cycle containing the top contributes k - 1; every other cycle contributes k + 1.
-def swapCount (perm : Equiv.Perm ι) (top : ι) : ℕ :=
-  (perm.support.erase top).card + (cyclesAwayFromTop perm top).card
 
 private lemma cycle_fixes_of_fixed {perm cycle : Equiv.Perm ι}
     (hc : cycle ∈ perm.cycleFactorsFinset) {x : ι} (hx : perm x = x) : cycle x = x := by

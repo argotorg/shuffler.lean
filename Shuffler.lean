@@ -1,1 +1,1 @@
-import Shuffler.Permute.Defs
+import Shuffler.Permute.Theorems
