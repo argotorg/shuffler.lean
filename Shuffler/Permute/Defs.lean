@@ -1,0 +1,156 @@
+import Init.Data.List.Basic
+import Mathlib.Data.Nat.Basic
+import Mathlib.GroupTheory.Perm.Support
+
+namespace Shuffler.Permute
+
+abbrev Value := ℕ
+
+abbrev Stack := List Value
+abbrev Permutation (source : Stack) := Equiv.Perm (Fin source.length)
+
+inductive Trace : Stack → Stack → Type where
+  | Lit : (s : Stack) → Trace s s
+  | Swap
+    : (idx : ℕ)
+    → (hlen : idx < prev.length)
+    → (hlo : 1 ≤ idx)
+    → (hhi : idx < 17)
+    → Trace start prev
+    → Trace start (prev.swap (prev.length - 1) (prev.length - 1 - idx))
+
+-- Termination measure for `permute.go`: the number of out-of-place elements
+-- other than `top`, then whether `top` itself is in place (1) or not (0).
+-- Compared lexicographically.
+def Permutation.measure {source : Stack} (perm : Permutation source) (top : Fin source.length) : ℕ×ℕ :=
+  ((perm.support.erase top).card, if perm top = top then 1 else 0)
+
+-- When `top` is out of place, swapping it into place decreases the first component
+-- of the measure
+lemma Permutation.measure_place_top_lt {source : Stack} (perm : Permutation source)
+    (top : Fin source.length) (ht : perm top ≠ top) :
+    ((perm * Equiv.swap top (perm top)).measure top).1 < (perm.measure top).1 := by
+  -- the swap puts `perm top` in place and leaves everyone else's status unchanged
+  have hset : (perm * Equiv.swap top (perm top)).support.erase top
+      = (perm.support.erase top).erase (perm top) := by
+    ext x
+    simp only [Finset.mem_erase, Equiv.Perm.mem_support, Equiv.Perm.mul_apply]
+    cases eq_or_ne x top with
+    | inl hx =>
+      subst hx
+      simp
+    | inr hx =>
+      cases eq_or_ne x (perm top) with
+      | inl hx' =>
+        subst hx'
+        simp
+      | inr hx' =>
+        rw [Equiv.swap_apply_of_ne_of_ne hx hx']
+        simp [hx, hx']
+  simp only [Permutation.measure, hset]
+  exact Finset.card_erase_lt_of_mem (by simp [ht])
+
+-- When `top` is in place, swapping it with an out-of-place `pos` keeps the
+-- first component and puts `top` out of place, decreasing the second component
+lemma Permutation.measure_swap_pos_lt {source : Stack} (perm : Permutation source)
+    (top pos : Fin source.length) (ht : perm top = top) (hpos : perm pos ≠ pos) :
+    ((perm * Equiv.swap top pos).measure top).1 = (perm.measure top).1 ∧
+    ((perm * Equiv.swap top pos).measure top).2 < (perm.measure top).2 := by
+  -- the swap moves `top` out of place and leaves everyone else's status unchanged
+  have hset : (perm * Equiv.swap top pos).support.erase top = perm.support.erase top := by
+    ext x
+    simp only [Finset.mem_erase, Equiv.Perm.mem_support, Equiv.Perm.mul_apply]
+    cases eq_or_ne x top with
+    | inl hx =>
+      subst hx
+      simp
+    | inr hx =>
+      cases eq_or_ne x pos with
+      | inl hx' =>
+        subst hx'
+        simp [ht, hx, hpos, Ne.symm hx]
+      | inr hx' =>
+        rw [Equiv.swap_apply_of_ne_of_ne hx hx']
+  -- `top` is a fixed point and `perm` is injective, so `pos` can't map to it
+  have : perm pos ≠ top := fun h => hpos (by rw [perm.injective (h.trans ht.symm)]; exact ht)
+  simp [Permutation.measure, hset, ht, this]
+
+-- permute takes a stack and a permutation, and returns the series of swap
+-- operations required to transform the source into the result of applying the
+-- permutation to it.
+def permute
+  (source : Stack)
+  (perm : Permutation source)
+  (hlo: source.length > 0)
+  (hhi : source.length < 17)
+  : (result : Stack) × Trace source result
+  := go source perm (.Lit source) (by simp)
+  where
+    go (current : Stack) (perm : Permutation source) (trace : Trace source current) (hlen : current.length = source.length) : (result : Stack) × Trace source result :=
+      let top : Fin source.length := ⟨source.length - 1, by omega⟩
+      have htop : top.val = source.length - 1 := rfl
+      -- if the top is out of place, we swap it into position
+      if ht : perm top ≠ top
+      then
+        -- We want to swap the top element into position `perm[top]`. But `Trace.Swap`
+        -- is parameterised by depth below the top, not an absolute index: it swaps
+        -- position `len-1` with position `len-1-idx`. So we convert the target
+        -- absolute position into a depth.
+        --
+        --   position:  0  1  ...  perm[top]  ...........  top = len-1
+        --                          └─────────── idx ──────────┘        idx = depth below top
+        --
+        --   Trace.Swap idx  swaps  (len-1)  with  (len-1) - idx
+        --   want that lower position to be perm[top]:
+        --       (len-1) - idx = perm[top]  ⟹  idx = (len-1) - perm[top] = top - perm[top]
+
+        -- Fins have modulo arithmetic, nats don't
+        let idx : ℕ := top.val - (perm top).val
+
+        let stack' := current.swap (current.length - 1) (current.length - 1 - idx)
+        let perm' := perm * Equiv.swap top (perm top)
+
+        have h1 : idx < current.length := by have := (perm top).isLt; omega
+        have h2 : 1 ≤ idx := by
+          -- we need the isLt proof of it
+          have hlt := (perm top).isLt
+          omega
+        have h3 : idx < 17 := by omega
+        let trace' := .Swap idx h1 h2 h3 trace
+
+        go stack' perm' trace' (by dsimp[stack']; simp [hlen])
+
+      -- search for the shallowest out of place element
+      else
+        -- we make pos a subtype that carries a proof that pos is out of place.
+        -- we need this later for the range proofs when generating the trace
+        let pos : Option {i : Fin source.length // perm i ≠ i} :=
+          (List.finRange source.length).foldl
+            (λ p (i : Fin source.length) =>
+              if h : perm i ≠ i then .some ⟨i, h⟩ else p)
+            .none
+        match pos with
+
+        -- swap top with pos
+        | some ⟨pos, hpos⟩ =>
+
+          -- `top` is a fixed point, so the out-of-place `pos` is strictly below it
+          have hne : pos ≠ top := fun h => hpos (by rw [h]; exact not_not.mp ht)
+          have hlt : (pos : ℕ) < top := by
+            have := pos.isLt; have := Fin.val_ne_of_ne hne; omega
+          let idx := current.length - 1 - pos
+          let stack' := current.swap (current.length - 1) (current.length - 1 - idx)
+          let perm' := perm * Equiv.swap top pos
+
+          let trace' := .Swap idx (by omega) (by omega) (by omega) trace
+          go stack' perm' trace' (by dsimp[stack']; simp [hlen])
+
+        -- we're done
+        | none => ⟨current, trace⟩
+    termination_by Permutation.measure perm ⟨source.length - 1, by omega⟩
+    decreasing_by
+      · exact Prod.Lex.left _ _ (Permutation.measure_place_top_lt perm _ ht)
+      · obtain ⟨heq, hlt⟩ := Permutation.measure_swap_pos_lt perm _ pos (not_not.mp ht) hpos
+        exact Prod.Lex.right' _ heq.le hlt
+
+end Shuffler.Permute
