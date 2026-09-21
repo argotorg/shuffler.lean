@@ -41,60 +41,28 @@ def Permutation.measure {source : Stack} (perm : Permutation source) (top : Fin 
 
 -- When `top` is out of place, swapping it into place decreases the first component
 -- of the measure
-theorem Permutation.measure_place_top_lt
-  {source : Stack}
-  (perm : Permutation source)
-  (top : Fin source.length)
-  (ht : perm top ≠ top) :
-  (((perm * Equiv.swap top (perm top)).measure top).1 < (perm.measure top).1)
-  := by
-
-  simp only [Permutation.measure]
-
-  -- the swap fixes `perm top` and leaves everything else's status unchanged
+theorem Permutation.measure_place_top_lt {source : Stack} (perm : Permutation source)
+    (top : Fin source.length) (ht : perm top ≠ top) :
+    ((perm * Equiv.swap top (perm top)).measure top).1 < (perm.measure top).1 := by
+  -- the swap puts `perm top` in place and leaves everyone else's status unchanged
   have hset : (perm * Equiv.swap top (perm top)).support.erase top
       = (perm.support.erase top).erase (perm top) := by
-      simp_all only [ne_eq]
-      ext a : 1
-      simp_all only [Finset.mem_erase, ne_eq, Equiv.Perm.mem_support, Equiv.Perm.coe_mul, Function.comp_apply,
-        Equiv.swap_apply_def]
-      apply Iff.intro
-      · intro a_1
-        simp_all only [not_false_eq_true, true_and]
-        obtain ⟨left, right⟩ := a_1
-        simp_all only [↓reduceIte]
-        apply And.intro
-        · apply Aesop.BuiltinRules.not_intro
-          intro a_1
-          subst a_1
-          simp_all only [not_false_eq_true, ↓reduceIte, not_true_eq_false]
-        · apply Aesop.BuiltinRules.not_intro
-          intro a_1
-          split at right
-          next h =>
-            subst h
-            simp_all only [not_false_eq_true, EmbeddingLike.apply_eq_iff_eq]
-          next h => simp_all only
-      · intro a_1
-        simp_all only [not_false_eq_true, ↓reduceIte, and_self]
-  rw [hset]
-  simp_all only [ne_eq, Finset.mem_erase, not_false_eq_true, Equiv.Perm.mem_support,
-    EmbeddingLike.apply_eq_iff_eq, and_self, Finset.card_erase_of_mem, gt_iff_lt]
-  have : (Equiv.Perm.support perm).card ≥ 2 := by
-    have : {top, perm top} ⊆ Equiv.Perm.support perm := by
-      refine Finset.insert_subset ?_ ?_
-      · simp_all only [Equiv.Perm.mem_support, ne_eq, not_false_eq_true]
-      · simp_all only [Finset.singleton_subset_iff, Equiv.Perm.mem_support, ne_eq, EmbeddingLike.apply_eq_iff_eq,
-        not_false_eq_true]
-    refine Equiv.Perm.two_le_card_support_of_ne_one ?_
-    simp_all only [ne_eq]
-    apply Aesop.BuiltinRules.not_intro
-    intro a
-    subst a
-    simp_all only [Equiv.Perm.coe_one, id_eq, not_true_eq_false]
-  simp_all only [ge_iff_le, gt_iff_lt]
-  refine Nat.sub_succ_lt_self ((Equiv.Perm.support perm).card - 1) 0 ?_
-  omega
+    ext x
+    simp only [Finset.mem_erase, Equiv.Perm.mem_support, Equiv.Perm.mul_apply]
+    cases eq_or_ne x top with
+    | inl hx =>
+      subst hx
+      simp
+    | inr hx =>
+      cases eq_or_ne x (perm top) with
+      | inl hx' =>
+        subst hx'
+        simp
+      | inr hx' =>
+        rw [Equiv.swap_apply_of_ne_of_ne hx hx']
+        simp [hx, hx']
+  simp only [Permutation.measure, hset]
+  exact Finset.card_erase_lt_of_mem (by simp [ht])
 
 -- When `top` is in place, swapping it with an out-of-place `pos` keeps the
 -- first component and puts `top` out of place, decreasing the second component
@@ -102,25 +70,24 @@ theorem Permutation.measure_swap_pos_lt {source : Stack} (perm : Permutation sou
     (top pos : Fin source.length) (ht : perm top = top) (hpos : perm pos ≠ pos) :
     ((perm * Equiv.swap top pos).measure top).1 = (perm.measure top).1 ∧
     ((perm * Equiv.swap top pos).measure top).2 < (perm.measure top).2 := by
-  -- top is already in place so pos can't be top
-  have hne : pos ≠ top := by
-    intro (h : pos = top)
-    simp_all
-  -- unfolds the measure on both sides (i.e, it's about the tuple components)
-  simp only [Permutation.measure]
-  -- disentangles the conjunction `∧` into its components
-  constructor
-  · congr 1
-    ext x  -- two finsets are equal if they have the same members
+  -- the swap moves `top` out of place and leaves everyone else's status unchanged
+  have hset : (perm * Equiv.swap top pos).support.erase top = perm.support.erase top := by
+    ext x
     simp only [Finset.mem_erase, Equiv.Perm.mem_support, Equiv.Perm.mul_apply]
-    by_cases hxtop : x = top
-    · simp [hxtop]
-    · by_cases hxpos : x = pos
-      · subst hxpos
-        simp [Equiv.swap_apply_right, ht, hxtop, hpos, Ne.symm hxtop]
-      · rw [Equiv.swap_apply_of_ne_of_ne hxtop hxpos]
-  · have : perm pos ≠ top := fun h => hne (perm.injective (h.trans ht.symm))
-    simp [Equiv.Perm.mul_apply, Equiv.swap_apply_left, ht, this]
+    cases eq_or_ne x top with
+    | inl hx =>
+      subst hx
+      simp
+    | inr hx =>
+      cases eq_or_ne x pos with
+      | inl hx' =>
+        subst hx'
+        simp [ht, hx, hpos, Ne.symm hx]
+      | inr hx' =>
+        rw [Equiv.swap_apply_of_ne_of_ne hx hx']
+  -- `top` is a fixed point and `perm` is injective, so `pos` can't map to it
+  have : perm pos ≠ top := fun h => hpos (by rw [perm.injective (h.trans ht.symm)]; exact ht)
+  simp [Permutation.measure, hset, ht, this]
 
 -- permute takes a stack and a permutation, and returns the series of swap
 -- operations required to transform the source into the result of applying the
@@ -157,7 +124,7 @@ def permute
         let stack' := current.swap (current.length - 1) (current.length - 1 - idx)
         let perm' := perm * Equiv.swap top (perm top)
 
-        have h1 : idx < current.length := by rw [hlen]; grind only [= Lean.Grind.toInt_fin]
+        have h1 : idx < current.length := by have := (perm top).isLt; omega
         have h2 : 1 ≤ idx := by
           -- we need the isLt proof of it
           have hlt := (perm top).isLt
@@ -181,7 +148,10 @@ def permute
         -- swap top with pos
         | some ⟨pos, hpos⟩ =>
 
-          have hlt : (pos : ℕ) < top := by have := pos.isLt; grind
+          -- `top` is a fixed point, so the out-of-place `pos` is strictly below it
+          have hne : pos ≠ top := fun h => hpos (by rw [h]; exact not_not.mp ht)
+          have hlt : (pos : ℕ) < top := by
+            have := pos.isLt; have := Fin.val_ne_of_ne hne; omega
           let idx := current.length - 1 - pos
           let stack' := current.swap (current.length - 1) (current.length - 1 - idx)
           let perm' := perm * Equiv.swap top pos
