@@ -1,11 +1,9 @@
+import Shuffler.Defs
 import Shuffler.Permute.Lemmas
 import Mathlib.GroupTheory.Perm.Cycle.Factors
 
 namespace Shuffler.Permute
 
-abbrev Value := ℕ
-
-abbrev Stack := List Value
 abbrev Permutation (source : Stack) := Equiv.Perm (Fin source.length)
 
 namespace Permutation
@@ -24,35 +22,18 @@ end Permutation
 
 def MAX_SWAP_DEPTH := 16
 
-inductive Trace : Stack → Stack → Type where
-  | Lit : (s : Stack) → Trace s s
-  | Swap
-    : (idx : ℕ)
-    → (hlen : idx < prev.length)
-    → (hlo : 1 ≤ idx)
-    → (hhi : idx < 17)
-    → Trace start prev
-    → Trace start (prev.swap (prev.length - 1) (prev.length - 1 - idx))
-
-def Trace.swapCount : Trace source result → ℕ
-  | .Lit _ => 0
-  | .Swap _ _ _ _ trace => trace.swapCount + 1
-
-inductive PermuteErr : Type where
-  | Blocked : ℕ → PermuteErr
-
 -- permute takes a stack and a permutation, and returns the series of swap
 -- operations required to transform the source into the result of applying the
 -- permutation to it.
 def permute
   (source : Stack)
   (perm : Permutation source)
-  : Except PermuteErr ((result : Stack) × Trace source result)
+  : Except ShuffleErr ((result : Stack) × Trace source result)
   := if hne : 0 < source.length
   then go source perm (.Lit source) hne rfl
   else .ok ⟨source, .Lit source⟩
   where
-    go (current : Stack) (perm : Permutation source) (trace : Trace source current) (hne : source.length > 0) (hlen : current.length = source.length) : Except PermuteErr ((result : Stack) × Trace source result) :=
+    go (current : Stack) (perm : Permutation source) (trace : Trace source current) (hne : source.length > 0) (hlen : current.length = source.length) : Except ShuffleErr ((result : Stack) × Trace source result) :=
       let top : Fin source.length := ⟨source.length - 1, by omega⟩
       have htop : top.val = source.length - 1 := rfl
       -- if the top is out of place, we swap it into position

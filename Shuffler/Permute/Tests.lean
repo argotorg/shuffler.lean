@@ -1,7 +1,13 @@
+import Shuffler.Defs
 import Shuffler.Permute.Defs
 import Mathlib.Data.Fintype.Perm
 
 namespace Shuffler.Permute.Tests
+
+-- Permutation results use the trace and error types shared by the shuffle stages.
+example (source : Stack) (perm : Permutation source) :
+    Except ShuffleErr ((result : Stack) × _root_.Trace source result) :=
+  permute source perm
 
 -- Observe the production result without requiring equality on proof-carrying traces.
 private def result (source : Stack) (perm : Permutation source) : Except ℕ Stack :=

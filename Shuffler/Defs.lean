@@ -2,6 +2,10 @@ import Mathlib.Data.Nat.Notation
 import Batteries.Data.List.Basic
 import Mathlib.Data.PEquiv
 
+inductive ShuffleErr : Type where
+  | Blocked : ℕ → ShuffleErr
+
+
 abbrev Value := ℕ
 abbrev Stack := List Value
 
@@ -14,6 +18,15 @@ inductive Trace : Stack → Stack → Type where
     → (hhi : idx < 17)
     → Trace start prev
     → Trace start (prev.swap (prev.length - 1) (prev.length - 1 - idx))
+
+def Trace.concat (t1 : Trace a b) (t2 : Trace b c) : Trace a c :=
+  match t2 with
+  | .Lit _ => t1
+  | .Swap idx hlen hlo hhi t => .Swap idx hlen hlo hhi (t1.concat t)
+
+def Trace.swapCount : Trace source result → ℕ
+  | .Lit _ => 0
+  | .Swap _ _ _ _ trace => trace.swapCount + 1
 
 
 abbrev Mapping (source : Stack) (target : Stack) := PEquiv (Fin source.length) (Fin target.length)
