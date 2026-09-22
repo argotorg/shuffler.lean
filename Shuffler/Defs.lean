@@ -5,8 +5,27 @@ import Mathlib.Data.PEquiv
 inductive ShuffleErr : Type where
   | Blocked : ℕ → ShuffleErr
 
+inductive Value : Type where
+  | Var (idx : ℕ )
+  | Lit (val : Fin (2 ^ 256))
+  | Wildcard
 
-abbrev Value := ℕ
+deriving instance DecidableEq for Value
+
+def Value.is_junk : Value → Prop
+| Wildcard => true
+| _ => false
+
+instance (v : Value) : Decidable v.is_junk := by
+  cases v <;> unfold Value.is_junk <;> infer_instance
+
+def Value.can_be_freely_generated : Value → Prop
+| Var _ => false
+| _ => true
+
+instance (v : Value) : Decidable v.can_be_freely_generated := by
+  cases v <;> unfold Value.can_be_freely_generated <;> infer_instance
+
 abbrev Stack := List Value
 
 inductive Trace : Stack → Stack → Type where

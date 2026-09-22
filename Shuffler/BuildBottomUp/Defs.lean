@@ -12,14 +12,30 @@ theorem unmapped_target_slots_eq_zero (mapping : Mapping source target) :
     unmapped_target_slots mapping = 0 ↔ ∀ j, (mapping.symm j).isSome := by
   simp [unmapped_target_slots, Finset.filter_eq_empty_iff, Option.isSome_iff_ne_none]
 
+-- TODO: can we refine the domain here?
+abbrev SpillSet := Finset ℕ
+
+def SpillSet.is_spilled (spills : SpillSet) : (val : Value) → Prop
+| .Var idx => idx ∈ spills
+| _ => false
+
+instance (spills : SpillSet) (v : Value) : Decidable (spills.is_spilled v) := by
+  cases v <;> unfold SpillSet.is_spilled <;> infer_instance
+
 structure State (source target : Stack) where
   planned_mapping : Mapping source target
 
   stack : Stack
+  trace : Trace source stack
   mapping : Mapping stack target
+
   pending_generations : ℕ
   hpending : unmapped_target_slots mapping = pending_generations
-  trace : Trace source stack
+
+  spills : SpillSet
+
+
+
 
 def State.is_final (state : State source target) (target_offset : Fin target.length)
   := (state.mapping.symm target_offset).map Fin.val = some target_offset.val
@@ -53,6 +69,11 @@ theorem LoopInvariant.advance
       omega
     simpa [heq] using hfinal
 
+def Stack.shallowest_copy_position (stack : Stack) (slot : Value) :
+    Option (Fin stack.length) :=
+  (List.finRange stack.length).reverse.find?
+    (fun pos => stack[pos] = slot)
+
 def build_bottom_up
     (target_offset : Fin target.length)
     (state : State source target)
@@ -85,13 +106,18 @@ def build_bottom_up
   let mut urgentToDup : Option (Fin target.length) := none
   for hmem : offset in [target_offset.val : target.length] do
 
-    -- only offsets no slot is bound for yet (ie that need to be duped) can be urgent
+    -- only offsets no slot is bound for yet (i.e. that need to be duped) can be urgent
     if (state.mapping.symm ⟨offset, hmem.upper⟩).isSome then
       continue
 
+    -- ignore slot kinds that don't need to be duped
     let slot := target[offset]'hmem.upper
-    if (hfree : slot.is_junk ∨ slot.can_be_freely_generated ∨ slot.isSpilled state.spills) then
+    -- TODO: this matches the c++, but is_junk is redundent here (implied by freely generated)
+    if hfree : slot.is_junk ∨ slot.can_be_freely_generated ∨ state.spills.is_spilled slot then
       continue
+
+    if let some source_copy := state.stack.shallowest_copy_position slot then
+      sorry
 
     sorry
 
