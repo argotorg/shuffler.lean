@@ -37,12 +37,12 @@ def pop : (mapping : Mapping' target) → Mapping' target
     (invFun x).bind fun i =>
       if h : i.val < xs.dropLast.length then some ⟨i.val, h⟩ else none
   refine ⟨xs.dropLast, ⟨toFun', invFun', ?_⟩⟩
+  simp only [toFun', invFun', ← hinv]
   intro a b
-  dsimp [toFun', invFun']
-  rw [← hinv]
-  cases invFun b <;> simp [Fin.ext_iff]
-  intro h
-  simpa only [h, List.length_dropLast] using a.isLt
+  cases invFun b <;> simp +contextual [Fin.ext_iff, -List.length_dropLast]
+
+def push (val : Value) : (mapping : Mapping' target) → Mapping' target
+| ⟨xs, ⟨toFun, invFun, hinv⟩⟩ => by sorry
 
 --def src := [1,2,3,4]
 --def
