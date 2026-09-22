@@ -103,7 +103,7 @@ def build_bottom_up
     return ⟨res, state.trace.concat trace⟩
 
   -- a target offset that needs something DUPed urgently before it goes out of dup reach
-  let mut urgentToDup : Option (Fin target.length) := none
+  let mut urgent_to_dup : Option (Fin target.length) := none
   for hmem : offset in [target_offset.val : target.length] do
 
     -- only offsets no slot is bound for yet (i.e. that need to be duped) can be urgent
