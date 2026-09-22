@@ -15,34 +15,40 @@ inductive Trace : Stack → Stack → Type where
     → Trace start prev
     → Trace start (prev.swap (prev.length - 1) (prev.length - 1 - idx))
 
-abbrev Mapping := PEquiv ℕ ℕ
 
-abbrev Mapping' (target : Stack) := (source : Stack) × PEquiv (Fin source.length) (Fin target.length)
+abbrev Mapping (source : Stack) (target : Stack) := PEquiv (Fin source.length) (Fin target.length)
 
-abbrev Mapping'' (source : Stack) (target : Stack) := PEquiv (Fin source.length) (Fin target.length)
 
-structure Hi (source : Stack) (t : Stack) where
-  mapping : Mapping' t
-  mapping' : Mapping'' source t
-  mapping'' : Mapping
-
-def pop : (mapping : Mapping' target) → Mapping' target
-| ⟨xs, ⟨toFun, invFun, hinv⟩⟩ => by
-  have hlen : xs.dropLast.length ≤ xs.length := by
+def pop : (mapping : Mapping source target) → Mapping source.dropLast target
+| ⟨toFun, invFun, hinv⟩ => by
+  have hlen : source.dropLast.length ≤ source.length := by
     simp only [List.length_dropLast]
     exact Nat.sub_le _ _
-  let toFun' := fun (x : Fin xs.dropLast.length) =>
+  let toFun' := fun (x : Fin source.dropLast.length) =>
     toFun ⟨x.val, Nat.lt_of_lt_of_le x.isLt hlen⟩
-  let invFun' : Fin target.length → Option (Fin xs.dropLast.length) := fun x =>
+  let invFun' : Fin target.length → Option (Fin source.dropLast.length) := fun x =>
     (invFun x).bind fun i =>
-      if h : i.val < xs.dropLast.length then some ⟨i.val, h⟩ else none
-  refine ⟨xs.dropLast, ⟨toFun', invFun', ?_⟩⟩
+      if h : i.val < source.dropLast.length then some ⟨i.val, h⟩ else none
+  refine ⟨toFun', invFun', ?_⟩
   simp only [toFun', invFun', ← hinv]
   intro a b
   cases invFun b <;> simp +contextual [Fin.ext_iff, -List.length_dropLast]
 
-def push (val : Value) : (mapping : Mapping' target) → Mapping' target
-| ⟨xs, ⟨toFun, invFun, hinv⟩⟩ => by sorry
+def bind (f : Mapping source target) (p : Fin source.length) (d : Fin target.length)
+    (hp : f p = none) (hd : f.symm d = none) : Mapping source target where
+  toFun := Function.update f p (some d)
+  invFun := Function.update f.symm d (some p)
+  inv a b := by
+    simp only [Function.update_apply]
+    split_ifs with ha hb hb
+    · subst ha hb; simp
+    · subst ha; simp [← PEquiv.eq_some_iff, hd, Ne.symm hb]
+    · subst hb; simp [PEquiv.eq_some_iff, hp, Ne.symm ha]
+    · exact PEquiv.mem_iff_mem f
+
+-- to be edited
+def push (val : Value) : (mapping : Mapping source target) → Mapping (source ++[val]) target
+| ⟨toFun, invFun, hinv⟩ => by sorry
 
 --def src := [1,2,3,4]
 --def
