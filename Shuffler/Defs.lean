@@ -78,9 +78,32 @@ def bind (f : Mapping source target) (p : Fin source.length) (d : Fin target.len
     · subst hb; simp [PEquiv.eq_some_iff, hp, Ne.symm ha]
     · exact PEquiv.mem_iff_mem f
 
--- to be edited
-def push (val : Value) : (mapping : Mapping source target) → Mapping (source ++[val]) target
-| ⟨toFun, invFun, hinv⟩ => by sorry
+-- to be edited, not sure about val
+-- pushes val onto the source stack and binds it to destination on the target stack
+def push (destination : Fin target.length) (val : Value) (mapping : Mapping source target)
+          (h_empty : mapping.symm destination = none) : Mapping (source ++ [val]) target :=
+  let extended : Mapping (source ++ [val]) target := {
+    toFun x := if h : x.val < source.length then mapping ⟨x, h⟩ else none
+    invFun x :=
+      if h : (mapping.symm x).isSome then
+        some ⟨((mapping.symm x).get h).val, by simp; omega⟩
+      else none
+    inv a b := by
+      split_ifs with h1 ha
+      · have hb := (PEquiv.eq_some_iff _).mp (Option.eq_some_of_isSome h1)
+        constructor
+        · intro h; simp only [Option.some.injEq, Fin.ext_iff] at h
+          rwa [show (⟨a, ha⟩ : Fin _) = _ from Fin.ext h.symm]
+        · intro h; simp [PEquiv.inj mapping hb h]
+      · have := (Option.get _ h1).isLt; simp [Fin.ext_iff]; omega
+      · simp only [Option.not_isSome_iff_eq_none] at h1
+        simp only [false_iff]
+        intro h; rw [← PEquiv.eq_some_iff] at h; simp_all
+      · simp }
+  _root_.bind extended ⟨source.length, by simp⟩ destination
+    (by simp [extended, DFunLike.coe]) (by show dite _ _ _ = _; simp [h_empty])
+
+
 
 --def src := [1,2,3,4]
 --def
