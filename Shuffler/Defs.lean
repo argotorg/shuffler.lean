@@ -49,26 +49,23 @@ def Trace.swapCount : Trace source result → ℕ
   | .Swap _ _ _ _ trace => trace.swapCount + 1
 
 
-abbrev Mapping (source : Stack) (target : Stack) := PEquiv (Fin source.length) (Fin target.length)
+abbrev Mapping (source_len : ℕ ) (target_len : ℕ ) := PEquiv (Fin source_len) (Fin target_len)
 
-
-def pop : (mapping : Mapping source target) → Mapping source.dropLast target
-| ⟨toFun, invFun, hinv⟩ => by
-  have hlen : source.dropLast.length ≤ source.length := by
-    simp only [List.length_dropLast]
-    exact Nat.sub_le _ _
-  let toFun' := fun (x : Fin source.dropLast.length) =>
+def pop : (mapping : Mapping source_len target_len) →  (h_source : 0 < source_len) → Mapping (source_len - 1) target_len
+| ⟨toFun, invFun, hinv⟩, h_source => by
+  have hlen : source_len - 1 ≤ source_len := by omega
+  let toFun' := fun (x : Fin (source_len - 1)) =>
     toFun ⟨x.val, Nat.lt_of_lt_of_le x.isLt hlen⟩
-  let invFun' : Fin target.length → Option (Fin source.dropLast.length) := fun x =>
+  let invFun' : Fin target_len → Option (Fin (source_len - 1)) := fun x =>
     (invFun x).bind fun i =>
-      if h : i.val < source.dropLast.length then some ⟨i.val, h⟩ else none
+      if h : i.val < source_len - 1 then some ⟨i.val, h⟩ else none
   refine ⟨toFun', invFun', ?_⟩
   simp only [toFun', invFun', ← hinv]
   intro a b
-  cases invFun b <;> simp +contextual [Fin.ext_iff, -List.length_dropLast]
+  cases invFun b <;> simp +contextual [Fin.ext_iff]
 
-def bind (f : Mapping source target) (p : Fin source.length) (d : Fin target.length)
-    (hp : f p = none) (hd : f.symm d = none) : Mapping source target where
+def bind (f : Mapping source_len target_len) (p : Fin source_len) (d : Fin target_len)
+    (hp : f p = none) (hd : f.symm d = none) : Mapping source_len target_len where
   toFun := Function.update f p (some d)
   invFun := Function.update f.symm d (some p)
   inv a b := by
@@ -79,15 +76,15 @@ def bind (f : Mapping source target) (p : Fin source.length) (d : Fin target.len
     · subst hb; simp [PEquiv.eq_some_iff, hp, Ne.symm ha]
     · exact PEquiv.mem_iff_mem f
 
--- to be edited, not sure about val
+
 -- pushes val onto the source stack and binds it to destination on the target stack
-def push (destination : Fin target.length) (mapping : Mapping source target)
-          (h_empty : mapping.symm destination = none) : Mapping (source ++ [val]) target :=
-  let extended : Mapping (source ++ [val]) target := {
-    toFun x := if h : x.val < source.length then mapping ⟨x, h⟩ else none
+def push (destination : Fin target_len) (mapping : Mapping source_len target_len)
+          (h_empty : mapping.symm destination = none) : Mapping (source_len +1) target_len :=
+  let extended : Mapping (source_len +1) target_len := {
+    toFun x := if h : x.val < source_len then mapping ⟨x, h⟩ else none
     invFun x :=
       if h : (mapping.symm x).isSome then
-        some ⟨((mapping.symm x).get h).val, by simp; omega⟩
+        some ⟨((mapping.symm x).get h).val, by omega⟩
       else none
     inv a b := by
       split_ifs with h1 ha
@@ -101,31 +98,31 @@ def push (destination : Fin target.length) (mapping : Mapping source target)
         simp only [false_iff]
         intro h; rw [← PEquiv.eq_some_iff] at h; simp_all
       · simp }
-  _root_.bind extended ⟨source.length, by simp⟩ destination
+  _root_.bind extended ⟨source_len, by simp⟩ destination
     (by simp [extended, DFunLike.coe]) (by show dite _ _ _ = _; simp [h_empty])
 
 
 
 
-def swap_destination (a b : Fin source.length) (mapping : Mapping source target) : Mapping source target :=
+def swap_destination (a b : Fin source_len) (mapping : Mapping source_len target_len) : Mapping source_len target_len :=
   (Equiv.swap a b).toPEquiv.trans mapping
 
 
 -- checking properties of swap_destination
-theorem swap_destination_apply_left (a b : Fin source.length) (mapping : Mapping source target) :
+theorem swap_destination_apply_left (a b : Fin source_len) (mapping : Mapping source_len target_len) :
     swap_destination a b mapping a = mapping b := by
   simp [swap_destination, PEquiv.trans]
 
-theorem swap_destination_apply_right (a b : Fin source.length) (mapping : Mapping source target) :
+theorem swap_destination_apply_right (a b : Fin source_len) (mapping : Mapping source_len target_len) :
     swap_destination a b mapping b = mapping a := by
   simp [swap_destination, PEquiv.trans]
 
-theorem swap_destination_apply_of_ne_of_ne {a b x : Fin source.length} (mapping : Mapping source target)
+theorem swap_destination_apply_of_ne_of_ne {a b x : Fin source_len} (mapping : Mapping source_len target_len)
     (ha : x ≠ a) (hb : x ≠ b) : swap_destination a b mapping x = mapping x := by
   simp [swap_destination, PEquiv.trans, Equiv.swap_apply_of_ne_of_ne ha hb]
 
-theorem swap_destination_symm_of_symm_eq_left (a b : Fin source.length) (t : Fin target.length)
-    (mapping : Mapping source target) (h : mapping.symm t = some a) :
+theorem swap_destination_symm_of_symm_eq_left (a b : Fin source_len) (t : Fin target_len)
+    (mapping : Mapping source_len target_len) (h : mapping.symm t = some a) :
     (swap_destination a b mapping).symm t = some b := by
   rw [swap_destination, PEquiv.symm_trans_rev, PEquiv.trans_eq_some]
   exact ⟨a, h, by simp [PEquiv.eq_some_iff]⟩
