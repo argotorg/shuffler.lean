@@ -1,6 +1,7 @@
 import Mathlib.Data.Nat.Notation
 import Batteries.Data.List.Basic
 import Mathlib.Data.PEquiv
+import Mathlib.Logic.Equiv.Basic
 
 inductive ShuffleErr : Type where
   | Blocked : ℕ → ShuffleErr
@@ -80,7 +81,7 @@ def bind (f : Mapping source target) (p : Fin source.length) (d : Fin target.len
 
 -- to be edited, not sure about val
 -- pushes val onto the source stack and binds it to destination on the target stack
-def push (destination : Fin target.length) (val : Value) (mapping : Mapping source target)
+def push (destination : Fin target.length) (mapping : Mapping source target)
           (h_empty : mapping.symm destination = none) : Mapping (source ++ [val]) target :=
   let extended : Mapping (source ++ [val]) target := {
     toFun x := if h : x.val < source.length then mapping ⟨x, h⟩ else none
@@ -104,6 +105,42 @@ def push (destination : Fin target.length) (val : Value) (mapping : Mapping sour
     (by simp [extended, DFunLike.coe]) (by show dite _ _ _ = _; simp [h_empty])
 
 
+
+
+def swap_destination (a b : Fin source.length) (mapping : Mapping source target) : Mapping source target :=
+  (Equiv.swap a b).toPEquiv.trans mapping
+
+
+-- checking properties of swap_destination
+theorem swap_destination_apply_left (a b : Fin source.length) (mapping : Mapping source target) :
+    swap_destination a b mapping a = mapping b := by
+  simp [swap_destination, PEquiv.trans]
+
+theorem swap_destination_apply_right (a b : Fin source.length) (mapping : Mapping source target) :
+    swap_destination a b mapping b = mapping a := by
+  simp [swap_destination, PEquiv.trans]
+
+theorem swap_destination_apply_of_ne_of_ne {a b x : Fin source.length} (mapping : Mapping source target)
+    (ha : x ≠ a) (hb : x ≠ b) : swap_destination a b mapping x = mapping x := by
+  simp [swap_destination, PEquiv.trans, Equiv.swap_apply_of_ne_of_ne ha hb]
+
+theorem swap_destination_symm_of_symm_eq_left (a b : Fin source.length) (t : Fin target.length)
+    (mapping : Mapping source target) (h : mapping.symm t = some a) :
+    (swap_destination a b mapping).symm t = some b := by
+  rw [swap_destination, PEquiv.symm_trans_rev, PEquiv.trans_eq_some]
+  exact ⟨a, h, by simp [PEquiv.eq_some_iff]⟩
+
+
+
+/-	void swapDestinations(StackOffset const _a, StackOffset const _b)
+	{
+		std::swap(m_destinationOf[_a.value], m_destinationOf[_b.value]);
+		if (Destination const& destination = m_destinationOf[_a.value])
+			m_positionOf[destination->value] = _a;
+		if (Destination const& destination = m_destinationOf[_b.value])
+			m_positionOf[destination->value] = _b;
+	}
+  -/
 
 --def src := [1,2,3,4]
 --def
