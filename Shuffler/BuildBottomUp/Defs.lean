@@ -1,3 +1,21 @@
+-- TODO: Include the blocked copy's offset with its excess depth. C++ recovery
+-- uses both fields (solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:277,963).
+-- Retain the working state on failure when modeling Emission::Result (line 283).
+-- TODO: Make stack reach a parameter. Lean fixes it at 16; C++ accepts a
+-- configured reach (solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:838).
+-- TODO: Model FunctionCallReturnLabel and FunctionReturnLabel. Lean omits both
+-- slot kinds (solidity/libyul/backends/evm/ssa/StackSlot.h:77).
+-- TODO: Prove caller counter consistency: pending_generations must equal the
+-- unmapped target count. At zero, Nat subtraction saturates; C++ size_t wraps.
+-- TODO: Prove availability on the current stack at each caller. The precondition
+-- excludes the final branch; unreachable! is a panic, not a C++ assertion exception.
+-- TODO: State the value correspondence. C++ compares literal instruction IDs;
+-- Lean compares words. This relies on literal deduplication within one store
+-- (solidity/libyul/backends/evm/ssa/InstructionStore.h:193).
+-- TODO: Prove that produce appends the requested value, and specify its trace
+-- operation and error result. Existing theorems cover stack length, mappings,
+-- and counters.
+
 import Shuffler.Mapping
 import Shuffler.Permute.Defs
 
