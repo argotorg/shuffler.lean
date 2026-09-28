@@ -54,9 +54,10 @@ inductive Trace : Stack → Stack → Type where
     → Trace start prev
     → Trace start prev.dropLast
   | Push
-    : (w : Word)
+    : (v : Value)
+    → (hfree : v.can_be_freely_generated := by decide)
     → Trace start prev
-    → Trace start (prev ++ [.Lit w])
+    → Trace start (prev ++ [v])
 
 def Trace.concat (t1 : Trace a b) (t2 : Trace b c) : Trace a c :=
   match t2 with
@@ -64,11 +65,11 @@ def Trace.concat (t1 : Trace a b) (t2 : Trace b c) : Trace a c :=
   | .Swap idx hlen hlo hhi t => .Swap idx hlen hlo hhi (t1.concat t)
   | .Dup idx hlen hlo hhi t => .Dup idx hlen hlo hhi (t1.concat t)
   | .Pop hlen t => .Pop hlen (t1.concat t)
-  | .Push w t => .Push w (t1.concat t)
+  | .Push v hfree t => .Push v hfree (t1.concat t)
 
 def Trace.swapCount : Trace source result → ℕ
   | .Lit _ => 0
   | .Swap _ _ _ _ trace => trace.swapCount + 1
   | .Dup _ _ _ _ trace => trace.swapCount
   | .Pop _ trace => trace.swapCount
-  | .Push _ trace => trace.swapCount
+  | .Push _ _ trace => trace.swapCount
