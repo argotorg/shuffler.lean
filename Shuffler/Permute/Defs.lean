@@ -61,7 +61,7 @@ def permute
             have hlt := (perm top).isLt
             dsimp [idx, Fin.rev]
             omega
-          have h3 : idx < 17 := by unfold MAX_SWAP_DEPTH at hdepth; omega
+          have h3 : idx ≤ MAX_SWAP_DEPTH := by omega
           let trace' := .Swap idx h1 h2 h3 trace
 
           go stack' perm' trace' hne (by dsimp[stack']; simp [hlen])
@@ -92,7 +92,7 @@ def permute
 
             have h1 : idx < current.length := by simpa [idx, hlen] using pos.rev.isLt
             have h2 : 1 ≤ idx := by dsimp [idx, Fin.rev]; omega
-            have h3 : idx < 17 := by unfold MAX_SWAP_DEPTH at hdepth; omega
+            have h3 : idx ≤ MAX_SWAP_DEPTH := by omega
             let trace' := .Swap idx h1 h2 h3 trace
             go stack' perm' trace' hne (by dsimp[stack']; simp [hlen])
 

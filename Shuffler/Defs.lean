@@ -1,6 +1,8 @@
 import Mathlib.Data.Nat.Notation
 import Batteries.Data.List.Basic
 
+abbrev Word := Fin (2 ^ 256)
+
 -- Zero indexed from the top of the stack.
 def MAX_SWAP_DEPTH := 16
 def MAX_DUP_DEPTH := 15
@@ -10,7 +12,7 @@ inductive ShuffleErr : Type where
 
 inductive Value : Type where
   | Var (idx : ℕ )
-  | Lit (val : Fin (2 ^ 256))
+  | Lit (val : Word)
   | Wildcard
 
 deriving instance DecidableEq for Value
@@ -37,15 +39,36 @@ inductive Trace : Stack → Stack → Type where
     : (idx : ℕ)
     → (hlen : idx < prev.length)
     → (hlo : 1 ≤ idx)
-    → (hhi : idx < 17)
+    → (hhi : idx ≤ MAX_SWAP_DEPTH)
     → Trace start prev
     → Trace start (prev.swap (prev.length - 1) (prev.length - 1 - idx))
+  | Dup
+    : (idx : ℕ)
+    → (hlen : idx ≤ prev.length)
+    → (hlo : 1 ≤ idx)
+    → (hhi : idx ≤ MAX_DUP_DEPTH + 1)
+    → Trace start prev
+    → Trace start (prev ++ [prev[prev.length - idx]])
+  | Pop
+    : (hlen : 0 < prev.length)
+    → Trace start prev
+    → Trace start prev.dropLast
+  | Push
+    : (w : Word)
+    → Trace start prev
+    → Trace start (prev ++ [.Lit w])
 
 def Trace.concat (t1 : Trace a b) (t2 : Trace b c) : Trace a c :=
   match t2 with
   | .Lit _ => t1
   | .Swap idx hlen hlo hhi t => .Swap idx hlen hlo hhi (t1.concat t)
+  | .Dup idx hlen hlo hhi t => .Dup idx hlen hlo hhi (t1.concat t)
+  | .Pop hlen t => .Pop hlen (t1.concat t)
+  | .Push w t => .Push w (t1.concat t)
 
 def Trace.swapCount : Trace source result → ℕ
   | .Lit _ => 0
   | .Swap _ _ _ _ trace => trace.swapCount + 1
+  | .Dup _ _ _ _ trace => trace.swapCount
+  | .Pop _ trace => trace.swapCount
+  | .Push _ trace => trace.swapCount
