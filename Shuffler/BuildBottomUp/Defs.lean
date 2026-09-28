@@ -1,16 +1,6 @@
 import Shuffler.Mapping
-import Mathlib.Data.Finset.Filter
-import Mathlib.Data.Fintype.Basic
-import Mathlib.Data.Finset.Card
 
 open Shuffler.Permute
-
-def unmapped_target_slots (mapping : Mapping source target) : ℕ :=
-  (Finset.univ.filter (λ j => mapping.symm j = .none)).card
-
-theorem unmapped_target_slots_eq_zero (mapping : Mapping source target) :
-    unmapped_target_slots mapping = 0 ↔ ∀ j, (mapping.symm j).isSome := by
-  simp [unmapped_target_slots, Finset.filter_eq_empty_iff, Option.isSome_iff_ne_none]
 
 -- TODO: can we refine the domain here?
 abbrev SpillSet := Finset ℕ
@@ -23,14 +13,14 @@ instance (spills : SpillSet) (v : Value) : Decidable (spills.is_spilled v) := by
   cases v <;> unfold SpillSet.is_spilled <;> infer_instance
 
 structure State (source target : Stack) where
-  planned_mapping : Mapping source target
+  planned_mapping : Mapping source.length target.length
 
   stack : Stack
   trace : Trace source stack
-  mapping : Mapping stack target
+  mapping : Mapping stack.length target.length
 
   pending_generations : ℕ
-  hpending : unmapped_target_slots mapping = pending_generations
+  hpending : Mapping.unmapped_target_slots mapping = pending_generations
 
   spills : SpillSet
 
@@ -97,9 +87,10 @@ def build_bottom_up
   -- all is generated, the final permutation
   if hpending : state.pending_generations = 0 then
     have htarget : ∀ j, (state.mapping.symm j).isSome :=
-      (unmapped_target_slots_eq_zero state.mapping).mp (state.hpending.trans hpending)
+      (Mapping.unmapped_target_slots_eq_zero state.mapping).mp (state.hpending.trans hpending)
+    have hcomplete := state.mapping.complete_of_target_total hsize htarget
 
-    let ⟨res, trace⟩ ← permute state.stack (state.mapping.toPermutation hsize htarget)
+    let ⟨res, trace⟩ ← permute state.stack (state.mapping.toPermutation hcomplete.1 hcomplete.2)
     return ⟨res, state.trace.concat trace⟩
 
   -- a target offset that needs something DUPed urgently before it goes out of dup reach
