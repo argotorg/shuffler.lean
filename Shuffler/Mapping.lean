@@ -1,23 +1,21 @@
-import Shuffler.Defs
-import Shuffler.Permute.Defs
 import Mathlib.Data.PEquiv
 import Mathlib.Logic.Equiv.Basic
 import Mathlib.Data.Fintype.EquivFin
 import Mathlib.Data.Finset.Card
 
--- A Mapping is a partial bijection between a source stack and a target stack
+-- A Mapping is a partial bijection between source positions and target positions.
 abbrev Mapping (source_len target_len : ℕ) := PEquiv (Fin source_len) (Fin target_len)
 
 namespace Mapping
 
 variable {source_len target_len : ℕ}
 
--- pop removes the top source position and it's binding if it exists, all other bindings are unchanged
+-- pop removes the top source position and its binding, if any; all other bindings stay unchanged.
 def pop : (mapping : Mapping (source_len + 1) target_len) → Mapping source_len target_len
 | ⟨toFun, invFun, hinv⟩ => by
-  -- shrink the domain of toFun by forwarding to the previous impl
+  -- Restrict toFun to the remaining source positions.
   let toFun' := fun (x : Fin source_len) => toFun x.castSucc
-  -- keep each targets inverse binding if its source position is below the removed top, return none otherwise
+  -- Keep each target's inverse binding below the removed top; return none otherwise.
   let invFun' : Fin target_len → Option (Fin source_len) := fun x =>
     (invFun x).bind fun i =>
       if h : i.val < source_len then some ⟨i.val, h⟩ else none
@@ -26,12 +24,12 @@ def pop : (mapping : Mapping (source_len + 1) target_len) → Mapping source_len
   intro a b
   cases invFun b <;> simp +contextual [Fin.ext_iff]
 
--- binds connects an unbound source position to an unbound target position, and keeps all existing bindings unchanged
+-- bind connects an unbound source to an unbound target and keeps all existing bindings unchanged.
 def bind (mapping : Mapping source_len target_len) (p : Fin source_len) (d : Fin target_len)
     (hp : mapping p = none) (hd : mapping.symm d = none) : Mapping source_len target_len where
-  -- map source position p to some d and keeps all other results unchanged
+  -- Map source position p to some d and keep all other results unchanged.
   toFun := Function.update mapping p (some d)
-  -- map target position d to some p and keeps all other results unchanged
+  -- Map target position d to some p and keep all other results unchanged.
   invFun := Function.update mapping.symm d (some p)
   inv a b := by
     simp only [Function.update_apply]
@@ -41,7 +39,7 @@ def bind (mapping : Mapping source_len target_len) (p : Fin source_len) (d : Fin
     · subst hb; simp [PEquiv.eq_some_iff, hp, Ne.symm ha]
     · exact PEquiv.mem_iff_mem mapping
 
--- push adds a new top to the source stack, binds that to an existing unbound target position, and keeps all existing bindings unchanged
+-- push adds a new source top and binds it to an unbound target; all existing bindings stay unchanged.
 def push (mapping : Mapping source_len target_len) (dst : Fin target_len)
     (hdst : mapping.symm dst = none) : Mapping (source_len + 1) target_len := by
   -- Extend the mapping with an unbound source position.
@@ -51,7 +49,7 @@ def push (mapping : Mapping source_len target_len) (dst : Fin target_len)
       if h : i.val < source_len then mapping ⟨i.val, h⟩ else none
     -- Increase the bound of each inverse index without changing its value;
     -- leave unbound destinations as none.
-    invFun := fun d => (mapping.symm d).map (Fin.castLE (by simp))
+    invFun := fun d => (mapping.symm d).map Fin.castSucc
     inv := by
       intro i d
       split_ifs with h
@@ -61,11 +59,11 @@ def push (mapping : Mapping source_len target_len) (dst : Fin target_len)
         omega
   }
   -- Bind the top source position to dst.
-  exact extended.bind ⟨source_len, by simp⟩ dst
+  exact extended.bind (Fin.last source_len) dst
     (by simp [extended])
     (by simpa [extended, PEquiv.symm] using hdst)
 
--- counts the number of target slots that are not bound to a source slot
+-- Count the target slots that are not bound to a source slot.
 def unmapped_target_slots (mapping : Mapping source_len target_len) : ℕ :=
   (Finset.univ.filter (λ j => mapping.symm j = .none)).card
 
@@ -93,14 +91,13 @@ theorem complete_of_target_total
   rw [hposition j]
   rfl
 
--- Builds a Permutation from a total Mapping between stacks of equal length
+-- Build a permutation when source and target lengths are equal and every source position is bound.
 def toPermutation
-    {source : Stack}
-    (mapping : Mapping source.length target_len)
-    (hlen : source.length = target_len)
-    (hsource : ∀ i, (mapping i).isSome) : Shuffler.Permute.Permutation source :=
+    (mapping : Mapping source_len target_len)
+    (hlen : source_len = target_len)
+    (hsource : ∀ i, (mapping i).isSome) : Equiv.Perm (Fin source_len) :=
   have htarget := (complete_of_target_total mapping.symm hlen.ge hsource).2
-  let equiv : Fin source.length ≃ Fin target_len := {
+  let equiv : Fin source_len ≃ Fin target_len := {
     toFun := fun i => (mapping i).get (hsource i)
     invFun := fun j => (mapping.symm j).get (htarget j)
     left_inv := fun i => by
@@ -113,6 +110,16 @@ def toPermutation
       exact mapping.eq_some_iff.mp (Option.some_get (htarget j)).symm
   }
   equiv.trans (finCongr hlen.symm)
+
+-- The permutation sends each source position to its bound target position.
+@[simp] theorem toPermutation_apply
+    (mapping : Mapping source_len target_len)
+    (hlen : source_len = target_len)
+    (hsource : ∀ i, (mapping i).isSome)
+    (i : Fin source_len) :
+    some (Fin.cast hlen (mapping.toPermutation hlen hsource i)) = mapping i := by
+  subst target_len
+  simp [toPermutation]
 
 -- The unbound target count is zero exactly when every target is bound.
 theorem unmapped_target_slots_eq_zero (mapping : Mapping source_len target_len) :
@@ -155,20 +162,20 @@ theorem unmapped_target_slots_eq_zero (mapping : Mapping source_len target_len) 
 -- Pushing to d binds the new source top to d.
 @[simp] theorem push_apply_top (mapping : Mapping source_len target_len)
     (d : Fin target_len) (hd : mapping.symm d = none) :
-    push mapping d hd ⟨source_len, by simp⟩ = some d := by
+    push mapping d hd (Fin.last source_len) = some d := by
   simp [push]
 
 -- Pushing preserves forward lookups at all existing source positions.
-@[simp] theorem push_apply_castLE (mapping : Mapping source_len target_len)
+@[simp] theorem push_apply_castSucc (mapping : Mapping source_len target_len)
     (d : Fin target_len) (hd : mapping.symm d = none) (i : Fin source_len) :
-    push mapping d hd (Fin.castLE (by simp) i) = mapping i := by
+    push mapping d hd i.castSucc = mapping i := by
   have hne : i.val ≠ source_len := Nat.ne_of_lt i.isLt
   simp [push, bind, Fin.ext_iff, hne, i.isLt]
 
 -- After pushing to d, the inverse lookup at d returns the new source top.
 @[simp] theorem push_symm_apply (mapping : Mapping source_len target_len)
     (d : Fin target_len) (hd : mapping.symm d = none) :
-    (push mapping d hd).symm d = some ⟨source_len, by simp⟩ := by
+    (push mapping d hd).symm d = some (Fin.last source_len) := by
   rw [(push mapping d hd).eq_some_iff]
   exact push_apply_top mapping d hd
 
@@ -177,13 +184,13 @@ theorem unmapped_target_slots_eq_zero (mapping : Mapping source_len target_len) 
     (d : Fin target_len) (hd : mapping.symm d = none) (j : Fin target_len)
     (hj : j ≠ d) :
     (push mapping d hd).symm j =
-      (mapping.symm j).map (Fin.castLE (by simp)) := by
+      (mapping.symm j).map Fin.castSucc := by
   change Function.update _ d _ j = _
   simp only [Function.update_apply, ite_eq_right hj]
   rfl
 
 -- Binding a free source to a free target preserves every existing binding.
--- note: for PEquiv, a ≤ b means if x if bound in a, then it is also bound in b.
+-- For PEquiv, a ≤ b means every binding x ↦ y in a is also present in b.
 -- https://leanprover-community.github.io/mathlib4_docs/Mathlib/Data/PEquiv.html#PEquiv.le_def
 theorem le_bind (mapping : Mapping source_len target_len)
     (p : Fin source_len) (d : Fin target_len) (hp : mapping p = none)
@@ -201,7 +208,7 @@ theorem le_bind (mapping : Mapping source_len target_len)
   apply PEquiv.ext
   intro i
   rw [pop_apply]
-  exact push_apply_castLE mapping d hd i
+  exact push_apply_castSucc mapping d hd i
 
 -- A target that was unbound remains unbound after popping.
 @[simp] theorem pop_symm_apply_of_none (mapping : Mapping (source_len + 1) target_len)
@@ -212,7 +219,7 @@ theorem le_bind (mapping : Mapping source_len target_len)
 
 -- Popping unbinds the target that was bound to the source top.
 @[simp] theorem pop_symm_apply_of_top (mapping : Mapping (source_len + 1) target_len)
-    (d : Fin target_len) (hd : mapping ⟨source_len, by simp⟩ = some d) :
+    (d : Fin target_len) (hd : mapping (Fin.last source_len) = some d) :
     mapping.pop.symm d = none := by
   change (mapping.symm d).bind _ = none
   rw [mapping.eq_some_iff.mpr hd]
@@ -220,21 +227,14 @@ theorem le_bind (mapping : Mapping source_len target_len)
 
 -- Popping a bound top and pushing to the same target restores the original mapping.
 theorem push_pop (mapping : Mapping (source_len + 1) target_len)
-    (d : Fin target_len) (hd : mapping ⟨source_len, by simp⟩ = some d) :
+    (d : Fin target_len) (hd : mapping (Fin.last source_len) = some d) :
     push mapping.pop d
       (pop_symm_apply_of_top mapping d hd) = mapping := by
   apply PEquiv.ext
   intro i
-  by_cases hi : i.val < source_len
-  · have heq : i = Fin.castLE (by simp) (⟨i.val, hi⟩ : Fin source_len) := rfl
-    rw [heq, push_apply_castLE, pop_apply]
-    rfl
-  · have heq : i = ⟨source_len, by simp⟩ := by
-      apply Fin.ext
-      change i.val = source_len
-      have := i.isLt
-      omega
-    rw [heq, push_apply_top (source_len := source_len), hd]
+  refine Fin.lastCases ?_ (fun i => ?_) i
+  · simp [hd]
+  · simp
 
 -- Binding two pairs with distinct source and target positions gives the same result in either order.
 theorem bind_comm (mapping : Mapping source_len target_len)
@@ -284,7 +284,7 @@ theorem unmapped_target_slots_push (mapping : Mapping source_len target_len)
 -- After popping, a target is unbound exactly when it was unbound or bound to the removed top.
 @[simp] theorem pop_symm_eq_none_iff (mapping : Mapping (source_len + 1) target_len)
     (d : Fin target_len) :
-    mapping.pop.symm d = none ↔ mapping.symm d = none ∨ mapping ⟨source_len, by simp⟩ = some d := by
+    mapping.pop.symm d = none ↔ mapping.symm d = none ∨ mapping (Fin.last source_len) = some d := by
   rw [← mapping.eq_some_iff]
   change (mapping.symm d).bind _ = none ↔ _
   cases h : mapping.symm d with
@@ -296,7 +296,7 @@ theorem unmapped_target_slots_push (mapping : Mapping source_len target_len)
 
 -- Popping an unbound source top preserves the unbound target count.
 theorem unmapped_target_slots_pop_of_unbound (mapping : Mapping (source_len + 1) target_len)
-    (htop : mapping ⟨source_len, by simp⟩ = none) :
+    (htop : mapping (Fin.last source_len) = none) :
     unmapped_target_slots mapping.pop = unmapped_target_slots mapping := by
   unfold unmapped_target_slots
   congr 1
@@ -305,7 +305,7 @@ theorem unmapped_target_slots_pop_of_unbound (mapping : Mapping (source_len + 1)
 
 -- Popping a bound source top increases the unbound target count by one.
 theorem unmapped_target_slots_pop_of_bound (mapping : Mapping (source_len + 1) target_len)
-    (d : Fin target_len) (htop : mapping ⟨source_len, by simp⟩ = some d) :
+    (d : Fin target_len) (htop : mapping (Fin.last source_len) = some d) :
     unmapped_target_slots mapping.pop = unmapped_target_slots mapping + 1 := by
   have h := unmapped_target_slots_push
     mapping.pop
@@ -324,19 +324,19 @@ theorem push_push_ne (mapping : Mapping source_len target_len)
   intro h
   have hlookup := congrArg
     (fun mapping : Mapping (source_len + 1 + 1) target_len =>
-      mapping (Fin.castLE (by simp) (⟨source_len, by simp⟩ : Fin (source_len + 1)))) h
-  simp only [push_apply_castLE, push_apply_top, Option.some.injEq] at hlookup
+      mapping (Fin.last source_len).castSucc) h
+  simp only [push_apply_castSucc, push_apply_top, Option.some.injEq] at hlookup
   exact hde hlookup
 
 -- Popping an unbound source top and then pushing cannot restore the original mapping.
 theorem push_pop_ne_of_unbound (mapping : Mapping (source_len + 1) target_len)
     (d : Fin target_len) (hd : mapping.symm d = none)
-    (htop : mapping ⟨source_len, by simp⟩ = none) :
+    (htop : mapping (Fin.last source_len) = none) :
     push mapping.pop d
       (pop_symm_apply_of_none mapping d hd) ≠ mapping := by
   intro h
   have hlookup := congrArg (fun mapping : Mapping (source_len + 1) target_len =>
-    mapping ⟨source_len, by simp⟩) h
+    mapping (Fin.last source_len)) h
   simp [htop] at hlookup
 
 -- With no source positions, every inverse lookup returns none.

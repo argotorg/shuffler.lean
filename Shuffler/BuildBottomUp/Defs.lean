@@ -1,4 +1,5 @@
 import Shuffler.Mapping
+import Shuffler.Permute.Defs
 
 open Shuffler.Permute
 
