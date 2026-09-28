@@ -35,6 +35,10 @@ def Value.can_be_freely_generated : Value → Prop
 instance (v : Value) : Decidable v.can_be_freely_generated := by
   cases v <;> unfold Value.can_be_freely_generated <;> infer_instance
 
+theorem Value.can_be_freely_generated_of_is_junk (v : Value) (hjunk : v.is_junk) :
+    v.can_be_freely_generated := by
+  cases v <;> simp_all [Value.is_junk, Value.can_be_freely_generated]
+
 abbrev Stack := List Value
 
 inductive Trace : Stack → Stack → Type where
