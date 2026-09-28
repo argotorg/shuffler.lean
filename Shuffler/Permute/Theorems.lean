@@ -4,15 +4,16 @@ namespace Shuffler.Permute
 
 -- Blocked reports the excess depth of a moved position in the original permutation.
 theorem permute_blocks_unreachable
+    (spills : SpillSet)
     (source : Stack) (perm : Permutation source)
     (hnreachable : ¬all_swaps_reachable perm) :
-    ∃ x, permute source perm = .error (.Blocked x)
+    ∃ x, permute spills source perm = .error (.Blocked x)
       ∧ x > 0
       ∧ ∃ i ∈ perm.support, i.rev.val = x + MAX_SWAP_DEPTH := by
   rw [permute]
   split
   · rename_i hne
-    refine permute.go.induct_unfolding source hne
+    refine permute.go.induct_unfolding spills source hne
       (motive := fun _ remaining _ _ result =>
         ¬all_swaps_reachable remaining →
           ∃ x, result = .error (.Blocked x)
@@ -35,14 +36,15 @@ theorem permute_blocks_unreachable
     exact False.elim (hnreachable (fun i => Fin.elim0 i))
 
 theorem permute_applies_permutation_reachable
+    (spills : SpillSet)
     (source : Stack) (perm : Permutation source)
     (hreachable : all_swaps_reachable perm) :
-    ∃ (res : Stack) (trace : Trace source res),
-      permute source perm = .ok ⟨res, trace⟩ ∧ res = apply_permutation source perm := by
+    ∃ (res : Stack) (trace : Trace spills source res),
+      permute spills source perm = .ok ⟨res, trace⟩ ∧ res = apply_permutation source perm := by
   rw [permute]
   split
   · rename_i hne
-    refine permute.go.induct_unfolding source hne
+    refine permute.go.induct_unfolding spills source hne
       (motive := fun current remaining _ hlen result =>
         all_swaps_reachable remaining →
           ∃ res resultTrace, result = .ok ⟨res, resultTrace⟩
@@ -68,15 +70,16 @@ theorem permute_applies_permutation_reachable
 -- Every successful run uses exactly the count determined by its initial cycles.
 -- Arbitrary traces need not satisfy this: they may contain redundant swaps.
 theorem permute_swapCount
+    (spills : SpillSet)
     (source : Stack) (perm : Permutation source) (hne : 0 < source.length)
-    {res : Stack} {resultTrace : Trace source res}
-    (hresult : permute source perm = .ok ⟨res, resultTrace⟩) :
+    {res : Stack} {resultTrace : Trace spills source res}
+    (hresult : permute spills source perm = .ok ⟨res, resultTrace⟩) :
     resultTrace.swapCount = Permutation.swapCount perm ⟨source.length - 1, by omega⟩ := by
   rw [permute, dite_eq_left hne] at hresult
-  have hgo := permute.go.induct source hne
+  have hgo := permute.go.induct spills source hne
     (motive := fun current remaining trace hlen =>
-      ∀ {res : Stack} {resultTrace : Trace source res},
-        permute.go source current remaining trace hne hlen = .ok ⟨res, resultTrace⟩ →
+      ∀ {res : Stack} {resultTrace : Trace spills source res},
+        permute.go spills source current remaining trace hne hlen = .ok ⟨res, resultTrace⟩ →
           resultTrace.swapCount = trace.swapCount +
             Permutation.swapCount remaining ⟨source.length - 1, by omega⟩)
     ?_ ?_ ?_ ?_ ?_ source perm (.Lit source) rfl hresult
@@ -119,12 +122,13 @@ theorem permute_swapCount
 
 -- This bound also covers the empty stack. Fixed points are not counted as cycles.
 theorem permute_swapCount_le
+    (spills : SpillSet)
     (source : Stack) (perm : Permutation source)
-    {res : Stack} {trace : Trace source res}
-    (hresult : permute source perm = .ok ⟨res, trace⟩) :
+    {res : Stack} {trace : Trace spills source res}
+    (hresult : permute spills source perm = .ok ⟨res, trace⟩) :
     trace.swapCount ≤ perm.support.card + perm.cycleFactorsFinset.card := by
   by_cases hne : 0 < source.length
-  · rw [permute_swapCount source perm hne hresult]
+  · rw [permute_swapCount spills source perm hne hresult]
     exact Permutation.swapCount_le perm _
   · rw [permute, dite_eq_right hne] at hresult
     cases hresult

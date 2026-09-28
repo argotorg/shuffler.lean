@@ -24,14 +24,15 @@ end Permutation
 -- operations required to transform the source into the result of applying the
 -- permutation to it.
 def permute
+  (spills : SpillSet)
   (source : Stack)
   (perm : Permutation source)
-  : Except ShuffleErr ((result : Stack) × Trace source result)
+  : Except ShuffleErr ((result : Stack) × Trace spills source result)
   := if hne : 0 < source.length
   then go source perm (.Lit source) hne rfl
   else .ok ⟨source, .Lit source⟩
   where
-    go (current : Stack) (perm : Permutation source) (trace : Trace source current) (hne : source.length > 0) (hlen : current.length = source.length) : Except ShuffleErr ((result : Stack) × Trace source result) :=
+    go (current : Stack) (perm : Permutation source) (trace : Trace spills source current) (hne : source.length > 0) (hlen : current.length = source.length) : Except ShuffleErr ((result : Stack) × Trace spills source result) :=
       let top : Fin source.length := ⟨source.length - 1, by omega⟩
       have htop : top.val = source.length - 1 := rfl
       -- if the top is out of place, we swap it into position

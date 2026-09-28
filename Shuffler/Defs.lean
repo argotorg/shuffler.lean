@@ -1,4 +1,5 @@
 import Mathlib.Data.Nat.Notation
+import Mathlib.Data.Finset.Basic
 import Batteries.Data.List.Basic
 
 abbrev Word := Fin (2 ^ 256)
@@ -6,6 +7,8 @@ abbrev Word := Fin (2 ^ 256)
 structure VarId where
   val : ℕ
   deriving DecidableEq
+
+abbrev SpillSet := Finset VarId
 
 -- Zero indexed from the top of the stack.
 def MAX_SWAP_DEPTH := 16
@@ -20,6 +23,13 @@ inductive Value : Type where
   | Wildcard
 
 deriving instance DecidableEq for Value
+
+def SpillSet.is_spilled (spills : SpillSet) : (val : Value) → Prop
+| .Var id => id ∈ spills
+| _ => false
+
+instance (spills : SpillSet) (v : Value) : Decidable (spills.is_spilled v) := by
+  cases v <;> unfold SpillSet.is_spilled <;> infer_instance
 
 def Value.is_junk : Value → Prop
 | Wildcard => true
@@ -41,43 +51,50 @@ theorem Value.can_be_freely_generated_of_is_junk (v : Value) (hjunk : v.is_junk)
 
 abbrev Stack := List Value
 
-inductive Trace : Stack → Stack → Type where
-  | Lit : (s : Stack) → Trace s s
+inductive Trace (spills : SpillSet) : Stack → Stack → Type where
+  | Lit : (s : Stack) → Trace spills s s
   | Swap
     : (idx : ℕ)
     → (hlen : idx < prev.length)
     → (hlo : 1 ≤ idx)
     → (hhi : idx ≤ MAX_SWAP_DEPTH)
-    → Trace start prev
-    → Trace start (prev.swap (prev.length - 1) (prev.length - 1 - idx))
+    → Trace spills start prev
+    → Trace spills start (prev.swap (prev.length - 1) (prev.length - 1 - idx))
   | Dup
     : (idx : ℕ)
     → (hlen : idx ≤ prev.length)
     → (hlo : 1 ≤ idx)
     → (hhi : idx ≤ MAX_DUP_DEPTH + 1)
-    → Trace start prev
-    → Trace start (prev ++ [prev[prev.length - idx]])
+    → Trace spills start prev
+    → Trace spills start (prev ++ [prev[prev.length - idx]])
   | Pop
     : (hlen : 0 < prev.length)
-    → Trace start prev
-    → Trace start prev.dropLast
+    → Trace spills start prev
+    → Trace spills start prev.dropLast
   | Push
     : (v : Value)
     → (hfree : v.can_be_freely_generated := by decide)
-    → Trace start prev
-    → Trace start (prev ++ [v])
+    → Trace spills start prev
+    → Trace spills start (prev ++ [v])
+  | Load
+    : (id : VarId)
+    → (hspilled : id ∈ spills)
+    → Trace spills start prev
+    → Trace spills start (prev ++ [.Var id])
 
-def Trace.concat (t1 : Trace a b) (t2 : Trace b c) : Trace a c :=
+def Trace.concat (t1 : Trace spills a b) (t2 : Trace spills b c) : Trace spills a c :=
   match t2 with
   | .Lit _ => t1
   | .Swap idx hlen hlo hhi t => .Swap idx hlen hlo hhi (t1.concat t)
   | .Dup idx hlen hlo hhi t => .Dup idx hlen hlo hhi (t1.concat t)
   | .Pop hlen t => .Pop hlen (t1.concat t)
   | .Push v hfree t => .Push v hfree (t1.concat t)
+  | .Load id hspilled t => .Load id hspilled (t1.concat t)
 
-def Trace.swapCount : Trace source result → ℕ
+def Trace.swapCount : Trace spills source result → ℕ
   | .Lit _ => 0
   | .Swap _ _ _ _ trace => trace.swapCount + 1
   | .Dup _ _ _ _ trace => trace.swapCount
   | .Pop _ trace => trace.swapCount
   | .Push _ _ trace => trace.swapCount
+  | .Load _ _ trace => trace.swapCount
