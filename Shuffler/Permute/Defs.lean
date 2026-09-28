@@ -18,6 +18,10 @@ def cyclesAwayFromTop (perm : Equiv.Perm ι) (top : ι) : Finset (Equiv.Perm ι)
 def swapCount (perm : Equiv.Perm ι) (top : ι) : ℕ :=
   (perm.support.erase top).card + (cyclesAwayFromTop perm top).card
 
+-- The minimum count when a swap can use any two positions.
+def arbitrarySwapCount (perm : Equiv.Perm ι) : ℕ :=
+  perm.support.card - perm.cycleFactorsFinset.card
+
 end Permutation
 
 -- permute takes a stack and a permutation, and returns the series of swap

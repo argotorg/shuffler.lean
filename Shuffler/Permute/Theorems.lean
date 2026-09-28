@@ -1,4 +1,4 @@
-import Shuffler.Permute.Cycles
+import Shuffler.Permute.Optimality
 
 namespace Shuffler.Permute
 
@@ -133,5 +133,50 @@ theorem permute_swapCount_le
   · rw [permute, dite_eq_right hne] at hresult
     cases hresult
     simp [Trace.swapCount]
+
+-- Optimality concerns the supplied permutation of positions, including equal values.
+-- The comparison permits all top swaps, so it also covers the depth-limited subset.
+theorem permute_swapCount_optimal
+    (spills : SpillSet) (source : Stack) (perm : Permutation source)
+    (hne : 0 < source.length) {res : Stack} {trace : Trace spills source res}
+    (hresult : permute spills source perm = .ok ⟨res, trace⟩) :
+    IsLeast {n | ∃ swaps : List (Fin source.length),
+      (swaps.map (Equiv.swap ⟨source.length - 1, by omega⟩)).prod = perm ∧ swaps.length = n}
+      trace.swapCount := by
+  rw [permute_swapCount spills source perm hne hresult]
+  exact Permutation.swapCount_isLeast perm _
+
+-- The exact excess over the arbitrary-swap minimum is two per cycle away from the top.
+theorem permute_swapCount_eq_arbitrarySwapCount_add
+    (spills : SpillSet) (source : Stack) (perm : Permutation source)
+    (hne : 0 < source.length) {res : Stack} {trace : Trace spills source res}
+    (hresult : permute spills source perm = .ok ⟨res, trace⟩) :
+    trace.swapCount = Permutation.arbitrarySwapCount perm +
+      2 * (Permutation.cyclesAwayFromTop perm ⟨source.length - 1, by omega⟩).card := by
+  rw [permute_swapCount spills source perm hne hresult]
+  exact Permutation.swapCount_eq_arbitrarySwapCount_add perm _
+
+-- This bound includes the empty stack and the identity permutation.
+theorem permute_swapCount_le_three_mul_arbitrarySwapCount
+    (spills : SpillSet) (source : Stack) (perm : Permutation source)
+    {res : Stack} {trace : Trace spills source res}
+    (hresult : permute spills source perm = .ok ⟨res, trace⟩) :
+    trace.swapCount ≤ 3 * Permutation.arbitrarySwapCount perm := by
+  by_cases hne : 0 < source.length
+  · rw [permute_swapCount spills source perm hne hresult]
+    exact Permutation.swapCount_le_three_mul_arbitrarySwapCount perm _
+  · rw [permute, dite_eq_right hne] at hresult
+    cases hresult
+    simp [Trace.swapCount]
+
+theorem permute_swapCount_le_three_mul_length_swaps
+    (spills : SpillSet) (source : Stack) (perm : Permutation source)
+    {res : Stack} {trace : Trace spills source res}
+    (hresult : permute spills source perm = .ok ⟨res, trace⟩)
+    (swaps : List (Fin source.length × Fin source.length))
+    (hprod : (swaps.map (fun p => Equiv.swap p.1 p.2)).prod = perm) :
+    trace.swapCount ≤ 3 * swaps.length := by
+  exact (permute_swapCount_le_three_mul_arbitrarySwapCount spills source perm hresult).trans
+    (Nat.mul_le_mul_left 3 (Permutation.arbitrarySwapCount_le_length_swaps perm swaps hprod))
 
 end Shuffler.Permute
