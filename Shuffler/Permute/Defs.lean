@@ -20,8 +20,6 @@ def swapCount (perm : Equiv.Perm ι) (top : ι) : ℕ :=
 
 end Permutation
 
-def MAX_SWAP_DEPTH := 16
-
 -- permute takes a stack and a permutation, and returns the series of swap
 -- operations required to transform the source into the result of applying the
 -- permutation to it.
