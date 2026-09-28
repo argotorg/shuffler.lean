@@ -3,11 +3,10 @@ import Shuffler.Permute.Defs
 
 open Shuffler.Permute
 
--- TODO: can we refine the domain here?
-abbrev SpillSet := Finset ℕ
+abbrev SpillSet := Finset VarId
 
 def SpillSet.is_spilled (spills : SpillSet) : (val : Value) → Prop
-| .Var idx => idx ∈ spills
+| .Var id => id ∈ spills
 | _ => false
 
 instance (spills : SpillSet) (v : Value) : Decidable (spills.is_spilled v) := by

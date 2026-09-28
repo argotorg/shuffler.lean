@@ -3,6 +3,10 @@ import Batteries.Data.List.Basic
 
 abbrev Word := Fin (2 ^ 256)
 
+structure VarId where
+  val : ℕ
+  deriving DecidableEq
+
 -- Zero indexed from the top of the stack.
 def MAX_SWAP_DEPTH := 16
 def MAX_DUP_DEPTH := 15
@@ -11,7 +15,7 @@ inductive ShuffleErr : Type where
   | Blocked : ℕ → ShuffleErr
 
 inductive Value : Type where
-  | Var (idx : ℕ )
+  | Var (id : VarId)
   | Lit (val : Word)
   | Wildcard
 
