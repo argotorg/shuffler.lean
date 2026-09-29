@@ -163,7 +163,7 @@ private theorem State.produce_preserves (state : State source target spills)
     (mapping.swapDestinations a b).unmapped_target_slots = mapping.unmapped_target_slots := by
   simp [Mapping.unmapped_target_slots]
 
-private theorem State.swapDestinations_is_final (state : State source target spills)
+theorem State.swapDestinations_is_final (state : State source target spills)
     (a b : Fin state.stack.length) (i : Fin target.length) (hi : state.is_final i)
     (ha : i.val ≠ a.val) (hb : i.val ≠ b.val) :
     ((state.mapping.swapDestinations a b).symm i).map Fin.val = some i.val := by

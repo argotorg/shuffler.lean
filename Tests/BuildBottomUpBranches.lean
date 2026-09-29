@@ -2,6 +2,8 @@ import Shuffler.BuildBottomUp.Defs
 
 set_option maxRecDepth 16384
 
+-- Use the compiled evaluator: cbv reports loose bound variables for build_bottom_up.
+
 namespace BuildBottomUpBranchTests
 
 -- Attaching a proof keeps both success values and errors unchanged.
@@ -25,7 +27,7 @@ example :
       (by decide) (by decide)
       (by intro i; fin_cases i <;> unfold State.is_available <;> decide)).toOption.map
         (fun result => result.1) = some [.Lit 20, .Lit 10, .Lit 7] := by
-  cbv
+  native_decide
 
 -- Keep the first seventeen destinations and leave the eighteenth unbound.
 private def retained : Mapping 17 18 where
@@ -66,7 +68,7 @@ example :
       (by decide) (by decide)
       (by intro i; fin_cases i <;> unfold State.is_available <;> decide)).toOption.map
         (fun result => result.1) = some urgentTarget := by
-  cbv
+  native_decide
 
 private def missingCopyState : State [.Lit 10, .Lit 20] [.Lit 20, .Lit 10, .Var ⟨37⟩] ∅ where
   planned_mapping := ⊥

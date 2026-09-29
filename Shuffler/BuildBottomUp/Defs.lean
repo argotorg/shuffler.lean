@@ -16,9 +16,30 @@
 -- operation and error result. Existing theorems cover stack length, mappings,
 -- and counters.
 
-import Shuffler.BuildBottomUp.Theorems
+import Shuffler.BuildBottomUp.Invariants
 
 open Shuffler.Permute
+
+-- An equal-valued copy that is not final. Swap reach is checked separately.
+-- Keep the copy-search proofs with the position. These fields are erased at runtime.
+structure State.MovableCopy (state : State source target spills)
+    (copy : Fin state.stack.length) extends Fin state.stack.length where
+  equal : state.stack[toFin] = state.stack[copy]
+  not_final : ¬ state.is_final val
+
+instance {state : State source target spills} {copy : Fin state.stack.length} :
+    CoeOut (state.MovableCopy copy) (Fin state.stack.length) where
+  coe pos := pos.toFin
+
+theorem BuildBottomUpInvariant.retag_copy {state : State source target spills}
+    {dest : Fin target.length} {copy : Fin state.stack.length}
+    (h : BuildBottomUpInvariant dest.val state) (pos : state.MovableCopy copy)
+    (hbound : state.mapping.symm dest = some copy) :
+    BuildBottomUpInvariant dest.val
+        { state with mapping := state.mapping.swapDestinations pos copy } ∧
+      (state.mapping.swapDestinations pos copy).symm dest = some pos.toFin := by
+  exact ⟨h.retag pos copy (h.not_final_ge pos pos.not_final)
+    (h.processed.bound_ge dest copy hbound le_rfl), by simp [hbound]⟩
 
 def build_bottom_up
     (cursor : ℕ)
@@ -40,6 +61,11 @@ def build_bottom_up
     if hskip : target_offset.val < state.stack.length ∧ state.is_final target_offset then
       return ← build_bottom_up (cursor + 1) state (hinv.advance hskip.2)
         hsize hpending havailable
+
+    else
+    have hnfinal : ¬ state.is_final target_offset := by
+      intro hfinal
+      exact hskip ⟨state.is_final_lt target_offset hfinal, hfinal⟩
 
     -- all is generated, the final permutation
     if hzero : state.pending_generations = 0 then
@@ -110,68 +136,97 @@ def build_bottom_up
         have hprogress := hpost.2.2.2.2
         return ← build_bottom_up cursor state' hpost.1 hpost.2.1 hpost.2.2.1 hpost.2.2.2.1
 
-    let mut state := state
+    have hentry : BuildBottomUpInvariant cursor state := ⟨hinv, hsize, hpending, havailable⟩
 
+    let ⟨state, hpost, hnfinal⟩ : {state // BuildBottomUpPlacement target_offset state ∧
+        ¬ state.is_final target_offset} ←
     -- a slot is bound for the target: retained or generated already
-    if let some boundForTarget := state.mapping.symm target_offset then
+    if hbound : (state.mapping.symm target_offset).isSome then
+      let boundForTarget := (state.mapping.symm target_offset).get hbound
 
+      have hbound : state.mapping.symm target_offset = some boundForTarget := (Option.some_get hbound).symm
       -- we go bottom up so the slot that should go into target_offset has to be here or above
-      have : boundForTarget.val ≥ target_offset.val := by sorry
+      have hge : boundForTarget.val ≥ target_offset.val := hinv.bound_ge target_offset boundForTarget hbound (by rfl)
 
       let sourceForTargetOffset : Fin state.stack.length := boundForTarget
-      let mut pos : Fin state.stack.length := sourceForTargetOffset
+      let mut pos : state.MovableCopy sourceForTargetOffset :=
+        ⟨sourceForTargetOffset, rfl,
+          state.bound_not_final_of_not_final target_offset sourceForTargetOffset hbound hnfinal⟩
 
       -- if the slot currently occupying targetOffset happens to be an equal copy of that value we're done
       -- and can set `pos` directly to the target offset
-      if state.stack[target_offset] = state.stack[sourceForTargetOffset]'(by sorry) then
-        pos := ⟨target_offset.val, by sorry⟩
+      if hequal : state.stack[target_offset] = state.stack[sourceForTargetOffset] then
+        pos := ⟨⟨target_offset.val, by omega⟩, hequal, hnfinal⟩
 
       -- otherwise search if there is an equal, movable copy shallower than carrier
       else
         for candidate in
             ((List.finRange state.stack.length).reverse.take
               (state.stack.depth_of sourceForTargetOffset).val) do
-          if state.stack[candidate] = state.stack[sourceForTargetOffset] ∧
+          if hcandidate : state.stack[candidate] = state.stack[sourceForTargetOffset] ∧
               ¬ state.is_final candidate.val then
-            pos := candidate
+            pos := ⟨candidate, hcandidate.1, hcandidate.2⟩
             break
 
       -- we picked a valid pos
-      have hposvalid : state.stack[pos.val] = state.stack[sourceForTargetOffset.val] := by sorry
+      have hposvalid : state.stack[pos.val] = state.stack[sourceForTargetOffset.val] := pos.equal
+      have ⟨hpost, hdest⟩ := hentry.retag_copy (dest := target_offset) pos hbound
 
       -- update the destinations if needed
-      state := {
+      let state := {
         state with
         mapping := state.mapping.swapDestinations pos sourceForTargetOffset
       }
 
       -- we're already done, go to the next loop
-      if pos.val = target_offset.val then
-        return ← build_bottom_up (cursor + 1) state (by sorry) (by sorry) (by sorry) (by sorry)
+      if hplaced : pos.val = target_offset.val then
+        have hfinal := (state.is_final_of_bound_iff target_offset pos hdest).mpr hplaced
+        return ← build_bottom_up (cursor + 1) state (hpost.processed.advance hfinal)
+          hpost.size hpost.pending hpost.available
 
+      else
       -- if pos is not already at the top of the stack, swap it up
-      if pos.val ≠ state.stack.length - 1 then
-        if ¬ (state.stack.is_swap_reachable pos) then
-          throw (.Blocked sorry)
-        state := state.swapWith pos (by sorry) (by sorry) (by sorry)
+      if hnotTop : pos.val ≠ state.stack.length - 1 then
+        if hreach : ¬ state.stack.is_swap_reachable pos then
+          throw (.Blocked (state.stack.depth_of pos - MAX_SWAP_DEPTH))
+        else
+        have hbelow := state.stack.below_of_not_top pos hnotTop
+        let state := state.swapWith pos hbelow (not_not.mp hreach)
+          (state.bound_not_final target_offset pos hdest hplaced)
+        pure ⟨state, hpost.swap_bound pos hdest hbelow (not_not.mp hreach) hplaced⟩
+      else
+        pure ⟨state, hpost.bound_at_top pos hdest (not_not.mp hnotTop) hplaced⟩
 
     -- the slot needs to be generated
     else
-      state ← state.generate target_offset (by sorry) (by sorry)
+      have hbound : state.mapping.symm target_offset = none := by simpa using hbound
+      let ⟨state, hresult⟩ ← (state.generate target_offset hbound (havailable target_offset)).attach
+      have hpost := hentry.generate_placement (dest := target_offset) hbound hresult
 
       -- `generate` might have already placed the slot into the target offset, then we're done for this offset
-      if state.is_final target_offset then
-        return ← build_bottom_up (cursor + 1) state (by sorry) (by sorry) (by sorry) (by sorry)
+      if hfinal : state.is_final target_offset then
+        return ← build_bottom_up (cursor + 1) state (hpost.processed.advance hfinal)
+          hpost.size hpost.pending hpost.available
+      else
+        pure ⟨state, hpost, hfinal⟩
 
     -- we might have to swap the top down into the target offset
-    have hnfinal : ¬ state.is_final target_offset := by sorry
-    if target_offset.val ≠ state.stack.length - 1 then
-      if ¬ state.stack.is_swap_reachable ⟨target_offset.val, by sorry⟩ then
-        throw (.Blocked sorry)
-      state := state.swapWith ⟨target_offset.val, by sorry⟩ (by sorry) (by sorry) (by sorry)
+    let ⟨state, hpost⟩ : {state // BuildBottomUpInvariant (cursor + 1) state} ←
+      if hnotTop : target_offset.val ≠ state.stack.length - 1 then
+        let pos : Fin state.stack.length := ⟨target_offset.val, hpost.in_bounds⟩
+        have hbelow := state.stack.below_of_not_top pos hnotTop
+        if hreach : ¬ state.stack.is_swap_reachable pos then
+          throw (.Blocked (state.stack.depth_of pos - MAX_SWAP_DEPTH))
+        else
+          let state := state.swapWith pos hbelow (not_not.mp hreach) hnfinal
+          pure ⟨state, hpost.swap_final hbelow (not_not.mp hreach) hnfinal⟩
+      else
+        pure ⟨state, hpost.finish_at_top (not_not.mp hnotTop)⟩
 
-    return ← build_bottom_up (cursor + 1) state (by sorry) (by sorry) (by sorry) (by sorry)
+    return ← build_bottom_up (cursor + 1) state hpost.processed
+      hpost.size hpost.pending hpost.available
 
+-- Advancing decreases the first component; revisiting decreases the second.
 termination_by (target.length - cursor, state.pending_generations)
 decreasing_by
   all_goals omega
