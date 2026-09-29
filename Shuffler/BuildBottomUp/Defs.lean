@@ -110,7 +110,68 @@ def build_bottom_up
       have hprogress := hpost.2.2.2.2
       return ← build_bottom_up target_offset state' hpost.1 hpost.2.1 hpost.2.2.1 hpost.2.2.2.1
 
-  sorry
+  let mut state := state
+
+  -- a slot is bound for the target: retained or generated already
+  if let some boundForTarget := state.mapping.symm target_offset then
+
+    -- we go bottom up so the slot that should go into target_offset has to be here or above
+    have : boundForTarget.val ≥ target_offset.val := by sorry
+
+    let sourceForTargetOffset : Fin state.stack.length := boundForTarget
+    let mut pos : Fin state.stack.length := sourceForTargetOffset
+
+    -- if the slot currently occupying targetOffset happens to be an equal copy of that value we're done
+    -- and can set `pos` directly to the target offset
+    if state.stack[target_offset] = state.stack[sourceForTargetOffset]'(by sorry) then
+      pos := ⟨target_offset.val, by sorry⟩
+
+    -- otherwise search if there is an equal, movable copy shallower than carrier
+    else
+      for candidate in
+          ((List.finRange state.stack.length).reverse.take
+            (state.stack.depth_of sourceForTargetOffset).val) do
+        if state.stack[candidate] = state.stack[sourceForTargetOffset] ∧
+            ¬ state.is_final candidate.val then
+          pos := candidate
+          break
+
+    -- we picked a valid pos
+    have hposvalid : state.stack[pos.val] = state.stack[sourceForTargetOffset.val] := by sorry
+
+    -- update the destinations if needed
+    state := {
+      state with
+      mapping := state.mapping.swapDestinations pos sourceForTargetOffset
+    }
+
+    -- we're already done, go to the next loop
+    if pos.val = target_offset.val then
+      return ← build_bottom_up ⟨target_offset.val + 1, by sorry⟩ state (by sorry) (by sorry) (by sorry) (by sorry)
+
+    -- if pos is not already at the top of the stack, swap it up
+    if pos.val ≠ state.stack.length - 1 then
+      if ¬ (state.stack.is_swap_reachable pos) then
+        throw (.Blocked sorry)
+      state := state.swapWith pos (by sorry) (by sorry) (by sorry)
+
+  -- the slot needs to be generated
+  else
+    state ← state.generate target_offset (by sorry) (by sorry)
+
+    -- `generate` might have already placed the slot into the target offset, then we're done for this offset
+    if state.is_final target_offset then
+      return ← build_bottom_up ⟨target_offset.val + 1, by sorry⟩ state (by sorry) (by sorry) (by sorry) (by sorry)
+
+  -- we might have to swap the top down into the target offset
+  have hnfinal : ¬ state.is_final target_offset := by sorry
+  if target_offset.val ≠ state.stack.length - 1 then
+    if ¬ state.stack.is_swap_reachable ⟨target_offset.val, by sorry⟩ then
+      throw (.Blocked sorry)
+    state := state.swapWith ⟨target_offset.val, by sorry⟩ (by sorry) (by sorry) (by sorry)
+
+  return ← build_bottom_up ⟨target_offset.val + 1, by sorry⟩ state (by sorry) (by sorry) (by sorry) (by sorry)
+
 termination_by target.length - target_offset.val + state.pending_generations
 decreasing_by
   · have hnext : (target_offset + 1).val = target_offset.val + 1 :=
