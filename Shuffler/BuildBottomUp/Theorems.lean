@@ -240,14 +240,14 @@ theorem State.generate_effects (state : State source target spills)
       exact ⟨hlen, hcount, hcounter, hfinal, hsubset⟩
 
 theorem State.generate_preserves (state : State source target spills)
-    (target_offset dest : Fin target.length)
-    (hinv : LoopInvariant target_offset state)
+    (cursor : ℕ) (dest : Fin target.length)
+    (hinv : LoopInvariant cursor state)
     (hsize : state.stack.length + state.pending_generations = target.length)
     (hpending : state.mapping.unmapped_target_slots = state.pending_generations)
     (havailable : ∀ i, state.is_available i)
     (hdest : state.mapping.symm dest = none) {state' : State source target spills}
     (hresult : state.generate dest hdest (havailable dest) = .ok state') :
-    LoopInvariant target_offset state' ∧
+    LoopInvariant cursor state' ∧
       state'.stack.length + state'.pending_generations = target.length ∧
       state'.mapping.unmapped_target_slots = state'.pending_generations ∧
       (∀ i, state'.is_available i) ∧

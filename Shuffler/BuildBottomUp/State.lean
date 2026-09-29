@@ -19,7 +19,6 @@ structure State (source target : Stack) (spills : SpillSet) where
   pending_generations : ℕ
 
 
-
 -- An offset is final when its assigned source has the same offset.
 -- Offsets outside the target's bounds are not final.
 def State.is_final (state : State source target spills) (offset : ℕ) : Prop :=
@@ -33,28 +32,21 @@ instance (state : State source target spills) (offset : ℕ) :
   infer_instance
 
 def LoopInvariant
-    (target_offset : Fin target.length)
+    (cursor : ℕ)
     (state : State source target spills) : Prop :=
-  ∀ i : Fin target.length, i < target_offset → state.is_final i
+  ∀ i : Fin target.length, i.val < cursor → state.is_final i
 
 theorem LoopInvariant.advance
-    {target_offset : Fin target.length}
+    {cursor : ℕ}
     {state : State source target spills}
-    [NeZero target.length]
-    (hinv : LoopInvariant target_offset state)
-    (hfinal : state.is_final target_offset)
-    (hnext : target_offset.val + 1 < target.length) :
-    LoopInvariant (target_offset + 1) state := by
-  have hval : (target_offset + 1).val = target_offset.val + 1 :=
-    Fin.val_add_one_of_lt' hnext
+    (hinv : LoopInvariant cursor state)
+    (hfinal : state.is_final cursor) :
+    LoopInvariant (cursor + 1) state := by
   intro i hi
-  by_cases hlt : i < target_offset
+  by_cases hlt : i.val < cursor
   · exact hinv i hlt
-  · have heq : i = target_offset := by
-      apply Fin.ext
-      simp only [Fin.lt_def] at hi hlt
-      omega
-    simpa [heq] using hfinal
+  · have heq : i.val = cursor := by omega
+    simpa only [heq] using hfinal
 
 def Stack.shallowest_copy_position (stack : Stack) (slot : Value) :
     Option (Fin stack.length) :=
@@ -159,24 +151,6 @@ def State.produce (state : State source target spills) (target_offset : Fin targ
   let state' ← produced
   return { state' with pending_generations := state'.pending_generations - 1 }
 
-/-
-  void swap(Offset const& _offset)
-  {
-      yulAssert(isValidSwapTarget(_offset), "Stack too deep");
-      std::swap((*m_data)[_offset.value], m_data->back());
-      if (m_trace)
-          m_trace->push_back(ShuffleOp::swap(offsetToDepth(_offset)));
-  }
-
-	/// Swaps the top with the slot at `_pos`, the destinations traveling along
-	void swapWith(StackOffset const _pos)
-	{
-		yulAssert(!isFinal(_pos), "swapping a final slot out of place");
-		m_stack.swap(_pos);
-		m_mapping.swapDestinations(_pos, StackOffset{m_data.size() - 1});
-	}
--/
-
 -- swaps the top with the slot at pos. mapping destinations follow.
 -- NOTE: we mirror the assertion structure of the c++ by adding _hnotfinal as a requirement even though it is not needed by the body
 def State.swapWith (state : State source target spills) (pos : Fin state.stack.length)
@@ -198,30 +172,6 @@ def State.swapWith (state : State source target spills) (pos : Fin state.stack.l
     trace := hstack ▸ Trace.Swap depth.val depth.isLt
       (by dsimp [depth, Stack.depth_of]; omega) hswap state.trace
   }
-
-/-
-  /// Produces the slot for `_targetOffset` and moves it toward its place right away: if the offset exists
-	/// already and holds a slot that is not final, a single swap places the produced slot and floats the other
-	/// one, which may be its own placement. An equal slot there just takes over the destination.
-	[[nodiscard]] std::optional<Blocked> generate(StackOffset const _targetOffset)
-	{
-		if (std::optional<Blocked> blocked = produce(_targetOffset))
-			return blocked;
-		// `produce` left the slot on top; swap it down only if its offset exists strictly below the top:
-		// as the top itself it is in place already, beyond the height it has to wait on top anyway
-		if (_targetOffset.value + 1 < m_data.size() && !isFinal(_targetOffset))
-		{
-			if (m_data[_targetOffset.value] == m_data.back())
-				// an equal slot stands at the offset: retag instead of swapping two equal slots
-				m_mapping.swapDestinations(_targetOffset, StackOffset{m_data.size() - 1});
-			else if (isSwapReachable(_targetOffset))
-				swapWith(_targetOffset);
-			// out of swap reach: leave the slot on top; buildBottomUp re-checks reach when filling the offset
-		}
-		return std::nullopt;
-	}
-
--/
 
 def State.generate (state : State source target spills) (target_offset : Fin target.length)
     (hdest : state.mapping.symm target_offset = none)

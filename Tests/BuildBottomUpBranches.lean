@@ -18,7 +18,7 @@ private def newTopState : State [.Lit 10, .Lit 20] [.Lit 20, .Lit 10, .Lit 7] �
 
 private theorem newTopInvariant : LoopInvariant 0 newTopState := by
   intro i hi
-  exact (Fin.not_lt_zero i hi).elim
+  omega
 
 example :
     (build_bottom_up 0 newTopState newTopInvariant
@@ -50,7 +50,7 @@ private def urgentState : State urgentSource urgentTarget ∅ where
   mapping := retained.swapDestinations 2 3
   pending_generations := 1
 
-private theorem urgentInvariant : LoopInvariant ⟨2, by decide⟩ urgentState := by
+private theorem urgentInvariant : LoopInvariant 2 urgentState := by
   intro i hi
   rcases i with ⟨i, hibound⟩
   change i < 2 at hi
@@ -62,7 +62,7 @@ private theorem urgentInvariant : LoopInvariant ⟨2, by decide⟩ urgentState :
     decide
 
 example :
-    (build_bottom_up ⟨2, by decide⟩ urgentState urgentInvariant
+    (build_bottom_up 2 urgentState urgentInvariant
       (by decide) (by decide)
       (by intro i; fin_cases i <;> unfold State.is_available <;> decide)).toOption.map
         (fun result => result.1) = some urgentTarget := by
@@ -77,7 +77,7 @@ private def missingCopyState : State [.Lit 10, .Lit 20] [.Lit 20, .Lit 10, .Var 
 
 -- An unavailable target value cannot satisfy the new input condition.
 #check_failure (build_bottom_up 0 missingCopyState
-  (by intro i hi; exact (Fin.not_lt_zero i hi).elim)
+  (by intro i hi; omega)
   (by decide) (by decide)
   (by intro i; fin_cases i <;> unfold State.is_available <;> decide))
 
@@ -90,7 +90,7 @@ private def surplusState : State [.Lit 10, .Lit 20, .Lit 7] [.Lit 20, .Lit 10, .
 
 -- A stack at target height cannot reserve room for another generation.
 #check_failure (build_bottom_up 0 surplusState
-  (by intro i hi; exact (Fin.not_lt_zero i hi).elim)
+  (by intro i hi; omega)
   (by decide) (by decide)
   (by intro i; fin_cases i <;> unfold State.is_available <;> decide))
 

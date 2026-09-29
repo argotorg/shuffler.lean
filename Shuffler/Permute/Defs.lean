@@ -27,6 +27,10 @@ end Permutation
 -- permute takes a stack and a permutation, and returns the series of swap
 -- operations required to transform the source into the result of applying the
 -- permutation to it.
+-- TODO: Match C++ by reassigning destinations among equal values before processing
+-- cycles. Keep positions already at a destination needed by their group, then
+-- pair the remaining positions and destinations in ascending order.
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:629-675.
 def permute
   (spills : SpillSet)
   (source : Stack)
@@ -36,6 +40,10 @@ def permute
   then go source perm (.Lit source) hne rfl
   else .ok ⟨source, .Lit source⟩
   where
+    -- TODO: In both exchange branches, compare the selected value with the top
+    -- before checking SWAP reach. For equal values, exchange their permutation
+    -- destinations without changing the stack or emitting a swap, as C++ does.
+    -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:677-687.
     go (current : Stack) (perm : Permutation source) (trace : Trace spills source current) (hne : source.length > 0) (hlen : current.length = source.length) : Except ShuffleErr ((result : Stack) × Trace spills source result) :=
       let top : Fin source.length := ⟨source.length - 1, by omega⟩
       have htop : top.val = source.length - 1 := rfl
