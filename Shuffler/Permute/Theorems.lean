@@ -2,7 +2,10 @@ import Shuffler.Permute.Optimality
 
 namespace Shuffler.Permute
 
--- Blocked reports the excess depth of a moved position in the original permutation.
+-- `hnreachable` says that `perm` moves a position deeper than `MAX_SWAP_DEPTH`.
+-- The run returns `.Blocked x`, where `x` is positive.
+-- The witness `i ∈ perm.support` identifies a moved position in the input permutation.
+-- Its depth, `i.rev.val`, exceeds the limit by exactly `x`.
 theorem permute_blocks_unreachable
     (spills : SpillSet)
     (source : Stack) (perm : Permutation source)
@@ -35,6 +38,11 @@ theorem permute_blocks_unreachable
     obtain rfl : source = [] := by simpa using Nat.eq_zero_of_not_pos hne
     exact False.elim (hnreachable (fun i => Fin.elim0 i))
 
+-- `hreachable` says that every position moved by `perm` is within the swap depth limit.
+-- There is then a result stack and a trace that `permute` successfully returns.
+-- The equality after `∧` says that the result is the requested permutation of `source`:
+-- the value at each source position `i` goes to target position `perm i`.
+-- This also covers the empty stack, which requires no swaps.
 theorem permute_applies_permutation_reachable
     (spills : SpillSet)
     (source : Stack) (perm : Permutation source)
@@ -67,8 +75,11 @@ theorem permute_applies_permutation_reachable
     obtain rfl : source = [] := by simpa using Nat.eq_zero_of_not_pos hne
     exact ⟨[], .Lit [], rfl, by simp [apply_permutation]⟩
 
--- Every successful run uses exactly the count determined by its initial cycles.
--- Arbitrary traces need not satisfy this: they may contain redundant swaps.
+-- `hne` makes the top position, `source.length - 1`, available.
+-- `hresult` says that `permute` successfully returned this stack and trace.
+-- The emitted swap count equals the count computed from the input permutation:
+-- moved positions below the top, plus cycles of length at least two that exclude the top.
+-- This is an exact count for the returned trace.
 theorem permute_swapCount
     (spills : SpillSet)
     (source : Stack) (perm : Permutation source) (hne : 0 < source.length)
@@ -120,7 +131,10 @@ theorem permute_swapCount
     cases hresult
     simp [hperm]
 
--- This bound also covers the empty stack. Fixed points are not counted as cycles.
+-- Given a successful return in `hresult`, bound the number of emitted swaps by
+-- the number of moved positions plus the number of cycles of length at least two.
+-- `perm.support` contains the moved positions; `cycleFactorsFinset` contains those cycles.
+-- This upper bound also covers the empty stack, without requiring a top position.
 theorem permute_swapCount_le
     (spills : SpillSet)
     (source : Stack) (perm : Permutation source)
@@ -134,8 +148,11 @@ theorem permute_swapCount_le
     cases hresult
     simp [Trace.swapCount]
 
--- Optimality concerns the supplied permutation of positions, including equal values.
--- The comparison permits all top swaps, so it also covers the depth-limited subset.
+-- For a successful run on a nonempty stack, the set contains all lengths of lists
+-- of top swaps whose composition equals `perm`.
+-- `IsLeast` says that the emitted count belongs to this set and no smaller length does.
+-- Thus `permute` attains the minimum for the given position permutation, including equal values.
+-- The comparison allows every swap depth, so it also covers all permitted top swaps.
 theorem permute_swapCount_optimal
     (spills : SpillSet) (source : Stack) (perm : Permutation source)
     (hne : 0 < source.length) {res : Stack} {trace : Trace spills source res}
@@ -146,7 +163,10 @@ theorem permute_swapCount_optimal
   rw [permute_swapCount spills source perm hne hresult]
   exact Permutation.swapCount_isLeast perm _
 
--- The exact excess over the arbitrary-swap minimum is two per cycle away from the top.
+-- For a successful run on a nonempty stack, compare the emitted count with
+-- `arbitrarySwapCount perm`, the minimum when swaps may use any two positions.
+-- Each cycle of length at least two that excludes the top adds exactly two swaps.
+-- If there are no such cycles, `permute` also attains the arbitrary-swap minimum.
 theorem permute_swapCount_eq_arbitrarySwapCount_add
     (spills : SpillSet) (source : Stack) (perm : Permutation source)
     (hne : 0 < source.length) {res : Stack} {trace : Trace spills source res}
@@ -156,7 +176,10 @@ theorem permute_swapCount_eq_arbitrarySwapCount_add
   rw [permute_swapCount spills source perm hne hresult]
   exact Permutation.swapCount_eq_arbitrarySwapCount_add perm _
 
--- This bound includes the empty stack and the identity permutation.
+-- `hresult` identifies the trace returned by a successful run of `permute`.
+-- Its swap count is at most three times the minimum for swaps between any two positions.
+-- `arbitrarySwapCount_isLeast` proves that `arbitrarySwapCount perm` is that minimum.
+-- The inequality also covers the empty stack and a minimum of zero swaps.
 theorem permute_swapCount_le_three_mul_arbitrarySwapCount
     (spills : SpillSet) (source : Stack) (perm : Permutation source)
     {res : Stack} {trace : Trace spills source res}
@@ -169,6 +192,10 @@ theorem permute_swapCount_le_three_mul_arbitrarySwapCount
     cases hresult
     simp [Trace.swapCount]
 
+-- Each pair in `swaps` names the endpoints of a swap; `hprod` says their composition is `perm`.
+-- `hresult` identifies the trace returned by a successful run of `permute`.
+-- Its count is at most three times the length of any such list, even if the list is not shortest.
+-- This applies the factor-three bound using the lower bound on `swaps.length`.
 theorem permute_swapCount_le_three_mul_length_swaps
     (spills : SpillSet) (source : Stack) (perm : Permutation source)
     {res : Stack} {trace : Trace spills source res}
