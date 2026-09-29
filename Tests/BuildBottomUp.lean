@@ -40,7 +40,7 @@ def emptyState (target : Stack) (spills : SpillSet) : State [] target spills whe
 def spilled : State [] [.Var ⟨37⟩] {⟨37⟩} := emptyState _ _
 
 -- Produce loads a spilled variable even when the stack has no copy.
-example : spilled.produce 0 rfl =
+example : spilled.produce 0 rfl (by unfold State.is_available; decide) =
     .ok { spilled.push (.Var ⟨37⟩) 0 (by decide) rfl with pending_generations := 0 } := rfl
 
 -- Loading fills the last unbound target position; produce updates the counter.
@@ -49,10 +49,10 @@ example : ((spilled.push (.Var ⟨37⟩) 0 (by decide) rfl).mapping.symm 0).map 
     some 0 := rfl
 
 -- Produce can also push a literal when no copy exists.
-example : (emptyState [.Lit 0] ∅).produce 0 rfl =
+example : (emptyState [.Lit 0] ∅).produce 0 rfl (by unfold State.is_available; decide) =
     .ok { (emptyState [.Lit 0] ∅).push (.Lit 0) 0 (by decide) rfl with pending_generations := 0 } := rfl
 
-example : (emptyState [.Wildcard] ∅).produce 0 rfl =
+example : (emptyState [.Wildcard] ∅).produce 0 rfl (by unfold State.is_available; decide) =
     .ok { (emptyState [.Wildcard] ∅).push .Wildcard 0 (by decide) rfl with pending_generations := 0 } := rfl
 
 def copyState (depth : ℕ) (spills : SpillSet) :
@@ -64,13 +64,15 @@ def copyState (depth : ℕ) (spills : SpillSet) :
   pending_generations := 1
 
 -- The deepest reachable copy is duplicated, even if it is also spilled.
-example : (copyState MAX_DUP_DEPTH {⟨37⟩}).produce 0 rfl =
+example : (copyState MAX_DUP_DEPTH {⟨37⟩}).produce 0 rfl (by unfold State.is_available; decide) =
     .ok { (copyState MAX_DUP_DEPTH {⟨37⟩}).dup ⟨0, by decide⟩ 0 (by decide) rfl with
       pending_generations := 0 } := rfl
 
 -- One slot beyond DUP reach blocks unless a spill can be loaded.
-example : (copyState (MAX_DUP_DEPTH + 1) ∅).produce 0 rfl = .error (.Blocked 1) := rfl
-example : (copyState (MAX_DUP_DEPTH + 1) {⟨37⟩}).produce 0 rfl =
+example : (copyState (MAX_DUP_DEPTH + 1) ∅).produce 0 rfl
+    (by unfold State.is_available; decide) = .error (.Blocked 1) := rfl
+example : (copyState (MAX_DUP_DEPTH + 1) {⟨37⟩}).produce 0 rfl
+    (by unfold State.is_available; decide) =
     .ok { (copyState (MAX_DUP_DEPTH + 1) {⟨37⟩}).push (.Var ⟨37⟩) 0 (by decide) rfl with
       pending_generations := 0 } := rfl
 
@@ -79,7 +81,8 @@ example : (copyState (MAX_DUP_DEPTH + 1) {⟨37⟩}).produce 0 rfl =
 #check_failure (spilled.push (.Var ⟨38⟩) 0 (by decide) rfl)
 
 -- Produce requires a copy, a spill, or a value that can be freely generated.
-#check_failure ((emptyState [.Var ⟨37⟩] ∅).produce 0 rfl)
+#check_failure ((emptyState [.Var ⟨37⟩] ∅).produce 0 rfl (by unfold State.is_available; decide))
+#check_failure ((emptyState [.Var ⟨37⟩] {⟨38⟩}).produce 0 rfl (by unfold State.is_available; decide))
 
 /-- info: 'State.produce' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in

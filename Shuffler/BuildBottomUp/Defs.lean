@@ -8,7 +8,7 @@
 -- TODO: Prove caller counter consistency: pending_generations must equal the
 -- unmapped target count. At zero, Nat subtraction saturates; C++ size_t wraps.
 -- TODO: Prove availability on the current stack at each caller. The precondition
--- excludes the final branch; unreachable! is a panic, not a C++ assertion exception.
+-- excludes the final branch.
 -- TODO: State the value correspondence. C++ compares literal instruction IDs;
 -- Lean compares words. This relies on literal deduplication within one store
 -- (solidity/libyul/backends/evm/ssa/InstructionStore.h:193).
@@ -32,12 +32,15 @@ structure State (source target : Stack) (spills : SpillSet) where
 
 
 
+-- An offset is final when its assigned source has the same offset.
+-- Offsets outside the target's bounds are not final.
+def State.is_final (state : State source target spills) (offset : ℕ) : Prop :=
+  if h : offset < target.length then
+    (state.mapping.symm ⟨offset, h⟩).map Fin.val = some offset
+  else False
 
-def State.is_final (state : State source target spills) (target_offset : Fin target.length)
-  := (state.mapping.symm target_offset).map Fin.val = some target_offset.val
-
-instance (state : State source target spills) (target_offset : Fin target.length) :
-    Decidable (state.is_final target_offset) := by
+instance (state : State source target spills) (offset : ℕ) :
+    Decidable (state.is_final offset) := by
   unfold State.is_final
   infer_instance
 
@@ -76,9 +79,21 @@ def Stack.depth_of (stack : Stack) (idx : Fin stack.length) : Fin stack.length :
 def Stack.is_dup_reachable (stack : Stack) (pos : Fin stack.length) : Prop :=
   (stack.depth_of pos) ≤ MAX_DUP_DEPTH
 
+def Stack.is_swap_reachable (stack : Stack) (pos : Fin stack.length) : Prop :=
+  (stack.depth_of pos) ≤ MAX_SWAP_DEPTH
+
+def State.is_available (state : State source target spills) (target_offset : Fin target.length) : Prop :=
+  let slot := target[target_offset]
+  slot.can_be_freely_generated ∨ spills.is_spilled slot ∨ (state.stack.shallowest_copy_position slot).isSome
+
 instance (stack : Stack) (pos : Fin stack.length) :
     Decidable (stack.is_dup_reachable pos) := by
   unfold Stack.is_dup_reachable
+  infer_instance
+
+instance (stack : Stack) (pos : Fin stack.length) :
+    Decidable (stack.is_swap_reachable pos) := by
+  unfold Stack.is_swap_reachable
   infer_instance
 
 -- C++: solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:786 (Emission::dup)
@@ -125,10 +140,7 @@ def State.push (state : State source target spills) (slot : Value) (dest : Fin t
 -- C++: solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:388 (Emission::produce)
 def State.produce (state : State source target spills) (target_offset : Fin target.length)
     (hdest : state.mapping.symm target_offset = none)
-    (_havailable :
-      let slot := target[target_offset]
-      slot.can_be_freely_generated ∨ spills.is_spilled slot ∨
-        (state.stack.shallowest_copy_position slot).isSome := by decide) :
+    (havailable : state.is_available target_offset) :
     Except ShuffleErr (State source target spills) := do
   let slot := target[target_offset]
   let copy := state.stack.shallowest_copy_position slot
@@ -146,16 +158,57 @@ def State.produce (state : State source target spills) (target_offset : Fin targ
     if hfree : slot.can_be_freely_generated ∨ spills.is_spilled slot then
       return state.push slot target_offset hfree hdest
 
-    else if let some pos := copy then
+    else if hcopy : copy.isSome then
+      let pos := copy.get hcopy
       throw (.Blocked (state.stack.depth_of pos - MAX_DUP_DEPTH))
 
     else
-      -- The slot has no copy on the stack and cannot be generated or loaded from a spill.
-      unreachable!
-      return state
+      -- unreacahble: generated slot has no copy on the stack and is not spilled
+      False.elim (hfree (by
+        change slot.can_be_freely_generated ∨ spills.is_spilled slot ∨ copy.isSome at havailable
+        simpa only [hcopy, Bool.false_eq_true, or_false] using havailable))
 
   let state' ← produced
   return { state' with pending_generations := state'.pending_generations - 1 }
+
+/-
+  void swap(Offset const& _offset)
+  {
+      yulAssert(isValidSwapTarget(_offset), "Stack too deep");
+      std::swap((*m_data)[_offset.value], m_data->back());
+      if (m_trace)
+          m_trace->push_back(ShuffleOp::swap(offsetToDepth(_offset)));
+  }
+
+	/// Swaps the top with the slot at `_pos`, the destinations traveling along
+	void swapWith(StackOffset const _pos)
+	{
+		yulAssert(!isFinal(_pos), "swapping a final slot out of place");
+		m_stack.swap(_pos);
+		m_mapping.swapDestinations(_pos, StackOffset{m_data.size() - 1});
+	}
+-/
+
+-- swaps the top with the slot at pos. mapping destinations follow.
+-- NOTE: we mirror the assertion structure of the c++ by adding _hnotfinal as a requirement even though it is not needed by the body
+def State.swapWith (state : State source target spills) (pos : Fin state.stack.length)
+    (hbelow : pos.val + 1 < state.stack.length)
+    (hswap : state.stack.is_swap_reachable pos)
+    (_hnotfinal : ¬ state.is_final pos.val) : State source target spills :=
+  let depth := state.stack.depth_of pos
+  have hpos : state.stack.length - 1 - depth.val = pos.val := by dsimp [depth, Stack.depth_of]; omega
+  have hstack : state.stack.swap (state.stack.length - 1) (state.stack.length - 1 - depth.val) =
+      state.stack.swap pos (state.stack.length - 1) := by
+    rw [hpos, List.swap_comm]
+  {
+    state with
+    stack := state.stack.swap pos (state.stack.length - 1)
+    mapping := by
+      simpa only [List.length_swap] using
+        state.mapping.swapDestinations pos ⟨state.stack.length - 1, by have := pos.isLt; omega⟩
+    trace := hstack ▸ Trace.Swap depth.val depth.isLt
+      (by dsimp [depth, Stack.depth_of]; omega) hswap state.trace
+  }
 
 /-
   /// Produces the slot for `_targetOffset` and moves it toward its place right away: if the offset exists
@@ -180,6 +233,31 @@ def State.produce (state : State source target spills) (target_offset : Fin targ
 	}
 
 -/
+
+def State.generate (state : State source target spills) (target_offset : Fin target.length)
+    (hdest : state.mapping.symm target_offset = none)
+    (havailable : state.is_available target_offset)
+    : Except ShuffleErr (State source target spills) := do
+
+  let state ← state.produce target_offset hdest havailable
+
+  -- try to place the produced value if it's target position is below the current top and not already final
+  -- otherwise:
+  --  - the new slot is final, no need to swap
+  --  - the target position of the new slot is above the current top, so need to wait for the stack to grow before placing
+  if hswap : target_offset.val + 1 < state.stack.length ∧ ¬ (state.is_final target_offset) then
+    let pos : Fin state.stack.length := ⟨target_offset.val, by omega⟩
+    if state.stack[pos] = state.stack.getLast (by intro h; simp [h] at hswap) then
+      -- produce binds the current top to target_offset
+      -- if the current top and the slot at target_offset are the same, just retag them in the mapping and skip a swap of identical items
+      return {
+        state with
+        mapping := state.mapping.swapDestinations pos ⟨state.stack.length - 1, by omega⟩
+      }
+    else if hreach : state.stack.is_swap_reachable pos then
+      return state.swapWith pos hswap.1 hreach hswap.2
+
+  return state
 
 
 def build_bottom_up

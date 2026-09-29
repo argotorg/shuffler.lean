@@ -39,6 +39,11 @@ def bind (mapping : Mapping source_len target_len) (p : Fin source_len) (d : Fin
     · subst hb; simp [PEquiv.eq_some_iff, hp, Ne.symm ha]
     · exact PEquiv.mem_iff_mem mapping
 
+-- Exchange the destinations of two source positions, including unbound positions.
+def swapDestinations (mapping : Mapping source_len target_len) (a b : Fin source_len) :
+    Mapping source_len target_len :=
+  (Equiv.swap a b).toPEquiv.trans mapping
+
 -- push adds a new source top and binds it to an unbound target; all existing bindings stay unchanged.
 def push (mapping : Mapping source_len target_len) (dst : Fin target_len)
     (hdst : mapping.symm dst = none) : Mapping (source_len + 1) target_len := by
@@ -158,6 +163,62 @@ theorem unmapped_target_slots_eq_zero (mapping : Mapping source_len target_len) 
     (mapping.bind p d hp hd).symm j = mapping.symm j := by
   change Function.update mapping.symm d (some p) j = _
   simp [hj]
+
+-- Look up the source position after exchanging a and b.
+@[simp] theorem swapDestinations_apply (mapping : Mapping source_len target_len)
+    (a b p : Fin source_len) :
+    mapping.swapDestinations a b p = mapping (Equiv.swap a b p) := by
+  simp [swapDestinations, PEquiv.trans, Equiv.toPEquiv]
+
+-- The first source position receives the second position's destination.
+theorem swapDestinations_apply_left (mapping : Mapping source_len target_len)
+    (a b : Fin source_len) : mapping.swapDestinations a b a = mapping b := by
+  simp
+
+-- The second source position receives the first position's destination.
+theorem swapDestinations_apply_right (mapping : Mapping source_len target_len)
+    (a b : Fin source_len) : mapping.swapDestinations a b b = mapping a := by
+  simp
+
+-- All other source positions keep their destinations.
+theorem swapDestinations_apply_of_ne (mapping : Mapping source_len target_len)
+    {a b p : Fin source_len} (ha : p ≠ a) (hb : p ≠ b) :
+    mapping.swapDestinations a b p = mapping p := by
+  simp [Equiv.swap_apply_of_ne_of_ne ha hb]
+
+-- Inverse lookups exchange a and b and keep unbound targets unbound.
+@[simp] theorem swapDestinations_symm_apply (mapping : Mapping source_len target_len)
+    (a b : Fin source_len) (d : Fin target_len) :
+    (mapping.swapDestinations a b).symm d = (mapping.symm d).map (Equiv.swap a b) := by
+  rcases hd : mapping.symm d with _ | p
+  · refine Option.eq_none_iff_forall_ne_some.2 fun q hq => ?_
+    rw [PEquiv.eq_some_iff, swapDestinations_apply, ← PEquiv.eq_some_iff, hd] at hq
+    cases hq
+  · rw [Option.map_some, PEquiv.eq_some_iff, swapDestinations_apply, Equiv.swap_apply_self,
+      ← PEquiv.eq_some_iff, hd]
+
+-- A target bound to the first position becomes bound to the second position.
+theorem swapDestinations_symm_of_symm_eq_left (mapping : Mapping source_len target_len)
+    (a b : Fin source_len) (d : Fin target_len) (hd : mapping.symm d = some a) :
+    (mapping.swapDestinations a b).symm d = some b := by
+  simp [hd]
+
+-- A target bound to the second position becomes bound to the first position.
+theorem swapDestinations_symm_of_symm_eq_right (mapping : Mapping source_len target_len)
+    (a b : Fin source_len) (d : Fin target_len) (hd : mapping.symm d = some b) :
+    (mapping.swapDestinations a b).symm d = some a := by
+  simp [hd]
+
+-- Exchanging the same pair twice restores the mapping.
+@[simp] theorem swapDestinations_swapDestinations (mapping : Mapping source_len target_len)
+    (a b : Fin source_len) :
+    (mapping.swapDestinations a b).swapDestinations a b = mapping := by
+  simp [swapDestinations, ← PEquiv.trans_assoc, ← Equiv.toPEquiv_trans]
+
+-- Exchanging a position with itself leaves the mapping unchanged.
+theorem swapDestinations_self (mapping : Mapping source_len target_len) (a : Fin source_len) :
+    mapping.swapDestinations a a = mapping := by
+  simp [swapDestinations]
 
 -- Pushing to d binds the new source top to d.
 @[simp] theorem push_apply_top (mapping : Mapping source_len target_len)
