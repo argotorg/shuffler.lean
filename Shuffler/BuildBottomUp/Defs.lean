@@ -36,82 +36,94 @@ def index (size offset : ℕ) : M (Fin size) := do
 def slotAt (stack : Stack) (offset : ℕ) : M Value := do
   return stack[← index stack.length offset]
 
+--- conversins ---
 
--- An offset is final when its assigned source has the same offset.
--- Offsets outside the target's bounds are not final.
+def Stack.offsetToDepth (stack : Stack) (idx : Fin stack.length) : Fin stack.length :=
+  ⟨stack.length - 1 - idx, by omega⟩
+
+-- Check the offset before converting it to a depth in the working stack.
+def State.depthOf (state : State source target spills) (offset : ℕ) : M (Fin state.stack.length) := do
+  return state.stack.offsetToDepth (← index state.stack.length offset)
+
+--- queries ---
+
+def Stack.shallowestCopyPosition (stack : Stack) (slot : Value) : Option (Fin stack.length) :=
+  (List.finRange stack.length).reverse.find?
+    (fun pos => stack[pos] = slot)
+
+def Stack.isDupReachable (stack : Stack) (pos : Fin stack.length) : Prop :=
+  (stack.offsetToDepth pos) ≤ MAX_DUP_DEPTH
+
+instance (stack : Stack) (pos : Fin stack.length) : Decidable (stack.isDupReachable pos) :=
+  by unfold Stack.isDupReachable; infer_instance
+
+def Stack.isSwapReachable (stack : Stack) (pos : Fin stack.length) : Prop :=
+  (stack.offsetToDepth pos) ≤ MAX_SWAP_DEPTH
+
+def State.isSwapReachable (state : State source target spills) (offset : ℕ) : M Bool := do
+  return decide ((← depthOf state offset).val ≤ MAX_SWAP_DEPTH)
+
+instance (stack : Stack) (pos : Fin stack.length) : Decidable (stack.isSwapReachable pos) :=
+  by unfold Stack.isSwapReachable; infer_instance
+
 def State.isFinal (state : State source target spills) (offset : ℕ) : Prop :=
   if h : offset < target.length then
     (state.mapping.symm ⟨offset, h⟩).map Fin.val = some offset
   else False
 
-def Stack.shallowestCopyPosition (stack : Stack) (slot : Value) :
-    Option (Fin stack.length) :=
-  (List.finRange stack.length).reverse.find?
-    (fun pos => stack[pos] = slot)
+instance (state : State source target spills) (offset : ℕ) : Decidable (state.isFinal offset) :=
+  by unfold State.isFinal; infer_instance
 
-def Stack.offsetToDepth (stack : Stack) (idx : Fin stack.length) : Fin stack.length :=
-  ⟨stack.length - 1 - idx, by omega⟩
-
-def Stack.isDupReachable (stack : Stack) (pos : Fin stack.length) : Prop :=
-  (stack.offsetToDepth pos) ≤ MAX_DUP_DEPTH
-
-def Stack.isSwapReachable (stack : Stack) (pos : Fin stack.length) : Prop :=
-  (stack.offsetToDepth pos) ≤ MAX_SWAP_DEPTH
-
+-- can the slot at target[target_offset] be generated?
 def State.isAvailable (state : State source target spills) (target_offset : Fin target.length) : Prop :=
   let slot := target[target_offset]
-  slot.can_be_freely_generated ∨ spills.is_spilled slot ∨ (state.stack.shallowestCopyPosition slot).isSome
-
-instance (state : State source target spills) (offset : ℕ) : Decidable (state.isFinal offset) := by unfold State.isFinal; infer_instance
-instance (stack : Stack) (pos : Fin stack.length) : Decidable (stack.isDupReachable pos) := by unfold Stack.isDupReachable; infer_instance
-instance (stack : Stack) (pos : Fin stack.length) : Decidable (stack.isSwapReachable pos) := by unfold Stack.isSwapReachable; infer_instance
-
-namespace Shuffler.BuildBottomUp
-
-def positionOf (state : State source target spills) (offset : ℕ) : Option ℕ :=
-  if h : offset < target.length then (state.mapping.symm ⟨offset, h⟩).map Fin.val else none
-
--- Check the offset before converting it to a depth in the working stack.
-def depthOf (state : State source target spills) (offset : ℕ) : M (Fin state.stack.length) := do
-  return state.stack.offsetToDepth (← index state.stack.length offset)
-
-def isSwapReachable (state : State source target spills) (offset : ℕ) : M Bool := do
-  return decide ((← depthOf state offset).val ≤ MAX_SWAP_DEPTH)
+  slot.can_be_freely_generated ∨
+  spills.is_spilled slot ∨
+  (state.stack.shallowestCopyPosition slot).isSome
 
 instance (state : State source target spills) (dest : Fin target.length) :
     Decidable (state.isAvailable dest) := by
   unfold State.isAvailable
   infer_instance
 
+def State.positionOf (state : State source target spills) (offset : ℕ) : Option ℕ :=
+  if h : offset < target.length then (state.mapping.symm ⟨offset, h⟩).map Fin.val else none
+
+-- Actions
+
+namespace Shuffler.BuildBottomUp
+
 -- Convert between source offsets and the depths used by trace constructors.
-private theorem dup_stack_eq (stack : Stack) (copy : Fin stack.length) :
+private lemma dup_stack_eq (stack : Stack) (copy : Fin stack.length) :
     stack ++ [stack[stack.length - ((stack.offsetToDepth copy).val + 1)]] =
       stack ++ [stack[copy]] := by
   have hcopy : stack.length - ((stack.offsetToDepth copy).val + 1) = copy.val := by
     dsimp [Stack.offsetToDepth]; omega
   exact congrArg (fun slot => stack ++ [slot]) (getElem_congr_idx hcopy)
 
-private theorem swap_stack_eq (stack : Stack) (pos : Fin stack.length) :
+private lemma swap_stack_eq (stack : Stack) (pos : Fin stack.length) :
     stack.swap (stack.length - 1) (stack.length - 1 - (stack.offsetToDepth pos).val) =
       stack.swap pos (stack.length - 1) := by
   have hpos : stack.length - 1 - (stack.offsetToDepth pos).val = pos.val := by
     dsimp [Stack.offsetToDepth]; omega
   rw [hpos, List.swap_comm]
 
-private theorem swap_depth_pos (stack : Stack) (pos : Fin stack.length)
+private lemma swap_depth_pos (stack : Stack) (pos : Fin stack.length)
     (hbelow : pos.val + 1 < stack.length) : 1 ≤ (stack.offsetToDepth pos).val := by
   dsimp [Stack.offsetToDepth]; omega
 
-private theorem top_lt_length (stack : Stack) (pos : Fin stack.length) :
+private lemma top_lt_length (stack : Stack) (pos : Fin stack.length) :
     stack.length - 1 < stack.length := by
   have := pos.isLt
   omega
+
+private lemma stack_push_len (stack : Stack) (slot : Value) :
+  stack.length + 1 = (stack ++ [slot]).length := by simp
 
 def push (slot : Value) (dest : Fin target.length) : Action source target spills Unit := do
   let state ← get
   let ⟨hbound⟩ ← requires (state.mapping.symm dest = none) "destination already bound to a slot"
   let ⟨hgen⟩ ← requires (slot.can_be_freely_generated ∨ spills.is_spilled slot) "pushed slot cannot be generated or loaded"
-  have heq : state.stack.length + 1 = (state.stack ++ [slot]).length := by simp
 
   set {
     state with
@@ -120,7 +132,8 @@ def push (slot : Value) (dest : Fin target.length) : Action source target spills
       | .Var id  , h => .Load id (by simpa [Value.can_be_freely_generated, SpillSet.is_spilled] using h) state.trace
       | .Lit word, _ => .Push (.Lit word) (by simp [Value.can_be_freely_generated]) state.trace
       | .Wildcard, _ => .Push .Wildcard (by decide) state.trace
-    mapping := heq ▸ state.mapping.push dest hbound
+    mapping := by simpa [stack_push_len] using
+      state.mapping.push dest hbound
   }
 
 def dup (offset : ℕ) (dest : Fin target.length) : Action source target spills Unit := do
@@ -186,7 +199,7 @@ def produce (targetOffset : Fin target.length) : Action source target spills Uni
     throw (.assertion "generated slot has no copy on the stack and is not spilled")
 
   let state ← get
-  ensure (positionOf state targetOffset.val = some (state.stack.length - 1)) "generated slot is not bound to the top"
+  ensure (state.positionOf targetOffset.val = some (state.stack.length - 1)) "generated slot is not bound to the top"
   modify fun state => { state with pending_generations := state.pending_generations - 1 }
 
 def generate (targetOffset : ℕ) : Action source target spills Unit := do
@@ -197,7 +210,7 @@ def generate (targetOffset : ℕ) : Action source target spills Unit := do
     let top := state.stack.length - 1
     if (← slotAt state.stack targetOffset) = (← slotAt state.stack top) then
       swapDestinations targetOffset top
-    else if ← isSwapReachable state targetOffset then
+    else if ← state.isSwapReachable targetOffset then
       swapWith targetOffset
 
 -- StateT passes the working state between actions.
@@ -223,15 +236,15 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) :
         return ⟨res, state.trace.concat trace⟩
 
       let urgentToDup ← forIn (m := M) [targetOffset : target.length] none fun offset urgent => do
-        if (positionOf state offset).isSome then
+        if (state.positionOf offset).isSome then
           return .yield urgent
         let slot ← slotAt target offset
         if slot.is_junk ∨ slot.can_be_freely_generated ∨ spills.is_spilled slot then
           return .yield urgent
         if let some copy := state.stack.shallowestCopyPosition slot then
           if ¬ state.stack.isDupReachable copy then
-            throw (.blocked ((← depthOf state copy) - MAX_DUP_DEPTH))
-          if (← depthOf state copy) = MAX_DUP_DEPTH ∧ copy.val ≠ targetOffset ∧ urgent.isNone then
+            throw (.blocked ((← state.depthOf copy) - MAX_DUP_DEPTH))
+          if (← state.depthOf copy) = MAX_DUP_DEPTH ∧ copy.val ≠ targetOffset ∧ urgent.isNone then
             return .yield (some offset)
         return .yield urgent
 
@@ -242,11 +255,11 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) :
 
       let sourceTop := state.stack.length
       if urgentToDup.isNone ∧ sourceTop > targetOffset ∧ sourceTop < target.length ∧
-          (positionOf state sourceTop).isNone ∧ sourceTop - targetOffset < MAX_SWAP_DEPTH then
+          (state.positionOf sourceTop).isNone ∧ sourceTop - targetOffset < MAX_SWAP_DEPTH then
         generate sourceTop
         continue
 
-      if let some boundForTarget := positionOf state targetOffset then
+      if let some boundForTarget := state.positionOf targetOffset then
         -- The slot bound for this offset must not be below it.
         ensure (boundForTarget ≥ targetOffset)
           "slot bound for the offset being filled is missing or already below it"
@@ -256,7 +269,7 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) :
           pos := targetOffset
         else
           pos ← forIn (m := M)
-            ((List.range state.stack.length).reverse.take (← depthOf state sourceForTargetOffset)) pos fun candidate pos => do
+            ((List.range state.stack.length).reverse.take (← state.depthOf sourceForTargetOffset)) pos fun candidate pos => do
               if (← slotAt state.stack candidate) = (← slotAt state.stack sourceForTargetOffset) ∧
                   ¬ state.isFinal candidate then
                 return .done candidate
@@ -271,8 +284,8 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) :
 
         let state ← get
         if pos ≠ state.stack.length - 1 then
-          if ¬ (← isSwapReachable state pos) then
-            throw (.blocked ((← depthOf state pos) - MAX_SWAP_DEPTH))
+          if ¬ (← state.isSwapReachable pos) then
+            throw (.blocked ((← state.depthOf pos) - MAX_SWAP_DEPTH))
           swapWith pos
       else
         generate targetOffset
@@ -284,8 +297,8 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) :
       let state ← get
       ensure (¬ state.isFinal targetOffset) "target slot is already final"
       if targetOffset ≠ state.stack.length - 1 then
-        if ¬ (← isSwapReachable state targetOffset) then
-          throw (.blocked ((← depthOf state targetOffset) - MAX_SWAP_DEPTH))
+        if ¬ (← state.isSwapReachable targetOffset) then
+          throw (.blocked ((← state.depthOf targetOffset) - MAX_SWAP_DEPTH))
         swapWith targetOffset
       targetOffset := targetOffset + 1
 

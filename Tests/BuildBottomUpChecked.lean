@@ -96,17 +96,17 @@ example : (produce 0).exec (copyState 16) = .error (.blocked 1) := rfl
 example : observeState ((produce 0).exec (copyState 15 {⟨37⟩})) =
     .ok ((copyState 15).stack ++ [.Var ⟨37⟩], [.dup 16]) := rfl
 example : ((produce 0).exec (copyState 15 {⟨37⟩})).map
-    (fun next => (positionOf next 0, next.pending_generations)) = .ok (some 16, 16) := rfl
+    (fun next => (next.positionOf 0, next.pending_generations)) = .ok (some 16, 16) := rfl
 -- Beyond DUP reach, a spill load succeeds and binds the new top.
 example : observeState ((produce 0).exec (copyState 16 {⟨37⟩})) =
     .ok ((copyState 16).stack ++ [.Var ⟨37⟩], [.load ⟨37⟩]) := rfl
 example : ((produce 0).exec (copyState 16 {⟨37⟩})).map
-    (fun next => (positionOf next 0, next.pending_generations)) = .ok (some 17, 17) := rfl
+    (fun next => (next.positionOf 0, next.pending_generations)) = .ok (some 17, 17) := rfl
 -- Literal and junk production also bind the top and decrement exactly once.
 example : ((produce 0).exec (emptyState [.Lit 1] ∅)).map
-    (fun next => (positionOf next 0, next.pending_generations)) = .ok (some 0, 0) := rfl
+    (fun next => (next.positionOf 0, next.pending_generations)) = .ok (some 0, 0) := rfl
 example : ((produce 0).exec (emptyState [.Wildcard] ∅)).map
-    (fun next => (positionOf next 0, next.pending_generations)) = .ok (some 0, 0) := rfl
+    (fun next => (next.positionOf 0, next.pending_generations)) = .ok (some 0, 0) := rfl
 
 -- DUP checks offsets against the current stack, including an empty stack.
 example : (dup 0 0).exec (emptyState [.Lit 1] ∅) =
@@ -120,8 +120,8 @@ example : (dup 2 0).exec boundState =
 example : ((do
     generate 0
     generate 1).exec (emptyState [.Lit 1, .Lit 1] ∅)).map
-      (fun (next : State [] [.Lit 1, .Lit 1] ∅) => (next.stack, operations next.trace, positionOf next 0,
-        positionOf next 1, next.pending_generations)) =
+      (fun (next : State [] [.Lit 1, .Lit 1] ∅) => (next.stack, operations next.trace, next.positionOf 0,
+        next.positionOf 1, next.pending_generations)) =
     .ok ([.Lit 1, .Lit 1], [.push (.Lit 1), .dup 1], some 0, some 1, 0) := rfl
 
 -- A failed action stops the sequence and returns no state.

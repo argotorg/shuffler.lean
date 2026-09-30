@@ -13,13 +13,13 @@ example (stack : Stack) (offset : Fin stack.length) :
 
 -- Reject offsets at or beyond the end, including every offset of an empty stack.
 example (state : State source target spills) (offset : ℕ) (h : state.stack.length ≤ offset) :
-    depthOf state offset = .error (.assertion "offset is out of bounds") := by
-  simp [depthOf, index, Nat.not_lt.mpr h]
+    state.depthOf offset = .error (.assertion "offset is out of bounds") := by
+  simp [State.depthOf, index, Nat.not_lt.mpr h]
   rfl
 
 example (state : State source target spills) (offset : ℕ) (h : state.stack.length ≤ offset) :
-    isSwapReachable state offset = .error (.assertion "offset is out of bounds") := by
-  simp [isSwapReachable, depthOf, index, Nat.not_lt.mpr h]
+    state.isSwapReachable offset = .error (.assertion "offset is out of bounds") := by
+  simp [State.isSwapReachable, State.depthOf, index, Nat.not_lt.mpr h]
   rfl
 
 -- Target indices retain the original finality condition after conversion to a natural number.
@@ -40,8 +40,8 @@ private def boundState : State [.Lit 10, .Lit 20, .Lit 30] [.Lit 30, .Lit 10] �
   mapping := ((⊥ : Mapping 3 2).bind 0 1 rfl rfl).bind 2 0 (by decide) (by decide)
   pending_generations := 0
 
-example : (depthOf boundState 0).map Fin.val = .ok 2 := rfl
-example : (depthOf boundState 2).map Fin.val = .ok 0 := rfl
+example : (boundState.depthOf 0).map Fin.val = .ok 2 := rfl
+example : (boundState.depthOf 2).map Fin.val = .ok 0 := rfl
 
 -- The values and both directions of the mapping move together.
 private def swapped := (swapWith 0).exec boundState

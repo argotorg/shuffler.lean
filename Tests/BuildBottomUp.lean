@@ -105,7 +105,7 @@ example : (produce 0).exec (emptyState [.Var ⟨37⟩] {⟨38⟩}) =
 example (state : State source target spills) (dest : Fin target.length)
     (hdest : state.mapping.symm dest = none) (ha : state.isAvailable dest) :
     Spec ((produce dest).exec state) (fun next =>
-      0 < next.stack.length ∧ positionOf next dest.val = some (next.stack.length - 1)) := by
+      0 < next.stack.length ∧ next.positionOf dest.val = some (next.stack.length - 1)) := by
   apply (Spec.of_action (produce_spec state dest hdest ha)).mono
   intro next h
   exact ⟨by have := h.size; omega, h.top⟩

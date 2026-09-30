@@ -18,8 +18,8 @@ structure Growth (state next : State source target spills) (dest : Fin target.le
 
 theorem Growth.top {state next : State source target spills} {dest : Fin target.length}
     (h : Growth state next dest pending) :
-    positionOf next dest.val = some (next.stack.length - 1) := by
-  simp [positionOf, dest.isLt, h.bound, h.size]
+    next.positionOf dest.val = some (next.stack.length - 1) := by
+  simp [State.positionOf, dest.isLt, h.bound, h.size]
 
 theorem Growth.decrement {state next : State source target spills} {dest : Fin target.length}
     (h : Growth state next dest pending) :
@@ -57,7 +57,7 @@ private theorem growth_append (state : State source target spills) (slot : Value
     ⦃fun s => s = state⦄ push slot dest
     ⦃fun _ next => Growth state next dest state.pending_generations; allowedErrors⦄ := by
   vcgen [push] <;> subst_vars <;> simp_all
-  exact growth_append _ slot dest hbound _
+  simpa only [eqRec_eq_cast] using growth_append _ slot dest hbound _
 
 @[spec] theorem dup_spec (state : State source target spills) (copy : Fin state.stack.length)
     (dest : Fin target.length) (hdup : state.stack.isDupReachable copy)
@@ -90,14 +90,14 @@ structure Generation (state next : State source target spills) (dest : Fin targe
 theorem Growth.generation {state next : State source target spills} {dest : Fin target.length}
     (h : Growth state next dest (state.pending_generations - 1)) : Generation state next dest :=
   ⟨h.size, h.count, h.pending_eq, h.preserved, h.subset,
-    Or.inr (by simpa [positionOf, dest.isLt] using h.top)⟩
+    Or.inr (by simpa [State.positionOf, dest.isLt] using h.top)⟩
 
 theorem Growth.generation_swapped {state produced next : State source target spills}
     {dest : Fin target.length} (h : Growth state produced dest (state.pending_generations - 1))
     (hbound : state.mapping.symm dest = none) (pos : Fin produced.stack.length)
     (hpos : pos.val = dest.val) (hs : Swapped produced next pos) : Generation state next dest := by
   have htop : (produced.mapping.symm dest).map Fin.val = some (produced.stack.length - 1) := by
-    simpa [positionOf, dest.isLt] using h.top
+    simpa [State.positionOf, dest.isLt] using h.top
   refine ⟨hs.size.trans h.size, by rw [hs.count]; exact h.count,
     hs.pending.trans h.pending_eq, ?_, (fun _ hi => hs.subset (h.subset hi)),
     Or.inl (hs.final dest hpos htop)⟩

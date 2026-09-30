@@ -98,7 +98,7 @@ theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
           obtain ⟨hlt, hnone⟩ := hu (urgent.get hurg.1) (Option.some_get hurg.1).symm
           let u : Fin target.length := ⟨urgent.get hurg.1, hlt⟩
           have hb : state.mapping.symm u = none := by
-            simpa [positionOf, hlt, u] using hnone
+            simpa [State.positionOf, hlt, u] using hnone
           simp_action
           apply (generate_contract state u hb (inv.available u)).bind
           intro next hgen
@@ -107,13 +107,13 @@ theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
           · rename_i htop
             let top : Fin target.length := ⟨state.stack.length, htop.2.2.1⟩
             have hb : state.mapping.symm top = none := by
-              simpa [positionOf, top, top.isLt] using htop.2.2.2.1
+              simpa [State.positionOf, top, top.isLt] using htop.2.2.2.1
             simp_action
             apply (generate_contract state top hb (inv.available top)).bind
             intro next hgen
             exact StepPost.retry (hgen.invariant inv) (hgen.decreases inv)
-          · have hposition : positionOf state cursor = (state.mapping.symm dest).map Fin.val := by
-              simp [positionOf, hc, dest]
+          · have hposition : state.positionOf cursor = (state.mapping.symm dest).map Fin.val := by
+              simp [State.positionOf, hc, dest]
             rw [hposition]
             cases hb : state.mapping.symm dest with
             | none =>
