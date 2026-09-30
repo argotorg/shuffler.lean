@@ -46,48 +46,41 @@ def loopBody (source target : Stack) (spills : SpillSet) :
     funext frame
     cases frame.1 <;> rfl⟩
 
-/-- Expose the body without the equality proof, which refers to the outer loop.
-The equality below checks that this is the actual body. -/
-def bodyForTerminationCheck (source target : Stack) (spills : SpillSet) :
-    Unit → ControlFrame source spills → Action source target spills (ForInStep (ControlFrame source spills)) := by
-  run_tac
-    let args ← #[`source, `target, `spills].mapM fun name => do
-      return (← Lean.Meta.getLocalDeclFromUserName name).toExpr
-    let extracted ← Lean.Meta.mkAppM ``loopBody args
-    let value ← Lean.Meta.mkAppM ``Subtype.val #[extracted]
-    let value ← Lean.Meta.whnf value
-    Lean.Elab.Tactic.closeMainGoal `bodyForTerminationCheck value
+/--
+All steps from `current` to `next` that continue the loop for another iteration.
+Each pair contains the control value and the StateT state. Both returned values must match.
+Only `.ok (.yield ...)` continues. Done and error results have no successor.
+`next` comes first to match the argument order of `Acc`.
+-/
+def Continues {σ β ε : Type}
+    (body : Unit → β → StateT σ (Except ε) (ForInStep β))
+    (next current : β × σ) : Prop :=
+  (body () current.1).run current.2 = .ok (.yield next.1, next.2)
 
-example (source target : Stack) (spills : SpillSet) :
-    bodyForTerminationCheck source target spills = (loopBody source target spills).val := rfl
-
--- All other dependencies use Lean's checked definitions. String append is a runtime primitive.
--- This audits logical definitions, not compiler replacements or the runtime itself.
--- It cannot inspect function values supplied in the input, such as mapping lookups.
-/-- info: 'Shuffler.BuildBottomUp.bodyForTerminationCheck' depends on opaque or partial definitions: [String.Internal.append] -/
-#guard_msgs in
-#print opaques bodyForTerminationCheck
-
-/-- Extract the step that Lean.Loop.forIn passes to repeatM.
-The kernel checks the equality for every initial control value. -/
-def Continues.repeatStep {σ β ε : Type}
+/-- Extract the step function passed into repeatM by the same forIn invocation used in `loopBody` -/
+def repeatStep {σ β ε : Type}
     (body : Unit → β → StateT σ (Except ε) (ForInStep β)) :
     { step : β → StateT σ (Except ε) (β ⊕ β) //
       ∀ initial, forIn ({} : Lean.Loop) initial body =
         (letI : Nonempty β := ⟨initial⟩; repeatM step initial) } := by
   exact ⟨_, by intro initial; rfl⟩
 
-/--
-All steps from `current` to `next` that continue the loop for another iteration.
-Each pair contains the control value and the StateT state. Both returned values must match.
-Only `.ok (.yield ...)` continues. Done and error results have no successor.
-`next` comes first to match the argument order of `Acc`.
-To conclude runtime termination from `Acc`, each body call must also finish.
-See README.md for the audit, assumptions, and source links.
--/
-def Continues {σ β ε : Type}
+/-- `Continues` describes exactly the `.ok (.yield ...)` case below.
+Only this case calls the next iteration, `recur`, with the returned control and state.
+Done and error results exit. The equality holds for every `recur`. -/
+theorem Continues.repeatM_body_eq {σ β ε : Type}
     (body : Unit → β → StateT σ (Except ε) (ForInStep β))
-    (next current : β × σ) : Prop :=
-  (body () current.1).run current.2 = .ok (.yield next.1, next.2)
+    (recur : β → StateT σ (Except ε) β) (current : β × σ) :
+    (repeatM.body (repeatStep body).val recur current.1).run current.2 =
+      match (body () current.1).run current.2 with
+      | .ok (.yield control, state) => (recur control).run state
+      | .ok (.done control, state) => .ok (control, state)
+      | .error err => .error err := by
+  cases h : body () current.1 current.2 with
+  | error err => simp [repeatM.body, repeatStep, StateT.run, bind, StateT.bind, Except.bind, h]
+  | ok result =>
+    rcases result with ⟨step, state⟩
+    cases step <;> simp [repeatM.body, repeatStep, StateT.run, bind, StateT.bind, Except.bind,
+      pure, StateT.pure, Except.pure, h]
 
 end Shuffler.BuildBottomUp

@@ -14,10 +14,12 @@ private def newTopState : State [.Lit 10, .Lit 20] [.Lit 20, .Lit 10, .Lit 7] �
   mapping := ((⊥ : Mapping 2 3).bind 0 1 rfl rfl).bind 1 0 (by decide) (by decide)
   pending_generations := 1
 
+example : Invariant 0 newTopState :=
+  ⟨(by intro i hi; omega), by decide, by decide,
+    by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩
+
 example :
-    (buildBottomUpVerified newTopState ⟨(by intro i hi; omega),
-      by decide, by decide,
-      by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩).toOption.map
+    (buildBottomUp newTopState).toOption.map
         (fun result => result.1) = some [.Lit 20, .Lit 10, .Lit 7] := by
   native_decide
 
@@ -56,10 +58,12 @@ example : ∀ i : Fin urgentTarget.length, i.val < 2 → urgentState.isFinal i :
   · change urgentState.isFinal 1
     decide
 
+example : Invariant 0 urgentState :=
+  ⟨(by intro i hi; omega), by decide, by decide,
+    by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩
+
 example :
-    (buildBottomUpVerified urgentState ⟨(by intro i hi; omega),
-      by decide, by decide,
-      by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩).toOption.map
+    (buildBottomUp urgentState).toOption.map
         (fun result => result.1) = some urgentTarget := by
   native_decide
 
@@ -70,10 +74,11 @@ private def missingCopyState : State [.Lit 10, .Lit 20] [.Lit 20, .Lit 10, .Var 
   mapping := ((⊥ : Mapping 2 3).bind 0 1 rfl rfl).bind 1 0 (by decide) (by decide)
   pending_generations := 1
 
--- An unavailable target value cannot satisfy the new input condition.
-#check_failure (buildBottomUpVerified missingCopyState ⟨(by intro i hi; omega),
-      by decide, by decide,
-      by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩)
+-- An unavailable target value cannot satisfy the input invariant.
+example : ¬ Invariant 0 missingCopyState := by
+  intro inv
+  have unavailable : ¬ missingCopyState.isAvailable (2 : Fin 3) := by decide
+  exact unavailable (inv.available 2)
 
 private def surplusState : State [.Lit 10, .Lit 20, .Lit 7] [.Lit 20, .Lit 10, .Lit 7] ∅ where
   planned_mapping := ⊥
@@ -83,9 +88,10 @@ private def surplusState : State [.Lit 10, .Lit 20, .Lit 7] [.Lit 20, .Lit 10, .
   pending_generations := 1
 
 -- A stack at target height cannot reserve room for another generation.
-#check_failure (buildBottomUpVerified surplusState ⟨(by intro i hi; omega),
-      by decide, by decide,
-      by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩)
+example : ¬ Invariant 0 surplusState := by
+  intro inv
+  have : (4 : ℕ) = 3 := inv.size
+  omega
 
 /-- info: 'Shuffler.BuildBottomUp.generate_contract' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in

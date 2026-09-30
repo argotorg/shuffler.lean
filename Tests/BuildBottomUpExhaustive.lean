@@ -28,10 +28,10 @@ private def expectedStack (state : State source target spills) : Stack :=
 
 -- These stacks fit within reach, so every admitted case must succeed.
 private def checkState (state : State source target ∅) : Option Bool :=
-  if hs : state.stack.length + state.pending_generations = target.length then
-    if hp : state.mapping.unmapped_target_slots = state.pending_generations then
-      if ha : ∀ i, state.isAvailable i then
-        some (match buildBottomUpVerified state ⟨(by intro i hi; omega), hs, hp, ha⟩ with
+  if state.stack.length + state.pending_generations = target.length then
+    if state.mapping.unmapped_target_slots = state.pending_generations then
+      if ∀ i, state.isAvailable i then
+        some (match buildBottomUp state with
           | .ok result => decide (result.1 = expectedStack state)
           | .error _ => false)
       else none

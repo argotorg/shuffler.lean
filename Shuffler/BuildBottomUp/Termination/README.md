@@ -5,9 +5,10 @@ after comparing the [implementation](../Defs.lean) with C++.
 2. **Actual code.** The equality in `loopBody` connects the extracted body,
    initial configuration, and work after the loop to `buildBottomUp`.
 3. **Continuing steps.** `Continues` includes exactly the `.ok (.yield ...)`
-   results. The equality in `repeatStep` and the two public correspondence
-   theorems connect this relation to Lean's loop. Done and error results exit.
-4. **Body audit.** `bodyForTerminationCheck` in [Defs.lean](Defs.lean)
+   results. The equality in `repeatStep` connects the step to Lean's loop.
+   `Continues.repeatM_body_eq` shows that exactly these results call the next
+   iteration, with the returned control and state. Done and error results exit.
+4. **Body audit.** `bodyForTerminationCheck` in [Theorems.lean](Theorems.lean)
    exposes the body without its attached proof. The equality and audit checks
    are in the same file. `rfl` checks equality with the actual body.
    Batteries' `#print opaques` follows named logical

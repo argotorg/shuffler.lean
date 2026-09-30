@@ -1,32 +1,8 @@
 import Shuffler.BuildBottomUp.Lemmas.Termination
-import Shuffler.BuildBottomUp.Lemmas.Continues
 
 open Std.Internal.Do
 
 namespace Shuffler.BuildBottomUp
-
-/-- `Continues body next current` describes a step from `current` to `next`.
-Each pair is `(control, state)`. Read `↔` as "if and only if".
-The right side says Lean's step continues (`.inl`) with the control and state in `next`. -/
-theorem Continues.iff_repeatStep {σ β ε : Type}
-    (body : Unit → β → StateT σ (Except ε) (ForInStep β))
-    (next current : β × σ) :
-    Continues body next current ↔
-      ((Continues.repeatStep body).val current.1).run current.2 = .ok (.inl next.1, next.2) :=
-  Lemmas.continues_iff_repeatStep body next current
-
-/-- The left side runs one loop step from `current = (control, state)`.
-The right side lists the three cases. `recur` is the function for the next iteration.
-`.yield` calls `recur` with both new values. `.done` and `.error` exit without calling it. -/
-theorem Continues.repeatM_body_eq {σ β ε : Type}
-    (body : Unit → β → StateT σ (Except ε) (ForInStep β))
-    (recur : β → StateT σ (Except ε) β) (current : β × σ) :
-    (repeatM.body (Continues.repeatStep body).val recur current.1).run current.2 =
-      match (body () current.1).run current.2 with
-      | .ok (.yield control, state) => (recur control).run state
-      | .ok (.done control, state) => .ok (control, state)
-      | .error err => .error err :=
-  Lemmas.repeatM_body_eq body recur current
 
 /-- No infinite chain of continuing steps starts at `((none, 0), state)`.
 Runtime termination also requires each body call to finish; see README.md.
@@ -53,19 +29,27 @@ theorem buildBottomUp_noAssertion (state : State source target spills)
     buildBottomUp state ≠ .error (.assertion reason) := by
   exact ((spec_iff_triple _ _).mpr (buildBottomUp_triple state inv)).noAssertion reason
 
--- Use the proof to remove the assertion case from the error type.
-private def restoreResult (result : Except Error α)
-    (noAssertion : ∀ reason, result ≠ .error (.assertion reason)) : Except ShuffleErr α :=
-  match result with
-  | .ok value => .ok value
-  | .error (.blocked excess) => .error (.Blocked excess)
-  | .error (.assertion reason) => False.elim (noAssertion reason rfl)
+/-- Expose the body without the equality proof, which refers to the outer loop.
+The equality below checks that this is the actual body. -/
+def bodyForTerminationCheck (source target : Stack) (spills : SpillSet) :
+    Unit → ControlFrame source spills → Action source target spills (ForInStep (ControlFrame source spills)) := by
+  run_tac
+    let args ← #[`source, `target, `spills].mapM fun name => do
+      return (← Lean.Meta.getLocalDeclFromUserName name).toExpr
+    let extracted ← Lean.Meta.mkAppM ``loopBody args
+    let value ← Lean.Meta.mkAppM ``Subtype.val #[extracted]
+    let value ← Lean.Meta.whnf value
+    Lean.Elab.Tactic.closeMainGoal `bodyForTerminationCheck value
 
-/-- Run buildBottomUp and return only errors in the public error type.
-The invariant is a proof argument; it is not a runtime check. -/
-def buildBottomUpVerified (state : State source target spills)
-    (inv : Invariant 0 state) : Except ShuffleErr ((res : Stack) × Trace spills source res) :=
-  restoreResult (buildBottomUp state) (buildBottomUp_noAssertion state inv)
+example (source target : Stack) (spills : SpillSet) :
+    bodyForTerminationCheck source target spills = (loopBody source target spills).val := rfl
+
+-- All other dependencies use Lean's checked definitions. String append is a runtime primitive.
+-- This audits logical definitions, not compiler replacements or the runtime itself.
+-- It cannot inspect function values supplied in the input, such as mapping lookups.
+/-- info: 'Shuffler.BuildBottomUp.bodyForTerminationCheck' depends on opaque or partial definitions: [String.Internal.append] -/
+#guard_msgs in
+#print opaques bodyForTerminationCheck
 
 /-- info: 'Shuffler.BuildBottomUp.buildBottomUp_terminates' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
@@ -78,9 +62,5 @@ def buildBottomUpVerified (state : State source target spills)
 /-- info: 'Shuffler.BuildBottomUp.buildBottomUp_noAssertion' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms buildBottomUp_noAssertion
-
-/-- info: 'Shuffler.BuildBottomUp.buildBottomUpVerified' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in
-#print axioms buildBottomUpVerified
 
 end Shuffler.BuildBottomUp

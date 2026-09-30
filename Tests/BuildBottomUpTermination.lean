@@ -91,36 +91,24 @@ example (current : ℕ × ℕ) : ¬ Acc (Continues grow) current := by
   induction h with
   | intro current _ ih => exact ih (current.1 + 1, current.2 + 1) rfl
 
--- The relation matches the recursive branch extracted from Lean's actual loop.
-example {σ β ε : Type} (body : Unit → β → StateT σ (Except ε) (ForInStep β))
-    (next current : β × σ) :
-    Continues body next current ↔
-      ((Continues.repeatStep body).val current.1).run current.2 =
-        .ok (.inl next.1, next.2) :=
-  Continues.iff_repeatStep body next current
-
 -- A continuing step passes both updated values to any recursive continuation.
 example (recur : ℕ → StateT ℕ (Except Error) ℕ) (cursor remaining : ℕ) :
-    (repeatM.body (Continues.repeatStep countdown).val recur cursor).run (remaining + 1) =
+    (repeatM.body (repeatStep countdown).val recur cursor).run (remaining + 1) =
       (recur (cursor + 1)).run remaining := by
   exact Continues.repeatM_body_eq countdown recur (cursor, remaining + 1)
 
 -- A done result returns its updated values without using the continuation.
 example (recur : ℕ → StateT ℕ (Except Error) ℕ) (cursor : ℕ) :
-    (repeatM.body (Continues.repeatStep exitOrSpin).val recur cursor).run 0 =
+    (repeatM.body (repeatStep exitOrSpin).val recur cursor).run 0 =
       .ok (cursor + 7, 1) := by
   exact Continues.repeatM_body_eq exitOrSpin recur (cursor, 0)
 
 -- Errors also bypass every continuation, including ones that would return success.
 example (recur : ℕ → StateT ℕ (Except Error) ℕ) (err : Error) (cursor state : ℕ) :
-    (repeatM.body (Continues.repeatStep (fun _ _ => fun _ : ℕ =>
+    (repeatM.body (repeatStep (fun _ _ => fun _ : ℕ =>
       (.error err : Except Error (ForInStep ℕ × ℕ)))).val recur cursor).run state =
       .error err := by
   exact Continues.repeatM_body_eq _ recur (cursor, state)
-
-/-- info: 'Shuffler.BuildBottomUp.Continues.iff_repeatStep' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in
-#print axioms Continues.iff_repeatStep
 
 /-- info: 'Shuffler.BuildBottomUp.Continues.repeatM_body_eq' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in

@@ -3,8 +3,11 @@ import Shuffler.Permute.Defs
 import Shuffler.Stack
 import Shuffler.Trace
 
+-- TODO: make numeric types here match the c++ types
+
 
 --- Types ------------------------------------------------------------------------------------------
+
 
 structure State (source target : Stack) (spills : SpillSet) where
   planned_mapping : Mapping source.length target.length
