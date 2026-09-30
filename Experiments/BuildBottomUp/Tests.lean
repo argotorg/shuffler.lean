@@ -40,7 +40,7 @@ private def boundState : State [.Lit 1] [.Lit 1] ∅ where
 example : (generate 0).exec boundState =
     .error (.assertion "destination already bound to a slot") := rfl
 example : (swapWith 0).exec boundState =
-    .error (.assertion "swap requires a reachable slot below the top that is not final") := rfl
+    .error (.assertion "cannot swap the top with itself") := rfl
 
 private def observeState (result : Checked.M (State source target spills)) :=
   observe (result.map fun state => ⟨state.stack, state.trace⟩)
@@ -70,6 +70,17 @@ private def copyState (padding : ℕ) (spills : SpillSet := ∅) : State
   trace := .Lit _
   mapping := ⊥
   pending_generations := padding + 2
+
+-- SWAP16 succeeds; one slot beyond its reach is rejected.
+example : observeState ((Checked.swapWith 0).exec (copyState 16)) =
+    .ok (List.replicate 16 (.Lit 0) ++ [.Var ⟨37⟩], [.swap 16]) := rfl
+example : (Checked.swapWith 0).exec (copyState 17) =
+    .error (.assertion "swap target is out of reach") := rfl
+
+-- A final slot below the top is rejected even when it is within reach.
+example : (Checked.swapWith 0).exec
+    { copyState 1 with mapping := (⊥ : Mapping 2 3).bind 0 0 rfl rfl } =
+    .error (.assertion "swap target is already final") := rfl
 
 example : observeState ((Checked.dup 0 0).exec (copyState 15)) =
     .ok ((copyState 15).stack ++ [.Var ⟨37⟩], [.dup 16]) := rfl

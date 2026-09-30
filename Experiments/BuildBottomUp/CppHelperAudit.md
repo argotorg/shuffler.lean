@@ -135,7 +135,7 @@ Stack operation: `Stack::swap`, `Stack.h:60`.
 | Lean statement | C++ statement | Finding |
 | --- | --- | --- |
 | Check the source index | Bounds check inside `Stack::offsetToDepth` | Lean checks before testing finality; C++ tests finality first. |
-| Check below-top, reach, and not-final in one condition | Assert not-final, then assert a valid SWAP target | Same accepted domain at default reach. The check order and error strings differ. |
+| Check below-top, then reach, then not-final | Assert not-final, then assert a valid SWAP target | Same accepted domain at default reach. The check order and error strings differ. |
 | Compute depth and apply the named conversion lemmas | Stack offset/depth conversion | Same depth; remaining work is proof construction. |
 | Swap `offset` with the top in `stack` | `std::swap` in `Stack::swap` | Same values are exchanged. |
 | Exchange their mapping destinations | `m_mapping.swapDestinations` | Same assignments follow the values. |

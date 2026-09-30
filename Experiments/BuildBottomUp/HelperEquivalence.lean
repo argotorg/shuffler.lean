@@ -42,9 +42,8 @@ theorem swapWith_eq (state : State source target spills) (pos : Fin state.stack.
     (hnfinal : ¬ state.is_final pos.val) :
     (swapWith pos.val).exec state = .ok (state.swapWith pos hbelow hreach hnfinal) := by
   simp only [swapWith, Action.exec_get, Action.exec_lift]
-  simp [requires, State.swapWith, index, pos.isLt, bind, Except.bind,
+  simp [ensure, requires, State.swapWith, index, pos.isLt, bind, Except.bind,
     pure, Except.pure, hbelow, hreach, hnfinal]
-  split
   rfl
 
 theorem produce_eq (state : State source target spills) (dest : Fin target.length)

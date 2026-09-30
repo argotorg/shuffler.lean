@@ -155,8 +155,8 @@ errors. The result-level `Spec` and its conversion lemmas connect these contract
 to the existing branch and finite-execution proofs.
 [SwapProofs.lean](SwapProofs.lean) and [HelperProofs.lean](HelperProofs.lean)
 use `vcgen` to compose the contracts. Pure lemmas prove the stack and mapping
-effects. The swap proof handles one nested `PLift`/`And` pattern explicitly
-because Lean 4.34's `vcgen` cannot split that pattern.
+effects. The swap proof simplifies `requires` and `ensure` using its
+preconditions, then proves the state update.
 [Invariants.lean](Invariants.lean) defines the checked invariant and its state
 properties. [CheckedProofs.lean](CheckedProofs.lean) uses these facts to prove
 the small generation loop.
