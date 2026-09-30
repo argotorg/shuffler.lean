@@ -102,6 +102,7 @@ theorem generate_contract (state : State source target spills) (dest : Fin targe
     Spec (generate state dest.val) (fun next => Generation state next dest) := by
   unfold generate
   rw [index_eq]
+  simp only [bind_pure]
   simp only [bind, Except.bind]
   apply (produce_spec state dest hbound havailable).bind
   intro produced hp
@@ -125,6 +126,9 @@ theorem generate_contract (state : State source target spills) (dest : Fin targe
       omega
   split
   · rename_i hswap
+    rw [slotAt_index produced.stack ⟨dest.val, by omega⟩,
+      slotAt_index produced.stack ⟨produced.stack.length - 1, by omega⟩]
+    dsimp only
     split
     · rw [swapDestinations_result produced ⟨dest.val, by omega⟩
         ⟨produced.stack.length - 1, by omega⟩]

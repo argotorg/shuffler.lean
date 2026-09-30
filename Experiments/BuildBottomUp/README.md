@@ -101,7 +101,9 @@ exists and bind the index for `dup`. Successful branches update `state`, then
 the function checks that the destination is bound to the new top and decrements
 the pending count. Tests cover the counter and binding after each production
 path. `generate` uses an explicit `else if` to keep the mapping-only exchange
-and physical swap mutually exclusive.
+and physical swap mutually exclusive. It uses the same checked offset operations
+as the main loop: `slotAt` for stack reads and `isSwapReachable` for the reach
+test. Its body needs no explicit `Fin` construction or tactic proofs.
 
 The offset/depth conversion proofs used by `dup` and `swapWith` are private
 named lemmas in `CheckedSupport.lean`.

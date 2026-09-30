@@ -148,15 +148,16 @@ def produce (initial : State source target spills) (targetOffset : Fin target.le
   state := { state with pending_generations := state.pending_generations - 1 }
   return state
 
-def generate (state : State source target spills) (offset : ℕ) : M (State source target spills) := do
-  let dest ← index target.length offset
-  let next ← produce state dest
-  if hswap : dest.val + 1 < next.stack.length ∧ ¬ next.isFinal dest.val then
-    let pos : Fin next.stack.length := ⟨dest.val, by omega⟩
-    if next.stack[pos] = next.stack.getLast (by intro h; simp [h] at hswap) then
-      return ← swapDestinations next pos.val (next.stack.length - 1)
-    else if next.stack.isSwapReachable pos then
-      return ← swapWith next pos.val
-  return next
+def generate (initial : State source target spills) (targetOffset : ℕ) : M (State source target spills) := do
+  let mut state := initial
+  state ← produce state (← index target.length targetOffset)
+
+  if targetOffset + 1 < state.stack.length ∧ ¬ state.isFinal targetOffset then
+    let top := state.stack.length - 1
+    if (← slotAt state.stack targetOffset) = (← slotAt state.stack top) then
+      state ← swapDestinations state targetOffset top
+    else if isSwapReachable state targetOffset then
+      state ← swapWith state targetOffset
+  return state
 
 end BuildBottomUpExperiments.Checked

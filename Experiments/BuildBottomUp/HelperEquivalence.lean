@@ -81,6 +81,7 @@ theorem generate_eq (state : State source target spills) (dest : Fin target.leng
     (hbound : state.mapping.symm dest = none) (havailable : state.is_available dest) :
     generate state dest.val = liftResult (state.generate dest hbound havailable) := by
   simp only [generate, index, dest.isLt, ↓reduceDIte, pure_bind]
+  simp only [bind_pure]
   rw [produce_eq state dest hbound havailable]
   unfold State.generate
   cases hresult : state.produce dest hbound havailable with
@@ -89,14 +90,20 @@ theorem generate_eq (state : State source target spills) (dest : Fin target.leng
     simp only [liftResult, Except.mapError, bind, Except.bind]
     by_cases hswap : dest.val + 1 < next.stack.length ∧ ¬ next.is_final dest.val
     · let pos : Fin next.stack.length := ⟨dest.val, by omega⟩
+      have htop : next.stack.length - 1 < next.stack.length := by omega
+      have hlast : next.stack[next.stack.length - 1] =
+          next.stack.getLast (by intro h; simp [h] at hswap) := (List.getLast_eq_getElem _).symm
+      have hreach_eq : isSwapReachable next dest.val = next.stack.is_swap_reachable pos := rfl
+      simp only [isFinal_legacy_eq, hswap]
+      rw [slotAt_index next.stack pos, slotAt_index next.stack ⟨next.stack.length - 1, htop⟩]
+      simp only [Fin.getElem_fin, pos, hlast, hreach_eq]
       by_cases hequal : next.stack[dest.val] = next.stack.getLast (by intro h; simp [h] at hswap)
-      · have htop : next.stack.length - 1 < next.stack.length := by omega
-        simp [hswap, hequal, pos, swapDestinations, index, pos.isLt, htop,
+      · simp [hequal, pos, swapDestinations, index, pos.isLt, htop,
           bind, Except.bind, pure, Except.pure]
       · by_cases hreach : next.stack.is_swap_reachable pos
-        · simp [hswap, hequal, pos, hreach, swapWith_eq next pos hswap.1 hreach hswap.2,
+        · simp [hequal, pos, hreach, swapWith_eq next pos hswap.1 hreach hswap.2,
             pure, Except.pure]
-        · simp [hswap, hequal, pos, hreach, pure, Except.pure]
+        · simp [hequal, pos, hreach, pure, Except.pure]
     · simp [hswap, pure, Except.pure]
 
 

@@ -168,13 +168,15 @@ C++ counterpart: `Emission::produce`, `Shuffler.cpp:388`.
 
 C++ counterpart: `Emission::generate`, `Shuffler.cpp:410`.
 
-1. `index target.length offset` is an extra checked boundary for the C++ raw
-   target index.
-2. Binding `next ← produce state dest` propagates failure immediately, as the
+1. `index target.length targetOffset` is an extra checked boundary for the C++
+   raw target index, applied before `produce`.
+2. Updating `state ← produce ...` propagates failure immediately, as the
    C++ `if (blocked = produce(...)) return blocked` does.
 3. The outer test is the same: destination strictly below the new top and
    not final. All checks use the state after production.
-4. Constructing `pos : Fin next.stack.length` adds no stack operation.
+4. `slotAt` checks bounds for the destination and top reads. The outer guard
+   ensures both offsets are valid. The reach check uses `isSwapReachable` with
+   the same offset as the main loop; no `Fin` construction appears in the body.
 5. Equal destination and top values cause a mapping-only exchange. This
    occurs before the reach check, so equal values can be retagged out of SWAP
    reach. Lean uses an explicit `else if` for the following SWAP branch,
