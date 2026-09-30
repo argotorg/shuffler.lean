@@ -65,7 +65,7 @@ private theorem growth_append (state : State source target spills) (slot : Value
     ⦃fun s => s = state⦄ dup copy.val dest
     ⦃fun _ next => Growth state next dest state.pending_generations; allowedErrors⦄ := by
   vcgen [dup, index] <;> subst_vars <;> simp_all
-  exact growth_append _ _ dest hbound _
+  simpa only [eqRec_eq_cast] using growth_append _ _ dest hbound _
 
 @[spec] theorem produce_spec (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest) :

@@ -22,7 +22,7 @@ def UrgentChoice (state : State source target spills) (choice : Option ℕ) : Pr
 
 @[spec] theorem urgentScan_triple (cursor : ℕ) (state : State source target spills) :
     ⦃True⦄ (
-      forIn (m := M) [cursor : target.length] none fun offset urgent => do
+      forIn (m := Except Error) [cursor : target.length] none fun offset urgent => do
         if (state.positionOf offset).isSome then
           return .yield urgent
         let slot ← slotAt target offset

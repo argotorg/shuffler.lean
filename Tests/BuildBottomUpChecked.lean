@@ -44,7 +44,7 @@ example : (generate 0).exec boundState =
 example : (swapWith 0).exec boundState =
     .error (.assertion "cannot swap the top with itself") := rfl
 
-private def observeState (result : M (State source target spills)) :=
+private def observeState (result : Except Error (State source target spills)) :=
   observe (result.map fun state => ⟨state.stack, state.trace⟩)
 
 example : observeState ((push (.Lit 1) 0).exec (emptyState [.Lit 1] ∅)) =

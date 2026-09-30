@@ -12,8 +12,8 @@ private def unboundState (stack target : Stack) : State stack target ∅ where
   pending_generations := target.length
 
 -- Observe the stack, source assigned to each target, swap count, and generation count.
-private def observe (result : M (State source target spills)) :
-    M (Stack × List (Option ℕ) × ℕ × ℕ) :=
+private def observe (result : Except Error (State source target spills)) :
+    Except Error (Stack × List (Option ℕ) × ℕ × ℕ) :=
   result.map fun state =>
     (state.stack, List.ofFn (fun d => (state.mapping.symm d).map Fin.val),
       state.trace.swapCount, state.pending_generations)

@@ -33,7 +33,7 @@ theorem buildBottomUp_terminates (cursor : ℕ) (state : State source target spi
   exact ⟨r, hr⟩
 
 theorem buildBottomUp_eq_of_loopRuns (cursor : ℕ) (state : State source target spills)
-    {r : M (Frame source target spills)}
+    {r : Except Error (Frame source target spills)}
     (h : LoopRuns (loopStep (loopParts source target spills).val) (none, state, cursor) r) :
     buildBottomUp cursor state = (r >>= finishLoop) := by
   rw [buildBottomUp_as_loop, h.result_eq]
@@ -54,7 +54,7 @@ theorem buildBottomUp_noAssertion (cursor : ℕ) (state : State source target sp
   exact ((spec_iff_triple _ _).mpr (buildBottomUp_triple cursor state inv)).noAssertion reason
 
 -- Assertion exclusion recovers the public error type.
-private def restoreResult (result : M α)
+private def restoreResult (result : Except Error α)
     (noAssertion : ∀ reason, result ≠ .error (.assertion reason)) : Except ShuffleErr α :=
   match result with
   | .ok value => .ok value

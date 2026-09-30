@@ -22,45 +22,43 @@ inductive Error where
   | assertion (reason : String)
   deriving DecidableEq, Repr
 
-abbrev M := Except Error
-
 abbrev Action (source target : Stack) (spills : SpillSet) :=
-  StateT (State source target spills) M
+  StateT (State source target spills) (Except Error)
 
 
 --- Utils ------------------------------------------------------------------------------------------
 
 
 -- returns a proof of `condition` if it holds, or throws with an assertion error otherwise.
-def requires (condition : Prop) [Decidable condition] (reason : String) : M (PLift condition) :=
+def requires (condition : Prop) [Decidable condition] (reason : String) : Except Error (PLift condition) :=
   if h : condition then pure ⟨h⟩ else throw (.assertion reason)
 
 -- throw an assertion error if `condition` does not hold.
-def ensure (condition : Prop) [Decidable condition] (reason : String) : M Unit := do
+def ensure (condition : Prop) [Decidable condition] (reason : String) : Except Error Unit := do
   let _ ← requires condition reason
   return ()
 
 -- convert offset to a `Fin size` if offset < size. throw an assertion error otherwise.
-def index (size offset : ℕ) : M (Fin size) := do
+def index (size offset : ℕ) : Except Error (Fin size) := do
   if h : offset < size then return ⟨offset, h⟩
   else throw (.assertion "offset is out of bounds")
 
 -- return the slot at offset if offset < stack.length. throw an assertion error otherwise.
-def slotAt (stack : Stack) (offset : ℕ) : M Value := do
+def slotAt (stack : Stack) (offset : ℕ) : Except Error Value := do
   return stack[← index stack.length offset]
 
 
 --- Conversions ------------------------------------------------------------------------------------
 
 
-def State.depthOf (state : State source target spills) (offset : ℕ) : M (Fin state.stack.length) := do
+def State.depthOf (state : State source target spills) (offset : ℕ) : Except Error (Fin state.stack.length) := do
   return state.stack.offsetToDepth (← index state.stack.length offset)
 
 
 --- Queries ----------------------------------------------------------------------------------------
 
 
-def State.isSwapReachable (state : State source target spills) (offset : ℕ) : M Bool := do
+def State.isSwapReachable (state : State source target spills) (offset : ℕ) : Except Error Bool := do
   return decide ((← depthOf state offset).val ≤ MAX_SWAP_DEPTH)
 
 instance (stack : Stack) (pos : Fin stack.length) : Decidable (stack.isSwapReachable pos) :=
@@ -116,7 +114,6 @@ def dup (offset : ℕ) (dest : Fin target.length) : Action source target spills 
   let copy ← index state.stack.length offset
   let depth := state.stack.offsetToDepth copy
 
-  have heq : state.stack.length + 1 = (state.stack ++ [state.stack[copy]]).length := by simp
   let ⟨hbound⟩ ← requires (state.mapping.symm dest = none) "destination already bound to a slot"
   let ⟨hdup⟩ ← requires (state.stack.isDupReachable copy) "copy is outside DUP reach"
 
@@ -126,7 +123,8 @@ def dup (offset : ℕ) (dest : Fin target.length) : Action source target spills 
     trace :=
       dup_stack_eq state.stack copy ▸
         Trace.Dup (depth.val + 1) (Nat.succ_le_of_lt depth.isLt) (Nat.succ_pos _) (Nat.add_le_add_right hdup 1) state.trace
-    mapping := heq ▸ state.mapping.push dest hbound
+    mapping := by simpa [stack_push_len] using
+      state.mapping.push dest hbound
   }
 
 def swapDestinations (a b : ℕ) : Action source target spills Unit := do
@@ -189,11 +187,11 @@ def generate (targetOffset : ℕ) : Action source target spills Unit := do
       swapWith targetOffset
 
 
---- Actions ----------------------------------------------------------------------------------------
+--- buildBottomUp -----------------------------------------------------------------------------------
 
 
 def buildBottomUp (cursor : ℕ) (initial : State source target spills) :
-    M ((res : Stack) × Trace spills source res) :=
+    Except Error ((res : Stack) × Trace spills source res) :=
   StateT.run' (s := initial) do
     let mut targetOffset := cursor
     while targetOffset < target.length do
@@ -211,7 +209,7 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) :
             (ε' := Error) fun (.Blocked excess) => .blocked excess
         return ⟨res, state.trace.concat trace⟩
 
-      let urgentToDup ← forIn (m := M) [targetOffset : target.length] none fun offset urgent => do
+      let urgentToDup ← forIn (m := Except Error) [targetOffset : target.length] none fun offset urgent => do
         if (state.positionOf offset).isSome then
           return .yield urgent
         let slot ← slotAt target offset
@@ -244,7 +242,7 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) :
         if (← slotAt state.stack targetOffset) = (← slotAt state.stack sourceForTargetOffset) then
           pos := targetOffset
         else
-          pos ← forIn (m := M)
+          pos ← forIn (m := Except Error)
             ((List.range state.stack.length).reverse.take (← state.depthOf sourceForTargetOffset)) pos fun candidate pos => do
               if (← slotAt state.stack candidate) = (← slotAt state.stack sourceForTargetOffset) ∧
                   ¬ state.isFinal candidate then

@@ -12,7 +12,7 @@ theorem loop_unfold [Monad m] [LawfulMonad m] [Lean.Order.MonadTail m] (s : β) 
 abbrev Frame (source target : Stack) (spills : SpillSet) :=
   Option ((res : Stack) × Trace spills source res) × State source target spills × ℕ
 
-def finishLoop (frame : Frame source target spills) : M ((res : Stack) × Trace spills source res) := do
+def finishLoop (frame : Frame source target spills) : Except Error ((res : Stack) × Trace spills source res) := do
   if let some result := frame.1 then
     return result
   ensure (frame.2.1.stack.length = target.length) "stack and target sizes differ"
@@ -44,14 +44,14 @@ def loopParts (source target : Stack) (spills : SpillSet) :
     cases frame.1 <;> rfl⟩
 
 def loopStep (body : Unit → ControlFrame source spills → Action source target spills (ForInStep (ControlFrame source spills)))
-    (_ : Unit) (frame : Frame source target spills) : M (ForInStep (Frame source target spills)) := do
+    (_ : Unit) (frame : Frame source target spills) : Except Error (ForInStep (Frame source target spills)) := do
   let (step, state) ← (body () (frame.1, frame.2.2)).run frame.2.1
   return match step with
     | .done out => .done (out.1, state, out.2)
     | .yield out => .yield (out.1, state, out.2)
 
 def runLoop (body : Unit → ControlFrame source spills → Action source target spills (ForInStep (ControlFrame source spills)))
-    (frame : Frame source target spills) : M (Frame source target spills) := do
+    (frame : Frame source target spills) : Except Error (Frame source target spills) := do
   let (out, state) ← (forIn ({} : Lean.Loop) (frame.1, frame.2.2) body).run frame.2.1
   return (out.1, state, out.2)
 
@@ -69,14 +69,14 @@ theorem runLoop_unfold (body : Unit → ControlFrame source spills → Action so
   | ok result => obtain ⟨step, state⟩ := result; cases step <;> rfl
 
 -- A finite execution of the actual loop body, including an error exit.
-inductive LoopRuns (body : Unit → β → M (ForInStep β)) : β → M β → Prop where
+inductive LoopRuns (body : Unit → β → Except Error (ForInStep β)) : β → Except Error β → Prop where
   | error {s e} : body () s = .error e → LoopRuns body s (.error e)
   | done {s out} : body () s = .ok (.done out) → LoopRuns body s (.ok out)
   | next {s s' r} : body () s = .ok (.yield s') → LoopRuns body s' r → LoopRuns body s r
 
 theorem LoopRuns.result_eq
     {body : Unit → ControlFrame source spills → Action source target spills (ForInStep (ControlFrame source spills))}
-    {frame : Frame source target spills} {r : M (Frame source target spills)}
+    {frame : Frame source target spills} {r : Except Error (Frame source target spills)}
     (h : LoopRuns (loopStep body) frame r) : runLoop body frame = r := by
   induction h with
   | error he => rw [runLoop_unfold, he]; rfl

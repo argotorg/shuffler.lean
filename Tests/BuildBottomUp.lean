@@ -54,7 +54,7 @@ private def emptyState (target : Stack) (spills : SpillSet) : State [] target sp
 
 private def spilled : State [] [.Var ⟨37⟩] {⟨37⟩} := emptyState _ _
 
-private def observeState (result : M (State source target spills)) :=
+private def observeState (result : Except Error (State source target spills)) :=
   result.map fun state =>
     (state.stack, operations state.trace,
       List.ofFn (fun dest => (state.mapping.symm dest).map Fin.val), state.pending_generations)

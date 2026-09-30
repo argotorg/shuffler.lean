@@ -9,7 +9,7 @@ set_option mvcgen.warning false
 namespace Shuffler.BuildBottomUp
 
 -- A blocked operation is allowed. An assertion error is excluded.
-def Spec (result : M α) (post : α → Prop) : Prop :=
+def Spec (result : Except Error α) (post : α → Prop) : Prop :=
   match result with
   | .ok value => post value
   | .error (.blocked _) => True
@@ -19,7 +19,7 @@ def Spec (result : M α) (post : α → Prop) : Prop :=
 def allowedErrors : EPost⟨Error → Prop⟩ :=
   epost⟨fun | .blocked _ => True | .assertion _ => False⟩
 
-theorem spec_iff_triple (result : M α) (post : α → Prop) :
+theorem spec_iff_triple (result : Except Error α) (post : α → Prop) :
     Spec result post ↔ ⦃True⦄ result ⦃post; allowedErrors⦄ := by
   cases result with
   | ok value => exact ⟨fun h => ⟨fun _ => h⟩, fun h => h.le_wp trivial⟩
@@ -67,7 +67,7 @@ theorem Spec.of_action {action : Action source target spills Unit}
     ⦃fun _ s => s = { state with mapping := state.mapping.swapDestinations ⟨a, ha⟩ ⟨b, hb⟩ }; allowedErrors⦄ := by
   vcgen [swapDestinations, index] <;> subst_vars <;> simp_all
 
-theorem Spec.bind {result : M α} {pre : α → Prop} {next : α → M β}
+theorem Spec.bind {result : Except Error α} {pre : α → Prop} {next : α → Except Error β}
     {post : β → Prop} (h : Spec result pre)
     (step : ∀ value, pre value → Spec (next value) post) :
     Spec (result >>= next) post := by
@@ -75,18 +75,18 @@ theorem Spec.bind {result : M α} {pre : α → Prop} {next : α → M β}
   | ok value => exact step value h
   | error err => cases err <;> exact h
 
-theorem Spec.mono {result : M α} {pre post : α → Prop}
+theorem Spec.mono {result : Except Error α} {pre post : α → Prop}
     (h : Spec result pre) (step : ∀ value, pre value → post value) : Spec result post := by
   cases result with
   | ok value => exact step value h
   | error err => cases err <;> exact h
 
-theorem Spec.noAssertion {result : M α} {post : α → Prop}
+theorem Spec.noAssertion {result : Except Error α} {post : α → Prop}
     (h : Spec result post) (reason : String) : result ≠ .error (.assertion reason) := by
   intro heq
   simp [heq, Spec] at h
 
-theorem Spec.error {result : M α} {post : α → Prop}
+theorem Spec.error {result : Except Error α} {post : α → Prop}
     (h : Spec result post) (heq : result = .error err) : ∃ excess, err = .blocked excess := by
   cases err with
   | blocked excess => exact ⟨excess, rfl⟩

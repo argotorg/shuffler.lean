@@ -1,8 +1,8 @@
 import Shuffler.BuildBottomUp.Defs
 
--- Execute an update and retain its state. Errors have no state, as in M.
+-- Execute an update and retain its state. Errors have no state.
 def Action.exec (action : Action source target spills Unit) (state : State source target spills) :
-    M (State source target spills) := do
+    Except Error (State source target spills) := do
   let (_, next) ← action.run state
   return next
 
@@ -17,7 +17,7 @@ theorem except_error_bind (err : ε) (next : α → Except ε β) :
 theorem Action.exec_get (next : State source target spills → Action source target spills Unit)
     (state : State source target spills) : (get >>= next).exec state = (next state).exec state := rfl
 
-theorem Action.exec_lift (action : M α) (next : α → Action source target spills Unit)
+theorem Action.exec_lift (action : Except Error α) (next : α → Action source target spills Unit)
     (state : State source target spills) :
     (liftM action >>= next).exec state = (action >>= fun value => (next value).exec state) := by
   cases action <;> rfl
@@ -39,12 +39,12 @@ theorem Action.run_bind_update (action : Action source target spills Unit)
 theorem Action.run_get (next : State source target spills → Action source target spills α)
     (state : State source target spills) : (get >>= next).run state = (next state).run state := rfl
 
-theorem Action.run_lift (action : M α) (next : α → Action source target spills β)
+theorem Action.run_lift (action : Except Error α) (next : α → Action source target spills β)
     (state : State source target spills) :
     (liftM action >>= next).run state = (action >>= fun value => (next value).run state) := by
   cases action <;> rfl
 
-theorem Action.exec_lift_unit (action : M Unit) (state : State source target spills) :
+theorem Action.exec_lift_unit (action : Except Error Unit) (state : State source target spills) :
     (liftM action : Action source target spills Unit).exec state =
       (action >>= fun _ => pure state) := by cases action <;> rfl
 
