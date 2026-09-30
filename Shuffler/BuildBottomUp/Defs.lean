@@ -209,18 +209,18 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) :
             (ε' := Error) fun (.Blocked excess) => .blocked excess
         return ⟨res, state.trace.concat trace⟩
 
-      let urgentToDup ← forIn (m := Except Error) [targetOffset : target.length] none fun offset urgent => do
+      let mut urgentToDup := none
+      for offset in [targetOffset : target.length] do
         if (state.positionOf offset).isSome then
-          return .yield urgent
+          continue
         let slot ← slotAt target offset
         if slot.is_junk ∨ slot.can_be_freely_generated ∨ spills.is_spilled slot then
-          return .yield urgent
+          continue
         if let some copy := state.stack.shallowestCopyPosition slot then
           if ¬ state.stack.isDupReachable copy then
             throw (.blocked ((← state.depthOf copy) - MAX_DUP_DEPTH))
-          if (← state.depthOf copy) = MAX_DUP_DEPTH ∧ copy.val ≠ targetOffset ∧ urgent.isNone then
-            return .yield (some offset)
-        return .yield urgent
+          if (← state.depthOf copy) = MAX_DUP_DEPTH ∧ copy.val ≠ targetOffset ∧ urgentToDup.isNone then
+            urgentToDup := some offset
 
       if h : urgentToDup.isSome ∧ urgentToDup ≠ some targetOffset ∧
           state.stack.length - targetOffset < MAX_SWAP_DEPTH then
@@ -242,12 +242,11 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) :
         if (← slotAt state.stack targetOffset) = (← slotAt state.stack sourceForTargetOffset) then
           pos := targetOffset
         else
-          pos ← forIn (m := Except Error)
-            ((List.range state.stack.length).reverse.take (← state.depthOf sourceForTargetOffset)) pos fun candidate pos => do
-              if (← slotAt state.stack candidate) = (← slotAt state.stack sourceForTargetOffset) ∧
-                  ¬ state.isFinal candidate then
-                return .done candidate
-              return .yield pos
+          for candidate in (List.range state.stack.length).reverse.take (← state.depthOf sourceForTargetOffset) do
+            if (← slotAt state.stack candidate) = (← slotAt state.stack sourceForTargetOffset) ∧
+                ¬ state.isFinal candidate then
+              pos := candidate
+              break
 
         ensure ((← slotAt state.stack pos) = (← slotAt state.stack sourceForTargetOffset))
           "selected copy differs from the bound slot"

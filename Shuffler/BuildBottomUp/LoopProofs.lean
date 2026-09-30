@@ -90,9 +90,13 @@ theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
           simp [Except.mapError, except_ok_bind,
             Spec, StepPost, finishLoop, pure, Except.pure]
       · simp only [hz, ↓reduceIte]
-        simp_action
-        apply ((spec_iff_triple _ _).mpr (urgentScan_triple cursor state)).bind
-        intro urgent hu
+        rw [StateT.run_bind, bind_assoc]
+        have hscan := (action_triple_iff _ _ _).mp (urgentScan_triple cursor state)
+        simp only [bind_pure] at hscan
+        apply hscan.bind
+        rintro ⟨urgent, next⟩ ⟨hu, hnext⟩
+        dsimp only at hu hnext ⊢
+        subst next
         split
         · rename_i hurg
           obtain ⟨hlt, hnone⟩ := hu (urgent.get hurg.1) (Option.some_get hurg.1).symm
@@ -153,11 +157,14 @@ theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
               · simp_action
                 rw [depthOf_index state carrier]
                 simp only [except_ok_bind]
-                have hscan := (spec_iff_triple _ _).mpr (copyScan_triple state carrier carrier.val
+                have hscan := (action_triple_iff _ _ _).mp (copyScan_triple state carrier carrier.val
                   ⟨carrier, rfl, rfl, state.boundNotFinal_of_not_final dest carrier hb hnfinal⟩)
-                simp only [slotAt_index state.stack carrier, except_ok_bind] at hscan
+                simp only [bind_pure, slotAt_index state.stack carrier] at hscan
+                rw [StateT.run_bind, bind_assoc]
                 apply hscan.bind
-                intro selected hselected
+                rintro ⟨selected, next⟩ ⟨hselected, hnext⟩
+                dsimp only at hselected hnext ⊢
+                subst next
                 obtain ⟨pos, rfl, hequal, hmovable⟩ := hselected
                 rw [slotAt_index state.stack pos]
                 simp_action
