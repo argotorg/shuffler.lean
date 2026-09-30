@@ -19,6 +19,11 @@ example : generate (emptyState [.Var ⟨37⟩] ∅) 0 = .error (.assertion .unav
 example : swapWith (emptyState [] ∅) 0 = .error (.assertion .bounds) := rfl
 example : finish (emptyState [.Lit 1] ∅) = .error (.assertion .permutation) := rfl
 
+-- A built-in assertion does not reject inputs outside the proved preconditions.
+-- Here the loop is skipped and the final size assertion is false.
+example : observe (Checked.buildBottomUp 1 (emptyState [.Lit 1] ∅)) =
+    .ok ([], []) := by native_decide
+
 private def boundState : State [.Lit 1] [.Lit 1] ∅ where
   planned_mapping := ⊥
   stack := [.Lit 1]

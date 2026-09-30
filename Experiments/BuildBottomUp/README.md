@@ -62,9 +62,9 @@ a stack reach error:
 
 The exception postcondition in `generate_spec` and `generateUntilBound_spec` is
 `exists excess, err = .blocked excess`. It rules out every assertion error.
-No assertion is converted to `Blocked`, discarded, or replaced by a default
-value. The checks add computation; this experiment does not claim that the
-compiler removes them.
+No helper error is converted to `Blocked`, discarded, or replaced by a default
+value. The helper checks add computation; this experiment does not claim that
+the compiler removes them.
 
 `buildBottomUp_noAssertion` proves assertion exclusion for the full loop.
 `buildBottomUpVerified` uses `restoreResult` to give the function its old
@@ -73,12 +73,30 @@ proof. `buildBottomUpVerified_eq` proves exact equality to the old function.
 This wrapper takes the four old preconditions as one `BuildBottomUpInvariant`.
 
 The C++ assertions about the bound source, selected value, final placement,
-and final stack size appear as `assertThat` calls. Bounds and operation
-preconditions are checked inside the support functions.
+and final stack size appear as Lean's built-in `assert` statements:
 
-`assertThat` takes a proposition and a `Decidable` instance, so its calls use
-`=` and `¬` directly. The instance supplies the runtime check.
-The other conditions also use propositions: `∧`, `∨`, `=`, `≠`, and `¬`.
+```lean
+assert (boundForTarget ≥ targetOffset)
+```
+
+These statements are proof annotations for `vcgen`. They do not check the
+condition at runtime and do not accept a message string. They require
+`Std.Internal.Do`. The two files that use them set `experimental.intrinsic`
+to acknowledge this experimental syntax in Lean 4.34.
+
+The equivalence and termination proofs still use the old preconditions. They
+compare the computation; they are not a `vcgen` proof of these annotations.
+An input outside the preconditions can pass a false annotation. A test covers
+this case for the final stack size. The slot reads inside the copy assertion
+still run and can return a bounds error.
+
+Bounds and operation preconditions are checked inside the support functions.
+Their `if h : ...` branches supply proofs needed to construct `Fin` values and
+call `State.generate`, `State.swapWith`, and `Mapping.toPermutation`. A built-in
+`assert` does not supply these proofs when Lean checks the function, so it
+cannot replace those branches with the current operation types.
+
+Conditions use propositions: `∧`, `∨`, `=`, `≠`, and `¬`.
 `isSwapReachable` is a proposition with a `Decidable` instance. Standard
 `Option.isSome` and `Option.isNone` queries still return `Bool`. The test runner
 uses `decide` at the boundary where it needs a Boolean result.
@@ -117,7 +135,7 @@ Compare `Checked.buildBottomUp` with `Emission::buildBottomUp` in
 | `m_mapping.swapDestinations(...)` | `state ← swapDestinations state ...` |
 | Reach check followed by `swapWith(...)` | The same check followed by checked `swapWith` |
 | `return permute(...)` | `return ← finish state` |
-| `yulAssert(...)` | `assertThat` or a checked helper precondition |
+| `yulAssert(...)` | Built-in `assert` annotation or a checked helper precondition |
 
 The urgent scan keeps scanning after it finds the first urgent destination.
 A later unreachable copy must still block the operation. The equal-copy scan

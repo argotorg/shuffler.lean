@@ -5,7 +5,7 @@ namespace BuildBottomUpExperiments.Checked
 open Shuffler.Permute
 
 inductive Assertion where
-  | bounds | bound | unavailable | swap | permutation | copy | final | size
+  | bounds | bound | unavailable | swap | permutation
   deriving DecidableEq, Repr
 
 inductive Error where
@@ -20,9 +20,6 @@ abbrev M := Except Error
 
 def liftResult (r : Except ShuffleErr α) : M α :=
   r.mapError fun (.Blocked excess) => .blocked excess
-
-def assertThat (condition : Prop) [Decidable condition] (reason : Assertion) : M Unit :=
-  if condition then pure () else throw (.assertion reason)
 
 def index (size offset : ℕ) : M (Fin size) :=
   if h : offset < size then .ok ⟨offset, h⟩ else .error (.assertion .bounds)

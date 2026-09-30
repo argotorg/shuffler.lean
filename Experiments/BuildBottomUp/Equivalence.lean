@@ -18,7 +18,7 @@ theorem attach_ok {r : Except ε α} {a : α} (h : r = .ok a) :
 theorem attach_error {r : Except ε α} {e : ε} (h : r = .error e) :
     r.attach = .error e := by subst r; rfl
 
-theorem assert_true (reason : Assertion) : assertThat True reason = .ok () := rfl
+theorem assert_true : Std.Internal.Do.assertGadget (m := M) True = .ok ⟨⟩ := rfl
 
 theorem swapDestinations_eq (state : State source target spills)
     (a b : Fin state.stack.length) :
@@ -100,7 +100,7 @@ theorem buildWith_eq
     have hsize := complete_size state ⟨hi, hs, hp, ha⟩ hd
     rw [buildWith, unfold_loop, build_bottom_up.eq_def]
     dsimp only [loopParts, finishLoop]
-    simp [show ¬cursor < target.length by omega, hd, hsize, assertThat, liftResult,
+    simp [show ¬cursor < target.length by omega, hd, hsize, assert_true, liftResult,
       pure, Except.pure, Except.mapError, bind, Except.bind]
   case case2 cursor state hi hs hp ha hd dest hf ih =>
     have hskip : cursor < state.stack.length ∧ state.is_final cursor := hf

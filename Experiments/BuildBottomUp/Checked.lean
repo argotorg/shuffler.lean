@@ -1,6 +1,9 @@
 import Experiments.BuildBottomUp.CheckedSupport
+import Std.Internal.Do
 
 namespace BuildBottomUpExperiments.Checked
+
+set_option experimental.intrinsic true
 
 -- Local mutation is Lean do-notation. No state is shared with the caller.
 -- C++ ++targetOffset is written at each advancing continue and at the loop tail.
@@ -42,7 +45,8 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
       continue
 
     if let some boundForTarget := positionOf state targetOffset then
-      assertThat (boundForTarget ≥ targetOffset) .bound
+      -- The slot bound for this offset must not be below it.
+      assert (boundForTarget ≥ targetOffset)
       let sourceForTargetOffset := boundForTarget
       let mut pos := sourceForTargetOffset
       if (← slotAt state.stack targetOffset) = (← slotAt state.stack sourceForTargetOffset) then
@@ -54,7 +58,7 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
             pos := candidate
             break
 
-      assertThat ((← slotAt state.stack pos) = (← slotAt state.stack sourceForTargetOffset)) .copy
+      assert ((← slotAt state.stack pos) = (← slotAt state.stack sourceForTargetOffset))
       state ← swapDestinations state pos sourceForTargetOffset
       if pos = targetOffset then
         targetOffset := targetOffset + 1
@@ -70,14 +74,14 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
         targetOffset := targetOffset + 1
         continue
 
-    assertThat (¬ state.is_final targetOffset) .final
+    assert (¬ state.is_final targetOffset)
     if targetOffset ≠ state.stack.length - 1 then
       if ¬ isSwapReachable state targetOffset then
         throw (.blocked (depthOf state targetOffset - MAX_SWAP_DEPTH))
       state ← swapWith state targetOffset
     targetOffset := targetOffset + 1
 
-  assertThat (state.stack.length = target.length) .size
+  assert (state.stack.length = target.length)
   return ⟨state.stack, state.trace⟩
 
 end BuildBottomUpExperiments.Checked
