@@ -34,6 +34,6 @@ def compareAndRun (cursor : ℕ) (state : State source target spills)
     (Checked.buildBottomUpVerified cursor state ⟨hinv, hsize, hpending, havailable⟩)
   if observe original = observe deferred ∧ observe original = observe checked ∧
       observe original = observe verified then checked
-  else .error (.assertion .permutation)
+  else .error (.assertion "build-bottom-up results differ")
 
 end BuildBottomUpExperiments

@@ -2,8 +2,6 @@ import Experiments.BuildBottomUp.Checked
 
 namespace BuildBottomUpExperiments.Checked
 
-set_option experimental.intrinsic true
-
 theorem loop_unfold (s : β) (f : Unit → β → M (ForInStep β)) :
     forIn ({} : Lean.Loop) s f = (do
       match ← f () s with
@@ -17,7 +15,7 @@ abbrev Frame (source target : Stack) (spills : SpillSet) :=
 def finishLoop (frame : Frame source target spills) : M (Result source spills) := do
   if let some result := frame.1 then
     return result
-  assert (frame.2.1.stack.length = target.length)
+  ensure (frame.2.1.stack.length = target.length) "stack and target sizes differ"
   return ⟨frame.2.1.stack, frame.2.1.trace⟩
 
 -- Lean infers the body from the actual definition. The equality is checked

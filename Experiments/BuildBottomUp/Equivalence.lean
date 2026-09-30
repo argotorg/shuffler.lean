@@ -18,7 +18,7 @@ theorem attach_ok {r : Except ε α} {a : α} (h : r = .ok a) :
 theorem attach_error {r : Except ε α} {e : ε} (h : r = .error e) :
     r.attach = .error e := by subst r; rfl
 
-theorem assert_true : Std.Internal.Do.assertGadget (m := M) True = .ok ⟨⟩ := rfl
+theorem ensure_true (reason : String) : ensure True reason = .ok () := rfl
 
 theorem swapDestinations_eq (state : State source target spills)
     (a b : Fin state.stack.length) :
@@ -46,7 +46,7 @@ macro "finish_placement " c:term ", " st:term ", " hp:term ", " hn:term ", " adv
   simp only [and_cases]
   have hnf := $hn
   try dsimp +zetaDelta only at hnf
-  try simp +zetaDelta only [hnf, not_false_eq_true, assert_true, bind, Except.bind]
+  try simp +zetaDelta only [hnf, not_false_eq_true, ensure_true, bind, Except.bind]
   by_cases hnotTop : $c ≠ ($st).stack.length - 1
   · try dsimp +zetaDelta only at hnotTop
     try simp +zetaDelta only [ne_eq, hnotTop, not_false_eq_true, ↓reduceIte, ↓reduceDIte]
@@ -100,7 +100,7 @@ theorem buildWith_eq
     have hsize := complete_size state ⟨hi, hs, hp, ha⟩ hd
     rw [buildWith, unfold_loop, build_bottom_up.eq_def]
     dsimp only [loopParts, finishLoop]
-    simp [show ¬cursor < target.length by omega, hd, hsize, assert_true, liftResult,
+    simp [show ¬cursor < target.length by omega, hd, hsize, ensure_true, liftResult,
       pure, Except.pure, Except.mapError, bind, Except.bind]
   case case2 cursor state hi hs hp ha hd dest hf ih =>
     have hskip : cursor < state.stack.length ∧ state.is_final cursor := hf
@@ -115,8 +115,8 @@ theorem buildWith_eq
     dsimp only [loopParts, finishLoop]
     simp only [show cursor < target.length by omega, hd, hskip', hz,
       ↓reduceIte, ↓reduceDIte,
-      pure_bind, bind_assoc]
-    simp only [finish, dite_eq_left hc.1, dite_eq_left hc.2]
+      bind_assoc]
+    simp only [requires, dite_eq_left (And.intro hc.1 hc.2), pure_bind]
     cases hperm : Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hc.1 hc.2) with
     | error err => cases err; rfl
     | ok result => cases result; rfl
@@ -209,13 +209,13 @@ theorem buildWith_eq
           conv_lhs => rw [hbound, Option.map_some]
           dsimp only [dest] at hb
           simp only [hb, eq_self, ↓reduceDIte, hge,
-            assert_true, hslot, slotAt_eq]
+            ensure_true, hslot, slotAt_eq]
           by_cases hequal : state.stack[current] = state.stack[carrier]
           · have hequal' := hequal
             simp only [Fin.getElem_fin] at hequal' ⊢
             dsimp only [current, carrier, dest]
             dsimp +zetaDelta only at hequal'
-            simp only [hequal', ↓reduceIte, ↓reduceDIte, eq_self, assert_true]
+            simp only [hequal', ↓reduceIte, ↓reduceDIte, eq_self, ensure_true]
             rw [swapDestinations_eq state current carrier]
             simp only [pure, Except.pure]
             let chosen : state.MovableCopy carrier := ⟨current, hequal, hnfinal⟩
@@ -242,7 +242,7 @@ theorem buildWith_eq
               have heq := chosen.equal
               simp only [Fin.getElem_fin] at heq ⊢
               dsimp only [carrier, dest] at heq ⊢
-              simp only [heq, eq_self, assert_true]
+              simp only [heq, eq_self, ensure_true]
               rw [swapDestinations_eq state chosen.toFin carrier]
               simp only [pure, Except.pure]
               obtain ⟨hretag, hdest⟩ := inv.retag_copy (dest := dest) chosen hbound
@@ -323,7 +323,7 @@ theorem buildBottomUp_terminates (cursor : ℕ) (state : State source target spi
     (ha : ∀ i, state.is_available i) :
     ∃ r, LoopRuns (loopParts source target spills).val (none, state, cursor) r := by
   by_contra h
-  have heq := buildWith_eq (loopOr (.assertion .bounds) (loopParts source target spills).val)
+  have heq := buildWith_eq (loopOr (.assertion "loop has no finite execution") (loopParts source target spills).val)
     (fun frame => by
       rw [loopOr_unfold]
       cases hstep : (loopParts source target spills).val () frame with
@@ -336,7 +336,7 @@ theorem buildBottomUp_terminates (cursor : ℕ) (state : State source target spi
   | ok result => simp [hresult, liftResult, Except.mapError] at heq
 
 theorem buildBottomUp_noAssertion (cursor : ℕ) (state : State source target spills)
-    (inv : BuildBottomUpInvariant cursor state) (reason : Assertion) :
+    (inv : BuildBottomUpInvariant cursor state) (reason : String) :
     buildBottomUp cursor state ≠ .error (.assertion reason) := by
   rw [buildBottomUp_eq cursor state inv.processed inv.size inv.pending inv.available]
   cases build_bottom_up cursor state inv.processed inv.size inv.pending inv.available with

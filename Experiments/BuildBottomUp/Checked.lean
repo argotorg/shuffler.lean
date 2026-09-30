@@ -1,9 +1,6 @@
 import Experiments.BuildBottomUp.CheckedSupport
-import Std.Internal.Do
 
 namespace BuildBottomUpExperiments.Checked
-
-set_option experimental.intrinsic true
 
 -- Local mutation is Lean do-notation. No state is shared with the caller.
 -- C++ ++targetOffset is written at each advancing continue and at the loop tail.
@@ -17,7 +14,12 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
       continue
 
     if state.pending_generations = 0 then
-      return ← finish state
+      let ⟨hlen, hsource⟩ ← requires
+        (state.stack.length = target.length ∧ ∀ i, (state.mapping i).isSome)
+        "stack does not define a complete permutation"
+      let ⟨res, trace⟩ ← liftResult
+        (Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hlen hsource))
+      return ⟨res, state.trace.concat trace⟩
 
     let mut urgentToDup : Option ℕ := none
     for offset in [targetOffset : target.length] do
@@ -46,7 +48,8 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
 
     if let some boundForTarget := positionOf state targetOffset then
       -- The slot bound for this offset must not be below it.
-      assert (boundForTarget ≥ targetOffset)
+      ensure (boundForTarget ≥ targetOffset)
+        "slot bound for the offset being filled is missing or already below it"
       let sourceForTargetOffset := boundForTarget
       let mut pos := sourceForTargetOffset
       if (← slotAt state.stack targetOffset) = (← slotAt state.stack sourceForTargetOffset) then
@@ -58,7 +61,8 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
             pos := candidate
             break
 
-      assert ((← slotAt state.stack pos) = (← slotAt state.stack sourceForTargetOffset))
+      ensure ((← slotAt state.stack pos) = (← slotAt state.stack sourceForTargetOffset))
+        "selected copy differs from the bound slot"
       state ← swapDestinations state pos sourceForTargetOffset
       if pos = targetOffset then
         targetOffset := targetOffset + 1
@@ -74,14 +78,14 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
         targetOffset := targetOffset + 1
         continue
 
-    assert (¬ state.is_final targetOffset)
+    ensure (¬ state.is_final targetOffset) "target slot is already final"
     if targetOffset ≠ state.stack.length - 1 then
       if ¬ isSwapReachable state targetOffset then
         throw (.blocked (depthOf state targetOffset - MAX_SWAP_DEPTH))
       state ← swapWith state targetOffset
     targetOffset := targetOffset + 1
 
-  assert (state.stack.length = target.length)
+  ensure (state.stack.length = target.length) "stack and target sizes differ"
   return ⟨state.stack, state.trace⟩
 
 end BuildBottomUpExperiments.Checked

@@ -3,10 +3,14 @@
 Use `Checked.lean` as the starting point for the next version. It keeps the C++
 branch order, searches, early returns, and `continue` statements. Its loop body
 has no tactic proofs, proof-carrying search results, or invariant updates.
-The urgent-generation guard supplies one proof reference to `Option.get`.
+The urgent-generation guard supplies a proof to `Option.get`. The final
+permutation branch gets its length and mapping proofs from `requires`.
 The supporting operations still use the existing `State`, `Mapping`, and `Trace`.
 
-These are experiments. The production files are unchanged.
+This directory contains the candidate implementation for production use. Its
+checks and proofs use ordinary Lean definitions and theorems. It does not use
+the experimental verification tactics or contract syntax. The existing
+implementation in `Shuffler/BuildBottomUp` is unchanged.
 
 The checked version now has a proof of equivalence to the old definition, plus
 a separate proof that its outer loop has a finite execution. Both use the old
@@ -17,13 +21,8 @@ preconditions. See [Equivalence.lean](Equivalence.lean).
 | Approach | File | Result |
 | --- | --- | --- |
 | Move proofs below the definition and group the four invariants | [Deferred.lean](Deferred.lean) | Compiles without `sorry`. Keeps the dependent `else` branches and recursive calls. |
-| Checked helpers with separate assertion errors | [Checked.lean](Checked.lean) and [CheckedSupport.lean](CheckedSupport.lean) | The full algorithm compiles as a `while` loop with early returns. One proof reference reads the guarded optional value. |
-| Prove contracts and loop properties after the definition with `mvcgen` | [CheckedProofs.lean](CheckedProofs.lean) | Proves a loop over the actual checked `generate` helper terminates, preserves the invariant, and can fail only with `Blocked`. |
-
-The deferred version has about 110 lines of algorithm and 40 lines of proof.
-The checked version has about 75 lines of algorithm. These counts exclude most
-comments and the helper implementations. They measure the main definition,
-not the total cost of verification.
+| Checked helpers with separate assertion errors | [Checked.lean](Checked.lean) and [CheckedSupport.lean](CheckedSupport.lean) | The full algorithm compiles as a `while` loop with early returns. The final permutation checks and call are in the loop body. |
+| Prove helper contracts and loop properties after the definition | [CheckedProofs.lean](CheckedProofs.lean) | Proves exact helper equivalence and that a loop over checked `generate` takes at most one iteration, preserves the invariant, and can fail only with `Blocked`. |
 
 An attempted `rfl` proof of equality between the deferred version and the old
 function failed. Grouping the invariant arguments changes the recursive term.
@@ -36,16 +35,18 @@ also needs facts about the state after mutation and after a search. Its dependen
 operations require those facts when Lean elaborates the program. An explicit
 `else` keeps the required branch fact in scope.
 
-`mvcgen` works on a program that already type-checks. It cannot supply a missing
-argument to `State.generate` during elaboration. Moving the partial operation
-into a checked helper solves that earlier problem:
+Moving each operation into a checked helper keeps those proof arguments out of
+the loop body:
 
 ```lean
 state ← generate state urgent
 continue
 ```
 
-The helper checks its bounds, unbound destination, and availability. On valid
+The helper checks its bounds, unbound destination, and availability. The local
+`push`, `dup`, `produce`, `swapWith`, and `generate` implementations construct
+states and traces directly. They share the core types with the old code but do
+not call its operational `State` helpers. On valid
 inputs, `generate_eq` proves that it returns exactly the result of
 `State.generate`, with the old error embedded in the new error type. This
 includes the complete state and trace. `swapWith_eq` proves the corresponding
@@ -57,10 +58,12 @@ a stack reach error:
 
 ```lean
 | blocked (excess : Nat)
-| assertion (reason : Assertion)
+| assertion (reason : String)
 ```
 
-The exception postcondition in `generate_spec` and `generateUntilBound_spec` is
+Assertion errors carry a message that describes the failed precondition.
+
+The error case in `generate_spec` and `generateUntilBound_spec` is
 `exists excess, err = .blocked excess`. It rules out every assertion error.
 No helper error is converted to `Blocked`, discarded, or replaced by a default
 value. The helper checks add computation; this experiment does not claim that
@@ -72,59 +75,73 @@ the compiler removes them.
 proof. `buildBottomUpVerified_eq` proves exact equality to the old function.
 This wrapper takes the four old preconditions as one `BuildBottomUpInvariant`.
 
-The C++ assertions about the bound source, selected value, final placement,
-and final stack size appear as Lean's built-in `assert` statements:
+The C++ assertions about the produced top, bound source, selected value, final
+placement, and final stack size use the local `ensure` function:
 
 ```lean
-assert (boundForTarget ≥ targetOffset)
+ensure (state.stack.length = target.length) "stack and target sizes differ"
 ```
 
-These statements are proof annotations for `vcgen`. They do not check the
-condition at runtime and do not accept a message string. They require
-`Std.Internal.Do`. The two files that use them set `experimental.intrinsic`
-to acknowledge this experimental syntax in Lean 4.34.
+These checks run at runtime. A false condition returns `.assertion reason`.
+Tests cover invalid inputs, including a size mismatch when the cursor skips
+the loop. The equivalence and termination proofs use the old preconditions
+and prove that these checks succeed on admitted inputs.
 
-The equivalence and termination proofs still use the old preconditions. They
-compare the computation; they are not a `vcgen` proof of these annotations.
-An input outside the preconditions can pass a false annotation. A test covers
-this case for the final stack size. The slot reads inside the copy assertion
-still run and can return a bounds error.
+`produce` joins its successful branches at `let next ← (do ...)`, checks that
+the destination is bound to the new top, then decrements the pending count.
+The parentheses keep the branch returns local to that action. A bare
+`let next ← do ...` lets those returns leave the enclosing function and skip
+the shared check and decrement. Tests cover the counter and binding after
+each production path. `generate` uses an explicit `else if` to keep the
+mapping-only exchange and physical swap mutually exclusive.
+
+The offset/depth conversion proofs used by `dup` and `swapWith` are private
+named lemmas in `CheckedSupport.lean`.
 
 Bounds and operation preconditions are checked inside the support functions.
-Their `if h : ...` branches supply proofs needed to construct `Fin` values and
-call `State.generate`, `State.swapWith`, and `Mapping.toPermutation`. A built-in
-`assert` does not supply these proofs when Lean checks the function, so it
-cannot replace those branches with the current operation types.
+The local `requires` function returns the checked proof in Lean's built-in
+`PLift` type. Helpers can use that proof without nested success branches:
+
+```lean
+let ⟨hbound⟩ ← requires (state.mapping.symm dest = none) "destination already bound to a slot"
+```
+
+The proof is used to construct trace operations and mappings. A failed check
+returns `.assertion reason`. This is an ordinary function, with no experimental
+contract syntax. `ensure` calls `requires` and discards the proof when the caller
+only needs the runtime check.
 
 Conditions use propositions: `∧`, `∨`, `=`, `≠`, and `¬`.
 `isSwapReachable` is a proposition with a `Decidable` instance. Standard
 `Option.isSome` and `Option.isNone` queries still return `Bool`. The test runner
 uses `decide` at the boundary where it needs a Boolean result.
 
-## What `mvcgen` does here
+## Helper and loop proofs
 
 `generateUntilBound` is a small loop that calls the same checked `generate`
-operation as the full translation. Its separate proof supplies:
+operation as the full translation. Ordinary Lean theorems establish:
 
-- The existing `BuildBottomUpInvariant` as the loop invariant.
-- `pending_generations` as a decreasing measure.
-- A success postcondition that preserves the invariant.
-- A success postcondition that establishes a bound destination.
-- An error postcondition that admits only `Blocked`.
+- Each successful generation preserves `BuildBottomUpInvariant`, decreases
+  `pending_generations`, and binds the destination.
+- The loop either returns the already-bound state or calls `generate` once.
+- Success preserves the invariant and leaves the destination bound.
+- The only possible failure under the preconditions is `Blocked`.
 
-The proof uses the existing `State.generate_preserves` theorem. It has no
-`sorry`. The axiom checks cover both the checked algorithm and this loop proof.
-Lean 4.34 prints an experimental warning for `mvcgen`.
-
-One detail matters when registering specs: the invariant cursor does not occur
-in the helper call. A global generic spec let `mvcgen` choose the wrong local
-natural number as that cursor. The working proof supplies a local spec with the
-cursor fixed. This keeps the choice explicit.
+The proofs use exact helper equivalence and the existing
+`State.generate_preserves` and `State.generate_position` theorems. The loop
+equation is proved by unfolding the actual loop. Axiom checks cover both the
+checked algorithm and the loop proof.
 
 ## Comparison with C++
 
+See [CppHelperAudit.md](CppHelperAudit.md) for the statement-by-statement helper
+review. The final permutation's handling of equal slots is an accepted
+divergence for now; it can emit extra swaps or report a blocked operation that
+C++ avoids. The existing comparison tests compare Lean implementations, not
+Lean against C++.
+
 Compare `Checked.buildBottomUp` with `Emission::buildBottomUp` in
-`solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp`, lines 478–614.
+`solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp`, starting at line 478.
 
 | C++ | Checked Lean |
 | --- | --- |
@@ -134,8 +151,8 @@ Compare `Checked.buildBottomUp` with `Emission::buildBottomUp` in
 | `generate(...)`, failure check | `state ← generate state ...` |
 | `m_mapping.swapDestinations(...)` | `state ← swapDestinations state ...` |
 | Reach check followed by `swapWith(...)` | The same check followed by checked `swapWith` |
-| `return permute(...)` | `return ← finish state` |
-| `yulAssert(...)` | Built-in `assert` annotation or a checked helper precondition |
+| `return permute(...)` | Check the complete mapping, call `permute`, and return the stack and combined trace |
+| `yulAssert(...)` | `ensure condition reason` or a checked helper precondition |
 
 The urgent scan keeps scanning after it finds the first urgent destination.
 A later unreachable copy must still block the operation. The equal-copy scan

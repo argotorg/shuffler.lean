@@ -14,15 +14,19 @@ private def emptyState (target : Stack) (spills : SpillSet) : State [] target sp
   pending_generations := target.length
 
 -- The extra error cases are observable. No assertion is converted to Blocked.
-example : generate (emptyState [.Lit 1] ∅) 1 = .error (.assertion .bounds) := rfl
-example : generate (emptyState [.Var ⟨37⟩] ∅) 0 = .error (.assertion .unavailable) := rfl
-example : swapWith (emptyState [] ∅) 0 = .error (.assertion .bounds) := rfl
-example : finish (emptyState [.Lit 1] ∅) = .error (.assertion .permutation) := rfl
+example : generate (emptyState [.Lit 1] ∅) 1 =
+    .error (.assertion "offset is out of bounds") := rfl
+example : generate (emptyState [.Var ⟨37⟩] ∅) 0 =
+    .error (.assertion "generated slot has no copy on the stack and is not spilled") := rfl
+example : swapWith (emptyState [] ∅) 0 =
+    .error (.assertion "offset is out of bounds") := rfl
+example : observe (Checked.buildBottomUp 0
+    { emptyState [.Lit 1] ∅ with pending_generations := 0 }) =
+    .error (.assertion "stack does not define a complete permutation") := by native_decide
 
--- A built-in assertion does not reject inputs outside the proved preconditions.
--- Here the loop is skipped and the final size assertion is false.
+-- Reject a size mismatch even when the cursor skips the loop.
 example : observe (Checked.buildBottomUp 1 (emptyState [.Lit 1] ∅)) =
-    .ok ([], []) := by native_decide
+    .error (.assertion "stack and target sizes differ") := by native_decide
 
 private def boundState : State [.Lit 1] [.Lit 1] ∅ where
   planned_mapping := ⊥
@@ -31,8 +35,63 @@ private def boundState : State [.Lit 1] [.Lit 1] ∅ where
   mapping := (⊥ : Mapping 1 1).bind 0 0 rfl rfl
   pending_generations := 0
 
-example : generate boundState 0 = .error (.assertion .bound) := rfl
-example : swapWith boundState 0 = .error (.assertion .swap) := rfl
+example : generate boundState 0 =
+    .error (.assertion "destination already bound to a slot") := rfl
+example : swapWith boundState 0 =
+    .error (.assertion "swap requires a reachable slot below the top that is not final") := rfl
+
+private def observeState (result : Checked.M (State source target spills)) :=
+  observe (result.map fun state => ⟨state.stack, state.trace⟩)
+
+example : observeState (Checked.push (emptyState [.Lit 1] ∅) (.Lit 1) 0) =
+    .ok ([.Lit 1], [.push (.Lit 1)]) := rfl
+example : Checked.push (emptyState [.Var ⟨37⟩] ∅) (.Var ⟨37⟩) 0 =
+    .error (.assertion "pushed slot cannot be generated or loaded") := rfl
+example : Checked.push boundState (.Lit 1) 0 =
+    .error (.assertion "destination already bound to a slot") := rfl
+-- When both checks fail, report the bound destination first.
+example : Checked.push boundState (.Var ⟨37⟩) 0 =
+    .error (.assertion "destination already bound to a slot") := rfl
+-- Equal lengths do not imply that the mapping is complete.
+example : observe (Checked.buildBottomUp 0 { boundState with mapping := ⊥ }) =
+    .error (.assertion "stack does not define a complete permutation") := by native_decide
+example : Checked.produce boundState 0 =
+    .error (.assertion "destination already bound to a slot") := rfl
+example : observeState (Checked.produce (emptyState [.Var ⟨37⟩] {⟨37⟩}) 0) =
+    .ok ([.Var ⟨37⟩], [.load ⟨37⟩]) := rfl
+
+private def copyState (padding : ℕ) (spills : SpillSet := ∅) : State
+    (.Var ⟨37⟩ :: List.replicate padding (.Lit 0))
+    (.Var ⟨37⟩ :: List.replicate (padding + 1) (.Lit 0)) spills where
+  planned_mapping := ⊥
+  stack := .Var ⟨37⟩ :: List.replicate padding (.Lit 0)
+  trace := .Lit _
+  mapping := ⊥
+  pending_generations := padding + 2
+
+example : observeState (Checked.dup (copyState 15) ⟨0, by decide⟩ 0) =
+    .ok ((copyState 15).stack ++ [.Var ⟨37⟩], [.dup 16]) := rfl
+example : Checked.dup (copyState 16) ⟨0, by decide⟩ 0 =
+    .error (.assertion "copy is outside DUP reach") := rfl
+example : Checked.dup boundState ⟨0, by decide⟩ 0 =
+    .error (.assertion "destination already bound to a slot") := rfl
+example : Checked.produce (copyState 16) 0 = .error (.blocked 1) := rfl
+
+-- A reachable copy takes priority over a spill load, including at DUP16.
+example : observeState (Checked.produce (copyState 15 {⟨37⟩}) 0) =
+    .ok ((copyState 15).stack ++ [.Var ⟨37⟩], [.dup 16]) := rfl
+example : (Checked.produce (copyState 15 {⟨37⟩}) 0).map
+    (fun next => (positionOf next 0, next.pending_generations)) = .ok (some 16, 16) := rfl
+-- Beyond DUP reach, a spill load succeeds and binds the new top.
+example : observeState (Checked.produce (copyState 16 {⟨37⟩}) 0) =
+    .ok ((copyState 16).stack ++ [.Var ⟨37⟩], [.load ⟨37⟩]) := rfl
+example : (Checked.produce (copyState 16 {⟨37⟩}) 0).map
+    (fun next => (positionOf next 0, next.pending_generations)) = .ok (some 17, 17) := rfl
+-- Literal and junk production also bind the top and decrement exactly once.
+example : (Checked.produce (emptyState [.Lit 1] ∅) 0).map
+    (fun next => (positionOf next 0, next.pending_generations)) = .ok (some 0, 0) := rfl
+example : (Checked.produce (emptyState [.Wildcard] ∅) 0).map
+    (fun next => (positionOf next 0, next.pending_generations)) = .ok (some 0, 0) := rfl
 
 -- A blocked source found later in the scan must override an earlier urgent copy.
 -- This guards against changing the urgent search to an early-return find.
