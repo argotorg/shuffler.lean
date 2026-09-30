@@ -63,7 +63,7 @@ theorem produce_eq (state : State source target spills) (dest : Fin target.lengt
         liftResult, Except.mapError, pure, Except.pure, bind, Except.bind]
     | some copy =>
       by_cases hdup : state.stack.is_dup_reachable copy
-      · simp +instances [produce, State.produce, hbound, hjunk, hcopy, hdup,
+      · simp +instances [produce, State.produce, hbound, hjunk, hcopy, Option.filter_some, hdup,
           dup_eq state copy dest hdup hbound,
           ensure, requires, positionOf, dest.isLt, State.dup,
           liftResult, Except.mapError, pure, Except.pure, bind, Except.bind]

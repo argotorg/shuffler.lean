@@ -53,35 +53,40 @@ theorem dup_spec (state : State source target spills) (copy : Fin state.stack.le
 theorem produce_spec (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest) :
     Spec (produce state dest) (fun next => Growth state next dest (state.pending_generations - 1)) := by
-  unfold produce
-  rw [ensure_of_true _ (by simp [hbound])]
-  simp only [bind, Except.bind, Fin.getElem_fin]
-  apply Spec.bind (pre := fun next => Growth state next dest state.pending_generations)
-  · by_cases hjunk : target[dest.val].is_junk
-    · simp only [hjunk, ↓reduceIte]
-      exact push_spec state _ dest (Or.inl (Value.can_be_freely_generated_of_is_junk _ hjunk)) hbound
-    · simp only [hjunk, ↓reduceIte]
-      cases hcopy : state.stack.shallowestCopyPosition target[dest.val] with
-      | none =>
-        have hgen : target[dest.val].can_be_freely_generated ∨ spills.is_spilled target[dest.val] := by
-          simpa [State.isAvailable, hcopy] using havailable
-        simp only [hgen, ↓reduceIte]
-        exact push_spec state _ dest hgen hbound
-      | some copy =>
-        by_cases hdup : state.stack.isDupReachable copy
-        · simp only [hdup, ↓reduceIte]
-          exact dup_spec state copy dest hdup hbound
-        · simp only [hdup, ↓reduceIte]
-          by_cases hgen : target[dest.val].can_be_freely_generated ∨ spills.is_spilled target[dest.val]
-          · simp only [hgen, ↓reduceIte]
-            exact push_spec state _ dest hgen hbound
-          · simp only [hgen, ↓reduceIte]
-            exact True.intro
-  · intro next h
+  have finish (next : State source target spills) (h : Growth state next dest state.pending_generations) :
+      Spec (do
+        ensure (positionOf next dest.val = some (next.stack.length - 1)) "generated slot is not bound to the top"
+        pure { next with pending_generations := next.pending_generations - 1 })
+        (fun result => Growth state result dest (state.pending_generations - 1)) := by
     have htop : positionOf next dest.val = some (next.stack.length - 1) := by
       simp [positionOf, dest.isLt, h.bound, h.size]
     rw [ensure_of_true _ htop]
     exact ⟨h.size, h.bound, h.count, by simp [h.pending_eq], h.preserved, h.subset⟩
+  unfold produce
+  dsimp only
+  rw [ensure_of_true _ (by simp [hbound])]
+  simp only [bind, Except.bind]
+  by_cases hjunk : target[dest.val].is_junk
+  · simp only [hjunk, ↓reduceIte]
+    exact (push_spec state _ dest (Or.inl (Value.can_be_freely_generated_of_is_junk _ hjunk)) hbound).bind finish
+  · simp only [hjunk, ↓reduceIte]
+    cases hcopy : state.stack.shallowestCopyPosition target[dest.val] with
+    | none =>
+      have hgen : target[dest.val].can_be_freely_generated ∨ spills.is_spilled target[dest.val] := by
+        simpa [State.isAvailable, hcopy] using havailable
+      simp only [Option.filter_none, hgen, ↓reduceIte]
+      exact (push_spec state _ dest hgen hbound).bind finish
+    | some copy =>
+      simp only [Option.filter_some, decide_eq_true_eq]
+      by_cases hdup : state.stack.isDupReachable copy
+      · simp only [hdup, ↓reduceIte]
+        exact (dup_spec state copy dest hdup hbound).bind finish
+      · simp only [hdup, ↓reduceIte]
+        by_cases hgen : target[dest.val].can_be_freely_generated ∨ spills.is_spilled target[dest.val]
+        · simp only [hgen, ↓reduceIte]
+          exact (push_spec state _ dest hgen hbound).bind finish
+        · simp only [hgen, ↓reduceIte]
+          exact True.intro
 
 structure Generation (state next : State source target spills) (dest : Fin target.length) : Prop where
   size : next.stack.length = state.stack.length + 1

@@ -95,13 +95,13 @@ Tests cover invalid inputs, including a size mismatch when the cursor skips
 the loop. The checked invariant states the four input conditions. The independent
 proofs show that these checks succeed when those conditions hold.
 
-`produce` joins its successful branches at `let next ← (do ...)`, checks that
-the destination is bound to the new top, then decrements the pending count.
-The parentheses keep the branch returns local to that action. A bare
-`let next ← do ...` lets those returns leave the enclosing function and skip
-the shared check and decrement. Tests cover the counter and binding after
-each production path. `generate` uses an explicit `else if` to keep the
-mapping-only exchange and physical swap mutually exclusive.
+`produce` uses a local `mut state` and the C++ `if / else if` branch order.
+Its reachable-copy branch uses `copy.filter` to test reach only when a copy
+exists and bind the index for `dup`. Successful branches update `state`, then
+the function checks that the destination is bound to the new top and decrements
+the pending count. Tests cover the counter and binding after each production
+path. `generate` uses an explicit `else if` to keep the mapping-only exchange
+and physical swap mutually exclusive.
 
 The offset/depth conversion proofs used by `dup` and `swapWith` are private
 named lemmas in `CheckedSupport.lean`.

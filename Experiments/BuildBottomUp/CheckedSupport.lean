@@ -126,28 +126,27 @@ def swapWith (state : State source target spills) (offset : ℕ) : M (State sour
       (swap_depth_pos state.stack pos hbelow) hreach state.trace
   }
 
-def produce (state : State source target spills) (dest : Fin target.length) : M (State source target spills) := do
-  ensure (state.mapping.symm dest).isNone "destination already bound to a slot"
+def produce (initial : State source target spills) (targetOffset : Fin target.length) : M (State source target spills) := do
+  let mut state := initial
+  ensure (state.mapping.symm targetOffset).isNone "destination already bound to a slot"
 
-  let slot := target[dest]
+  let slot := target[targetOffset.val]
   let copy := state.stack.shallowestCopyPosition slot
 
-  -- Parentheses keep branch returns local to this action.
-  let next ← (do
-    if slot.is_junk then
-      return ← push state slot dest
-    if let some pos := copy then
-      if state.stack.isDupReachable pos then
-        return ← dup state pos dest
-    if slot.can_be_freely_generated ∨ spills.is_spilled slot then
-      return ← push state slot dest
-    if hcopy : copy.isSome then
-      let pos := copy.get hcopy
-      throw (.blocked (state.stack.depth pos - MAX_DUP_DEPTH))
-    throw (.assertion "generated slot has no copy on the stack and is not spilled"))
+  if slot.is_junk then
+    state ← push state slot targetOffset
+  else if let some pos := copy.filter (fun pos => state.stack.isDupReachable pos) then
+    state ← dup state pos targetOffset
+  else if slot.can_be_freely_generated ∨ spills.is_spilled slot then
+    state ← push state slot targetOffset
+  else if let some pos := copy then
+    throw (.blocked (state.stack.depth pos - MAX_DUP_DEPTH))
+  else
+    throw (.assertion "generated slot has no copy on the stack and is not spilled")
 
-  ensure (positionOf next dest.val = some (next.stack.length - 1)) "generated slot is not bound to the top"
-  return { next with pending_generations := next.pending_generations - 1 }
+  ensure (positionOf state targetOffset.val = some (state.stack.length - 1)) "generated slot is not bound to the top"
+  state := { state with pending_generations := state.pending_generations - 1 }
+  return state
 
 def generate (state : State source target spills) (offset : ℕ) : M (State source target spills) := do
   let dest ← index target.length offset

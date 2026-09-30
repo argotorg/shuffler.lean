@@ -155,12 +155,12 @@ C++ counterpart: `Emission::produce`, `Shuffler.cpp:388`.
 | Read `target[dest]` | Read `m_target[_targetOffset.value]` | Same slot on valid inputs. |
 | Find the shallowest copy | `shallowestCopyPosition(slot)` | Both search from top to bottom and stop at the first equal slot. Both do this before the junk test. |
 | Junk: call `push` | First C++ branch | Same. Existing junk is not duplicated. |
-| Copy exists and is reachable: call `dup` | Second C++ branch | Same short-circuit logic, expressed as two nested `if`s in Lean. This takes precedence over loading a spill or pushing a literal. |
+| Copy exists and is reachable: call `dup` | Second C++ branch | `else if let some pos := copy.filter ...` tests reach only when a copy exists. This takes precedence over loading a spill or pushing a literal. |
 | Freely generated or spilled: call `push` | Third C++ branch | Same fallback when no reachable copy exists. |
 | Copy exists: return `blocked (depth - 15)` | `blockDupUnreachable` | Same excess at default reach. Lean omits the copy offset from the error. |
 | No copy and no generation source: assertion error | Final C++ assertion | Same reason string; different error interface. |
-| Join successful branches at `let next ← (do ...)` | Continue after the C++ `if/else if` chain | Same: failed branches skip all later work. Parentheses keep successful branch returns local to the action. |
-| Check that `positionOf(next, dest)` is the new top | Assert that `positionOf(dest)` is the new top, `Shuffler.cpp:402` | Same condition and position before the decrement. Lean supplies a message; C++ uses its default assertion description. The equivalence proof establishes that the check succeeds. |
+| Update local `mut state` in the `if / else if` chain | Update the emission state in the C++ branches | Successful branches continue to the shared check and decrement. Failed branches skip all later work. |
+| Check that `positionOf(state, dest)` is the new top | Assert that `positionOf(dest)` is the new top, `Shuffler.cpp:402` | Same condition and position before the decrement. Lean supplies a message; C++ uses its default assertion description. The equivalence proof establishes that the check succeeds. |
 | Subtract one from pending count | `--m_pendingGenerations` | Same under the pending-count invariant. With an inconsistent zero counter, Lean stays at zero and C++ unsigned arithmetic wraps. |
 | Return the new state | Return `std::nullopt` with mutated state | Same successful effects in the common domain. |
 
@@ -234,12 +234,11 @@ the current C++ planner constructs these particular mappings.
 
 1. **Inline the final permutation branch.** Done in this review. This follows
    the C++ `buildBottomUp` structure and removes the separate `finish` API.
-2. **Keep one successful join in `produce`.** The code now uses
-   `let next ← (do ...)` directly, with the top-binding `ensure` immediately
-   before the decrement. The parentheses are required: an experiment with a
-   bare `let next ← do ...` confirmed that branch returns would leave
-   `produce` and skip the shared code. The nested optional-copy/reach test
-   still represents C++ short-circuit evaluation.
+2. **Match the C++ branch chain in `produce`.** The code uses local `mut state`
+   updates in an explicit `if / else if` chain, with the top-binding `ensure`
+   immediately before the decrement. `copy.filter` combines copy presence
+   and DUP reach in the second branch. Successful branches continue to the
+   shared code without an early return.
 3. **Make `generate`'s mutual exclusion explicit.** The SWAP branch now uses
    `else if` after the equality branch. The outer guarded block remains: it both
    matches C++ and supplies the bounds proof for the destination index.
