@@ -1,9 +1,19 @@
-import Shuffler.State
+import Shuffler.Mapping
 import Shuffler.Permute.Defs
+import Shuffler.Stack
+import Shuffler.Trace
 
 
 --- Types ------------------------------------------------------------------------------------------
 
+structure State (source target : Stack) (spills : SpillSet) where
+  planned_mapping : Mapping source.length target.length
+
+  stack : Stack
+  trace : Trace spills source stack
+  mapping : Mapping stack.length target.length
+
+  pending_generations : ℕ
 
 -- we use a custom error type since the core buildBottomUp definition is
 -- non-total and encodes assertion failure as a possibility.
@@ -43,28 +53,12 @@ def slotAt (stack : Stack) (offset : ℕ) : M Value := do
 --- Conversions ------------------------------------------------------------------------------------
 
 
-def Stack.offsetToDepth (stack : Stack) (idx : Fin stack.length) : Fin stack.length :=
-  ⟨stack.length - 1 - idx, by omega⟩
-
 def State.depthOf (state : State source target spills) (offset : ℕ) : M (Fin state.stack.length) := do
   return state.stack.offsetToDepth (← index state.stack.length offset)
 
 
 --- Queries ----------------------------------------------------------------------------------------
 
-
-def Stack.shallowestCopyPosition (stack : Stack) (slot : Value) : Option (Fin stack.length) :=
-  (List.finRange stack.length).reverse.find?
-    (fun pos => stack[pos] = slot)
-
-def Stack.isDupReachable (stack : Stack) (pos : Fin stack.length) : Prop :=
-  (stack.offsetToDepth pos) ≤ MAX_DUP_DEPTH
-
-instance (stack : Stack) (pos : Fin stack.length) : Decidable (stack.isDupReachable pos) :=
-  by unfold Stack.isDupReachable; infer_instance
-
-def Stack.isSwapReachable (stack : Stack) (pos : Fin stack.length) : Prop :=
-  (stack.offsetToDepth pos) ≤ MAX_SWAP_DEPTH
 
 def State.isSwapReachable (state : State source target spills) (offset : ℕ) : M Bool := do
   return decide ((← depthOf state offset).val ≤ MAX_SWAP_DEPTH)
@@ -94,36 +88,6 @@ instance (state : State source target spills) (dest : Fin target.length) :
 
 def State.positionOf (state : State source target spills) (offset : ℕ) : Option ℕ :=
   if h : offset < target.length then (state.mapping.symm ⟨offset, h⟩).map Fin.val else none
-
-
---- Lemmas -----------------------------------------------------------------------------------------
-
-
-private lemma dup_stack_eq (stack : Stack) (copy : Fin stack.length) :
-    stack ++ [stack[stack.length - ((stack.offsetToDepth copy).val + 1)]] =
-      stack ++ [stack[copy]] := by
-  have hcopy : stack.length - ((stack.offsetToDepth copy).val + 1) = copy.val := by
-    dsimp [Stack.offsetToDepth]; omega
-  exact congrArg (fun slot => stack ++ [slot]) (getElem_congr_idx hcopy)
-
-private lemma swap_stack_eq (stack : Stack) (pos : Fin stack.length) :
-    stack.swap (stack.length - 1) (stack.length - 1 - (stack.offsetToDepth pos).val) =
-      stack.swap pos (stack.length - 1) := by
-  have hpos : stack.length - 1 - (stack.offsetToDepth pos).val = pos.val := by
-    dsimp [Stack.offsetToDepth]; omega
-  rw [hpos, List.swap_comm]
-
-private lemma swap_depth_pos (stack : Stack) (pos : Fin stack.length)
-    (hbelow : pos.val + 1 < stack.length) : 1 ≤ (stack.offsetToDepth pos).val := by
-  dsimp [Stack.offsetToDepth]; omega
-
-private lemma top_lt_length (stack : Stack) (pos : Fin stack.length) :
-    stack.length - 1 < stack.length := by
-  have := pos.isLt
-  omega
-
-private lemma stack_push_len (stack : Stack) (slot : Value) :
-  stack.length + 1 = (stack ++ [slot]).length := by simp
 
 
 --- Actions ----------------------------------------------------------------------------------------

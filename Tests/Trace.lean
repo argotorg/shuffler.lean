@@ -1,4 +1,4 @@
-import Shuffler.Defs
+import Shuffler.Trace
 
 namespace TraceTests
 
