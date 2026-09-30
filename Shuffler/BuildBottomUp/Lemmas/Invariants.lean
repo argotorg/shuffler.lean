@@ -1,4 +1,4 @@
-import Shuffler.BuildBottomUp.Contracts
+import Shuffler.BuildBottomUp.Lemmas.Contracts
 
 theorem Stack.shallowestCopyPosition_isSome (stack : Stack) (slot : Value) :
     (stack.shallowestCopyPosition slot).isSome ↔ slot ∈ stack := by
@@ -85,11 +85,6 @@ theorem Stack.belowOfNotTop (stack : Stack) (pos : Fin stack.length)
 
 namespace Shuffler.BuildBottomUp
 
-def Processed
-    (cursor : ℕ)
-    (state : State source target spills) : Prop :=
-  ∀ i : Fin target.length, i.val < cursor → state.isFinal i
-
 theorem Processed.advance
     {cursor : ℕ}
     {state : State source target spills}
@@ -110,13 +105,6 @@ theorem Processed.bound_ge {state : State source target spills}
   have hlt : pos.val < target.length := by omega
   have hfinal := hinv ⟨pos.val, hlt⟩ (by change pos.val < cursor; omega)
   exact state.boundNotFinal dest pos hbound (by omega) hfinal
-
--- The four facts required at each loop iteration.
-structure Invariant (cursor : ℕ) (state : State source target spills) : Prop where
-  processed : Processed cursor state
-  size : state.stack.length + state.pending_generations = target.length
-  pending : state.mapping.unmapped_target_slots = state.pending_generations
-  available : ∀ i, state.isAvailable i
 
 theorem Invariant.advance {state : State source target spills}
     (h : Invariant cursor state) (hfinal : state.isFinal cursor) :

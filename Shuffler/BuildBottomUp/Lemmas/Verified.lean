@@ -1,4 +1,4 @@
-import Shuffler.BuildBottomUp.LoopProofs
+import Shuffler.BuildBottomUp.Lemmas.LoopProofs
 
 open Std.Internal.Do
 
@@ -23,7 +23,7 @@ theorem buildBottomUp_total (cursor : ℕ) (state : State source target spills)
       obtain ⟨rfl, hi, hlt⟩ := hp
       obtain ⟨r, hr, hs⟩ := buildBottomUp_total cursor' next hi
       exact ⟨r, .next heq hr, hs⟩
-termination_by (target.length - cursor, state.pending_generations)
+termination_by terminationMeasure cursor state
 decreasing_by exact hlt
 
 theorem buildBottomUp_terminates (cursor : ℕ) (state : State source target spills)

@@ -1,5 +1,5 @@
-import Shuffler.BuildBottomUp.ActionProofs
-import Std.Internal.Do
+import Shuffler.BuildBottomUp.Lemmas.ActionProofs
+import Shuffler.BuildBottomUp.Termination
 import Std.Tactic.Do
 
 open Std.Internal.Do
@@ -7,17 +7,6 @@ open Std.Internal.Do
 set_option mvcgen.warning false
 
 namespace Shuffler.BuildBottomUp
-
--- A blocked operation is allowed. An assertion error is excluded.
-def Spec (result : Except Error α) (post : α → Prop) : Prop :=
-  match result with
-  | .ok value => post value
-  | .error (.blocked _) => True
-  | .error (.assertion _) => False
-
--- The standard contracts use the same error policy as the result-level API.
-def allowedErrors : EPost⟨Error → Prop⟩ :=
-  epost⟨fun | .blocked _ => True | .assertion _ => False⟩
 
 theorem spec_iff_triple (result : Except Error α) (post : α → Prop) :
     Spec result post ↔ ⦃True⦄ result ⦃post; allowedErrors⦄ := by

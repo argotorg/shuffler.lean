@@ -18,6 +18,10 @@ Run `lake build Tests` to check the proofs and regression tests.
 errors. They do not prove that the result equals the target: the input invariant
 does not require mapped source values to equal target values.
 
-The implementation and its proof dependencies are in `Shuffler/BuildBottomUp`.
+The implementation is in `Shuffler/BuildBottomUp/Defs.lean`.
+`Shuffler/BuildBottomUp/Termination.lean` contains the invariant, execution model,
+step contract, and termination measure. The proofs are in
+`Shuffler/BuildBottomUp/Lemmas`, with the termination theorems and verified
+wrapper in `Lemmas/Verified.lean`.
 The tests call these modules directly and include 6,527 cases with enumerated
 stacks, mappings, and cursors.

@@ -1,6 +1,6 @@
-import Shuffler.BuildBottomUp.FiniteExecution
-import Shuffler.BuildBottomUp.HelperProofs
-import Shuffler.BuildBottomUp.ScanProofs
+import Shuffler.BuildBottomUp.Lemmas.FiniteExecution
+import Shuffler.BuildBottomUp.Lemmas.HelperProofs
+import Shuffler.BuildBottomUp.Lemmas.ScanProofs
 
 open Std.Internal.Do
 
@@ -10,13 +10,6 @@ namespace Shuffler.BuildBottomUp
 
 set_option maxRecDepth 16384
 set_option maxHeartbeats 2000000
-
-def StepPost (cursor : ℕ) (state : State source target spills) :
-    ForInStep (Frame source target spills) → Prop
-  | .done out => Spec (finishLoop out) (fun _ => True)
-  | .yield out => out.1 = none ∧ Invariant out.2.2 out.2.1 ∧
-      Prod.Lex Nat.lt Nat.lt (target.length - out.2.2, out.2.1.pending_generations)
-        (target.length - cursor, state.pending_generations)
 
 theorem StepPost.advance {state next : State source target spills}
     (hc : cursor < target.length) (inv : Invariant (cursor + 1) next) :
@@ -210,12 +203,6 @@ theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
     rw [finishLoop, ensure_of_true _ (inv.complete_size (by omega))]
     trivial
 
-def BodyPost (cursor : ℕ) (state : State source target spills)
-    (step : ForInStep (ControlFrame source spills)) (next : State source target spills) : Prop :=
-  StepPost cursor state (match step with
-    | .done out => .done (out.1, next, out.2)
-    | .yield out => .yield (out.1, next, out.2))
-
 @[spec] theorem loop_body_triple (frame : ControlFrame source spills) (state : State source target spills)
     (hnone : frame.1 = none) (inv : Invariant frame.2 state) :
     ⦃fun s => s = state⦄ (loopParts source target spills).val () frame
@@ -240,11 +227,6 @@ def BodyPost (cursor : ℕ) (state : State source target spills)
   simp_all [finishLoop, ensure, requires, Spec, bind, Except.bind,
     throw, throwThe, MonadExceptOf.throw]
 
-private def LoopInvariant : RepeatInvariant (ControlFrame source spills) (ControlFrame source spills)
-    (State source target spills → Prop)
-  | .inl frame, state => frame.1 = none ∧ Invariant frame.2 state
-  | .inr frame, state => Spec (finishLoop (frame.1, state, frame.2)) (fun _ => True)
-
 theorem build_action_triple (cursor : ℕ) :
     ⦃Invariant cursor⦄ (do
       let frame ← forIn ({} : Lean.Loop) (none, cursor) (loopParts source target spills).val
@@ -253,7 +235,7 @@ theorem build_action_triple (cursor : ℕ) :
   vcgen [loop_body_triple, finishAction_triple] invariants
   · LoopInvariant
   · RepeatVariant.ofMeasure (fun (frame : ControlFrame source spills) (state : State source target spills) =>
-      (target.length - frame.2, state.pending_generations))
+      terminationMeasure frame.2 state)
   all_goals try simp_all [LoopInvariant]
   case vc3 =>
     rename_i initial hinit frame measure before step after hm hp

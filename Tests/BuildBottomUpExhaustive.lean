@@ -1,4 +1,4 @@
-import Shuffler.BuildBottomUp.Verified
+import Shuffler.BuildBottomUp.Lemmas.Verified
 
 namespace BuildBottomUpExhaustiveTests
 open Shuffler.BuildBottomUp

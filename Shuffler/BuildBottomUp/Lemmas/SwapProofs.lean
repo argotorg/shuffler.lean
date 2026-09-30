@@ -1,4 +1,4 @@
-import Shuffler.BuildBottomUp.Invariants
+import Shuffler.BuildBottomUp.Lemmas.Invariants
 
 open Std.Internal.Do
 

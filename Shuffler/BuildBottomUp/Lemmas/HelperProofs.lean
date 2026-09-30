@@ -1,4 +1,4 @@
-import Shuffler.BuildBottomUp.SwapProofs
+import Shuffler.BuildBottomUp.Lemmas.SwapProofs
 
 open Std.Internal.Do
 

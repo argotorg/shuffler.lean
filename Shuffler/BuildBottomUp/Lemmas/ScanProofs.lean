@@ -1,4 +1,4 @@
-import Shuffler.BuildBottomUp.Contracts
+import Shuffler.BuildBottomUp.Lemmas.Contracts
 
 open Std.Internal.Do
 

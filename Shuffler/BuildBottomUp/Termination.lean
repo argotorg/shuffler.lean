@@ -1,13 +1,32 @@
-import Shuffler.BuildBottomUp.ActionProofs
+import Shuffler.BuildBottomUp.Defs
+import Std.Internal.Do
+
+open Std.Internal.Do
 
 namespace Shuffler.BuildBottomUp
 
-theorem loop_unfold [Monad m] [LawfulMonad m] [Lean.Order.MonadTail m] (s : β) (f : Unit → β → m (ForInStep β)) :
-    forIn ({} : Lean.Loop) s f = (do
-      match ← f () s with
-      | .done s => pure s
-      | .yield s => forIn ({} : Lean.Loop) s f) :=
-  Lean.Loop.forIn_eq_of_monadTail
+-- A blocked operation is allowed. An assertion error is excluded.
+def Spec (result : Except Error α) (post : α → Prop) : Prop :=
+  match result with
+  | .ok value => post value
+  | .error (.blocked _) => True
+  | .error (.assertion _) => False
+
+-- The standard contracts use the same error policy as the result-level API.
+def allowedErrors : EPost⟨Error → Prop⟩ :=
+  epost⟨fun | .blocked _ => True | .assertion _ => False⟩
+
+def Processed
+    (cursor : ℕ)
+    (state : State source target spills) : Prop :=
+  ∀ i : Fin target.length, i.val < cursor → state.isFinal i
+
+-- The four facts required at each loop iteration.
+structure Invariant (cursor : ℕ) (state : State source target spills) : Prop where
+  processed : Processed cursor state
+  size : state.stack.length + state.pending_generations = target.length
+  pending : state.mapping.unmapped_target_slots = state.pending_generations
+  available : ∀ i, state.isAvailable i
 
 abbrev Frame (source target : Stack) (spills : SpillSet) :=
   Option ((res : Stack) × Trace spills source res) × State source target spills × ℕ
@@ -55,49 +74,33 @@ def runLoop (body : Unit → ControlFrame source spills → Action source target
   let (out, state) ← (forIn ({} : Lean.Loop) (frame.1, frame.2.2) body).run frame.2.1
   return (out.1, state, out.2)
 
-theorem runLoop_unfold (body : Unit → ControlFrame source spills → Action source target spills (ForInStep (ControlFrame source spills)))
-    (frame : Frame source target spills) :
-    runLoop body frame = (do
-      match ← loopStep body () frame with
-      | .done out => pure out
-      | .yield next => runLoop body next) := by
-  unfold runLoop loopStep
-  conv_lhs => rw [loop_unfold]
-  simp only [StateT.run_bind]
-  cases h : (body () (frame.1, frame.2.2)).run frame.2.1 with
-  | error e => rfl
-  | ok result => obtain ⟨step, state⟩ := result; cases step <;> rfl
-
 -- A finite execution of the actual loop body, including an error exit.
 inductive LoopRuns (body : Unit → β → Except Error (ForInStep β)) : β → Except Error β → Prop where
   | error {s e} : body () s = .error e → LoopRuns body s (.error e)
   | done {s out} : body () s = .ok (.done out) → LoopRuns body s (.ok out)
   | next {s s' r} : body () s = .ok (.yield s') → LoopRuns body s' r → LoopRuns body s r
 
-theorem LoopRuns.result_eq
-    {body : Unit → ControlFrame source spills → Action source target spills (ForInStep (ControlFrame source spills))}
-    {frame : Frame source target spills} {r : Except Error (Frame source target spills)}
-    (h : LoopRuns (loopStep body) frame r) : runLoop body frame = r := by
-  induction h with
-  | error he => rw [runLoop_unfold, he]; rfl
-  | done hd => rw [runLoop_unfold, hd]; rfl
-  | next hn _ ih => rw [runLoop_unfold, hn]; exact ih
+-- Compare the remaining target positions first, then the pending generations.
+def terminationMeasure (cursor : ℕ) (state : State source target spills) : ℕ × ℕ :=
+  (target.length - cursor, state.pending_generations)
 
-theorem buildBottomUp_as_loop (cursor : ℕ) (state : State source target spills) :
-    buildBottomUp cursor state =
-      (runLoop (loopParts source target spills).val (none, state, cursor) >>= finishLoop) := by
-  rw [(loopParts source target spills).property cursor state]
-  unfold runLoop
-  simp only [StateT.run'_eq, StateT.run_bind]
-  cases h : (forIn ({} : Lean.Loop) (none, cursor) (loopParts source target spills).val).run state with
-  | error e => rfl
-  | ok frame =>
-    obtain ⟨⟨result, cursor⟩, next⟩ := frame
-    cases result with
-    | some result => rfl
-    | none =>
-      simp only [except_ok_bind, pure_bind, finishAction, finishLoop,
-        Action.run_get, Action.run_lift, StateT.run_pure]
-      cases ensure (next.stack.length = target.length) "stack and target sizes differ" <;> rfl
+def StepPost (cursor : ℕ) (state : State source target spills) :
+    ForInStep (Frame source target spills) → Prop
+  | .done out => Spec (finishLoop out) (fun _ => True)
+  | .yield out => out.1 = none ∧ Invariant out.2.2 out.2.1 ∧
+      Prod.Lex Nat.lt Nat.lt (terminationMeasure out.2.2 out.2.1)
+        (terminationMeasure cursor state)
+
+def BodyPost (cursor : ℕ) (state : State source target spills)
+    (step : ForInStep (ControlFrame source spills)) (next : State source target spills) : Prop :=
+  StepPost cursor state (match step with
+    | .done out => .done (out.1, next, out.2)
+    | .yield out => .yield (out.1, next, out.2))
+
+-- The loop contract distinguishes continuation frames from exit frames.
+def LoopInvariant : RepeatInvariant (ControlFrame source spills) (ControlFrame source spills)
+    (State source target spills → Prop)
+  | .inl frame, state => frame.1 = none ∧ Invariant frame.2 state
+  | .inr frame, state => Spec (finishLoop (frame.1, state, frame.2)) (fun _ => True)
 
 end Shuffler.BuildBottomUp
