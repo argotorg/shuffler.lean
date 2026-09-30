@@ -30,10 +30,10 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
             sourceCopy.val != targetOffset && urgentToDup.isNone then
           urgentToDup := some offset
 
-    if let some urgent := urgentToDup then
-      if urgent != targetOffset && state.stack.length - targetOffset < MAX_SWAP_DEPTH then
-        state ← generate state urgent
-        continue
+    if h : urgentToDup.isSome ∧ urgentToDup ≠ some targetOffset ∧
+        state.stack.length - targetOffset < MAX_SWAP_DEPTH then
+      state ← generate state (urgentToDup.get h.1)
+      continue
 
     let sourceTop := state.stack.length
     if urgentToDup.isNone && sourceTop > targetOffset && sourceTop < target.length &&

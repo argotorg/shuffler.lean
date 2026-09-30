@@ -144,8 +144,9 @@ theorem buildWith_eq
       simp only [liftMap_ok, bind, Except.bind]
       cases choice
       case' some u =>
-        have hu : (u.val.val != cursor) = true ↔ u.val ≠ dest := by simp [dest, Fin.ext_iff]
+        have hu : u.val.val ≠ cursor ↔ u.val ≠ dest := by simp [dest, Fin.ext_iff]
         simp only [Option.map_some, Option.isNone_some, Option.isSome_some, Bool.false_eq_true,
+          ne_eq, Option.some.injEq, Option.get_some, true_and,
           not_true_eq_false, false_and, ↓reduceIte, ↓reduceDIte]
         by_cases hurg : u.val ≠ dest ∧ state.stack.length - cursor < MAX_SWAP_DEPTH
         case pos =>
@@ -170,7 +171,7 @@ theorem buildWith_eq
           simp only [hu, hurg, htop, ↓reduceIte, ↓reduceDIte]
       case' none =>
         simp only [Option.map_none, Option.isNone_none, Option.isSome_none, Bool.false_eq_true,
-          eq_self, not_false_eq_true, true_and]
+          eq_self, not_false_eq_true, true_and, false_and, ↓reduceDIte]
         have htop : state.stack.length < target.length := by omega
         let topDest : Fin target.length := ⟨state.stack.length, htop⟩
         have hposition : positionOf state state.stack.length = (state.mapping.symm topDest).map Fin.val := by

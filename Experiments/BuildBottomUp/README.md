@@ -2,7 +2,8 @@
 
 Use `Checked.lean` as the starting point for the next version. It keeps the C++
 branch order, searches, early returns, and `continue` statements. Its loop body
-has no proof arguments, proof-carrying search results, or invariant updates.
+has no tactic proofs, proof-carrying search results, or invariant updates.
+The urgent-generation guard supplies one proof reference to `Option.get`.
 The supporting operations still use the existing `State`, `Mapping`, and `Trace`.
 
 These are experiments. The production files are unchanged.
@@ -16,7 +17,7 @@ preconditions. See [Equivalence.lean](Equivalence.lean).
 | Approach | File | Result |
 | --- | --- | --- |
 | Move proofs below the definition and group the four invariants | [Deferred.lean](Deferred.lean) | Compiles without `sorry`. Keeps the dependent `else` branches and recursive calls. |
-| Checked helpers with separate assertion errors | [Checked.lean](Checked.lean) and [CheckedSupport.lean](CheckedSupport.lean) | The full algorithm compiles as a `while` loop with early returns. No proofs in the loop body. |
+| Checked helpers with separate assertion errors | [Checked.lean](Checked.lean) and [CheckedSupport.lean](CheckedSupport.lean) | The full algorithm compiles as a `while` loop with early returns. One proof reference reads the guarded optional value. |
 | Prove contracts and loop properties after the definition with `mvcgen` | [CheckedProofs.lean](CheckedProofs.lean) | Proves a loop over the actual checked `generate` helper terminates, preserves the invariant, and can fail only with `Blocked`. |
 
 The deferred version has about 110 lines of algorithm and 40 lines of proof.
@@ -117,6 +118,12 @@ Compare `Checked.buildBottomUp` with `Emission::buildBottomUp` in
 The urgent scan keeps scanning after it finds the first urgent destination.
 A later unreachable copy must still block the operation. The equal-copy scan
 stops at its first eligible copy. Both details have tests.
+
+The urgent-generation `if` has the same three checks as C++: an urgent value
+exists, it differs from the target offset, and generation preserves swap reach.
+The named condition `h` supplies its first fact to `urgentToDup.get h.1`.
+Given the presence check, `urgentToDup ≠ some targetOffset` compares the stored
+offset with `targetOffset`.
 
 The local mutation in Lean `do` notation is translated into value passing.
 There is no shared mutable state. A `StateT` layer could remove some explicit
