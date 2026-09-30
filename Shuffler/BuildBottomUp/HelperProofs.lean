@@ -129,6 +129,7 @@ theorem Swapped.retag (state : State source target spills) (pos : Fin state.stac
     | exact Growth.generation (by assumption)
     | exact Growth.generation_swapped (by assumption) hbound _ rfl (by assumption)
     | exact Growth.generation_swapped (by assumption) hbound _ rfl (Swapped.retag _ _)
+    | exact of_decide_eq_true (Eq.symm (by assumption))
     | assumption
     | solve | simp_all
     | solve | omega

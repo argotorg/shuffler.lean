@@ -28,6 +28,10 @@ example : observe (buildBottomUp 0
 example : observe (buildBottomUp 1 (emptyState [.Lit 1] ∅)) =
     .error (.assertion "stack and target sizes differ") := by native_decide
 
+-- A cursor above the generated top cannot supply a stack index for the final swap.
+example : observe (buildBottomUp 1 (emptyState [.Lit 1, .Lit 2] ∅)) =
+    .error (.assertion "offset is out of bounds") := by native_decide
+
 private def boundState : State [.Lit 1] [.Lit 1] ∅ where
   planned_mapping := ⊥
   stack := [.Lit 1]

@@ -105,6 +105,28 @@ theorem ensure_of_true (condition : Prop) [Decidable condition] (h : condition) 
 @[simp] theorem slotAt_index (stack : Stack) (i : Fin stack.length) :
     slotAt stack i.val = .ok stack[i] := by simp [slotAt, index_eq]
 
+@[simp] theorem depthOf_index (state : State source target spills) (i : Fin state.stack.length) :
+    depthOf state i.val = .ok (state.stack.offsetToDepth i) := by
+  simp [depthOf]
+
+@[simp] theorem isSwapReachable_index (state : State source target spills) (i : Fin state.stack.length) :
+    isSwapReachable state i.val = .ok (decide (state.stack.isSwapReachable i)) := by
+  simp [isSwapReachable, Stack.isSwapReachable]
+
+@[spec] theorem depthOf_spec (state : State source target spills) (offset : ℕ)
+    (hlt : offset < state.stack.length) :
+    ⦃True⦄ depthOf state offset
+    ⦃fun depth => depth = state.stack.offsetToDepth ⟨offset, hlt⟩; allowedErrors⦄ := by
+  rw [depthOf_index state ⟨offset, hlt⟩]
+  exact ⟨fun _ => rfl⟩
+
+@[spec] theorem isSwapReachable_spec (state : State source target spills) (offset : ℕ)
+    (hlt : offset < state.stack.length) :
+    ⦃True⦄ isSwapReachable state offset
+    ⦃fun reachable => reachable = decide (state.stack.isSwapReachable ⟨offset, hlt⟩); allowedErrors⦄ := by
+  rw [isSwapReachable_index state ⟨offset, hlt⟩]
+  exact ⟨fun _ => rfl⟩
+
 theorem swapDestinations_result (state : State source target spills)
     (a b : Fin state.stack.length) :
     (swapDestinations a.val b.val).exec state =

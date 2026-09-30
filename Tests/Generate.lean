@@ -1,4 +1,4 @@
-import Shuffler.BuildBottomUp.Defs
+import Shuffler.BuildBottomUp.ActionProofs
 
 open Shuffler.BuildBottomUp
 

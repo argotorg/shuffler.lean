@@ -65,29 +65,18 @@ def State.isAvailable (state : State source target spills) (target_offset : Fin 
 instance (state : State source target spills) (offset : ℕ) : Decidable (state.isFinal offset) := by unfold State.isFinal; infer_instance
 instance (stack : Stack) (pos : Fin stack.length) : Decidable (stack.isDupReachable pos) := by unfold Stack.isDupReachable; infer_instance
 instance (stack : Stack) (pos : Fin stack.length) : Decidable (stack.isSwapReachable pos) := by unfold Stack.isSwapReachable; infer_instance
-instance (state : State source target spills) (targetOffset : Fin target.length) : Decidable (state.isAvailable targetOffset)
-  := by unfold State.isAvailable; infer_instance
-
--- Execute an update and retain its state. Errors have no state, as in M.
-def Action.exec (action : Action source target spills Unit) (state : State source target spills) :
-    M (State source target spills) := do
-  let (_, next) ← action.run state
-  return next
 
 namespace Shuffler.BuildBottomUp
 
 def positionOf (state : State source target spills) (offset : ℕ) : Option ℕ :=
   if h : offset < target.length then (state.mapping.symm ⟨offset, h⟩).map Fin.val else none
 
-def depthOf (state : State source target spills) (offset : ℕ) : ℕ :=
-  state.stack.length - 1 - offset
+-- Check the offset before converting it to a depth in the working stack.
+def depthOf (state : State source target spills) (offset : ℕ) : M (Fin state.stack.length) := do
+  return state.stack.offsetToDepth (← index state.stack.length offset)
 
-def isSwapReachable (state : State source target spills) (offset : ℕ) : Prop :=
-  depthOf state offset ≤ MAX_SWAP_DEPTH
-
-instance (state : State source target spills) (offset : ℕ) :
-    Decidable (isSwapReachable state offset) :=
-  inferInstanceAs (Decidable (depthOf state offset ≤ MAX_SWAP_DEPTH))
+def isSwapReachable (state : State source target spills) (offset : ℕ) : M Bool := do
+  return decide ((← depthOf state offset).val ≤ MAX_SWAP_DEPTH)
 
 instance (state : State source target spills) (dest : Fin target.length) :
     Decidable (state.isAvailable dest) := by
@@ -208,7 +197,7 @@ def generate (targetOffset : ℕ) : Action source target spills Unit := do
     let top := state.stack.length - 1
     if (← slotAt state.stack targetOffset) = (← slotAt state.stack top) then
       swapDestinations targetOffset top
-    else if isSwapReachable state targetOffset then
+    else if ← isSwapReachable state targetOffset then
       swapWith targetOffset
 
 -- StateT passes the working state between actions.
@@ -241,8 +230,8 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) :
           return .yield urgent
         if let some copy := state.stack.shallowestCopyPosition slot then
           if ¬ state.stack.isDupReachable copy then
-            throw (.blocked (depthOf state copy - MAX_DUP_DEPTH))
-          if depthOf state copy = MAX_DUP_DEPTH ∧ copy.val ≠ targetOffset ∧ urgent.isNone then
+            throw (.blocked ((← depthOf state copy) - MAX_DUP_DEPTH))
+          if (← depthOf state copy) = MAX_DUP_DEPTH ∧ copy.val ≠ targetOffset ∧ urgent.isNone then
             return .yield (some offset)
         return .yield urgent
 
@@ -267,7 +256,7 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) :
           pos := targetOffset
         else
           pos ← forIn (m := M)
-            ((List.range state.stack.length).reverse.take (depthOf state sourceForTargetOffset)) pos fun candidate pos => do
+            ((List.range state.stack.length).reverse.take (← depthOf state sourceForTargetOffset)) pos fun candidate pos => do
               if (← slotAt state.stack candidate) = (← slotAt state.stack sourceForTargetOffset) ∧
                   ¬ state.isFinal candidate then
                 return .done candidate
@@ -282,8 +271,8 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) :
 
         let state ← get
         if pos ≠ state.stack.length - 1 then
-          if ¬ isSwapReachable state pos then
-            throw (.blocked (depthOf state pos - MAX_SWAP_DEPTH))
+          if ¬ (← isSwapReachable state pos) then
+            throw (.blocked ((← depthOf state pos) - MAX_SWAP_DEPTH))
           swapWith pos
       else
         generate targetOffset
@@ -295,8 +284,8 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) :
       let state ← get
       ensure (¬ state.isFinal targetOffset) "target slot is already final"
       if targetOffset ≠ state.stack.length - 1 then
-        if ¬ isSwapReachable state targetOffset then
-          throw (.blocked (depthOf state targetOffset - MAX_SWAP_DEPTH))
+        if ¬ (← isSwapReachable state targetOffset) then
+          throw (.blocked ((← depthOf state targetOffset) - MAX_SWAP_DEPTH))
         swapWith targetOffset
       targetOffset := targetOffset + 1
 

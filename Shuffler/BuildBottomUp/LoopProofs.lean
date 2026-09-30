@@ -37,8 +37,11 @@ macro "finish_checked " c:term ", " st:term ", " hp:term ", " hn:term ", " hc:te
   · try dsimp +zetaDelta only at hnotTop
     simp +zetaDelta only [ne_eq, hnotTop, not_false_eq_true, ↓reduceIte]
     let pos : Fin ($st).stack.length := ⟨$c, ($hp).in_bounds⟩
+    simp_action
+    rw [isSwapReachable_index $st pos]
+    simp only [except_ok_bind, decide_eq_true_eq]
     have hbelow := Stack.belowOfNotTop ($st).stack pos hnotTop
-    by_cases hr : isSwapReachable $st $c
+    by_cases hr : ($st).stack.isSwapReachable pos
     · try dsimp +zetaDelta only at hr
       try simp +zetaDelta only [hr, not_true_eq_false, ↓reduceIte]
       simp_action
@@ -47,6 +50,9 @@ macro "finish_checked " c:term ", " st:term ", " hp:term ", " hn:term ", " hc:te
       exact StepPost.advance $hc hinv
     · try dsimp +zetaDelta only at hr
       simp +zetaDelta only [hr, not_false_eq_true, ↓reduceIte]
+      simp_action
+      rw [depthOf_index $st pos]
+      simp only [except_ok_bind]
       exact True.intro
   · try dsimp +zetaDelta only at hnotTop
     simp +zetaDelta only [ne_eq, hnotTop, ↓reduceIte]
@@ -145,7 +151,9 @@ theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
                   { state with mapping := state.mapping.swapDestinations current carrier }
                   dest current hd).mpr rfl
               · simp_action
-                have hscan := (spec_iff_triple _ _).mpr (copyScan_triple state carrier.val carrier.isLt carrier.val
+                rw [depthOf_index state carrier]
+                simp only [except_ok_bind]
+                have hscan := (spec_iff_triple _ _).mpr (copyScan_triple state carrier carrier.val
                   ⟨carrier, rfl, rfl, state.boundNotFinal_of_not_final dest carrier hb hnfinal⟩)
                 simp only [slotAt_index state.stack carrier, except_ok_bind] at hscan
                 apply hscan.bind
@@ -169,16 +177,22 @@ theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
                   by_cases hnotTop : pos.val ≠ retag.stack.length - 1
                   · dsimp +zetaDelta only at hnotTop
                     simp only [ne_eq, hnotTop, not_false_eq_true, ↓reduceIte]
+                    simp_action
+                    rw [isSwapReachable_index retag pos]
+                    simp only [except_ok_bind, decide_eq_true_eq]
                     have hbelow := Stack.belowOfNotTop retag.stack pos hnotTop
-                    by_cases hr : isSwapReachable retag pos.val
+                    by_cases hr : retag.stack.isSwapReachable pos
                     · dsimp +zetaDelta only at hr
-                      simp only [hr, not_true_eq_false, ↓reduceIte]
+                      simp +zetaDelta only [hr, not_true_eq_false, ↓reduceIte]
                       simp_action
                       apply (hi.swap_bound (dest := dest) pos hd hbelow hr hplaced).bind
                       intro next hp
                       finish_checked cursor, next, hp.1, hp.2, hc
                     · dsimp +zetaDelta only at hr
-                      simp only [hr, not_false_eq_true, ↓reduceIte]
+                      simp +zetaDelta only [hr, not_false_eq_true, ↓reduceIte]
+                      simp_action
+                      rw [depthOf_index retag pos]
+                      simp only [except_ok_bind]
                       exact True.intro
                   · dsimp +zetaDelta only at hnotTop
                     simp only [ne_eq, hnotTop, ↓reduceIte]

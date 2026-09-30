@@ -30,8 +30,8 @@ def UrgentChoice (state : State source target spills) (choice : Option ℕ) : Pr
           return .yield urgent
         if let some copy := state.stack.shallowestCopyPosition slot then
           if ¬ state.stack.isDupReachable copy then
-            throw (.blocked (depthOf state copy - MAX_DUP_DEPTH))
-          if depthOf state copy = MAX_DUP_DEPTH ∧ copy.val ≠ cursor ∧ urgent.isNone then
+            throw (.blocked ((← depthOf state copy) - MAX_DUP_DEPTH))
+          if (← depthOf state copy) = MAX_DUP_DEPTH ∧ copy.val ≠ cursor ∧ urgent.isNone then
             return .yield (some offset)
         return .yield urgent) ⦃UrgentChoice state; allowedErrors⦄ := by
   rw [Std.Legacy.Range.forIn_eq_forIn_range']
@@ -44,15 +44,15 @@ def Chosen (state : State source target spills) (copy : Fin state.stack.length) 
   ∃ pos : Fin state.stack.length, pos.val = offset ∧
     state.stack[pos] = state.stack[copy] ∧ ¬ state.isFinal pos.val
 
-@[spec] theorem copyScan_triple (state : State source target spills) (copy : ℕ)
-    (hlt : copy < state.stack.length) (initial : ℕ) (hinit : Chosen state ⟨copy, hlt⟩ initial) :
+@[spec] theorem copyScan_triple (state : State source target spills) (copy : Fin state.stack.length)
+    (initial : ℕ) (hinit : Chosen state copy initial) :
     ⦃True⦄ (
-      forIn ((List.range state.stack.length).reverse.take (depthOf state copy)) initial fun candidate pos => do
+      forIn ((List.range state.stack.length).reverse.take (state.stack.offsetToDepth copy)) initial fun candidate pos => do
         if (← slotAt state.stack candidate) = (← slotAt state.stack copy) ∧ ¬ state.isFinal candidate then
           return .done candidate
-        return .yield pos) ⦃Chosen state ⟨copy, hlt⟩; allowedErrors⦄ := by
+        return .yield pos) ⦃Chosen state copy; allowedErrors⦄ := by
   vcgen invariants
-  · fun _ _ pos => Chosen state ⟨copy, hlt⟩ pos
+  · fun _ _ pos => Chosen state copy pos
   all_goals try simp_all
   all_goals first
     | exact copy_offset_lt (by assumption)
