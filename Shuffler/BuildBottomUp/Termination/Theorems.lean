@@ -1,8 +1,14 @@
-import Shuffler.BuildBottomUp.Lemmas.LoopProofs
+import Shuffler.BuildBottomUp.Lemmas.Loop
 
 open Std.Internal.Do
 
 namespace Shuffler.BuildBottomUp
+
+-- One loop step either exits or preserves the invariant and decreases the measure.
+theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
+    (inv : Invariant cursor state) :
+    Spec ((loopStep (loopParts source target spills).val) () (none, state, cursor)) (StepPost cursor state) :=
+  Lemmas.loop_step_spec cursor state inv
 
 -- Each continuation of the actual loop decreases the lexicographic measure.
 theorem buildBottomUp_total (cursor : ℕ) (state : State source target spills)

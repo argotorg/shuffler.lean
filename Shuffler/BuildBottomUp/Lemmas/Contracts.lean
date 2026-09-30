@@ -1,5 +1,5 @@
-import Shuffler.BuildBottomUp.Lemmas.ActionProofs
-import Shuffler.BuildBottomUp.Termination
+import Shuffler.BuildBottomUp.Lemmas.Action
+import Shuffler.BuildBottomUp.Termination.Defs
 import Std.Tactic.Do
 
 open Std.Internal.Do

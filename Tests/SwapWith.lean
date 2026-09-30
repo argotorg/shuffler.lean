@@ -1,4 +1,4 @@
-import Shuffler.BuildBottomUp.Lemmas.ActionProofs
+import Shuffler.BuildBottomUp.Lemmas.Action
 
 open Shuffler.BuildBottomUp
 

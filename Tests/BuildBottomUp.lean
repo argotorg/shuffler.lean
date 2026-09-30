@@ -1,4 +1,4 @@
-import Shuffler.BuildBottomUp.Lemmas.HelperProofs
+import Shuffler.BuildBottomUp.Lemmas.Helper
 import Tests.BuildBottomUpObservations
 
 open Shuffler.BuildBottomUp BuildBottomUpTestSupport

@@ -19,9 +19,9 @@ errors. They do not prove that the result equals the target: the input invariant
 does not require mapped source values to equal target values.
 
 The implementation is in `Shuffler/BuildBottomUp/Defs.lean`.
-`Shuffler/BuildBottomUp/Termination.lean` contains the invariant, execution model,
-step contract, and termination measure. The proofs are in
-`Shuffler/BuildBottomUp/Lemmas`, with the termination theorems and verified
-wrapper in `Lemmas/Verified.lean`.
+`Shuffler/BuildBottomUp/Termination/Defs.lean` contains the invariant, execution
+model, step contract, and termination measure. The main theorems and verified
+wrapper are in `Shuffler/BuildBottomUp/Termination/Theorems.lean`. Supporting
+proofs are in `Shuffler/BuildBottomUp/Lemmas`.
 The tests call these modules directly and include 6,527 cases with enumerated
 stacks, mappings, and cursors.

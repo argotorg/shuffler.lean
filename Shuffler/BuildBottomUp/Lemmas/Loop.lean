@@ -1,6 +1,6 @@
 import Shuffler.BuildBottomUp.Lemmas.FiniteExecution
-import Shuffler.BuildBottomUp.Lemmas.HelperProofs
-import Shuffler.BuildBottomUp.Lemmas.ScanProofs
+import Shuffler.BuildBottomUp.Lemmas.Helper
+import Shuffler.BuildBottomUp.Lemmas.Scan
 
 open Std.Internal.Do
 
@@ -51,7 +51,7 @@ macro "finish_checked " c:term ", " st:term ", " hp:term ", " hn:term ", " hc:te
     simp +zetaDelta only [ne_eq, hnotTop, ↓reduceIte]
     exact StepPost.advance $hc (($hp).finish_at_top (not_not.mp hnotTop))))
 
-theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
+theorem Lemmas.loop_step_spec (cursor : ℕ) (state : State source target spills)
     (inv : Invariant cursor state) :
     Spec ((loopStep (loopParts source target spills).val) () (none, state, cursor)) (StepPost cursor state) := by
   dsimp only [loopStep, loopParts]
@@ -211,7 +211,7 @@ theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
   dsimp at hnone
   subst result
   apply (action_triple_iff _ _ _).mpr
-  have h := loop_step_spec cursor state inv
+  have h := Lemmas.loop_step_spec cursor state inv
   unfold loopStep at h
   cases heq : ((loopParts source target spills).val () (none, cursor)).run state with
   | error err => cases err <;> simp_all [Spec]
