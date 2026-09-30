@@ -14,12 +14,8 @@ private def newTopState : State [.Lit 10, .Lit 20] [.Lit 20, .Lit 10, .Lit 7] �
   mapping := ((⊥ : Mapping 2 3).bind 0 1 rfl rfl).bind 1 0 (by decide) (by decide)
   pending_generations := 1
 
-private theorem newTopInvariant : Processed 0 newTopState := by
-  intro i hi
-  omega
-
 example :
-    (buildBottomUpVerified 0 newTopState ⟨newTopInvariant,
+    (buildBottomUpVerified newTopState ⟨(by intro i hi; omega),
       by decide, by decide,
       by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩).toOption.map
         (fun result => result.1) = some [.Lit 20, .Lit 10, .Lit 7] := by
@@ -48,7 +44,8 @@ private def urgentState : State urgentSource urgentTarget ∅ where
   mapping := retained.swapDestinations 2 3
   pending_generations := 1
 
-private theorem urgentInvariant : Processed 2 urgentState := by
+-- The loop skips the first two destinations before it reaches the urgent copy.
+example : ∀ i : Fin urgentTarget.length, i.val < 2 → urgentState.isFinal i := by
   intro i hi
   rcases i with ⟨i, hibound⟩
   change i < 2 at hi
@@ -60,7 +57,7 @@ private theorem urgentInvariant : Processed 2 urgentState := by
     decide
 
 example :
-    (buildBottomUpVerified 2 urgentState ⟨urgentInvariant,
+    (buildBottomUpVerified urgentState ⟨(by intro i hi; omega),
       by decide, by decide,
       by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩).toOption.map
         (fun result => result.1) = some urgentTarget := by
@@ -74,7 +71,7 @@ private def missingCopyState : State [.Lit 10, .Lit 20] [.Lit 20, .Lit 10, .Var 
   pending_generations := 1
 
 -- An unavailable target value cannot satisfy the new input condition.
-#check_failure (buildBottomUpVerified 0 missingCopyState ⟨(by intro i hi; omega),
+#check_failure (buildBottomUpVerified missingCopyState ⟨(by intro i hi; omega),
       by decide, by decide,
       by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩)
 
@@ -86,7 +83,7 @@ private def surplusState : State [.Lit 10, .Lit 20, .Lit 7] [.Lit 20, .Lit 10, .
   pending_generations := 1
 
 -- A stack at target height cannot reserve room for another generation.
-#check_failure (buildBottomUpVerified 0 surplusState ⟨(by intro i hi; omega),
+#check_failure (buildBottomUpVerified surplusState ⟨(by intro i hi; omega),
       by decide, by decide,
       by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩)
 

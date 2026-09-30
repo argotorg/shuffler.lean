@@ -190,10 +190,10 @@ def generate (targetOffset : ℕ) : Action source target spills Unit := do
 --- buildBottomUp -----------------------------------------------------------------------------------
 
 
-def buildBottomUp (cursor : ℕ) (initial : State source target spills) :
+def buildBottomUp (initial : State source target spills) :
     Except Error ((res : Stack) × Trace spills source res) :=
   StateT.run' (s := initial) do
-    let mut targetOffset := cursor
+    let mut targetOffset := 0
     while targetOffset < target.length do
       let state ← get
       if targetOffset < state.stack.length ∧ state.isFinal targetOffset then

@@ -2,14 +2,9 @@ import Shuffler.BuildBottomUp.Defs
 
 namespace Shuffler.BuildBottomUp
 
-def Processed
-    (cursor : ℕ)
-    (state : State source target spills) : Prop :=
-  ∀ i : Fin target.length, i.val < cursor → state.isFinal i
-
 -- The four facts required at each loop iteration.
 structure Invariant (cursor : ℕ) (state : State source target spills) : Prop where
-  processed : Processed cursor state
+  processed : ∀ i : Fin target.length, i.val < cursor → state.isFinal i
   size : state.stack.length + state.pending_generations = target.length
   pending : state.mapping.unmapped_target_slots = state.pending_generations
   available : ∀ i, state.isAvailable i
@@ -36,11 +31,11 @@ def finishAction (frame : ControlFrame source spills) :
 -- Extract the actual StateT loop body; the kernel checks the equality.
 def loopParts (source target : Stack) (spills : SpillSet) :
     { body : Unit → ControlFrame source spills → Action source target spills (ForInStep (ControlFrame source spills)) //
-      ∀ cursor state, buildBottomUp cursor state = StateT.run' (do
-        let frame ← forIn ({} : Lean.Loop) (none, cursor) body
+      ∀ state, buildBottomUp state = StateT.run' (do
+        let frame ← forIn ({} : Lean.Loop) (none, 0) body
         finishAction frame) state } := by
   exact ⟨_, by
-    intro cursor state
+    intro state
     unfold buildBottomUp finishAction ControlFrame.result
     dsimp only
     congr 2

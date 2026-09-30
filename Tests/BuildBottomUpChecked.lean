@@ -20,17 +20,27 @@ example : (generate 0).exec (emptyState [.Var ⟨37⟩] ∅) =
     .error (.assertion "generated slot has no copy on the stack and is not spilled") := rfl
 example : (swapWith 0).exec (emptyState [] ∅) =
     .error (.assertion "offset is out of bounds") := rfl
-example : observe (buildBottomUp 0
+example : observe (buildBottomUp
     { emptyState [.Lit 1] ∅ with pending_generations := 0 }) =
     .error (.assertion "stack does not define a complete permutation") := by native_decide
 
--- Reject a size mismatch even when the cursor skips the loop.
-example : observe (buildBottomUp 1 (emptyState [.Lit 1] ∅)) =
+-- An empty target skips the loop but still checks the stack size.
+private def surplusAtExit : State [.Lit 1] [] ∅ where
+  planned_mapping := ⊥
+  stack := [.Lit 1]
+  trace := .Lit _
+  mapping := ⊥
+  pending_generations := 0
+
+example : observe (buildBottomUp surplusAtExit) =
     .error (.assertion "stack and target sizes differ") := by native_decide
 
--- A cursor above the generated top cannot supply a stack index for the final swap.
-example : observe (buildBottomUp 1 (emptyState [.Lit 1, .Lit 2] ∅)) =
-    .error (.assertion "offset is out of bounds") := by native_decide
+-- An empty input and target need no operations.
+example : observe (buildBottomUp (emptyState [] ∅)) = .ok ([], []) := by native_decide
+
+-- Start at target offset zero and generate every target position.
+example : observe (buildBottomUp (emptyState [.Lit 1, .Lit 2] ∅)) =
+    .ok ([.Lit 1, .Lit 2], [.push (.Lit 1), .push (.Lit 2)]) := by native_decide
 
 private def boundState : State [.Lit 1] [.Lit 1] ∅ where
   planned_mapping := ⊥
@@ -57,7 +67,7 @@ example : (push (.Lit 1) 0).exec boundState =
 example : (push (.Var ⟨37⟩) 0).exec boundState =
     .error (.assertion "destination already bound to a slot") := rfl
 -- Equal lengths do not imply that the mapping is complete.
-example : observe (buildBottomUp 0 { boundState with mapping := ⊥ }) =
+example : observe (buildBottomUp { boundState with mapping := ⊥ }) =
     .error (.assertion "stack does not define a complete permutation") := by native_decide
 example : (produce 0).exec boundState =
     .error (.assertion "destination already bound to a slot") := rfl
@@ -153,10 +163,10 @@ private def urgentThenBlocked : State
   mapping := by simpa using shiftTwo 17
   pending_generations := 2
 
-example : observe (buildBottomUp 0 urgentThenBlocked) = .error (.blocked 1) := by
+example : observe (buildBottomUp urgentThenBlocked) = .error (.blocked 1) := by
   native_decide
 
-example : observe ((buildBottomUpVerified 0 boundState
+example : observe ((buildBottomUpVerified boundState
     ⟨by intro i hi; omega, by decide, by decide, by intro i; fin_cases i; decide⟩).mapError
       fun (.Blocked excess) => Error.blocked excess) =
     .ok ([.Lit 1], []) := by native_decide

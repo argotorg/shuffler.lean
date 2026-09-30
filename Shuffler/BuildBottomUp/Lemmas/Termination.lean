@@ -2,7 +2,7 @@ import Shuffler.BuildBottomUp.Lemmas.Loop
 
 namespace Shuffler.BuildBottomUp.Lemmas
 
-theorem buildBottomUp_terminates (cursor : ℕ) (state : State source target spills)
+theorem loop_terminates (cursor : ℕ) (state : State source target spills)
     (inv : Invariant cursor state) :
     Acc (Continues (loopParts source target spills).val) ((none, cursor), state) := by
   constructor
@@ -16,7 +16,7 @@ theorem buildBottomUp_terminates (cursor : ℕ) (state : State source target spi
     Prod.Lex Nat.lt Nat.lt (terminationMeasure cursor' next)
       (terminationMeasure cursor state) at hp
   obtain ⟨rfl, hi, hlt⟩ := hp
-  exact buildBottomUp_terminates cursor' next hi
+  exact loop_terminates cursor' next hi
 termination_by terminationMeasure cursor state
 decreasing_by exact hlt
 

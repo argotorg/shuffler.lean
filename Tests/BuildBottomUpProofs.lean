@@ -30,7 +30,7 @@ private def equalCurrentState : State [.Lit 10, .Lit 10] [.Lit 10, .Lit 7, .Lit 
   pending_generations := 1
 
 example :
-    (buildBottomUpVerified 0 equalCurrentState ⟨(by intro i hi; omega),
+    (buildBottomUpVerified equalCurrentState ⟨(by intro i hi; omega),
       by decide, by decide,
       by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩).toOption.map
         (fun result => (result.1, result.2.swapCount)) =
@@ -48,7 +48,7 @@ private def equalCandidateState :
   pending_generations := 1
 
 example :
-    (buildBottomUpVerified 0 equalCandidateState ⟨(by intro i hi; omega),
+    (buildBottomUpVerified equalCandidateState ⟨(by intro i hi; omega),
       by decide, by decide,
       by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩).toOption.map
         (fun result => (result.1, result.2.swapCount)) =
@@ -66,7 +66,7 @@ private def finalCandidateState :
   pending_generations := 1
 
 example :
-    (buildBottomUpVerified 0 finalCandidateState ⟨(by intro i hi; omega),
+    (buildBottomUpVerified finalCandidateState ⟨(by intro i hi; omega),
       by decide, by decide,
       by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩).toOption.map
         (fun result => (result.1, result.2.swapCount)) =
@@ -91,7 +91,7 @@ private def blockedSwapUpState :
   mapping := by simpa using (retainAll 19).swapDestinations 0 1
   pending_generations := 1
 
-example : (match buildBottomUpVerified 0 blockedSwapUpState ⟨(by intro i hi; omega),
+example : (match buildBottomUpVerified blockedSwapUpState ⟨(by intro i hi; omega),
       by decide, by decide,
       by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩ with
     | .error (.Blocked excess) => some excess
@@ -108,7 +108,7 @@ private def blockedSwapDownState :
   mapping := by simpa using (retainAll 18).swapDestinations 0 17
   pending_generations := 1
 
-example : (match buildBottomUpVerified 0 blockedSwapDownState ⟨(by intro i hi; omega),
+example : (match buildBottomUpVerified blockedSwapDownState ⟨(by intro i hi; omega),
       by decide, by decide,
       by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩ with
     | .error (.Blocked excess) => some excess
@@ -125,7 +125,7 @@ private def blockedGeneratedState :
   mapping := by simpa using (Mapping.swapDestinations (retainAll 17).symm 0 17).symm
   pending_generations := 1
 
-example : (match buildBottomUpVerified 0 blockedGeneratedState ⟨(by intro i hi; omega),
+example : (match buildBottomUpVerified blockedGeneratedState ⟨(by intro i hi; omega),
       by decide, by decide,
       by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩ with
     | .error (.Blocked excess) => some excess
@@ -143,7 +143,7 @@ private def swapLimitState :
   pending_generations := 1
 
 example :
-    (buildBottomUpVerified 0 swapLimitState ⟨(by intro i hi; omega),
+    (buildBottomUpVerified swapLimitState ⟨(by intro i hi; omega),
       by decide, by decide,
       by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩).toOption.map
         (fun result => (result.1, result.2.swapCount)) =

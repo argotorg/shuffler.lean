@@ -12,8 +12,8 @@ Run `lake build Tests` to check the proofs and regression tests.
 
 ## Build bottom up
 
-`Shuffler.BuildBottomUp.buildBottomUp` runs the checked algorithm.
-`Shuffler.BuildBottomUp.buildBottomUpVerified` takes an `Invariant` and returns
+`Shuffler.BuildBottomUp.buildBottomUp` runs the checked algorithm from target offset zero.
+`Shuffler.BuildBottomUp.buildBottomUpVerified` takes an `Invariant 0 state` and returns
 `Except ShuffleErr`. Its proofs establish termination and exclude assertion
 errors. They do not prove that the result equals the target: the input invariant
 does not require mapped source values to equal target values.
@@ -24,7 +24,7 @@ and `buildBottomUp_terminates` in `Shuffler/BuildBottomUp/Termination/Theorems.l
 The statement uses Lean's standard `Acc` certificate:
 
 ```lean
-Acc (Continues (loopParts source target spills).val) ((none, cursor), state)
+Acc (Continues (loopParts source target spills).val) ((none, 0), state)
 ```
 
 `Continues body next current` means one body call from `current` returns
@@ -35,7 +35,7 @@ no successors, so they are base cases. An infinite chain of yields cannot have
 an `Acc` certificate. This is the certificate used by Lean's general
 well-founded recursion machinery; it does not select one terminating execution.
 `loopParts` carries an equality that connects the body and exit code to
-`buildBottomUp`. The claim requires `Invariant cursor state`.
+`buildBottomUp`. The claim requires `Invariant 0 state`.
 Both `.done` and error results exit the loop; `buildBottomUp_noAssertion`
 separately excludes assertion errors.
 
@@ -48,5 +48,5 @@ the `StateT` state. Neither name is part of Lean's loop API.
 The measure, step contracts, state conversions, and `Acc` proofs are in
 `Shuffler/BuildBottomUp/Lemmas`. The executable definition has no termination
 proof arguments.
-The tests call these modules directly and include 6,527 cases with enumerated
-stacks, mappings, and cursors.
+The tests call these modules directly and include 4,675 cases with enumerated
+stacks and mappings.

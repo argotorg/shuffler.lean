@@ -200,7 +200,7 @@ theorem Invariant.bound_at_top {state : State source target spills} {dest : Fin 
     (hbound : state.mapping.symm dest = some pos)
     (htop : pos.val = state.stack.length - 1) (hne : pos.val ≠ dest.val) :
     Placement dest state ∧ ¬ state.isFinal dest := by
-  have := h.processed.bound_ge dest pos hbound le_rfl
+  have := h.bound_ge dest pos hbound le_rfl
   exact ⟨⟨h, by have := pos.isLt; omega, Or.inr (by simp [hbound, htop])⟩,
     (state.isFinal_of_bound_iff dest pos hbound).not.mpr hne⟩
 
@@ -210,7 +210,7 @@ theorem Invariant.swap_bound {state : State source target spills} {dest : Fin ta
     (hbelow : pos.val + 1 < state.stack.length) (hreach : state.stack.isSwapReachable pos)
     (hne : pos.val ≠ dest.val) :
     Spec ((swapWith pos.val).exec state) (fun next => Placement dest next ∧ ¬ next.isFinal dest) := by
-  have hge := h.processed.bound_ge dest pos hbound le_rfl
+  have hge := h.bound_ge dest pos hbound le_rfl
   apply (swap_spec state pos hbelow hreach (state.boundNotFinal dest pos hbound hne)).mono
   intro next hs
   have htop := hs.bound_top dest hbound

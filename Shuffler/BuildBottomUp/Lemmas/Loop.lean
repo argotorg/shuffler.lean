@@ -126,7 +126,7 @@ theorem Lemmas.loop_step_spec (cursor : ℕ) (state : State source target spills
             | some carrier =>
               simp only [Option.map_some]
               simp_action
-              have hge := inv.processed.bound_ge dest carrier hb le_rfl
+              have hge := inv.bound_ge dest carrier hb le_rfl
               have hcurrent : cursor < state.stack.length := lt_of_le_of_lt hge carrier.isLt
               let current : Fin state.stack.length := ⟨cursor, hcurrent⟩
               rw [ensure_of_true _ hge]

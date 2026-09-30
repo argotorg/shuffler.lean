@@ -85,31 +85,24 @@ theorem Stack.belowOfNotTop (stack : Stack) (pos : Fin stack.length)
 
 namespace Shuffler.BuildBottomUp
 
-theorem Processed.advance
-    {cursor : ℕ}
-    {state : State source target spills}
-    (hinv : Processed cursor state)
-    (hfinal : state.isFinal cursor) :
-    Processed (cursor + 1) state := by
-  intro i hi
-  by_cases hlt : i.val < cursor
-  · exact hinv i hlt
-  · have heq : i.val = cursor := by omega
-    simpa only [heq] using hfinal
-
-theorem Processed.bound_ge {state : State source target spills}
-    (hinv : Processed cursor state) (dest : Fin target.length)
+theorem Invariant.bound_ge {state : State source target spills}
+    (hinv : Invariant cursor state) (dest : Fin target.length)
     (pos : Fin state.stack.length) (hbound : state.mapping.symm dest = some pos)
     (hdest : cursor ≤ dest.val) : cursor ≤ pos.val := by
   by_contra h
   have hlt : pos.val < target.length := by omega
-  have hfinal := hinv ⟨pos.val, hlt⟩ (by change pos.val < cursor; omega)
+  have hfinal := hinv.processed ⟨pos.val, hlt⟩ (by change pos.val < cursor; omega)
   exact state.boundNotFinal dest pos hbound (by omega) hfinal
 
 theorem Invariant.advance {state : State source target spills}
     (h : Invariant cursor state) (hfinal : state.isFinal cursor) :
-    Invariant (cursor + 1) state :=
-  { h with processed := h.processed.advance hfinal }
+    Invariant (cursor + 1) state := by
+  refine { h with processed := ?_ }
+  intro i hi
+  by_cases hlt : i.val < cursor
+  · exact h.processed i hlt
+  · have heq : i.val = cursor := by omega
+    simpa only [heq] using hfinal
 
 theorem Invariant.cursor_le_length {state : State source target spills}
     (h : Invariant cursor state) (hlt : cursor < target.length) :

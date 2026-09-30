@@ -5,9 +5,9 @@ open Shuffler.BuildBottomUp
 namespace BuildBottomUpTerminationTests
 
 -- The public claim uses the actual StateT loop body and the initial state.
-example (cursor : ℕ) (state : State source target spills) (inv : Invariant cursor state) :
-    Acc (Continues (loopParts source target spills).val) ((none, cursor), state) :=
-  buildBottomUp_terminates cursor state inv
+example (state : State source target spills) (inv : Invariant 0 state) :
+    Acc (Continues (loopParts source target spills).val) ((none, 0), state) :=
+  buildBottomUp_terminates state inv
 
 private def countdown (_ : Unit) (cursor : ℕ) : StateT ℕ (Except Error) (ForInStep ℕ)
   | 0 => .ok (.done cursor, 0)
