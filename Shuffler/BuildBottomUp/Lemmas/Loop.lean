@@ -1,4 +1,3 @@
-import Shuffler.BuildBottomUp.Lemmas.FiniteExecution
 import Shuffler.BuildBottomUp.Lemmas.Helper
 import Shuffler.BuildBottomUp.Lemmas.Scan
 
@@ -204,11 +203,11 @@ theorem Lemmas.loop_step_spec (cursor : ℕ) (state : State source target spills
     trivial
 
 @[spec] theorem loop_body_triple (frame : ControlFrame source spills) (state : State source target spills)
-    (hnone : frame.1 = none) (inv : Invariant frame.2 state) :
+    (hnone : frame.result = none) (inv : Invariant frame.targetOffset state) :
     ⦃fun s => s = state⦄ (loopParts source target spills).val () frame
-    ⦃BodyPost frame.2 state; allowedErrors⦄ := by
+    ⦃BodyPost frame.targetOffset state; allowedErrors⦄ := by
   obtain ⟨result, cursor⟩ := frame
-  dsimp at hnone
+  dsimp only [ControlFrame.result] at hnone
   subst result
   apply (action_triple_iff _ _ _).mpr
   have h := Lemmas.loop_step_spec cursor state inv
@@ -220,7 +219,7 @@ theorem Lemmas.loop_step_spec (cursor : ℕ) (state : State source target spills
     cases step <;> simpa [heq, Spec, BodyPost] using h
 
 @[spec] theorem finishAction_triple (frame : ControlFrame source spills) :
-    ⦃fun state : State source target spills => Spec (finishLoop (frame.1, state, frame.2)) (fun _ => True)⦄
+    ⦃fun state : State source target spills => Spec (finishLoop (frame.result, state, frame.targetOffset)) (fun _ => True)⦄
       finishAction frame ⦃fun _ _ => True; allowedErrors⦄ := by
   vcgen [finishAction]
   by_contra hn
@@ -235,14 +234,14 @@ theorem build_action_triple (cursor : ℕ) :
   vcgen [loop_body_triple, finishAction_triple] invariants
   · LoopInvariant
   · RepeatVariant.ofMeasure (fun (frame : ControlFrame source spills) (state : State source target spills) =>
-      terminationMeasure frame.2 state)
+      terminationMeasure frame.targetOffset state)
   all_goals try simp_all [LoopInvariant]
   case vc3 =>
     rename_i initial hinit frame measure before step after hm hp
     cases step with
     | done out => exact hp
     | yield out =>
-      change out.1 = none ∧ Invariant out.2 after ∧ _ at hp
+      change ControlFrame.result out = none ∧ Invariant (ControlFrame.targetOffset out) after ∧ _ at hp
       simp only [Lean.Order.meet_apply, Lean.Order.meet_prop_eq_and, LoopInvariant]
       refine ⟨?_, hp.1, hp.2.1⟩
       rw [RepeatVariant.evalsBelow_ofMeasure_apply, RepeatVariant.evalsBelow_ofMeasure]

@@ -21,10 +21,6 @@ namespace BuildBottomUpProofTests
 #guard_msgs in
 #print axioms buildBottomUp_terminates
 
-/-- info: 'Shuffler.BuildBottomUp.buildBottomUp_eq_of_loopRuns' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in
-#print axioms buildBottomUp_eq_of_loopRuns
-
 -- Equal values at the current offset exchange destinations without a swap.
 private def equalCurrentState : State [.Lit 10, .Lit 10] [.Lit 10, .Lit 7, .Lit 10] ∅ where
   planned_mapping := ⊥

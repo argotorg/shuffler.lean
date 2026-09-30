@@ -1,48 +1,16 @@
-import Shuffler.BuildBottomUp.Lemmas.Loop
+import Shuffler.BuildBottomUp.Lemmas.Termination
 
 open Std.Internal.Do
 
 namespace Shuffler.BuildBottomUp
 
--- One loop step either exits or preserves the invariant and decreases the measure.
-theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
-    (inv : Invariant cursor state) :
-    Spec ((loopStep (loopParts source target spills).val) () (none, state, cursor)) (StepPost cursor state) :=
-  Lemmas.loop_step_spec cursor state inv
-
--- Each continuation of the actual loop decreases the lexicographic measure.
-theorem buildBottomUp_total (cursor : ℕ) (state : State source target spills)
-    (inv : Invariant cursor state) :
-    ∃ r, LoopRuns (loopStep (loopParts source target spills).val) (none, state, cursor) r ∧
-      Spec (r >>= finishLoop) (fun _ => True) := by
-  have hs := loop_step_spec cursor state inv
-  cases heq : (loopStep (loopParts source target spills).val) () (none, state, cursor) with
-  | error err =>
-    obtain ⟨excess, rfl⟩ := hs.error heq
-    exact ⟨.error (.blocked excess), .error heq, True.intro⟩
-  | ok step =>
-    have hp : StepPost cursor state step := by simpa only [heq, Spec] using hs
-    cases step with
-    | done out => exact ⟨.ok out, .done heq, hp⟩
-    | yield out =>
-      obtain ⟨result, next, cursor'⟩ := out
-      obtain ⟨rfl, hi, hlt⟩ := hp
-      obtain ⟨r, hr, hs⟩ := buildBottomUp_total cursor' next hi
-      exact ⟨r, .next heq hr, hs⟩
-termination_by terminationMeasure cursor state
-decreasing_by exact hlt
-
+-- Every execution of the actual loop reaches an exit after finitely many steps.
+-- Acc is the certificate used by Lean's well-founded recursion machinery.
+-- Done and error results exit the loop; assertion errors are excluded below.
 theorem buildBottomUp_terminates (cursor : ℕ) (state : State source target spills)
     (inv : Invariant cursor state) :
-    ∃ r, LoopRuns (loopStep (loopParts source target spills).val) (none, state, cursor) r := by
-  obtain ⟨r, hr, _⟩ := buildBottomUp_total cursor state inv
-  exact ⟨r, hr⟩
-
-theorem buildBottomUp_eq_of_loopRuns (cursor : ℕ) (state : State source target spills)
-    {r : Except Error (Frame source target spills)}
-    (h : LoopRuns (loopStep (loopParts source target spills).val) (none, state, cursor) r) :
-    buildBottomUp cursor state = (r >>= finishLoop) := by
-  rw [buildBottomUp_as_loop, h.result_eq]
+    Acc (Continues (loopParts source target spills).val) ((none, cursor), state) :=
+  Lemmas.buildBottomUp_terminates cursor state inv
 
 theorem buildBottomUp_triple (cursor : ℕ) (state : State source target spills)
     (inv : Invariant cursor state) :
@@ -71,9 +39,9 @@ def buildBottomUpVerified (cursor : ℕ) (state : State source target spills)
     (inv : Invariant cursor state) : Except ShuffleErr ((res : Stack) × Trace spills source res) :=
   restoreResult (buildBottomUp cursor state) (buildBottomUp_noAssertion cursor state inv)
 
-/-- info: 'Shuffler.BuildBottomUp.buildBottomUp_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+/-- info: 'Shuffler.BuildBottomUp.buildBottomUp_terminates' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
-#print axioms buildBottomUp_total
+#print axioms buildBottomUp_terminates
 
 /-- info: 'Shuffler.BuildBottomUp.buildBottomUp_triple' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in

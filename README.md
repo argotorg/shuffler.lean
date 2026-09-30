@@ -19,9 +19,34 @@ errors. They do not prove that the result equals the target: the input invariant
 does not require mapped source values to equal target values.
 
 The implementation is in `Shuffler/BuildBottomUp/Defs.lean`.
-`Shuffler/BuildBottomUp/Termination/Defs.lean` contains the invariant, execution
-model, step contract, and termination measure. The main theorems and verified
-wrapper are in `Shuffler/BuildBottomUp/Termination/Theorems.lean`. Supporting
-proofs are in `Shuffler/BuildBottomUp/Lemmas`.
+To review the termination claim, read `Shuffler/BuildBottomUp/Termination/Defs.lean`
+and `buildBottomUp_terminates` in `Shuffler/BuildBottomUp/Termination/Theorems.lean`.
+The statement uses Lean's standard `Acc` certificate:
+
+```lean
+Acc (Continues (loopParts source target spills).val) ((none, cursor), state)
+```
+
+`Continues body next current` means one body call from `current` returns
+`.yield` with the control value and state in `next`. The next configuration
+comes first because that is the argument order required by `Acc`.
+`Acc` requires a certificate for every successor. Done and error results have
+no successors, so they are base cases. An infinite chain of yields cannot have
+an `Acc` certificate. This is the certificate used by Lean's general
+well-founded recursion machinery; it does not select one terminating execution.
+`loopParts` carries an equality that connects the body and exit code to
+`buildBottomUp`. The claim requires `Invariant cursor state`.
+Both `.done` and error results exit the loop; `buildBottomUp_noAssertion`
+separately excludes assertion errors.
+
+`ControlFrame` is this project's name for the pair passed between iterations.
+Its named accessors are `result` (an optional early return result) and
+`targetOffset` (the current target offset). It remains a pair to match Lean's
+generated loop body directly. The proof code also uses `Frame`, which includes
+the `StateT` state. Neither name is part of Lean's loop API.
+
+The measure, step contracts, state conversions, and `Acc` proofs are in
+`Shuffler/BuildBottomUp/Lemmas`. The executable definition has no termination
+proof arguments.
 The tests call these modules directly and include 6,527 cases with enumerated
 stacks, mappings, and cursors.
