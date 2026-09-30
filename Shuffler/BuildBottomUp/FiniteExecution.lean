@@ -10,18 +10,19 @@ theorem loop_unfold [Monad m] [LawfulMonad m] [Lean.Order.MonadTail m] (s : β) 
   Lean.Loop.forIn_eq_of_monadTail
 
 abbrev Frame (source target : Stack) (spills : SpillSet) :=
-  Option (Result source spills) × State source target spills × ℕ
+  Option ((res : Stack) × Trace spills source res) × State source target spills × ℕ
 
-def finishLoop (frame : Frame source target spills) : M (Result source spills) := do
+def finishLoop (frame : Frame source target spills) : M ((res : Stack) × Trace spills source res) := do
   if let some result := frame.1 then
     return result
   ensure (frame.2.1.stack.length = target.length) "stack and target sizes differ"
   return ⟨frame.2.1.stack, frame.2.1.trace⟩
 
 abbrev ControlFrame (source : Stack) (spills : SpillSet) :=
-  Option (Result source spills) × ℕ
+  Option ((res : Stack) × Trace spills source res) × ℕ
 
-def finishAction (frame : ControlFrame source spills) : Action source target spills (Result source spills) := do
+def finishAction (frame : ControlFrame source spills) :
+    Action source target spills ((res : Stack) × Trace spills source res) := do
   if let some result := frame.1 then
     return result
   let state ← get

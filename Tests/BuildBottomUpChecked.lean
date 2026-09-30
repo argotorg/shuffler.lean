@@ -152,8 +152,9 @@ private def urgentThenBlocked : State
 example : observe (buildBottomUp 0 urgentThenBlocked) = .error (.blocked 1) := by
   native_decide
 
-example : observe (liftResult (buildBottomUpVerified 0 boundState
-    ⟨by intro i hi; omega, by decide, by decide, by intro i; fin_cases i; decide⟩)) =
+example : observe ((buildBottomUpVerified 0 boundState
+    ⟨by intro i hi; omega, by decide, by decide, by intro i; fin_cases i; decide⟩).mapError
+      fun (.Blocked excess) => Error.blocked excess) =
     .ok ([.Lit 1], []) := by native_decide
 
 -- The new definitions and the loop proof do not use sorryAx.

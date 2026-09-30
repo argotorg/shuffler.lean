@@ -22,7 +22,8 @@ example (state : State source target spills) (copy : Fin state.stack.length)
 -- Pushing a spilled variable records a load and keeps the previous trace.
 example (state : State source target spills) (id : VarId) (dest : Fin target.length)
     (hspilled : id ∈ spills) (hdest : state.mapping.symm dest = none) :
-    ((push (.Var id) dest).exec state).map (fun next => (⟨next.stack, next.trace⟩ : Result source spills)) =
+    ((push (.Var id) dest).exec state).map
+      (fun next => (⟨next.stack, next.trace⟩ : (res : Stack) × Trace spills source res)) =
       .ok ⟨state.stack ++ [.Var id], Trace.Load id hspilled state.trace⟩ := by
   simp [push, Action.exec, requires, hdest, SpillSet.is_spilled, hspilled]
   rfl
@@ -30,14 +31,16 @@ example (state : State source target spills) (id : VarId) (dest : Fin target.len
 -- Literals and wildcards record pushes.
 example (state : State source target spills) (word : Word) (dest : Fin target.length)
     (hdest : state.mapping.symm dest = none) :
-    ((push (.Lit word) dest).exec state).map (fun next => (⟨next.stack, next.trace⟩ : Result source spills)) =
+    ((push (.Lit word) dest).exec state).map
+      (fun next => (⟨next.stack, next.trace⟩ : (res : Stack) × Trace spills source res)) =
       .ok ⟨state.stack ++ [.Lit word], Trace.Push (.Lit word) (by simp [Value.can_be_freely_generated]) state.trace⟩ := by
   simp [push, Action.exec, requires, hdest, Value.can_be_freely_generated]
   rfl
 
 example (state : State source target spills) (dest : Fin target.length)
     (hdest : state.mapping.symm dest = none) :
-    ((push .Wildcard dest).exec state).map (fun next => (⟨next.stack, next.trace⟩ : Result source spills)) =
+    ((push .Wildcard dest).exec state).map
+      (fun next => (⟨next.stack, next.trace⟩ : (res : Stack) × Trace spills source res)) =
       .ok ⟨state.stack ++ [.Wildcard], Trace.Push .Wildcard (by decide) state.trace⟩ := by
   simp [push, Action.exec, requires, hdest, Value.can_be_freely_generated]
   rfl

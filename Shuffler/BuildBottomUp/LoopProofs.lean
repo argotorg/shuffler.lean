@@ -78,10 +78,10 @@ theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
         cases hperm : Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hp.1 hp.2) with
         | error err =>
           cases err
-          simp [liftResult, Except.mapError, Spec]
+          simp [Except.mapError, Spec]
         | ok result =>
           cases result
-          simp [liftResult, Except.mapError, except_ok_bind,
+          simp [Except.mapError, except_ok_bind,
             Spec, StepPost, finishLoop, pure, Except.pure]
       · simp only [hz, ↓reduceIte]
         simp_action
@@ -228,7 +228,7 @@ theorem build_action_triple (cursor : ℕ) :
     ⦃Invariant cursor⦄ (do
       let frame ← forIn ({} : Lean.Loop) (none, cursor) (loopParts source target spills).val
       finishAction frame)
-    ⦃fun (_ : Result source spills) (_ : State source target spills) => True; allowedErrors⦄ := by
+    ⦃fun (_ : (res : Stack) × Trace spills source res) (_ : State source target spills) => True; allowedErrors⦄ := by
   vcgen [loop_body_triple, finishAction_triple] invariants
   · LoopInvariant
   · RepeatVariant.ofMeasure (fun (frame : ControlFrame source spills) (state : State source target spills) =>

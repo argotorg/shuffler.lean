@@ -62,7 +62,7 @@ private def restoreResult (result : M α)
   | .error (.assertion reason) => False.elim (noAssertion reason rfl)
 
 def buildBottomUpVerified (cursor : ℕ) (state : State source target spills)
-    (inv : Invariant cursor state) : Except ShuffleErr (Result source spills) :=
+    (inv : Invariant cursor state) : Except ShuffleErr ((res : Stack) × Trace spills source res) :=
   restoreResult (buildBottomUp cursor state) (buildBottomUp_noAssertion cursor state inv)
 
 /-- info: 'Shuffler.BuildBottomUp.buildBottomUp_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/

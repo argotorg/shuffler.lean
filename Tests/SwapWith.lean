@@ -38,7 +38,7 @@ example : swapped.map (fun state => decide (state.isFinal 0 ∧ ¬ state.isFinal
   decide
 
 -- The trace records the depth from the top, which is two for source position zero.
-example : swapped.map (fun state => (⟨state.stack, state.trace⟩ : Result _ _)) =
+example : swapped.map (fun state => (⟨state.stack, state.trace⟩ : (res : Stack) × Trace _ _ res)) =
     .ok ⟨[.Lit 30, .Lit 20, .Lit 10], Trace.Swap (spills := ∅) 2 (by decide) (by decide)
       (by decide) (Trace.Lit [.Lit 10, .Lit 20, .Lit 30])⟩ := by
   rfl

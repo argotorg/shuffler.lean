@@ -1,6 +1,42 @@
 import Shuffler.State
 import Shuffler.Permute.Defs
 
+--- types ---
+
+-- we use a custom error type since the core buildBottomUp definition is
+-- non-total and encodes assertion failure as a possibility.
+inductive Error where
+  | blocked (excess : ℕ)
+  | assertion (reason : String)
+  deriving DecidableEq, Repr
+
+abbrev M := Except Error
+
+abbrev Action (source target : Stack) (spills : SpillSet) :=
+  StateT (State source target spills) M
+
+
+--- utils ---
+
+-- returns a proof of `condition` if it holds, or throws with an assertion error otherwise.
+def requires (condition : Prop) [Decidable condition] (reason : String) : M (PLift condition) :=
+  if h : condition then pure ⟨h⟩ else throw (.assertion reason)
+
+-- throw an assertion error if `condition` does not hold.
+def ensure (condition : Prop) [Decidable condition] (reason : String) : M Unit := do
+  let _ ← requires condition reason
+  return ()
+
+-- convert offset to a `Fin size` if offset < size. throw an assertion error otherwise.
+def index (size offset : ℕ) : M (Fin size) := do
+  if h : offset < size then return ⟨offset, h⟩
+  else throw (.assertion "offset is out of bounds")
+
+-- return the slot at offset if offset < stack.length. throw an assertion error otherwise.
+def slotAt (stack : Stack) (offset : ℕ) : M Value := do
+  return stack[← index stack.length offset]
+
+
 -- An offset is final when its assigned source has the same offset.
 -- Offsets outside the target's bounds are not final.
 def State.isFinal (state : State source target spills) (offset : ℕ) : Prop :=
@@ -32,44 +68,13 @@ instance (stack : Stack) (pos : Fin stack.length) : Decidable (stack.isSwapReach
 instance (state : State source target spills) (targetOffset : Fin target.length) : Decidable (state.isAvailable targetOffset)
   := by unfold State.isAvailable; infer_instance
 
-namespace Shuffler.BuildBottomUp
-
-inductive Error where
-  | blocked (excess : ℕ)
-  | assertion (reason : String)
-  deriving DecidableEq, Repr
-
-abbrev Result (source : Stack) (spills : SpillSet) :=
-  (res : Stack) × Trace spills source res
-
-abbrev M := Except Error
-
-abbrev Action (source target : Stack) (spills : SpillSet) :=
-  StateT (State source target spills) M
-
 -- Execute an update and retain its state. Errors have no state, as in M.
 def Action.exec (action : Action source target spills Unit) (state : State source target spills) :
     M (State source target spills) := do
   let (_, next) ← action.run state
   return next
 
--- PLift lets Except return the proof needed to construct dependent values.
-def requires (condition : Prop) [Decidable condition] (reason : String) : M (PLift condition) :=
-  if h : condition then pure ⟨h⟩ else throw (.assertion reason)
-
-def ensure (condition : Prop) [Decidable condition] (reason : String) : M Unit := do
-  let _ ← requires condition reason
-  return ()
-
-def liftResult (r : Except ShuffleErr α) : M α :=
-  r.mapError fun (.Blocked excess) => .blocked excess
-
-def index (size offset : ℕ) : M (Fin size) := do
-  if h : offset < size then return ⟨offset, h⟩
-  else throw (.assertion "offset is out of bounds")
-
-def slotAt (stack : Stack) (offset : ℕ) : M Value := do
-  return stack[← index stack.length offset]
+namespace Shuffler.BuildBottomUp
 
 def positionOf (state : State source target spills) (offset : ℕ) : Option ℕ :=
   if h : offset < target.length then (state.mapping.symm ⟨offset, h⟩).map Fin.val else none
@@ -209,7 +214,8 @@ def generate (targetOffset : ℕ) : Action source target spills Unit := do
 -- StateT passes the working state between actions.
 -- C++ ++targetOffset is written at each advancing continue and at the loop tail.
 -- C++ --targetOffset; continue is a plain continue here.
-def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Result source spills) :=
+def buildBottomUp (cursor : ℕ) (initial : State source target spills) :
+    M ((res : Stack) × Trace spills source res) :=
   StateT.run' (s := initial) do
     let mut targetOffset := cursor
     while targetOffset < target.length do
@@ -222,8 +228,9 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
         let ⟨hlen, hsource⟩ ← requires
           (state.stack.length = target.length ∧ ∀ i, (state.mapping i).isSome)
           "stack does not define a complete permutation"
-        let ⟨res, trace⟩ ← liftResult
-          (Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hlen hsource))
+        let ⟨res, trace⟩ ←
+          (Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hlen hsource)).mapError
+            (ε' := Error) fun (.Blocked excess) => .blocked excess
         return ⟨res, state.trace.concat trace⟩
 
       let urgentToDup ← forIn (m := M) [targetOffset : target.length] none fun offset urgent => do

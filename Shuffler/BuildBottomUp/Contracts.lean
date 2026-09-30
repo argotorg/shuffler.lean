@@ -61,12 +61,6 @@ theorem Spec.of_action {action : Action source target spills Unit}
     ⦃True⦄ slotAt stack offset ⦃fun slot => slot = stack[offset]; allowedErrors⦄ := by
   vcgen [slotAt] with finish
 
-@[spec] theorem liftResult_spec (result : Except ShuffleErr α) :
-    ⦃True⦄ liftResult result ⦃fun _ => True; allowedErrors⦄ := by
-  cases result with
-  | ok value => exact ⟨fun _ => trivial⟩
-  | error err => cases err; exact ⟨fun _ => trivial⟩
-
 @[spec] theorem swapDestinations_spec (state : State source target spills)
     (a b : ℕ) (ha : a < state.stack.length) (hb : b < state.stack.length) :
     ⦃fun s => s = state⦄ swapDestinations a b
