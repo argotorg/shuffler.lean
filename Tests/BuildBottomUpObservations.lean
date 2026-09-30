@@ -1,6 +1,7 @@
-import Experiments.BuildBottomUp.Checked
+import Shuffler.BuildBottomUp.Defs
 
-namespace BuildBottomUpExperiments
+namespace BuildBottomUpTestSupport
+open Shuffler.BuildBottomUp
 
 inductive Operation where
   | swap (depth : ℕ) | dup (index : ℕ) | pop | push (value : Value) | load (id : VarId)
@@ -15,9 +16,9 @@ def operations : Trace spills source result → List Operation
   | .Push value _ trace => operations trace ++ [.push value]
   | .Load id _ trace => operations trace ++ [.load id]
 
-def observe (result : Checked.M (Checked.Result source spills)) :
-    Except Checked.Error (Stack × List Operation) :=
+def observe (result : M (Result source spills)) :
+    Except Error (Stack × List Operation) :=
   result.map fun ⟨stack, trace⟩ => (stack, operations trace)
 
 
-end BuildBottomUpExperiments
+end BuildBottomUpTestSupport

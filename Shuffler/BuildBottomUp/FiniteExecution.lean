@@ -1,7 +1,6 @@
-import Experiments.BuildBottomUp.Checked
-import Experiments.BuildBottomUp.ActionProofs
+import Shuffler.BuildBottomUp.ActionProofs
 
-namespace BuildBottomUpExperiments.Checked
+namespace Shuffler.BuildBottomUp
 
 theorem loop_unfold [Monad m] [LawfulMonad m] [Lean.Order.MonadTail m] (s : β) (f : Unit → β → m (ForInStep β)) :
     forIn ({} : Lean.Loop) s f = (do
@@ -74,88 +73,20 @@ inductive LoopRuns (body : Unit → β → M (ForInStep β)) : β → M β → P
   | done {s out} : body () s = .ok (.done out) → LoopRuns body s (.ok out)
   | next {s s' r} : body () s = .ok (.yield s') → LoopRuns body s' r → LoopRuns body s r
 
-theorem loopRuns_iff (body : Unit → β → M (ForInStep β)) (s : β) (r : M β) :
-    LoopRuns body s r ↔ match body () s with
-      | .error e => r = .error e
-      | .ok (.done out) => r = .ok out
-      | .ok (.yield s') => LoopRuns body s' r := by
-  constructor
-  · intro h
-    cases h with
-    | error h => simp [h]
-    | done h => simp [h]
-    | next h next => simpa [h] using next
-  · cases h : body () s with
-    | error e => intro he; subst r; exact .error h
-    | ok step =>
-      cases step with
-      | done out => intro he; subst r; exact .done h
-      | yield s' => exact LoopRuns.next h
-
-theorem LoopRuns.deterministic {body : Unit → β → M (ForInStep β)}
-    (h : LoopRuns body s r) (h' : LoopRuns body s r') : r = r' := by
+theorem LoopRuns.result_eq
+    {body : Unit → ControlFrame source spills → Action source target spills (ForInStep (ControlFrame source spills))}
+    {frame : Frame source target spills} {r : M (Frame source target spills)}
+    (h : LoopRuns (loopStep body) frame r) : runLoop body frame = r := by
   induction h with
-  | error he => have := (loopRuns_iff _ _ _).mp h'; symm; simpa [he] using this
-  | done hd => have := (loopRuns_iff _ _ _).mp h'; symm; simpa [hd] using this
-  | next hn _ ih =>
-    apply ih
-    have := (loopRuns_iff _ _ _).mp h'
-    simpa [hn] using this
-
-theorem LoopRuns.result_eq {body : Unit → β → M (ForInStep β)}
-    (h : LoopRuns body s r) (loop : β → M β)
-    (unfold_loop : ∀ s, loop s = (do
-      match ← body () s with
-      | .done out => pure out
-      | .yield out => loop out)) : loop s = r := by
-  induction h with
-  | error he => rw [unfold_loop, he]; rfl
-  | done hd => rw [unfold_loop, hd]; rfl
-  | next hn _ ih => rw [unfold_loop, hn]; exact ih
-
--- A proof-only interpreter. On a path with no finite execution it returns the
--- chosen error. It obeys the same one-step equation as the real loop.
-noncomputable def loopOr (fallback : Error) (body : Unit → β → M (ForInStep β))
-    (s : β) : M β := by
-  classical
-  exact if h : ∃ r, LoopRuns body s r then Classical.choose h else .error fallback
-
-theorem loopOr_of_runs (fallback : Error) {body : Unit → β → M (ForInStep β)}
-    (h : LoopRuns body s r) : loopOr fallback body s = r := by
-  unfold loopOr
-  rw [dite_eq_left (show ∃ r, LoopRuns body s r from ⟨r, h⟩)]
-  exact LoopRuns.deterministic (Classical.choose_spec _) h
-
-theorem loopOr_unfold (fallback : Error) (body : Unit → β → M (ForInStep β)) (s : β) :
-    loopOr fallback body s = (do
-      match ← body () s with
-      | .done out => pure out
-      | .yield s' => loopOr fallback body s') := by
-  cases h : body () s with
-  | error e => rw [loopOr_of_runs fallback (.error h)]; rfl
-  | ok step =>
-    cases step with
-    | done out => rw [loopOr_of_runs fallback (.done h)]; rfl
-    | yield s' =>
-      by_cases hex : ∃ r, LoopRuns body s' r
-      · have hn := Classical.choose_spec hex
-        rw [loopOr_of_runs fallback (LoopRuns.next h hn)]
-        simpa only [bind, Except.bind] using (loopOr_of_runs fallback hn).symm
-      · have hnone : ¬ ∃ r, LoopRuns body s r := by
-          rintro ⟨r, hr⟩
-          exact hex ⟨r, by simpa [h] using (loopRuns_iff _ _ _).mp hr⟩
-        simp [loopOr, hex, hnone, bind, Except.bind]
-
-def buildWith (loop : Frame source target spills → M (Frame source target spills))
-    (cursor : ℕ) (state : State source target spills) : M (Result source spills) := do
-  let frame ← loop (none, state, cursor)
-  finishLoop frame
+  | error he => rw [runLoop_unfold, he]; rfl
+  | done hd => rw [runLoop_unfold, hd]; rfl
+  | next hn _ ih => rw [runLoop_unfold, hn]; exact ih
 
 theorem buildBottomUp_as_loop (cursor : ℕ) (state : State source target spills) :
     buildBottomUp cursor state =
-      buildWith (runLoop (loopParts source target spills).val) cursor state := by
+      (runLoop (loopParts source target spills).val (none, state, cursor) >>= finishLoop) := by
   rw [(loopParts source target spills).property cursor state]
-  unfold buildWith runLoop
+  unfold runLoop
   simp only [StateT.run'_eq, StateT.run_bind]
   cases h : (forIn ({} : Lean.Loop) (none, cursor) (loopParts source target spills).val).run state with
   | error e => rfl
@@ -168,4 +99,4 @@ theorem buildBottomUp_as_loop (cursor : ℕ) (state : State source target spills
         Action.run_get, Action.run_lift, StateT.run_pure]
       cases ensure (next.stack.length = target.length) "stack and target sizes differ" <;> rfl
 
-end BuildBottomUpExperiments.Checked
+end Shuffler.BuildBottomUp

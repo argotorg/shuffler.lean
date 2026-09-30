@@ -1,4 +1,4 @@
-import Experiments.BuildBottomUp.ActionProofs
+import Shuffler.BuildBottomUp.ActionProofs
 import Std.Internal.Do
 import Std.Tactic.Do
 
@@ -6,7 +6,7 @@ open Std.Internal.Do
 
 set_option mvcgen.warning false
 
-namespace BuildBottomUpExperiments.Checked
+namespace Shuffler.BuildBottomUp
 
 -- A blocked operation is allowed. An assertion error is excluded.
 def Spec (result : M α) (post : α → Prop) : Prop :=
@@ -119,4 +119,4 @@ theorem swapDestinations_result (state : State source target spills)
     index_eq]
   rfl
 
-end BuildBottomUpExperiments.Checked
+end Shuffler.BuildBottomUp

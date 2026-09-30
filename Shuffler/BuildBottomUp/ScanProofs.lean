@@ -1,10 +1,10 @@
-import Experiments.BuildBottomUp.Contracts
+import Shuffler.BuildBottomUp.Contracts
 
 open Std.Internal.Do
 
 set_option mvcgen.warning false
 
-namespace BuildBottomUpExperiments.Checked
+namespace Shuffler.BuildBottomUp
 
 private theorem range_offset_lt
     (h : List.range' start (stop - start) = pref ++ offset :: suff) : offset < stop := by
@@ -58,4 +58,4 @@ def Chosen (state : State source target spills) (copy : Fin state.stack.length) 
     | exact copy_offset_lt (by assumption)
     | exact ⟨⟨_, copy_offset_lt (by assumption)⟩, rfl, (by symm; assumption), (by tauto)⟩
 
-end BuildBottomUpExperiments.Checked
+end Shuffler.BuildBottomUp

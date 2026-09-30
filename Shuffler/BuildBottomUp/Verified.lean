@@ -1,8 +1,8 @@
-import Experiments.BuildBottomUp.LoopProofs
+import Shuffler.BuildBottomUp.LoopProofs
 
 open Std.Internal.Do
 
-namespace BuildBottomUpExperiments.Checked
+namespace Shuffler.BuildBottomUp
 
 -- Each continuation of the actual loop decreases the lexicographic measure.
 theorem buildBottomUp_total (cursor : ℕ) (state : State source target spills)
@@ -36,13 +36,7 @@ theorem buildBottomUp_eq_of_loopRuns (cursor : ℕ) (state : State source target
     {r : M (Frame source target spills)}
     (h : LoopRuns (loopStep (loopParts source target spills).val) (none, state, cursor) r) :
     buildBottomUp cursor state = (r >>= finishLoop) := by
-  rw [buildBottomUp_as_loop, buildWith,
-    h.result_eq (runLoop (loopParts source target spills).val)
-      (fun frame => by
-        rw [runLoop_unfold]
-        congr 1
-        funext step
-        cases step <;> rfl)]
+  rw [buildBottomUp_as_loop, h.result_eq]
 
 theorem buildBottomUp_triple (cursor : ℕ) (state : State source target spills)
     (inv : Invariant cursor state) :
@@ -59,24 +53,32 @@ theorem buildBottomUp_noAssertion (cursor : ℕ) (state : State source target sp
     buildBottomUp cursor state ≠ .error (.assertion reason) := by
   exact ((spec_iff_triple _ _).mpr (buildBottomUp_triple cursor state inv)).noAssertion reason
 
+-- Assertion exclusion recovers the public error type.
+private def restoreResult (result : M α)
+    (noAssertion : ∀ reason, result ≠ .error (.assertion reason)) : Except ShuffleErr α :=
+  match result with
+  | .ok value => .ok value
+  | .error (.blocked excess) => .error (.Blocked excess)
+  | .error (.assertion reason) => False.elim (noAssertion reason rfl)
+
 def buildBottomUpVerified (cursor : ℕ) (state : State source target spills)
     (inv : Invariant cursor state) : Except ShuffleErr (Result source spills) :=
   restoreResult (buildBottomUp cursor state) (buildBottomUp_noAssertion cursor state inv)
 
-/-- info: 'BuildBottomUpExperiments.Checked.buildBottomUp_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+/-- info: 'Shuffler.BuildBottomUp.buildBottomUp_total' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms buildBottomUp_total
 
-/-- info: 'BuildBottomUpExperiments.Checked.buildBottomUp_triple' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+/-- info: 'Shuffler.BuildBottomUp.buildBottomUp_triple' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms buildBottomUp_triple
 
-/-- info: 'BuildBottomUpExperiments.Checked.buildBottomUp_noAssertion' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+/-- info: 'Shuffler.BuildBottomUp.buildBottomUp_noAssertion' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms buildBottomUp_noAssertion
 
-/-- info: 'BuildBottomUpExperiments.Checked.buildBottomUpVerified' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+/-- info: 'Shuffler.BuildBottomUp.buildBottomUpVerified' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms buildBottomUpVerified
 
-end BuildBottomUpExperiments.Checked
+end Shuffler.BuildBottomUp

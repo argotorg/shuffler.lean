@@ -1,20 +1,12 @@
-import Experiments.BuildBottomUp.Checked
+import Shuffler.BuildBottomUp.Defs
 
-namespace BuildBottomUpExperiments.Checked
+namespace Shuffler.BuildBottomUp
 
 theorem except_ok_bind (value : α) (next : α → Except ε β) :
     (Except.ok value >>= next) = next value := rfl
 
 theorem except_error_bind (err : ε) (next : α → Except ε β) :
     (Except.error err >>= next) = .error err := rfl
-
-theorem Action.exec_bind (action : Action source target spills Unit)
-    (next : Unit → Action source target spills Unit) (state : State source target spills) :
-    (action >>= next).exec state = (action.exec state >>= fun state => (next ()).exec state) := by
-  simp only [Action.exec, StateT.run_bind]
-  cases action.run state with
-  | error e => rfl
-  | ok result => obtain ⟨⟨⟩, next⟩ := result; rfl
 
 theorem Action.exec_get (next : State source target spills → Action source target spills Unit)
     (state : State source target spills) : (get >>= next).exec state = (next state).exec state := rfl
@@ -26,9 +18,6 @@ theorem Action.exec_lift (action : M α) (next : α → Action source target spi
 
 theorem Action.exec_set (state next : State source target spills) :
     (set next : Action source target spills Unit).exec state = .ok next := rfl
-
-theorem Action.exec_modify (state : State source target spills) (f : State source target spills → State source target spills) :
-    (modify f : Action source target spills Unit).exec state = .ok (f state) := rfl
 
 theorem Action.exec_throw (state : State source target spills) (err : Error) :
     (throw err : Action source target spills Unit).exec state = .error err := rfl
@@ -73,4 +62,4 @@ macro "simp_action" : tactic => `(tactic| simp only [Action.run_ite, Action.run_
   StateT.run_pure, Action.run_throw, Action.exec_throw,
   bind_assoc, pure_bind, except_ok_bind, except_error_bind])
 
-end BuildBottomUpExperiments.Checked
+end Shuffler.BuildBottomUp

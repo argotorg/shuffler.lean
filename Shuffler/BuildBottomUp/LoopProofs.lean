@@ -1,11 +1,12 @@
-import Experiments.BuildBottomUp.CheckedProofs
-import Experiments.BuildBottomUp.ScanProofs
+import Shuffler.BuildBottomUp.FiniteExecution
+import Shuffler.BuildBottomUp.HelperProofs
+import Shuffler.BuildBottomUp.ScanProofs
 
 open Std.Internal.Do
 
 set_option mvcgen.warning false
 
-namespace BuildBottomUpExperiments.Checked
+namespace Shuffler.BuildBottomUp
 
 set_option maxRecDepth 16384
 set_option maxHeartbeats 2000000
@@ -247,4 +248,4 @@ theorem build_action_triple (cursor : ℕ) :
       rw [← hm.1]
       exact hp.2.2
 
-end BuildBottomUpExperiments.Checked
+end Shuffler.BuildBottomUp

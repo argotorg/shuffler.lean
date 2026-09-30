@@ -1,4 +1,4 @@
-import Experiments.BuildBottomUp.Contracts
+import Shuffler.BuildBottomUp.Contracts
 
 theorem Stack.shallowestCopyPosition_isSome (stack : Stack) (slot : Value) :
     (stack.shallowestCopyPosition slot).isSome ↔ slot ∈ stack := by
@@ -83,7 +83,7 @@ theorem Stack.belowOfNotTop (stack : Stack) (pos : Fin stack.length)
   omega
 
 
-namespace BuildBottomUpExperiments.Checked
+namespace Shuffler.BuildBottomUp
 
 def Processed
     (cursor : ℕ)
@@ -111,7 +111,7 @@ theorem Processed.bound_ge {state : State source target spills}
   have hfinal := hinv ⟨pos.val, hlt⟩ (by change pos.val < cursor; omega)
   exact state.boundNotFinal dest pos hbound (by omega) hfinal
 
--- The four facts required at each recursive call.
+-- The four facts required at each loop iteration.
 structure Invariant (cursor : ℕ) (state : State source target spills) : Prop where
   processed : Processed cursor state
   size : state.stack.length + state.pending_generations = target.length
@@ -163,4 +163,4 @@ theorem Invariant.complete_size {state : State source target spills}
   change state.stack.length < state.stack.length at this
   omega
 
-end BuildBottomUpExperiments.Checked
+end Shuffler.BuildBottomUp

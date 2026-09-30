@@ -1,10 +1,10 @@
-import Experiments.BuildBottomUp.Invariants
+import Shuffler.BuildBottomUp.Invariants
 
 open Std.Internal.Do
 
 set_option mvcgen.warning false
 
-namespace BuildBottomUpExperiments.Checked
+namespace Shuffler.BuildBottomUp
 
 structure Swapped (state next : State source target spills) (pos : Fin state.stack.length) : Prop where
   size : next.stack.length = state.stack.length
@@ -75,4 +75,4 @@ theorem Swapped.final {state next : State source target spills}
   have htop := state.boundOfVal dest ⟨state.stack.length - 1, by have := pos.isLt; omega⟩ hbound
   simp [State.isFinal, dest.isLt, h.mapping, htop, hpos]
 
-end BuildBottomUpExperiments.Checked
+end Shuffler.BuildBottomUp

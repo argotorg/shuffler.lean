@@ -32,7 +32,7 @@ instance (stack : Stack) (pos : Fin stack.length) : Decidable (stack.isSwapReach
 instance (state : State source target spills) (targetOffset : Fin target.length) : Decidable (state.isAvailable targetOffset)
   := by unfold State.isAvailable; infer_instance
 
-namespace BuildBottomUpExperiments.Checked
+namespace Shuffler.BuildBottomUp
 
 inductive Error where
   | blocked (excess : ℕ)
@@ -297,4 +297,4 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
     ensure (state.stack.length = target.length) "stack and target sizes differ"
     return ⟨state.stack, state.trace⟩
 
-end BuildBottomUpExperiments.Checked
+end Shuffler.BuildBottomUp

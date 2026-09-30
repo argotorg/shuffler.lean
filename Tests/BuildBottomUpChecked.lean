@@ -1,10 +1,8 @@
-import Experiments.BuildBottomUp.Independence
-import Experiments.BuildBottomUp.Observations
+import Shuffler.BuildBottomUp.Verified
+import Tests.BuildBottomUpObservations
 
-check_no_legacy_imports
-
-namespace BuildBottomUpExperiments
-open Checked
+namespace BuildBottomUpCheckedTests
+open Shuffler.BuildBottomUp BuildBottomUpTestSupport
 
 set_option maxRecDepth 16384
 
@@ -22,12 +20,12 @@ example : (generate 0).exec (emptyState [.Var ⟨37⟩] ∅) =
     .error (.assertion "generated slot has no copy on the stack and is not spilled") := rfl
 example : (swapWith 0).exec (emptyState [] ∅) =
     .error (.assertion "offset is out of bounds") := rfl
-example : observe (Checked.buildBottomUp 0
+example : observe (buildBottomUp 0
     { emptyState [.Lit 1] ∅ with pending_generations := 0 }) =
     .error (.assertion "stack does not define a complete permutation") := by native_decide
 
 -- Reject a size mismatch even when the cursor skips the loop.
-example : observe (Checked.buildBottomUp 1 (emptyState [.Lit 1] ∅)) =
+example : observe (buildBottomUp 1 (emptyState [.Lit 1] ∅)) =
     .error (.assertion "stack and target sizes differ") := by native_decide
 
 private def boundState : State [.Lit 1] [.Lit 1] ∅ where
@@ -42,24 +40,24 @@ example : (generate 0).exec boundState =
 example : (swapWith 0).exec boundState =
     .error (.assertion "cannot swap the top with itself") := rfl
 
-private def observeState (result : Checked.M (State source target spills)) :=
+private def observeState (result : M (State source target spills)) :=
   observe (result.map fun state => ⟨state.stack, state.trace⟩)
 
-example : observeState ((Checked.push (.Lit 1) 0).exec (emptyState [.Lit 1] ∅)) =
+example : observeState ((push (.Lit 1) 0).exec (emptyState [.Lit 1] ∅)) =
     .ok ([.Lit 1], [.push (.Lit 1)]) := rfl
-example : (Checked.push (.Var ⟨37⟩) 0).exec (emptyState [.Var ⟨37⟩] ∅) =
+example : (push (.Var ⟨37⟩) 0).exec (emptyState [.Var ⟨37⟩] ∅) =
     .error (.assertion "pushed slot cannot be generated or loaded") := rfl
-example : (Checked.push (.Lit 1) 0).exec boundState =
+example : (push (.Lit 1) 0).exec boundState =
     .error (.assertion "destination already bound to a slot") := rfl
 -- When both checks fail, report the bound destination first.
-example : (Checked.push (.Var ⟨37⟩) 0).exec boundState =
+example : (push (.Var ⟨37⟩) 0).exec boundState =
     .error (.assertion "destination already bound to a slot") := rfl
 -- Equal lengths do not imply that the mapping is complete.
-example : observe (Checked.buildBottomUp 0 { boundState with mapping := ⊥ }) =
+example : observe (buildBottomUp 0 { boundState with mapping := ⊥ }) =
     .error (.assertion "stack does not define a complete permutation") := by native_decide
-example : (Checked.produce 0).exec boundState =
+example : (produce 0).exec boundState =
     .error (.assertion "destination already bound to a slot") := rfl
-example : observeState ((Checked.produce 0).exec (emptyState [.Var ⟨37⟩] {⟨37⟩})) =
+example : observeState ((produce 0).exec (emptyState [.Var ⟨37⟩] {⟨37⟩})) =
     .ok ([.Var ⟨37⟩], [.load ⟨37⟩]) := rfl
 
 private def copyState (padding : ℕ) (spills : SpillSet := ∅) : State
@@ -72,46 +70,46 @@ private def copyState (padding : ℕ) (spills : SpillSet := ∅) : State
   pending_generations := padding + 2
 
 -- SWAP16 succeeds; one slot beyond its reach is rejected.
-example : observeState ((Checked.swapWith 0).exec (copyState 16)) =
+example : observeState ((swapWith 0).exec (copyState 16)) =
     .ok (List.replicate 16 (.Lit 0) ++ [.Var ⟨37⟩], [.swap 16]) := rfl
-example : (Checked.swapWith 0).exec (copyState 17) =
+example : (swapWith 0).exec (copyState 17) =
     .error (.assertion "swap target is out of reach") := rfl
 
 -- A final slot below the top is rejected even when it is within reach.
-example : (Checked.swapWith 0).exec
+example : (swapWith 0).exec
     { copyState 1 with mapping := (⊥ : Mapping 2 3).bind 0 0 rfl rfl } =
     .error (.assertion "swap target is already final") := rfl
 
-example : observeState ((Checked.dup 0 0).exec (copyState 15)) =
+example : observeState ((dup 0 0).exec (copyState 15)) =
     .ok ((copyState 15).stack ++ [.Var ⟨37⟩], [.dup 16]) := rfl
-example : (Checked.dup 0 0).exec (copyState 16) =
+example : (dup 0 0).exec (copyState 16) =
     .error (.assertion "copy is outside DUP reach") := rfl
-example : (Checked.dup 0 0).exec boundState =
+example : (dup 0 0).exec boundState =
     .error (.assertion "destination already bound to a slot") := rfl
-example : (Checked.produce 0).exec (copyState 16) = .error (.blocked 1) := rfl
+example : (produce 0).exec (copyState 16) = .error (.blocked 1) := rfl
 
 -- A reachable copy takes priority over a spill load, including at DUP16.
-example : observeState ((Checked.produce 0).exec (copyState 15 {⟨37⟩})) =
+example : observeState ((produce 0).exec (copyState 15 {⟨37⟩})) =
     .ok ((copyState 15).stack ++ [.Var ⟨37⟩], [.dup 16]) := rfl
-example : ((Checked.produce 0).exec (copyState 15 {⟨37⟩})).map
+example : ((produce 0).exec (copyState 15 {⟨37⟩})).map
     (fun next => (positionOf next 0, next.pending_generations)) = .ok (some 16, 16) := rfl
 -- Beyond DUP reach, a spill load succeeds and binds the new top.
-example : observeState ((Checked.produce 0).exec (copyState 16 {⟨37⟩})) =
+example : observeState ((produce 0).exec (copyState 16 {⟨37⟩})) =
     .ok ((copyState 16).stack ++ [.Var ⟨37⟩], [.load ⟨37⟩]) := rfl
-example : ((Checked.produce 0).exec (copyState 16 {⟨37⟩})).map
+example : ((produce 0).exec (copyState 16 {⟨37⟩})).map
     (fun next => (positionOf next 0, next.pending_generations)) = .ok (some 17, 17) := rfl
 -- Literal and junk production also bind the top and decrement exactly once.
-example : ((Checked.produce 0).exec (emptyState [.Lit 1] ∅)).map
+example : ((produce 0).exec (emptyState [.Lit 1] ∅)).map
     (fun next => (positionOf next 0, next.pending_generations)) = .ok (some 0, 0) := rfl
-example : ((Checked.produce 0).exec (emptyState [.Wildcard] ∅)).map
+example : ((produce 0).exec (emptyState [.Wildcard] ∅)).map
     (fun next => (positionOf next 0, next.pending_generations)) = .ok (some 0, 0) := rfl
 
 -- DUP checks offsets against the current stack, including an empty stack.
-example : (Checked.dup 0 0).exec (emptyState [.Lit 1] ∅) =
+example : (dup 0 0).exec (emptyState [.Lit 1] ∅) =
     .error (.assertion "offset is out of bounds") := rfl
-example : (Checked.dup 1 0).exec boundState =
+example : (dup 1 0).exec boundState =
     .error (.assertion "offset is out of bounds") := rfl
-example : (Checked.dup 2 0).exec boundState =
+example : (dup 2 0).exec boundState =
     .error (.assertion "offset is out of bounds") := rfl
 
 -- The second action sees the first action's stack, mapping, and pending count.
@@ -151,16 +149,16 @@ private def urgentThenBlocked : State
   mapping := by simpa using shiftTwo 17
   pending_generations := 2
 
-example : observe (Checked.buildBottomUp 0 urgentThenBlocked) = .error (.blocked 1) := by
+example : observe (buildBottomUp 0 urgentThenBlocked) = .error (.blocked 1) := by
   native_decide
 
-example : observe (Checked.liftResult (Checked.buildBottomUpVerified 0 boundState
+example : observe (liftResult (buildBottomUpVerified 0 boundState
     ⟨by intro i hi; omega, by decide, by decide, by intro i; fin_cases i; decide⟩)) =
     .ok ([.Lit 1], []) := by native_decide
 
 -- The new definitions and the loop proof do not use sorryAx.
-/-- info: 'BuildBottomUpExperiments.Checked.buildBottomUp' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+/-- info: 'Shuffler.BuildBottomUp.buildBottomUp' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
-#print axioms Checked.buildBottomUp
+#print axioms buildBottomUp
 
-end BuildBottomUpExperiments
+end BuildBottomUpCheckedTests

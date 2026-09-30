@@ -1,10 +1,10 @@
-import Experiments.BuildBottomUp.SwapProofs
+import Shuffler.BuildBottomUp.SwapProofs
 
 open Std.Internal.Do
 
 set_option mvcgen.warning false
 
-namespace BuildBottomUpExperiments.Checked
+namespace Shuffler.BuildBottomUp
 
 -- Effects of adding one bound stack slot.
 structure Growth (state next : State source target spills) (dest : Fin target.length)
@@ -218,4 +218,4 @@ theorem Invariant.swap_bound {state : State source target spills} {dest : Fin ta
   apply (next.isFinal_of_bound_val_iff dest _ htop).not.mpr
   omega
 
-end BuildBottomUpExperiments.Checked
+end Shuffler.BuildBottomUp

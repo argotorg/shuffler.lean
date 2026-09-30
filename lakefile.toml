@@ -6,8 +6,8 @@ defaultTargets = ["Shuffler"]
 name = "Shuffler"
 
 [[lean_lib]]
-name = "Experiments"
-globs = ["Experiments.+"]
+name = "Tests"
+globs = ["Tests.+"]
 
 [[require]]
 name = "mathlib"
