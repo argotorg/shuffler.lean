@@ -135,13 +135,18 @@ There is no shared mutable state. A `StateT` layer could remove some explicit
 
 ## Checks
 
+The experiments are registered as a Lake library, so the editor can resolve
+their imports. Run `lake build Experiments` to build all experiment modules.
+The default `lake build` still builds `Shuffler`.
+
 From the repository root:
 
 ```sh
 Experiments/BuildBottomUp/check.sh
 ```
 
-The script builds the dependencies, compiles each experiment, and checks:
+The script runs `lake build Experiments`, then checks the derived branch
+fixtures. Together, the build and fixture checks cover:
 
 - The existing branch fixtures against all three Lean implementations and the
   verified wrapper.
@@ -156,7 +161,8 @@ The script builds the dependencies, compiles each experiment, and checks:
 
 The existing fixtures also cover urgent and new-top retries, equal-copy
 selection, skipping final copies, blocked swaps, and the SWAP16 boundary.
-Derived test files and compiler output are temporary files under `.lake`.
+Compiled modules are in Lake's build directory. Derived test files are
+temporary files under `.lake`.
 
 ## Equivalence and termination proofs
 

@@ -1,17 +1,12 @@
 #!/bin/sh
 set -eu
 
-# Run from the repository root. Keep compiler output and derived fixtures in .lake.
+# Run from the repository root. Use the same module build as the editor.
+lake build Experiments
+
+# Keep derived fixtures in .lake.
 check_dir=$(mktemp -d .lake/build-bottom-up-experiments.XXXXXX)
 trap 'rm -rf "$check_dir"' EXIT HUP INT TERM
-mkdir -p "$check_dir/Experiments/BuildBottomUp"
-export LEAN_PATH="$check_dir${LEAN_PATH:+:$LEAN_PATH}"
-
-lake build Shuffler.BuildBottomUp.Defs
-for module in Deferred CheckedSupport Checked CheckedProofs FiniteExecution ScanEquivalence Equivalence Comparison Tests; do
-  lake env lean -o "$check_dir/Experiments/BuildBottomUp/$module.olean" \
-    "Experiments/BuildBottomUp/$module.lean"
-done
 
 # Use the production fixtures without keeping a second copy of their states.
 # compareAndRun compares the result stack, every trace operand, and error excess.

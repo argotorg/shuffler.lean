@@ -5,6 +5,10 @@ defaultTargets = ["Shuffler"]
 [[lean_lib]]
 name = "Shuffler"
 
+[[lean_lib]]
+name = "Experiments"
+globs = ["Experiments.+"]
+
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"
