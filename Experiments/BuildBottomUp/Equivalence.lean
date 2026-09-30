@@ -100,7 +100,7 @@ theorem buildWith_eq
   case case1 cursor state hi hs hp ha hd =>
     have hsize := complete_size state ⟨hi, hs, hp, ha⟩ hd
     rw [buildWith, unfold_loop, build_bottom_up.eq_def]
-    dsimp only [loopStep, loopParts, finishLoop, urgentScan, copyScan]
+    dsimp only [loopStep, loopParts, finishLoop]
     simp_action
     simp +instances only [isFinal_legacy_eq, shallowestCopyPosition_legacy_eq, isDupReachable_legacy_eq]
     simp [show ¬cursor < target.length by omega, hd, hsize, ensure_true, liftResult,
@@ -108,7 +108,7 @@ theorem buildWith_eq
   case case2 cursor state hi hs hp ha hd dest hf ih =>
     have hskip : cursor < state.stack.length ∧ state.is_final cursor := hf
     rw [buildWith, unfold_loop, build_bottom_up.eq_def]
-    dsimp only [loopStep, loopParts, finishLoop, urgentScan, copyScan]
+    dsimp only [loopStep, loopParts, finishLoop]
     simp_action
     simp +instances only [isFinal_legacy_eq, shallowestCopyPosition_legacy_eq, isDupReachable_legacy_eq]
     simp only [show cursor < target.length by omega, hd, hskip,
@@ -117,7 +117,7 @@ theorem buildWith_eq
   case case3 cursor state hi hs hp ha hd dest hskip hnfinal hz ht hc =>
     have hskip' : ¬ (cursor < state.stack.length ∧ state.is_final cursor) := hskip
     rw [buildWith, unfold_loop, build_bottom_up.eq_def]
-    dsimp only [loopStep, loopParts, finishLoop, urgentScan, copyScan]
+    dsimp only [loopStep, loopParts, finishLoop]
     simp_action
     simp +instances only [isFinal_legacy_eq, shallowestCopyPosition_legacy_eq, isDupReachable_legacy_eq]
     simp only [show cursor < target.length by omega, hd, hskip', hz,
@@ -131,7 +131,7 @@ theorem buildWith_eq
     have hskip' : ¬ (cursor < state.stack.length ∧ state.is_final cursor) := hskip
     have inv : BuildBottomUpInvariant cursor state := ⟨hi, hs, hp, ha⟩
     rw [buildWith, unfold_loop, build_bottom_up.eq_def]
-    dsimp only [loopStep, loopParts, finishLoop, urgentScan, copyScan]
+    dsimp only [loopStep, loopParts, finishLoop]
     simp_action
     simp +instances only [isFinal_legacy_eq, shallowestCopyPosition_legacy_eq, isDupReachable_legacy_eq]
     simp only [hd, hskip', hz, ↓reduceDIte]

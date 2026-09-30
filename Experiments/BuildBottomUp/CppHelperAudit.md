@@ -17,14 +17,13 @@ change the permutation routine or resolve its behavior differences.
 
 ## Sources and comparison domain
 
-- [CheckedSupport.lean](CheckedSupport.lean): helper implementations.
-- [Checked.lean](Checked.lean): the loop and final permutation branch.
+- [Checked.lean](Checked.lean): checked predicates, stack queries, helpers,
+  scans, and the loop with its final permutation branch.
 - [C++ Shuffler.cpp](../../solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp):
   `Emission` and `Mapping`.
 - [C++ Stack.h](../../solidity/libyul/backends/evm/ssa/Stack.h): the stack changes
   and trace emission called by `Emission`.
 - [Lean State.lean](../../Shuffler/State.lean): shared state type.
-- [Queries.lean](Queries.lean): checked predicates and stack queries.
 - [Lean Permute/Defs.lean](../../Shuffler/Permute/Defs.lean): final permutation.
 
 The common domain uses valid offsets, a consistent partial bijection, an
@@ -194,7 +193,7 @@ false branch is a successful return, not an assertion failure.
 ## Final permutation, now inside `buildBottomUp`
 
 C++ branch: `Shuffler.cpp:487`. C++ routine: `Emission::permute`, line 629.
-Lean branch: `Checked.lean:16`. Lean routine: `Shuffler/Permute/Defs.lean:34`.
+Lean branch: `buildBottomUp` in `Checked.lean`. Lean routine: `Shuffler/Permute/Defs.lean:34`.
 
 1. Both enter when the pending count is zero, after the final-slot skip.
 2. Lean checks equal lengths and complete source bindings. C++ asserts equal

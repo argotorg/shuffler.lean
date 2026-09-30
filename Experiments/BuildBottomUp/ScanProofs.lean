@@ -1,4 +1,3 @@
-import Experiments.BuildBottomUp.Scans
 import Experiments.BuildBottomUp.Contracts
 
 namespace BuildBottomUpExperiments.Checked
@@ -33,8 +32,19 @@ def UrgentChoice (state : State source target spills) (choice : Option ℕ) : Pr
   ∀ offset, choice = some offset → offset < target.length ∧ positionOf state offset = none
 
 theorem urgentScan_spec (cursor : ℕ) (state : State source target spills) :
-    Spec (urgentScan cursor state) (UrgentChoice state) := by
-  unfold urgentScan
+    Spec (
+      forIn [cursor : target.length] none fun offset urgent => do
+        if (positionOf state offset).isSome then
+          return .yield urgent
+        let slot ← slotAt target offset
+        if slot.is_junk ∨ slot.can_be_freely_generated ∨ spills.is_spilled slot then
+          return .yield urgent
+        if let some copy := state.stack.shallowestCopyPosition slot then
+          if ¬ state.stack.isDupReachable copy then
+            throw (.blocked (depthOf state copy - MAX_DUP_DEPTH))
+          if depthOf state copy = MAX_DUP_DEPTH ∧ copy.val ≠ cursor ∧ urgent.isNone then
+            return .yield (some offset)
+        return .yield urgent) (UrgentChoice state) := by
   rw [Std.Legacy.Range.forIn_eq_forIn_range']
   apply forIn_spec
   · intro offset h
@@ -67,8 +77,11 @@ def Chosen (state : State source target spills) (copy : Fin state.stack.length) 
 
 theorem copyScan_spec (state : State source target spills) (copy : Fin state.stack.length)
     (initial : ℕ) (hinit : Chosen state copy initial) :
-    Spec (copyScan state copy.val initial) (Chosen state copy) := by
-  unfold copyScan
+    Spec (
+      forIn ((List.range state.stack.length).reverse.take (depthOf state copy.val)) initial fun candidate pos => do
+        if (← slotAt state.stack candidate) = (← slotAt state.stack copy.val) ∧ ¬ state.isFinal candidate then
+          return .done candidate
+        return .yield pos) (Chosen state copy) := by
   apply forIn_spec _ _ _ _ hinit
   intro candidate hmem pos hpos
   have hlt : candidate < state.stack.length :=

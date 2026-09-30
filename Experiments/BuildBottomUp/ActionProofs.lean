@@ -1,4 +1,4 @@
-import Experiments.BuildBottomUp.CheckedSupport
+import Experiments.BuildBottomUp.Checked
 
 namespace BuildBottomUpExperiments.Checked
 

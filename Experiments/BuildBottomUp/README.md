@@ -16,7 +16,7 @@ The checked implementation and its proofs have no imports from
 `Shuffler/BuildBottomUp`. They share `State` from
 [Shuffler/State.lean](../../Shuffler/State.lean), plus the existing core,
 mapping, trace, and permutation modules. Checked stack queries and state
-predicates are defined in [Queries.lean](Queries.lean).
+predicates and helper operations are defined in [Checked.lean](Checked.lean).
 
 [Verified.lean](Verified.lean) provides the public checked wrapper, termination,
 and assertion-exclusion theorems. Its `Invariant` has the same four conditions
@@ -29,7 +29,7 @@ proofs do not import it.
 | Approach | File | Result |
 | --- | --- | --- |
 | Move proofs below the definition and group the four invariants | [Deferred.lean](Deferred.lean) | Compiles without `sorry`. Keeps the dependent `else` branches and recursive calls. |
-| Checked helpers with separate assertion errors | [Checked.lean](Checked.lean) and [CheckedSupport.lean](CheckedSupport.lean) | The full algorithm compiles as a `while` loop with early returns. The final permutation checks and call are in the loop body. |
+| Checked helpers with separate assertion errors | [Checked.lean](Checked.lean) | The full algorithm compiles as a `while` loop with early returns. Both scans and the final permutation checks and call are in the loop body. |
 | Prove helper contracts and loop properties after the definition | [HelperProofs.lean](HelperProofs.lean), [LoopProofs.lean](LoopProofs.lean), and [Verified.lean](Verified.lean) | Proves state effects, invariant preservation, finite execution, and exclusion of assertion errors directly from checked code. |
 
 An attempted `rfl` proof of equality between the deferred version and the old
@@ -114,7 +114,7 @@ as the main loop: `slotAt` for stack reads and `isSwapReachable` for the reach
 test. Its body needs no explicit `Fin` construction or tactic proofs.
 
 The offset/depth conversion proofs used by `dup` and `swapWith` are private
-named lemmas in `CheckedSupport.lean`.
+named lemmas in `Checked.lean`.
 `dup` accepts a natural-number offset and checks it against the current stack
 before constructing a `Fin` index.
 
@@ -157,9 +157,10 @@ and [HelperProofs.lean](HelperProofs.lean) prove the stack and mapping effects.
 properties. [CheckedProofs.lean](CheckedProofs.lean) uses these facts to prove
 the small generation loop.
 
-The two searches are executable functions in [Scans.lean](Scans.lean).
-[ScanProofs.lean](ScanProofs.lean) proves their bounds and selection properties.
-The main loop calls these same functions. Its body is extracted by
+The two searches are inside `buildBottomUp` in [Checked.lean](Checked.lean).
+[ScanProofs.lean](ScanProofs.lean) states and proves their bounds and selection
+properties for the scan expressions. The loop proof applies these theorems to
+the scans in the actual loop body. That body is extracted by
 [FiniteExecution.lean](FiniteExecution.lean), with a kernel-checked equality.
 [LoopProofs.lean](LoopProofs.lean) proves that each iteration either exits or
 preserves the invariant and decreases
@@ -203,7 +204,7 @@ Given the presence check, `urgentToDup ≠ some targetOffset` compares the store
 offset with `targetOffset`.
 
 The main loop reads the state again after updates when later checks need it.
-Pure queries and scans still take an explicit state. Only the cursor and
+Pure queries still take an explicit state. Only the cursor and
 copy-selection offset use local `mut` bindings.
 
 ## Checks

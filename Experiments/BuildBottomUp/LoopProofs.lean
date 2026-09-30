@@ -140,8 +140,10 @@ theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
                   { state with mapping := state.mapping.swapDestinations current carrier }
                   dest current hd).mpr rfl
               · simp_action
-                apply (copyScan_spec state carrier carrier.val
-                    ⟨carrier, rfl, rfl, state.boundNotFinal_of_not_final dest carrier hb hnfinal⟩).bind
+                have hscan := copyScan_spec state carrier carrier.val
+                  ⟨carrier, rfl, rfl, state.boundNotFinal_of_not_final dest carrier hb hnfinal⟩
+                simp only [slotAt_index state.stack carrier, except_ok_bind] at hscan
+                apply hscan.bind
                 intro selected hselected
                 obtain ⟨pos, rfl, hequal, hmovable⟩ := hselected
                 rw [slotAt_index state.stack pos]
