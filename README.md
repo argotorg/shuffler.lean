@@ -24,7 +24,7 @@ and `buildBottomUp_terminates` in `Shuffler/BuildBottomUp/Termination/Theorems.l
 The statement uses Lean's standard `Acc` certificate:
 
 ```lean
-Acc (Continues (loopParts source target spills).val) ((none, 0), state)
+Acc (Continues (loopBody source target spills).val) ((none, 0), state)
 ```
 
 `Continues body next current` means one body call from `current` returns
@@ -34,8 +34,17 @@ comes first because that is the argument order required by `Acc`.
 no successors, so they are base cases. An infinite chain of yields cannot have
 an `Acc` certificate. This is the certificate used by Lean's general
 well-founded recursion machinery; it does not select one terminating execution.
-`loopParts` carries an equality that connects the body and exit code to
+`loopBody` carries an equality that connects the body and exit code to
 `buildBottomUp`. The claim requires `Invariant 0 state`.
+`Lemmas/Continues.lean` checks the relation against the step extracted from
+`Lean.Loop.forIn` and proves the behavior of one `repeatM.body` step.
+Each body call must also finish: the inner loops are finite, and `permute`
+has its own termination proof.
+The body audit in `Shuffler/BuildBottomUp/Termination/Defs.lean` uses
+Batteries' `#print opaques`. Only `String.Internal.append` is allowed.
+This audits logical definitions; compiler replacements and runtime primitives
+remain trusted. Function-valued inputs, including mapping lookups, must also
+terminate at runtime.
 Both `.done` and error results exit the loop; `buildBottomUp_noAssertion`
 separately excludes assertion errors.
 

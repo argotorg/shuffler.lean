@@ -52,8 +52,8 @@ macro "finish_checked " c:term ", " st:term ", " hp:term ", " hn:term ", " hc:te
 
 theorem Lemmas.loop_step_spec (cursor : ℕ) (state : State source target spills)
     (inv : Invariant cursor state) :
-    Spec ((loopStep (loopParts source target spills).val) () (none, state, cursor)) (StepPost cursor state) := by
-  dsimp only [loopStep, loopParts]
+    Spec ((loopStep (loopBody source target spills).val) () (none, state, cursor)) (StepPost cursor state) := by
+  dsimp only [loopStep, loopBody]
   simp_action
   by_cases hc : cursor < target.length
   · simp only [hc, ↓reduceIte]
@@ -204,7 +204,7 @@ theorem Lemmas.loop_step_spec (cursor : ℕ) (state : State source target spills
 
 @[spec] theorem loop_body_triple (frame : ControlFrame source spills) (state : State source target spills)
     (hnone : frame.result = none) (inv : Invariant frame.targetOffset state) :
-    ⦃fun s => s = state⦄ (loopParts source target spills).val () frame
+    ⦃fun s => s = state⦄ (loopBody source target spills).val () frame
     ⦃BodyPost frame.targetOffset state; allowedErrors⦄ := by
   obtain ⟨result, cursor⟩ := frame
   dsimp only [ControlFrame.result] at hnone
@@ -212,7 +212,7 @@ theorem Lemmas.loop_step_spec (cursor : ℕ) (state : State source target spills
   apply (action_triple_iff _ _ _).mpr
   have h := Lemmas.loop_step_spec cursor state inv
   unfold loopStep at h
-  cases heq : ((loopParts source target spills).val () (none, cursor)).run state with
+  cases heq : ((loopBody source target spills).val () (none, cursor)).run state with
   | error err => cases err <;> simp_all [Spec]
   | ok result =>
     obtain ⟨step, next⟩ := result
@@ -228,7 +228,7 @@ theorem Lemmas.loop_step_spec (cursor : ℕ) (state : State source target spills
 
 theorem build_action_triple (cursor : ℕ) :
     ⦃Invariant cursor⦄ (do
-      let frame ← forIn ({} : Lean.Loop) (none, cursor) (loopParts source target spills).val
+      let frame ← forIn ({} : Lean.Loop) (none, cursor) (loopBody source target spills).val
       finishAction frame)
     ⦃fun (_ : (res : Stack) × Trace spills source res) (_ : State source target spills) => True; allowedErrors⦄ := by
   vcgen [loop_body_triple, finishAction_triple] invariants

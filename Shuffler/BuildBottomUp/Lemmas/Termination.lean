@@ -4,11 +4,11 @@ namespace Shuffler.BuildBottomUp.Lemmas
 
 theorem loop_terminates (cursor : ℕ) (state : State source target spills)
     (inv : Invariant cursor state) :
-    Acc (Continues (loopParts source target spills).val) ((none, cursor), state) := by
+    Acc (Continues (loopBody source target spills).val) ((none, cursor), state) := by
   constructor
   rintro ⟨⟨result, cursor'⟩, next⟩ hstep
   have hs := (action_triple_iff _ _ _).mp (loop_body_triple (none, cursor) state rfl inv)
-  change ((loopParts source target spills).val () (none, cursor)).run state =
+  change ((loopBody source target spills).val () (none, cursor)).run state =
     .ok (.yield (result, cursor'), next) at hstep
   have hp : BodyPost cursor state (.yield (result, cursor')) next := by
     simpa only [hstep, Spec] using hs
