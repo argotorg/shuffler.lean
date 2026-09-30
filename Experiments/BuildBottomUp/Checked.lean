@@ -18,14 +18,14 @@ def Stack.shallowestCopyPosition (stack : Stack) (slot : Value) :
   (List.finRange stack.length).reverse.find?
     (fun pos => stack[pos] = slot)
 
-def Stack.depth (stack : Stack) (idx : Fin stack.length) : Fin stack.length :=
+def Stack.offsetToDepth (stack : Stack) (idx : Fin stack.length) : Fin stack.length :=
   ⟨stack.length - 1 - idx, by omega⟩
 
 def Stack.isDupReachable (stack : Stack) (pos : Fin stack.length) : Prop :=
-  (stack.depth pos) ≤ MAX_DUP_DEPTH
+  (stack.offsetToDepth pos) ≤ MAX_DUP_DEPTH
 
 def Stack.isSwapReachable (stack : Stack) (pos : Fin stack.length) : Prop :=
-  (stack.depth pos) ≤ MAX_SWAP_DEPTH
+  (stack.offsetToDepth pos) ≤ MAX_SWAP_DEPTH
 
 def State.isAvailable (state : State source target spills) (target_offset : Fin target.length) : Prop :=
   let slot := target[target_offset]
@@ -100,22 +100,22 @@ instance (state : State source target spills) (dest : Fin target.length) :
 
 -- Convert between source offsets and the depths used by trace constructors.
 private theorem dup_stack_eq (stack : Stack) (copy : Fin stack.length) :
-    stack ++ [stack[stack.length - ((stack.depth copy).val + 1)]] =
+    stack ++ [stack[stack.length - ((stack.offsetToDepth copy).val + 1)]] =
       stack ++ [stack[copy]] := by
-  have hcopy : stack.length - ((stack.depth copy).val + 1) = copy.val := by
-    dsimp [Stack.depth]; omega
+  have hcopy : stack.length - ((stack.offsetToDepth copy).val + 1) = copy.val := by
+    dsimp [Stack.offsetToDepth]; omega
   exact congrArg (fun slot => stack ++ [slot]) (getElem_congr_idx hcopy)
 
 private theorem swap_stack_eq (stack : Stack) (pos : Fin stack.length) :
-    stack.swap (stack.length - 1) (stack.length - 1 - (stack.depth pos).val) =
+    stack.swap (stack.length - 1) (stack.length - 1 - (stack.offsetToDepth pos).val) =
       stack.swap pos (stack.length - 1) := by
-  have hpos : stack.length - 1 - (stack.depth pos).val = pos.val := by
-    dsimp [Stack.depth]; omega
+  have hpos : stack.length - 1 - (stack.offsetToDepth pos).val = pos.val := by
+    dsimp [Stack.offsetToDepth]; omega
   rw [hpos, List.swap_comm]
 
 private theorem swap_depth_pos (stack : Stack) (pos : Fin stack.length)
-    (hbelow : pos.val + 1 < stack.length) : 1 ≤ (stack.depth pos).val := by
-  dsimp [Stack.depth]; omega
+    (hbelow : pos.val + 1 < stack.length) : 1 ≤ (stack.offsetToDepth pos).val := by
+  dsimp [Stack.offsetToDepth]; omega
 
 private theorem top_lt_length (stack : Stack) (pos : Fin stack.length) :
     stack.length - 1 < stack.length := by
@@ -141,7 +141,7 @@ def push (slot : Value) (dest : Fin target.length) : Action source target spills
 def dup (offset : ℕ) (dest : Fin target.length) : Action source target spills Unit := do
   let state ← get
   let copy ← index state.stack.length offset
-  let depth := state.stack.depth copy
+  let depth := state.stack.offsetToDepth copy
 
   have heq : state.stack.length + 1 = (state.stack ++ [state.stack[copy]]).length := by simp
   let ⟨hbound⟩ ← requires (state.mapping.symm dest = none) "destination already bound to a slot"
@@ -168,7 +168,7 @@ def swapWith (offset : ℕ) : Action source target spills Unit := do
   let ⟨hbelow, hreach, _hnfinal⟩ ← requires
     (pos.val + 1 < state.stack.length ∧ state.stack.isSwapReachable pos ∧ ¬ state.isFinal pos.val)
     "swap requires a reachable slot below the top that is not final"
-  let depth := state.stack.depth pos
+  let depth := state.stack.offsetToDepth pos
   have heq : state.stack.length = (state.stack.swap pos (state.stack.length - 1)).length :=
     List.length_swap.symm
   set {
@@ -194,7 +194,7 @@ def produce (targetOffset : Fin target.length) : Action source target spills Uni
   else if slot.can_be_freely_generated ∨ spills.is_spilled slot then
     push slot targetOffset
   else if let some pos := copy then
-    throw (.blocked (state.stack.depth pos - MAX_DUP_DEPTH))
+    throw (.blocked (state.stack.offsetToDepth pos - MAX_DUP_DEPTH))
   else
     throw (.assertion "generated slot has no copy on the stack and is not spilled")
 

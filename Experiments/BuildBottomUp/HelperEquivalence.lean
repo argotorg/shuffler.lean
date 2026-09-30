@@ -12,8 +12,8 @@ namespace BuildBottomUpExperiments.Checked
 @[simp] theorem shallowestCopyPosition_legacy_eq (stack : Stack) (slot : Value) :
     Stack.shallowestCopyPosition stack slot = _root_.Stack.shallowest_copy_position stack slot := rfl
 
-@[simp] theorem depth_legacy_eq (stack : Stack) (pos : Fin stack.length) :
-    Stack.depth stack pos = _root_.Stack.depth_of stack pos := rfl
+@[simp] theorem offsetToDepth_legacy_eq (stack : Stack) (pos : Fin stack.length) :
+    Stack.offsetToDepth stack pos = _root_.Stack.depth_of stack pos := rfl
 
 @[simp] theorem isDupReachable_legacy_eq (stack : Stack) (pos : Fin stack.length) :
     Stack.isDupReachable stack pos = _root_.Stack.is_dup_reachable stack pos := rfl
