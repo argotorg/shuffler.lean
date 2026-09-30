@@ -16,11 +16,11 @@ private def emptyState (target : Stack) (spills : SpillSet) : State [] target sp
   pending_generations := target.length
 
 -- The extra error cases are observable. No assertion is converted to Blocked.
-example : generate (emptyState [.Lit 1] ∅) 1 =
+example : (generate 1).exec (emptyState [.Lit 1] ∅) =
     .error (.assertion "offset is out of bounds") := rfl
-example : generate (emptyState [.Var ⟨37⟩] ∅) 0 =
+example : (generate 0).exec (emptyState [.Var ⟨37⟩] ∅) =
     .error (.assertion "generated slot has no copy on the stack and is not spilled") := rfl
-example : swapWith (emptyState [] ∅) 0 =
+example : (swapWith 0).exec (emptyState [] ∅) =
     .error (.assertion "offset is out of bounds") := rfl
 example : observe (Checked.buildBottomUp 0
     { emptyState [.Lit 1] ∅ with pending_generations := 0 }) =
@@ -37,29 +37,29 @@ private def boundState : State [.Lit 1] [.Lit 1] ∅ where
   mapping := (⊥ : Mapping 1 1).bind 0 0 rfl rfl
   pending_generations := 0
 
-example : generate boundState 0 =
+example : (generate 0).exec boundState =
     .error (.assertion "destination already bound to a slot") := rfl
-example : swapWith boundState 0 =
+example : (swapWith 0).exec boundState =
     .error (.assertion "swap requires a reachable slot below the top that is not final") := rfl
 
 private def observeState (result : Checked.M (State source target spills)) :=
   observe (result.map fun state => ⟨state.stack, state.trace⟩)
 
-example : observeState (Checked.push (emptyState [.Lit 1] ∅) (.Lit 1) 0) =
+example : observeState ((Checked.push (.Lit 1) 0).exec (emptyState [.Lit 1] ∅)) =
     .ok ([.Lit 1], [.push (.Lit 1)]) := rfl
-example : Checked.push (emptyState [.Var ⟨37⟩] ∅) (.Var ⟨37⟩) 0 =
+example : (Checked.push (.Var ⟨37⟩) 0).exec (emptyState [.Var ⟨37⟩] ∅) =
     .error (.assertion "pushed slot cannot be generated or loaded") := rfl
-example : Checked.push boundState (.Lit 1) 0 =
+example : (Checked.push (.Lit 1) 0).exec boundState =
     .error (.assertion "destination already bound to a slot") := rfl
 -- When both checks fail, report the bound destination first.
-example : Checked.push boundState (.Var ⟨37⟩) 0 =
+example : (Checked.push (.Var ⟨37⟩) 0).exec boundState =
     .error (.assertion "destination already bound to a slot") := rfl
 -- Equal lengths do not imply that the mapping is complete.
 example : observe (Checked.buildBottomUp 0 { boundState with mapping := ⊥ }) =
     .error (.assertion "stack does not define a complete permutation") := by native_decide
-example : Checked.produce boundState 0 =
+example : (Checked.produce 0).exec boundState =
     .error (.assertion "destination already bound to a slot") := rfl
-example : observeState (Checked.produce (emptyState [.Var ⟨37⟩] {⟨37⟩}) 0) =
+example : observeState ((Checked.produce 0).exec (emptyState [.Var ⟨37⟩] {⟨37⟩})) =
     .ok ([.Var ⟨37⟩], [.load ⟨37⟩]) := rfl
 
 private def copyState (padding : ℕ) (spills : SpillSet := ∅) : State
@@ -71,29 +71,55 @@ private def copyState (padding : ℕ) (spills : SpillSet := ∅) : State
   mapping := ⊥
   pending_generations := padding + 2
 
-example : observeState (Checked.dup (copyState 15) ⟨0, by decide⟩ 0) =
+example : observeState ((Checked.dup 0 0).exec (copyState 15)) =
     .ok ((copyState 15).stack ++ [.Var ⟨37⟩], [.dup 16]) := rfl
-example : Checked.dup (copyState 16) ⟨0, by decide⟩ 0 =
+example : (Checked.dup 0 0).exec (copyState 16) =
     .error (.assertion "copy is outside DUP reach") := rfl
-example : Checked.dup boundState ⟨0, by decide⟩ 0 =
+example : (Checked.dup 0 0).exec boundState =
     .error (.assertion "destination already bound to a slot") := rfl
-example : Checked.produce (copyState 16) 0 = .error (.blocked 1) := rfl
+example : (Checked.produce 0).exec (copyState 16) = .error (.blocked 1) := rfl
 
 -- A reachable copy takes priority over a spill load, including at DUP16.
-example : observeState (Checked.produce (copyState 15 {⟨37⟩}) 0) =
+example : observeState ((Checked.produce 0).exec (copyState 15 {⟨37⟩})) =
     .ok ((copyState 15).stack ++ [.Var ⟨37⟩], [.dup 16]) := rfl
-example : (Checked.produce (copyState 15 {⟨37⟩}) 0).map
+example : ((Checked.produce 0).exec (copyState 15 {⟨37⟩})).map
     (fun next => (positionOf next 0, next.pending_generations)) = .ok (some 16, 16) := rfl
 -- Beyond DUP reach, a spill load succeeds and binds the new top.
-example : observeState (Checked.produce (copyState 16 {⟨37⟩}) 0) =
+example : observeState ((Checked.produce 0).exec (copyState 16 {⟨37⟩})) =
     .ok ((copyState 16).stack ++ [.Var ⟨37⟩], [.load ⟨37⟩]) := rfl
-example : (Checked.produce (copyState 16 {⟨37⟩}) 0).map
+example : ((Checked.produce 0).exec (copyState 16 {⟨37⟩})).map
     (fun next => (positionOf next 0, next.pending_generations)) = .ok (some 17, 17) := rfl
 -- Literal and junk production also bind the top and decrement exactly once.
-example : (Checked.produce (emptyState [.Lit 1] ∅) 0).map
+example : ((Checked.produce 0).exec (emptyState [.Lit 1] ∅)).map
     (fun next => (positionOf next 0, next.pending_generations)) = .ok (some 0, 0) := rfl
-example : (Checked.produce (emptyState [.Wildcard] ∅) 0).map
+example : ((Checked.produce 0).exec (emptyState [.Wildcard] ∅)).map
     (fun next => (positionOf next 0, next.pending_generations)) = .ok (some 0, 0) := rfl
+
+-- DUP checks offsets against the current stack, including an empty stack.
+example : (Checked.dup 0 0).exec (emptyState [.Lit 1] ∅) =
+    .error (.assertion "offset is out of bounds") := rfl
+example : (Checked.dup 1 0).exec boundState =
+    .error (.assertion "offset is out of bounds") := rfl
+example : (Checked.dup 2 0).exec boundState =
+    .error (.assertion "offset is out of bounds") := rfl
+
+-- The second action sees the first action's stack, mapping, and pending count.
+example : ((do
+    generate 0
+    generate 1).exec (emptyState [.Lit 1, .Lit 1] ∅)).map
+      (fun (next : State [] [.Lit 1, .Lit 1] ∅) => (next.stack, operations next.trace, positionOf next 0,
+        positionOf next 1, next.pending_generations)) =
+    .ok ([.Lit 1, .Lit 1], [.push (.Lit 1), .dup 1], some 0, some 1, 0) := rfl
+
+-- A failed action stops the sequence and returns no state.
+example : (do
+    generate 0
+    generate 0
+    generate 2).exec (emptyState [.Lit 1, .Lit 1] ∅) =
+    .error (.assertion "destination already bound to a slot") := rfl
+example : (do
+    produce 0
+    generate 100).exec (copyState 16) = .error (.blocked 1) := rfl
 
 -- A blocked source found later in the scan must override an earlier urgent copy.
 -- This guards against changing the urgent search to an early-return find.

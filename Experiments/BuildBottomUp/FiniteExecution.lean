@@ -1,8 +1,9 @@
 import Experiments.BuildBottomUp.Checked
+import Experiments.BuildBottomUp.ActionProofs
 
 namespace BuildBottomUpExperiments.Checked
 
-theorem loop_unfold (s : β) (f : Unit → β → M (ForInStep β)) :
+theorem loop_unfold [Monad m] [LawfulMonad m] [Lean.Order.MonadTail m] (s : β) (f : Unit → β → m (ForInStep β)) :
     forIn ({} : Lean.Loop) s f = (do
       match ← f () s with
       | .done s => pure s
@@ -18,20 +19,54 @@ def finishLoop (frame : Frame source target spills) : M (Result source spills) :
   ensure (frame.2.1.stack.length = target.length) "stack and target sizes differ"
   return ⟨frame.2.1.stack, frame.2.1.trace⟩
 
--- Lean infers the body from the actual definition. The equality is checked
--- by the kernel; there is no second copy of the algorithm to maintain.
+abbrev ControlFrame (source : Stack) (spills : SpillSet) :=
+  Option (Result source spills) × ℕ
+
+def finishAction (frame : ControlFrame source spills) : Action source target spills (Result source spills) := do
+  if let some result := frame.1 then
+    return result
+  let state ← get
+  ensure (state.stack.length = target.length) "stack and target sizes differ"
+  return ⟨state.stack, state.trace⟩
+
+-- Extract the actual StateT loop body; the kernel checks the equality.
 def loopParts (source target : Stack) (spills : SpillSet) :
-    { body : Unit → Frame source target spills → M (ForInStep (Frame source target spills)) //
-      ∀ cursor state, buildBottomUp cursor state = (do
-        let frame ← forIn ({} : Lean.Loop) (none, state, cursor) body
-        finishLoop frame) } := by
+    { body : Unit → ControlFrame source spills → Action source target spills (ForInStep (ControlFrame source spills)) //
+      ∀ cursor state, buildBottomUp cursor state = StateT.run' (do
+        let frame ← forIn ({} : Lean.Loop) (none, cursor) body
+        finishAction frame) state } := by
   exact ⟨_, by
     intro cursor state
-    unfold buildBottomUp finishLoop
+    unfold buildBottomUp finishAction
     dsimp only
     congr 2
     funext frame
     cases frame.1 <;> rfl⟩
+
+def loopStep (body : Unit → ControlFrame source spills → Action source target spills (ForInStep (ControlFrame source spills)))
+    (_ : Unit) (frame : Frame source target spills) : M (ForInStep (Frame source target spills)) := do
+  let (step, state) ← (body () (frame.1, frame.2.2)).run frame.2.1
+  return match step with
+    | .done out => .done (out.1, state, out.2)
+    | .yield out => .yield (out.1, state, out.2)
+
+def runLoop (body : Unit → ControlFrame source spills → Action source target spills (ForInStep (ControlFrame source spills)))
+    (frame : Frame source target spills) : M (Frame source target spills) := do
+  let (out, state) ← (forIn ({} : Lean.Loop) (frame.1, frame.2.2) body).run frame.2.1
+  return (out.1, state, out.2)
+
+theorem runLoop_unfold (body : Unit → ControlFrame source spills → Action source target spills (ForInStep (ControlFrame source spills)))
+    (frame : Frame source target spills) :
+    runLoop body frame = (do
+      match ← loopStep body () frame with
+      | .done out => pure out
+      | .yield next => runLoop body next) := by
+  unfold runLoop loopStep
+  conv_lhs => rw [loop_unfold]
+  simp only [StateT.run_bind]
+  cases h : (body () (frame.1, frame.2.2)).run frame.2.1 with
+  | error e => rfl
+  | ok result => obtain ⟨step, state⟩ := result; cases step <;> rfl
 
 -- A finite execution of the actual loop body, including an error exit.
 inductive LoopRuns (body : Unit → β → M (ForInStep β)) : β → M β → Prop where
@@ -68,11 +103,15 @@ theorem LoopRuns.deterministic {body : Unit → β → M (ForInStep β)}
     simpa [hn] using this
 
 theorem LoopRuns.result_eq {body : Unit → β → M (ForInStep β)}
-    (h : LoopRuns body s r) : forIn ({} : Lean.Loop) s body = r := by
+    (h : LoopRuns body s r) (loop : β → M β)
+    (unfold_loop : ∀ s, loop s = (do
+      match ← body () s with
+      | .done out => pure out
+      | .yield out => loop out)) : loop s = r := by
   induction h with
-  | error he => rw [loop_unfold, he]; rfl
-  | done hd => rw [loop_unfold, hd]; rfl
-  | next hn _ ih => rw [loop_unfold, hn]; exact ih
+  | error he => rw [unfold_loop, he]; rfl
+  | done hd => rw [unfold_loop, hd]; rfl
+  | next hn _ ih => rw [unfold_loop, hn]; exact ih
 
 -- A proof-only interpreter. On a path with no finite execution it returns the
 -- chosen error. It obeys the same one-step equation as the real loop.
@@ -114,7 +153,19 @@ def buildWith (loop : Frame source target spills → M (Frame source target spil
 
 theorem buildBottomUp_as_loop (cursor : ℕ) (state : State source target spills) :
     buildBottomUp cursor state =
-      buildWith (fun frame => forIn ({} : Lean.Loop) frame (loopParts source target spills).val)
-        cursor state := (loopParts source target spills).property cursor state
+      buildWith (runLoop (loopParts source target spills).val) cursor state := by
+  rw [(loopParts source target spills).property cursor state]
+  unfold buildWith runLoop
+  simp only [StateT.run'_eq, StateT.run_bind]
+  cases h : (forIn ({} : Lean.Loop) (none, cursor) (loopParts source target spills).val).run state with
+  | error e => rfl
+  | ok frame =>
+    obtain ⟨⟨result, cursor⟩, next⟩ := frame
+    cases result with
+    | some result => rfl
+    | none =>
+      simp only [except_ok_bind, pure_bind, finishAction, finishLoop,
+        Action.run_get, Action.run_lift, StateT.run_pure]
+      cases ensure (next.stack.length = target.length) "stack and target sizes differ" <;> rfl
 
 end BuildBottomUpExperiments.Checked

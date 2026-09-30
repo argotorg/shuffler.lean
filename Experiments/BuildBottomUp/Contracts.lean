@@ -1,4 +1,4 @@
-import Experiments.BuildBottomUp.CheckedSupport
+import Experiments.BuildBottomUp.ActionProofs
 
 namespace BuildBottomUpExperiments.Checked
 
@@ -49,8 +49,10 @@ theorem ensure_of_true (condition : Prop) [Decidable condition] (h : condition) 
 
 theorem swapDestinations_result (state : State source target spills)
     (a b : Fin state.stack.length) :
-    swapDestinations state a.val b.val =
+    (swapDestinations a.val b.val).exec state =
       .ok { state with mapping := state.mapping.swapDestinations a b } := by
-  simp [swapDestinations, index_eq, bind, Except.bind, pure, Except.pure]
+  simp only [swapDestinations, Action.exec_get, Action.exec_lift, Action.exec_set,
+    index_eq]
+  rfl
 
 end BuildBottomUpExperiments.Checked

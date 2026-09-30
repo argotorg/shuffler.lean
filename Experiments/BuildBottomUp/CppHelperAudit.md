@@ -23,8 +23,8 @@ change the permutation routine or resolve its behavior differences.
   `Emission` and `Mapping`.
 - [C++ Stack.h](../../solidity/libyul/backends/evm/ssa/Stack.h): the stack changes
   and trace emission called by `Emission`.
-- [Lean State.lean](../../Shuffler/BuildBottomUp/State.lean): shared state and
-  predicates.
+- [Lean State.lean](../../Shuffler/State.lean): shared state type.
+- [Queries.lean](Queries.lean): checked predicates and stack queries.
 - [Lean Permute/Defs.lean](../../Shuffler/Permute/Defs.lean): final permutation.
 
 The common domain uses valid offsets, a consistent partial bijection, an
@@ -39,7 +39,8 @@ cases. C++ compares literal instruction IDs; Lean compares literal words.
 `InstructionStore::appendLiteral` deduplicates words within one store, which
 supports the intended correspondence for literals from that store.
 
-Lean returns immutable state values. The C++ helpers change `m_data`,
+Lean uses `StateT` to pass immutable state values between actions. An error
+stops later actions and returns no state. The C++ helpers change `m_data`,
 `m_trace`, and `m_mapping` in sequence. The comparison below distinguishes
 the resulting successful state from the order of checks and partial changes
 on failure. Proof terms and equality casts do not emit stack operations.
@@ -101,7 +102,7 @@ Stack operation: `Stack::dup`, `Stack.h:88`.
 
 | Lean statement | C++ statement | Finding |
 | --- | --- | --- |
-| Accept `copy : Fin stack.length` | `offsetToDepth(_copy)` checks bounds | The Lean argument type establishes bounds before the function runs. |
+| Accept a natural-number offset and check it against the current stack | `offsetToDepth(_copy)` checks bounds | Lean constructs a `Fin` index after this check. An invalid offset returns an assertion error. |
 | Check that `dest` is unbound | Mapping check after `m_stack.dup` | Same requirement, different check order. |
 | Check DUP reach | `dupReachable(depth)`, `Stack.h:91` | Same valid range: source depths 0 through 15 at default reach. |
 | Compute `depth` | `auto const depth = offsetToDepth(_offset)` | Same value. |
@@ -159,10 +160,10 @@ C++ counterpart: `Emission::produce`, `Shuffler.cpp:388`.
 | Freely generated or spilled: call `push` | Third C++ branch | Same fallback when no reachable copy exists. |
 | Copy exists: return `blocked (depth - 15)` | `blockDupUnreachable` | Same excess at default reach. Lean omits the copy offset from the error. |
 | No copy and no generation source: assertion error | Final C++ assertion | Same reason string; different error interface. |
-| Update local `mut state` in the `if / else if` chain | Update the emission state in the C++ branches | Successful branches continue to the shared check and decrement. Failed branches skip all later work. |
+| Call state actions in the `if / else if` chain, then read the state with `get` | Update the emission state in the C++ branches | Successful branches continue to the shared check and decrement. Failed branches skip all later work. |
 | Check that `positionOf(state, dest)` is the new top | Assert that `positionOf(dest)` is the new top, `Shuffler.cpp:402` | Same condition and position before the decrement. Lean supplies a message; C++ uses its default assertion description. The equivalence proof establishes that the check succeeds. |
 | Subtract one from pending count | `--m_pendingGenerations` | Same under the pending-count invariant. With an inconsistent zero counter, Lean stays at zero and C++ unsigned arithmetic wraps. |
-| Return the new state | Return `std::nullopt` with mutated state | Same successful effects in the common domain. |
+| Return `Unit` in the state action | Return `std::nullopt` with mutated state | Same successful effects in the common domain. `Action.exec` returns the final Lean state. |
 
 ## `generate`
 
@@ -170,7 +171,7 @@ C++ counterpart: `Emission::generate`, `Shuffler.cpp:410`.
 
 1. `index target.length targetOffset` is an extra checked boundary for the C++
    raw target index, applied before `produce`.
-2. Updating `state ← produce ...` propagates failure immediately, as the
+2. Calling `produce ...` propagates failure immediately, as the
    C++ `if (blocked = produce(...)) return blocked` does.
 3. The outer test is the same: destination strictly below the new top and
    not final. All checks use the state after production.
@@ -236,8 +237,8 @@ the current C++ planner constructs these particular mappings.
 
 1. **Inline the final permutation branch.** Done in this review. This follows
    the C++ `buildBottomUp` structure and removes the separate `finish` API.
-2. **Match the C++ branch chain in `produce`.** The code uses local `mut state`
-   updates in an explicit `if / else if` chain, with the top-binding `ensure`
+2. **Match the C++ branch chain in `produce`.** The code calls state actions
+   in an explicit `if / else if` chain, with the top-binding `ensure`
    immediately before the decrement. `copy.filter` combines copy presence
    and DUP reach in the second branch. Successful branches continue to the
    shared code without an early return.

@@ -27,7 +27,7 @@ theorem StepPost.retry {state next : State source target spills}
 -- Verify the common placement tail of the actual loop body.
 macro "finish_checked " c:term ", " st:term ", " hp:term ", " hn:term ", " hc:term : tactic => `(tactic| (
   try rw [ensure_of_true _ $hn]
-  try simp only [not_false_eq_true, ensure_of_true True True.intro, bind, Except.bind, pure, Except.pure]
+  try simp only [not_false_eq_true, ensure_of_true True True.intro, except_ok_bind, except_error_bind, pure_bind, bind_assoc]
   by_cases hnotTop : $c ≠ ($st).stack.length - 1
   · try dsimp +zetaDelta only at hnotTop
     simp +zetaDelta only [ne_eq, hnotTop, not_false_eq_true, ↓reduceIte]
@@ -36,6 +36,7 @@ macro "finish_checked " c:term ", " st:term ", " hp:term ", " hn:term ", " hc:te
     by_cases hr : isSwapReachable $st $c
     · try dsimp +zetaDelta only at hr
       try simp +zetaDelta only [hr, not_true_eq_false, ↓reduceIte]
+      simp_action
       apply (($hp).swap_final hbelow hr $hn).bind
       intro final hinv
       exact StepPost.advance $hc hinv
@@ -48,8 +49,9 @@ macro "finish_checked " c:term ", " st:term ", " hp:term ", " hn:term ", " hc:te
 
 theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
     (inv : Invariant cursor state) :
-    Spec ((loopParts source target spills).val () (none, state, cursor)) (StepPost cursor state) := by
-  dsimp only [loopParts]
+    Spec ((loopStep (loopParts source target spills).val) () (none, state, cursor)) (StepPost cursor state) := by
+  dsimp only [loopStep, loopParts]
+  simp_action
   by_cases hc : cursor < target.length
   · simp only [hc, ↓reduceIte]
     by_cases hskip : cursor < state.stack.length ∧ state.isFinal cursor
@@ -67,15 +69,17 @@ theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
         have hp := state.mapping.complete_of_target_total (by omega) ht
         simp only [hz, ↓reduceIte, requires, dite_eq_left hp, pure_bind]
         split
+        simp_action
         cases hperm : Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hp.1 hp.2) with
         | error err =>
           cases err
-          simp [liftResult, Except.mapError, bind, Except.bind, Spec]
+          simp [liftResult, Except.mapError, Spec]
         | ok result =>
           cases result
-          simp [liftResult, Except.mapError, bind, Except.bind, pure, Except.pure,
-            Spec, StepPost, finishLoop]
+          simp [liftResult, Except.mapError, except_ok_bind,
+            Spec, StepPost, finishLoop, pure, Except.pure]
       · simp only [hz, ↓reduceIte]
+        simp_action
         apply (urgentScan_spec cursor state).bind
         intro urgent hu
         split
@@ -84,6 +88,7 @@ theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
           let u : Fin target.length := ⟨urgent.get hurg.1, hlt⟩
           have hb : state.mapping.symm u = none := by
             simpa [positionOf, hlt, u] using hnone
+          simp_action
           apply (generate_contract state u hb (inv.available u)).bind
           intro next hgen
           exact StepPost.retry (hgen.invariant inv) (hgen.decreases inv)
@@ -92,6 +97,7 @@ theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
             let top : Fin target.length := ⟨state.stack.length, htop.2.2.1⟩
             have hb : state.mapping.symm top = none := by
               simpa [positionOf, top, top.isLt] using htop.2.2.2.1
+            simp_action
             apply (generate_contract state top hb (inv.available top)).bind
             intro next hgen
             exact StepPost.retry (hgen.invariant inv) (hgen.decreases inv)
@@ -101,6 +107,7 @@ theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
             cases hb : state.mapping.symm dest with
             | none =>
               simp only [Option.map_none]
+              simp_action
               apply (generate_contract state dest hb (inv.available dest)).bind
               intro next hgen
               have hp := hgen.placement inv
@@ -111,17 +118,18 @@ theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
                 finish_checked cursor, next, hp, hf, hc
             | some carrier =>
               simp only [Option.map_some]
+              simp_action
               have hge := inv.processed.bound_ge dest carrier hb le_rfl
               have hcurrent : cursor < state.stack.length := lt_of_le_of_lt hge carrier.isLt
               let current : Fin state.stack.length := ⟨cursor, hcurrent⟩
               rw [ensure_of_true _ hge]
-              simp only [bind, Except.bind]
+              simp only [except_ok_bind]
               rw [slotAt_index state.stack current, slotAt_index state.stack carrier]
-              dsimp only
+              simp_action
               split
               · rename_i hequal
                 rw [ensure_of_true _ hequal]
-                dsimp only
+                simp_action
                 rw [swapDestinations_result state current carrier]
                 have hi := inv.retag current carrier (by rfl) hge
                 apply StepPost.advance hc
@@ -131,16 +139,17 @@ theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
                 exact (State.isFinal_of_bound_iff
                   { state with mapping := state.mapping.swapDestinations current carrier }
                   dest current hd).mpr rfl
-              · apply (copyScan_spec state carrier carrier.val
+              · simp_action
+                apply (copyScan_spec state carrier carrier.val
                     ⟨carrier, rfl, rfl, state.boundNotFinal_of_not_final dest carrier hb hnfinal⟩).bind
                 intro selected hselected
                 obtain ⟨pos, rfl, hequal, hmovable⟩ := hselected
                 rw [slotAt_index state.stack pos]
-                dsimp only
+                simp_action
                 rw [ensure_of_true _ hequal]
-                dsimp only
+                simp_action
                 rw [swapDestinations_result state pos carrier]
-                dsimp only
+                simp_action
                 let retag := { state with mapping := state.mapping.swapDestinations pos carrier }
                 have hi : Invariant cursor retag := inv.retag pos carrier
                   (inv.not_final_ge pos hmovable) hge
@@ -157,6 +166,7 @@ theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
                     by_cases hr : isSwapReachable retag pos.val
                     · dsimp +zetaDelta only at hr
                       simp only [hr, not_true_eq_false, ↓reduceIte]
+                      simp_action
                       apply (hi.swap_bound (dest := dest) pos hd hbelow hr hplaced).bind
                       intro next hp
                       finish_checked cursor, next, hp.1, hp.2, hc

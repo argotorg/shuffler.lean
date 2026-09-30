@@ -47,7 +47,7 @@ Moving each operation into a checked helper keeps those proof arguments out of
 the loop body:
 
 ```lean
-state ← generate state urgent
+generate urgent
 continue
 ```
 
@@ -60,9 +60,11 @@ not call its operational `State` helpers. In the separate comparison module
 includes the complete state and trace. `swapWith_eq` proves the corresponding
 statement for swaps.
 
-In Lean these helpers are total functions into `Except`. They are partial
-operations from the caller's point of view. An assertion error is distinct from
-a stack reach error:
+The helpers use `Action source target spills`, an abbreviation for
+`StateT (State source target spills) (Except Error)`. Each update returns `Unit`.
+`get` reads the current state; `set` and `modify` supply the next state. These
+are pure functions with no shared mutable state. An assertion error is distinct
+from a stack reach error:
 
 ```lean
 | blocked (excess : Nat)
@@ -70,6 +72,12 @@ a stack reach error:
 ```
 
 Assertion errors carry a message that describes the failed precondition.
+
+Use `action.run initial` to get the return value and final state, or
+`action.exec initial` for the final state of a `Unit` action. Both return
+`Except Error`. An error stops the remaining actions and returns no state.
+`buildBottomUp` runs its actions internally and keeps its existing public
+result type.
 
 The error case in `generate_spec` and `generateUntilBound_spec` is
 `exists excess, err = .blocked excess`. It rules out every assertion error.
@@ -95,10 +103,10 @@ Tests cover invalid inputs, including a size mismatch when the cursor skips
 the loop. The checked invariant states the four input conditions. The independent
 proofs show that these checks succeed when those conditions hold.
 
-`produce` uses a local `mut state` and the C++ `if / else if` branch order.
+`produce` uses state actions and the C++ `if / else if` branch order.
 Its reachable-copy branch uses `copy.filter` to test reach only when a copy
-exists and bind the index for `dup`. Successful branches update `state`, then
-the function checks that the destination is bound to the new top and decrements
+exists and bind the index for `dup`. Successful branches update the state, then
+the function reads it again, checks that the destination is bound to the new top, and decrements
 the pending count. Tests cover the counter and binding after each production
 path. `generate` uses an explicit `else if` to keep the mapping-only exchange
 and physical swap mutually exclusive. It uses the same checked offset operations
@@ -107,6 +115,8 @@ test. Its body needs no explicit `Fin` construction or tactic proofs.
 
 The offset/depth conversion proofs used by `dup` and `swapWith` are private
 named lemmas in `CheckedSupport.lean`.
+`dup` accepts a natural-number offset and checks it against the current stack
+before constructing a `Fin` index.
 
 Bounds and operation preconditions are checked inside the support functions.
 The local `requires` function returns the checked proof in Lean's built-in
@@ -137,7 +147,9 @@ operation as the full translation. Ordinary Lean theorems establish:
 - Success preserves the invariant and leaves the destination bound.
 - The only possible failure under the preconditions is `Blocked`.
 
-The helper proofs use the checked operations directly. [Contracts.lean](Contracts.lean)
+The helper proofs use the checked operations through `Action.exec`.
+[ActionProofs.lean](ActionProofs.lean) supplies the state-passing equations used
+by these proofs. [Contracts.lean](Contracts.lean)
 defines `Spec`: success must satisfy its stated condition, a blocked result is
 allowed, and an assertion error is excluded. [SwapProofs.lean](SwapProofs.lean)
 and [HelperProofs.lean](HelperProofs.lean) prove the stack and mapping effects.
@@ -173,9 +185,9 @@ Compare `Checked.buildBottomUp` with `Emission::buildBottomUp` in
 | --- | --- |
 | `for` loop increment | Increment at each advancing `continue` and at the loop tail |
 | `--targetOffset; continue` | `continue`, with the cursor unchanged |
-| `m_data`, `m_mapping`, `m_pendingGenerations` | Fields of local `state` |
-| `generate(...)`, failure check | `state ← generate state ...` |
-| `m_mapping.swapDestinations(...)` | `state ← swapDestinations state ...` |
+| `m_data`, `m_mapping`, `m_pendingGenerations` | Fields read with `let state ← get` |
+| `generate(...)`, failure check | `generate ...` |
+| `m_mapping.swapDestinations(...)` | `swapDestinations ...` |
 | Reach check followed by `swapWith(...)` | The same check followed by checked `swapWith` |
 | `return permute(...)` | Check the complete mapping, call `permute`, and return the stack and combined trace |
 | `yulAssert(...)` | `ensure condition reason` or a checked helper precondition |
@@ -190,9 +202,9 @@ The named condition `h` supplies its first fact to `urgentToDup.get h.1`.
 Given the presence check, `urgentToDup ≠ some targetOffset` compares the stored
 offset with `targetOffset`.
 
-The local mutation in Lean `do` notation is translated into value passing.
-There is no shared mutable state. A `StateT` layer could remove some explicit
-`state` arguments, but it is not needed for this result.
+The main loop reads the state again after updates when later checks need it.
+Pure queries and scans still take an explicit state. Only the cursor and
+copy-selection offset use local `mut` bindings.
 
 ## Checks
 
@@ -220,6 +232,8 @@ wrapper. Together, the build and fixture checks cover:
 - An urgent copy followed by a blocked copy.
 - Bounds, unavailable values, already-bound destinations, invalid swaps,
   and an incomplete final permutation.
+- Action sequences that use the updated stack, mapping, and counter, and stop
+  after an error; invalid DUP offsets at and beyond the stack length.
 
 [Tests.lean](Tests.lean) contains checked tests and imports no old implementation.
 [ComparisonTests.lean](ComparisonTests.lean) contains the exhaustive comparison.
@@ -262,8 +276,10 @@ The proof files have separate roles:
   scan still checks later copies after it finds an urgent one.
 - [FiniteExecution.lean](FiniteExecution.lean) extracts the actual loop body
   from `buildBottomUp`. Lean checks the extraction by equality. There is no
-  separate copy of the algorithm. `LoopRuns` describes a finite sequence of
-  calls to that body, ending in `done` or an error.
+  separate copy of the algorithm. `loopStep` runs one state action and includes
+  its state in the proof frame. `runLoop_unfold` connects those steps to the
+  actual `StateT` loop. `LoopRuns` describes a finite sequence of these steps,
+  ending in `done` or an error.
 - [Equivalence.lean](Equivalence.lean) compares each branch under the old
   definition's well-founded induction. Every continuation uses the same cursor
   and complete `State`, including its mapping, counters, and trace.

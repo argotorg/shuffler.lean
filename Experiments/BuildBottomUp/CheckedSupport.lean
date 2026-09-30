@@ -13,6 +13,15 @@ abbrev Result (source : Stack) (spills : SpillSet) :=
 
 abbrev M := Except Error
 
+abbrev Action (source target : Stack) (spills : SpillSet) :=
+  StateT (State source target spills) M
+
+-- Execute an update and retain its state. Errors have no state, as in M.
+def Action.exec (action : Action source target spills Unit) (state : State source target spills) :
+    M (State source target spills) := do
+  let (_, next) ← action.run state
+  return next
+
 -- PLift lets Except return the proof needed to construct dependent values.
 def requires (condition : Prop) [Decidable condition] (reason : String) : M (PLift condition) :=
   if h : condition then pure ⟨h⟩ else throw (.assertion reason)
@@ -73,12 +82,13 @@ private theorem top_lt_length (stack : Stack) (pos : Fin stack.length) :
   have := pos.isLt
   omega
 
-def push (state : State source target spills) (slot : Value) (dest : Fin target.length) : M (State source target spills) := do
+def push (slot : Value) (dest : Fin target.length) : Action source target spills Unit := do
+  let state ← get
   let ⟨hbound⟩ ← requires (state.mapping.symm dest = none) "destination already bound to a slot"
   let ⟨hgen⟩ ← requires (slot.can_be_freely_generated ∨ spills.is_spilled slot) "pushed slot cannot be generated or loaded"
   have heq : state.stack.length + 1 = (state.stack ++ [slot]).length := by simp
 
-  return {
+  set {
     state with
     stack := state.stack ++ [slot]
     trace := match slot, hgen with
@@ -88,14 +98,16 @@ def push (state : State source target spills) (slot : Value) (dest : Fin target.
     mapping := heq ▸ state.mapping.push dest hbound
   }
 
-def dup (state : State source target spills) (copy : Fin state.stack.length)
-    (dest : Fin target.length) : M (State source target spills) := do
+def dup (offset : ℕ) (dest : Fin target.length) : Action source target spills Unit := do
+  let state ← get
+  let copy ← index state.stack.length offset
+  let depth := state.stack.depth copy
+
+  have heq : state.stack.length + 1 = (state.stack ++ [state.stack[copy]]).length := by simp
   let ⟨hbound⟩ ← requires (state.mapping.symm dest = none) "destination already bound to a slot"
   let ⟨hdup⟩ ← requires (state.stack.isDupReachable copy) "copy is outside DUP reach"
-  let depth := state.stack.depth copy
-  have heq : state.stack.length + 1 = (state.stack ++ [state.stack[copy]]).length := by simp
 
-  return {
+  set {
     state with
     stack := state.stack ++ [state.stack[copy]]
     trace :=
@@ -104,12 +116,14 @@ def dup (state : State source target spills) (copy : Fin state.stack.length)
     mapping := heq ▸ state.mapping.push dest hbound
   }
 
-def swapDestinations (state : State source target spills) (a b : ℕ) : M (State source target spills) := do
+def swapDestinations (a b : ℕ) : Action source target spills Unit := do
+  let state ← get
   let a ← index state.stack.length a
   let b ← index state.stack.length b
-  return { state with mapping := state.mapping.swapDestinations a b }
+  set { state with mapping := state.mapping.swapDestinations a b }
 
-def swapWith (state : State source target spills) (offset : ℕ) : M (State source target spills) := do
+def swapWith (offset : ℕ) : Action source target spills Unit := do
+  let state ← get
   let pos ← index state.stack.length offset
   let ⟨hbelow, hreach, _hnfinal⟩ ← requires
     (pos.val + 1 < state.stack.length ∧ state.stack.isSwapReachable pos ∧ ¬ state.isFinal pos.val)
@@ -117,7 +131,7 @@ def swapWith (state : State source target spills) (offset : ℕ) : M (State sour
   let depth := state.stack.depth pos
   have heq : state.stack.length = (state.stack.swap pos (state.stack.length - 1)).length :=
     List.length_swap.symm
-  return {
+  set {
     state with
     stack := state.stack.swap pos (state.stack.length - 1)
     mapping := heq ▸
@@ -126,38 +140,37 @@ def swapWith (state : State source target spills) (offset : ℕ) : M (State sour
       (swap_depth_pos state.stack pos hbelow) hreach state.trace
   }
 
-def produce (initial : State source target spills) (targetOffset : Fin target.length) : M (State source target spills) := do
-  let mut state := initial
+def produce (targetOffset : Fin target.length) : Action source target spills Unit := do
+  let state ← get
   ensure (state.mapping.symm targetOffset).isNone "destination already bound to a slot"
 
   let slot := target[targetOffset.val]
   let copy := state.stack.shallowestCopyPosition slot
 
   if slot.is_junk then
-    state ← push state slot targetOffset
+    push slot targetOffset
   else if let some pos := copy.filter (fun pos => state.stack.isDupReachable pos) then
-    state ← dup state pos targetOffset
+    dup pos.val targetOffset
   else if slot.can_be_freely_generated ∨ spills.is_spilled slot then
-    state ← push state slot targetOffset
+    push slot targetOffset
   else if let some pos := copy then
     throw (.blocked (state.stack.depth pos - MAX_DUP_DEPTH))
   else
     throw (.assertion "generated slot has no copy on the stack and is not spilled")
 
+  let state ← get
   ensure (positionOf state targetOffset.val = some (state.stack.length - 1)) "generated slot is not bound to the top"
-  state := { state with pending_generations := state.pending_generations - 1 }
-  return state
+  modify fun state => { state with pending_generations := state.pending_generations - 1 }
 
-def generate (initial : State source target spills) (targetOffset : ℕ) : M (State source target spills) := do
-  let mut state := initial
-  state ← produce state (← index target.length targetOffset)
+def generate (targetOffset : ℕ) : Action source target spills Unit := do
+  produce (← index target.length targetOffset)
+  let state ← get
 
   if targetOffset + 1 < state.stack.length ∧ ¬ state.isFinal targetOffset then
     let top := state.stack.length - 1
     if (← slotAt state.stack targetOffset) = (← slotAt state.stack top) then
-      state ← swapDestinations state targetOffset top
+      swapDestinations targetOffset top
     else if isSwapReachable state targetOffset then
-      state ← swapWith state targetOffset
-  return state
+      swapWith targetOffset
 
 end BuildBottomUpExperiments.Checked

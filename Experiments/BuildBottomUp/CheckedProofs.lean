@@ -24,12 +24,12 @@ theorem restoreResult_eq (result : M α)
 theorem generate_spec (state : State source target spills)
     (dest : Fin target.length) (cursor : ℕ)
     (inv : Invariant cursor state) (hbound : state.mapping.symm dest = none) :
-    match generate state dest.val with
+    match (generate dest.val).exec state with
     | .ok next => Invariant cursor next ∧
         next.pending_generations < state.pending_generations ∧ (positionOf next dest.val).isSome
     | .error err => ∃ excess, err = .blocked excess := by
   have h := generate_contract state dest hbound (inv.available dest)
-  cases heq : generate state dest.val with
+  cases heq : (generate dest.val).exec state with
   | error err => exact h.error heq
   | ok next =>
     have hg : Generation state next dest := by simpa only [heq, Spec] using h
@@ -41,36 +41,36 @@ theorem generate_spec (state : State source target spills)
     · simp [positionOf, dest.isLt, ht]
 
 -- A loop over the checked helper, with its proof outside the body.
-def generateUntilBound (state : State source target spills) (dest : Fin target.length) :
-    M (State source target spills) := do
-  let mut state := state
-  while (positionOf state dest.val).isNone do
-    state ← generate state dest.val
-  return state
+def generateUntilBound (dest : Fin target.length) : Action source target spills Unit := do
+  while (positionOf (← get) dest.val).isNone do
+    generate dest.val
 
 theorem generateUntilBound_unfold (state : State source target spills) (dest : Fin target.length) :
-    generateUntilBound state dest =
+    (generateUntilBound dest).exec state =
       if (positionOf state dest.val).isNone then do
-        let next ← generate state dest.val
-        generateUntilBound next dest
+        let next ← (generate dest.val).exec state
+        (generateUntilBound dest).exec next
       else pure state := by
   unfold generateUntilBound
-  dsimp only
   conv_lhs => rw [loop_unfold]
-  split <;> simp_all
+  simp only [Action.exec, StateT.run_bind, StateT.run_get,
+    StateT.run_pure, bind_assoc, pure_bind]
+  split
+  · simp only [Action.run_bind_update, StateT.run_pure, Action.exec, bind_assoc, pure_bind]
+  · rfl
 
 -- Generation binds the destination, so this loop takes at most one iteration.
 theorem generateUntilBound_eq (state : State source target spills)
     (dest : Fin target.length) (cursor : ℕ) (inv : Invariant cursor state) :
-    generateUntilBound state dest =
-      if (positionOf state dest.val).isNone then generate state dest.val else .ok state := by
+    (generateUntilBound dest).exec state =
+      if (positionOf state dest.val).isNone then (generate dest.val).exec state else .ok state := by
   rw [generateUntilBound_unfold]
   split
   · rename_i hnone
     have hbound : state.mapping.symm dest = none := by
       simpa [positionOf, dest.isLt] using hnone
     have hspec := generate_spec state dest cursor inv hbound
-    cases hresult : generate state dest.val with
+    cases hresult : (generate dest.val).exec state with
     | error err => rfl
     | ok next =>
       simp only [hresult] at hspec
@@ -81,7 +81,7 @@ theorem generateUntilBound_eq (state : State source target spills)
 
 theorem generateUntilBound_spec (state : State source target spills)
     (dest : Fin target.length) (cursor : ℕ) (inv : Invariant cursor state) :
-    match generateUntilBound state dest with
+    match (generateUntilBound dest).exec state with
     | .ok next => Invariant cursor next ∧ (positionOf next dest.val).isSome
     | .error err => ∃ excess, err = .blocked excess := by
   rw [generateUntilBound_eq state dest cursor inv]
@@ -90,7 +90,7 @@ theorem generateUntilBound_spec (state : State source target spills)
     have hbound : state.mapping.symm dest = none := by
       simpa [positionOf, dest.isLt] using hnone
     have hspec := generate_spec state dest cursor inv hbound
-    cases hresult : generate state dest.val with
+    cases hresult : (generate dest.val).exec state with
     | error err => simpa [hresult] using hspec
     | ok next =>
       simp only [hresult] at hspec

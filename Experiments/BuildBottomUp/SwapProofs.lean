@@ -15,8 +15,9 @@ structure Swapped (state next : State source target spills) (pos : Fin state.sta
 theorem swap_spec (state : State source target spills) (pos : Fin state.stack.length)
     (hbelow : pos.val + 1 < state.stack.length) (hreach : state.stack.isSwapReachable pos)
     (hnfinal : ¬ state.isFinal pos.val) :
-    Spec (swapWith state pos.val) (fun next => Swapped state next pos) := by
-  simp [swapWith, index, pos.isLt, requires, hbelow, hreach, hnfinal,
+    Spec ((swapWith pos.val).exec state) (fun next => Swapped state next pos) := by
+  simp only [swapWith, Action.exec_get, Action.exec_lift]
+  simp [index, pos.isLt, requires, hbelow, hreach, hnfinal,
     bind, Except.bind, pure, Except.pure]
   split
   refine { size := ?_, pending := rfl, count := ?_, subset := ?_, mapping := ?_ }
