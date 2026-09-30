@@ -68,7 +68,7 @@ def newUrgent (cursor : ℕ) (state : State source target spills) : M (Option �
     if let some copy := state.stack.shallowest_copy_position slot then
       if ¬ state.stack.is_dup_reachable copy then
         throw (.blocked (depthOf state copy - MAX_DUP_DEPTH))
-      if depthOf state copy == MAX_DUP_DEPTH && copy.val != cursor && urgent.isNone then
+      if depthOf state copy = MAX_DUP_DEPTH ∧ copy.val ≠ cursor ∧ urgent.isNone then
         return .yield (some offset)
     return .yield urgent
 
@@ -99,7 +99,7 @@ theorem urgent_eq (cursor : ℕ) (state : State source target spills) :
         · simp_all [liftMap, liftResult, Except.map, Except.mapError, mapStep, depthOf,
             Stack.depth_of, throw, throwThe]
           rfl
-        · simp only [Bool.and_eq_true, beq_iff_eq, Option.isNone_map, depthOf, Stack.depth_of, and_assoc]
+        · simp only [bne_iff_ne, Option.isNone_map, depthOf, Stack.depth_of]
           split <;> simp_all [liftMap, liftResult, Except.map, Except.mapError, mapStep,
             pure, Except.pure]
           split_ifs <;> simp_all

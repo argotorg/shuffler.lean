@@ -32,8 +32,8 @@ def compareAndRun (cursor : ℕ) (state : State source target spills)
   let checked := Checked.buildBottomUp cursor state
   let verified := Checked.liftResult
     (Checked.buildBottomUpVerified cursor state ⟨hinv, hsize, hpending, havailable⟩)
-  if observe original == observe deferred && observe original == observe checked &&
-      observe original == observe verified then checked
+  if observe original = observe deferred ∧ observe original = observe checked ∧
+      observe original = observe verified then checked
   else .error (.assertion .permutation)
 
 end BuildBottomUpExperiments

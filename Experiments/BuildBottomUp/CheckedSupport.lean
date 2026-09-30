@@ -36,8 +36,12 @@ def positionOf (state : State source target spills) (offset : ℕ) : Option ℕ 
 def depthOf (state : State source target spills) (offset : ℕ) : ℕ :=
   state.stack.length - 1 - offset
 
-def isSwapReachable (state : State source target spills) (offset : ℕ) : Bool :=
+def isSwapReachable (state : State source target spills) (offset : ℕ) : Prop :=
   depthOf state offset ≤ MAX_SWAP_DEPTH
+
+instance (state : State source target spills) (offset : ℕ) :
+    Decidable (isSwapReachable state offset) :=
+  inferInstanceAs (Decidable (depthOf state offset ≤ MAX_SWAP_DEPTH))
 
 instance (state : State source target spills) (dest : Fin target.length) :
     Decidable (state.is_available dest) := by

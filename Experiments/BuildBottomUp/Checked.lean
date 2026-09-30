@@ -9,11 +9,11 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
   let mut state := initial
   let mut targetOffset := cursor
   while targetOffset < target.length do
-    if targetOffset < state.stack.length && state.is_final targetOffset then
+    if targetOffset < state.stack.length ∧ state.is_final targetOffset then
       targetOffset := targetOffset + 1
       continue
 
-    if state.pending_generations == 0 then
+    if state.pending_generations = 0 then
       return ← finish state
 
     let mut urgentToDup : Option ℕ := none
@@ -26,8 +26,8 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
       if let some sourceCopy := state.stack.shallowest_copy_position slot then
         if ¬ state.stack.is_dup_reachable sourceCopy then
           throw (.blocked (depthOf state sourceCopy - MAX_DUP_DEPTH))
-        if depthOf state sourceCopy == MAX_DUP_DEPTH &&
-            sourceCopy.val != targetOffset && urgentToDup.isNone then
+        if depthOf state sourceCopy = MAX_DUP_DEPTH ∧
+            sourceCopy.val ≠ targetOffset ∧ urgentToDup.isNone then
           urgentToDup := some offset
 
     if h : urgentToDup.isSome ∧ urgentToDup ≠ some targetOffset ∧
@@ -36,8 +36,8 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
       continue
 
     let sourceTop := state.stack.length
-    if urgentToDup.isNone && sourceTop > targetOffset && sourceTop < target.length &&
-        (positionOf state sourceTop).isNone && sourceTop - targetOffset < MAX_SWAP_DEPTH then
+    if urgentToDup.isNone ∧ sourceTop > targetOffset ∧ sourceTop < target.length ∧
+        (positionOf state sourceTop).isNone ∧ sourceTop - targetOffset < MAX_SWAP_DEPTH then
       state ← generate state sourceTop
       continue
 
@@ -56,12 +56,12 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
 
       assertThat ((← slotAt state.stack pos) = (← slotAt state.stack sourceForTargetOffset)) .copy
       state ← swapDestinations state pos sourceForTargetOffset
-      if pos == targetOffset then
+      if pos = targetOffset then
         targetOffset := targetOffset + 1
         continue
 
-      if pos != state.stack.length - 1 then
-        if !isSwapReachable state pos then
+      if pos ≠ state.stack.length - 1 then
+        if ¬ isSwapReachable state pos then
           throw (.blocked (depthOf state pos - MAX_SWAP_DEPTH))
         state ← swapWith state pos
     else
@@ -71,8 +71,8 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
         continue
 
     assertThat (¬ state.is_final targetOffset) .final
-    if targetOffset != state.stack.length - 1 then
-      if !isSwapReachable state targetOffset then
+    if targetOffset ≠ state.stack.length - 1 then
+      if ¬ isSwapReachable state targetOffset then
         throw (.blocked (depthOf state targetOffset - MAX_SWAP_DEPTH))
       state ← swapWith state targetOffset
     targetOffset := targetOffset + 1

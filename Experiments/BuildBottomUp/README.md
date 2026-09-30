@@ -78,6 +78,10 @@ preconditions are checked inside the support functions.
 
 `assertThat` takes a proposition and a `Decidable` instance, so its calls use
 `=` and `¬` directly. The instance supplies the runtime check.
+The other conditions also use propositions: `∧`, `∨`, `=`, `≠`, and `¬`.
+`isSwapReachable` is a proposition with a `Decidable` instance. Standard
+`Option.isSome` and `Option.isNone` queries still return `Bool`. The test runner
+uses `decide` at the boundary where it needs a Boolean result.
 
 ## What `mvcgen` does here
 

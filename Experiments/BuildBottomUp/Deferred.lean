@@ -37,7 +37,7 @@ def buildBottomUp (cursor : ℕ) (state : State source target spills)
             if ¬ state.stack.is_dup_reachable sourceCopy then
               throw (.Blocked (state.stack.depth_of sourceCopy - MAX_DUP_DEPTH))
             if state.stack.depth_of sourceCopy = MAX_DUP_DEPTH ∧
-                sourceCopy.val != targetOffset.val ∧ urgentToDup.isNone then
+                sourceCopy.val ≠ targetOffset.val ∧ urgentToDup.isNone then
               urgentToDup := some ⟨⟨offset, hmem.upper⟩, by simpa using hbound⟩
 
       if let some urgent := urgentToDup then

@@ -26,17 +26,13 @@ theorem swapDestinations_eq (state : State source target spills)
       .ok { state with mapping := state.mapping.swapDestinations a b } := by
   simp [swapDestinations, index, a.isLt, b.isLt, bind, Except.bind, pure, Except.pure]
 
-theorem isSwapReachable_eq (state : State source target spills) (pos : Fin state.stack.length) :
-    isSwapReachable state pos.val = decide (state.stack.is_swap_reachable pos) := rfl
-
 theorem and_cases {P Q : Prop} (h : P ∧ Q) (k : P → Q → α) :
     And.casesOn h k = k h.1 h.2 := by cases h; rfl
 
 -- Normalize the administrative binds introduced by the two do blocks.
 macro "resume_with " h:term : tactic => `(tactic|
   simpa only [buildWith, finishLoop, liftResult, Except.mapError, bind, Except.bind,
-    Bool.and_eq_true, decide_eq_true_eq, beq_iff_eq, bne_iff_ne, ne_eq,
-    pure_bind, bind_assoc, pure, Except.pure, ↓reduceIte, ↓reduceDIte,
+    ne_eq, pure_bind, bind_assoc, pure, Except.pure, ↓reduceIte, ↓reduceDIte,
     Option.isNone_iff_eq_none, and_assoc, and_true, true_and, and_false,
     false_and, not_false_eq_true, not_true_eq_false, eq_self,
     Bool.false_eq_true, Bool.true_eq_false] using $h)
@@ -53,23 +49,22 @@ macro "finish_placement " c:term ", " st:term ", " hp:term ", " hn:term ", " adv
   try simp +zetaDelta only [hnf, not_false_eq_true, assert_true, bind, Except.bind]
   by_cases hnotTop : $c ≠ ($st).stack.length - 1
   · try dsimp +zetaDelta only at hnotTop
-    try simp +zetaDelta only [bne_iff_ne, ne_eq, hnotTop, not_false_eq_true, ↓reduceIte, ↓reduceDIte]
+    try simp +zetaDelta only [ne_eq, hnotTop, not_false_eq_true, ↓reduceIte, ↓reduceDIte]
     let pos : Fin ($st).stack.length := ⟨$c, ($hp).in_bounds⟩
     have hbelow := Stack.below_of_not_top ($st).stack pos hnotTop
-    rw [isSwapReachable_eq $st pos]
     by_cases hr : ($st).stack.is_swap_reachable pos
     · try dsimp +zetaDelta only at hr
-      try simp +zetaDelta only [hr, decide_true, Bool.not_true, Bool.false_eq_true,
+      try simp +zetaDelta only [hr, show isSwapReachable $st pos.val from hr,
         not_true_eq_false, ↓reduceIte, ↓reduceDIte]
       rw [swapWith_eq $st pos hbelow hr hnf]
       try simp +zetaDelta only [bind, Except.bind, pure, Except.pure]
       resume_with ($advance _ (($hp).swap_final hbelow hr hnf))
     · try dsimp +zetaDelta only at hr
-      try simp +zetaDelta only [hr, decide_false, Bool.not_false, not_false_eq_true,
+      try simp +zetaDelta only [hr, show ¬ isSwapReachable $st pos.val from hr, not_false_eq_true,
         ↓reduceIte, ↓reduceDIte]
       rfl
   · try dsimp +zetaDelta only at hnotTop
-    try simp +zetaDelta only [bne_iff_ne, hnotTop, ↓reduceIte, ↓reduceDIte, bind, Except.bind,
+    try simp +zetaDelta only [hnotTop, ↓reduceIte, ↓reduceDIte, bind, Except.bind,
       pure, Except.pure]
     resume_with ($advance $st (($hp).finish_at_top (not_not.mp hnotTop)))))
 
@@ -112,14 +107,14 @@ theorem buildWith_eq
     rw [buildWith, unfold_loop, build_bottom_up.eq_def]
     dsimp only [loopParts, finishLoop]
     simp only [show cursor < target.length by omega, hd, hskip,
-      Bool.and_eq_true, decide_eq_true_eq, and_self, ↓reduceIte, ↓reduceDIte, pure_bind]
-    simpa only [buildWith, finishLoop, Bool.and_eq_true, decide_eq_true_eq] using ih
+      and_self, ↓reduceIte, ↓reduceDIte, pure_bind]
+    simpa only [buildWith, finishLoop] using ih
   case case3 cursor state hi hs hp ha hd dest hskip hnfinal hz ht hc =>
     have hskip' : ¬ (cursor < state.stack.length ∧ state.is_final cursor) := hskip
     rw [buildWith, unfold_loop, build_bottom_up.eq_def]
     dsimp only [loopParts, finishLoop]
     simp only [show cursor < target.length by omega, hd, hskip', hz,
-      Bool.and_eq_true, decide_eq_true_eq, beq_self_eq_true, ↓reduceIte, ↓reduceDIte,
+      ↓reduceIte, ↓reduceDIte,
       pure_bind, bind_assoc]
     simp only [finish, dite_eq_left hc.1, dite_eq_left hc.2]
     cases hperm : Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hc.1 hc.2) with
@@ -132,8 +127,7 @@ theorem buildWith_eq
     dsimp only [loopParts, finishLoop]
     simp only [hd, hskip', hz, ↓reduceDIte]
     erw [← newUrgent.eq_def cursor state, ← oldUrgent.eq_def cursor state]
-    simp only [show cursor < target.length by omega, hskip', hz,
-      Bool.and_eq_true, decide_eq_true_eq, beq_iff_eq, ↓reduceIte,
+    simp only [show cursor < target.length by omega, ↓reduceIte,
       pure_bind, bind_assoc]
     rw [urgent_eq cursor state]
     cases hscan : oldUrgent cursor state with
@@ -162,7 +156,7 @@ theorem buildWith_eq
             erw [attach_ok hgen]
             simp only [liftResult, Except.mapError, pure, Except.pure]
             simpa only [buildWith, finishLoop, liftResult, Except.mapError, Except.attach,
-              bind, Except.bind, Bool.and_eq_true, decide_eq_true_eq, beq_iff_eq, pure_bind, bind_assoc,
+              bind, Except.bind, pure_bind, bind_assoc,
               pure, Except.pure, ↓reduceIte, ↓reduceDIte]
               using urgent u next hgen
         case' neg =>
@@ -177,7 +171,7 @@ theorem buildWith_eq
         have hposition : positionOf state state.stack.length = (state.mapping.symm topDest).map Fin.val := by
           simp [positionOf, htop, topDest]
         rw [hposition]
-        simp only [htop, Option.isNone_map, Option.isNone_iff_eq_none, and_true, and_assoc, ↓reduceDIte]
+        simp only [htop, Option.isNone_map, Option.isNone_iff_eq_none, true_and, ↓reduceDIte]
         by_cases hgen : state.stack.length > cursor ∧ state.mapping.symm topDest = none ∧
             state.stack.length - cursor < MAX_SWAP_DEPTH
         case pos =>
@@ -193,7 +187,7 @@ theorem buildWith_eq
             erw [attach_ok hresult]
             simp only [liftResult, Except.mapError, pure, Except.pure]
             simpa only [buildWith, finishLoop, liftResult, Except.mapError, bind, Except.bind,
-              Bool.and_eq_true, decide_eq_true_eq, beq_iff_eq, pure_bind, bind_assoc,
+              pure_bind, bind_assoc,
               pure, Except.pure, ↓reduceIte, ↓reduceDIte, Option.isNone_iff_eq_none, and_assoc]
               using top none htop ⟨by simp, hgen.1, hgen.2.1, hgen.2.2⟩ next hresult
         case' neg =>
@@ -260,22 +254,22 @@ theorem buildWith_eq
               · simp only [hplaced, ↓reduceIte, ↓reduceDIte]
                 by_cases hnotTop : chosen.val ≠ retag.stack.length - 1
                 · dsimp +zetaDelta only at hnotTop
-                  simp +zetaDelta only [bne_iff_ne, ne_eq, hnotTop, not_false_eq_true, ↓reduceIte, ↓reduceDIte]
+                  simp +zetaDelta only [ne_eq, hnotTop, not_false_eq_true, ↓reduceIte, ↓reduceDIte]
                   have hbelow := Stack.below_of_not_top retag.stack chosen hnotTop
-                  rw [isSwapReachable_eq retag chosen.toFin]
                   by_cases hr : retag.stack.is_swap_reachable chosen.toFin
                   · dsimp +zetaDelta only at hr
-                    simp +zetaDelta only [hr, decide_true, Bool.not_true, Bool.false_eq_true, not_true_eq_false,
+                    simp +zetaDelta only [hr, show isSwapReachable retag chosen.val from hr, not_true_eq_false,
                       ↓reduceIte, ↓reduceDIte]
                     have hnf := retag.bound_not_final dest chosen hdest hplaced
                     rw [swapWith_eq retag chosen.toFin hbelow hr hnf]
                     have hplace := hretag.swap_bound chosen hdest hbelow hr hplaced
                     finish_placement cursor, (retag.swapWith chosen hbelow hr hnf), hplace.1, hplace.2, advance
                   · dsimp +zetaDelta only at hr
-                    simp +zetaDelta only [hr, decide_false, Bool.not_false, not_false_eq_true, ↓reduceIte, ↓reduceDIte]
+                    simp +zetaDelta only [hr, show ¬ isSwapReachable retag chosen.val from hr,
+                      not_false_eq_true, ↓reduceIte, ↓reduceDIte]
                     rfl
                 · dsimp +zetaDelta only at hnotTop
-                  simp only [bne_iff_ne, hnotTop, ↓reduceIte, ↓reduceDIte]
+                  simp only [hnotTop, ↓reduceIte, ↓reduceDIte]
                   have hplace := hretag.bound_at_top chosen hdest (not_not.mp hnotTop) hplaced
                   finish_placement cursor, retag, hplace.1, hplace.2, advance
         case' neg =>
@@ -297,7 +291,7 @@ theorem buildWith_eq
             case pos =>
               simp only [hfinal, ↓reduceIte, ↓reduceDIte]
               simpa only [buildWith, finishLoop, liftResult, Except.mapError, bind, Except.bind,
-                Bool.and_eq_true, decide_eq_true_eq, beq_iff_eq, pure_bind, bind_assoc,
+                pure_bind, bind_assoc,
                 pure, Except.pure, ↓reduceIte, ↓reduceDIte, Option.isNone_iff_eq_none, and_assoc]
                 using advance next (hplace.toBuildBottomUpInvariant.advance hfinal)
             case' neg =>

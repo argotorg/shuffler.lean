@@ -80,7 +80,8 @@ private def checkState (cursor : ℕ) (state : State source target ∅) : Option
         if ha : ∀ i, state.is_available i then
           let old := liftResult (build_bottom_up cursor state hi hs hp ha)
           let deferred := liftResult (Deferred.buildBottomUp cursor state ⟨hi, hs, hp, ha⟩)
-          some (observe old == observe (Checked.buildBottomUp cursor state) && observe old == observe deferred)
+          some (decide (observe old = observe (Checked.buildBottomUp cursor state) ∧
+            observe old = observe deferred))
         else none
       else none
     else none
@@ -106,7 +107,7 @@ private def exhaustive : Bool × ℕ := Id.run do
             for cursor in [:target.length + 1] do
               if let some equalResults := checkState cursor state then
                 tested := tested + 1
-                if !equalResults then return (false, tested)
+                if ¬ equalResults then return (false, tested)
   return (true, tested)
 
 -- The count also checks that precondition filtering does not skip every case.
