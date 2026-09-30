@@ -1,4 +1,4 @@
-import Shuffler.Defs
+import Shuffler.Trace
 import Shuffler.Permute.Lemmas
 import Mathlib.GroupTheory.Perm.Cycle.Factors
 

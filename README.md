@@ -7,3 +7,5 @@ This repo contains a work in progress formalization of the new plan based shuffl
 Either run `nix develop` or install [elan](https://github.com/leanprover/elan).
 
 Then run `lake build` to compile the project.
+
+Run `lake build Tests` to check the proofs and regression tests.

@@ -413,3 +413,19 @@ theorem push_pop_ne_of_unbound (mapping : Mapping (source_len + 1) target_len)
   simp [unmapped_target_slots, symm_apply_empty mapping]
 
 end Mapping
+
+@[simp] theorem Mapping.unmapped_target_slots_swapDestinations
+    (mapping : Mapping source_len target_len) (a b : Fin source_len) :
+    (mapping.swapDestinations a b).unmapped_target_slots = mapping.unmapped_target_slots := by
+  simp [Mapping.unmapped_target_slots]
+
+@[simp] theorem Mapping.cast_symm_val (mapping : Mapping n target_len) (h : n = m)
+    (i : Fin target_len) :
+    ((h ▸ mapping).symm i).map Fin.val = (mapping.symm i).map Fin.val := by
+  cases h
+  rfl
+
+@[simp] theorem Mapping.unmapped_target_slots_cast (mapping : Mapping n target_len)
+    (h : n = m) : (h ▸ mapping).unmapped_target_slots = mapping.unmapped_target_slots := by
+  cases h
+  rfl
