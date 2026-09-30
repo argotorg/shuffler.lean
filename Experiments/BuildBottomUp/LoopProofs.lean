@@ -1,6 +1,10 @@
 import Experiments.BuildBottomUp.CheckedProofs
 import Experiments.BuildBottomUp.ScanProofs
 
+open Std.Internal.Do
+
+set_option mvcgen.warning false
+
 namespace BuildBottomUpExperiments.Checked
 
 set_option maxRecDepth 16384
@@ -80,7 +84,7 @@ theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
             Spec, StepPost, finishLoop, pure, Except.pure]
       · simp only [hz, ↓reduceIte]
         simp_action
-        apply (urgentScan_spec cursor state).bind
+        apply ((spec_iff_triple _ _).mpr (urgentScan_triple cursor state)).bind
         intro urgent hu
         split
         · rename_i hurg
@@ -140,8 +144,8 @@ theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
                   { state with mapping := state.mapping.swapDestinations current carrier }
                   dest current hd).mpr rfl
               · simp_action
-                have hscan := copyScan_spec state carrier carrier.val
-                  ⟨carrier, rfl, rfl, state.boundNotFinal_of_not_final dest carrier hb hnfinal⟩
+                have hscan := (spec_iff_triple _ _).mpr (copyScan_triple state carrier.val carrier.isLt carrier.val
+                  ⟨carrier, rfl, rfl, state.boundNotFinal_of_not_final dest carrier hb hnfinal⟩)
                 simp only [slotAt_index state.stack carrier, except_ok_bind] at hscan
                 apply hscan.bind
                 intro selected hselected
@@ -183,5 +187,64 @@ theorem loop_step_spec (cursor : ℕ) (state : State source target spills)
     change Spec (finishLoop (none, state, cursor)) (fun _ => True)
     rw [finishLoop, ensure_of_true _ (inv.complete_size (by omega))]
     trivial
+
+def BodyPost (cursor : ℕ) (state : State source target spills)
+    (step : ForInStep (ControlFrame source spills)) (next : State source target spills) : Prop :=
+  StepPost cursor state (match step with
+    | .done out => .done (out.1, next, out.2)
+    | .yield out => .yield (out.1, next, out.2))
+
+@[spec] theorem loop_body_triple (frame : ControlFrame source spills) (state : State source target spills)
+    (hnone : frame.1 = none) (inv : Invariant frame.2 state) :
+    ⦃fun s => s = state⦄ (loopParts source target spills).val () frame
+    ⦃BodyPost frame.2 state; allowedErrors⦄ := by
+  obtain ⟨result, cursor⟩ := frame
+  dsimp at hnone
+  subst result
+  apply (action_triple_iff _ _ _).mpr
+  have h := loop_step_spec cursor state inv
+  unfold loopStep at h
+  cases heq : ((loopParts source target spills).val () (none, cursor)).run state with
+  | error err => cases err <;> simp_all [Spec]
+  | ok result =>
+    obtain ⟨step, next⟩ := result
+    cases step <;> simpa [heq, Spec, BodyPost] using h
+
+@[spec] theorem finishAction_triple (frame : ControlFrame source spills) :
+    ⦃fun state : State source target spills => Spec (finishLoop (frame.1, state, frame.2)) (fun _ => True)⦄
+      finishAction frame ⦃fun _ _ => True; allowedErrors⦄ := by
+  vcgen [finishAction]
+  by_contra hn
+  simp_all [finishLoop, ensure, requires, Spec, bind, Except.bind,
+    throw, throwThe, MonadExceptOf.throw]
+
+private def LoopInvariant : RepeatInvariant (ControlFrame source spills) (ControlFrame source spills)
+    (State source target spills → Prop)
+  | .inl frame, state => frame.1 = none ∧ Invariant frame.2 state
+  | .inr frame, state => Spec (finishLoop (frame.1, state, frame.2)) (fun _ => True)
+
+theorem build_action_triple (cursor : ℕ) :
+    ⦃Invariant cursor⦄ (do
+      let frame ← forIn ({} : Lean.Loop) (none, cursor) (loopParts source target spills).val
+      finishAction frame)
+    ⦃fun (_ : Result source spills) (_ : State source target spills) => True; allowedErrors⦄ := by
+  vcgen [loop_body_triple, finishAction_triple] invariants
+  · LoopInvariant
+  · RepeatVariant.ofMeasure (fun (frame : ControlFrame source spills) (state : State source target spills) =>
+      (target.length - frame.2, state.pending_generations))
+  all_goals try simp_all [LoopInvariant]
+  case vc3 =>
+    rename_i initial hinit frame measure before step after hm hp
+    cases step with
+    | done out => exact hp
+    | yield out =>
+      change out.1 = none ∧ Invariant out.2 after ∧ _ at hp
+      simp only [Lean.Order.meet_apply, Lean.Order.meet_prop_eq_and, LoopInvariant]
+      refine ⟨?_, hp.1, hp.2.1⟩
+      rw [RepeatVariant.evalsBelow_ofMeasure_apply, RepeatVariant.evalsBelow_ofMeasure]
+      rw [Lean.Order.ofProp_prop_eq]
+      change Prod.Lex Nat.lt Nat.lt _ _
+      rw [← hm.1]
+      exact hp.2.2
 
 end BuildBottomUpExperiments.Checked

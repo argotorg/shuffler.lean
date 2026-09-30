@@ -7,10 +7,10 @@ The urgent-generation guard supplies a proof to `Option.get`. The final
 permutation branch gets its length and mapping proofs from `requires`.
 The supporting operations still use the existing `State`, `Mapping`, and `Trace`.
 
-This directory contains the candidate implementation for production use. Its
-checks and proofs use ordinary Lean definitions and theorems. It does not use
-the experimental verification tactics or contract syntax. The existing
-algorithm in `Shuffler/BuildBottomUp` remains available for comparison.
+This directory contains the candidate implementation for production use. The
+proofs use Lean 4.34's `vcgen` and the Hoare triples from `Std.Internal.Do`.
+The algorithm uses ordinary Lean definitions. The existing algorithm in
+`Shuffler/BuildBottomUp` remains available for comparison.
 
 The checked implementation and its proofs have no imports from
 `Shuffler/BuildBottomUp`. They share `State` from
@@ -139,7 +139,8 @@ uses `decide` at the boundary where it needs a Boolean result.
 ## Helper and loop proofs
 
 `generateUntilBound` is a small loop that calls the same checked `generate`
-operation as the full translation. Ordinary Lean theorems establish:
+operation as the full translation. Its `vcgen` proof uses a loop invariant and
+`pending_generations` as the termination measure. The theorems establish:
 
 - Each successful generation preserves the checked `Invariant`, decreases
   `pending_generations`, and binds the destination.
@@ -147,26 +148,37 @@ operation as the full translation. Ordinary Lean theorems establish:
 - Success preserves the invariant and leaves the destination bound.
 - The only possible failure under the preconditions is `Blocked`.
 
-The helper proofs use the checked operations through `Action.exec`.
-[ActionProofs.lean](ActionProofs.lean) supplies the state-passing equations used
-by these proofs. [Contracts.lean](Contracts.lean)
-defines `Spec`: success must satisfy its stated condition, a blocked result is
-allowed, and an assertion error is excluded. [SwapProofs.lean](SwapProofs.lean)
-and [HelperProofs.lean](HelperProofs.lean) prove the stack and mapping effects.
+The helper proofs use Hoare triples over the checked state actions.
+[Contracts.lean](Contracts.lean) registers primitive contracts with `@[spec]`.
+Its `allowedErrors` condition permits blocked results and excludes assertion
+errors. The result-level `Spec` and its conversion lemmas connect these contracts
+to the existing branch and finite-execution proofs.
+[SwapProofs.lean](SwapProofs.lean) and [HelperProofs.lean](HelperProofs.lean)
+use `vcgen` to compose the contracts. Pure lemmas prove the stack and mapping
+effects. The swap proof handles one nested `PLift`/`And` pattern explicitly
+because Lean 4.34's `vcgen` cannot split that pattern.
 [Invariants.lean](Invariants.lean) defines the checked invariant and its state
 properties. [CheckedProofs.lean](CheckedProofs.lean) uses these facts to prove
 the small generation loop.
 
 The two searches are inside `buildBottomUp` in [Checked.lean](Checked.lean).
-[ScanProofs.lean](ScanProofs.lean) states and proves their bounds and selection
-properties for the scan expressions. The loop proof applies these theorems to
+[ScanProofs.lean](ScanProofs.lean) uses `vcgen` and the standard list-loop rule
+to prove bounds and selection properties for the scan expressions. The loop proof applies these theorems to
 the scans in the actual loop body. That body is extracted by
 [FiniteExecution.lean](FiniteExecution.lean), with a kernel-checked equality.
 [LoopProofs.lean](LoopProofs.lean) proves that each iteration either exits or
 preserves the invariant and decreases
 `(target.length - cursor, state.pending_generations)` in lexicographic order.
-[Verified.lean](Verified.lean) uses this result to prove finite execution and
-assertion exclusion, then defines `buildBottomUpVerified`.
+[LoopProofs.lean](LoopProofs.lean) also supplies the loop invariant and this
+measure to `vcgen` for the standard `Lean.Loop` rule. The branch proof remains
+explicit. [Verified.lean](Verified.lean) derives `buildBottomUp_triple` and
+assertion exclusion from that contract, then defines `buildBottomUpVerified`.
+It retains the separate `LoopRuns` witness for finite execution and comparison.
+
+The proof modules import `Std.Internal.Do` and `Std.Tactic.Do`. Lean 4.34 still
+marks `vcgen` as experimental. The proof modules set `mvcgen.warning` to `false`,
+which also suppresses the `vcgen` warning in this release. No toolchain upgrade
+is required.
 
 Axiom checks cover the checked algorithm, helper-loop proof, full-loop
 theorem, assertion exclusion, and verified wrapper.
@@ -290,11 +302,13 @@ that satisfies the one-step equation and proves exact result equality using
 the old function's induction principle. This proof belongs to the comparison
 modules only.
 
-The independent proof in `Verified.lean` uses `loop_step_spec` and the checked
+The independent proofs in `Verified.lean` use the checked invariant and
 termination measure. `buildBottomUp_terminates` states that a finite
 `LoopRuns` derivation exists. `buildBottomUp_total` combines finite execution
 with exclusion of assertion errors in the returned result.
-`buildBottomUp_noAssertion` states that exclusion for the actual function.
+`buildBottomUp_triple` uses the standard loop contract to exclude assertion
+errors in the actual function. `buildBottomUp_noAssertion` exposes that result
+as an inequality for each assertion error.
 These theorems take the checked `Invariant`; none uses the old implementation.
 The axiom checks report only `propext`, `Classical.choice`, and `Quot.sound`;
 none uses `sorryAx` or `native_decide`.

@@ -1,6 +1,10 @@
 import Experiments.BuildBottomUp.FiniteExecution
 import Experiments.BuildBottomUp.HelperProofs
 
+open Std.Internal.Do
+
+set_option mvcgen.warning false
+
 namespace BuildBottomUpExperiments.Checked
 
 -- The public wrapper uses assertion exclusion to recover the original error type.
@@ -45,6 +49,19 @@ def generateUntilBound (dest : Fin target.length) : Action source target spills 
   while (positionOf (← get) dest.val).isNone do
     generate dest.val
 
+theorem generateUntilBound_triple (dest : Fin target.length) (cursor : ℕ) :
+    ⦃Invariant cursor⦄ (generateUntilBound dest : Action source target spills Unit)
+    ⦃fun _ state => Invariant cursor state ∧ (positionOf state dest.val).isSome; allowedErrors⦄ := by
+  vcgen [generateUntilBound] invariants
+  · RepeatInvariant.ofInvariantAndBreak (fun _ state => Invariant cursor state)
+      (fun _ state => (positionOf state dest.val).isSome)
+  · RepeatVariant.ofMeasure (fun _ (state : State source target spills) => state.pending_generations)
+  all_goals try simp_all [positionOf, dest.isLt, Option.isSome_iff_ne_none]
+  case vc3 hgen =>
+    obtain ⟨rfl, hi⟩ := (by assumption : _ ∧ Invariant cursor _)
+    exact ⟨hgen.decreases hi, hgen.invariant hi⟩
+  case vc5 => exact Invariant.available (by tauto) dest
+
 theorem generateUntilBound_unfold (state : State source target spills) (dest : Fin target.length) :
     (generateUntilBound dest).exec state =
       if (positionOf state dest.val).isNone then do
@@ -84,19 +101,12 @@ theorem generateUntilBound_spec (state : State source target spills)
     match (generateUntilBound dest).exec state with
     | .ok next => Invariant cursor next ∧ (positionOf next dest.val).isSome
     | .error err => ∃ excess, err = .blocked excess := by
-  rw [generateUntilBound_eq state dest cursor inv]
-  by_cases hnone : (positionOf state dest.val).isNone = true
-  · rw [ite_eq_left hnone]
-    have hbound : state.mapping.symm dest = none := by
-      simpa [positionOf, dest.isLt] using hnone
-    have hspec := generate_spec state dest cursor inv hbound
-    cases hresult : (generate dest.val).exec state with
-    | error err => simpa [hresult] using hspec
-    | ok next =>
-      simp only [hresult] at hspec
-      exact ⟨hspec.1, hspec.2.2⟩
-  · rw [ite_eq_right hnone]
-    exact ⟨inv, Option.isSome_iff_ne_none.mpr (by simpa using hnone)⟩
+  have h : Spec ((generateUntilBound dest).exec state)
+      (fun next => Invariant cursor next ∧ (positionOf next dest.val).isSome) :=
+    Spec.of_action ⟨fun s hs => by subst s; exact (generateUntilBound_triple dest cursor).le_wp state inv⟩
+  cases heq : (generateUntilBound dest).exec state with
+  | error err => exact h.error heq
+  | ok next => simpa only [heq, Spec] using h
 
 /-- info: 'BuildBottomUpExperiments.Checked.generateUntilBound_spec' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in

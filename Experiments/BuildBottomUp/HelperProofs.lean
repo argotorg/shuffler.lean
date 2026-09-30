@@ -1,5 +1,9 @@
 import Experiments.BuildBottomUp.SwapProofs
 
+open Std.Internal.Do
+
+set_option mvcgen.warning false
+
 namespace BuildBottomUpExperiments.Checked
 
 -- Effects of adding one bound stack slot.
@@ -11,6 +15,17 @@ structure Growth (state next : State source target spills) (dest : Fin target.le
   pending_eq : next.pending_generations = pending
   preserved : ∀ i : Fin target.length, state.isFinal i → next.isFinal i
   subset : state.stack ⊆ next.stack
+
+theorem Growth.top {state next : State source target spills} {dest : Fin target.length}
+    (h : Growth state next dest pending) :
+    positionOf next dest.val = some (next.stack.length - 1) := by
+  simp [positionOf, dest.isLt, h.bound, h.size]
+
+theorem Growth.decrement {state next : State source target spills} {dest : Fin target.length}
+    (h : Growth state next dest pending) :
+    Growth state { next with pending_generations := next.pending_generations - 1 }
+      dest (pending - 1) :=
+  ⟨h.size, h.bound, h.count, by simp [h.pending_eq], h.preserved, h.subset⟩
 
 private theorem growth_append (state : State source target spills) (slot : Value)
     (dest : Fin target.length) (hdest : state.mapping.symm dest = none)
@@ -36,67 +51,32 @@ private theorem growth_append (state : State source target spills) (slot : Value
       Option.map_map, Function.comp_def] using hi
   · exact List.subset_append_left _ _
 
-theorem push_spec (state : State source target spills) (slot : Value) (dest : Fin target.length)
+@[spec] theorem push_spec (state : State source target spills) (slot : Value) (dest : Fin target.length)
     (hgen : slot.can_be_freely_generated ∨ spills.is_spilled slot)
     (hbound : state.mapping.symm dest = none) :
-    Spec ((push slot dest).exec state) (fun next => Growth state next dest state.pending_generations) := by
-  cases slot <;> simp only [push, Action.exec_get, Action.exec_lift, Action.exec_set,
-    requires, hbound, hgen, ↓reduceDIte, pure_bind]
-  all_goals exact growth_append state _ dest hbound _
+    ⦃fun s => s = state⦄ push slot dest
+    ⦃fun _ next => Growth state next dest state.pending_generations; allowedErrors⦄ := by
+  vcgen [push] <;> subst_vars <;> simp_all
+  exact growth_append _ slot dest hbound _
 
-theorem dup_spec (state : State source target spills) (copy : Fin state.stack.length)
+@[spec] theorem dup_spec (state : State source target spills) (copy : Fin state.stack.length)
     (dest : Fin target.length) (hdup : state.stack.isDupReachable copy)
     (hbound : state.mapping.symm dest = none) :
-    Spec ((dup copy.val dest).exec state) (fun next => Growth state next dest state.pending_generations) := by
-  simp only [dup, Action.exec_get, Action.exec_lift, Action.exec_set, index_eq,
-    except_ok_bind, requires, hbound, hdup, ↓reduceDIte, pure_bind]
-  exact growth_append state _ dest hbound _
+    ⦃fun s => s = state⦄ dup copy.val dest
+    ⦃fun _ next => Growth state next dest state.pending_generations; allowedErrors⦄ := by
+  vcgen [dup, index] <;> subst_vars <;> simp_all
+  exact growth_append _ _ dest hbound _
 
-theorem produce_spec (state : State source target spills) (dest : Fin target.length)
+@[spec] theorem produce_spec (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest) :
-    Spec ((produce dest).exec state) (fun next => Growth state next dest (state.pending_generations - 1)) := by
-  have finish (next : State source target spills) (h : Growth state next dest state.pending_generations) :
-      Spec (do
-        ensure (positionOf next dest.val = some (next.stack.length - 1)) "generated slot is not bound to the top"
-        pure { next with pending_generations := next.pending_generations - 1 })
-        (fun result => Growth state result dest (state.pending_generations - 1)) := by
-    have htop : positionOf next dest.val = some (next.stack.length - 1) := by
-      simp [positionOf, dest.isLt, h.bound, h.size]
-    rw [ensure_of_true _ htop]
-    exact ⟨h.size, h.bound, h.count, by simp [h.pending_eq], h.preserved, h.subset⟩
-  unfold produce
-  simp only [Action.exec_get, Action.exec_lift]
-  rw [ensure_of_true _ (by simp [hbound])]
-  simp only [except_ok_bind]
-  by_cases hjunk : target[dest.val].is_junk
-  · simp only [hjunk, ↓reduceIte]
-    rw [Action.exec_bind]
-    simp only [Action.exec_get, Action.exec_lift, Action.exec_modify]
-    exact (push_spec state _ dest (Or.inl (Value.can_be_freely_generated_of_is_junk _ hjunk)) hbound).bind finish
-  · simp only [hjunk, ↓reduceIte]
-    cases hcopy : state.stack.shallowestCopyPosition target[dest.val] with
-    | none =>
-      have hgen : target[dest.val].can_be_freely_generated ∨ spills.is_spilled target[dest.val] := by
-        simpa [State.isAvailable, hcopy] using havailable
-      simp only [Option.filter_none, hgen, ↓reduceIte]
-      rw [Action.exec_bind]
-      simp only [Action.exec_get, Action.exec_lift, Action.exec_modify]
-      exact (push_spec state _ dest hgen hbound).bind finish
-    | some copy =>
-      simp only [Option.filter_some, decide_eq_true_eq]
-      by_cases hdup : state.stack.isDupReachable copy
-      · simp only [hdup, ↓reduceIte]
-        rw [Action.exec_bind]
-        simp only [Action.exec_get, Action.exec_lift, Action.exec_modify]
-        exact (dup_spec state copy dest hdup hbound).bind finish
-      · simp only [hdup, ↓reduceIte]
-        by_cases hgen : target[dest.val].can_be_freely_generated ∨ spills.is_spilled target[dest.val]
-        · simp only [hgen, ↓reduceIte]
-          rw [Action.exec_bind]
-          simp only [Action.exec_get, Action.exec_lift, Action.exec_modify]
-          exact (push_spec state _ dest hgen hbound).bind finish
-        · simp only [hgen, ↓reduceIte]
-          simp [Action.exec_bind, Action.exec_throw, except_error_bind, Spec]
+    ⦃fun s => s = state⦄ produce dest
+    ⦃fun _ next => Growth state next dest (state.pending_generations - 1); allowedErrors⦄ := by
+  vcgen [produce] <;> subst_vars
+  all_goals first
+    | exact Growth.top (by assumption)
+    | exact Growth.decrement (by assumption)
+    | exact Or.inl (Value.can_be_freely_generated_of_is_junk _ (by assumption))
+    | solve | simp_all [allowedErrors, State.isAvailable, Option.isSome_iff_exists]
 
 structure Generation (state next : State source target spills) (dest : Fin target.length) : Prop where
   size : next.stack.length = state.stack.length + 1
@@ -107,58 +87,63 @@ structure Generation (state next : State source target spills) (dest : Fin targe
   position : next.isFinal dest ∨
     (next.mapping.symm dest).map Fin.val = some (next.stack.length - 1)
 
+theorem Growth.generation {state next : State source target spills} {dest : Fin target.length}
+    (h : Growth state next dest (state.pending_generations - 1)) : Generation state next dest :=
+  ⟨h.size, h.count, h.pending_eq, h.preserved, h.subset,
+    Or.inr (by simpa [positionOf, dest.isLt] using h.top)⟩
+
+theorem Growth.generation_swapped {state produced next : State source target spills}
+    {dest : Fin target.length} (h : Growth state produced dest (state.pending_generations - 1))
+    (hbound : state.mapping.symm dest = none) (pos : Fin produced.stack.length)
+    (hpos : pos.val = dest.val) (hs : Swapped produced next pos) : Generation state next dest := by
+  have htop : (produced.mapping.symm dest).map Fin.val = some (produced.stack.length - 1) := by
+    simpa [positionOf, dest.isLt] using h.top
+  refine ⟨hs.size.trans h.size, by rw [hs.count]; exact h.count,
+    hs.pending.trans h.pending_eq, ?_, (fun _ hi => hs.subset (h.subset hi)),
+    Or.inl (hs.final dest hpos htop)⟩
+  intro i hi
+  have hne : i ≠ dest := by
+    intro heq
+    subst i
+    simp [State.isFinal, dest.isLt, hbound] at hi
+  have hp := produced.swapDestinations_isFinal pos
+    ⟨produced.stack.length - 1, by have := pos.isLt; omega⟩ i (h.preserved i hi)
+    (fun heq => hne (Fin.ext (heq.trans hpos)))
+    (by have := state.isFinal_lt i hi; have := h.size; dsimp; omega)
+  simpa only [State.isFinal, i.isLt, dite_true, hs.mapping] using hp
+
+theorem Swapped.retag (state : State source target spills) (pos : Fin state.stack.length) :
+    Swapped state
+      { state with mapping := (state.mapping.swapDestinations pos
+          ⟨state.stack.length - 1, by have := pos.isLt; omega⟩) } pos := by
+  exact ⟨rfl, rfl, by simp, List.Subset.refl _, fun _ => rfl⟩
+
+@[spec] theorem generate_triple (state : State source target spills) (dest : Fin target.length)
+    (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest) :
+    ⦃fun s => s = state⦄ generate dest.val
+    ⦃fun _ next => Generation state next dest; allowedErrors⦄ := by
+  vcgen [generate]
+  all_goals try simp only [Fin.val_inj] at *
+  all_goals subst_vars
+  all_goals first
+    | exact Growth.generation (by assumption)
+    | exact Growth.generation_swapped (by assumption) hbound _ rfl (by assumption)
+    | exact Growth.generation_swapped (by assumption) hbound _ rfl (Swapped.retag _ _)
+    | assumption
+    | solve | simp_all
+    | solve | omega
+
 theorem generate_contract (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest) :
-    Spec ((generate dest.val).exec state) (fun next => Generation state next dest) := by
-  unfold generate
-  rw [Action.exec_lift]
-  rw [index_eq]
-  simp only [except_ok_bind, Action.exec_bind, Action.exec_get]
-  apply (produce_spec state dest hbound havailable).bind
-  intro produced hp
-  have hlen := hp.size
-  have htop : (produced.mapping.symm dest).map Fin.val = some (produced.stack.length - 1) := by
-    simpa [hlen] using hp.bound
-  have htop' := produced.boundOfVal dest ⟨produced.stack.length - 1, by omega⟩ htop
-  have hretag (pos : Fin produced.stack.length) (hpos : pos.val = dest.val)
-      (i : Fin target.length) (hi : state.isFinal i) :
-      ((produced.mapping.swapDestinations pos
-        ⟨produced.stack.length - 1, by omega⟩).symm i).map Fin.val = some i.val := by
-    have hne : i ≠ dest := by
-      intro heq
-      subst i
-      simp [State.isFinal, dest.isLt, hbound] at hi
-    apply produced.swapDestinations_isFinal _ _ i (hp.preserved i hi)
-    · intro heq
-      exact hne (Fin.ext (heq.trans hpos))
-    · have := state.isFinal_lt i hi
-      dsimp
-      omega
-  split
-  · rename_i hswap
-    simp only [Action.exec_lift]
-    rw [slotAt_index produced.stack ⟨dest.val, by omega⟩,
-      slotAt_index produced.stack ⟨produced.stack.length - 1, by omega⟩]
-    simp only [except_ok_bind]
-    split
-    · rw [swapDestinations_result produced ⟨dest.val, by omega⟩
-        ⟨produced.stack.length - 1, by omega⟩]
-      refine ⟨hp.size, ?_, hp.pending_eq, ?_, hp.subset, Or.inl ?_⟩
-      · simpa using hp.count
-      · intro i hi
-        simpa only [State.isFinal, i.isLt, dite_true, Fin.eta] using hretag _ rfl i hi
-      · simp [State.isFinal, dest.isLt, htop']
-    · split
-      · rename_i hreach
-        apply (swap_spec produced ⟨dest.val, by omega⟩ hswap.1 hreach hswap.2).mono
-        intro next hs
-        refine ⟨hs.size.trans hp.size, by rw [hs.count]; exact hp.count,
-          hs.pending.trans hp.pending_eq, ?_, (fun _ h => hs.subset (hp.subset h)),
-          Or.inl (hs.final dest rfl htop)⟩
-        intro i hi
-        simpa only [State.isFinal, i.isLt, dite_true, hs.mapping] using hretag _ rfl i hi
-      · exact ⟨hp.size, hp.count, hp.pending_eq, hp.preserved, hp.subset, Or.inr htop⟩
-  · exact ⟨hp.size, hp.count, hp.pending_eq, hp.preserved, hp.subset, Or.inr htop⟩
+    Spec ((generate dest.val).exec state) (fun next => Generation state next dest) :=
+  Spec.of_action (generate_triple state dest hbound havailable)
+
+@[spec] theorem generate_offset_spec (state : State source target spills) (offset : ℕ)
+    (hlt : offset < target.length) (hbound : state.mapping.symm ⟨offset, hlt⟩ = none)
+    (havailable : state.isAvailable ⟨offset, hlt⟩) :
+    ⦃fun s => s = state⦄ generate offset
+    ⦃fun _ next => Generation state next ⟨offset, hlt⟩; allowedErrors⦄ :=
+  generate_triple state ⟨offset, hlt⟩ hbound havailable
 
 theorem Generation.invariant {state next : State source target spills} {dest : Fin target.length}
     (h : Generation state next dest) (inv : Invariant cursor state) : Invariant cursor next := by
