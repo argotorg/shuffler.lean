@@ -1,4 +1,5 @@
-import Shuffler.BuildBottomUp.Defs
+import Experiments.BuildBottomUp.Queries
+import Shuffler.Permute.Defs
 
 namespace BuildBottomUpExperiments.Checked
 
@@ -44,46 +45,44 @@ instance (state : State source target spills) (offset : ℕ) :
   inferInstanceAs (Decidable (depthOf state offset ≤ MAX_SWAP_DEPTH))
 
 instance (state : State source target spills) (dest : Fin target.length) :
-    Decidable (state.is_available dest) := by
-  unfold State.is_available
+    Decidable (state.isAvailable dest) := by
+  unfold State.isAvailable
   infer_instance
 
 -- Convert between source offsets and the depths used by trace constructors.
 private theorem dup_stack_eq (stack : Stack) (copy : Fin stack.length) :
-    stack ++ [stack[stack.length - ((stack.depth_of copy).val + 1)]] =
+    stack ++ [stack[stack.length - ((stack.depth copy).val + 1)]] =
       stack ++ [stack[copy]] := by
-  have hcopy : stack.length - ((stack.depth_of copy).val + 1) = copy.val := by
-    dsimp [Stack.depth_of]; omega
+  have hcopy : stack.length - ((stack.depth copy).val + 1) = copy.val := by
+    dsimp [Stack.depth]; omega
   exact congrArg (fun slot => stack ++ [slot]) (getElem_congr_idx hcopy)
 
 private theorem swap_stack_eq (stack : Stack) (pos : Fin stack.length) :
-    stack.swap (stack.length - 1) (stack.length - 1 - (stack.depth_of pos).val) =
+    stack.swap (stack.length - 1) (stack.length - 1 - (stack.depth pos).val) =
       stack.swap pos (stack.length - 1) := by
-  have hpos : stack.length - 1 - (stack.depth_of pos).val = pos.val := by
-    dsimp [Stack.depth_of]; omega
+  have hpos : stack.length - 1 - (stack.depth pos).val = pos.val := by
+    dsimp [Stack.depth]; omega
   rw [hpos, List.swap_comm]
 
 private theorem swap_depth_pos (stack : Stack) (pos : Fin stack.length)
-    (hbelow : pos.val + 1 < stack.length) : 1 ≤ (stack.depth_of pos).val := by
-  dsimp [Stack.depth_of]; omega
+    (hbelow : pos.val + 1 < stack.length) : 1 ≤ (stack.depth pos).val := by
+  dsimp [Stack.depth]; omega
 
 private theorem top_lt_length (stack : Stack) (pos : Fin stack.length) :
     stack.length - 1 < stack.length := by
   have := pos.isLt
   omega
 
-def push (state : State source target spills) (slot : Value) (dest : Fin target.length) :
-    M (State source target spills) := do
+def push (state : State source target spills) (slot : Value) (dest : Fin target.length) : M (State source target spills) := do
   let ⟨hbound⟩ ← requires (state.mapping.symm dest = none) "destination already bound to a slot"
-  let ⟨hgen⟩ ← requires (slot.can_be_freely_generated ∨ spills.is_spilled slot)
-    "pushed slot cannot be generated or loaded"
+  let ⟨hgen⟩ ← requires (slot.can_be_freely_generated ∨ spills.is_spilled slot) "pushed slot cannot be generated or loaded"
   have heq : state.stack.length + 1 = (state.stack ++ [slot]).length := by simp
+
   return {
     state with
     stack := state.stack ++ [slot]
     trace := match slot, hgen with
-      | .Var id, h =>
-        .Load id (by simpa [Value.can_be_freely_generated, SpillSet.is_spilled] using h) state.trace
+      | .Var id  , h => .Load id (by simpa [Value.can_be_freely_generated, SpillSet.is_spilled] using h) state.trace
       | .Lit word, _ => .Push (.Lit word) (by simp [Value.can_be_freely_generated]) state.trace
       | .Wildcard, _ => .Push .Wildcard (by decide) state.trace
     mapping := heq ▸ state.mapping.push dest hbound
@@ -92,14 +91,16 @@ def push (state : State source target spills) (slot : Value) (dest : Fin target.
 def dup (state : State source target spills) (copy : Fin state.stack.length)
     (dest : Fin target.length) : M (State source target spills) := do
   let ⟨hbound⟩ ← requires (state.mapping.symm dest = none) "destination already bound to a slot"
-  let ⟨hdup⟩ ← requires (state.stack.is_dup_reachable copy) "copy is outside DUP reach"
-  let depth := state.stack.depth_of copy
+  let ⟨hdup⟩ ← requires (state.stack.isDupReachable copy) "copy is outside DUP reach"
+  let depth := state.stack.depth copy
   have heq : state.stack.length + 1 = (state.stack ++ [state.stack[copy]]).length := by simp
+
   return {
     state with
     stack := state.stack ++ [state.stack[copy]]
-    trace := dup_stack_eq state.stack copy ▸ Trace.Dup (depth.val + 1) (Nat.succ_le_of_lt depth.isLt)
-      (Nat.succ_pos _) (Nat.add_le_add_right hdup 1) state.trace
+    trace :=
+      dup_stack_eq state.stack copy ▸
+        Trace.Dup (depth.val + 1) (Nat.succ_le_of_lt depth.isLt) (Nat.succ_pos _) (Nat.add_le_add_right hdup 1) state.trace
     mapping := heq ▸ state.mapping.push dest hbound
   }
 
@@ -111,9 +112,9 @@ def swapDestinations (state : State source target spills) (a b : ℕ) : M (State
 def swapWith (state : State source target spills) (offset : ℕ) : M (State source target spills) := do
   let pos ← index state.stack.length offset
   let ⟨hbelow, hreach, _hnfinal⟩ ← requires
-    (pos.val + 1 < state.stack.length ∧ state.stack.is_swap_reachable pos ∧ ¬ state.is_final pos.val)
+    (pos.val + 1 < state.stack.length ∧ state.stack.isSwapReachable pos ∧ ¬ state.isFinal pos.val)
     "swap requires a reachable slot below the top that is not final"
-  let depth := state.stack.depth_of pos
+  let depth := state.stack.depth pos
   have heq : state.stack.length = (state.stack.swap pos (state.stack.length - 1)).length :=
     List.length_swap.symm
   return {
@@ -125,37 +126,37 @@ def swapWith (state : State source target spills) (offset : ℕ) : M (State sour
       (swap_depth_pos state.stack pos hbelow) hreach state.trace
   }
 
-def produce (state : State source target spills) (dest : Fin target.length) :
-    M (State source target spills) := do
-  if state.mapping.symm dest ≠ none then
-    throw (.assertion "destination already bound to a slot")
+def produce (state : State source target spills) (dest : Fin target.length) : M (State source target spills) := do
+  ensure (state.mapping.symm dest).isNone "destination already bound to a slot"
+
   let slot := target[dest]
-  let copy := state.stack.shallowest_copy_position slot
+  let copy := state.stack.shallowestCopyPosition slot
+
   -- Parentheses keep branch returns local to this action.
   let next ← (do
     if slot.is_junk then
       return ← push state slot dest
     if let some pos := copy then
-      if state.stack.is_dup_reachable pos then
+      if state.stack.isDupReachable pos then
         return ← dup state pos dest
     if slot.can_be_freely_generated ∨ spills.is_spilled slot then
       return ← push state slot dest
     if hcopy : copy.isSome then
       let pos := copy.get hcopy
-      throw (.blocked (state.stack.depth_of pos - MAX_DUP_DEPTH))
+      throw (.blocked (state.stack.depth pos - MAX_DUP_DEPTH))
     throw (.assertion "generated slot has no copy on the stack and is not spilled"))
-  ensure (positionOf next dest.val = some (next.stack.length - 1))
-    "generated slot is not bound to the top"
+
+  ensure (positionOf next dest.val = some (next.stack.length - 1)) "generated slot is not bound to the top"
   return { next with pending_generations := next.pending_generations - 1 }
 
 def generate (state : State source target spills) (offset : ℕ) : M (State source target spills) := do
   let dest ← index target.length offset
   let next ← produce state dest
-  if hswap : dest.val + 1 < next.stack.length ∧ ¬ next.is_final dest.val then
+  if hswap : dest.val + 1 < next.stack.length ∧ ¬ next.isFinal dest.val then
     let pos : Fin next.stack.length := ⟨dest.val, by omega⟩
     if next.stack[pos] = next.stack.getLast (by intro h; simp [h] at hswap) then
       return ← swapDestinations next pos.val (next.stack.length - 1)
-    else if next.stack.is_swap_reachable pos then
+    else if next.stack.isSwapReachable pos then
       return ← swapWith next pos.val
   return next
 

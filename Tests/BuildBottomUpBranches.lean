@@ -6,10 +6,6 @@ set_option maxRecDepth 16384
 
 namespace BuildBottomUpBranchTests
 
--- Attaching a proof keeps both success values and errors unchanged.
-example (result : Except ShuffleErr ℕ) : result.attach.map Subtype.val = result := by
-  cases result <;> rfl
-
 -- The new top is the only unbound target. Generating it must revisit offset zero.
 private def newTopState : State [.Lit 10, .Lit 20] [.Lit 20, .Lit 10, .Lit 7] ∅ where
   planned_mapping := ⊥

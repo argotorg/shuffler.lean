@@ -1,4 +1,4 @@
-import Experiments.BuildBottomUp.CheckedProofs
+import Experiments.BuildBottomUp.HelperEquivalence
 
 namespace BuildBottomUpExperiments.Checked
 set_option maxRecDepth 16384

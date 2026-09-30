@@ -158,11 +158,6 @@ private theorem State.produce_preserves (state : State source target spills)
             dite_eq_right hfree] at hresult
           cases hresult
 
-@[simp] theorem Mapping.unmapped_target_slots_swapDestinations
-    (mapping : Mapping source_len target_len) (a b : Fin source_len) :
-    (mapping.swapDestinations a b).unmapped_target_slots = mapping.unmapped_target_slots := by
-  simp [Mapping.unmapped_target_slots]
-
 theorem State.swapDestinations_is_final (state : State source target spills)
     (a b : Fin state.stack.length) (i : Fin target.length) (hi : state.is_final i)
     (ha : i.val ≠ a.val) (hb : i.val ≠ b.val) :
@@ -172,17 +167,6 @@ theorem State.swapDestinations_is_final (state : State source target spills)
   have hpa : pos ≠ a := by intro h; exact ha (heq ▸ congrArg Fin.val h)
   have hpb : pos ≠ b := by intro h; exact hb (heq ▸ congrArg Fin.val h)
   simp [hpos, Equiv.swap_apply_of_ne_of_ne hpa hpb, heq]
-
-@[simp] theorem Mapping.cast_symm_val (mapping : Mapping n target_len) (h : n = m)
-    (i : Fin target_len) :
-    ((h ▸ mapping).symm i).map Fin.val = (mapping.symm i).map Fin.val := by
-  cases h
-  rfl
-
-@[simp] theorem Mapping.unmapped_target_slots_cast (mapping : Mapping n target_len)
-    (h : n = m) : (h ▸ mapping).unmapped_target_slots = mapping.unmapped_target_slots := by
-  cases h
-  rfl
 
 -- Generation adds one slot, fills one destination, and keeps existing final slots and values.
 theorem State.generate_effects (state : State source target spills)

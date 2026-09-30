@@ -10,11 +10,19 @@ The supporting operations still use the existing `State`, `Mapping`, and `Trace`
 This directory contains the candidate implementation for production use. Its
 checks and proofs use ordinary Lean definitions and theorems. It does not use
 the experimental verification tactics or contract syntax. The existing
-implementation in `Shuffler/BuildBottomUp` is unchanged.
+algorithm in `Shuffler/BuildBottomUp` remains available for comparison.
 
-The checked version now has a proof of equivalence to the old definition, plus
-a separate proof that its outer loop has a finite execution. Both use the old
-preconditions. See [Equivalence.lean](Equivalence.lean).
+The checked implementation and its proofs have no imports from
+`Shuffler/BuildBottomUp`. They share `State` from
+[Shuffler/State.lean](../../Shuffler/State.lean), plus the existing core,
+mapping, trace, and permutation modules. Checked stack queries and state
+predicates are defined in [Queries.lean](Queries.lean).
+
+[Verified.lean](Verified.lean) provides the public checked wrapper, termination,
+and assertion-exclusion theorems. Its `Invariant` has the same four conditions
+as the old input contract, with separate checked predicates. The exact
+equivalence proof remains in [Equivalence.lean](Equivalence.lean); production
+proofs do not import it.
 
 ## What was tested
 
@@ -22,7 +30,7 @@ preconditions. See [Equivalence.lean](Equivalence.lean).
 | --- | --- | --- |
 | Move proofs below the definition and group the four invariants | [Deferred.lean](Deferred.lean) | Compiles without `sorry`. Keeps the dependent `else` branches and recursive calls. |
 | Checked helpers with separate assertion errors | [Checked.lean](Checked.lean) and [CheckedSupport.lean](CheckedSupport.lean) | The full algorithm compiles as a `while` loop with early returns. The final permutation checks and call are in the loop body. |
-| Prove helper contracts and loop properties after the definition | [CheckedProofs.lean](CheckedProofs.lean) | Proves exact helper equivalence and that a loop over checked `generate` takes at most one iteration, preserves the invariant, and can fail only with `Blocked`. |
+| Prove helper contracts and loop properties after the definition | [HelperProofs.lean](HelperProofs.lean), [LoopProofs.lean](LoopProofs.lean), and [Verified.lean](Verified.lean) | Proves state effects, invariant preservation, finite execution, and exclusion of assertion errors directly from checked code. |
 
 An attempted `rfl` proof of equality between the deferred version and the old
 function failed. Grouping the invariant arguments changes the recursive term.
@@ -46,8 +54,8 @@ continue
 The helper checks its bounds, unbound destination, and availability. The local
 `push`, `dup`, `produce`, `swapWith`, and `generate` implementations construct
 states and traces directly. They share the core types with the old code but do
-not call its operational `State` helpers. On valid
-inputs, `generate_eq` proves that it returns exactly the result of
+not call its operational `State` helpers. In the separate comparison module
+[HelperEquivalence.lean](HelperEquivalence.lean), `generate_eq` proves that it returns exactly the result of
 `State.generate`, with the old error embedded in the new error type. This
 includes the complete state and trace. `swapWith_eq` proves the corresponding
 statement for swaps.
@@ -73,7 +81,7 @@ the compiler removes them.
 `buildBottomUpVerified` uses `restoreResult` to give the function its old
 `Except ShuffleErr` result type. The assertion branch is eliminated with that
 proof. `buildBottomUpVerified_eq` proves exact equality to the old function.
-This wrapper takes the four old preconditions as one `BuildBottomUpInvariant`.
+This wrapper takes the four preconditions as one checked `Invariant`.
 
 The C++ assertions about the produced top, bound source, selected value, final
 placement, and final stack size use the local `ensure` function:
@@ -84,8 +92,8 @@ ensure (state.stack.length = target.length) "stack and target sizes differ"
 
 These checks run at runtime. A false condition returns `.assertion reason`.
 Tests cover invalid inputs, including a size mismatch when the cursor skips
-the loop. The equivalence and termination proofs use the old preconditions
-and prove that these checks succeed on admitted inputs.
+the loop. The checked invariant states the four input conditions. The independent
+proofs show that these checks succeed when those conditions hold.
 
 `produce` joins its successful branches at `let next ← (do ...)`, checks that
 the destination is bound to the new top, then decrements the pending count.
@@ -121,16 +129,32 @@ uses `decide` at the boundary where it needs a Boolean result.
 `generateUntilBound` is a small loop that calls the same checked `generate`
 operation as the full translation. Ordinary Lean theorems establish:
 
-- Each successful generation preserves `BuildBottomUpInvariant`, decreases
+- Each successful generation preserves the checked `Invariant`, decreases
   `pending_generations`, and binds the destination.
 - The loop either returns the already-bound state or calls `generate` once.
 - Success preserves the invariant and leaves the destination bound.
 - The only possible failure under the preconditions is `Blocked`.
 
-The proofs use exact helper equivalence and the existing
-`State.generate_preserves` and `State.generate_position` theorems. The loop
-equation is proved by unfolding the actual loop. Axiom checks cover both the
-checked algorithm and the loop proof.
+The helper proofs use the checked operations directly. [Contracts.lean](Contracts.lean)
+defines `Spec`: success must satisfy its stated condition, a blocked result is
+allowed, and an assertion error is excluded. [SwapProofs.lean](SwapProofs.lean)
+and [HelperProofs.lean](HelperProofs.lean) prove the stack and mapping effects.
+[Invariants.lean](Invariants.lean) defines the checked invariant and its state
+properties. [CheckedProofs.lean](CheckedProofs.lean) uses these facts to prove
+the small generation loop.
+
+The two searches are executable functions in [Scans.lean](Scans.lean).
+[ScanProofs.lean](ScanProofs.lean) proves their bounds and selection properties.
+The main loop calls these same functions. Its body is extracted by
+[FiniteExecution.lean](FiniteExecution.lean), with a kernel-checked equality.
+[LoopProofs.lean](LoopProofs.lean) proves that each iteration either exits or
+preserves the invariant and decreases
+`(target.length - cursor, state.pending_generations)` in lexicographic order.
+[Verified.lean](Verified.lean) uses this result to prove finite execution and
+assertion exclusion, then defines `buildBottomUpVerified`.
+
+Axiom checks cover the checked algorithm, helper-loop proof, full-loop
+theorem, assertion exclusion, and verified wrapper.
 
 ## Comparison with C++
 
@@ -181,7 +205,8 @@ Experiments/BuildBottomUp/check.sh
 ```
 
 The script runs `lake build Experiments`, then checks the derived branch
-fixtures. Together, the build and fixture checks cover:
+fixtures through both the comparison runner and the independent checked
+wrapper. Together, the build and fixture checks cover:
 
 - The existing branch fixtures against all three Lean implementations and the
   verified wrapper.
@@ -193,6 +218,20 @@ fixtures. Together, the build and fixture checks cover:
 - An urgent copy followed by a blocked copy.
 - Bounds, unavailable values, already-bound destinations, invalid swaps,
   and an incomplete final permutation.
+
+[Tests.lean](Tests.lean) contains checked tests and imports no old implementation.
+[ComparisonTests.lean](ComparisonTests.lean) contains the exhaustive comparison.
+[Independence.lean](Independence.lean) checks the full imported module list and
+rejects any module under `Shuffler.BuildBottomUp`. The comparison tests also
+check that this guard rejects a module that imports the old implementation.
+[Fixtures.lean](Fixtures.lean) adapts the existing branch fixtures to the checked
+wrapper without importing the old code.
+
+To check only checked code, its proofs, tests, and the derived branch fixtures:
+
+```sh
+Experiments/BuildBottomUp/check.sh --independent
+```
 
 The existing fixtures also cover urgent and new-top retries, equal-copy
 selection, skipping final copies, blocked swaps, and the SWAP16 boundary.
@@ -227,20 +266,19 @@ The proof files have separate roles:
   definition's well-founded induction. Every continuation uses the same cursor
   and complete `State`, including its mapping, counters, and trace.
 
-The main induction is `buildWith_eq`. It accepts any loop interpreter that
-satisfies the one-step equation. Applied to Lean's loop, it proves exact result
-equality. Applied to the proof-only `loopOr` interpreter, it also proves finite
-execution: this interpreter returns an assertion error if no finite execution
-exists. Equality to the old result excludes that error. This argument uses the
-old termination measure through `build_bottom_up.induct`; it does not infer
-termination from equality of Lean values alone.
+The comparison induction is `buildWith_eq`. It accepts a loop interpreter
+that satisfies the one-step equation and proves exact result equality using
+the old function's induction principle. This proof belongs to the comparison
+modules only.
 
-`buildBottomUp_terminates` states that a finite `LoopRuns` derivation exists.
-`buildBottomUp_total` combines that derivation with exact equality of its output
-to the old result. `buildBottomUp_noAssertion` excludes every added assertion
-error. The axiom checks cover equality, termination, the combined theorem, and
-the verified wrapper. They report only `propext`, `Classical.choice`, and
-`Quot.sound`; none uses `sorryAx` or `native_decide`.
+The independent proof in `Verified.lean` uses `loop_step_spec` and the checked
+termination measure. `buildBottomUp_terminates` states that a finite
+`LoopRuns` derivation exists. `buildBottomUp_total` combines finite execution
+with exclusion of assertion errors in the returned result.
+`buildBottomUp_noAssertion` states that exclusion for the actual function.
+These theorems take the checked `Invariant`; none uses the old implementation.
+The axiom checks report only `propext`, `Classical.choice`, and `Quot.sound`;
+none uses `sorryAx` or `native_decide`.
 
 The old return type exposes a stack and trace on success, or a blocked excess
 on error. It does not expose a final mapping or the working state on error.
@@ -251,4 +289,8 @@ The experiments preserve the existing model's limits: fixed stack reach, fewer
 slot kinds, literal equality assumptions, and errors without the blocked offset
 or working state. They do not prove equivalence to C++ across those differences.
 The old `build_bottom_up_correct` theorem still contains its original `sorry`;
-none of these experiments uses that theorem as evidence.
+none of these experiments uses that theorem as evidence. The four input
+conditions do not relate mapped values to target values. Thus the independent
+proofs establish termination and assertion exclusion, not equality of every
+successful stack to the target. That property requires a value-correspondence
+condition.

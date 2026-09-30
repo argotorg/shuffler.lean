@@ -1,4 +1,4 @@
-import Experiments.BuildBottomUp.CheckedSupport
+import Experiments.BuildBottomUp.Scans
 
 namespace BuildBottomUpExperiments.Checked
 
@@ -9,7 +9,7 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
   let mut state := initial
   let mut targetOffset := cursor
   while targetOffset < target.length do
-    if targetOffset < state.stack.length ∧ state.is_final targetOffset then
+    if targetOffset < state.stack.length ∧ state.isFinal targetOffset then
       targetOffset := targetOffset + 1
       continue
 
@@ -21,19 +21,7 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
         (Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hlen hsource))
       return ⟨res, state.trace.concat trace⟩
 
-    let mut urgentToDup : Option ℕ := none
-    for offset in [targetOffset : target.length] do
-      if (positionOf state offset).isSome then
-        continue
-      let slot ← slotAt target offset
-      if slot.is_junk ∨ slot.can_be_freely_generated ∨ spills.is_spilled slot then
-        continue
-      if let some sourceCopy := state.stack.shallowest_copy_position slot then
-        if ¬ state.stack.is_dup_reachable sourceCopy then
-          throw (.blocked (depthOf state sourceCopy - MAX_DUP_DEPTH))
-        if depthOf state sourceCopy = MAX_DUP_DEPTH ∧
-            sourceCopy.val ≠ targetOffset ∧ urgentToDup.isNone then
-          urgentToDup := some offset
+    let urgentToDup ← urgentScan targetOffset state
 
     if h : urgentToDup.isSome ∧ urgentToDup ≠ some targetOffset ∧
         state.stack.length - targetOffset < MAX_SWAP_DEPTH then
@@ -55,11 +43,7 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
       if (← slotAt state.stack targetOffset) = (← slotAt state.stack sourceForTargetOffset) then
         pos := targetOffset
       else
-        for candidate in (List.range state.stack.length).reverse.take (depthOf state sourceForTargetOffset) do
-          if (← slotAt state.stack candidate) = (← slotAt state.stack sourceForTargetOffset) ∧
-              ¬ state.is_final candidate then
-            pos := candidate
-            break
+        pos ← copyScan state sourceForTargetOffset pos
 
       ensure ((← slotAt state.stack pos) = (← slotAt state.stack sourceForTargetOffset))
         "selected copy differs from the bound slot"
@@ -74,11 +58,11 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
         state ← swapWith state pos
     else
       state ← generate state targetOffset
-      if state.is_final targetOffset then
+      if state.isFinal targetOffset then
         targetOffset := targetOffset + 1
         continue
 
-    ensure (¬ state.is_final targetOffset) "target slot is already final"
+    ensure (¬ state.isFinal targetOffset) "target slot is already final"
     if targetOffset ≠ state.stack.length - 1 then
       if ¬ isSwapReachable state targetOffset then
         throw (.blocked (depthOf state targetOffset - MAX_SWAP_DEPTH))

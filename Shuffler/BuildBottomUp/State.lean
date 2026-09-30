@@ -1,4 +1,4 @@
-import Shuffler.Mapping
+import Shuffler.State
 import Shuffler.Permute.Defs
 
 open Shuffler.Permute
@@ -8,16 +8,6 @@ def Except.attach (result : Except ε α) : Except ε {value // result = .ok val
   match result with
   | .error err => .error err
   | .ok value => .ok ⟨value, rfl⟩
-
-structure State (source target : Stack) (spills : SpillSet) where
-  planned_mapping : Mapping source.length target.length
-
-  stack : Stack
-  trace : Trace spills source stack
-  mapping : Mapping stack.length target.length
-
-  pending_generations : ℕ
-
 
 -- An offset is final when its assigned source has the same offset.
 -- Offsets outside the target's bounds are not final.

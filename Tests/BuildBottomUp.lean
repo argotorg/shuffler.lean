@@ -2,6 +2,10 @@ import Shuffler.BuildBottomUp.Theorems
 
 namespace BuildBottomUpTests
 
+-- Attaching a proof keeps both success values and errors unchanged.
+example (result : Except ShuffleErr ℕ) : result.attach.map Subtype.val = result := by
+  cases result <;> rfl
+
 -- The C++ helpers leave the counter unchanged; produce updates it.
 example (state : State source target spills) (slot : Value) (dest : Fin target.length)
     (hgen : slot.can_be_freely_generated ∨ spills.is_spilled slot)

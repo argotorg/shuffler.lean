@@ -1,5 +1,5 @@
 import Experiments.BuildBottomUp.ScanEquivalence
-import Experiments.BuildBottomUp.FiniteExecution
+import Experiments.BuildBottomUp.Verified
 
 namespace BuildBottomUpExperiments.Checked
 
@@ -81,8 +81,7 @@ theorem complete_size (state : State source target spills)
   omega
 
 -- Compare one iteration under the old function's well-founded induction.
--- The loop interpreter is a parameter so this proof also establishes finite
--- execution, independently of the logical value assigned to a divergent loop.
+-- Checked termination is proved separately in Verified.lean.
 theorem buildWith_eq
     (loop : Frame source target spills → M (Frame source target spills))
     (unfold_loop : ∀ frame, loop frame = (do
@@ -99,20 +98,23 @@ theorem buildWith_eq
   case case1 cursor state hi hs hp ha hd =>
     have hsize := complete_size state ⟨hi, hs, hp, ha⟩ hd
     rw [buildWith, unfold_loop, build_bottom_up.eq_def]
-    dsimp only [loopParts, finishLoop]
+    dsimp only [loopParts, finishLoop, urgentScan, copyScan]
+    simp only [isFinal_legacy_eq, shallowestCopyPosition_legacy_eq, isDupReachable_legacy_eq]
     simp [show ¬cursor < target.length by omega, hd, hsize, ensure_true, liftResult,
       pure, Except.pure, Except.mapError, bind, Except.bind]
   case case2 cursor state hi hs hp ha hd dest hf ih =>
     have hskip : cursor < state.stack.length ∧ state.is_final cursor := hf
     rw [buildWith, unfold_loop, build_bottom_up.eq_def]
-    dsimp only [loopParts, finishLoop]
+    dsimp only [loopParts, finishLoop, urgentScan, copyScan]
+    simp only [isFinal_legacy_eq, shallowestCopyPosition_legacy_eq, isDupReachable_legacy_eq]
     simp only [show cursor < target.length by omega, hd, hskip,
       and_self, ↓reduceIte, ↓reduceDIte, pure_bind]
     simpa only [buildWith, finishLoop] using ih
   case case3 cursor state hi hs hp ha hd dest hskip hnfinal hz ht hc =>
     have hskip' : ¬ (cursor < state.stack.length ∧ state.is_final cursor) := hskip
     rw [buildWith, unfold_loop, build_bottom_up.eq_def]
-    dsimp only [loopParts, finishLoop]
+    dsimp only [loopParts, finishLoop, urgentScan, copyScan]
+    simp only [isFinal_legacy_eq, shallowestCopyPosition_legacy_eq, isDupReachable_legacy_eq]
     simp only [show cursor < target.length by omega, hd, hskip', hz,
       ↓reduceIte, ↓reduceDIte,
       bind_assoc]
@@ -124,7 +126,8 @@ theorem buildWith_eq
     have hskip' : ¬ (cursor < state.stack.length ∧ state.is_final cursor) := hskip
     have inv : BuildBottomUpInvariant cursor state := ⟨hi, hs, hp, ha⟩
     rw [buildWith, unfold_loop, build_bottom_up.eq_def]
-    dsimp only [loopParts, finishLoop]
+    dsimp only [loopParts, finishLoop, urgentScan, copyScan]
+    simp only [isFinal_legacy_eq, shallowestCopyPosition_legacy_eq, isDupReachable_legacy_eq]
     simp only [hd, hskip', hz, ↓reduceDIte]
     erw [← newUrgent.eq_def cursor state, ← oldUrgent.eq_def cursor state]
     simp only [show cursor < target.length by omega, ↓reduceIte,
@@ -313,61 +316,6 @@ theorem buildBottomUp_eq (cursor : ℕ) (state : State source target spills)
   | error e => rfl
   | ok step => cases step <;> rfl
 
--- A finite loop execution followed by the final code gives the actual function result.
-theorem buildBottomUp_eq_of_loopRuns (cursor : ℕ) (state : State source target spills)
-    {r : M (Frame source target spills)}
-    (h : LoopRuns (loopParts source target spills).val (none, state, cursor) r) :
-    buildBottomUp cursor state = (r >>= finishLoop) := by
-  rw [buildBottomUp_as_loop, buildWith, h.result_eq]
-
--- The finite-execution claim is separate from equality of Lean values.
--- The same induction works for an interpreter that reports nontermination as
--- an assertion error. Equality to the old result rules out that error.
-theorem buildBottomUp_terminates (cursor : ℕ) (state : State source target spills)
-    (hi : LoopInvariant cursor state)
-    (hs : state.stack.length + state.pending_generations = target.length)
-    (hp : state.mapping.unmapped_target_slots = state.pending_generations)
-    (ha : ∀ i, state.is_available i) :
-    ∃ r, LoopRuns (loopParts source target spills).val (none, state, cursor) r := by
-  by_contra h
-  have heq := buildWith_eq (loopOr (.assertion "loop has no finite execution") (loopParts source target spills).val)
-    (fun frame => by
-      rw [loopOr_unfold]
-      cases hstep : (loopParts source target spills).val () frame with
-      | error e => rfl
-      | ok step => cases step <;> rfl)
-    cursor state hi hs hp ha
-  simp only [buildWith, loopOr, h, ↓reduceDIte, bind, Except.bind] at heq
-  cases hresult : build_bottom_up cursor state hi hs hp ha with
-  | error err => cases err; simp [hresult, liftResult, Except.mapError] at heq
-  | ok result => simp [hresult, liftResult, Except.mapError] at heq
-
-theorem buildBottomUp_noAssertion (cursor : ℕ) (state : State source target spills)
-    (inv : BuildBottomUpInvariant cursor state) (reason : String) :
-    buildBottomUp cursor state ≠ .error (.assertion reason) := by
-  rw [buildBottomUp_eq cursor state inv.processed inv.size inv.pending inv.available]
-  cases build_bottom_up cursor state inv.processed inv.size inv.pending inv.available with
-  | error err => cases err; simp [liftResult, Except.mapError]
-  | ok result => simp [liftResult, Except.mapError]
-
--- A finite loop execution, followed by the unchanged return code, produces
--- exactly the old result. This combines termination and result equality.
-theorem buildBottomUp_total (cursor : ℕ) (state : State source target spills)
-    (inv : BuildBottomUpInvariant cursor state) :
-    ∃ r, LoopRuns (loopParts source target spills).val (none, state, cursor) r ∧
-      (r >>= finishLoop) =
-        liftResult (build_bottom_up cursor state inv.processed inv.size inv.pending inv.available) := by
-  obtain ⟨r, hr⟩ := buildBottomUp_terminates cursor state
-    inv.processed inv.size inv.pending inv.available
-  refine ⟨r, hr, ?_⟩
-  have heq := buildBottomUp_eq cursor state inv.processed inv.size inv.pending inv.available
-  rw [buildBottomUp_as_loop, buildWith, hr.result_eq] at heq
-  exact heq
-
-def buildBottomUpVerified (cursor : ℕ) (state : State source target spills)
-    (inv : BuildBottomUpInvariant cursor state) : Except ShuffleErr (Result source spills) :=
-  restoreResult (buildBottomUp cursor state) (buildBottomUp_noAssertion cursor state inv)
-
 theorem liftResult_injective : Function.Injective (liftResult (α := α)) := by
   intro a b h
   cases a with
@@ -379,7 +327,7 @@ theorem liftResult_injective : Function.Injective (liftResult (α := α)) := by
     | ok b => simpa [liftResult, Except.mapError] using h
 
 theorem buildBottomUpVerified_eq (cursor : ℕ) (state : State source target spills)
-    (inv : BuildBottomUpInvariant cursor state) :
+    (inv : Invariant cursor state) :
     buildBottomUpVerified cursor state inv =
       build_bottom_up cursor state inv.processed inv.size inv.pending inv.available := by
   apply liftResult_injective
