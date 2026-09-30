@@ -1,7 +1,9 @@
 import Shuffler.State
 import Shuffler.Permute.Defs
 
---- types ---
+
+--- Types ------------------------------------------------------------------------------------------
+
 
 -- we use a custom error type since the core buildBottomUp definition is
 -- non-total and encodes assertion failure as a possibility.
@@ -16,7 +18,8 @@ abbrev Action (source target : Stack) (spills : SpillSet) :=
   StateT (State source target spills) M
 
 
---- utils ---
+--- Utils ------------------------------------------------------------------------------------------
+
 
 -- returns a proof of `condition` if it holds, or throws with an assertion error otherwise.
 def requires (condition : Prop) [Decidable condition] (reason : String) : M (PLift condition) :=
@@ -36,16 +39,19 @@ def index (size offset : ℕ) : M (Fin size) := do
 def slotAt (stack : Stack) (offset : ℕ) : M Value := do
   return stack[← index stack.length offset]
 
---- conversins ---
+
+--- Conversions ------------------------------------------------------------------------------------
+
 
 def Stack.offsetToDepth (stack : Stack) (idx : Fin stack.length) : Fin stack.length :=
   ⟨stack.length - 1 - idx, by omega⟩
 
--- Check the offset before converting it to a depth in the working stack.
 def State.depthOf (state : State source target spills) (offset : ℕ) : M (Fin state.stack.length) := do
   return state.stack.offsetToDepth (← index state.stack.length offset)
 
---- queries ---
+
+--- Queries ----------------------------------------------------------------------------------------
+
 
 def Stack.shallowestCopyPosition (stack : Stack) (slot : Value) : Option (Fin stack.length) :=
   (List.finRange stack.length).reverse.find?
@@ -89,11 +95,10 @@ instance (state : State source target spills) (dest : Fin target.length) :
 def State.positionOf (state : State source target spills) (offset : ℕ) : Option ℕ :=
   if h : offset < target.length then (state.mapping.symm ⟨offset, h⟩).map Fin.val else none
 
--- Actions
 
-namespace Shuffler.BuildBottomUp
+--- Lemmas -----------------------------------------------------------------------------------------
 
--- Convert between source offsets and the depths used by trace constructors.
+
 private lemma dup_stack_eq (stack : Stack) (copy : Fin stack.length) :
     stack ++ [stack[stack.length - ((stack.offsetToDepth copy).val + 1)]] =
       stack ++ [stack[copy]] := by
@@ -119,6 +124,12 @@ private lemma top_lt_length (stack : Stack) (pos : Fin stack.length) :
 
 private lemma stack_push_len (stack : Stack) (slot : Value) :
   stack.length + 1 = (stack ++ [slot]).length := by simp
+
+
+--- Actions ----------------------------------------------------------------------------------------
+
+
+namespace Shuffler.BuildBottomUp
 
 def push (slot : Value) (dest : Fin target.length) : Action source target spills Unit := do
   let state ← get
@@ -213,9 +224,10 @@ def generate (targetOffset : ℕ) : Action source target spills Unit := do
     else if ← state.isSwapReachable targetOffset then
       swapWith targetOffset
 
--- StateT passes the working state between actions.
--- C++ ++targetOffset is written at each advancing continue and at the loop tail.
--- C++ --targetOffset; continue is a plain continue here.
+
+--- Actions ----------------------------------------------------------------------------------------
+
+
 def buildBottomUp (cursor : ℕ) (initial : State source target spills) :
     M ((res : Stack) × Trace spills source res) :=
   StateT.run' (s := initial) do
