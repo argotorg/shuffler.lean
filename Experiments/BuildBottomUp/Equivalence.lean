@@ -313,6 +313,13 @@ theorem buildBottomUp_eq (cursor : ℕ) (state : State source target spills)
   | error e => rfl
   | ok step => cases step <;> rfl
 
+-- A finite loop execution followed by the final code gives the actual function result.
+theorem buildBottomUp_eq_of_loopRuns (cursor : ℕ) (state : State source target spills)
+    {r : M (Frame source target spills)}
+    (h : LoopRuns (loopParts source target spills).val (none, state, cursor) r) :
+    buildBottomUp cursor state = (r >>= finishLoop) := by
+  rw [buildBottomUp_as_loop, buildWith, h.result_eq]
+
 -- The finite-execution claim is separate from equality of Lean values.
 -- The same induction works for an interpreter that reports nontermination as
 -- an assertion error. Equality to the old result rules out that error.
@@ -382,6 +389,14 @@ theorem buildBottomUpVerified_eq (cursor : ℕ) (state : State source target spi
 /-- info: 'BuildBottomUpExperiments.Checked.buildBottomUp_eq' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms buildBottomUp_eq
+
+/--
+info: 'BuildBottomUpExperiments.Checked.buildBottomUp_eq_of_loopRuns' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
+#guard_msgs in
+#print axioms buildBottomUp_eq_of_loopRuns
 
 /-- info: 'BuildBottomUpExperiments.Checked.buildBottomUp_terminates' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
