@@ -54,7 +54,7 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
             pos := candidate
             break
 
-      assertThat ((← slotAt state.stack pos) == (← slotAt state.stack sourceForTargetOffset)) .copy
+      assertThat ((← slotAt state.stack pos) = (← slotAt state.stack sourceForTargetOffset)) .copy
       state ← swapDestinations state pos sourceForTargetOffset
       if pos == targetOffset then
         targetOffset := targetOffset + 1
@@ -70,14 +70,14 @@ def buildBottomUp (cursor : ℕ) (initial : State source target spills) : M (Res
         targetOffset := targetOffset + 1
         continue
 
-    assertThat (!decide (state.is_final targetOffset)) .final
+    assertThat (¬ state.is_final targetOffset) .final
     if targetOffset != state.stack.length - 1 then
       if !isSwapReachable state targetOffset then
         throw (.blocked (depthOf state targetOffset - MAX_SWAP_DEPTH))
       state ← swapWith state targetOffset
     targetOffset := targetOffset + 1
 
-  assertThat (state.stack.length == target.length) .size
+  assertThat (state.stack.length = target.length) .size
   return ⟨state.stack, state.trace⟩
 
 end BuildBottomUpExperiments.Checked

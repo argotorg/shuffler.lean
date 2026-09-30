@@ -75,6 +75,9 @@ The C++ assertions about the bound source, selected value, final placement,
 and final stack size appear as `assertThat` calls. Bounds and operation
 preconditions are checked inside the support functions.
 
+`assertThat` takes a proposition and a `Decidable` instance, so its calls use
+`=` and `¬` directly. The instance supplies the runtime check.
+
 ## What `mvcgen` does here
 
 `generateUntilBound` is a small loop that calls the same checked `generate`

@@ -18,7 +18,7 @@ theorem attach_ok {r : Except ε α} {a : α} (h : r = .ok a) :
 theorem attach_error {r : Except ε α} {e : ε} (h : r = .error e) :
     r.attach = .error e := by subst r; rfl
 
-theorem assert_true (reason : Assertion) : assertThat true reason = .ok () := rfl
+theorem assert_true (reason : Assertion) : assertThat True reason = .ok () := rfl
 
 theorem swapDestinations_eq (state : State source target spills)
     (a b : Fin state.stack.length) :
@@ -50,7 +50,7 @@ macro "finish_placement " c:term ", " st:term ", " hp:term ", " hn:term ", " adv
   simp only [and_cases]
   have hnf := $hn
   try dsimp +zetaDelta only at hnf
-  try simp +zetaDelta only [hnf, decide_false, Bool.not_false, assert_true, bind, Except.bind]
+  try simp +zetaDelta only [hnf, not_false_eq_true, assert_true, bind, Except.bind]
   by_cases hnotTop : $c ≠ ($st).stack.length - 1
   · try dsimp +zetaDelta only at hnotTop
     try simp +zetaDelta only [bne_iff_ne, ne_eq, hnotTop, not_false_eq_true, ↓reduceIte, ↓reduceDIte]
@@ -213,14 +213,14 @@ theorem buildWith_eq
           have hslot : slotAt state.stack cursor = .ok state.stack[current] := slotAt_eq _ current
           conv_lhs => rw [hbound, Option.map_some]
           dsimp only [dest] at hb
-          simp only [hb, eq_self, ↓reduceDIte, show decide (carrier.val ≥ cursor) = true by simp [hge],
+          simp only [hb, eq_self, ↓reduceDIte, hge,
             assert_true, hslot, slotAt_eq]
           by_cases hequal : state.stack[current] = state.stack[carrier]
           · have hequal' := hequal
             simp only [Fin.getElem_fin] at hequal' ⊢
             dsimp only [current, carrier, dest]
             dsimp +zetaDelta only at hequal'
-            simp only [hequal', ↓reduceIte, ↓reduceDIte, beq_self_eq_true, assert_true]
+            simp only [hequal', ↓reduceIte, ↓reduceDIte, eq_self, assert_true]
             rw [swapDestinations_eq state current carrier]
             simp only [pure, Except.pure]
             let chosen : state.MovableCopy carrier := ⟨current, hequal, hnfinal⟩
@@ -247,7 +247,7 @@ theorem buildWith_eq
               have heq := chosen.equal
               simp only [Fin.getElem_fin] at heq ⊢
               dsimp only [carrier, dest] at heq ⊢
-              simp only [heq, beq_self_eq_true, assert_true]
+              simp only [heq, eq_self, assert_true]
               rw [swapDestinations_eq state chosen.toFin carrier]
               simp only [pure, Except.pure]
               obtain ⟨hretag, hdest⟩ := inv.retag_copy (dest := dest) chosen hbound
