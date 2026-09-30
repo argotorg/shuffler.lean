@@ -8,11 +8,6 @@ def State.isFinal (state : State source target spills) (offset : ℕ) : Prop :=
     (state.mapping.symm ⟨offset, h⟩).map Fin.val = some offset
   else False
 
-instance (state : State source target spills) (offset : ℕ) :
-    Decidable (state.isFinal offset) := by
-  unfold State.isFinal
-  infer_instance
-
 def Stack.shallowestCopyPosition (stack : Stack) (slot : Value) :
     Option (Fin stack.length) :=
   (List.finRange stack.length).reverse.find?
@@ -31,15 +26,11 @@ def State.isAvailable (state : State source target spills) (target_offset : Fin 
   let slot := target[target_offset]
   slot.can_be_freely_generated ∨ spills.is_spilled slot ∨ (state.stack.shallowestCopyPosition slot).isSome
 
-instance (stack : Stack) (pos : Fin stack.length) :
-    Decidable (stack.isDupReachable pos) := by
-  unfold Stack.isDupReachable
-  infer_instance
-
-instance (stack : Stack) (pos : Fin stack.length) :
-    Decidable (stack.isSwapReachable pos) := by
-  unfold Stack.isSwapReachable
-  infer_instance
+instance (state : State source target spills) (offset : ℕ) : Decidable (state.isFinal offset) := by unfold State.isFinal; infer_instance
+instance (stack : Stack) (pos : Fin stack.length) : Decidable (stack.isDupReachable pos) := by unfold Stack.isDupReachable; infer_instance
+instance (stack : Stack) (pos : Fin stack.length) : Decidable (stack.isSwapReachable pos) := by unfold Stack.isSwapReachable; infer_instance
+instance (state : State source target spills) (targetOffset : Fin target.length) : Decidable (state.isAvailable targetOffset)
+  := by unfold State.isAvailable; infer_instance
 
 namespace BuildBottomUpExperiments.Checked
 
@@ -165,12 +156,14 @@ def swapDestinations (a b : ℕ) : Action source target spills Unit := do
 def swapWith (offset : ℕ) : Action source target spills Unit := do
   let state ← get
   let pos ← index state.stack.length offset
-  let ⟨hbelow, hreach, _hnfinal⟩ ← requires
-    (pos.val + 1 < state.stack.length ∧ state.stack.isSwapReachable pos ∧ ¬ state.isFinal pos.val)
-    "swap requires a reachable slot below the top that is not final"
   let depth := state.stack.offsetToDepth pos
-  have heq : state.stack.length = (state.stack.swap pos (state.stack.length - 1)).length :=
-    List.length_swap.symm
+
+  let ⟨hbelow⟩ ← requires (pos.val + 1 < state.stack.length) "cannot swap the top with itself"
+  let ⟨hreach⟩ ← requires (state.stack.isSwapReachable pos) "swap target is out of reach"
+  ensure (¬ state.isFinal pos.val) "swap target is already final"
+
+  have heq : state.stack.length = (state.stack.swap pos (state.stack.length - 1)).length := List.length_swap.symm
+
   set {
     state with
     stack := state.stack.swap pos (state.stack.length - 1)
