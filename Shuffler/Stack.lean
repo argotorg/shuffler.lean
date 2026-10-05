@@ -11,6 +11,7 @@ inductive Value : Type where
   | Var (id : VarId)
   | Lit (val : Word)
   | Wildcard
+  | FunctionReturnLabel
 
 deriving instance DecidableEq for Value
 
@@ -30,6 +31,7 @@ instance (v : Value) : Decidable v.can_be_freely_generated := by
 
 -- Function return labels are not modelled yet, so no value is one.
 def Value.isFunctionReturnLabel : Value → Bool
+| FunctionReturnLabel => true
 | _ => false
 
 theorem Value.can_be_freely_generated_of_is_junk (v : Value) (hjunk : v.is_junk) :
