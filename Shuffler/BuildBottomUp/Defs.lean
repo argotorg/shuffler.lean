@@ -193,15 +193,16 @@ def generate (targetOffset : ℕ) : Action source target spills Unit := do
 --- buildBottomUp -----------------------------------------------------------------------------------
 
 
+open scoped Lean.Order.MonadTail in
 def buildBottomUp (initial : State source target spills) :
     Except Error ((res : Stack) × Trace spills source res) :=
-  StateT.run' (s := initial) do
-    let mut targetOffset := 0
-    while targetOffset < target.length do
+  letI : Nonempty ((res : Stack) × Trace spills source res) := ⟨⟨source, .Lit source⟩⟩
+  let rec loop [Nonempty ((res : Stack) × Trace spills source res)] (targetOffset : ℕ) :
+      Action source target spills ((res : Stack) × Trace spills source res) := do
+    if targetOffset < target.length then
       let state ← get
       if targetOffset < state.stack.length ∧ state.isFinal targetOffset then
-        targetOffset := targetOffset + 1
-        continue
+        return ← loop (targetOffset + 1)
 
       if state.pending_generations = 0 then
         let ⟨hlen, hsource⟩ ← requires
@@ -228,13 +229,13 @@ def buildBottomUp (initial : State source target spills) :
       if h : urgentToDup.isSome ∧ urgentToDup ≠ some targetOffset ∧
           state.stack.length - targetOffset < MAX_SWAP_DEPTH then
         generate (urgentToDup.get h.1)
-        continue
+        return ← loop targetOffset
 
       let sourceTop := state.stack.length
       if urgentToDup.isNone ∧ sourceTop > targetOffset ∧ sourceTop < target.length ∧
           (state.positionOf sourceTop).isNone ∧ sourceTop - targetOffset < MAX_SWAP_DEPTH then
         generate sourceTop
-        continue
+        return ← loop targetOffset
 
       if let some boundForTarget := state.positionOf targetOffset then
         -- The slot bound for this offset must not be below it.
@@ -255,8 +256,7 @@ def buildBottomUp (initial : State source target spills) :
           "selected copy differs from the bound slot"
         swapDestinations pos sourceForTargetOffset
         if pos = targetOffset then
-          targetOffset := targetOffset + 1
-          continue
+          return ← loop (targetOffset + 1)
 
         let state ← get
         if pos ≠ state.stack.length - 1 then
@@ -267,8 +267,7 @@ def buildBottomUp (initial : State source target spills) :
         generate targetOffset
         let state ← get
         if state.isFinal targetOffset then
-          targetOffset := targetOffset + 1
-          continue
+          return ← loop (targetOffset + 1)
 
       let state ← get
       ensure (¬ state.isFinal targetOffset) "target slot is already final"
@@ -276,10 +275,12 @@ def buildBottomUp (initial : State source target spills) :
         if ¬ (← state.isSwapReachable targetOffset) then
           throw (.blocked ((← state.depthOf targetOffset) - MAX_SWAP_DEPTH))
         swapWith targetOffset
-      targetOffset := targetOffset + 1
+      return ← loop (targetOffset + 1)
 
     let state ← get
     ensure (state.stack.length = target.length) "stack and target sizes differ"
     return ⟨state.stack, state.trace⟩
+  partial_fixpoint
+  StateT.run' (s := initial) (loop 0)
 
 end Shuffler.BuildBottomUp
