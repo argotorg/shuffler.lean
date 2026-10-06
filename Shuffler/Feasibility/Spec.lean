@@ -4,7 +4,7 @@ import Mathlib.Data.List.Forall2
 
 /-!
 Review the trace restrictions, then the finite conditions, then the four
-statements at the end of this file. The instruction model is in
+core statements and the no-POP corollary at the end of this file. The instruction model is in
 `Shuffler/Trace.lean`; `MAX_DUP_DEPTH = 15` and `MAX_SWAP_DEPTH = 16` are
 zero-based depths from `Shuffler/Basic.lean`.
 
@@ -19,8 +19,8 @@ exact additions but allows any final order. `AppendOnlyGeneration` restricts
 the operations further: it forbids SWAP and keeps the original source prefix.
 
 The statements are propositions, not assumptions. Their proofs are in the
-modules named beside them. Import `Shuffler.Feasibility.Theorems` to load all
-four proofs. Keeping the proofs downstream avoids circular imports.
+modules named beside them. Import `Shuffler.Feasibility.Theorems` to load the
+core proofs and the corollary. Keeping the proofs downstream avoids circular imports.
 -/
 
 -- The trace adds values without changing or removing existing positions.
@@ -100,6 +100,11 @@ def Reserve (spills : SpillSet) (source target : Stack) (missing : Multiset Valu
 def CanPlace (spills : SpillSet) (source target : Stack) (missing : Multiset Value) : Prop :=
   ∃ trace : Trace spills source target, trace.noPop ∧ trace.additions = missing
 
+-- Counts determine the additions when POP is forbidden. Reserve also checks
+-- that target counts include all source counts; subtraction alone does not.
+def NoPopNeeded (spills : SpillSet) (source target : Stack) : Prop :=
+  Reserve spills source target ((target : Multiset Value) - (source : Multiset Value))
+
 end Shuffler.Placement
 
 namespace Shuffler.Generate
@@ -147,6 +152,47 @@ instance (spills : SpillSet) (source : Stack) (missing : Multiset Value) :
 
 end Shuffler.Generate.WithSwaps
 
+/-!
+Examples where the current BBU fails although a trace exists
+
+Stacks below are written bottom first. `0×n` means n literal zeros. Indices
+are zero-based, and the spill set is empty. These are constructed valid
+occurrence mappings; no claim is made that the mapping builder selects them.
+All four exact problems satisfy Reserve. The production checks are in
+`Tests/BuildBottomUpComplete.lean`.
+
+1. Fix an existing value before growth.
+   Source: [0×16, 1]. Target: [1, 0×16, 1]. Missing: [1].
+   Map source i to target i+1, leaving target 0 unbound.
+   BBU returns `.blocked 1`: it first uses DUP1 for the unbound target 0.
+   Growth puts the bottom zero beyond SWAP reach, so that position cannot
+   then become 1. A valid trace is `SWAP16; PUSH 1`. It assigns the existing
+   1 to target 0 and the new 1 to the top instead.
+
+2. Move a source into DUP reach before using it.
+   Let x be an unspilled variable.
+   Source: [x, 0×16]. Target: [0×16, x, x]. Missing: [x].
+   Map source 0 to target 16, source 16 to target 0, and each source i to
+   target i for 1≤i≤15. Target 17 is unbound.
+   BBU returns `.blocked 1`: its initial scan rejects the sole x at depth
+   16 before trying a swap. A valid trace is `SWAP16; DUP1`. This trace also
+   respects the original occurrence assignments.
+
+3. Avoid moving equal values only to satisfy occurrence assignments.
+   Source and target: [0×18]. Missing: [].
+   Map source 0 to target 17 and source 17 to target 0; leave other indices
+   fixed. BBU returns `.blocked 1` while trying to realize that permutation.
+   The bottom occurrence is outside SWAP reach. The empty trace already
+   reaches the exact target because every value is zero.
+
+4. Keep an initially reachable source available during growth.
+   Source: [0, x, 0×15]. Target: [0, x, 0, x, 0×15]. Missing: [0, x].
+   Map source i to target i+2, leaving targets 0 and 1 unbound.
+   The sole x starts at depth 15, within DUP reach. BBU fills the earlier
+   free hole first, then returns `.blocked 1` after x leaves DUP reach.
+   A valid trace is `DUP16; PUSH 0; SWAP1; SWAP15`.
+-/
+
 namespace Shuffler.Feasibility
 
 /-- The central equivalence: Reserve holds exactly when a production trace
@@ -189,5 +235,15 @@ Proved by Generate.WithSwaps.canGenerate_iff_ready in
 Shuffler/Generate/WithSwaps.lean. -/
 abbrev GenerationWithSwaps (spills : SpillSet) (source : Stack) (missing : Multiset Value) : Prop :=
   Generate.WithSwaps.CanGenerate spills source missing ↔ Generate.WithSwaps.Ready spills source missing
+
+/-- An exact test for whether this concrete target has a trace without POP.
+The additions are the target counts minus the source counts. This does not
+assert that allowing POP leaves all feasible problems unchanged.
+
+Proved by Placement.noPopNeeded_iff_exists_trace in
+Shuffler/Placement/NoPopNeeded.lean. -/
+abbrev PopFreePlacement (spills : SpillSet) (source target : Stack) : Prop :=
+  Placement.NoPopNeeded spills source target ↔
+    ∃ trace : Trace spills source target, trace.noPop
 
 end Shuffler.Feasibility
