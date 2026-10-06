@@ -104,7 +104,7 @@ structure State.Valid (state : State source target spills) : Prop where
   available : ∀ i, state.isAvailable i
 
 -- Bound targets retain their assigned values; unbound targets are generated.
--- TODO: this is too strong and does not account for wildcard targets
+-- Bound wildcard targets also retain their assigned source values.
 def State.expectedStack (state : State source target spills) : Stack :=
   List.ofFn fun dest : Fin target.length =>
     match state.mapping.symm dest with
