@@ -1,0 +1,23 @@
+LLVM: standard branch coverage; folded constant alternatives are omitted.
+Exported: both outcomes of each record, including folded constant alternatives.
+No error or assertion outcome is removed by a reachability review.
+/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/permute.c
+  LLVM: 46/49 outcomes (93.88%)
+  exported: 46/56 outcomes (82.14%); true 26/28, false 20/28
+  uncovered exported /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/permute.c:32:10-32:11 false (true=207326, false=0)
+  uncovered exported /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/permute.c:41:10-41:11 false (true=200842, false=0)
+  uncovered exported /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/permute.c:60:10-60:11 false (true=200802, false=0)
+  uncovered exported /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/permute.c:74:10-74:11 false (true=200802, false=0)
+  uncovered exported /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/permute.c:81:14-81:15 false (true=38548415, false=0)
+  uncovered exported /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/permute.c:82:13-82:20 false (true=38548415, false=0)
+  uncovered exported /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/permute.c:95:11-95:19 true (true=0, false=69199)
+  uncovered exported /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/permute.c:106:10-106:11 false (true=874, false=0)
+  uncovered exported /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/permute.c:109:14-109:15 false (true=81344, false=0)
+  uncovered exported /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/permute.c:134:11-134:30 true (true=0, false=369)
+/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/guided/oracle/solc_permute.inc
+  LLVM: 26/27 outcomes (96.30%)
+  exported: 26/28 outcomes (92.86%); true 14/14, false 12/14
+  uncovered exported /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/guided/oracle/solc_permute.inc:61:5-61:5 false (true=5922, false=0)
+  uncovered exported /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/guided/oracle/solc_permute.inc:80:10-80:14 false (true=874, false=0)
+TOTAL LLVM: 72/76 outcomes (94.74%)
+TOTAL EXPORTED: 72/84 outcomes (85.71%)
