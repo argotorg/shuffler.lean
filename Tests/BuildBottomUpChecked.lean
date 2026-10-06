@@ -1,4 +1,4 @@
-import Shuffler.BuildBottomUp.Termination.Theorems
+import Shuffler.BuildBottomUp.Defs
 import Tests.BuildBottomUpObservations
 
 namespace BuildBottomUpCheckedTests
@@ -166,13 +166,10 @@ private def urgentThenBlocked : State
 example : observe (buildBottomUp urgentThenBlocked) = .error (.blocked 1) := by
   native_decide
 
-example : Invariant 0 boundState :=
-  ⟨by intro i hi; omega, by decide, by decide, by intro i; fin_cases i; decide⟩
-
 example : observe (buildBottomUp boundState) =
     .ok ([.Lit 1], []) := by native_decide
 
--- The new definitions and the loop proof do not use sorryAx.
+-- The definition and its termination proof do not use sorryAx.
 /-- info: 'Shuffler.BuildBottomUp.buildBottomUp' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms buildBottomUp

@@ -1,4 +1,3 @@
-import Shuffler.BuildBottomUp.Lemmas.Helper
 import Tests.BuildBottomUpObservations
 
 open Shuffler.BuildBottomUp BuildBottomUpTestSupport
@@ -101,33 +100,9 @@ example : (produce 0).exec (emptyState [.Var ⟨37⟩] ∅) =
 example : (produce 0).exec (emptyState [.Var ⟨37⟩] {⟨38⟩}) =
     .error (.assertion "generated slot has no copy on the stack and is not spilled") := rfl
 
--- The helper contract proves the top binding and counter consistency for every success.
-example (state : State source target spills) (dest : Fin target.length)
-    (hdest : state.mapping.symm dest = none) (ha : state.isAvailable dest) :
-    Spec ((produce dest).exec state) (fun next =>
-      0 < next.stack.length ∧ next.positionOf dest.val = some (next.stack.length - 1)) := by
-  apply (Spec.of_action (produce_spec state dest hdest ha)).mono
-  intro next h
-  exact ⟨by have := h.size; omega, h.top⟩
-
-example (state : State source target spills) (dest : Fin target.length)
-    (hdest : state.mapping.symm dest = none) (ha : state.isAvailable dest)
-    (hp : state.mapping.unmapped_target_slots = state.pending_generations) :
-    Spec ((produce dest).exec state) (fun next =>
-      next.mapping.unmapped_target_slots = next.pending_generations) := by
-  apply (Spec.of_action (produce_spec state dest hdest ha)).mono
-  intro next h
-  have := h.count
-  have := h.pending_eq
-  omega
-
 /-- info: 'Shuffler.BuildBottomUp.produce' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms produce
-
-/-- info: 'Shuffler.BuildBottomUp.produce_spec' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in
-#print axioms produce_spec
 
 -- A bound destination cannot be filled again.
 example : (do

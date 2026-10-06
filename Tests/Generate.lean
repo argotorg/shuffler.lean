@@ -1,4 +1,4 @@
-import Shuffler.BuildBottomUp.Lemmas.Action
+import Tests.BuildBottomUpObservations
 
 open Shuffler.BuildBottomUp
 

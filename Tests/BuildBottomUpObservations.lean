@@ -1,5 +1,11 @@
 import Shuffler.BuildBottomUp.Defs
 
+-- Execute an update and retain its state. Errors have no state.
+def Action.exec (action : Action source target spills Unit) (state : State source target spills) :
+    Except Error (State source target spills) := do
+  let (_, next) ← action.run state
+  return next
+
 namespace BuildBottomUpTestSupport
 open Shuffler.BuildBottomUp
 

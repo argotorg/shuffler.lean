@@ -1,7 +1,9 @@
+import Shuffler.BuildBottomUp.Lemmas.StateT
 import Shuffler.Mapping
 import Shuffler.Permute.Defs
 import Shuffler.Stack
 import Shuffler.Trace
+import Std.Tactic.Do
 
 -- TODO: make numeric types here match the c++ types
 
@@ -18,8 +20,7 @@ structure State (source target : Stack) (spills : SpillSet) where
 
   pending_generations : ℕ
 
--- we use a custom error type since the core buildBottomUp definition is
--- non-total and encodes assertion failure as a possibility.
+-- BuildBottomUp reports blocked operations and assertion failures separately.
 inductive Error where
   | blocked (excess : ℕ)
   | assertion (reason : String)
@@ -193,12 +194,32 @@ def generate (targetOffset : ℕ) : Action source target spills Unit := do
 --- buildBottomUp -----------------------------------------------------------------------------------
 
 
-open scoped Lean.Order.MonadTail in
+set_option mvcgen.warning false in
+open Std.Internal.Do in
+private theorem generate_pending_generations (state next : State source target spills) (offset : ℕ)
+    (h : (generate offset).run state = .ok ((), next)) :
+    next.pending_generations = state.pending_generations - 1 := by
+  have hs : ⦃fun s : State source target spills => s.pending_generations = state.pending_generations⦄
+      generate offset
+      ⦃fun _ s => s.pending_generations = state.pending_generations - 1; epost⟨fun _ => True⟩⦄ := by
+    vcgen [generate, produce, push, dup, swapDestinations, swapWith,
+      ensure, requires, index, slotAt, State.isSwapReachable, State.depthOf]
+    all_goals simp_all
+  have hp := hs.le_wp state rfl
+  rw [StateT.wp_apply_eq, h] at hp
+  exact hp
+
+
+attribute [local wf_preprocess] StateT.run bind_eq state_bind_apply state_get_apply
+  state_dite_apply bindWithEquation_ok
+
+open Std.Internal.Do in
+set_option mvcgen.warning false in
+set_option maxHeartbeats 2000000 in
 def buildBottomUp (initial : State source target spills) :
     Except Error ((res : Stack) × Trace spills source res) :=
-  letI : Nonempty ((res : Stack) × Trace spills source res) := ⟨⟨source, .Lit source⟩⟩
-  let rec loop [Nonempty ((res : Stack) × Trace spills source res)] (targetOffset : ℕ) :
-      Action source target spills ((res : Stack) × Trace spills source res) := do
+  let rec loop (targetOffset : ℕ) :
+      Action source target spills ((res : Stack) × Trace spills source res) := fun current => StateT.run (s := current) do
     if targetOffset < target.length then
       let state ← get
       if targetOffset < state.stack.length ∧ state.isFinal targetOffset then
@@ -280,7 +301,23 @@ def buildBottomUp (initial : State source target spills) :
     let state ← get
     ensure (state.stack.length = target.length) "stack and target sizes differ"
     return ⟨state.stack, state.trace⟩
-  partial_fixpoint
+  -- Advancing reduces the first component; generating before a retry reduces the second.
+  termination_by current => (target.length - targetOffset, current.pending_generations)
+  decreasing_by
+    all_goals try exact Prod.Lex.left _ _ (by omega)
+    all_goals
+      apply Prod.Lex.right
+      rename_i hgen
+      have hg := generate_pending_generations _ _ _ hgen
+      clear hgen
+      let current : State source target spills := by assumption
+      have hsame := preserves_state_of_run _ current _ (by assumption) (by
+        simp only [Std.Legacy.Range.forIn'_eq_forIn'_range']
+        vcgen [slotAt, index, State.depthOf] invariants
+        · fun _ _ _ s => s = current
+        all_goals simp_all)
+      rw [hg, hsame]
+      exact Nat.sub_lt (Nat.pos_of_ne_zero (by assumption)) (by decide)
   StateT.run' (s := initial) (loop 0)
 
 end Shuffler.BuildBottomUp
