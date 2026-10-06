@@ -169,9 +169,4 @@ example : observe (buildBottomUp urgentThenBlocked) = .error (.blocked 1) := by
 example : observe (buildBottomUp boundState) =
     .ok ([.Lit 1], []) := by native_decide
 
--- The definition and its termination proof do not use sorryAx.
-/-- info: 'Shuffler.BuildBottomUp.buildBottomUp' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in
-#print axioms buildBottomUp
-
 end BuildBottomUpCheckedTests

@@ -1,3 +1,3 @@
 import Shuffler.Permute.Theorems
 import Shuffler.Mapping
-import Shuffler.BuildBottomUp.Defs
+import Shuffler.BuildBottomUp.Theorems

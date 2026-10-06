@@ -92,6 +92,16 @@ def State.positionOf (state : State source target spills) (offset : ℕ) : Optio
   if h : offset < target.length then (state.mapping.symm ⟨offset, h⟩).map Fin.val else none
 
 
+--- Predicates -------------------------------------------------------------------------------------
+
+
+-- Conditions required when buildBottomUp starts at offset zero.
+structure State.Valid (state : State source target spills) : Prop where
+  size : state.stack.length + state.pending_generations = target.length
+  pending : state.mapping.unmapped_target_slots = state.pending_generations
+  available : ∀ i, state.isAvailable i
+
+
 --- Actions ----------------------------------------------------------------------------------------
 
 

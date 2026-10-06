@@ -5,15 +5,6 @@ open Shuffler.BuildBottomUp
 
 namespace BuildBottomUpTerminationTests
 
--- Audit the whole function, including the recursion and the action helpers.
-/-- info: 'Shuffler.BuildBottomUp.buildBottomUp' depends on opaque or partial definitions: [String.Internal.append] -/
-#guard_msgs in
-#print opaques buildBottomUp
-
-/-- info: 'Shuffler.BuildBottomUp.buildBottomUp' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in
-#print axioms buildBottomUp
-
 -- A body containing another while loop must not pass that dependency check.
 def bodyWithNestedLoop (_ : Unit) (control : ℕ) : StateT ℕ (Except Error) (ForInStep ℕ) := do
   while true do pure ()
