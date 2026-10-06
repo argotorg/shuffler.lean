@@ -22,6 +22,7 @@ inductive Trace (spills : SpillSet) : Stack → Stack → Type where
     → (hhi : idx ≤ MAX_SWAP_DEPTH)
     → Trace spills start prev
     → Trace spills start (prev.swap (prev.length - 1) (prev.length - 1 - idx))
+  -- TODO: dup should not accept a function return label
   | Dup
     : (idx : ℕ)
     → (hlen : idx ≤ prev.length)

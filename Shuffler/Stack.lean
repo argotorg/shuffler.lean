@@ -50,7 +50,7 @@ theorem Value.can_be_freely_generated_of_is_junk (v : Value) (hjunk : v.is_junk)
 abbrev Stack := List Value
 
 def Stack.offsetToDepth (stack : Stack) (idx : Fin stack.length) : Fin stack.length :=
-  ⟨stack.length - 1 - idx, by omega⟩
+  ⟨stack.length - idx - 1, by omega⟩
 
 def Stack.shallowestCopyPosition (stack : Stack) (slot : Value) : Option (Fin stack.length) :=
   (List.finRange stack.length).reverse.find?

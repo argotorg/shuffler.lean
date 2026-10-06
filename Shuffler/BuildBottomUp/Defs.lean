@@ -22,6 +22,7 @@ structure State (source target : Stack) (spills : SpillSet) where
 
 -- BuildBottomUp reports blocked operations and assertion failures separately.
 inductive Error where
+  -- TODO: the c++ has the offset of the blocked value in the blocked error
   | blocked (excess : ℕ)
   | assertion (reason : String)
   deriving DecidableEq, Repr
@@ -55,6 +56,7 @@ def slotAt (stack : Stack) (offset : ℕ) : Except Error Value := do
 --- Conversions ------------------------------------------------------------------------------------
 
 
+-- TODO: add a Depth / Offset type
 def State.depthOf (state : State source target spills) (offset : ℕ) : Except Error (Fin state.stack.length) := do
   return state.stack.offsetToDepth (← index state.stack.length offset)
 
@@ -65,9 +67,7 @@ def State.depthOf (state : State source target spills) (offset : ℕ) : Except E
 def State.isSwapReachable (state : State source target spills) (offset : ℕ) : Except Error Bool := do
   return decide ((← depthOf state offset).val ≤ MAX_SWAP_DEPTH)
 
-instance (stack : Stack) (pos : Fin stack.length) : Decidable (stack.isSwapReachable pos) :=
-  by unfold Stack.isSwapReachable; infer_instance
-
+-- TODO: can this be in Except and use `index`
 def State.isFinal (state : State source target spills) (offset : ℕ) : Prop :=
   if h : offset < target.length then
     (state.mapping.symm ⟨offset, h⟩).map Fin.val = some offset
@@ -83,11 +83,13 @@ def State.isAvailable (state : State source target spills) (target_offset : Fin 
   spills.is_spilled slot ∨
   (state.stack.shallowestCopyPosition slot).isSome
 
+-- TODO: what does infer_instance actually do?
 instance (state : State source target spills) (dest : Fin target.length) :
     Decidable (state.isAvailable dest) := by
   unfold State.isAvailable
   infer_instance
 
+-- TODO: this is total over ℕ unlike the c++. should probably also use `index` and require correct bounds.
 def State.positionOf (state : State source target spills) (offset : ℕ) : Option ℕ :=
   if h : offset < target.length then (state.mapping.symm ⟨offset, h⟩).map Fin.val else none
 
@@ -102,6 +104,7 @@ structure State.Valid (state : State source target spills) : Prop where
   available : ∀ i, state.isAvailable i
 
 -- Bound targets retain their assigned values; unbound targets are generated.
+-- TODO: this is too strong and does not account for wildcard targets
 def State.expectedStack (state : State source target spills) : Stack :=
   List.ofFn fun dest : Fin target.length =>
     match state.mapping.symm dest with
@@ -135,6 +138,7 @@ def dup (offset : ℕ) (dest : Fin target.length) : Action source target spills 
   let copy ← index state.stack.length offset
   let depth := state.stack.offsetToDepth copy
 
+  -- TODO: mapping.symm should have a positionOf abbrev and destinationOf for mapping
   let ⟨hbound⟩ ← requires (state.mapping.symm dest = none) "destination already bound to a slot"
   let ⟨hdup⟩ ← requires (state.stack.isDupReachable copy) "copy is outside DUP reach"
 
