@@ -1,0 +1,10 @@
+filc safety error: cannot write pointer with ptr >= upper.
+    pointer: 0x79024490c7b4,0x79024490c770,0x79024490c780
+    expected 4 writable bytes.
+semantic origin:
+    (bounds-probe-c) spikes/clight-permute/build/filc/checks/bounds-probe.c:2:126: main
+check scheduled at:
+    (bounds-probe-c) spikes/clight-permute/build/filc/checks/bounds-probe.c:2:126: main
+    (libc.so) src/env/__libc_start_main.c:79:7: __libc_start_main
+    (libpizlo.so) <runtime>: start_program
+[25449] filc panic: thwarted a futile attempt to violate memory safety.

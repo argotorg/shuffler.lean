@@ -111,6 +111,13 @@ the unchanged reached definitions.
 
 ## Other checks
 
+[Fil-C 0.686](FILC_RESULTS.md) passed 4,435 exhaustive cases, boundary and
+rejection cases, 100,000 random cases, and 802 unique retained corpus
+inputs. Both implementations used the Fil-C runtime. Separate C and C++
+probes detected writes beyond the allocation bounds but did not detect a
+one-element overrun within the allocator's rounding. The report retains
+that limit. This was random testing and replay, not guided Fil-C fuzzing.
+
 The earlier GCC 15.3.0 and Clang 21.1.8 matrix passed all six configurations
 (`-O2`, `-O3`, ASan+UBSan for each compiler). Each configuration ran 4,435
 exhaustive cases, 20,000 random cases, and the boundary/rejection cases.

@@ -95,6 +95,14 @@ recorded in `pkgs/tools/security/aflplusplus/default.nix` at the Nixpkgs pin.
 
 Flocq remains a proof dependency even though this program uses only
 integers. Clight's semantics includes floating point definitions.
+
+The Fil-C tests use the official 0.686 musl package. Its compiler and C++
+libraries use Apache-2.0 with LLVM exceptions, its runtime uses BSD terms,
+and its musl libraries use MIT and the retained permissive notices. The
+package and license-file hashes are recorded in
+[tests/FILC_RESULTS.md](tests/FILC_RESULTS.md). This test toolchain is
+separate from the production printer and Rocq dependencies.
+
 The solc test oracle uses upstream Solidity source under GPL-3.0-or-later;
 its pinned source and extraction boundary are documented with the tests.
 None of these licenses limits use to non-commercial activity.

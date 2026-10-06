@@ -199,3 +199,11 @@ wrappers, then call the actual differential or rejection checker. They
 compile the generated C and pinned solc oracle with ASan and UBSan. The
 report tests check missing, malformed, inconsistent, macro, lambda, and
 constant-condition records; missing coverage must cause an error.
+
+## Fil-C
+
+[run-filc.sh](run-filc.sh) builds the actual C and C++ implementations with
+the pinned Fil-C package and its libraries. It checks runtime linkage,
+runs separate bounds-error probes, runs the exhaustive and random drivers,
+and replays retained guided inputs. See [FILC_RESULTS.md](FILC_RESULTS.md)
+for the commands, dependency licenses, results, and detection limits.

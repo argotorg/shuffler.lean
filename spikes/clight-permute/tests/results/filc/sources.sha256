@@ -1,0 +1,5 @@
+a120dccaaa1a7783231f7b4482f76f515ef6c099f4e0e73279f1228e634cfb78  spikes/clight-permute/permute.c
+4534e19c88f2dfebf132fd47f194b5c5a408f349c9a604f78b651a94bacee15e  spikes/clight-permute/tests/oracle.cpp
+e647c0e7ea62ccb4d5daec3d67ca67e2a27816507527cbf23e107d9c2347793d  spikes/clight-permute/tests/filc-run.py
+09ed150be604a5af5bf22570ce22bb377e6a0c3abbd68a593c023478126e83e9  spikes/clight-permute/tests/filc-replay.c
+10da647fc8a4f67e0ccf8ed552ef1908ec84640bbcb0056359ec8e60ffda911a  spikes/clight-permute/tests/run-filc.sh
