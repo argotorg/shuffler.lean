@@ -6,13 +6,13 @@ set_option mvcgen.warning false
 
 namespace Shuffler.BuildBottomUp
 
-private theorem range_offset_lt
+theorem range_offset_lt
     (h : List.range' start (stop - start) = pref ++ offset :: suff) : offset < stop := by
   have hmem : offset ∈ List.range' start (stop - start) := by rw [h]; simp
   have := List.mem_range'.mp hmem
   omega
 
-private theorem copy_offset_lt
+theorem copy_offset_lt
     (h : (List.range size).reverse.take depth = pref ++ offset :: suff) : offset < size := by
   have hmem : offset ∈ (List.range size).reverse.take depth := by rw [h]; simp
   exact List.mem_range.mp (List.mem_reverse.mp (List.mem_of_mem_take hmem))

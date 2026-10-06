@@ -101,6 +101,13 @@ structure State.Valid (state : State source target spills) : Prop where
   pending : state.mapping.unmapped_target_slots = state.pending_generations
   available : ∀ i, state.isAvailable i
 
+-- Bound targets retain their assigned values; unbound targets are generated.
+def State.expectedStack (state : State source target spills) : Stack :=
+  List.ofFn fun dest : Fin target.length =>
+    match state.mapping.symm dest with
+    | some pos => state.stack[pos]
+    | none => target[dest]
+
 
 --- Actions ----------------------------------------------------------------------------------------
 
