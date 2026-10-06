@@ -16,23 +16,28 @@ inductive Value : Type where
 deriving instance DecidableEq for Value
 
 def Value.is_junk : Value → Prop
-| Wildcard => true
-| _ => false
+| Wildcard => True
+| _ => False
 
 instance (v : Value) : Decidable v.is_junk := by
   cases v <;> unfold Value.is_junk <;> infer_instance
 
 def Value.can_be_freely_generated : Value → Prop
-| Var _ => false
-| _ => true
+| Lit _ => True
+| Wildcard => True
+| Var _ => False
+| FunctionReturnLabel => False
 
 instance (v : Value) : Decidable v.can_be_freely_generated := by
   cases v <;> unfold Value.can_be_freely_generated <;> infer_instance
 
 -- Function return labels are not modelled yet, so no value is one.
-def Value.isFunctionReturnLabel : Value → Bool
-| FunctionReturnLabel => true
-| _ => false
+def Value.isFunctionReturnLabel : Value → Prop
+| FunctionReturnLabel => True
+| _ => False
+
+instance (v : Value) : Decidable v.isFunctionReturnLabel := by
+  cases v <;> unfold Value.isFunctionReturnLabel <;> infer_instance
 
 theorem Value.can_be_freely_generated_of_is_junk (v : Value) (hjunk : v.is_junk) :
     v.can_be_freely_generated := by
