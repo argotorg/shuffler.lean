@@ -29,7 +29,7 @@ a temporary directory and then runs `coqchk` on all five modules.
 
 Validation completed: all five modules compile, all eight execution tests
 pass, and `coqchk` accepts the modules and their dependencies. The spike has
-409 lines of Rocq, including tests; its proof scope is smaller than the Lean
+414 lines of Rocq, including tests and license notices; its proof scope is smaller than the Lean
 development, so this is not a full-port size comparison.
 
 ## What the spike contains
