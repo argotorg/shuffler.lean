@@ -1,8 +1,10 @@
 # KLEE and translation-review status
 
-Snapshot: **2026-10-06 22:04:43 UTC**. The active bug search ends at
-**2026-10-07 09:00 UTC (11:00 CEST)**. Owner: `/root/lgpl_build`.
-The work is active. No active job was stopped for this status report.
+Final snapshot: **2026-10-06 22:12:20 UTC**. Owner: `/root/lgpl_build`.
+**Stopped at the user's request.** That request overrides the earlier
+deadline of 2026-10-07 09:00 UTC (11:00 CEST). All active jobs owned by this
+task were stopped. Logs and artifacts were retained. No further test,
+proof, fix, or review will start in this agent.
 
 Repository: `/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo`.
 All artifact paths below are relative to this repository.
@@ -25,16 +27,17 @@ lengths 1 through 4. Every input element is an unrestricted symbolic
 | 2 | 2 | 3 | Passed with completion markers |
 | 3 | 6 | 13 | Passed with completion markers |
 | 4 | 24 | 75 | Passed with completion markers |
-| 5 | 16 of 120 finished in corrected run | 541 | Running; no complete-domain claim yet |
+| 5 | 36 of 120 finished in corrected run | 541 | Stopped; no complete-domain claim yet |
 
-At the snapshot, the corrected run has **49 of 153 cases** and **10,541
+At the final snapshot, the corrected run has **69 of 153 cases** and **21,361
 completed paths**, with zero errors and zero partial paths in finished
-cases. The older run, without the completion guard, has **147 of 153
-cases** and **63,559 completed paths**. It remains useful raw evidence,
+cases. The older run, without the completion guard, finished **153 of 153
+cases** and **66,805 completed paths**. It remains useful raw evidence,
 but the corrected run is the intended final evidence. A completed full
 run through length five must have **153 cases and 66,805 paths**.
 
-The corrected large-profile campaign has passed **12 of 13 profiles**:
+The corrected large-profile campaign finished **13 of 13 profiles**,
+with **99 marked paths** in total:
 
 - Lengths 17, 18, and 19: exchange destinations 0 and 1; values are
   `[A,B,C,...,C]`. Each passed 13 paths. This reaches success, immediate
@@ -43,9 +46,8 @@ The corrected large-profile campaign has passed **12 of 13 profiles**:
   are copies of A followed by B. Each passed 3 paths.
 - Lengths 255, 256, 257, 512, and 1024: reverse destinations; values
   alternate A and B. Each passed 3 paths.
-- Lengths 33 and 257: rotate destinations by one; values repeat A,B,C.
+- Lengths 33, 257, and 1024: rotate destinations by one; values repeat A,B,C.
   Each passed 13 paths.
-- The length-1024 rotation with A,B,C is still running.
 
 Each symbol is an unrestricted unsigned value, and different symbols
 may be equal. These are explicit restricted families. They do not prove
@@ -114,16 +116,18 @@ It did not affect semantic assertions or path/error counts. The fixed
 parser skips rows after `calls=`, checks the counter layout, and requires
 boolean instruction-coverage values. Four tests pass.
 
-The old running `klee-complete` process loaded the old parser. After it
-finishes, repair only its manifest counters from raw `run.istats`:
+The old `klee-complete` process loaded the old parser. It finished before
+the stop request. Its manifest counters have now been repaired from raw
+`run.istats` with this command:
 
 ```sh
 python3 spikes/clight-permute/tests/equiv-alive2/klee_coverage.py \
   spikes/clight-permute/build/equiv-alive2/klee-complete/manifest.json
 ```
 
-Also repair the older `klee-mutations-final/*/manifest.json` files. Do not
-rewrite old stdout logs to conceal the original reporting error. The
+The older `klee-mutations-final/*/manifest.json` files were also repaired.
+Raw stdout logs remain unchanged. Do not rewrite them to conceal the
+original reporting error. The
 current `*-checked` runs use the fixed parser.
 
 ### Large-case file names
@@ -133,7 +137,31 @@ cases exceeded file-name limits. The runner now uses a SHA-256 suffix
 when the name is long and retains the full permutation in the manifest.
 Five domain/name tests pass.
 
-## Pending printer lead
+## Printer initialization finding
+
+Update **2026-10-06 22:07:24 UTC**: the isolated case is confirmed.
+`/root/c_memory_review` checked `uninitialized_copy_returns_zero` in Rocq
+for a function with the normal ABI and body `v8 = v9; return 0U;`, for all
+arguments. The unchanged printer accepts it. GCC 15.3 reports that v9 is
+used uninitialized. Reproduction files are under
+`spikes/clight-permute/build/equiv-saw/undef-probe/`.
+
+A copied actual Permute C source with a prefixed `v8 = v8;` also passes
+the corrected KLEE comparison at length three, permutation `[1,0,2]`:
+13 marked paths, no errors. This confirms that KLEE's selected safety
+checks do not reject an unused uninitialized scalar read. Evidence:
+`build/equiv-alive2/klee-uninitialized-copy.c` and
+`build/equiv-alive2/klee-uninitialized-copy/`.
+
+The memory-review agent was composing the complete Permute Clight call
+specification with the same self-copy prefix. The Frama-C agent confirmed
+that its RTE pass retains the C self-copy and creates an initialization
+obligation. WP reduces that obligation to **`Prove: false`** under the
+normal valid-permutation contract. Evidence:
+`build/frama-c/undef-prefix-1/rte.c:56` and
+`build/frama-c/undef-prefix-1/initialization-wp.log`. The first property
+filter selected zero goals; that unsuccessful attempt is retained in
+`wp.log` and is not the safety witness.
 
 Clight can copy `Vundef` from an uninitialized temporary into another
 temporary and continue. An unused read of an uninitialized automatic C
@@ -146,13 +174,17 @@ definite assignment for every accepted AST. The current Permute source
 appears to initialize its used temporaries. This is a limit of the general
 printer-subset claim, not yet a production counterexample.
 
-`/root/c_memory_review` owns the isolated Clight/printer probe and will
-report the result. No production printer or Rocq file was changed by this
+`/root/c_memory_review` owns the isolated Clight/printer probe and its
+preserved reproduction. No production printer or Rocq file was changed by this
 agent. A separate interface limit is that the oracle discards final
 `Emission::m_mapping`; full Emission-state equivalence would need a relation
 for its equal-value mapping exchanges.
 
-## Active jobs
+## Stopped and finished jobs
+
+There are **no task-owned KLEE/compiler jobs still running**. The corrected
+full-domain run and its current compiler/KLEE children received SIGTERM.
+Its session returned exit status 143. The other campaigns had finished.
 
 Use this shell prefix for all commands:
 
@@ -163,12 +195,25 @@ nix develop --impure --expr \
 
 | Job | Session | Main process PID | Status at snapshot |
 | --- | ---: | ---: | --- |
-| Old complete n1–5 run | 55474 | 32184 | 147/153 cases |
-| Corrected complete n1–5 run | 43858 | 53894 | 49/153 cases |
-| Corrected large profiles | 8055 | 53893 | 12/13 profiles |
+| Old complete n1–5 run | 55474 | 32184 | Finished: 153/153 cases |
+| Corrected complete n1–5 run | 43858 | 53894 | Stopped: 69/153 cases |
+| Corrected large profiles | 8055 | 53893 | Finished: 13/13 profiles |
 
-The active length-1024 profile runner PID is 59118; its current KLEE child
-PID is 59208. Worker PIDs in the n1–5 runs change after each case.
+The final stopped process set was: shell 53892, runner 53894, KLEE workers
+62967/62995/63006, and compiler processes 63057/63059. A post-stop process
+check found no active runner/profile/coverage process owned by this task.
+The former length-1024 profile runner 59118 and KLEE child 59208 had
+already finished. Coverage-repair session 72001 also finished with status 0.
+
+The corrected campaign has four unrecorded case directories. They were
+in progress when stopped and must not be counted as completed evidence:
+
+```text
+n5-1-3-0-2-4
+n5-1-3-0-4-2
+n5-1-3-2-0-4
+n5-1-3-2-4-0
+```
 
 Commands after the shell prefix:
 
@@ -241,16 +286,36 @@ wrapper/parser, coverage parser, upstream allocation fetcher, mutation
 campaigns, large-profile campaign, README, and their tests. Raw results
 are under ignored `spikes/clight-permute/build/equiv-alive2/`.
 
-## Next work
+## Exact resume command and remaining work
 
-1. Finish the corrected full n1–5 run and the final length-1024 profile.
+Do not resume without the user's later instruction. To restart the full
+marked campaign, use a **new** output directory. This command does not
+overwrite or infer completion from the stopped run:
+
+```sh
+nix develop --impure --expr \
+  'import ./spikes/clight-permute/tests/equiv-alive2/klee-shell.nix' \
+  --command python3 spikes/clight-permute/tests/equiv-alive2/run-klee.py \
+  --sizes 1,2,3,4,5 --jobs 4 --max-time 240s \
+  --output spikes/clight-permute/build/equiv-alive2/klee-resumed-full \
+  > spikes/clight-permute/build/equiv-alive2/klee-resumed-full-command.log 2>&1
+```
+
+For a resume that reuses completed cases, first check every source hash
+in `klee-complete-checked/manifest.json` against the current file. Then
+run the **84 missing length-five permutations**, each with a fresh
+output directory, and join only successful marked results. The recorded
+length-five prefix ends at `[1,2,4,3,0]`. The four unrecorded directories
+above are among those missing cases. If any source or proof harness has
+changed, use the fresh full run instead.
+
+1. Resume or restart the corrected full n1–5 run after authorization.
 2. Require all 153 cases and 66,805 marked paths for the full small-domain
    result. Do not infer completion from the old campaign.
-3. Repair old coverage manifests after their processes finish. Keep raw
-   logs unchanged.
+3. Old coverage manifests have been repaired. Keep raw logs unchanged.
 4. Update the README with final counts and retain a concise evidence set
    for parent archival.
-5. Review the isolated Vundef/printer probe with the parent. Keep the
+5. Review the confirmed Vundef/printer probe with the parent. Keep the
    current-code claim separate from the general accepted-subset claim.
-6. Continue the bug search until the stated deadline. Small-domain proofs
-   and selected large profiles do not close the all-size C/C++ proof gap.
+6. Follow the user's next scope and deadline. Small-domain proofs and
+   selected large profiles do not close the all-size C/C++ proof gap.

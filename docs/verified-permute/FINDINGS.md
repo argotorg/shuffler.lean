@@ -1,8 +1,8 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 # Confirmed findings and open leads
 
-Snapshot: 2026-10-06 22:04 UTC. The search remains active until
-2026-10-07 09:00 UTC. Production Permute has no concrete failing input yet.
+Final stop snapshot: 2026-10-06 22:14 UTC. The user stopped the search for
+a handoff. Production Permute has no concrete failing input yet.
 
 ## F1: KLEE accepts paths that skip the comparisons
 
@@ -61,9 +61,10 @@ declared assumptions; `coqchk` alone is not an axiom-policy check.
 `check-assumptions.py` now permits only the six inherited assumptions found
 in the baseline report. `tests/proof-challenge/ProofContract.v` states the
 required public theorem type independently. The integrated baseline passed.
-The isolated guard controls still need their output capture fixed: warnings
-were mixed into the assumptions report, causing even the baseline to fail.
-Do not claim those controls passed yet.
+The isolated guard driver initially mixed warnings into the assumptions
+report. That output capture is corrected. The repeat passed baseline,
+admitted-theorem, and false-axiom controls before the user stop. The last
+two controls remain unfinished in that repeat; do not call it complete.
 
 Evidence: `spikes/clight-permute/build/proof-challenge/guards/` and
 `/tmp/permute-proof-guards.log`.
@@ -95,10 +96,21 @@ it. GCC 15.3 reports the uninitialized `v9` read. The C automatic-local
 read needs a separate definedness argument; the Clight result alone does
 not provide it.
 
-Artifacts: `spikes/clight-permute/build/equiv-saw/undef-probe/`.
+The stronger reproduction prefixes the actual Permute AST with
+`Sset i (reg i)`. Its proof preserves the existing full Clight call's
+result, final memory, and trace. Both `coqc` and full `coqchk` passed.
+The unchanged printer emits `v8 = v8;` before initialization. GCC and
+Clang both report the uninitialized read. Corrected KLEE still accepts
+that C variant for all 13 marked size-three paths. Frama-C's independent
+initialization check instead generates an obligation `Prove: false`.
+
+Artifacts: `spikes/clight-permute/build/equiv-saw/undef-probe/`,
+`build/equiv-alive2/klee-uninitialized-copy/`, and
+`build/frama-c/undef-prefix-1/initialization-wp.log`, all under the spike.
 The checking agent confirmed that current printer sources match the
-compiled sources used for the probe. Current Permute's temporary reads
-appear initialized; this is not yet a current Permute memory witness.
+compiled sources used for the probe. The unchanged Permute's temporary
+reads appear initialized. This is a demonstrated proof/translation-chain
+gap under mutation, not a failing input for the unchanged production AST.
 
 ## Explicit boundaries, not production failures
 

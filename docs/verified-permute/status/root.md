@@ -1,8 +1,29 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 # Root agent handoff
 
-Snapshot: 2026-10-06 22:04 UTC. Deadline: 2026-10-07 09:00 UTC.
+Final snapshot: 2026-10-06 22:14 UTC. **Stopped by user request.** The
+earlier 2026-10-07 09:00 UTC deadline no longer requires this agent to run.
 See [the main status](../WORKING_STATUS.md) and [findings](../FINDINGS.md).
+
+## Final changes after the initial snapshot
+
+- Fixed `guards.py` to save Rocq stdout as the assumptions report and
+  stderr separately. The repeat passed baseline, admitted, and explicit
+  false-axiom controls. Root stopped Python PID 61876 and its current
+  `coqchk` child PID 63288 at 22:14:35 UTC. The last two controls in this
+  repeat are incomplete. Preserve that distinction.
+- Retried promoted reachability compilation with the correct Nix path.
+  It failed on duplicate logical `SolcModel` objects in the source root
+  and `build/proofs`. The next agent should compile isolated copies with
+  one load path; no proof fix was attempted after the stop.
+- The 34-case AST/model mutation run finished before the stop. All 32
+  changed candidates and both equivalent controls had expected results.
+- All child agents saved their final status and stopped their jobs.
+- New printer-gap evidence includes a kernel-checked full-Permute prefix
+  transfer theorem and an independent Frama-C initialization failure.
+
+Older sections below describe the initial 22:04 snapshot; this final
+section takes precedence where status changed.
 
 ## Root-owned uncommitted files
 
@@ -102,4 +123,4 @@ nix develop --impure --expr 'import ./spikes/clight-permute/shell.nix'
 Default shell does not include Python. A currently available interpreter is
 `/nix/store/0r6k8xa2kgqyp3r4v2w7yrb80ma2iawm-python3-3.13.12/bin/python3`.
 
-Do not mark the goal complete or stop the search before the deadline.
+The goal is unfinished. Leave it paused for the continuing agent.

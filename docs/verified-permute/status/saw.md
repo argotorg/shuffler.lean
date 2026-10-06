@@ -1,11 +1,12 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 # SAW and specification review status
 
-Saved: **2026-10-06 22:04:34 UTC**. Agent: `/root/c_memory_review`.
+Final stop snapshot: **2026-10-06 22:13:41 UTC**. Agent: `/root/c_memory_review`.
 
-The parent task is to keep checking for a real defect or proof gap until
-**2026-10-07 09:00 UTC** (11:00 CEST). This file records work in progress.
-Active proof jobs were left running when this file was written.
+**The user requested a stop and handoff. All active task jobs are stopped.**
+The earlier 2026-10-07 09:00 UTC deadline no longer authorizes more work.
+The main body below preserves the 22:04:34 snapshot. The final handoff
+section at the end overrides its active-job and pending-probe statements.
 
 ## Scope and file ownership
 
@@ -241,3 +242,111 @@ possible general printer-contract gap, not a demonstrated production bug.
    the active jobs finish; build files remain ignored.
 5. Continue tests that challenge actual assumptions until the parent's
    deadline, without changing production files or adding restricted tools.
+
+
+## Final stop and handoff
+
+The user stop instruction was received after the first status snapshot.
+No new proof, test, fix, or review was started after that instruction.
+Task drivers and their SAW/Z3 children received SIGTERM at
+**2026-10-06 22:12:42 UTC**. Exact commands, process IDs, and working
+folders are saved in `build/equiv-saw/stopped.json`.
+
+There are **no active task proof or compiler processes**. The stopped SAW
+and Z3 processes 48363, 48375, 53252, 53268, and 63191 were visible only
+as zombies during the final check; they are not executing. The driver
+sessions were collected and closed.
+
+### Final job states
+
+- Session **97189**, full n1..3: stopped with exit143 while simulating
+  `[1,0,2]`. The five previously proved cases remain valid under the
+  completion audit. The other four length-three cases have no new proof.
+  `full-n3/results.json` records only the five completed cases.
+- Session **49605**, n18 two-value family: stopped with exit143. It had
+  reached `Checking proof obligations equivalence...`, but no success
+  marker was produced. It is **incomplete**, not proved. Its results file
+  is empty because the driver was stopped before recording a final result.
+- Session **53856**, C/miter O0 trial: completed before the stop request
+  with a **600-second timeout**. Results: `c-o0-trial/results.json`.
+- Session **72886**, stronger Vundef probe: **completed with exit0**
+  before the stop. Full `coqchk` reports `Modules were successfully checked`.
+  Both compiler diagnostic logs contain the expected uninitialized read.
+
+### Confirmed full-Permute Vundef transfer gap
+
+The isolated `Probe.prefix_preserves_call` theorem is now compiled and
+kernel-checked. It prefixes the **actual Permute AST** with
+`Sset i (reg i)`. At function entry, `i` contains `Vundef`; copying it to
+itself leaves the entire temporary map unchanged. The theorem transfers
+**every original Clight call result and final memory**, with the original
+empty external-event trace, to the prefixed AST. Thus the existing
+functional and array postconditions also transfer.
+
+The unchanged production printer accepts the prefixed AST and emits
+`v8 = v8;` before initialization. GCC15.3 and Clang from the parent shell
+both report that `v8` is uninitialized when read. C11 6.3.2.1 paragraph2
+makes this automatic-scalar read undefined. This confirms that the general
+transfer argument requires a separate C initialization condition. Current
+Permute itself still has each temporary assigned before its reads; this
+probe does not establish a defect in the unchanged generated C.
+
+Completed evidence:
+
+- `build/equiv-saw/undef-probe/Probe.v` and `Probe.vo`;
+- `build/equiv-saw/undef-probe/proof.log`;
+- `build/equiv-saw/undef-probe/kernel.log`;
+- `build/equiv-saw/undef-probe/print_prefixed.ml`;
+- `build/equiv-saw/undef-probe/prefixed.c`;
+- `build/equiv-saw/undef-probe/gcc.log` and `clang.log`.
+
+The probe's printed assumptions are the same six imported CompCert/library
+assumptions used by this development, including external-function and
+inline-assembly semantics; no new axiom or admitted proof was added.
+The production `Permute.v` and `printer.ml` were compared with the compiled
+`build/project` copies and matched.
+
+The source was preserved before the stop in these **new untracked files**:
+
+- `tests/equiv-saw/undef-copy/UndefCopy.v` (same proof, renamed module);
+- `tests/equiv-saw/undef-copy/print_prefixed.ml`;
+- `tests/equiv-saw/undef-copy/check.sh`;
+- `tests/equiv-saw/undef-copy/README.md`.
+
+These paths are relative to `spikes/clight-permute/`. The new reproducible
+`check.sh` has **not been executed**. It copies current production sources,
+rebuilds extraction and the printer in isolation, checks the proof, and
+uses `-Werror=uninitialized` to require rejection of the variant after the
+unchanged C passes. The completed manual probe used warning diagnostics
+instead of that new driver's error requirement. Running the new driver is
+pending work for the next agent. No production printer or proof was fixed.
+
+### Resume commands for the next agent
+
+Do not run these without a new instruction to resume. To check the new
+self-contained Vundef regression using the already built audited CompCert
+dependencies:
+
+```sh
+nix develop --impure --expr 'import ./spikes/clight-permute/shell.nix' \
+  --command sh spikes/clight-permute/tests/equiv-saw/undef-copy/check.sh
+```
+
+To retry the unfinished n3 case without overwriting the earlier evidence:
+
+```sh
+nix develop --impure --expr 'import ./spikes/clight-permute/tests/equiv-saw/shell.nix' \
+  --command python3 spikes/clight-permute/tests/equiv-saw/verify.py \
+  --permutation 1,0,2 --timeout 2400 \
+  --out spikes/clight-permute/build/equiv-saw/resumed-n3-102
+```
+
+The n18 bitcode and `family.saw` script are complete and can be rerun
+unchanged from the SAW shell. Put its new log in a separate filename and
+apply `verify.classify(exit_code, log_text, "Proof succeeded! equivalence")`.
+Require a complete result, not only the proof-success text.
+
+The next substantive choice is how to state and discharge the separate
+C initialization condition. Keep that decision outside the proof and
+printer syntax claims until it has evidence. Parent and the other review
+agent have been told about the confirmed full-Permute transfer gap.

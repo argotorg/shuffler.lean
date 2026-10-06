@@ -2,8 +2,10 @@
 
 # Frama-C work status
 
-Updated: **2026-10-06 22:04 UTC**. The active bug-hunt deadline is
-**2026-10-07 09:00 UTC** (11:00 CEST). Proof jobs continue.
+Final handoff: **2026-10-06 22:13 UTC**. **Work is stopped at the user's
+request. No Frama-C or solver job from this task is still running.**
+The prior deadline was 2026-10-07 09:00 UTC (11:00 CEST). The stop request
+overrides the earlier instruction to continue until that deadline.
 
 There is **no complete Frama-C source-C proof yet**. No C defect or new native
 counterexample has been found in this work. A valid local WP goal is not a
@@ -61,18 +63,23 @@ extra entries are not included in the table.
 | Run | Explicit goals | Valid | Pending | Notes |
 | --- | ---: | ---: | ---: | --- |
 | `full-1` | 774 | 604 | 170 | Z3, 3-second limit; full iff and trace contract. |
+| `full-2` | 774 | 657 | 117 | Z3/CVC5, 10-second limit; full iff and trace contract. |
 | `memory-1` | 597 | 572 | 25 | Z3, 5-second limit. |
 | `memory-2` | 601 | 586 | 15 | Added permutation invariant; Z3, 15 seconds. |
 | `memory-3` | 601 | 590 | 11 | Added CVC5; 10 seconds. |
 | `memory-4` | 601 | 565 | 36 | Solver configuration experiment. CVC5 failed with a Why3 `Not_found` error; this run is not a success. |
 | `memory-5` | 605 | 595 | 10 | Added original-input frame facts; Z3/CVC5, 10 seconds. Finished while this status file was written. |
 | `memory-6` | none | none | none | ACSL parse error: multiple statement assertions in one comment. Corrected before `memory-7`. |
+| `memory-7` | 644 | 642 | 2 | Best completed memory pass. Open goals: target initialization and main-loop termination. |
+| `memory-8` | 642 | 626 | 16 | CVC5 registry/configuration failure. Z3 completed the other goals. This is not an improvement over `memory-7`. |
 | `target-init-direct` | 9 | 8 | 1 | Focused diagnostic; target-initialization establishment still pending. |
 | `lemmas-1` | 3 | 0 | 3 | Induction experiments for count bounds, frame, and update lemmas. No lemma is accepted as proved. |
 
-The most recent completed memory pass, `memory-5`, still needs main-loop
-termination, target initialization after validation, and some array frame
-and initialization facts across swaps. The full proof also needs matching
+The best completed memory pass, `memory-7`, still needs main-loop
+termination and target initialization after validation. Its other explicit
+runtime, initialization, array-frame, and bound goals are discharged. That
+does not establish full safety while target initialization is open.
+The full proof also needs matching
 completeness, the main-loop rank, count updates, trace-prefix frame facts,
 and the source-C reachability argument. The separate Rocq reachability
 proof does not fill these source-C obligations.
@@ -87,21 +94,22 @@ count, unique goal IDs, required postconditions, memory/initialization
 categories, loop categories, and termination coverage. Negative report tests
 check empty reports, removed goals/categories, removed trace properties,
 duplicate IDs, false success fields, timeouts, smoke goals, and wrong
-function names. Five annotation tests passed. Twelve report tests passed.
+function names. Five annotation tests passed before later annotation edits;
+they have not been rerun after the stop request. Twelve report tests passed.
+Three version-header tests and four tests with the actual CVC5 binary passed.
 These tests do not turn an incomplete proof into a complete proof.
 
-## Active jobs and files
+## Stopped jobs and files
 
-At this update, these sessions continue. Session IDs are tool-session IDs,
-not operating-system PIDs.
+The former active jobs all finished before the final process scan. No signal
+was needed. `build/frama-c/stopped-jobs.json` records an empty owned-process
+set. The earlier process snapshot is retained in
+`build/frama-c/processes-status-2204.json`.
 
-| Run | Session ID | OS PID | Log |
+| Completed run | Former session ID | Former OS PID | Log |
 | --- | ---: | ---: | --- |
 | `full-2` | 63127 | 52747 | `build/frama-c/full-2/wp.log` |
 | `memory-7` | 52755 | 59328 | `build/frama-c/memory-7/wp.log` |
-
-The process snapshot and complete command lines are retained in
-`build/frama-c/processes-status-2204.json`.
 
 Each was launched from `spikes/clight-permute` with:
 
@@ -113,7 +121,8 @@ nix develop --impure --expr 'import ./tests/frama-c/shell.nix' \
 The exact Frama-C command is in each run's `manifest.json`. New experiments
 may have a log and per-goal JSON outside a named run directory. Relevant
 source files are `tests/frama-c/shell.nix`, `annotate.py`, `run.py`,
-`test_annotations.py`, `test_report.py`, and `lemmas.acsl`. The last file
+`test_annotations.py`, `test_report.py`, `test_solver_version.py`,
+`test_solver_wrapper.py`, and `lemmas.acsl`. The last file
 contains unproved lemma obligations and proof-strategy experiments; it is not
 yet included as a proved library by the full C annotation generator.
 
@@ -134,10 +143,37 @@ FatCow notice is CC-BY-3.0. No installed non-commercial icon set was found.
 The tool audit checks package metadata and installed notices; it is not a
 review of every source file in every transitive dependency.
 
-Why3 does not parse the shorter CVC5 1.3 version line. An attempt to fill its
-version field caused `Not_found` failures. The current runner retains the
-working detected identifier and saves the actual `cvc5 --version` output.
-This tool compatibility issue is still under review.
+Why3 does not parse the shorter CVC5 1.3 version line. The current runner
+writes a local adapter which changes only the version-header format. It
+keeps the actual version number and all license text. Every solver call
+executes the real CVC5 binary with the original arguments. Native and adapted
+SAT/UNSAT calls passed, and an invalid solver option remained an error.
+
+A second issue came from option order: Frama-C resolved a solver name before
+it read the local Why3 configuration. `run.py` now places the local config
+before prover selection. An isolated follow-up used the correct CVC5 1.3.4
+identifier and had no `Not_found` error, but its mathematical goal remains
+unproved. No full source pass has run with this final option order. Do not
+treat the old CVC5 failures in `memory-4` or `memory-8` as proof results.
+
+## Uninitialized-copy control
+
+The copied source under `build/frama-c/undef-prefix-1/` inserts `v8 = v8;`
+before the first output write. The production source is unchanged. This
+tests the known difference between a Clight `Vundef` copy and a C read of an
+uninitialized automatic variable.
+
+Frama-C retained the assignment. Its RTE pass added
+`assert rte: initialization: \\initialized(&v8);` immediately before it,
+at `rte.c:56`. WP reduced the first initialization obligation to
+**`Prove: false`** under the normal valid-permutation contract. This is an
+explicit failed safety condition, not a timeout used as a witness. The log
+is `initialization-wp.log`; the report is `initialization-goals.json`.
+The mutant source, token-preserving annotated copy, and hashes are retained.
+
+The first attempted property selector produced zero goals. Its `wp.log`
+is retained as a failed diagnostic. The corrected selector was
+`-wp-prop initialization`. No empty report is accepted by the proof runner.
 
 ## Completed validation
 
@@ -159,12 +195,31 @@ Each passing run checked 695 valid cases with ten native calls per case,
 plus invalid-API cases. Source-regeneration rejection is recorded separately
 from semantic tests. No unrun formal verifier is reported as a success.
 
-## Next work
+## Resume instructions
 
-1. Finish and inspect the active per-goal reports.
+Do not resume unless the user authorizes it. After authorization, use a new
+run name so that existing artifacts remain intact:
+
+```
+cd spikes/clight-permute
+nix develop --impure --expr 'import ./tests/frama-c/shell.nix' \\
+  --command python3 tests/frama-c/run.py --mode memory --name memory-9 --timeout 10
+```
+
+For the full theorem, use `--mode full --name full-3`. These commands use the
+latest annotation generator and final solver-configuration order. Their
+expected current result is still failure while required goals are open.
+
+The immediate proof work is:
+
+1. Check the final solver setup in a fresh run; all prior jobs have ended.
 2. Prove target initialization through an explicit finite-surjection helper.
 3. Complete local array frame and trace-append facts without changing C tokens.
 4. Prove the count/rank and trace-frame lemmas, then use them in the full pass.
+   `moved_bounds` has two solved tactic branches and one empty branch in
+   its saved script. The theorem is not proved. The finite-surjection
+   initialization helper is in `build/frama-c/coverage-lemma.c`; it is also
+   unproved. Its final tool result is in `coverage-lemma-fixed.log`.
 5. Close normalization completeness and the source-C iff theorem.
 6. Continue negative checks of proof-result handling and all requested bug classes.
 

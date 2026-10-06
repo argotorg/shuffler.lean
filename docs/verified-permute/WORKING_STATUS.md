@@ -1,20 +1,45 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 # Permute working status
 
-Snapshot: **2026-10-06 22:04 UTC**. This is a handoff, not a completion report.
+Final stop snapshot: **2026-10-06 22:14 UTC**. This is a handoff, not a
+completion report. **Work is stopped at the user's request.** All child
+agents have stopped their jobs. Root stopped its remaining guard-test job.
+No verification work was restarted after the stop clarification.
 
-## Active objective and deadline
+Latest updates since the initial snapshot:
+
+- The uninitialized-copy finding now applies to a prefix on the actual
+  Permute AST. Its full-call result, final memory, and trace are preserved
+  by a proof accepted by `coqc` and `coqchk`. The unchanged printer emits
+  `v8 = v8;` before initialization. GCC and Clang warn; Frama-C generates
+  an initialization obligation that reduces to `false`.
+- Corrected KLEE campaign stopped at 69/153 cases and 21,361 marked paths.
+  All 13 restricted large profiles completed, with 99 marked paths. The
+  two mutation campaigns completed: 12 local and 16 shared controls.
+- Best completed Frama-C memory pass: **642/644** goals. The open goals
+  are target initialization after validation and main-loop termination.
+  Best recorded full pass: **657/774**. Neither is a complete proof.
+- Root's guard output capture is fixed. Baseline, admitted-theorem, and
+  false-axiom controls passed their expected checks. The repeat was stopped
+  during the remaining controls; do not call the whole rerun complete.
+- The promoted reachability build now fails on ambiguous `SolcModel.vo`
+  load paths, after the first Nix path issue was corrected. Use an isolated
+  build directory to avoid the old root-level objects. Do not claim the
+  promoted modules or full-call corollary are checked yet.
+
+## Paused objective and former deadline
 
 Find a concrete bug or gap in the generated C, its Clight/Rocq proof chain,
 or its relation to the actual solc C++ Permute operation. Continue until
 **2026-10-07 09:00 UTC / 11:00 CEST**, unless the user changes the deadline.
-The root agent has created an active goal with this deadline. There is no
-user-set token budget. Do not mark the goal complete after the first finding.
+The user subsequently requested a stop and handoff to a new agent. That
+request overrides the earlier deadline. The objective is unfinished and is
+to be paused, not marked complete. There is no user-set token budget.
 
 The user authorizes local defensive testing, source changes, reviews,
 parallel agents, and commits. They explicitly ask for continued effort and
 for all bug categories below. Filesystem chaos tests are excluded at their
-request. No approval pause is needed for the current work.
+request. Resume verification only under the new agent's user instruction.
 
 Required constraints:
 
@@ -35,7 +60,8 @@ Workspace:
 Branch: `bbu-recursive`. Original base:
 `0e92d2a1a9b720a9e127814d8c2c4192055638ce`.
 
-Current committed HEAD at this snapshot: `416cd6c`.
+Last development commit before status snapshots: `416cd6c`.
+Initial handoff snapshot commit: `08db708`.
 The initial Rocq work, LGPL selection, Clight implementation, printer,
 proof layers, solc tests, guided fuzzing, research report, and Fil-C results
 are committed as 15 separate commits. See [review-guide.md](review-guide.md)
@@ -193,9 +219,9 @@ Alive2 equivalence proof is claimed.
 Full C/C++ equivalence for every permutation through size 1024 is not
 established. That remains a goal; enumeration alone will not scale.
 
-## Agent assignments
+## Stopped agent assignments
 
-All four slots are occupied, including root:
+The agents had these assignments; all child agents are now idle:
 
 - Root: orchestration, commits, proof guards, AST/model mutation checks,
   reachability theorem, evidence integration, and coverage provenance fix.
@@ -209,11 +235,11 @@ All four slots are occupied, including root:
 The three review reports are `review-spec.md`, `review-translation.md`, and
 `review-memory.md` in this directory. They are working documents.
 
-## Next actions
+## Next actions for the continuing agent
 
 1. Save this handoff and each agent's detailed status.
-2. Correct the isolated assumptions-test output capture; repeat all guard
-   controls. Test unsafe Rocq typing flags as separate negative controls.
+2. Finish the isolated guard-control rerun; its output capture is corrected.
+   Test unsafe Rocq typing flags as separate negative controls.
 3. Compile and check the promoted reachability modules; update the public
    type fixture and required assumption list as appropriate.
 4. Add source/binary provenance checks to coverage reporting with negative
@@ -229,8 +255,9 @@ The three review reports are `review-spec.md`, `review-translation.md`, and
 9. Archive MSan, source/proof mutation, symbolic-tool, and review evidence;
    commit it in separate reviewable chunks. Exclude all binaries and caches,
    including the newly created `.frama-c/` cache directory.
-10. Continue searching until the deadline. Keep concrete findings separate
-    from hypotheses, unsupported cases, and results outside the contract.
+10. Follow the new user instruction on when to resume and for how long.
+    Keep concrete findings separate from hypotheses, unsupported cases,
+    and results outside the contract.
 
 The user reported repeated platform cybersecurity-classifier interruptions.
 This is authorized local defensive validation. One earlier subagent turn
