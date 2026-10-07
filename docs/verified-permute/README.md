@@ -1,6 +1,8 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 # C ↔ Lean proof-of-concept review
 
+For completed work and open gaps, read the [short summary](SUMMARY.md).
+
 The main subject is the proposed C ↔ Lean verification workflow. Permute
 is the test case. Start with the core Rocq definitions and theorem statements,
 then assess the independent evidence that tests this workflow before it is
