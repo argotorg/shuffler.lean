@@ -22,7 +22,7 @@ example : (swapWith 0).exec (emptyState [] ∅) =
     .error (.assertion "offset is out of bounds") := rfl
 example : observe (buildBottomUp
     { emptyState [.Lit 1] ∅ with pending_generations := 0 }) =
-    .error (.assertion "stack does not define a complete permutation") := by native_decide
+    .error (.assertion "working stack does not match target size") := by native_decide
 
 -- An empty target skips the loop but still checks the stack size.
 private def surplusAtExit : State [.Lit 1] [] ∅ where
@@ -68,7 +68,7 @@ example : (push (.Var ⟨37⟩) 0).exec boundState =
     .error (.assertion "destination already bound to a slot") := rfl
 -- Equal lengths do not imply that the mapping is complete.
 example : observe (buildBottomUp { boundState with mapping := ⊥ }) =
-    .error (.assertion "stack does not define a complete permutation") := by native_decide
+    .error (.assertion "unmapped source slots") := by native_decide
 example : (produce 0).exec boundState =
     .error (.assertion "destination already bound to a slot") := rfl
 example : observeState ((produce 0).exec (emptyState [.Var ⟨37⟩] {⟨37⟩})) =

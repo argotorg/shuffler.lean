@@ -1,11 +1,16 @@
-import Shuffler.BuildBottomUp.Lemmas.StateT
 import Shuffler.Mapping
 import Shuffler.Permute.Defs
 import Shuffler.Stack
 import Shuffler.Trace
+import Std.Internal.Do
 import Std.Tactic.Do
 
 -- TODO: make numeric types here match the c++ types
+-- TODO: make the Error.blocked args match the c++
+-- TODO: isFinal should use `index` and assert on oob
+-- TODO: positionOf is total over ℕ unlike c++. should also assert on oob.
+-- TODO: positionOf / destinationOf abbrevs
+-- TODO: add a Depth / Offset type
 
 
 --- Types ------------------------------------------------------------------------------------------
@@ -164,25 +169,24 @@ def swapWith (offset : ℕ) : Action source target spills Unit := do
 
 def produce (targetOffset : Fin target.length) : Action source target spills Unit := do
   let state ← get
-  _ ← requires (state.mapping.symm targetOffset).isNone "destination already bound to a slot"
 
   let slot := target[targetOffset.val]
   let copy := state.stack.shallowestCopyPosition slot
 
   if slot.is_junk then
     push slot targetOffset
-  else if let some pos := copy.filter (fun pos => state.stack.isDupReachable pos) then
+  else if let some pos := copy.filter (λ pos => state.stack.isDupReachable pos) then
     dup pos.val targetOffset
   else if slot.can_be_freely_generated ∨ spills.is_spilled slot then
     push slot targetOffset
-  else if let some pos := copy then
-    throw (.blocked (state.stack.offsetToDepth pos - MAX_DUP_DEPTH))
+  else if h : copy.isSome then
+    throw (.blocked (state.stack.offsetToDepth (copy.get h) - MAX_DUP_DEPTH))
   else
     throw (.assertion "generated slot has no copy on the stack and is not spilled")
 
   let state ← get
   _ ← requires (state.positionOf targetOffset.val = some (state.stack.length - 1)) "generated slot is not bound to the top"
-  modify fun state => { state with pending_generations := state.pending_generations - 1 }
+  modify λ state => { state with pending_generations := state.pending_generations - 1 }
 
 def generate (targetOffset : ℕ) : Action source target spills Unit := do
   produce (← index target.length targetOffset)
@@ -214,61 +218,68 @@ private theorem generate_pending_generations (state next : State source target s
   rw [StateT.wp_apply_eq, h] at hp
   exact hp
 
-
-attribute [local wf_preprocess] StateT.run bind_eq state_bind_apply state_get_apply
-  state_dite_apply bindWithEquation_ok
-
-open Std.Internal.Do in
-set_option mvcgen.warning false in
-set_option maxHeartbeats 2000000 in
 def buildBottomUp (initial : State source target spills) :
     Except Error ((res : Stack) × Trace spills source res) :=
+  -- Reads before a retry use `state` directly, so the termination proof can relate it to `_hgen`.
   let rec loop (targetOffset : ℕ) :
       Action source target spills ((res : Stack) × Trace spills source res) := fun current => StateT.run (s := current) do
+    let state := current
     if targetOffset < target.length then
-      let state ← get
-      if targetOffset < state.stack.length ∧ state.isFinal targetOffset then
-        return ← loop (targetOffset + 1)
 
-      if state.pending_generations = 0 then
-        let ⟨hlen, hsource⟩ ← requires
-          (state.stack.length = target.length ∧ ∀ i, (state.mapping i).isSome)
-          "stack does not define a complete permutation"
+      if targetOffset < state.stack.length ∧ state.isFinal targetOffset then
+        return (← loop (targetOffset + 1))
+
+      if state.pending_generations = 0 then do
+        let ⟨hlen⟩ ← requires (state.stack.length = target.length) "working stack does not match target size"
+        let ⟨hbound⟩ ← requires (∀ i, (state.mapping i).isSome) "unmapped source slots"
+
         let ⟨res, trace⟩ ←
-          (Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hlen hsource)).mapError
+          (Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hlen hbound)).mapError
             (ε' := Error) fun (.Blocked excess) => .blocked excess
         return ⟨res, state.trace.concat trace⟩
 
       let mut urgentToDup := none
       for offset in [targetOffset : target.length] do
+
         if (state.positionOf offset).isSome then
           continue
+
         let slot ← slotAt target offset
         if slot.is_junk ∨ slot.can_be_freely_generated ∨ spills.is_spilled slot then
           continue
-        if let some copy := state.stack.shallowestCopyPosition slot then
-          if ¬ state.stack.isDupReachable copy then
-            throw (.blocked ((← state.depthOf copy) - MAX_DUP_DEPTH))
-          if (← state.depthOf copy) = MAX_DUP_DEPTH ∧ copy.val ≠ targetOffset ∧ urgentToDup.isNone then
+
+        if let some sourceCopy := state.stack.shallowestCopyPosition slot then
+          if ¬ state.stack.isDupReachable sourceCopy then
+            throw (.blocked ((← state.depthOf sourceCopy) - MAX_DUP_DEPTH))
+          if (← state.depthOf sourceCopy) = MAX_DUP_DEPTH ∧ sourceCopy.val ≠ targetOffset ∧ urgentToDup.isNone then
             urgentToDup := some offset
 
-      if h : urgentToDup.isSome ∧ urgentToDup ≠ some targetOffset ∧
-          state.stack.length - targetOffset < MAX_SWAP_DEPTH then
-        generate (urgentToDup.get h.1)
-        return ← loop targetOffset
+      if h : urgentToDup.isSome ∧
+             urgentToDup ≠ some targetOffset ∧
+             state.stack.length - targetOffset < MAX_SWAP_DEPTH
+        then match _hgen : (generate (urgentToDup.get h.1)).run state with
+          | .error err => throw err
+          | .ok ((), next) =>
+            return ← fun _ => loop targetOffset next
 
       let sourceTop := state.stack.length
-      if urgentToDup.isNone ∧ sourceTop > targetOffset ∧ sourceTop < target.length ∧
-          (state.positionOf sourceTop).isNone ∧ sourceTop - targetOffset < MAX_SWAP_DEPTH then
-        generate sourceTop
-        return ← loop targetOffset
+      if urgentToDup.isNone ∧
+         sourceTop > targetOffset ∧
+         sourceTop < target.length ∧
+         (state.positionOf sourceTop).isNone ∧
+         sourceTop - targetOffset < MAX_SWAP_DEPTH
+      then match _hgen : (generate sourceTop).run state with
+        | .error err => throw err
+        | .ok ((), next) =>
+          return ← fun _ => loop targetOffset next
 
-      if let some boundForTarget := state.positionOf targetOffset then
-        -- The slot bound for this offset must not be below it.
-        _ ← requires (boundForTarget ≥ targetOffset)
-          "slot bound for the offset being filled is missing or already below it"
+      if h : (state.positionOf targetOffset).isSome then
+        let boundForTarget := (state.positionOf targetOffset).get h
+        _ ← requires (boundForTarget ≥ targetOffset) "slot bound for the offset being filled is missing or already below it"
+
         let sourceForTargetOffset := boundForTarget
         let mut pos := sourceForTargetOffset
+
         if (← slotAt state.stack targetOffset) = (← slotAt state.stack sourceForTargetOffset) then
           pos := targetOffset
         else
@@ -280,7 +291,9 @@ def buildBottomUp (initial : State source target spills) :
 
         _ ← requires ((← slotAt state.stack pos) = (← slotAt state.stack sourceForTargetOffset))
           "selected copy differs from the bound slot"
+
         swapDestinations pos sourceForTargetOffset
+
         if pos = targetOffset then
           return ← loop (targetOffset + 1)
 
@@ -302,26 +315,16 @@ def buildBottomUp (initial : State source target spills) :
           throw (.blocked ((← state.depthOf targetOffset) - MAX_SWAP_DEPTH))
         swapWith targetOffset
       return ← loop (targetOffset + 1)
-
-    let state ← get
-    _ ← requires (state.stack.length = target.length) "stack and target sizes differ"
-    return ⟨state.stack, state.trace⟩
+    else do
+      _ ← requires (state.stack.length = target.length) "stack and target sizes differ"
+      return ⟨state.stack, state.trace⟩
   -- Advancing reduces the first component; generating before a retry reduces the second.
   termination_by current => (target.length - targetOffset, current.pending_generations)
   decreasing_by
     all_goals try exact Prod.Lex.left _ _ (by omega)
     all_goals
       apply Prod.Lex.right
-      rename_i hgen
-      have hg := generate_pending_generations _ _ _ hgen
-      clear hgen
-      let current : State source target spills := by assumption
-      have hsame := preserves_state_of_run _ current _ (by assumption) (by
-        simp only [Std.Legacy.Range.forIn'_eq_forIn'_range']
-        vcgen [slotAt, index, State.depthOf] invariants
-        · fun _ _ _ s => s = current
-        all_goals simp_all)
-      rw [hg, hsame]
+      rw [generate_pending_generations _ _ _ _hgen]
       exact Nat.sub_lt (Nat.pos_of_ne_zero (by assumption)) (by decide)
   StateT.run' (s := initial) (loop 0)
 

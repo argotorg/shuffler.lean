@@ -85,7 +85,7 @@ example : ¬ unbound.Valid := by
   contradiction
 
 example : (buildBottomUp unbound).map (fun result => result.1) =
-    .error (.assertion "stack does not define a complete permutation") := by native_decide
+    .error (.assertion "unmapped source slots") := by native_decide
 
 example : ¬ (emptyState [.Var ⟨1⟩] ∅).Valid := by
   intro h

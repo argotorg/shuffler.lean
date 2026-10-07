@@ -8,7 +8,7 @@ abbrev SpillSet := Finset VarId
 
 def SpillSet.is_spilled (spills : SpillSet) : (val : Value) → Prop
 | .Var id => id ∈ spills
-| _ => false
+| _ => False
 
 instance (spills : SpillSet) (v : Value) : Decidable (spills.is_spilled v) := by
   cases v <;> unfold SpillSet.is_spilled <;> infer_instance

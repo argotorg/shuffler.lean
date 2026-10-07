@@ -40,6 +40,26 @@ macro "finish_checked " c:term ", " st:term ", " hp:term ", " hn:term ", " advan
     exact $advance _ (($hp).finish_at_top (not_not.mp hnotTop))))
 
 
+-- Verify a retry branch, which matches on the result of an update.
+theorem Spec.retry {action : Action source target spills Unit} {state : State source target spills}
+    {pre : State source target spills → Prop} {rest : Action source target spills β}
+    {next : State source target spills → Action source target spills β}
+    {post : β × State source target spills → Prop}
+    (h : Spec (action.exec state) pre) (step : ∀ s, pre s → Spec (next s state) post) :
+    Spec ((match _hrun : action.run state with
+      | .error err => (throw err : Action source target spills PUnit) >>= fun _ => rest
+      | .ok ((), s) => next s) state) post := by
+  simp only [Action.exec] at h
+  cases hr : action.run state with
+  | error err =>
+    rw [hr] at h
+    cases err <;> trivial
+  | ok r =>
+    obtain ⟨⟨⟩, s⟩ := r
+    rw [hr] at h
+    exact step s h
+
+
 theorem loop_spec (cursor : ℕ) (state : State source target spills)
     (inv : Invariant cursor state) :
     Spec (buildBottomUp.loop cursor state) (fun _ => True) := by
@@ -67,17 +87,14 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
           (Mapping.unmapped_target_slots_eq_zero state.mapping).mp (inv.pending.trans hz)
         have hs := inv.size
         have hp := state.mapping.complete_of_target_total (by omega) ht
-        simp only [hz, ↓reduceIte, requires, dite_eq_left hp, pure_bind]
-        split
-        simp_action
+        simp only [hz, ↓reduceIte, requires_of_true _ hp.1, requires_of_true _ hp.2, except_ok_bind]
         cases hperm : Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hp.1 hp.2) with
         | error err =>
           cases err
           simp [Except.mapError, Spec]
         | ok result =>
           cases result
-          simp [Except.mapError, except_ok_bind,
-            Spec, pure, Except.pure]
+          simp [Except.mapError, Spec]
       · simp only [hz, ↓reduceIte]
         rw [StateT.run_bind]
         have hscan := (action_triple_iff _ _ _).mp (urgentScan_triple cursor state)
@@ -86,26 +103,28 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
         rintro ⟨urgent, next⟩ ⟨hu, hnext⟩
         dsimp only at hu hnext ⊢
         subst next
-        split
-        · rename_i hurg
+        rw [Action.run_dite]
+        by_cases hurg : urgent.isSome ∧ urgent ≠ some cursor ∧ state.stack.length - cursor < MAX_SWAP_DEPTH
+        · rw [dite_eq_left hurg]
           obtain ⟨hlt, hnone⟩ := hu (urgent.get hurg.1) (Option.some_get hurg.1).symm
           let u : Fin target.length := ⟨urgent.get hurg.1, hlt⟩
           have hb : state.mapping.symm u = none := by
             simpa [State.positionOf, hlt, u] using hnone
-          simp_action
-          apply (generate_contract state u hb (inv.available u)).bind
+          apply (generate_contract state u hb (inv.available u)).retry
           intro next hgen
           exact retry _ (hgen.invariant inv) (hgen.decreases inv)
-        · split
-          · rename_i htop
+        · rw [dite_eq_right hurg, Action.run_ite]
+          by_cases htop : urgent.isNone ∧ state.stack.length > cursor ∧ state.stack.length < target.length ∧
+              (state.positionOf state.stack.length).isNone ∧ state.stack.length - cursor < MAX_SWAP_DEPTH
+          · rw [ite_eq_left htop]
             let top : Fin target.length := ⟨state.stack.length, htop.2.2.1⟩
             have hb : state.mapping.symm top = none := by
               simpa [State.positionOf, top, top.isLt] using htop.2.2.2.1
-            simp_action
-            apply (generate_contract state top hb (inv.available top)).bind
+            apply (generate_contract state top hb (inv.available top)).retry
             intro next hgen
             exact retry _ (hgen.invariant inv) (hgen.decreases inv)
-          · have hposition : state.positionOf cursor = (state.mapping.symm dest).map Fin.val := by
+          · rw [ite_eq_right htop]
+            have hposition : state.positionOf cursor = (state.mapping.symm dest).map Fin.val := by
               simp [State.positionOf, hc, dest]
             rw [hposition]
             cases hb : state.mapping.symm dest with
@@ -121,7 +140,7 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
               · simp only [hf, ↓reduceIte]
                 finish_checked cursor, next, hp, hf, advance
             | some carrier =>
-              simp only [Option.map_some]
+              simp only [Option.map_some, Option.isSome_some, Option.get_some, ↓reduceDIte]
               simp_action
               have hge := inv.processed.bound_ge dest carrier hb le_rfl
               have hcurrent : cursor < state.stack.length := lt_of_le_of_lt hge carrier.isLt
