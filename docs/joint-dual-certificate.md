@@ -204,3 +204,22 @@ The EVM example above has actual trace score 52 and `L=104,Q=1`.
 against every empty-source trace to the same target without POP. It
 also checks the direct surplus certificate, independently of the plan
 minimum theorem.
+
+The saved periodic case `a (x1 ... x15)^3 a`, at reach 16 with all LOAD
+widths 32 and byte-only weights, is a second example. The saved production
+trace costs 591 and its generation baseline is 575. One external
+feasibility call supplied integer dual data with `L=1166,Q=1`. The exact
+checker verified every coefficient. Thus `591+575=1166` certifies the
+factor-two surplus bound. The trace's extracted plan has `J=1167`, so
+attainment of the plan bound is not needed here. The certificate does
+not pass the exact-score test, which would require `L>=1182`.
+
+`Tests/OptimalityPeriodicDual.lean` replays the actual saved operations,
+proves their 591-byte cost, checks the supplied integers with `decide`,
+and proves the surplus bound for every same-target empty-source trace
+without POP. Its finite validity check uses a larger local heartbeat
+limit and took 42 seconds in the targeted build. The external call is
+only a data supplier. No trust in that solver enters the Lean theorem.
+Evidence and reproduction commands are in
+`Bench/evidence-periodic-joint-dual.json`. This was one named case, with
+no production scheduler rerun or new broad trace search.
