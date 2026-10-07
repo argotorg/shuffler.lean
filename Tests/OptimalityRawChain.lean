@@ -1,4 +1,5 @@
 import Shuffler.Optimality.Schedule.Soundness
+import Shuffler.Optimality.Schedule.Comparison
 
 open Shuffler.Optimality
 
@@ -30,9 +31,13 @@ private def witness : List Op :=
 #guard (Schedule.candidate .chain costs .bytesOnly spills source target missing).map
   (fun result => (traceCost costs result.trace).bytes) = some 457
 
--- The full portfolio keeps the original-BBU candidate and avoids this loss.
+-- The portfolio normalizes SWAP runs before comparing candidates.
 #guard (Schedule.build costs .bytesOnly spills source target missing).map
-  (fun result => (traceCost costs result.trace).bytes) = some 146
+  (fun result => (traceCost costs result.trace).bytes) = some 127
+
+-- Normalization applies before any scheduler policy is tried.
+#guard (Schedule.buildWith [] costs .bytesOnly spills source target missing).map
+  (fun result => (traceCost costs result.trace).bytes) = some 127
 
 -- The witness alone refutes factor two for a trace of the raw-policy cost.
 -- The true optimum can only make the required upper bound smaller.

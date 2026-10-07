@@ -693,3 +693,26 @@ The native normalizer hooks are pinned separately as
 The default planner selection stays at seventeen algorithms. The two explicit
 reference-normalization selectors pass equal-swap and invalid-input smoke
 checks. The saved production-trace normalization suite is next.
+
+### 2026-10-07 04:23 UTC
+
+The actual portfolio now normalizes each proposed trace before cost
+comparison, and normalizes its complete fallback once. The saved wide-LOAD
+fixture returns 127 bytes from both `Schedule.build` and `buildWith []`;
+the original BBU trace still has 146 bytes. Lean proves comparison against
+the normalized original, normalized complete fallback, and every normalized
+raw candidate in the requested strategy list. The exact Reserve success
+theorem remains proved.
+
+The full `lake build Shuffler Tests optimality_bench` checkpoint passes
+3035 jobs. Twelve audited normalization and portfolio results use only the
+three standard axioms. Updated tests keep the raw-policy controls and check
+the changed portfolio costs. The v14 pass-only evidence checks 2509 saved
+traces, with 931 shorter traces and 1895 removed SWAPs. General idempotence,
+a complete runtime bound, and global factor two remain open.
+
+The pinned v15 targeted run has 33 valid traces and no score increases
+against its matched saved v12/v13 results. The oracle settles 31 cases;
+the actual portfolio attains 30 of those optima. The wide-LOAD result of
+127 bytes equals the settled optimum. The separate 590-case saved-suite
+comparison is still running.

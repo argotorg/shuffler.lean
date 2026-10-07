@@ -33,10 +33,15 @@ private def originalStrategies : List Schedule.Strategy :=
   policies.map (·.withMode .relaxed) ++ policies
 
 #guard (Schedule.buildWith originalStrategies costs ⟨1,1,by decide⟩ ∅
-  distinct17 rotated18 {.Lit 99}).map (fun result => result.trace.swapCount) = some 19
+  distinct17 rotated18 {.Lit 99}).map (fun result => result.trace.swapCount) = some 17
+
+-- Each raw policy still has nineteen SWAPs. Normalizing candidates before
+-- comparison attains the seventeen-SWAP witness even with the six policies.
+#guard originalStrategies.map (fun strategy =>
+  (Schedule.candidate strategy costs ⟨1,1,by decide⟩ ∅ distinct17 rotated18 {.Lit 99}).map
+    (fun result => result.trace.swapCount)) = List.replicate 6 (some 19)
 
 -- The witness SWAP1,...,SWAP16; PUSH99; SWAP1 has seventeen swaps.
--- The old six-policy portfolio has nineteen swaps on this input.
 #guard (Schedule.build costs ⟨1,1,by decide⟩ ∅ distinct17 rotated18 {.Lit 99}).map
   (fun result => result.trace.swapCount) = some 17
 

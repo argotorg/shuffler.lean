@@ -25,7 +25,7 @@ private def costs : PrimitiveCosts := PrimitiveCosts.evm
     else if id = ⟨115⟩ then .push ⟨0,by decide⟩ else .push ⟨1,by decide⟩)
 
 -- Four births cost 12. The certified eleven-SWAP witness has total cost 45.
--- Earlier policies choose the next matched birth and use sixteen SWAPs.
+-- The nine raw policies choose the next matched birth and use sixteen SWAPs.
 #guard (Schedule.build costs .gasOnly spills source target missing).map
   (fun result => traceCost costs result.trace) = some ⟨45,15⟩
 
@@ -34,7 +34,12 @@ private def previousStrategies : List Schedule.Strategy :=
   policies.map (·.withMode .relaxed) ++ policies ++ policies.map (·.withMode .chains)
 
 #guard (Schedule.buildWith previousStrategies costs .gasOnly spills source target missing).map
-  (fun result => traceCost costs result.trace) = some ⟨60,21⟩
+  (fun result => traceCost costs result.trace) = some ⟨48,49⟩
+
+-- This control runs the actual raw policies, before portfolio normalization.
+#guard previousStrategies.map (fun strategy =>
+  (Schedule.candidate strategy costs .gasOnly spills source target missing).map
+    (fun result => (traceCost costs result.trace).gas)) = List.replicate 9 (some 60)
 
 #guard baseline costs .gasOnly spills source missing = 12
 #guard staticExcess costs .gasOnly spills source target missing = 33

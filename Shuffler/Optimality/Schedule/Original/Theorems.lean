@@ -31,20 +31,21 @@ theorem cheaper_le_proposed (costs : PrimitiveCosts) (weights : Weights)
       Bool.and_eq_true, beq_iff_eq] at h
     omega
 
-theorem buildWith_cost_le_original (strategies : List Strategy)
+theorem buildWith_cost_le_normalized_original (strategies : List Strategy)
     (costs : PrimitiveCosts) (weights : Weights)
     (spills : SpillSet) (source target : Stack) (missing : Multiset Value)
     (result original : BuiltTrace spills source target missing)
     (hresult : buildWith strategies costs weights spills source target missing = some result)
     (horiginal : originalCandidate spills source target missing = some original) :
     (traceCost costs result.trace).score weights ≤
-      (traceCost costs original.trace).score weights := by
+      (traceCost costs (SwapRuns.normalizeBuilt original).trace).score weights := by
   by_cases hz : missing = 0
   · subst missing
     have hr : ValueGraph.build spills source target = some result := by
       simpa [buildWith, BuiltTrace.cast] using hresult
     exact (ValueGraph.build_weightedOptimal costs weights spills source target result hr).2
-      original.trace ⟨original.noPop, original.additions⟩
+      (SwapRuns.normalizeBuilt original).trace
+        ⟨(SwapRuns.normalizeBuilt original).noPop, (SwapRuns.normalizeBuilt original).additions⟩
   · cases hc : Shuffler.Placement.build spills source target missing with
     | none => simp [buildWith, hz, hc] at hresult
     | some initial =>
@@ -54,9 +55,31 @@ theorem buildWith_cost_le_original (strategies : List Strategy)
         rw [← he]
         apply (search_le strategies costs weights spills source target missing _).trans
         simpa only [initialCandidates, horiginal, accept] using
-          cheaper_le_proposed costs weights original
+          cheaper_le_proposed costs weights (SwapRuns.normalizeBuilt original)
             (accept costs weights (ShortGrowth.build costs weights spills source target missing)
-              (accept costs weights (appendCandidate costs weights spills source target missing) initial))
+              (accept costs weights (appendCandidate costs weights spills source target missing)
+                (SwapRuns.normalizeBuilt initial)))
+
+theorem buildWith_cost_le_original (strategies : List Strategy)
+    (costs : PrimitiveCosts) (weights : Weights)
+    (spills : SpillSet) (source target : Stack) (missing : Multiset Value)
+    (result original : BuiltTrace spills source target missing)
+    (hresult : buildWith strategies costs weights spills source target missing = some result)
+    (horiginal : originalCandidate spills source target missing = some original) :
+    (traceCost costs result.trace).score weights ≤
+      (traceCost costs original.trace).score weights :=
+  (buildWith_cost_le_normalized_original strategies costs weights spills source target missing
+    result original hresult horiginal).trans (SwapRuns.normalize_score_le costs weights original.trace)
+
+theorem build_cost_le_normalized_original (costs : PrimitiveCosts) (weights : Weights)
+    (spills : SpillSet) (source target : Stack) (missing : Multiset Value)
+    (result original : BuiltTrace spills source target missing)
+    (hresult : build costs weights spills source target missing = some result)
+    (horiginal : originalCandidate spills source target missing = some original) :
+    (traceCost costs result.trace).score weights ≤
+      (traceCost costs (SwapRuns.normalizeBuilt original).trace).score weights :=
+  buildWith_cost_le_normalized_original _ costs weights spills source target missing
+    result original hresult horiginal
 
 theorem build_cost_le_original (costs : PrimitiveCosts) (weights : Weights)
     (spills : SpillSet) (source target : Stack) (missing : Multiset Value)

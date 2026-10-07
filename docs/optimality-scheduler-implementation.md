@@ -208,8 +208,9 @@ value available as the next chain pivot. This check scans the fixed-size
 active window and adds no graph-state search or numerical penalty.
 
 The repeated-chain regression needs four births. The earlier policies return
-60 gas; this policy returns the 45-gas trace at the proved static bound.
-`Tests/OptimalityChainContinuity.lean` retains the nine-policy 60 control and
+60 gas before normalization; this policy returns the 45-gas trace at the
+proved static bound. The normalized earlier candidate set has 48 gas.
+`Tests/OptimalityChainContinuity.lean` retains all nine raw 60-gas controls and
 checks the new result, baseline 12, and static excess 33. The first different
 birth in the earlier trace does not force a loss: a different continuation
 still costs 45. The second birth does force a loss.
@@ -252,3 +253,18 @@ Thus this bound has an O(N) shared-scan implementation design for each
 candidate, consistent with the earlier O(N²) planner design. The literal
 Lean code scans protected lists per value. No scan-equivalence or runtime
 proof for this optimized version has been added.
+
+## Normalization before comparison
+
+Every proposed built trace now passes through `SwapRuns.normalizeBuilt`
+before the portfolio compares its cost. The complete fallback passes through
+it once. This replaces each SWAP run by minimum placement for that run's
+endpoints. Birth choices, exact additions, and birth order stay unchanged.
+The original BBU and complete-constructor bodies stay unchanged.
+
+The normalized-original and normalized-complete comparison bounds are proved.
+`Schedule.Comparison` also bounds the result by every normalized raw strategy
+candidate in the requested list, including the static-bound early-return
+case. The saved wide-LOAD raw-chain fixture now returns 127 bytes from the
+actual `Schedule.build`; the raw original BBU still has 146 bytes. See
+`docs/swap-run-normalization.md` for the exact proof and test scope.

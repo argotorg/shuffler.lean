@@ -72,7 +72,9 @@ theorem buildWith_cost_le_append (strategies : List Strategy)
         unfold initialCandidates
         apply (accept_le costs weights _ _).trans
         apply (accept_le costs weights _ _).trans
-        simpa only [happend, accept] using cheaper_le_proposed costs weights appended initial
+        simpa only [happend, accept] using
+          (cheaper_le_proposed costs weights (SwapRuns.normalizeBuilt appended)
+            (SwapRuns.normalizeBuilt initial)).trans (SwapRuns.normalize_score_le costs weights appended.trace)
 
 theorem build_attains_baseline (costs : PrimitiveCosts) (weights : Weights)
     (hswap : 0 < costs.swap.score weights)
