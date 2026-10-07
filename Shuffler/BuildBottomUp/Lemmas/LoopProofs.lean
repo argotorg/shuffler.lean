@@ -12,8 +12,8 @@ set_option maxHeartbeats 2000000
 
 -- Verify the common placement tail of the actual loop body.
 macro "finish_checked " c:term ", " st:term ", " hp:term ", " hn:term ", " advance:term : tactic => `(tactic| (
-  try rw [ensure_of_true _ $hn]
-  try simp only [not_false_eq_true, ensure_of_true True True.intro, except_ok_bind, except_error_bind, pure_bind, bind_assoc]
+  try rw [requires_of_true _ $hn]
+  try simp only [not_false_eq_true, requires_of_true True True.intro, except_ok_bind, except_error_bind, pure_bind, bind_assoc]
   by_cases hnotTop : $c ≠ ($st).stack.length - 1
   · try dsimp +zetaDelta only at hnotTop
     simp +zetaDelta only [ne_eq, hnotTop, not_false_eq_true, ↓reduceIte]
@@ -126,13 +126,13 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
               have hge := inv.processed.bound_ge dest carrier hb le_rfl
               have hcurrent : cursor < state.stack.length := lt_of_le_of_lt hge carrier.isLt
               let current : Fin state.stack.length := ⟨cursor, hcurrent⟩
-              rw [ensure_of_true _ hge]
+              rw [requires_of_true _ hge]
               simp only [except_ok_bind]
               rw [slotAt_index state.stack current, slotAt_index state.stack carrier]
               simp_action
               split
               · rename_i hequal
-                rw [ensure_of_true _ hequal]
+                rw [requires_of_true _ hequal]
                 simp_action
                 rw [swapDestinations_result state current carrier]
                 have hi := inv.retag current carrier (by rfl) hge
@@ -156,7 +156,7 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
                 obtain ⟨pos, rfl, hequal, hmovable⟩ := hselected
                 rw [slotAt_index state.stack pos]
                 simp_action
-                rw [ensure_of_true _ hequal]
+                rw [requires_of_true _ hequal]
                 simp_action
                 rw [swapDestinations_result state pos carrier]
                 simp_action
@@ -191,7 +191,7 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
                     have hp := hi.bound_at_top (dest := dest) pos hd (not_not.mp hnotTop) hplaced
                     finish_checked cursor, retag, hp.1, hp.2, advance
   · simp only [hc, ↓reduceIte]
-    rw [ensure_of_true _ (inv.complete_size (by omega))]
+    rw [requires_of_true _ (inv.complete_size (by omega))]
     trivial
 termination_by (target.length - cursor, state.pending_generations)
 decreasing_by

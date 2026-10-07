@@ -47,10 +47,6 @@ theorem Spec.of_action {action : Action source target spills Unit}
     ⦃condition⦄ requires condition reason ⦃fun _ => True; allowedErrors⦄ := by
   vcgen [requires] with finish
 
-@[spec] theorem ensure_spec (condition : Prop) [Decidable condition] (reason : String) :
-    ⦃condition⦄ ensure condition reason ⦃fun _ => True; allowedErrors⦄ := by
-  vcgen [ensure] with finish
-
 @[spec] theorem index_spec (size offset : ℕ) :
     ⦃offset < size⦄ index size offset ⦃fun i => i.val = offset; allowedErrors⦄ := by
   vcgen [index] with finish
@@ -93,9 +89,9 @@ theorem Spec.error {result : Except Error α} {post : α → Prop}
 @[simp] theorem spec_ok (value : α) (post : α → Prop) : Spec (.ok value) post ↔ post value := Iff.rfl
 @[simp] theorem spec_blocked (excess : ℕ) (post : α → Prop) : Spec (.error (.blocked excess)) post := trivial
 
-theorem ensure_of_true (condition : Prop) [Decidable condition] (h : condition) (reason : String) :
-    ensure condition reason = .ok () := by
-  simp [ensure, requires, h, pure, Except.pure, bind, Except.bind]
+theorem requires_of_true (condition : Prop) [Decidable condition] (h : condition) (reason : String) :
+    requires condition reason = .ok ⟨h⟩ := by
+  simp [requires, h, pure, Except.pure]
 
 @[simp] theorem index_eq (i : Fin size) : index size i.val = .ok i := by
   simp [index, i.isLt, pure, Except.pure]

@@ -37,11 +37,6 @@ abbrev Action (source target : Stack) (spills : SpillSet) :=
 def requires (condition : Prop) [Decidable condition] (reason : String) : Except Error (PLift condition) :=
   if h : condition then pure ⟨h⟩ else throw (.assertion reason)
 
--- throw an assertion error if `condition` does not hold.
-def ensure (condition : Prop) [Decidable condition] (reason : String) : Except Error Unit := do
-  let _ ← requires condition reason
-  return ()
-
 -- convert offset to a `Fin size` if offset < size. throw an assertion error otherwise.
 def index (size offset : ℕ) : Except Error (Fin size) := do
   if h : offset < size then return ⟨offset, h⟩
@@ -154,7 +149,7 @@ def swapWith (offset : ℕ) : Action source target spills Unit := do
 
   let ⟨hbelow⟩ ← requires (pos.val + 1 < state.stack.length) "cannot swap the top with itself"
   let ⟨hreach⟩ ← requires (state.stack.isSwapReachable pos) "swap target is out of reach"
-  ensure (¬ state.isFinal pos.val) "swap target is already final"
+  _ ← requires (¬ state.isFinal pos.val) "swap target is already final"
 
   have heq : state.stack.length = (state.stack.swap pos (state.stack.length - 1)).length := List.length_swap.symm
 
@@ -169,7 +164,7 @@ def swapWith (offset : ℕ) : Action source target spills Unit := do
 
 def produce (targetOffset : Fin target.length) : Action source target spills Unit := do
   let state ← get
-  ensure (state.mapping.symm targetOffset).isNone "destination already bound to a slot"
+  _ ← requires (state.mapping.symm targetOffset).isNone "destination already bound to a slot"
 
   let slot := target[targetOffset.val]
   let copy := state.stack.shallowestCopyPosition slot
@@ -186,7 +181,7 @@ def produce (targetOffset : Fin target.length) : Action source target spills Uni
     throw (.assertion "generated slot has no copy on the stack and is not spilled")
 
   let state ← get
-  ensure (state.positionOf targetOffset.val = some (state.stack.length - 1)) "generated slot is not bound to the top"
+  _ ← requires (state.positionOf targetOffset.val = some (state.stack.length - 1)) "generated slot is not bound to the top"
   modify fun state => { state with pending_generations := state.pending_generations - 1 }
 
 def generate (targetOffset : ℕ) : Action source target spills Unit := do
@@ -213,7 +208,7 @@ private theorem generate_pending_generations (state next : State source target s
       generate offset
       ⦃fun _ s => s.pending_generations = state.pending_generations - 1; epost⟨fun _ => True⟩⦄ := by
     vcgen [generate, produce, push, dup, swapDestinations, swapWith,
-      ensure, requires, index, slotAt, State.isSwapReachable, State.depthOf]
+      requires, index, slotAt, State.isSwapReachable, State.depthOf]
     all_goals simp_all
   have hp := hs.le_wp state rfl
   rw [StateT.wp_apply_eq, h] at hp
@@ -270,7 +265,7 @@ def buildBottomUp (initial : State source target spills) :
 
       if let some boundForTarget := state.positionOf targetOffset then
         -- The slot bound for this offset must not be below it.
-        ensure (boundForTarget ≥ targetOffset)
+        _ ← requires (boundForTarget ≥ targetOffset)
           "slot bound for the offset being filled is missing or already below it"
         let sourceForTargetOffset := boundForTarget
         let mut pos := sourceForTargetOffset
@@ -283,7 +278,7 @@ def buildBottomUp (initial : State source target spills) :
               pos := candidate
               break
 
-        ensure ((← slotAt state.stack pos) = (← slotAt state.stack sourceForTargetOffset))
+        _ ← requires ((← slotAt state.stack pos) = (← slotAt state.stack sourceForTargetOffset))
           "selected copy differs from the bound slot"
         swapDestinations pos sourceForTargetOffset
         if pos = targetOffset then
@@ -301,7 +296,7 @@ def buildBottomUp (initial : State source target spills) :
           return ← loop (targetOffset + 1)
 
       let state ← get
-      ensure (¬ state.isFinal targetOffset) "target slot is already final"
+      _ ← requires (¬ state.isFinal targetOffset) "target slot is already final"
       if targetOffset ≠ state.stack.length - 1 then
         if ¬ (← state.isSwapReachable targetOffset) then
           throw (.blocked ((← state.depthOf targetOffset) - MAX_SWAP_DEPTH))
@@ -309,7 +304,7 @@ def buildBottomUp (initial : State source target spills) :
       return ← loop (targetOffset + 1)
 
     let state ← get
-    ensure (state.stack.length = target.length) "stack and target sizes differ"
+    _ ← requires (state.stack.length = target.length) "stack and target sizes differ"
     return ⟨state.stack, state.trace⟩
   -- Advancing reduces the first component; generating before a retry reduces the second.
   termination_by current => (target.length - targetOffset, current.pending_generations)

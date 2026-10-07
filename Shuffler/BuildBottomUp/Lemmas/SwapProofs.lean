@@ -24,7 +24,7 @@ theorem swap_triple (state : State source target spills) (pos : Fin state.stack.
   -- Prove the checked preconditions before proving the state update.
   vcgen [swapWith, index] until (requires _ _)
   all_goals subst_vars
-  all_goals simp_all [ensure, requires]
+  all_goals simp_all [requires]
   apply WPMonad.pure_le_wp_pure (m := Except Error) _ _ _
   change Swapped _ _ _
   refine { size := ?_, pending := rfl, count := ?_, subset := ?_, mapping := ?_ }
