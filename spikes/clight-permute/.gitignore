@@ -1,0 +1,14 @@
+/build/
+/.frama-c/
+*.vo
+*.vos
+*.vok
+*.glob
+.*.aux
+.lia.cache
+.nia.cache
+*.cmi
+*.cmo
+*.cmx
+*.o
+__pycache__/

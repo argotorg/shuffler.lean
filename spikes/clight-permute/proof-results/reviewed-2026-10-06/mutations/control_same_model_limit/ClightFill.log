@@ -1,0 +1,24 @@
+File "./ClightFill.v", line 6, characters 0-178:
+Warning: Trying to mask the absolute name "Permute"!
+[masking-absolute-name,deprecated-since-8.8,deprecated,default]
+File "./ClightFill.v", line 6, characters 0-178:
+Warning: Trying to mask the absolute name "Permute.exchange"!
+[masking-absolute-name,deprecated-since-8.8,deprecated,default]
+File "./ClightFill.v", line 6, characters 0-178:
+Warning: Trying to mask the absolute name "Permute.depth"!
+[masking-absolute-name,deprecated-since-8.8,deprecated,default]
+File "./ClightFill.v", line 6, characters 0-178:
+Warning: Trying to mask the absolute name "Permute.permute"!
+[masking-absolute-name,deprecated-since-8.8,deprecated,default]
+Axioms:
+ClassicalDedekindReals.sig_not_dec : forall P : Prop, {~ ~ P} + {~ P}
+ClassicalDedekindReals.sig_forall_dec :
+  forall P : nat -> Prop,
+  (forall n : nat, {P n} + {~ P n}) ->
+  {n : nat | ~ P n} + {forall n : nat, P n}
+inline_assembly_sem : String.string -> signature -> extcall_sem
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+external_functions_sem : String.string -> signature -> extcall_sem
+Classical_Prop.classic : forall P : Prop, P \/ ~ P

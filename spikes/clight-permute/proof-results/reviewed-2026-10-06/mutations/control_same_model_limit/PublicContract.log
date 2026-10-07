@@ -1,0 +1,12 @@
+File "./PublicContract.v", line 5, characters 0-148:
+Warning: Trying to mask the absolute name "Permute"!
+[masking-absolute-name,deprecated-since-8.8,deprecated,default]
+File "./PublicContract.v", line 5, characters 0-148:
+Warning: Trying to mask the absolute name "Permute.exchange"!
+[masking-absolute-name,deprecated-since-8.8,deprecated,default]
+File "./PublicContract.v", line 5, characters 0-148:
+Warning: Trying to mask the absolute name "Permute.depth"!
+[masking-absolute-name,deprecated-since-8.8,deprecated,default]
+File "./PublicContract.v", line 5, characters 0-148:
+Warning: Trying to mask the absolute name "Permute.permute"!
+[masking-absolute-name,deprecated-since-8.8,deprecated,default]

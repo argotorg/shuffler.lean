@@ -1,0 +1,55 @@
+File "./ProofContract.v", line 6, characters 0-144:
+Warning: Trying to mask the absolute name "Permute"!
+[masking-absolute-name,deprecated-since-8.8,deprecated,default]
+File "./ProofContract.v", line 6, characters 0-144:
+Warning: Trying to mask the absolute name "Permute.exchange"!
+[masking-absolute-name,deprecated-since-8.8,deprecated,default]
+File "./ProofContract.v", line 6, characters 0-144:
+Warning: Trying to mask the absolute name "Permute.depth"!
+[masking-absolute-name,deprecated-since-8.8,deprecated,default]
+File "./ProofContract.v", line 6, characters 0-144:
+Warning: Trying to mask the absolute name "Permute.permute"!
+[masking-absolute-name,deprecated-since-8.8,deprecated,default]
+File "./ProofContract.v", line 33, characters 2-80:
+Error:
+In environment
+d : nat
+ge : genv
+memory : Memory.mem
+bd : block
+bp : block
+bt : block
+bu : block
+btrace : block
+bo : block
+source : 'I_d.+1 -> nat
+p : {perm 'I_d.+1}
+The term "permute_call_correct ge memory bd bp bt bu btrace bo source p"
+has type "True" while it is expected to have type
+ "(d.+1 <= 1024)%coq_nat ->
+  separate_arrays bd bp bt bu btrace bo ->
+  (forall x : 'I_d.+1, uint (Z.of_nat (source x))) ->
+  array_at memory bd (words source) ->
+  array_at memory bp (words (fun x : 'I_d.+1 => \val (p x))) ->
+  writable_array memory bt d.+1 ->
+  writable_array memory bu d.+1 ->
+  writable_array memory btrace (2 * d.+1) ->
+  writable_array memory bo 3 ->
+  exists
+    (memory' : Memory.mem) (code : Z) (result : SolcResult
+                                                 Datatypes_nat__canonical__eqtype_Equality
+                                                 d.+1),
+    eval_funcall function_entry2 ge memory (Internal permute)
+      (call_arguments (Int.repr (Z.of_nat d.+1)) (Vptr bd Ptrofs.zero)
+         (Vptr bp Ptrofs.zero) (Vptr bt Ptrofs.zero) 
+         (Vptr bu Ptrofs.zero) (Vptr btrace Ptrofs.zero)
+         (Vptr bo Ptrofs.zero))
+      E0 memory' (Vint (Int.repr code)) /\
+    solc_permute (A:=Datatypes_nat__canonical__eqtype_Equality) source p =
+    Some result /\
+    result_arrays bd bp btrace bo result memory'
+      (Out_return (Some (Vint (Int.repr code), u32))) /\
+    solc_result_spec (A:=Datatypes_nat__canonical__eqtype_Equality) source p
+      result /\
+    (code = 0 \/ code = 1)".
+

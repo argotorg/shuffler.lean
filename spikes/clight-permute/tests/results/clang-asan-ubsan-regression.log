@@ -1,0 +1,7 @@
+solc oracle: cd1b0a209b17d3f6dd124bd89e1b9bcdff79b912; 3 source hashes checked
+oracle checks: three modified sources and invalid selectors rejected
+clang version 21.1.8
+x86_64-unknown-linux-gnu
+test flags: -O1 -g -fsanitize=address,undefined -fno-sanitize-recover=all
+tests: 4435 exhaustive cases; boundary and invalid-input cases
+fuzz: 20000 cases, seed 2654435769
