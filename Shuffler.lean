@@ -6,3 +6,12 @@ import Shuffler.BuildBottomUp.Complete
 import Shuffler.Generate.BuildBottomUp
 import Shuffler.Feasibility.Theorems
 import Shuffler.Optimality.Cost
+import Shuffler.Optimality.Schedule.Theorems
+import Shuffler.Optimality.Schedule.Soundness
+import Shuffler.Optimality.Lineage.Theorems
+import Shuffler.Optimality.Approximation.Build
+import Shuffler.Optimality.OldBBU.CostBounds
+import Shuffler.Optimality.ForcedIntroduction.Cost
+import Shuffler.Optimality.Schedule.Original.Theorems
+import Shuffler.Optimality.Schedule.Append.Theorems
+import Shuffler.Optimality.PrefixIntroduction.Theorems

@@ -106,6 +106,23 @@ decreasing_by
 
 -- This constructor returns data in Type. It executes finite searches and
 -- instruction constructors; it does not extract a trace from an existence proof.
+/-
+Informal complexity estimates for this constructor and the checked `build`:
+EVM reach is fixed at 16. Let n include source, target, missing, and spill input
+sizes, and assume O(1) value comparisons. `prepare` runs once. Each
+`buildWorking` step consumes one target slot, searches at most 17 working
+values, and emits at most two operations.
+
+An implementation with arrays, dense value ids, count tables, and an operation
+buffer takes O(n) time and O(n) space, including output. Comparison maps give
+O(n log n) time and O(n) space. The current linked-list checked `build` takes
+O(n²) time and can use O(n²) space: it scans and erases lists, copies growing
+prefixes, concatenates recursive traces, and retains intermediate stack lists.
+
+The `BuildBottomUp.buildComplete` wrapper also constructs `expectedStack`.
+Its linear estimate assumes O(1) mapping queries. The arbitrary `PEquiv`
+functions in a State have no evaluation-time bound from their type.
+-/
 def buildOfReserve (spills : SpillSet) (source target : Stack) (missing : Multiset Value)
     (h : Reserve spills source target missing) : BuiltTrace spills source target missing := by
   let prepared := prepare spills source target missing h
