@@ -63,19 +63,24 @@ def path (graph : Network) (labels : Labels) : Nat → Nat → Option (List Nat)
         let previous ← path graph labels fuel graph.edges[edgeIndex]!.tail
         return edgeIndex :: previous
 
-def augment (graph : Network) (flow : Flow) : Option Flow := do
-  let (labels, distance) ← shortest graph flow
-  let steps ← path graph labels graph.outgoing.size graph.sink
-  let capacity := steps.foldl (fun capacity edgeIndex =>
-    let reverse := graph.edges[edgeIndex]!.reverse
-    (capacity.set! edgeIndex (capacity[edgeIndex]! - 1)).set! reverse (capacity[reverse]! + 1)) flow.capacity
-  -- Truncation also updates unreachable vertices. This keeps all residual
-  -- reduced costs nonnegative when the current potentials are feasible.
-  let potential := (List.range graph.outgoing.size).foldl (fun potential vertex =>
+def pushArc (graph : Network) (capacity : Array Nat) (edgeIndex : Nat) : Array Nat :=
+  let reverse := graph.edges[edgeIndex]!.reverse
+  (capacity.set! edgeIndex (capacity[edgeIndex]! - 1)).set! reverse (capacity[reverse]! + 1)
+
+def updatePotential (graph : Network) (flow : Flow) (labels : Labels) (distance : Int) : Array Int :=
+  (List.range graph.outgoing.size).foldl (fun potential vertex =>
     let change := match labels.distance[vertex]! with
       | none => distance
       | some found => min found distance
     potential.set! vertex (flow.potential[vertex]! + change)) flow.potential
+
+def augment (graph : Network) (flow : Flow) : Option Flow := do
+  let (labels, distance) ← shortest graph flow
+  let steps ← path graph labels graph.outgoing.size graph.sink
+  let capacity := steps.foldl (pushArc graph) flow.capacity
+  -- Truncation also updates unreachable vertices. This keeps all residual
+  -- reduced costs nonnegative when the current potentials are feasible.
+  let potential := updatePotential graph flow labels distance
   return ⟨capacity, potential⟩
 
 def run (graph : Network) (count : Nat) : Option Flow :=
