@@ -1,0 +1,116 @@
+{
+  "status": "checked actual production outputs from saved portfolio traces",
+  "scope": "No portfolio builder or optimality oracle was rerun. The empty-source pass optimizes a fixed birth word. The source pass preserves the supplied labelled assignment and birth methods; its raw increases are rejected by the incumbent comparison.",
+  "runner": "/tmp/optimality-bench-postpass-v1",
+  "runnerSha256": "eeafdf451487f1c94d3fd8491c48bade3ac09f8b6a3e92e212e93b242e907ba5",
+  "groups": [
+    {
+      "mode": "birth-reference",
+      "cases": 97,
+      "inputPath": "/tmp/postpass-empty-input.jsonl",
+      "inputSha256": "1b986bfce0959d8d6cc2dd2c37d66ff5e209f01ad257c57b0d3bc88768fd0909",
+      "outputPath": "/tmp/postpass-empty-output.jsonl",
+      "outputSha256": "4d7d2ed5a5be0bccbea237afdae544e8018ebeaf4955590fd14d310cb99d4497",
+      "wallMs": 142.313314,
+      "timingScope": "Each measured case includes production replay, the post-pass, output replay, cost and certificate reporting, and JSON serialization. It excludes the saved portfolio run.",
+      "medianMs": 0.114766,
+      "p95Ms": 2.976689,
+      "maxMs": 14.326243,
+      "maxSourceSize": 0,
+      "maxTargetSize": 64,
+      "rawScoreImprovements": 0,
+      "rawScoreIncreases": 0,
+      "selectedScoreIncreases": 0,
+      "selectedGasSaved": 0,
+      "selectedBytesSaved": 0,
+      "sourceRecords": [
+        {
+          "path": "/tmp/optimality-v15-planted.jsonl",
+          "sha256": "2146562360f103325b7ddaa00607d21e96491aca31d96267ffd6c2412500a73f"
+        },
+        {
+          "path": "/tmp/optimality-v15-regressions.jsonl",
+          "sha256": "bc8c49e150139ff68d86355a809fb4c11f76ceb27f6fb29540aedb278b0b04b8"
+        },
+        {
+          "path": "/tmp/optimality-v6-small-20261007.jsonl",
+          "sha256": "741f54f1c8b6f5ffcd9646f884d1046b62c524eda78a4044804e2b7dcbd4e484"
+        },
+        {
+          "path": "/tmp/optimality-v6-medium-2026100721.jsonl",
+          "sha256": "d832c40f065e7e2e060471e006c0f6852cfab6f2818d283a526f209e5b2dcda5"
+        },
+        {
+          "path": "/tmp/optimality-v6-medium-2026100722.jsonl",
+          "sha256": "c11dc2c1adcb0ed1fce0d2db52d95b1ed70948200d57ae9949d494cc1a918c9c"
+        },
+        {
+          "path": "/tmp/optimality-v6-medium-2026100723.jsonl",
+          "sha256": "4c2766f6f1319224d981bc45e8ca1d9e33037809efc6af3959dffa47f33367ba"
+        }
+      ],
+      "changes": []
+    },
+    {
+      "mode": "source-reference",
+      "cases": 603,
+      "inputPath": "/tmp/postpass-source-input.jsonl",
+      "inputSha256": "51de7c56f5f1a8d972b7b9d3879b75b2fe081fadf5e2526e5581611ec8343e84",
+      "outputPath": "/tmp/postpass-source-output.jsonl",
+      "outputSha256": "779ef8436c9826fcf08699955dfb9c32ab67a0838707a9730f30ab9daf4808bb",
+      "wallMs": 5106.312767,
+      "timingScope": "Each measured case includes production replay, the post-pass, output replay, cost and certificate reporting, and JSON serialization. It excludes the saved portfolio run.",
+      "medianMs": 2.003284,
+      "p95Ms": 23.699084,
+      "maxMs": 224.521961,
+      "maxSourceSize": 512,
+      "maxTargetSize": 520,
+      "rawScoreImprovements": 1,
+      "rawScoreIncreases": 42,
+      "selectedScoreIncreases": 0,
+      "selectedGasSaved": 6,
+      "selectedBytesSaved": 2,
+      "sourceRecords": [
+        {
+          "path": "/tmp/optimality-v15-planted.jsonl",
+          "sha256": "2146562360f103325b7ddaa00607d21e96491aca31d96267ffd6c2412500a73f"
+        },
+        {
+          "path": "/tmp/optimality-v15-regressions.jsonl",
+          "sha256": "bc8c49e150139ff68d86355a809fb4c11f76ceb27f6fb29540aedb278b0b04b8"
+        }
+      ],
+      "changes": [
+        {
+          "id": "optimality-v15-planted.jsonl:planted-chains-2026100793-51/wsupplied/g1b1",
+          "sourceSize": 16,
+          "targetSize": 32,
+          "beforeCost": {
+            "gas": 107,
+            "bytes": 36
+          },
+          "candidateCost": {
+            "gas": 101,
+            "bytes": 34
+          },
+          "beforeScore": 143,
+          "candidateScore": 135,
+          "selectedCost": {
+            "gas": 101,
+            "bytes": 34
+          },
+          "selectedScore": 135,
+          "measuredMs": 3.711083,
+          "savedPortfolioMs": 3324.969285,
+          "keepCandidate": true
+        }
+      ]
+    }
+  ],
+  "preservedV15Runner": {
+    "path": "/tmp/optimality-bench-normalized-portfolio-v15",
+    "sha256": "3ddd8f261d12476b8add7c6e18bd6be3b470b15a687d67946b117fefa36c3340"
+  },
+  "proofScope": "No new global factor-two claim follows from these finite checks. Empty fixed-word and general supplied-assignment guarantees remain separate.",
+  "reproduce": "node scripts/optimality-birth-postpass-check.mjs /tmp/optimality-bench-postpass-v1 Bench/evidence-birth-postpass.json"
+}

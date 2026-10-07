@@ -8,6 +8,8 @@ import Shuffler.Optimality.ShortGrowth.Build
 import Shuffler.Optimality.Baseline
 import Shuffler.Optimality.Approximation.Build
 import Shuffler.Optimality.SwapRuns.Theorems
+import Shuffler.Optimality.BirthPlacement.Improve
+import Shuffler.Optimality.BirthPlacement.SourceRealize
 
 /-!
 JSONL bridge for offline benchmarks. Every accepted operation list is checked
@@ -105,7 +107,8 @@ private def parseProblem (json : Json) : Except String Problem := do
     | .ok value => value.getArr? >>= fun values => (values.toList.mapM parseOp).map some
     | .error _ => pure none
   let algorithms : Option (List String) ← optional json "algorithms" none
-  let allowedAlgorithms := algorithmNames ++ ["normalize-reference", "normalize-reference-twice"]
+  let allowedAlgorithms := algorithmNames ++ ["normalize-reference", "normalize-reference-twice",
+    "birth-reference", "source-reference"]
   if !(algorithms.getD []).all allowedAlgorithms.contains then throw "unknown algorithm selection"
   return {
     id := id
@@ -278,6 +281,33 @@ private def runNormalizeReference (twice : Bool) (problem : Problem) : Json :=
       let result := if twice then SwapRuns.normalizeBuilt normalized else normalized
       observed problem (flatten result.trace)
 
+-- These benchmark modes consume saved traces. They do not run a portfolio.
+private def runBirthReference (problem : Problem) : Json :=
+  if hs : problem.source = [] then
+    match problem.reference with
+    | none => Json.mkObj [("status", toJson "not-applicable")]
+    | some ops =>
+      match replayExact problem.spills problem.source problem.target
+          (problem.missing : Multiset Value) ops with
+      | none => Json.mkObj [("status", toJson "invalid-reference")]
+      | some built =>
+        let empty := built.cast hs rfl rfl
+        let improved := BirthPlacement.improveTraceWord (costs problem) problem.weights
+          empty.trace empty.noPop
+        observed problem (flatten improved)
+  else Json.mkObj [("status", toJson "not-applicable")]
+
+private def runSourceReference (problem : Problem) : Json :=
+  match problem.reference with
+  | none => Json.mkObj [("status", toJson "not-applicable")]
+  | some ops =>
+    match replayExact problem.spills problem.source problem.target
+        (problem.missing : Multiset Value) ops with
+    | none => Json.mkObj [("status", toJson "invalid-reference")]
+    | some built =>
+      let candidate := BirthPlacement.canonicalizeTraceAssignment built.trace built.noPop
+      observed problem (flatten candidate.built.trace)
+
 private def runProblem (problem : Problem) : IO Json := do
   let start ← IO.monoNanosNow
   let actualReserve := decide (Shuffler.Placement.Reserve problem.spills problem.source problem.target
@@ -299,7 +329,9 @@ private def runProblem (problem : Problem) : IO Json := do
       ("schedule-chain", fun _ => runScheduleCandidate .chain problem),
       ("schedule", fun _ => runSchedule problem),
       ("normalize-reference", fun _ => runNormalizeReference false problem),
-      ("normalize-reference-twice", fun _ => runNormalizeReference true problem)]
+      ("normalize-reference-twice", fun _ => runNormalizeReference true problem),
+      ("birth-reference", fun _ => runBirthReference problem),
+      ("source-reference", fun _ => runSourceReference problem)]
   let algorithms := if problem.actualCaps then Json.mkObj (tasks.filterMap fun (name, run) =>
       if (problem.algorithms.map (fun selected => selected.contains name)).getD
           (algorithmNames.contains name) then some (name, run ()) else none)
