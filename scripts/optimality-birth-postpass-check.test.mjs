@@ -35,3 +35,10 @@ test('rejects a source output that does not reach the target', () => {
     ops: [['push', 'l:1'], ['push', 'l:0']], cost: { gas: 5, bytes: 3 }, score: 5 };
   assert.throws(() => checkPostpass(problem, altered, 'source-reference'), /endpoint differs/);
 });
+
+test('rejects a final selected trace whose weighted cost increases', () => {
+  const altered = structuredClone(output);
+  altered.result.algorithms['postpass-reference'] = { status: 'ok',
+    ops: [...problem.referenceOps, ['swap', 1], ['swap', 1]], cost: { gas: 11, bytes: 5 }, score: 11 };
+  assert.throws(() => checkPostpass(problem, altered, 'postpass-reference'), /incumbent score increases/);
+});

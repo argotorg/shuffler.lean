@@ -20,7 +20,8 @@ export function checkPostpass(problem, output, mode) {
   assert.deepEqual(after.cost, candidate.cost, 'Lean and JS costs differ');
   assert.equal(after.score, candidate.score, 'Lean and JS scores differ');
   assert.deepEqual(after.added, before.added, 'ordered birth values differ');
-  if (mode === 'birth-reference') assert.ok(after.score <= before.score, 'empty-source score increases');
+  if (mode === 'birth-reference' || mode === 'postpass-reference')
+    assert.ok(after.score <= before.score, 'incumbent score increases');
   if (mode === 'source-reference') {
     const methods = ops => ops.filter(op => op[0] !== 'swap').map(op => op[0]);
     assert.deepEqual(methods(candidate.ops), methods(problem.referenceOps), 'source birth methods differ');
@@ -35,7 +36,7 @@ export function checkPostpass(problem, output, mode) {
     keepCandidate };
 }
 
-function assess(inputPath, outputPath, timePath, mode) {
+export function assess(inputPath, outputPath, timePath, mode) {
   const input = rows(inputPath), output = rows(outputPath);
   assert.equal(input.length, output.length, 'output row count differs');
   const results = input.map((problem, index) => checkPostpass(problem, output[index], mode));
@@ -65,7 +66,7 @@ function main() {
     assess('/tmp/postpass-source-input.jsonl', '/tmp/postpass-source-output.jsonl',
       '/tmp/postpass-source-time.json', 'source-reference')];
   const report = { status: 'checked actual production outputs from saved portfolio traces',
-    scope: 'No portfolio builder or optimality oracle was rerun. The empty-source pass optimizes a fixed birth word. The source pass preserves the supplied labelled assignment and birth methods; its raw increases are rejected by the incumbent comparison.',
+    scope: 'No portfolio builder or optimality oracle was rerun. The empty-source pass optimizes a fixed birth word. The source pass builds from the supplied labelled assignment and preserves birth methods; its raw increases are rejected by the incumbent comparison. No theorem about re-extracting the output assignment is claimed.',
     runner, runnerSha256: digest(runner), groups,
     preservedV15Runner: { path: '/tmp/optimality-bench-normalized-portfolio-v15',
       sha256: digest('/tmp/optimality-bench-normalized-portfolio-v15') },

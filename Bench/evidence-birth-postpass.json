@@ -1,6 +1,6 @@
 {
   "status": "checked actual production outputs from saved portfolio traces",
-  "scope": "No portfolio builder or optimality oracle was rerun. The empty-source pass optimizes a fixed birth word. The source pass preserves the supplied labelled assignment and birth methods; its raw increases are rejected by the incumbent comparison.",
+  "scope": "No portfolio builder or optimality oracle was rerun. The empty-source pass optimizes a fixed birth word. The source pass builds from the supplied labelled assignment and preserves birth methods; its raw increases are rejected by the incumbent comparison. No theorem about re-extracting the output assignment is claimed.",
   "runner": "/tmp/optimality-bench-postpass-v1",
   "runnerSha256": "eeafdf451487f1c94d3fd8491c48bade3ac09f8b6a3e92e212e93b242e907ba5",
   "groups": [
