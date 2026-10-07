@@ -114,10 +114,11 @@ The comparison trace may use different direct or DUP instructions.
 the lower weighted score. It preserves the word, exact additions, source,
 and target. It has no POP and no failure branch. Lean proves that it never
 increases the input score and that it retains the same-word factor-two
-bounds. This API is separate from the current portfolio schedule.
+bounds. The portfolio calls this API once after it selects a growing trace
+with an empty source.
 
-These results apply to a supplied birth word. They do not choose the birth
-word or its introduction methods. The number of moved endpoints can also
+These results apply to a supplied birth word. They choose its introduction
+methods, but do not choose the birth word. The number of moved endpoints can also
 exceed the number of positions with unequal values. With reach 2, word
 `b a b a` and target `a a b b`, the `a` at position 1 must move because the
 other `a` is born too late for output position 0.

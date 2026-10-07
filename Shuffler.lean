@@ -28,3 +28,5 @@ import Shuffler.Optimality.BirthPlacement.RawWord.Theorems
 import Shuffler.Optimality.BirthPlacement.Global.Theorems
 import Shuffler.Optimality.BirthPlacement.SourceCheapest.Theorems
 import Shuffler.Optimality.BirthPlacement.Dual.Trace
+import Shuffler.Optimality.BirthPlacement.Dual.Source
+import Shuffler.Optimality.Schedule.PostPass.Guarantees
