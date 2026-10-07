@@ -8,13 +8,25 @@ namespace Shuffler.Optimality
 
 -- A scalar bound for planners that do not need a proof-carrying result.
 -- The terms can charge the same swaps, so use their maximum.
-def staticExcess (costs : PrimitiveCosts) (weights : Weights)
+def staticExcessCore (costs : PrimitiveCosts) (weights : Weights)
     (spills : SpillSet) (source target : Stack) (missing : Multiset Value) : Nat :=
   max (max (GroupEntry.bound costs weights source target missing)
       (max (lineageBound costs weights spills source target missing)
         (coupledBound costs weights spills source target missing
           (GroupEntry.requiredSwaps source target missing))))
     (ValueAccounting.bound costs weights spills source target missing)
+
+-- A frozen prefix cannot supply an operation. Recompute the reduced total
+-- lower bound, then express it above the original generation baseline.
+def staticExcess (costs : PrimitiveCosts) (weights : Weights)
+    (spills : SpillSet) (source target : Stack) (missing : Multiset Value) : Nat :=
+  let full := staticExcessCore costs weights spills source target missing
+  let count := Shuffler.Placement.frozen source
+  if count = 0 then full
+  else max full
+    (baseline costs weights spills (source.drop count) missing +
+      staticExcessCore costs weights spills (source.drop count) (target.drop count) missing -
+      baseline costs weights spills source missing)
 
 -- This compares excess above the generation baseline. The form without
 -- subtraction also covers inputs where the optimum equals the baseline.

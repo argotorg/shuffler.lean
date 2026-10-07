@@ -58,3 +58,17 @@ for the baseline and factor-two transfer results. They do not change `Trace`,
 the planner, or its operation semantics. `Tests/OptimalityFrozenPrefix.lean`
 checks maximum-depth SWAP and DUP, PUSH, LOAD, cost preservation, a changed
 frozen prefix, and the height-17 boundary where removing one slot is invalid.
+
+The runtime `staticExcess` wrapper now applies this reduction. If the source
+has a frozen prefix, it recomputes baseline plus the core bound on the active
+suffix, subtracts the original baseline, and takes the maximum with the full
+bound. The height-at-most-17 path keeps the core bound. The saved frozen-gap
+test now has excess bound 2. A value available only in the frozen prefix has
+original baseline 1, reduced baseline 34, and excess bound 33.
+
+The full Shuffler, Tests, and native benchmark build passes 3005 jobs after
+this integration. The new bound and certificate audit uses only standard
+axioms. The pinned executable is `/tmp/optimality-bench-frozen-v13`, with
+SHA256 `0f6c8667f24b84e12a33eba5dda1aa0e264866b8df25fa826568245e715164e8`.
+Its runtime change from v12 is this bound wrapper; no scheduler policy was
+added. Targeted v12/v13 comparisons are recorded separately in Bench.

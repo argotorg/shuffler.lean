@@ -3,6 +3,7 @@ import Shuffler.Optimality.Reintroduction.Theorems
 import Shuffler.Optimality.GroupEntry.Theorems
 import Shuffler.Optimality.CoupledBound.Theorems
 import Shuffler.Optimality.ValueAccounting.Theorems
+import Shuffler.Optimality.Approximation.Drop
 
 namespace Shuffler.Optimality
 
@@ -100,14 +101,30 @@ def ExcessLowerBound.max
 
 -- These bounds charge some of the same swaps. Taking their maximum is valid;
 -- adding them would need a separate disjointness proof.
-def staticExcessLowerBound (costs : PrimitiveCosts) (weights : Weights)
+def staticExcessCoreLowerBound (costs : PrimitiveCosts) (weights : Weights)
     (spills : SpillSet) (source target : Stack) (missing : Multiset Value) :
     ExcessLowerBound costs weights spills source target missing where
-  excess := staticExcess costs weights spills source target missing
+  excess := staticExcessCore costs weights spills source target missing
   valid := (((groupEntryExcessLowerBound costs weights spills source target missing).max
     ((lineageExcessLowerBound costs weights spills source target missing).max
       (coupledExcessLowerBound costs weights spills source target missing))).max
     (valueAccountingExcessLowerBound costs weights spills source target missing)).valid
+
+def staticExcessLowerBound (costs : PrimitiveCosts) (weights : Weights)
+    (spills : SpillSet) (source target : Stack) (missing : Multiset Value) :
+    ExcessLowerBound costs weights spills source target missing where
+  excess := staticExcess costs weights spills source target missing
+  valid := by
+    intro trace he
+    unfold staticExcess
+    dsimp only
+    split
+    · exact (staticExcessCoreLowerBound costs weights spills source target missing).valid trace he
+    · exact ((staticExcessCoreLowerBound costs weights spills source target missing).max
+        (ExcessLowerBound.ofDrop costs weights (Shuffler.Placement.frozen source) (Nat.le_refl _)
+          (staticExcessCoreLowerBound costs weights spills
+            (source.drop (Shuffler.Placement.frozen source))
+            (target.drop (Shuffler.Placement.frozen source)) missing))).valid trace he
 
 theorem weightedOptimal_of_cost_eq_bound (costs : PrimitiveCosts) (weights : Weights)
     (bound : ExcessLowerBound costs weights spills source target missing)
