@@ -65,6 +65,57 @@ For a joint word-and-assignment objective, `2G+sH` is sufficient, where `G`
 is the introduction score and `s` the SWAP price. This is a weaker target
 than minimizing `F`. No efficient minimizer for `H` is claimed here.
 
+## A bounded interface to future assignments
+
+Keep only assignment edges whose endpoints are both in the source. This
+partial permutation consists of disjoint paths and closed cycles. The
+virtual prefix uses only this data: a target outside the source acts as an
+exit, and its exact future index does not affect any prefix SWAP. Each
+prefix cycle stays inside one component of the source partial permutation.
+
+Call a source component marked when it contains a prefix cycle counted by
+`c`. Let `q_closed` count marked closed source cycles, and let `m` count
+marked open source paths. Then `m≤c≤8` at reach 16. Follow the full assignment
+from each marked path, through future positions and any unmarked source
+paths, to the next marked path. These returns define a permutation `tau`
+of the `m` marked paths. Fixed points of `tau` count as return cycles. Thus
+
+```
+r = q_closed + number_of_cycles(tau).
+```
+
+This confines the needed global topology to at most eight terminals. It
+does not make the connection problem local: a return path can pass through
+many future positions. Once the full assignment is supplied, a cycle scan
+with indexed arrays computes this information in linear time. Optimizing it
+remains a separate problem.
+
+If `m=0`, then `r=q_closed`. If `m=1`, then `r=q_closed+1`. In these cases
+`H-E` is fixed by the source partial map. For a supplied birth word and a
+fixed source partial map, minimum-cost bipartite matching can minimize `E`
+over the remaining value-compatible deadline edges. Source rows that exit
+the partial map are restricted to future columns. Introduction availability
+depends on the supplied word, not on which equal copies are paired.
+
+In particular, source length at most four gives `c≤1` and hence `m≤1`.
+There are only finitely many partial maps on those source positions.
+Trying them and solving their matching problems gives a polynomial
+fixed-word route for that special case. This is a paper construction; no
+implementation, complexity refinement, or Lean optimization theorem is
+claimed.
+
+For `m>0`, discarding the return connections only gives
+
+```
+q_closed + 1 ≤ r ≤ q_closed + m.
+```
+
+The resulting local upper estimate can exceed `H` by as much as `m-1`,
+with the bound `m-1≤7`. This additive allowance is not a factor-two surplus
+guarantee. A finite set of terminal-connection patterns does not by itself
+give an efficient method to realize each pattern through the permitted
+future matching edges.
+
 ## H is not an exact sum of edge costs
 
 Use three equal source values and no births. Every token permutation is
@@ -149,6 +200,37 @@ axioms. No solver result is an assumption of the theorem.
 The six assignments were found in one focused check of the 5040 labelled
 assignments at source height 5 and total length 7. The final proof needs only
 the six displayed assignments and the three explicit traces.
+
+## Old rows and moved count do not determine a sufficient bound
+
+Keep `A` above, and compare it with
+
+```
+T = [6,5,1,0,4,2,3].
+```
+
+Both have six moved positions and exactly the same five old assignment rows,
+including the same future destinations for the old tokens. They have the
+same source partial map and the same two prefix cycles. `A` reconnects those
+paths into one full cycle, so `r=1` and `F=H=9`. `T` leaves two full cycles,
+so `r=2` and `F=H=8`.
+
+The production trace
+
+```
+DUP1; SWAP3; SWAP4; DUP1; SWAP3; SWAP6
+```
+
+has assignment `T` and four SWAPs. Any score that depends only on `E` and
+the old rows must give the same result for `A` and `T`. A pointwise bound
+`F≤score≤2S` would require that result to be both at least 9 and at most 8.
+This rules out such a local score even when it is nonlinear.
+
+`Tests.OptimalitySourceEdgeObstruction.no_old_rows_surrogate` proves this
+second obstruction in Lean. It checks the production trace, equal old rows,
+the moved counts, and the required potential values. Future connectivity is
+therefore necessary for this pointwise bound, even though its interface has
+at most eight marked paths at production reach.
 
 ## What remains possible
 

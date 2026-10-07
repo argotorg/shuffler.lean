@@ -126,6 +126,46 @@ the general lower bound and the exact `k=8` witness. The all-`k` output formula
 and asymptotic sharpness argument are not yet Lean theorems.
 See [sharpness scope](fixed-word-sharpness.md).
 
+## Research after the production freeze
+
+For an empty source with legal direct introduction of every value, the
+minimum generation score is `D-M_R`: `D` is the all-direct score and `M_R`
+is maximum-weight gap-interval packing at capacity `R`. The paper proof
+handles the final boundary and constructs births in deadline order. A
+min-cost-flow implementation takes `O(R*n*log n)` arithmetic operations,
+or `O(n log n)` at reach 16. This result excludes SWAP cost and is not a
+Lean theorem. See [exact generation](empty-source-generation.md).
+
+With fixed gap prices, a sparse flow graph solves the priced assignment
+problem and supplies row/column dual potentials. Seven small named cases
+were compared with exact permutation enumeration. Replacing the row/column
+data for the two saved witnesses preserves lower bounds 1166 and 147.
+The ordinary implementation design takes `O(n² log n)`, above the strict
+`O(n²)` ceiling. The cited faster flow theorem retains a cost-bit factor;
+the outer price algorithm and its price-size bound remain open. See
+[the fixed-price oracle](priced-assignment-oracle.md).
+
+A paper proof gives one local recombination with
+`W(P')+W(Q')≤E(P)+E(Q)` for the empty-source realizer. Extra quota and
+generation conditions, together with `J(X)=L`, give `C+B≤L`. The proof does
+not justify repeated use of the same cycle credit or prove that a required
+recombination always exists. The permutation check covers 11,816 local
+recombinations. See [local rounding](local-cycle-rounding.md).
+
+The source objective `H=E+2c-r` satisfies `F≤H≤2S` on paper. It counts full
+cycles only where source entry affects the cost. At reach 16, at most eight
+marked source paths carry the needed connections through future rows.
+For at most one marked open path, fixing the source partial map reduces
+the remaining objective to ordinary matching. The general connection
+problem remains open.
+
+Two separate kernel theorems limit simpler source bounds. No signed rational
+edge matrix can give universal pointwise bounds `F≤W≤2S` for this canonical
+realizer: six feasible assignments force `13≤12`. No function of only the
+moved count and all old rows can do so either: two assignments force `9≤8`.
+These statements do not rule out a global factor-two optimizer or a different
+realizer. See [the source assignment assessment](source-assignment-surrogate.md).
+
 ## Validation and remaining work
 
 `lake build Shuffler Tests optimality_bench` passed with 3261 build jobs on
@@ -146,15 +186,11 @@ A general method that produces a candidate and dual certificate with
 movement omits some initial-cycle SWAP costs. No LP integrality or general
 rounding theorem closes this gap.
 
-A later focused assessment gives the paper objective `H=E+2c-r`, with
-`F≤H≤2S`. It needs full-cycle counts only for source-affected cycles.
-A separate kernel theorem shows that no signed rational edge matrix can
-give the universal pointwise bounds `F≤W≤2S` for this canonical realizer:
-six feasible assignments force `13≤12`. This does not rule out a global
-factor-two optimizer or a different realizer. See
-[the source assignment assessment](source-assignment-surrogate.md).
 `lake build Tests.OptimalitySourceEdgeObstruction` passed with 1590 jobs;
-its axiom audit lists only the same three standard axioms.
+both obstruction axiom audits list only the same three standard axioms.
+The source and local-rounding notes received independent read-only review.
+The exact-generation proof received a separate review of its interval bound,
+final-boundary injection, and deadline schedule.
 
 Against the starting commit `4b8dfa7`, `Stack.lean`, `Trace.lean`, the original
 BBU implementation, and the mapping builder are unchanged. The Placement
