@@ -1,0 +1,405 @@
+{
+  "status": "finite exact search, not a movement theorem",
+  "scope": "Empty source; first and last target values are a, with no other a. The selected a interval has R<j<=2R. Every consecutive interval of another value is selected and has gap at most R. All per-value direct budgets equal one. Capacity is checked. Equal-copy role exchange and every birth order are allowed.",
+  "monotonicity": "Removing selected short intervals only raises the introduction budgets and removes presence requirements. Therefore each witness also works for every subset of its selected short intervals, while retaining the a interval.",
+  "geometryScope": "Position graphs describe the returned minimum-SWAP witness only. A disconnected graph does not exclude another connected witness.",
+  "domain": {
+    "reach": "1 through4",
+    "lastA": "R+1 through2R",
+    "middleKinds": "at most min(R,4)",
+    "stateLimit": 300000
+  },
+  "carrierDefinition": "a is born first at0 and copied at some p with1<=p<=R. Both SWAPs lift that copied a: first p→k, then k→j, with no other SWAP.",
+  "carrierConstruction": "Try at most R one-hop paths p→j and R squared two-hop paths p→k→j. Rotate the prescribed birth values along the path, then emit one direct introduction per kind and DUP thereafter; perform each path SWAP immediately after its upper position is born. Check the exact presence and reach guards. This is an offline construction experiment, not an integrated runtime policy or a theorem that some path always succeeds.",
+  "plans": 870,
+  "states": 1387160,
+  "counts": {
+    "1": 1,
+    "2": 6,
+    "3": 56,
+    "4": 807
+  },
+  "maximumSwaps": 2,
+  "twoSwaps": 200,
+  "connectedTwoSwaps": 200,
+  "carrierTwoSwaps": 200,
+  "limits": [],
+  "violations": [],
+  "disjointExamples": [],
+  "nonCarrierExamples": [],
+  "carrierFailures": [],
+  "maximumExamples": [
+    {
+      "word": [
+        "a",
+        "b",
+        "b",
+        "c",
+        "a"
+      ],
+      "reach": 2,
+      "result": {
+        "status": "reachable",
+        "states": 45,
+        "ops": [
+          [
+            "load",
+            42
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "swap",
+            2
+          ],
+          [
+            "load",
+            44
+          ],
+          [
+            "swap",
+            1
+          ]
+        ],
+        "direct": [
+          1,
+          1,
+          1
+        ],
+        "swaps": 2
+      },
+      "graph": {
+        "edges": [
+          [
+            1,
+            3
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "shared": [
+          3
+        ],
+        "connected": true
+      }
+    },
+    {
+      "word": [
+        "a",
+        "b",
+        "b",
+        "b",
+        "c",
+        "c",
+        "a"
+      ],
+      "reach": 3,
+      "result": {
+        "status": "reachable",
+        "states": 164,
+        "ops": [
+          [
+            "load",
+            42
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "swap",
+            3
+          ],
+          [
+            "load",
+            44
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "swap",
+            2
+          ]
+        ],
+        "direct": [
+          1,
+          1,
+          1
+        ],
+        "swaps": 2
+      },
+      "graph": {
+        "edges": [
+          [
+            1,
+            4
+          ],
+          [
+            4,
+            6
+          ]
+        ],
+        "shared": [
+          4
+        ],
+        "connected": true
+      }
+    },
+    {
+      "word": [
+        "a",
+        "b",
+        "b",
+        "b",
+        "c",
+        "d",
+        "a"
+      ],
+      "reach": 3,
+      "result": {
+        "status": "reachable",
+        "states": 300,
+        "ops": [
+          [
+            "load",
+            42
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "swap",
+            3
+          ],
+          [
+            "load",
+            45
+          ],
+          [
+            "load",
+            44
+          ],
+          [
+            "swap",
+            2
+          ]
+        ],
+        "direct": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "swaps": 2
+      },
+      "graph": {
+        "edges": [
+          [
+            1,
+            4
+          ],
+          [
+            4,
+            6
+          ]
+        ],
+        "shared": [
+          4
+        ],
+        "connected": true
+      }
+    },
+    {
+      "word": [
+        "a",
+        "b",
+        "c",
+        "b",
+        "c",
+        "b",
+        "a"
+      ],
+      "reach": 3,
+      "result": {
+        "status": "reachable",
+        "states": 164,
+        "ops": [
+          [
+            "load",
+            42
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "dup",
+            2
+          ],
+          [
+            "dup",
+            2
+          ],
+          [
+            "load",
+            44
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "swap",
+            3
+          ],
+          [
+            "dup",
+            3
+          ],
+          [
+            "swap",
+            1
+          ]
+        ],
+        "direct": [
+          1,
+          1,
+          1
+        ],
+        "swaps": 2
+      },
+      "graph": {
+        "edges": [
+          [
+            2,
+            5
+          ],
+          [
+            5,
+            6
+          ]
+        ],
+        "shared": [
+          5
+        ],
+        "connected": true
+      }
+    },
+    {
+      "word": [
+        "a",
+        "b",
+        "c",
+        "b",
+        "c",
+        "c",
+        "a"
+      ],
+      "reach": 3,
+      "result": {
+        "status": "reachable",
+        "states": 152,
+        "ops": [
+          [
+            "load",
+            42
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "load",
+            44
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "swap",
+            3
+          ],
+          [
+            "dup",
+            3
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "swap",
+            2
+          ]
+        ],
+        "direct": [
+          1,
+          1,
+          1
+        ],
+        "swaps": 2
+      },
+      "graph": {
+        "edges": [
+          [
+            1,
+            4
+          ],
+          [
+            4,
+            6
+          ]
+        ],
+        "shared": [
+          4
+        ],
+        "connected": true
+      }
+    }
+  ],
+  "reproduce": "node scripts/optimality-one-gap.mjs Bench/evidence-one-gap.json 4"
+}
