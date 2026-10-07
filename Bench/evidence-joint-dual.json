@@ -1,0 +1,493 @@
+{
+  "status": "exact integer check of supplied joint dual certificates; no solver or Lean theorem claimed",
+  "certificate": "Signed row and column potentials, nonnegative prefix and retention-upper-bound multipliers, and one positive common denominator. O(n) scalars and O(n^2) exact integer operations.",
+  "scope": "Six hand-supplied small certificates are checked against independent endpoint-permutation optima. DUP and SWAP prices can differ. First-copy direct prices and direct-over-DUP dominance are included.",
+  "cases": 6,
+  "failures": [],
+  "records": [
+    {
+      "name": "empty",
+      "target": [],
+      "reach": 16,
+      "prices": {
+        "direct": [],
+        "dup": 3,
+        "swap": 1
+      },
+      "candidate": {
+        "assignment": [],
+        "modes": []
+      },
+      "certificate": {
+        "scale": 1,
+        "row": [],
+        "column": [],
+        "prefix": [],
+        "upper": []
+      },
+      "result": {
+        "status": "certified",
+        "scale": "1",
+        "lowerBoundNumerator": "0",
+        "candidateObjective": "0",
+        "generationCost": "0",
+        "moved": 0,
+        "scaledGap": "0",
+        "constant": "0",
+        "rewardUpperBoundNumerator": "0",
+        "gaps": []
+      },
+      "baseline": 0,
+      "exact": {
+        "status": "optimal",
+        "objective": 0,
+        "word": [],
+        "assignment": [],
+        "E": 0,
+        "retained": [],
+        "assignments": 1
+      }
+    },
+    {
+      "name": "first-copies",
+      "target": [
+        "a",
+        "b"
+      ],
+      "reach": 1,
+      "prices": {
+        "direct": [
+          [
+            "a",
+            4
+          ],
+          [
+            "b",
+            6
+          ]
+        ],
+        "dup": 3,
+        "swap": 2
+      },
+      "candidate": {
+        "assignment": [
+          0,
+          1
+        ],
+        "modes": [
+          "direct",
+          "direct"
+        ]
+      },
+      "certificate": {
+        "scale": 1,
+        "row": [
+          2,
+          2
+        ],
+        "column": [
+          0,
+          0
+        ],
+        "prefix": [],
+        "upper": []
+      },
+      "result": {
+        "status": "certified",
+        "scale": "1",
+        "lowerBoundNumerator": "20",
+        "candidateObjective": "20",
+        "generationCost": "10",
+        "moved": 0,
+        "scaledGap": "0",
+        "constant": "24",
+        "rewardUpperBoundNumerator": "4",
+        "gaps": []
+      },
+      "baseline": 10,
+      "exact": {
+        "status": "optimal",
+        "objective": 0,
+        "word": [
+          "a",
+          "b"
+        ],
+        "assignment": [
+          0,
+          1
+        ],
+        "E": 0,
+        "retained": [],
+        "assignments": 2
+      }
+    },
+    {
+      "name": "retained-copy",
+      "target": [
+        "a",
+        "b",
+        "a"
+      ],
+      "reach": 1,
+      "prices": {
+        "direct": [
+          [
+            "a",
+            34
+          ],
+          [
+            "b",
+            34
+          ]
+        ],
+        "dup": 1,
+        "swap": 1
+      },
+      "candidate": {
+        "assignment": [
+          0,
+          2,
+          1
+        ],
+        "modes": [
+          "direct",
+          "dup",
+          "direct"
+        ]
+      },
+      "certificate": {
+        "scale": 1,
+        "row": [
+          2,
+          1,
+          0
+        ],
+        "column": [
+          1,
+          0,
+          1
+        ],
+        "prefix": [
+          2
+        ],
+        "upper": [
+          64
+        ]
+      },
+      "result": {
+        "status": "certified",
+        "scale": "1",
+        "lowerBoundNumerator": "140",
+        "candidateObjective": "140",
+        "generationCost": "69",
+        "moved": 2,
+        "scaledGap": "0",
+        "constant": "207",
+        "rewardUpperBoundNumerator": "67",
+        "gaps": [
+          {
+            "start": 0,
+            "end": 2,
+            "value": "a",
+            "cut": 1,
+            "required": 1,
+            "reward": "66"
+          }
+        ]
+      },
+      "baseline": 69,
+      "exact": {
+        "status": "optimal",
+        "objective": 2,
+        "word": [
+          "a",
+          "a",
+          "b"
+        ],
+        "assignment": [
+          0,
+          2,
+          1
+        ],
+        "E": 2,
+        "retained": [
+          true
+        ],
+        "assignments": 4
+      }
+    },
+    {
+      "name": "separate-dup-and-swap-prices",
+      "target": [
+        "a",
+        "b",
+        "a"
+      ],
+      "reach": 1,
+      "prices": {
+        "direct": [
+          [
+            "a",
+            7
+          ],
+          [
+            "b",
+            4
+          ]
+        ],
+        "dup": 2,
+        "swap": 3
+      },
+      "candidate": {
+        "assignment": [
+          0,
+          2,
+          1
+        ],
+        "modes": [
+          "direct",
+          "dup",
+          "direct"
+        ]
+      },
+      "certificate": {
+        "scale": 1,
+        "row": [
+          6,
+          3,
+          0
+        ],
+        "column": [
+          3,
+          0,
+          3
+        ],
+        "prefix": [
+          6
+        ],
+        "upper": [
+          4
+        ]
+      },
+      "result": {
+        "status": "certified",
+        "scale": "1",
+        "lowerBoundNumerator": "32",
+        "candidateObjective": "32",
+        "generationCost": "13",
+        "moved": 2,
+        "scaledGap": "0",
+        "constant": "45",
+        "rewardUpperBoundNumerator": "13",
+        "gaps": [
+          {
+            "start": 0,
+            "end": 2,
+            "value": "a",
+            "cut": 1,
+            "required": 1,
+            "reward": "10"
+          }
+        ]
+      },
+      "baseline": 13,
+      "exact": {
+        "status": "optimal",
+        "objective": 6,
+        "word": [
+          "a",
+          "a",
+          "b"
+        ],
+        "assignment": [
+          0,
+          2,
+          1
+        ],
+        "E": 2,
+        "retained": [
+          true
+        ],
+        "assignments": 4
+      }
+    },
+    {
+      "name": "movement-cost-prevents-reuse",
+      "target": [
+        "a",
+        "b",
+        "a"
+      ],
+      "reach": 1,
+      "prices": {
+        "direct": [
+          [
+            "a",
+            3
+          ],
+          [
+            "b",
+            4
+          ]
+        ],
+        "dup": 2,
+        "swap": 3
+      },
+      "candidate": {
+        "assignment": [
+          0,
+          1,
+          2
+        ],
+        "modes": [
+          "direct",
+          "direct",
+          "direct"
+        ]
+      },
+      "certificate": {
+        "scale": 1,
+        "row": [
+          5,
+          3,
+          3
+        ],
+        "column": [
+          0,
+          0,
+          0
+        ],
+        "prefix": [
+          2
+        ],
+        "upper": [
+          0
+        ]
+      },
+      "result": {
+        "status": "certified",
+        "scale": "1",
+        "lowerBoundNumerator": "20",
+        "candidateObjective": "20",
+        "generationCost": "10",
+        "moved": 0,
+        "scaledGap": "0",
+        "constant": "29",
+        "rewardUpperBoundNumerator": "9",
+        "gaps": [
+          {
+            "start": 0,
+            "end": 2,
+            "value": "a",
+            "cut": 1,
+            "required": 1,
+            "reward": "2"
+          }
+        ]
+      },
+      "baseline": 9,
+      "exact": {
+        "status": "optimal",
+        "objective": 2,
+        "word": [
+          "a",
+          "b",
+          "a"
+        ],
+        "assignment": [
+          0,
+          1,
+          2
+        ],
+        "E": 0,
+        "retained": [
+          false
+        ],
+        "assignments": 4
+      }
+    },
+    {
+      "name": "cheap-direct",
+      "target": [
+        "zero",
+        "zero"
+      ],
+      "reach": 1,
+      "prices": {
+        "direct": [
+          [
+            "zero",
+            2
+          ]
+        ],
+        "dup": 3,
+        "swap": 5
+      },
+      "candidate": {
+        "assignment": [
+          0,
+          1
+        ],
+        "modes": [
+          "direct",
+          "direct"
+        ]
+      },
+      "certificate": {
+        "scale": 1,
+        "row": [
+          5,
+          5
+        ],
+        "column": [
+          0,
+          0
+        ],
+        "prefix": [
+          0
+        ],
+        "upper": [
+          0
+        ]
+      },
+      "result": {
+        "status": "certified",
+        "scale": "1",
+        "lowerBoundNumerator": "8",
+        "candidateObjective": "8",
+        "generationCost": "4",
+        "moved": 0,
+        "scaledGap": "0",
+        "constant": "18",
+        "rewardUpperBoundNumerator": "10",
+        "gaps": [
+          {
+            "start": 0,
+            "end": 1,
+            "value": "zero",
+            "cut": 1,
+            "required": 1,
+            "reward": "0"
+          }
+        ]
+      },
+      "baseline": 4,
+      "exact": {
+        "status": "optimal",
+        "objective": 0,
+        "word": [
+          "zero",
+          "zero"
+        ],
+        "assignment": [
+          0,
+          1
+        ],
+        "E": 0,
+        "retained": [],
+        "assignments": 2
+      }
+    }
+  ],
+  "reproduce": "node scripts/optimality-joint-dual.mjs Bench/evidence-joint-dual.json"
+}
