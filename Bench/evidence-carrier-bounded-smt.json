@@ -1,0 +1,352 @@
+{
+  "status": "inconclusive bounded SMT experiments",
+  "scope": "Both unrestricted bounded checks returned unknown at their fixed timeouts; neither establishes feasibility or infeasibility. Positive/negative small cases pass, and the known R5 five-SWAP witness is SAT and independently replayed when its operations are fixed.",
+  "calibration": {
+    "status": "sat",
+    "exitCode": 0,
+    "signal": null,
+    "stderr": "",
+    "milliseconds": 35.037274,
+    "stdout": "sat\n((op_0 0)\n (depth_0 0)\n (value_0 0)\n (op_1 0)\n (depth_1 0)\n (value_1 1)\n (op_2 0)\n (depth_2 0)\n (value_2 2)\n (op_3 0)\n (depth_3 0)\n (value_3 3)\n (op_4 1)\n (depth_4 4)\n (value_4 0)\n (op_5 1)\n (depth_5 4)\n (value_5 0)\n (op_6 1)\n (depth_6 4)\n (value_6 0)\n (op_7 1)\n (depth_7 4)\n (value_7 0)\n (op_8 0)\n (depth_8 0)\n (value_8 4)\n (op_9 2)\n (depth_9 4)\n (value_9 0)\n (op_10 1)\n (depth_10 5)\n (value_10 0)\n (op_11 1)\n (depth_11 5)\n (value_11 0)\n (op_12 2)\n (depth_12 1)\n (value_12 0)\n (op_13 1)\n (depth_13 5)\n (value_13 0)\n (op_14 2)\n (depth_14 1)\n (value_14 0)\n (op_15 1)\n (depth_15 5)\n (value_15 0)\n (op_16 2)\n (depth_16 1)\n (value_16 0)\n (op_17 1)\n (depth_17 1)\n (value_17 0)\n (op_18 2)\n (depth_18 5)\n (value_18 0))\n",
+    "ops": [
+      [
+        "load",
+        42
+      ],
+      [
+        "load",
+        43
+      ],
+      [
+        "load",
+        44
+      ],
+      [
+        "load",
+        45
+      ],
+      [
+        "dup",
+        4
+      ],
+      [
+        "dup",
+        4
+      ],
+      [
+        "dup",
+        4
+      ],
+      [
+        "dup",
+        4
+      ],
+      [
+        "load",
+        46
+      ],
+      [
+        "swap",
+        4
+      ],
+      [
+        "dup",
+        5
+      ],
+      [
+        "dup",
+        5
+      ],
+      [
+        "swap",
+        1
+      ],
+      [
+        "dup",
+        5
+      ],
+      [
+        "swap",
+        1
+      ],
+      [
+        "dup",
+        5
+      ],
+      [
+        "swap",
+        1
+      ],
+      [
+        "dup",
+        1
+      ],
+      [
+        "swap",
+        5
+      ]
+    ],
+    "replay": {
+      "target": [
+        "v:42",
+        "v:43",
+        "v:44",
+        "v:45",
+        "v:46",
+        "v:43",
+        "v:44",
+        "v:45",
+        "v:46",
+        "v:43",
+        "v:44",
+        "v:45",
+        "v:46",
+        "v:42"
+      ],
+      "added": [
+        "v:42",
+        "v:43",
+        "v:44",
+        "v:45",
+        "v:42",
+        "v:43",
+        "v:44",
+        "v:45",
+        "v:46",
+        "v:46",
+        "v:43",
+        "v:44",
+        "v:45",
+        "v:46"
+      ],
+      "cost": {
+        "gas": 72,
+        "bytes": 184
+      },
+      "score": 184,
+      "instructions": 19
+    },
+    "swaps": 5
+  },
+  "checks": [
+    {
+      "scope": "Finite SMT search of every trace with at most the given SWAP budget, exact target, and exactly one LOAD per fresh kind. DUP uses ordinary values; there is no fixed ancestry, birth order, or interval-presence restriction. NOPs only pad the end of shorter traces. Frozen-prefix constraints follow from the operation reach limit.",
+      "solver": "/nix/store/89ap2f0glliam9rb97davgb02w5m71fh-z3-4.16.0/bin/z3",
+      "problem": {
+        "source": [],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:42"
+        ],
+        "spills": [
+          42,
+          43,
+          44,
+          45,
+          46
+        ],
+        "caps": {
+          "swap": 5,
+          "dup": 5
+        },
+        "id": "unnamed",
+        "missing": [
+          "v:42",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:42"
+        ],
+        "weights": {
+          "gas": 1,
+          "bytes": 1
+        },
+        "gasModel": "cpp",
+        "loadWidths": [],
+        "model": "reduced-cap"
+      },
+      "swapBudget": 4,
+      "slots": 18,
+      "timeoutMs": 30000,
+      "result": {
+        "status": "unknown",
+        "exitCode": 1,
+        "signal": null,
+        "stderr": "",
+        "milliseconds": 30039.806216,
+        "stdout": "unknown\n(error \"line 571 column 414: model is not available\")\n"
+      },
+      "interpretation": "sat includes an independently replayed trace; unsat excludes only this finite trace bound; unknown or solver error is inconclusive.",
+      "reproduce": "Z3_BIN=<z3-path> node scripts/optimality-bounded-trace-smt.mjs 5 4 /tmp/carrier-smt-r5-s4.json 30000"
+    },
+    {
+      "scope": "Finite SMT search of every trace with at most the given SWAP budget, exact target, and exactly one LOAD per fresh kind. DUP uses ordinary values; there is no fixed ancestry, birth order, or interval-presence restriction. NOPs only pad the end of shorter traces. Frozen-prefix constraints follow from the operation reach limit.",
+      "solver": "/nix/store/89ap2f0glliam9rb97davgb02w5m71fh-z3-4.16.0/bin/z3",
+      "problem": {
+        "source": [],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:47",
+          "v:48",
+          "v:49",
+          "v:50",
+          "v:51",
+          "v:52",
+          "v:53",
+          "v:54",
+          "v:55",
+          "v:56",
+          "v:57",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:47",
+          "v:48",
+          "v:49",
+          "v:50",
+          "v:51",
+          "v:52",
+          "v:53",
+          "v:54",
+          "v:55",
+          "v:56",
+          "v:57",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:47",
+          "v:48",
+          "v:49",
+          "v:50",
+          "v:51",
+          "v:52",
+          "v:53",
+          "v:54",
+          "v:55",
+          "v:56",
+          "v:57",
+          "v:42"
+        ],
+        "spills": [
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57
+        ],
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "id": "unnamed",
+        "missing": [
+          "v:42",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:47",
+          "v:48",
+          "v:49",
+          "v:50",
+          "v:51",
+          "v:52",
+          "v:53",
+          "v:54",
+          "v:55",
+          "v:56",
+          "v:57",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:47",
+          "v:48",
+          "v:49",
+          "v:50",
+          "v:51",
+          "v:52",
+          "v:53",
+          "v:54",
+          "v:55",
+          "v:56",
+          "v:57",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:47",
+          "v:48",
+          "v:49",
+          "v:50",
+          "v:51",
+          "v:52",
+          "v:53",
+          "v:54",
+          "v:55",
+          "v:56",
+          "v:57",
+          "v:42"
+        ],
+        "weights": {
+          "gas": 1,
+          "bytes": 1
+        },
+        "gasModel": "cpp",
+        "loadWidths": [],
+        "model": "actual-16/17"
+      },
+      "swapBudget": 4,
+      "slots": 51,
+      "timeoutMs": 60000,
+      "result": {
+        "status": "unknown",
+        "exitCode": 1,
+        "signal": null,
+        "stderr": "",
+        "milliseconds": 60161.746977999996,
+        "stdout": "unknown\n(error \"line 3299 column 1206: model is not available\")\n"
+      },
+      "interpretation": "sat includes an independently replayed trace; unsat excludes only this finite trace bound; unknown or solver error is inconclusive.",
+      "reproduce": "Z3_BIN=<z3-path> node scripts/optimality-bounded-trace-smt.mjs 16 4 /tmp/carrier-smt-r16-s4.json 60000"
+    }
+  ]
+}

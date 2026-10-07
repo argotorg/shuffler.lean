@@ -1,0 +1,715 @@
+{
+  "status": "finite counterexamples to the proposed static carrier frontier bounds; no production approximation claim",
+  "scope": "a occurs only at0 andj. Every other consecutive equal-value gap is at mostR and selected. Retained-value occupancy must be at mostR. All values have one direct introduction budget.",
+  "edge": "For p<q<=p+R, with u the previous occurrence of target[p] and v the next, p→q iff u is absent or min(v,q)-u<=R.",
+  "frontier": "F0=R; F(k+1)=max(Fk,max_{1<=p<=Fk} H(p)), capped atj. H=p+R if p is a first occurrence or next(p)-prev(p)<=R; otherwise H=prev(p)+R.",
+  "hypothesis": "F(k+2)>=min(j,Fk+R) for every tested k. If true generally, this yields at most2*floor((j-1)/R) carrier SWAPs.",
+  "domain": {
+    "exhaustive": "R1..3, j in[R+1,4R], at most3 canonical middle kinds",
+    "random": "R1..16, j in[R+1,8R], at mostR+2 middle kinds",
+    "seed": 2026100742
+  },
+  "tested": 22021,
+  "counts": {
+    "exhaustive canonical middle": 7010,
+    "seeded short-gap word": 15011
+  },
+  "frontierSteps": 181539,
+  "gapRejected": 37327,
+  "capacityRejected": 1498,
+  "randomAttempts": 16000,
+  "violatingInputs": 874,
+  "globalBoundFailures": 32,
+  "failures": [
+    {
+      "word": [
+        "a",
+        "b",
+        "c",
+        "b",
+        "c",
+        "b",
+        "c",
+        "b",
+        "a"
+      ],
+      "reach": 3,
+      "source": "exhaustive canonical middle",
+      "result": {
+        "Q": 2,
+        "occupancy": [
+          1,
+          2,
+          3,
+          3,
+          3,
+          3,
+          2,
+          1
+        ],
+        "maximumOccupancy": 3,
+        "capacityFeasible": true,
+        "ceilings": [
+          3,
+          4,
+          5,
+          4,
+          5,
+          6,
+          7,
+          8,
+          3
+        ],
+        "frontiers": [
+          3,
+          5,
+          6,
+          7,
+          8,
+          8,
+          8
+        ],
+        "firstFailure": {
+          "step": 1,
+          "before": 5,
+          "afterTwo": 7,
+          "required": 8
+        }
+      }
+    },
+    {
+      "word": [
+        "a",
+        "b",
+        "c",
+        "b",
+        "c",
+        "b",
+        "c",
+        "d",
+        "a"
+      ],
+      "reach": 3,
+      "source": "exhaustive canonical middle",
+      "result": {
+        "Q": 2,
+        "occupancy": [
+          1,
+          2,
+          3,
+          3,
+          3,
+          2,
+          1,
+          1
+        ],
+        "maximumOccupancy": 3,
+        "capacityFeasible": true,
+        "ceilings": [
+          3,
+          4,
+          5,
+          4,
+          5,
+          6,
+          7,
+          8,
+          3
+        ],
+        "frontiers": [
+          3,
+          5,
+          6,
+          7,
+          8,
+          8,
+          8
+        ],
+        "firstFailure": {
+          "step": 1,
+          "before": 5,
+          "afterTwo": 7,
+          "required": 8
+        }
+      }
+    },
+    {
+      "word": [
+        "a",
+        "b",
+        "b",
+        "b",
+        "c",
+        "b",
+        "c",
+        "b",
+        "c",
+        "a"
+      ],
+      "reach": 3,
+      "source": "exhaustive canonical middle",
+      "result": {
+        "Q": 2,
+        "occupancy": [
+          1,
+          2,
+          2,
+          2,
+          3,
+          3,
+          3,
+          2,
+          1
+        ],
+        "maximumOccupancy": 3,
+        "capacityFeasible": true,
+        "ceilings": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          6,
+          7,
+          8,
+          9,
+          3
+        ],
+        "frontiers": [
+          3,
+          6,
+          7,
+          8,
+          9,
+          9,
+          9
+        ],
+        "firstFailure": {
+          "step": 1,
+          "before": 6,
+          "afterTwo": 8,
+          "required": 9
+        }
+      }
+    },
+    {
+      "word": [
+        "a",
+        "b",
+        "b",
+        "b",
+        "c",
+        "b",
+        "c",
+        "b",
+        "d",
+        "a"
+      ],
+      "reach": 3,
+      "source": "exhaustive canonical middle",
+      "result": {
+        "Q": 2,
+        "occupancy": [
+          1,
+          2,
+          2,
+          2,
+          3,
+          3,
+          2,
+          1,
+          1
+        ],
+        "maximumOccupancy": 3,
+        "capacityFeasible": true,
+        "ceilings": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          6,
+          7,
+          8,
+          9,
+          3
+        ],
+        "frontiers": [
+          3,
+          6,
+          7,
+          8,
+          9,
+          9,
+          9
+        ],
+        "firstFailure": {
+          "step": 1,
+          "before": 6,
+          "afterTwo": 8,
+          "required": 9
+        }
+      }
+    },
+    {
+      "word": [
+        "a",
+        "b",
+        "b",
+        "c",
+        "b",
+        "c",
+        "b",
+        "c",
+        "b",
+        "a"
+      ],
+      "reach": 3,
+      "source": "exhaustive canonical middle",
+      "result": {
+        "Q": 2,
+        "occupancy": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          3,
+          3,
+          2,
+          1
+        ],
+        "maximumOccupancy": 3,
+        "capacityFeasible": true,
+        "ceilings": [
+          3,
+          4,
+          5,
+          6,
+          5,
+          6,
+          7,
+          8,
+          9,
+          3
+        ],
+        "frontiers": [
+          3,
+          6,
+          7,
+          8,
+          9,
+          9,
+          9
+        ],
+        "firstFailure": {
+          "step": 1,
+          "before": 6,
+          "afterTwo": 8,
+          "required": 9
+        }
+      }
+    },
+    {
+      "word": [
+        "a",
+        "b",
+        "b",
+        "c",
+        "b",
+        "c",
+        "b",
+        "c",
+        "d",
+        "a"
+      ],
+      "reach": 3,
+      "source": "exhaustive canonical middle",
+      "result": {
+        "Q": 2,
+        "occupancy": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          3,
+          2,
+          1,
+          1
+        ],
+        "maximumOccupancy": 3,
+        "capacityFeasible": true,
+        "ceilings": [
+          3,
+          4,
+          5,
+          6,
+          5,
+          6,
+          7,
+          8,
+          9,
+          3
+        ],
+        "frontiers": [
+          3,
+          6,
+          7,
+          8,
+          9,
+          9,
+          9
+        ],
+        "firstFailure": {
+          "step": 1,
+          "before": 6,
+          "afterTwo": 8,
+          "required": 9
+        }
+      }
+    },
+    {
+      "word": [
+        "a",
+        "b",
+        "b",
+        "c",
+        "c",
+        "b",
+        "c",
+        "b",
+        "c",
+        "a"
+      ],
+      "reach": 3,
+      "source": "exhaustive canonical middle",
+      "result": {
+        "Q": 2,
+        "occupancy": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          3,
+          3,
+          2,
+          1
+        ],
+        "maximumOccupancy": 3,
+        "capacityFeasible": true,
+        "ceilings": [
+          3,
+          4,
+          4,
+          6,
+          7,
+          5,
+          7,
+          8,
+          9,
+          3
+        ],
+        "frontiers": [
+          3,
+          6,
+          7,
+          8,
+          9,
+          9,
+          9
+        ],
+        "firstFailure": {
+          "step": 1,
+          "before": 6,
+          "afterTwo": 8,
+          "required": 9
+        }
+      }
+    },
+    {
+      "word": [
+        "a",
+        "b",
+        "b",
+        "c",
+        "c",
+        "b",
+        "c",
+        "b",
+        "d",
+        "a"
+      ],
+      "reach": 3,
+      "source": "exhaustive canonical middle",
+      "result": {
+        "Q": 2,
+        "occupancy": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          3,
+          2,
+          1,
+          1
+        ],
+        "maximumOccupancy": 3,
+        "capacityFeasible": true,
+        "ceilings": [
+          3,
+          4,
+          4,
+          6,
+          7,
+          5,
+          7,
+          8,
+          9,
+          3
+        ],
+        "frontiers": [
+          3,
+          6,
+          7,
+          8,
+          9,
+          9,
+          9
+        ],
+        "firstFailure": {
+          "step": 1,
+          "before": 6,
+          "afterTwo": 8,
+          "required": 9
+        }
+      }
+    },
+    {
+      "word": [
+        "a",
+        "b",
+        "b",
+        "c",
+        "d",
+        "b",
+        "c",
+        "b",
+        "c",
+        "a"
+      ],
+      "reach": 3,
+      "source": "exhaustive canonical middle",
+      "result": {
+        "Q": 2,
+        "occupancy": [
+          1,
+          2,
+          2,
+          3,
+          3,
+          3,
+          3,
+          2,
+          1
+        ],
+        "maximumOccupancy": 3,
+        "capacityFeasible": true,
+        "ceilings": [
+          3,
+          4,
+          4,
+          6,
+          7,
+          5,
+          6,
+          8,
+          9,
+          3
+        ],
+        "frontiers": [
+          3,
+          6,
+          7,
+          8,
+          9,
+          9,
+          9
+        ],
+        "firstFailure": {
+          "step": 1,
+          "before": 6,
+          "afterTwo": 8,
+          "required": 9
+        }
+      }
+    },
+    {
+      "word": [
+        "a",
+        "b",
+        "b",
+        "c",
+        "d",
+        "b",
+        "d",
+        "b",
+        "d",
+        "a"
+      ],
+      "reach": 3,
+      "source": "exhaustive canonical middle",
+      "result": {
+        "Q": 2,
+        "occupancy": [
+          1,
+          2,
+          2,
+          2,
+          3,
+          3,
+          3,
+          2,
+          1
+        ],
+        "maximumOccupancy": 3,
+        "capacityFeasible": true,
+        "ceilings": [
+          3,
+          4,
+          4,
+          6,
+          7,
+          5,
+          7,
+          8,
+          9,
+          3
+        ],
+        "frontiers": [
+          3,
+          6,
+          7,
+          8,
+          9,
+          9,
+          9
+        ],
+        "firstFailure": {
+          "step": 1,
+          "before": 6,
+          "afterTwo": 8,
+          "required": 9
+        }
+      }
+    }
+  ],
+  "firstGlobalFailure": {
+    "word": [
+      "a",
+      "b",
+      "c",
+      "b",
+      "c",
+      "b",
+      "c",
+      "b",
+      "c",
+      "a"
+    ],
+    "reach": 3,
+    "source": "exhaustive canonical middle",
+    "result": {
+      "Q": 2,
+      "occupancy": [
+        1,
+        2,
+        3,
+        3,
+        3,
+        3,
+        3,
+        2,
+        1
+      ],
+      "maximumOccupancy": 3,
+      "capacityFeasible": true,
+      "ceilings": [
+        3,
+        4,
+        5,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        3
+      ],
+      "frontiers": [
+        3,
+        5,
+        6,
+        7,
+        8,
+        9,
+        9
+      ],
+      "firstFailure": {
+        "step": 1,
+        "before": 5,
+        "afterTwo": 7,
+        "required": 8
+      }
+    }
+  },
+  "excludedTrap": {
+    "word": [
+      "a",
+      "b",
+      "c",
+      "b",
+      "c",
+      "a"
+    ],
+    "reach": 2,
+    "result": {
+      "Q": 2,
+      "occupancy": [
+        1,
+        2,
+        3,
+        2,
+        1
+      ],
+      "maximumOccupancy": 3,
+      "capacityFeasible": false,
+      "ceilings": [
+        2,
+        3,
+        4,
+        3,
+        4,
+        2
+      ],
+      "frontiers": [
+        2,
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "firstFailure": {
+        "step": 1,
+        "before": 4,
+        "afterTwo": 4,
+        "required": 5
+      }
+    }
+  },
+  "reproduce": "node scripts/optimality-carrier-frontier.mjs Bench/evidence-carrier-frontier.json"
+}

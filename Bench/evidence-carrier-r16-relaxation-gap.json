@@ -1,0 +1,1324 @@
+{
+  "scope": "Actual-capacity R16 trace replay and a separately stated combinatorial lower-bound argument. No offline optimum is claimed, and no production scheduler approximation failure is claimed.",
+  "family": "source empty; target a(x1..x15)^3a; all sixteen variables spilled with LOAD width32; bytes-only weights.",
+  "generationBaseline": 575,
+  "jointRelaxationMinimum": 2,
+  "paperLowerBound": {
+    "birthPrefix": "By birth32 every kind has exactly two copies. The remaining15 births are forced x1,..,x15 by their output-freezing deadlines.",
+    "transpositions": "The forced birth suffix differs from target by the directed acyclic value path x1→x2→…→x15→a. Every permutation cycle containing suffix positions has at least one nonsuffix position, so at least15 transpositions are needed, regardless equal-copy matching.",
+    "costScope": "For one direct introduction perkind, cost is baseline plus SWAP count. Any additional width32 LOAD costs33 more bytes than DUP, so it also exceeds the575+15 lower bound.",
+    "minimumSwaps": 15,
+    "minimumBytes": 590,
+    "status": "Audited mathematical argument; this file is not a Lean proof."
+  },
+  "productionWitness": {
+    "carrierPositions": [
+      15,
+      31,
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46
+    ],
+    "swaps": 16,
+    "cost": {
+      "gas": 237,
+      "bytes": 591
+    },
+    "upperBytes": 591
+  },
+  "conclusion": "The true optimum is between590 and591 bytes if the stated combinatorial argument is accepted. Its excess is therefore at least15, while the joint relaxation is2. This refutes a2-times realization guarantee for that relaxation at actualR16; it does not refute a2-times guarantee relative to OPT for the production scheduler.",
+  "summary": {
+    "configuration": {
+      "suite": "input",
+      "inputPath": "/tmp/carrier-r16-witness.jsonl",
+      "seed": 1,
+      "cases": 10000,
+      "stateLimit": 100000,
+      "skipOracle": true,
+      "noLean": false,
+      "selectedAlgorithms": [
+        "normalize-reference"
+      ],
+      "weights": [
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          6,
+          1
+        ]
+      ],
+      "loadWidths": [
+        1,
+        2,
+        32
+      ],
+      "model": "actual-16/17",
+      "node": "v22.23.3",
+      "leanToolchain": "leanprover/lean4:v4.34.0",
+      "runnerSnapshot": {
+        "file": "/tmp/nix-shell.1Z8qMa/optimality-bench-Dbhha6/runner",
+        "sha256": "3ddd8f261d12476b8add7c6e18bd6be3b470b15a687d67946b117fefa36c3340"
+      },
+      "versionBefore": {
+        "source": {
+          "sha256": "e671258df3f0a1755bb4d240d12e98e022f8b5411978e918a416227cc1efa20f",
+          "files": 218
+        },
+        "artifacts": {
+          "sha256": "dc7d459a00f1a3c8ae08b9a9c64a5018276f79e243d624e833cf74ebea4356af",
+          "files": 250
+        }
+      },
+      "versionAfter": {
+        "source": {
+          "sha256": "e671258df3f0a1755bb4d240d12e98e022f8b5411978e918a416227cc1efa20f",
+          "files": 218
+        },
+        "artifacts": {
+          "sha256": "dc7d459a00f1a3c8ae08b9a9c64a5018276f79e243d624e833cf74ebea4356af",
+          "files": 250
+        }
+      },
+      "stableArtifacts": true,
+      "stableSources": true
+    },
+    "witnessRatioReporting": {
+      "version": 2,
+      "finiteMaximumUsesPositiveReferenceExcess": true,
+      "zeroReferenceExcessReportedSeparately": true
+    },
+    "cases": 1,
+    "oracle": {
+      "not-run": 1
+    },
+    "oracleStates": 0,
+    "modelDisagreements": [],
+    "algorithms": {
+      "normalize-reference": {
+        "cases": 1,
+        "successes": 1,
+        "feasibilityFailures": 0,
+        "oracleComparisons": 0,
+        "exact": 0,
+        "zeroExcessViolations": 0,
+        "maxCostRatio": 1,
+        "maxExcessRatio": 1,
+        "certificates": {
+          "exactBaseline": 0,
+          "exactLineage": 0,
+          "exactStatic": 0,
+          "exactNoGrowth": 0,
+          "twiceLineage": 0,
+          "twiceStatic": 0
+        },
+        "maxInstructionsPerSize": 1.3404255319148937,
+        "worstExcessCase": null,
+        "scope": "completed-source-to-target",
+        "witnessComparisons": 1,
+        "witnessViolations": 0,
+        "witnessPositiveExcessComparisons": 1,
+        "witnessZeroExcessComparisons": 0,
+        "witnessZeroExcessViolations": 0,
+        "maxCandidateExcessWithZeroWitness": 0,
+        "worstZeroExcessWitnessCase": null,
+        "maxWitnessExcessRatio": 1,
+        "worstWitnessCase": "carrier-cycle-r16-relaxation-gap",
+        "worstWitnessComparison": {
+          "caseId": "carrier-cycle-r16-relaxation-gap",
+          "baseline": 575,
+          "candidateScore": 591,
+          "witnessScore": 591,
+          "candidateExcess": 16,
+          "witnessExcess": 16
+        }
+      }
+    }
+  },
+  "records": [
+    {
+      "problem": {
+        "id": "carrier-cycle-r16-relaxation-gap",
+        "source": [],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:47",
+          "v:48",
+          "v:49",
+          "v:50",
+          "v:51",
+          "v:52",
+          "v:53",
+          "v:54",
+          "v:55",
+          "v:56",
+          "v:57",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:47",
+          "v:48",
+          "v:49",
+          "v:50",
+          "v:51",
+          "v:52",
+          "v:53",
+          "v:54",
+          "v:55",
+          "v:56",
+          "v:57",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:47",
+          "v:48",
+          "v:49",
+          "v:50",
+          "v:51",
+          "v:52",
+          "v:53",
+          "v:54",
+          "v:55",
+          "v:56",
+          "v:57",
+          "v:42"
+        ],
+        "spills": [
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            32
+          ],
+          [
+            44,
+            32
+          ],
+          [
+            45,
+            32
+          ],
+          [
+            46,
+            32
+          ],
+          [
+            47,
+            32
+          ],
+          [
+            48,
+            32
+          ],
+          [
+            49,
+            32
+          ],
+          [
+            50,
+            32
+          ],
+          [
+            51,
+            32
+          ],
+          [
+            52,
+            32
+          ],
+          [
+            53,
+            32
+          ],
+          [
+            54,
+            32
+          ],
+          [
+            55,
+            32
+          ],
+          [
+            56,
+            32
+          ],
+          [
+            57,
+            32
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "referenceOps": [
+          [
+            "load",
+            42
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "load",
+            44
+          ],
+          [
+            "load",
+            45
+          ],
+          [
+            "load",
+            46
+          ],
+          [
+            "load",
+            47
+          ],
+          [
+            "load",
+            48
+          ],
+          [
+            "load",
+            49
+          ],
+          [
+            "load",
+            50
+          ],
+          [
+            "load",
+            51
+          ],
+          [
+            "load",
+            52
+          ],
+          [
+            "load",
+            53
+          ],
+          [
+            "load",
+            54
+          ],
+          [
+            "load",
+            55
+          ],
+          [
+            "load",
+            56
+          ],
+          [
+            "dup",
+            15
+          ],
+          [
+            "dup",
+            15
+          ],
+          [
+            "dup",
+            15
+          ],
+          [
+            "dup",
+            15
+          ],
+          [
+            "dup",
+            15
+          ],
+          [
+            "dup",
+            15
+          ],
+          [
+            "dup",
+            15
+          ],
+          [
+            "dup",
+            15
+          ],
+          [
+            "dup",
+            15
+          ],
+          [
+            "dup",
+            15
+          ],
+          [
+            "dup",
+            15
+          ],
+          [
+            "dup",
+            15
+          ],
+          [
+            "dup",
+            15
+          ],
+          [
+            "dup",
+            15
+          ],
+          [
+            "dup",
+            15
+          ],
+          [
+            "load",
+            57
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            1
+          ]
+        ],
+        "missing": [
+          "v:42",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:47",
+          "v:48",
+          "v:49",
+          "v:50",
+          "v:51",
+          "v:52",
+          "v:53",
+          "v:54",
+          "v:55",
+          "v:56",
+          "v:57",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:47",
+          "v:48",
+          "v:49",
+          "v:50",
+          "v:51",
+          "v:52",
+          "v:53",
+          "v:54",
+          "v:55",
+          "v:56",
+          "v:57",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:47",
+          "v:48",
+          "v:49",
+          "v:50",
+          "v:51",
+          "v:52",
+          "v:53",
+          "v:54",
+          "v:55",
+          "v:56",
+          "v:57",
+          "v:42"
+        ],
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17"
+      },
+      "oracle": {
+        "model": "actual-16/17",
+        "status": "not-run",
+        "reason": "skip-oracle",
+        "states": 0
+      },
+      "production": {
+        "elapsedNanos": 2094916,
+        "jsonBytes": 2101,
+        "result": {
+          "actualCaps": true,
+          "actualReserve": true,
+          "algorithms": {
+            "normalize-reference": {
+              "certificate": null,
+              "certificates": {
+                "exactBaseline": false,
+                "exactLineage": false,
+                "exactNoGrowth": false,
+                "exactStatic": false,
+                "twiceLineage": false,
+                "twiceStatic": false
+              },
+              "cost": {
+                "bytes": 591,
+                "gas": 237
+              },
+              "instructions": 63,
+              "ops": [
+                [
+                  "load",
+                  42
+                ],
+                [
+                  "load",
+                  43
+                ],
+                [
+                  "load",
+                  44
+                ],
+                [
+                  "load",
+                  45
+                ],
+                [
+                  "load",
+                  46
+                ],
+                [
+                  "load",
+                  47
+                ],
+                [
+                  "load",
+                  48
+                ],
+                [
+                  "load",
+                  49
+                ],
+                [
+                  "load",
+                  50
+                ],
+                [
+                  "load",
+                  51
+                ],
+                [
+                  "load",
+                  52
+                ],
+                [
+                  "load",
+                  53
+                ],
+                [
+                  "load",
+                  54
+                ],
+                [
+                  "load",
+                  55
+                ],
+                [
+                  "load",
+                  56
+                ],
+                [
+                  "dup",
+                  15
+                ],
+                [
+                  "dup",
+                  15
+                ],
+                [
+                  "dup",
+                  15
+                ],
+                [
+                  "dup",
+                  15
+                ],
+                [
+                  "dup",
+                  15
+                ],
+                [
+                  "dup",
+                  15
+                ],
+                [
+                  "dup",
+                  15
+                ],
+                [
+                  "dup",
+                  15
+                ],
+                [
+                  "dup",
+                  15
+                ],
+                [
+                  "dup",
+                  15
+                ],
+                [
+                  "dup",
+                  15
+                ],
+                [
+                  "dup",
+                  15
+                ],
+                [
+                  "dup",
+                  15
+                ],
+                [
+                  "dup",
+                  15
+                ],
+                [
+                  "dup",
+                  15
+                ],
+                [
+                  "load",
+                  57
+                ],
+                [
+                  "dup",
+                  1
+                ],
+                [
+                  "swap",
+                  16
+                ],
+                [
+                  "dup",
+                  16
+                ],
+                [
+                  "swap",
+                  1
+                ],
+                [
+                  "dup",
+                  16
+                ],
+                [
+                  "swap",
+                  1
+                ],
+                [
+                  "dup",
+                  16
+                ],
+                [
+                  "swap",
+                  1
+                ],
+                [
+                  "dup",
+                  16
+                ],
+                [
+                  "swap",
+                  1
+                ],
+                [
+                  "dup",
+                  16
+                ],
+                [
+                  "swap",
+                  1
+                ],
+                [
+                  "dup",
+                  16
+                ],
+                [
+                  "swap",
+                  1
+                ],
+                [
+                  "dup",
+                  16
+                ],
+                [
+                  "swap",
+                  1
+                ],
+                [
+                  "dup",
+                  16
+                ],
+                [
+                  "swap",
+                  1
+                ],
+                [
+                  "dup",
+                  16
+                ],
+                [
+                  "swap",
+                  1
+                ],
+                [
+                  "dup",
+                  16
+                ],
+                [
+                  "swap",
+                  1
+                ],
+                [
+                  "dup",
+                  16
+                ],
+                [
+                  "swap",
+                  1
+                ],
+                [
+                  "dup",
+                  16
+                ],
+                [
+                  "swap",
+                  1
+                ],
+                [
+                  "dup",
+                  16
+                ],
+                [
+                  "swap",
+                  1
+                ],
+                [
+                  "dup",
+                  16
+                ],
+                [
+                  "swap",
+                  1
+                ],
+                [
+                  "dup",
+                  16
+                ],
+                [
+                  "swap",
+                  1
+                ]
+              ],
+              "score": 591,
+              "status": "ok"
+            }
+          },
+          "generationBaseline": 575,
+          "id": "carrier-cycle-r16-relaxation-gap",
+          "lineageExcess": 0,
+          "reference": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": false,
+              "exactNoGrowth": false,
+              "exactStatic": false,
+              "twiceLineage": false,
+              "twiceStatic": false
+            },
+            "cost": {
+              "bytes": 591,
+              "gas": 237
+            },
+            "instructions": 63,
+            "ops": [
+              [
+                "load",
+                42
+              ],
+              [
+                "load",
+                43
+              ],
+              [
+                "load",
+                44
+              ],
+              [
+                "load",
+                45
+              ],
+              [
+                "load",
+                46
+              ],
+              [
+                "load",
+                47
+              ],
+              [
+                "load",
+                48
+              ],
+              [
+                "load",
+                49
+              ],
+              [
+                "load",
+                50
+              ],
+              [
+                "load",
+                51
+              ],
+              [
+                "load",
+                52
+              ],
+              [
+                "load",
+                53
+              ],
+              [
+                "load",
+                54
+              ],
+              [
+                "load",
+                55
+              ],
+              [
+                "load",
+                56
+              ],
+              [
+                "dup",
+                15
+              ],
+              [
+                "dup",
+                15
+              ],
+              [
+                "dup",
+                15
+              ],
+              [
+                "dup",
+                15
+              ],
+              [
+                "dup",
+                15
+              ],
+              [
+                "dup",
+                15
+              ],
+              [
+                "dup",
+                15
+              ],
+              [
+                "dup",
+                15
+              ],
+              [
+                "dup",
+                15
+              ],
+              [
+                "dup",
+                15
+              ],
+              [
+                "dup",
+                15
+              ],
+              [
+                "dup",
+                15
+              ],
+              [
+                "dup",
+                15
+              ],
+              [
+                "dup",
+                15
+              ],
+              [
+                "dup",
+                15
+              ],
+              [
+                "load",
+                57
+              ],
+              [
+                "dup",
+                1
+              ],
+              [
+                "swap",
+                16
+              ],
+              [
+                "dup",
+                16
+              ],
+              [
+                "swap",
+                1
+              ],
+              [
+                "dup",
+                16
+              ],
+              [
+                "swap",
+                1
+              ],
+              [
+                "dup",
+                16
+              ],
+              [
+                "swap",
+                1
+              ],
+              [
+                "dup",
+                16
+              ],
+              [
+                "swap",
+                1
+              ],
+              [
+                "dup",
+                16
+              ],
+              [
+                "swap",
+                1
+              ],
+              [
+                "dup",
+                16
+              ],
+              [
+                "swap",
+                1
+              ],
+              [
+                "dup",
+                16
+              ],
+              [
+                "swap",
+                1
+              ],
+              [
+                "dup",
+                16
+              ],
+              [
+                "swap",
+                1
+              ],
+              [
+                "dup",
+                16
+              ],
+              [
+                "swap",
+                1
+              ],
+              [
+                "dup",
+                16
+              ],
+              [
+                "swap",
+                1
+              ],
+              [
+                "dup",
+                16
+              ],
+              [
+                "swap",
+                1
+              ],
+              [
+                "dup",
+                16
+              ],
+              [
+                "swap",
+                1
+              ],
+              [
+                "dup",
+                16
+              ],
+              [
+                "swap",
+                1
+              ],
+              [
+                "dup",
+                16
+              ],
+              [
+                "swap",
+                1
+              ],
+              [
+                "dup",
+                16
+              ],
+              [
+                "swap",
+                1
+              ]
+            ],
+            "score": 591,
+            "status": "ok"
+          },
+          "staticExcess": 2
+        }
+      },
+      "comparisons": {
+        "normalize-reference": {
+          "status": "ok",
+          "target": [
+            "v:42",
+            "v:43",
+            "v:44",
+            "v:45",
+            "v:46",
+            "v:47",
+            "v:48",
+            "v:49",
+            "v:50",
+            "v:51",
+            "v:52",
+            "v:53",
+            "v:54",
+            "v:55",
+            "v:56",
+            "v:57",
+            "v:43",
+            "v:44",
+            "v:45",
+            "v:46",
+            "v:47",
+            "v:48",
+            "v:49",
+            "v:50",
+            "v:51",
+            "v:52",
+            "v:53",
+            "v:54",
+            "v:55",
+            "v:56",
+            "v:57",
+            "v:43",
+            "v:44",
+            "v:45",
+            "v:46",
+            "v:47",
+            "v:48",
+            "v:49",
+            "v:50",
+            "v:51",
+            "v:52",
+            "v:53",
+            "v:54",
+            "v:55",
+            "v:56",
+            "v:57",
+            "v:42"
+          ],
+          "added": [
+            "v:42",
+            "v:43",
+            "v:44",
+            "v:45",
+            "v:46",
+            "v:47",
+            "v:48",
+            "v:49",
+            "v:50",
+            "v:51",
+            "v:52",
+            "v:53",
+            "v:54",
+            "v:55",
+            "v:56",
+            "v:42",
+            "v:43",
+            "v:44",
+            "v:45",
+            "v:46",
+            "v:47",
+            "v:48",
+            "v:49",
+            "v:50",
+            "v:51",
+            "v:52",
+            "v:53",
+            "v:54",
+            "v:55",
+            "v:56",
+            "v:57",
+            "v:57",
+            "v:43",
+            "v:44",
+            "v:45",
+            "v:46",
+            "v:47",
+            "v:48",
+            "v:49",
+            "v:50",
+            "v:51",
+            "v:52",
+            "v:53",
+            "v:54",
+            "v:55",
+            "v:56",
+            "v:57"
+          ],
+          "cost": {
+            "gas": 237,
+            "bytes": 591
+          },
+          "score": 591,
+          "instructions": 63,
+          "excess": 16,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "exact": null,
+          "costRatio": null,
+          "excessRatio": null,
+          "zeroExcessViolation": false,
+          "scope": "completed-source-to-target",
+          "witness": {
+            "baseline": 575,
+            "candidateScore": 591,
+            "witnessScore": 591,
+            "candidateCost": {
+              "gas": 237,
+              "bytes": 591
+            },
+            "witnessCost": {
+              "gas": 237,
+              "bytes": 591
+            },
+            "twiceExcessViolation": false,
+            "excessRatioAgainstWitness": 1,
+            "source": "supplied"
+          }
+        }
+      }
+    }
+  ]
+}
