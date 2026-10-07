@@ -1,6 +1,6 @@
 import Shuffler.Optimality.BirthPlacement.SourceRealize.State
 import Shuffler.Optimality.BirthPlacement.SourceEntry
-import Shuffler.Optimality.BirthPlacement.SourcePlan.Trace
+import Shuffler.Optimality.BirthPlacement.SourcePlan.TraceTheorems
 
 namespace Shuffler.Optimality.BirthPlacement
 
