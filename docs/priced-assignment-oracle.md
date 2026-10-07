@@ -6,6 +6,11 @@ prices have been fixed. It does not solve the outer price problem or
 give the rounding theorem needed to construct a trace with the required
 surplus bound.
 
+[The restricted full-price theorem](pairwise-premium-certificate.md)
+proves that one oracle optimum suffices when every positive-premium
+value occurs at most twice. Its Lean proof takes the optimal assignment
+or tight finite certificate as input; it does not implement this oracle.
+
 ## Fixed prices
 
 Let target positions be `0,...,n-1`, with common reach `R>=1`. Give each
