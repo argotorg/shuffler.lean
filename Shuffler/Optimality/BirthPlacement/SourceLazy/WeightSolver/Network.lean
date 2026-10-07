@@ -29,30 +29,40 @@ def Network.add (graph : Network) (tail head capacity : Nat) (cost : Int) : Netw
 -- Each target has one chain node for source-interior rows and one for other rows.
 -- A generic row-to-column path has cost 1 + [both endpoints are interior].
 -- A legal identity edge has cost zero.
+def addColumn [DecidableEq α] (height : Nat) (target : Fin size → α)
+    (graph : Network) (index : Fin size) : Network :=
+  let indices := List.finRange size
+  let graph := graph.add (size + index.val) graph.sink 1 0
+  let graph := graph.add (2 * size + index.val) (size + index.val) (size + 1)
+    (if index.val + 1 < height then 1 else 0)
+  let graph := graph.add (3 * size + index.val) (size + index.val) (size + 1) 0
+  match indices.find? (fun next => index.val < next.val && target index == target next) with
+  | none => graph
+  | some next =>
+      (graph.add (2 * size + index.val) (2 * size + next.val) (size + 1) 0).add
+        (3 * size + index.val) (3 * size + next.val) (size + 1) 0
+
+def addRow [DecidableEq α] (reach height : Nat) (word target : Fin size → α)
+    (graph : Network) (index : Fin size) : Network :=
+  let graph := graph.add graph.source index.val 1 0
+  let graph := if word index = target index then
+      graph.add index.val (size + index.val) (size + 1) 0 else graph
+  if index.val + reach + 1 < height then graph
+  else match (List.finRange size).find? (fun output =>
+      index.val ≤ output.val + reach && word index == target output) with
+    | none => graph
+    | some output => graph.add index.val
+        ((if index.val + 1 < height then 2 else 3) * size + output.val) (size + 1) 1
+
+def emptyNetwork (size : Nat) : Network :=
+  ⟨4 * size, 4 * size + 1, #[], Array.replicate (4 * size + 2) []⟩
+
 def network [DecidableEq α] (reach height : Nat) (word target : Fin size → α) : Network :=
   let births := Vector.ofFn word
   let outputs := Vector.ofFn target
-  let indices := List.finRange size
-  let base : Network := ⟨4 * size, 4 * size + 1, #[], Array.replicate (4 * size + 2) []⟩
-  let columns := indices.foldl (fun graph index =>
-    let graph := graph.add (size + index.val) graph.sink 1 0
-    let graph := graph.add (2 * size + index.val) (size + index.val) (size + 1)
-      (if index.val + 1 < height then 1 else 0)
-    let graph := graph.add (3 * size + index.val) (size + index.val) (size + 1) 0
-    match indices.find? (fun next => index.val < next.val && outputs[index.val] == outputs[next.val]) with
-    | none => graph
-    | some next =>
-        (graph.add (2 * size + index.val) (2 * size + next.val) (size + 1) 0).add
-          (3 * size + index.val) (3 * size + next.val) (size + 1) 0) base
-  indices.foldl (fun graph index =>
-    let graph := graph.add graph.source index.val 1 0
-    let graph := if births[index.val] = outputs[index.val] then
-        graph.add index.val (size + index.val) (size + 1) 0 else graph
-    if index.val + reach + 1 < height then graph
-    else match indices.find? (fun output =>
-        index.val ≤ output.val + reach && births[index.val] == outputs[output.val]) with
-      | none => graph
-      | some output => graph.add index.val
-          ((if index.val + 1 < height then 2 else 3) * size + output.val) (size + 1) 1) columns
+  let readBirth := fun i : Fin size => births[i.val]
+  let readTarget := fun i : Fin size => outputs[i.val]
+  let columns := (List.finRange size).foldl (addColumn height readTarget) (emptyNetwork size)
+  (List.finRange size).foldl (addRow reach height readBirth readTarget) columns
 
 end Shuffler.Optimality.BirthPlacement.SourceLazy.WeightSolver
