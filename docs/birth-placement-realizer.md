@@ -90,11 +90,15 @@ direct generation, missing DUP parents, spilled variables, and wildcards.
 
 ## Scope still to prove
 
-Any physical trace assigns birth tokens to final positions. Each moved
-token must take part in a SWAP, which suggests `E <= 2 * SWAPs`. Combined
-with an assignment that minimizes `E`, this gives the proposed factor-two
-movement bound for a fixed birth word. The trace-to-assignment link and
-assignment optimizer are separate proof tasks. The weighted comparison
+`traceAssignment` now computes the birth-token assignment induced by any
+no-POP trace. It satisfies the endpoint deadlines and the value mapping,
+and its moved-token count satisfies `E <= 2 * SWAPs`. For an empty source,
+`tracePlan` also proves all birth availability conditions and preserves
+the ordered birth events. These proofs are in the `TracePlan` modules.
+
+Combined with an assignment that minimizes `E`, this gives the proposed
+factor-two movement bound for a fixed birth word. The optimizer and its
+integration are separate proof tasks. The weighted comparison
 is proved conditionally by `realize_score_le_twice`: the planned birth
 cost must be no greater than the other trace's birth cost, and the planned
 `E` must be at most twice the other trace's SWAP count. A separate theorem
