@@ -1,0 +1,863 @@
+{
+  "status": "exact offline checks of the paper long-or-last flow construction; no production solver or Lean flow theorem",
+  "scope": "Seven named empty-source cases, each compared with every lag-valid endpoint permutation. Every canonical route and every extracted integer joint certificate is checked. One positive short nonlast gap is rejected.",
+  "cases": 7,
+  "assignments": 1645,
+  "records": [
+    {
+      "fixture": {
+        "name": "empty",
+        "target": [],
+        "reach": 16,
+        "prices": {
+          "direct": [],
+          "dup": 1,
+          "swap": 3
+        }
+      },
+      "assignments": 1,
+      "exactReward": "0",
+      "result": {
+        "assignment": [],
+        "candidate": {
+          "assignment": [],
+          "modes": []
+        },
+        "certificate": {
+          "scale": "1",
+          "row": [],
+          "column": [],
+          "prefix": [],
+          "upper": []
+        },
+        "checked": {
+          "status": "certified",
+          "scale": "1",
+          "lowerBoundNumerator": "0",
+          "candidateObjective": "0",
+          "generationCost": "0",
+          "moved": 0,
+          "scaledGap": "0",
+          "constant": "0",
+          "rewardUpperBoundNumerator": "0",
+          "gaps": []
+        },
+        "reward": "0",
+        "vertices": 2,
+        "arcs": 0
+      }
+    },
+    {
+      "fixture": {
+        "name": "three-separated-copies",
+        "target": [
+          "a",
+          "b",
+          "c",
+          "a",
+          "b",
+          "c",
+          "a"
+        ],
+        "reach": 2,
+        "prices": {
+          "direct": [
+            [
+              "a",
+              8
+            ],
+            [
+              "b",
+              1
+            ],
+            [
+              "c",
+              1
+            ]
+          ],
+          "dup": 1,
+          "swap": 3
+        }
+      },
+      "assignments": 486,
+      "exactReward": "40",
+      "result": {
+        "assignment": [
+          0,
+          1,
+          6,
+          3,
+          2,
+          5,
+          4
+        ],
+        "candidate": {
+          "assignment": [
+            0,
+            1,
+            6,
+            3,
+            2,
+            5,
+            4
+          ],
+          "modes": [
+            "direct",
+            "direct",
+            "dup",
+            "dup",
+            "direct",
+            "direct",
+            "direct"
+          ]
+        },
+        "certificate": {
+          "scale": "1",
+          "row": [
+            "0",
+            "0",
+            "0",
+            "0",
+            "-3",
+            "-3",
+            "-6"
+          ],
+          "column": [
+            "20",
+            "3",
+            "3",
+            "17",
+            "6",
+            "6",
+            "17"
+          ],
+          "prefix": [
+            "3",
+            "0",
+            "0",
+            "14"
+          ],
+          "upper": [
+            "11",
+            "0",
+            "0",
+            "0"
+          ]
+        },
+        "checked": {
+          "status": "certified",
+          "scale": "1",
+          "lowerBoundNumerator": "37",
+          "candidateObjective": "37",
+          "generationCost": "14",
+          "moved": 3,
+          "scaledGap": "0",
+          "constant": "77",
+          "rewardUpperBoundNumerator": "40",
+          "gaps": [
+            {
+              "start": 0,
+              "end": 3,
+              "value": "a",
+              "cut": 2,
+              "required": 1,
+              "forced": false,
+              "reward": "14"
+            },
+            {
+              "start": 1,
+              "end": 4,
+              "value": "b",
+              "cut": 3,
+              "required": 1,
+              "forced": false,
+              "reward": "0"
+            },
+            {
+              "start": 2,
+              "end": 5,
+              "value": "c",
+              "cut": 4,
+              "required": 1,
+              "forced": false,
+              "reward": "0"
+            },
+            {
+              "start": 3,
+              "end": 6,
+              "value": "a",
+              "cut": 5,
+              "required": 2,
+              "forced": false,
+              "reward": "14"
+            }
+          ]
+        },
+        "reward": "40",
+        "vertices": 32,
+        "arcs": 55
+      }
+    },
+    {
+      "fixture": {
+        "name": "long-then-short-last",
+        "target": [
+          "a",
+          "b",
+          "c",
+          "a",
+          "a",
+          "d"
+        ],
+        "reach": 2,
+        "prices": {
+          "direct": [
+            [
+              "a",
+              9
+            ],
+            [
+              "b",
+              1
+            ],
+            [
+              "c",
+              1
+            ],
+            [
+              "d",
+              1
+            ]
+          ],
+          "dup": 1,
+          "swap": 2
+        }
+      },
+      "assignments": 162,
+      "exactReward": "40",
+      "result": {
+        "assignment": [
+          0,
+          1,
+          3,
+          2,
+          4,
+          5
+        ],
+        "candidate": {
+          "assignment": [
+            0,
+            1,
+            3,
+            2,
+            4,
+            5
+          ],
+          "modes": [
+            "direct",
+            "direct",
+            "dup",
+            "direct",
+            "dup",
+            "direct"
+          ]
+        },
+        "certificate": {
+          "scale": "1",
+          "row": [
+            "0",
+            "0",
+            "0",
+            "-2",
+            "-2",
+            "0"
+          ],
+          "column": [
+            "22",
+            "2",
+            "2",
+            "20",
+            "20",
+            "2"
+          ],
+          "prefix": [
+            "4",
+            "16"
+          ],
+          "upper": [
+            "12",
+            "0"
+          ]
+        },
+        "checked": {
+          "status": "certified",
+          "scale": "1",
+          "lowerBoundNumerator": "32",
+          "candidateObjective": "32",
+          "generationCost": "14",
+          "moved": 2,
+          "scaledGap": "0",
+          "constant": "72",
+          "rewardUpperBoundNumerator": "40",
+          "gaps": [
+            {
+              "start": 0,
+              "end": 3,
+              "value": "a",
+              "cut": 2,
+              "required": 1,
+              "forced": false,
+              "reward": "16"
+            },
+            {
+              "start": 3,
+              "end": 4,
+              "value": "a",
+              "cut": 5,
+              "required": 2,
+              "forced": false,
+              "reward": "16"
+            }
+          ]
+        },
+        "reward": "40",
+        "vertices": 28,
+        "arcs": 46
+      }
+    },
+    {
+      "fixture": {
+        "name": "two-values-mixed",
+        "target": [
+          "a",
+          "b",
+          "x",
+          "a",
+          "b",
+          "a",
+          "b"
+        ],
+        "reach": 2,
+        "prices": {
+          "direct": [
+            [
+              "a",
+              9
+            ],
+            [
+              "b",
+              5
+            ],
+            [
+              "x",
+              1
+            ]
+          ],
+          "dup": 1,
+          "swap": 3
+        }
+      },
+      "assignments": 486,
+      "exactReward": "60",
+      "result": {
+        "assignment": [
+          0,
+          1,
+          3,
+          4,
+          2,
+          5,
+          6
+        ],
+        "candidate": {
+          "assignment": [
+            0,
+            1,
+            3,
+            4,
+            2,
+            5,
+            6
+          ],
+          "modes": [
+            "direct",
+            "direct",
+            "dup",
+            "dup",
+            "direct",
+            "dup",
+            "dup"
+          ]
+        },
+        "certificate": {
+          "scale": "1",
+          "row": [
+            "0",
+            "0",
+            "0",
+            "0",
+            "-3",
+            "0",
+            "-3"
+          ],
+          "column": [
+            "22",
+            "17",
+            "3",
+            "19",
+            "14",
+            "19",
+            "14"
+          ],
+          "prefix": [
+            "3",
+            "6",
+            "16",
+            "8"
+          ],
+          "upper": [
+            "13",
+            "2",
+            "0",
+            "0"
+          ]
+        },
+        "checked": {
+          "status": "certified",
+          "scale": "1",
+          "lowerBoundNumerator": "47",
+          "candidateObjective": "47",
+          "generationCost": "19",
+          "moved": 3,
+          "scaledGap": "0",
+          "constant": "107",
+          "rewardUpperBoundNumerator": "60",
+          "gaps": [
+            {
+              "start": 0,
+              "end": 3,
+              "value": "a",
+              "cut": 2,
+              "required": 1,
+              "forced": false,
+              "reward": "16"
+            },
+            {
+              "start": 1,
+              "end": 4,
+              "value": "b",
+              "cut": 3,
+              "required": 1,
+              "forced": false,
+              "reward": "8"
+            },
+            {
+              "start": 3,
+              "end": 5,
+              "value": "a",
+              "cut": 5,
+              "required": 2,
+              "forced": false,
+              "reward": "16"
+            },
+            {
+              "start": 4,
+              "end": 6,
+              "value": "b",
+              "cut": 6,
+              "required": 2,
+              "forced": false,
+              "reward": "8"
+            }
+          ]
+        },
+        "reward": "60",
+        "vertices": 32,
+        "arcs": 56
+      }
+    },
+    {
+      "fixture": {
+        "name": "zero-swap-price",
+        "target": [
+          "a",
+          "b",
+          "x",
+          "a",
+          "b",
+          "a",
+          "b"
+        ],
+        "reach": 2,
+        "prices": {
+          "direct": [
+            [
+              "a",
+              9
+            ],
+            [
+              "b",
+              5
+            ],
+            [
+              "x",
+              1
+            ]
+          ],
+          "dup": 1,
+          "swap": 0
+        }
+      },
+      "assignments": 486,
+      "exactReward": "48",
+      "result": {
+        "assignment": [
+          0,
+          1,
+          3,
+          4,
+          2,
+          5,
+          6
+        ],
+        "candidate": {
+          "assignment": [
+            0,
+            1,
+            3,
+            4,
+            2,
+            5,
+            6
+          ],
+          "modes": [
+            "direct",
+            "direct",
+            "dup",
+            "dup",
+            "direct",
+            "dup",
+            "dup"
+          ]
+        },
+        "certificate": {
+          "scale": "1",
+          "row": [
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "column": [
+            "16",
+            "8",
+            "0",
+            "16",
+            "8",
+            "16",
+            "8"
+          ],
+          "prefix": [
+            "0",
+            "0",
+            "16",
+            "8"
+          ],
+          "upper": [
+            "16",
+            "8",
+            "0",
+            "0"
+          ]
+        },
+        "checked": {
+          "status": "certified",
+          "scale": "1",
+          "lowerBoundNumerator": "38",
+          "candidateObjective": "38",
+          "generationCost": "19",
+          "moved": 3,
+          "scaledGap": "0",
+          "constant": "86",
+          "rewardUpperBoundNumerator": "48",
+          "gaps": [
+            {
+              "start": 0,
+              "end": 3,
+              "value": "a",
+              "cut": 2,
+              "required": 1,
+              "forced": false,
+              "reward": "16"
+            },
+            {
+              "start": 1,
+              "end": 4,
+              "value": "b",
+              "cut": 3,
+              "required": 1,
+              "forced": false,
+              "reward": "8"
+            },
+            {
+              "start": 3,
+              "end": 5,
+              "value": "a",
+              "cut": 5,
+              "required": 2,
+              "forced": false,
+              "reward": "16"
+            },
+            {
+              "start": 4,
+              "end": 6,
+              "value": "b",
+              "cut": 6,
+              "required": 2,
+              "forced": false,
+              "reward": "8"
+            }
+          ]
+        },
+        "reward": "48",
+        "vertices": 32,
+        "arcs": 56
+      }
+    },
+    {
+      "fixture": {
+        "name": "reuse-costs-too-much-movement",
+        "target": [
+          "a",
+          "b",
+          "a",
+          "b",
+          "a"
+        ],
+        "reach": 1,
+        "prices": {
+          "direct": [
+            [
+              "a",
+              2
+            ],
+            [
+              "b",
+              2
+            ]
+          ],
+          "dup": 1,
+          "swap": 30
+        }
+      },
+      "assignments": 16,
+      "exactReward": "150",
+      "result": {
+        "assignment": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "candidate": {
+          "assignment": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "modes": [
+            "direct",
+            "direct",
+            "direct",
+            "direct",
+            "direct"
+          ]
+        },
+        "certificate": {
+          "scale": "1",
+          "row": [
+            "0",
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "column": [
+            "34",
+            "32",
+            "32",
+            "30",
+            "30"
+          ],
+          "prefix": [
+            "2",
+            "2",
+            "2"
+          ],
+          "upper": [
+            "0",
+            "0",
+            "0"
+          ]
+        },
+        "checked": {
+          "status": "certified",
+          "scale": "1",
+          "lowerBoundNumerator": "20",
+          "candidateObjective": "20",
+          "generationCost": "10",
+          "moved": 0,
+          "scaledGap": "0",
+          "constant": "170",
+          "rewardUpperBoundNumerator": "150",
+          "gaps": [
+            {
+              "start": 0,
+              "end": 2,
+              "value": "a",
+              "cut": 1,
+              "required": 1,
+              "forced": false,
+              "reward": "2"
+            },
+            {
+              "start": 1,
+              "end": 3,
+              "value": "b",
+              "cut": 2,
+              "required": 1,
+              "forced": false,
+              "reward": "2"
+            },
+            {
+              "start": 2,
+              "end": 4,
+              "value": "a",
+              "cut": 3,
+              "required": 2,
+              "forced": false,
+              "reward": "2"
+            }
+          ]
+        },
+        "reward": "150",
+        "vertices": 23,
+        "arcs": 39
+      }
+    },
+    {
+      "fixture": {
+        "name": "zero-reward-short-nonlast",
+        "target": [
+          "a",
+          "a",
+          "x",
+          "a"
+        ],
+        "reach": 1,
+        "prices": {
+          "direct": [
+            [
+              "a",
+              1
+            ],
+            [
+              "x",
+              5
+            ]
+          ],
+          "dup": 2,
+          "swap": 3
+        }
+      },
+      "assignments": 8,
+      "exactReward": "12",
+      "result": {
+        "assignment": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "candidate": {
+          "assignment": [
+            0,
+            1,
+            2,
+            3
+          ],
+          "modes": [
+            "direct",
+            "direct",
+            "direct",
+            "direct"
+          ]
+        },
+        "certificate": {
+          "scale": "1",
+          "row": [
+            "0",
+            "0",
+            "0",
+            "0"
+          ],
+          "column": [
+            "3",
+            "3",
+            "3",
+            "3"
+          ],
+          "prefix": [
+            "0",
+            "0"
+          ],
+          "upper": [
+            "0",
+            "0"
+          ]
+        },
+        "checked": {
+          "status": "certified",
+          "scale": "1",
+          "lowerBoundNumerator": "16",
+          "candidateObjective": "16",
+          "generationCost": "8",
+          "moved": 0,
+          "scaledGap": "0",
+          "constant": "28",
+          "rewardUpperBoundNumerator": "12",
+          "gaps": [
+            {
+              "start": 0,
+              "end": 1,
+              "value": "a",
+              "cut": 1,
+              "required": 1,
+              "forced": false,
+              "reward": "0"
+            },
+            {
+              "start": 1,
+              "end": 3,
+              "value": "a",
+              "cut": 2,
+              "required": 2,
+              "forced": false,
+              "reward": "0"
+            }
+          ]
+        },
+        "reward": "12",
+        "vertices": 19,
+        "arcs": 30
+      }
+    }
+  ],
+  "reproduce": "node scripts/optimality-long-or-last-flow.mjs Bench/evidence-long-or-last-flow.json"
+}
