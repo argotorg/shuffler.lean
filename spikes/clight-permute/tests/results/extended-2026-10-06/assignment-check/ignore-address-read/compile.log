@@ -1,4 +1,0 @@
-File "./AssignmentCheck.v", line 134, characters 7-18:
-Error: Unable to unify "false" with
- "accepts (seq [put data (reg i) (lit 1); ret 0])".
-

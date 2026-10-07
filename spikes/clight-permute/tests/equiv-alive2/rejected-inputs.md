@@ -57,7 +57,7 @@ The run is retained under `build/equiv-alive2/rejected-extended/`.
 A later run with a 1,800-second limit per case completes lengths 16,
 17, and 18 with 31, 33, and 35 marked paths. All pass without errors,
 partial paths, or lost forks. Its
-[archive](../results/extended-2026-10-06/rejected-depth-extended/manifest.json)
+[run summary](../results/extended-2026-10-06/README.md)
 retains source snapshots, bitcode, statistics, and all witnesses.
 Lengths 32 and 64 remain incomplete.
 See the [archive](../results/extended-2026-10-06/README.md), its per-case manifest, and the

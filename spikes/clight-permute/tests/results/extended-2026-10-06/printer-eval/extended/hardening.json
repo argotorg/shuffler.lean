@@ -1,3 +1,0 @@
-{
-  "NIX_HARDENING_ENABLE": "bindnow format libcxxhardeningfast pic relro stackclashprotection stackprotector strictflexarrays1 strictoverflow zerocallusedregs"
-}

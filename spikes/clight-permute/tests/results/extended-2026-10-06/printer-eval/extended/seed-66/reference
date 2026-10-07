@@ -1,2 +1,0 @@
-#!/bin/sh
-exec /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/printer-eval/validated/printer-eval run 66

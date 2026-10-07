@@ -5,8 +5,10 @@
 ## Current pause: 2026-10-07
 
 The user asked to wrap up and commit. All runs from this task have stopped.
-The [evidence archive](../../../spikes/clight-permute/tests/results/frama-c-2026-10-07/README.md)
-contains the proof inputs, reports, SMT obligations, controls, and hashes.
+The [result summary](../../../spikes/clight-permute/tests/results/frama-c-2026-10-07/README.md)
+records the proof results and limits. At the user's request, the raw inputs,
+reports, SMT obligations, and archives were removed from the current tree.
+They remain in commit `a9b8307`.
 
 | Component | Valid / scheduled goals | Saved run |
 | --- | ---: | --- |

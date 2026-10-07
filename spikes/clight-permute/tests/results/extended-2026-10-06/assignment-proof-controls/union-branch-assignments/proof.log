@@ -1,6 +1,0 @@
-File "./AssignmentSound.v", line 71, characters 21-30:
-Error: Unable to apply lemma of type
- "forall (A : Type) (f : A -> bool) (x : A) (l : list A),
-  In x (filter f l) <-> In x l /\ f x = true"
-on hypothesis of type "In id (ids ++ other)".
-

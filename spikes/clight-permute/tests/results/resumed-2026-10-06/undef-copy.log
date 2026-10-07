@@ -1,1 +1,0 @@
-Clight preserves the call; both C compilers reject its uninitialized read.

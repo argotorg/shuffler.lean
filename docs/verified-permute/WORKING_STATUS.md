@@ -3,6 +3,11 @@
 
 ## Current pause: 2026-10-07
 
+The user later requested removal of the bulk result files. The current tree
+keeps summaries; the removed outputs remain in commit `a9b8307`.
+See the [result storage note](../../spikes/clight-permute/tests/results/README.md).
+Historical references below describe the files saved at the time of each run.
+
 The user asked to wrap up and commit the resumed Frama-C work. All runs from
 this task have stopped. No other verification campaign was restarted.
 
@@ -21,7 +26,7 @@ The success source control suite stopped after its 570/570 baseline; the
 parentheses run and two faulty variants remain incomplete or unrun.
 
 See [the Frama-C status](status/frama-c.md) and
-[the compressed evidence](../../spikes/clight-permute/tests/results/frama-c-2026-10-07/README.md).
+[the saved result summary](../../spikes/clight-permute/tests/results/frama-c-2026-10-07/README.md).
 Production C, Rocq, the AST, and the printer are unchanged. No new bug was
 found in unchanged production C. F10 records a control-scope error.
 The printer and Lean–Rocq proof gaps remain open. Resume only on user request.
@@ -131,7 +136,7 @@ The further KLEE rejection run at lengths 16, 17, and 18 completed with
 31, 33, and 35 marked paths. All 99 paths pass with no errors, partial
 paths, or lost forks. Each case had a 1,800-second limit. Its directory is
 `spikes/clight-permute/build/equiv-alive2/rejected-depth-extended/`.
-The [archive](../../spikes/clight-permute/tests/results/extended-2026-10-06/rejected-depth-extended/manifest.json)
+The [run summary](../../spikes/clight-permute/tests/results/extended-2026-10-06/README.md)
 includes the bitcode, statistics, source snapshots, and all witnesses.
 Lengths 32 and 64 remain incomplete from the earlier short run.
 The generated-program campaign also completed: 128 distinct C sources,

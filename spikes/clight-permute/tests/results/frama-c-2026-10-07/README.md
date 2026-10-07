@@ -1,6 +1,12 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 # Frama-C evidence — 2026-10-07
 
+**Historical summary.** Raw reports, generated files, and source copies
+were removed from the current tree at the user's request. They remain
+in commit `a9b8307`. File paths below refer to that saved state unless
+they link to a file still in the current tree. These outputs are not
+required to build the proofs or run the test tools.
+
 Work stopped at the user's request. All six components have complete
 individual proof reports. The fresh combined run and two source control
 suites are incomplete. No proof or solver process from this task remains.
@@ -12,7 +18,7 @@ Production C, Rocq, the Clight AST, and the printer are unchanged.
 ## Component results
 
 Paths in this table are relative to `spikes/clight-permute/build/frama-c/`
-inside [component-proofs.tar.gz](component-proofs.tar.gz).
+inside `component-proofs.tar.gz`.
 
 | Component | Valid / scheduled goals | Saved directory |
 | --- | ---: | --- |
@@ -43,7 +49,7 @@ and the status bound into the original `success_iff` clause. Read the
 
 ## Controls and remaining work
 
-[controls.tar.gz](controls.tar.gz) contains these unmodified result directories.
+`controls.tar.gz` contains these unmodified result directories.
 
 | Suite | Cases | Recorded result |
 | --- | ---: | --- |
@@ -88,7 +94,7 @@ nix develop --offline --impure \
 
 ## Diagnostics and trust limits
 
-[diagnostics.tar.gz](diagnostics.tar.gz) retains the early focused and corrected
+`diagnostics.tar.gz` retains the early focused and corrected
 termination controls, the memory-dependent variant probes, and two earlier
 incomplete runs (`full-composed-20261007` and `success-source-controls-20261007`).
 
@@ -111,15 +117,15 @@ They do not provide proof terms to Rocq. The C printer, compiler, and
 Lean–Rocq links remain outside this evidence. No Alt-Ergo, `clightgen`,
 `ccomp`, or CompCert compiler pass was used.
 
-## Archive contents
+## Archive contents in commit `a9b8307`
 
-The four archives preserve selected evidence from the ignored build tree.
+The four archives in that commit preserve evidence from the ignored build tree.
 The run directories retain annotated C, logs, commands, manifests, goal JSON,
 SMT obligations, and tactic sessions where generated. Partial runs retain
 only the files produced before interruption. Paths remain relative to the
 repository root. Extract into a new directory to keep earlier evidence intact.
 
-[sources.tar.gz](sources.tar.gz) contains:
+`sources.tar.gz` contains:
 
 - Tool and production source snapshots before and after whitespace cleanup,
   plus the final status documents, Nix shell, lock file, and license audit.
@@ -136,4 +142,4 @@ Each archive has an `ARCHIVE_MEMBERS.json` with a SHA-256 for every regular
 file and the target of each symbolic link. Solver binary links retain their
 Nix store targets; the archives do not copy those binaries. Archive creation
 reads every member back and checks its size, hash, and exact membership.
-[SHA256SUMS](SHA256SUMS) covers the archives and the plain-text evidence files.
+`SHA256SUMS` covers the archives and the plain-text evidence files.

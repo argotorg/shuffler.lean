@@ -1,4 +1,0 @@
-clang version 19.1.7
-Target: x86_64-unknown-linux-gnu
-Thread model: posix
-InstalledDir: /nix/store/nrjjq2hbd628pibjjk7nchisb83dizlz-clang-19.1.7/bin

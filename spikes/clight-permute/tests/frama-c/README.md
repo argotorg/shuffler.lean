@@ -18,6 +18,10 @@ safety 641/641, termination 337/337, target 313/313, trace 393/393, status
 full contract coverage on the same C and input domain. All 52 tool tests
 and seven control suites pass. See the [evidence](../results/frama-c-2026-10-07/README.md).
 
+The current tree keeps the result summary and the saved-report audit.
+The raw reports and archives remain in commit `a9b8307`; they were removed
+from the current tree at the user's request. New runs write under `build/`.
+
 The fresh combined run stopped during trace and has no completed root result.
 The status source control suite reports failure because one expected failed
 property is wrong; both faulty variants are rejected. The success source

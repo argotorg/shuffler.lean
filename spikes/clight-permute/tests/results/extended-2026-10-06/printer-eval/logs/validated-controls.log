@@ -1,7 +1,0 @@
-test_baseline_and_printer_mutations (__main__.PrinterControls.test_baseline_and_printer_mutations) ... ok
-test_missing_fuel_and_bad_length (__main__.PrinterControls.test_missing_fuel_and_bad_length) ... ok
-
-----------------------------------------------------------------------
-Ran 2 tests in 16.659s
-
-OK

@@ -1,7 +1,0 @@
-In file included from /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/assume-probe/result/runtime/new_opnt.cc:25:
-In file included from /nix/store/8sjgd7q3mdks1rb7rbcv0sallhvrhai5-gcc-15.3.0/include/c++/15.3.0/x86_64-unknown-linux-gnu/bits/c++config.h:727:
-In file included from /nix/store/8sjgd7q3mdks1rb7rbcv0sallhvrhai5-gcc-15.3.0/include/c++/15.3.0/x86_64-unknown-linux-gnu/bits/os_defines.h:39:
-/nix/store/lbjwxax9n0457lgd83rqwpd1l9lgfl7r-glibc-2.42-84-dev/include/features.h:435:4: warning: _FORTIFY_SOURCE requires compiling with optimization (-O) [-W#warnings]
-  435 | #  warning _FORTIFY_SOURCE requires compiling with optimization (-O)
-      |    ^
-1 warning generated.

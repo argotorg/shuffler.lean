@@ -1,7 +1,0 @@
-[ { "goal": "typed_ref_lemma_initialized_by_surjection",
-    "property": "lemma_initialized_by_surjection",
-    "file": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-helper-instance-v2/helper.c",
-    "line": 3, "smoke": false, "passed": true, "verdict": "valid",
-    "provers": [ { "prover": "qed", "time": 0.00664, "success": 0 },
-                 { "prover": "Z3:4.16.0", "time": 0.0174, "success": 1 } ],
-    "tactics": 1, "proved": 1 } ]

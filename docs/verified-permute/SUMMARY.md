@@ -2,8 +2,10 @@
 # Verification summary — 2026-10-07
 
 **Status: paused at the user's request.** No verification jobs are running.
-The [Frama-C evidence](../../spikes/clight-permute/tests/results/frama-c-2026-10-07/README.md)
-records the latest work and the checks that remain incomplete.
+The [Frama-C summary](../../spikes/clight-permute/tests/results/frama-c-2026-10-07/README.md)
+records the latest work and the checks that remain incomplete. Raw run
+outputs were removed from the current tree; they remain in commit `a9b8307`.
+See the [result storage note](../../spikes/clight-permute/tests/results/README.md).
 
 The aim is to test the proposed C ↔ Lean verification pipeline before use
 on larger programs. Permute is the test case. The current checked theorem

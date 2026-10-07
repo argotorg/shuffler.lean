@@ -1,6 +1,0 @@
-[ { "goal": "typed_ref_lemma_moved_bounds", "property": "lemma_moved_bounds",
-    "file": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/rank-bounds-qed/input.c",
-    "line": 41, "smoke": false, "passed": false, "verdict": "unknown",
-    "provers": [ { "prover": "qed", "time": 0.00163, "success": 0 },
-                 { "prover": "CVC5:1.3.4", "time": 0.125, "success": 2 } ],
-    "subgoals": 3, "tactics": 1, "proved": 2 } ]

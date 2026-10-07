@@ -1,7 +1,0 @@
-KLEE 3.3-pre (https://klee-se.org/)
-  Build mode: RelWithDebInfo (Asserts: ON)
-  Build revision: unknown
-
-LLVM (http://llvm.org/):
-  LLVM version 19.1.7
-  Optimized build.

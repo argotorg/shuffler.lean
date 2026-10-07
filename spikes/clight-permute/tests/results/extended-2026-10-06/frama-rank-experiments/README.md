@@ -1,10 +1,16 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 # Frama-C rank experiments at pause
 
+**Historical summary.** Raw reports, generated files, and source copies
+were removed from the current tree at the user's request. They remain
+in commit `a9b8307`. File paths below refer to that saved state unless
+they link to a file still in the current tree. These outputs are not
+required to build the proofs or run the test tools.
+
 Work is paused at the user's request on 2026-10-07. These copied-source
 experiments do not change production C or `tests/frama-c/lemmas.acsl`.
 
-The [all-integer experiment](rank-all-integers/goals.json) proves one of
+The all-integer experiment (`rank-all-integers/goals.json`) proves one of
 three explicit lemma goals. Its strengthened bounds statement is:
 
 ```c
@@ -30,7 +36,7 @@ corollaries and check every prerequisite together before use in C proofs.
 The main-loop measure must handle equal-value exchanges, which can skip
 trace increments; trace length alone does not establish progress.
 
-[archive.json](archive.json) records hashes for 80 retained files, including
+`archive.json` records hashes for 80 retained files, including
 sources, proof scripts, SMT obligations, logs, and the diagnostic runner.
 The runner's exit code is not a proof-completion check; inspect each goal
 report. The saved tool-test log records all 25 tests passing.
