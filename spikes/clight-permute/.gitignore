@@ -1,4 +1,5 @@
 /build/
+/.frama-c/
 *.vo
 *.vos
 *.vok

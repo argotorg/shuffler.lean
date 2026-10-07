@@ -25,6 +25,8 @@ ClightEvalTests ClightMemory ClightEntry ClightSwap ClightScalar ClightExchange
 ClightChoose ClightExchangeSuccess ChooseModel ModelArrays ClightMain ClightInitialize
 ClightLoop ClightCall ClightNormalize ClightValidation ClightSearch ClightFill ClightFillLoop
 FirstFree ClightCorrect ClightNormalization
+Reachability ClightReachability
+ModelSpec PermuteSpec PermuteCorrect
 """.split())
 LEGACY_MODULES = frozenset(("Permute", "Proofs", "Compute", "CycleProbe", "Tests"))
 

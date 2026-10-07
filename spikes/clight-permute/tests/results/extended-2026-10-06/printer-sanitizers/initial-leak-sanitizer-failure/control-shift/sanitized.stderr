@@ -1,0 +1,2 @@
+/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/printer-eval/sanitizer-pilot/control-shift/program.c:20:48: runtime error: shift exponent 32 is too large for 32-bit type 'unsigned int'
+SUMMARY: UndefinedBehaviorSanitizer: undefined-behavior /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/printer-eval/sanitizer-pilot/control-shift/program.c:20:48 

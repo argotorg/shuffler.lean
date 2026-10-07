@@ -1,0 +1,4354 @@
+{
+  "core": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/permute.c",
+  "core_sha256": "a120dccaaa1a7783231f7b4482f76f515ef6c099f4e0e73279f1228e634cfb78",
+  "solc_permute_sha256": "6d2864500674270821ee5702ccf1787ef27716d598c98c6cc139e80c67f53476",
+  "sizes": [
+    5
+  ],
+  "value_groups": null,
+  "cases": [
+    {
+      "n": 5,
+      "directory": "n5-0-1-2-3-4",
+      "permutation": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 192,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 95,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 301,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "efa30f44e523e86b496f835683550ccca33f144ed63d5a9115d0bc1e5668c34f",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-1-2-4-3",
+      "permutation": [
+        0,
+        1,
+        2,
+        4,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 319,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "bda44f91571bb08e39e6933f11658bb06321a90440ffc1311b7575fe5451d443",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-1-3-2-4",
+      "permutation": [
+        0,
+        1,
+        3,
+        2,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "2f3ba011b80bc4cf28a93b0c2e2b522f9fd605aaa93a7b9df0a395dbefad51e1",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-1-3-4-2",
+      "permutation": [
+        0,
+        1,
+        3,
+        4,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "518a369027c9e89801ef15110f29f868c8f9a981e91c419105d8350a95e7938f",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-1-4-2-3",
+      "permutation": [
+        0,
+        1,
+        4,
+        2,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "4e699e658e8fd467656d80137046ba98881e026cc46e82a76c7a8cd37b428d00",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-1-4-3-2",
+      "permutation": [
+        0,
+        1,
+        4,
+        3,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 319,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "3e8fc51a84b074a14c0cbd086b44524b9a55c47d6c7fad9b5869b0affd5a856d",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-2-1-3-4",
+      "permutation": [
+        0,
+        2,
+        1,
+        3,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "802f587161e3e8606c3e2389ef2c69375d072c21691a085fc5356c5b724fafbd",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-2-1-4-3",
+      "permutation": [
+        0,
+        2,
+        1,
+        4,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "10b702798af1809a808f01b60fb64a13ce543c8e096c418d36b58805e9feb497",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-2-3-1-4",
+      "permutation": [
+        0,
+        2,
+        3,
+        1,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "c7562976c5d1be70518860b648774bf18600499b6e672a9bfaf156b10ebb920d",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-2-3-4-1",
+      "permutation": [
+        0,
+        2,
+        3,
+        4,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "f6f0490184f755bdd46e02c334fec3986622e8490596a3bcb2fc1d30b570108b",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-2-4-1-3",
+      "permutation": [
+        0,
+        2,
+        4,
+        1,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "e4404617561c5aabd981987de840ed4b33a179f9ecefbb88f0f5bc59221a67e9",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-2-4-3-1",
+      "permutation": [
+        0,
+        2,
+        4,
+        3,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "123f90ff89373033646b61238f9a86845f469b43d0d9a7442f8a7babb9ce244b",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-3-1-2-4",
+      "permutation": [
+        0,
+        3,
+        1,
+        2,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "ea5f7c2b1af80cb13735572f7a282ce0f23f0cb8ee951ec27717b25e3ba6511d",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-3-1-4-2",
+      "permutation": [
+        0,
+        3,
+        1,
+        4,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "9b73aed1d7cf32c5b3130656589da4115747f94ed9c5e26ce45d020979a537e7",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-3-2-1-4",
+      "permutation": [
+        0,
+        3,
+        2,
+        1,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "01f481d732df053bb4c47ece88e9594775ec129d2d1e6b5969796eaa14abc8a9",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-3-2-4-1",
+      "permutation": [
+        0,
+        3,
+        2,
+        4,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "2d59469a9697179c0987dbc5223917ed0df40d70a961abd3dda80d932055b1f8",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-3-4-1-2",
+      "permutation": [
+        0,
+        3,
+        4,
+        1,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "14be506e9ff4a3b175473f06425f46203278a9363e364ccc731efc62289f6e73",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-3-4-2-1",
+      "permutation": [
+        0,
+        3,
+        4,
+        2,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "058fdc2c9c91c3a66ec690428da1d1d5897833eb7c832cf290c53e4ac11098ea",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-4-1-2-3",
+      "permutation": [
+        0,
+        4,
+        1,
+        2,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "dbaf71834f22c62cfa504f1bd20db8be2e950543ae03136979a5a42f375c39fc",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-4-1-3-2",
+      "permutation": [
+        0,
+        4,
+        1,
+        3,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "24d90ecb28fc0ea021f91956811cf50662e39af7075800332e2e4f4ab71c05af",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-4-2-1-3",
+      "permutation": [
+        0,
+        4,
+        2,
+        1,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "9e73178700848904c0e8b1700651ddd725749aa0d4846ba47de26485a62792a8",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-4-2-3-1",
+      "permutation": [
+        0,
+        4,
+        2,
+        3,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 319,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "90e3bba43a8298c92e6c20e6ae7cc08b81766cd77046f8c6cbf90505dfba8cc9",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-4-3-1-2",
+      "permutation": [
+        0,
+        4,
+        3,
+        1,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "3bfdb03ecf1a5b35f6998bd9ea0525f5210140a6a048e926748d1a9d2394f905",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-0-4-3-2-1",
+      "permutation": [
+        0,
+        4,
+        3,
+        2,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "56302b1f056944e02e6fd7a79833588132faab536e70ff13c5a34ecf8bd383cf",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-0-2-3-4",
+      "permutation": [
+        1,
+        0,
+        2,
+        3,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "9d9377584dea188cd367a0b61ebca63ba4082b912ea9bf4f3eeaea42bfd21ad2",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-0-2-4-3",
+      "permutation": [
+        1,
+        0,
+        2,
+        4,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "d7c767c897bcb4dfb975edea9a7ba87872c6bac4c581f2f0fd82b156e933ec34",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-0-3-2-4",
+      "permutation": [
+        1,
+        0,
+        3,
+        2,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "dec78fe2225b2946269c2f407e62c653ce4aa8800f52d6a2999644054c125ab7",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-0-3-4-2",
+      "permutation": [
+        1,
+        0,
+        3,
+        4,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "5a0814f70d54b7e7d1acbc3a1d72801e95664be099e7b7a6a7f57a8bb70cd23a",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-0-4-2-3",
+      "permutation": [
+        1,
+        0,
+        4,
+        2,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "4c659cb7ecde8a2afbcb340f6207a9a4492537397ec6cf70f015452e88d3840c",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-0-4-3-2",
+      "permutation": [
+        1,
+        0,
+        4,
+        3,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "6d5040cd3904394baab697bcbae94582366e0ced3f0f50d503b8a5cc4089232f",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-2-0-3-4",
+      "permutation": [
+        1,
+        2,
+        0,
+        3,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "59a529ca12deda85036b6c95ffa039a83119c259f1834cf5568963f85d77fe8b",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-2-0-4-3",
+      "permutation": [
+        1,
+        2,
+        0,
+        4,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "027881e8158ebe55a05c1578ca241781d05c53293fd2890f2f41b31303844475",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-2-3-0-4",
+      "permutation": [
+        1,
+        2,
+        3,
+        0,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "d281d76d8042900d2cf41af5470ab77f3a4a696291636c37e69b982c0b99daa3",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-2-3-4-0",
+      "permutation": [
+        1,
+        2,
+        3,
+        4,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "a19767d8da1cd1bc6835a4ef38a90c1ac650b3b377e444cbf0aa6f2bd012211c",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-2-4-0-3",
+      "permutation": [
+        1,
+        2,
+        4,
+        0,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "62c7289a9a37f95ae3d54ffbd62d839121f398d6434502b56dcc65c3b62455dd",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-2-4-3-0",
+      "permutation": [
+        1,
+        2,
+        4,
+        3,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "6df86eccf0fcd3bb4efe6a4de9e98fa1f6ec9310886ae18b5f89061f543aa357",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-3-0-2-4",
+      "permutation": [
+        1,
+        3,
+        0,
+        2,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "e282ad6d274b8719d280d9909c8994143288a78af34a59137e2cc670228ea0a2",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-3-0-4-2",
+      "permutation": [
+        1,
+        3,
+        0,
+        4,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "4adf5f45d91e41b9e576c2fa438e6dc6b9ce5319a84d1ef5eb9dff25e01a6ee5",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-3-2-0-4",
+      "permutation": [
+        1,
+        3,
+        2,
+        0,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "ca2e942def3d15be7fc349b4c0dab98a33d8dfe3da4884a5c2ae6dfa95cb31e0",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-3-2-4-0",
+      "permutation": [
+        1,
+        3,
+        2,
+        4,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "4c57f483eaf752b5a4d0a80293e4759e9fcca6ef346085e2327543cb1ff658a8",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-3-4-0-2",
+      "permutation": [
+        1,
+        3,
+        4,
+        0,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "b4e23202c9030384b2746ce3257dd5545f959e1f829e8b4f7a6eb90659d44540",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-3-4-2-0",
+      "permutation": [
+        1,
+        3,
+        4,
+        2,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "d5b7389cb8ff7161c4964f32fd5e8d62cb52005e70e19eed950540be5e4d8dbb",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-4-0-2-3",
+      "permutation": [
+        1,
+        4,
+        0,
+        2,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "b532b4c0b52aa1e4952ff604bdcba6a0549ff45c660e93c7fe89b187b15eec05",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-4-0-3-2",
+      "permutation": [
+        1,
+        4,
+        0,
+        3,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "be2234f6a964931c17152f4128bb6fe1e967b2be29e1f3edb66acdd77a856fcf",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-4-2-0-3",
+      "permutation": [
+        1,
+        4,
+        2,
+        0,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "8c75753feb21806264ceae3b3e768c7d548146c5de8bcf8ec236c2817e580ab1",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-4-2-3-0",
+      "permutation": [
+        1,
+        4,
+        2,
+        3,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "1d89fd1b8cef774fccabd43c66710e4a43db7970a76e4bc5e2295e756792396b",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-4-3-0-2",
+      "permutation": [
+        1,
+        4,
+        3,
+        0,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "583a9a115c7878c280dfc5e2009031c18247d55275aceafa550326883089133b",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-1-4-3-2-0",
+      "permutation": [
+        1,
+        4,
+        3,
+        2,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "8fc6807cdf0296841f63448f3a5aa380a8efa5bb037ba213470689bd79789711",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-0-1-3-4",
+      "permutation": [
+        2,
+        0,
+        1,
+        3,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "5d23a257dbb8a5c803511f122a39a890a6e242f2a026e64cd2c5e75e0b7524cf",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-0-1-4-3",
+      "permutation": [
+        2,
+        0,
+        1,
+        4,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "4472f0006205282873cdd629ea5d15926aa0a366054794fff6cf20a93d71bd98",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-0-3-1-4",
+      "permutation": [
+        2,
+        0,
+        3,
+        1,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "5fc032bacc9a00bb344cd7b63806826098c28e3a0a6979e44c37fe2719614175",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-0-3-4-1",
+      "permutation": [
+        2,
+        0,
+        3,
+        4,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "b8e667c005516724fe8a53d8830169f4a6366e58094bba14f2a5c7f26c080459",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-0-4-1-3",
+      "permutation": [
+        2,
+        0,
+        4,
+        1,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "154a34a3665bd0bed170c5d6095dd0f1d735f0521f9b4c0741838797eebbde0b",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-0-4-3-1",
+      "permutation": [
+        2,
+        0,
+        4,
+        3,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "c9217af5eefb08f14f59246750eea8afd12bcd04726f40d0e8f8195e34307e84",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-1-0-3-4",
+      "permutation": [
+        2,
+        1,
+        0,
+        3,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "af6df0df64f4027126d89f0a1cac7a01a52cf2a25ec96ca94ae255481ba95675",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-1-0-4-3",
+      "permutation": [
+        2,
+        1,
+        0,
+        4,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "13042ad0fc8de38b30435d837a6f36edfe6789bc8c188205180d8853ec2d7fac",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-1-3-0-4",
+      "permutation": [
+        2,
+        1,
+        3,
+        0,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "aecd3a80c1c3a21f10950861989e3895da1d6cea6f8589fb3904b3d8184e06e8",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-1-3-4-0",
+      "permutation": [
+        2,
+        1,
+        3,
+        4,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "d32699194f9e6345fcd5a91127e35dd4c94339014d95fa2051ebfa937f2efd84",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-1-4-0-3",
+      "permutation": [
+        2,
+        1,
+        4,
+        0,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "38c061cb8d0bb065d7ec487375de516e5196d61ec018c61a37d576005853b69a",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-1-4-3-0",
+      "permutation": [
+        2,
+        1,
+        4,
+        3,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "8de926943b5128dadb95b1f849478e4e4d82506c47e41a05ba996d36312d1d0e",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-3-0-1-4",
+      "permutation": [
+        2,
+        3,
+        0,
+        1,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "869abf9d9601542ffdaaea71240fac89ec6ac5bbd8295e0a132b4924a548a5ca",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-3-0-4-1",
+      "permutation": [
+        2,
+        3,
+        0,
+        4,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "09b3b218f9ac1f97e53d667671dd2c48bc5cd2508584db08c3b61cae1202d4f6",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-3-1-0-4",
+      "permutation": [
+        2,
+        3,
+        1,
+        0,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "d9aef36cf9b0af3b1ba5c604346abb5ae38b74fa96a06789479830c4bd675052",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-3-1-4-0",
+      "permutation": [
+        2,
+        3,
+        1,
+        4,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "58f74a0e4ce292b298eccefe4beb252d4fccbc346c225fef81ad904fe4611762",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-3-4-0-1",
+      "permutation": [
+        2,
+        3,
+        4,
+        0,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "6dfc7eecc05fcf968ddea0bc7cb74cbe2d7148d2bc98135a047b498319578224",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-3-4-1-0",
+      "permutation": [
+        2,
+        3,
+        4,
+        1,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "6e5144810429aa72d6d528a93202ccec07e3810d63da1c44bca6afc8cb4c9c12",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-4-0-1-3",
+      "permutation": [
+        2,
+        4,
+        0,
+        1,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "ae5b98fbdc070d681b785e8079048af79e55f22ed601887cf212597cbf2dcf72",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-4-0-3-1",
+      "permutation": [
+        2,
+        4,
+        0,
+        3,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "81a0bf7d3eaf7e65599e13aeb5a4002f12063d6ded0516889d71bd87ea418266",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-4-1-0-3",
+      "permutation": [
+        2,
+        4,
+        1,
+        0,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "868c2f5100f1a60fd4d6fb71d379aff04996b6ada7dd75bd4bf7150eb701f814",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-4-1-3-0",
+      "permutation": [
+        2,
+        4,
+        1,
+        3,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "8ba4732c43b81665773dfb95b1a92e9f71fe3633f75537605a425d6f32c290cb",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-4-3-0-1",
+      "permutation": [
+        2,
+        4,
+        3,
+        0,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "cdcf8df381c030abff3daa0ed52690ead651f7c531d30fc5f39b5e2706b1bf93",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-2-4-3-1-0",
+      "permutation": [
+        2,
+        4,
+        3,
+        1,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "309de3f9eca2f11852af03aab96196f3a9d09ae96abbd0393239453933194bda",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-0-1-2-4",
+      "permutation": [
+        3,
+        0,
+        1,
+        2,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "ef3678c3faaf26c2a1f2f9f0856722ef8eeaa52431e092049a4926e6c2f642f4",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-0-1-4-2",
+      "permutation": [
+        3,
+        0,
+        1,
+        4,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "5790c083f95bef01c4d1374229a5a5cb5ffc5042030f8c156fa25bd63b72f476",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-0-2-1-4",
+      "permutation": [
+        3,
+        0,
+        2,
+        1,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "5ceac0fa06a441780ab18a7d16a2c4a5f9042be1f750daa40a5f184cd56d4170",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-0-2-4-1",
+      "permutation": [
+        3,
+        0,
+        2,
+        4,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "d0a1f206c7e3f0fe3a1560c408062f05a8d828e51c2e84bcd55e640a38455bad",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-0-4-1-2",
+      "permutation": [
+        3,
+        0,
+        4,
+        1,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "29cf851e2e9c40c340793522fd2034505be9760f7ccaece806905a5e7b1de897",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-0-4-2-1",
+      "permutation": [
+        3,
+        0,
+        4,
+        2,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "255e2243e60bc90cc45e195421e57e5074c57a0319bb8282390a51e7ac122471",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-1-0-2-4",
+      "permutation": [
+        3,
+        1,
+        0,
+        2,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "2a32d642db4e992b5e65fd5ca999ca8689562b20d6bc298730a43c66dbcad265",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-1-0-4-2",
+      "permutation": [
+        3,
+        1,
+        0,
+        4,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "d7cd3554a60c77e9de73488c029bb63773e76f0739be982f5bb74a42e9deb037",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-1-2-0-4",
+      "permutation": [
+        3,
+        1,
+        2,
+        0,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "975541a89cbc7f52901a162a1f5b6198d45bf9f9a857d0565d209598fcc14c7a",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-1-2-4-0",
+      "permutation": [
+        3,
+        1,
+        2,
+        4,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "ad63944ad216294408a185a64799e235b5d6f7d97dad31981e212c6353dcc9a9",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-1-4-0-2",
+      "permutation": [
+        3,
+        1,
+        4,
+        0,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "a3bcb56947719516bf1ccf97cd94996f2ca60ceb435700b867a841b5ba707ffc",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-1-4-2-0",
+      "permutation": [
+        3,
+        1,
+        4,
+        2,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "75b1666cb7ab9e55cf20eb162000f44eac7bd0d39013e92c168d312b24bae27b",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-2-0-1-4",
+      "permutation": [
+        3,
+        2,
+        0,
+        1,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "3b4b1505727745378fa024393d7d2886035b2d7a547cef28e25ae1673af6c866",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-2-0-4-1",
+      "permutation": [
+        3,
+        2,
+        0,
+        4,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "be1ccaade49a1edc305a1623f23074cdda4e75249ac9a0a3b8c0186859fb1044",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-2-1-0-4",
+      "permutation": [
+        3,
+        2,
+        1,
+        0,
+        4
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "5410504e24c64b577b90a45a43b1908b7b7b5b79643b06027651ab3ee0c23cd1",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-2-1-4-0",
+      "permutation": [
+        3,
+        2,
+        1,
+        4,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "640161317af769f3b367dc4f01adf7f340e5926204998d3eec19345df9d76127",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-2-4-0-1",
+      "permutation": [
+        3,
+        2,
+        4,
+        0,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "d02b08b8d6040f4e56a9391d9c89ca3d2214ea87180923a4ebae924aeb7f1919",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-2-4-1-0",
+      "permutation": [
+        3,
+        2,
+        4,
+        1,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "4bf90d88465d11d3726d673a7ebff831ce95610932aefc51b2ed1ca5bfb75453",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-4-0-1-2",
+      "permutation": [
+        3,
+        4,
+        0,
+        1,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "24c10d37f7c928c108081fe5f443d5be5ee29bfb7ad896e32fa235ed33b48a25",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-4-0-2-1",
+      "permutation": [
+        3,
+        4,
+        0,
+        2,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "308a70a80196d58bf7f89b3b269cb74ebf06b4db7f47e7609fe7020ce85fe658",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-4-1-0-2",
+      "permutation": [
+        3,
+        4,
+        1,
+        0,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "dea9f30b41e9891abe15c4832c12f8201684c5879ccb1404f7fb2055edc44030",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-4-1-2-0",
+      "permutation": [
+        3,
+        4,
+        1,
+        2,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "72879752fa253f4dfb1e0041a571bb97fea2920c538a87317e41d686934a4ae1",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-4-2-0-1",
+      "permutation": [
+        3,
+        4,
+        2,
+        0,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "8dd1c06708cce5e8d2e0b93037009c9c120fd7b8db4d17f6b6a2c261aaa8d468",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-3-4-2-1-0",
+      "permutation": [
+        3,
+        4,
+        2,
+        1,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "11b505dff57fa0f257ae1052afc95dbaa5b2928f9297de4221704be84d4ac0c4",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-0-1-2-3",
+      "permutation": [
+        4,
+        0,
+        1,
+        2,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "69978ae4781d7c7c03396188593d461eae1ff0f765f18d3b2bcd74cec0dd0492",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-0-1-3-2",
+      "permutation": [
+        4,
+        0,
+        1,
+        3,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "3cf94a0fc89c32874d0cc74ce7b553d342d226054bac51da45936b379018665a",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-0-2-1-3",
+      "permutation": [
+        4,
+        0,
+        2,
+        1,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "a08d67d83b90d9dcab02ae6467456ddb6daae3381fde75585f2dca150739b497",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-0-2-3-1",
+      "permutation": [
+        4,
+        0,
+        2,
+        3,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "14179d2dc7a31a9b5d05d34a5a9df6923cac9f1cb791d8b5084cd5af37dec7fd",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-0-3-1-2",
+      "permutation": [
+        4,
+        0,
+        3,
+        1,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "c020312b5e82b378d13b0201d1ed4cb2bec863c08b5cc76addef36e287911c28",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-0-3-2-1",
+      "permutation": [
+        4,
+        0,
+        3,
+        2,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "80b15a2ac0d81a845446bc505b05e6a10ac796c3a4e8b66597ba651683044396",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-1-0-2-3",
+      "permutation": [
+        4,
+        1,
+        0,
+        2,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "e7a432a3bf93d849aff13325ac0e56343c386be66fc4e0de29bd0ae46c6d6914",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-1-0-3-2",
+      "permutation": [
+        4,
+        1,
+        0,
+        3,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "9279af86dccca10fe734bbf8b153ddbdb02c7785ad0149664952026ef852e2c6",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-1-2-0-3",
+      "permutation": [
+        4,
+        1,
+        2,
+        0,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "1158d35c9417d7cca2b0e8df00ecd4c0cfb67926251b6a0498bb493a755110fd",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-1-2-3-0",
+      "permutation": [
+        4,
+        1,
+        2,
+        3,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 319,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "66727de9eb432d89877bdbcc86f1633d6f3081a245c0599e4a274ad01b47f1eb",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-1-3-0-2",
+      "permutation": [
+        4,
+        1,
+        3,
+        0,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "7a5b9e66c68625c0bcb0b53277a4927dfcb6646c9fca4325c36c4bffa0c71eb9",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-1-3-2-0",
+      "permutation": [
+        4,
+        1,
+        3,
+        2,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "bc83065e7d92fccc3c0ecf583401524d067664211c5715d0b67b46a0d7305f45",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-2-0-1-3",
+      "permutation": [
+        4,
+        2,
+        0,
+        1,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "d01a577f5bbf32e4f462bc738bd7cad823c5d118c9353387bc45c93d8ea45a74",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-2-0-3-1",
+      "permutation": [
+        4,
+        2,
+        0,
+        3,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "75f1e2d8246fe87fef65cd508c21f8429c653f56ac64a3eea0dc310c7dadd341",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-2-1-0-3",
+      "permutation": [
+        4,
+        2,
+        1,
+        0,
+        3
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "7bd45121b70f6a6bfcdd7bd188bb987f09db5e16ee80d04fff47e5cca3bab6e6",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-2-1-3-0",
+      "permutation": [
+        4,
+        2,
+        1,
+        3,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "19d62fc81c359f033eaf8c11676f5d02ad0a6b70600fd90fdd0d2825fac45202",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-2-3-0-1",
+      "permutation": [
+        4,
+        2,
+        3,
+        0,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "f465a80784e141ef1552c750bb87e62ee77900fab199cacc4d4105e8cd4774ef",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-2-3-1-0",
+      "permutation": [
+        4,
+        2,
+        3,
+        1,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "1e85c0e91792e5402ab5505a6cd171ec98971a67332e0f24e0dfdb8c7628f95f",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-3-0-1-2",
+      "permutation": [
+        4,
+        3,
+        0,
+        1,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "97d5caeb74d266352360afac84fc55248fd3828c30870e19fe59dbfcf581825f",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-3-0-2-1",
+      "permutation": [
+        4,
+        3,
+        0,
+        2,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "6b54403a57732734ed048a740a6b59c9b2b3175e9d7f1a7c83a491b77a67fe0c",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-3-1-0-2",
+      "permutation": [
+        4,
+        3,
+        1,
+        0,
+        2
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "a01b3c9fc16616fe188608802350f2a93a104b0ff4049b74ac52342b79c92451",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-3-1-2-0",
+      "permutation": [
+        4,
+        3,
+        1,
+        2,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "cca2f7bd0bcd55f6ed9e0681fd687a26126f7cbcbb051a2e2132ab9c3aff3e55",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-3-2-0-1",
+      "permutation": [
+        4,
+        3,
+        2,
+        0,
+        1
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "c1348df52011a4223a365c29cdcce99c9617b7bb0c53a54c4717bbd468ef7172",
+      "pass": true
+    },
+    {
+      "n": 5,
+      "directory": "n5-4-3-2-1-0",
+      "permutation": [
+        4,
+        3,
+        2,
+        1,
+        0
+      ],
+      "complete_paths": 541,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 331,
+          "instructions": 354
+        },
+        "solc adapter": {
+          "covered_instructions": 109,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 329,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 541,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "c750043efc88f8a6feefdd26a6d76be74770720aa89eb3b0c625500549e1c7c5",
+      "pass": true
+    }
+  ],
+  "source_sha256": {
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/permute.c": "a120dccaaa1a7783231f7b4482f76f515ef6c099f4e0e73279f1228e634cfb78",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/core.c": "ae103cc63f66ef4b08073b84785b587a10b009a41c09a2f14797058b109e6f10",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/oracle.cpp": "5a11fd327479ba781250c4877eafa4ecce47b423fa9cfff3e6850a903f929ff6",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/klee-driver.c": "b70aa1821f915e367d52d02372102631f3e5599d3be2419366cb1e5329594836",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/observation.h": "45e846318dad0c9a3cbf2caa9d0eaf099dd4fe4d1b19f6ef3954bb91063dcbda",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/oracle.cpp": "4534e19c88f2dfebf132fd47f194b5c5a408f349c9a604f78b651a94bacee15e",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/test.h": "0e004203239597532676e2b9a39022198391894cb9868bac3c175010b35d3a5b",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/permute.h": "a081421bd698f8b61fe9eee3e49d2b24b7a5c9d06d8772c43a090856b21ba8e6",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/run-klee.py": "65da4e72078743e3d7ad702ea05ffd2e21f3a25e820bdd863530b2e94a18432b",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/profiles.py": "f56fc77572d738cc1ce85ad9457d49357172faf93a89b48693d3454a72cbaec9",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/klee_coverage.py": "566ae80da6e9108c1fe6e97932f29c59aa7f33d35f83ba9d8f1eee7a2a5fd2e7",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/fetch_nothrow.py": "581ef364d7ba56e004987e47e665a3cc854b03a902fcccdc164c8c4b66b372c1",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime/new_opnt.cc": "4c2466f46ae448de78523a245600acbbbca8680409e7f477f1939de28bac48c0",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/completion.py": "75cd4f9c67a776a539654263e32016b68dd625a5fe85ff705f98e6d4e2c55ce7",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/completion.c": "412304ced793b89bd3e9b655547b3e8a2808a4ed85edace82d988bdaa7365c1b",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/klee-shell.nix": "bc124cea25b991a10a5671bef922bdd012bb2674bd28e667436c23c755c9f8fc",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/oracle/solc_emission_helpers.inc": "5dbf3c308fd06da2be1e257ef67b27446054994ebeb550330bdcb7de8a1d40c9",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/oracle/solc_mapping.inc": "0cd018ad0c0ba53cbe61362bd6b9d84298a89d54cb44fc4bcf34d4f0d0e6a272",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/oracle/solc_permute.inc": "6d2864500674270821ee5702ccf1787ef27716d598c98c6cc139e80c67f53476",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/oracle/solc_stack_helpers.inc": "f3da04fdced4d12114c96e8b7614d4ea10d168751394b7aa0f7a662db9108d8d",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/oracle/solc_types.inc": "5718984cb5dd08859cac0336e34eff4cd45958b1515d5ccf8a0c9fccaab162db"
+  }
+}

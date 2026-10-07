@@ -1,0 +1,26 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* These are proof obligations. There are no user axioms in this file. */
+/*@
+  lemma moved_bounds{L}:
+    \forall unsigned int *p, integer k;
+      0 <= k ==> 0 <= moved(p,k) <= k;
+
+  lemma moved_frame{A,B}:
+    \forall unsigned int *p, integer k;
+      0 <= k && (\forall integer i; 0 <= i < k ==> \at(p[i],A) == \at(p[i],B)) ==>
+      moved{A}(p,k) == moved{B}(p,k);
+
+  lemma moved_update{A,B}:
+    \forall unsigned int *p, integer k,j;
+      0 <= k && (\forall integer i; 0 <= i < k && i != j ==> \at(p[i],A) == \at(p[i],B)) ==>
+      moved{B}(p,k) == moved{A}(p,k) +
+        (0 <= j < k ? ((\at(p[j],B) != j ? 1 : 0) - (\at(p[j],A) != j ? 1 : 0)) : 0);
+*/
+
+/*@
+  strategy SMT: \prover("CVC5", "Z3", 10.0);
+  strategy InductMoved:
+    \tactic("Wp.induction", \ingoal(L_moved(_,_,K)), \select(K),
+      \param("base",0), \children(SMT));
+  proof InductMoved: moved_bounds, moved_frame, moved_update;
+*/

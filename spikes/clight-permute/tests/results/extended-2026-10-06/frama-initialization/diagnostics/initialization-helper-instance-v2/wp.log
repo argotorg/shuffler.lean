@@ -1,0 +1,27 @@
+[kernel] Parsing spikes/clight-permute/build/frama-c/initialization-helper-instance-v2/helper.c (with preprocessing)
+[wp] Running WP plugin...
+[wp] 1 goal scheduled
+[wp] Proved goals:    1 / 1
+  Qed:             0 (7ms)
+  Script:          1 (Tactic) (Qed 7ms) (Z3 17ms)
+[wp] Updated session
+   - 1 new valid script
+------------------------------------------------------------
+  Global
+------------------------------------------------------------
+
+Goal Lemma 'initialized_by_surjection':
+Assume {
+  Have: 0 <= n.
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < n) ->
+      (Init_0[shift_uint32(t, Mint_0[shift_uint32(p, i_1)])]=true))).
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < n) ->
+      (exists i_2 : Z. (Mint_0[shift_uint32(p, i_2)] = i_1) /\ (0 <= i_2) /\
+       (i_2 < n)))).
+  Have: 0 <= i.
+  Have: i < n.
+}
+Prove: (Init_0[shift_uint32(t, i)]=true).
+Prover Script returns Valid (Qed:7ms) (17ms)
+
+------------------------------------------------------------

@@ -1,0 +1,183 @@
+{
+  "pass": true,
+  "results": [
+    {
+      "name": "baseline",
+      "checker_compiles": true,
+      "examples_removed": 21,
+      "expected_proof_failure": null,
+      "proof_exit": 0,
+      "expected_result_met": true,
+      "checker_sha256": "2291793805c5e486ea487e03ae3ca1d3ba59f8cd78398717bb295aef84c4c929",
+      "proof_sha256": "4a70c4db9750927bec505706489c9b1317d3e8a333d6a389ff2f22d2e2f6058d"
+    },
+    {
+      "name": "ignore-assignment-source",
+      "checker_compiles": true,
+      "examples_removed": 21,
+      "expected_proof_failure": "complete_path_safe",
+      "proof_exit": 1,
+      "expected_result_met": true,
+      "checker_sha256": "280e8c2b1f9847839e6ccbc30578a44bc7ecade18f5a8d3c8ca86e553a763cb7",
+      "proof_sha256": "4a70c4db9750927bec505706489c9b1317d3e8a333d6a389ff2f22d2e2f6058d"
+    },
+    {
+      "name": "union-branch-assignments",
+      "checker_compiles": true,
+      "examples_removed": 21,
+      "expected_proof_failure": "join_left",
+      "proof_exit": 1,
+      "expected_result_met": true,
+      "checker_sha256": "dd4d247a90fa060af154eb6b8b286c608c0a2566dd77a1b972bb208c5b83212e",
+      "proof_sha256": "4a70c4db9750927bec505706489c9b1317d3e8a333d6a389ff2f22d2e2f6058d"
+    },
+    {
+      "name": "ignore-condition-read",
+      "checker_compiles": true,
+      "examples_removed": 21,
+      "expected_proof_failure": "complete_path_safe",
+      "proof_exit": 1,
+      "expected_result_met": true,
+      "checker_sha256": "44532e642e5ab45118a97d60a69f8b7cc483af4811cc3acf668550b171ed986c",
+      "proof_sha256": "4a70c4db9750927bec505706489c9b1317d3e8a333d6a389ff2f22d2e2f6058d"
+    },
+    {
+      "name": "ignore-address-read",
+      "checker_compiles": true,
+      "examples_removed": 21,
+      "expected_proof_failure": "complete_path_safe",
+      "proof_exit": 1,
+      "expected_result_met": true,
+      "checker_sha256": "dfca06b2353abd934bb18c5033afb074f00b747cf4b8c7be327920a77157edd3",
+      "proof_sha256": "4a70c4db9750927bec505706489c9b1317d3e8a333d6a389ff2f22d2e2f6058d"
+    },
+    {
+      "name": "ignore-store-read",
+      "checker_compiles": true,
+      "examples_removed": 21,
+      "expected_proof_failure": "complete_path_safe",
+      "proof_exit": 1,
+      "expected_result_met": true,
+      "checker_sha256": "ed7ed06deb507a12b09abd05857deccdb5e123dd7499a618556574592bbfd77d",
+      "proof_sha256": "4a70c4db9750927bec505706489c9b1317d3e8a333d6a389ff2f22d2e2f6058d"
+    },
+    {
+      "name": "ignore-return-read",
+      "checker_compiles": true,
+      "examples_removed": 21,
+      "expected_proof_failure": "complete_path_safe",
+      "proof_exit": 1,
+      "expected_result_met": true,
+      "checker_sha256": "82dc70f31f91100c730b92e825a27b36fad42a8fd4c7a63d7abff9fa1d260400",
+      "proof_sha256": "4a70c4db9750927bec505706489c9b1317d3e8a333d6a389ff2f22d2e2f6058d"
+    },
+    {
+      "name": "ignore-loop-body",
+      "checker_compiles": true,
+      "examples_removed": 21,
+      "expected_proof_failure": "complete_path_safe",
+      "proof_exit": 1,
+      "expected_result_met": true,
+      "checker_sha256": "d519847a8d560fbecff2a723be13b6c84c4e08123873bda7c519eda3e859aa8f",
+      "proof_sha256": "4a70c4db9750927bec505706489c9b1317d3e8a333d6a389ff2f22d2e2f6058d"
+    },
+    {
+      "name": "parentheses-control",
+      "checker_compiles": true,
+      "examples_removed": 21,
+      "expected_proof_failure": null,
+      "proof_exit": 0,
+      "expected_result_met": true,
+      "checker_sha256": "d9539aeda98ad7f051f29efc60c679facc472c4831aff97987bc4722c0484738",
+      "proof_sha256": "4a70c4db9750927bec505706489c9b1317d3e8a333d6a389ff2f22d2e2f6058d"
+    },
+    {
+      "name": "execution-baseline",
+      "kind": "execution-model-control",
+      "expected_proof_failure": null,
+      "proof_exit": 0,
+      "expected_result_met": true,
+      "proof_sha256": "754797a691bb9684184a3d097409e37fed70b01ff03ce8bc5596ef6cfb003d55"
+    },
+    {
+      "name": "execution-parentheses",
+      "kind": "execution-model-control",
+      "expected_proof_failure": null,
+      "proof_exit": 0,
+      "expected_result_met": true,
+      "proof_sha256": "8ab498731574e966beb292a926d9b4cfa4a692eda3e52c8e5ba760462f731467"
+    },
+    {
+      "name": "execution-hide-unsafe-set",
+      "kind": "execution-model-control",
+      "expected_proof_failure": "execution_recorded",
+      "proof_exit": 1,
+      "expected_result_met": true,
+      "proof_sha256": "e1f034c3cfad92834e9d0549205a4b69ddcdde4e0fdd99bdfdcfe929a6f224e7"
+    },
+    {
+      "name": "execution-reverse-branch",
+      "kind": "execution-model-control",
+      "expected_proof_failure": "recorded_erases",
+      "proof_exit": 1,
+      "expected_result_met": true,
+      "proof_sha256": "935f2d7340004633b5b555b25678c229de2a69095195c36d358ba0f96d5833b4"
+    },
+    {
+      "name": "execution-ignore-condition",
+      "kind": "execution-model-control",
+      "expected_proof_failure": "recorded_path",
+      "proof_exit": 1,
+      "expected_result_met": true,
+      "proof_sha256": "58b88d3fef0eae608a5c5dc2189db2e1cad8ba5c0e33cb64f7dc329f97a28664"
+    },
+    {
+      "name": "execution-loop-reset",
+      "kind": "execution-model-control",
+      "expected_proof_failure": "recorded_path",
+      "proof_exit": 1,
+      "expected_result_met": true,
+      "proof_sha256": "7200fed688aab6052dc12a248488b7fb0d65d5811f18970d1049cdc2e8b542b7"
+    },
+    {
+      "name": "execution-set-before-read",
+      "kind": "execution-model-control",
+      "expected_proof_failure": "recorded_path",
+      "proof_exit": 1,
+      "expected_result_met": true,
+      "proof_sha256": "be134663d6295e918dfb7b6fdfad4f5483a89e14e03980bee806211311f152af"
+    },
+    {
+      "name": "missing-import",
+      "kind": "error-classification-control",
+      "proof_exit": 1,
+      "classified_as_soundness_failure": false,
+      "expected_result_met": true,
+      "proof_sha256": "5d59a28b0a006e5c6deb912c6f5c4569345ba70260883fe9e2f873508a69010a"
+    },
+    {
+      "name": "syntax-in-theorem",
+      "kind": "error-classification-control",
+      "proof_exit": 1,
+      "classified_as_soundness_failure": false,
+      "expected_result_met": true,
+      "proof_sha256": "a6a184d4ea4a33f8dec3b83ea52540426922f8d9058d0b5f6c9a8ed78b0147f7"
+    },
+    {
+      "name": "unrelated-lemma",
+      "kind": "error-classification-control",
+      "proof_exit": 1,
+      "classified_as_soundness_failure": false,
+      "expected_result_met": true,
+      "proof_sha256": "0fa5bb42e6c50e819d3800f708849f6ef14655e34a37a6d66335751cbfe2d3e5"
+    }
+  ],
+  "base_manifest_sha256": "c1cba7d287aca882ca29206a56fbe64245bd7fa8e0fe4fd26144f9fc89256fd3",
+  "sources": {
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/initialization/AssignmentCheck.v": "1003fc5ef36acaf2293d02647edde4ae9e9a314e9978fbac09a0be0a01435e5f",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/initialization/AssignmentSound.v": "4a70c4db9750927bec505706489c9b1317d3e8a333d6a389ff2f22d2e2f6058d",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/initialization/AssignmentExec.v": "754797a691bb9684184a3d097409e37fed70b01ff03ce8bc5596ef6cfb003d55",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/initialization/check.py": "d47e6031a8ac1ae7d8256c0080c42f4498459c8713737e56ddf715462b0639ed",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/initialization/proof_controls.py": "4b06e63783d4fb505a815ba474e4c44db2510ecf7044abbb156d316f7607fff9"
+  }
+}

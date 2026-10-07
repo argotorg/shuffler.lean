@@ -1,0 +1,30 @@
+File "./AssignmentExec.v", line 119, characters 28-36:
+Error:
+In environment
+function_entry :
+  genv -> function -> list val -> mem -> env -> temp_env -> mem -> Prop
+ge : genv
+e : env
+le : temp_env
+m : mem
+condition : expr
+yes, no : statement
+v : val
+t : trace
+le' : temp_env
+m' : mem
+out : outcome
+initial, final : assigned
+safe : bool
+H : eval_expr ge e le m condition v
+H0 : bool_val v (typeof condition) m = Some true
+Run : recorded_exec e le m yes t le' m' out initial final safe
+kind : exit_kind
+Kind : outcome_kind out = Some kind
+Path : assignment_path yes initial final kind safe
+Unable to unify
+ "assignment_path (Sifthenelse ?M3314 ?M3315 ?M3316) 
+    ?M3317 ?M3318 ?M3319 (uses ?M3317 ?M3314 && ?M3320)"
+with
+ "assignment_path (Sifthenelse condition yes no) initial final kind safe".
+

@@ -1,0 +1,5 @@
+solc oracle: cd1b0a209b17d3f6dd124bd89e1b9bcdff79b912; 3 source hashes checked
+{"case": "baseline", "matched": true, "results": [{"case": "n2-1_0", "permutation": [1, 0], "status": "proved", "exit": 0, "reason": "complete", "seconds": 6.378}]}
+{"case": "c_exit", "matched": true, "results": [{"case": "n2-1_0", "permutation": [1, 0], "status": "incomplete", "exit": 0, "reason": "partial_execution", "seconds": 6.93}]}
+{"case": "cpp_exit", "matched": true, "results": [{"case": "n2-1_0", "permutation": [1, 0], "status": "incomplete", "exit": 0, "reason": "partial_execution", "seconds": 7.835}]}
+{"case": "stale_result", "matched": true}

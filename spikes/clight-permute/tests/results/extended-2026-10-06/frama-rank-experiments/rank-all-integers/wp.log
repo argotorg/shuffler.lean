@@ -1,0 +1,64 @@
+[kernel] Parsing spikes/clight-permute/build/frama-c/rank-all-integers/input.c (with preprocessing)
+[wp] Running WP plugin...
+[wp] 3 goals scheduled
+[wp:tactical] [found] \ingoal(L_moved(_, _, K))
+[wp:tactical] [found] \ingoal(L_moved(_, _, K))
+[wp:tactical] [found] \ingoal(L_moved(_, _, K))
+[wp:tactical] [found] \ingoal(L_moved(_, _, K))
+[wp:tactical] [found] \ingoal(L_moved(_, _, K))
+[wp:tactical] [found] \ingoal(L_moved(_, _, K))
+[wp:tactical] [found] \ingoal(L_moved(_, _, K))
+[wp:tactical] [found] \ingoal(L_moved(_, _, K))
+[wp:tactical] [found] \ingoal(L_moved(_, _, K))
+[wp:tactical] [found] \ingoal(L_moved(_, _, K))
+[wp] [Unknown] typed_ref_lemma_moved_update (Tactics 5) (Qed 8/11 52ms) (CVC5 2/11 144ms)
+[wp:tactical] [found] \ingoal(L_moved(_, _, K))
+[wp] [Unknown] typed_ref_lemma_moved_frame (Tactics 5) (Qed 8/11 24ms) (CVC5 2/11 109ms)
+[wp] Proved goals:    1 / 3
+  Qed:             0 (0.64ms-52ms)
+  Script:          1 (Tactics 11) (Qed 16/25 77ms) (CVC5 7/25 417ms)
+  Unknown:         2
+[wp] Updated session
+   - 1 new valid script
+   - 2 new scripts to complete
+------------------------------------------------------------
+  Global
+------------------------------------------------------------
+
+Goal Lemma 'moved_bounds':
+Let x = L_moved(Mint_0, p, k).
+Prove: (0 <= x) /\ (if (k <= 0) then (x <= 0) else (x <= k)).
+Prover Script returns Valid (Qed:0.64ms) (164ms)
+
+------------------------------------------------------------
+
+Goal Lemma 'moved_frame':
+Assume Lemmas: 'moved_bounds'
+Assume {
+  Have: forall i : Z. let a = shift_uint32(p, i) in ((0 <= i) -> ((i < k) ->
+      (Mint_0[a] = Mint_1[a]))).
+}
+Prove: L_moved(Mint_0, p, k) = L_moved(Mint_1, p, k).
+Prover Script returns Unknown (Qed:24ms) (109ms)
+
+------------------------------------------------------------
+
+Goal Lemma 'moved_update':
+Assume Lemmas: 'moved_frame' 'moved_bounds'
+Let a = shift_uint32(p, j).
+Let x = Mint_1[a].
+Let x_1 = Mint_0[a].
+Assume {
+  Have: is_uint32(x_1).
+  Have: is_uint32(x).
+  Have: forall i : Z. let a_1 = shift_uint32(p, i) in ((i != j) ->
+      ((0 <= i) -> ((i < k) -> (Mint_1[a_1] = Mint_0[a_1])))).
+}
+Prove: (L_moved(Mint_0, p, k)
+        + (if ((0 <= j) & (j < k))
+           then ((if (x = j) then 0 else 1) - (if (x_1 = j) then 0 else 1))
+           else 0)) = L_moved(Mint_1, p, k).
+Prover Script returns Unknown (Qed:52ms) (144ms)
+
+------------------------------------------------------------
+[wp] Logging keys: tactical.

@@ -1,0 +1,21 @@
+test_actual_c_mutations (__main__.ComparisonTests.test_actual_c_mutations) ... 
+  test_actual_c_mutations (__main__.ComparisonTests.test_actual_c_mutations) (name='c-equal-swap') ... FAIL
+test_case_domain (__main__.ComparisonTests.test_case_domain) ... ok
+test_fuel_exhaustion_is_failure (__main__.ComparisonTests.test_fuel_exhaustion_is_failure) ... ok
+test_independent_expected_records (__main__.ComparisonTests.test_independent_expected_records) ... ok
+test_malformed_protocol_is_failure (__main__.ComparisonTests.test_malformed_protocol_is_failure) ... ok
+test_six_actual_c_builds (__main__.ComparisonTests.test_six_actual_c_builds) ... ok
+
+======================================================================
+FAIL: test_actual_c_mutations (__main__.ComparisonTests.test_actual_c_mutations) (name='c-equal-swap')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/rocq-eval/test_compare.py", line 89, in test_actual_c_mutations
+    self.assertEqual(verdict["pass"], kind == "control", verdict)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True != False : {'pass': True, 'mismatches': [], 'errors': []}
+
+----------------------------------------------------------------------
+Ran 6 tests in 5.558s
+
+FAILED (failures=1)

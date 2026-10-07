@@ -4,6 +4,7 @@ set -eu
 test_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 build_dir=${1:-"$test_dir/../build/guided"}
 build_dir=$(CDPATH= cd -- "$build_dir" && pwd)
+python3 "$test_dir/coverage-manifest.py" check "$build_dir"
 corpus_dir=${2:-"$build_dir/corpus"}
 report=$(mktemp -d "$build_dir/report.XXXXXX")
 mkdir "$report/corpus"
@@ -44,5 +45,7 @@ llvm-cov show "$build_dir/coverage/permute-fuzz" -instr-profile="$report/run.pro
     -show-branches=count -show-expansions -format=html -output-dir="$report/html" "$core" "$oracle"
 python3 "$test_dir/coverage-report.py" "$report/coverage.json" "$core" "$oracle" \
     > "$report/branches.txt"
+python3 "$test_dir/coverage-manifest.py" check "$build_dir"
+cp "$build_dir/coverage-manifest.json" "$report/build-manifest.json"
 cat "$report/summary.txt" "$report/branches.txt"
 printf 'Coverage snapshot: %s\n' "$report"

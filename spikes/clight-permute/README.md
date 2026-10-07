@@ -1,5 +1,11 @@
 # Clight Permute prototype
 
+For review, start with the [public contract and core definitions](../../docs/verified-permute/README.md)
+and the [trust boundary](../../docs/verified-permute/trust-boundary.md).
+The readable theorem is `PermuteCorrect.clight_refines_model`; its named
+predicates are in `PermuteSpec.v`, and the model postcondition is in
+`ModelSpec.v`. Proof scripts are separate from these specification definitions.
+
 This directory constructs a Clight implementation of Permute in Rocq and
 prints it as C11. The complete Clight call has a proof of defined execution
 and refinement of the duplicate-aware Rocq model for valid permutations

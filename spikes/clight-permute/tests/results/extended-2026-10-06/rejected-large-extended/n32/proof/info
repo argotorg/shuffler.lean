@@ -1,0 +1,23 @@
+klee --solver-backend=z3 --libc=none --ubsan-runtime --external-calls=none --check-div-zero=true --check-overshift=true --emit-all-errors --max-time=3600s --output-dir=/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/rejected-large-extended/n32/proof /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/rejected-large-extended/n32/linked.bc
+PID: 82762
+Using monotonic steady clock with 1/1000000000s resolution
+Started: 2026-10-07 00:01:13
+BEGIN searcher description
+<InterleavedSearcher> containing 2 searchers:
+RandomPathSearcher
+WeightedRandomSearcher::CoveringNew
+</InterleavedSearcher>
+END searcher description
+Finished: 2026-10-07 01:01:31
+Elapsed: 01:00:18
+KLEE: done: explored paths = 59
+KLEE: done: avg. constructs per query = 3281
+KLEE: done: total queries = 89
+KLEE: done: valid queries = 30
+KLEE: done: invalid queries = 59
+KLEE: done: query cex = 89
+
+KLEE: done: total instructions = 107450
+KLEE: done: completed paths = 27
+KLEE: done: partially completed paths = 32
+KLEE: done: generated tests = 59

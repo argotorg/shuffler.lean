@@ -1,0 +1,9 @@
+{"name": "baseline", "expected_failure": null, "expected_result_met": true, "exit": 0, "source_sha256": "1003fc5ef36acaf2293d02647edde4ae9e9a314e9978fbac09a0be0a01435e5f"}
+{"name": "ignore-assignment-source", "expected_failure": "rejects_undefined_self_copy", "expected_result_met": true, "exit": 1, "source_sha256": "415133f0bd2773230d4df815bf7716d5ec91fcb557494956ee32aa267ca882b5"}
+{"name": "union-branch-assignments", "expected_failure": "rejects_one_branch_assignment", "expected_result_met": true, "exit": 1, "source_sha256": "7b2e946cd132e1aa2fcd5542d03baece5c28f94862f70a0f29151f63cb18f05b"}
+{"name": "ignore-condition-read", "expected_failure": "rejects_undefined_condition", "expected_result_met": true, "exit": 1, "source_sha256": "054d812a00de99e060c0da7d0dc9902b6de0e35eb67fc80ad249721311d5f45f"}
+{"name": "ignore-address-read", "expected_failure": "rejects_undefined_address", "expected_result_met": true, "exit": 1, "source_sha256": "c500ac33db5d572397755ec10a72214539d3ed008d06b25ddc97df45c237f355"}
+{"name": "ignore-store-read", "expected_failure": "rejects_undefined_store", "expected_result_met": true, "exit": 1, "source_sha256": "a1c9047dd7e56b4c2b5d724ab967c9c5a7dfb8cbd06eb07bc759c9a241b4a2b9"}
+{"name": "ignore-return-read", "expected_failure": "rejects_undefined_return", "expected_result_met": true, "exit": 1, "source_sha256": "5517895676f3bcfb8bd44b7f7eb9f63b9276d3dcbddadf6536e546a061f56c9a"}
+{"name": "ignore-loop-body", "expected_failure": "rejects_undefined_read_in_loop", "expected_result_met": true, "exit": 1, "source_sha256": "ffcab9255f841866d0987287a68fce4ec1bae2ddfb4f1dd61dfccf60d8476891"}
+{"name": "duplicate-assignment-control", "expected_failure": null, "expected_result_met": true, "exit": 0, "source_sha256": "1f4895c2312b8011c2620b57937777490422547fb1868e24bae11a40161bac09"}

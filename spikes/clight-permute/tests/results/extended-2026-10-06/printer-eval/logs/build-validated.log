@@ -1,0 +1,6 @@
++ coqc -R /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/compcert compcert -Q /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/rocq-eval/validated  -Q /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/legacy Legacy Generic.v
++ coqchk -silent -o -R /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/compcert compcert -Q /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/rocq-eval/validated  -Q /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/legacy Legacy Generic
++ python3 /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/check-assumptions.py --kernel /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/printer-eval/validated/kernel.log
++ ocamlopt -w -a -c extracted.mli
++ ocamlopt -w -a -c extracted.ml
++ ocamlopt -w +a-4-70 -o printer-eval extracted.cmx printer.ml generator.ml main.ml

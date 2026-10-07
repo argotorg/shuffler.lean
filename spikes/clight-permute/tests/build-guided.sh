@@ -5,11 +5,13 @@ test_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 build_dir=${1:-"$test_dir/../build/guided"}
 mkdir -p "$build_dir"
 build_dir=$(CDPATH= cd -- "$build_dir" && pwd)
+python3 "$test_dir/coverage-manifest.py" clear "$build_dir"
 python3 "$test_dir/prepare_oracle.py" "$build_dir/oracle"
 python3 "$test_dir/test_prepare_oracle.py" "$build_dir/oracle"
 clang --version | head -n 1
 clang -dumpmachine
 llvm-cov --version | head -n 2
+python3 "$test_dir/coverage-manifest.py" begin "$build_dir"
 for mode in fuzz coverage; do
     mkdir -p "$build_dir/$mode"
     case "$mode" in
@@ -32,6 +34,7 @@ for mode in fuzz coverage; do
     clang++ $link "$build_dir/$mode/permute.o" "$build_dir/$mode/check_case.o" \
         "$build_dir/$mode/guided.o" "$build_dir/$mode/oracle.o" -o "$build_dir/$mode/permute-fuzz"
 done
+python3 "$test_dir/coverage-manifest.py" finish "$build_dir"
 mkdir -p "$build_dir/corpus" "$build_dir/artifacts"
 python3 "$test_dir/seed_corpus.py" "$build_dir/corpus"
 printf 'Fuzzer: %s/fuzz/permute-fuzz\nCorpus: %s/corpus\n' "$build_dir" "$build_dir"

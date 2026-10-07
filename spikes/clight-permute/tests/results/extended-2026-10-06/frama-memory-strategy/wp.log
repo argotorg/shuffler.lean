@@ -1,0 +1,23 @@
+[kernel] Parsing build/frama-c/memory-target-strategy/annotated.c (with preprocessing)
+[wp] Running WP plugin...
+[wp] Warning: Skipped RTE guards: unaligned pointers (\aligned not supported)
+[wp] Warning: Skipped RTE guards: invalid function pointer calls (\valid_function not supported)
+[rte:annot] annotating function permute
+[wp] Computing [100 goals...]
+[wp] Computing [200 goals...]
+[wp] Computing [300 goals...]
+[wp] Computing [400 goals...]
+[wp] Computing [500 goals...]
+[wp] Computing [600 goals...]
+[wp] 642 goals scheduled
+[wp] [Timeout] typed_ref_permute_terminates_part2 (Qed 291ms) (Z3)
+[wp] Proved goals:  642 / 643
+  Unreachable:     1
+  Qed:           319 (17ms-173ms-815ms)
+  CVC5 1.3.4:    316 (48ms-848ms-9.8s)
+  Z3 4.16.0:       5 (682ms-3.6s-9.8s)
+  Script:          1 (Tactic) (Qed 1.6s) (CVC5 2/4 9.9s) (Z3 1/4 9.8s)
+  Timeout:         1
+[wp] Updated session
+   - 3 new valid scripts
+   - 1 new script to complete

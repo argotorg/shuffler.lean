@@ -1,0 +1,72 @@
+[
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/initialization/execution-checked/AssignmentCheck.log",
+    "archive": "AssignmentCheck.log",
+    "sha256": "e48860f73316a42d574e923cda848bcb6d474abd18fef10499e88630d5a78335"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/initialization/execution-checked/AssignmentCheck.v",
+    "archive": "AssignmentCheck.v",
+    "sha256": "1003fc5ef36acaf2293d02647edde4ae9e9a314e9978fbac09a0be0a01435e5f"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/initialization/execution-checked/AssignmentExec.log",
+    "archive": "AssignmentExec.log",
+    "sha256": "054694e379e5503c8fe63c6240b946c3fd35ff6ae2845d9838c53185db1a7001"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/initialization/execution-checked/AssignmentExec.v",
+    "archive": "AssignmentExec.v",
+    "sha256": "754797a691bb9684184a3d097409e37fed70b01ff03ce8bc5596ef6cfb003d55"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/initialization/execution-checked/AssignmentSound.log",
+    "archive": "AssignmentSound.log",
+    "sha256": "f0532d0e8a885018e887fe9f2fc1415078fabe8f12825919a931ee3c625a3996"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/initialization/execution-checked/AssignmentSound.v",
+    "archive": "AssignmentSound.v",
+    "sha256": "4a70c4db9750927bec505706489c9b1317d3e8a333d6a389ff2f22d2e2f6058d"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/initialization/execution-checked/ExecContract.log",
+    "archive": "ExecContract.log",
+    "sha256": "d356aa66485a36c5d79dcbb6cb02ce83a5214b236d1132359a6e3b1f9dd9322d"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/initialization/execution-checked/ExecContract.v",
+    "archive": "ExecContract.v",
+    "sha256": "a11e685fe9ef48217685b65bf0e0aba4078f3add50f6ea9263b18ca5463275a5"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/initialization/execution-checked/SoundContract.log",
+    "archive": "SoundContract.log",
+    "sha256": "f0532d0e8a885018e887fe9f2fc1415078fabe8f12825919a931ee3c625a3996"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/initialization/execution-checked/SoundContract.v",
+    "archive": "SoundContract.v",
+    "sha256": "a64e714456d10418a649e093c7236583d9daf8b3ab92181534d5643a7a420fa2"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/initialization/execution-checked/kernel-policy.log",
+    "archive": "kernel-policy.log",
+    "sha256": "95e116bf422914ee0124d819eeb540074005383eb990160c489511139ac78ee9"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/initialization/execution-checked/kernel.log",
+    "archive": "kernel.log",
+    "sha256": "91ddc2ba73b8d8081a836fdc9564c046a93283afa537e493dec7c78a70d208dc"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/initialization/execution-checked/results.json",
+    "archive": "results.json",
+    "sha256": "e14b63c172ebd8ef8a403788c677efd72481844638f07b32397dbe6759a2db00"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/initialization/sound.py",
+    "archive": "sound.py",
+    "sha256": "53eb81bbf98d28786e863d45f1776451e8753437bb21aa1f8881e221a784c936"
+  }
+]

@@ -1,0 +1,59 @@
+[kernel] Parsing spikes/clight-permute/build/frama-c/rank-lemmas-current-v2/input.c (with preprocessing)
+[wp] Running WP plugin...
+[wp] 3 goals scheduled
+[wp] [Unknown] typed_ref_lemma_moved_bounds (Tactic) (Qed 0.57ms) (CVC5 2/3 91ms)
+[wp] [Timeout] typed_ref_lemma_moved_frame (Tactics 5) (Qed 8/11 41ms) (CVC5 1/11 50ms)
+[wp] [Timeout] typed_ref_lemma_moved_update (Tactics 5) (Qed 8/11 63ms) (CVC5 1/11 54ms)
+[wp] Proved goals:    0 / 3
+  Qed:             0 (41ms-35ms-63ms)
+  Timeout:         3
+[wp] Updated session
+   - 3 new scripts to complete
+------------------------------------------------------------
+  Global
+------------------------------------------------------------
+
+Goal Lemma 'moved_bounds':
+Let x = L_moved(Mint_0, p, k). Assume { Have: 0 <= k. }
+Prove: (x <= k) /\ (0 <= x).
+Prover CVC5 1.3.4 returns Timeout (10s)
+Prover Z3 4.16.0 returns Timeout (10s)
+Prover Script returns Unknown (Qed:0.57ms) (91ms)
+
+------------------------------------------------------------
+
+Goal Lemma 'moved_frame':
+Assume Lemmas: 'moved_bounds'
+Assume {
+  Have: 0 <= k.
+  Have: forall i : Z. let a = shift_uint32(p, i) in ((0 <= i) -> ((i < k) ->
+      (Mint_0[a] = Mint_1[a]))).
+}
+Prove: L_moved(Mint_0, p, k) = L_moved(Mint_1, p, k).
+Prover CVC5 1.3.4 returns Timeout (10s)
+Prover Z3 4.16.0 returns Timeout (10s)
+Prover Script returns Timeout (Qed:41ms) (50ms)
+
+------------------------------------------------------------
+
+Goal Lemma 'moved_update':
+Assume Lemmas: 'moved_frame' 'moved_bounds'
+Let a = shift_uint32(p, j).
+Let x = Mint_1[a].
+Let x_1 = Mint_0[a].
+Assume {
+  Have: 0 <= k.
+  Have: is_uint32(x_1).
+  Have: is_uint32(x).
+  Have: forall i : Z. let a_1 = shift_uint32(p, i) in ((i != j) ->
+      ((0 <= i) -> ((i < k) -> (Mint_1[a_1] = Mint_0[a_1])))).
+}
+Prove: (L_moved(Mint_0, p, k)
+        + (if ((0 <= j) & (j < k))
+           then ((if (x = j) then 0 else 1) - (if (x_1 = j) then 0 else 1))
+           else 0)) = L_moved(Mint_1, p, k).
+Prover CVC5 1.3.4 returns Timeout (Qed:2ms) (10s)
+Prover Z3 4.16.0 returns Timeout (Qed:2ms) (10s)
+Prover Script returns Timeout (Qed:63ms) (54ms)
+
+------------------------------------------------------------

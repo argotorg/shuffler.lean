@@ -1,0 +1,22 @@
+{
+  "pass": false,
+  "modules": [
+    {
+      "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-assume-probe/fixed/n1-0/core.bc",
+      "sha256": "3f39af6c073fc15f14f7d8cf07fd4fbc63b0626cb98adf5bff7693f49337f30a",
+      "forbidden_symbols": [
+        "klee_assume"
+      ]
+    },
+    {
+      "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-assume-probe/fixed/n1-0/oracle.bc",
+      "sha256": "cdeffa4287446ba5afea177b5bcf6e85eee903326d08a26297394d3f454c1e15",
+      "forbidden_symbols": []
+    },
+    {
+      "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-assume-probe/fixed/runtime.bc",
+      "sha256": "078959543ee6db784435f33d02e9b3c994399b6a09a230ad6dea6d8a1eeefaf4",
+      "forbidden_symbols": []
+    }
+  ]
+}

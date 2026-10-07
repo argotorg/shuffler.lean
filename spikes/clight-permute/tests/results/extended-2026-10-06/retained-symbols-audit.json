@@ -1,0 +1,4015 @@
+{
+  "source_audit_sha256": "9d6efb034cdbaf682456bf6bfc95966fce7c1d59fe0b195017629def7cb00e4e",
+  "checker_sha256": "59ab73e311f2555da84d4e347ca52746de543f8df03cbbf2feb6b18a7bf1b884",
+  "case_count": 167,
+  "cases": [
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n1-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n1-0/core.bc",
+            "sha256": "3cd5268a0c7c11e65f89737c9ce0e640b751ab9e2f5f5e4f7a6b6b05fa5732f7",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n1-0/oracle.bc",
+            "sha256": "cfa37f84870bed4c1d81c740095838ff3e8d8757e84ae6863c5e3e92df256ef3",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n2-0-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n2-0-1/core.bc",
+            "sha256": "8be31a577137f24d022f3b86277633941d6fca60390d2a00209f92e7737e8868",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n2-0-1/oracle.bc",
+            "sha256": "bdfee6b674e78ea4f034b4f35e495ed25d671881a3abf771c0f912160c75fb9b",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n2-1-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n2-1-0/core.bc",
+            "sha256": "d3c21c10a59ac56533a73217fa9bd57d9c79bebffdc64ef4f725f8ccca11319d",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n2-1-0/oracle.bc",
+            "sha256": "35d53ffeaefc410fd443c9344701a1fdd4a84848d841155bfbeadacfb356ad43",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n3-0-1-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n3-0-1-2/core.bc",
+            "sha256": "5f85fbb0718bc79e7a6d398d512ddba3c13770a3f01934f2e87efd51c224aac3",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n3-0-1-2/oracle.bc",
+            "sha256": "f82003e78ff9df87c0d76e764202b62cd5060526c44a8b311c0d0a84d0b7b31b",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n3-0-2-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n3-0-2-1/core.bc",
+            "sha256": "3deca04e71db53fecb3a04a5c6b0c01ac35a2411f50565be0a1cc42c39d6d512",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n3-0-2-1/oracle.bc",
+            "sha256": "b94650cfb82ebdae5dfcd43e310754c4d54ee4b409018724ed7b24e47b78e493",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n3-1-0-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n3-1-0-2/core.bc",
+            "sha256": "7b9a6bd3bedc548828bc7b1addf1dde2ba3141b1495278443683ec142cd9f16b",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n3-1-0-2/oracle.bc",
+            "sha256": "7e27ded2bf98f909050dcaa149a52c891e55c1c83fcb55fe1b863700aef319f5",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n3-1-2-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n3-1-2-0/core.bc",
+            "sha256": "d1e00daf88945ee89f8157613817d39e999d0c1b617bc2f06b97f20572b31f00",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n3-1-2-0/oracle.bc",
+            "sha256": "dbf579139083a2acbdaf8ff0404239065b7b7ec73fd63a1a2a5ed54bffa5211f",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n3-2-0-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n3-2-0-1/core.bc",
+            "sha256": "0ed54d54161993ac9610b0a62bfaa236752a2f7edb8de5ec7d673208d0173984",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n3-2-0-1/oracle.bc",
+            "sha256": "0b05acf297181987c8f9f4f865cea237a961cf6a6c9f3549d43bcb598ef6fcc6",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n3-2-1-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n3-2-1-0/core.bc",
+            "sha256": "2dd7fdbfb463d132485fb5213989d08fc8e4324371024d19d2bf8194d97964b6",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n3-2-1-0/oracle.bc",
+            "sha256": "65f4d0e083745a40a99b484e6717e10b28ac37092000bea0d2407e8b73dc58c5",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-0-1-2-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-0-1-2-3/core.bc",
+            "sha256": "3cf378cddf61e4df46c2286b244b495c974aff4ace3c62ed8765410eae735fc7",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-0-1-2-3/oracle.bc",
+            "sha256": "61f3f021b07200f9da42d5fa1b3ed0339e7a776107af8214de9a35bc58c05e0a",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-0-1-3-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-0-1-3-2/core.bc",
+            "sha256": "6271aa0e65d6b8c6a5b6f76b755befd0a3dcf7a5add0e8352edfb00cdba41890",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-0-1-3-2/oracle.bc",
+            "sha256": "1a7321169ec10d9ebc1a30b4eb6bf04fcae0c3831b38ddc41ead41fbcabf947f",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-0-2-1-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-0-2-1-3/core.bc",
+            "sha256": "75a300952e6db200ad0361abc9584b98541c4a73986968ebd9ed4a782b682065",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-0-2-1-3/oracle.bc",
+            "sha256": "a17a6edcf4468c7919268fc893f913230dc2b290479dc05b301f3f7f63756662",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-0-2-3-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-0-2-3-1/core.bc",
+            "sha256": "047f3c92a6387cd0f266fe1862e1d5c0fb307f8d1fdf7cbd184efbb50087469f",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-0-2-3-1/oracle.bc",
+            "sha256": "9bf603f5fd19738d291cbc16fbc1fbc1112102f29a32eadd18b37355708304ff",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-0-3-1-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-0-3-1-2/core.bc",
+            "sha256": "fc748db6acf12dcdbffc9af64d602077fc28fa4a5bb347d650313962cb8a7cdb",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-0-3-1-2/oracle.bc",
+            "sha256": "faeb5e1500b276a2f4bad1b12f9a83abdd6fd5b928b8887c58074ae2807911ac",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-0-3-2-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-0-3-2-1/core.bc",
+            "sha256": "12ad12ba015dbda75a5292cf4c276b3e5f0155515bd4ffdfde81ff591987fb58",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-0-3-2-1/oracle.bc",
+            "sha256": "676ddffd99701e633e70ff8db50d7704eca6ca9c9ea4535eee4134623b22ce5b",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-1-0-2-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-1-0-2-3/core.bc",
+            "sha256": "e52678677a1b83d56a437afb867f4aec36ee92ddbb36c5f5c8ba5872541c3f32",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-1-0-2-3/oracle.bc",
+            "sha256": "05546d640b5eb41b2e73223bf267eee29ac4b2e966582c22bcc1217c306c4ff4",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-1-0-3-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-1-0-3-2/core.bc",
+            "sha256": "f22b72b3383565260e31f518b4b6fa54abf5751d5a70981001f5afe0dfd0caa8",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-1-0-3-2/oracle.bc",
+            "sha256": "45004008017373a6034b3848ab1de30be168279b0a726ec2910bf57dc0a062a5",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-1-2-0-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-1-2-0-3/core.bc",
+            "sha256": "7ce311959a28e2d5f6a2570ec56e49e7bbecd5652e76d5af726cf53ad17ab7eb",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-1-2-0-3/oracle.bc",
+            "sha256": "e181bd3ad7a23e688dc5208dd742c25067e53651939b07992b97c176e1c46851",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-1-2-3-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-1-2-3-0/core.bc",
+            "sha256": "910733c285af81d1a3bea676bf23bcf8eda5a032edbc1536107911e5f4935ad4",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-1-2-3-0/oracle.bc",
+            "sha256": "3b939174dfe6636873df32aad95808d0564915f3a3358d6db5e24f3b4fbdbef6",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-1-3-0-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-1-3-0-2/core.bc",
+            "sha256": "fa04467ed196b9bb17e2d22143896338189c013cd78de3da83c10023531eddea",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-1-3-0-2/oracle.bc",
+            "sha256": "60228a8e88226e7a5a57bd08d2be29d7b146aeecc6a6000e96c50e89c113163b",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-1-3-2-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-1-3-2-0/core.bc",
+            "sha256": "494d6c321a0e7a83ac7669d42bb540fd388f2c16b89fa0178827ba30af968025",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-1-3-2-0/oracle.bc",
+            "sha256": "df12ceb350044ccc3414f5601caf6d44888b63543484d9813dccd0f5ed5657ea",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-2-0-1-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-2-0-1-3/core.bc",
+            "sha256": "d206e92430405cf5dc285b75731cdf41e46dcc25e1581b6d1aa4ab85d24d305b",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-2-0-1-3/oracle.bc",
+            "sha256": "fae1b6762097cbbde820aa5103527e5d5e35af64c960e10d31473f35693642b3",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-2-0-3-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-2-0-3-1/core.bc",
+            "sha256": "1050436232c808f5f1be3e98874be98b71791c2788c9732a6b437a059a4b383e",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-2-0-3-1/oracle.bc",
+            "sha256": "23cfdd64afc1f803facbf14b8c2cb3982a79f64152fa2cc35d081dda6139e062",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-2-1-0-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-2-1-0-3/core.bc",
+            "sha256": "804d76d56e5675d1e3b433b7e40c0abfe9f9b8781fd10651db84091371a117c1",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-2-1-0-3/oracle.bc",
+            "sha256": "542c35722972dafebd2de6866f66b271b8268a8e7aa562cfd16205fbb45c3aed",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-2-1-3-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-2-1-3-0/core.bc",
+            "sha256": "daf08cc86e702bc8085d2075fccfe76a78feeafee03c369dd9382d6b7f374fc1",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-2-1-3-0/oracle.bc",
+            "sha256": "b25d68ecef9c04b0a116b6e8e65cf7e2a83cbe5e27e9785243b562b03692d01a",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-2-3-0-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-2-3-0-1/core.bc",
+            "sha256": "01b0090b9bd0ae6b0c7e9de34d13a27c1e1a14c5e3c01a88d6ccdde901afb1ee",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-2-3-0-1/oracle.bc",
+            "sha256": "c4588e4a5515847ca79fe0e38127775a54a32ef6ec3336365fe1376453bffc8c",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-2-3-1-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-2-3-1-0/core.bc",
+            "sha256": "6f30ba5ffec3c7c8d4977ac142db62a06aea89a563433631b8d505d290a74924",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-2-3-1-0/oracle.bc",
+            "sha256": "4b396b5e761142a97811fd4f7e8f732b1eb29c688bec4ef4bc4f66c947728d4f",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-3-0-1-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-3-0-1-2/core.bc",
+            "sha256": "c453e8ad183619d6573662469985db773741db69174d2c902b288c8de02c15d1",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-3-0-1-2/oracle.bc",
+            "sha256": "06fa4114aa0ecc5db752038642395a7155fe9b971f4fe3d38c7ee7b139a95035",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-3-0-2-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-3-0-2-1/core.bc",
+            "sha256": "efdf67083e944a1783dd6ce8206a12376a7de3c9e516cb8581270230cc980a68",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-3-0-2-1/oracle.bc",
+            "sha256": "d255ce27c7155d042e64c33c123420a4c0e326a890622deaa432d337ddd03931",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-3-1-0-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-3-1-0-2/core.bc",
+            "sha256": "35d2ee6c25263bf61bfd9352e46aecf4dc9aa80bb6c9d0d8649a66b0dfb382af",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-3-1-0-2/oracle.bc",
+            "sha256": "69653e7dc21a190ad2a15ac06cbb95293b2e1a96c015750c4b8b53a919b7586e",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-3-1-2-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-3-1-2-0/core.bc",
+            "sha256": "e48fe8135258df98a0cfeabb8ba1970bba7006828528da243d8209d0ede0e367",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-3-1-2-0/oracle.bc",
+            "sha256": "8a7417e515263e00999e368cd154b72a44727044f3aec873eaac0dea639391c4",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-3-2-0-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-3-2-0-1/core.bc",
+            "sha256": "c37004b0e23ce460bcd2c2e593a6ee4eece322c96330138c1659e3a64dcfe163",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-3-2-0-1/oracle.bc",
+            "sha256": "e614f461a7222cf89b26042dddff60e661aa2b3af20c1c49b47fd58e13e3743f",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-complete-checked/manifest.json",
+      "case": "n4-3-2-1-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-3-2-1-0/core.bc",
+            "sha256": "3341ad01ee7938d7a4d8af51f287b7fd09a4741a815ab78f56174fc1e311cccf",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/n4-3-2-1-0/oracle.bc",
+            "sha256": "6685eccc429522d06ff6601925e84eef531d90f097705669a7067ac029de7010",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-complete-checked/runtime.bc",
+            "sha256": "e8de260e30244bfe354b8cba256347d71255aff9949aaf6b3279ffaa31055448",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-1-2-3-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-1-2-3-4/core.bc",
+            "sha256": "1959114ace6387041d0aa0cb299dc89adff5073d9b5e49c5cd76da1e77ef7dc3",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-1-2-3-4/oracle.bc",
+            "sha256": "b91dd7f6c332cf89bb63e3e44271a685e935deac8cc3c48329535d62416cf7b7",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-1-2-4-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-1-2-4-3/core.bc",
+            "sha256": "d7dc5e6425c82f1d763b889582750d51048db18ea1aa394630da39f4ba9bb13a",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-1-2-4-3/oracle.bc",
+            "sha256": "9e5636cd0c9c71d3a5fef150a85d6532ab7b8ff16049218751014ea919d0361b",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-1-3-2-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-1-3-2-4/core.bc",
+            "sha256": "b1378990f447bbd4d54043c3a751c2625fa6ecc45e0abf2ef586362b8516c1a4",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-1-3-2-4/oracle.bc",
+            "sha256": "e583419b3a0cd3639151541b5926fe9f440c1bf019c92a2cffbae0eaba401fa8",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-1-3-4-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-1-3-4-2/core.bc",
+            "sha256": "942679fdab2aa87210570a07d45f1784c5206766d7d4e6fc3b98236467fd982f",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-1-3-4-2/oracle.bc",
+            "sha256": "c14458987e9c7ceab1940b607eb9646c2720f30e7a22dc94cebfa3f190c08d5f",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-1-4-2-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-1-4-2-3/core.bc",
+            "sha256": "8c4d1a8623e100652948c69e4fcc3c63280fb5056d84e2a28c31c7d4097199f0",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-1-4-2-3/oracle.bc",
+            "sha256": "b1bf48c568afe20717810d8e6ee1cd2002ffc4169a292f5a205dab1cf7f3348b",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-1-4-3-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-1-4-3-2/core.bc",
+            "sha256": "d48e480287b3e6ee4830ea484ea299f88de7013c51c2ed963ab7abafbf0ebc44",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-1-4-3-2/oracle.bc",
+            "sha256": "a4d8b173fb4d897924252497322cd1e06a2b8b384fe2462e4b2d4abcb081b2c9",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-2-1-3-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-2-1-3-4/core.bc",
+            "sha256": "6f75b0f8a596b5136887d100ce38a3204938716c9e3d779d5e461a47ea694b7e",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-2-1-3-4/oracle.bc",
+            "sha256": "59f2631bc68e808895c2966169124d178e2a354b1c6360f1b85943acb8202427",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-2-1-4-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-2-1-4-3/core.bc",
+            "sha256": "4f1c9a0c5eab09cb6097061bbed4106ca24c83781d0c979377bb80520d80339c",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-2-1-4-3/oracle.bc",
+            "sha256": "f14f658586e3e5a579d35064aec1e0bcb6a34461a9466dbcae54bb0dda91a0a9",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-2-3-1-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-2-3-1-4/core.bc",
+            "sha256": "f91f1161fba53e6687ef42f25013526d6b98f3fd6457749a52a4ade63e04c640",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-2-3-1-4/oracle.bc",
+            "sha256": "0804ce30cead7acdc54e1df1196715da7ac6584fb456deeccb82e32fe21d43f1",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-2-3-4-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-2-3-4-1/core.bc",
+            "sha256": "5e1b3fb315690913993a30d200540e41bb20d6b8d4bc0ebf602779ced79fd936",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-2-3-4-1/oracle.bc",
+            "sha256": "60157292a95cbed7b97595fdb92c357a39f5f38d9fb2aa5170694a37314fca0c",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-2-4-1-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-2-4-1-3/core.bc",
+            "sha256": "391c8a0281eb3d3cec111d3a77a603308cb8316c8008b6e8044c882e0a3e5323",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-2-4-1-3/oracle.bc",
+            "sha256": "517c5a7a9991f6e0bd8bfc344a97185b4135a5c26050543df2f773ae816d5deb",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-2-4-3-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-2-4-3-1/core.bc",
+            "sha256": "5ee0c0d50f6b80a40320cf62d47b666073b477eabff75616a467d8558b34e17c",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-2-4-3-1/oracle.bc",
+            "sha256": "c800c03a6b7a7687b4a0ab1571eb9ed14541ca3595a2a7ef404584afa34fe706",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-3-1-2-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-3-1-2-4/core.bc",
+            "sha256": "135ca249d75c59fa07ef40db805688d10655041dc4c801884f862a55495eefff",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-3-1-2-4/oracle.bc",
+            "sha256": "7fe4d41737078973b47e08d7466c99a0b6320b5c1417097be13b15e13a4e2f2d",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-3-1-4-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-3-1-4-2/core.bc",
+            "sha256": "335c294c387e685b79f5ad8bb792bbbc7a25777407c32cc9fa563e94607160ca",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-3-1-4-2/oracle.bc",
+            "sha256": "1e787897b2af026021fa66435431cf090305972007e97a04cfd87b9099ba81d7",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-3-2-1-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-3-2-1-4/core.bc",
+            "sha256": "dd05c3338f0cdecf51be512e678cf2892e498b346428dbacfb62b378c5ef65b1",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-3-2-1-4/oracle.bc",
+            "sha256": "a1442ede7c82eb45bc093961cc51a7d936fd175d97bf6961452f742000c56772",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-3-2-4-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-3-2-4-1/core.bc",
+            "sha256": "a8781f3730e70e31c83ffdde204eb315ed948e7215038d4a0ba46b72bc6b10cd",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-3-2-4-1/oracle.bc",
+            "sha256": "8a03e7b78f9d20c3b4d01ffedb3900b91f7c2de6f670561d1bca332f61baabe0",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-3-4-1-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-3-4-1-2/core.bc",
+            "sha256": "416543555054eb4ff2ec6ce2893f67b890d1d54c9841723640a2a7232d38183d",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-3-4-1-2/oracle.bc",
+            "sha256": "2fe16ff891e5c8d1fafd7389c3ce6d5d2b4e87cf055d77d325c513cf29d0a5db",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-3-4-2-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-3-4-2-1/core.bc",
+            "sha256": "79d4d257e690b48b3130c84142fbe136a69882687cc5d53c8ad6ee5766ceaf6b",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-3-4-2-1/oracle.bc",
+            "sha256": "623816a2a86e099e88b41e6ec0270b7011257cb280e349abc6f93f45641585b7",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-4-1-2-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-4-1-2-3/core.bc",
+            "sha256": "35b368bb88f6a0e03427eb78776fd2f69f021a8e9f9cc46102d28f3d5fc2089d",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-4-1-2-3/oracle.bc",
+            "sha256": "39ed76ec6ef44bbd0dc12f0f3fc3164310e69c52930e645891a0afcdd7b9ebcd",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-4-1-3-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-4-1-3-2/core.bc",
+            "sha256": "9a97b2ac10866264fc96be4f6361354de6dc746a383287221657176f4a2b1678",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-4-1-3-2/oracle.bc",
+            "sha256": "54c45d979215834d016dc527b98c6180a38d06a534b343e74f15929e06ab8926",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-4-2-1-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-4-2-1-3/core.bc",
+            "sha256": "40e5c3e857a2ad030d097ae1a3fb32634bac8adf20ff61c2c4ae749a6687d450",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-4-2-1-3/oracle.bc",
+            "sha256": "44dca6a9705475174e1ae4b7ab9d6b99c8a6435b5c1d41ab1a3a16605d60c828",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-4-2-3-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-4-2-3-1/core.bc",
+            "sha256": "806f239b1f642c1df6f80fdff17099b5d1ce781a0876ff25e69de2c00d65c65d",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-4-2-3-1/oracle.bc",
+            "sha256": "f4888acfc1e39ed10fa2ee7cf7697887f6d0e33937f9786ef299eb75a107054e",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-4-3-1-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-4-3-1-2/core.bc",
+            "sha256": "abe7989b39dabec9484113b651ffabdecf0b05d867054574062213453ea7aaed",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-4-3-1-2/oracle.bc",
+            "sha256": "f149fdfa11e09b942f86625c253186cf8ce707d86ade97432ea46f063e4ac187",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-0-4-3-2-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-4-3-2-1/core.bc",
+            "sha256": "8a8fa66cd2549a0805d86a71f931d79d6b383b2701d53a001f401f0e26817dc3",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-0-4-3-2-1/oracle.bc",
+            "sha256": "4e6ae8f8f0925353c8690541d32e2d2151f028cd2806cd38e71911c7509b2cdf",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-0-2-3-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-0-2-3-4/core.bc",
+            "sha256": "144fa27aecf04eca61ce358b417135ace09505edc9513872433a4305d6bee923",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-0-2-3-4/oracle.bc",
+            "sha256": "6e8f9ae589dd7ee6cccf75254e616dea85abac987d909d63db5f6f8e3e961415",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-0-2-4-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-0-2-4-3/core.bc",
+            "sha256": "4b728601de7fb3bcde6b711003fa0f8715389870b94d8a9bf079951630195ccc",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-0-2-4-3/oracle.bc",
+            "sha256": "4df65e9989b1b1920a2d426bf94d0efa387f0b0823a5b52307fe4e1d566f6eb2",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-0-3-2-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-0-3-2-4/core.bc",
+            "sha256": "900b02d20979aa0834c95e96238d7da71a80bd33f5098642bbb6e086cd5e7b3f",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-0-3-2-4/oracle.bc",
+            "sha256": "e070dac12922ef66217537e95a16bdb040babc759331d112d6668f15ce9f2875",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-0-3-4-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-0-3-4-2/core.bc",
+            "sha256": "9d9e67c52bf4159ee9ff062cd40e9934220905bc154123f8ae68902fd94ea2e9",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-0-3-4-2/oracle.bc",
+            "sha256": "f9dc1f1176631358824bf6e45989f28c6c5a03d76f16440a454fabf9a3931b7d",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-0-4-2-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-0-4-2-3/core.bc",
+            "sha256": "7c1b677a2a573c941dd3bbb87c7cb967d7566a19dca3a906966a427dd7576199",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-0-4-2-3/oracle.bc",
+            "sha256": "76d0fee7e8e694f69a9aba2ecebe0bca47f3463442de25622702ecca3a71f39b",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-0-4-3-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-0-4-3-2/core.bc",
+            "sha256": "84d68b1e600c987ffbcec2264d62e917089c8ba593c5c0e096981edb542ee38b",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-0-4-3-2/oracle.bc",
+            "sha256": "b554943d79e6572888df761d26f755a91ba0a56e4ea5b06f4c503f4cb4a186f7",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-2-0-3-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-2-0-3-4/core.bc",
+            "sha256": "951edba7ab3f689cb5bdad89cf3d820f58cd70032163f1a164f04f7eeea02ea3",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-2-0-3-4/oracle.bc",
+            "sha256": "aa0047320ba67012c4bf31aaf0487379294e0083a4960789ed52dd967a65e7b0",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-2-0-4-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-2-0-4-3/core.bc",
+            "sha256": "b3cd990094fbd28d0af1237eb15c81fdd425d078303b78bf46cc2e377ed125b3",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-2-0-4-3/oracle.bc",
+            "sha256": "7928662579ebb9ecb107de531870bc9b2e4675ba86971365b1a3226d6b4acd68",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-2-3-0-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-2-3-0-4/core.bc",
+            "sha256": "7ee9adf8fdb72fbb29aff9198c28a391d1a2ab6ca44ce62f0a187b9699ad6eec",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-2-3-0-4/oracle.bc",
+            "sha256": "301ff08fad31ee31092ad87386e82ffa19c5c4547cf15f91af203e64a06a6d0d",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-2-3-4-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-2-3-4-0/core.bc",
+            "sha256": "c6689d5df9bc5ff784efcd9fb5198184f178181d9d2eef65eb7dc9dc14846f25",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-2-3-4-0/oracle.bc",
+            "sha256": "568b2f68ae060add1f1a8e87baeee498321646a05c4b4b3575d8b3cd0bd4e10b",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-2-4-0-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-2-4-0-3/core.bc",
+            "sha256": "1c13956af9fb24c9b803987fb693471942b36f0b06887645aec202786c844e92",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-2-4-0-3/oracle.bc",
+            "sha256": "ede81d55628bb1fc5ddedfa6f527edaaf8b339955154ce9de6682dd885049180",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-2-4-3-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-2-4-3-0/core.bc",
+            "sha256": "a702e7a70186f0176100bdf154eb5a1091a601807bb9d309ab25501c60ef1aa2",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-2-4-3-0/oracle.bc",
+            "sha256": "3b5f4c5fddb285e002d26a5a638d25646baf7230a3b9d2df0a58d37e01e83304",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-3-0-2-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-3-0-2-4/core.bc",
+            "sha256": "01dd6eeb2fe17333d51a5b93edeff1e8219b9ccd37e5fe6a740f9b81d5634833",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-3-0-2-4/oracle.bc",
+            "sha256": "4cb58386174922128e9ee3094bd58458eb45b25b5aebda131a81f19d91582f59",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-3-0-4-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-3-0-4-2/core.bc",
+            "sha256": "94965ee1616ba50f2ef4d3290b4ae6dc440a8c2e652a14dc39fdc2b3059e840f",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-3-0-4-2/oracle.bc",
+            "sha256": "e8ba6bfe53f10ee5a489092177c8411019d98af8f0d5b7c776a85b6c367507d4",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-3-2-0-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-3-2-0-4/core.bc",
+            "sha256": "d4c8e8b786c07446c82f7332a40ba3b3ddf4504a887d682518356f64f4f3f378",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-3-2-0-4/oracle.bc",
+            "sha256": "828bd44f64a74b8e9115ef81e98ffdf87fc69aa0ab627966642ab7dd0c42b1e4",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-3-2-4-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-3-2-4-0/core.bc",
+            "sha256": "c456dce9543f8ab12dc9153e168988f112feb9ee5eb8ec902fdf6d62b0dff95b",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-3-2-4-0/oracle.bc",
+            "sha256": "8fb5c569a8529881e71c1d9e02479fb5e94f018b0f7dcd00ca00a24bda9b033d",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-3-4-0-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-3-4-0-2/core.bc",
+            "sha256": "2dd93a18252b404339df3aeebb410f171a4283673d81e39adf7993d07eeca211",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-3-4-0-2/oracle.bc",
+            "sha256": "f225a575699d0f1cc0198623d4bdfa074f51dc25e626c618c45ded7ba44803a5",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-3-4-2-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-3-4-2-0/core.bc",
+            "sha256": "db8701068e4bda3e3c2a51c540189ed7f7b4f68af1f7523e73826b9876e8fc94",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-3-4-2-0/oracle.bc",
+            "sha256": "6b4cd6bdb439d6c33c3dc8d73ea0d234ca2b693fd5370f6bdfb504904b5e1fc4",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-4-0-2-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-4-0-2-3/core.bc",
+            "sha256": "fe30f90219078f00b4628f7e84a12ddb58c682c2b0c70692046346a0d62157ed",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-4-0-2-3/oracle.bc",
+            "sha256": "5e8573dd616a16cc6bffa4b70410e74d208c4a742cd2f6a38c84f49ae7472913",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-4-0-3-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-4-0-3-2/core.bc",
+            "sha256": "46188428dc69f3e5cb62d2e4113c6d0879d90e497c034c921fd873ea710b2e79",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-4-0-3-2/oracle.bc",
+            "sha256": "819260c2cb423a354cec3407d446556f52d4b950c90438e1e2b41bf5831eb880",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-4-2-0-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-4-2-0-3/core.bc",
+            "sha256": "266d9b8a5d0f57bddda4dfd6d85772fcf3db3c52ca96e7d8f49b0a086b61a4c6",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-4-2-0-3/oracle.bc",
+            "sha256": "44d3cdc15314eb2078cfc7fa2e29740e9363433747bae68fdd6b11d6dd6e0ac5",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-4-2-3-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-4-2-3-0/core.bc",
+            "sha256": "1672acc32a485636579a4d8cfa93f3e5999cea80f74a22272d955f8a96b1fa08",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-4-2-3-0/oracle.bc",
+            "sha256": "368eab35c9e2cdc789f02f9bed8354b0b2a3afafd320252ea64cf1aeaf081f40",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-4-3-0-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-4-3-0-2/core.bc",
+            "sha256": "d0451af826b5e9f0f9bca20c07e8b3789c18e50c676622a7113516710e618089",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-4-3-0-2/oracle.bc",
+            "sha256": "7f26520f196c70242e807131abefe7152d80e6a73541b968e34da383b0c4fae5",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-1-4-3-2-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-4-3-2-0/core.bc",
+            "sha256": "9f96a84eca908c53e9a7952c335a28f7f9595586f7f938ab0d147415e0ef41dd",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-1-4-3-2-0/oracle.bc",
+            "sha256": "b536b9ef426b7c26c4532f0c1178b21c6300c70f890bb47b75bfa905b84d5b65",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-0-1-3-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-0-1-3-4/core.bc",
+            "sha256": "390ed586598577bf868e4cd4d9cc159711a9990a2a55ce1f057efbff1af06c97",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-0-1-3-4/oracle.bc",
+            "sha256": "4eaf261091bd2072be544b88c5f28e8e81a3c3bed3c8d3ff1bb00e9c6cf9ff98",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-0-1-4-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-0-1-4-3/core.bc",
+            "sha256": "37cca3c0d9ab3a8905d3625e1835ece9be736b7c920815f5ab4f747195d0e6a0",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-0-1-4-3/oracle.bc",
+            "sha256": "d1bd24ec07b07c8967a590d553b767b061768e4373a41b3ba706ade2fe0ef7d0",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-0-3-1-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-0-3-1-4/core.bc",
+            "sha256": "357311ffa270e039f16627d554ff02445cf3aedcd75a25a7e33ad12bb40bb066",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-0-3-1-4/oracle.bc",
+            "sha256": "55862a49905746ff7ea44ff2aa8fd5e7d6ebf03f6a116f33c458e4ec7a4852c9",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-0-3-4-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-0-3-4-1/core.bc",
+            "sha256": "8e5aa3df8cb58890720bbda91da86f8db1c287e868cb8e386c36926948eb48ad",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-0-3-4-1/oracle.bc",
+            "sha256": "0356603488430d32d22c991bb0e020d26c242edaf8b822f03e3ac74432a35f6c",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-0-4-1-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-0-4-1-3/core.bc",
+            "sha256": "e74f3dc670e503f1f09732e8d8b2f9d7d159873600e1c3b9e7b36997e6693d96",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-0-4-1-3/oracle.bc",
+            "sha256": "da1325030d6e56a627e6b4fbcc618dffa72ea4205ce2c3ca6b8331d04af037ee",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-0-4-3-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-0-4-3-1/core.bc",
+            "sha256": "3d0fb666c47164ec6731932bca8b6ceea2ca45843ffa171b617d56412060c655",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-0-4-3-1/oracle.bc",
+            "sha256": "659ff9ed7a7bae8267116adc324e2759842e934b8ab91948508e1a37de5ada5a",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-1-0-3-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-1-0-3-4/core.bc",
+            "sha256": "28ec10025aaf7e540a8299fdfcba9530f52665829083bc115d0b825b098773bf",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-1-0-3-4/oracle.bc",
+            "sha256": "07699d8fad90c1d761f1dfb0c70fe67585cbd0d741cc609ee6d2f133aea7b58f",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-1-0-4-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-1-0-4-3/core.bc",
+            "sha256": "ba85c2277781b7b106c9b525b8b10332c8e1d87c617b41b9facf191ceb8aff40",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-1-0-4-3/oracle.bc",
+            "sha256": "9b7b4edcfaea3b00cc79ba86bf324dc19c2c489537e4f85b4d3763b027b560f5",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-1-3-0-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-1-3-0-4/core.bc",
+            "sha256": "c5c6d5d5c5597ce5c4d074579c22839f3e664d92dd2060a92f821bb6cce9b4ef",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-1-3-0-4/oracle.bc",
+            "sha256": "a0fa052a505d0672a4d7441eb7b37b4486949d9c19c50df3b79bad2cb0c63ca8",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-1-3-4-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-1-3-4-0/core.bc",
+            "sha256": "8041f0d348c5261301bb86031eb09d553770c5849523be67be6bb3a6f3b00623",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-1-3-4-0/oracle.bc",
+            "sha256": "305b38b078d0f560e4a656abce68935b630f5a01c5e4c89cfae717a639ef7650",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-1-4-0-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-1-4-0-3/core.bc",
+            "sha256": "433a0dc16e81b2bf110e91b20c25528c724a64d593cb525453e3f8e133a3452c",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-1-4-0-3/oracle.bc",
+            "sha256": "12d7d6f86a9434c48568743b3653d73ace4d9576d4dc0e8acdf2986ee6d66150",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-1-4-3-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-1-4-3-0/core.bc",
+            "sha256": "d59c01ff98e7e8b0b7199aba6b91f9ffbe0bb5b5328b547a59f57e965992695d",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-1-4-3-0/oracle.bc",
+            "sha256": "452b68bc1f8e1f035e98cdc3376d81907740b06dc4072de05d8f559722f98324",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-3-0-1-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-3-0-1-4/core.bc",
+            "sha256": "40360e0b0b3edcca2ddc92fd3ebd4aee2678ba1133e1ae9e282a187f413b179e",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-3-0-1-4/oracle.bc",
+            "sha256": "ab7ee939f9241b9daf3d31af449d1550ee1a65fc1cd6628f5d021cb0f50cfbce",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-3-0-4-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-3-0-4-1/core.bc",
+            "sha256": "d06c1b99991cd888f2473e1fdb8f6be3c61306f0e96f35ea234a4036b3b0d0fb",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-3-0-4-1/oracle.bc",
+            "sha256": "eeac23ace7b1ed8089720135728cc08621d9c977ba46610435212e11a1eb6df9",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-3-1-0-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-3-1-0-4/core.bc",
+            "sha256": "1f13ecf2669792b0abf8a8728136b9ba24ddfe0a6858067bbc1114947089f16c",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-3-1-0-4/oracle.bc",
+            "sha256": "126f032294ba3de2d41272515d3ce57ba6f1b544927be142f4abc982e6a64d9d",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-3-1-4-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-3-1-4-0/core.bc",
+            "sha256": "7cdb7833bcfe65ebdce6ec375ebb984aa4af1c54716ec00b30525a6339715170",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-3-1-4-0/oracle.bc",
+            "sha256": "a47ab2ae8e9f1da03e43de13b46fe3bf84ab77dfa796146dc40e928e1506d07e",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-3-4-0-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-3-4-0-1/core.bc",
+            "sha256": "f2384c3057735f0cce74cc472a39f51ec14eed24297a0d2e35cdfb10bc8be925",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-3-4-0-1/oracle.bc",
+            "sha256": "a70296321f1d69f418977593091e2c15c4e7984470007bac2cb851fd316a51ad",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-3-4-1-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-3-4-1-0/core.bc",
+            "sha256": "43e6212aa96168c0305aaa3f49be0d0e2fe04f7cbeeea70d587d66565f6fc73c",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-3-4-1-0/oracle.bc",
+            "sha256": "755df4d0db529cc0beebaa28e8208cdec169322da41c22d92019684dd8414b9d",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-4-0-1-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-4-0-1-3/core.bc",
+            "sha256": "5a4a50a1ce474698153c5b7b603d14449bc262e4a55cb2d04522fc94b530bbb5",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-4-0-1-3/oracle.bc",
+            "sha256": "3d635297b38a5592e236ce3014f728730ba0ec31624ad3ca9f82fcb81c9f8798",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-4-0-3-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-4-0-3-1/core.bc",
+            "sha256": "eaa9fae4f600afa5552277723034505a897123dad3d8cd4277e4252e85461800",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-4-0-3-1/oracle.bc",
+            "sha256": "64ef078595dd304b0a790e2603b601e4d22802d94d33e40153299c3716199aa5",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-4-1-0-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-4-1-0-3/core.bc",
+            "sha256": "7f2cafc09ff9eb29f9a75aa130b4dc97f261b2a440576b6574b855858dd6c983",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-4-1-0-3/oracle.bc",
+            "sha256": "eea3e9cadb9d398e9543ee791aa4199884b286a33197215d9532d6c9372329a8",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-4-1-3-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-4-1-3-0/core.bc",
+            "sha256": "6ceda4e82b25b296fefaac6f960d409002583669f44d7fae9c7698ebdc20d257",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-4-1-3-0/oracle.bc",
+            "sha256": "4a73602ca18aaa68e31ac16a480dbf828eb0523c73af0b1cba46a25a30be29b7",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-4-3-0-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-4-3-0-1/core.bc",
+            "sha256": "c6f89d03fa82c1914af67fa8b7f6931648268ce481d4977f0231e770fd1d38aa",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-4-3-0-1/oracle.bc",
+            "sha256": "3a0a545ef1815b71201886104d35495eb29a1c3ab2a5671a97dd09fb2c2a26cc",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-2-4-3-1-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-4-3-1-0/core.bc",
+            "sha256": "cd6c2e42ddd77ed8d038ff622b730d01b46ebe6fe14c3cbb01f2933b1191a6c8",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-2-4-3-1-0/oracle.bc",
+            "sha256": "9f818baa95dfd8f92235fb04faaa49193be83038b8e74a7ca0755a14467334c8",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-0-1-2-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-0-1-2-4/core.bc",
+            "sha256": "b57af65bb244f7ab8255362f847925f43cb51d52b5d36949a9aed31a295c846c",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-0-1-2-4/oracle.bc",
+            "sha256": "79a468ff33ffb2c61bc83b33715302545fb55b9a1ae35a062fa5a3e7a8930d66",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-0-1-4-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-0-1-4-2/core.bc",
+            "sha256": "7d0929252e4c7d339c09dea177dbb94a268d44857b62595c2845824eda13388a",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-0-1-4-2/oracle.bc",
+            "sha256": "8fdcb79c545bd8764743c35f6e50e6370f5a5b015a8d4b8a02ad69fee2c5d938",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-0-2-1-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-0-2-1-4/core.bc",
+            "sha256": "e25f1b0027e1b931fdb1327531f391f23ef343abfdd8cc835679d06e6a59a8be",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-0-2-1-4/oracle.bc",
+            "sha256": "1266289d34e7aaac3e8a15b1484a93677f213326e1ccc56ebf6270f2248625ec",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-0-2-4-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-0-2-4-1/core.bc",
+            "sha256": "1dfa73bcad56026ba5e8ce0e38cb98e95ae763ee0d0dea7329d36fe74a77f38e",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-0-2-4-1/oracle.bc",
+            "sha256": "cb1038f1a2a98d050ca42a906b471a635cf1521d43bbf3d157a3c030fadae484",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-0-4-1-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-0-4-1-2/core.bc",
+            "sha256": "9d903be86fded21d406ddefe70a67c2f7745be13cdf3a674c3349ccbf854e819",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-0-4-1-2/oracle.bc",
+            "sha256": "721465228becb3644819c2fed0d0b06e4fa625a0e87f36102236267064619da1",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-0-4-2-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-0-4-2-1/core.bc",
+            "sha256": "b6304f421b03836b88841b21a5f75ab6db865356dac57d1b60ea50ed4f33ecfe",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-0-4-2-1/oracle.bc",
+            "sha256": "6feaba4662dae994ff7fabf4d994aec515a70a023647cc0df24ea83a6fe1bcc9",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-1-0-2-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-1-0-2-4/core.bc",
+            "sha256": "0d5e040f9787d848b7892f0b68077c896b411e6df99c97f6b421d56974898a6d",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-1-0-2-4/oracle.bc",
+            "sha256": "4f29a8120e53841237fcd4f792c6d177850eb83de6b657249695041d01f21212",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-1-0-4-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-1-0-4-2/core.bc",
+            "sha256": "df050920bdf05c4e5bee7f50c11854becb22da362639fb8d70ee2b62bd90b2a4",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-1-0-4-2/oracle.bc",
+            "sha256": "5fd170f194d99da90a761dfb6c6082d2f1cb64ad59fb66357c71ecc71c422c10",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-1-2-0-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-1-2-0-4/core.bc",
+            "sha256": "1921a3f29ea3ac61ed72f55ee3791988626f7d43430876d397cba3c9a5ff1b9c",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-1-2-0-4/oracle.bc",
+            "sha256": "7c395f440158696de4ac2e2072fa981122d8f6ff12e4dd9d4c31455fd0d7301f",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-1-2-4-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-1-2-4-0/core.bc",
+            "sha256": "a7042c79f7735e0f3bf8a9a1183b1fabddc43445448bdb364499a7d332c95383",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-1-2-4-0/oracle.bc",
+            "sha256": "24dd9a941c1747d922f150764998844776e1df4ec94e1ca5a28c430b21a2d5e0",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-1-4-0-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-1-4-0-2/core.bc",
+            "sha256": "7d72219c4a859a797d6a52ffbd928056ec44250ff1e08d2273e13e8f033c6a70",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-1-4-0-2/oracle.bc",
+            "sha256": "38a9edd8898eebafdff11144de3c4c707ef81442d300ff6abe6c36a193529968",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-1-4-2-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-1-4-2-0/core.bc",
+            "sha256": "8a88f3152423374a26c64050540e4cc47814ba78ab4afdb91e9c6ca371b7d96e",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-1-4-2-0/oracle.bc",
+            "sha256": "3147acaafbe5d027ebc2dd311e068b0e8fc02164b8942fedecdae2bb0a7a93e4",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-2-0-1-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-2-0-1-4/core.bc",
+            "sha256": "ab6b9c0626bc3b914be0a468bb28408b4bb4f244e9611a5a1970663481656a80",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-2-0-1-4/oracle.bc",
+            "sha256": "61e4272417e4707ec309c6cdbe1d7b132dbdeb318abe2e680019fefdb1649407",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-2-0-4-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-2-0-4-1/core.bc",
+            "sha256": "91d5f44fc3ab56835f1a2eacb6b1f42ef4c2f92b2f575e127465f2225edc5037",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-2-0-4-1/oracle.bc",
+            "sha256": "6a40509489443e5f8ffaa639f6a4401a5f273c85da1abf684f35ab34778c1f82",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-2-1-0-4",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-2-1-0-4/core.bc",
+            "sha256": "24f8cc4dbf60bd31f46eef96e71c3384f7e5ab2a67bb9bdb5530f75a630e2666",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-2-1-0-4/oracle.bc",
+            "sha256": "ab173ae60a640fc6509e4f8d13c986aae922652ba1824844d13381a4bf24f837",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-2-1-4-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-2-1-4-0/core.bc",
+            "sha256": "11a5a31918cbdd769f2411e5222e5f4c3a0506777acf616871add21f98e3cab6",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-2-1-4-0/oracle.bc",
+            "sha256": "9febcc60b2d673e20d24b38f20bef3aef48e478e91f2b92b747f35fb657c36b8",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-2-4-0-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-2-4-0-1/core.bc",
+            "sha256": "28f8f5ca1790b2476b2b38ba067f6724baee5caa2bf4ef965b75c96edcf3e269",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-2-4-0-1/oracle.bc",
+            "sha256": "324988c07ddf582db43b39f20ff87178ebfe81c6e5fca7e6fa94e709e8fee2fa",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-2-4-1-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-2-4-1-0/core.bc",
+            "sha256": "62a831d8ff8a0e22268c40a8d6f7d498617f61b5e34f0dddf2c98e62e8c9ea1d",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-2-4-1-0/oracle.bc",
+            "sha256": "810eda59a5a442e6846241160450c5da3390f8c2454d84dd0a878e825e2a3c82",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-4-0-1-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-4-0-1-2/core.bc",
+            "sha256": "ab1ccad1c178c8bf2d8bc50ae31dc8dc0b0b470ec0e3e60c0511aa23d290a896",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-4-0-1-2/oracle.bc",
+            "sha256": "fed16354a06d08b04e8417dc8a72f55ce5b125443b0ea85ac8e8ba9bcd8edba0",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-4-0-2-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-4-0-2-1/core.bc",
+            "sha256": "e83594f0440fc30a93538221744854c954d0690fd86d11843157a0ef23a6d1b1",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-4-0-2-1/oracle.bc",
+            "sha256": "13a5fa0188b6d820b49ab81edfee7af40917efc75a680f9102745ab5b30cd819",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-4-1-0-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-4-1-0-2/core.bc",
+            "sha256": "75a31a6b6d49ccbad1e75d7f8f89824bbb21d86d4c54e987537376f2fd1543d8",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-4-1-0-2/oracle.bc",
+            "sha256": "b84060d54dc90f9eac5af959d0d3cb4b1405004daf1996c4d7a33049338dc876",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-4-1-2-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-4-1-2-0/core.bc",
+            "sha256": "0ee2a8a4a552351d682e247246bce8a1e7833d4e4048521f69414d6609ba51f0",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-4-1-2-0/oracle.bc",
+            "sha256": "5aa4f7846c3a512fa1bce7d774d66895d61cb1989bd49a5075f1272a53c993c3",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-4-2-0-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-4-2-0-1/core.bc",
+            "sha256": "3d656322db8a3aa8ddf6791ecd66aa750c784d2f83df50e72ac88336d40ca31f",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-4-2-0-1/oracle.bc",
+            "sha256": "006f551f58b1b66f7950cf14a3417b3a758ed0f90a5082d1147ceb4556be8e7b",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-3-4-2-1-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-4-2-1-0/core.bc",
+            "sha256": "4de86c7c3b8feb8ff133b3d0551e9a25a54064bc357832733d29dfe86bc17eab",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-3-4-2-1-0/oracle.bc",
+            "sha256": "29ab1ab56bf5b28cccc3da792158be1cd0eec75289c0a582e80e352e387474e5",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-0-1-2-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-0-1-2-3/core.bc",
+            "sha256": "9f2c25a196ad2e836189fe04aa400bc38a3fc6793df97a1aaf13e93981853ad4",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-0-1-2-3/oracle.bc",
+            "sha256": "b92cfc4c340b07039d70a3f9539484040c7b8446dbd5f5dbe59527e5403b5fe7",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-0-1-3-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-0-1-3-2/core.bc",
+            "sha256": "4f67b051bf2a9efb7add7beeb874ffc4bd80b9390a95ae7d56428849fcec273c",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-0-1-3-2/oracle.bc",
+            "sha256": "19a29629347363ba7978ad029b0bc04bc33b2d34ed752443f39c4fc9d854bad2",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-0-2-1-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-0-2-1-3/core.bc",
+            "sha256": "85d58bf723c81424c505c86d8de9e4e504e3a71266ab22f6ea81ad8543b2bc5e",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-0-2-1-3/oracle.bc",
+            "sha256": "2d6c09363d3ad6378781be776873d825f7da0dcbe2094607f28fd21688bcd038",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-0-2-3-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-0-2-3-1/core.bc",
+            "sha256": "a1146140153c0d85897b1b44fc5eb4ac473e25c972576770b301a52d74df6dd8",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-0-2-3-1/oracle.bc",
+            "sha256": "9c7001f23937b4703f3942b33f9578eac91144f84d06ac1b64dcc25373d0fe6d",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-0-3-1-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-0-3-1-2/core.bc",
+            "sha256": "5d59117663114079a9a45f3ba8aa411835a57dcd8b7e7c98ec4a750730d8d409",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-0-3-1-2/oracle.bc",
+            "sha256": "4d046b1fbaf67e3b0d5af7f505c3d220abcbe975ee138a0edf149e269e53c3a8",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-0-3-2-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-0-3-2-1/core.bc",
+            "sha256": "bf6b1d9cb84f51bbc756cd6ad1a7c180401738ab101db1e41bdb9ea004206caa",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-0-3-2-1/oracle.bc",
+            "sha256": "191d74d4e68b66c46b618eeda6d9b2c679c7db4855502330e5ca9454b11c2751",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-1-0-2-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-1-0-2-3/core.bc",
+            "sha256": "308b618866860e20cc32df9a71a58e46d3e62c839a62c854e833a816421a971d",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-1-0-2-3/oracle.bc",
+            "sha256": "241f2fbd4691ef93b96b9cbece4c943325f5b0496d718c43c7889b6ba0f9d361",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-1-0-3-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-1-0-3-2/core.bc",
+            "sha256": "b2e2dfcc37dfcdbe693599ef43de43eecafe557d680cd12f8ecc2ddcbfd52c74",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-1-0-3-2/oracle.bc",
+            "sha256": "5c76879cf41d7cccbd6f352243ab00de5f54bd9ce8c94a79b3934bebaa13182b",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-1-2-0-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-1-2-0-3/core.bc",
+            "sha256": "1d9a65f2c2374f73bb9dcbdb2dc4e1b018f7a1e637f014c85054b4ec3f3b162f",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-1-2-0-3/oracle.bc",
+            "sha256": "06936fa813aa42a592c32e7c7e60a2bbf36ac26ff3008fe1072705e18c9a05ed",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-1-2-3-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-1-2-3-0/core.bc",
+            "sha256": "19dd63bcca93df99fb02b5681c077bf76b9396a64a5cbcac1fe94e0eaea0ff90",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-1-2-3-0/oracle.bc",
+            "sha256": "a7ea3653644f2bf55028c157f39f399d8a21d1f25fad55265b74ebf0d091c7c6",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-1-3-0-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-1-3-0-2/core.bc",
+            "sha256": "6f8ed57fe5b11f16a662c11b55ce431415b889cd9e88c6e9421fa4224eba7ed4",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-1-3-0-2/oracle.bc",
+            "sha256": "895afe3765afdeccdc394c026f0241eefd09146c57dbc80cce447b6cd9af630f",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-1-3-2-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-1-3-2-0/core.bc",
+            "sha256": "8167286e34b55de6c1304175b22be2a77ed393bb76fcb9b8d0e760768fa5f1d7",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-1-3-2-0/oracle.bc",
+            "sha256": "1a2677f5aded0779d770fc86bd96348d7609820b15f95fb63f6edddde37afb5e",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-2-0-1-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-2-0-1-3/core.bc",
+            "sha256": "77750ab1c6c10e67288b0ea8325bda6f70448523ad615443ff985347891a8fcd",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-2-0-1-3/oracle.bc",
+            "sha256": "bc5703b3a7647855128d53084e3a4c60d664bcdadf1731329d9aac5cd23fc834",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-2-0-3-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-2-0-3-1/core.bc",
+            "sha256": "a8c672473fb85d8ff96c6d99c79ff71cf42c2969473542a95f51fe966b6f087b",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-2-0-3-1/oracle.bc",
+            "sha256": "b9d524791889a74a3b24e92dd3792c92597ef233c4d11e7d614f2f036f8d428f",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-2-1-0-3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-2-1-0-3/core.bc",
+            "sha256": "457dc3aa449555cb03a8c23d877a41559e7c7a88796429eab807b5dbfda50855",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-2-1-0-3/oracle.bc",
+            "sha256": "9de89a5407282b9a60f56ee20ed20f32261f8abc13d8dbb9a6175dd583d29fb9",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-2-1-3-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-2-1-3-0/core.bc",
+            "sha256": "f4a8e6e946731332b5be154cef444ab84483b0ee100dbb97f5438e3fbdf18683",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-2-1-3-0/oracle.bc",
+            "sha256": "27cc7d4ac28938c1072e785d78f780fc7a2e655aa4d43af7c9b6e5dfc554eefc",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-2-3-0-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-2-3-0-1/core.bc",
+            "sha256": "0a1c3ee45582f70b2264674cef70d6210b04f87c3b49abef5e69bdb3931b9d56",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-2-3-0-1/oracle.bc",
+            "sha256": "64121f2772ccf69af0f3d83929ad3e8485bad8a969f1b4c96b7dbd98f51aeeec",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-2-3-1-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-2-3-1-0/core.bc",
+            "sha256": "e031ae057c4e483262596e2025c98e7b87efc45d13bc31b88a375ce55229780d",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-2-3-1-0/oracle.bc",
+            "sha256": "09a83210343f90c55f72c85eb2699e11243de9755a032f510cbb9290e275ade3",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-3-0-1-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-3-0-1-2/core.bc",
+            "sha256": "8df3eec10b12a47b7ab8d0804f5cdae89c2993e272ed54c9d9ada2cafb1e27d1",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-3-0-1-2/oracle.bc",
+            "sha256": "c2fb117a28df9b581679549a18f7d27ccf8c180124483b9fb3e16266b581e598",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-3-0-2-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-3-0-2-1/core.bc",
+            "sha256": "f94541a3d1a188d6c8b44baa3b92707424669983fbac7488f2a2b494e27962c9",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-3-0-2-1/oracle.bc",
+            "sha256": "a592c4b57c26569ea854e73deaf5fdcc2d70091d47a12a2c0120aec49b3bcc2f",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-3-1-0-2",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-3-1-0-2/core.bc",
+            "sha256": "3c7dbc1c7e11854d77e8b78a17d3f81b58f226ec8c1a1c52cba9be681e3304ae",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-3-1-0-2/oracle.bc",
+            "sha256": "b3a8778cf71547cd6a24e867ae54edc391338bf22dfc317bc6eca1acede76e0d",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-3-1-2-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-3-1-2-0/core.bc",
+            "sha256": "bc4768005634038a4a827aee53cff8083c313a9627842d492b8a9e1578b6c499",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-3-1-2-0/oracle.bc",
+            "sha256": "db12a47c6dc1c57b474d13eb7ef8e18166753aaa9fd76a4e1a4ebc796eae1748",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-3-2-0-1",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-3-2-0-1/core.bc",
+            "sha256": "fea0937bcf79e631b1f1914c346d78a6cacdebc21edfda4c0d1a949ca475d9b1",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-3-2-0-1/oracle.bc",
+            "sha256": "b29d83da4bf68d3d21154af33e1e27d59eb2ab0a5485ecd1bcb0ebb1bf20dce1",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-resumed-n5/manifest.json",
+      "case": "n5-4-3-2-1-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-3-2-1-0/core.bc",
+            "sha256": "51144ba0be1f565aee35470da3c81fb1ddd7b6905a3d289a162b4c95880e76b2",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/n5-4-3-2-1-0/oracle.bc",
+            "sha256": "ce99ebcb05e2bdf7688d75cc9c0f12a5fe416d52c742f7133a73050eafa99418",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-resumed-n5/runtime.bc",
+            "sha256": "8b2f32c35dd3df11cbe8ae425c4ceb3ddb634f511c2e794f2abfe7501f744519",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-extended-n6-swap/manifest.json",
+      "case": "n6-1-0-2-3-4-5",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-extended-n6-swap/n6-1-0-2-3-4-5/core.bc",
+            "sha256": "98c9e429531e0bf13c6e4670df4d1a8d160e4184b30ba30cc825585954056cfb",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-extended-n6-swap/n6-1-0-2-3-4-5/oracle.bc",
+            "sha256": "70d6f6321d535c5165b6c4c8dc18324a1969e30f82a3d43884b7c226262dd1ab",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-extended-n6-swap/runtime.bc",
+            "sha256": "1a93e96cbb45f34acd612a16a3296a4f8f3d143f6a6a471922c9ea718deba43f",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-profiles-checked/n1024-end-swap/manifest.json",
+      "case": "n1024-db6977581526f1a94c9326b2c0f5d798ea4f4b417427e531e07792d2ed960dab",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n1024-end-swap/n1024-db6977581526f1a94c9326b2c0f5d798ea4f4b417427e531e07792d2ed960dab/core.bc",
+            "sha256": "8dc487d292436d2ed12ed8ca29163e415b9a5a0da8b00bea0eccade2da71886f",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n1024-end-swap/n1024-db6977581526f1a94c9326b2c0f5d798ea4f4b417427e531e07792d2ed960dab/oracle.bc",
+            "sha256": "81ddee9377ba2ba22a5c601c3aa951db39e7759008c4ca70d235652a676f8604",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n1024-end-swap/runtime.bc",
+            "sha256": "a5b8468d9765791a20dd2ff4e51870ffba067a67b2fd4ad6a71a1aa8b81bdaf3",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-profiles-checked/n1024-reverse-two-groups/manifest.json",
+      "case": "n1024-86634e9121d4ffe700309af378124d1d9ae7fc62a859824b9f760e817973cc72",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n1024-reverse-two-groups/n1024-86634e9121d4ffe700309af378124d1d9ae7fc62a859824b9f760e817973cc72/core.bc",
+            "sha256": "945965fdd45de99d3c9719a57042a5a9fa3b9738d9dd48c5678c5d7892ca575c",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n1024-reverse-two-groups/n1024-86634e9121d4ffe700309af378124d1d9ae7fc62a859824b9f760e817973cc72/oracle.bc",
+            "sha256": "dbb04542c2a18fecd05196df96776015fc4effcc133f1457d594fe96a36a9d32",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n1024-reverse-two-groups/runtime.bc",
+            "sha256": "8a730e453ab05b680081994fe391c1564b200904b06c859cf8f3776ccb8920a8",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-profiles-checked/n1024-rotate-three-groups/manifest.json",
+      "case": "n1024-ddc0a88c6f3fdd649539d3133420f038ba840a75afc90bca8e421ab5bab7bad3",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n1024-rotate-three-groups/n1024-ddc0a88c6f3fdd649539d3133420f038ba840a75afc90bca8e421ab5bab7bad3/core.bc",
+            "sha256": "b07ce5d3d976038ae5c8c837b8558addebf4d2febebdbc8e05e9b8c621ab8086",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n1024-rotate-three-groups/n1024-ddc0a88c6f3fdd649539d3133420f038ba840a75afc90bca8e421ab5bab7bad3/oracle.bc",
+            "sha256": "8d67f86db5349bd41365978d7cc8fc0eefb8a28cc6a3cc3f23bdd62e89d4636f",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n1024-rotate-three-groups/runtime.bc",
+            "sha256": "d9ec19d6a8684980f9cc0070d4d2a957682b9e8b6c7a4b6546d256488d7f1325",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-profiles-checked/n17-low-swap/manifest.json",
+      "case": "n17-1-0-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n17-low-swap/n17-1-0-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16/core.bc",
+            "sha256": "21cd5e7c9b964d6b8636908b45f8a690901f32633359393a035022788aeab3e8",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n17-low-swap/n17-1-0-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16/oracle.bc",
+            "sha256": "b6cbf872006407626bdf000fd029cee8fd57d27a9c9355c8f27e61cc11ef2b82",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n17-low-swap/runtime.bc",
+            "sha256": "69aeaa5183f38103a3a8384f979012e6f1ba9c4394b6964bad443ff0954c4c2d",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-profiles-checked/n18-end-swap/manifest.json",
+      "case": "n18-17-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n18-end-swap/n18-17-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-0/core.bc",
+            "sha256": "1f4770bd4bef138a8aaf30c7f8ba756c1e6ffcd22340f4f6f3b6d3863085c1b8",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n18-end-swap/n18-17-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-0/oracle.bc",
+            "sha256": "f6633410075958081734b7a871d3db4088c61b4b3414cb700576accd3e4f9d1b",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n18-end-swap/runtime.bc",
+            "sha256": "35ec910ba0cf2a1ef0bf9dbe30d78b9c7ad18d161ab19885dda08270eb6ae4e9",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-profiles-checked/n18-low-swap/manifest.json",
+      "case": "n18-1-0-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n18-low-swap/n18-1-0-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17/core.bc",
+            "sha256": "79f1ac2ed1318456f70dce6a6be47b875de9ba097e288cf8581f9b83aa61327b",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n18-low-swap/n18-1-0-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17/oracle.bc",
+            "sha256": "1a116c57aca30e789777d749efae947a059778fd49223ecbeb3264aa40117812",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n18-low-swap/runtime.bc",
+            "sha256": "6c67238f4901cc0f7110dd12fb6b9bd1baeb8e14ea7edd3279ea0f9fb828edfb",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-profiles-checked/n19-low-swap/manifest.json",
+      "case": "n19-1-0-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n19-low-swap/n19-1-0-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18/core.bc",
+            "sha256": "bcaaf5fe175872cd164c6469a7dc537a708eeab66a628f110cbcedf441fdcbc5",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n19-low-swap/n19-1-0-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18/oracle.bc",
+            "sha256": "915c3efc505ea27d2bd53325c3bf2bb6e0bb2d5562faf6f075e6c7ef5eaf7512",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n19-low-swap/runtime.bc",
+            "sha256": "360524db9bcaf94393adc0cfec904dc738145085ccc2f5ffd97d3c8be6858c9c",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-profiles-checked/n255-reverse-two-groups/manifest.json",
+      "case": "n255-0537708ba98f5075fa56fe56af18e4594dd1976a720720369e78df852ec4da35",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n255-reverse-two-groups/n255-0537708ba98f5075fa56fe56af18e4594dd1976a720720369e78df852ec4da35/core.bc",
+            "sha256": "e0828ad94c6cea8de4616e22b78a003ed30f71f9cd564fffe89ebf5ccd9df399",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n255-reverse-two-groups/n255-0537708ba98f5075fa56fe56af18e4594dd1976a720720369e78df852ec4da35/oracle.bc",
+            "sha256": "917dc947c58a4bef45a1040373b4675898914b665375f5926d8287d43a7e0c54",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n255-reverse-two-groups/runtime.bc",
+            "sha256": "ab463363195ef71f6b763446dc03cebdd9c3221d227eb01dd1d1a9d86dfbd345",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-profiles-checked/n256-reverse-two-groups/manifest.json",
+      "case": "n256-4fe4ab51c65cb0b0ca709fada3b6da03d01d6e46711417b98ccf5e6103626b76",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n256-reverse-two-groups/n256-4fe4ab51c65cb0b0ca709fada3b6da03d01d6e46711417b98ccf5e6103626b76/core.bc",
+            "sha256": "5421e2a44a818b7bb85e5c177bb92b6d0156ad4e843ee059854985a25f52f883",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n256-reverse-two-groups/n256-4fe4ab51c65cb0b0ca709fada3b6da03d01d6e46711417b98ccf5e6103626b76/oracle.bc",
+            "sha256": "9f9206cf469977433d60350ff2572e06bd775958d593f5cccd87139a02a3c407",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n256-reverse-two-groups/runtime.bc",
+            "sha256": "335293d941e7beb3b049377a6e2113a3f360c94a43ccaaac619a119281b238a7",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-profiles-checked/n257-reverse-two-groups/manifest.json",
+      "case": "n257-0fe1c3b30e3bfa4c83ff0e2ee7555af44adb3bbabe94ebf90a004b67f25726ca",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n257-reverse-two-groups/n257-0fe1c3b30e3bfa4c83ff0e2ee7555af44adb3bbabe94ebf90a004b67f25726ca/core.bc",
+            "sha256": "b4df2e2da6f6c29576f15c9349de7fe645ac541a3fb983380dff2460fc66703a",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n257-reverse-two-groups/n257-0fe1c3b30e3bfa4c83ff0e2ee7555af44adb3bbabe94ebf90a004b67f25726ca/oracle.bc",
+            "sha256": "c22c9b9eb51800604c9fd67aaa8438a396d6d169d9cedd3a6de7d2d6d742d1fd",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n257-reverse-two-groups/runtime.bc",
+            "sha256": "b8db5855557709c2a805f87dfd94dd928b37b7a11b411e5f31f8e89fdf0601fb",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-profiles-checked/n257-rotate-three-groups/manifest.json",
+      "case": "n257-1dc5073bcad89325b5f00fec5b37f87a12b3a2a03093f9751bb6e513d773b94d",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n257-rotate-three-groups/n257-1dc5073bcad89325b5f00fec5b37f87a12b3a2a03093f9751bb6e513d773b94d/core.bc",
+            "sha256": "a28167bb0849127e0d6f874d8e3d8454af4d1f2c0606aca21fb9438d16503f97",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n257-rotate-three-groups/n257-1dc5073bcad89325b5f00fec5b37f87a12b3a2a03093f9751bb6e513d773b94d/oracle.bc",
+            "sha256": "a87bdb3c3510cce49f6f20dc5c830e9bdd22f05aa78b20d8f3ef693fef6551bb",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n257-rotate-three-groups/runtime.bc",
+            "sha256": "693ce8fe0999b112399a12b62d8ce510a798e23d0a0898447bda385617440dc6",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-profiles-checked/n33-rotate-three-groups/manifest.json",
+      "case": "n33-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20-21-22-23-24-25-26-27-28-29-30-31-32-0",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n33-rotate-three-groups/n33-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20-21-22-23-24-25-26-27-28-29-30-31-32-0/core.bc",
+            "sha256": "95aeda80e4e81d607b1a62af4cec2a087c3d047ea846cc597c305964eb13f0fd",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n33-rotate-three-groups/n33-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20-21-22-23-24-25-26-27-28-29-30-31-32-0/oracle.bc",
+            "sha256": "9b53de73f3a27df6e5572825e2c9921cdeb6c5df2dc2a080bd67d06ebd18ef7c",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n33-rotate-three-groups/runtime.bc",
+            "sha256": "974a5d3c61882589bba95681b0e15859d3f89aa01dbd10451db3ae02633a0e0f",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    },
+    {
+      "manifest": "build/equiv-alive2/klee-profiles-checked/n512-reverse-two-groups/manifest.json",
+      "case": "n512-459fdf7c62b21469c01b1fff25c30627c654a6a8f1b6ab22203c4e49ced8ca8c",
+      "symbols": {
+        "pass": true,
+        "modules": [
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n512-reverse-two-groups/n512-459fdf7c62b21469c01b1fff25c30627c654a6a8f1b6ab22203c4e49ced8ca8c/core.bc",
+            "sha256": "46d827b54f73ccff02fb51d79033dc27c2caf768096d8bab5be36f9ae51dcdc2",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n512-reverse-two-groups/n512-459fdf7c62b21469c01b1fff25c30627c654a6a8f1b6ab22203c4e49ced8ca8c/oracle.bc",
+            "sha256": "5aea5f8354fc7d127eda78f0be6e8f0e89adf6e90f3848435fecc4ec415ff602",
+            "forbidden_symbols": []
+          },
+          {
+            "module": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-profiles-checked/n512-reverse-two-groups/runtime.bc",
+            "sha256": "6246ba97df15ef5ff2ae258f2cbf2521bbf1ed2611449fff13b8d8782a62dc3f",
+            "forbidden_symbols": []
+          }
+        ]
+      }
+    }
+  ]
+}

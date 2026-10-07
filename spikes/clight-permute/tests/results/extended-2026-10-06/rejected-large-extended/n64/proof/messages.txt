@@ -1,0 +1,13 @@
+KLEE: Using Z3 solver backend
+KLEE: Deterministic allocator: Using quarantine queue size 8
+KLEE: Deterministic allocator: globals (start-address=0x72a839400000 size=10 GiB)
+KLEE: Deterministic allocator: constants (start-address=0x72a5b9400000 size=10 GiB)
+KLEE: Deterministic allocator: heap (start-address=0x71a5b9400000 size=1024 GiB)
+KLEE: Deterministic allocator: stack (start-address=0x7185b9400000 size=128 GiB)
+KLEE: ERROR: spikes/clight-permute/permute.c:51: Query timed out (fork).
+KLEE: halting execution, dumping remaining states
+KLEE: Deterministic allocator: Using quarantine queue size 8
+KLEE: Deterministic allocator: globals (start-address=0x718339400000 size=10 GiB)
+KLEE: Deterministic allocator: constants (start-address=0x7180b9400000 size=10 GiB)
+KLEE: Deterministic allocator: heap (start-address=0x7080b9400000 size=1024 GiB)
+KLEE: Deterministic allocator: stack (start-address=0x7060b9400000 size=128 GiB)

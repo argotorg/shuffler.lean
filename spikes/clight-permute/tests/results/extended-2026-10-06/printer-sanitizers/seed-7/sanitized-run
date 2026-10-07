@@ -1,0 +1,4 @@
+#!/bin/sh
+ASAN_OPTIONS=detect_leaks=0
+export ASAN_OPTIONS
+exec /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/printer-eval/sanitizer-extended/seed-7/sanitized

@@ -1,0 +1,409 @@
+{
+  "pass": true,
+  "programs": 8,
+  "cases_per_program": 50,
+  "results": [
+    {
+      "seed": 0,
+      "source_sha256": "5a49cff76fc942c1c3a191316d94b7e853cda001bbe0465007cde7c1bc1e519c",
+      "pass": true,
+      "interpreter_errors": [],
+      "comparisons": [
+        {
+          "binary": "native-gcc-O0",
+          "sha256": "d36590c3bb4a81e9a6aa4e05dc1dc9b337cfeb308bbb8e61776f0643dfe63452",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-gcc-O2",
+          "sha256": "46d9dfda0b8e461ae4e8eced5302308f9f46d3fc326f754c696e59761899d4e6",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-gcc-O3",
+          "sha256": "4ed89d40344985579dd525936518f8a10eb4a37d9156a3db5c582c1ea6a2891a",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O0",
+          "sha256": "bf7cb7b6b277101a7ad9380ddb138fcc140f8155b87de1c125a9e8150b4ec1ff",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O2",
+          "sha256": "325a50e4376ad5ae8436e9360157ca8de88c814f7cdb18adb03858ba596d980b",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O3",
+          "sha256": "0359fe2e542f5c032a22ca07514b480cca3c3058ed7311c5331b3c14ee6c0cd8",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        }
+      ]
+    },
+    {
+      "seed": 1,
+      "source_sha256": "1cef1b4ac74c5490358a220593312ddad4d7c420bf285aba8b95acc49de8089e",
+      "pass": true,
+      "interpreter_errors": [],
+      "comparisons": [
+        {
+          "binary": "native-gcc-O0",
+          "sha256": "2660678613708dfb0fd2074160478d91f7af151f8ff3f43e4d60776482a24b22",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-gcc-O2",
+          "sha256": "c02458a2704205ecaf3462cd24536450d5854e6999272c95f287d5f99f18f62f",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-gcc-O3",
+          "sha256": "9a90eb32fb3627e95418a73b28537466a71f98db43c70327941c55375cf270c7",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O0",
+          "sha256": "d07eb28bb252ab67469c303ef1a66a9417f9298e10292b1513094a1df44115d7",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O2",
+          "sha256": "71b62a38ab29046fbe892306ff2ce5528e325ea0a6f9e1a6c29898183cbf7975",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O3",
+          "sha256": "71b62a38ab29046fbe892306ff2ce5528e325ea0a6f9e1a6c29898183cbf7975",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        }
+      ]
+    },
+    {
+      "seed": 2,
+      "source_sha256": "a6eb7d0c3c36e0fc3105d937c2b94aa51b2c8bd72f13cdc7388207054ca4ffb1",
+      "pass": true,
+      "interpreter_errors": [],
+      "comparisons": [
+        {
+          "binary": "native-gcc-O0",
+          "sha256": "be86b50f24bb74ce356a97615f57d40e81697e8a4ea969f85ac1bb3a18151389",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-gcc-O2",
+          "sha256": "2a73c840de85b7456ee4a7e9be415aa3b22a2e771c959f1f779a50915e3afecd",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-gcc-O3",
+          "sha256": "2498e309bb6ba595a292d1ffd4419c4ac8fd036f6a77d1b6f2b4d768aa9d1e46",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O0",
+          "sha256": "58711a780efe08c6c20a74eb0c2a17e5aeec1ada53dffc737aa569a19af28056",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O2",
+          "sha256": "16225a31daea61b7e1d86b66e77b6ed81819d6f051c1613e2f4d777268395d2c",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O3",
+          "sha256": "4fb3333b1ae83c11f711fa0e6a17fd6d35d01a25e1c327cb3d8eaf21f2115ecb",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        }
+      ]
+    },
+    {
+      "seed": 3,
+      "source_sha256": "35b02e32d21285c8f5788de35c2e522fb72c1be28be0fcb83d9f50007928975a",
+      "pass": true,
+      "interpreter_errors": [],
+      "comparisons": [
+        {
+          "binary": "native-gcc-O0",
+          "sha256": "d4d7956d3d63ec40acf1f6a8ab6a3227ce631073222753f179eae72842faae64",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-gcc-O2",
+          "sha256": "856438a9d599d0fdcdf71c817a602206e274e9ecfffcddca14bb71d490260646",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-gcc-O3",
+          "sha256": "b1876cc1c56c557a5bce61c8a2965a786b0d63fab5b5d2547481d57f543db1a3",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O0",
+          "sha256": "941d840eb949d610a7ed984effcd426bed42ab1a3673b2cc1c0fe3bf67f273f8",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O2",
+          "sha256": "17de84971abc890a1e585d18a6e1d7c8ff1e61879204d0f9847cc5a00f162387",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O3",
+          "sha256": "45a0b6ccfa5b076f9ff7d7a5f0a15ec649414cc2825e89f81be2dd29f72ec567",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        }
+      ]
+    },
+    {
+      "seed": 4,
+      "source_sha256": "17fa9b04fd8dfc727046e6ab51145e1fd537b8ee37843cc51b0544d2daba3691",
+      "pass": true,
+      "interpreter_errors": [],
+      "comparisons": [
+        {
+          "binary": "native-gcc-O0",
+          "sha256": "0ce2f27491ab2acc455544474133955580a1dfcb1e8853260d5e7594306742fd",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-gcc-O2",
+          "sha256": "a6d3db0f57901cb1a8bba6e0068965d3a3b1e609a6e2dc196f78a082aff78abc",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-gcc-O3",
+          "sha256": "cd4740ae87e0bb41cfec8f80a86aa085ed7a748aca1be1da895e04490c8d8a80",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O0",
+          "sha256": "778e83a9285e8bac5239cb98c593cae511f5a93cbe3606f34421b92c3963e016",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O2",
+          "sha256": "423763402982b77693d7af9f3397162aafc664b32e0b0b1d47810f13c5f6a6a5",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O3",
+          "sha256": "423763402982b77693d7af9f3397162aafc664b32e0b0b1d47810f13c5f6a6a5",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        }
+      ]
+    },
+    {
+      "seed": 5,
+      "source_sha256": "8760a3a776ea8e16aa832df5658828d36facedac0b33b2e5601a523d1098fb71",
+      "pass": true,
+      "interpreter_errors": [],
+      "comparisons": [
+        {
+          "binary": "native-gcc-O0",
+          "sha256": "90c3a3af1a3e85bda5606b444066d4751ee6e3133ae38d2b305f0510f9ef3305",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-gcc-O2",
+          "sha256": "21a97e1952d54e6b6a7a82c2949df55631374b8b9774d298e88c2c32b9aa7de7",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-gcc-O3",
+          "sha256": "fe7dc38f489b63463238bf0311653151c1ba1d771692910ff0cf6ef83ce7d8bf",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O0",
+          "sha256": "df6c36e47b98860cd89fdf074038d8ac31c0be2ec9ed6311f3b9c90b10bcd0f6",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O2",
+          "sha256": "b149a2361b5bccd333b32aafeb06d96256478ae3c1aebca0db91e360bcbdfa0f",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O3",
+          "sha256": "d662f185c0eddb6a3804fd416cbf3d90d381f817f1eb362b1294ecc09cdf47cf",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        }
+      ]
+    },
+    {
+      "seed": 6,
+      "source_sha256": "6b619019ca34d1677a7f8100ffc9e61ae55be327dc337c789ebc4c9c9cb26337",
+      "pass": true,
+      "interpreter_errors": [],
+      "comparisons": [
+        {
+          "binary": "native-gcc-O0",
+          "sha256": "c877cf6b128975e367e266d63bc9c8d8751def0c9863115a53b8e0e63a829c8d",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-gcc-O2",
+          "sha256": "1b6d907e0e939e14a7742c274cba0edeb39a1c6a343ff43d48ca9c09a1aa6501",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-gcc-O3",
+          "sha256": "17a1f3a1c3eeb35f14c59bc90f6f7f35083b4577243fd118dda06fdc70fb85ab",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O0",
+          "sha256": "6055d760cc5a0c80427e3dc3230070664d98f3cf42523e4e5df7ce51e67e7633",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O2",
+          "sha256": "bfcd5593544ba55867f0309453cb66cdb5675e1c2796b6060e4b7fb93dbc2900",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O3",
+          "sha256": "841dea30ee385e0af44d755889dcc5cd469d31fa80d3e2366fb256f6f751d061",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        }
+      ]
+    },
+    {
+      "seed": 7,
+      "source_sha256": "c43a2ed649f1a5cfc4972708c9fedc176edba6ea6d37aceab28e10f81b25fac7",
+      "pass": true,
+      "interpreter_errors": [],
+      "comparisons": [
+        {
+          "binary": "native-gcc-O0",
+          "sha256": "2fefce934383f2b3d8257fb382a92e6059a9f54a7272676c8fdc924ae602cfbd",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-gcc-O2",
+          "sha256": "d0f5cb9f77ba2dde64b8198a0826e65a792958fb8b9d4f1e109a091925b6263a",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-gcc-O3",
+          "sha256": "0e64804c375d6c9a97800dbacff4a48cba37a84f659c09883d5f6f537529a009",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O0",
+          "sha256": "3788953fe15494a91c1184abf26e3a591659959671f0f0a2db6e4dde4b4505bd",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O2",
+          "sha256": "b097a33203d714fa85e081f14a430a6de0b57e17d75407ef25c4a0718071607d",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        },
+        {
+          "binary": "native-clang-O3",
+          "sha256": "4a76b0891bb7f385e349a3f465a0b763afd708b9fc8f34339994964150dc9abf",
+          "pass": true,
+          "mismatches": [],
+          "errors": []
+        }
+      ]
+    }
+  ],
+  "inputs_sha256": "0565f3357d228407c080290acef80674e40930f9480ccb9690ccbcce3b0f63bc",
+  "build_manifest_sha256": "f8dd5e70be1c725376858fe56b61cd4894d768d88a6961fe39830934250a0773"
+}

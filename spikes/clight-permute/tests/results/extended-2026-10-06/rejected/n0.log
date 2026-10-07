@@ -1,0 +1,17 @@
+KLEE: output directory is "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/rejected-extended/n0/proof"
+KLEE: Using Z3 solver backend
+KLEE: Deterministic allocator: Using quarantine queue size 8
+KLEE: Deterministic allocator: globals (start-address=0x784116e00000 size=10 GiB)
+KLEE: Deterministic allocator: constants (start-address=0x783e96e00000 size=10 GiB)
+KLEE: Deterministic allocator: heap (start-address=0x773e96e00000 size=1024 GiB)
+KLEE: Deterministic allocator: stack (start-address=0x771e96e00000 size=128 GiB)
+KLEE: Deterministic allocator: Using quarantine queue size 8
+KLEE: Deterministic allocator: globals (start-address=0x771c16e00000 size=10 GiB)
+KLEE: Deterministic allocator: constants (start-address=0x771996e00000 size=10 GiB)
+KLEE: Deterministic allocator: heap (start-address=0x761996e00000 size=1024 GiB)
+KLEE: Deterministic allocator: stack (start-address=0x75f996e00000 size=128 GiB)
+
+KLEE: done: total instructions = 359
+KLEE: done: completed paths = 2
+KLEE: done: partially completed paths = 0
+KLEE: done: generated tests = 2

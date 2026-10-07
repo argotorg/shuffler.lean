@@ -1,0 +1,549 @@
+[
+  {
+    "name": "baseline",
+    "expected_pass": true,
+    "expected_result_met": true,
+    "cases": [
+      {
+        "seed": 0,
+        "pass": true,
+        "mismatches": [],
+        "errors": []
+      },
+      {
+        "seed": 1,
+        "pass": true,
+        "mismatches": [],
+        "errors": []
+      },
+      {
+        "seed": 2,
+        "pass": true,
+        "mismatches": [],
+        "errors": []
+      },
+      {
+        "seed": 3,
+        "pass": true,
+        "mismatches": [],
+        "errors": []
+      },
+      {
+        "seed": 4,
+        "pass": true,
+        "mismatches": [],
+        "errors": []
+      },
+      {
+        "seed": 5,
+        "pass": true,
+        "mismatches": [],
+        "errors": []
+      }
+    ]
+  },
+  {
+    "name": "subtract-as-add",
+    "expected_pass": false,
+    "expected_result_met": true,
+    "cases": [
+      {
+        "seed": 0,
+        "pass": false,
+        "mismatches": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25
+        ],
+        "errors": []
+      },
+      {
+        "seed": 1,
+        "pass": false,
+        "mismatches": [],
+        "errors": [
+          "process exit -11",
+          "expected 26 records, received 0",
+          "reference and candidate record counts differ"
+        ]
+      },
+      {
+        "seed": 2,
+        "pass": false,
+        "mismatches": [],
+        "errors": [
+          "process exit -11",
+          "expected 26 records, received 0",
+          "reference and candidate record counts differ"
+        ]
+      },
+      {
+        "seed": 3,
+        "pass": false,
+        "mismatches": [],
+        "errors": [
+          "process exit -11",
+          "expected 26 records, received 0",
+          "reference and candidate record counts differ"
+        ]
+      },
+      {
+        "seed": 4,
+        "pass": false,
+        "mismatches": [],
+        "errors": [
+          "process exit -11",
+          "expected 26 records, received 0",
+          "reference and candidate record counts differ"
+        ]
+      },
+      {
+        "seed": 5,
+        "pass": false,
+        "mismatches": [],
+        "errors": [
+          "process exit -11",
+          "expected 26 records, received 0",
+          "reference and candidate record counts differ"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "less-as-greater",
+    "expected_pass": false,
+    "expected_result_met": true,
+    "cases": [
+      {
+        "seed": 0,
+        "pass": false,
+        "mismatches": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25
+        ],
+        "errors": []
+      },
+      {
+        "seed": 1,
+        "pass": false,
+        "mismatches": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25
+        ],
+        "errors": []
+      },
+      {
+        "seed": 2,
+        "pass": false,
+        "mismatches": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25
+        ],
+        "errors": []
+      },
+      {
+        "seed": 3,
+        "pass": false,
+        "mismatches": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25
+        ],
+        "errors": []
+      },
+      {
+        "seed": 4,
+        "pass": false,
+        "mismatches": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25
+        ],
+        "errors": []
+      },
+      {
+        "seed": 5,
+        "pass": false,
+        "mismatches": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25
+        ],
+        "errors": []
+      }
+    ]
+  },
+  {
+    "name": "reverse-greater-equal",
+    "expected_pass": false,
+    "expected_result_met": true,
+    "cases": [
+      {
+        "seed": 0,
+        "pass": false,
+        "mismatches": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          22,
+          25
+        ],
+        "errors": []
+      },
+      {
+        "seed": 1,
+        "pass": true,
+        "mismatches": [],
+        "errors": []
+      },
+      {
+        "seed": 2,
+        "pass": false,
+        "mismatches": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24
+        ],
+        "errors": []
+      },
+      {
+        "seed": 3,
+        "pass": false,
+        "mismatches": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25
+        ],
+        "errors": []
+      },
+      {
+        "seed": 4,
+        "pass": false,
+        "mismatches": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25
+        ],
+        "errors": []
+      },
+      {
+        "seed": 5,
+        "pass": false,
+        "mismatches": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25
+        ],
+        "errors": []
+      }
+    ]
+  },
+  {
+    "name": "equivalent-parentheses",
+    "expected_pass": true,
+    "expected_result_met": true,
+    "cases": [
+      {
+        "seed": 0,
+        "pass": true,
+        "mismatches": [],
+        "errors": []
+      },
+      {
+        "seed": 1,
+        "pass": true,
+        "mismatches": [],
+        "errors": []
+      },
+      {
+        "seed": 2,
+        "pass": true,
+        "mismatches": [],
+        "errors": []
+      },
+      {
+        "seed": 3,
+        "pass": true,
+        "mismatches": [],
+        "errors": []
+      },
+      {
+        "seed": 4,
+        "pass": true,
+        "mismatches": [],
+        "errors": []
+      },
+      {
+        "seed": 5,
+        "pass": true,
+        "mismatches": [],
+        "errors": []
+      }
+    ]
+  }
+]

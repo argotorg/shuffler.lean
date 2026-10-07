@@ -1,0 +1,15 @@
+{
+  "process_returncode": 0,
+  "goals": 642,
+  "verdicts": {
+    "valid": 641,
+    "timeout": 1
+  },
+  "unproved_goals": [
+    "typed_ref_permute_terminates_part2"
+  ],
+  "report_errors": [
+    "unproved goal: typed_ref_permute_terminates_part2"
+  ],
+  "complete": false
+}

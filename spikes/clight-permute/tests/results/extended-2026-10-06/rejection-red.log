@@ -1,0 +1,18 @@
+F
+======================================================================
+FAIL: test_actual_c_rejects_symbolic_inputs (__main__.RejectionTests.test_actual_c_rejects_symbolic_inputs)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/test_rejected.py", line 40, in test_actual_c_rejects_symbolic_inputs
+    code, cases = self.run_case(sizes="0,1,2,3")
+                  ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/test_rejected.py", line 29, in run_case
+    self.assertTrue(manifest.is_file(), process.stdout)
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: False is not true : /nix/store/d64q19q1xjdwfhqx6czvrjgrhq0n3lcc-python3-3.14.7/bin/python3: can't open file '/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/run-rejected.py': [Errno 2] No such file or directory
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.029s
+
+FAILED (failures=1)

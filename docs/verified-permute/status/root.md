@@ -1,6 +1,34 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 # Root agent handoff
 
+## Current pause: 2026-10-07
+
+Work is paused at the user's request. This overrides the earlier deadline.
+No verification process remains active. Frama-C has 641/642 memory goals
+valid, with termination open. Evidence and remaining proof steps are in
+[the current status](../WORKING_STATUS.md). The sections below are history.
+
+## Resumed review and verification
+
+The user has resumed work. See [the current status](../WORKING_STATUS.md).
+The review now starts with the core Rocq definitions and public theorems;
+tool and mutation evidence follows. The Lean ↔ Rocq bridge is future work.
+
+The review refactor passed the integrated proof check, including 67 listed
+modules, three public type fixtures, and 223 theorem assumption reports.
+`coqchk -o` reports the same twelve allowed upstream environment axioms and
+no unsafe typing settings. The printer and production C are unchanged.
+Evidence: `spikes/clight-permute/proof-results/reviewed-2026-10-06/`.
+
+The resumed supporting runs have finished. The corrected KLEE audit covers
+all permutations and unsigned 32-bit values at lengths one through five:
+153 cases and 66,805 marked paths. See the
+[supporting evidence index](../../../spikes/clight-permute/tests/results/resumed-2026-10-06/README.md)
+for this result, the other runs, and their limits. Open proof links remain.
+
+The stopped snapshot below is retained as history. Its stop instruction and
+pending reachability compilation no longer describe the resumed state.
+
 Final snapshot: 2026-10-06 22:14 UTC. **Stopped by user request.** The
 earlier 2026-10-07 09:00 UTC deadline no longer requires this agent to run.
 See [the main status](../WORKING_STATUS.md) and [findings](../FINDINGS.md).

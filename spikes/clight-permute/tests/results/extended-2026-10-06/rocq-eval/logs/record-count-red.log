@@ -1,0 +1,22 @@
+test_actual_c_early_exit_and_timeout (__main__.ComparisonTests.test_actual_c_early_exit_and_timeout) ... ok
+test_actual_c_mutations (__main__.ComparisonTests.test_actual_c_mutations) ... ok
+test_case_domain (__main__.ComparisonTests.test_case_domain) ... ok
+test_different_record_counts_are_not_equal (__main__.ComparisonTests.test_different_record_counts_are_not_equal) ... FAIL
+test_fuel_exhaustion_is_failure (__main__.ComparisonTests.test_fuel_exhaustion_is_failure) ... ok
+test_independent_expected_records (__main__.ComparisonTests.test_independent_expected_records) ... ok
+test_malformed_protocol_is_failure (__main__.ComparisonTests.test_malformed_protocol_is_failure) ... ok
+test_six_actual_c_builds (__main__.ComparisonTests.test_six_actual_c_builds) ... ok
+
+======================================================================
+FAIL: test_different_record_counts_are_not_equal (__main__.ComparisonTests.test_different_record_counts_are_not_equal)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/rocq-eval/test_compare.py", line 61, in test_different_record_counts_are_not_equal
+    self.assertFalse(compare(self.reference, candidate)["pass"])
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 8 tests in 6.846s
+
+FAILED (failures=1)

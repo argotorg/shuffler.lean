@@ -1,6 +1,10 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 # Confirmed findings and open leads
 
+Resumed verification is recorded in [WORKING_STATUS.md](WORKING_STATUS.md).
+The review now starts with the [core definitions and public theorems](README.md).
+The earlier stop snapshot below remains historical evidence.
+
 Final stop snapshot: 2026-10-06 22:14 UTC. The user stopped the search for
 a handoff. Production Permute has no concrete failing input yet.
 
@@ -66,16 +70,29 @@ report. That output capture is corrected. The repeat passed baseline,
 admitted-theorem, and false-axiom controls before the user stop. The last
 two controls remain unfinished in that repeat; do not call it complete.
 
+After resumption, a fresh eight-control campaign completed. Baseline passed;
+admissions, false axioms, shadowed names, unsafe recursion, unsafe positivity,
+an impossible precondition, and a `True` postcondition had their expected
+rejections. Both unsafe-typing variants pass `coqchk` itself. The added
+kernel-context policy rejects them and checks full axiom names. The
+short-name collision did not bypass the original complete theorem check.
+The fresh sources and logs are archived under
+`spikes/clight-permute/proof-results/reviewed-2026-10-06/guards/`.
+
 Evidence: `spikes/clight-permute/build/proof-challenge/guards/` and
 `/tmp/permute-proof-guards.log`.
 
 ## F5: Coverage can pair a stale binary with changed source
 
-`guided-coverage.sh` does not currently bind the coverage binary to the
+The original `guided-coverage.sh` did not bind the coverage binary to the
 current source hashes before rendering source text. An edit without rebuild
-can mislabel old counters. The saved campaign source hashes were checked
+could mislabel old counters. The saved campaign source hashes were checked
 and match; their current reported totals are not invalidated by this lead.
-A manifest check and stale-source/binary negative tests remain to be added.
+A source/binary manifest check has now been added. Eleven tests pass,
+including rejection by the actual reporting script for stale sources,
+stale binaries, and invalidated builds. A fresh native replay retained
+72/76 LLVM outcomes and 72/84 exported outcomes. The original reports
+remain archived; their matching source hashes are unchanged.
 
 ## F6: KLEE function-coverage parsing counted call-arc rows
 
@@ -111,6 +128,96 @@ The checking agent confirmed that current printer sources match the
 compiled sources used for the probe. The unchanged Permute's temporary
 reads appear initialized. This is a demonstrated proof/translation-chain
 gap under mutation, not a failing input for the unchanged production AST.
+
+The later [candidate assignment check](../../spikes/clight-permute/tests/initialization/README.md)
+accepts the actual Permute AST and rejects the self-copy prefix. Its
+expression-read lemma and computed Permute result are kernel checked.
+Twenty-one examples and seven weakened-checker controls have their
+expected results. Later kernel checks establish statement-level soundness
+for an explicit control-path model and connect terminating Clight
+executions to that model. The connection retains actual branch decisions
+and intermediate states. The abstract prefix proof has no concrete
+small-step or divergence link yet. Memory byte initialization and the C
+translation are separate; this checker is outside the production pipeline.
+F7 remains open. See the
+[execution proof archive](../../spikes/clight-permute/tests/results/extended-2026-10-06/assignment-execution-proof/README.md).
+
+## F8: KLEE can pass after a feasible branch is not explored
+
+A copied production C body adds this statement after clearing `out`:
+
+```c
+if (v2[0] == 42U) return 2U;
+```
+
+At length one with permutation `[0]`, normal KLEE exploration rejects the
+copy with an assertion witness: input `[42]` returns 2 while the oracle
+returns 0. A controlled run with `--max-forks=0 --rng-initial-seed=1`
+instead reports one completed path, zero partial paths, no errors, and a
+valid completion marker. The current runner reports `pass=true` and exits
+zero. The feasible failing branch was not explored.
+
+The log records `skipping fork (max-forks reached)` and the statistics record
+an inhibited fork. KLEE can also inhibit forks above its memory cap; the
+current runner does not check that counter. The explicit fork-limit control
+demonstrates the result-gate gap. It does not show that a default production
+run hit its memory cap.
+
+Evidence: `spikes/clight-permute/build/equiv-alive2/path-loss-probe/`,
+including the changed source, normal rejection, limited false pass, wrapper
+options, logs, bitcode, manifests, and KTests. The false pass is under
+`forks-disabled-seed-1/`. The runner now rejects inhibited forks and abnormal
+state termination using the statistics database, and rejects skip-fork
+warnings. Both symbolic runners use this check. Nine policy tests and four
+actual KLEE controls pass. The limited faulty source and limited baseline
+are both rejected; the unrestricted baseline passes and the unrestricted
+faulty source has its assertion witness.
+
+All 153 retained completed cases at lengths one through five were checked
+for inhibited forks, early termination, and solver termination; all these
+counters are zero. This finding does not invalidate those completed cases.
+It is a checking-pipeline defect, not an unchanged-production C failure.
+
+The stronger check also passed an audit of 167 retained cases and 71,587
+marked paths: lengths one through five, the selected length-six swap, and
+the thirteen restricted large profiles. A fresh lengths-one-through-three
+run passed all nine cases and 85 paths with the new check.
+
+## F9: Code under test can restrict inputs through the KLEE API
+
+A copied C body contains:
+
+```c
+klee_assume(v2[0] != 42U);
+if (v2[0] == 42U) return 2U;
+```
+
+At length one, the actual runner reports success on one completed path,
+with a completion marker and zero inhibited forks, partial paths, or errors.
+The assumption inside the program under test excludes input 42. The same
+faulty return without the assumption is rejected with an assertion witness.
+The reported unrestricted-input comparison therefore depends on a condition
+introduced by the tested source, not the declared harness domain.
+
+This probe adds a verifier API call; it is not a failure of unchanged
+production C and is outside the printer's accepted Clight subset. The
+result gate needs to separate trusted harness assumptions from code under
+test before this workflow is used for more programs.
+
+Both runners now inspect the compiled program symbols before linking the
+trusted harness. They reject definitions or references whose names start
+with `klee_`. The comparison checks the C, C++ oracle, and allocator wrapper
+modules; the rejection runner checks its C module. Eight symbol-boundary
+tests pass, including actual runner rejection of declared and defined
+`klee_assume` functions. The nine rejection tests and four fork-loss controls
+also pass after this change. All 167 retained program-module sets pass the
+new symbol check.
+
+Evidence: `spikes/clight-permute/build/equiv-alive2/klee-assume-probe/`.
+A separate `klee_silent_exit` probe was rejected because it has a partial
+path. An `llvm.assume` probe did not hide the faulty return under the current
+KLEE settings; the assertion witness was retained. Do not report either
+of these two controls as a false pass.
 
 ## Explicit boundaries, not production failures
 

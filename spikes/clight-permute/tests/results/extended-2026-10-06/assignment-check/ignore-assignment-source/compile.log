@@ -1,0 +1,3 @@
+File "./AssignmentCheck.v", line 118, characters 7-18:
+Error: Unable to unify "false" with "accepts (seq [set i (reg i); ret 0])".
+

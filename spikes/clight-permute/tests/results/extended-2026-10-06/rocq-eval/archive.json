@@ -1,0 +1,547 @@
+[
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/small/inputs.txt",
+    "archive": "small/inputs.txt",
+    "sha256": "628bbcad4ea64ae4381eb6f83b0fdbaff29e4ee35572aa55d016e02e2fdec099"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/small/rocq-eval.stdout",
+    "archive": "small/rocq-eval.stdout",
+    "sha256": "6dc9b154ff4de7dd979636596ecb31f2629ae4ae48fbb49d48bdc603c65ebb03"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/small/rocq-eval.stderr",
+    "archive": "small/rocq-eval.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/small/native-clang-O0.stdout",
+    "archive": "small/native-clang-O0.stdout",
+    "sha256": "6dc9b154ff4de7dd979636596ecb31f2629ae4ae48fbb49d48bdc603c65ebb03"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/small/native-clang-O0.stderr",
+    "archive": "small/native-clang-O0.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/small/native-clang-O2.stdout",
+    "archive": "small/native-clang-O2.stdout",
+    "sha256": "6dc9b154ff4de7dd979636596ecb31f2629ae4ae48fbb49d48bdc603c65ebb03"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/small/native-clang-O2.stderr",
+    "archive": "small/native-clang-O2.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/small/native-clang-O3.stdout",
+    "archive": "small/native-clang-O3.stdout",
+    "sha256": "6dc9b154ff4de7dd979636596ecb31f2629ae4ae48fbb49d48bdc603c65ebb03"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/small/native-clang-O3.stderr",
+    "archive": "small/native-clang-O3.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/small/native-gcc-O0.stdout",
+    "archive": "small/native-gcc-O0.stdout",
+    "sha256": "6dc9b154ff4de7dd979636596ecb31f2629ae4ae48fbb49d48bdc603c65ebb03"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/small/native-gcc-O0.stderr",
+    "archive": "small/native-gcc-O0.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/small/native-gcc-O2.stdout",
+    "archive": "small/native-gcc-O2.stdout",
+    "sha256": "6dc9b154ff4de7dd979636596ecb31f2629ae4ae48fbb49d48bdc603c65ebb03"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/small/native-gcc-O2.stderr",
+    "archive": "small/native-gcc-O2.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/small/native-gcc-O3.stdout",
+    "archive": "small/native-gcc-O3.stdout",
+    "sha256": "6dc9b154ff4de7dd979636596ecb31f2629ae4ae48fbb49d48bdc603c65ebb03"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/small/native-gcc-O3.stderr",
+    "archive": "small/native-gcc-O3.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/small/results.json",
+    "archive": "small/results.json",
+    "sha256": "5bd09eb9d5da96bb951092535f119f9869eb597ec973f9bfaaf1a6d3f59cfda4"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/boundary/inputs.txt",
+    "archive": "boundary/inputs.txt",
+    "sha256": "5d7ab905f263e1383737204e3253c0d844d7ad1c817131e65c6111dec5d14a6a"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/boundary/rocq-eval.stdout",
+    "archive": "boundary/rocq-eval.stdout",
+    "sha256": "52e53b3e9cf6bb04ee80c17807d6b460198845ac78a23ae2bac31b94dc42c1ed"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/boundary/rocq-eval.stderr",
+    "archive": "boundary/rocq-eval.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/boundary/native-clang-O0.stdout",
+    "archive": "boundary/native-clang-O0.stdout",
+    "sha256": "52e53b3e9cf6bb04ee80c17807d6b460198845ac78a23ae2bac31b94dc42c1ed"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/boundary/native-clang-O0.stderr",
+    "archive": "boundary/native-clang-O0.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/boundary/native-clang-O2.stdout",
+    "archive": "boundary/native-clang-O2.stdout",
+    "sha256": "52e53b3e9cf6bb04ee80c17807d6b460198845ac78a23ae2bac31b94dc42c1ed"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/boundary/native-clang-O2.stderr",
+    "archive": "boundary/native-clang-O2.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/boundary/native-clang-O3.stdout",
+    "archive": "boundary/native-clang-O3.stdout",
+    "sha256": "52e53b3e9cf6bb04ee80c17807d6b460198845ac78a23ae2bac31b94dc42c1ed"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/boundary/native-clang-O3.stderr",
+    "archive": "boundary/native-clang-O3.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/boundary/native-gcc-O0.stdout",
+    "archive": "boundary/native-gcc-O0.stdout",
+    "sha256": "52e53b3e9cf6bb04ee80c17807d6b460198845ac78a23ae2bac31b94dc42c1ed"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/boundary/native-gcc-O0.stderr",
+    "archive": "boundary/native-gcc-O0.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/boundary/native-gcc-O2.stdout",
+    "archive": "boundary/native-gcc-O2.stdout",
+    "sha256": "52e53b3e9cf6bb04ee80c17807d6b460198845ac78a23ae2bac31b94dc42c1ed"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/boundary/native-gcc-O2.stderr",
+    "archive": "boundary/native-gcc-O2.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/boundary/native-gcc-O3.stdout",
+    "archive": "boundary/native-gcc-O3.stdout",
+    "sha256": "52e53b3e9cf6bb04ee80c17807d6b460198845ac78a23ae2bac31b94dc42c1ed"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/boundary/native-gcc-O3.stderr",
+    "archive": "boundary/native-gcc-O3.stderr",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/boundary/results.json",
+    "archive": "boundary/results.json",
+    "sha256": "15f7487489b81f7545d4e3d0afa43d523edc993c5247b5ce5c869b390b0b05a2"
+  },
+  {
+    "source": "spikes/clight-permute/tests/rocq-eval/Driver.v",
+    "archive": "sources/Driver.v",
+    "sha256": "ce6d9498605027fc736ca247068a5646bdeca637c5cd40d5ac31ee8ffcb6ca7b"
+  },
+  {
+    "source": "spikes/clight-permute/tests/rocq-eval/main.ml",
+    "archive": "sources/main.ml",
+    "sha256": "de8913a01c5cd251cb5e52fd481cbd3d3c03d921d1bdc05ce6b401a5c913ba0c"
+  },
+  {
+    "source": "spikes/clight-permute/tests/rocq-eval/native.c",
+    "archive": "sources/native.c",
+    "sha256": "ce0d2795b929b8771c7c93cee972b1f5179c15b1efe413fbc24286a4ef8f2bc1"
+  },
+  {
+    "source": "spikes/clight-permute/tests/rocq-eval/build.py",
+    "archive": "sources/build.py",
+    "sha256": "2aeb8e6f815c9d4849cbd40bad07a078df1647671252d879934b7f8832c475ba"
+  },
+  {
+    "source": "spikes/clight-permute/tests/rocq-eval/compare.py",
+    "archive": "sources/compare.py",
+    "sha256": "e0b8f2233df1850e175c36f6a4f99a97d26197462b2e2ff5dc3a05217ad36d08"
+  },
+  {
+    "source": "spikes/clight-permute/tests/rocq-eval/test_compare.py",
+    "archive": "sources/test_compare.py",
+    "sha256": "5346d9e606378d3af9b118f3896f11dcf918da0896d02c5e2e56653b80f063c8"
+  },
+  {
+    "source": "spikes/clight-permute/tests/rocq-eval/README.md",
+    "archive": "sources/README.md",
+    "sha256": "b860d9d1b2e31feae6adf07aefb377c696ffe3aab3e1b816d08d7e9c7403056f"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/Permute.v",
+    "archive": "build/Permute.v",
+    "sha256": "c20f4070499460175c14a77c7ba2f00b67b70562572868d5465cd399789127c1"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/SolcModel.v",
+    "archive": "build/SolcModel.v",
+    "sha256": "6bad62fd8c04ee127ecb440ff27245bf2c46e2d63f20d8c884237af70e7cb560"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ModelProofs.v",
+    "archive": "build/ModelProofs.v",
+    "sha256": "a00b9eef5c56a7427dd3af5ddf6d86f8489a5db1a7d90f9fb5d5bdcf3334d85d"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/Extract.v",
+    "archive": "build/Extract.v",
+    "sha256": "530f90b26b042e59f028dc0f62ec101361e7f81ca78d4c86c2de532386c1807d"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightEval.v",
+    "archive": "build/ClightEval.v",
+    "sha256": "6c018fc0d498926059d4cd4b4403b46c1f97d78ef5e2d4dc46ffec896d382ba8"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightEvalProofs.v",
+    "archive": "build/ClightEvalProofs.v",
+    "sha256": "767f48ce5f15cc7e1ab9374c903df4af4f7869a3dd93022792b55edf002e8f82"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightMemory.v",
+    "archive": "build/ClightMemory.v",
+    "sha256": "cdd64789cd24983edca0346557a8805883d00b4d7ae666ea9c4c754ce477b637"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightSwap.v",
+    "archive": "build/ClightSwap.v",
+    "sha256": "948f518b58faa44e298ab932ccf3709ab51cdc72ff345b9e366a2951dc434fa3"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ModelTests.v",
+    "archive": "build/ModelTests.v",
+    "sha256": "83e0e48892bd0c33159821ddd813312606a466e33ef4638da051fe9b617f05c6"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightEntry.v",
+    "archive": "build/ClightEntry.v",
+    "sha256": "42d5cb3b71e8ea299cc660a387ca2b78153f2cb3a25e935e4c9c2fd5a9865f1c"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightScalar.v",
+    "archive": "build/ClightScalar.v",
+    "sha256": "3c546ce044a186c2c66b93666af5a295808c2451d264d6dfeeca24cdd1a4716d"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightExchange.v",
+    "archive": "build/ClightExchange.v",
+    "sha256": "c453f236fee7d293cb403fb9ea5b07bb204fc43de59ddf11e2609636b67099db"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightChoose.v",
+    "archive": "build/ClightChoose.v",
+    "sha256": "0964fdb858057a4a8d64d56ec015e80dc88a95dddef8b40a5cbb412fd480e070"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightEvalTests.v",
+    "archive": "build/ClightEvalTests.v",
+    "sha256": "954baf49ebefc92abece6f233d61b44d15bd2d0cebbb6a56ef1876f73c30df97"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightExchangeSuccess.v",
+    "archive": "build/ClightExchangeSuccess.v",
+    "sha256": "b44fda3f23b9f2739a1e8112275dce237e25107576de59913a84f3eec2a40af1"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ChooseModel.v",
+    "archive": "build/ChooseModel.v",
+    "sha256": "683fb0172136b93efc2107cd099fe54b1a385fd8b4fc47f7f5d7691eaa32548b"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ModelArrays.v",
+    "archive": "build/ModelArrays.v",
+    "sha256": "2662b8cce3e8283ad726231a30310028439671419428f3b114d5fef80f132e80"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightInitialize.v",
+    "archive": "build/ClightInitialize.v",
+    "sha256": "37cb54d319d1b23ce1ff3c0136bf543a6b2011240766fff113ab9cd63c93fee3"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightLoop.v",
+    "archive": "build/ClightLoop.v",
+    "sha256": "fc7d93cc8ad22a1f422661cef2cbd849db5553d1d09f3084566a315d815fd936"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightNormalize.v",
+    "archive": "build/ClightNormalize.v",
+    "sha256": "75b1bb6af4ef8a64fa4bb9781b49c3da7f5c71630cd4b47e4366e2317bf2b218"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightMain.v",
+    "archive": "build/ClightMain.v",
+    "sha256": "34561af916bd41356dce95df872ec20addcb08103e851af75d0832149decc79f"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightSearch.v",
+    "archive": "build/ClightSearch.v",
+    "sha256": "97b04141dedfa3a79c579b7878507a3c6bbbcda088a9f09b1c49126b8fdf5127"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/FirstFree.v",
+    "archive": "build/FirstFree.v",
+    "sha256": "1e3ee8269b6792b00ab07c22ba2a5c1aa7d5dc468654f31d09af611d0f9d5e82"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightFill.v",
+    "archive": "build/ClightFill.v",
+    "sha256": "3c6cedf9c262749c1d368397bba4fb5ca7a93d5cbf4d5cb3096ffc598d742b49"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightCall.v",
+    "archive": "build/ClightCall.v",
+    "sha256": "47179d8ac54778bd79e1183260b182fd4d2aac70d41e2257983783a7b6b4beab"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightFillLoop.v",
+    "archive": "build/ClightFillLoop.v",
+    "sha256": "e5a821841eab7b1237d7b3db019c5ecccc1c5fa6fbb1103f88b1709c35b9ba38"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightValidation.v",
+    "archive": "build/ClightValidation.v",
+    "sha256": "bfd92ff3281a9ed79e51b14fb0d571cf9bb6c768e6a9e2983720ce1ecb03d809"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightNormalization.v",
+    "archive": "build/ClightNormalization.v",
+    "sha256": "7a40151453121b2769aca3d22a8d87cb0a8ff578b63214920cd83b333da25cde"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightCorrect.v",
+    "archive": "build/ClightCorrect.v",
+    "sha256": "9d60126b588a105dd47982381695bd5937e73cac694227fe19dcff173e560dd6"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/Reachability.v",
+    "archive": "build/Reachability.v",
+    "sha256": "fb52987e185171408d62da99c7c7be3dde1fbfabcf2c8c54a475344838231b39"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightReachability.v",
+    "archive": "build/ClightReachability.v",
+    "sha256": "a02635b52f1708742d3eaca8614a6b78f6013ce703bb3893bb5ec12ef374d15c"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ModelSpec.v",
+    "archive": "build/ModelSpec.v",
+    "sha256": "ac15ce8fe34c6407e094060346c730e6fb7159e196fd7fc78b776735b6cda664"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/PermuteSpec.v",
+    "archive": "build/PermuteSpec.v",
+    "sha256": "65770f4a9ab39cb0c8d99814323a8313c66f906472821fd1bc4f590fd8f83cf2"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/PermuteCorrect.v",
+    "archive": "build/PermuteCorrect.v",
+    "sha256": "b9ac986549fa22f7d8b412a7a8844d9c2f9d5fe845627b534c109a2476cc214a"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/Driver.v",
+    "archive": "build/Driver.v",
+    "sha256": "ce6d9498605027fc736ca247068a5646bdeca637c5cd40d5ac31ee8ffcb6ca7b"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/main.ml",
+    "archive": "build/main.ml",
+    "sha256": "de8913a01c5cd251cb5e52fd481cbd3d3c03d921d1bdc05ce6b401a5c913ba0c"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/hardening.json",
+    "archive": "build/hardening.json",
+    "sha256": "df8ccd2e46caccca594c5338a84ea47d051ee34f2a3ea42a93437dbcfa0056cc"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/source-order.txt",
+    "archive": "build/source-order.txt",
+    "sha256": "a83df78e6b9019aa773f08582c9981711b51b7e9b464ad5f5f38af0f333794b7"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/Permute.log",
+    "archive": "build/Permute.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightEval.log",
+    "archive": "build/ClightEval.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightEvalProofs.log",
+    "archive": "build/ClightEvalProofs.log",
+    "sha256": "48c83933a6b91b6b61770640482bdbe7ccfd919efdffcb9d946638d41f19d95b"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightMemory.log",
+    "archive": "build/ClightMemory.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightEntry.log",
+    "archive": "build/ClightEntry.log",
+    "sha256": "b90d5688c05bfa0207c02dc67257615fc3e8e8c55a6801b3134db44806ebad04"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightScalar.log",
+    "archive": "build/ClightScalar.log",
+    "sha256": "13033407998ebaac9b41d5b45179fd1cb64535e3048bcdfb04398ef4a12730cd"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ClightCall.log",
+    "archive": "build/ClightCall.log",
+    "sha256": "deb505ce389b52b8f874b6e0cbd8b0d9d405e4df4fe57cae35c5b249722a78c8"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/Driver.log",
+    "archive": "build/Driver.log",
+    "sha256": "1859d397ee49119361a0568eebcd1a6006e78d9f9a69fde3d3ac10fd2335ffbf"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/evaluation.ml",
+    "archive": "build/evaluation.ml",
+    "sha256": "a6d996e2afdf043906885f545f1a4eca48d123b53edd411ac0070456904af66b"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/evaluation.mli",
+    "archive": "build/evaluation.mli",
+    "sha256": "2417611e10049a76a0ac409583a0eff79b7c6143a24839048c6ed1a9f8d3ca7f"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/kernel.log",
+    "archive": "build/kernel.log",
+    "sha256": "91ddc2ba73b8d8081a836fdc9564c046a93283afa537e493dec7c78a70d208dc"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/kernel-policy.log",
+    "archive": "build/kernel-policy.log",
+    "sha256": "95e116bf422914ee0124d819eeb540074005383eb990160c489511139ac78ee9"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ocaml-interface.log",
+    "archive": "build/ocaml-interface.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ocaml-extraction.log",
+    "archive": "build/ocaml-extraction.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ocaml-main.log",
+    "archive": "build/ocaml-main.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/gcc-version.txt",
+    "archive": "build/gcc-version.txt",
+    "sha256": "30362ed8039b4e4383227cb65cf1603c0c1bc50b248ec835630aa402be0e22ed"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/native-gcc-O0.log",
+    "archive": "build/native-gcc-O0.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/native-gcc-O2.log",
+    "archive": "build/native-gcc-O2.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/native-gcc-O3.log",
+    "archive": "build/native-gcc-O3.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/clang-version.txt",
+    "archive": "build/clang-version.txt",
+    "sha256": "b7acce544c951ad846bd92a1d97f691ae298cabad83348f165e64ce1014ab11d"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/native-clang-O0.log",
+    "archive": "build/native-clang-O0.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/native-clang-O2.log",
+    "archive": "build/native-clang-O2.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/native-clang-O3.log",
+    "archive": "build/native-clang-O3.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/rocq-version.txt",
+    "archive": "build/rocq-version.txt",
+    "sha256": "25dc95d08899a577f7e8b2a5307dfdb9cfd8e3c9e003a9e09ae08769445cbf40"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/ocaml-version.txt",
+    "archive": "build/ocaml-version.txt",
+    "sha256": "f6e9bdfcb4121ba9527686614bc1f50e1700abfb09ca780a8407916b2d259b7c"
+  },
+  {
+    "source": "spikes/clight-permute/build/rocq-eval/validated/build.json",
+    "archive": "build/build.json",
+    "sha256": "c1cba7d287aca882ca29206a56fbe64245bd7fa8e0fe4fd26144f9fc89256fd3"
+  },
+  {
+    "source": "/tmp/permute-rocq-eval-tests-first.log",
+    "archive": "logs/tests-first.log",
+    "sha256": "095acc25acb2c336c6f8dcdbbb63515d014b7744a91b926e18caa63bb998a1a2"
+  },
+  {
+    "source": "/tmp/permute-rocq-eval-tests-green.log",
+    "archive": "logs/tests-green.log",
+    "sha256": "2b858d605287359663069823463a03939540e24cfa7497db8e010a1b5b32dfcf"
+  },
+  {
+    "source": "/tmp/permute-rocq-eval-record-count-red.log",
+    "archive": "logs/record-count-red.log",
+    "sha256": "12e272479184254778e786ed476e6992e7c761ecfa5ecdf913f61571b0f8ed1c"
+  },
+  {
+    "source": "/tmp/permute-rocq-eval-record-count-green.log",
+    "archive": "logs/record-count-green.log",
+    "sha256": "37af229a5e36ae57f645dcbe620b21b160be87ad5edb6e7bbcd4e850ace2b663"
+  },
+  {
+    "source": "/tmp/permute-rocq-eval-validated-tests.log",
+    "archive": "logs/validated-tests.log",
+    "sha256": "0d9cad731dcb7c2b2f96673218b49fc5c40da8e4cfceb59c236f7778227af91e"
+  },
+  {
+    "source": "/tmp/permute-rocq-eval-build-validated.log",
+    "archive": "logs/build-validated.log",
+    "sha256": "ff55460aaf7d58c6e6b2014176dbbac3d8c879774bb474d2210da4c697978f96"
+  }
+]

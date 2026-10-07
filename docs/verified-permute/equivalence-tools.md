@@ -1,9 +1,11 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 # Tools for checking C and solc Permute equivalence
 
-Review date: 2026-10-06. This is a source and documentation review. No
-verifier in this report was installed or run. The rankings below are
-engineering estimates, not measured results.
+Review date: 2026-10-06. This report started as a source and documentation
+review. The rankings below are initial engineering estimates. Later trials
+are recorded in [the SAW checker](../../spikes/clight-permute/tests/equiv-saw/README.md)
+and [the Alive2/KLEE checker](../../spikes/clight-permute/tests/equiv-alive2/README.md).
+Their measured results and limits take precedence over these estimates.
 
 ## Answer and recommended order
 
@@ -214,8 +216,10 @@ translation from both source programs to that LLVM input.
 
 ## License boundary
 
-No tool discussed here was added to the build. The complete dependency
-closure of a new verifier has **not** been audited. A project's top-level
+The initial review did not add these tools to the build. The later SAW
+selection has a [separate dependency review](../../spikes/clight-permute/tests/equiv-saw/LICENSES.md).
+Do not extend that review to every tool or optional configuration in this
+table. A project's top-level
 license or Nix metadata is not a license check of all bundled binaries,
 solvers, source downloads, and build dependencies.
 

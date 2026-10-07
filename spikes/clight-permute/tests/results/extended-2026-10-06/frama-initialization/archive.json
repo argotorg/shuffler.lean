@@ -1,0 +1,432 @@
+[
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/baseline/annotated.c",
+    "archive": "baseline/annotated.c",
+    "sha256": "12e08d369cf2c742d4b57395acc651ce48fae80f9a2832fa86124db30c5a7c80"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/baseline/core.c",
+    "archive": "baseline/core.c",
+    "sha256": "a120dccaaa1a7783231f7b4482f76f515ef6c099f4e0e73279f1228e634cfb78"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/baseline/goals.json",
+    "archive": "baseline/goals.json",
+    "sha256": "a17458ac06f6386d4c6c47ed3b369cdd5b3ad04ad9643fd9dc2b0a06e1bbe29c"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/baseline/manifest.json",
+    "archive": "baseline/manifest.json",
+    "sha256": "f26bd6d5f6bb86851ed5fff2d1004932f792250a31c16144f4b3b681b68a5c1c"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/baseline/obligations/typed_ref/Wp_Tactical_typed_ref_permute_loop_invariant_target_Why3_CVC5_1_3_4.smt2",
+    "archive": "baseline/obligations/typed_ref/Wp_Tactical_typed_ref_permute_loop_invariant_target_Why3_CVC5_1_3_4.smt2",
+    "sha256": "8705160d2b16cded7d8a8b69f547530ce72bf1ed5187af879044c0d3bf402a15"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/baseline/obligations/typed_ref/permute_loop_invariant_filled_initialized_preserved_Why3_CVC5_1_3_4.smt2",
+    "archive": "baseline/obligations/typed_ref/permute_loop_invariant_filled_initialized_preserved_Why3_CVC5_1_3_4.smt2",
+    "sha256": "e07b6ced262dfd2fb0e69e1bcc43a5ff987c311b9d8217e2f3eb57664d9e24af"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/baseline/obligations/typed_ref/permute_loop_invariant_target_initialized_2_established_Why3_CVC5_1_3_4.smt2",
+    "archive": "baseline/obligations/typed_ref/permute_loop_invariant_target_initialized_2_established_Why3_CVC5_1_3_4.smt2",
+    "sha256": "c4cf334d75c6873edc93acecec0e4c25a63fba1ff101c7a8d2087e5e29d2be93"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/baseline/obligations/typed_ref/permute_loop_invariant_target_initialized_2_preserved_part1_Why3_CVC5_1_3_4.smt2",
+    "archive": "baseline/obligations/typed_ref/permute_loop_invariant_target_initialized_2_preserved_part1_Why3_CVC5_1_3_4.smt2",
+    "sha256": "21a7669b40afb1aded25e7bd0f5a21ab26ea33126ba4c3b02372010149cabef9"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/baseline/obligations/typed_ref/permute_loop_invariant_target_initialized_2_preserved_part3_Why3_CVC5_1_3_4.smt2",
+    "archive": "baseline/obligations/typed_ref/permute_loop_invariant_target_initialized_2_preserved_part3_Why3_CVC5_1_3_4.smt2",
+    "sha256": "55c61f21ccb6782e3d369255744fb80b972572492069b0ab88539cdaebda8031"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/baseline/obligations/typed_ref/permute_loop_invariant_target_initialized_established_Why3_CVC5_1_3_4.smt2",
+    "archive": "baseline/obligations/typed_ref/permute_loop_invariant_target_initialized_established_Why3_CVC5_1_3_4.smt2",
+    "sha256": "6ee6dd4a364655342f779186bc740e3fbb6ced5cab256b7d76d0ff5443bd8ae8"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/baseline/obligations/typed_ref/permute_loop_invariant_target_initialized_established_Why3_Z3_4_16_0.smt2",
+    "archive": "baseline/obligations/typed_ref/permute_loop_invariant_target_initialized_established_Why3_Z3_4_16_0.smt2",
+    "sha256": "556e69dcad7f4547f979bf44b1b63adce04cecf92504b00d20c71c578e258dd4"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/baseline/obligations/typed_ref/permute_loop_invariant_target_initialized_preserved_part1_Why3_CVC5_1_3_4.smt2",
+    "archive": "baseline/obligations/typed_ref/permute_loop_invariant_target_initialized_preserved_part1_Why3_CVC5_1_3_4.smt2",
+    "sha256": "2e48ad262237294bec8dcab96d4d0af2dde3b94d9c8666bb0289d244f4d43ec4"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/baseline/obligations/typed_ref/permute_loop_invariant_target_initialized_preserved_part2_Why3_CVC5_1_3_4.smt2",
+    "archive": "baseline/obligations/typed_ref/permute_loop_invariant_target_initialized_preserved_part2_Why3_CVC5_1_3_4.smt2",
+    "sha256": "c875f2712ce526e1adcae841f8a9773e72bb573fa95cdfc6f73b054bbe51611a"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/baseline/session/script/permute_loop_invariant_target_initialized_established.json",
+    "archive": "baseline/session/script/permute_loop_invariant_target_initialized_established.json",
+    "sha256": "627432efee02f2b9ca1655ce6891e44527f2757f66ea92be82608aa8876eecde"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/baseline/wp.log",
+    "archive": "baseline/wp.log",
+    "sha256": "abcc7703b20e0862fd9de9f218d8d901dd4bd17fa476d8ac7990d8b98b4433c2"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/missing-target-store/annotated.c",
+    "archive": "missing-target-store/annotated.c",
+    "sha256": "589aa6bc35e805174d78834f0e0cac94e77fab99d05d99fc03d914c7df538885"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/missing-target-store/core.c",
+    "archive": "missing-target-store/core.c",
+    "sha256": "bcf89943375196a14c83165920f70a5e7103e0350da5fd5c78e642b319968a5d"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/missing-target-store/goals.json",
+    "archive": "missing-target-store/goals.json",
+    "sha256": "95f507d7d2783c2b1fa669281d6fe48bde56c9303d991f10fa504bf8fa040655"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/missing-target-store/manifest.json",
+    "archive": "missing-target-store/manifest.json",
+    "sha256": "06ea0d2b68a6e3cb9d95044ce5d18c176c0b5496f992c47dac863282bcfdd03a"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/missing-target-store/obligations/typed_ref/Wp_Tactical_typed_ref_permute_loop_invariant_target_Why3_CVC5_1_3_4.smt2",
+    "archive": "missing-target-store/obligations/typed_ref/Wp_Tactical_typed_ref_permute_loop_invariant_target_Why3_CVC5_1_3_4.smt2",
+    "sha256": "8705160d2b16cded7d8a8b69f547530ce72bf1ed5187af879044c0d3bf402a15"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/missing-target-store/obligations/typed_ref/permute_loop_invariant_filled_initialized_preserved_Why3_CVC5_1_3_4.smt2",
+    "archive": "missing-target-store/obligations/typed_ref/permute_loop_invariant_filled_initialized_preserved_Why3_CVC5_1_3_4.smt2",
+    "sha256": "82aa42f93b97a389551d24cad3e2bc44570acf4497c084ed83923bb7201abb7b"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/missing-target-store/obligations/typed_ref/permute_loop_invariant_filled_initialized_preserved_Why3_Z3_4_16_0.smt2",
+    "archive": "missing-target-store/obligations/typed_ref/permute_loop_invariant_filled_initialized_preserved_Why3_Z3_4_16_0.smt2",
+    "sha256": "ca81986da4f968eb3175248f192960995e27ca29ed45ba577a46ca6e2a6b8390"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/missing-target-store/obligations/typed_ref/permute_loop_invariant_target_initialized_2_established_Why3_CVC5_1_3_4.smt2",
+    "archive": "missing-target-store/obligations/typed_ref/permute_loop_invariant_target_initialized_2_established_Why3_CVC5_1_3_4.smt2",
+    "sha256": "c4cf334d75c6873edc93acecec0e4c25a63fba1ff101c7a8d2087e5e29d2be93"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/missing-target-store/obligations/typed_ref/permute_loop_invariant_target_initialized_2_preserved_part1_Why3_CVC5_1_3_4.smt2",
+    "archive": "missing-target-store/obligations/typed_ref/permute_loop_invariant_target_initialized_2_preserved_part1_Why3_CVC5_1_3_4.smt2",
+    "sha256": "21a7669b40afb1aded25e7bd0f5a21ab26ea33126ba4c3b02372010149cabef9"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/missing-target-store/obligations/typed_ref/permute_loop_invariant_target_initialized_2_preserved_part3_Why3_CVC5_1_3_4.smt2",
+    "archive": "missing-target-store/obligations/typed_ref/permute_loop_invariant_target_initialized_2_preserved_part3_Why3_CVC5_1_3_4.smt2",
+    "sha256": "55c61f21ccb6782e3d369255744fb80b972572492069b0ab88539cdaebda8031"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/missing-target-store/obligations/typed_ref/permute_loop_invariant_target_initialized_established_Why3_CVC5_1_3_4.smt2",
+    "archive": "missing-target-store/obligations/typed_ref/permute_loop_invariant_target_initialized_established_Why3_CVC5_1_3_4.smt2",
+    "sha256": "6ee6dd4a364655342f779186bc740e3fbb6ced5cab256b7d76d0ff5443bd8ae8"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/missing-target-store/obligations/typed_ref/permute_loop_invariant_target_initialized_established_Why3_Z3_4_16_0.smt2",
+    "archive": "missing-target-store/obligations/typed_ref/permute_loop_invariant_target_initialized_established_Why3_Z3_4_16_0.smt2",
+    "sha256": "556e69dcad7f4547f979bf44b1b63adce04cecf92504b00d20c71c578e258dd4"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/missing-target-store/obligations/typed_ref/permute_loop_invariant_target_initialized_preserved_part1_Why3_CVC5_1_3_4.smt2",
+    "archive": "missing-target-store/obligations/typed_ref/permute_loop_invariant_target_initialized_preserved_part1_Why3_CVC5_1_3_4.smt2",
+    "sha256": "2e48ad262237294bec8dcab96d4d0af2dde3b94d9c8666bb0289d244f4d43ec4"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/missing-target-store/obligations/typed_ref/permute_loop_invariant_target_initialized_preserved_part2_Why3_CVC5_1_3_4.smt2",
+    "archive": "missing-target-store/obligations/typed_ref/permute_loop_invariant_target_initialized_preserved_part2_Why3_CVC5_1_3_4.smt2",
+    "sha256": "c875f2712ce526e1adcae841f8a9773e72bb573fa95cdfc6f73b054bbe51611a"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/missing-target-store/session/script/permute_loop_invariant_filled_initialized_preserved.json",
+    "archive": "missing-target-store/session/script/permute_loop_invariant_filled_initialized_preserved.json",
+    "sha256": "8fd188312644b1e6e8a3cab61ef58ae59f0a2134fa6a6a0613dd412f9b65674d"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/missing-target-store/session/script/permute_loop_invariant_target_initialized_established.json",
+    "archive": "missing-target-store/session/script/permute_loop_invariant_target_initialized_established.json",
+    "sha256": "023dafc5017f78c9a5e4e5df970915a2f51e2f26b46c469c3208a2b0247fb4b5"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/missing-target-store/wp.log",
+    "archive": "missing-target-store/wp.log",
+    "sha256": "bb55e8e72eacb76b8cfdb5258a9c9e43de98f798f2e013e06f7e79b12e3264da"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/parentheses/annotated.c",
+    "archive": "parentheses/annotated.c",
+    "sha256": "afc37b4bea850475861f61912fc0a185ace4cbab8735f81d9876dda6fd003fff"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/parentheses/core.c",
+    "archive": "parentheses/core.c",
+    "sha256": "490f408fc14067def4cb79f32c05a2c3d114cc8ff7da536fc4f64685f55b435c"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/parentheses/goals.json",
+    "archive": "parentheses/goals.json",
+    "sha256": "3c2d131663fdfb9d09151ce7bc6eed6db028a08ff54233987dd44a98f706055d"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/parentheses/manifest.json",
+    "archive": "parentheses/manifest.json",
+    "sha256": "8a0903f3a4bcd60096b96119f6ff349e91c753e3e440232da21ec8bb6dcefe3e"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/parentheses/obligations/typed_ref/Wp_Tactical_typed_ref_permute_loop_invariant_target_Why3_CVC5_1_3_4.smt2",
+    "archive": "parentheses/obligations/typed_ref/Wp_Tactical_typed_ref_permute_loop_invariant_target_Why3_CVC5_1_3_4.smt2",
+    "sha256": "8705160d2b16cded7d8a8b69f547530ce72bf1ed5187af879044c0d3bf402a15"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/parentheses/obligations/typed_ref/permute_loop_invariant_filled_initialized_preserved_Why3_CVC5_1_3_4.smt2",
+    "archive": "parentheses/obligations/typed_ref/permute_loop_invariant_filled_initialized_preserved_Why3_CVC5_1_3_4.smt2",
+    "sha256": "e07b6ced262dfd2fb0e69e1bcc43a5ff987c311b9d8217e2f3eb57664d9e24af"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/parentheses/obligations/typed_ref/permute_loop_invariant_target_initialized_2_established_Why3_CVC5_1_3_4.smt2",
+    "archive": "parentheses/obligations/typed_ref/permute_loop_invariant_target_initialized_2_established_Why3_CVC5_1_3_4.smt2",
+    "sha256": "c4cf334d75c6873edc93acecec0e4c25a63fba1ff101c7a8d2087e5e29d2be93"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/parentheses/obligations/typed_ref/permute_loop_invariant_target_initialized_2_preserved_part1_Why3_CVC5_1_3_4.smt2",
+    "archive": "parentheses/obligations/typed_ref/permute_loop_invariant_target_initialized_2_preserved_part1_Why3_CVC5_1_3_4.smt2",
+    "sha256": "21a7669b40afb1aded25e7bd0f5a21ab26ea33126ba4c3b02372010149cabef9"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/parentheses/obligations/typed_ref/permute_loop_invariant_target_initialized_2_preserved_part3_Why3_CVC5_1_3_4.smt2",
+    "archive": "parentheses/obligations/typed_ref/permute_loop_invariant_target_initialized_2_preserved_part3_Why3_CVC5_1_3_4.smt2",
+    "sha256": "55c61f21ccb6782e3d369255744fb80b972572492069b0ab88539cdaebda8031"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/parentheses/obligations/typed_ref/permute_loop_invariant_target_initialized_established_Why3_CVC5_1_3_4.smt2",
+    "archive": "parentheses/obligations/typed_ref/permute_loop_invariant_target_initialized_established_Why3_CVC5_1_3_4.smt2",
+    "sha256": "6ee6dd4a364655342f779186bc740e3fbb6ced5cab256b7d76d0ff5443bd8ae8"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/parentheses/obligations/typed_ref/permute_loop_invariant_target_initialized_established_Why3_Z3_4_16_0.smt2",
+    "archive": "parentheses/obligations/typed_ref/permute_loop_invariant_target_initialized_established_Why3_Z3_4_16_0.smt2",
+    "sha256": "556e69dcad7f4547f979bf44b1b63adce04cecf92504b00d20c71c578e258dd4"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/parentheses/obligations/typed_ref/permute_loop_invariant_target_initialized_preserved_part1_Why3_CVC5_1_3_4.smt2",
+    "archive": "parentheses/obligations/typed_ref/permute_loop_invariant_target_initialized_preserved_part1_Why3_CVC5_1_3_4.smt2",
+    "sha256": "2e48ad262237294bec8dcab96d4d0af2dde3b94d9c8666bb0289d244f4d43ec4"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/parentheses/obligations/typed_ref/permute_loop_invariant_target_initialized_preserved_part2_Why3_CVC5_1_3_4.smt2",
+    "archive": "parentheses/obligations/typed_ref/permute_loop_invariant_target_initialized_preserved_part2_Why3_CVC5_1_3_4.smt2",
+    "sha256": "c875f2712ce526e1adcae841f8a9773e72bb573fa95cdfc6f73b054bbe51611a"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/parentheses/session/script/permute_loop_invariant_target_initialized_established.json",
+    "archive": "parentheses/session/script/permute_loop_invariant_target_initialized_established.json",
+    "sha256": "92cb1f955e66ac0951392b0e0185d496ca56a8389071f0d84c213fe3f0f0038c"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/parentheses/wp.log",
+    "archive": "parentheses/wp.log",
+    "sha256": "7bce095baa44aecdc2c122c7035212243979e67f0a81ea63cac5d29dca1af468"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-controls/results.json",
+    "archive": "results.json",
+    "sha256": "9762c9047df48ccb107f3525ee1fe95abd06cf1b9588b8276a982f5b129972fb"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/frama-c/annotate.py",
+    "archive": "sources/annotate.py",
+    "sha256": "c8376fbdd15b20654f34a004a657e67c5f304be5e5e7c32dda28dedd6bc6e2c1"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/frama-c/run.py",
+    "archive": "sources/run.py",
+    "sha256": "11f9ba9c1d33c93ce15c8e237208eea73c481fd2accd60588bcbb9503d4d825c"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/frama-c/check_initialization.py",
+    "archive": "sources/check_initialization.py",
+    "sha256": "9b46b1084dab4942ca9f6337f3cf1d8db731c6ba432b8ba12bb019bcb87f9e94"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/frama-c/test_annotations.py",
+    "archive": "sources/test_annotations.py",
+    "sha256": "76fa878dbc853d50ec9b8e80bf67a2a43623e7df37f683e0e0f5e56ef5d500e7"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/frama-c/test_report.py",
+    "archive": "sources/test_report.py",
+    "sha256": "e0da87ad0db0fba75e448648dfb62cef774b93df4a35e70d39122ac17cd49fbc"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/frama-c/test_solver_version.py",
+    "archive": "sources/test_solver_version.py",
+    "sha256": "36729c85047df250fb260a61416c3949591e9bb30180be364a86a9cbaece16d1"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/frama-c/test_solver_wrapper.py",
+    "archive": "sources/test_solver_wrapper.py",
+    "sha256": "6ef09d72516beff1a9c1146e9df74e1e25dfea00e885b3cc375c3bd6e6a40e0d"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/frama-c/shell.nix",
+    "archive": "sources/shell.nix",
+    "sha256": "3dc12a8e925073df92532b58a9f3c5570cfcc68b6ba4b4ebe6d0db05f0e1ee03"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/frama-c/LICENSE_AUDIT.md",
+    "archive": "sources/LICENSE_AUDIT.md",
+    "sha256": "b8399d179d767d0d5da893d8fe0aa8f6b994a987b3540a3befb24a5cdc8a3af5"
+  },
+  {
+    "source": "/tmp/permute-frama-strategy-unit-tests.log",
+    "archive": "unit-tests.log",
+    "sha256": "bee6b80bd3c107a0940fe4add2ac74890f2e187d5807b84692625fbd90ad657b"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-helper-review/goals.json",
+    "archive": "diagnostics/initialization-helper-review/goals.json",
+    "sha256": "4602f95a94d2a665ace57d4c81f50c99c7ff2ed55cfa64757fba71f81377cf36"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-helper-review/helper.c",
+    "archive": "diagnostics/initialization-helper-review/helper.c",
+    "sha256": "e4dd312bb67798ebabd14090699f3e0475f3a14ef7dae53b08d34e459dd25aa9"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-helper-review/obligations/typed_ref/lemma_initialized_by_surjection_Why3_CVC5_1_3_4.smt2",
+    "archive": "diagnostics/initialization-helper-review/obligations/typed_ref/lemma_initialized_by_surjection_Why3_CVC5_1_3_4.smt2",
+    "sha256": "a551665167a942c3755d8de7ec4d3807c782985d1502d3ea3ef4a36ed22a599d"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-helper-review/obligations/typed_ref/lemma_initialized_by_surjection_Why3_Z3_4_16_0.smt2",
+    "archive": "diagnostics/initialization-helper-review/obligations/typed_ref/lemma_initialized_by_surjection_Why3_Z3_4_16_0.smt2",
+    "sha256": "84b2e5d233627fbdec9bd2cfea182d354a6dbba6d7e118251171049f3f4f7806"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-helper-review/source.json",
+    "archive": "diagnostics/initialization-helper-review/source.json",
+    "sha256": "c86ed083b188a4c0736726fb82123c8a91efdaf291e5222d088e6aaaecd73811"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-helper-review/wp.log",
+    "archive": "diagnostics/initialization-helper-review/wp.log",
+    "sha256": "52fc42a690a8d955b8400b6df39703b358266972aa0596be8c50da959ea41208"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-helper-instance-v2/goals.json",
+    "archive": "diagnostics/initialization-helper-instance-v2/goals.json",
+    "sha256": "d920cf3b62e228c4f62d88aa1c61a6bebabb90f56107957b5ad34575b5a88818"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-helper-instance-v2/helper.c",
+    "archive": "diagnostics/initialization-helper-instance-v2/helper.c",
+    "sha256": "92ea6a099e5370346d05463c3be2d5d3b757eacc96444de35da593b7a259dcc4"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-helper-instance-v2/obligations/typed_ref/Wp_Tactical_typed_ref_lemma_initialized_by_surjection_0_Why3_CVC5_1_3_4.smt2",
+    "archive": "diagnostics/initialization-helper-instance-v2/obligations/typed_ref/Wp_Tactical_typed_ref_lemma_initialized_by_surjection_0_Why3_CVC5_1_3_4.smt2",
+    "sha256": "5d2bac7b1342fb0e99b5b1b0666dad1433eacdbc51a63c03ca3761a8133e84e5"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-helper-instance-v2/obligations/typed_ref/Wp_Tactical_typed_ref_lemma_initialized_by_surjection_0_Why3_Z3_4_16_0.smt2",
+    "archive": "diagnostics/initialization-helper-instance-v2/obligations/typed_ref/Wp_Tactical_typed_ref_lemma_initialized_by_surjection_0_Why3_Z3_4_16_0.smt2",
+    "sha256": "615cbbc1d25d183c4328e20b2594848dd7afc51c72878ea95d590a610271d5cb"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-helper-instance-v2/session/script/lemma_initialized_by_surjection.json",
+    "archive": "diagnostics/initialization-helper-instance-v2/session/script/lemma_initialized_by_surjection.json",
+    "sha256": "dbd9ae6d745568ec4577e38135ad63d3c142be140e6e7bad0bc04345497a0db5"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/initialization-helper-instance-v2/wp.log",
+    "archive": "diagnostics/initialization-helper-instance-v2/wp.log",
+    "sha256": "eaafbfb081a96dc911e17efc1e81b3ab0b0ad766742ed77ddbedec35a29f7232"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/target-initialization-head/goals.json",
+    "archive": "diagnostics/target-initialization-head/goals.json",
+    "sha256": "59459aed50c0033ee1fdbd751ee3a86dfa09b786b10b1f211b0b92c307b22535"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/target-initialization-head/input.c",
+    "archive": "diagnostics/target-initialization-head/input.c",
+    "sha256": "d2ddca794e1a00df1ee62fcbf19c608a25110bbd234de574467f69861b15c3e4"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/target-initialization-head/manifest.json",
+    "archive": "diagnostics/target-initialization-head/manifest.json",
+    "sha256": "567942d7a463cae507defb5b6427bef80e002940296588ba1ff4a296e18caf13"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/target-initialization-head/obligations/typed_ref/Wp_Tactical_typed_ref_permute_loop_invariant_target_2_Why3_CVC5_1_3_4.smt2",
+    "archive": "diagnostics/target-initialization-head/obligations/typed_ref/Wp_Tactical_typed_ref_permute_loop_invariant_target_2_Why3_CVC5_1_3_4.smt2",
+    "sha256": "7188f5781e0cb9b87a4f4ec5efce95adb972873b1255803f2396842fac6cd2b6"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/target-initialization-head/obligations/typed_ref/Wp_Tactical_typed_ref_permute_loop_invariant_target_3_Why3_CVC5_1_3_4.smt2",
+    "archive": "diagnostics/target-initialization-head/obligations/typed_ref/Wp_Tactical_typed_ref_permute_loop_invariant_target_3_Why3_CVC5_1_3_4.smt2",
+    "sha256": "8705160d2b16cded7d8a8b69f547530ce72bf1ed5187af879044c0d3bf402a15"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/target-initialization-head/obligations/typed_ref/Wp_Tactical_typed_ref_permute_loop_invariant_target_4_Why3_CVC5_1_3_4.smt2",
+    "archive": "diagnostics/target-initialization-head/obligations/typed_ref/Wp_Tactical_typed_ref_permute_loop_invariant_target_4_Why3_CVC5_1_3_4.smt2",
+    "sha256": "94cff67aa1b53ec620d02ef7da71c5c75d3530a5cc1ab2837621df1c35b51510"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/target-initialization-head/obligations/typed_ref/Wp_Tactical_typed_ref_permute_loop_invariant_target_5_Why3_CVC5_1_3_4.smt2",
+    "archive": "diagnostics/target-initialization-head/obligations/typed_ref/Wp_Tactical_typed_ref_permute_loop_invariant_target_5_Why3_CVC5_1_3_4.smt2",
+    "sha256": "6c52892f6fff1f9b650d4eaa0eb9277543af088d8c5365da9c9365ec86b2679a"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/target-initialization-head/obligations/typed_ref/Wp_Tactical_typed_ref_permute_loop_invariant_target_6_Why3_CVC5_1_3_4.smt2",
+    "archive": "diagnostics/target-initialization-head/obligations/typed_ref/Wp_Tactical_typed_ref_permute_loop_invariant_target_6_Why3_CVC5_1_3_4.smt2",
+    "sha256": "74ddbc60b1809a85f87867a5894e69eef5fba471c55b1ff6e04ebf1e52396463"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/target-initialization-head/obligations/typed_ref/Wp_Tactical_typed_ref_permute_loop_invariant_target_Why3_CVC5_1_3_4.smt2",
+    "archive": "diagnostics/target-initialization-head/obligations/typed_ref/Wp_Tactical_typed_ref_permute_loop_invariant_target_Why3_CVC5_1_3_4.smt2",
+    "sha256": "a0482449bf195b40522599ebb6068240e199e38ec96e742bf5f6a002e1b457f7"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/target-initialization-head/session/script/permute_loop_invariant_target_initialized_2_established.json",
+    "archive": "diagnostics/target-initialization-head/session/script/permute_loop_invariant_target_initialized_2_established.json",
+    "sha256": "c69683fe433f4357fc129d900021dfc0ef1b26c94b350ffe63a547dd2c7ec81c"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/target-initialization-head/session/script/permute_loop_invariant_target_initialized_2_preserved_part1.json",
+    "archive": "diagnostics/target-initialization-head/session/script/permute_loop_invariant_target_initialized_2_preserved_part1.json",
+    "sha256": "10e91575abf5426018d7f59b5a9d0e514166e1ff0541f0634215852f0c5e7f88"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/target-initialization-head/session/script/permute_loop_invariant_target_initialized_2_preserved_part3.json",
+    "archive": "diagnostics/target-initialization-head/session/script/permute_loop_invariant_target_initialized_2_preserved_part3.json",
+    "sha256": "e9348f3216e3fc07f8ae45ce0a81e3576f52f71c9dfc7e56a5d7f331c98af1dd"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/target-initialization-head/session/script/permute_loop_invariant_target_initialized_established.json",
+    "archive": "diagnostics/target-initialization-head/session/script/permute_loop_invariant_target_initialized_established.json",
+    "sha256": "64effd034cf9715ff8d8240ed7b51d874e7d7689e4dbfad659e9b253ce11fe2b"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/target-initialization-head/session/script/permute_loop_invariant_target_initialized_preserved_part1.json",
+    "archive": "diagnostics/target-initialization-head/session/script/permute_loop_invariant_target_initialized_preserved_part1.json",
+    "sha256": "588e310cd09de07ac1b7eae7520a725885cb94df87b01c97524fb2638b636b64"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/target-initialization-head/session/script/permute_loop_invariant_target_initialized_preserved_part2.json",
+    "archive": "diagnostics/target-initialization-head/session/script/permute_loop_invariant_target_initialized_preserved_part2.json",
+    "sha256": "1e452ecbb31e51495ac8f0b18a832da570cb9ece44c54fabef68c8feaaf0185c"
+  },
+  {
+    "source": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/frama-c/target-initialization-head/wp.log",
+    "archive": "diagnostics/target-initialization-head/wp.log",
+    "sha256": "0e5784584f8b0539fa967f66d473b24053173adca711927883e34ccceeda6b0f"
+  }
+]

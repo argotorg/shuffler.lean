@@ -1,0 +1,1549 @@
+[kernel] Parsing build/frama-c/initialization-controls/baseline/annotated.c (with preprocessing)
+[wp] Running WP plugin...
+[wp] Warning: Skipped RTE guards: unaligned pointers (\aligned not supported)
+[wp] Warning: Skipped RTE guards: invalid function pointer calls (\valid_function not supported)
+[rte:annot] annotating function permute
+[wp] 9 goals scheduled
+[wp] Proved goals:    9 / 9
+  Qed:             2 (155ms-164ms-291ms)
+  CVC5 1.3.4:      6 (310ms-2.2s-6s)
+  Script:          1 (Tactic) (Qed 224ms) (CVC5 122ms)
+[wp] Updated session
+   - 1 new valid script
+------------------------------------------------------------
+  Function permute
+------------------------------------------------------------
+
+Goal Establishment of Invariant 'filled_initialized' ("build/frama-c/initialization-controls/baseline/annotated.c", lines 99-100):
+Tags: Else Else Else.
+Prove: true.
+Prover Qed returns Valid (5ms)
+
+------------------------------------------------------------
+
+Goal Preservation of Invariant 'filled_initialized' ("build/frama-c/initialization-controls/baseline/annotated.c", lines 99-100):
+Tags: Then Else Else Else Else Else.
+Let a = shift_uint32(v7_0, 0).
+Let a_1 = shift_uint32(v7_0, 1).
+Let a_2 = shift_uint32(v7_0, 2).
+Let m = Init_0[a <- true][a_1 <- true][a_2 <- true].
+Let a_3 = shift_uint32(v5_0, 0).
+Let a_4 = memcpy(m, a_3, Init_undef_0, a_3, v1_0).
+Let a_5 = shift_uint32(v4_0, 0).
+Let a_6 = memcpy(memcpy(a_4, a_3, Init_undef_1, a_3, v1_0), a_5,
+            Init_undef_2, a_5, v1_0).
+Let m_1 = Mint_0[a <- 0].
+Let m_2 = m_1[a_1 <- 0].
+Let m_3 = m_2[a_2 <- 0].
+Let a_7 = memcpy(m_3, a_3, Mint_undef_0, a_3, v1_0).
+Let a_8 = memcpy(memcpy(a_7, a_3, Mint_undef_1, a_3, v1_0), a_5,
+            Mint_undef_2, a_5, v1_0).
+Let a_9 = shift_uint32(v3_0, v8_0).
+Let a_10 = a_8[a_9].
+Let a_11 = shift_uint32(v5_0, a_10).
+Let a_12 = a_6[a_11 <- true].
+Let a_13 = shift_uint32(v4_0, a_10).
+Let a_14 = a_12[a_13 <- true].
+Let x = to_uint32(1 + v8_0).
+Let a_15 = a_8[a_11 <- 1].
+Let a_16 = shift_uint32(v2_0, v8_0).
+Let a_17 = a_15[a_13 <- a_15[a_16]].
+Let a_18 = shift_uint32(v2_0, 0).
+Let a_19 = shift_uint32(v3_0, 0).
+Let a_20 = shift_uint32(v6_0, 0).
+Let x_1 = 2 * v1_0.
+Assume {
+  Type: is_uint32_chunk(Mint_0) /\ is_uint32(v1_0) /\ is_uint32(v8_0) /\
+      is_uint32(v8_1) /\ is_uint32_chunk(m_1) /\ is_uint32_chunk(m_2) /\
+      is_uint32_chunk(m_3) /\ is_uint32_chunk(a_7) /\ is_uint32_chunk(a_8) /\
+      is_uint32(a_10) /\ is_uint32_chunk(a_15) /\ is_uint32_chunk(a_17).
+  (* Heap *)
+  Type: (region(v2_0.base) <= 0) /\ (region(v3_0.base) <= 0) /\
+      (region(v4_0.base) <= 0) /\ (region(v5_0.base) <= 0) /\
+      (region(v6_0.base) <= 0) /\ (region(v7_0.base) <= 0) /\
+      linked(Malloc_0) /\ scinit(Init_0).
+  (* Goal *)
+  When: (0 <= i) /\ (i < x).
+  (* Pre-condition 'size' *)
+  Have: (0 < v1_0) /\ (v1_0 <= 1024).
+  (* Pre-condition 'data_valid' *)
+  Have: valid_rw(Malloc_0, a_18, v1_0).
+  (* Pre-condition 'permutation_valid' *)
+  Have: valid_rw(Malloc_0, a_19, v1_0).
+  (* Pre-condition 'target_valid' *)
+  Have: valid_rw(Malloc_0, a_5, v1_0).
+  (* Pre-condition 'used_valid' *)
+  Have: valid_rw(Malloc_0, a_3, v1_0).
+  (* Pre-condition 'trace_valid' *)
+  Have: valid_rw(Malloc_0, a_20, x_1).
+  (* Pre-condition 'out_valid' *)
+  Have: valid_rw(Malloc_0, a, 3).
+  (* Pre-condition 'disjoint' *)
+  Have: separated(a_18, v1_0, a_19, v1_0) /\
+      separated(a_18, v1_0, a_5, v1_0) /\ separated(a_18, v1_0, a_3, v1_0) /\
+      separated(a_18, v1_0, a_20, x_1) /\ separated(a_18, v1_0, a, 3) /\
+      separated(a_19, v1_0, a_5, v1_0) /\ separated(a_19, v1_0, a_3, v1_0) /\
+      separated(a_19, v1_0, a_20, x_1) /\ separated(a_19, v1_0, a, 3) /\
+      separated(a_5, v1_0, a_3, v1_0) /\ separated(a_5, v1_0, a_20, x_1) /\
+      separated(a_5, v1_0, a, 3) /\ separated(a_3, v1_0, a_20, x_1) /\
+      separated(a_3, v1_0, a, 3) /\ separated(a_20, x_1, a, 3).
+  (* Pre-condition 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (Init_0[shift_uint32(v2_0, i_1)]=true))).
+  (* Pre-condition 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (Init_0[shift_uint32(v3_0, i_1)]=true))).
+  (* Pre-condition 'permutation_input' *)
+  Have: (forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+         (Mint_0[shift_uint32(v3_0, i_1)] < v1_0)))) /\
+      (forall i_2,i_1 : Z.
+       ((Mint_0[shift_uint32(v3_0, i_2)] = Mint_0[shift_uint32(v3_0, i_1)]) ->
+       ((0 <= i_2) -> ((i_2 < v1_0) -> ((0 <= i_1) -> ((i_1 < v1_0) ->
+       (i_2 = i_1))))))) /\
+      (forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+       (exists i_2 : Z. (Mint_0[shift_uint32(v3_0, i_2)] = i_1) /\
+        (0 <= i_2) /\ (i_2 < v1_0))))).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a, 1).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_1, 1).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_2, 1).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_21 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (m_3[a_21] = Mint_0[a_21]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (m[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (m[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_21 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (m_3[a_21] = Mint_0[a_21]))).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_21 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_7[a_21] = Mint_0[a_21]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_4[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_4[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_21 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_7[a_21] = Mint_0[a_21]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_4[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_7[a] = 0) /\ (a_7[a_1] = 0) /\ (a_7[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_1 <= v1_0) /\ (0 <= v8_1).
+  (* Invariant 'clear' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_1) ->
+      (a_7[shift_uint32(v5_0, i_1)] = 0))).
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_1) ->
+      (a_4[shift_uint32(v5_0, i_1)]=true))).
+  (* Else *)
+  Have: v1_0 <= v8_1.
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_4[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_21 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_8[a_21] = Mint_0[a_21]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_6[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_6[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_21 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_8[a_21] = Mint_0[a_21]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_6[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_8[a] = 0) /\ (a_8[a_1] = 0) /\ (a_8[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_0 <= v1_0) /\ (0 <= v8_0).
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_6[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'filled_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_0) ->
+      (a_6[shift_uint32(v4_0, Mint_0[shift_uint32(v3_0, i_1)])]=true))).
+  (* Then *)
+  Have: v8_0 < v1_0.
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rd(Malloc_0, a_9, 1).
+  (* Assertion 'rte,initialization' *)
+  Have: (a_6[a_9]=true).
+  (* Else *)
+  Have: a_10 < v1_0.
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rd(Malloc_0, a_11, 1).
+  (* Assertion 'rte,initialization' *)
+  Have: (a_6[a_11]=true).
+  (* Else *)
+  Have: a_8[a_11] = 0.
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_11, 1).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_13, 1).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rd(Malloc_0, a_16, 1).
+  (* Assertion 'rte,initialization' *)
+  Have: (a_12[a_16]=true).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_21 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_17[a_21] = Mint_0[a_21]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_14[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_14[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_21 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_17[a_21] = Mint_0[a_21]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_14[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_17[a] = 0) /\ (a_17[a_1] = 0) /\ (a_17[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: x <= v1_0.
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_14[shift_uint32(v5_0, i_1)]=true))).
+}
+Prove: (a_14[shift_uint32(v4_0, Mint_0[shift_uint32(v3_0, i)])]=true).
+Prover CVC5 1.3.4 returns Valid (Qed:158ms) (6s) (342048)
+
+------------------------------------------------------------
+
+Goal Establishment of Invariant 'target_initialized' ("build/frama-c/initialization-controls/baseline/annotated.c", line 129):
+Tags: Else Else Else Else.
+Let a = shift_uint32(v7_0, 0).
+Let a_1 = shift_uint32(v7_0, 1).
+Let a_2 = shift_uint32(v7_0, 2).
+Let m = Init_0[a <- true][a_1 <- true][a_2 <- true].
+Let a_3 = shift_uint32(v5_0, 0).
+Let a_4 = memcpy(m, a_3, Init_undef_0, a_3, v1_0).
+Let a_5 = shift_uint32(v4_0, 0).
+Let a_6 = memcpy(memcpy(a_4, a_3, Init_undef_1, a_3, v1_0), a_5,
+            Init_undef_2, a_5, v1_0).
+Let m_1 = Mint_0[a <- 0].
+Let m_2 = m_1[a_1 <- 0].
+Let m_3 = m_2[a_2 <- 0].
+Let a_7 = memcpy(m_3, a_3, Mint_undef_0, a_3, v1_0).
+Let a_8 = memcpy(memcpy(a_7, a_3, Mint_undef_1, a_3, v1_0), a_5,
+            Mint_undef_2, a_5, v1_0).
+Let a_9 = shift_uint32(v2_0, 0).
+Let a_10 = shift_uint32(v3_0, 0).
+Let a_11 = shift_uint32(v6_0, 0).
+Let x = 2 * v1_0.
+Assume {
+  Type: is_uint32_chunk(Mint_0) /\ is_uint32(v1_0) /\ is_uint32(v8_0) /\
+      is_uint32(v8_1) /\ is_uint32_chunk(m_1) /\ is_uint32_chunk(m_2) /\
+      is_uint32_chunk(m_3) /\ is_uint32_chunk(a_7) /\ is_uint32_chunk(a_8).
+  (* Heap *)
+  Type: (region(v2_0.base) <= 0) /\ (region(v3_0.base) <= 0) /\
+      (region(v4_0.base) <= 0) /\ (region(v5_0.base) <= 0) /\
+      (region(v6_0.base) <= 0) /\ (region(v7_0.base) <= 0) /\
+      linked(Malloc_0) /\ scinit(Init_0).
+  (* Goal *)
+  When: (0 <= i) /\ (i < v1_0).
+  (* Pre-condition 'size' *)
+  Have: (0 < v1_0) /\ (v1_0 <= 1024).
+  (* Pre-condition 'data_valid' *)
+  Have: valid_rw(Malloc_0, a_9, v1_0).
+  (* Pre-condition 'permutation_valid' *)
+  Have: valid_rw(Malloc_0, a_10, v1_0).
+  (* Pre-condition 'target_valid' *)
+  Have: valid_rw(Malloc_0, a_5, v1_0).
+  (* Pre-condition 'used_valid' *)
+  Have: valid_rw(Malloc_0, a_3, v1_0).
+  (* Pre-condition 'trace_valid' *)
+  Have: valid_rw(Malloc_0, a_11, x).
+  (* Pre-condition 'out_valid' *)
+  Have: valid_rw(Malloc_0, a, 3).
+  (* Pre-condition 'disjoint' *)
+  Have: separated(a_9, v1_0, a_10, v1_0) /\
+      separated(a_9, v1_0, a_5, v1_0) /\ separated(a_9, v1_0, a_3, v1_0) /\
+      separated(a_9, v1_0, a_11, x) /\ separated(a_9, v1_0, a, 3) /\
+      separated(a_10, v1_0, a_5, v1_0) /\ separated(a_10, v1_0, a_3, v1_0) /\
+      separated(a_10, v1_0, a_11, x) /\ separated(a_10, v1_0, a, 3) /\
+      separated(a_5, v1_0, a_3, v1_0) /\ separated(a_5, v1_0, a_11, x) /\
+      separated(a_5, v1_0, a, 3) /\ separated(a_3, v1_0, a_11, x) /\
+      separated(a_3, v1_0, a, 3) /\ separated(a_11, x, a, 3).
+  (* Pre-condition 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (Init_0[shift_uint32(v2_0, i_1)]=true))).
+  (* Pre-condition 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (Init_0[shift_uint32(v3_0, i_1)]=true))).
+  (* Pre-condition 'permutation_input' *)
+  Have: (forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+         (Mint_0[shift_uint32(v3_0, i_1)] < v1_0)))) /\
+      (forall i_2,i_1 : Z.
+       ((Mint_0[shift_uint32(v3_0, i_2)] = Mint_0[shift_uint32(v3_0, i_1)]) ->
+       ((0 <= i_2) -> ((i_2 < v1_0) -> ((0 <= i_1) -> ((i_1 < v1_0) ->
+       (i_2 = i_1))))))) /\
+      (forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+       (exists i_2 : Z. (Mint_0[shift_uint32(v3_0, i_2)] = i_1) /\
+        (0 <= i_2) /\ (i_2 < v1_0))))).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a, 1).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_1, 1).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_2, 1).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_12 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (m_3[a_12] = Mint_0[a_12]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (m[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (m[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_12 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (m_3[a_12] = Mint_0[a_12]))).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_12 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_7[a_12] = Mint_0[a_12]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_4[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_4[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_12 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_7[a_12] = Mint_0[a_12]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_4[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_7[a] = 0) /\ (a_7[a_1] = 0) /\ (a_7[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_1 <= v1_0) /\ (0 <= v8_1).
+  (* Invariant 'clear' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_1) ->
+      (a_7[shift_uint32(v5_0, i_1)] = 0))).
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_1) ->
+      (a_4[shift_uint32(v5_0, i_1)]=true))).
+  (* Else *)
+  Have: v1_0 <= v8_1.
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_4[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_12 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_8[a_12] = Mint_0[a_12]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_6[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_6[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_12 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_8[a_12] = Mint_0[a_12]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_6[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_8[a] = 0) /\ (a_8[a_1] = 0) /\ (a_8[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_0 <= v1_0) /\ (0 <= v8_0).
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_6[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'filled_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_0) ->
+      (a_6[shift_uint32(v4_0, Mint_0[shift_uint32(v3_0, i_1)])]=true))).
+  (* Else *)
+  Have: v1_0 <= v8_0.
+}
+Prove: (a_6[shift_uint32(v4_0, i)]=true).
+Prover CVC5 1.3.4 returns Timeout (Qed:132ms) (10s)
+Prover Z3 4.16.0 returns Timeout (Qed:132ms) (10s)
+Prover Script returns Valid (Qed:224ms) (122ms)
+
+------------------------------------------------------------
+
+Goal Preservation of Invariant 'target_initialized' ("build/frama-c/initialization-controls/baseline/annotated.c", line 129) (1/2):
+Tags: Then Then Else Else Else Else.
+Let a = shift_uint32(v7_0, 0).
+Let m = Mint_0[a <- 0].
+Let a_1 = shift_uint32(v7_0, 1).
+Let m_1 = m[a_1 <- 0].
+Let a_2 = shift_uint32(v7_0, 2).
+Let m_2 = m_1[a_2 <- 0].
+Let a_3 = shift_uint32(v5_0, 0).
+Let a_4 = memcpy(m_2, a_3, Mint_undef_0, a_3, v1_0).
+Let a_5 = shift_uint32(v4_0, 0).
+Let a_6 = memcpy(memcpy(a_4, a_3, Mint_undef_1, a_3, v1_0), a_5,
+            Mint_undef_2, a_5, v1_0).
+Let a_7 = shift_uint32(v3_0, 0).
+Let a_8 = memcpy(memcpy(a_6, a_3, Mint_undef_3, a_3, v1_0), a_7,
+            Mint_undef_4, a_7, v1_0).
+Let a_9 = shift_uint32(v3_0, v8_0).
+Let a_10 = a_8[a_9 <- v8_0].
+Let a_11 = shift_uint32(v5_0, v8_0).
+Let a_12 = a_10[a_11 <- 1].
+Let m_3 = Init_0[a <- true][a_1 <- true][a_2 <- true].
+Let a_13 = memcpy(m_3, a_3, Init_undef_0, a_3, v1_0).
+Let a_14 = memcpy(memcpy(a_13, a_3, Init_undef_1, a_3, v1_0), a_5,
+             Init_undef_2, a_5, v1_0).
+Let a_15 = memcpy(memcpy(a_14, a_3, Init_undef_3, a_3, v1_0), a_7,
+             Init_undef_4, a_7, v1_0).
+Let a_16 = a_15[a_9 <- true][a_11 <- true].
+Let a_17 = shift_uint32(v4_0, v8_0).
+Let a_18 = a_8[a_17].
+Let a_19 = shift_uint32(v2_0, v8_0).
+Let a_20 = a_8[a_19].
+Let a_21 = shift_uint32(v2_0, 0).
+Let a_22 = shift_uint32(v6_0, 0).
+Let x = 2 * v1_0.
+Assume {
+  Type: is_uint32_chunk(Mint_0) /\ is_uint32(v1_0) /\ is_uint32(v8_0) /\
+      is_uint32(v8_1) /\ is_uint32(v8_2) /\ is_uint32_chunk(m) /\
+      is_uint32_chunk(m_1) /\ is_uint32_chunk(m_2) /\ is_uint32_chunk(a_4) /\
+      is_uint32_chunk(a_6) /\ is_uint32_chunk(a_8) /\
+      is_uint32_chunk(a_10) /\ is_uint32(a_20) /\ is_uint32(a_18) /\
+      is_uint32_chunk(a_12).
+  (* Heap *)
+  Type: (region(v2_0.base) <= 0) /\ (region(v3_0.base) <= 0) /\
+      (region(v4_0.base) <= 0) /\ (region(v5_0.base) <= 0) /\
+      (region(v6_0.base) <= 0) /\ (region(v7_0.base) <= 0) /\
+      linked(Malloc_0) /\ scinit(Init_0).
+  (* Goal *)
+  When: (0 <= i) /\ (i < v1_0).
+  (* Pre-condition 'size' *)
+  Have: (0 < v1_0) /\ (v1_0 <= 1024).
+  (* Pre-condition 'data_valid' *)
+  Have: valid_rw(Malloc_0, a_21, v1_0).
+  (* Pre-condition 'permutation_valid' *)
+  Have: valid_rw(Malloc_0, a_7, v1_0).
+  (* Pre-condition 'target_valid' *)
+  Have: valid_rw(Malloc_0, a_5, v1_0).
+  (* Pre-condition 'used_valid' *)
+  Have: valid_rw(Malloc_0, a_3, v1_0).
+  (* Pre-condition 'trace_valid' *)
+  Have: valid_rw(Malloc_0, a_22, x).
+  (* Pre-condition 'out_valid' *)
+  Have: valid_rw(Malloc_0, a, 3).
+  (* Pre-condition 'disjoint' *)
+  Have: separated(a_21, v1_0, a_7, v1_0) /\
+      separated(a_21, v1_0, a_5, v1_0) /\ separated(a_21, v1_0, a_3, v1_0) /\
+      separated(a_21, v1_0, a_22, x) /\ separated(a_21, v1_0, a, 3) /\
+      separated(a_7, v1_0, a_5, v1_0) /\ separated(a_7, v1_0, a_3, v1_0) /\
+      separated(a_7, v1_0, a_22, x) /\ separated(a_7, v1_0, a, 3) /\
+      separated(a_5, v1_0, a_3, v1_0) /\ separated(a_5, v1_0, a_22, x) /\
+      separated(a_5, v1_0, a, 3) /\ separated(a_3, v1_0, a_22, x) /\
+      separated(a_3, v1_0, a, 3) /\ separated(a_22, x, a, 3).
+  (* Pre-condition 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (Init_0[shift_uint32(v2_0, i_1)]=true))).
+  (* Pre-condition 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (Init_0[shift_uint32(v3_0, i_1)]=true))).
+  (* Pre-condition 'permutation_input' *)
+  Have: (forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+         (Mint_0[shift_uint32(v3_0, i_1)] < v1_0)))) /\
+      (forall i_2,i_1 : Z.
+       ((Mint_0[shift_uint32(v3_0, i_2)] = Mint_0[shift_uint32(v3_0, i_1)]) ->
+       ((0 <= i_2) -> ((i_2 < v1_0) -> ((0 <= i_1) -> ((i_1 < v1_0) ->
+       (i_2 = i_1))))))) /\
+      (forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+       (exists i_2 : Z. (Mint_0[shift_uint32(v3_0, i_2)] = i_1) /\
+        (0 <= i_2) /\ (i_2 < v1_0))))).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a, 1).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_1, 1).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_2, 1).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_23 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (m_2[a_23] = Mint_0[a_23]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (m_3[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (m_3[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_23 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (m_2[a_23] = Mint_0[a_23]))).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_23 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_4[a_23] = Mint_0[a_23]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_13[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_13[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_23 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_4[a_23] = Mint_0[a_23]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_13[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_4[a] = 0) /\ (a_4[a_1] = 0) /\ (a_4[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_2 <= v1_0) /\ (0 <= v8_2).
+  (* Invariant 'clear' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_2) ->
+      (a_4[shift_uint32(v5_0, i_1)] = 0))).
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_2) ->
+      (a_13[shift_uint32(v5_0, i_1)]=true))).
+  (* Else *)
+  Have: v1_0 <= v8_2.
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_13[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_23 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_6[a_23] = Mint_0[a_23]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_14[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_14[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_23 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_6[a_23] = Mint_0[a_23]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_14[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_6[a] = 0) /\ (a_6[a_1] = 0) /\ (a_6[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_1 <= v1_0) /\ (0 <= v8_1).
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_14[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'filled_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_1) ->
+      (a_14[shift_uint32(v4_0, Mint_0[shift_uint32(v3_0, i_1)])]=true))).
+  (* Else *)
+  Have: v1_0 <= v8_1.
+  (* Invariant 'target_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_14[shift_uint32(v4_0, i_1)]=true))).
+  (* Invariant 'permutation_bounds' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_6[shift_uint32(v3_0, i_1)] < v1_0))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_15[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_23 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_8[a_23] = Mint_0[a_23]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_15[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_8[a] = 0) /\ (a_8[a_1] = 0) /\ (a_8[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_0 <= v1_0) /\ (0 <= v8_0).
+  (* Invariant 'target_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_15[shift_uint32(v4_0, i_1)]=true))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_15[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'used_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_15[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'permutation_bounds' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_8[shift_uint32(v3_0, i_1)] < v1_0))).
+  (* Then *)
+  Have: v8_0 < v1_0.
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rd(Malloc_0, a_19, 1).
+  (* Assertion 'rte,initialization' *)
+  Have: (a_15[a_19]=true).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rd(Malloc_0, a_17, 1).
+  (* Assertion 'rte,initialization' *)
+  Have: (a_15[a_17]=true).
+  (* Then *)
+  Have: a_18 = a_20.
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_9, 1).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_11, 1).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_16[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_23 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_12[a_23] = Mint_0[a_23]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_16[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_12[a] = 0) /\ (a_12[a_1] = 0) /\ (a_12[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: to_uint32(1 + v8_0) <= v1_0.
+}
+Prove: (a_16[shift_uint32(v4_0, i)]=true).
+Prover CVC5 1.3.4 returns Valid (Qed:189ms) (1s) (137765)
+
+------------------------------------------------------------
+
+Goal Preservation of Invariant 'target_initialized' ("build/frama-c/initialization-controls/baseline/annotated.c", line 129) (2/2):
+Tags: Then Else Else Else Else Else.
+Let a = shift_uint32(v7_0, 0).
+Let m = Mint_0[a <- 0].
+Let a_1 = shift_uint32(v7_0, 1).
+Let m_1 = m[a_1 <- 0].
+Let a_2 = shift_uint32(v7_0, 2).
+Let m_2 = m_1[a_2 <- 0].
+Let a_3 = shift_uint32(v5_0, 0).
+Let a_4 = memcpy(m_2, a_3, Mint_undef_0, a_3, v1_0).
+Let a_5 = shift_uint32(v4_0, 0).
+Let a_6 = memcpy(memcpy(a_4, a_3, Mint_undef_1, a_3, v1_0), a_5,
+            Mint_undef_2, a_5, v1_0).
+Let a_7 = shift_uint32(v3_0, 0).
+Let a_8 = memcpy(memcpy(a_6, a_3, Mint_undef_3, a_3, v1_0), a_7,
+            Mint_undef_4, a_7, v1_0).
+Let a_9 = shift_uint32(v5_0, v8_0).
+Let a_10 = a_8[a_9 <- 0].
+Let m_3 = Init_0[a <- true][a_1 <- true][a_2 <- true].
+Let a_11 = memcpy(m_3, a_3, Init_undef_0, a_3, v1_0).
+Let a_12 = memcpy(memcpy(a_11, a_3, Init_undef_1, a_3, v1_0), a_5,
+             Init_undef_2, a_5, v1_0).
+Let a_13 = memcpy(memcpy(a_12, a_3, Init_undef_3, a_3, v1_0), a_7,
+             Init_undef_4, a_7, v1_0).
+Let a_14 = a_13[a_9 <- true].
+Let a_15 = shift_uint32(v4_0, v8_0).
+Let a_16 = a_8[a_15].
+Let a_17 = shift_uint32(v2_0, v8_0).
+Let a_18 = a_8[a_17].
+Let a_19 = shift_uint32(v2_0, 0).
+Let a_20 = shift_uint32(v6_0, 0).
+Let x = 2 * v1_0.
+Assume {
+  Type: is_uint32_chunk(Mint_0) /\ is_uint32(v1_0) /\ is_uint32(v8_0) /\
+      is_uint32(v8_1) /\ is_uint32(v8_2) /\ is_uint32_chunk(m) /\
+      is_uint32_chunk(m_1) /\ is_uint32_chunk(m_2) /\ is_uint32_chunk(a_4) /\
+      is_uint32_chunk(a_6) /\ is_uint32_chunk(a_8) /\
+      is_uint32_chunk(a_10) /\ is_uint32(a_18) /\ is_uint32(a_16).
+  (* Heap *)
+  Type: (region(v2_0.base) <= 0) /\ (region(v3_0.base) <= 0) /\
+      (region(v4_0.base) <= 0) /\ (region(v5_0.base) <= 0) /\
+      (region(v6_0.base) <= 0) /\ (region(v7_0.base) <= 0) /\
+      linked(Malloc_0) /\ scinit(Init_0).
+  (* Goal *)
+  When: (0 <= i) /\ (i < v1_0).
+  (* Pre-condition 'size' *)
+  Have: (0 < v1_0) /\ (v1_0 <= 1024).
+  (* Pre-condition 'data_valid' *)
+  Have: valid_rw(Malloc_0, a_19, v1_0).
+  (* Pre-condition 'permutation_valid' *)
+  Have: valid_rw(Malloc_0, a_7, v1_0).
+  (* Pre-condition 'target_valid' *)
+  Have: valid_rw(Malloc_0, a_5, v1_0).
+  (* Pre-condition 'used_valid' *)
+  Have: valid_rw(Malloc_0, a_3, v1_0).
+  (* Pre-condition 'trace_valid' *)
+  Have: valid_rw(Malloc_0, a_20, x).
+  (* Pre-condition 'out_valid' *)
+  Have: valid_rw(Malloc_0, a, 3).
+  (* Pre-condition 'disjoint' *)
+  Have: separated(a_19, v1_0, a_7, v1_0) /\
+      separated(a_19, v1_0, a_5, v1_0) /\ separated(a_19, v1_0, a_3, v1_0) /\
+      separated(a_19, v1_0, a_20, x) /\ separated(a_19, v1_0, a, 3) /\
+      separated(a_7, v1_0, a_5, v1_0) /\ separated(a_7, v1_0, a_3, v1_0) /\
+      separated(a_7, v1_0, a_20, x) /\ separated(a_7, v1_0, a, 3) /\
+      separated(a_5, v1_0, a_3, v1_0) /\ separated(a_5, v1_0, a_20, x) /\
+      separated(a_5, v1_0, a, 3) /\ separated(a_3, v1_0, a_20, x) /\
+      separated(a_3, v1_0, a, 3) /\ separated(a_20, x, a, 3).
+  (* Pre-condition 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (Init_0[shift_uint32(v2_0, i_1)]=true))).
+  (* Pre-condition 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (Init_0[shift_uint32(v3_0, i_1)]=true))).
+  (* Pre-condition 'permutation_input' *)
+  Have: (forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+         (Mint_0[shift_uint32(v3_0, i_1)] < v1_0)))) /\
+      (forall i_2,i_1 : Z.
+       ((Mint_0[shift_uint32(v3_0, i_2)] = Mint_0[shift_uint32(v3_0, i_1)]) ->
+       ((0 <= i_2) -> ((i_2 < v1_0) -> ((0 <= i_1) -> ((i_1 < v1_0) ->
+       (i_2 = i_1))))))) /\
+      (forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+       (exists i_2 : Z. (Mint_0[shift_uint32(v3_0, i_2)] = i_1) /\
+        (0 <= i_2) /\ (i_2 < v1_0))))).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a, 1).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_1, 1).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_2, 1).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_21 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (m_2[a_21] = Mint_0[a_21]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (m_3[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (m_3[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_21 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (m_2[a_21] = Mint_0[a_21]))).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_21 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_4[a_21] = Mint_0[a_21]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_11[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_11[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_21 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_4[a_21] = Mint_0[a_21]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_11[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_4[a] = 0) /\ (a_4[a_1] = 0) /\ (a_4[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_2 <= v1_0) /\ (0 <= v8_2).
+  (* Invariant 'clear' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_2) ->
+      (a_4[shift_uint32(v5_0, i_1)] = 0))).
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_2) ->
+      (a_11[shift_uint32(v5_0, i_1)]=true))).
+  (* Else *)
+  Have: v1_0 <= v8_2.
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_11[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_21 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_6[a_21] = Mint_0[a_21]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_12[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_12[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_21 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_6[a_21] = Mint_0[a_21]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_12[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_6[a] = 0) /\ (a_6[a_1] = 0) /\ (a_6[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_1 <= v1_0) /\ (0 <= v8_1).
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_12[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'filled_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_1) ->
+      (a_12[shift_uint32(v4_0, Mint_0[shift_uint32(v3_0, i_1)])]=true))).
+  (* Else *)
+  Have: v1_0 <= v8_1.
+  (* Invariant 'target_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_12[shift_uint32(v4_0, i_1)]=true))).
+  (* Invariant 'permutation_bounds' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_6[shift_uint32(v3_0, i_1)] < v1_0))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_13[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_21 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_8[a_21] = Mint_0[a_21]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_13[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_8[a] = 0) /\ (a_8[a_1] = 0) /\ (a_8[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_0 <= v1_0) /\ (0 <= v8_0).
+  (* Invariant 'target_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_13[shift_uint32(v4_0, i_1)]=true))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_13[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'used_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_13[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'permutation_bounds' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_8[shift_uint32(v3_0, i_1)] < v1_0))).
+  (* Then *)
+  Have: v8_0 < v1_0.
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rd(Malloc_0, a_17, 1).
+  (* Assertion 'rte,initialization' *)
+  Have: (a_13[a_17]=true).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rd(Malloc_0, a_15, 1).
+  (* Assertion 'rte,initialization' *)
+  Have: (a_13[a_15]=true).
+  (* Else *)
+  Have: a_16 != a_18.
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_9, 1).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_14[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_21 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_10[a_21] = Mint_0[a_21]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_14[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_10[a] = 0) /\ (a_10[a_1] = 0) /\ (a_10[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: to_uint32(1 + v8_0) <= v1_0.
+}
+Prove: (a_14[shift_uint32(v4_0, i)]=true).
+Prover CVC5 1.3.4 returns Valid (Qed:155ms) (1.1s) (128896)
+
+------------------------------------------------------------
+
+Goal Establishment of Invariant 'target_initialized' ("build/frama-c/initialization-controls/baseline/annotated.c", line 156):
+Tags: Else Else Else Else Else.
+Let a = shift_uint32(v7_0, 0).
+Let m = Mint_0[a <- 0].
+Let a_1 = shift_uint32(v7_0, 1).
+Let m_1 = m[a_1 <- 0].
+Let a_2 = shift_uint32(v7_0, 2).
+Let m_2 = m_1[a_2 <- 0].
+Let a_3 = shift_uint32(v5_0, 0).
+Let a_4 = memcpy(m_2, a_3, Mint_undef_0, a_3, v1_0).
+Let a_5 = shift_uint32(v4_0, 0).
+Let a_6 = memcpy(memcpy(a_4, a_3, Mint_undef_1, a_3, v1_0), a_5,
+            Mint_undef_2, a_5, v1_0).
+Let a_7 = shift_uint32(v3_0, 0).
+Let a_8 = memcpy(memcpy(a_6, a_3, Mint_undef_3, a_3, v1_0), a_7,
+            Mint_undef_4, a_7, v1_0).
+Let m_3 = Init_0[a <- true][a_1 <- true][a_2 <- true].
+Let a_9 = memcpy(m_3, a_3, Init_undef_0, a_3, v1_0).
+Let a_10 = memcpy(memcpy(a_9, a_3, Init_undef_1, a_3, v1_0), a_5,
+             Init_undef_2, a_5, v1_0).
+Let a_11 = memcpy(memcpy(a_10, a_3, Init_undef_3, a_3, v1_0), a_7,
+             Init_undef_4, a_7, v1_0).
+Let a_12 = shift_uint32(v2_0, 0).
+Let a_13 = shift_uint32(v6_0, 0).
+Let x = 2 * v1_0.
+Assume {
+  Type: is_uint32_chunk(Mint_0) /\ is_uint32(v1_0) /\ is_uint32(v8_0) /\
+      is_uint32(v8_1) /\ is_uint32(v8_2) /\ is_uint32_chunk(m) /\
+      is_uint32_chunk(m_1) /\ is_uint32_chunk(m_2) /\ is_uint32_chunk(a_4) /\
+      is_uint32_chunk(a_6) /\ is_uint32_chunk(a_8).
+  (* Heap *)
+  Type: (region(v2_0.base) <= 0) /\ (region(v3_0.base) <= 0) /\
+      (region(v4_0.base) <= 0) /\ (region(v5_0.base) <= 0) /\
+      (region(v6_0.base) <= 0) /\ (region(v7_0.base) <= 0) /\
+      linked(Malloc_0) /\ scinit(Init_0).
+  (* Goal *)
+  When: (0 <= i) /\ (i < v1_0).
+  (* Pre-condition 'size' *)
+  Have: (0 < v1_0) /\ (v1_0 <= 1024).
+  (* Pre-condition 'data_valid' *)
+  Have: valid_rw(Malloc_0, a_12, v1_0).
+  (* Pre-condition 'permutation_valid' *)
+  Have: valid_rw(Malloc_0, a_7, v1_0).
+  (* Pre-condition 'target_valid' *)
+  Have: valid_rw(Malloc_0, a_5, v1_0).
+  (* Pre-condition 'used_valid' *)
+  Have: valid_rw(Malloc_0, a_3, v1_0).
+  (* Pre-condition 'trace_valid' *)
+  Have: valid_rw(Malloc_0, a_13, x).
+  (* Pre-condition 'out_valid' *)
+  Have: valid_rw(Malloc_0, a, 3).
+  (* Pre-condition 'disjoint' *)
+  Have: separated(a_12, v1_0, a_7, v1_0) /\
+      separated(a_12, v1_0, a_5, v1_0) /\ separated(a_12, v1_0, a_3, v1_0) /\
+      separated(a_12, v1_0, a_13, x) /\ separated(a_12, v1_0, a, 3) /\
+      separated(a_7, v1_0, a_5, v1_0) /\ separated(a_7, v1_0, a_3, v1_0) /\
+      separated(a_7, v1_0, a_13, x) /\ separated(a_7, v1_0, a, 3) /\
+      separated(a_5, v1_0, a_3, v1_0) /\ separated(a_5, v1_0, a_13, x) /\
+      separated(a_5, v1_0, a, 3) /\ separated(a_3, v1_0, a_13, x) /\
+      separated(a_3, v1_0, a, 3) /\ separated(a_13, x, a, 3).
+  (* Pre-condition 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (Init_0[shift_uint32(v2_0, i_1)]=true))).
+  (* Pre-condition 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (Init_0[shift_uint32(v3_0, i_1)]=true))).
+  (* Pre-condition 'permutation_input' *)
+  Have: (forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+         (Mint_0[shift_uint32(v3_0, i_1)] < v1_0)))) /\
+      (forall i_2,i_1 : Z.
+       ((Mint_0[shift_uint32(v3_0, i_2)] = Mint_0[shift_uint32(v3_0, i_1)]) ->
+       ((0 <= i_2) -> ((i_2 < v1_0) -> ((0 <= i_1) -> ((i_1 < v1_0) ->
+       (i_2 = i_1))))))) /\
+      (forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+       (exists i_2 : Z. (Mint_0[shift_uint32(v3_0, i_2)] = i_1) /\
+        (0 <= i_2) /\ (i_2 < v1_0))))).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a, 1).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_1, 1).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_2, 1).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_14 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (m_2[a_14] = Mint_0[a_14]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (m_3[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (m_3[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_14 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (m_2[a_14] = Mint_0[a_14]))).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_14 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_4[a_14] = Mint_0[a_14]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_9[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_9[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_14 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_4[a_14] = Mint_0[a_14]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_9[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_4[a] = 0) /\ (a_4[a_1] = 0) /\ (a_4[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_2 <= v1_0) /\ (0 <= v8_2).
+  (* Invariant 'clear' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_2) ->
+      (a_4[shift_uint32(v5_0, i_1)] = 0))).
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_2) ->
+      (a_9[shift_uint32(v5_0, i_1)]=true))).
+  (* Else *)
+  Have: v1_0 <= v8_2.
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_9[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_14 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_6[a_14] = Mint_0[a_14]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_10[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_10[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_14 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_6[a_14] = Mint_0[a_14]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_10[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_6[a] = 0) /\ (a_6[a_1] = 0) /\ (a_6[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_1 <= v1_0) /\ (0 <= v8_1).
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_10[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'filled_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_1) ->
+      (a_10[shift_uint32(v4_0, Mint_0[shift_uint32(v3_0, i_1)])]=true))).
+  (* Else *)
+  Have: v1_0 <= v8_1.
+  (* Invariant 'target_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_10[shift_uint32(v4_0, i_1)]=true))).
+  (* Invariant 'permutation_bounds' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_6[shift_uint32(v3_0, i_1)] < v1_0))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_11[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_14 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_8[a_14] = Mint_0[a_14]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_11[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_8[a] = 0) /\ (a_8[a_1] = 0) /\ (a_8[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_0 <= v1_0) /\ (0 <= v8_0).
+  (* Invariant 'target_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_11[shift_uint32(v4_0, i_1)]=true))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_11[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'used_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_11[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'permutation_bounds' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_8[shift_uint32(v3_0, i_1)] < v1_0))).
+  (* Else *)
+  Have: v1_0 <= v8_0.
+}
+Prove: (a_11[shift_uint32(v4_0, i)]=true).
+Prover CVC5 1.3.4 returns Valid (Qed:195ms) (310ms) (82702)
+
+------------------------------------------------------------
+
+Goal Preservation of Invariant 'target_initialized' ("build/frama-c/initialization-controls/baseline/annotated.c", line 156) (1/3):
+Tags: Then Then Then Then Then Else Else Else Else Else Else.
+Let a = shift_uint32(v7_0, 0).
+Let m = Mint_0[a <- 0].
+Let a_1 = shift_uint32(v7_0, 1).
+Let m_1 = m[a_1 <- 0].
+Let a_2 = shift_uint32(v7_0, 2).
+Let m_2 = m_1[a_2 <- 0].
+Let a_3 = shift_uint32(v5_0, 0).
+Let a_4 = memcpy(m_2, a_3, Mint_undef_0, a_3, v1_0).
+Let a_5 = shift_uint32(v4_0, 0).
+Let a_6 = memcpy(memcpy(a_4, a_3, Mint_undef_1, a_3, v1_0), a_5,
+            Mint_undef_2, a_5, v1_0).
+Let a_7 = shift_uint32(v3_0, 0).
+Let a_8 = memcpy(memcpy(a_6, a_3, Mint_undef_3, a_3, v1_0), a_7,
+            Mint_undef_4, a_7, v1_0).
+Let a_9 = memcpy(memcpy(a_8, a_3, Mint_undef_5, a_3, v1_0), a_7,
+            Mint_undef_6, a_7, v1_0).
+Let a_10 = shift_uint32(v3_0, v8_0).
+Let a_11 = a_9[a_10 <- v9_0].
+Let a_12 = shift_uint32(v5_0, v9_0).
+Let a_13 = a_11[a_12 <- 1].
+Let m_3 = Init_0[a <- true][a_1 <- true][a_2 <- true].
+Let a_14 = memcpy(m_3, a_3, Init_undef_0, a_3, v1_0).
+Let a_15 = memcpy(memcpy(a_14, a_3, Init_undef_1, a_3, v1_0), a_5,
+             Init_undef_2, a_5, v1_0).
+Let a_16 = memcpy(memcpy(a_15, a_3, Init_undef_3, a_3, v1_0), a_7,
+             Init_undef_4, a_7, v1_0).
+Let a_17 = memcpy(memcpy(a_16, a_3, Init_undef_5, a_3, v1_0), a_7,
+             Init_undef_6, a_7, v1_0).
+Let a_18 = a_17[a_10 <- true][a_12 <- true].
+Let a_19 = shift_uint32(v4_0, v9_0).
+Let a_20 = a_9[a_19].
+Let a_21 = shift_uint32(v2_0, v8_0).
+Let a_22 = a_9[a_21].
+Let a_23 = shift_uint32(v4_0, v8_0).
+Let a_24 = a_9[a_23].
+Let a_25 = shift_uint32(v2_0, 0).
+Let a_26 = shift_uint32(v6_0, 0).
+Let x = 2 * v1_0.
+Assume {
+  Type: is_uint32_chunk(Mint_0) /\ is_uint32(v1_0) /\ is_uint32(v8_0) /\
+      is_uint32(v8_1) /\ is_uint32(v8_2) /\ is_uint32(v8_3) /\
+      is_uint32(v9_0) /\ is_uint32_chunk(m) /\ is_uint32_chunk(m_1) /\
+      is_uint32_chunk(m_2) /\ is_uint32_chunk(a_4) /\ is_uint32_chunk(a_6) /\
+      is_uint32_chunk(a_8) /\ is_uint32_chunk(a_9) /\
+      is_uint32_chunk(a_11) /\ is_uint32(a_22) /\ is_uint32(a_24) /\
+      is_uint32(a_20) /\ is_uint32_chunk(a_13).
+  (* Heap *)
+  Type: (region(v2_0.base) <= 0) /\ (region(v3_0.base) <= 0) /\
+      (region(v4_0.base) <= 0) /\ (region(v5_0.base) <= 0) /\
+      (region(v6_0.base) <= 0) /\ (region(v7_0.base) <= 0) /\
+      linked(Malloc_0) /\ scinit(Init_0).
+  (* Goal *)
+  When: (0 <= i) /\ (i < v1_0).
+  (* Pre-condition 'size' *)
+  Have: (0 < v1_0) /\ (v1_0 <= 1024).
+  (* Pre-condition 'data_valid' *)
+  Have: valid_rw(Malloc_0, a_25, v1_0).
+  (* Pre-condition 'permutation_valid' *)
+  Have: valid_rw(Malloc_0, a_7, v1_0).
+  (* Pre-condition 'target_valid' *)
+  Have: valid_rw(Malloc_0, a_5, v1_0).
+  (* Pre-condition 'used_valid' *)
+  Have: valid_rw(Malloc_0, a_3, v1_0).
+  (* Pre-condition 'trace_valid' *)
+  Have: valid_rw(Malloc_0, a_26, x).
+  (* Pre-condition 'out_valid' *)
+  Have: valid_rw(Malloc_0, a, 3).
+  (* Pre-condition 'disjoint' *)
+  Have: separated(a_25, v1_0, a_7, v1_0) /\
+      separated(a_25, v1_0, a_5, v1_0) /\ separated(a_25, v1_0, a_3, v1_0) /\
+      separated(a_25, v1_0, a_26, x) /\ separated(a_25, v1_0, a, 3) /\
+      separated(a_7, v1_0, a_5, v1_0) /\ separated(a_7, v1_0, a_3, v1_0) /\
+      separated(a_7, v1_0, a_26, x) /\ separated(a_7, v1_0, a, 3) /\
+      separated(a_5, v1_0, a_3, v1_0) /\ separated(a_5, v1_0, a_26, x) /\
+      separated(a_5, v1_0, a, 3) /\ separated(a_3, v1_0, a_26, x) /\
+      separated(a_3, v1_0, a, 3) /\ separated(a_26, x, a, 3).
+  (* Pre-condition 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (Init_0[shift_uint32(v2_0, i_1)]=true))).
+  (* Pre-condition 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (Init_0[shift_uint32(v3_0, i_1)]=true))).
+  (* Pre-condition 'permutation_input' *)
+  Have: (forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+         (Mint_0[shift_uint32(v3_0, i_1)] < v1_0)))) /\
+      (forall i_2,i_1 : Z.
+       ((Mint_0[shift_uint32(v3_0, i_2)] = Mint_0[shift_uint32(v3_0, i_1)]) ->
+       ((0 <= i_2) -> ((i_2 < v1_0) -> ((0 <= i_1) -> ((i_1 < v1_0) ->
+       (i_2 = i_1))))))) /\
+      (forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+       (exists i_2 : Z. (Mint_0[shift_uint32(v3_0, i_2)] = i_1) /\
+        (0 <= i_2) /\ (i_2 < v1_0))))).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a, 1).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_1, 1).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_2, 1).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_27 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (m_2[a_27] = Mint_0[a_27]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (m_3[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (m_3[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_27 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (m_2[a_27] = Mint_0[a_27]))).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_27 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_4[a_27] = Mint_0[a_27]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_14[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_14[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_27 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_4[a_27] = Mint_0[a_27]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_14[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_4[a] = 0) /\ (a_4[a_1] = 0) /\ (a_4[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_3 <= v1_0) /\ (0 <= v8_3).
+  (* Invariant 'clear' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_3) ->
+      (a_4[shift_uint32(v5_0, i_1)] = 0))).
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_3) ->
+      (a_14[shift_uint32(v5_0, i_1)]=true))).
+  (* Else *)
+  Have: v1_0 <= v8_3.
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_14[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_27 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_6[a_27] = Mint_0[a_27]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_15[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_15[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_27 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_6[a_27] = Mint_0[a_27]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_15[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_6[a] = 0) /\ (a_6[a_1] = 0) /\ (a_6[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_2 <= v1_0) /\ (0 <= v8_2).
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_15[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'filled_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_2) ->
+      (a_15[shift_uint32(v4_0, Mint_0[shift_uint32(v3_0, i_1)])]=true))).
+  (* Else *)
+  Have: v1_0 <= v8_2.
+  (* Invariant 'target_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_15[shift_uint32(v4_0, i_1)]=true))).
+  (* Invariant 'permutation_bounds' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_6[shift_uint32(v3_0, i_1)] < v1_0))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_16[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_27 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_8[a_27] = Mint_0[a_27]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_16[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_8[a] = 0) /\ (a_8[a_1] = 0) /\ (a_8[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_1 <= v1_0) /\ (0 <= v8_1).
+  (* Invariant 'target_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_16[shift_uint32(v4_0, i_1)]=true))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_16[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'used_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_16[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'permutation_bounds' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_8[shift_uint32(v3_0, i_1)] < v1_0))).
+  (* Else *)
+  Have: v1_0 <= v8_1.
+  (* Loop assigns ... *)
+  Have: ((Init_v9_0=true) -> (Init_v9_1=true)).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_17[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_27 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_9[a_27] = Mint_0[a_27]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_17[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_9[a] = 0) /\ (a_9[a_1] = 0) /\ (a_9[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_0 <= v1_0) /\ (0 <= v8_0).
+  (* Invariant 'target_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_17[shift_uint32(v4_0, i_1)]=true))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_17[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'used_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_17[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'permutation_bounds' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_9[shift_uint32(v3_0, i_1)] < v1_0))).
+  (* Then *)
+  Have: v8_0 < v1_0.
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rd(Malloc_0, a_21, 1).
+  (* Assertion 'rte,initialization' *)
+  Have: (a_17[a_21]=true).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rd(Malloc_0, a_23, 1).
+  (* Assertion 'rte,initialization' *)
+  Have: (a_17[a_23]=true).
+  (* Then *)
+  Have: a_24 != a_22.
+  (* Invariant 'bounds' *)
+  Have: (v9_0 <= v1_0) /\ (0 <= v9_0).
+  (* Then *)
+  Have: v9_0 < v1_0.
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rd(Malloc_0, a_12, 1).
+  (* Assertion 'rte,initialization' *)
+  Have: (a_17[a_12]=true).
+  (* Then *)
+  Have: a_9[a_12] = 0.
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rd(Malloc_0, a_19, 1).
+  (* Assertion 'rte,initialization' *)
+  Have: (a_17[a_19]=true).
+  (* Then *)
+  Have: a_20 = a_22.
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_10, 1).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_12, 1).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_18[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_27 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_13[a_27] = Mint_0[a_27]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_18[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_13[a] = 0) /\ (a_13[a_1] = 0) /\ (a_13[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: to_uint32(1 + v8_0) <= v1_0.
+}
+Prove: (a_18[shift_uint32(v4_0, i)]=true).
+Prover CVC5 1.3.4 returns Valid (Qed:291ms) (4.2s) (293002)
+
+------------------------------------------------------------
+
+Goal Preservation of Invariant 'target_initialized' ("build/frama-c/initialization-controls/baseline/annotated.c", line 156) (2/3):
+Tags: Then Then Else Else Else Else Else Else Else.
+Prove: true.
+Prover Qed returns Valid (87ms)
+
+------------------------------------------------------------
+
+Goal Preservation of Invariant 'target_initialized' ("build/frama-c/initialization-controls/baseline/annotated.c", line 156) (3/3):
+Tags: Then Else Else Else Else Else Else.
+Let a = shift_uint32(v7_0, 0).
+Let m = Mint_0[a <- 0].
+Let a_1 = shift_uint32(v7_0, 1).
+Let m_1 = m[a_1 <- 0].
+Let a_2 = shift_uint32(v7_0, 2).
+Let m_2 = m_1[a_2 <- 0].
+Let a_3 = shift_uint32(v5_0, 0).
+Let a_4 = memcpy(m_2, a_3, Mint_undef_0, a_3, v1_0).
+Let a_5 = shift_uint32(v4_0, 0).
+Let a_6 = memcpy(memcpy(a_4, a_3, Mint_undef_1, a_3, v1_0), a_5,
+            Mint_undef_2, a_5, v1_0).
+Let a_7 = shift_uint32(v3_0, 0).
+Let a_8 = memcpy(memcpy(a_6, a_3, Mint_undef_3, a_3, v1_0), a_7,
+            Mint_undef_4, a_7, v1_0).
+Let a_9 = memcpy(memcpy(a_8, a_3, Mint_undef_5, a_3, v1_0), a_7,
+            Mint_undef_6, a_7, v1_0).
+Let a_10 = shift_uint32(v4_0, v8_0).
+Let a_11 = a_9[a_10].
+Let a_12 = shift_uint32(v2_0, v8_0).
+Let a_13 = a_9[a_12].
+Let m_3 = Init_0[a <- true][a_1 <- true][a_2 <- true].
+Let a_14 = memcpy(m_3, a_3, Init_undef_0, a_3, v1_0).
+Let a_15 = memcpy(memcpy(a_14, a_3, Init_undef_1, a_3, v1_0), a_5,
+             Init_undef_2, a_5, v1_0).
+Let a_16 = memcpy(memcpy(a_15, a_3, Init_undef_3, a_3, v1_0), a_7,
+             Init_undef_4, a_7, v1_0).
+Let a_17 = memcpy(memcpy(a_16, a_3, Init_undef_5, a_3, v1_0), a_7,
+             Init_undef_6, a_7, v1_0).
+Let a_18 = shift_uint32(v2_0, 0).
+Let a_19 = shift_uint32(v6_0, 0).
+Let x = 2 * v1_0.
+Assume {
+  Type: is_uint32_chunk(Mint_0) /\ is_uint32(v1_0) /\ is_uint32(v8_0) /\
+      is_uint32(v8_1) /\ is_uint32(v8_2) /\ is_uint32(v8_3) /\
+      is_uint32_chunk(m) /\ is_uint32_chunk(m_1) /\ is_uint32_chunk(m_2) /\
+      is_uint32_chunk(a_4) /\ is_uint32_chunk(a_6) /\ is_uint32_chunk(a_8) /\
+      is_uint32_chunk(a_9) /\ is_uint32(a_13) /\ is_uint32(a_11).
+  (* Heap *)
+  Type: (region(v2_0.base) <= 0) /\ (region(v3_0.base) <= 0) /\
+      (region(v4_0.base) <= 0) /\ (region(v5_0.base) <= 0) /\
+      (region(v6_0.base) <= 0) /\ (region(v7_0.base) <= 0) /\
+      linked(Malloc_0) /\ scinit(Init_0).
+  (* Goal *)
+  When: (0 <= i) /\ (i < v1_0).
+  (* Pre-condition 'size' *)
+  Have: (0 < v1_0) /\ (v1_0 <= 1024).
+  (* Pre-condition 'data_valid' *)
+  Have: valid_rw(Malloc_0, a_18, v1_0).
+  (* Pre-condition 'permutation_valid' *)
+  Have: valid_rw(Malloc_0, a_7, v1_0).
+  (* Pre-condition 'target_valid' *)
+  Have: valid_rw(Malloc_0, a_5, v1_0).
+  (* Pre-condition 'used_valid' *)
+  Have: valid_rw(Malloc_0, a_3, v1_0).
+  (* Pre-condition 'trace_valid' *)
+  Have: valid_rw(Malloc_0, a_19, x).
+  (* Pre-condition 'out_valid' *)
+  Have: valid_rw(Malloc_0, a, 3).
+  (* Pre-condition 'disjoint' *)
+  Have: separated(a_18, v1_0, a_7, v1_0) /\
+      separated(a_18, v1_0, a_5, v1_0) /\ separated(a_18, v1_0, a_3, v1_0) /\
+      separated(a_18, v1_0, a_19, x) /\ separated(a_18, v1_0, a, 3) /\
+      separated(a_7, v1_0, a_5, v1_0) /\ separated(a_7, v1_0, a_3, v1_0) /\
+      separated(a_7, v1_0, a_19, x) /\ separated(a_7, v1_0, a, 3) /\
+      separated(a_5, v1_0, a_3, v1_0) /\ separated(a_5, v1_0, a_19, x) /\
+      separated(a_5, v1_0, a, 3) /\ separated(a_3, v1_0, a_19, x) /\
+      separated(a_3, v1_0, a, 3) /\ separated(a_19, x, a, 3).
+  (* Pre-condition 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (Init_0[shift_uint32(v2_0, i_1)]=true))).
+  (* Pre-condition 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (Init_0[shift_uint32(v3_0, i_1)]=true))).
+  (* Pre-condition 'permutation_input' *)
+  Have: (forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+         (Mint_0[shift_uint32(v3_0, i_1)] < v1_0)))) /\
+      (forall i_2,i_1 : Z.
+       ((Mint_0[shift_uint32(v3_0, i_2)] = Mint_0[shift_uint32(v3_0, i_1)]) ->
+       ((0 <= i_2) -> ((i_2 < v1_0) -> ((0 <= i_1) -> ((i_1 < v1_0) ->
+       (i_2 = i_1))))))) /\
+      (forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+       (exists i_2 : Z. (Mint_0[shift_uint32(v3_0, i_2)] = i_1) /\
+        (0 <= i_2) /\ (i_2 < v1_0))))).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a, 1).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_1, 1).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rw(Malloc_0, a_2, 1).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_20 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (m_2[a_20] = Mint_0[a_20]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (m_3[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (m_3[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_20 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (m_2[a_20] = Mint_0[a_20]))).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_20 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_4[a_20] = Mint_0[a_20]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_14[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_14[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_20 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_4[a_20] = Mint_0[a_20]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_14[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_4[a] = 0) /\ (a_4[a_1] = 0) /\ (a_4[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_3 <= v1_0) /\ (0 <= v8_3).
+  (* Invariant 'clear' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_3) ->
+      (a_4[shift_uint32(v5_0, i_1)] = 0))).
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_3) ->
+      (a_14[shift_uint32(v5_0, i_1)]=true))).
+  (* Else *)
+  Have: v1_0 <= v8_3.
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_14[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'original_permutation' *)
+  Have: forall i_1 : Z. let a_20 = shift_uint32(v3_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_6[a_20] = Mint_0[a_20]))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_15[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_15[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_20 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_6[a_20] = Mint_0[a_20]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_15[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_6[a] = 0) /\ (a_6[a_1] = 0) /\ (a_6[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_2 <= v1_0) /\ (0 <= v8_2).
+  (* Invariant 'initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_15[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'filled_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v8_2) ->
+      (a_15[shift_uint32(v4_0, Mint_0[shift_uint32(v3_0, i_1)])]=true))).
+  (* Else *)
+  Have: v1_0 <= v8_2.
+  (* Invariant 'target_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_15[shift_uint32(v4_0, i_1)]=true))).
+  (* Invariant 'permutation_bounds' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_6[shift_uint32(v3_0, i_1)] < v1_0))).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_16[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_20 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_8[a_20] = Mint_0[a_20]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_16[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_8[a] = 0) /\ (a_8[a_1] = 0) /\ (a_8[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_1 <= v1_0) /\ (0 <= v8_1).
+  (* Invariant 'target_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_16[shift_uint32(v4_0, i_1)]=true))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_16[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'used_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_16[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'permutation_bounds' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_8[shift_uint32(v3_0, i_1)] < v1_0))).
+  (* Else *)
+  Have: v1_0 <= v8_1.
+  (* Loop assigns ... *)
+  Have: ((Init_v9_0=true) -> (Init_v9_1=true)).
+  (* Invariant 'data_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_17[shift_uint32(v2_0, i_1)]=true))).
+  (* Invariant 'data_unchanged' *)
+  Have: forall i_1 : Z. let a_20 = shift_uint32(v2_0, i_1) in ((0 <= i_1) ->
+      ((i_1 < v1_0) -> (a_9[a_20] = Mint_0[a_20]))).
+  (* Invariant 'out_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 <= 2) ->
+      (a_17[shift_uint32(v7_0, i_1)]=true))).
+  (* Invariant 'out_clear' *)
+  Have: (a_9[a] = 0) /\ (a_9[a_1] = 0) /\ (a_9[a_2] = 0).
+  (* Invariant 'bounds' *)
+  Have: (v8_0 <= v1_0) /\ (0 <= v8_0).
+  (* Invariant 'target_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_17[shift_uint32(v4_0, i_1)]=true))).
+  (* Invariant 'permutation_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_17[shift_uint32(v3_0, i_1)]=true))).
+  (* Invariant 'used_initialized' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_17[shift_uint32(v5_0, i_1)]=true))).
+  (* Invariant 'permutation_bounds' *)
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < v1_0) ->
+      (a_9[shift_uint32(v3_0, i_1)] < v1_0))).
+  (* Then *)
+  Have: v8_0 < v1_0.
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rd(Malloc_0, a_12, 1).
+  (* Assertion 'rte,initialization' *)
+  Have: (a_17[a_12]=true).
+  (* Assertion 'rte,mem_access' *)
+  Have: valid_rd(Malloc_0, a_10, 1).
+  (* Assertion 'rte,initialization' *)
+  Have: (a_17[a_10]=true).
+  (* Else *)
+  Have: a_11 = a_13.
+  (* Invariant 'bounds' *)
+  Have: to_uint32(1 + v8_0) <= v1_0.
+}
+Prove: (a_17[shift_uint32(v4_0, i)]=true).
+Prover CVC5 1.3.4 returns Valid (Qed:267ms) (394ms) (97005)
+
+------------------------------------------------------------

@@ -1,0 +1,352 @@
+{
+  "source_sha256": {
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/permute.c": "a120dccaaa1a7783231f7b4482f76f515ef6c099f4e0e73279f1228e634cfb78",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/permute.h": "a081421bd698f8b61fe9eee3e49d2b24b7a5c9d06d8772c43a090856b21ba8e6",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/rejected-driver.c": "fffa6e4b82a67219100e5665762a6f00f70cf34428cea02aaaa6c9dd2d05e50f",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/completion.c": "412304ced793b89bd3e9b655547b3e8a2808a4ed85edace82d988bdaa7365c1b",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/completion.py": "75cd4f9c67a776a539654263e32016b68dd625a5fe85ff705f98e6d4e2c55ce7",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/run-rejected.py": "81b4eaf8d17be703dfd9f361bd834c1e6acd2b72c68d7f759290cf0e7d1bc89c",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/klee-shell.nix": "bc124cea25b991a10a5671bef922bdd012bb2674bd28e667436c23c755c9f8fc",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/flake.lock": "c5c80698e4416edf7e411da710bc064c94c2613d28c1cd5ba71d1c544ccc8d70"
+  },
+  "sizes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    8,
+    16,
+    17,
+    18,
+    32,
+    64
+  ],
+  "cases": [
+    {
+      "n": 0,
+      "pass": true,
+      "exit_code": 0,
+      "complete_paths": 2,
+      "partial_paths": 0,
+      "errors": [],
+      "completion": {
+        "witnesses": 2,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "56086fcd127f166f456ae1589cfc85c087e13e091eb08f19ce4549b95fa5e7f2"
+    },
+    {
+      "n": 1,
+      "pass": true,
+      "exit_code": 0,
+      "complete_paths": 1,
+      "partial_paths": 0,
+      "errors": [],
+      "completion": {
+        "witnesses": 1,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "a51faaba11296cf3fcf1984b7869958af265a5101c46452ab9f02e1fda30e64b"
+    },
+    {
+      "n": 2,
+      "pass": true,
+      "exit_code": 0,
+      "complete_paths": 3,
+      "partial_paths": 0,
+      "errors": [],
+      "completion": {
+        "witnesses": 3,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "3837efe6ce9b4746669a3623cccc9529b1ee17e6197e7d7f3208041994cb19d7"
+    },
+    {
+      "n": 3,
+      "pass": true,
+      "exit_code": 0,
+      "complete_paths": 5,
+      "partial_paths": 0,
+      "errors": [],
+      "completion": {
+        "witnesses": 5,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "52305acd122cde38cdbbb40941ca5a51d8b3d7d0c7caec8898b0329769a58feb"
+    },
+    {
+      "n": 4,
+      "pass": true,
+      "exit_code": 0,
+      "complete_paths": 7,
+      "partial_paths": 0,
+      "errors": [],
+      "completion": {
+        "witnesses": 7,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "bce36757df4454d66a936c346f3c1637e7a8bd77473c98acecd9a4702cc714d0"
+    },
+    {
+      "n": 5,
+      "pass": true,
+      "exit_code": 0,
+      "complete_paths": 9,
+      "partial_paths": 0,
+      "errors": [],
+      "completion": {
+        "witnesses": 9,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "9be2cd664327eb3ca1395fcb393a664d82cc8931d26e44206eb85a586da2486a"
+    },
+    {
+      "n": 6,
+      "pass": true,
+      "exit_code": 0,
+      "complete_paths": 11,
+      "partial_paths": 0,
+      "errors": [],
+      "completion": {
+        "witnesses": 11,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "8e346665f4afa6447cb84b2a776f93d700b92a0004fdc51472357d6bd4214fc9"
+    },
+    {
+      "n": 8,
+      "pass": true,
+      "exit_code": 0,
+      "complete_paths": 15,
+      "partial_paths": 0,
+      "errors": [],
+      "completion": {
+        "witnesses": 15,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "8e04a8dbfbef2131aeb58e0238b53d47dcfdacfc7b2e156b6189c5ddaaf834c4"
+    },
+    {
+      "n": 16,
+      "pass": false,
+      "exit_code": 0,
+      "complete_paths": 9,
+      "partial_paths": 22,
+      "errors": [],
+      "completion": {
+        "witnesses": 31,
+        "invalid_witnesses": {
+          "test000010.ktest": "input domain or final completion marker differs",
+          "test000011.ktest": "input domain or final completion marker differs",
+          "test000012.ktest": "input domain or final completion marker differs",
+          "test000013.ktest": "input domain or final completion marker differs",
+          "test000014.ktest": "input domain or final completion marker differs",
+          "test000015.ktest": "input domain or final completion marker differs",
+          "test000016.ktest": "input domain or final completion marker differs",
+          "test000017.ktest": "input domain or final completion marker differs",
+          "test000018.ktest": "input domain or final completion marker differs",
+          "test000019.ktest": "input domain or final completion marker differs",
+          "test000020.ktest": "input domain or final completion marker differs",
+          "test000021.ktest": "input domain or final completion marker differs",
+          "test000022.ktest": "input domain or final completion marker differs",
+          "test000023.ktest": "input domain or final completion marker differs",
+          "test000024.ktest": "input domain or final completion marker differs",
+          "test000025.ktest": "input domain or final completion marker differs",
+          "test000026.ktest": "input domain or final completion marker differs",
+          "test000027.ktest": "input domain or final completion marker differs",
+          "test000028.ktest": "input domain or final completion marker differs",
+          "test000029.ktest": "input domain or final completion marker differs",
+          "test000030.ktest": "input domain or final completion marker differs",
+          "test000031.ktest": "input domain or final completion marker differs"
+        },
+        "pass": false
+      },
+      "changed_sources": [],
+      "linked_sha256": "23d5390599f7e1401a3ca60e04e3bbcf7463efbd1e9df3c19b8cad0f7a48696f"
+    },
+    {
+      "n": 17,
+      "pass": false,
+      "exit_code": 0,
+      "complete_paths": 9,
+      "partial_paths": 24,
+      "errors": [],
+      "completion": {
+        "witnesses": 33,
+        "invalid_witnesses": {
+          "test000010.ktest": "input domain or final completion marker differs",
+          "test000011.ktest": "input domain or final completion marker differs",
+          "test000012.ktest": "input domain or final completion marker differs",
+          "test000013.ktest": "input domain or final completion marker differs",
+          "test000014.ktest": "input domain or final completion marker differs",
+          "test000015.ktest": "input domain or final completion marker differs",
+          "test000016.ktest": "input domain or final completion marker differs",
+          "test000017.ktest": "input domain or final completion marker differs",
+          "test000018.ktest": "input domain or final completion marker differs",
+          "test000019.ktest": "input domain or final completion marker differs",
+          "test000020.ktest": "input domain or final completion marker differs",
+          "test000021.ktest": "input domain or final completion marker differs",
+          "test000022.ktest": "input domain or final completion marker differs",
+          "test000023.ktest": "input domain or final completion marker differs",
+          "test000024.ktest": "input domain or final completion marker differs",
+          "test000025.ktest": "input domain or final completion marker differs",
+          "test000026.ktest": "input domain or final completion marker differs",
+          "test000027.ktest": "input domain or final completion marker differs",
+          "test000028.ktest": "input domain or final completion marker differs",
+          "test000029.ktest": "input domain or final completion marker differs",
+          "test000030.ktest": "input domain or final completion marker differs",
+          "test000031.ktest": "input domain or final completion marker differs",
+          "test000032.ktest": "input domain or final completion marker differs",
+          "test000033.ktest": "input domain or final completion marker differs"
+        },
+        "pass": false
+      },
+      "changed_sources": [],
+      "linked_sha256": "9b104c4c1aa492e934e3087a6697199b7e47c18978411df292c531c556b2cfec"
+    },
+    {
+      "n": 18,
+      "pass": false,
+      "exit_code": 0,
+      "complete_paths": 10,
+      "partial_paths": 25,
+      "errors": [],
+      "completion": {
+        "witnesses": 35,
+        "invalid_witnesses": {
+          "test000011.ktest": "input domain or final completion marker differs",
+          "test000012.ktest": "input domain or final completion marker differs",
+          "test000013.ktest": "input domain or final completion marker differs",
+          "test000014.ktest": "input domain or final completion marker differs",
+          "test000015.ktest": "input domain or final completion marker differs",
+          "test000016.ktest": "input domain or final completion marker differs",
+          "test000017.ktest": "input domain or final completion marker differs",
+          "test000018.ktest": "input domain or final completion marker differs",
+          "test000019.ktest": "input domain or final completion marker differs",
+          "test000020.ktest": "input domain or final completion marker differs",
+          "test000021.ktest": "input domain or final completion marker differs",
+          "test000022.ktest": "input domain or final completion marker differs",
+          "test000023.ktest": "input domain or final completion marker differs",
+          "test000024.ktest": "input domain or final completion marker differs",
+          "test000025.ktest": "input domain or final completion marker differs",
+          "test000026.ktest": "input domain or final completion marker differs",
+          "test000027.ktest": "input domain or final completion marker differs",
+          "test000028.ktest": "input domain or final completion marker differs",
+          "test000029.ktest": "input domain or final completion marker differs",
+          "test000030.ktest": "input domain or final completion marker differs",
+          "test000031.ktest": "input domain or final completion marker differs",
+          "test000032.ktest": "input domain or final completion marker differs",
+          "test000033.ktest": "input domain or final completion marker differs",
+          "test000034.ktest": "input domain or final completion marker differs",
+          "test000035.ktest": "input domain or final completion marker differs"
+        },
+        "pass": false
+      },
+      "changed_sources": [],
+      "linked_sha256": "07fa705d19aedf50d8465a46f510d6c15b13ce29347d9f60c8a0829f5a0628f7"
+    },
+    {
+      "n": 32,
+      "pass": false,
+      "exit_code": 0,
+      "complete_paths": 3,
+      "partial_paths": 28,
+      "errors": [],
+      "completion": {
+        "witnesses": 31,
+        "invalid_witnesses": {
+          "test000004.ktest": "input domain or final completion marker differs",
+          "test000005.ktest": "input domain or final completion marker differs",
+          "test000006.ktest": "input domain or final completion marker differs",
+          "test000007.ktest": "input domain or final completion marker differs",
+          "test000008.ktest": "input domain or final completion marker differs",
+          "test000009.ktest": "input domain or final completion marker differs",
+          "test000010.ktest": "input domain or final completion marker differs",
+          "test000011.ktest": "input domain or final completion marker differs",
+          "test000012.ktest": "input domain or final completion marker differs",
+          "test000013.ktest": "input domain or final completion marker differs",
+          "test000014.ktest": "input domain or final completion marker differs",
+          "test000015.ktest": "input domain or final completion marker differs",
+          "test000016.ktest": "input domain or final completion marker differs",
+          "test000017.ktest": "input domain or final completion marker differs",
+          "test000018.ktest": "input domain or final completion marker differs",
+          "test000019.ktest": "input domain or final completion marker differs",
+          "test000020.ktest": "input domain or final completion marker differs",
+          "test000021.ktest": "input domain or final completion marker differs",
+          "test000022.ktest": "input domain or final completion marker differs",
+          "test000023.ktest": "input domain or final completion marker differs",
+          "test000024.ktest": "input domain or final completion marker differs",
+          "test000025.ktest": "input domain or final completion marker differs",
+          "test000026.ktest": "input domain or final completion marker differs",
+          "test000027.ktest": "input domain or final completion marker differs",
+          "test000028.ktest": "input domain or final completion marker differs",
+          "test000029.ktest": "input domain or final completion marker differs",
+          "test000030.ktest": "input domain or final completion marker differs",
+          "test000031.ktest": "input domain or final completion marker differs"
+        },
+        "pass": false
+      },
+      "changed_sources": [],
+      "linked_sha256": "8c7b7aefc02d551f00dcf7a29d93d6860e820e597f73db9a278dbc3b8f0e79da"
+    },
+    {
+      "n": 64,
+      "pass": false,
+      "exit_code": 0,
+      "complete_paths": 0,
+      "partial_paths": 24,
+      "errors": [],
+      "completion": {
+        "witnesses": 24,
+        "invalid_witnesses": {
+          "test000001.ktest": "input domain or final completion marker differs",
+          "test000002.ktest": "input domain or final completion marker differs",
+          "test000003.ktest": "input domain or final completion marker differs",
+          "test000004.ktest": "input domain or final completion marker differs",
+          "test000005.ktest": "input domain or final completion marker differs",
+          "test000006.ktest": "input domain or final completion marker differs",
+          "test000007.ktest": "input domain or final completion marker differs",
+          "test000008.ktest": "input domain or final completion marker differs",
+          "test000009.ktest": "input domain or final completion marker differs",
+          "test000010.ktest": "input domain or final completion marker differs",
+          "test000011.ktest": "input domain or final completion marker differs",
+          "test000012.ktest": "input domain or final completion marker differs",
+          "test000013.ktest": "input domain or final completion marker differs",
+          "test000014.ktest": "input domain or final completion marker differs",
+          "test000015.ktest": "input domain or final completion marker differs",
+          "test000016.ktest": "input domain or final completion marker differs",
+          "test000017.ktest": "input domain or final completion marker differs",
+          "test000018.ktest": "input domain or final completion marker differs",
+          "test000019.ktest": "input domain or final completion marker differs",
+          "test000020.ktest": "input domain or final completion marker differs",
+          "test000021.ktest": "input domain or final completion marker differs",
+          "test000022.ktest": "input domain or final completion marker differs",
+          "test000023.ktest": "input domain or final completion marker differs",
+          "test000024.ktest": "input domain or final completion marker differs"
+        },
+        "pass": false
+      },
+      "changed_sources": [],
+      "linked_sha256": "608becd98f3a48bafaeb63923ce51255b84ea59959d21454721be6d0862d2444"
+    }
+  ]
+}

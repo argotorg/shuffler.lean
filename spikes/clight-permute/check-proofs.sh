@@ -32,6 +32,7 @@ qualified = [(module, proofs / (module + ".v")) for module in modules]
 qualified += [("Legacy." + module, legacy / (module + ".v"))
               for module in sorted(audit.LEGACY_MODULES)]
 statements = []
+theorems = []
 for module, path in qualified:
     statements.append(f"Require Import {module}.")
     for name in re.findall(
@@ -39,9 +40,16 @@ for module, path in qualified:
         audit.uncomment(path.read_text()),
     ):
         qualified_name = module + "." + name
+        theorems.append(qualified_name)
         statements += ["Goal True.", f'idtac "{qualified_name}".', "Abort.",
                        f"Print Assumptions {qualified_name}."]
 (proofs / "Assumptions.v").write_text("\n".join(statements) + "\n")
+(proofs / "assumption-theorems.txt").write_text("\n".join(theorems) + "\n")
+for name in ("ProofContract.v", "ReachabilityContract.v", "PublicContract.v"):
+    contract = root / "tests/proof-challenge" / name
+    audit.imports(contract.read_text(), set(modules) | {Path(name).stem for name in audit.ALLOWED},
+                  external=("Coq", "Stdlib", "Flocq", "mathcomp"))
+    shutil.copy2(contract, proofs / contract.name)
 checked = modules + ["Legacy." + module for module in sorted(audit.LEGACY_MODULES)]
 checked += ["compcert." + name[:-2].replace("/", ".")
             for name in sorted(audit.ALLOWED) if name.endswith(".v")]
@@ -65,7 +73,16 @@ for source in $(cat source-order.txt); do
 done
 coqc -R ../compcert compcert -Q ../legacy Legacy Assumptions.v \
     > "$spike_dir/build/proof-assumptions.txt"
-coqchk -silent -R ../compcert compcert -Q ../legacy Legacy \
-    $(cat checked-modules.txt)
+python3 "$spike_dir/test-assumptions.py"
+python3 "$spike_dir/check-assumptions.py" "$spike_dir/build/proof-assumptions.txt" \
+    assumption-theorems.txt
+coqc -R ../compcert compcert -Q ../legacy Legacy ProofContract.v
+coqc -R ../compcert compcert -Q ../legacy Legacy ReachabilityContract.v
+coqc -R ../compcert compcert -Q ../legacy Legacy PublicContract.v
+coqchk -silent -o -R ../compcert compcert -Q ../legacy Legacy \
+    $(cat checked-modules.txt) ProofContract ReachabilityContract PublicContract \
+    > "$spike_dir/build/proof-kernel.stdout" \
+    2> "$spike_dir/build/proof-kernel-context.txt"
+python3 "$spike_dir/check-assumptions.py" --kernel "$spike_dir/build/proof-kernel-context.txt"
 printf 'Project, legacy, and allowed CompCert modules pass coqchk\n'
 printf 'Proof assumptions: %s/build/proof-assumptions.txt\n' "$spike_dir"

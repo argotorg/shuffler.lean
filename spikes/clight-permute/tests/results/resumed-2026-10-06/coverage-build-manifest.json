@@ -1,0 +1,23 @@
+{
+  "sources": {
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/permute.c": "a120dccaaa1a7783231f7b4482f76f515ef6c099f4e0e73279f1228e634cfb78",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/permute.h": "a081421bd698f8b61fe9eee3e49d2b24b7a5c9d06d8772c43a090856b21ba8e6",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/shell.nix": "1e111de6d83b1c964cc0cd56951f40a37347432e5f95e4855ed8ac4a401c79e9",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/test.h": "0e004203239597532676e2b9a39022198391894cb9868bac3c175010b35d3a5b",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/check_case.c": "004019e488c7251e5f7f28d2a20e24cf5e8535370b50d4b34ef29db02a98625d",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/guided.c": "ab6f0d910d452dcb1b69f0c10d44b542ac094c5b17e870db5d6ffbdbcd4fa4d4",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/oracle.cpp": "4534e19c88f2dfebf132fd47f194b5c5a408f349c9a604f78b651a94bacee15e",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/build-guided.sh": "269d66d9ac06d0d431a4ceb5537e0615f31741005d1bf0e192e726f59eebc398",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/prepare_oracle.py": "cc14faec3182c3f7f1e7687d32fbfa5a0869aef0356b2d99771dbe32b4ee6c80",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/coverage-manifest.py": "906d31ad89d06fdff0454fa71cac0fc438b41ca9b9cdb8caf6f968180a7bf478",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/flake.lock": "c5c80698e4416edf7e411da710bc064c94c2613d28c1cd5ba71d1c544ccc8d70",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/guided-resumed/oracle/solc_types.inc": "5718984cb5dd08859cac0336e34eff4cd45958b1515d5ccf8a0c9fccaab162db",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/guided-resumed/oracle/solc_mapping.inc": "0cd018ad0c0ba53cbe61362bd6b9d84298a89d54cb44fc4bcf34d4f0d0e6a272",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/guided-resumed/oracle/solc_permute.inc": "6d2864500674270821ee5702ccf1787ef27716d598c98c6cc139e80c67f53476",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/guided-resumed/oracle/solc_emission_helpers.inc": "5dbf3c308fd06da2be1e257ef67b27446054994ebeb550330bdcb7de8a1d40c9",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/guided-resumed/oracle/solc_stack_helpers.inc": "f3da04fdced4d12114c96e8b7614d4ea10d168751394b7aa0f7a662db9108d8d"
+  },
+  "binary": {
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/guided-resumed/coverage/permute-fuzz": "99fc9308b3eed05c83fa3808c4f9f3ed5966ede6a3e4d7bdd5a6344c2e66291d"
+  }
+}

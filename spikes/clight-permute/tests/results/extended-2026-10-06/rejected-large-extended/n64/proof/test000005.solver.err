@@ -1,0 +1,9 @@
+Error: Query timed out (fork).
+File: spikes/clight-permute/permute.c
+Line: 51
+assembly.ll line: 215
+State: 47
+Stack: 
+	#000000215 in permute(64, 124874987143168, 124872839659520, 124877134626816, 124871765917696, 124881429594112, 124849217339392) at spikes/clight-permute/permute.c:51
+	#100000867 in checked_main() at spikes/clight-permute/tests/equiv-alive2/rejected-driver.c:36
+	#200001123 in main() at spikes/clight-permute/tests/equiv-alive2/completion.c:8

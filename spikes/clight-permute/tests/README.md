@@ -120,6 +120,13 @@ report keeps its input snapshot, replay log, raw profile, merged profile,
 LLVM JSON, text metrics, uncovered outcomes, and HTML under
 `build/guided/report.*`. The active fuzz run is unchanged.
 
+`build-guided.sh` records project-source and coverage-binary hashes after
+a completed build. Reporting checks those hashes before replay and again
+before it publishes the summary. Missing manifests, changed sources, or
+changed binaries require a rebuild. A failed build clears the prior
+manifest. Each completed report retains `build-manifest.json`. This binds
+the report to its inputs; it is not a proof of the compiler or the coverage tool.
+
 The report selects the generated `permute.c` and the unmodified
 `solc_permute.inc`. It includes lambdas and macro expansions in the C++
 Permute body. Helper files, the adapter, and standard-library/range-v3

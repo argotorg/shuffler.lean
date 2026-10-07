@@ -1,0 +1,8 @@
+File "./AssignmentSound.v", line 60, characters 8-9:
+Error:
+In environment
+small, large : list ident
+value : expr
+The term "I" has type "True" while it is expected to have type
+ "incl small large -> uses small value = true -> uses large value = true".
+

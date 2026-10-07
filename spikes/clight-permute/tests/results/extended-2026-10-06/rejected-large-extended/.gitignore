@@ -1,0 +1,3 @@
+# Raw queries are retained in query-files.tar.gz with per-file hashes.
+/n32/proof/*.kquery
+/n64/proof/*.kquery

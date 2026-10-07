@@ -1,0 +1,34 @@
+{
+  "pass": true,
+  "results": [
+    {
+      "name": "baseline",
+      "goals": 9,
+      "pending": [],
+      "expected_proof_pass": true,
+      "expected_result_met": true
+    },
+    {
+      "name": "parentheses",
+      "goals": 9,
+      "pending": [],
+      "expected_proof_pass": true,
+      "expected_result_met": true
+    },
+    {
+      "name": "missing-target-store",
+      "goals": 9,
+      "pending": [
+        "typed_ref_permute_loop_invariant_filled_initialized_preserved"
+      ],
+      "expected_proof_pass": false,
+      "expected_result_met": true
+    }
+  ],
+  "production_sha256": "a120dccaaa1a7783231f7b4482f76f515ef6c099f4e0e73279f1228e634cfb78",
+  "sources": {
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/frama-c/annotate.py": "c8376fbdd15b20654f34a004a657e67c5f304be5e5e7c32dda28dedd6bc6e2c1",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/frama-c/run.py": "11f9ba9c1d33c93ce15c8e237208eea73c481fd2accd60588bcbb9503d4d825c",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/frama-c/check_initialization.py": "9b46b1084dab4942ca9f6337f3cf1d8db731c6ba432b8ba12bb019bcb87f9e94"
+  }
+}

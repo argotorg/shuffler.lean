@@ -1,0 +1,15 @@
+In file included from prefixed.c:3:
+In file included from /nix/store/mn2y6cydn5phwf2hxgfc3n7zjf48d5xg-clang-wrapper-21.1.8/resource-root/include/limits.h:25:
+In file included from /nix/store/lbjwxax9n0457lgd83rqwpd1l9lgfl7r-glibc-2.42-84-dev/include/limits.h:26:
+In file included from /nix/store/lbjwxax9n0457lgd83rqwpd1l9lgfl7r-glibc-2.42-84-dev/include/bits/libc-header-start.h:33:
+/nix/store/lbjwxax9n0457lgd83rqwpd1l9lgfl7r-glibc-2.42-84-dev/include/features.h:435:4: warning: _FORTIFY_SOURCE requires compiling with optimization (-O) [-W#warnings]
+  435 | #  warning _FORTIFY_SOURCE requires compiling with optimization (-O)
+      |    ^
+prefixed.c:20:8: error: variable 'v8' is uninitialized when used here [-Werror,-Wuninitialized]
+   20 |   v8 = v8;
+      |        ^~
+prefixed.c:14:18: note: initialize the variable 'v8' to silence this warning
+   14 |   unsigned int v8;
+      |                  ^
+      |                   = 0
+1 warning and 1 error generated.

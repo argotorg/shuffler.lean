@@ -1,5 +1,58 @@
 # KLEE and translation-review status
 
+## Current pause: 2026-10-07
+
+Work is paused at the user's request; no KLEE process remains active.
+The [longer rejection campaign](../../../spikes/clight-permute/tests/results/extended-2026-10-06/rejected-large-extended/README.md)
+is incomplete. Length 32 times out with 27 completed and 32 partial paths.
+Length 64 is interrupted for the pause with 4 completed and 43 partial
+paths and one solver error. The runner returns 1. No success is claimed
+for either case.
+
+## Continued checks
+
+The [extended archive](../../../spikes/clight-permute/tests/results/extended-2026-10-06/README.md)
+records the later checks and two confirmed gate defects, F8 and F9.
+Both runners now reject inhibited forks, abnormal termination, missing
+statistics, and KLEE control symbols in the compiled program modules.
+The four fork-loss controls, eight symbol-boundary tests, and nine C API
+rejection tests pass. The saved F9 source is rejected before KLEE starts.
+
+Both new policies also pass on all 167 retained comparison cases and
+71,587 marked paths. This includes the full lengths-one-through-five
+domain, one length-six permutation, and thirteen restricted large
+profiles. It does not establish all length-six cases.
+
+The new symbolic rejection checks complete at lengths 1 through 6 and 8,
+and for empty/oversized calls. A longer run also completes lengths 16,
+17, and 18 with 99 marked paths in total. Lengths 32 and 64 time out
+in the earlier short run with partial paths and no error witness.
+Those two sizes remain incomplete.
+
+## Resumed verification
+
+The corrected run now covers all valid permutations at lengths one through
+five, with unrestricted symbolic unsigned 32-bit values, including duplicates.
+All 153 cases and 66,805 marked paths pass. No partial paths or errors remain
+in this domain. Length five contributes 120 cases and 64,920 marked paths.
+
+The audit combines only lengths one through four from
+`build/equiv-alive2/klee-complete-checked/manifest.json` with the new
+`build/equiv-alive2/klee-resumed-n5/manifest.json`. It checks the exact
+permutation sets, current source hashes, linked-bitcode hashes, logs, error
+files, path counts, and every completion witness. The driver/parser tests
+also pass: 16 tests.
+
+See the [archived audit and results](../../../spikes/clight-permute/tests/results/resumed-2026-10-06/README.md).
+This is a finite-domain C/C++ check under KLEE's LLVM and successful-allocation
+models. It does not close the Lean relation or printer proof gap. The larger
+profiles below remain restricted families.
+
+The resumed campaign is complete. The earlier stopped snapshot below is
+retained as history; its length-five completion status no longer applies.
+
+## Earlier stopped snapshot
+
 Final snapshot: **2026-10-06 22:12:20 UTC**. Owner: `/root/lgpl_build`.
 **Stopped at the user's request.** That request overrides the earlier
 deadline of 2026-10-07 09:00 UTC (11:00 CEST). All active jobs owned by this

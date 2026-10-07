@@ -1,0 +1,27 @@
+[kernel] Parsing spikes/clight-permute/build/frama-c/initialization-helper-review/helper.c (with preprocessing)
+[wp] Running WP plugin...
+[wp] 1 goal scheduled
+[wp] [Timeout] typed_ref_lemma_initialized_by_surjection (Qed 0.88ms) (Z3)
+[wp] Proved goals:    0 / 1
+  Qed:             0 (0.88ms)
+  Timeout:         1
+------------------------------------------------------------
+  Global
+------------------------------------------------------------
+
+Goal Lemma 'initialized_by_surjection':
+Assume {
+  Have: 0 <= n.
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < n) ->
+      (Init_0[shift_uint32(t, Mint_0[shift_uint32(p, i_1)])]=true))).
+  Have: forall i_1 : Z. ((0 <= i_1) -> ((i_1 < n) ->
+      (exists i_2 : Z. (Mint_0[shift_uint32(p, i_2)] = i_1) /\ (0 <= i_2) /\
+       (i_2 < n)))).
+  Have: 0 <= i.
+  Have: i < n.
+}
+Prove: (Init_0[shift_uint32(t, i)]=true).
+Prover CVC5 1.3.4 returns Unknown (Qed:0.88ms)
+Prover Z3 4.16.0 returns Timeout (Qed:0.88ms) (10s)
+
+------------------------------------------------------------

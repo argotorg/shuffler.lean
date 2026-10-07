@@ -1,6 +1,246 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 # Permute working status
 
+## Paused at user request: 2026-10-07
+
+The user asked to wrap up Frama-C and pause to save tokens. This instruction
+overrides the earlier 11:00 CEST deadline. No verification process remains
+active. The work is paused, not complete. Resume only on user instruction.
+
+- Frama-C memory pass: **641/642 explicit goals valid**. Main-loop
+  termination remains open. The runner reports failure.
+- Initialization controls: baseline and parentheses pass all nine selected
+  goals; removing the target store leaves an invariant unproved. All 25
+  Frama-C tool tests pass.
+- The final copied-source rank experiment proves the all-integer bounds
+  lemma. Frame and update lemmas remain unproved. The
+  [rank archive](../../spikes/clight-permute/tests/results/extended-2026-10-06/frama-rank-experiments/README.md)
+  records the results and next proof step. No production lemma changed.
+- The longer KLEE rejection campaign has stopped. Length 32 timed out;
+  length 64 was interrupted for the pause. Both are incomplete. The
+  [archive](../../spikes/clight-permute/tests/results/extended-2026-10-06/rejected-large-extended/README.md)
+  retains partial paths and the length-64 solver error.
+
+The Clight-to-Rocq theorem remains the main proof. The C translation link,
+full source-C contract, and concrete divergent-execution connection for
+the assignment checker remain open. No new unchanged-production-C bug was
+found. At the pause, no commits had been made; the user then requested a
+commit of this work. All later references below to active or next work
+describe the state before this pause.
+
+## Continued testing to 11:00 CEST
+
+At 2026-10-06 22:53 UTC, the active user goal again requests testing until
+11:00 CEST on 2026-10-07 (09:00 UTC), with findings recorded. This instruction
+takes precedence over the earlier deadline and stop notes below.
+
+The previous turn completed the corrected KLEE lengths-one-through-five
+audit and archived its evidence. This was progress, not a pending run.
+The length-six symbolic comparison and symbolic C API rejection run have
+finished. The main theorem assumes a valid permutation; the rejection
+behavior needs separate checks.
+
+The new rejection runner passed nine tests against production C and
+changed copies. All malformed permutations and unrestricted unsigned
+32-bit data pass at lengths 1, 2, 3, 4, 5, 6, and 8. The separate symbolic
+empty/oversized check also passes. Lengths 16, 17, 18, 32, and 64 reached
+the 120-second limit with partial paths and no error witnesses. That
+campaign has finished and correctly returns nonzero. No completion claim
+is made for these larger sizes.
+
+The length-six pilot for permutation `[1,0,2,3,4,5]` reached its 600-second
+limit: 4,121 completed paths and 522 partial paths, with no errors. It was
+correctly rejected as incomplete. A separate run with a 1,800-second limit
+completed all 4,683 marked paths in about 614 seconds, without errors or
+inhibited forks. This is one selected permutation, not a full length-six
+campaign.
+
+Current evidence paths:
+
+- `spikes/clight-permute/build/equiv-alive2/rejected-extended/`
+- `spikes/clight-permute/build/equiv-alive2/klee-extended-n6-pilot/`
+- `spikes/clight-permute/build/equiv-alive2/klee-extended-n6-swap/`
+- `/tmp/permute-rejected-controls.log`
+
+See the [rejection check contract](../../spikes/clight-permute/tests/equiv-alive2/rejected-inputs.md).
+
+The inhibited-fork hypothesis is confirmed as [F8](FINDINGS.md): an explicit
+fork-limit control causes the current runner to accept a faulty C copy.
+One path completes with its marker while a feasible failing branch is not
+explored. The normal unrestricted run finds the assertion failure. Both
+runners now reject inhibited forks and abnormal state termination. Nine
+policy tests and four actual KLEE controls pass.
+
+[F9](FINDINGS.md) records a second domain gap: a `klee_assume` call inside
+the tested C removes input 42 while the old gate reports success. Both
+runners now reject KLEE control symbols in compiled program modules before
+linking the trusted harness. Eight boundary tests pass, including real
+compiler/runner controls for declared and defined KLEE functions. The nine
+rejection tests and four fork-loss controls still pass.
+
+All 167 retained cases (71,587 marked paths) pass both new audits. This
+includes the complete lengths-one-through-five domain, the selected
+length-six permutation, and thirteen restricted large profiles. A fresh
+lengths-one-through-three run with the fork check passed nine cases and
+85 paths. The old result files remain unchanged.
+
+Evidence is in
+[the extended results archive](../../spikes/clight-permute/tests/results/extended-2026-10-06/README.md).
+Direct execution comparisons between Rocq/Clight and generated C now pass
+1,110 selected cases on GCC and Clang at `-O0`, `-O2`, and `-O3`. These
+include 784 successful results, 68 blocked results, and 258 rejected
+inputs. The small campaign has 925 cases; the boundary campaign has 185.
+The extracted interpreter uses the actual AST and CompCert memory, with
+undefined initial scratch memory and local temporaries. Its successful
+body return is connected to a full call by a checked wrapper theorem.
+The kernel policy reports 12 allowed upstream axioms and no unsafe settings.
+
+The new comparison tool passes eight tests, including ten shared C
+mutation controls, process exit, timeout, fuel exhaustion, and malformed
+records. During development, the controls exposed a missing equal-value
+swap case and a record-count check omitted from the comparison helper.
+Both were corrected before the campaigns. They do not change prior
+production evidence. See the [test contract](../../spikes/clight-permute/tests/rocq-eval/README.md).
+
+The further KLEE rejection run at lengths 16, 17, and 18 completed with
+31, 33, and 35 marked paths. All 99 paths pass with no errors, partial
+paths, or lost forks. Each case had a 1,800-second limit. Its directory is
+`spikes/clight-permute/build/equiv-alive2/rejected-depth-extended/`.
+The [archive](../../spikes/clight-permute/tests/results/extended-2026-10-06/rejected-depth-extended/manifest.json)
+includes the bitcode, statistics, source snapshots, and all witnesses.
+Lengths 32 and 64 remain incomplete from the earlier short run.
+The generated-program campaign also completed: 128 distinct C sources,
+50 input cases per program, and all six GCC/Clang builds pass. This is
+6,400 interpreter cases and 38,400 native comparisons. The tests cover
+unsigned wraparound, array index arithmetic, branches, nested bounded
+loops, inner breaks, early returns, and renamed identifiers. Three faulty
+printer controls are detected; the baseline and a parentheses control
+pass. A hand-calculated arithmetic record also agrees with the interpreter
+and all six C builds. The generic extraction prints the production
+`permute.c` byte for byte. These are finite tests, not a printer proof.
+See the [generated-program archive](../../spikes/clight-permute/tests/results/extended-2026-10-06/printer-eval/README.md).
+
+A longer KLEE rejection run at lengths 32 and 64 is active, with a
+3,600-second limit per case, under
+`spikes/clight-permute/build/equiv-alive2/rejected-large-extended/`.
+Length 32 reached that limit with 27 completed and 32 partial paths, no
+error witnesses, and no lost forks. Its result is incomplete. Length 64
+is now running under the same process.
+The sanitizer follow-up passes all 128 generated programs on the same
+6,400 cases with Clang `-O1`, AddressSanitizer, and UBSan. Buffer-overflow
+and invalid-shift controls produce the expected diagnostics and nonzero
+exits. Leak detection is disabled after an environment failure: the
+LeakSanitizer thread scan cannot run here. The tested functions use stack
+objects only. See the [sanitizer archive](../../spikes/clight-permute/tests/results/extended-2026-10-06/printer-sanitizers/README.md).
+
+A candidate Rocq check for assignment before temporary reads now accepts
+the actual Permute AST and rejects the known undefined self-copy prefix.
+Twenty-one examples and nine baseline/mutation controls have their
+expected results. The kernel check passes. The expression-read lemma and
+the computed Permute result are closed under the global context.
+This candidate is supporting evidence; it is not a new production gate. See the
+[assignment-check archive](../../spikes/clight-permute/tests/results/extended-2026-10-06/assignment-check/README.md).
+
+The statement-level argument now passes a fresh kernel check. It covers
+complete paths and finite prefixes in an explicit control model, including
+branch joins, loop exits, nested breaks, and later iterations. Five path
+witnesses include unsafe reads. All four public path theorems are closed
+under the global context. See the
+[path-proof archive](../../spikes/clight-permute/tests/results/extended-2026-10-06/assignment-path-proof/README.md).
+
+A further proof connects every terminating Clight execution in the
+supported statement form to an execution record. Records preserve actual
+expression evaluations, branch decisions, intermediate environments,
+memories, traces, and outcomes. They map to the control model, where the
+checker proves safety. The actual Permute body has the required form and
+the resulting theorem. Five independent execution type fixtures pass.
+The fresh `coqchk` and kernel policy pass with 12 allowed upstream axioms
+and no unsafe settings. These concrete theorems retain upstream CompCert
+assumptions; unlike the path theorems, they are not closed under the
+global context. See the
+[execution-proof archive](../../spikes/clight-permute/tests/results/extended-2026-10-06/assignment-execution-proof/README.md).
+
+Nineteen [proof controls](../../spikes/clight-permute/tests/results/extended-2026-10-06/assignment-proof-controls/README.md)
+also have their expected results. Seven weakened checker copies compile
+with all 21 example tests removed, then fail a named soundness statement.
+Five changed execution-record definitions fail coverage, erasure, or path
+proofs. The two baselines and two parentheses controls pass. Three real
+compiler-error controls are excluded from proof-failure evidence.
+
+The proved property is prior assignment of temporary names. Memory byte
+initialization and C translation are separate. The abstract prefix proof
+still needs a concrete small-step or divergence link. F7 remains open.
+Next work is to challenge this new proof connection and examine the
+remaining prefix and memory obligations. The active KLEE run remains
+separate and must be polled through its current process.
+
+The Frama-C follow-up now proves all nine selected fill-invariant and
+target-initialization goals on production C. An equivalent parentheses
+control passes. Removing the target store fails the fill invariant. The
+strategy instantiates an existing premise and preserves all C tokens.
+All 25 tool tests pass. The
+[initialization archive](../../spikes/clight-permute/tests/results/extended-2026-10-06/frama-initialization/README.md)
+retains these results. The full memory pass `memory-target-strategy` now
+has 641/642 explicit goals valid. Only main-loop termination is pending.
+The runner correctly returns nonzero. The
+[full memory-pass archive](../../spikes/clight-permute/tests/results/extended-2026-10-06/frama-memory-strategy/README.md)
+records the result. The count/rank lemmas also remain open. No source-C
+proof completion is claimed.
+
+## Resumed work: 2026-10-06
+
+The user has resumed verification and clarified the main purpose: review
+the C ↔ Lean proof-of-concept workflow, starting with the core Rocq
+definitions and theorems. Additional tools and mutations supply independent
+supporting evidence. A verified Lean ↔ Rocq bridge is future work, outside
+the current scope. No token budget was set. The later active deadline is
+recorded above.
+
+Start at [README.md](README.md), then read [trust-boundary.md](trust-boundary.md).
+The public theorem is now `PermuteCorrect.clight_refines_model`, with
+`PermuteSpec` and `ModelSpec` as separate specification modules. The expanded
+type remains checked independently. The refactored full proof build and
+`coqchk` have passed; evidence is under
+`spikes/clight-permute/proof-results/reviewed-2026-10-06/`.
+
+Other completed resumed checks:
+
+- The saved uninitialized-copy reproduction passed its proof and compiler
+  checks. It still demonstrates the accepted-printer-subset gap.
+- SAW's unchanged baseline, both early-exit controls, and stale-result
+  control had their expected results in a fresh output directory.
+- Coverage now requires matching source and binary manifests. Eleven
+  tests pass, including rejection by the actual reporting script for stale
+  source, stale binary, and invalidated build. A fresh replay gives 72/76
+  LLVM outcomes and 72/84 exported outcomes.
+- The new kernel-context policy checks full axiom names and unsafe typing
+  settings. Its tests and the existing assumption tests pass. A shadowed
+  short-name probe did not bypass the whole existing theorem check.
+- The Frama-C run with the final solver setup completed with 635/642 valid
+  goals, one unknown, and six timeouts. It is incomplete and does not
+  supersede the earlier 642/644 memory result. Its 24 driver tests pass.
+- All eight proof-policy controls had their expected results. Both selected
+  behavior changes failed dependent proofs, and both equivalent source
+  controls passed after the review refactor. Their sources and logs are
+  archived with the reviewed proof evidence.
+
+- The corrected KLEE length-five run completed all 120 permutations and
+  64,920 marked paths. An audit combined these with the retained lengths
+  one through four: 153 cases and 66,805 marked paths, with no partial paths
+  or errors. The audit checked source and bitcode hashes and read each
+  completion witness again. This covers unrestricted unsigned 32-bit
+  values at lengths one through five under the recorded runtime model.
+
+The resumed runs above have finished. Their
+[supporting evidence index](../../spikes/clight-permute/tests/results/resumed-2026-10-06/README.md)
+records results and limits. The open proof links remain open.
+No sub-agents have been started in the resumed work.
+
+## Earlier stopped handoff
+
+The remainder of this file preserves the earlier handoff. The resumed
+section above takes precedence over its stop instructions and old file map.
+
 Final stop snapshot: **2026-10-06 22:14 UTC**. This is a handoff, not a
 completion report. **Work is stopped at the user's request.** All child
 agents have stopped their jobs. Root stopped its remaining guard-test job.

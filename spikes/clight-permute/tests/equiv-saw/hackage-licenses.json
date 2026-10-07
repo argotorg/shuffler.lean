@@ -1,0 +1,2102 @@
+[
+  {
+    "name": "BoundedChan",
+    "version": "1.0.3.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/BoundedChan-1.0.3.0/BoundedChan.cabal"
+  },
+  {
+    "name": "Cabal",
+    "version": "3.10.3.0",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/Cabal-3.10.3.0/Cabal.cabal"
+  },
+  {
+    "name": "Cabal-syntax",
+    "version": "3.10.3.0",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/Cabal-syntax-3.10.3.0/Cabal-syntax.cabal"
+  },
+  {
+    "name": "Glob",
+    "version": "0.10.2",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/Glob-0.10.2/Glob.cabal"
+  },
+  {
+    "name": "GraphSCC",
+    "version": "1.0.4",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/GraphSCC-1.0.4/GraphSCC.cabal"
+  },
+  {
+    "name": "HUnit",
+    "version": "1.6.2.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/HUnit-1.6.2.0/HUnit.cabal"
+  },
+  {
+    "name": "IfElse",
+    "version": "0.85",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/IfElse-0.85/IfElse.cabal"
+  },
+  {
+    "name": "IntervalMap",
+    "version": "0.6.2.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/IntervalMap-0.6.2.1/IntervalMap.cabal"
+  },
+  {
+    "name": "MemoTrie",
+    "version": "0.6.11",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/MemoTrie-0.6.11/MemoTrie.cabal"
+  },
+  {
+    "name": "MonadRandom",
+    "version": "0.6.2",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/MonadRandom-0.6.2/MonadRandom.cabal"
+  },
+  {
+    "name": "OneTuple",
+    "version": "0.4.2.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/OneTuple-0.4.2.1/OneTuple.cabal"
+  },
+  {
+    "name": "Only",
+    "version": "0.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/Only-0.1/Only.cabal"
+  },
+  {
+    "name": "QuickCheck",
+    "version": "2.14.3",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/QuickCheck-2.14.3/QuickCheck.cabal"
+  },
+  {
+    "name": "StateVar",
+    "version": "1.2.2",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/StateVar-1.2.2/StateVar.cabal"
+  },
+  {
+    "name": "adjunctions",
+    "version": "4.4.3",
+    "license": "BSD2",
+    "url": "https://hackage-content.haskell.org/package/adjunctions-4.4.3/adjunctions.cabal"
+  },
+  {
+    "name": "aeson",
+    "version": "2.2.3.0",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/aeson-2.2.3.0/aeson.cabal"
+  },
+  {
+    "name": "aeson-pretty",
+    "version": "0.8.10",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/aeson-pretty-0.8.10/aeson-pretty.cabal"
+  },
+  {
+    "name": "alex",
+    "version": "3.5.4.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/alex-3.5.4.0/alex.cabal"
+  },
+  {
+    "name": "ansi-terminal",
+    "version": "1.0.2",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/ansi-terminal-1.0.2/ansi-terminal.cabal"
+  },
+  {
+    "name": "ansi-terminal-types",
+    "version": "0.11.5",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/ansi-terminal-types-0.11.5/ansi-terminal-types.cabal"
+  },
+  {
+    "name": "ansi-wl-pprint",
+    "version": "0.6.9",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/ansi-wl-pprint-0.6.9/ansi-wl-pprint.cabal"
+  },
+  {
+    "name": "appar",
+    "version": "0.1.8",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/appar-0.1.8/appar.cabal"
+  },
+  {
+    "name": "arithmoi",
+    "version": "0.13.2.0",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/arithmoi-0.13.2.0/arithmoi.cabal"
+  },
+  {
+    "name": "array",
+    "version": "0.5.8.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/array-0.5.8.0/array.cabal"
+  },
+  {
+    "name": "asn1-encoding",
+    "version": "0.9.6",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/asn1-encoding-0.9.6/asn1-encoding.cabal"
+  },
+  {
+    "name": "asn1-parse",
+    "version": "0.9.5",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/asn1-parse-0.9.5/asn1-parse.cabal"
+  },
+  {
+    "name": "asn1-types",
+    "version": "0.3.4",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/asn1-types-0.3.4/asn1-types.cabal"
+  },
+  {
+    "name": "assoc",
+    "version": "1.1.1",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/assoc-1.1.1/assoc.cabal"
+  },
+  {
+    "name": "async",
+    "version": "2.2.6",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/async-2.2.6/async.cabal"
+  },
+  {
+    "name": "attoparsec",
+    "version": "0.14.4",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/attoparsec-0.14.4/attoparsec.cabal"
+  },
+  {
+    "name": "attoparsec-aeson",
+    "version": "2.2.2.0",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/attoparsec-aeson-2.2.2.0/attoparsec-aeson.cabal"
+  },
+  {
+    "name": "auto-update",
+    "version": "0.2.6",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/auto-update-0.2.6/auto-update.cabal"
+  },
+  {
+    "name": "barbies",
+    "version": "2.1.1.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/barbies-2.1.1.0/barbies.cabal"
+  },
+  {
+    "name": "base",
+    "version": "4.18.3.0",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/base-4.18.3.0/base.cabal"
+  },
+  {
+    "name": "base-compat",
+    "version": "0.12.3",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/base-compat-0.12.3/base-compat.cabal"
+  },
+  {
+    "name": "base-compat-batteries",
+    "version": "0.12.3",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/base-compat-batteries-0.12.3/base-compat-batteries.cabal"
+  },
+  {
+    "name": "base-orphans",
+    "version": "0.9.3",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/base-orphans-0.9.3/base-orphans.cabal"
+  },
+  {
+    "name": "base16-bytestring",
+    "version": "1.0.2.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/base16-bytestring-1.0.2.0/base16-bytestring.cabal"
+  },
+  {
+    "name": "base64-bytestring",
+    "version": "1.2.1.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/base64-bytestring-1.2.1.0/base64-bytestring.cabal"
+  },
+  {
+    "name": "basement",
+    "version": "0.0.16",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/basement-0.0.16/basement.cabal"
+  },
+  {
+    "name": "bifunctors",
+    "version": "5.6.3",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/bifunctors-5.6.3/bifunctors.cabal"
+  },
+  {
+    "name": "bimap",
+    "version": "0.5.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/bimap-0.5.0/bimap.cabal"
+  },
+  {
+    "name": "binary",
+    "version": "0.8.9.1",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/binary-0.8.9.1/binary.cabal"
+  },
+  {
+    "name": "binary-orphans",
+    "version": "1.0.5",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/binary-orphans-1.0.5/binary-orphans.cabal"
+  },
+  {
+    "name": "bitvec",
+    "version": "1.1.5.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/bitvec-1.1.5.0/bitvec.cabal"
+  },
+  {
+    "name": "bitwise",
+    "version": "1.0.0.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/bitwise-1.0.0.1/bitwise.cabal"
+  },
+  {
+    "name": "blaze-builder",
+    "version": "0.4.4.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/blaze-builder-0.4.4.1/blaze-builder.cabal"
+  },
+  {
+    "name": "blaze-html",
+    "version": "0.9.2.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/blaze-html-0.9.2.0/blaze-html.cabal"
+  },
+  {
+    "name": "blaze-markup",
+    "version": "0.8.3.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/blaze-markup-0.8.3.0/blaze-markup.cabal"
+  },
+  {
+    "name": "boomerang",
+    "version": "1.4.9.4",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/boomerang-1.4.9.4/boomerang.cabal"
+  },
+  {
+    "name": "boring",
+    "version": "0.2.2",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/boring-0.2.2/boring.cabal"
+  },
+  {
+    "name": "bsb-http-chunked",
+    "version": "0.0.0.4",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/bsb-http-chunked-0.0.0.4/bsb-http-chunked.cabal"
+  },
+  {
+    "name": "bv-sized",
+    "version": "1.0.6",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/bv-sized-1.0.6/bv-sized.cabal"
+  },
+  {
+    "name": "byteorder",
+    "version": "1.0.4",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/byteorder-1.0.4/byteorder.cabal"
+  },
+  {
+    "name": "bytestring",
+    "version": "0.11.5.4",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/bytestring-0.11.5.4/bytestring.cabal"
+  },
+  {
+    "name": "bytestring-builder",
+    "version": "0.10.8.2.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/bytestring-builder-0.10.8.2.0/bytestring-builder.cabal"
+  },
+  {
+    "name": "call-stack",
+    "version": "0.4.0",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/call-stack-0.4.0/call-stack.cabal"
+  },
+  {
+    "name": "case-insensitive",
+    "version": "1.2.1.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/case-insensitive-1.2.1.0/case-insensitive.cabal"
+  },
+  {
+    "name": "cassava",
+    "version": "0.5.4.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/cassava-0.5.4.1/cassava.cabal"
+  },
+  {
+    "name": "cborg",
+    "version": "0.2.10.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/cborg-0.2.10.0/cborg.cabal"
+  },
+  {
+    "name": "cborg-json",
+    "version": "0.2.6.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/cborg-json-0.2.6.0/cborg-json.cabal"
+  },
+  {
+    "name": "cereal",
+    "version": "0.5.8.3",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/cereal-0.5.8.3/cereal.cabal"
+  },
+  {
+    "name": "character-ps",
+    "version": "0.1",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/character-ps-0.1/character-ps.cabal"
+  },
+  {
+    "name": "charset",
+    "version": "0.3.12",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/charset-0.3.12/charset.cabal"
+  },
+  {
+    "name": "chimera",
+    "version": "0.4.1.0",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/chimera-0.4.1.0/chimera.cabal"
+  },
+  {
+    "name": "clock",
+    "version": "0.8.4",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/clock-0.8.4/clock.cabal"
+  },
+  {
+    "name": "cmdargs",
+    "version": "0.10.22",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/cmdargs-0.10.22/cmdargs.cabal"
+  },
+  {
+    "name": "code-page",
+    "version": "0.2.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/code-page-0.2.1/code-page.cabal"
+  },
+  {
+    "name": "colour",
+    "version": "2.3.6",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/colour-2.3.6/colour.cabal"
+  },
+  {
+    "name": "comonad",
+    "version": "5.0.9",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/comonad-5.0.9/comonad.cabal"
+  },
+  {
+    "name": "concurrent-extra",
+    "version": "0.7.0.12",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/concurrent-extra-0.7.0.12/concurrent-extra.cabal"
+  },
+  {
+    "name": "concurrent-output",
+    "version": "1.10.21",
+    "license": "BSD2",
+    "url": "https://hackage-content.haskell.org/package/concurrent-output-1.10.21/concurrent-output.cabal"
+  },
+  {
+    "name": "conduit",
+    "version": "1.3.6.1",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/conduit-1.3.6.1/conduit.cabal"
+  },
+  {
+    "name": "conduit-extra",
+    "version": "1.3.8",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/conduit-extra-1.3.8/conduit-extra.cabal"
+  },
+  {
+    "name": "config-schema",
+    "version": "1.3.0.0",
+    "license": "ISC",
+    "url": "https://hackage-content.haskell.org/package/config-schema-1.3.0.0/config-schema.cabal"
+  },
+  {
+    "name": "config-value",
+    "version": "0.8.3",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/config-value-0.8.3/config-value.cabal"
+  },
+  {
+    "name": "constraints",
+    "version": "0.14.2",
+    "license": "BSD-2-Clause",
+    "url": "https://hackage-content.haskell.org/package/constraints-0.14.2/constraints.cabal"
+  },
+  {
+    "name": "containers",
+    "version": "0.6.7",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/containers-0.6.7/containers.cabal"
+  },
+  {
+    "name": "contravariant",
+    "version": "1.5.5",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/contravariant-1.5.5/contravariant.cabal"
+  },
+  {
+    "name": "cookie",
+    "version": "0.5.1",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/cookie-0.5.1/cookie.cabal"
+  },
+  {
+    "name": "criterion",
+    "version": "1.6.4.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/criterion-1.6.4.1/criterion.cabal"
+  },
+  {
+    "name": "criterion-measurement",
+    "version": "0.2.3.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/criterion-measurement-0.2.3.0/criterion-measurement.cabal"
+  },
+  {
+    "name": "crypto-token",
+    "version": "0.1.2",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/crypto-token-0.1.2/crypto-token.cabal"
+  },
+  {
+    "name": "cryptohash-md5",
+    "version": "0.11.101.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/cryptohash-md5-0.11.101.0/cryptohash-md5.cabal"
+  },
+  {
+    "name": "cryptohash-sha1",
+    "version": "0.11.101.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/cryptohash-sha1-0.11.101.0/cryptohash-sha1.cabal"
+  },
+  {
+    "name": "cryptohash-sha256",
+    "version": "0.11.102.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/cryptohash-sha256-0.11.102.1/cryptohash-sha256.cabal"
+  },
+  {
+    "name": "crypton",
+    "version": "1.0.2",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/crypton-1.0.2/crypton.cabal"
+  },
+  {
+    "name": "crypton-x509",
+    "version": "1.7.7",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/crypton-x509-1.7.7/crypton-x509.cabal"
+  },
+  {
+    "name": "crypton-x509-store",
+    "version": "1.6.9",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/crypton-x509-store-1.6.9/crypton-x509-store.cabal"
+  },
+  {
+    "name": "crypton-x509-validation",
+    "version": "1.6.13",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/crypton-x509-validation-1.6.13/crypton-x509-validation.cabal"
+  },
+  {
+    "name": "cryptonite",
+    "version": "0.30",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/cryptonite-0.30/cryptonite.cabal"
+  },
+  {
+    "name": "cryptonite-conduit",
+    "version": "0.2.2",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/cryptonite-conduit-0.2.2/cryptonite-conduit.cabal"
+  },
+  {
+    "name": "data-accessor",
+    "version": "0.2.3.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/data-accessor-0.2.3.1/data-accessor.cabal"
+  },
+  {
+    "name": "data-default",
+    "version": "0.8.0.2",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/data-default-0.8.0.2/data-default.cabal"
+  },
+  {
+    "name": "data-default-class",
+    "version": "0.2.0.0",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/data-default-class-0.2.0.0/data-default-class.cabal"
+  },
+  {
+    "name": "data-fix",
+    "version": "0.3.4",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/data-fix-0.3.4/data-fix.cabal"
+  },
+  {
+    "name": "data-inttrie",
+    "version": "0.1.4",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/data-inttrie-0.1.4/data-inttrie.cabal"
+  },
+  {
+    "name": "data-ref",
+    "version": "0.1",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/data-ref-0.1/data-ref.cabal"
+  },
+  {
+    "name": "deepseq",
+    "version": "1.4.8.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/deepseq-1.4.8.1/deepseq.cabal"
+  },
+  {
+    "name": "dense-linear-algebra",
+    "version": "0.1.0.0",
+    "license": "BSD2",
+    "url": "https://hackage-content.haskell.org/package/dense-linear-algebra-0.1.0.0/dense-linear-algebra.cabal"
+  },
+  {
+    "name": "deriving-compat",
+    "version": "0.6.8",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/deriving-compat-0.6.8/deriving-compat.cabal"
+  },
+  {
+    "name": "directory",
+    "version": "1.3.8.5",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/directory-1.3.8.5/directory.cabal"
+  },
+  {
+    "name": "distributive",
+    "version": "0.6.2.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/distributive-0.6.2.1/distributive.cabal"
+  },
+  {
+    "name": "dlist",
+    "version": "1.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/dlist-1.0/dlist.cabal"
+  },
+  {
+    "name": "doctest",
+    "version": "0.22.10",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/doctest-0.22.10/doctest.cabal"
+  },
+  {
+    "name": "dotgen",
+    "version": "0.4.3",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/dotgen-0.4.3/dotgen.cabal"
+  },
+  {
+    "name": "easy-file",
+    "version": "0.2.5",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/easy-file-0.2.5/easy-file.cabal"
+  },
+  {
+    "name": "ech-config",
+    "version": "0.0.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/ech-config-0.0.1/ech-config.cabal"
+  },
+  {
+    "name": "entropy",
+    "version": "0.4.1.11",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/entropy-0.4.1.11/entropy.cabal"
+  },
+  {
+    "name": "erf",
+    "version": "2.0.0.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/erf-2.0.0.0/erf.cabal"
+  },
+  {
+    "name": "exact-pi",
+    "version": "0.5.0.2",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/exact-pi-0.5.0.2/exact-pi.cabal"
+  },
+  {
+    "name": "exceptions",
+    "version": "0.10.7",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/exceptions-0.10.7/exceptions.cabal"
+  },
+  {
+    "name": "executable-path",
+    "version": "0.0.3.1",
+    "license": "PublicDomain",
+    "url": "https://hackage-content.haskell.org/package/executable-path-0.0.3.1/executable-path.cabal"
+  },
+  {
+    "name": "extra",
+    "version": "1.8.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/extra-1.8.1/extra.cabal"
+  },
+  {
+    "name": "fast-logger",
+    "version": "3.2.6",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/fast-logger-3.2.6/fast-logger.cabal"
+  },
+  {
+    "name": "fgl",
+    "version": "5.8.3.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/fgl-5.8.3.0/fgl.cabal"
+  },
+  {
+    "name": "fgl-visualize",
+    "version": "0.1.0.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/fgl-visualize-0.1.0.1/fgl-visualize.cabal"
+  },
+  {
+    "name": "file-embed",
+    "version": "0.0.16.0",
+    "license": "BSD2",
+    "url": "https://hackage-content.haskell.org/package/file-embed-0.0.16.0/file-embed.cabal"
+  },
+  {
+    "name": "filelock",
+    "version": "0.1.1.8",
+    "license": "PublicDomain",
+    "url": "https://hackage-content.haskell.org/package/filelock-0.1.1.8/filelock.cabal"
+  },
+  {
+    "name": "filemanip",
+    "version": "0.3.6.3",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/filemanip-0.3.6.3/filemanip.cabal"
+  },
+  {
+    "name": "filepath",
+    "version": "1.4.301.0",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/filepath-1.4.301.0/filepath.cabal"
+  },
+  {
+    "name": "fingertree",
+    "version": "0.1.6.3",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/fingertree-0.1.6.3/fingertree.cabal"
+  },
+  {
+    "name": "free",
+    "version": "5.2",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/free-5.2/free.cabal"
+  },
+  {
+    "name": "generic-deriving",
+    "version": "1.14.7",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/generic-deriving-1.14.7/generic-deriving.cabal"
+  },
+  {
+    "name": "generic-lens",
+    "version": "2.3.0.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/generic-lens-2.3.0.0/generic-lens.cabal"
+  },
+  {
+    "name": "generic-lens-core",
+    "version": "2.3.0.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/generic-lens-core-2.3.0.0/generic-lens-core.cabal"
+  },
+  {
+    "name": "generic-random",
+    "version": "1.5.0.1",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/generic-random-1.5.0.1/generic-random.cabal"
+  },
+  {
+    "name": "generically",
+    "version": "0.1.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/generically-0.1.1/generically.cabal"
+  },
+  {
+    "name": "ghc",
+    "version": "9.6.7",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/ghc-9.6.7/ghc.cabal"
+  },
+  {
+    "name": "ghc-bignum",
+    "version": "1.3",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/ghc-bignum-1.3/ghc-bignum.cabal"
+  },
+  {
+    "name": "ghc-boot",
+    "version": "9.6.7",
+    "url": "https://github.com/ghc/ghc/blob/ghc-9.6.7-release/LICENSE",
+    "license": "BSD-3-Clause (GHC distribution)"
+  },
+  {
+    "name": "ghc-boot-th",
+    "version": "9.6.7",
+    "url": "https://github.com/ghc/ghc/blob/ghc-9.6.7-release/LICENSE",
+    "license": "BSD-3-Clause (GHC distribution)"
+  },
+  {
+    "name": "ghc-heap",
+    "version": "9.6.7",
+    "url": "https://github.com/ghc/ghc/blob/ghc-9.6.7-release/LICENSE",
+    "license": "BSD-3-Clause (GHC distribution)"
+  },
+  {
+    "name": "ghc-paths",
+    "version": "0.1.0.12",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/ghc-paths-0.1.0.12/ghc-paths.cabal"
+  },
+  {
+    "name": "ghc-prim",
+    "version": "0.10.0",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/ghc-prim-0.10.0/ghc-prim.cabal"
+  },
+  {
+    "name": "ghci",
+    "version": "9.6.7",
+    "url": "https://github.com/ghc/ghc/blob/ghc-9.6.7-release/LICENSE",
+    "license": "BSD-3-Clause (GHC distribution)"
+  },
+  {
+    "name": "githash",
+    "version": "0.1.7.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/githash-0.1.7.0/githash.cabal"
+  },
+  {
+    "name": "gitrev",
+    "version": "1.3.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/gitrev-1.3.1/gitrev.cabal"
+  },
+  {
+    "name": "graphviz",
+    "version": "2999.20.2.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/graphviz-2999.20.2.1/graphviz.cabal"
+  },
+  {
+    "name": "half",
+    "version": "0.3.3",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/half-0.3.3/half.cabal"
+  },
+  {
+    "name": "happy",
+    "version": "2.1.7",
+    "license": "BSD2",
+    "url": "https://hackage-content.haskell.org/package/happy-2.1.7/happy.cabal"
+  },
+  {
+    "name": "happy-lib",
+    "version": "2.1.7",
+    "license": "BSD-2-Clause",
+    "url": "https://hackage-content.haskell.org/package/happy-lib-2.1.7/happy-lib.cabal"
+  },
+  {
+    "name": "hashable",
+    "version": "1.4.7.0",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/hashable-1.4.7.0/hashable.cabal"
+  },
+  {
+    "name": "hashtables",
+    "version": "1.4.2",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/hashtables-1.4.2/hashtables.cabal"
+  },
+  {
+    "name": "haskeline",
+    "version": "0.8.2.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/haskeline-0.8.2.1/haskeline.cabal"
+  },
+  {
+    "name": "haskell-lexer",
+    "version": "1.2.1",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/haskell-lexer-1.2.1/haskell-lexer.cabal"
+  },
+  {
+    "name": "haskell-src-exts",
+    "version": "1.23.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/haskell-src-exts-1.23.1/haskell-src-exts.cabal"
+  },
+  {
+    "name": "haskell-src-meta",
+    "version": "0.8.15",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/haskell-src-meta-0.8.15/haskell-src-meta.cabal"
+  },
+  {
+    "name": "hedgehog",
+    "version": "1.5",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/hedgehog-1.5/hedgehog.cabal"
+  },
+  {
+    "name": "hedgehog-classes",
+    "version": "0.2.5.4",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/hedgehog-classes-0.2.5.4/hedgehog-classes.cabal"
+  },
+  {
+    "name": "heredoc",
+    "version": "0.2.0.0",
+    "license": "PublicDomain",
+    "url": "https://hackage-content.haskell.org/package/heredoc-0.2.0.0/heredoc.cabal"
+  },
+  {
+    "name": "hgmp",
+    "version": "0.1.2.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/hgmp-0.1.2.1/hgmp.cabal"
+  },
+  {
+    "name": "hostname",
+    "version": "1.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/hostname-1.0/hostname.cabal"
+  },
+  {
+    "name": "hourglass",
+    "version": "0.2.12",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/hourglass-0.2.12/hourglass.cabal"
+  },
+  {
+    "name": "hpc",
+    "version": "0.6.2.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/hpc-0.6.2.0/hpc.cabal"
+  },
+  {
+    "name": "hpke",
+    "version": "0.0.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/hpke-0.0.0/hpke.cabal"
+  },
+  {
+    "name": "hsc2hs",
+    "version": "0.68.10",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/hsc2hs-0.68.10/hsc2hs.cabal"
+  },
+  {
+    "name": "hspec",
+    "version": "2.11.16",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/hspec-2.11.16/hspec.cabal"
+  },
+  {
+    "name": "hspec-api",
+    "version": "2.11.16",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/hspec-api-2.11.16/hspec-api.cabal"
+  },
+  {
+    "name": "hspec-core",
+    "version": "2.11.16",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/hspec-core-2.11.16/hspec-core.cabal"
+  },
+  {
+    "name": "hspec-discover",
+    "version": "2.11.16",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/hspec-discover-2.11.16/hspec-discover.cabal"
+  },
+  {
+    "name": "hspec-expectations",
+    "version": "0.8.4",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/hspec-expectations-0.8.4/hspec-expectations.cabal"
+  },
+  {
+    "name": "http-date",
+    "version": "0.0.11",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/http-date-0.0.11/http-date.cabal"
+  },
+  {
+    "name": "http-semantics",
+    "version": "0.4.0",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/http-semantics-0.4.0/http-semantics.cabal"
+  },
+  {
+    "name": "http-types",
+    "version": "0.12.4",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/http-types-0.12.4/http-types.cabal"
+  },
+  {
+    "name": "http2",
+    "version": "5.4.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/http2-5.4.0/http2.cabal"
+  },
+  {
+    "name": "ieee754",
+    "version": "0.8.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/ieee754-0.8.0/ieee754.cabal"
+  },
+  {
+    "name": "indexed-profunctors",
+    "version": "0.1.1.1",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/indexed-profunctors-0.1.1.1/indexed-profunctors.cabal"
+  },
+  {
+    "name": "indexed-traversable",
+    "version": "0.1.4",
+    "license": "BSD2",
+    "url": "https://hackage-content.haskell.org/package/indexed-traversable-0.1.4/indexed-traversable.cabal"
+  },
+  {
+    "name": "indexed-traversable-instances",
+    "version": "0.1.2",
+    "license": "BSD2",
+    "url": "https://hackage-content.haskell.org/package/indexed-traversable-instances-0.1.2/indexed-traversable-instances.cabal"
+  },
+  {
+    "name": "infinite-list",
+    "version": "0.1.3",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/infinite-list-0.1.3/infinite-list.cabal"
+  },
+  {
+    "name": "integer-conversion",
+    "version": "0.1.1",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/integer-conversion-0.1.1/integer-conversion.cabal"
+  },
+  {
+    "name": "integer-gmp",
+    "version": "1.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/integer-gmp-1.1/integer-gmp.cabal"
+  },
+  {
+    "name": "integer-logarithms",
+    "version": "1.0.5",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/integer-logarithms-1.0.5/integer-logarithms.cabal"
+  },
+  {
+    "name": "integer-roots",
+    "version": "1.0.4.0",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/integer-roots-1.0.4.0/integer-roots.cabal"
+  },
+  {
+    "name": "interpolate",
+    "version": "0.2.1",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/interpolate-0.2.1/interpolate.cabal"
+  },
+  {
+    "name": "invariant",
+    "version": "0.6.4",
+    "license": "BSD2",
+    "url": "https://hackage-content.haskell.org/package/invariant-0.6.4/invariant.cabal"
+  },
+  {
+    "name": "io-streams",
+    "version": "1.5.2.2",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/io-streams-1.5.2.2/io-streams.cabal"
+  },
+  {
+    "name": "iproute",
+    "version": "1.7.15",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/iproute-1.7.15/iproute.cabal"
+  },
+  {
+    "name": "isocline",
+    "version": "1.0.9",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/isocline-1.0.9/isocline.cabal"
+  },
+  {
+    "name": "itanium-abi",
+    "version": "0.1.3",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/itanium-abi-0.1.3/itanium-abi.cabal"
+  },
+  {
+    "name": "js-chart",
+    "version": "2.9.4.1",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/js-chart-2.9.4.1/js-chart.cabal"
+  },
+  {
+    "name": "json",
+    "version": "0.11",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/json-0.11/json.cabal"
+  },
+  {
+    "name": "kan-extensions",
+    "version": "5.2.7",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/kan-extensions-5.2.7/kan-extensions.cabal"
+  },
+  {
+    "name": "kvitable",
+    "version": "1.1.1.0",
+    "license": "ISC",
+    "url": "https://hackage-content.haskell.org/package/kvitable-1.1.1.0/kvitable.cabal"
+  },
+  {
+    "name": "language-c99",
+    "version": "0.2.0",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/language-c99-0.2.0/language-c99.cabal"
+  },
+  {
+    "name": "language-c99-simple",
+    "version": "0.3.0",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/language-c99-simple-0.3.0/language-c99-simple.cabal"
+  },
+  {
+    "name": "language-c99-util",
+    "version": "0.2.0",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/language-c99-util-0.2.0/language-c99-util.cabal"
+  },
+  {
+    "name": "lens",
+    "version": "5.2.3",
+    "license": "BSD2",
+    "url": "https://hackage-content.haskell.org/package/lens-5.2.3/lens.cabal"
+  },
+  {
+    "name": "libBF",
+    "version": "0.6.8",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/libBF-0.6.8/libBF.cabal"
+  },
+  {
+    "name": "libffi",
+    "version": "0.2.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/libffi-0.2.1/libffi.cabal"
+  },
+  {
+    "name": "libyaml",
+    "version": "0.1.4",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/libyaml-0.1.4/libyaml.cabal"
+  },
+  {
+    "name": "libyaml-clib",
+    "version": "0.2.5",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/libyaml-clib-0.2.5/libyaml-clib.cabal"
+  },
+  {
+    "name": "lifted-async",
+    "version": "0.10.2.7",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/lifted-async-0.10.2.7/lifted-async.cabal"
+  },
+  {
+    "name": "lifted-base",
+    "version": "0.2.3.12",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/lifted-base-0.2.3.12/lifted-base.cabal"
+  },
+  {
+    "name": "logict",
+    "version": "0.8.2.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/logict-0.8.2.0/logict.cabal"
+  },
+  {
+    "name": "lucid",
+    "version": "2.11.20250303",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/lucid-2.11.20250303/lucid.cabal"
+  },
+  {
+    "name": "lumberjack",
+    "version": "1.0.3.0",
+    "license": "ISC",
+    "url": "https://hackage-content.haskell.org/package/lumberjack-1.0.3.0/lumberjack.cabal"
+  },
+  {
+    "name": "math-functions",
+    "version": "0.3.4.4",
+    "license": "BSD2",
+    "url": "https://hackage-content.haskell.org/package/math-functions-0.3.4.4/math-functions.cabal"
+  },
+  {
+    "name": "megaparsec",
+    "version": "9.6.1",
+    "license": "BSD-2-Clause",
+    "url": "https://hackage-content.haskell.org/package/megaparsec-9.6.1/megaparsec.cabal"
+  },
+  {
+    "name": "memory",
+    "version": "0.18.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/memory-0.18.0/memory.cabal"
+  },
+  {
+    "name": "microlens",
+    "version": "0.4.14.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/microlens-0.4.14.0/microlens.cabal"
+  },
+  {
+    "name": "microlens-th",
+    "version": "0.4.3.17",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/microlens-th-0.4.3.17/microlens-th.cabal"
+  },
+  {
+    "name": "microstache",
+    "version": "1.0.3",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/microstache-1.0.3/microstache.cabal"
+  },
+  {
+    "name": "mmorph",
+    "version": "1.2.2",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/mmorph-1.2.2/mmorph.cabal"
+  },
+  {
+    "name": "mod",
+    "version": "0.2.1.0",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/mod-0.2.1.0/mod.cabal"
+  },
+  {
+    "name": "modern-uri",
+    "version": "0.3.6.1",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/modern-uri-0.3.6.1/modern-uri.cabal"
+  },
+  {
+    "name": "monad-control",
+    "version": "1.0.3.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/monad-control-1.0.3.1/monad-control.cabal"
+  },
+  {
+    "name": "monadLib",
+    "version": "3.10.3",
+    "license": "ISC",
+    "url": "https://hackage-content.haskell.org/package/monadLib-3.10.3/monadLib.cabal"
+  },
+  {
+    "name": "mono-traversable",
+    "version": "1.0.21.0",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/mono-traversable-1.0.21.0/mono-traversable.cabal"
+  },
+  {
+    "name": "mtl",
+    "version": "2.3.1",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/mtl-2.3.1/mtl.cabal"
+  },
+  {
+    "name": "mwc-random",
+    "version": "0.15.3.0",
+    "license": "BSD-2-Clause",
+    "url": "https://hackage-content.haskell.org/package/mwc-random-0.15.3.0/mwc-random.cabal"
+  },
+  {
+    "name": "named-text",
+    "version": "1.2.2.0",
+    "license": "ISC",
+    "url": "https://hackage-content.haskell.org/package/named-text-1.2.2.0/named-text.cabal"
+  },
+  {
+    "name": "network",
+    "version": "3.2.8.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/network-3.2.8.0/network.cabal"
+  },
+  {
+    "name": "network-byte-order",
+    "version": "0.1.7",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/network-byte-order-0.1.7/network-byte-order.cabal"
+  },
+  {
+    "name": "network-control",
+    "version": "0.1.7",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/network-control-0.1.7/network-control.cabal"
+  },
+  {
+    "name": "network-info",
+    "version": "0.2.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/network-info-0.2.1/network-info.cabal"
+  },
+  {
+    "name": "network-uri",
+    "version": "2.6.4.2",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/network-uri-2.6.4.2/network-uri.cabal"
+  },
+  {
+    "name": "newtype-generics",
+    "version": "0.6.2",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/newtype-generics-0.6.2/newtype-generics.cabal"
+  },
+  {
+    "name": "numtype-dk",
+    "version": "0.5.0.3",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/numtype-dk-0.5.0.3/numtype-dk.cabal"
+  },
+  {
+    "name": "old-locale",
+    "version": "1.0.0.7",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/old-locale-1.0.0.7/old-locale.cabal"
+  },
+  {
+    "name": "old-time",
+    "version": "1.1.0.5",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/old-time-1.1.0.5/old-time.cabal"
+  },
+  {
+    "name": "optparse-applicative",
+    "version": "0.18.1.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/optparse-applicative-0.18.1.0/optparse-applicative.cabal"
+  },
+  {
+    "name": "ordered-containers",
+    "version": "0.2.4",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/ordered-containers-0.2.4/ordered-containers.cabal"
+  },
+  {
+    "name": "os-string",
+    "version": "2.0.8",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/os-string-2.0.8/os-string.cabal"
+  },
+  {
+    "name": "panic",
+    "version": "0.4.0.1",
+    "license": "ISC",
+    "url": "https://hackage-content.haskell.org/package/panic-0.4.0.1/panic.cabal"
+  },
+  {
+    "name": "parallel",
+    "version": "3.2.2.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/parallel-3.2.2.0/parallel.cabal"
+  },
+  {
+    "name": "parsec",
+    "version": "3.1.16.1",
+    "license": "BSD2",
+    "url": "https://hackage-content.haskell.org/package/parsec-3.1.16.1/parsec.cabal"
+  },
+  {
+    "name": "parser-combinators",
+    "version": "1.3.1",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/parser-combinators-1.3.1/parser-combinators.cabal"
+  },
+  {
+    "name": "parsers",
+    "version": "0.12.12",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/parsers-0.12.12/parsers.cabal"
+  },
+  {
+    "name": "pem",
+    "version": "0.2.4",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/pem-0.2.4/pem.cabal"
+  },
+  {
+    "name": "polyparse",
+    "version": "1.13.1",
+    "license": "LGPL",
+    "url": "https://hackage-content.haskell.org/package/polyparse-1.13.1/polyparse.cabal"
+  },
+  {
+    "name": "pretty",
+    "version": "1.1.3.6",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/pretty-1.1.3.6/pretty.cabal"
+  },
+  {
+    "name": "pretty-hex",
+    "version": "1.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/pretty-hex-1.1/pretty-hex.cabal"
+  },
+  {
+    "name": "pretty-show",
+    "version": "1.10",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/pretty-show-1.10/pretty-show.cabal"
+  },
+  {
+    "name": "prettyprinter",
+    "version": "1.7.1",
+    "license": "BSD2",
+    "url": "https://hackage-content.haskell.org/package/prettyprinter-1.7.1/prettyprinter.cabal"
+  },
+  {
+    "name": "prettyprinter-ansi-terminal",
+    "version": "1.1.3",
+    "license": "BSD2",
+    "url": "https://hackage-content.haskell.org/package/prettyprinter-ansi-terminal-1.1.3/prettyprinter-ansi-terminal.cabal"
+  },
+  {
+    "name": "primitive",
+    "version": "0.9.1.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/primitive-0.9.1.0/primitive.cabal"
+  },
+  {
+    "name": "process",
+    "version": "1.6.19.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/process-1.6.19.0/process.cabal"
+  },
+  {
+    "name": "profunctors",
+    "version": "5.6.3",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/profunctors-5.6.3/profunctors.cabal"
+  },
+  {
+    "name": "psqueues",
+    "version": "0.2.8.3",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/psqueues-0.2.8.3/psqueues.cabal"
+  },
+  {
+    "name": "quickcheck-instances",
+    "version": "0.3.33",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/quickcheck-instances-0.3.33/quickcheck-instances.cabal"
+  },
+  {
+    "name": "quickcheck-io",
+    "version": "0.2.0",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/quickcheck-io-0.2.0/quickcheck-io.cabal"
+  },
+  {
+    "name": "random",
+    "version": "1.2.1.3",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/random-1.2.1.3/random.cabal"
+  },
+  {
+    "name": "raw-strings-qq",
+    "version": "1.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/raw-strings-qq-1.1/raw-strings-qq.cabal"
+  },
+  {
+    "name": "recv",
+    "version": "0.1.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/recv-0.1.1/recv.cabal"
+  },
+  {
+    "name": "reflection",
+    "version": "2.1.9",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/reflection-2.1.9/reflection.cabal"
+  },
+  {
+    "name": "regex-base",
+    "version": "0.94.0.3",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/regex-base-0.94.0.3/regex-base.cabal"
+  },
+  {
+    "name": "regex-compat",
+    "version": "0.95.2.2",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/regex-compat-0.95.2.2/regex-compat.cabal"
+  },
+  {
+    "name": "resourcet",
+    "version": "1.3.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/resourcet-1.3.0/resourcet.cabal"
+  },
+  {
+    "name": "ring-buffer",
+    "version": "0.4.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/ring-buffer-0.4.1/ring-buffer.cabal"
+  },
+  {
+    "name": "rts",
+    "version": "1.0.2",
+    "url": "https://github.com/ghc/ghc/blob/ghc-9.6.7-release/LICENSE",
+    "license": "BSD-3-Clause (GHC distribution)"
+  },
+  {
+    "name": "s-cargot",
+    "version": "0.1.6.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/s-cargot-0.1.6.0/s-cargot.cabal"
+  },
+  {
+    "name": "safe",
+    "version": "0.3.21",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/safe-0.3.21/safe.cabal"
+  },
+  {
+    "name": "safe-exceptions",
+    "version": "0.1.7.4",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/safe-exceptions-0.1.7.4/safe-exceptions.cabal"
+  },
+  {
+    "name": "sayable",
+    "version": "1.2.6.0",
+    "license": "ISC",
+    "url": "https://hackage-content.haskell.org/package/sayable-1.2.6.0/sayable.cabal"
+  },
+  {
+    "name": "sbv",
+    "version": "10.10",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/sbv-10.10/sbv.cabal"
+  },
+  {
+    "name": "scientific",
+    "version": "0.3.8.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/scientific-0.3.8.1/scientific.cabal"
+  },
+  {
+    "name": "scotty",
+    "version": "0.22",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/scotty-0.22/scotty.cabal"
+  },
+  {
+    "name": "semialign",
+    "version": "1.3.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/semialign-1.3.1/semialign.cabal"
+  },
+  {
+    "name": "semigroupoids",
+    "version": "6.0.1",
+    "license": "BSD2",
+    "url": "https://hackage-content.haskell.org/package/semigroupoids-6.0.1/semigroupoids.cabal"
+  },
+  {
+    "name": "semigroups",
+    "version": "0.20",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/semigroups-0.20/semigroups.cabal"
+  },
+  {
+    "name": "semirings",
+    "version": "0.7",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/semirings-0.7/semirings.cabal"
+  },
+  {
+    "name": "serialise",
+    "version": "0.2.6.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/serialise-0.2.6.1/serialise.cabal"
+  },
+  {
+    "name": "silently",
+    "version": "1.2.5.4",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/silently-1.2.5.4/silently.cabal"
+  },
+  {
+    "name": "simple-get-opt",
+    "version": "0.4",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/simple-get-opt-0.4/simple-get-opt.cabal"
+  },
+  {
+    "name": "simple-sendfile",
+    "version": "0.2.32",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/simple-sendfile-0.2.32/simple-sendfile.cabal"
+  },
+  {
+    "name": "simple-smt",
+    "version": "0.9.8",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/simple-smt-0.9.8/simple-smt.cabal"
+  },
+  {
+    "name": "smallcheck",
+    "version": "1.2.1.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/smallcheck-1.2.1.1/smallcheck.cabal"
+  },
+  {
+    "name": "split",
+    "version": "0.2.5",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/split-0.2.5/split.cabal"
+  },
+  {
+    "name": "splitmix",
+    "version": "0.1.3.2",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/splitmix-0.1.3.2/splitmix.cabal"
+  },
+  {
+    "name": "statistics",
+    "version": "0.16.5.0",
+    "license": "BSD-2-Clause",
+    "url": "https://hackage-content.haskell.org/package/statistics-0.16.5.0/statistics.cabal"
+  },
+  {
+    "name": "stm",
+    "version": "2.5.1.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/stm-2.5.1.0/stm.cabal"
+  },
+  {
+    "name": "streaming-commons",
+    "version": "0.2.3.1",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/streaming-commons-0.2.3.1/streaming-commons.cabal"
+  },
+  {
+    "name": "strict",
+    "version": "0.5.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/strict-0.5.1/strict.cabal"
+  },
+  {
+    "name": "string-interpolate",
+    "version": "0.3.4.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/string-interpolate-0.3.4.0/string-interpolate.cabal"
+  },
+  {
+    "name": "syb",
+    "version": "0.7.3",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/syb-0.7.3/syb.cabal"
+  },
+  {
+    "name": "tagged",
+    "version": "0.8.10",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/tagged-0.8.10/tagged.cabal"
+  },
+  {
+    "name": "tasty",
+    "version": "1.5.3",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/tasty-1.5.3/tasty.cabal"
+  },
+  {
+    "name": "tasty-ant-xml",
+    "version": "1.1.9",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/tasty-ant-xml-1.1.9/tasty-ant-xml.cabal"
+  },
+  {
+    "name": "tasty-checklist",
+    "version": "1.0.8.0",
+    "license": "ISC",
+    "url": "https://hackage-content.haskell.org/package/tasty-checklist-1.0.8.0/tasty-checklist.cabal"
+  },
+  {
+    "name": "tasty-expected-failure",
+    "version": "0.12.3",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/tasty-expected-failure-0.12.3/tasty-expected-failure.cabal"
+  },
+  {
+    "name": "tasty-golden",
+    "version": "2.3.5",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/tasty-golden-2.3.5/tasty-golden.cabal"
+  },
+  {
+    "name": "tasty-hedgehog",
+    "version": "1.4.0.2",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/tasty-hedgehog-1.4.0.2/tasty-hedgehog.cabal"
+  },
+  {
+    "name": "tasty-hspec",
+    "version": "1.2.0.4",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/tasty-hspec-1.2.0.4/tasty-hspec.cabal"
+  },
+  {
+    "name": "tasty-hunit",
+    "version": "0.10.2",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/tasty-hunit-0.10.2/tasty-hunit.cabal"
+  },
+  {
+    "name": "tasty-quickcheck",
+    "version": "0.11.1",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/tasty-quickcheck-0.11.1/tasty-quickcheck.cabal"
+  },
+  {
+    "name": "tasty-smallcheck",
+    "version": "0.8.2",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/tasty-smallcheck-0.8.2/tasty-smallcheck.cabal"
+  },
+  {
+    "name": "tasty-sugar",
+    "version": "2.2.3.3",
+    "license": "ISC",
+    "url": "https://hackage-content.haskell.org/package/tasty-sugar-2.2.3.3/tasty-sugar.cabal"
+  },
+  {
+    "name": "template-haskell",
+    "version": "2.20.0.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/template-haskell-2.20.0.0/template-haskell.cabal"
+  },
+  {
+    "name": "temporary",
+    "version": "1.3",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/temporary-1.3/temporary.cabal"
+  },
+  {
+    "name": "terminal-size",
+    "version": "0.3.4",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/terminal-size-0.3.4/terminal-size.cabal"
+  },
+  {
+    "name": "terminfo",
+    "version": "0.4.1.6",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/terminfo-0.4.1.6/terminfo.cabal"
+  },
+  {
+    "name": "test-framework",
+    "version": "0.8.2.3",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/test-framework-0.8.2.3/test-framework.cabal"
+  },
+  {
+    "name": "test-framework-hunit",
+    "version": "0.3.0.3",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/test-framework-hunit-0.3.0.3/test-framework-hunit.cabal"
+  },
+  {
+    "name": "text",
+    "version": "2.0.2",
+    "license": "BSD-2-Clause",
+    "url": "https://hackage-content.haskell.org/package/text-2.0.2/text.cabal"
+  },
+  {
+    "name": "text-conversions",
+    "version": "0.3.1.1",
+    "license": "ISC",
+    "url": "https://hackage-content.haskell.org/package/text-conversions-0.3.1.1/text-conversions.cabal"
+  },
+  {
+    "name": "text-iso8601",
+    "version": "0.1.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/text-iso8601-0.1.1/text-iso8601.cabal"
+  },
+  {
+    "name": "text-short",
+    "version": "0.1.6.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/text-short-0.1.6.1/text-short.cabal"
+  },
+  {
+    "name": "tf-random",
+    "version": "0.5",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/tf-random-0.5/tf-random.cabal"
+  },
+  {
+    "name": "th-abstraction",
+    "version": "0.6.0.0",
+    "license": "ISC",
+    "url": "https://hackage-content.haskell.org/package/th-abstraction-0.6.0.0/th-abstraction.cabal"
+  },
+  {
+    "name": "th-compat",
+    "version": "0.1.7",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/th-compat-0.1.7/th-compat.cabal"
+  },
+  {
+    "name": "th-expand-syns",
+    "version": "0.4.12.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/th-expand-syns-0.4.12.0/th-expand-syns.cabal"
+  },
+  {
+    "name": "th-lift",
+    "version": "0.8.7",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/th-lift-0.8.7/th-lift.cabal"
+  },
+  {
+    "name": "th-lift-instances",
+    "version": "0.1.20",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/th-lift-instances-0.1.20/th-lift-instances.cabal"
+  },
+  {
+    "name": "th-orphans",
+    "version": "0.13.16",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/th-orphans-0.13.16/th-orphans.cabal"
+  },
+  {
+    "name": "th-reify-many",
+    "version": "0.1.10",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/th-reify-many-0.1.10/th-reify-many.cabal"
+  },
+  {
+    "name": "these",
+    "version": "1.2.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/these-1.2.1/these.cabal"
+  },
+  {
+    "name": "time",
+    "version": "1.12.2",
+    "license": "BSD-2-Clause",
+    "url": "https://hackage-content.haskell.org/package/time-1.12.2/time.cabal"
+  },
+  {
+    "name": "time-compat",
+    "version": "1.9.8",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/time-compat-1.9.8/time-compat.cabal"
+  },
+  {
+    "name": "time-manager",
+    "version": "0.3.0",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/time-manager-0.3.0/time-manager.cabal"
+  },
+  {
+    "name": "tls",
+    "version": "2.1.14",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/tls-2.1.14/tls.cabal"
+  },
+  {
+    "name": "tls-session-manager",
+    "version": "0.0.8",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/tls-session-manager-0.0.8/tls-session-manager.cabal"
+  },
+  {
+    "name": "toml-parser",
+    "version": "2.0.2.0",
+    "license": "ISC",
+    "url": "https://hackage-content.haskell.org/package/toml-parser-2.0.2.0/toml-parser.cabal"
+  },
+  {
+    "name": "transformers",
+    "version": "0.6.1.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/transformers-0.6.1.0/transformers.cabal"
+  },
+  {
+    "name": "transformers-base",
+    "version": "0.4.6",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/transformers-base-0.4.6/transformers-base.cabal"
+  },
+  {
+    "name": "transformers-compat",
+    "version": "0.7.2",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/transformers-compat-0.7.2/transformers-compat.cabal"
+  },
+  {
+    "name": "tree-diff",
+    "version": "0.3.0.1",
+    "license": "GPL-2.0-or-later",
+    "url": "https://hackage-content.haskell.org/package/tree-diff-0.3.0.1/tree-diff.cabal"
+  },
+  {
+    "name": "typed-process",
+    "version": "0.2.13.0",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/typed-process-0.2.13.0/typed-process.cabal"
+  },
+  {
+    "name": "unbounded-delays",
+    "version": "0.1.1.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/unbounded-delays-0.1.1.1/unbounded-delays.cabal"
+  },
+  {
+    "name": "uniplate",
+    "version": "1.6.13",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/uniplate-1.6.13/uniplate.cabal"
+  },
+  {
+    "name": "unliftio",
+    "version": "0.2.25.1",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/unliftio-0.2.25.1/unliftio.cabal"
+  },
+  {
+    "name": "unliftio-core",
+    "version": "0.2.1.0",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/unliftio-core-0.2.1.0/unliftio-core.cabal"
+  },
+  {
+    "name": "unordered-containers",
+    "version": "0.2.21",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/unordered-containers-0.2.21/unordered-containers.cabal"
+  },
+  {
+    "name": "utf8-string",
+    "version": "1.0.2",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/utf8-string-1.0.2/utf8-string.cabal"
+  },
+  {
+    "name": "uuid",
+    "version": "1.3.16",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/uuid-1.3.16/uuid.cabal"
+  },
+  {
+    "name": "uuid-types",
+    "version": "1.0.6",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/uuid-types-1.0.6/uuid-types.cabal"
+  },
+  {
+    "name": "vault",
+    "version": "0.3.1.6",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/vault-0.3.1.6/vault.cabal"
+  },
+  {
+    "name": "vector",
+    "version": "0.13.2.0",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/vector-0.13.2.0/vector.cabal"
+  },
+  {
+    "name": "vector-algorithms",
+    "version": "0.9.1.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/vector-algorithms-0.9.1.0/vector-algorithms.cabal"
+  },
+  {
+    "name": "vector-binary-instances",
+    "version": "0.2.5.2",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/vector-binary-instances-0.2.5.2/vector-binary-instances.cabal"
+  },
+  {
+    "name": "vector-stream",
+    "version": "0.1.0.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/vector-stream-0.1.0.1/vector-stream.cabal"
+  },
+  {
+    "name": "vector-th-unbox",
+    "version": "0.2.2",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/vector-th-unbox-0.2.2/vector-th-unbox.cabal"
+  },
+  {
+    "name": "versions",
+    "version": "6.0.8",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/versions-6.0.8/versions.cabal"
+  },
+  {
+    "name": "void",
+    "version": "0.7.4",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/void-0.7.4/void.cabal"
+  },
+  {
+    "name": "wai",
+    "version": "3.2.4",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/wai-3.2.4/wai.cabal"
+  },
+  {
+    "name": "wai-extra",
+    "version": "3.1.18",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/wai-extra-3.1.18/wai-extra.cabal"
+  },
+  {
+    "name": "wai-logger",
+    "version": "2.5.0",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/wai-logger-2.5.0/wai-logger.cabal"
+  },
+  {
+    "name": "warp",
+    "version": "3.4.12",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/warp-3.4.12/warp.cabal"
+  },
+  {
+    "name": "warp-tls",
+    "version": "3.4.13",
+    "license": "MIT",
+    "url": "https://hackage-content.haskell.org/package/warp-tls-3.4.13/warp-tls.cabal"
+  },
+  {
+    "name": "weigh",
+    "version": "0.0.18",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/weigh-0.0.18/weigh.cabal"
+  },
+  {
+    "name": "witherable",
+    "version": "0.5",
+    "license": "BSD-3-Clause",
+    "url": "https://hackage-content.haskell.org/package/witherable-0.5/witherable.cabal"
+  },
+  {
+    "name": "wl-pprint-annotated",
+    "version": "0.1.0.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/wl-pprint-annotated-0.1.0.1/wl-pprint-annotated.cabal"
+  },
+  {
+    "name": "wl-pprint-text",
+    "version": "1.2.0.2",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/wl-pprint-text-1.2.0.2/wl-pprint-text.cabal"
+  },
+  {
+    "name": "word8",
+    "version": "0.1.3",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/word8-0.1.3/word8.cabal"
+  },
+  {
+    "name": "xml",
+    "version": "1.3.14",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/xml-1.3.14/xml.cabal"
+  },
+  {
+    "name": "yaml",
+    "version": "0.11.11.2",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/yaml-0.11.11.2/yaml.cabal"
+  },
+  {
+    "name": "zenc",
+    "version": "0.1.2",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/zenc-0.1.2/zenc.cabal"
+  },
+  {
+    "name": "zlib",
+    "version": "0.7.1.1",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/zlib-0.7.1.1/zlib.cabal"
+  },
+  {
+    "name": "zlib-bindings",
+    "version": "0.1.1.5",
+    "license": "BSD3",
+    "url": "https://hackage-content.haskell.org/package/zlib-bindings-0.1.1.5/zlib-bindings.cabal"
+  }
+]

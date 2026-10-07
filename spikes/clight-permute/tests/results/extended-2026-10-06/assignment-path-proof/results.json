@@ -1,0 +1,35 @@
+{
+  "pass": true,
+  "sources": {
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/initialization/AssignmentCheck.v": "1003fc5ef36acaf2293d02647edde4ae9e9a314e9978fbac09a0be0a01435e5f",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/initialization/AssignmentSound.v": "4a70c4db9750927bec505706489c9b1317d3e8a333d6a389ff2f22d2e2f6058d",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/initialization/SoundContract.v": "a64e714456d10418a649e093c7236583d9daf8b3ab92181534d5643a7a420fa2",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/initialization/sound.py": "ac6013ddfda3ce6044242713aa5a195c4a6f4028085f1fd4b190f77f01b3dcf1"
+  },
+  "base_manifest_sha256": "c1cba7d287aca882ca29206a56fbe64245bd7fa8e0fe4fd26144f9fc89256fd3",
+  "artifacts": {
+    "AssignmentCheck.v": "1003fc5ef36acaf2293d02647edde4ae9e9a314e9978fbac09a0be0a01435e5f",
+    "AssignmentCheck.log": "e48860f73316a42d574e923cda848bcb6d474abd18fef10499e88630d5a78335",
+    ".AssignmentCheck.aux": "72026ebbbab08989191e7fd918be09932d09f133fa74bfe3e32bbc776c3f4bfc",
+    "AssignmentCheck.glob": "af415931506658c6493549fdda6cf0966c787d2d90c689d24d0b8e35dabb38ba",
+    "AssignmentCheck.vo": "2e3b38cf3fb8fa84514cb48b58eb427faea455056d50c12f5b81e6710b289ba0",
+    "AssignmentCheck.vos": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "AssignmentCheck.vok": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "AssignmentSound.v": "4a70c4db9750927bec505706489c9b1317d3e8a333d6a389ff2f22d2e2f6058d",
+    "AssignmentSound.log": "f0532d0e8a885018e887fe9f2fc1415078fabe8f12825919a931ee3c625a3996",
+    ".AssignmentSound.aux": "1fdb3ae28e1f70ec2a9729f24006cabfe5b639720d188e13ed40894d53f1a338",
+    "AssignmentSound.glob": "93fbe28296afb46287987aece22da4b353f3b386ed6dca4145b53a83e74cc708",
+    "AssignmentSound.vo": "87ba9951f6d5ba51cd9b1b85b52429ae40609881f18a2f23587d08dfc28b888b",
+    "AssignmentSound.vos": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "AssignmentSound.vok": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "SoundContract.v": "a64e714456d10418a649e093c7236583d9daf8b3ab92181534d5643a7a420fa2",
+    "SoundContract.log": "f0532d0e8a885018e887fe9f2fc1415078fabe8f12825919a931ee3c625a3996",
+    ".SoundContract.aux": "0aa0aa784ad9c1852083793e5a388e16db83ba802cec08439b44ea4487bbe2f1",
+    "SoundContract.glob": "1940217e4d4f44789f7dd0d25d5134cf209e8e0287dcca360f8814fb43fecf09",
+    "SoundContract.vo": "9c78df48bea64e66c817259c93cbe1ebf13638309820c8b349249e4642f1db72",
+    "SoundContract.vos": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "SoundContract.vok": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "kernel.log": "91ddc2ba73b8d8081a836fdc9564c046a93283afa537e493dec7c78a70d208dc",
+    "kernel-policy.log": "95e116bf422914ee0124d819eeb540074005383eb990160c489511139ac78ee9"
+  }
+}

@@ -1,6 +1,22 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 # SAW and specification review status
 
+## Resumed checks
+
+The user resumed verification. The isolated uninitialized-copy driver
+`tests/equiv-saw/undef-copy/check.sh` completed successfully. The Clight
+transfer proof passed, and GCC and Clang rejected the printed uninitialized
+read as required by the control.
+
+The completion campaign ran in a fresh `build/equiv-saw/completion-resumed/`
+directory. The size-two swap baseline proved; early exit in either C or C++
+was reported incomplete; the failed-build stale-result control passed.
+All four controls had their expected results. Five classifier tests passed.
+No additional full-domain equivalence claim follows from these controls.
+
+The stopped handoff below is retained as history. See
+[the current main status](../WORKING_STATUS.md) for the resumed scope.
+
 Final stop snapshot: **2026-10-06 22:13:41 UTC**. Agent: `/root/c_memory_review`.
 
 **The user requested a stop and handoff. All active task jobs are stopped.**

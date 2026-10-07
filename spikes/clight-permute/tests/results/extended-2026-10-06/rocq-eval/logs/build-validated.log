@@ -1,0 +1,24 @@
++ coqdep -sort -R /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/compcert compcert -Q /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/legacy Legacy Driver.v
++ coqc -w -notation-overridden,-deprecated-from-Coq -R /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/compcert compcert -Q /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/legacy Legacy ./Permute.v
++ coqc -w -notation-overridden,-deprecated-from-Coq -R /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/compcert compcert -Q /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/legacy Legacy ./ClightEval.v
++ coqc -w -notation-overridden,-deprecated-from-Coq -R /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/compcert compcert -Q /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/legacy Legacy ./ClightEvalProofs.v
++ coqc -w -notation-overridden,-deprecated-from-Coq -R /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/compcert compcert -Q /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/legacy Legacy ./ClightMemory.v
++ coqc -w -notation-overridden,-deprecated-from-Coq -R /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/compcert compcert -Q /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/legacy Legacy ./ClightEntry.v
++ coqc -w -notation-overridden,-deprecated-from-Coq -R /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/compcert compcert -Q /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/legacy Legacy ./ClightScalar.v
++ coqc -w -notation-overridden,-deprecated-from-Coq -R /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/compcert compcert -Q /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/legacy Legacy ./ClightCall.v
++ coqc -w -notation-overridden,-deprecated-from-Coq -R /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/compcert compcert -Q /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/legacy Legacy Driver.v
++ coqchk -silent -o -R /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/compcert compcert -Q /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/legacy Legacy Driver
++ python3 /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/check-assumptions.py --kernel /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/rocq-eval/validated/kernel.log
++ ocamlopt -w -a -c evaluation.mli
++ ocamlopt -w -a -c evaluation.ml
++ ocamlopt -w +a-4-70 -o rocq-eval evaluation.cmx main.ml
++ gcc --version
++ gcc -std=c11 -Wall -Wextra -Werror -U_FORTIFY_SOURCE -O0 -I. native.c permute.c -o native-gcc-O0
++ gcc -std=c11 -Wall -Wextra -Werror -U_FORTIFY_SOURCE -O2 -I. native.c permute.c -o native-gcc-O2
++ gcc -std=c11 -Wall -Wextra -Werror -U_FORTIFY_SOURCE -O3 -I. native.c permute.c -o native-gcc-O3
++ clang --version
++ clang -std=c11 -Wall -Wextra -Werror -U_FORTIFY_SOURCE -O0 -I. native.c permute.c -o native-clang-O0
++ clang -std=c11 -Wall -Wextra -Werror -U_FORTIFY_SOURCE -O2 -I. native.c permute.c -o native-clang-O2
++ clang -std=c11 -Wall -Wextra -Werror -U_FORTIFY_SOURCE -O3 -I. native.c permute.c -o native-clang-O3
++ coqc --version
++ ocamlopt -version

@@ -1,0 +1,66 @@
+{
+  "core": "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/path-loss-probe/permute.c",
+  "core_sha256": "0bb0dd7cdf594e61bcbb54420c8c9a4bfe27dae168beb02f88045a6c6237e0ee",
+  "solc_permute_sha256": "6d2864500674270821ee5702ccf1787ef27716d598c98c6cc139e80c67f53476",
+  "sizes": [
+    1
+  ],
+  "value_groups": null,
+  "cases": [
+    {
+      "n": 1,
+      "directory": "n1-0",
+      "permutation": [
+        0
+      ],
+      "complete_paths": 1,
+      "partial_paths": 0,
+      "errors": [],
+      "function_coverage": {
+        "C permute": {
+          "covered_instructions": 183,
+          "instructions": 361
+        },
+        "solc adapter": {
+          "covered_instructions": 95,
+          "instructions": 124
+        },
+        "solc Emission::permute": {
+          "covered_instructions": 188,
+          "instructions": 331
+        }
+      },
+      "completion": {
+        "witnesses": 1,
+        "invalid_witnesses": {},
+        "pass": true
+      },
+      "changed_sources": [],
+      "linked_sha256": "4031bf45742882df2855ffb6d7df3c3314f380c61d9aeaa184e2b0855ec4c355",
+      "pass": true
+    }
+  ],
+  "source_sha256": {
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/path-loss-probe/permute.c": "0bb0dd7cdf594e61bcbb54420c8c9a4bfe27dae168beb02f88045a6c6237e0ee",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/core.c": "ae103cc63f66ef4b08073b84785b587a10b009a41c09a2f14797058b109e6f10",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/oracle.cpp": "5a11fd327479ba781250c4877eafa4ecce47b423fa9cfff3e6850a903f929ff6",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/klee-driver.c": "b70aa1821f915e367d52d02372102631f3e5599d3be2419366cb1e5329594836",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/observation.h": "45e846318dad0c9a3cbf2caa9d0eaf099dd4fe4d1b19f6ef3954bb91063dcbda",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/oracle.cpp": "4534e19c88f2dfebf132fd47f194b5c5a408f349c9a604f78b651a94bacee15e",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/test.h": "0e004203239597532676e2b9a39022198391894cb9868bac3c175010b35d3a5b",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/permute.h": "a081421bd698f8b61fe9eee3e49d2b24b7a5c9d06d8772c43a090856b21ba8e6",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/run-klee.py": "65da4e72078743e3d7ad702ea05ffd2e21f3a25e820bdd863530b2e94a18432b",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/profiles.py": "f56fc77572d738cc1ce85ad9457d49357172faf93a89b48693d3454a72cbaec9",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/klee_coverage.py": "566ae80da6e9108c1fe6e97932f29c59aa7f33d35f83ba9d8f1eee7a2a5fd2e7",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/fetch_nothrow.py": "581ef364d7ba56e004987e47e665a3cc854b03a902fcccdc164c8c4b66b372c1",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/path-loss-probe/forks-disabled-seed-1/runtime/new_opnt.cc": "4c2466f46ae448de78523a245600acbbbca8680409e7f477f1939de28bac48c0",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/completion.py": "75cd4f9c67a776a539654263e32016b68dd625a5fe85ff705f98e6d4e2c55ce7",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/completion.c": "412304ced793b89bd3e9b655547b3e8a2808a4ed85edace82d988bdaa7365c1b",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/klee-shell.nix": "bc124cea25b991a10a5671bef922bdd012bb2674bd28e667436c23c755c9f8fc",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/path-loss-probe/forks-disabled-seed-1/oracle/solc_emission_helpers.inc": "5dbf3c308fd06da2be1e257ef67b27446054994ebeb550330bdcb7de8a1d40c9",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/path-loss-probe/forks-disabled-seed-1/oracle/solc_mapping.inc": "0cd018ad0c0ba53cbe61362bd6b9d84298a89d54cb44fc4bcf34d4f0d0e6a272",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/path-loss-probe/forks-disabled-seed-1/oracle/solc_permute.inc": "6d2864500674270821ee5702ccf1787ef27716d598c98c6cc139e80c67f53476",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/path-loss-probe/forks-disabled-seed-1/oracle/solc_stack_helpers.inc": "f3da04fdced4d12114c96e8b7614d4ea10d168751394b7aa0f7a662db9108d8d",
+    "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/path-loss-probe/forks-disabled-seed-1/oracle/solc_types.inc": "5718984cb5dd08859cac0336e34eff4cd45958b1515d5ccf8a0c9fccaab162db"
+  }
+}

@@ -2,6 +2,59 @@
 
 # Frama-C work status
 
+## Current pause: 2026-10-07
+
+The user asked to wrap up this work and pause. No Frama-C or solver process
+remains active. This overrides the earlier deadline. The result is still
+**641/642 memory goals valid**, with main-loop termination unproved.
+Initialization controls and all 25 tool tests pass.
+
+The final [rank experiment](../../../spikes/clight-permute/tests/results/extended-2026-10-06/frama-rank-experiments/README.md)
+proves the all-integer bounds lemma in a copied source. Frame and update
+remain unproved. All reports, proof scripts, SMT obligations, and diagnostic
+sources are archived. The production rank-lemma file is unchanged.
+
+After user authorization to resume, the next step is to instantiate the
+positive induction hypothesis at `n - 1` for frame/update. Check all lemma
+prerequisites before use. Then add the main-loop measure and finish the
+source-C contract. The historical results below do not constitute a full
+source-C proof.
+
+## Resumed check
+
+A later focused check now proves all nine fill-invariant and target-
+initialization obligations on the production C. A parentheses control
+also passes. Removing the target store leaves the fill-invariant
+preservation goal unproved. The WP strategy instantiates the existing
+surjection premise at the index in the outer goal access. It adds no
+assumption and changes no C token. The runner now applies prover and
+tactic selection in the WP stage after `-then`. All 25 tool tests pass.
+See the [initialization archive](../../../spikes/clight-permute/tests/results/extended-2026-10-06/frama-initialization/README.md).
+
+The full memory pass `memory-target-strategy` then completed with
+**641/642 explicit goals valid**. Only main-loop termination remains
+unproved. The runner returns nonzero. Its
+[archive](../../../spikes/clight-permute/tests/results/extended-2026-10-06/frama-memory-strategy/README.md)
+retains the reports, sources, proof scripts, and selected SMT obligations.
+This is still an incomplete memory contract and not the full functional
+proof. The original count/rank experiment leaves all three lemmas unproved
+under `build/frama-c/rank-lemmas-current-v2/`. The later all-integer variant
+proves only the bounds goal, as recorded above.
+
+After the user's resume instruction, `memory-resumed-9` ran with the final
+solver setup. It completed with 635/642 valid goals, one unknown, and six
+timeouts. The runner correctly reported failure. Target initialization and
+main-loop termination remain open; the other pending goals are listed in
+`build/frama-c/memory-resumed-9/summary.json`. This run does not supersede
+the earlier 642/644 memory result.
+
+All 24 annotation, report, version, and solver-wrapper tests passed in the
+Frama-C Nix shell. An earlier invocation outside that shell failed because
+the required solver was unavailable; that log remains in `/tmp`.
+
+The stopped handoff below records the earlier work. See
+[the current main status](../WORKING_STATUS.md) for the resumed scope.
+
 Final handoff: **2026-10-06 22:13 UTC**. **Work is stopped at the user's
 request. No Frama-C or solver job from this task is still running.**
 The prior deadline was 2026-10-07 09:00 UTC (11:00 CEST). The stop request
@@ -62,6 +115,7 @@ extra entries are not included in the table.
 
 | Run | Explicit goals | Valid | Pending | Notes |
 | --- | ---: | ---: | ---: | --- |
+| `memory-target-strategy` | 642 | 641 | 1 | Initialization strategy and prover selection in the WP stage. Only main-loop termination is pending. |
 | `full-1` | 774 | 604 | 170 | Z3, 3-second limit; full iff and trace contract. |
 | `full-2` | 774 | 657 | 117 | Z3/CVC5, 10-second limit; full iff and trace contract. |
 | `memory-1` | 597 | 572 | 25 | Z3, 5-second limit. |
@@ -152,8 +206,8 @@ SAT/UNSAT calls passed, and an invalid solver option remained an error.
 A second issue came from option order: Frama-C resolved a solver name before
 it read the local Why3 configuration. `run.py` now places the local config
 before prover selection. An isolated follow-up used the correct CVC5 1.3.4
-identifier and had no `Not_found` error, but its mathematical goal remains
-unproved. No full source pass has run with this final option order. Do not
+identifier and had no `Not_found` error. The later memory passes above use
+the corrected solver setup and WP-stage options. Do not
 treat the old CVC5 failures in `memory-4` or `memory-8` as proof results.
 
 ## Uninitialized-copy control
@@ -210,17 +264,12 @@ For the full theorem, use `--mode full --name full-3`. These commands use the
 latest annotation generator and final solver-configuration order. Their
 expected current result is still failure while required goals are open.
 
-The immediate proof work is:
+The remaining proof work after user authorization is:
 
-1. Check the final solver setup in a fresh run; all prior jobs have ended.
-2. Prove target initialization through an explicit finite-surjection helper.
-3. Complete local array frame and trace-append facts without changing C tokens.
-4. Prove the count/rank and trace-frame lemmas, then use them in the full pass.
-   `moved_bounds` has two solved tactic branches and one empty branch in
-   its saved script. The theorem is not proved. The finite-surjection
-   initialization helper is in `build/frama-c/coverage-lemma.c`; it is also
-   unproved. Its final tool result is in `coverage-lemma-fixed.log`.
-5. Close normalization completeness and the source-C iff theorem.
-6. Continue negative checks of proof-result handling and all requested bug classes.
+1. Finish frame/update induction and retain original statements as corollaries.
+2. Use the checked rank facts to prove main-loop termination.
+3. Complete the full functional contract, including trace replay and the
+   success condition. Target initialization is already valid in the memory pass.
+4. Continue negative controls for each added proof step and result check.
 
 No filesystem fault or chaos tests are planned; the user excluded them.

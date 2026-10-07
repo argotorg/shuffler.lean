@@ -1,0 +1,87 @@
+[
+  {
+    "source": "spikes/clight-permute/tests/equiv-alive2/program_symbols.py",
+    "archive": "final-gate-sources/program_symbols.py",
+    "sha256": "59ab73e311f2555da84d4e347ca52746de543f8df03cbbf2feb6b18a7bf1b884"
+  },
+  {
+    "source": "spikes/clight-permute/tests/equiv-alive2/test_program_symbols.py",
+    "archive": "final-gate-sources/test_program_symbols.py",
+    "sha256": "bf99167fee1ba4f3f61bda9788bb82f3d17f7609e06485fe9e8d44bbb56285f6"
+  },
+  {
+    "source": "spikes/clight-permute/tests/equiv-alive2/run-klee.py",
+    "archive": "final-gate-sources/run-klee.py",
+    "sha256": "746fa17eeb990454920dab08e3a981424c6e19b740df5ec134dc1b78596fbc03"
+  },
+  {
+    "source": "spikes/clight-permute/tests/equiv-alive2/run-rejected.py",
+    "archive": "final-gate-sources/run-rejected.py",
+    "sha256": "ef4280f84539883936943f0a5d86cadcf8ba11d70458e35aa612cca0fb6c9152"
+  },
+  {
+    "source": "spikes/clight-permute/tests/equiv-alive2/exploration.py",
+    "archive": "final-gate-sources/exploration.py",
+    "sha256": "33c430e99387551637aee283e27debd68fb4c1654b61da953733dd6ceb276b4b"
+  },
+  {
+    "source": "spikes/clight-permute/tests/equiv-alive2/path-loss.py",
+    "archive": "final-gate-sources/path-loss.py",
+    "sha256": "88dfc6cc1e6db9df2720555e523845d4b5782266858808ee53169b8b7fef87b0"
+  },
+  {
+    "source": "spikes/clight-permute/tests/equiv-alive2/test_exploration.py",
+    "archive": "final-gate-sources/test_exploration.py",
+    "sha256": "8bbd18558382b3607fd742923c7ff96e8c4742d744aae09545d80977c70e3c33"
+  },
+  {
+    "source": "spikes/clight-permute/tests/equiv-alive2/rejected-driver.c",
+    "archive": "final-gate-sources/rejected-driver.c",
+    "sha256": "fffa6e4b82a67219100e5665762a6f00f70cf34428cea02aaaa6c9dd2d05e50f"
+  },
+  {
+    "source": "spikes/clight-permute/tests/equiv-alive2/test_rejected.py",
+    "archive": "final-gate-sources/test_rejected.py",
+    "sha256": "c18ac9c860e79d637ed179e852cc696d49cf8f390351cdc1ece287c90c80a6ac"
+  },
+  {
+    "source": "/tmp/permute-symbols-red.log",
+    "archive": "final-gate-logs/symbols-red.log",
+    "sha256": "5aea879101ced58186385957517b953e84c7d88cd507a759fb92a857ad2dd0ee"
+  },
+  {
+    "source": "/tmp/permute-symbols-green.log",
+    "archive": "final-gate-logs/symbols-green.log",
+    "sha256": "f39c39b1f454e13e13b4ed9f400fce38f20ddcb5fbbd46c438a6e797e53a031a"
+  },
+  {
+    "source": "/tmp/permute-rejected-symbols-tests.log",
+    "archive": "final-gate-logs/rejected-symbols-tests.log",
+    "sha256": "741269872435be5f67ea12dddc17f3f5ff7df7a07242016f5c2c5b9e9b9266f2"
+  },
+  {
+    "source": "/tmp/permute-symbols-retained-audit.log",
+    "archive": "final-gate-logs/symbols-retained-audit.log",
+    "sha256": "a981ddae73b2c696eea0823a81bb4b885a57737199bb2988a270cbc5ba478386"
+  },
+  {
+    "source": "/tmp/permute-klee-assume-fixed.log",
+    "archive": "final-gate-logs/klee-assume-fixed.log",
+    "sha256": "ac0fadd731754a6d6b1c230a8a6e79155d7a4f7317c4729ec31458e8d7d6f1f8"
+  },
+  {
+    "source": "spikes/clight-permute/build/equiv-alive2/klee-assume-probe/fixed/n1-0/program-symbols.json",
+    "archive": "klee-assume-probe/fixed/program-symbols.json",
+    "sha256": "7682f27e676cd9a58914ad699b183b3286dd37eb05cf56c0ce6d06e69c23a79c"
+  },
+  {
+    "source": "spikes/clight-permute/build/equiv-alive2/path-loss-symbols-checked/results.json",
+    "archive": "path-loss-symbols-checked/results.json",
+    "sha256": "b56d7a0ebe4011a9fdfcd4d4e9185885026cac31cf3ac036434307bcb5a54bef"
+  },
+  {
+    "source": "spikes/clight-permute/build/equiv-alive2/symbols-retained-audit/audit.py",
+    "archive": "retained-symbols-audit.py",
+    "sha256": "941a74156c9b5df6ff6e443e03a24f3e9daf23d136546162e0fc070d6020e035"
+  }
+]

@@ -1,0 +1,12 @@
+File "printer.ml", line 5, characters 0-14:
+5 | open Extracted
+    ^^^^^^^^^^^^^^
+Warning 44 [open-shadow-identifier]: this open statement shadows the value identifier fst (which is later used)
+File "printer.ml", line 5, characters 0-14:
+5 | open Extracted
+    ^^^^^^^^^^^^^^
+Warning 44 [open-shadow-identifier]: this open statement shadows the value identifier snd (which is later used)
+File "generator.ml", line 22, characters 6-23:
+22 |   let open Stdlib.Int64 in
+           ^^^^^^^^^^^^^^^^^
+Warning 44 [open-shadow-identifier]: this open statement shadows the value identifier add (which is later used)

@@ -1,0 +1,53 @@
+=================================================================
+==165364==ERROR: AddressSanitizer: stack-buffer-overflow on address 0x78ef4fb00060 at pc 0x6073538c0aa1 bp 0x7fff73ea52c0 sp 0x7fff73ea52b8
+WRITE of size 4 at 0x78ef4fb00060 thread T0
+    #0 0x6073538c0aa0 in permute /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/printer-eval/sanitizer-extended/control-bounds/program.c:20:9
+    #1 0x6073538bfe86 in main /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/printer-eval/validated/native.c:18:31
+    #2 0x7cef51c2b284 in __libc_start_call_main (/nix/store/lm3pknxi0ipypy3lxh1wmm8wvvavdwrn-glibc-2.42-84/lib/libc.so.6+0x2b284) (BuildId: 67802a55cff437269d8d9608af391b6f583fca73)
+    #3 0x7cef51c2b337 in __libc_start_main@GLIBC_2.2.5 (/nix/store/lm3pknxi0ipypy3lxh1wmm8wvvavdwrn-glibc-2.42-84/lib/libc.so.6+0x2b337) (BuildId: 67802a55cff437269d8d9608af391b6f583fca73)
+    #4 0x607353769354 in _start (/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/printer-eval/sanitizer-extended/control-bounds/sanitized+0x2c354)
+
+Address 0x78ef4fb00060 is located in stack of thread T0 at offset 96 in frame
+    #0 0x6073538bfc27 in main /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/printer-eval/validated/native.c:8
+
+  This frame has 5 object(s):
+    [32, 36) 'size' (line 9)
+    [48, 52) 'fuel' (line 9)
+    [64, 96) 'data' (line 13) <== Memory access at offset 96 overflows this variable
+    [128, 160) 'permutation' (line 13)
+    [192, 204) 'out' (line 13)
+HINT: this may be a false positive if your program uses some custom stack unwind mechanism, swapcontext or vfork
+      (longjmp and C++ exceptions *are* supported)
+SUMMARY: AddressSanitizer: stack-buffer-overflow /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/printer-eval/sanitizer-extended/control-bounds/program.c:20:9 in permute
+Shadow bytes around the buggy address:
+  0x78ef4faffd80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x78ef4faffe00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x78ef4faffe80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x78ef4fafff00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x78ef4fafff80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+=>0x78ef4fb00000: f1 f1 f1 f1 04 f2 04 f2 00 00 00 00[f2]f2 f2 f2
+  0x78ef4fb00080: 00 00 00 00 f2 f2 f2 f2 00 04 f3 f3 f3 f3 f3 f3
+  0x78ef4fb00100: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x78ef4fb00180: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x78ef4fb00200: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  0x78ef4fb00280: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+Shadow byte legend (one shadow byte represents 8 application bytes):
+  Addressable:           00
+  Partially addressable: 01 02 03 04 05 06 07 
+  Heap left redzone:       fa
+  Freed heap region:       fd
+  Stack left redzone:      f1
+  Stack mid redzone:       f2
+  Stack right redzone:     f3
+  Stack after return:      f5
+  Stack use after scope:   f8
+  Global redzone:          f9
+  Global init order:       f6
+  Poisoned by user:        f7
+  Container overflow:      fc
+  Array cookie:            ac
+  Intra object redzone:    bb
+  ASan internal:           fe
+  Left alloca redzone:     ca
+  Right alloca redzone:    cb
+==165364==ABORTING

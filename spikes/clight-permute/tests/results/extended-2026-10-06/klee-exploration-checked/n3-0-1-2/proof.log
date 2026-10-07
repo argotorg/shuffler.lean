@@ -1,0 +1,24 @@
+KLEE: output directory is "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/equiv-alive2/klee-exploration-checked/n3-0-1-2/proof"
+KLEE: Using Z3 solver backend
+KLEE: Deterministic allocator: Using quarantine queue size 8
+KLEE: Deterministic allocator: globals (start-address=0x7d1896c00000 size=10 GiB)
+KLEE: Deterministic allocator: constants (start-address=0x7d1616c00000 size=10 GiB)
+KLEE: Deterministic allocator: heap (start-address=0x7c1616c00000 size=1024 GiB)
+KLEE: Deterministic allocator: stack (start-address=0x7bf616c00000 size=128 GiB)
+KLEE: WARNING: undefined reference to function: _ZSt17__throw_bad_allocv
+KLEE: WARNING: undefined reference to function: _ZSt20__throw_length_errorPKc
+KLEE: WARNING: undefined reference to function: _ZSt21__glibcxx_assert_failPKciS0_S0_
+KLEE: WARNING: undefined reference to function: _ZSt28__throw_bad_array_new_lengthv
+KLEE: WARNING: undefined reference to variable: _ZSt7nothrow
+KLEE: WARNING: undefined reference to function: _ZdlPvm
+KLEE: WARNING ONCE: Alignment of memory from call "_Znwm" is not modelled. Using alignment of 8.
+KLEE: Deterministic allocator: Using quarantine queue size 8
+KLEE: Deterministic allocator: globals (start-address=0x7bf396c00000 size=10 GiB)
+KLEE: Deterministic allocator: constants (start-address=0x7bf116c00000 size=10 GiB)
+KLEE: Deterministic allocator: heap (start-address=0x7af116c00000 size=1024 GiB)
+KLEE: Deterministic allocator: stack (start-address=0x7ad116c00000 size=128 GiB)
+
+KLEE: done: total instructions = 380841
+KLEE: done: completed paths = 13
+KLEE: done: partially completed paths = 0
+KLEE: done: generated tests = 13

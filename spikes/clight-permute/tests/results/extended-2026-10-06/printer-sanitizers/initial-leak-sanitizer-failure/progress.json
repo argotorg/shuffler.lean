@@ -1,0 +1,18 @@
+[
+  {
+    "seed": 0,
+    "pass": false,
+    "mismatches": [
+      48
+    ],
+    "errors": [
+      "process exit 1",
+      "expected 50 records, received 49",
+      "case 48: invalid trace count or record length: 4020634318 0 0 137994125 3527327598 2857060367 945044233 3404875120 3526570529 454625463 2573206801 2245087425 1184948859 3058322487 274332970 523758192 2147483679 1719079724 1224154991 ",
+      "reference and candidate record counts differ"
+    ],
+    "source_sha256": "5a49cff76fc942c1c3a191316d94b7e853cda001bbe0465007cde7c1bc1e519c",
+    "binary_sha256": "58010c93996077bfd1709446b513ca37158bbbb27df2e37ea3d4a01878bb8d6a",
+    "stderr_empty": false
+  }
+]

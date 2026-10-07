@@ -1,0 +1,10 @@
+{
+  "time_utc": "2026-10-07T01:30:31.402108+00:00",
+  "reason": "User asks to wrap up Frama-C and pause; this overrides the earlier deadline.",
+  "klee_stop": {
+    "pid": 166262,
+    "signal": "SIGINT",
+    "runner_exit_code": 1
+  },
+  "active_verification_processes": []
+}

@@ -1,0 +1,9 @@
+In file included from /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/tests/equiv-alive2/rejected-driver.c:2:
+In file included from /nix/store/ym6fyvc1y5ng7bpzigmg5db313w4mr88-klee-git-9a36a6782b814fe1fa37439652b875114faa0e20/include/klee/klee.h:13:
+In file included from /nix/store/dzqms3pvhvkvkhabcnxf1iy0n701cl2c-clang-wrapper-19.1.7/resource-root/include/stdint.h:56:
+In file included from /nix/store/lbjwxax9n0457lgd83rqwpd1l9lgfl7r-glibc-2.42-84-dev/include/stdint.h:26:
+In file included from /nix/store/lbjwxax9n0457lgd83rqwpd1l9lgfl7r-glibc-2.42-84-dev/include/bits/libc-header-start.h:33:
+/nix/store/lbjwxax9n0457lgd83rqwpd1l9lgfl7r-glibc-2.42-84-dev/include/features.h:435:4: warning: _FORTIFY_SOURCE requires compiling with optimization (-O) [-W#warnings]
+  435 | #  warning _FORTIFY_SOURCE requires compiling with optimization (-O)
+      |    ^
+1 warning generated.

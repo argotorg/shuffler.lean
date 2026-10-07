@@ -1,0 +1,8 @@
+Error: ASSERTION FAIL: core.status == oracle.status
+File: spikes/clight-permute/tests/equiv-alive2/klee-driver.c
+Line: 15
+assembly.ll line: 30228
+State: 1
+Stack: 
+	#000030228 in checked_main() at spikes/clight-permute/tests/equiv-alive2/klee-driver.c:15
+	#100030468 in main() at spikes/clight-permute/tests/equiv-alive2/completion.c:8
