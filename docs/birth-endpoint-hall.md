@@ -48,6 +48,19 @@ This file does not claim a proved runtime bound for that implementation.
 The number of moved endpoint tokens is an optimization objective. It is
 not the exact number of SWAP instructions.
 
+`optimizeTraceWord` extracts a feasible birth word from an empty-source
+trace without POP. It chooses the cheapest available introduction at each
+birth and an endpoint map with minimum moved-token count. Lean proves a
+factor-two bound against every trace with the same ordered birth values,
+for both total weighted score and score above the generation baseline.
+The comparison trace may use different direct or DUP instructions.
+
+`improveTraceWord` compares this result with the supplied trace and keeps
+the lower weighted score. It preserves the word, exact additions, source,
+and target. It has no POP and no failure branch. Lean proves that it never
+increases the input score and that it retains the same-word factor-two
+bounds. This API is separate from the current portfolio schedule.
+
 These results apply to a supplied birth word. They do not choose the birth
 word or its introduction methods. The number of moved endpoints can also
 exceed the number of positions with unequal values. With reach 2, word
