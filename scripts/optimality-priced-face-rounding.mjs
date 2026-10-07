@@ -252,6 +252,56 @@ export function checkDenominatorThree() {
     inputMoved: bound, balancedColorings: colorings, bestOutputMoved: best, outputWitness: witness };
 }
 
+/** Refutes E-preserving row-token rounding even at canonical cuts. */
+export function checkCanonicalCounterexample() {
+  const input = { target: [0, 1, 2, 1, 1, 3, 2, 0], reach: 3, swap: 1,
+    gaps: [{ left: 0, weight: 2 }, { left: 2, weight: 2 }] };
+  const { target, reach } = input, { table, gaps, permutations } = tableFor(target, reach);
+  const inputs = [target.map((_, row) => row), [0, 1, 2, 7, 6, 5, 3, 4]];
+  const words = inputs.map(assignment => assignment.map(output => target[output]));
+  const reward = assignment => target.length - moved(assignment) + input.gaps.reduce((sum, gap) =>
+    sum + gap.weight * assignment.slice(0, gap.left + reach + 1).filter(output =>
+      target[output] === target[gap.left]).length, 0);
+  const optimum = Math.max(...[...table.values()].map(entry => reward(entry.assignment)));
+  const dual = pricedAssignment(input);
+  assert.equal(String(optimum), dual.reward);
+  inputs.forEach(assignment => {
+    assert.ok(assignment.every((output, row) => row <= output + reach));
+    assert.equal(reward(assignment), optimum);
+  });
+  let colorings = 0, best = Infinity, witness = null;
+  const visit = (row, difference, left, right) => {
+    if (row === target.length) {
+      if (difference.some(value => value !== 0)) return;
+      const a = table.get(key(left)), b = table.get(key(right));
+      if (!a || !b) return;
+      colorings++;
+      if (a.e + b.e < best) { best = a.e + b.e; witness = [a.assignment, b.assignment]; }
+      return;
+    }
+    const [a, b] = words.map(word => word[row]);
+    for (const [x, y] of a === b ? [[a, b]] : [[a, b], [b, a]]) {
+      const next = [...difference]; next[x]++; next[y]--;
+      if (gaps.some(gap => gap + reach === row && Math.abs(next[target[gap]]) > 1)) continue;
+      visit(row + 1, next, [...left, x], [...right, y]);
+    }
+  };
+  visit(0, Array(4).fill(0), [], []);
+  const rank = assignment => relativeCycles(assignment, target.map((_, row) => row))
+    .reduce((sum, cycle) => sum + cycle.length - 1, 0);
+  const alternative = [0, 1, 2, 7, 4, 6, 3, 5];
+  assert.ok(alternative.every((output, row) => row <= output + reach));
+  assert.equal(reward(alternative), optimum);
+  return { name: 'canonical-price-mixed-pin-obstruction', input, dual, permutations, words: table.size,
+    inputAssignments: inputs, inputMoved: inputs.reduce((sum, assignment) => sum + moved(assignment), 0),
+    canonicalGaps: gaps.map(left => ({ left, value: target[left], cut: left + reach })),
+    balancedColorings: colorings, bestOutputMoved: best, outputWitness: witness,
+    outputSwapRank: witness.reduce((sum, assignment) => sum + rank(assignment), 0),
+    alternative: { assignment: alternative, moved: moved(alternative), reward: reward(alternative),
+      gapCounts: counts(alternative.map(output => target[output]), target, reach, gaps) },
+    scope: 'This refutes canonical-cut E-preserving row-token rounding on a common canonical-price face. The witnesses have total swap rank 3 <= input E 4. A different common-face assignment changes row values and retains every gap. This is not a factor-two or LP-integrality counterexample.' };
+}
+
 function main() {
   const output = process.argv[2] ?? 'Bench/evidence-priced-face-rounding.json';
   const fixtures = [
@@ -268,11 +318,12 @@ function main() {
     console.log(JSON.stringify({ ...record, roundingWitness: record.roundingWitness !== null }));
     if (record.failures.length) break;
   }
-  const report = { status: 'named exact checks of a common-price optimal-face rounding claim',
-    claim: 'Every pair of assignments on one positive-SWAP-price canonical-gap-price optimum face admits an all-prefix-balanced row-token recoloring preserving their total moved count. This is stronger than the required canonical-cut balance.',
+  const report = { status: 'refuted by a named exact canonical-price counterexample',
+    claim: 'E-preserving row-token rounding can fail on a positive-SWAP-price canonical-gap-price optimum face, even when balance is required only at canonical cuts.',
     priceDomain: { swap: [1, 2], eachCanonicalGap: [0, 1, 2, 3, 4] }, records,
     denominatorThree: checkDenominatorThree(),
-    scope: 'Only the six named target/reach instances and the one denominator-three case. Endpoint minima and all face pairs are independently enumerated. Any failure has a separate exact sparse-flow assignment dual. The terminal test uses one deterministic split sequence per pair, not all split sequences. No general theorem, LP integrality, production change, or runtime bound is claimed.',
+    counterexample: checkCanonicalCounterexample(),
+    scope: 'Six named reach-2 cases and one denominator-three case pass the stronger all-prefix check. The separate named reach-3 case refutes even canonical-cut row-token E rounding. Endpoint minima are independently enumerated and the counterexample has a checked sparse-flow assignment dual. The terminal tests use one deterministic split sequence per pair. No factor-two failure, LP integrality result, production change, or runtime bound is claimed.',
     reproduce: `node scripts/optimality-priced-face-rounding.mjs ${output}` };
   fs.writeFileSync(output, JSON.stringify(report, null, 2) + '\n');
 }

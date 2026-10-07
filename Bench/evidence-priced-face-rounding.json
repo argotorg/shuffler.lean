@@ -1,6 +1,6 @@
 {
-  "status": "named exact checks of a common-price optimal-face rounding claim",
-  "claim": "Every pair of assignments on one positive-SWAP-price canonical-gap-price optimum face admits an all-prefix-balanced row-token recoloring preserving their total moved count. This is stronger than the required canonical-cut balance.",
+  "status": "refuted by a named exact canonical-price counterexample",
+  "claim": "E-preserving row-token rounding can fail on a positive-SWAP-price canonical-gap-price optimum face, even when balance is required only at canonical cuts.",
   "priceDomain": {
     "swap": [
       1,
@@ -918,6 +918,162 @@
       ]
     ]
   },
-  "scope": "Only the six named target/reach instances and the one denominator-three case. Endpoint minima and all face pairs are independently enumerated. Any failure has a separate exact sparse-flow assignment dual. The terminal test uses one deterministic split sequence per pair, not all split sequences. No general theorem, LP integrality, production change, or runtime bound is claimed.",
+  "counterexample": {
+    "name": "canonical-price-mixed-pin-obstruction",
+    "input": {
+      "target": [
+        0,
+        1,
+        2,
+        1,
+        1,
+        3,
+        2,
+        0
+      ],
+      "reach": 3,
+      "swap": 1,
+      "gaps": [
+        {
+          "left": 0,
+          "weight": 2
+        },
+        {
+          "left": 2,
+          "weight": 2
+        }
+      ]
+    },
+    "dual": {
+      "status": "optimal",
+      "reward": "12",
+      "assignment": [
+        0,
+        1,
+        2,
+        7,
+        4,
+        6,
+        3,
+        5
+      ],
+      "row": [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "-1",
+        "-1"
+      ],
+      "column": [
+        "3",
+        "1",
+        "3",
+        "1",
+        "1",
+        "1",
+        "2",
+        "2"
+      ],
+      "vertices": 37,
+      "arcs": 62
+    },
+    "permutations": 6144,
+    "words": 1234,
+    "inputAssignments": [
+      [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      [
+        0,
+        1,
+        2,
+        7,
+        6,
+        5,
+        3,
+        4
+      ]
+    ],
+    "inputMoved": 4,
+    "canonicalGaps": [
+      {
+        "left": 0,
+        "value": 0,
+        "cut": 3
+      },
+      {
+        "left": 1,
+        "value": 1,
+        "cut": 4
+      },
+      {
+        "left": 2,
+        "value": 2,
+        "cut": 5
+      },
+      {
+        "left": 3,
+        "value": 1,
+        "cut": 6
+      }
+    ],
+    "balancedColorings": 2,
+    "bestOutputMoved": 5,
+    "outputWitness": [
+      [
+        0,
+        1,
+        2,
+        3,
+        6,
+        5,
+        4,
+        7
+      ],
+      [
+        0,
+        1,
+        2,
+        7,
+        3,
+        5,
+        6,
+        4
+      ]
+    ],
+    "outputSwapRank": 3,
+    "alternative": {
+      "assignment": [
+        0,
+        1,
+        2,
+        7,
+        4,
+        6,
+        3,
+        5
+      ],
+      "moved": 4,
+      "reward": 12,
+      "gapCounts": [
+        2,
+        2,
+        2,
+        3
+      ]
+    },
+    "scope": "This refutes canonical-cut E-preserving row-token rounding on a common canonical-price face. The witnesses have total swap rank 3 <= input E 4. A different common-face assignment changes row values and retains every gap. This is not a factor-two or LP-integrality counterexample."
+  },
+  "scope": "Six named reach-2 cases and one denominator-three case pass the stronger all-prefix check. The separate named reach-3 case refutes even canonical-cut row-token E rounding. Endpoint minima are independently enumerated and the counterexample has a checked sparse-flow assignment dual. The terminal tests use one deterministic split sequence per pair. No factor-two failure, LP integrality result, production change, or runtime bound is claimed.",
   "reproduce": "node scripts/optimality-priced-face-rounding.mjs Bench/evidence-priced-face-rounding.json"
 }

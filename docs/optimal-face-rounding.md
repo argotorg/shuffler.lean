@@ -4,7 +4,8 @@ This note concerns the empty-source endpoint cost `E`, with one positive
 identity reward `s`. It does not extend the result to the source cost
 `W=E+interiorEdges`. It gives Lean proofs of local price facts, a paper
 proof for assignments with the same fixed positions, and named finite
-checks of two open rounding claims.
+checks. A reach-3 counterexample refutes the proposed general
+E-preserving row-token rounding claim.
 
 Let `A(i,v)` be the sum of the nonnegative canonical gap prices for value
 `v` whose cuts are at least birth row `i`. A feasible assignment has
@@ -23,12 +24,14 @@ alpha_i + beta_j >= A(i,target[j]) + s*[i=j]
 on every legal edge. An edge is tight when equality holds. Every edge
 of a primal assignment that attains the dual bound is tight.
 
-The required rounding goal concerns only the canonical gap cuts. For
+The proposed rounding goal concerns only the canonical gap cuts. For
 each such cut and value, each output count must be the floor or ceiling
 of the mean input count. The outputs must preserve each row's multiset
 of values and remain on the common optimum face. Balance at every
-prefix is a stronger, optional property. The finite checks below test
-that stronger property; the general proof does not need it.
+prefix is a stronger property. The six reach-2 checks below pass that
+stronger test, but the separate reach-3 case fails even at canonical
+cuts. Full joint-LP complementarity gives further conditions which this
+counterexample does not meet.
 
 Canonical prices have a further restriction: at cut `c`, only value
 `target[c-R]` can have a price drop. A target position defines at most
@@ -127,7 +130,7 @@ reward `s`. The output fixed set is exactly `F`. This proves the stated
 paper result for any denominator `k`; it is not yet a Lean edge-coloring
 construction or a production runtime bound.
 
-## The open mixed-pin case
+## Counterexample in the mixed-pin case
 
 An identity token can appear before generic tokens at a lower level.
 The level equation in item 3 describes the edge that could replace it,
@@ -135,7 +138,7 @@ but does not supply a simultaneous recoloring for all rows and values.
 The common-fixed-set proof therefore does not apply when pin status
 varies among input assignments.
 
-Two precise local statements remain open:
+The proposed split proof used these two statements:
 
 * In a relative cycle whose value-prefix discrepancy has magnitude at
   least 2 at a canonical gap cut, there is a same-value pair of nonfixed
@@ -148,8 +151,58 @@ A safe split stays on the oracle face, preserves `E`, and increases the
 number of relative cycles. These facts would give finite progress if the
 two missing statements held. A separate proof is required for the second
 statement; discrepancy at most one in each cycle alone does not prove it.
-These two-input statements would also need an extension or a composition
-argument for arbitrary denominators. The required theorem is still open.
+They cannot prove the proposed general result. The following exact case
+refutes both the large-discrepancy split statement and the E-preserving
+row-token conclusion.
+
+Take reach 3, swap price 1, target `c a b a a x b c`, and assignments
+
+```
+P = [0,1,2,3,4,5,6,7]
+Q = [0,1,2,7,6,5,3,4].
+```
+
+Give price 2 to the c gap at cut 3 and price 2 to the b gap at cut 5.
+All a-gap prices are zero. Both assignments attain the global oracle
+reward 12. Enumeration of all 6,144 legal permutations and an
+independently checked assignment dual verify this value. The dual is
+`alpha=[0,0,0,0,0,0,-1,-1]`,
+`beta=[3,1,3,1,1,1,2,2]`.
+
+At the first a-gap cut 4, P has three a births and Q has one. Each
+balanced output must have two. The only balanced pair of row-token
+words, up to exchanging outputs, is
+
+```
+c a b a b x a c
+c a b c a x b a.
+```
+
+Their minimum moved costs are 2 and 3. Their sum 5 exceeds the input
+sum 4. The Q cycle has two generic a edges `6->3` and `7->4`; exchanging
+their destinations is illegal because `7>3+3`. There is no other
+same-value generic pair in the cycle. Thus there is also no safe split.
+
+This is not a factor-two counterexample. The output endpoint ranks are
+1 and 2, whose sum 3 is at most the input E sum 4. Nor is it an
+integrality counterexample. The alternative
+
+```
+Q' = [0,1,2,7,4,6,3,5]
+```
+
+has moved cost 4 and oracle reward 12. It retains both priced gaps and
+both a gaps, by changing row values. The mean P/Q count at the second
+a cut is 2.5, below its retention threshold 3. If a has a positive
+actual generation premium, zero quota price at this gap forces positive
+cap price; full joint-LP complementarity would then require full
+retention. The P/Q mixture therefore fails that condition. Q' increases
+this count without reducing any priced count.
+
+A remaining possible approach can use full joint-LP optimality and
+complementarity, and can change row marginals inside the priced face.
+Neither a rounding theorem under these conditions nor a polynomial
+joint optimizer is established here.
 
 ## Named exact checks
 
@@ -178,6 +231,10 @@ filler values. Its three inputs are identity, identity, and the cycle
 a gap, a checked assignment dual gives reward 22 to all three inputs.
 There are six balanced colorings. Their best total moved cost is 6,
 equal to the input total; three transpositions attain it.
+
+The separate reach-3 counterexample is included in the same checker and
+evidence file. Its endpoint minima, canonical-cut colorings, dual, and
+alternative assignment are checked independently of the passing cases.
 
 The evidence is in `Bench/evidence-priced-face-rounding.json`. No general
 rounding, LP integrality, source extension, or efficient joint optimizer
