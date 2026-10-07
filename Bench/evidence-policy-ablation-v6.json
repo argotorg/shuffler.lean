@@ -1,0 +1,135 @@
+{
+  "checkpoint": "v6 historical recorded-candidate ablation",
+  "scope": "Unique gains compare each recorded policy with the other six-mode-era candidate algorithms listed here. Old BBU is excluded because it was not then a portfolio candidate. This does not establish redundancy in v12.",
+  "candidates": [
+    "complete",
+    "value-graph",
+    "short-growth",
+    "append-only",
+    "schedule-balanced",
+    "schedule-eager",
+    "schedule-preserve",
+    "schedule-relaxed-balanced",
+    "schedule-relaxed-eager",
+    "schedule-relaxed-preserve"
+  ],
+  "cases": 3703,
+  "fullUnmatched": 0,
+  "policies": {
+    "schedule-balanced": {
+      "recorded": 3703,
+      "successes": 3691,
+      "fullScoreMatches": 3633,
+      "uniqueGains": [],
+      "uniqueGainCases": 0,
+      "maxGain": null
+    },
+    "schedule-eager": {
+      "recorded": 3703,
+      "successes": 3691,
+      "fullScoreMatches": 3637,
+      "uniqueGains": [
+        {
+          "id": "two-seed-place-wide-wide-gap33-ab/w1/g4b1",
+          "score": 420,
+          "withoutPolicyScore": 427,
+          "gain": 7,
+          "weights": {
+            "gas": 4,
+            "bytes": 1
+          },
+          "sourceHeight": 16,
+          "births": 35,
+          "file": "/tmp/optimality-v6-two-seed-placement-2026100741.jsonl"
+        }
+      ],
+      "uniqueGainCases": 1,
+      "maxGain": 7
+    },
+    "schedule-preserve": {
+      "recorded": 3703,
+      "successes": 3691,
+      "fullScoreMatches": 3421,
+      "uniqueGains": [],
+      "uniqueGainCases": 0,
+      "maxGain": null
+    },
+    "schedule-relaxed-balanced": {
+      "recorded": 3703,
+      "successes": 3691,
+      "fullScoreMatches": 3624,
+      "uniqueGains": [],
+      "uniqueGainCases": 0,
+      "maxGain": null
+    },
+    "schedule-relaxed-eager": {
+      "recorded": 3703,
+      "successes": 3691,
+      "fullScoreMatches": 3632,
+      "uniqueGains": [
+        {
+          "id": "two-seed-place-wide-narrow-gap16-ba/w1/g1b1",
+          "score": 73,
+          "withoutPolicyScore": 76,
+          "gain": 3,
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "sourceHeight": 16,
+          "births": 18,
+          "file": "/tmp/optimality-v6-two-seed-placement-2026100741.jsonl"
+        },
+        {
+          "id": "two-seed-place-wide-narrow-gap16-ba/w1/g4b1",
+          "score": 223,
+          "withoutPolicyScore": 235,
+          "gain": 12,
+          "weights": {
+            "gas": 4,
+            "bytes": 1
+          },
+          "sourceHeight": 16,
+          "births": 18,
+          "file": "/tmp/optimality-v6-two-seed-placement-2026100741.jsonl"
+        },
+        {
+          "id": "two-seed-place-wide-narrow-gap16-ba/w1/g5b1",
+          "score": 273,
+          "withoutPolicyScore": 288,
+          "gain": 15,
+          "weights": {
+            "gas": 5,
+            "bytes": 1
+          },
+          "sourceHeight": 16,
+          "births": 18,
+          "file": "/tmp/optimality-v6-two-seed-placement-2026100741.jsonl"
+        },
+        {
+          "id": "two-seed-place-wide-narrow-gap16-ba/w1/g6b1",
+          "score": 323,
+          "withoutPolicyScore": 341,
+          "gain": 18,
+          "weights": {
+            "gas": 6,
+            "bytes": 1
+          },
+          "sourceHeight": 16,
+          "births": 18,
+          "file": "/tmp/optimality-v6-two-seed-placement-2026100741.jsonl"
+        }
+      ],
+      "uniqueGainCases": 4,
+      "maxGain": 18
+    },
+    "schedule-relaxed-preserve": {
+      "recorded": 3703,
+      "successes": 3691,
+      "fullScoreMatches": 3399,
+      "uniqueGains": [],
+      "uniqueGainCases": 0,
+      "maxGain": null
+    }
+  }
+}

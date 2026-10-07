@@ -1,0 +1,2834 @@
+{
+  "checkpoint": "v7",
+  "status": "intermediate experimental checkpoint",
+  "productionRunnerSha256": "2ad9828e168315872dbd214bf1a933d27b42e3dc687839919023e56e35a31362",
+  "reproductionNote": "Commands regenerate the cases and run the current build. Match the executable hash to repeat this checkpoint exactly. Source and artifact fingerprints were sampled at run time; the executable hash identifies the fixed planner. Input-suite cases are included inline.",
+  "limits": "Finite tests do not prove a general approximation ratio. Only optimal oracle records enter cost ratios. A not-run result is an intentional omission, not an optimum or an infeasibility claim. Missing certificate counters mean that coverage was not measured by that runner. A witness violation proves failure of factor two without an optimum; absence of a witness violation is only finite test evidence.",
+  "suites": [
+    {
+      "suite": "input",
+      "seed": 1,
+      "cases": 1,
+      "selectedAlgorithms": [
+        "schedule",
+        "old-bbu"
+      ],
+      "stateLimit": 100000,
+      "skipOracle": true,
+      "oracle": {
+        "not-run": 1
+      },
+      "oracleStates": 0,
+      "sourceHeights": [
+        17
+      ],
+      "targetHeights": [
+        18
+      ],
+      "gasModels": [
+        "cpp"
+      ],
+      "loadAddressWidths": [],
+      "weights": [
+        "1:1"
+      ],
+      "productionRunnerSha256": "2ad9828e168315872dbd214bf1a933d27b42e3dc687839919023e56e35a31362",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "03891070a7353f1c45b4df3cf098a329f5c31536203e4f16bf750da85a04392a",
+            "files": 143
+          },
+          "artifacts": {
+            "sha256": "9fc2e546b3d5a922c7cf5738b06718cbc943ff60765a938a4b96384b19950652",
+            "files": 176
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "03891070a7353f1c45b4df3cf098a329f5c31536203e4f16bf750da85a04392a",
+            "files": 143
+          },
+          "artifacts": {
+            "sha256": "9fc2e546b3d5a922c7cf5738b06718cbc943ff60765a938a4b96384b19950652",
+            "files": 176
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "old-bbu": {
+          "cases": 1,
+          "successes": 1,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 0,
+            "exactLineage": 0,
+            "exactStatic": 0,
+            "exactNoGrowth": 0,
+            "twiceLineage": 0,
+            "twiceStatic": 1
+          },
+          "scope": "original-generation-and-final-permutation",
+          "witnessComparisons": 1,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 1.8235294117647058,
+          "worstWitnessCase": "old-bbu-rotate-seventeen"
+        },
+        "schedule": {
+          "cases": 1,
+          "successes": 1,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 0,
+            "exactLineage": 0,
+            "exactStatic": 0,
+            "exactNoGrowth": 0,
+            "twiceLineage": 0,
+            "twiceStatic": 1
+          },
+          "scope": "completed-source-to-target",
+          "witnessComparisons": 1,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 1.1176470588235294,
+          "worstWitnessCase": "old-bbu-rotate-seventeen"
+        }
+      },
+      "summaryPath": "/tmp/old-bbu-rotate-witness-results-summary.json",
+      "recordsPath": "/tmp/old-bbu-rotate-witness-results.jsonl",
+      "referenceCertificates": {
+        "exactBaseline": 0,
+        "exactLineage": 0,
+        "exactStatic": 1,
+        "exactNoGrowth": 0,
+        "twiceLineage": 0,
+        "twiceStatic": 1
+      },
+      "inputCases": [
+        {
+          "id": "old-bbu-rotate-seventeen",
+          "source": [
+            "v:0",
+            "v:1",
+            "v:2",
+            "v:3",
+            "v:4",
+            "v:5",
+            "v:6",
+            "v:7",
+            "v:8",
+            "v:9",
+            "v:10",
+            "v:11",
+            "v:12",
+            "v:13",
+            "v:14",
+            "v:15",
+            "v:16"
+          ],
+          "target": [
+            "v:1",
+            "v:2",
+            "v:3",
+            "v:4",
+            "v:5",
+            "v:6",
+            "v:7",
+            "v:8",
+            "v:9",
+            "v:10",
+            "v:11",
+            "v:12",
+            "v:13",
+            "v:14",
+            "v:15",
+            "v:16",
+            "l:99",
+            "v:0"
+          ],
+          "spills": [],
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "referenceOps": [
+            [
+              "swap",
+              1
+            ],
+            [
+              "swap",
+              2
+            ],
+            [
+              "swap",
+              3
+            ],
+            [
+              "swap",
+              4
+            ],
+            [
+              "swap",
+              5
+            ],
+            [
+              "swap",
+              6
+            ],
+            [
+              "swap",
+              7
+            ],
+            [
+              "swap",
+              8
+            ],
+            [
+              "swap",
+              9
+            ],
+            [
+              "swap",
+              10
+            ],
+            [
+              "swap",
+              11
+            ],
+            [
+              "swap",
+              12
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "swap",
+              14
+            ],
+            [
+              "swap",
+              15
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:99"
+            ],
+            [
+              "swap",
+              1
+            ]
+          ],
+          "missing": [
+            "l:99"
+          ],
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "loadWidths": [],
+          "model": "actual-16/17"
+        }
+      ],
+      "reproduce": "node scripts/optimality-bench.mjs --input /tmp/old-bbu-rotate-witness.jsonl --state-limit 100000 --skip-oracle --algorithms schedule,old-bbu --runner .lake/build/bin/optimality_bench"
+    },
+    {
+      "suite": "boundary",
+      "seed": 2026100702,
+      "cases": 120,
+      "selectedAlgorithms": [
+        "schedule",
+        "old-bbu"
+      ],
+      "stateLimit": 30000,
+      "skipOracle": false,
+      "oracle": {
+        "optimal": 120
+      },
+      "oracleStates": 93480,
+      "sourceHeights": [
+        15,
+        16,
+        17,
+        18
+      ],
+      "targetHeights": [
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52
+      ],
+      "gasModels": [
+        "cpp"
+      ],
+      "loadAddressWidths": [
+        1,
+        2,
+        32
+      ],
+      "weights": [
+        "0:1",
+        "1:0",
+        "1:1",
+        "4:1",
+        "5:1",
+        "6:1"
+      ],
+      "productionRunnerSha256": "2ad9828e168315872dbd214bf1a933d27b42e3dc687839919023e56e35a31362",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "e3188c1d1851d9e308292c791e06222b23c0581a4b223c16662e8c96f035d48a",
+            "files": 138
+          },
+          "artifacts": {
+            "sha256": "bb21e1453ea0b21691d8007853604c1f60deeb8cbd9d3f9291f7968bb5984225",
+            "files": 170
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "2283fb21e35ccfc71cb56fe1e78c2066e5354e83f0c8e4ef31690f540861ea7f",
+            "files": 139
+          },
+          "artifacts": {
+            "sha256": "bb21e1453ea0b21691d8007853604c1f60deeb8cbd9d3f9291f7968bb5984225",
+            "files": 170
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "old-bbu": {
+          "cases": 120,
+          "successes": 120,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 120,
+          "exact": 26,
+          "zeroExcessViolations": 13,
+          "maxExcessRatio": "inf",
+          "worstExcessCase": "literal-width1-gap33/w1/g1b0",
+          "certificates": {
+            "exactBaseline": 14,
+            "exactLineage": 22,
+            "exactStatic": 22,
+            "exactNoGrowth": 0,
+            "twiceLineage": 37,
+            "twiceStatic": 37
+          },
+          "scope": "original-generation-and-final-permutation",
+          "witnessComparisons": 120,
+          "witnessViolations": 82,
+          "maxWitnessExcessRatio": "inf",
+          "worstWitnessCase": "literal-width1-gap33/w1/g1b0"
+        },
+        "schedule": {
+          "cases": 120,
+          "successes": 120,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 120,
+          "exact": 120,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 27,
+            "exactLineage": 111,
+            "exactStatic": 111,
+            "exactNoGrowth": 0,
+            "twiceLineage": 119,
+            "twiceStatic": 119
+          },
+          "scope": "completed-source-to-target",
+          "witnessComparisons": 120,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 1,
+          "worstWitnessCase": null
+        }
+      },
+      "summaryPath": "/tmp/optimality-v7-boundary-2026100702-summary.json",
+      "recordsPath": "/tmp/optimality-v7-boundary-2026100702.jsonl",
+      "referenceCertificates": {
+        "exactBaseline": 27,
+        "exactLineage": 111,
+        "exactStatic": 111,
+        "exactNoGrowth": 0,
+        "twiceLineage": 119,
+        "twiceStatic": 119
+      },
+      "reproduce": "node scripts/optimality-bench.mjs --suite boundary --seed 2026100702 --cases 120 --state-limit 30000 --algorithms schedule,old-bbu --runner .lake/build/bin/optimality_bench"
+    },
+    {
+      "suite": "input",
+      "seed": 1,
+      "cases": 4,
+      "selectedAlgorithms": [
+        "schedule",
+        "old-bbu"
+      ],
+      "stateLimit": 200000,
+      "skipOracle": false,
+      "oracle": {
+        "optimal": 4
+      },
+      "oracleStates": 17168,
+      "sourceHeights": [
+        16,
+        32
+      ],
+      "targetHeights": [
+        22,
+        37
+      ],
+      "gasModels": [
+        "evm"
+      ],
+      "loadAddressWidths": [
+        0,
+        32
+      ],
+      "weights": [
+        "1:0",
+        "1:1",
+        "4:1"
+      ],
+      "productionRunnerSha256": "2ad9828e168315872dbd214bf1a933d27b42e3dc687839919023e56e35a31362",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "21a633e2c1e2fb3eaa7bef629217e27ac5cf10df9a63b9f1ba9ceb63d0845933",
+            "files": 140
+          },
+          "artifacts": {
+            "sha256": "bb21e1453ea0b21691d8007853604c1f60deeb8cbd9d3f9291f7968bb5984225",
+            "files": 170
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "21a633e2c1e2fb3eaa7bef629217e27ac5cf10df9a63b9f1ba9ceb63d0845933",
+            "files": 140
+          },
+          "artifacts": {
+            "sha256": "bb21e1453ea0b21691d8007853604c1f60deeb8cbd9d3f9291f7968bb5984225",
+            "files": 170
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "old-bbu": {
+          "cases": 4,
+          "successes": 4,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 4,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 2,
+          "worstExcessCase": "planted-2026100781-13/wsupplied/g1b0",
+          "certificates": {
+            "exactBaseline": 0,
+            "exactLineage": 0,
+            "exactStatic": 0,
+            "exactNoGrowth": 0,
+            "twiceLineage": 0,
+            "twiceStatic": 0
+          },
+          "scope": "original-generation-and-final-permutation",
+          "witnessComparisons": 4,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 2,
+          "worstWitnessCase": "planted-2026100781-13/wsupplied/g1b0"
+        },
+        "schedule": {
+          "cases": 4,
+          "successes": 4,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 4,
+          "exact": 4,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 0,
+            "exactLineage": 0,
+            "exactStatic": 0,
+            "exactNoGrowth": 0,
+            "twiceLineage": 0,
+            "twiceStatic": 0
+          },
+          "scope": "completed-source-to-target",
+          "witnessComparisons": 4,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 1,
+          "worstWitnessCase": null
+        }
+      },
+      "summaryPath": "/tmp/optimality-v7-gap-oracle-summary.json",
+      "recordsPath": "/tmp/optimality-v7-gap-oracle.jsonl",
+      "referenceCertificates": {
+        "exactBaseline": 0,
+        "exactLineage": 0,
+        "exactStatic": 0,
+        "exactNoGrowth": 0,
+        "twiceLineage": 0,
+        "twiceStatic": 0
+      },
+      "inputCases": [
+        {
+          "id": "planted-2026100781-13/wsupplied/g1b1",
+          "source": [
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:43",
+            "v:43",
+            "v:43",
+            "v:43"
+          ],
+          "missing": [
+            "v:43",
+            "l:0",
+            "l:0",
+            "v:43",
+            "v:43",
+            "v:43"
+          ],
+          "spills": [
+            43,
+            44
+          ],
+          "gasModel": "evm",
+          "loadWidths": [
+            [
+              43,
+              0
+            ],
+            [
+              44,
+              32
+            ]
+          ],
+          "planted": {
+            "seed": 2026100781,
+            "index": 13,
+            "family": 1,
+            "swaps": 1
+          },
+          "referenceOps": [
+            [
+              "dup",
+              16
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "swap",
+              2
+            ],
+            [
+              "dup",
+              1
+            ],
+            [
+              "dup",
+              1
+            ],
+            [
+              "dup",
+              1
+            ]
+          ],
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "model": "actual-16/17"
+        },
+        {
+          "id": "planted-2026100781-25/wsupplied/g4b1",
+          "source": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:43",
+            "v:43",
+            "v:43"
+          ],
+          "missing": [
+            "v:43",
+            "l:0",
+            "l:0",
+            "v:43",
+            "v:43"
+          ],
+          "spills": [],
+          "gasModel": "evm",
+          "loadWidths": [],
+          "planted": {
+            "seed": 2026100781,
+            "index": 25,
+            "family": 1,
+            "swaps": 1
+          },
+          "referenceOps": [
+            [
+              "dup",
+              16
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "swap",
+              2
+            ],
+            [
+              "dup",
+              1
+            ],
+            [
+              "dup",
+              1
+            ]
+          ],
+          "weights": {
+            "gas": 4,
+            "bytes": 1
+          },
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "model": "actual-16/17"
+        },
+        {
+          "id": "planted-2026100781-13/wsupplied/g4b1",
+          "source": [
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:43",
+            "v:43",
+            "v:43",
+            "v:43"
+          ],
+          "missing": [
+            "v:43",
+            "l:0",
+            "l:0",
+            "v:43",
+            "v:43",
+            "v:43"
+          ],
+          "spills": [
+            43,
+            44
+          ],
+          "gasModel": "evm",
+          "loadWidths": [
+            [
+              43,
+              0
+            ],
+            [
+              44,
+              32
+            ]
+          ],
+          "planted": {
+            "seed": 2026100781,
+            "index": 13,
+            "family": 1,
+            "swaps": 1
+          },
+          "referenceOps": [
+            [
+              "dup",
+              16
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "swap",
+              2
+            ],
+            [
+              "dup",
+              1
+            ],
+            [
+              "dup",
+              1
+            ],
+            [
+              "dup",
+              1
+            ]
+          ],
+          "weights": {
+            "gas": 4,
+            "bytes": 1
+          },
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "model": "actual-16/17"
+        },
+        {
+          "id": "planted-2026100781-13/wsupplied/g1b0",
+          "source": [
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:43",
+            "v:43",
+            "v:43",
+            "v:43"
+          ],
+          "missing": [
+            "v:43",
+            "l:0",
+            "l:0",
+            "v:43",
+            "v:43",
+            "v:43"
+          ],
+          "spills": [
+            43,
+            44
+          ],
+          "gasModel": "evm",
+          "loadWidths": [
+            [
+              43,
+              0
+            ],
+            [
+              44,
+              32
+            ]
+          ],
+          "planted": {
+            "seed": 2026100781,
+            "index": 13,
+            "family": 1,
+            "swaps": 1
+          },
+          "referenceOps": [
+            [
+              "dup",
+              16
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "swap",
+              2
+            ],
+            [
+              "dup",
+              1
+            ],
+            [
+              "dup",
+              1
+            ],
+            [
+              "dup",
+              1
+            ]
+          ],
+          "weights": {
+            "gas": 1,
+            "bytes": 0
+          },
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "model": "actual-16/17"
+        }
+      ],
+      "reproduce": "node scripts/optimality-bench.mjs --input /tmp/optimality-v7-gap-oracle-input.jsonl --state-limit 200000 --algorithms schedule,old-bbu --runner .lake/build/bin/optimality_bench"
+    },
+    {
+      "suite": "planted",
+      "seed": 2026100781,
+      "cases": 60,
+      "selectedAlgorithms": [
+        "schedule",
+        "old-bbu"
+      ],
+      "stateLimit": 30000,
+      "skipOracle": true,
+      "oracle": {
+        "not-run": 60
+      },
+      "oracleStates": 0,
+      "sourceHeights": [
+        0,
+        1,
+        2,
+        15,
+        16,
+        17,
+        18,
+        32,
+        64,
+        128
+      ],
+      "targetHeights": [
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        34,
+        35,
+        37,
+        39,
+        46,
+        48,
+        50,
+        51,
+        64,
+        65,
+        80,
+        81,
+        82,
+        84,
+        96,
+        113,
+        129,
+        143,
+        194
+      ],
+      "gasModels": [
+        "cpp",
+        "evm"
+      ],
+      "loadAddressWidths": [
+        0,
+        1,
+        2,
+        32
+      ],
+      "weights": [
+        "0:1",
+        "1:0",
+        "1:1",
+        "4:1",
+        "5:1",
+        "6:1"
+      ],
+      "productionRunnerSha256": "2ad9828e168315872dbd214bf1a933d27b42e3dc687839919023e56e35a31362",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "e3188c1d1851d9e308292c791e06222b23c0581a4b223c16662e8c96f035d48a",
+            "files": 138
+          },
+          "artifacts": {
+            "sha256": "bb21e1453ea0b21691d8007853604c1f60deeb8cbd9d3f9291f7968bb5984225",
+            "files": 170
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "2283fb21e35ccfc71cb56fe1e78c2066e5354e83f0c8e4ef31690f540861ea7f",
+            "files": 139
+          },
+          "artifacts": {
+            "sha256": "bb21e1453ea0b21691d8007853604c1f60deeb8cbd9d3f9291f7968bb5984225",
+            "files": 170
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "old-bbu": {
+          "cases": 60,
+          "successes": 60,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 2,
+            "exactLineage": 4,
+            "exactStatic": 8,
+            "exactNoGrowth": 0,
+            "twiceLineage": 7,
+            "twiceStatic": 10
+          },
+          "scope": "original-generation-and-final-permutation",
+          "witnessComparisons": 60,
+          "witnessViolations": 38,
+          "maxWitnessExcessRatio": "inf",
+          "worstWitnessCase": "planted-2026100781-6/wsupplied/g1b1"
+        },
+        "schedule": {
+          "cases": 60,
+          "successes": 60,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 7,
+            "exactLineage": 24,
+            "exactStatic": 31,
+            "exactNoGrowth": 0,
+            "twiceLineage": 44,
+            "twiceStatic": 56
+          },
+          "scope": "completed-source-to-target",
+          "witnessComparisons": 60,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 1.1666666666666667,
+          "worstWitnessCase": "planted-2026100781-30/wsupplied/g1b0"
+        }
+      },
+      "summaryPath": "/tmp/optimality-v7-planted-2026100781-summary.json",
+      "recordsPath": "/tmp/optimality-v7-planted-2026100781.jsonl",
+      "referenceCertificates": {
+        "exactBaseline": 3,
+        "exactLineage": 6,
+        "exactStatic": 9,
+        "exactNoGrowth": 0,
+        "twiceLineage": 17,
+        "twiceStatic": 24
+      },
+      "reproduce": "node scripts/optimality-bench.mjs --suite planted --seed 2026100781 --cases 60 --state-limit 30000 --skip-oracle --algorithms schedule,old-bbu --runner .lake/build/bin/optimality_bench"
+    },
+    {
+      "suite": "planted",
+      "seed": 2026100782,
+      "cases": 150,
+      "selectedAlgorithms": [
+        "schedule",
+        "old-bbu"
+      ],
+      "stateLimit": 100000,
+      "skipOracle": true,
+      "oracle": {
+        "not-run": 150
+      },
+      "oracleStates": 0,
+      "sourceHeights": [
+        1,
+        5,
+        15,
+        16,
+        17,
+        18,
+        32,
+        64,
+        128
+      ],
+      "targetHeights": [
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        46,
+        47,
+        48,
+        49,
+        51,
+        52,
+        66,
+        67,
+        80,
+        81,
+        82,
+        83,
+        84,
+        95,
+        97,
+        99,
+        115,
+        128,
+        130,
+        131,
+        133,
+        143,
+        144,
+        146,
+        147,
+        148,
+        159,
+        160,
+        161,
+        163,
+        194,
+        224
+      ],
+      "gasModels": [
+        "cpp",
+        "evm"
+      ],
+      "loadAddressWidths": [
+        0,
+        1,
+        2,
+        32
+      ],
+      "weights": [
+        "0:1",
+        "1:0",
+        "1:1",
+        "4:1",
+        "5:1",
+        "6:1"
+      ],
+      "productionRunnerSha256": "2ad9828e168315872dbd214bf1a933d27b42e3dc687839919023e56e35a31362",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "45f5217554c59ed22776106e4c930558e5f714530fde3749832b7677a02be93d",
+            "files": 140
+          },
+          "artifacts": {
+            "sha256": "bb21e1453ea0b21691d8007853604c1f60deeb8cbd9d3f9291f7968bb5984225",
+            "files": 170
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "4f4ec9df1ee1b26fb96da7b933292b726af3d5697cfdf73b717cac09d8a2412d",
+            "files": 141
+          },
+          "artifacts": {
+            "sha256": "9d2e768cc062d83c5f85bfea9e7c493950bf76425c4bbc79762ef9c375361676",
+            "files": 173
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "old-bbu": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 1,
+            "exactLineage": 5,
+            "exactStatic": 7,
+            "exactNoGrowth": 0,
+            "twiceLineage": 6,
+            "twiceStatic": 22
+          },
+          "scope": "original-generation-and-final-permutation",
+          "witnessComparisons": 150,
+          "witnessViolations": 83,
+          "maxWitnessExcessRatio": 32,
+          "worstWitnessCase": "planted-2026100782-55/wsupplied/g0b1"
+        },
+        "schedule": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 12,
+            "exactLineage": 47,
+            "exactStatic": 69,
+            "exactNoGrowth": 0,
+            "twiceLineage": 82,
+            "twiceStatic": 124
+          },
+          "scope": "completed-source-to-target",
+          "witnessComparisons": 150,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 1.3333333333333333,
+          "worstWitnessCase": "planted-2026100782-132/wsupplied/g5b1"
+        }
+      },
+      "summaryPath": "/tmp/optimality-v7-planted-2026100782-summary.json",
+      "recordsPath": "/tmp/optimality-v7-planted-2026100782.jsonl",
+      "referenceCertificates": {
+        "exactBaseline": 0,
+        "exactLineage": 10,
+        "exactStatic": 18,
+        "exactNoGrowth": 0,
+        "twiceLineage": 25,
+        "twiceStatic": 56
+      },
+      "reproduce": "node scripts/optimality-bench.mjs --suite planted --seed 2026100782 --cases 150 --state-limit 100000 --skip-oracle --algorithms schedule,old-bbu --runner .lake/build/bin/optimality_bench"
+    },
+    {
+      "suite": "planted",
+      "seed": 2026100783,
+      "cases": 150,
+      "selectedAlgorithms": [
+        "schedule",
+        "old-bbu"
+      ],
+      "stateLimit": 100000,
+      "skipOracle": true,
+      "oracle": {
+        "not-run": 150
+      },
+      "oracleStates": 0,
+      "sourceHeights": [
+        0,
+        1,
+        2,
+        5,
+        15,
+        16,
+        17,
+        18,
+        32,
+        64,
+        128
+      ],
+      "targetHeights": [
+        3,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        38,
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        80,
+        81,
+        82,
+        83,
+        84,
+        95,
+        97,
+        98,
+        114,
+        128,
+        143,
+        144,
+        145,
+        146,
+        147,
+        148,
+        159,
+        194,
+        256,
+        259
+      ],
+      "gasModels": [
+        "cpp",
+        "evm"
+      ],
+      "loadAddressWidths": [
+        0,
+        1,
+        2,
+        32
+      ],
+      "weights": [
+        "0:1",
+        "1:0",
+        "1:1",
+        "4:1",
+        "5:1",
+        "6:1"
+      ],
+      "productionRunnerSha256": "2ad9828e168315872dbd214bf1a933d27b42e3dc687839919023e56e35a31362",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "45f5217554c59ed22776106e4c930558e5f714530fde3749832b7677a02be93d",
+            "files": 140
+          },
+          "artifacts": {
+            "sha256": "bb21e1453ea0b21691d8007853604c1f60deeb8cbd9d3f9291f7968bb5984225",
+            "files": 170
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "4f4ec9df1ee1b26fb96da7b933292b726af3d5697cfdf73b717cac09d8a2412d",
+            "files": 141
+          },
+          "artifacts": {
+            "sha256": "9d2e768cc062d83c5f85bfea9e7c493950bf76425c4bbc79762ef9c375361676",
+            "files": 173
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "old-bbu": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 0,
+            "exactLineage": 6,
+            "exactStatic": 10,
+            "exactNoGrowth": 0,
+            "twiceLineage": 14,
+            "twiceStatic": 23
+          },
+          "scope": "original-generation-and-final-permutation",
+          "witnessComparisons": 150,
+          "witnessViolations": 91,
+          "maxWitnessExcessRatio": "inf",
+          "worstWitnessCase": "planted-2026100783-99/wsupplied/g1b0"
+        },
+        "schedule": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 16,
+            "exactLineage": 53,
+            "exactStatic": 79,
+            "exactNoGrowth": 0,
+            "twiceLineage": 95,
+            "twiceStatic": 136
+          },
+          "scope": "completed-source-to-target",
+          "witnessComparisons": 150,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 1,
+          "worstWitnessCase": null
+        }
+      },
+      "summaryPath": "/tmp/optimality-v7-planted-2026100783-summary.json",
+      "recordsPath": "/tmp/optimality-v7-planted-2026100783.jsonl",
+      "referenceCertificates": {
+        "exactBaseline": 2,
+        "exactLineage": 17,
+        "exactStatic": 25,
+        "exactNoGrowth": 0,
+        "twiceLineage": 36,
+        "twiceStatic": 61
+      },
+      "reproduce": "node scripts/optimality-bench.mjs --suite planted --seed 2026100783 --cases 150 --state-limit 100000 --skip-oracle --algorithms schedule,old-bbu --runner .lake/build/bin/optimality_bench"
+    },
+    {
+      "suite": "planted",
+      "seed": 2026100784,
+      "cases": 150,
+      "selectedAlgorithms": [
+        "schedule",
+        "old-bbu"
+      ],
+      "stateLimit": 100000,
+      "skipOracle": true,
+      "oracle": {
+        "not-run": 150
+      },
+      "oracleStates": 0,
+      "sourceHeights": [
+        0,
+        1,
+        2,
+        5,
+        15,
+        16,
+        17,
+        18,
+        32,
+        64,
+        128
+      ],
+      "targetHeights": [
+        2,
+        5,
+        8,
+        16,
+        17,
+        19,
+        20,
+        21,
+        22,
+        23,
+        30,
+        32,
+        33,
+        34,
+        35,
+        36,
+        38,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        64,
+        65,
+        67,
+        68,
+        80,
+        81,
+        82,
+        84,
+        95,
+        98,
+        101,
+        114,
+        118,
+        130,
+        131,
+        132,
+        133,
+        144,
+        145,
+        146,
+        147,
+        159,
+        161,
+        162,
+        192
+      ],
+      "gasModels": [
+        "cpp",
+        "evm"
+      ],
+      "loadAddressWidths": [
+        0,
+        1,
+        2,
+        32
+      ],
+      "weights": [
+        "0:1",
+        "1:0",
+        "1:1",
+        "4:1",
+        "5:1",
+        "6:1"
+      ],
+      "productionRunnerSha256": "2ad9828e168315872dbd214bf1a933d27b42e3dc687839919023e56e35a31362",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "45f5217554c59ed22776106e4c930558e5f714530fde3749832b7677a02be93d",
+            "files": 140
+          },
+          "artifacts": {
+            "sha256": "bb21e1453ea0b21691d8007853604c1f60deeb8cbd9d3f9291f7968bb5984225",
+            "files": 170
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "4f4ec9df1ee1b26fb96da7b933292b726af3d5697cfdf73b717cac09d8a2412d",
+            "files": 141
+          },
+          "artifacts": {
+            "sha256": "9d2e768cc062d83c5f85bfea9e7c493950bf76425c4bbc79762ef9c375361676",
+            "files": 173
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "old-bbu": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 3,
+            "exactLineage": 5,
+            "exactStatic": 8,
+            "exactNoGrowth": 0,
+            "twiceLineage": 10,
+            "twiceStatic": 19
+          },
+          "scope": "original-generation-and-final-permutation",
+          "witnessComparisons": 150,
+          "witnessViolations": 85,
+          "maxWitnessExcessRatio": "inf",
+          "worstWitnessCase": "planted-2026100784-6/wsupplied/g1b0"
+        },
+        "schedule": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 12,
+            "exactLineage": 31,
+            "exactStatic": 67,
+            "exactNoGrowth": 0,
+            "twiceLineage": 82,
+            "twiceStatic": 131
+          },
+          "scope": "completed-source-to-target",
+          "witnessComparisons": 150,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 1,
+          "worstWitnessCase": null
+        }
+      },
+      "summaryPath": "/tmp/optimality-v7-planted-2026100784-summary.json",
+      "recordsPath": "/tmp/optimality-v7-planted-2026100784.jsonl",
+      "referenceCertificates": {
+        "exactBaseline": 5,
+        "exactLineage": 10,
+        "exactStatic": 19,
+        "exactNoGrowth": 0,
+        "twiceLineage": 19,
+        "twiceStatic": 64
+      },
+      "reproduce": "node scripts/optimality-bench.mjs --suite planted --seed 2026100784 --cases 150 --state-limit 100000 --skip-oracle --algorithms schedule,old-bbu --runner .lake/build/bin/optimality_bench"
+    },
+    {
+      "suite": "planted-chains",
+      "seed": 2026100793,
+      "cases": 80,
+      "selectedAlgorithms": [
+        "schedule",
+        "old-bbu"
+      ],
+      "stateLimit": 100000,
+      "skipOracle": true,
+      "oracle": {
+        "not-run": 80
+      },
+      "oracleStates": 0,
+      "sourceHeights": [
+        2,
+        3,
+        5,
+        16,
+        17,
+        18,
+        32,
+        64,
+        128,
+        256,
+        512
+      ],
+      "targetHeights": [
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        11,
+        17,
+        18,
+        20,
+        21,
+        22,
+        24,
+        26,
+        32,
+        35,
+        40,
+        65,
+        67,
+        72,
+        129,
+        130,
+        131,
+        136,
+        144,
+        257,
+        258,
+        259,
+        260,
+        264,
+        272,
+        513,
+        514,
+        520
+      ],
+      "gasModels": [
+        "cpp",
+        "evm"
+      ],
+      "loadAddressWidths": [
+        0,
+        1,
+        2,
+        32
+      ],
+      "weights": [
+        "0:1",
+        "1:0",
+        "1:1",
+        "4:1",
+        "5:1",
+        "6:1"
+      ],
+      "productionRunnerSha256": "2ad9828e168315872dbd214bf1a933d27b42e3dc687839919023e56e35a31362",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "4068c2f6c8e05e9f41c335d37dd632c8b8bcba7a20596e95de76c0dfc2236f0b",
+            "files": 147
+          },
+          "artifacts": {
+            "sha256": "e17886cab145d02e6b8a098e56384999a4fa98b0e7edae55ae6dc468bfc58bd7",
+            "files": 179
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "ae5cc1a00657c2d463756ef42c35cb654c93aca66785fe20326c51cd86b6bbb7",
+            "files": 150
+          },
+          "artifacts": {
+            "sha256": "3e76b1436456aea4aba6cea69aa3489c77fefb3d04baeba9baa2b78f2e01ac8b",
+            "files": 181
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "old-bbu": {
+          "cases": 80,
+          "successes": 80,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 0,
+            "exactLineage": 0,
+            "exactStatic": 2,
+            "exactNoGrowth": 0,
+            "twiceLineage": 12,
+            "twiceStatic": 53
+          },
+          "scope": "original-generation-and-final-permutation",
+          "witnessComparisons": 80,
+          "witnessViolations": 5,
+          "maxWitnessExcessRatio": 3.3157894736842106,
+          "worstWitnessCase": "planted-chains-2026100793-59/wsupplied/g6b1"
+        },
+        "schedule": {
+          "cases": 80,
+          "successes": 80,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 0,
+            "exactLineage": 0,
+            "exactStatic": 52,
+            "exactNoGrowth": 0,
+            "twiceLineage": 22,
+            "twiceStatic": 80
+          },
+          "scope": "completed-source-to-target",
+          "witnessComparisons": 80,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 1.4545454545454546,
+          "worstWitnessCase": "planted-chains-2026100793-31/wsupplied/g1b0"
+        }
+      },
+      "summaryPath": "/tmp/optimality-v7-planted-chains-2026100793-summary.json",
+      "recordsPath": "/tmp/optimality-v7-planted-chains-2026100793.jsonl",
+      "referenceCertificates": {
+        "exactBaseline": 0,
+        "exactLineage": 0,
+        "exactStatic": 32,
+        "exactNoGrowth": 0,
+        "twiceLineage": 18,
+        "twiceStatic": 74
+      },
+      "reproduce": "node scripts/optimality-bench.mjs --suite planted-chains --seed 2026100793 --cases 80 --state-limit 100000 --skip-oracle --algorithms schedule,old-bbu --runner .lake/build/bin/optimality_bench"
+    },
+    {
+      "suite": "input",
+      "seed": 1,
+      "cases": 8,
+      "selectedAlgorithms": [
+        "schedule",
+        "old-bbu"
+      ],
+      "stateLimit": 100000,
+      "skipOracle": true,
+      "oracle": {
+        "not-run": 8
+      },
+      "oracleStates": 0,
+      "sourceHeights": [
+        1,
+        2,
+        16,
+        17
+      ],
+      "targetHeights": [
+        2,
+        4,
+        18,
+        19,
+        34,
+        35
+      ],
+      "gasModels": [
+        "cpp"
+      ],
+      "loadAddressWidths": [
+        1,
+        2
+      ],
+      "weights": [
+        "1:0",
+        "1:1",
+        "6:1"
+      ],
+      "productionRunnerSha256": "2ad9828e168315872dbd214bf1a933d27b42e3dc687839919023e56e35a31362",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "e3188c1d1851d9e308292c791e06222b23c0581a4b223c16662e8c96f035d48a",
+            "files": 138
+          },
+          "artifacts": {
+            "sha256": "bb21e1453ea0b21691d8007853604c1f60deeb8cbd9d3f9291f7968bb5984225",
+            "files": 170
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "e3188c1d1851d9e308292c791e06222b23c0581a4b223c16662e8c96f035d48a",
+            "files": 138
+          },
+          "artifacts": {
+            "sha256": "bb21e1453ea0b21691d8007853604c1f60deeb8cbd9d3f9291f7968bb5984225",
+            "files": 170
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "old-bbu": {
+          "cases": 8,
+          "successes": 8,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 0,
+            "exactLineage": 2,
+            "exactStatic": 2,
+            "exactNoGrowth": 0,
+            "twiceLineage": 2,
+            "twiceStatic": 3
+          },
+          "scope": "original-generation-and-final-permutation",
+          "witnessComparisons": 8,
+          "witnessViolations": 5,
+          "maxWitnessExcessRatio": "inf",
+          "worstWitnessCase": "regression-old-bbu-equal-values-mapped-cycle"
+        },
+        "schedule": {
+          "cases": 8,
+          "successes": 8,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 1,
+            "exactLineage": 4,
+            "exactStatic": 5,
+            "exactNoGrowth": 0,
+            "twiceLineage": 6,
+            "twiceStatic": 8
+          },
+          "scope": "completed-source-to-target",
+          "witnessComparisons": 8,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 1,
+          "worstWitnessCase": null
+        }
+      },
+      "summaryPath": "/tmp/optimality-v7-regressions-summary.json",
+      "recordsPath": "/tmp/optimality-v7-regressions.jsonl",
+      "referenceCertificates": {
+        "exactBaseline": 1,
+        "exactLineage": 4,
+        "exactStatic": 5,
+        "exactNoGrowth": 0,
+        "twiceLineage": 6,
+        "twiceStatic": 8
+      },
+      "inputCases": [
+        {
+          "id": "regression-push0-before-pivot",
+          "source": [
+            "v:43",
+            "v:42"
+          ],
+          "target": [
+            "v:42",
+            "v:42",
+            "v:43",
+            "l:0"
+          ],
+          "spills": [
+            42,
+            43
+          ],
+          "weights": {
+            "gas": 6,
+            "bytes": 1
+          },
+          "loadWidths": [
+            [
+              42,
+              1
+            ],
+            [
+              43,
+              1
+            ]
+          ],
+          "expectedOracleScore": 51,
+          "referenceOps": [
+            [
+              "dup",
+              1
+            ],
+            [
+              "swap",
+              2
+            ],
+            [
+              "push",
+              "l:0"
+            ]
+          ],
+          "missing": [
+            "v:42",
+            "l:0"
+          ],
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17"
+        },
+        {
+          "id": "regression-introduce-a-before-b",
+          "source": [
+            "l:0"
+          ],
+          "target": [
+            "v:42",
+            "l:0",
+            "v:42",
+            "v:43"
+          ],
+          "spills": [
+            42,
+            43
+          ],
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "loadWidths": [
+            [
+              42,
+              2
+            ],
+            [
+              43,
+              2
+            ]
+          ],
+          "expectedOracleScore": 28,
+          "referenceOps": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              1
+            ],
+            [
+              "dup",
+              2
+            ],
+            [
+              "load",
+              43
+            ]
+          ],
+          "missing": [
+            "v:42",
+            "v:42",
+            "v:43"
+          ],
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17"
+        },
+        {
+          "id": "regression-carry-versus-reintroduce-6-1",
+          "source": [
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+          ],
+          "spills": [],
+          "weights": {
+            "gas": 6,
+            "bytes": 1
+          },
+          "expectedOracleScore": 272,
+          "referenceOps": [
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ]
+          ],
+          "missing": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+          ],
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "loadWidths": [],
+          "model": "actual-16/17"
+        },
+        {
+          "id": "regression-two-seed-place-wide-narrow-gap1-ba/w1/g1b1",
+          "source": [
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656",
+            "l:1",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "l:1",
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:1",
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+          ],
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "loadWidths": [],
+          "gasModel": "cpp",
+          "missing": [
+            "l:0",
+            "l:1",
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+          ],
+          "spills": [],
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "model": "actual-16/17",
+          "expectedOracleScore": 23,
+          "referenceOps": [
+            [
+              "dup",
+              15
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              1
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "swap",
+              2
+            ]
+          ]
+        },
+        {
+          "id": "regression-two-seed-place-hard-gap1-ab/w1/g1b0",
+          "source": [
+            "v:42",
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:43",
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42",
+            "v:43"
+          ],
+          "weights": {
+            "gas": 1,
+            "bytes": 0
+          },
+          "loadWidths": [],
+          "gasModel": "cpp",
+          "missing": [
+            "l:0",
+            "v:42",
+            "v:43"
+          ],
+          "spills": [],
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "model": "actual-16/17",
+          "expectedOracleScore": 17,
+          "referenceOps": [
+            [
+              "dup",
+              15
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "swap",
+              15
+            ],
+            [
+              "dup",
+              16
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "swap",
+              2
+            ]
+          ]
+        },
+        {
+          "id": "regression-sparse-attached-top-cycle",
+          "source": [
+            "v:2",
+            "l:0",
+            "v:1",
+            "v:3",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:1"
+          ],
+          "target": [
+            "v:1",
+            "l:3",
+            "v:3",
+            "v:1",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:2",
+            "l:0"
+          ],
+          "missing": [
+            "l:3"
+          ],
+          "spills": [],
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "referenceOps": [
+            [
+              "swap",
+              13
+            ],
+            [
+              "swap",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:3"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "loadWidths": [],
+          "model": "actual-16/17",
+          "expectedOracleScore": 21
+        },
+        {
+          "id": "regression-two-seed-place-wide-narrow-gap17-ab/w1/g6b1",
+          "source": [
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656",
+            "l:1",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "l:1",
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656",
+            "l:1"
+          ],
+          "weights": {
+            "gas": 6,
+            "bytes": 1
+          },
+          "loadWidths": [],
+          "gasModel": "cpp",
+          "missing": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656",
+            "l:1"
+          ],
+          "spills": [],
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "model": "actual-16/17",
+          "expectedOracleScore": 336,
+          "referenceOps": [
+            [
+              "dup",
+              16
+            ],
+            [
+              "swap",
+              15
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "swap",
+              1
+            ],
+            [
+              "push",
+              "l:1"
+            ]
+          ]
+        },
+        {
+          "id": "regression-old-bbu-equal-values-mapped-cycle",
+          "source": [
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "l:0",
+            "l:0"
+          ],
+          "mapping": [
+            1,
+            0
+          ],
+          "spills": [],
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "expectedOracleScore": 0,
+          "referenceOps": [],
+          "missing": [],
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "loadWidths": [],
+          "model": "actual-16/17"
+        }
+      ],
+      "reproduce": "node scripts/optimality-bench.mjs --input Bench/optimality-regressions.jsonl --state-limit 100000 --skip-oracle --algorithms schedule,old-bbu --runner .lake/build/bin/optimality_bench"
+    },
+    {
+      "suite": "two-seed-placement",
+      "seed": 2026100741,
+      "cases": 360,
+      "selectedAlgorithms": [
+        "schedule",
+        "old-bbu"
+      ],
+      "stateLimit": 30000,
+      "skipOracle": false,
+      "oracle": {
+        "optimal": 360
+      },
+      "oracleStates": 4428296,
+      "sourceHeights": [
+        16
+      ],
+      "targetHeights": [
+        18,
+        19,
+        32,
+        33,
+        34,
+        35,
+        48,
+        49,
+        50,
+        51
+      ],
+      "gasModels": [
+        "cpp"
+      ],
+      "loadAddressWidths": [],
+      "weights": [
+        "0:1",
+        "1:0",
+        "1:1",
+        "4:1",
+        "5:1",
+        "6:1"
+      ],
+      "productionRunnerSha256": "2ad9828e168315872dbd214bf1a933d27b42e3dc687839919023e56e35a31362",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "2283fb21e35ccfc71cb56fe1e78c2066e5354e83f0c8e4ef31690f540861ea7f",
+            "files": 139
+          },
+          "artifacts": {
+            "sha256": "bb21e1453ea0b21691d8007853604c1f60deeb8cbd9d3f9291f7968bb5984225",
+            "files": 170
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "d9c4621df44f42ae48d56004628c3d2cb2dea7b2798a1fa1a4eb97a5793061d9",
+            "files": 140
+          },
+          "artifacts": {
+            "sha256": "bb21e1453ea0b21691d8007853604c1f60deeb8cbd9d3f9291f7968bb5984225",
+            "files": 170
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "old-bbu": {
+          "cases": 360,
+          "successes": 360,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 360,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 23.666666666666668,
+          "worstExcessCase": "two-seed-place-wide-wide-gap1-ba/w1/g0b1",
+          "certificates": {
+            "exactBaseline": 0,
+            "exactLineage": 0,
+            "exactStatic": 0,
+            "exactNoGrowth": 0,
+            "twiceLineage": 0,
+            "twiceStatic": 0
+          },
+          "scope": "original-generation-and-final-permutation",
+          "witnessComparisons": 360,
+          "witnessViolations": 354,
+          "maxWitnessExcessRatio": 23.666666666666668,
+          "worstWitnessCase": "two-seed-place-wide-wide-gap1-ba/w1/g0b1"
+        },
+        "schedule": {
+          "cases": 360,
+          "successes": 360,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 360,
+          "exact": 306,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1.3103448275862069,
+          "worstExcessCase": "two-seed-place-wide-narrow-gap14-ab/w1/g6b1",
+          "certificates": {
+            "exactBaseline": 0,
+            "exactLineage": 0,
+            "exactStatic": 36,
+            "exactNoGrowth": 0,
+            "twiceLineage": 231,
+            "twiceStatic": 336
+          },
+          "scope": "completed-source-to-target",
+          "witnessComparisons": 360,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 1.3103448275862069,
+          "worstWitnessCase": "two-seed-place-wide-narrow-gap14-ab/w1/g6b1"
+        }
+      },
+      "summaryPath": "/tmp/optimality-v7-two-seed-placement-2026100741-summary.json",
+      "recordsPath": "/tmp/optimality-v7-two-seed-placement-2026100741.jsonl",
+      "referenceCertificates": {
+        "exactBaseline": 0,
+        "exactLineage": 0,
+        "exactStatic": 36,
+        "exactNoGrowth": 0,
+        "twiceLineage": 250,
+        "twiceStatic": 360
+      },
+      "reproduce": "node scripts/optimality-bench.mjs --suite two-seed-placement --seed 2026100741 --cases 360 --state-limit 30000 --algorithms schedule,old-bbu --runner .lake/build/bin/optimality_bench"
+    }
+  ]
+}

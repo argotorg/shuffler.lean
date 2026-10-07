@@ -1,0 +1,499 @@
+{
+  "scope": "Exact selected-value-presence realization search. A state-limit result does not establish an optimum or infeasibility.",
+  "cases": [
+    {
+      "reach": 4,
+      "word": [
+        "a",
+        "b",
+        "b",
+        "c",
+        "c",
+        "d",
+        "d",
+        "e",
+        "a"
+      ],
+      "selected": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "plan": {
+        "problem": {
+          "source": [],
+          "target": [
+            "v:42",
+            "v:43",
+            "v:43",
+            "v:44",
+            "v:44",
+            "v:45",
+            "v:45",
+            "v:46",
+            "v:42"
+          ],
+          "spills": [
+            42,
+            43,
+            44,
+            45,
+            46
+          ],
+          "caps": {
+            "swap": 4,
+            "dup": 4
+          },
+          "id": "unnamed",
+          "missing": [
+            "v:42",
+            "v:43",
+            "v:43",
+            "v:44",
+            "v:44",
+            "v:45",
+            "v:45",
+            "v:46",
+            "v:42"
+          ],
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "gasModel": "cpp",
+          "loadWidths": [],
+          "model": "reduced-cap"
+        },
+        "values": [
+          "v:42",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46"
+        ],
+        "budgets": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "intervals": [
+          {
+            "start": 1,
+            "end": 2,
+            "value": "v:43"
+          },
+          {
+            "start": 3,
+            "end": 4,
+            "value": "v:44"
+          },
+          {
+            "start": 5,
+            "end": 6,
+            "value": "v:45"
+          },
+          {
+            "start": 0,
+            "end": 8,
+            "value": "v:42"
+          }
+        ],
+        "capacityFeasible": true
+      },
+      "result": {
+        "status": "reachable",
+        "states": 3522,
+        "ops": [
+          [
+            "load",
+            42
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "load",
+            44
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "dup",
+            3
+          ],
+          [
+            "swap",
+            4
+          ],
+          [
+            "load",
+            45
+          ],
+          [
+            "load",
+            46
+          ],
+          [
+            "dup",
+            2
+          ],
+          [
+            "swap",
+            3
+          ]
+        ],
+        "direct": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "swaps": 2
+      },
+      "M": 0,
+      "Q": 1,
+      "floor": 1,
+      "milliseconds": 45.113687,
+      "stateLimit": 300000
+    },
+    {
+      "reach": 5,
+      "word": [
+        "a",
+        "b",
+        "b",
+        "c",
+        "c",
+        "d",
+        "d",
+        "e",
+        "e",
+        "f",
+        "a"
+      ],
+      "selected": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "plan": {
+        "problem": {
+          "source": [],
+          "target": [
+            "v:42",
+            "v:43",
+            "v:43",
+            "v:44",
+            "v:44",
+            "v:45",
+            "v:45",
+            "v:46",
+            "v:46",
+            "v:47",
+            "v:42"
+          ],
+          "spills": [
+            42,
+            43,
+            44,
+            45,
+            46,
+            47
+          ],
+          "caps": {
+            "swap": 5,
+            "dup": 5
+          },
+          "id": "unnamed",
+          "missing": [
+            "v:42",
+            "v:43",
+            "v:43",
+            "v:44",
+            "v:44",
+            "v:45",
+            "v:45",
+            "v:46",
+            "v:46",
+            "v:47",
+            "v:42"
+          ],
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "gasModel": "cpp",
+          "loadWidths": [],
+          "model": "reduced-cap"
+        },
+        "values": [
+          "v:42",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:47"
+        ],
+        "budgets": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "intervals": [
+          {
+            "start": 1,
+            "end": 2,
+            "value": "v:43"
+          },
+          {
+            "start": 3,
+            "end": 4,
+            "value": "v:44"
+          },
+          {
+            "start": 5,
+            "end": 6,
+            "value": "v:45"
+          },
+          {
+            "start": 7,
+            "end": 8,
+            "value": "v:46"
+          },
+          {
+            "start": 0,
+            "end": 10,
+            "value": "v:42"
+          }
+        ],
+        "capacityFeasible": true
+      },
+      "result": {
+        "status": "reachable",
+        "states": 45057,
+        "ops": [
+          [
+            "load",
+            42
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "load",
+            44
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "dup",
+            5
+          ],
+          [
+            "load",
+            45
+          ],
+          [
+            "load",
+            46
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "load",
+            47
+          ],
+          [
+            "dup",
+            4
+          ],
+          [
+            "swap",
+            5
+          ]
+        ],
+        "direct": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "swaps": 1
+      },
+      "M": 0,
+      "Q": 1,
+      "floor": 1,
+      "milliseconds": 381.696076,
+      "stateLimit": 300000
+    },
+    {
+      "reach": 6,
+      "word": [
+        "a",
+        "b",
+        "b",
+        "c",
+        "c",
+        "d",
+        "d",
+        "e",
+        "e",
+        "f",
+        "f",
+        "g",
+        "a"
+      ],
+      "selected": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "plan": {
+        "problem": {
+          "source": [],
+          "target": [
+            "v:42",
+            "v:43",
+            "v:43",
+            "v:44",
+            "v:44",
+            "v:45",
+            "v:45",
+            "v:46",
+            "v:46",
+            "v:47",
+            "v:47",
+            "v:48",
+            "v:42"
+          ],
+          "spills": [
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48
+          ],
+          "caps": {
+            "swap": 6,
+            "dup": 6
+          },
+          "id": "unnamed",
+          "missing": [
+            "v:42",
+            "v:43",
+            "v:43",
+            "v:44",
+            "v:44",
+            "v:45",
+            "v:45",
+            "v:46",
+            "v:46",
+            "v:47",
+            "v:47",
+            "v:48",
+            "v:42"
+          ],
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "gasModel": "cpp",
+          "loadWidths": [],
+          "model": "reduced-cap"
+        },
+        "values": [
+          "v:42",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:47",
+          "v:48"
+        ],
+        "budgets": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "intervals": [
+          {
+            "start": 1,
+            "end": 2,
+            "value": "v:43"
+          },
+          {
+            "start": 3,
+            "end": 4,
+            "value": "v:44"
+          },
+          {
+            "start": 5,
+            "end": 6,
+            "value": "v:45"
+          },
+          {
+            "start": 7,
+            "end": 8,
+            "value": "v:46"
+          },
+          {
+            "start": 9,
+            "end": 10,
+            "value": "v:47"
+          },
+          {
+            "start": 0,
+            "end": 12,
+            "value": "v:42"
+          }
+        ],
+        "capacityFeasible": true
+      },
+      "result": {
+        "status": "limit",
+        "states": 300000
+      },
+      "M": 0,
+      "Q": 1,
+      "floor": 1,
+      "milliseconds": 833.4683,
+      "stateLimit": 300000
+    }
+  ]
+}

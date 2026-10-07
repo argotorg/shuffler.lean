@@ -1,0 +1,1262 @@
+{
+  "checkpoint": "v11",
+  "status": "intermediate experimental checkpoint",
+  "productionRunnerSha256": "8477dbee7b1f74012d47a7de609adcb8981c050ace141015017a64b64ad9e656",
+  "reproductionNote": "Commands regenerate the cases and run the current build. Match the executable hash to repeat this checkpoint exactly. Source and artifact fingerprints were sampled at run time; the executable hash identifies the fixed planner. Input-suite cases are included inline.",
+  "limits": "Finite tests do not prove a general approximation ratio. Only optimal oracle records enter cost ratios. A not-run result is an intentional omission, not an optimum or an infeasibility claim. Missing certificate counters mean that coverage was not measured by that runner. A witness violation proves failure of factor two without an optimum; absence of a witness violation is only finite test evidence.",
+  "suites": [
+    {
+      "suite": "input",
+      "seed": 1,
+      "cases": 9,
+      "selectedAlgorithms": [
+        "schedule",
+        "old-bbu"
+      ],
+      "stateLimit": 200000,
+      "skipOracle": false,
+      "oracle": {
+        "optimal": 9
+      },
+      "oracleStates": 34161,
+      "sourceHeights": [
+        15
+      ],
+      "targetHeights": [
+        19,
+        21,
+        31
+      ],
+      "gasModels": [
+        "cpp"
+      ],
+      "loadAddressWidths": [
+        0,
+        2,
+        32
+      ],
+      "weights": [
+        "0:1"
+      ],
+      "productionRunnerSha256": "8477dbee7b1f74012d47a7de609adcb8981c050ace141015017a64b64ad9e656",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "bd25c9e1bf5abcc10b51c8796518f75a0e79146152348f3d07dd172404bd09f3",
+            "files": 178
+          },
+          "artifacts": {
+            "sha256": "6e64a3cb8086952f45a7b60394d1937f2a1ca5f5ad66fa8deec83bfaf4eee4cf",
+            "files": 211
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "bd25c9e1bf5abcc10b51c8796518f75a0e79146152348f3d07dd172404bd09f3",
+            "files": 178
+          },
+          "artifacts": {
+            "sha256": "6e64a3cb8086952f45a7b60394d1937f2a1ca5f5ad66fa8deec83bfaf4eee4cf",
+            "files": 211
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "old-bbu": {
+          "cases": 9,
+          "successes": 9,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 9,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 2.125,
+          "worstExcessCase": "collective-capacity-k3-width0",
+          "certificates": {
+            "exactBaseline": 0,
+            "exactLineage": 0,
+            "exactStatic": 0,
+            "exactNoGrowth": 0,
+            "twiceLineage": 0,
+            "twiceStatic": 0
+          },
+          "scope": "original-generation-and-final-permutation",
+          "witnessComparisons": 9,
+          "witnessViolations": 3,
+          "maxWitnessExcessRatio": 2.125,
+          "worstWitnessCase": "collective-capacity-k3-width0"
+        },
+        "schedule": {
+          "cases": 9,
+          "successes": 9,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 9,
+          "exact": 9,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 0,
+            "exactLineage": 0,
+            "exactStatic": 0,
+            "exactNoGrowth": 0,
+            "twiceLineage": 0,
+            "twiceStatic": 5
+          },
+          "scope": "completed-source-to-target",
+          "witnessComparisons": 9,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 1,
+          "worstWitnessCase": null
+        }
+      },
+      "summaryPath": "/tmp/optimality-v11-collective-summary.json",
+      "recordsPath": "/tmp/optimality-v11-collective.jsonl",
+      "referenceCertificates": {
+        "exactBaseline": 0,
+        "exactLineage": 0,
+        "exactStatic": 0,
+        "exactNoGrowth": 0,
+        "twiceLineage": 0,
+        "twiceStatic": 5
+      },
+      "inputCases": [
+        {
+          "id": "collective-capacity-k2-width0",
+          "source": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "missing": [
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43"
+          ],
+          "spills": [
+            42,
+            43
+          ],
+          "loadWidths": [
+            [
+              42,
+              0
+            ],
+            [
+              43,
+              0
+            ]
+          ],
+          "weights": {
+            "gas": 0,
+            "bytes": 1
+          },
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17"
+        },
+        {
+          "id": "collective-capacity-k2-width2",
+          "source": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "missing": [
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43"
+          ],
+          "spills": [
+            42,
+            43
+          ],
+          "loadWidths": [
+            [
+              42,
+              2
+            ],
+            [
+              43,
+              2
+            ]
+          ],
+          "weights": {
+            "gas": 0,
+            "bytes": 1
+          },
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17"
+        },
+        {
+          "id": "collective-capacity-k2-width32",
+          "source": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "missing": [
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43"
+          ],
+          "spills": [
+            42,
+            43
+          ],
+          "loadWidths": [
+            [
+              42,
+              32
+            ],
+            [
+              43,
+              32
+            ]
+          ],
+          "weights": {
+            "gas": 0,
+            "bytes": 1
+          },
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17"
+        },
+        {
+          "id": "collective-capacity-k3-width0",
+          "source": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "missing": [
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43"
+          ],
+          "spills": [
+            42,
+            43
+          ],
+          "loadWidths": [
+            [
+              42,
+              0
+            ],
+            [
+              43,
+              0
+            ]
+          ],
+          "weights": {
+            "gas": 0,
+            "bytes": 1
+          },
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17"
+        },
+        {
+          "id": "collective-capacity-k3-width2",
+          "source": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "missing": [
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43"
+          ],
+          "spills": [
+            42,
+            43
+          ],
+          "loadWidths": [
+            [
+              42,
+              2
+            ],
+            [
+              43,
+              2
+            ]
+          ],
+          "weights": {
+            "gas": 0,
+            "bytes": 1
+          },
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17"
+        },
+        {
+          "id": "collective-capacity-k3-width32",
+          "source": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "missing": [
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43"
+          ],
+          "spills": [
+            42,
+            43
+          ],
+          "loadWidths": [
+            [
+              42,
+              32
+            ],
+            [
+              43,
+              32
+            ]
+          ],
+          "weights": {
+            "gas": 0,
+            "bytes": 1
+          },
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17"
+        },
+        {
+          "id": "collective-capacity-k8-width0",
+          "source": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "missing": [
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43"
+          ],
+          "spills": [
+            42,
+            43
+          ],
+          "loadWidths": [
+            [
+              42,
+              0
+            ],
+            [
+              43,
+              0
+            ]
+          ],
+          "weights": {
+            "gas": 0,
+            "bytes": 1
+          },
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17"
+        },
+        {
+          "id": "collective-capacity-k8-width2",
+          "source": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "missing": [
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43"
+          ],
+          "spills": [
+            42,
+            43
+          ],
+          "loadWidths": [
+            [
+              42,
+              2
+            ],
+            [
+              43,
+              2
+            ]
+          ],
+          "weights": {
+            "gas": 0,
+            "bytes": 1
+          },
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17"
+        },
+        {
+          "id": "collective-capacity-k8-width32",
+          "source": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "missing": [
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43",
+            "v:42",
+            "v:43"
+          ],
+          "spills": [
+            42,
+            43
+          ],
+          "loadWidths": [
+            [
+              42,
+              32
+            ],
+            [
+              43,
+              32
+            ]
+          ],
+          "weights": {
+            "gas": 0,
+            "bytes": 1
+          },
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17"
+        }
+      ],
+      "reproduce": "node scripts/optimality-bench.mjs --input /tmp/optimality-v11-collective-input.jsonl --state-limit 200000 --algorithms schedule,old-bbu --runner .lake/build/bin/optimality_bench"
+    },
+    {
+      "suite": "input",
+      "seed": 1,
+      "cases": 1,
+      "selectedAlgorithms": [
+        "schedule",
+        "old-bbu"
+      ],
+      "stateLimit": 100000,
+      "skipOracle": true,
+      "oracle": {
+        "not-run": 1
+      },
+      "oracleStates": 0,
+      "sourceHeights": [
+        18
+      ],
+      "targetHeights": [
+        50
+      ],
+      "gasModels": [
+        "evm"
+      ],
+      "loadAddressWidths": [
+        0
+      ],
+      "weights": [
+        "1:0"
+      ],
+      "productionRunnerSha256": "8477dbee7b1f74012d47a7de609adcb8981c050ace141015017a64b64ad9e656",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "1ca90a309797760642f776d4b9e12a9eb4219dce85cb470d0fb7a24213f88121",
+            "files": 178
+          },
+          "artifacts": {
+            "sha256": "b57c3c1ee85cce9f17671a9477ad7c69cb19ef44649cac6fbebdbf36c3dc710e",
+            "files": 208
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "1ca90a309797760642f776d4b9e12a9eb4219dce85cb470d0fb7a24213f88121",
+            "files": 178
+          },
+          "artifacts": {
+            "sha256": "b57c3c1ee85cce9f17671a9477ad7c69cb19ef44649cac6fbebdbf36c3dc710e",
+            "files": 208
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "old-bbu": {
+          "cases": 1,
+          "successes": 1,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 0,
+            "exactLineage": 0,
+            "exactStatic": 0,
+            "exactNoGrowth": 0,
+            "twiceLineage": 0,
+            "twiceStatic": 0
+          },
+          "scope": "original-generation-and-final-permutation",
+          "witnessComparisons": 1,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 2,
+          "worstWitnessCase": "planted-2026100783-83/wsupplied/g1b0"
+        },
+        "schedule": {
+          "cases": 1,
+          "successes": 1,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 0,
+            "exactLineage": 0,
+            "exactStatic": 0,
+            "exactNoGrowth": 0,
+            "twiceLineage": 0,
+            "twiceStatic": 0
+          },
+          "scope": "completed-source-to-target",
+          "witnessComparisons": 1,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 1,
+          "worstWitnessCase": null
+        }
+      },
+      "summaryPath": "/tmp/optimality-v11-last-gap-summary.json",
+      "recordsPath": "/tmp/optimality-v11-last-gap.jsonl",
+      "referenceCertificates": {
+        "exactBaseline": 0,
+        "exactLineage": 0,
+        "exactStatic": 0,
+        "exactNoGrowth": 0,
+        "twiceLineage": 0,
+        "twiceStatic": 0
+      },
+      "inputCases": [
+        {
+          "id": "planted-2026100783-83/wsupplied/g1b0",
+          "source": [
+            "l:0",
+            "l:0",
+            "v:42",
+            "l:1",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "l:0",
+            "l:0",
+            "l:1",
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:1",
+            "v:42"
+          ],
+          "missing": [
+            "l:1",
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "spills": [
+            44
+          ],
+          "gasModel": "evm",
+          "loadWidths": [
+            [
+              44,
+              0
+            ]
+          ],
+          "planted": {
+            "seed": 2026100783,
+            "index": 83,
+            "family": 2,
+            "swaps": 8
+          },
+          "referenceOps": [
+            [
+              "dup",
+              15
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "swap",
+              15
+            ],
+            [
+              "dup",
+              16
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "swap",
+              1
+            ],
+            [
+              "swap",
+              15
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "swap",
+              1
+            ],
+            [
+              "swap",
+              15
+            ]
+          ],
+          "weights": {
+            "gas": 1,
+            "bytes": 0
+          },
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "model": "actual-16/17"
+        }
+      ],
+      "reproduce": "node scripts/optimality-bench.mjs --input /tmp/optimality-v11-last-gap-input.jsonl --state-limit 100000 --skip-oracle --algorithms schedule,old-bbu --runner .lake/build/bin/optimality_bench"
+    }
+  ]
+}

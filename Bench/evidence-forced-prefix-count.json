@@ -1,0 +1,86 @@
+{
+  "status": "finite reachability evidence, not a proof",
+  "checked": 1490,
+  "states": 16890,
+  "first": null,
+  "completed": true,
+  "boundVersion": "min(H(v), prefixRun(T,p,v)+1)",
+  "bounds": {
+    "2": 1292,
+    "3": 198
+  },
+  "condition": "n >= R; p=n-R; T[p]=v; v absent from source; H(v)>=2",
+  "domain": {
+    "cap": 2,
+    "sourceLengths": [
+      2,
+      3,
+      4
+    ],
+    "sourceAlphabet": [
+      "l:0",
+      "l:1"
+    ],
+    "targetAlphabet": [
+      "l:0",
+      "l:1",
+      "v:42"
+    ],
+    "births": [
+      2,
+      3
+    ],
+    "directLimit": "proposed lower bound minus 1",
+    "stateLimit": 200000
+  },
+  "shorterStack": {
+    "problem": {
+      "source": [
+        "l:0"
+      ],
+      "target": [
+        "v:42",
+        "l:0",
+        "v:42"
+      ],
+      "spills": [
+        42
+      ],
+      "caps": {
+        "swap": 2,
+        "dup": 2
+      },
+      "id": "unnamed",
+      "missing": [
+        "v:42",
+        "v:42"
+      ],
+      "weights": {
+        "gas": 1,
+        "bytes": 1
+      },
+      "gasModel": "cpp",
+      "loadWidths": [],
+      "model": "reduced-cap"
+    },
+    "result": {
+      "status": "reachable",
+      "states": 6,
+      "ops": [
+        [
+          "load",
+          42
+        ],
+        [
+          "swap",
+          1
+        ],
+        [
+          "dup",
+          2
+        ]
+      ],
+      "direct": 1
+    }
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "scope": "Three distinct fresh values; selected-value presence, per-value direct budgets, no fixed copy roots.",
+  "plan": {
+    "problem": {
+      "source": [],
+      "target": [
+        "v:42",
+        "v:43",
+        "v:43",
+        "v:44",
+        "v:42"
+      ],
+      "spills": [
+        42,
+        43,
+        44
+      ],
+      "caps": {
+        "swap": 2,
+        "dup": 2
+      },
+      "id": "unnamed",
+      "missing": [
+        "v:42",
+        "v:43",
+        "v:43",
+        "v:44",
+        "v:42"
+      ],
+      "weights": {
+        "gas": 1,
+        "bytes": 1
+      },
+      "gasModel": "cpp",
+      "loadWidths": [],
+      "model": "reduced-cap"
+    },
+    "values": [
+      "v:42",
+      "v:43",
+      "v:44"
+    ],
+    "budgets": [
+      1,
+      1,
+      1
+    ],
+    "intervals": [
+      {
+        "start": 1,
+        "end": 2,
+        "value": "v:43"
+      },
+      {
+        "start": 0,
+        "end": 4,
+        "value": "v:42"
+      }
+    ],
+    "capacityFeasible": true
+  },
+  "result": {
+    "status": "reachable",
+    "states": 45,
+    "ops": [
+      [
+        "load",
+        42
+      ],
+      [
+        "dup",
+        1
+      ],
+      [
+        "load",
+        43
+      ],
+      [
+        "dup",
+        1
+      ],
+      [
+        "swap",
+        2
+      ],
+      [
+        "load",
+        44
+      ],
+      [
+        "swap",
+        1
+      ]
+    ],
+    "direct": [
+      1,
+      1,
+      1
+    ],
+    "swaps": 2
+  },
+  "M": 0,
+  "Q": 1
+}

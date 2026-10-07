@@ -1,0 +1,26 @@
+{
+  "status": "bounded experimental result; not a production algorithm",
+  "boundVersion": "graph-transport-Q-F-forced-introduction",
+  "checked": 696,
+  "first": null,
+  "domain": {
+    "alphabet": [
+      "l:0",
+      "v:42"
+    ],
+    "sourceLengths": "0 through4, stopped at first failure",
+    "births": 1,
+    "capacity": 2,
+    "loadWidths": [
+      0,
+      2,
+      32
+    ],
+    "weights": {
+      "gas": 0,
+      "bytes": 1
+    },
+    "macro": "arbitrary legal SWAPs, one birth, arbitrary legal SWAPs",
+    "residual": "exact no-growth SWAP distance"
+  }
+}

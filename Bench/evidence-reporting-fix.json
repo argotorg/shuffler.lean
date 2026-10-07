@@ -1,0 +1,62 @@
+{
+  "status": "reporting correction; planner records are unchanged",
+  "reportingVersion": 2,
+  "reason": "The old maximum witness excess ratio started at1. When all candidates were cheaper than their legal witnesses, the report showed1 rather than the measured maximum.",
+  "semantics": {
+    "version": 2,
+    "finiteMaximumUsesPositiveReferenceExcess": true,
+    "zeroReferenceExcessReportedSeparately": true
+  },
+  "historicalFilesPreserved": [
+    "Bench/evidence-v6.json",
+    "Bench/evidence-v7.json",
+    "Bench/evidence-v8.json",
+    "Bench/evidence-v9.json",
+    "Bench/evidence-v10.json",
+    "Bench/evidence-v11.json"
+  ],
+  "example": {
+    "records": "/tmp/optimality-v11-last-gap.jsonl",
+    "historicalSummary": "/tmp/optimality-v11-last-gap-summary.json",
+    "historicalMaximum": 1,
+    "corrected": {
+      "cases": 1,
+      "successes": 1,
+      "feasibilityFailures": 0,
+      "oracleComparisons": 0,
+      "exact": 0,
+      "zeroExcessViolations": 0,
+      "maxCostRatio": 1,
+      "maxExcessRatio": 1,
+      "certificates": {
+        "exactBaseline": 0,
+        "exactLineage": 0,
+        "exactStatic": 0,
+        "exactNoGrowth": 0,
+        "twiceLineage": 0,
+        "twiceStatic": 0
+      },
+      "maxInstructionsPerSize": 0.5441176470588235,
+      "worstExcessCase": null,
+      "scope": "completed-source-to-target",
+      "witnessComparisons": 1,
+      "witnessViolations": 0,
+      "witnessPositiveExcessComparisons": 1,
+      "witnessZeroExcessComparisons": 0,
+      "witnessZeroExcessViolations": 0,
+      "maxCandidateExcessWithZeroWitness": 0,
+      "worstZeroExcessWitnessCase": null,
+      "maxWitnessExcessRatio": 0.625,
+      "worstWitnessCase": "planted-2026100783-83/wsupplied/g1b0",
+      "worstWitnessComparison": {
+        "caseId": "planted-2026100783-83/wsupplied/g1b0",
+        "baseline": 66,
+        "candidateScore": 81,
+        "witnessScore": 90,
+        "candidateExcess": 15,
+        "witnessExcess": 24
+      }
+    }
+  },
+  "verification": "The first three report tests failed before the fix and passed after it. The tests replay legal candidate and witness traces before summarizing them."
+}

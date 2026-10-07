@@ -1,0 +1,523 @@
+{
+  "status": "finite reachability evidence, not a proof",
+  "claim": "The total number of direct introductions of a and b is at least k+1 in these fixed inputs.",
+  "records": [
+    {
+      "problem": {
+        "id": "collective-capacity-k2-width32",
+        "source": [
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "missing": [
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43"
+        ],
+        "spills": [
+          42,
+          43
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            32
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17",
+        "expectedOracleScore": 107,
+        "referenceOps": [
+          [
+            "load",
+            42
+          ],
+          [
+            "swap",
+            13
+          ],
+          [
+            "dup",
+            14
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "swap",
+            15
+          ]
+        ],
+        "oracleCounts": {
+          "loads": 3,
+          "loadsA": 1,
+          "loadsB": 2,
+          "dups": 1,
+          "swaps": 4
+        },
+        "measuredV11": {
+          "baseline": 70,
+          "staticExcess": 4,
+          "schedule": 107,
+          "oldBBU": 144
+        },
+        "proofEvidence": "offline exact oracle and pinned v11 production replay"
+      },
+      "directLimit": 2,
+      "result": {
+        "status": "unreachable",
+        "states": 1257
+      }
+    },
+    {
+      "problem": {
+        "id": "collective-capacity-k3-width32",
+        "source": [
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "missing": [
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43"
+        ],
+        "spills": [
+          42,
+          43
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            32
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17",
+        "expectedOracleScore": 144,
+        "referenceOps": [
+          [
+            "load",
+            42
+          ],
+          [
+            "swap",
+            11
+          ],
+          [
+            "dup",
+            12
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "dup",
+            14
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "swap",
+            15
+          ]
+        ],
+        "oracleCounts": {
+          "loads": 4,
+          "loadsA": 1,
+          "loadsB": 3,
+          "dups": 2,
+          "swaps": 6
+        },
+        "measuredV11": {
+          "baseline": 72,
+          "staticExcess": 6,
+          "schedule": 144,
+          "oldBBU": 217
+        },
+        "proofEvidence": "offline exact oracle and pinned v11 production replay"
+      },
+      "directLimit": 3,
+      "result": {
+        "status": "unreachable",
+        "states": 3297
+      }
+    },
+    {
+      "problem": {
+        "id": "collective-capacity-k8-width32",
+        "source": [
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "missing": [
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43"
+        ],
+        "spills": [
+          42,
+          43
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            32
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17",
+        "expectedOracleScore": 328,
+        "referenceOps": [
+          [
+            "load",
+            43
+          ],
+          [
+            "load",
+            42
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "dup",
+            2
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "load",
+            42
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "dup",
+            4
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "load",
+            42
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "dup",
+            6
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "load",
+            42
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "dup",
+            8
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "load",
+            42
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "dup",
+            10
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "load",
+            42
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "dup",
+            12
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "load",
+            42
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "dup",
+            14
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "load",
+            42
+          ],
+          [
+            "swap",
+            16
+          ]
+        ],
+        "oracleCounts": {
+          "loads": 9,
+          "loadsA": 8,
+          "loadsB": 1,
+          "dups": 7,
+          "swaps": 15
+        },
+        "measuredV11": {
+          "baseline": 82,
+          "staticExcess": 15,
+          "schedule": 328,
+          "oldBBU": 347
+        },
+        "proofEvidence": "offline exact oracle and pinned v11 production replay"
+      },
+      "directLimit": 8,
+      "result": {
+        "status": "unreachable",
+        "states": 21657
+      }
+    }
+  ]
+}

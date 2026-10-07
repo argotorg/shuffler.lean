@@ -1,0 +1,2487 @@
+{
+  "checkpoint": "v9",
+  "status": "intermediate experimental checkpoint",
+  "productionRunnerSha256": "60eb38ec9099631f3948ea346592e5d3f057b10fc50ef25e6e442f8b47466a9e",
+  "reproductionNote": "Commands regenerate the cases and run the current build. Match the executable hash to repeat this checkpoint exactly. Source and artifact fingerprints were sampled at run time; the executable hash identifies the fixed planner. Input-suite cases are included inline.",
+  "limits": "Finite tests do not prove a general approximation ratio. Only optimal oracle records enter cost ratios. A not-run result is an intentional omission, not an optimum or an infeasibility claim. Missing certificate counters mean that coverage was not measured by that runner. A witness violation proves failure of factor two without an optimum; absence of a witness violation is only finite test evidence.",
+  "suites": [
+    {
+      "suite": "input",
+      "seed": 1,
+      "cases": 17,
+      "selectedAlgorithms": [
+        "schedule",
+        "old-bbu",
+        "schedule-chains-balanced",
+        "schedule-chains-eager",
+        "schedule-chains-preserve"
+      ],
+      "stateLimit": 100000,
+      "skipOracle": true,
+      "oracle": {
+        "not-run": 17
+      },
+      "oracleStates": 0,
+      "sourceHeights": [
+        0,
+        1,
+        2,
+        16,
+        17,
+        18,
+        32
+      ],
+      "targetHeights": [
+        2,
+        4,
+        18,
+        19,
+        22,
+        34,
+        35,
+        37
+      ],
+      "gasModels": [
+        "cpp",
+        "evm"
+      ],
+      "loadAddressWidths": [
+        0,
+        1,
+        2,
+        32
+      ],
+      "weights": [
+        "0:1",
+        "1:0",
+        "1:1",
+        "4:1",
+        "6:1"
+      ],
+      "productionRunnerSha256": "60eb38ec9099631f3948ea346592e5d3f057b10fc50ef25e6e442f8b47466a9e",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "de462c4a656ab1b00f5ea7b3058670d60762c0ad049f592d6d191b5487fae0a9",
+            "files": 166
+          },
+          "artifacts": {
+            "sha256": "06a34ef955d45f3d77a3c8016210a46ed09d2bfc503e5ff8eb4e4874fdfeccae",
+            "files": 198
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "de462c4a656ab1b00f5ea7b3058670d60762c0ad049f592d6d191b5487fae0a9",
+            "files": 166
+          },
+          "artifacts": {
+            "sha256": "c76abe728652c6a417d7617625280142310746bbca2615fad3d0514390f47f4f",
+            "files": 199
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "old-bbu": {
+          "cases": 17,
+          "successes": 17,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 0,
+            "exactLineage": 3,
+            "exactStatic": 5,
+            "exactNoGrowth": 0,
+            "twiceLineage": 5,
+            "twiceStatic": 11
+          },
+          "scope": "original-generation-and-final-permutation",
+          "witnessComparisons": 17,
+          "witnessViolations": 5,
+          "maxWitnessExcessRatio": "inf",
+          "worstWitnessCase": "regression-old-bbu-equal-values-mapped-cycle"
+        },
+        "schedule": {
+          "cases": 17,
+          "successes": 17,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 1,
+            "exactLineage": 5,
+            "exactStatic": 11,
+            "exactNoGrowth": 0,
+            "twiceLineage": 9,
+            "twiceStatic": 16
+          },
+          "scope": "completed-source-to-target",
+          "witnessComparisons": 17,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 1.4545454545454546,
+          "worstWitnessCase": "regression-open-chain-repeated-births"
+        },
+        "schedule-chains-balanced": {
+          "cases": 17,
+          "successes": 17,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 1,
+            "exactLineage": 5,
+            "exactStatic": 9,
+            "exactNoGrowth": 0,
+            "twiceLineage": 8,
+            "twiceStatic": 15
+          },
+          "scope": "completed-source-to-target",
+          "witnessComparisons": 17,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 2,
+          "worstWitnessCase": "regression-capped-gap-absent"
+        },
+        "schedule-chains-eager": {
+          "cases": 17,
+          "successes": 17,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 1,
+            "exactLineage": 5,
+            "exactStatic": 11,
+            "exactNoGrowth": 0,
+            "twiceLineage": 9,
+            "twiceStatic": 16
+          },
+          "scope": "completed-source-to-target",
+          "witnessComparisons": 17,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 1.4545454545454546,
+          "worstWitnessCase": "regression-open-chain-repeated-births"
+        },
+        "schedule-chains-preserve": {
+          "cases": 17,
+          "successes": 17,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 1,
+            "exactLineage": 3,
+            "exactStatic": 6,
+            "exactNoGrowth": 0,
+            "twiceLineage": 8,
+            "twiceStatic": 15
+          },
+          "scope": "completed-source-to-target",
+          "witnessComparisons": 17,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 2,
+          "worstWitnessCase": "regression-introduce-a-before-b"
+        }
+      },
+      "summaryPath": "/tmp/optimality-v9-regressions-summary.json",
+      "recordsPath": "/tmp/optimality-v9-regressions.jsonl",
+      "referenceCertificates": {
+        "exactBaseline": 1,
+        "exactLineage": 5,
+        "exactStatic": 12,
+        "exactNoGrowth": 0,
+        "twiceLineage": 10,
+        "twiceStatic": 16
+      },
+      "inputCases": [
+        {
+          "id": "regression-push0-before-pivot",
+          "source": [
+            "v:43",
+            "v:42"
+          ],
+          "target": [
+            "v:42",
+            "v:42",
+            "v:43",
+            "l:0"
+          ],
+          "spills": [
+            42,
+            43
+          ],
+          "weights": {
+            "gas": 6,
+            "bytes": 1
+          },
+          "loadWidths": [
+            [
+              42,
+              1
+            ],
+            [
+              43,
+              1
+            ]
+          ],
+          "expectedOracleScore": 51,
+          "referenceOps": [
+            [
+              "dup",
+              1
+            ],
+            [
+              "swap",
+              2
+            ],
+            [
+              "push",
+              "l:0"
+            ]
+          ],
+          "missing": [
+            "v:42",
+            "l:0"
+          ],
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17"
+        },
+        {
+          "id": "regression-introduce-a-before-b",
+          "source": [
+            "l:0"
+          ],
+          "target": [
+            "v:42",
+            "l:0",
+            "v:42",
+            "v:43"
+          ],
+          "spills": [
+            42,
+            43
+          ],
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "loadWidths": [
+            [
+              42,
+              2
+            ],
+            [
+              43,
+              2
+            ]
+          ],
+          "expectedOracleScore": 28,
+          "referenceOps": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              1
+            ],
+            [
+              "dup",
+              2
+            ],
+            [
+              "load",
+              43
+            ]
+          ],
+          "missing": [
+            "v:42",
+            "v:42",
+            "v:43"
+          ],
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17"
+        },
+        {
+          "id": "regression-carry-versus-reintroduce-6-1",
+          "source": [
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+          ],
+          "spills": [],
+          "weights": {
+            "gas": 6,
+            "bytes": 1
+          },
+          "expectedOracleScore": 272,
+          "referenceOps": [
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ]
+          ],
+          "missing": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+          ],
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "loadWidths": [],
+          "model": "actual-16/17"
+        },
+        {
+          "id": "regression-two-seed-place-wide-narrow-gap1-ba/w1/g1b1",
+          "source": [
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656",
+            "l:1",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "l:1",
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:1",
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+          ],
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "loadWidths": [],
+          "gasModel": "cpp",
+          "missing": [
+            "l:0",
+            "l:1",
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+          ],
+          "spills": [],
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "model": "actual-16/17",
+          "expectedOracleScore": 23,
+          "referenceOps": [
+            [
+              "dup",
+              15
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              1
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "swap",
+              2
+            ]
+          ]
+        },
+        {
+          "id": "regression-two-seed-place-hard-gap1-ab/w1/g1b0",
+          "source": [
+            "v:42",
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:43",
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42",
+            "v:43"
+          ],
+          "weights": {
+            "gas": 1,
+            "bytes": 0
+          },
+          "loadWidths": [],
+          "gasModel": "cpp",
+          "missing": [
+            "l:0",
+            "v:42",
+            "v:43"
+          ],
+          "spills": [],
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "model": "actual-16/17",
+          "expectedOracleScore": 17,
+          "referenceOps": [
+            [
+              "dup",
+              15
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "swap",
+              15
+            ],
+            [
+              "dup",
+              16
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "swap",
+              2
+            ]
+          ]
+        },
+        {
+          "id": "regression-sparse-attached-top-cycle",
+          "source": [
+            "v:2",
+            "l:0",
+            "v:1",
+            "v:3",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:1"
+          ],
+          "target": [
+            "v:1",
+            "l:3",
+            "v:3",
+            "v:1",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:2",
+            "l:0"
+          ],
+          "missing": [
+            "l:3"
+          ],
+          "spills": [],
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "referenceOps": [
+            [
+              "swap",
+              13
+            ],
+            [
+              "swap",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:3"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "loadWidths": [],
+          "model": "actual-16/17",
+          "expectedOracleScore": 21
+        },
+        {
+          "id": "regression-two-seed-place-wide-narrow-gap17-ab/w1/g6b1",
+          "source": [
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656",
+            "l:1",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "l:1",
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656",
+            "l:1"
+          ],
+          "weights": {
+            "gas": 6,
+            "bytes": 1
+          },
+          "loadWidths": [],
+          "gasModel": "cpp",
+          "missing": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656",
+            "l:1"
+          ],
+          "spills": [],
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "model": "actual-16/17",
+          "expectedOracleScore": 336,
+          "referenceOps": [
+            [
+              "dup",
+              16
+            ],
+            [
+              "swap",
+              15
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "swap",
+              1
+            ],
+            [
+              "push",
+              "l:1"
+            ]
+          ]
+        },
+        {
+          "id": "regression-old-bbu-equal-values-mapped-cycle",
+          "source": [
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "l:0",
+            "l:0"
+          ],
+          "mapping": [
+            1,
+            0
+          ],
+          "spills": [],
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "expectedOracleScore": 0,
+          "referenceOps": [],
+          "missing": [],
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "loadWidths": [],
+          "model": "actual-16/17"
+        },
+        {
+          "id": "regression-gap-final-copies-regenerated",
+          "source": [
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:43",
+            "v:43",
+            "v:43",
+            "v:43"
+          ],
+          "missing": [
+            "v:43",
+            "l:0",
+            "l:0",
+            "v:43",
+            "v:43",
+            "v:43"
+          ],
+          "spills": [
+            43,
+            44
+          ],
+          "gasModel": "evm",
+          "loadWidths": [
+            [
+              43,
+              0
+            ],
+            [
+              44,
+              32
+            ]
+          ],
+          "planted": {
+            "seed": 2026100781,
+            "index": 13,
+            "family": 1,
+            "swaps": 1
+          },
+          "referenceOps": [
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "load",
+              43
+            ],
+            [
+              "dup",
+              1
+            ],
+            [
+              "dup",
+              1
+            ],
+            [
+              "dup",
+              1
+            ]
+          ],
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "model": "actual-16/17",
+          "expectedOracleScore": 25
+        },
+        {
+          "id": "regression-gap-final-copies-retained",
+          "source": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:43",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:43",
+            "v:43",
+            "v:43"
+          ],
+          "missing": [
+            "v:43",
+            "l:0",
+            "l:0",
+            "v:43",
+            "v:43"
+          ],
+          "spills": [],
+          "gasModel": "evm",
+          "loadWidths": [],
+          "planted": {
+            "seed": 2026100781,
+            "index": 25,
+            "family": 1,
+            "swaps": 1
+          },
+          "referenceOps": [
+            [
+              "dup",
+              16
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "swap",
+              2
+            ],
+            [
+              "dup",
+              1
+            ],
+            [
+              "dup",
+              1
+            ]
+          ],
+          "weights": {
+            "gas": 4,
+            "bytes": 1
+          },
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "model": "actual-16/17",
+          "expectedOracleScore": 70
+        },
+        {
+          "id": "regression-old-bbu-rotate-seventeen",
+          "source": [
+            "v:0",
+            "v:1",
+            "v:2",
+            "v:3",
+            "v:4",
+            "v:5",
+            "v:6",
+            "v:7",
+            "v:8",
+            "v:9",
+            "v:10",
+            "v:11",
+            "v:12",
+            "v:13",
+            "v:14",
+            "v:15",
+            "v:16"
+          ],
+          "target": [
+            "v:1",
+            "v:2",
+            "v:3",
+            "v:4",
+            "v:5",
+            "v:6",
+            "v:7",
+            "v:8",
+            "v:9",
+            "v:10",
+            "v:11",
+            "v:12",
+            "v:13",
+            "v:14",
+            "v:15",
+            "v:16",
+            "l:99",
+            "v:0"
+          ],
+          "spills": [],
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "referenceOps": [
+            [
+              "swap",
+              1
+            ],
+            [
+              "swap",
+              2
+            ],
+            [
+              "swap",
+              3
+            ],
+            [
+              "swap",
+              4
+            ],
+            [
+              "swap",
+              5
+            ],
+            [
+              "swap",
+              6
+            ],
+            [
+              "swap",
+              7
+            ],
+            [
+              "swap",
+              8
+            ],
+            [
+              "swap",
+              9
+            ],
+            [
+              "swap",
+              10
+            ],
+            [
+              "swap",
+              11
+            ],
+            [
+              "swap",
+              12
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "swap",
+              14
+            ],
+            [
+              "swap",
+              15
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:99"
+            ],
+            [
+              "swap",
+              1
+            ]
+          ],
+          "missing": [
+            "l:99"
+          ],
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "loadWidths": [],
+          "model": "actual-16/17",
+          "expectedOracleScore": 73,
+          "proofEvidence": "reference exactStatic certificate in pinned v7"
+        },
+        {
+          "id": "regression-open-chain-repeated-births",
+          "source": [
+            "l:0",
+            "l:0",
+            "l:1",
+            "l:256",
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656",
+            "v:100",
+            "v:101",
+            "v:102",
+            "v:103",
+            "v:104",
+            "v:105",
+            "v:106",
+            "v:107",
+            "v:108",
+            "v:109",
+            "v:110",
+            "v:111",
+            "v:112"
+          ],
+          "target": [
+            "l:0",
+            "v:112",
+            "l:0",
+            "l:1",
+            "l:256",
+            "l:452312848583266388373324160190187140051835877600158453279131187530910662656",
+            "v:100",
+            "v:101",
+            "v:102",
+            "v:103",
+            "v:104",
+            "v:105",
+            "v:107",
+            "v:108",
+            "v:109",
+            "v:110",
+            "v:111",
+            "l:1",
+            "v:100",
+            "v:104",
+            "v:106",
+            "v:106"
+          ],
+          "missing": [
+            "l:1",
+            "v:100",
+            "v:104",
+            "v:106"
+          ],
+          "spills": [
+            101,
+            104,
+            105,
+            108,
+            110,
+            111,
+            114,
+            115
+          ],
+          "gasModel": "evm",
+          "loadWidths": [
+            [
+              101,
+              2
+            ],
+            [
+              104,
+              32
+            ],
+            [
+              105,
+              2
+            ],
+            [
+              108,
+              0
+            ],
+            [
+              110,
+              0
+            ],
+            [
+              111,
+              2
+            ],
+            [
+              114,
+              32
+            ],
+            [
+              115,
+              1
+            ]
+          ],
+          "referenceOps": [
+            [
+              "swap",
+              16
+            ],
+            [
+              "swap",
+              15
+            ],
+            [
+              "dup",
+              1
+            ],
+            [
+              "swap",
+              15
+            ],
+            [
+              "swap",
+              14
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              1
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "swap",
+              12
+            ],
+            [
+              "swap",
+              11
+            ],
+            [
+              "swap",
+              10
+            ],
+            [
+              "dup",
+              1
+            ],
+            [
+              "swap",
+              10
+            ],
+            [
+              "swap",
+              9
+            ],
+            [
+              "dup",
+              1
+            ]
+          ],
+          "planted": {
+            "seed": 2026100793,
+            "index": 31,
+            "family": "open-chains",
+            "rounds": 4,
+            "swaps": 11
+          },
+          "weights": {
+            "gas": 1,
+            "bytes": 0
+          },
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "model": "actual-16/17",
+          "expectedOracleScore": 45,
+          "proofEvidence": "reference exactStatic certificate in pinned v7"
+        },
+        {
+          "id": "regression-forced-load-after-boundary-placement",
+          "source": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42"
+          ],
+          "target": [
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42"
+          ],
+          "missing": [
+            "v:42"
+          ],
+          "spills": [
+            42
+          ],
+          "loadWidths": [
+            [
+              42,
+              2
+            ]
+          ],
+          "weights": {
+            "gas": 0,
+            "bytes": 1
+          },
+          "referenceOps": [
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ]
+          ],
+          "expectedOracleScore": 5,
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17",
+          "proofEvidence": "offline exact oracle (18 states); pinned v8 production replay"
+        },
+        {
+          "id": "regression-capped-gap-present",
+          "source": [
+            "v:42"
+          ],
+          "target": [
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42"
+          ],
+          "spills": [
+            42
+          ],
+          "loadWidths": [
+            [
+              42,
+              0
+            ]
+          ],
+          "weights": {
+            "gas": 0,
+            "bytes": 1
+          },
+          "referenceOps": [
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "load",
+              42
+            ]
+          ],
+          "expectedOracleScore": 36,
+          "missing": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42"
+          ],
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17",
+          "proofEvidence": "reference exactStatic certificate in pinned v8"
+        },
+        {
+          "id": "regression-capped-gap-absent",
+          "source": [],
+          "target": [
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42"
+          ],
+          "spills": [
+            42
+          ],
+          "loadWidths": [
+            [
+              42,
+              0
+            ]
+          ],
+          "weights": {
+            "gas": 0,
+            "bytes": 1
+          },
+          "referenceOps": [
+            [
+              "load",
+              42
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "push",
+              "l:0"
+            ],
+            [
+              "load",
+              42
+            ]
+          ],
+          "expectedOracleScore": 38,
+          "missing": [
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42"
+          ],
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17",
+          "proofEvidence": "reference exactStatic certificate in pinned v8"
+        },
+        {
+          "id": "regression-absent-seed-two-birth-descent",
+          "source": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42"
+          ],
+          "missing": [
+            "v:42",
+            "v:42"
+          ],
+          "spills": [
+            42
+          ],
+          "loadWidths": [
+            [
+              42,
+              0
+            ]
+          ],
+          "weights": {
+            "gas": 0,
+            "bytes": 1
+          },
+          "referenceOps": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ]
+          ],
+          "expectedOracleScore": 5,
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17",
+          "proofEvidence": "offline exact oracle and pinned v9 production replay"
+        },
+        {
+          "id": "regression-absent-seed-two-birth-residual",
+          "source": [
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42"
+          ],
+          "missing": [
+            "v:42"
+          ],
+          "spills": [
+            42
+          ],
+          "loadWidths": [
+            [
+              42,
+              0
+            ]
+          ],
+          "weights": {
+            "gas": 0,
+            "bytes": 1
+          },
+          "referenceOps": [
+            [
+              "load",
+              42
+            ]
+          ],
+          "expectedOracleScore": 2,
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17",
+          "proofEvidence": "offline exact oracle and pinned v9 production replay"
+        }
+      ],
+      "reproduce": "node scripts/optimality-bench.mjs --input Bench/optimality-regressions.jsonl --state-limit 100000 --skip-oracle --algorithms schedule,old-bbu,schedule-chains-balanced,schedule-chains-eager,schedule-chains-preserve --runner .lake/build/bin/optimality_bench"
+    },
+    {
+      "suite": "input",
+      "seed": 1,
+      "cases": 2,
+      "selectedAlgorithms": [
+        "schedule",
+        "old-bbu"
+      ],
+      "stateLimit": 200000,
+      "skipOracle": false,
+      "oracle": {
+        "optimal": 2
+      },
+      "oracleStates": 37,
+      "sourceHeights": [
+        16,
+        17
+      ],
+      "targetHeights": [
+        18
+      ],
+      "gasModels": [
+        "cpp"
+      ],
+      "loadAddressWidths": [
+        0
+      ],
+      "weights": [
+        "0:1"
+      ],
+      "productionRunnerSha256": "60eb38ec9099631f3948ea346592e5d3f057b10fc50ef25e6e442f8b47466a9e",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "de462c4a656ab1b00f5ea7b3058670d60762c0ad049f592d6d191b5487fae0a9",
+            "files": 166
+          },
+          "artifacts": {
+            "sha256": "2aa02e6fb790c4ca3af6c729cf302d91cf64acda53f24975a951ae57e37cae3a",
+            "files": 199
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "de462c4a656ab1b00f5ea7b3058670d60762c0ad049f592d6d191b5487fae0a9",
+            "files": 166
+          },
+          "artifacts": {
+            "sha256": "2aa02e6fb790c4ca3af6c729cf302d91cf64acda53f24975a951ae57e37cae3a",
+            "files": 199
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "old-bbu": {
+          "cases": 2,
+          "successes": 2,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 2,
+          "exact": 2,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 0,
+            "exactLineage": 1,
+            "exactStatic": 1,
+            "exactNoGrowth": 0,
+            "twiceLineage": 2,
+            "twiceStatic": 2
+          },
+          "scope": "original-generation-and-final-permutation",
+          "witnessComparisons": 2,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 1,
+          "worstWitnessCase": null
+        },
+        "schedule": {
+          "cases": 2,
+          "successes": 2,
+          "feasibilityFailures": 0,
+          "oracleComparisons": 2,
+          "exact": 2,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1,
+          "worstExcessCase": null,
+          "certificates": {
+            "exactBaseline": 0,
+            "exactLineage": 1,
+            "exactStatic": 1,
+            "exactNoGrowth": 0,
+            "twiceLineage": 2,
+            "twiceStatic": 2
+          },
+          "scope": "completed-source-to-target",
+          "witnessComparisons": 2,
+          "witnessViolations": 0,
+          "maxWitnessExcessRatio": 1,
+          "worstWitnessCase": null
+        }
+      },
+      "summaryPath": "/tmp/optimality-v9-two-birth-summary.json",
+      "recordsPath": "/tmp/optimality-v9-two-birth.jsonl",
+      "referenceCertificates": {
+        "exactBaseline": 0,
+        "exactLineage": 1,
+        "exactStatic": 1,
+        "exactNoGrowth": 0,
+        "twiceLineage": 2,
+        "twiceStatic": 2
+      },
+      "inputCases": [
+        {
+          "id": "regression-absent-seed-two-birth-descent",
+          "source": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42"
+          ],
+          "missing": [
+            "v:42",
+            "v:42"
+          ],
+          "spills": [
+            42
+          ],
+          "loadWidths": [
+            [
+              42,
+              0
+            ]
+          ],
+          "weights": {
+            "gas": 0,
+            "bytes": 1
+          },
+          "referenceOps": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ]
+          ],
+          "expectedOracleScore": 5,
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17"
+        },
+        {
+          "id": "regression-absent-seed-two-birth-residual",
+          "source": [
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42"
+          ],
+          "missing": [
+            "v:42"
+          ],
+          "spills": [
+            42
+          ],
+          "loadWidths": [
+            [
+              42,
+              0
+            ]
+          ],
+          "weights": {
+            "gas": 0,
+            "bytes": 1
+          },
+          "referenceOps": [
+            [
+              "load",
+              42
+            ]
+          ],
+          "expectedOracleScore": 2,
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17"
+        }
+      ],
+      "reproduce": "node scripts/optimality-bench.mjs --input /tmp/optimality-v9-two-birth-input.jsonl --state-limit 200000 --algorithms schedule,old-bbu --runner .lake/build/bin/optimality_bench"
+    }
+  ]
+}

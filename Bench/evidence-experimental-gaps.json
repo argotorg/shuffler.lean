@@ -1,0 +1,37 @@
+{
+  "status": "Experimental finite checks; these records do not assert Lean proofs.",
+  "date": "2026-10-07",
+  "scope": "Offline operation-level and exact/witness cost checks. Q has a later Lean theorem; the capped direct-introduction variant remains experimental at this checkpoint.",
+  "P": {
+    "transitions": 254994,
+    "transitionFailures": [],
+    "exact": 11985,
+    "witnesses": 1070,
+    "boundFailures": []
+  },
+  "Q": {
+    "transitions": 405787,
+    "transitionFailures": [],
+    "exact": 11985,
+    "witnesses": 1070,
+    "boundFailures": []
+  },
+  "F": {
+    "transitions": 1298017,
+    "transitionFailures": [],
+    "exact": 11985,
+    "witnesses": 1070,
+    "boundFailures": []
+  },
+  "configurations": {
+    "P": "Three kinds, all stacks of length0..7, capacities1/2/3/4/16; DUP, SWAP, POP. Exact records include reduced-cap2 and v6; witnesses include no-growth, limited mixed cases, and v7 planted seed2026100781.",
+    "Q": "P local domain plus10000 sparse random stacks of height1..160, capacities2/3/4/8/16, seed2026100791.",
+    "F": "Two kinds, all stacks of length0..7, capacities1/2/3/4/16, SWAP prices0/1/3/19, caps0/1/2/4/32/uncapped, both leading-term policies; plus10000 sparse stacks through192 at capacity16, seed2026100792. Includes direct introductions."
+  },
+  "formulas": {
+    "P": "firstPos + sum(max(gap-capacity,0)); 0 if absent",
+    "Q": "ceil(firstPos/capacity) + sum(floor((gap-1)/capacity)); 0 if absent",
+    "F": "min(premium,swapPrice*ceil(firstPos/capacity)) + sum(min(premium,swapPrice*floor((gap-1)/capacity))); omit leading term for source-absent values; no cap for nonfree values"
+  },
+  "limits": "The counts are records or transitions, not distinct mathematical inputs. A witness provides an upper bound, not an optimum. No finite test proves the general conjecture."
+}

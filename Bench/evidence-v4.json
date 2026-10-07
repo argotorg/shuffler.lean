@@ -1,0 +1,1217 @@
+{
+  "checkpoint": "v4",
+  "status": "intermediate experimental checkpoint",
+  "productionRunnerSha256": "9eed153e293c41b82acae7b4115cba8250d2e1e92abca0b7257c7e199a2e5fb1",
+  "productionRunnerPath": "/tmp/optimality-bench-integrated-v4",
+  "productionContents": "Integrated complete fallback, append-only and ShortGrowth candidates, cycle macros, three scheduler policies, proved baseline stop. Before the later endpoint tie-order change and no-growth certification reporting.",
+  "reproductionNote": "Commands regenerate the cases and run the current build. Match the recorded executable hash to reproduce this checkpoint exactly. Source and artifact fingerprints were sampled at run time; the executable hash identifies the fixed planner.",
+  "limits": "Finite experiments do not establish a general approximation ratio or completeness of raw candidates. Only exact oracle records enter cost ratios.",
+  "reducedCapEvidence": {
+    "model": "reduced-cap-2",
+    "cases": 35600,
+    "optimal": 9304,
+    "infeasible": 26296,
+    "limited": 0,
+    "oracleStates": 92280,
+    "lowerBoundViolations": 0,
+    "sourceLengths": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "targetLengths": "source.length through 4",
+    "alphabet": [
+      "l:0",
+      "v:42",
+      "v:43"
+    ],
+    "spills": [
+      [],
+      [
+        42,
+        43
+      ]
+    ],
+    "weights": [
+      [
+        1,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        6,
+        1
+      ]
+    ],
+    "loadWidth": 2,
+    "stateLimit": 10000,
+    "recordsPath": "/tmp/optimality-bounds-cap2-full.jsonl",
+    "reproduce": "node scripts/optimality-bounds.mjs --output /tmp/optimality-bounds-cap2-full.jsonl"
+  },
+  "actualCapSuites": [
+    {
+      "suite": "boundary",
+      "seed": 2026100702,
+      "cases": 120,
+      "stateLimit": 20000,
+      "model": "actual-16/17",
+      "oracle": {
+        "optimal": 120
+      },
+      "oracleStates": 93481,
+      "productionRunnerSha256": "9eed153e293c41b82acae7b4115cba8250d2e1e92abca0b7257c7e199a2e5fb1",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "1f8b1b5204bf34452ef3cf532d3bee457ef3209a9187c26f3a5add26dece5f59",
+            "files": 96
+          },
+          "artifacts": {
+            "sha256": "d4cbfa7b7689bba0d4dc43fd242c98b14031293ffa8d7e70b88ddb909169c79c",
+            "files": 129
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "1f8b1b5204bf34452ef3cf532d3bee457ef3209a9187c26f3a5add26dece5f59",
+            "files": 96
+          },
+          "artifacts": {
+            "sha256": "d4cbfa7b7689bba0d4dc43fd242c98b14031293ffa8d7e70b88ddb909169c79c",
+            "files": 129
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "append-only": {
+          "cases": 120,
+          "successes": 120,
+          "feasibilityFailures": 0,
+          "exact": 88,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 33
+        },
+        "complete": {
+          "cases": 120,
+          "successes": 120,
+          "feasibilityFailures": 0,
+          "exact": 0,
+          "zeroExcessViolations": 27,
+          "maxExcessRatio": "inf"
+        },
+        "old-bbu": {
+          "cases": 120,
+          "successes": 120,
+          "feasibilityFailures": 0,
+          "exact": 26,
+          "zeroExcessViolations": 13,
+          "maxExcessRatio": "inf"
+        },
+        "schedule": {
+          "cases": 120,
+          "successes": 120,
+          "feasibilityFailures": 0,
+          "exact": 120,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-balanced": {
+          "cases": 120,
+          "successes": 120,
+          "feasibilityFailures": 0,
+          "exact": 120,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-eager": {
+          "cases": 120,
+          "successes": 120,
+          "feasibilityFailures": 0,
+          "exact": 120,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-preserve": {
+          "cases": 120,
+          "successes": 120,
+          "feasibilityFailures": 0,
+          "exact": 90,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1.95
+        },
+        "short-growth": {
+          "cases": 66,
+          "successes": 66,
+          "feasibilityFailures": 0,
+          "exact": 48,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 33
+        },
+        "value-graph": {
+          "cases": 0,
+          "successes": 0,
+          "feasibilityFailures": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        }
+      },
+      "summaryPath": "/tmp/optimality-v4-boundary-2026100702-summary.json",
+      "recordsPath": "/tmp/optimality-v4-boundary-2026100702.jsonl",
+      "reproduce": "node scripts/optimality-bench.mjs --suite boundary --seed 2026100702 --cases 120 --state-limit 20000 --runner .lake/build/bin/optimality_bench --output /tmp/reproduced-boundary-2026100702.jsonl --summary /tmp/reproduced-boundary-2026100702-summary.json"
+    },
+    {
+      "suite": "medium",
+      "seed": 2026100721,
+      "cases": 150,
+      "stateLimit": 20000,
+      "model": "actual-16/17",
+      "oracle": {
+        "optimal": 150
+      },
+      "oracleStates": 33085,
+      "productionRunnerSha256": "9eed153e293c41b82acae7b4115cba8250d2e1e92abca0b7257c7e199a2e5fb1",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "1f8b1b5204bf34452ef3cf532d3bee457ef3209a9187c26f3a5add26dece5f59",
+            "files": 96
+          },
+          "artifacts": {
+            "sha256": "d4cbfa7b7689bba0d4dc43fd242c98b14031293ffa8d7e70b88ddb909169c79c",
+            "files": 129
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "1f8b1b5204bf34452ef3cf532d3bee457ef3209a9187c26f3a5add26dece5f59",
+            "files": 96
+          },
+          "artifacts": {
+            "sha256": "d4cbfa7b7689bba0d4dc43fd242c98b14031293ffa8d7e70b88ddb909169c79c",
+            "files": 129
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "append-only": {
+          "cases": 27,
+          "successes": 27,
+          "feasibilityFailures": 0,
+          "exact": 27,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "complete": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 2,
+          "zeroExcessViolations": 25,
+          "maxExcessRatio": "inf"
+        },
+        "old-bbu": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 35,
+          "zeroExcessViolations": 18,
+          "maxExcessRatio": "inf"
+        },
+        "schedule": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 150,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-balanced": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 150,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-eager": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 150,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-preserve": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 134,
+          "zeroExcessViolations": 10,
+          "maxExcessRatio": "inf"
+        },
+        "short-growth": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 150,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "value-graph": {
+          "cases": 21,
+          "successes": 21,
+          "feasibilityFailures": 0,
+          "exact": 21,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        }
+      },
+      "summaryPath": "/tmp/optimality-v4-medium-2026100721-summary.json",
+      "recordsPath": "/tmp/optimality-v4-medium-2026100721.jsonl",
+      "reproduce": "node scripts/optimality-bench.mjs --suite medium --seed 2026100721 --cases 150 --state-limit 20000 --runner .lake/build/bin/optimality_bench --output /tmp/reproduced-medium-2026100721.jsonl --summary /tmp/reproduced-medium-2026100721-summary.json"
+    },
+    {
+      "suite": "medium",
+      "seed": 2026100722,
+      "cases": 150,
+      "stateLimit": 20000,
+      "model": "actual-16/17",
+      "oracle": {
+        "optimal": 150
+      },
+      "oracleStates": 31662,
+      "productionRunnerSha256": "9eed153e293c41b82acae7b4115cba8250d2e1e92abca0b7257c7e199a2e5fb1",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "1f8b1b5204bf34452ef3cf532d3bee457ef3209a9187c26f3a5add26dece5f59",
+            "files": 96
+          },
+          "artifacts": {
+            "sha256": "d4cbfa7b7689bba0d4dc43fd242c98b14031293ffa8d7e70b88ddb909169c79c",
+            "files": 129
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "1f8b1b5204bf34452ef3cf532d3bee457ef3209a9187c26f3a5add26dece5f59",
+            "files": 96
+          },
+          "artifacts": {
+            "sha256": "d4cbfa7b7689bba0d4dc43fd242c98b14031293ffa8d7e70b88ddb909169c79c",
+            "files": 129
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "append-only": {
+          "cases": 31,
+          "successes": 31,
+          "feasibilityFailures": 0,
+          "exact": 31,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "complete": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 7,
+          "zeroExcessViolations": 24,
+          "maxExcessRatio": "inf"
+        },
+        "old-bbu": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 44,
+          "zeroExcessViolations": 22,
+          "maxExcessRatio": "inf"
+        },
+        "schedule": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 150,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-balanced": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 150,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-eager": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 150,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-preserve": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 135,
+          "zeroExcessViolations": 8,
+          "maxExcessRatio": "inf"
+        },
+        "short-growth": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 150,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "value-graph": {
+          "cases": 21,
+          "successes": 21,
+          "feasibilityFailures": 0,
+          "exact": 21,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        }
+      },
+      "summaryPath": "/tmp/optimality-v4-medium-2026100722-summary.json",
+      "recordsPath": "/tmp/optimality-v4-medium-2026100722.jsonl",
+      "reproduce": "node scripts/optimality-bench.mjs --suite medium --seed 2026100722 --cases 150 --state-limit 20000 --runner .lake/build/bin/optimality_bench --output /tmp/reproduced-medium-2026100722.jsonl --summary /tmp/reproduced-medium-2026100722-summary.json"
+    },
+    {
+      "suite": "medium",
+      "seed": 2026100723,
+      "cases": 150,
+      "stateLimit": 20000,
+      "model": "actual-16/17",
+      "oracle": {
+        "optimal": 150
+      },
+      "oracleStates": 28498,
+      "productionRunnerSha256": "9eed153e293c41b82acae7b4115cba8250d2e1e92abca0b7257c7e199a2e5fb1",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "1f8b1b5204bf34452ef3cf532d3bee457ef3209a9187c26f3a5add26dece5f59",
+            "files": 96
+          },
+          "artifacts": {
+            "sha256": "d4cbfa7b7689bba0d4dc43fd242c98b14031293ffa8d7e70b88ddb909169c79c",
+            "files": 129
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "1f8b1b5204bf34452ef3cf532d3bee457ef3209a9187c26f3a5add26dece5f59",
+            "files": 96
+          },
+          "artifacts": {
+            "sha256": "d4cbfa7b7689bba0d4dc43fd242c98b14031293ffa8d7e70b88ddb909169c79c",
+            "files": 129
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "append-only": {
+          "cases": 51,
+          "successes": 51,
+          "feasibilityFailures": 0,
+          "exact": 51,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "complete": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 3,
+          "zeroExcessViolations": 48,
+          "maxExcessRatio": "inf"
+        },
+        "old-bbu": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 37,
+          "zeroExcessViolations": 31,
+          "maxExcessRatio": "inf"
+        },
+        "schedule": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 150,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-balanced": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 150,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-eager": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 150,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-preserve": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 126,
+          "zeroExcessViolations": 19,
+          "maxExcessRatio": "inf"
+        },
+        "short-growth": {
+          "cases": 150,
+          "successes": 150,
+          "feasibilityFailures": 0,
+          "exact": 150,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "value-graph": {
+          "cases": 21,
+          "successes": 21,
+          "feasibilityFailures": 0,
+          "exact": 21,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        }
+      },
+      "summaryPath": "/tmp/optimality-v4-medium-2026100723-summary.json",
+      "recordsPath": "/tmp/optimality-v4-medium-2026100723.jsonl",
+      "reproduce": "node scripts/optimality-bench.mjs --suite medium --seed 2026100723 --cases 150 --state-limit 20000 --runner .lake/build/bin/optimality_bench --output /tmp/reproduced-medium-2026100723.jsonl --summary /tmp/reproduced-medium-2026100723-summary.json"
+    },
+    {
+      "suite": "small",
+      "seed": 20261007,
+      "cases": 500,
+      "stateLimit": 20000,
+      "model": "actual-16/17",
+      "oracle": {
+        "optimal": 500
+      },
+      "oracleStates": 6285,
+      "productionRunnerSha256": "9eed153e293c41b82acae7b4115cba8250d2e1e92abca0b7257c7e199a2e5fb1",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "1f8b1b5204bf34452ef3cf532d3bee457ef3209a9187c26f3a5add26dece5f59",
+            "files": 96
+          },
+          "artifacts": {
+            "sha256": "d4cbfa7b7689bba0d4dc43fd242c98b14031293ffa8d7e70b88ddb909169c79c",
+            "files": 129
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "1f8b1b5204bf34452ef3cf532d3bee457ef3209a9187c26f3a5add26dece5f59",
+            "files": 96
+          },
+          "artifacts": {
+            "sha256": "d4cbfa7b7689bba0d4dc43fd242c98b14031293ffa8d7e70b88ddb909169c79c",
+            "files": 129
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "append-only": {
+          "cases": 151,
+          "successes": 151,
+          "feasibilityFailures": 0,
+          "exact": 151,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "complete": {
+          "cases": 500,
+          "successes": 500,
+          "feasibilityFailures": 0,
+          "exact": 36,
+          "zeroExcessViolations": 135,
+          "maxExcessRatio": "inf"
+        },
+        "old-bbu": {
+          "cases": 500,
+          "successes": 500,
+          "feasibilityFailures": 0,
+          "exact": 287,
+          "zeroExcessViolations": 33,
+          "maxExcessRatio": "inf"
+        },
+        "schedule": {
+          "cases": 500,
+          "successes": 500,
+          "feasibilityFailures": 0,
+          "exact": 500,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-balanced": {
+          "cases": 500,
+          "successes": 500,
+          "feasibilityFailures": 0,
+          "exact": 500,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-eager": {
+          "cases": 500,
+          "successes": 500,
+          "feasibilityFailures": 0,
+          "exact": 500,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-preserve": {
+          "cases": 500,
+          "successes": 500,
+          "feasibilityFailures": 0,
+          "exact": 455,
+          "zeroExcessViolations": 28,
+          "maxExcessRatio": "inf"
+        },
+        "short-growth": {
+          "cases": 500,
+          "successes": 500,
+          "feasibilityFailures": 0,
+          "exact": 500,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "value-graph": {
+          "cases": 42,
+          "successes": 42,
+          "feasibilityFailures": 0,
+          "exact": 42,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        }
+      },
+      "summaryPath": "/tmp/optimality-v4-small-20261007-summary.json",
+      "recordsPath": "/tmp/optimality-v4-small-20261007.jsonl",
+      "reproduce": "node scripts/optimality-bench.mjs --suite small --seed 20261007 --cases 500 --state-limit 20000 --runner .lake/build/bin/optimality_bench --output /tmp/reproduced-small-20261007.jsonl --summary /tmp/reproduced-small-20261007-summary.json"
+    },
+    {
+      "suite": "sparse",
+      "seed": 2026100731,
+      "cases": 100,
+      "stateLimit": 20000,
+      "model": "actual-16/17",
+      "oracle": {
+        "optimal": 100
+      },
+      "oracleStates": 41319,
+      "productionRunnerSha256": "9eed153e293c41b82acae7b4115cba8250d2e1e92abca0b7257c7e199a2e5fb1",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "1f8b1b5204bf34452ef3cf532d3bee457ef3209a9187c26f3a5add26dece5f59",
+            "files": 96
+          },
+          "artifacts": {
+            "sha256": "d4cbfa7b7689bba0d4dc43fd242c98b14031293ffa8d7e70b88ddb909169c79c",
+            "files": 129
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "1f8b1b5204bf34452ef3cf532d3bee457ef3209a9187c26f3a5add26dece5f59",
+            "files": 96
+          },
+          "artifacts": {
+            "sha256": "d4cbfa7b7689bba0d4dc43fd242c98b14031293ffa8d7e70b88ddb909169c79c",
+            "files": 129
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "append-only": {
+          "cases": 23,
+          "successes": 23,
+          "feasibilityFailures": 0,
+          "exact": 23,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "complete": {
+          "cases": 100,
+          "successes": 100,
+          "feasibilityFailures": 0,
+          "exact": 0,
+          "zeroExcessViolations": 23,
+          "maxExcessRatio": "inf"
+        },
+        "old-bbu": {
+          "cases": 100,
+          "successes": 100,
+          "feasibilityFailures": 0,
+          "exact": 24,
+          "zeroExcessViolations": 13,
+          "maxExcessRatio": "inf"
+        },
+        "schedule": {
+          "cases": 100,
+          "successes": 100,
+          "feasibilityFailures": 0,
+          "exact": 100,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-balanced": {
+          "cases": 100,
+          "successes": 100,
+          "feasibilityFailures": 0,
+          "exact": 100,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-eager": {
+          "cases": 100,
+          "successes": 100,
+          "feasibilityFailures": 0,
+          "exact": 100,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-preserve": {
+          "cases": 100,
+          "successes": 100,
+          "feasibilityFailures": 0,
+          "exact": 100,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "short-growth": {
+          "cases": 97,
+          "successes": 97,
+          "feasibilityFailures": 0,
+          "exact": 97,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "value-graph": {
+          "cases": 24,
+          "successes": 24,
+          "feasibilityFailures": 0,
+          "exact": 24,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        }
+      },
+      "summaryPath": "/tmp/optimality-v4-sparse-2026100731-summary.json",
+      "recordsPath": "/tmp/optimality-v4-sparse-2026100731.jsonl",
+      "reproduce": "node scripts/optimality-bench.mjs --suite sparse --seed 2026100731 --cases 100 --state-limit 20000 --runner .lake/build/bin/optimality_bench --output /tmp/reproduced-sparse-2026100731.jsonl --summary /tmp/reproduced-sparse-2026100731-summary.json"
+    },
+    {
+      "suite": "sparse",
+      "seed": 2026100732,
+      "cases": 100,
+      "stateLimit": 20000,
+      "model": "actual-16/17",
+      "oracle": {
+        "optimal": 100
+      },
+      "oracleStates": 36752,
+      "productionRunnerSha256": "9eed153e293c41b82acae7b4115cba8250d2e1e92abca0b7257c7e199a2e5fb1",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "1f8b1b5204bf34452ef3cf532d3bee457ef3209a9187c26f3a5add26dece5f59",
+            "files": 96
+          },
+          "artifacts": {
+            "sha256": "d4cbfa7b7689bba0d4dc43fd242c98b14031293ffa8d7e70b88ddb909169c79c",
+            "files": 129
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "1f8b1b5204bf34452ef3cf532d3bee457ef3209a9187c26f3a5add26dece5f59",
+            "files": 96
+          },
+          "artifacts": {
+            "sha256": "d4cbfa7b7689bba0d4dc43fd242c98b14031293ffa8d7e70b88ddb909169c79c",
+            "files": 129
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "append-only": {
+          "cases": 16,
+          "successes": 14,
+          "feasibilityFailures": 2,
+          "exact": 13,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 3
+        },
+        "complete": {
+          "cases": 100,
+          "successes": 100,
+          "feasibilityFailures": 0,
+          "exact": 0,
+          "zeroExcessViolations": 13,
+          "maxExcessRatio": "inf"
+        },
+        "old-bbu": {
+          "cases": 100,
+          "successes": 100,
+          "feasibilityFailures": 0,
+          "exact": 17,
+          "zeroExcessViolations": 5,
+          "maxExcessRatio": "inf"
+        },
+        "schedule": {
+          "cases": 100,
+          "successes": 100,
+          "feasibilityFailures": 0,
+          "exact": 100,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-balanced": {
+          "cases": 100,
+          "successes": 100,
+          "feasibilityFailures": 0,
+          "exact": 100,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-eager": {
+          "cases": 100,
+          "successes": 100,
+          "feasibilityFailures": 0,
+          "exact": 100,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-preserve": {
+          "cases": 100,
+          "successes": 100,
+          "feasibilityFailures": 0,
+          "exact": 100,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "short-growth": {
+          "cases": 98,
+          "successes": 96,
+          "feasibilityFailures": 2,
+          "exact": 95,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 3
+        },
+        "value-graph": {
+          "cases": 24,
+          "successes": 24,
+          "feasibilityFailures": 0,
+          "exact": 24,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        }
+      },
+      "summaryPath": "/tmp/optimality-v4-sparse-2026100732-summary.json",
+      "recordsPath": "/tmp/optimality-v4-sparse-2026100732.jsonl",
+      "reproduce": "node scripts/optimality-bench.mjs --suite sparse --seed 2026100732 --cases 100 --state-limit 20000 --runner .lake/build/bin/optimality_bench --output /tmp/reproduced-sparse-2026100732.jsonl --summary /tmp/reproduced-sparse-2026100732-summary.json"
+    },
+    {
+      "suite": "sparse",
+      "seed": 2026100733,
+      "cases": 100,
+      "stateLimit": 20000,
+      "model": "actual-16/17",
+      "oracle": {
+        "optimal": 100
+      },
+      "oracleStates": 38646,
+      "productionRunnerSha256": "9eed153e293c41b82acae7b4115cba8250d2e1e92abca0b7257c7e199a2e5fb1",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "1f8b1b5204bf34452ef3cf532d3bee457ef3209a9187c26f3a5add26dece5f59",
+            "files": 96
+          },
+          "artifacts": {
+            "sha256": "d4cbfa7b7689bba0d4dc43fd242c98b14031293ffa8d7e70b88ddb909169c79c",
+            "files": 129
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "1f8b1b5204bf34452ef3cf532d3bee457ef3209a9187c26f3a5add26dece5f59",
+            "files": 96
+          },
+          "artifacts": {
+            "sha256": "d4cbfa7b7689bba0d4dc43fd242c98b14031293ffa8d7e70b88ddb909169c79c",
+            "files": 129
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "append-only": {
+          "cases": 22,
+          "successes": 22,
+          "feasibilityFailures": 0,
+          "exact": 22,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "complete": {
+          "cases": 100,
+          "successes": 100,
+          "feasibilityFailures": 0,
+          "exact": 0,
+          "zeroExcessViolations": 22,
+          "maxExcessRatio": "inf"
+        },
+        "old-bbu": {
+          "cases": 100,
+          "successes": 100,
+          "feasibilityFailures": 0,
+          "exact": 23,
+          "zeroExcessViolations": 13,
+          "maxExcessRatio": "inf"
+        },
+        "schedule": {
+          "cases": 100,
+          "successes": 100,
+          "feasibilityFailures": 0,
+          "exact": 100,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-balanced": {
+          "cases": 100,
+          "successes": 100,
+          "feasibilityFailures": 0,
+          "exact": 100,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-eager": {
+          "cases": 100,
+          "successes": 100,
+          "feasibilityFailures": 0,
+          "exact": 100,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-preserve": {
+          "cases": 100,
+          "successes": 100,
+          "feasibilityFailures": 0,
+          "exact": 100,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "short-growth": {
+          "cases": 84,
+          "successes": 84,
+          "feasibilityFailures": 0,
+          "exact": 84,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "value-graph": {
+          "cases": 26,
+          "successes": 26,
+          "feasibilityFailures": 0,
+          "exact": 26,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        }
+      },
+      "summaryPath": "/tmp/optimality-v4-sparse-2026100733-summary.json",
+      "recordsPath": "/tmp/optimality-v4-sparse-2026100733.jsonl",
+      "reproduce": "node scripts/optimality-bench.mjs --suite sparse --seed 2026100733 --cases 100 --state-limit 20000 --runner .lake/build/bin/optimality_bench --output /tmp/reproduced-sparse-2026100733.jsonl --summary /tmp/reproduced-sparse-2026100733-summary.json"
+    },
+    {
+      "suite": "two-seed",
+      "seed": 2026100740,
+      "cases": 240,
+      "stateLimit": 20000,
+      "model": "actual-16/17",
+      "oracle": {
+        "optimal": 240
+      },
+      "oracleStates": 2817698,
+      "productionRunnerSha256": "9eed153e293c41b82acae7b4115cba8250d2e1e92abca0b7257c7e199a2e5fb1",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "f2bd1d2ac990c650d1f412a3c87d4bedaebb69dc0206c6fc44dc986730fc6903",
+            "files": 97
+          },
+          "artifacts": {
+            "sha256": "27284c4de3e90d2ab981adb9747a9f3d851b8b61142b90a0c1e523a6c0575d88",
+            "files": 129
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "83e077b554359e1e33660ea4b846468659d111636297e999f7ed42623e80fe85",
+            "files": 101
+          },
+          "artifacts": {
+            "sha256": "0729fa25ecf7b9c99c5b7fea9fd757917c7b38a60a3a53fe0a16de8d33a1aff9",
+            "files": 132
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "append-only": {
+          "cases": 240,
+          "successes": 240,
+          "feasibilityFailures": 0,
+          "exact": 94,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 32
+        },
+        "complete": {
+          "cases": 240,
+          "successes": 240,
+          "feasibilityFailures": 0,
+          "exact": 0,
+          "zeroExcessViolations": 50,
+          "maxExcessRatio": "inf"
+        },
+        "old-bbu": {
+          "cases": 240,
+          "successes": 240,
+          "feasibilityFailures": 0,
+          "exact": 14,
+          "zeroExcessViolations": 36,
+          "maxExcessRatio": "inf"
+        },
+        "schedule": {
+          "cases": 240,
+          "successes": 240,
+          "feasibilityFailures": 0,
+          "exact": 240,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-balanced": {
+          "cases": 240,
+          "successes": 240,
+          "feasibilityFailures": 0,
+          "exact": 240,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "schedule-eager": {
+          "cases": 240,
+          "successes": 240,
+          "feasibilityFailures": 0,
+          "exact": 235,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1.962962962962963
+        },
+        "schedule-preserve": {
+          "cases": 240,
+          "successes": 240,
+          "feasibilityFailures": 0,
+          "exact": 201,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 2.909090909090909
+        },
+        "short-growth": {
+          "cases": 96,
+          "successes": 96,
+          "feasibilityFailures": 0,
+          "exact": 26,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 32
+        },
+        "value-graph": {
+          "cases": 0,
+          "successes": 0,
+          "feasibilityFailures": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        }
+      },
+      "summaryPath": "/tmp/optimality-v4-two-seed-summary.json",
+      "recordsPath": "/tmp/optimality-v4-two-seed.jsonl",
+      "reproduce": "node scripts/optimality-bench.mjs --suite two-seed --seed 2026100740 --cases 240 --state-limit 20000 --runner .lake/build/bin/optimality_bench --output /tmp/reproduced-two-seed-2026100740.jsonl --summary /tmp/reproduced-two-seed-2026100740-summary.json"
+    },
+    {
+      "suite": "two-seed-placement",
+      "seed": 2026100741,
+      "cases": 360,
+      "stateLimit": 20000,
+      "model": "actual-16/17",
+      "oracle": {
+        "optimal": 360
+      },
+      "oracleStates": 4428309,
+      "productionRunnerSha256": "9eed153e293c41b82acae7b4115cba8250d2e1e92abca0b7257c7e199a2e5fb1",
+      "productionFingerprintsAtRun": {
+        "before": {
+          "source": {
+            "sha256": "5c13703713d16f043e767aa9e7d37516fe716633ded54b393c245a60288c1485",
+            "files": 107
+          },
+          "artifacts": {
+            "sha256": "6fad44b8638de342f0bd65df39c8f786fb3eb11789936b1a1b306ed667a0891d",
+            "files": 139
+          }
+        },
+        "after": {
+          "source": {
+            "sha256": "5dd475fc78862bb2b319ac573769b30907cd1900dcd83cb58c5abc33fcb7d4b0",
+            "files": 109
+          },
+          "artifacts": {
+            "sha256": "6fad44b8638de342f0bd65df39c8f786fb3eb11789936b1a1b306ed667a0891d",
+            "files": 139
+          }
+        }
+      },
+      "modelDisagreements": [],
+      "algorithms": {
+        "append-only": {
+          "cases": 0,
+          "successes": 0,
+          "feasibilityFailures": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "complete": {
+          "cases": 360,
+          "successes": 360,
+          "feasibilityFailures": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 48
+        },
+        "old-bbu": {
+          "cases": 360,
+          "successes": 360,
+          "feasibilityFailures": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 23.666666666666668
+        },
+        "schedule": {
+          "cases": 360,
+          "successes": 360,
+          "feasibilityFailures": 0,
+          "exact": 236,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1.4166666666666667
+        },
+        "schedule-balanced": {
+          "cases": 360,
+          "successes": 360,
+          "feasibilityFailures": 0,
+          "exact": 207,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1.6666666666666667
+        },
+        "schedule-eager": {
+          "cases": 360,
+          "successes": 360,
+          "feasibilityFailures": 0,
+          "exact": 221,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1.7358490566037736
+        },
+        "schedule-preserve": {
+          "cases": 360,
+          "successes": 360,
+          "feasibilityFailures": 0,
+          "exact": 216,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1.8125
+        },
+        "short-growth": {
+          "cases": 0,
+          "successes": 0,
+          "feasibilityFailures": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        },
+        "value-graph": {
+          "cases": 0,
+          "successes": 0,
+          "feasibilityFailures": 0,
+          "exact": 0,
+          "zeroExcessViolations": 0,
+          "maxExcessRatio": 1
+        }
+      },
+      "summaryPath": "/tmp/optimality-v4-two-seed-placement-summary.json",
+      "recordsPath": "/tmp/optimality-v4-two-seed-placement.jsonl",
+      "reproduce": "node scripts/optimality-bench.mjs --suite two-seed-placement --seed 2026100741 --cases 360 --state-limit 20000 --runner .lake/build/bin/optimality_bench --output /tmp/reproduced-two-seed-placement.jsonl --summary /tmp/reproduced-two-seed-placement-summary.json"
+    }
+  ],
+  "actualCapDefaults": {
+    "weights": [
+      [
+        1,
+        0
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        4,
+        1
+      ],
+      [
+        5,
+        1
+      ],
+      [
+        6,
+        1
+      ]
+    ],
+    "loadAddressWidths": [
+      1,
+      2,
+      32
+    ],
+    "gasModel": "cpp",
+    "node": "v22.23.3",
+    "leanToolchain": "leanprover/lean4:v4.34.0"
+  }
+}

@@ -1,0 +1,278 @@
+{
+  "scope": "Completed pinned v12 versus v8 on the same590 supplied-witness cases. Scores and operation lists are read directly; no oracle optima are claimed here.",
+  "runnerSha256": "e3a116256ffef648ac0404d04006e46b4335df01c2ce9dbad42e4d1eba8e3f0b",
+  "cases": 590,
+  "improvements": [
+    {
+      "id": "planted-2026100781-30/wsupplied/g1b0",
+      "v8": 90,
+      "v12": 81
+    },
+    {
+      "id": "planted-2026100782-132/wsupplied/g5b1",
+      "v8": 166,
+      "v12": 160
+    },
+    {
+      "id": "planted-2026100782-132/wsupplied/g1b0",
+      "v8": 31,
+      "v12": 30
+    },
+    {
+      "id": "planted-2026100782-132/wsupplied/g0b1",
+      "v8": 11,
+      "v12": 10
+    },
+    {
+      "id": "planted-2026100782-132/wsupplied/g1b1",
+      "v8": 42,
+      "v12": 40
+    },
+    {
+      "id": "planted-2026100782-132/wsupplied/g4b1",
+      "v8": 135,
+      "v12": 130
+    },
+    {
+      "id": "planted-chains-2026100793-48/wsupplied/g0b1",
+      "v8": 21,
+      "v12": 19
+    },
+    {
+      "id": "planted-chains-2026100793-13/wsupplied/g5b1",
+      "v8": 422,
+      "v12": 374
+    },
+    {
+      "id": "planted-chains-2026100793-39/wsupplied/g5b1",
+      "v8": 364,
+      "v12": 348
+    },
+    {
+      "id": "planted-chains-2026100793-12/wsupplied/g6b1",
+      "v8": 535,
+      "v12": 459
+    },
+    {
+      "id": "planted-chains-2026100793-68/wsupplied/g6b1",
+      "v8": 413,
+      "v12": 375
+    },
+    {
+      "id": "planted-chains-2026100793-0/wsupplied/g0b1",
+      "v8": 29,
+      "v12": 27
+    },
+    {
+      "id": "planted-chains-2026100793-50/wsupplied/g6b1",
+      "v8": 526,
+      "v12": 507
+    },
+    {
+      "id": "planted-chains-2026100793-12/wsupplied/g1b0",
+      "v8": 78,
+      "v12": 69
+    },
+    {
+      "id": "planted-chains-2026100793-27/wsupplied/g0b1",
+      "v8": 30,
+      "v12": 29
+    },
+    {
+      "id": "planted-chains-2026100793-60/wsupplied/g1b0",
+      "v8": 70,
+      "v12": 61
+    },
+    {
+      "id": "planted-chains-2026100793-36/wsupplied/g0b1",
+      "v8": 23,
+      "v12": 21
+    },
+    {
+      "id": "planted-chains-2026100793-63/wsupplied/g4b1",
+      "v8": 487,
+      "v12": 474
+    },
+    {
+      "id": "planted-chains-2026100793-31/wsupplied/g1b0",
+      "v8": 60,
+      "v12": 45
+    },
+    {
+      "id": "planted-chains-2026100793-13/wsupplied/g1b1",
+      "v8": 106,
+      "v12": 94
+    },
+    {
+      "id": "planted-chains-2026100793-50/wsupplied/g1b1",
+      "v8": 111,
+      "v12": 107
+    },
+    {
+      "id": "planted-chains-2026100793-50/wsupplied/g4b1",
+      "v8": 360,
+      "v12": 347
+    },
+    {
+      "id": "planted-chains-2026100793-36/wsupplied/g6b1",
+      "v8": 407,
+      "v12": 369
+    },
+    {
+      "id": "planted-chains-2026100793-50/wsupplied/g1b0",
+      "v8": 83,
+      "v12": 80
+    }
+  ],
+  "regressions": [],
+  "changedOperationLists": 54,
+  "failures": [],
+  "weakStaticCertificates": [
+    {
+      "id": "planted-2026100783-83/wsupplied/g1b0",
+      "B": 66,
+      "D": 6,
+      "score": 81,
+      "reference": 90
+    }
+  ],
+  "chainComparison": {
+    "sameScore": 517,
+    "higherScore": 73,
+    "lowerScore": 0,
+    "maxGap": 158,
+    "largestGap": {
+      "id": "planted-2026100784-33/wsupplied/g6b1",
+      "chain": 2064,
+      "portfolio": 1906
+    }
+  },
+  "timing": {
+    "scope": "Measured Lean runner wall time per case includes all three selected planners, reference replay, bound/certificate checks, and JSON serialization. No C++ runtime claim.",
+    "totalSeconds": 2998.8550735320005,
+    "medianSeconds": 1.100994747,
+    "p95Seconds": 25.905611218,
+    "slowest": [
+      {
+        "id": "planted-2026100784-33/wsupplied/g0b1",
+        "seconds": 149.817624836,
+        "sourceHeight": 16,
+        "births": 128,
+        "targetHeight": 144,
+        "algorithms": [
+          "old-bbu",
+          "schedule",
+          "schedule-chain"
+        ]
+      },
+      {
+        "id": "planted-2026100784-33/wsupplied/g4b1",
+        "seconds": 107.435429974,
+        "sourceHeight": 16,
+        "births": 128,
+        "targetHeight": 144,
+        "algorithms": [
+          "old-bbu",
+          "schedule",
+          "schedule-chain"
+        ]
+      },
+      {
+        "id": "planted-2026100782-96/wsupplied/g0b1",
+        "seconds": 96.019546339,
+        "sourceHeight": 128,
+        "births": 96,
+        "targetHeight": 224,
+        "algorithms": [
+          "old-bbu",
+          "schedule",
+          "schedule-chain"
+        ]
+      },
+      {
+        "id": "planted-2026100784-33/wsupplied/g6b1",
+        "seconds": 93.377827498,
+        "sourceHeight": 16,
+        "births": 128,
+        "targetHeight": 144,
+        "algorithms": [
+          "old-bbu",
+          "schedule",
+          "schedule-chain"
+        ]
+      },
+      {
+        "id": "planted-2026100782-90/wsupplied/g1b0",
+        "seconds": 86.042483075,
+        "sourceHeight": 128,
+        "births": 96,
+        "targetHeight": 224,
+        "algorithms": [
+          "old-bbu",
+          "schedule",
+          "schedule-chain"
+        ]
+      },
+      {
+        "id": "planted-chains-2026100793-63/wsupplied/g4b1",
+        "seconds": 84.947994296,
+        "sourceHeight": 256,
+        "births": 16,
+        "targetHeight": 272,
+        "algorithms": [
+          "old-bbu",
+          "schedule",
+          "schedule-chain"
+        ]
+      },
+      {
+        "id": "planted-2026100783-123/wsupplied/g6b1",
+        "seconds": 74.018631875,
+        "sourceHeight": 15,
+        "births": 128,
+        "targetHeight": 143,
+        "algorithms": [
+          "old-bbu",
+          "schedule",
+          "schedule-chain"
+        ]
+      },
+      {
+        "id": "planted-2026100783-123/wsupplied/g5b1",
+        "seconds": 74.002451378,
+        "sourceHeight": 15,
+        "births": 128,
+        "targetHeight": 143,
+        "algorithms": [
+          "old-bbu",
+          "schedule",
+          "schedule-chain"
+        ]
+      },
+      {
+        "id": "planted-2026100782-96/wsupplied/g4b1",
+        "seconds": 70.782676527,
+        "sourceHeight": 128,
+        "births": 96,
+        "targetHeight": 224,
+        "algorithms": [
+          "old-bbu",
+          "schedule",
+          "schedule-chain"
+        ]
+      },
+      {
+        "id": "planted-2026100782-96/wsupplied/g1b1",
+        "seconds": 67.432056849,
+        "sourceHeight": 128,
+        "births": 96,
+        "targetHeight": 224,
+        "algorithms": [
+          "old-bbu",
+          "schedule",
+          "schedule-chain"
+        ]
+      }
+    ]
+  }
+}

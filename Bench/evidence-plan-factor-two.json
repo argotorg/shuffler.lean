@@ -1,0 +1,133 @@
+{
+  "status": "finite falsification evidence for a proposed realization theorem, not a proof",
+  "semantics": "Ordinary value presence at selected cuts; per-value introduction upper budgets; equal-copy exchange and extra retention are allowed.",
+  "M": "min(q,m): every initial position replaced by a fresh value requires selection by a SWAP, including the initial top.",
+  "Q": "ceil(q*m/R) + sum over selected(i,j) of floor((j-i-1)/R). The two terms propose old-copy transport and retained-seed lifts.",
+  "proposedBound": "minimum SWAPs under the plan budgets and presence conditions <= 2*max(M,Q)",
+  "domain": {
+    "reaches": [
+      1,
+      2,
+      3
+    ],
+    "oldCopies": "0 through R",
+    "canonicalFreshKinds": "at most3",
+    "freshLength": "0 through6",
+    "stateLimit": 300000
+  },
+  "plans": 8850,
+  "newSearches": 8850,
+  "states": 1137981,
+  "violations": 0,
+  "zeroFloorCases": 3238,
+  "zeroFloorViolations": 0,
+  "maximumRatio": 2,
+  "worst": {
+    "key": "[2,0,[\"a\",\"b\",\"b\",\"c\",\"a\"],[0,1]]",
+    "plan": {
+      "problem": {
+        "source": [],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:44",
+          "v:42"
+        ],
+        "spills": [
+          42,
+          43,
+          44
+        ],
+        "caps": {
+          "swap": 2,
+          "dup": 2
+        },
+        "id": "unnamed",
+        "missing": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:44",
+          "v:42"
+        ],
+        "weights": {
+          "gas": 1,
+          "bytes": 1
+        },
+        "gasModel": "cpp",
+        "loadWidths": [],
+        "model": "reduced-cap"
+      },
+      "values": [
+        "v:42",
+        "v:43",
+        "v:44"
+      ],
+      "budgets": [
+        1,
+        1,
+        1
+      ],
+      "intervals": [
+        {
+          "start": 1,
+          "end": 2,
+          "value": "v:43"
+        },
+        {
+          "start": 0,
+          "end": 4,
+          "value": "v:42"
+        }
+      ],
+      "capacityFeasible": true
+    },
+    "result": {
+      "status": "reachable",
+      "states": 45,
+      "ops": [
+        [
+          "load",
+          42
+        ],
+        [
+          "dup",
+          1
+        ],
+        [
+          "load",
+          43
+        ],
+        [
+          "dup",
+          1
+        ],
+        [
+          "swap",
+          2
+        ],
+        [
+          "load",
+          44
+        ],
+        [
+          "swap",
+          1
+        ]
+      ],
+      "direct": [
+        1,
+        1,
+        1
+      ],
+      "swaps": 2
+    },
+    "M": 0,
+    "Q": 1,
+    "floor": 1
+  },
+  "first": null,
+  "cachePath": "Bench/plan-realization-cache.jsonl",
+  "reproduce": "node scripts/optimality-plan-factor-two.mjs Bench/evidence-plan-factor-two.json Bench/plan-realization-cache.jsonl"
+}

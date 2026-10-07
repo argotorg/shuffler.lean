@@ -1,0 +1,379 @@
+{
+  "status": "bounded experimental result; not a production algorithm",
+  "boundVersion": "graph-transport-Q-F-forced-introduction",
+  "checked": 79,
+  "first": {
+    "problem": {
+      "id": "descent-78",
+      "source": [
+        "l:0",
+        "l:0"
+      ],
+      "target": [
+        "v:42",
+        "l:0",
+        "l:0",
+        "v:42"
+      ],
+      "spills": [
+        42
+      ],
+      "loadWidths": [
+        [
+          42,
+          0
+        ]
+      ],
+      "weights": {
+        "gas": 0,
+        "bytes": 1
+      },
+      "caps": {
+        "swap": 2,
+        "dup": 2
+      },
+      "missing": [
+        "v:42",
+        "v:42"
+      ],
+      "gasModel": "cpp",
+      "model": "reduced-cap"
+    },
+    "result": {
+      "baseline": 3,
+      "staticExcess": 1,
+      "rhs": 2,
+      "minimum": 3,
+      "best": {
+        "prefix": [
+          [
+            "load",
+            42
+          ],
+          [
+            "swap",
+            2
+          ]
+        ],
+        "prefixCost": 3,
+        "nextSource": [
+          "v:42",
+          "l:0",
+          "l:0"
+        ],
+        "remaining": [
+          "v:42"
+        ],
+        "residualBaseline": 1,
+        "residualExcess": 1,
+        "residualIsExactPermutationCost": false,
+        "lhs": 3
+      },
+      "beforeStates": 1,
+      "birthBranches": 1,
+      "feasibleEnds": 3,
+      "succeeds": false
+    }
+  },
+  "completed": false,
+  "limited": false,
+  "caseLimit": 10000,
+  "domain": {
+    "alphabet": [
+      "l:0",
+      "v:42"
+    ],
+    "sourceLengths": {
+      "minimum": 0,
+      "maximum": 4
+    },
+    "births": 2,
+    "capacity": 2,
+    "loadWidths": [
+      0,
+      2,
+      32
+    ],
+    "weights": {
+      "gas": 0,
+      "bytes": 1
+    },
+    "macro": "arbitrary legal SWAPs, one birth, arbitrary legal SWAPs",
+    "residual": "exact no-growth SWAP distance at H=0; the same static bound otherwise"
+  },
+  "productionLift": {
+    "runner": "/tmp/optimality-bench-integrated-v9",
+    "runnerSha256": "60eb38ec9099631f3948ea346592e5d3f057b10fc50ef25e6e442f8b47466a9e",
+    "cases": [
+      {
+        "problem": {
+          "id": "regression-absent-seed-two-birth-descent",
+          "source": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42"
+          ],
+          "missing": [
+            "v:42",
+            "v:42"
+          ],
+          "spills": [
+            42
+          ],
+          "loadWidths": [
+            [
+              42,
+              0
+            ]
+          ],
+          "weights": {
+            "gas": 0,
+            "bytes": 1
+          },
+          "referenceOps": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ]
+          ],
+          "expectedOracleScore": 5,
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17"
+        },
+        "oracle": {
+          "model": "actual-16/17",
+          "baseline": 3,
+          "reserve": true,
+          "states": 19,
+          "expanded": 19,
+          "edges": 50,
+          "status": "optimal",
+          "cost": {
+            "gas": 15,
+            "bytes": 5
+          },
+          "score": 5,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ]
+          ],
+          "instructions": 3,
+          "excess": 2,
+          "milliseconds": 2.994634000000005
+        },
+        "baseline": 3,
+        "staticExcess": 1,
+        "schedule": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": true,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 5,
+            "gas": 15
+          },
+          "instructions": 3,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ]
+          ],
+          "score": 5,
+          "status": "ok"
+        }
+      },
+      {
+        "problem": {
+          "id": "regression-absent-seed-two-birth-residual",
+          "source": [
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0"
+          ],
+          "target": [
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42"
+          ],
+          "missing": [
+            "v:42"
+          ],
+          "spills": [
+            42
+          ],
+          "loadWidths": [
+            [
+              42,
+              0
+            ]
+          ],
+          "weights": {
+            "gas": 0,
+            "bytes": 1
+          },
+          "referenceOps": [
+            [
+              "load",
+              42
+            ]
+          ],
+          "expectedOracleScore": 2,
+          "caps": {
+            "swap": 16,
+            "dup": 16
+          },
+          "gasModel": "cpp",
+          "model": "actual-16/17"
+        },
+        "oracle": {
+          "model": "actual-16/17",
+          "baseline": 1,
+          "reserve": true,
+          "states": 18,
+          "expanded": 3,
+          "edges": 19,
+          "status": "optimal",
+          "cost": {
+            "gas": 6,
+            "bytes": 2
+          },
+          "score": 2,
+          "ops": [
+            [
+              "load",
+              42
+            ]
+          ],
+          "instructions": 1,
+          "excess": 1,
+          "milliseconds": 0.22614500000000248
+        },
+        "baseline": 1,
+        "staticExcess": 1,
+        "schedule": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": true,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": true,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 2,
+            "gas": 6
+          },
+          "instructions": 1,
+          "ops": [
+            [
+              "load",
+              42
+            ]
+          ],
+          "score": 2,
+          "status": "ok"
+        }
+      }
+    ],
+    "conclusion": "The one-birth descent inequality fails. Both planners attain OPT=5 for the initial problem and OPT=2 for the residual. The initial excess is2=2D, so this is not a global factor-two counterexample."
+  }
+}

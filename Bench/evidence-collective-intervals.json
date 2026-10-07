@@ -1,0 +1,60 @@
+{
+  "status": "finite reachability evidence, not a Lean proof",
+  "checked": 1134,
+  "states": 23988,
+  "first": null,
+  "totals": {
+    "1/0": 126,
+    "1/1": 126,
+    "2/0": 126,
+    "2/1": 126,
+    "2/2": 126,
+    "3/0": 126,
+    "3/1": 126,
+    "3/2": 126,
+    "3/3": 126
+  },
+  "domain": {
+    "reaches": [
+      1,
+      2,
+      3
+    ],
+    "oldCopies": "0 through reach",
+    "freshAlphabet": [
+      "v:42",
+      "v:43"
+    ],
+    "prefixLengths": "1 through 6",
+    "stateLimit": 300000
+  },
+  "formulaExamples": {
+    "status": "closed-form interval counts; not additional trace searches",
+    "alternating": [
+      {
+        "k": 2,
+        "minimumDirect": 3,
+        "intervalCount": 2,
+        "retained": 1
+      },
+      {
+        "k": 3,
+        "minimumDirect": 4,
+        "intervalCount": 4,
+        "retained": 2
+      },
+      {
+        "k": 8,
+        "minimumDirect": 9,
+        "intervalCount": 14,
+        "retained": 7
+      },
+      {
+        "k": 17,
+        "minimumDirect": 18,
+        "intervalCount": 32,
+        "retained": 16
+      }
+    ]
+  }
+}

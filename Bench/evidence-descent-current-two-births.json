@@ -1,0 +1,271 @@
+{
+  "status": "bounded experimental result; not a production algorithm",
+  "boundVersion": "graph-transport-Q-F-tail-prefix-count-correct-boundary",
+  "checked": 1294,
+  "first": {
+    "problem": {
+      "id": "descent-1293",
+      "source": [
+        "v:42",
+        "l:0",
+        "l:0",
+        "v:42"
+      ],
+      "target": [
+        "v:42",
+        "l:0",
+        "v:42",
+        "l:0",
+        "l:0",
+        "v:42"
+      ],
+      "spills": [
+        42
+      ],
+      "loadWidths": [
+        [
+          42,
+          0
+        ]
+      ],
+      "weights": {
+        "gas": 0,
+        "bytes": 1
+      },
+      "caps": {
+        "swap": 2,
+        "dup": 2
+      },
+      "missing": [
+        "l:0",
+        "v:42"
+      ],
+      "gasModel": "cpp",
+      "model": "reduced-cap"
+    },
+    "result": {
+      "baseline": 2,
+      "staticExcess": 1,
+      "rhs": 2,
+      "minimum": 3,
+      "best": {
+        "prefix": [
+          [
+            "dup",
+            1
+          ],
+          [
+            "swap",
+            2
+          ]
+        ],
+        "prefixCost": 2,
+        "nextSource": [
+          "v:42",
+          "l:0",
+          "v:42",
+          "v:42",
+          "l:0"
+        ],
+        "remaining": [
+          "l:0"
+        ],
+        "residualBaseline": 1,
+        "residualExcess": 1,
+        "residualIsExactPermutationCost": false,
+        "lhs": 3
+      },
+      "beforeStates": 3,
+      "birthBranches": 11,
+      "feasibleEnds": 24,
+      "succeeds": false
+    }
+  },
+  "completed": false,
+  "limited": false,
+  "caseLimit": 10000,
+  "domain": {
+    "alphabet": [
+      "l:0",
+      "v:42"
+    ],
+    "sourceLengths": {
+      "minimum": 0,
+      "maximum": 4
+    },
+    "births": 2,
+    "capacity": 2,
+    "loadWidths": [
+      0,
+      2,
+      32
+    ],
+    "weights": {
+      "gas": 0,
+      "bytes": 1
+    },
+    "macro": "arbitrary legal SWAPs, one birth, arbitrary legal SWAPs",
+    "residual": "exact no-growth SWAP distance at H=0; the same static bound otherwise"
+  },
+  "productionLift": {
+    "runner": "/tmp/optimality-bench-integrated-v12",
+    "runnerSha256": "e3a116256ffef648ac0404d04006e46b4335df01c2ce9dbad42e4d1eba8e3f0b",
+    "problem": {
+      "missing": [
+        "l:0",
+        "v:42"
+      ],
+      "spills": [
+        42
+      ],
+      "loadWidths": [
+        [
+          42,
+          0
+        ]
+      ],
+      "weights": {
+        "gas": 0,
+        "bytes": 1
+      },
+      "referenceOps": [
+        [
+          "dup",
+          1
+        ],
+        [
+          "swap",
+          16
+        ],
+        [
+          "push",
+          "l:0"
+        ],
+        [
+          "swap",
+          2
+        ]
+      ],
+      "expectedOracleScore": 4,
+      "id": "regression-gap-crosses-frozen-prefix",
+      "source": [
+        "v:42",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "v:42"
+      ],
+      "target": [
+        "v:42",
+        "l:0",
+        "v:42",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "v:42"
+      ],
+      "caps": {
+        "swap": 16,
+        "dup": 16
+      },
+      "gasModel": "cpp",
+      "model": "actual-16/17"
+    },
+    "oracle": {
+      "model": "actual-16/17",
+      "baseline": 2,
+      "reserve": true,
+      "states": 187,
+      "expanded": 173,
+      "edges": 733,
+      "status": "optimal",
+      "cost": {
+        "gas": 11,
+        "bytes": 4
+      },
+      "score": 4,
+      "ops": [
+        [
+          "swap",
+          15
+        ],
+        [
+          "push",
+          "l:0"
+        ],
+        [
+          "load",
+          42
+        ]
+      ],
+      "instructions": 3,
+      "excess": 2,
+      "milliseconds": 3.8005660000000034
+    },
+    "baseline": 2,
+    "staticExcess": 1,
+    "schedule": {
+      "certificate": null,
+      "certificates": {
+        "exactBaseline": false,
+        "exactLineage": false,
+        "exactNoGrowth": false,
+        "exactStatic": false,
+        "twiceLineage": false,
+        "twiceStatic": true
+      },
+      "cost": {
+        "bytes": 4,
+        "gas": 11
+      },
+      "instructions": 4,
+      "ops": [
+        [
+          "dup",
+          1
+        ],
+        [
+          "swap",
+          16
+        ],
+        [
+          "push",
+          "l:0"
+        ],
+        [
+          "swap",
+          2
+        ]
+      ],
+      "score": 4,
+      "status": "ok"
+    },
+    "conclusion": "The schedule is optimal; the static bound remains below the optimum excess because a gap crossing the frozen prefix cancels the new gap."
+  }
+}

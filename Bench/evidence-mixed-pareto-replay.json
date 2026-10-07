@@ -1,0 +1,6837 @@
+{
+  "scope": "Each exact Pareto witness was replayed by the pinned production Lean executable; no scheduler was run in this replay check.",
+  "runner": "/tmp/optimality-bench-integrated-v12",
+  "sha256": "e3a116256ffef648ac0404d04006e46b4335df01c2ce9dbad42e4d1eba8e3f0b",
+  "checked": 58,
+  "failures": 0,
+  "elapsedScope": "Lean per-case time includes reference replay, lower bounds, certificates, and serialization, with no selected planners.",
+  "elapsedSeconds": 0.018823895999999996,
+  "results": [
+    {
+      "elapsedNanos": 562750,
+      "jsonBytes": 664,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 52,
+        "id": "mixed-pareto-pattern0-width0/point0",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 73,
+            "gas": 27
+          },
+          "instructions": 8,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              12
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 100,
+          "status": "ok"
+        },
+        "staticExcess": 16
+      }
+    },
+    {
+      "elapsedNanos": 211243,
+      "jsonBytes": 585,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 52,
+        "id": "mixed-pareto-pattern0-width0/point1",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 42,
+            "gas": 30
+          },
+          "instructions": 8,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 72,
+          "status": "ok"
+        },
+        "staticExcess": 16
+      }
+    },
+    {
+      "elapsedNanos": 225801,
+      "jsonBytes": 664,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 54,
+        "id": "mixed-pareto-pattern0-width2/point0",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 75,
+            "gas": 27
+          },
+          "instructions": 8,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              12
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 102,
+          "status": "ok"
+        },
+        "staticExcess": 16
+      }
+    },
+    {
+      "elapsedNanos": 188822,
+      "jsonBytes": 585,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 54,
+        "id": "mixed-pareto-pattern0-width2/point1",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 46,
+            "gas": 30
+          },
+          "instructions": 8,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 76,
+          "status": "ok"
+        },
+        "staticExcess": 16
+      }
+    },
+    {
+      "elapsedNanos": 224058,
+      "jsonBytes": 664,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 52,
+        "id": "mixed-pareto-pattern1-width0/point0",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 73,
+            "gas": 27
+          },
+          "instructions": 8,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 100,
+          "status": "ok"
+        },
+        "staticExcess": 16
+      }
+    },
+    {
+      "elapsedNanos": 188081,
+      "jsonBytes": 585,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 52,
+        "id": "mixed-pareto-pattern1-width0/point1",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 42,
+            "gas": 30
+          },
+          "instructions": 8,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              15
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 72,
+          "status": "ok"
+        },
+        "staticExcess": 16
+      }
+    },
+    {
+      "elapsedNanos": 215191,
+      "jsonBytes": 664,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 54,
+        "id": "mixed-pareto-pattern1-width2/point0",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 75,
+            "gas": 27
+          },
+          "instructions": 8,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 102,
+          "status": "ok"
+        },
+        "staticExcess": 16
+      }
+    },
+    {
+      "elapsedNanos": 188070,
+      "jsonBytes": 585,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 54,
+        "id": "mixed-pareto-pattern1-width2/point1",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 46,
+            "gas": 30
+          },
+          "instructions": 8,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              15
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 76,
+          "status": "ok"
+        },
+        "staticExcess": 16
+      }
+    },
+    {
+      "elapsedNanos": 271987,
+      "jsonBytes": 790,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 60,
+        "id": "mixed-pareto-pattern2-width0/point0",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 109,
+            "gas": 39
+          },
+          "instructions": 12,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              10
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 148,
+          "status": "ok"
+        },
+        "staticExcess": 24
+      }
+    },
+    {
+      "elapsedNanos": 235430,
+      "jsonBytes": 712,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 60,
+        "id": "mixed-pareto-pattern2-width0/point1",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 78,
+            "gas": 42
+          },
+          "instructions": 12,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 120,
+          "status": "ok"
+        },
+        "staticExcess": 24
+      }
+    },
+    {
+      "elapsedNanos": 205784,
+      "jsonBytes": 633,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 60,
+        "id": "mixed-pareto-pattern2-width0/point2",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 47,
+            "gas": 45
+          },
+          "instructions": 12,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              11
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 92,
+          "status": "ok"
+        },
+        "staticExcess": 24
+      }
+    },
+    {
+      "elapsedNanos": 267769,
+      "jsonBytes": 790,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 62,
+        "id": "mixed-pareto-pattern2-width2/point0",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 111,
+            "gas": 39
+          },
+          "instructions": 12,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              10
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 150,
+          "status": "ok"
+        },
+        "staticExcess": 24
+      }
+    },
+    {
+      "elapsedNanos": 234487,
+      "jsonBytes": 712,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 62,
+        "id": "mixed-pareto-pattern2-width2/point1",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 82,
+            "gas": 42
+          },
+          "instructions": 12,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 124,
+          "status": "ok"
+        },
+        "staticExcess": 24
+      }
+    },
+    {
+      "elapsedNanos": 208349,
+      "jsonBytes": 633,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 62,
+        "id": "mixed-pareto-pattern2-width2/point2",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 53,
+            "gas": 45
+          },
+          "instructions": 12,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              11
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 98,
+          "status": "ok"
+        },
+        "staticExcess": 24
+      }
+    },
+    {
+      "elapsedNanos": 267118,
+      "jsonBytes": 790,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 60,
+        "id": "mixed-pareto-pattern3-width0/point0",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 109,
+            "gas": 39
+          },
+          "instructions": 12,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              11
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 148,
+          "status": "ok"
+        },
+        "staticExcess": 24
+      }
+    },
+    {
+      "elapsedNanos": 233406,
+      "jsonBytes": 712,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 60,
+        "id": "mixed-pareto-pattern3-width0/point1",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 78,
+            "gas": 42
+          },
+          "instructions": 12,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 120,
+          "status": "ok"
+        },
+        "staticExcess": 24
+      }
+    },
+    {
+      "elapsedNanos": 206135,
+      "jsonBytes": 633,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 60,
+        "id": "mixed-pareto-pattern3-width0/point2",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 47,
+            "gas": 45
+          },
+          "instructions": 12,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              15
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              11
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 92,
+          "status": "ok"
+        },
+        "staticExcess": 24
+      }
+    },
+    {
+      "elapsedNanos": 261006,
+      "jsonBytes": 790,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 62,
+        "id": "mixed-pareto-pattern3-width2/point0",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 111,
+            "gas": 39
+          },
+          "instructions": 12,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              11
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 150,
+          "status": "ok"
+        },
+        "staticExcess": 24
+      }
+    },
+    {
+      "elapsedNanos": 233506,
+      "jsonBytes": 712,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 62,
+        "id": "mixed-pareto-pattern3-width2/point1",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 82,
+            "gas": 42
+          },
+          "instructions": 12,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 124,
+          "status": "ok"
+        },
+        "staticExcess": 24
+      }
+    },
+    {
+      "elapsedNanos": 204322,
+      "jsonBytes": 633,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 62,
+        "id": "mixed-pareto-pattern3-width2/point2",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 53,
+            "gas": 45
+          },
+          "instructions": 12,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              15
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              11
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 98,
+          "status": "ok"
+        },
+        "staticExcess": 24
+      }
+    },
+    {
+      "elapsedNanos": 502517,
+      "jsonBytes": 1395,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 100,
+        "id": "mixed-pareto-pattern4-width0/point0",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 288,
+            "gas": 96
+          },
+          "instructions": 31,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              2
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              4
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 384,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 494613,
+      "jsonBytes": 1331,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 100,
+        "id": "mixed-pareto-pattern4-width0/point1",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 258,
+            "gas": 102
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              3
+            ],
+            [
+              "dup",
+              4
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 360,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 672785,
+      "jsonBytes": 1255,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 100,
+        "id": "mixed-pareto-pattern4-width0/point2",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 227,
+            "gas": 105
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              11
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              5
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 332,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 427116,
+      "jsonBytes": 1178,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 100,
+        "id": "mixed-pareto-pattern4-width0/point3",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 196,
+            "gas": 108
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              9
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              7
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 304,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 376122,
+      "jsonBytes": 1101,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 100,
+        "id": "mixed-pareto-pattern4-width0/point4",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 165,
+            "gas": 111
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              7
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              9
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 276,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 354612,
+      "jsonBytes": 1024,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 100,
+        "id": "mixed-pareto-pattern4-width0/point5",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 134,
+            "gas": 114
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              5
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              11
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 248,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 318343,
+      "jsonBytes": 945,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 100,
+        "id": "mixed-pareto-pattern4-width0/point6",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 103,
+            "gas": 117
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              3
+            ],
+            [
+              "dup",
+              4
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 220,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 285463,
+      "jsonBytes": 866,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 100,
+        "id": "mixed-pareto-pattern4-width0/point7",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 72,
+            "gas": 120
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              1
+            ],
+            [
+              "dup",
+              2
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              4
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 192,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 487890,
+      "jsonBytes": 1395,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 102,
+        "id": "mixed-pareto-pattern4-width2/point0",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 290,
+            "gas": 96
+          },
+          "instructions": 31,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              2
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              4
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 386,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 455860,
+      "jsonBytes": 1331,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 102,
+        "id": "mixed-pareto-pattern4-width2/point1",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 262,
+            "gas": 102
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              3
+            ],
+            [
+              "dup",
+              4
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 364,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 427477,
+      "jsonBytes": 1255,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 102,
+        "id": "mixed-pareto-pattern4-width2/point2",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 233,
+            "gas": 105
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              11
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              5
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 338,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 399835,
+      "jsonBytes": 1178,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 102,
+        "id": "mixed-pareto-pattern4-width2/point3",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 204,
+            "gas": 108
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              9
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              7
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 312,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 372615,
+      "jsonBytes": 1101,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 102,
+        "id": "mixed-pareto-pattern4-width2/point4",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 175,
+            "gas": 111
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              7
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              9
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 286,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 340054,
+      "jsonBytes": 1024,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 102,
+        "id": "mixed-pareto-pattern4-width2/point5",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 146,
+            "gas": 114
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              5
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              11
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 260,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 312262,
+      "jsonBytes": 946,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 102,
+        "id": "mixed-pareto-pattern4-width2/point6",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 117,
+            "gas": 117
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              3
+            ],
+            [
+              "dup",
+              4
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 234,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 284841,
+      "jsonBytes": 866,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 102,
+        "id": "mixed-pareto-pattern4-width2/point7",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 88,
+            "gas": 120
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              1
+            ],
+            [
+              "dup",
+              2
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              4
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 208,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 491367,
+      "jsonBytes": 1406,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 100,
+        "id": "mixed-pareto-pattern5-width0/point0",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 289,
+            "gas": 99
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              1
+            ],
+            [
+              "dup",
+              2
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              4
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 388,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 452224,
+      "jsonBytes": 1331,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 100,
+        "id": "mixed-pareto-pattern5-width0/point1",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 258,
+            "gas": 102
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              3
+            ],
+            [
+              "dup",
+              4
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 360,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 423860,
+      "jsonBytes": 1255,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 100,
+        "id": "mixed-pareto-pattern5-width0/point2",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 227,
+            "gas": 105
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              5
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              11
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 332,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 396149,
+      "jsonBytes": 1178,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 100,
+        "id": "mixed-pareto-pattern5-width0/point3",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 196,
+            "gas": 108
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              7
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              9
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 304,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 367745,
+      "jsonBytes": 1101,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 100,
+        "id": "mixed-pareto-pattern5-width0/point4",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 165,
+            "gas": 111
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              9
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              7
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 276,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 340164,
+      "jsonBytes": 1024,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 100,
+        "id": "mixed-pareto-pattern5-width0/point5",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 134,
+            "gas": 114
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              11
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              5
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 248,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 288999,
+      "jsonBytes": 855,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 100,
+        "id": "mixed-pareto-pattern5-width0/point6",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 71,
+            "gas": 117
+          },
+          "instructions": 31,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              2
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              4
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 188,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 484524,
+      "jsonBytes": 1406,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 102,
+        "id": "mixed-pareto-pattern5-width2/point0",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 291,
+            "gas": 99
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              1
+            ],
+            [
+              "dup",
+              2
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              4
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 390,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 455860,
+      "jsonBytes": 1331,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 102,
+        "id": "mixed-pareto-pattern5-width2/point1",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 262,
+            "gas": 102
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              3
+            ],
+            [
+              "dup",
+              4
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 364,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 438067,
+      "jsonBytes": 1255,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 102,
+        "id": "mixed-pareto-pattern5-width2/point2",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 233,
+            "gas": 105
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              5
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              11
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 338,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 396941,
+      "jsonBytes": 1178,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 102,
+        "id": "mixed-pareto-pattern5-width2/point3",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 204,
+            "gas": 108
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              7
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              9
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 312,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 441113,
+      "jsonBytes": 1101,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 102,
+        "id": "mixed-pareto-pattern5-width2/point4",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 175,
+            "gas": 111
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              9
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              7
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 286,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 342268,
+      "jsonBytes": 1024,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 102,
+        "id": "mixed-pareto-pattern5-width2/point5",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 146,
+            "gas": 114
+          },
+          "instructions": 32,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              11
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              5
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 260,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 289900,
+      "jsonBytes": 855,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 102,
+        "id": "mixed-pareto-pattern5-width2/point6",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 87,
+            "gas": 117
+          },
+          "instructions": 31,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              2
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              4
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              6
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              8
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              10
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              12
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              14
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 204,
+          "status": "ok"
+        },
+        "staticExcess": 60
+      }
+    },
+    {
+      "elapsedNanos": 324095,
+      "jsonBytes": 664,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 52,
+        "id": "mixed-pareto-pattern6-width0/point0",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 73,
+            "gas": 27
+          },
+          "instructions": 8,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              15
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 100,
+          "status": "ok"
+        },
+        "staticExcess": 16
+      }
+    },
+    {
+      "elapsedNanos": 218728,
+      "jsonBytes": 585,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 52,
+        "id": "mixed-pareto-pattern6-width0/point1",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 42,
+            "gas": 30
+          },
+          "instructions": 8,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              12
+            ],
+            [
+              "dup",
+              13
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 72,
+          "status": "ok"
+        },
+        "staticExcess": 16
+      }
+    },
+    {
+      "elapsedNanos": 219590,
+      "jsonBytes": 664,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 54,
+        "id": "mixed-pareto-pattern6-width2/point0",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 75,
+            "gas": 27
+          },
+          "instructions": 8,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "dup",
+              15
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 102,
+          "status": "ok"
+        },
+        "staticExcess": 16
+      }
+    },
+    {
+      "elapsedNanos": 203148,
+      "jsonBytes": 585,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 54,
+        "id": "mixed-pareto-pattern6-width2/point1",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 46,
+            "gas": 30
+          },
+          "instructions": 8,
+          "ops": [
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              12
+            ],
+            [
+              "dup",
+              13
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 76,
+          "status": "ok"
+        },
+        "staticExcess": 16
+      }
+    },
+    {
+      "elapsedNanos": 221503,
+      "jsonBytes": 664,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 52,
+        "id": "mixed-pareto-pattern7-width0/point0",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 73,
+            "gas": 27
+          },
+          "instructions": 8,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              12
+            ],
+            [
+              "dup",
+              13
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 100,
+          "status": "ok"
+        },
+        "staticExcess": 16
+      }
+    },
+    {
+      "elapsedNanos": 231141,
+      "jsonBytes": 585,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 52,
+        "id": "mixed-pareto-pattern7-width0/point1",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 42,
+            "gas": 30
+          },
+          "instructions": 8,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              15
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              14
+            ],
+            [
+              "dup",
+              15
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 72,
+          "status": "ok"
+        },
+        "staticExcess": 16
+      }
+    },
+    {
+      "elapsedNanos": 255887,
+      "jsonBytes": 664,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 54,
+        "id": "mixed-pareto-pattern7-width2/point0",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 75,
+            "gas": 27
+          },
+          "instructions": 8,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              12
+            ],
+            [
+              "dup",
+              13
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              16
+            ]
+          ],
+          "score": 102,
+          "status": "ok"
+        },
+        "staticExcess": 16
+      }
+    },
+    {
+      "elapsedNanos": 194903,
+      "jsonBytes": 585,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {},
+        "generationBaseline": 54,
+        "id": "mixed-pareto-pattern7-width2/point1",
+        "lineageExcess": 4,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 46,
+            "gas": 30
+          },
+          "instructions": 8,
+          "ops": [
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              15
+            ],
+            [
+              "push",
+              "l:452312848583266388373324160190187140051835877600158453279131187530910662656"
+            ],
+            [
+              "swap",
+              14
+            ],
+            [
+              "dup",
+              15
+            ],
+            [
+              "swap",
+              16
+            ],
+            [
+              "load",
+              42
+            ],
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 76,
+          "status": "ok"
+        },
+        "staticExcess": 16
+      }
+    }
+  ]
+}

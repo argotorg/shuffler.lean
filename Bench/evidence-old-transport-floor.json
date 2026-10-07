@@ -1,0 +1,43 @@
+{
+  "status": "finite exact assignment and cached-realization evidence, not a Lean theorem",
+  "scope": "q equal old source values at positions0..q-1, final old positionsm..m+q-1, with q<=R. Each selected fresh interval uses value presence, not fixed ancestry.",
+  "assignmentObjective": "min over old-copy matchings sum ceil(max(finalPosition-sourcePosition,0)/R)",
+  "formula": "Qold=q*floor(m/R)+min(q,m mod R)",
+  "assignmentDomain": {
+    "reach": "1 through6",
+    "old": "0 through reach",
+    "fresh": "0 through3*reach"
+  },
+  "assignments": 363,
+  "firstAssignmentMismatch": null,
+  "actualCapExample": {
+    "reach": 16,
+    "old": 2,
+    "fresh": 20,
+    "pooled": 3,
+    "exact": {
+      "cost": 4,
+      "sources": [
+        0,
+        1
+      ]
+    },
+    "formula": 4
+  },
+  "realizationCheck": {
+    "formula": "minimum SWAPs <= 2*(Qold + sum_selected floor((j-i-1)/R))",
+    "cachedPlans": 8850,
+    "strongerThanPooled": 0,
+    "violations": 0,
+    "firstViolation": null,
+    "maximumRatio": 2,
+    "worst": {
+      "key": "[2,0,[\"a\",\"b\",\"b\",\"c\",\"a\"],[0,1]]",
+      "swaps": 2,
+      "oldFloor": 0,
+      "gapFloor": 1
+    },
+    "cachePath": "Bench/plan-realization-cache.jsonl"
+  },
+  "reproduce": "node scripts/optimality-old-transport.mjs Bench/evidence-old-transport-floor.json Bench/plan-realization-cache.jsonl"
+}

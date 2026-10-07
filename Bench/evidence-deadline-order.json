@@ -1,0 +1,15 @@
+{
+  "status": "finite exhaustive combinatorial evidence, not a Lean theorem",
+  "domain": {
+    "jobs": "0 through5",
+    "deadlines": "1 through job count plus1",
+    "slots": "1-based",
+    "indices": "0-based"
+  },
+  "rule": "At each slot, choose the least remaining target index whose deadline is at most the earliest tight deadline cut. If no cut is tight, choose the least remaining target index.",
+  "instances": 8477,
+  "feasible": 5295,
+  "feasibleOrders": 89439,
+  "first": null,
+  "reproduce": "node scripts/optimality-deadline-order.mjs Bench/evidence-deadline-order.json"
+}

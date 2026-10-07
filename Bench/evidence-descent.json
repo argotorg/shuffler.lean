@@ -1,0 +1,231 @@
+{
+  "status": "bounded experimental result; not a production algorithm",
+  "checked": 119,
+  "first": {
+    "problem": {
+      "id": "descent-118",
+      "source": [
+        "l:0",
+        "l:0",
+        "v:42"
+      ],
+      "target": [
+        "v:42",
+        "l:0",
+        "l:0",
+        "v:42"
+      ],
+      "spills": [
+        42
+      ],
+      "loadWidths": [
+        [
+          42,
+          2
+        ]
+      ],
+      "weights": {
+        "gas": 0,
+        "bytes": 1
+      },
+      "caps": {
+        "swap": 2,
+        "dup": 2
+      },
+      "missing": [
+        "v:42"
+      ],
+      "gasModel": "cpp",
+      "model": "reduced-cap"
+    },
+    "result": {
+      "baseline": 1,
+      "staticExcess": 1,
+      "rhs": 2,
+      "minimum": 4,
+      "best": {
+        "prefix": [
+          [
+            "swap",
+            2
+          ],
+          [
+            "load",
+            42
+          ]
+        ],
+        "prefixCost": 5,
+        "nextSource": [
+          "v:42",
+          "l:0",
+          "l:0",
+          "v:42"
+        ],
+        "residualExactCost": 0,
+        "lhs": 4
+      },
+      "beforeStates": 3,
+      "birthBranches": 5,
+      "feasibleEnds": 3,
+      "succeeds": false
+    }
+  },
+  "domain": {
+    "alphabet": [
+      "l:0",
+      "v:42"
+    ],
+    "sourceLengths": "0 through4, stopped at first failure",
+    "births": 1,
+    "capacity": 2,
+    "loadWidths": [
+      0,
+      2,
+      32
+    ],
+    "weights": {
+      "gas": 0,
+      "bytes": 1
+    },
+    "macro": "arbitrary legal SWAPs, one birth, arbitrary legal SWAPs",
+    "residual": "exact no-growth SWAP distance"
+  },
+  "productionLift": {
+    "problem": {
+      "id": "regression-forced-load-after-boundary-placement",
+      "source": [
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "v:42"
+      ],
+      "target": [
+        "v:42",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "l:0",
+        "v:42"
+      ],
+      "missing": [
+        "v:42"
+      ],
+      "spills": [
+        42
+      ],
+      "loadWidths": [
+        [
+          42,
+          2
+        ]
+      ],
+      "weights": {
+        "gas": 0,
+        "bytes": 1
+      },
+      "referenceOps": [
+        [
+          "swap",
+          16
+        ],
+        [
+          "load",
+          42
+        ]
+      ],
+      "expectedOracleScore": 5,
+      "caps": {
+        "swap": 16,
+        "dup": 16
+      },
+      "gasModel": "cpp",
+      "model": "actual-16/17"
+    },
+    "runner": "/tmp/optimality-bench-integrated-v8",
+    "runnerSha256": "86ff3f56a00e57200386105f0abc7e8a5a1186b843af5266cfd13f09e9376fa1",
+    "oracle": {
+      "model": "actual-16/17",
+      "baseline": 1,
+      "reserve": true,
+      "states": 18,
+      "expanded": 18,
+      "edges": 49,
+      "status": "optimal",
+      "cost": {
+        "gas": 9,
+        "bytes": 5
+      },
+      "score": 5,
+      "ops": [
+        [
+          "swap",
+          16
+        ],
+        [
+          "load",
+          42
+        ]
+      ],
+      "instructions": 2,
+      "excess": 4,
+      "milliseconds": 3.4289539999999974
+    },
+    "baseline": 1,
+    "staticExcess": 1,
+    "schedule": {
+      "certificate": null,
+      "certificates": {
+        "exactBaseline": false,
+        "exactLineage": false,
+        "exactNoGrowth": false,
+        "exactStatic": false,
+        "twiceLineage": false,
+        "twiceStatic": false
+      },
+      "cost": {
+        "bytes": 5,
+        "gas": 9
+      },
+      "instructions": 2,
+      "ops": [
+        [
+          "swap",
+          16
+        ],
+        [
+          "load",
+          42
+        ]
+      ],
+      "score": 5,
+      "status": "ok"
+    },
+    "explanation": "Before the sole birth, bottom slot 0 must contain a. At height 18 this slot is permanently frozen. There is only one a before the birth, so it is at depth 17 and DUP16 cannot use it. Thus the birth must use LOAD. One SWAP is necessary because source bottom differs from target bottom. SWAP16; LOAD is sufficient.",
+    "conclusion": "The descent inequality fails for this bound. The schedule and old BBU are optimal on this case. This is not an algorithm factor-two counterexample."
+  }
+}

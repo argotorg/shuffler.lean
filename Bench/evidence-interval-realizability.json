@@ -1,0 +1,473 @@
+{
+  "status": "finite exact reachability evidence, not a Lean theorem",
+  "encoding": "Each selected-interval component has one fresh variable label. Labels are absent from source; a total direct budget equal to label count forces exactly one introduction per component. DUP preserves labels.",
+  "cutSemantics": "An interval [start,end) occupies cuts after outputs start through end-1.",
+  "domain": {
+    "reaches": [
+      1,
+      2,
+      3
+    ],
+    "oldCopies": "0 through reach",
+    "freshAlphabet": [
+      "a",
+      "b"
+    ],
+    "prefixLengths": "0 through 6",
+    "stateLimit": 300000
+  },
+  "feasiblePlans": 8031,
+  "rejectedPlans": 4830,
+  "distinctLabeledProblems": 1203,
+  "states": 196123,
+  "totals": {
+    "1/0": 1121,
+    "1/1": 127,
+    "2/0": 1429,
+    "2/1": 1121,
+    "2/2": 127,
+    "3/0": 1429,
+    "3/1": 1429,
+    "3/2": 1121,
+    "3/3": 127
+  },
+  "first": null,
+  "maximumSwaps": {
+    "count": 6,
+    "plan": {
+      "word": [
+        "a",
+        "a",
+        "a",
+        "a",
+        "a",
+        "a"
+      ],
+      "reach": 1,
+      "old": 1,
+      "intervals": [
+        {
+          "start": 0,
+          "end": 1,
+          "value": "a"
+        },
+        {
+          "start": 1,
+          "end": 2,
+          "value": "a"
+        },
+        {
+          "start": 2,
+          "end": 3,
+          "value": "a"
+        },
+        {
+          "start": 3,
+          "end": 4,
+          "value": "a"
+        },
+        {
+          "start": 4,
+          "end": 5,
+          "value": "a"
+        }
+      ],
+      "selected": [],
+      "occupancy": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "roots": [
+        {
+          "label": "v:100",
+          "value": "a",
+          "first": 0
+        },
+        {
+          "label": "v:101",
+          "value": "a",
+          "first": 1
+        },
+        {
+          "label": "v:102",
+          "value": "a",
+          "first": 2
+        },
+        {
+          "label": "v:103",
+          "value": "a",
+          "first": 3
+        },
+        {
+          "label": "v:104",
+          "value": "a",
+          "first": 4
+        },
+        {
+          "label": "v:105",
+          "value": "a",
+          "first": 5
+        }
+      ],
+      "capacity": 0,
+      "capacityFeasible": true,
+      "problem": {
+        "id": "selected-interval-plan",
+        "source": [
+          "l:0"
+        ],
+        "target": [
+          "v:100",
+          "v:101",
+          "v:102",
+          "v:103",
+          "v:104",
+          "v:105",
+          "l:0"
+        ],
+        "spills": [
+          100,
+          101,
+          102,
+          103,
+          104,
+          105
+        ],
+        "caps": {
+          "swap": 1,
+          "dup": 1
+        },
+        "missing": [
+          "v:100",
+          "v:101",
+          "v:102",
+          "v:103",
+          "v:104",
+          "v:105"
+        ],
+        "weights": {
+          "gas": 1,
+          "bytes": 1
+        },
+        "gasModel": "cpp",
+        "loadWidths": [],
+        "model": "reduced-cap"
+      }
+    },
+    "ops": [
+      [
+        "load",
+        100
+      ],
+      [
+        "swap",
+        1
+      ],
+      [
+        "load",
+        101
+      ],
+      [
+        "swap",
+        1
+      ],
+      [
+        "load",
+        102
+      ],
+      [
+        "swap",
+        1
+      ],
+      [
+        "load",
+        103
+      ],
+      [
+        "swap",
+        1
+      ],
+      [
+        "load",
+        104
+      ],
+      [
+        "swap",
+        1
+      ],
+      [
+        "load",
+        105
+      ],
+      [
+        "swap",
+        1
+      ]
+    ]
+  },
+  "swapBound": {
+    "formula": "M=max(min(q-1,m), q>0 and m>0 ? 1 : 0); Q=ceil(q*m/R)+sum_selected floor((end-start-1)/R)",
+    "violations": 46,
+    "first": {
+      "plan": {
+        "word": [
+          "a",
+          "b",
+          "b",
+          "b",
+          "a"
+        ],
+        "reach": 2,
+        "old": 0,
+        "intervals": [
+          {
+            "start": 1,
+            "end": 2,
+            "value": "b"
+          },
+          {
+            "start": 2,
+            "end": 3,
+            "value": "b"
+          },
+          {
+            "start": 0,
+            "end": 4,
+            "value": "a"
+          }
+        ],
+        "selected": [
+          0,
+          2
+        ],
+        "occupancy": [
+          1,
+          2,
+          1,
+          1,
+          0
+        ],
+        "roots": [
+          {
+            "label": "v:100",
+            "value": "a",
+            "first": 0
+          },
+          {
+            "label": "v:101",
+            "value": "b",
+            "first": 1
+          },
+          {
+            "label": "v:102",
+            "value": "b",
+            "first": 3
+          }
+        ],
+        "capacity": 2,
+        "capacityFeasible": true,
+        "problem": {
+          "id": "selected-interval-plan",
+          "source": [],
+          "target": [
+            "v:100",
+            "v:101",
+            "v:101",
+            "v:102",
+            "v:100"
+          ],
+          "spills": [
+            100,
+            101,
+            102
+          ],
+          "caps": {
+            "swap": 2,
+            "dup": 2
+          },
+          "missing": [
+            "v:100",
+            "v:101",
+            "v:101",
+            "v:102",
+            "v:100"
+          ],
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "gasModel": "cpp",
+          "loadWidths": [],
+          "model": "reduced-cap"
+        }
+      },
+      "minimumSwaps": 2,
+      "M": 0,
+      "Q": 1,
+      "ops": [
+        [
+          "load",
+          100
+        ],
+        [
+          "dup",
+          1
+        ],
+        [
+          "load",
+          101
+        ],
+        [
+          "dup",
+          1
+        ],
+        [
+          "swap",
+          2
+        ],
+        [
+          "load",
+          102
+        ],
+        [
+          "swap",
+          1
+        ]
+      ]
+    },
+    "firstWithNoOldCopies": {
+      "plan": {
+        "word": [
+          "a",
+          "b",
+          "b",
+          "b",
+          "a"
+        ],
+        "reach": 2,
+        "old": 0,
+        "intervals": [
+          {
+            "start": 1,
+            "end": 2,
+            "value": "b"
+          },
+          {
+            "start": 2,
+            "end": 3,
+            "value": "b"
+          },
+          {
+            "start": 0,
+            "end": 4,
+            "value": "a"
+          }
+        ],
+        "selected": [
+          0,
+          2
+        ],
+        "occupancy": [
+          1,
+          2,
+          1,
+          1,
+          0
+        ],
+        "roots": [
+          {
+            "label": "v:100",
+            "value": "a",
+            "first": 0
+          },
+          {
+            "label": "v:101",
+            "value": "b",
+            "first": 1
+          },
+          {
+            "label": "v:102",
+            "value": "b",
+            "first": 3
+          }
+        ],
+        "capacity": 2,
+        "capacityFeasible": true,
+        "problem": {
+          "id": "selected-interval-plan",
+          "source": [],
+          "target": [
+            "v:100",
+            "v:101",
+            "v:101",
+            "v:102",
+            "v:100"
+          ],
+          "spills": [
+            100,
+            101,
+            102
+          ],
+          "caps": {
+            "swap": 2,
+            "dup": 2
+          },
+          "missing": [
+            "v:100",
+            "v:101",
+            "v:101",
+            "v:102",
+            "v:100"
+          ],
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "gasModel": "cpp",
+          "loadWidths": [],
+          "model": "reduced-cap"
+        }
+      },
+      "minimumSwaps": 2,
+      "M": 0,
+      "Q": 1,
+      "ops": [
+        [
+          "load",
+          100
+        ],
+        [
+          "dup",
+          1
+        ],
+        [
+          "load",
+          101
+        ],
+        [
+          "dup",
+          1
+        ],
+        [
+          "swap",
+          2
+        ],
+        [
+          "load",
+          102
+        ],
+        [
+          "swap",
+          1
+        ]
+      ]
+    },
+    "scope": "Rigid copy-component assignments only. Failures do not refute a value-presence plan, which can exchange equal roots and retain extra copies at unselected cuts."
+  },
+  "completed": true,
+  "reproduce": "node scripts/optimality-interval-realizability.mjs Bench/evidence-interval-realizability.json"
+}

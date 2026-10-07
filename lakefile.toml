@@ -9,6 +9,10 @@ name = "Shuffler"
 name = "Tests"
 globs = ["Tests.+"]
 
+[[lean_exe]]
+name = "optimality_bench"
+root = "Bench.Optimality"
+
 [[require]]
 name = "mathlib"
 scope = "leanprover-community"

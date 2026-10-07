@@ -1,0 +1,3021 @@
+{
+  "scope": "Fixed raw-chain fixture. Each old BBU SWAP-only run is solved by the exact offline oracle and production ValueGraph.buildCertified. No production planner was changed.",
+  "oldCost": {
+    "bytes": 146,
+    "gas": 150
+  },
+  "optimizedCost": {
+    "gas": 93,
+    "bytes": 127
+  },
+  "optimizedOps": [
+    [
+      "load",
+      42
+    ],
+    [
+      "swap",
+      15
+    ],
+    [
+      "load",
+      43
+    ],
+    [
+      "swap",
+      15
+    ],
+    [
+      "dup",
+      16
+    ],
+    [
+      "swap",
+      15
+    ],
+    [
+      "dup",
+      16
+    ],
+    [
+      "swap",
+      15
+    ],
+    [
+      "dup",
+      16
+    ],
+    [
+      "swap",
+      15
+    ],
+    [
+      "dup",
+      16
+    ],
+    [
+      "swap",
+      15
+    ],
+    [
+      "dup",
+      16
+    ],
+    [
+      "swap",
+      15
+    ],
+    [
+      "dup",
+      16
+    ],
+    [
+      "swap",
+      15
+    ],
+    [
+      "dup",
+      16
+    ],
+    [
+      "swap",
+      15
+    ],
+    [
+      "dup",
+      16
+    ],
+    [
+      "swap",
+      15
+    ],
+    [
+      "dup",
+      16
+    ],
+    [
+      "swap",
+      15
+    ],
+    [
+      "dup",
+      16
+    ],
+    [
+      "swap",
+      15
+    ],
+    [
+      "dup",
+      16
+    ],
+    [
+      "swap",
+      15
+    ],
+    [
+      "load",
+      42
+    ],
+    [
+      "swap",
+      15
+    ]
+  ],
+  "wholeProblemOracle": {
+    "model": "actual-16/17",
+    "baseline": 80,
+    "reserve": true,
+    "states": 5337,
+    "expanded": 5336,
+    "edges": 26044,
+    "status": "optimal",
+    "cost": {
+      "gas": 93,
+      "bytes": 127
+    },
+    "score": 127,
+    "ops": [
+      [
+        "load",
+        42
+      ],
+      [
+        "swap",
+        15
+      ],
+      [
+        "load",
+        43
+      ],
+      [
+        "swap",
+        4
+      ],
+      [
+        "dup",
+        5
+      ],
+      [
+        "swap",
+        16
+      ],
+      [
+        "dup",
+        6
+      ],
+      [
+        "swap",
+        16
+      ],
+      [
+        "dup",
+        7
+      ],
+      [
+        "swap",
+        16
+      ],
+      [
+        "dup",
+        8
+      ],
+      [
+        "swap",
+        16
+      ],
+      [
+        "dup",
+        9
+      ],
+      [
+        "swap",
+        16
+      ],
+      [
+        "dup",
+        10
+      ],
+      [
+        "swap",
+        16
+      ],
+      [
+        "dup",
+        11
+      ],
+      [
+        "swap",
+        16
+      ],
+      [
+        "dup",
+        12
+      ],
+      [
+        "swap",
+        16
+      ],
+      [
+        "dup",
+        13
+      ],
+      [
+        "swap",
+        16
+      ],
+      [
+        "dup",
+        14
+      ],
+      [
+        "swap",
+        16
+      ],
+      [
+        "dup",
+        15
+      ],
+      [
+        "swap",
+        16
+      ],
+      [
+        "load",
+        42
+      ],
+      [
+        "swap",
+        15
+      ]
+    ],
+    "instructions": 28,
+    "excess": 47,
+    "milliseconds": 74.335929
+  },
+  "runs": [
+    {
+      "start": 1,
+      "end": 2,
+      "oldLength": 1,
+      "problem": {
+        "id": "regression-raw-chain-block/swaprun0",
+        "source": [
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "v:42"
+        ],
+        "target": [
+          "v:42",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "spills": [
+          42,
+          43
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            32
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "missing": [],
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17",
+        "referenceOps": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "algorithms": [
+          "value-graph-certified"
+        ]
+      },
+      "oracle": {
+        "model": "actual-16/17",
+        "baseline": 0,
+        "reserve": true,
+        "states": 16,
+        "expanded": 16,
+        "edges": 29,
+        "status": "optimal",
+        "cost": {
+          "gas": 3,
+          "bytes": 1
+        },
+        "score": 1,
+        "ops": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "instructions": 1,
+        "excess": 1,
+        "milliseconds": 1.5255360000000024
+      }
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "oldLength": 1,
+      "problem": {
+        "id": "regression-raw-chain-block/swaprun1",
+        "source": [
+          "v:42",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "v:43"
+        ],
+        "target": [
+          "v:42",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "spills": [
+          42,
+          43
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            32
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "missing": [],
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17",
+        "referenceOps": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "algorithms": [
+          "value-graph-certified"
+        ]
+      },
+      "oracle": {
+        "model": "actual-16/17",
+        "baseline": 0,
+        "reserve": true,
+        "states": 31,
+        "expanded": 16,
+        "edges": 44,
+        "status": "optimal",
+        "cost": {
+          "gas": 3,
+          "bytes": 1
+        },
+        "score": 1,
+        "ops": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "instructions": 1,
+        "excess": 1,
+        "milliseconds": 0.29459099999999694
+      }
+    },
+    {
+      "start": 5,
+      "end": 6,
+      "oldLength": 1,
+      "problem": {
+        "id": "regression-raw-chain-block/swaprun2",
+        "source": [
+          "v:42",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "v:43"
+        ],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "spills": [
+          42,
+          43
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            32
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "missing": [],
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17",
+        "referenceOps": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "algorithms": [
+          "value-graph-certified"
+        ]
+      },
+      "oracle": {
+        "model": "actual-16/17",
+        "baseline": 0,
+        "reserve": true,
+        "states": 30,
+        "expanded": 16,
+        "edges": 43,
+        "status": "optimal",
+        "cost": {
+          "gas": 3,
+          "bytes": 1
+        },
+        "score": 1,
+        "ops": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "instructions": 1,
+        "excess": 1,
+        "milliseconds": 0.2645549999999943
+      }
+    },
+    {
+      "start": 7,
+      "end": 8,
+      "oldLength": 1,
+      "problem": {
+        "id": "regression-raw-chain-block/swaprun3",
+        "source": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "v:43"
+        ],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "spills": [
+          42,
+          43
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            32
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "missing": [],
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17",
+        "referenceOps": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "algorithms": [
+          "value-graph-certified"
+        ]
+      },
+      "oracle": {
+        "model": "actual-16/17",
+        "baseline": 0,
+        "reserve": true,
+        "states": 30,
+        "expanded": 16,
+        "edges": 43,
+        "status": "optimal",
+        "cost": {
+          "gas": 3,
+          "bytes": 1
+        },
+        "score": 1,
+        "ops": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "instructions": 1,
+        "excess": 1,
+        "milliseconds": 0.29609400000000363
+      }
+    },
+    {
+      "start": 9,
+      "end": 10,
+      "oldLength": 1,
+      "problem": {
+        "id": "regression-raw-chain-block/swaprun4",
+        "source": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "v:43"
+        ],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "spills": [
+          42,
+          43
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            32
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "missing": [],
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17",
+        "referenceOps": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "algorithms": [
+          "value-graph-certified"
+        ]
+      },
+      "oracle": {
+        "model": "actual-16/17",
+        "baseline": 0,
+        "reserve": true,
+        "states": 30,
+        "expanded": 16,
+        "edges": 43,
+        "status": "optimal",
+        "cost": {
+          "gas": 3,
+          "bytes": 1
+        },
+        "score": 1,
+        "ops": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "instructions": 1,
+        "excess": 1,
+        "milliseconds": 1.3256619999999941
+      }
+    },
+    {
+      "start": 11,
+      "end": 12,
+      "oldLength": 1,
+      "problem": {
+        "id": "regression-raw-chain-block/swaprun5",
+        "source": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "v:43"
+        ],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "spills": [
+          42,
+          43
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            32
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "missing": [],
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17",
+        "referenceOps": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "algorithms": [
+          "value-graph-certified"
+        ]
+      },
+      "oracle": {
+        "model": "actual-16/17",
+        "baseline": 0,
+        "reserve": true,
+        "states": 30,
+        "expanded": 16,
+        "edges": 43,
+        "status": "optimal",
+        "cost": {
+          "gas": 3,
+          "bytes": 1
+        },
+        "score": 1,
+        "ops": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "instructions": 1,
+        "excess": 1,
+        "milliseconds": 0.2563999999999993
+      }
+    },
+    {
+      "start": 13,
+      "end": 14,
+      "oldLength": 1,
+      "problem": {
+        "id": "regression-raw-chain-block/swaprun6",
+        "source": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "v:43"
+        ],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "spills": [
+          42,
+          43
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            32
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "missing": [],
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17",
+        "referenceOps": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "algorithms": [
+          "value-graph-certified"
+        ]
+      },
+      "oracle": {
+        "model": "actual-16/17",
+        "baseline": 0,
+        "reserve": true,
+        "states": 30,
+        "expanded": 16,
+        "edges": 43,
+        "status": "optimal",
+        "cost": {
+          "gas": 3,
+          "bytes": 1
+        },
+        "score": 1,
+        "ops": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "instructions": 1,
+        "excess": 1,
+        "milliseconds": 0.24717300000000364
+      }
+    },
+    {
+      "start": 15,
+      "end": 16,
+      "oldLength": 1,
+      "problem": {
+        "id": "regression-raw-chain-block/swaprun7",
+        "source": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "v:43"
+        ],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "spills": [
+          42,
+          43
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            32
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "missing": [],
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17",
+        "referenceOps": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "algorithms": [
+          "value-graph-certified"
+        ]
+      },
+      "oracle": {
+        "model": "actual-16/17",
+        "baseline": 0,
+        "reserve": true,
+        "states": 30,
+        "expanded": 16,
+        "edges": 43,
+        "status": "optimal",
+        "cost": {
+          "gas": 3,
+          "bytes": 1
+        },
+        "score": 1,
+        "ops": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "instructions": 1,
+        "excess": 1,
+        "milliseconds": 0.5361029999999971
+      }
+    },
+    {
+      "start": 17,
+      "end": 18,
+      "oldLength": 1,
+      "problem": {
+        "id": "regression-raw-chain-block/swaprun8",
+        "source": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "v:43"
+        ],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "spills": [
+          42,
+          43
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            32
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "missing": [],
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17",
+        "referenceOps": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "algorithms": [
+          "value-graph-certified"
+        ]
+      },
+      "oracle": {
+        "model": "actual-16/17",
+        "baseline": 0,
+        "reserve": true,
+        "states": 30,
+        "expanded": 16,
+        "edges": 43,
+        "status": "optimal",
+        "cost": {
+          "gas": 3,
+          "bytes": 1
+        },
+        "score": 1,
+        "ops": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "instructions": 1,
+        "excess": 1,
+        "milliseconds": 0.3112729999999999
+      }
+    },
+    {
+      "start": 19,
+      "end": 20,
+      "oldLength": 1,
+      "problem": {
+        "id": "regression-raw-chain-block/swaprun9",
+        "source": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "v:43"
+        ],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "spills": [
+          42,
+          43
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            32
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "missing": [],
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17",
+        "referenceOps": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "algorithms": [
+          "value-graph-certified"
+        ]
+      },
+      "oracle": {
+        "model": "actual-16/17",
+        "baseline": 0,
+        "reserve": true,
+        "states": 30,
+        "expanded": 16,
+        "edges": 43,
+        "status": "optimal",
+        "cost": {
+          "gas": 3,
+          "bytes": 1
+        },
+        "score": 1,
+        "ops": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "instructions": 1,
+        "excess": 1,
+        "milliseconds": 0.40281399999999934
+      }
+    },
+    {
+      "start": 21,
+      "end": 22,
+      "oldLength": 1,
+      "problem": {
+        "id": "regression-raw-chain-block/swaprun10",
+        "source": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "v:43"
+        ],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "spills": [
+          42,
+          43
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            32
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "missing": [],
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17",
+        "referenceOps": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "algorithms": [
+          "value-graph-certified"
+        ]
+      },
+      "oracle": {
+        "model": "actual-16/17",
+        "baseline": 0,
+        "reserve": true,
+        "states": 30,
+        "expanded": 16,
+        "edges": 43,
+        "status": "optimal",
+        "cost": {
+          "gas": 3,
+          "bytes": 1
+        },
+        "score": 1,
+        "ops": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "instructions": 1,
+        "excess": 1,
+        "milliseconds": 0.25599899999999565
+      }
+    },
+    {
+      "start": 23,
+      "end": 24,
+      "oldLength": 1,
+      "problem": {
+        "id": "regression-raw-chain-block/swaprun11",
+        "source": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "v:43"
+        ],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "spills": [
+          42,
+          43
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            32
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "missing": [],
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17",
+        "referenceOps": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "algorithms": [
+          "value-graph-certified"
+        ]
+      },
+      "oracle": {
+        "model": "actual-16/17",
+        "baseline": 0,
+        "reserve": true,
+        "states": 30,
+        "expanded": 16,
+        "edges": 43,
+        "status": "optimal",
+        "cost": {
+          "gas": 3,
+          "bytes": 1
+        },
+        "score": 1,
+        "ops": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "instructions": 1,
+        "excess": 1,
+        "milliseconds": 1.4050010000000057
+      }
+    },
+    {
+      "start": 25,
+      "end": 26,
+      "oldLength": 1,
+      "problem": {
+        "id": "regression-raw-chain-block/swaprun12",
+        "source": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "v:43"
+        ],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "spills": [
+          42,
+          43
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            32
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "missing": [],
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17",
+        "referenceOps": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "algorithms": [
+          "value-graph-certified"
+        ]
+      },
+      "oracle": {
+        "model": "actual-16/17",
+        "baseline": 0,
+        "reserve": true,
+        "states": 30,
+        "expanded": 16,
+        "edges": 43,
+        "status": "optimal",
+        "cost": {
+          "gas": 3,
+          "bytes": 1
+        },
+        "score": 1,
+        "ops": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "instructions": 1,
+        "excess": 1,
+        "milliseconds": 0.39722400000000135
+      }
+    },
+    {
+      "start": 27,
+      "end": 47,
+      "oldLength": 20,
+      "problem": {
+        "id": "regression-raw-chain-block/swaprun13",
+        "source": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "v:42"
+        ],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:43",
+          "v:42",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "spills": [
+          42,
+          43
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            32
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "missing": [],
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17",
+        "referenceOps": [
+          [
+            "swap",
+            15
+          ],
+          [
+            "swap",
+            13
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "swap",
+            12
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "swap",
+            2
+          ],
+          [
+            "swap",
+            11
+          ],
+          [
+            "swap",
+            2
+          ],
+          [
+            "swap",
+            3
+          ],
+          [
+            "swap",
+            10
+          ],
+          [
+            "swap",
+            3
+          ],
+          [
+            "swap",
+            4
+          ],
+          [
+            "swap",
+            9
+          ],
+          [
+            "swap",
+            4
+          ],
+          [
+            "swap",
+            5
+          ],
+          [
+            "swap",
+            8
+          ],
+          [
+            "swap",
+            5
+          ],
+          [
+            "swap",
+            6
+          ],
+          [
+            "swap",
+            7
+          ],
+          [
+            "swap",
+            6
+          ]
+        ],
+        "algorithms": [
+          "value-graph-certified"
+        ]
+      },
+      "oracle": {
+        "model": "actual-16/17",
+        "baseline": 0,
+        "reserve": true,
+        "states": 31,
+        "expanded": 16,
+        "edges": 44,
+        "status": "optimal",
+        "cost": {
+          "gas": 3,
+          "bytes": 1
+        },
+        "score": 1,
+        "ops": [
+          [
+            "swap",
+            15
+          ]
+        ],
+        "instructions": 1,
+        "excess": 1,
+        "milliseconds": 0.43190899999999743
+      }
+    }
+  ],
+  "production": [
+    {
+      "elapsedNanos": 697476,
+      "jsonBytes": 714,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {
+          "value-graph-certified": {
+            "certificate": "no-growth-weighted-optimality",
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": true,
+              "exactNoGrowth": true,
+              "exactStatic": true,
+              "twiceLineage": true,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 1,
+              "gas": 3
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "swap",
+                15
+              ]
+            ],
+            "score": 1,
+            "status": "ok"
+          }
+        },
+        "generationBaseline": 0,
+        "id": "regression-raw-chain-block/swaprun0",
+        "lineageExcess": 1,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": true,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": true,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 1,
+            "gas": 3
+          },
+          "instructions": 1,
+          "ops": [
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 1,
+          "status": "ok"
+        },
+        "staticExcess": 1
+      }
+    },
+    {
+      "elapsedNanos": 672699,
+      "jsonBytes": 714,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {
+          "value-graph-certified": {
+            "certificate": "no-growth-weighted-optimality",
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": true,
+              "exactNoGrowth": true,
+              "exactStatic": true,
+              "twiceLineage": true,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 1,
+              "gas": 3
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "swap",
+                15
+              ]
+            ],
+            "score": 1,
+            "status": "ok"
+          }
+        },
+        "generationBaseline": 0,
+        "id": "regression-raw-chain-block/swaprun1",
+        "lineageExcess": 1,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": true,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": true,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 1,
+            "gas": 3
+          },
+          "instructions": 1,
+          "ops": [
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 1,
+          "status": "ok"
+        },
+        "staticExcess": 1
+      }
+    },
+    {
+      "elapsedNanos": 674603,
+      "jsonBytes": 714,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {
+          "value-graph-certified": {
+            "certificate": "no-growth-weighted-optimality",
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": true,
+              "exactNoGrowth": true,
+              "exactStatic": true,
+              "twiceLineage": true,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 1,
+              "gas": 3
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "swap",
+                15
+              ]
+            ],
+            "score": 1,
+            "status": "ok"
+          }
+        },
+        "generationBaseline": 0,
+        "id": "regression-raw-chain-block/swaprun2",
+        "lineageExcess": 1,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": true,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": true,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 1,
+            "gas": 3
+          },
+          "instructions": 1,
+          "ops": [
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 1,
+          "status": "ok"
+        },
+        "staticExcess": 1
+      }
+    },
+    {
+      "elapsedNanos": 713035,
+      "jsonBytes": 714,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {
+          "value-graph-certified": {
+            "certificate": "no-growth-weighted-optimality",
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": true,
+              "exactNoGrowth": true,
+              "exactStatic": true,
+              "twiceLineage": true,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 1,
+              "gas": 3
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "swap",
+                15
+              ]
+            ],
+            "score": 1,
+            "status": "ok"
+          }
+        },
+        "generationBaseline": 0,
+        "id": "regression-raw-chain-block/swaprun3",
+        "lineageExcess": 1,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": true,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": true,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 1,
+            "gas": 3
+          },
+          "instructions": 1,
+          "ops": [
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 1,
+          "status": "ok"
+        },
+        "staticExcess": 1
+      }
+    },
+    {
+      "elapsedNanos": 753741,
+      "jsonBytes": 714,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {
+          "value-graph-certified": {
+            "certificate": "no-growth-weighted-optimality",
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": true,
+              "exactNoGrowth": true,
+              "exactStatic": true,
+              "twiceLineage": true,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 1,
+              "gas": 3
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "swap",
+                15
+              ]
+            ],
+            "score": 1,
+            "status": "ok"
+          }
+        },
+        "generationBaseline": 0,
+        "id": "regression-raw-chain-block/swaprun4",
+        "lineageExcess": 1,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": true,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": true,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 1,
+            "gas": 3
+          },
+          "instructions": 1,
+          "ops": [
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 1,
+          "status": "ok"
+        },
+        "staticExcess": 1
+      }
+    },
+    {
+      "elapsedNanos": 798004,
+      "jsonBytes": 714,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {
+          "value-graph-certified": {
+            "certificate": "no-growth-weighted-optimality",
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": true,
+              "exactNoGrowth": true,
+              "exactStatic": true,
+              "twiceLineage": true,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 1,
+              "gas": 3
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "swap",
+                15
+              ]
+            ],
+            "score": 1,
+            "status": "ok"
+          }
+        },
+        "generationBaseline": 0,
+        "id": "regression-raw-chain-block/swaprun5",
+        "lineageExcess": 1,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": true,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": true,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 1,
+            "gas": 3
+          },
+          "instructions": 1,
+          "ops": [
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 1,
+          "status": "ok"
+        },
+        "staticExcess": 1
+      }
+    },
+    {
+      "elapsedNanos": 854811,
+      "jsonBytes": 714,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {
+          "value-graph-certified": {
+            "certificate": "no-growth-weighted-optimality",
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": true,
+              "exactNoGrowth": true,
+              "exactStatic": true,
+              "twiceLineage": true,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 1,
+              "gas": 3
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "swap",
+                15
+              ]
+            ],
+            "score": 1,
+            "status": "ok"
+          }
+        },
+        "generationBaseline": 0,
+        "id": "regression-raw-chain-block/swaprun6",
+        "lineageExcess": 1,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": true,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": true,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 1,
+            "gas": 3
+          },
+          "instructions": 1,
+          "ops": [
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 1,
+          "status": "ok"
+        },
+        "staticExcess": 1
+      }
+    },
+    {
+      "elapsedNanos": 904834,
+      "jsonBytes": 714,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {
+          "value-graph-certified": {
+            "certificate": "no-growth-weighted-optimality",
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": true,
+              "exactNoGrowth": true,
+              "exactStatic": true,
+              "twiceLineage": true,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 1,
+              "gas": 3
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "swap",
+                15
+              ]
+            ],
+            "score": 1,
+            "status": "ok"
+          }
+        },
+        "generationBaseline": 0,
+        "id": "regression-raw-chain-block/swaprun7",
+        "lineageExcess": 1,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": true,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": true,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 1,
+            "gas": 3
+          },
+          "instructions": 1,
+          "ops": [
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 1,
+          "status": "ok"
+        },
+        "staticExcess": 1
+      }
+    },
+    {
+      "elapsedNanos": 951311,
+      "jsonBytes": 714,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {
+          "value-graph-certified": {
+            "certificate": "no-growth-weighted-optimality",
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": true,
+              "exactNoGrowth": true,
+              "exactStatic": true,
+              "twiceLineage": true,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 1,
+              "gas": 3
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "swap",
+                15
+              ]
+            ],
+            "score": 1,
+            "status": "ok"
+          }
+        },
+        "generationBaseline": 0,
+        "id": "regression-raw-chain-block/swaprun8",
+        "lineageExcess": 1,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": true,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": true,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 1,
+            "gas": 3
+          },
+          "instructions": 1,
+          "ops": [
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 1,
+          "status": "ok"
+        },
+        "staticExcess": 1
+      }
+    },
+    {
+      "elapsedNanos": 1009640,
+      "jsonBytes": 714,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {
+          "value-graph-certified": {
+            "certificate": "no-growth-weighted-optimality",
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": true,
+              "exactNoGrowth": true,
+              "exactStatic": true,
+              "twiceLineage": true,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 1,
+              "gas": 3
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "swap",
+                15
+              ]
+            ],
+            "score": 1,
+            "status": "ok"
+          }
+        },
+        "generationBaseline": 0,
+        "id": "regression-raw-chain-block/swaprun9",
+        "lineageExcess": 1,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": true,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": true,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 1,
+            "gas": 3
+          },
+          "instructions": 1,
+          "ops": [
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 1,
+          "status": "ok"
+        },
+        "staticExcess": 1
+      }
+    },
+    {
+      "elapsedNanos": 1054525,
+      "jsonBytes": 715,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {
+          "value-graph-certified": {
+            "certificate": "no-growth-weighted-optimality",
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": true,
+              "exactNoGrowth": true,
+              "exactStatic": true,
+              "twiceLineage": true,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 1,
+              "gas": 3
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "swap",
+                15
+              ]
+            ],
+            "score": 1,
+            "status": "ok"
+          }
+        },
+        "generationBaseline": 0,
+        "id": "regression-raw-chain-block/swaprun10",
+        "lineageExcess": 1,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": true,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": true,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 1,
+            "gas": 3
+          },
+          "instructions": 1,
+          "ops": [
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 1,
+          "status": "ok"
+        },
+        "staticExcess": 1
+      }
+    },
+    {
+      "elapsedNanos": 1103887,
+      "jsonBytes": 715,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {
+          "value-graph-certified": {
+            "certificate": "no-growth-weighted-optimality",
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": true,
+              "exactNoGrowth": true,
+              "exactStatic": true,
+              "twiceLineage": true,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 1,
+              "gas": 3
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "swap",
+                15
+              ]
+            ],
+            "score": 1,
+            "status": "ok"
+          }
+        },
+        "generationBaseline": 0,
+        "id": "regression-raw-chain-block/swaprun11",
+        "lineageExcess": 1,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": true,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": true,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 1,
+            "gas": 3
+          },
+          "instructions": 1,
+          "ops": [
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 1,
+          "status": "ok"
+        },
+        "staticExcess": 1
+      }
+    },
+    {
+      "elapsedNanos": 1155964,
+      "jsonBytes": 715,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {
+          "value-graph-certified": {
+            "certificate": "no-growth-weighted-optimality",
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": true,
+              "exactNoGrowth": true,
+              "exactStatic": true,
+              "twiceLineage": true,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 1,
+              "gas": 3
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "swap",
+                15
+              ]
+            ],
+            "score": 1,
+            "status": "ok"
+          }
+        },
+        "generationBaseline": 0,
+        "id": "regression-raw-chain-block/swaprun12",
+        "lineageExcess": 1,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": true,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": true,
+            "twiceStatic": true
+          },
+          "cost": {
+            "bytes": 1,
+            "gas": 3
+          },
+          "instructions": 1,
+          "ops": [
+            [
+              "swap",
+              15
+            ]
+          ],
+          "score": 1,
+          "status": "ok"
+        },
+        "staticExcess": 1
+      }
+    },
+    {
+      "elapsedNanos": 1311495,
+      "jsonBytes": 936,
+      "result": {
+        "actualCaps": true,
+        "actualReserve": true,
+        "algorithms": {
+          "value-graph-certified": {
+            "certificate": "no-growth-weighted-optimality",
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": true,
+              "exactNoGrowth": true,
+              "exactStatic": true,
+              "twiceLineage": true,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 1,
+              "gas": 3
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "swap",
+                15
+              ]
+            ],
+            "score": 1,
+            "status": "ok"
+          }
+        },
+        "generationBaseline": 0,
+        "id": "regression-raw-chain-block/swaprun13",
+        "lineageExcess": 1,
+        "reference": {
+          "certificate": null,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": false,
+            "twiceLineage": false,
+            "twiceStatic": false
+          },
+          "cost": {
+            "bytes": 20,
+            "gas": 60
+          },
+          "instructions": 20,
+          "ops": [
+            [
+              "swap",
+              15
+            ],
+            [
+              "swap",
+              13
+            ],
+            [
+              "swap",
+              1
+            ],
+            [
+              "swap",
+              12
+            ],
+            [
+              "swap",
+              1
+            ],
+            [
+              "swap",
+              2
+            ],
+            [
+              "swap",
+              11
+            ],
+            [
+              "swap",
+              2
+            ],
+            [
+              "swap",
+              3
+            ],
+            [
+              "swap",
+              10
+            ],
+            [
+              "swap",
+              3
+            ],
+            [
+              "swap",
+              4
+            ],
+            [
+              "swap",
+              9
+            ],
+            [
+              "swap",
+              4
+            ],
+            [
+              "swap",
+              5
+            ],
+            [
+              "swap",
+              8
+            ],
+            [
+              "swap",
+              5
+            ],
+            [
+              "swap",
+              6
+            ],
+            [
+              "swap",
+              7
+            ],
+            [
+              "swap",
+              6
+            ]
+          ],
+          "score": 20,
+          "status": "ok"
+        },
+        "staticExcess": 1
+      }
+    }
+  ],
+  "fullProductionReplay": {
+    "elapsedNanos": 586549,
+    "jsonBytes": 748,
+    "result": {
+      "actualCaps": true,
+      "actualReserve": true,
+      "algorithms": {},
+      "generationBaseline": 80,
+      "id": "regression-raw-chain-block/normalized-bbu",
+      "lineageExcess": 1,
+      "reference": {
+        "certificate": null,
+        "certificates": {
+          "exactBaseline": false,
+          "exactLineage": false,
+          "exactNoGrowth": false,
+          "exactStatic": false,
+          "twiceLineage": false,
+          "twiceStatic": false
+        },
+        "cost": {
+          "bytes": 127,
+          "gas": 93
+        },
+        "instructions": 28,
+        "ops": [
+          [
+            "load",
+            42
+          ],
+          [
+            "swap",
+            15
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "swap",
+            15
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            15
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            15
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            15
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            15
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            15
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            15
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            15
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            15
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            15
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            15
+          ],
+          [
+            "dup",
+            16
+          ],
+          [
+            "swap",
+            15
+          ],
+          [
+            "load",
+            42
+          ],
+          [
+            "swap",
+            15
+          ]
+        ],
+        "score": 127,
+        "status": "ok"
+      },
+      "staticExcess": 14
+    }
+  }
+}

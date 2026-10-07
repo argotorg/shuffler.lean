@@ -1,0 +1,27 @@
+{
+  "status": "finite exact global-inventory evidence, not a Lean theorem",
+  "semantics": "First sourceCount(v) target occurrences are mandatory old outputs. Selected later intervals require retained value presence, with per-value direct budgets. The source is already reduced to at most R+1 slots.",
+  "deadlines": "A new root at target index j has deadline j+R-n+1. A selected child of previous equal output i has deadline i+R-n+1. Slots are1-based; target indices are0-based. Nonpositive new-job deadlines reject.",
+  "domain": {
+    "reaches": [
+      1,
+      2,
+      3
+    ],
+    "sourceLengths": "0 through R+1",
+    "alphabet": [
+      "a",
+      "b"
+    ],
+    "births": "0 through3",
+    "stateLimit": 300000
+  },
+  "plans": 26325,
+  "feasible": 22405,
+  "distinctSearches": 11204,
+  "states": 402691,
+  "firstDeadlineMismatch": null,
+  "firstParentMismatch": null,
+  "firstUnrealizable": null,
+  "reproduce": "node scripts/optimality-global-inventory.mjs Bench/evidence-global-inventory.json"
+}
