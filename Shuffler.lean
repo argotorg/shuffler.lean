@@ -15,3 +15,5 @@ import Shuffler.Optimality.ForcedIntroduction.Cost
 import Shuffler.Optimality.Schedule.Original.Theorems
 import Shuffler.Optimality.Schedule.Append.Theorems
 import Shuffler.Optimality.PrefixIntroduction.Theorems
+import Shuffler.Optimality.FrozenPrefix.Approximation
+import Shuffler.Optimality.Approximation.Drop
