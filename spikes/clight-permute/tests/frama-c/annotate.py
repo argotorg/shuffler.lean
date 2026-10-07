@@ -230,7 +230,7 @@ MEMORY_UNCHANGED = r'''
       loop invariant out_initialized: \initialized(v7 + (0 .. 2));
       loop invariant out_clear: v7[0] == 0 && v7[1] == 0 && v7[2] == 0;
 '''
-PERMUTATION_EXPLICIT = r'''((\forall integer i; 0 <= i < v1 ==> v3[i] < v1) &&
+PERMUTATION_EXPLICIT = r'''((\forall integer i; 0 <= i < v1 ==> 0 <= v3[i] < v1) &&
         (\forall integer i,j; 0 <= i < v1 && 0 <= j < v1 && v3[i] == v3[j] ==> i == j) &&
         (\forall integer j; 0 <= j < v1 ==> \exists integer i; 0 <= i < v1 && v3[i] == j))'''
 MEMORY_CONTRACT = MEMORY_CONTRACT.replace('permutation(v3,v1)', PERMUTATION_EXPLICIT)
@@ -277,15 +277,95 @@ INITIALIZATION_STRATEGY = r'''/*@
 def strip_comments(source):
     return re.sub(r'/\*.*?\*/', '', source, flags=re.S)
 
+
+def requirements(source):
+    """Return the named function preconditions, including their formulas."""
+    contract = re.search(r'/\*@\s*requires size:.*?\*/', source, re.S)
+    if contract is None:
+        raise ValueError('missing input contract')
+    clauses = re.findall(r'\brequires\s+(.*?)(?=\brequires\b|\bterminates\b)', contract[0], re.S)
+    return tuple(' '.join(clause.split()) for clause in clauses)
+
+
+def check_ghosts(source, mode='termination'):
+    """Allow only a local counter and two empty snapshot labels.
+
+    The counter reads n once and writes only itself. The two integer-bound
+    assertions are proof obligations. No ghost code can change real state.
+    """
+    actual = [' '.join(code.split()) for code in
+              re.findall(r'/\*@\s*ghost\s+(.*?)\*/', source, re.S)]
+    expected = {'safety': [], 'target': [],
+                'status': ['target_step: ;', 'target_ready: ;', 'normal_start: ;',
+                           'proof_fill: ;', 'int proof_steps = 2*v1;',
+                           'proof_swap: ;', 'proof_steps--;'],
+                'success': ['normal_start: ;', 'proof_fill: ;', 'action_start: ;', 'proof_swap: ;'],
+                'termination': ['proof_fill: ;', 'int proof_steps = 2*v1;',
+                                'proof_swap: ;', 'proof_steps--;'],
+                'trace': ['trace_blocked: ;', 'trace_step: ;', 'trace_perm: ;']}[mode]
+    if actual != expected:
+        raise ValueError('unexpected ghost code')
+    names = ('proof_steps', 'proof_fill', 'proof_swap', 'trace_blocked', 'trace_step',
+             'trace_perm', 'target_step', 'target_ready', 'normal_start', 'action_start')
+    if re.search(r'\b(?:' + '|'.join(names) + r')\b', strip_comments(source)):
+        raise ValueError('ghost name occurs in production C')
+
+
+def check_components(source, safety, termination):
+    tokens = strip_comments(source).split()
+    for component in (safety, termination):
+        if strip_comments(component).split() != tokens:
+            raise ValueError('component C token change')
+        if re.search(r'\b(?:axiom|admit|assumes)\s', component):
+            raise ValueError('unchecked proof assumption')
+    if requirements(safety) != requirements(termination):
+        raise ValueError('component input contracts differ')
+    check_ghosts(termination)
+
+
 def annotate(source, mode='full'):
     # The anchors must occur exactly once. This makes an emitter change fail closed.
     anchor = 'unsigned int permute('
     if source.count(anchor) != 1:
         raise SystemExit('function anchor changed')
+    if mode in ('status', 'success'):
+        # These reviewed annotation snapshots are rejected if any real C token
+        # changes. They are proof inputs, never replacement production sources.
+        result = Path(__file__).with_name(mode + '.c').read_text()
+        if strip_comments(result).split() != strip_comments(source).split():
+            raise SystemExit('C token change')
+        check_ghosts(result, mode)
+        return result
+    cuts, after, suffix = CUTS, (), INITIALIZATION_STRATEGY
     if mode == 'full':
         contract, loops = CONTRACT, LOOPS
-    elif mode == 'memory':
+    elif mode in ('memory', 'safety'):
         contract, loops = MEMORY_CONTRACT, MEMORY_LOOPS
+        if mode == 'safety':
+            # Partial correctness only. The separate termination component
+            # proves termination on the identical input domain and C tokens.
+            contract = contract.replace(r'terminates \true;', r'terminates \false;')
+    elif mode == 'termination':
+        import termination
+        library = Path(__file__).with_name('lemmas.acsl').read_text()
+        preconditions = MEMORY_CONTRACT.split('/*@\n  requires size:')[1].split('  terminates ')[0]
+        contract = library + '\n/*@\n  requires size:' + preconditions + r'  terminates \true;' + '\n*/\n'
+        loops, cuts, after = termination.LOOPS, termination.BEFORE, termination.AFTER
+        suffix = ''
+    elif mode == 'target':
+        import target
+        contract, loops, suffix = target.specification(
+            MEMORY_CONTRACT, MEMORY_LOOPS, CONTRACT, INITIALIZATION_STRATEGY)
+        cuts = ()
+    elif mode == 'trace':
+        import trace_annotations
+        library = Path(__file__).with_name('trace.acsl').read_text()
+        prefix = MEMORY_CONTRACT.split('  ensures status_range:')[0]
+        post = CONTRACT[CONTRACT.index('  ensures trace_bounds:'):]
+        contract = library + '\n' + prefix + post
+        contract = contract.replace(r'terminates \true;', r'terminates \false;')
+        loops, cuts, after = trace_annotations.LOOPS, trace_annotations.BEFORE, trace_annotations.AFTER
+        suffix = ''
     else:
         raise ValueError('unknown annotation mode')
     result = source.replace(anchor, contract + anchor)
@@ -293,13 +373,19 @@ def annotate(source, mode='full'):
     if len(pieces) != len(loops) + 1:
         raise SystemExit('loop count changed')
     result = pieces[0] + ''.join(annotation + '\n' + 'while (1)' + tail for annotation,tail in zip(loops,pieces[1:]))
-    for anchor, annotations in CUTS:
+    for anchor, annotations in cuts:
         if result.count(anchor) != 1:
             raise SystemExit('statement anchor changed')
         result = result.replace(anchor, annotations + anchor)
-    result += '\n' + INITIALIZATION_STRATEGY
+    for anchor, annotations in after:
+        if result.count(anchor) != 1:
+            raise SystemExit('statement anchor changed')
+        result = result.replace(anchor, anchor + '\n' + annotations)
+    result += '\n' + suffix
     if strip_comments(result).split() != strip_comments(source).split():
         raise SystemExit('C token change')
+    if mode in ('termination', 'trace'):
+        check_ghosts(result, mode)
     return result
 
 def main(mode='full'):

@@ -1,0 +1,160 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* Replay definitions, lemma obligations, and proof strategies. No user axioms. */
+/*@
+axiomatic Replay {
+  logic integer replay_value{Input,Trace}(unsigned int *d, unsigned int *t,
+                                         integer n, integer k, integer j) =
+    k <= 0 ? \at(d[j],Input) :
+      replay_value{Input,Trace}(d,t,n,k-1,
+        j == n-1 ? n-1-\at(t[k-1],Trace) :
+        j == n-1-\at(t[k-1],Trace) ? n-1 : j);
+
+  predicate replay_same{Input,A,B}(unsigned int *d, unsigned int *t,
+                                  integer n, integer k) =
+    \forall integer j; replay_value{Input,A}(d,t,n,k,j) == replay_value{Input,B}(d,t,n,k,j);
+
+  lemma replay_frame_all{Input,A,B}:
+    \forall unsigned int *d,*t, integer n,k;
+      (\forall integer i; 0 <= i < k ==> \at(t[i],A) == \at(t[i],B)) ==>
+      replay_same{Input,A,B}(d,t,n,k);
+}
+*/
+
+/*@
+ strategy ProofSMT: \prover("Z3", "CVC5", 10.0);
+ strategy ReplayValueUnfold2:
+   \tactic("Wp.unfold", \when(0 < K), \ingoal(T: L_replay_value(_,_,_,_,_,K,_)),
+     \select(T), \children(ProofSMT)), ProofSMT;
+ strategy ReplayValueUnfold:
+   \tactic("Wp.unfold", \when(0 < K), \ingoal(T: L_replay_value(_,_,_,_,_,K,_)),
+     \select(T), \children(ReplayValueUnfold2)), ProofSMT;
+ strategy ReplaySameHyp:
+   \tactic("Wp.unfold", \when(H: P_replay_same(_,_,_,_,_,_,_)), \select(H), \children(ReplayValueUnfold)), ReplayValueUnfold;
+ strategy ReplaySameGoal:
+   \tactic("Wp.unfold", \goal(G: P_replay_same(_,_,_,_,_,_,_)), \select(G), \children(ReplaySameHyp)), ProofSMT;
+ strategy ReplayPoint:
+   \tactic("Wp.instance", \when(0 < N), \when(H: \forall integer j; _),
+      \select(H), \param("P1",N-1), \children(ReplaySameGoal)), ReplaySameGoal;
+ strategy ReplayPremise:
+   \tactic("Wp.cut", \when(H: (P: (\forall integer j; _)) ==> _),
+     \select(H), \param("case","MODUS"), \param("clause",P), \children(ReplayPoint),
+     \child("Clause",ProofSMT)), ReplayPoint;
+ strategy ReplayPrevious:
+   \tactic("Wp.instance", \when(H: \forall integer i; 0 <= i ==> i < N ==> ((\forall integer j; _) ==> _)),
+     \select(H), \param("P1",N-1), \children(ReplayPremise)), ReplaySameGoal;
+ strategy ReplayInduct:
+   \tactic("Wp.induction", \ingoal(P_replay_same(_,_,_,_,_,_,K)), \select(K),
+     \param("base",0), \children(ReplaySameGoal), \child("Induction (sup)",ReplayPrevious));
+ proof ReplayInduct: replay_frame_all;
+*/
+
+/*@ axiomatic TraceChanges {
+  predicate trace_changes{Input,Trace}(unsigned int *d, unsigned int *t, integer n, integer c) =
+    \forall integer k; 0 <= k < c ==>
+      replay_value{Input,Trace}(d,t,n,k,n-1) !=
+      replay_value{Input,Trace}(d,t,n,k,n-1-\at(t[k],Trace));
+  lemma trace_changes_frame{Input,A,B}:
+    \forall unsigned int *d,*t, integer n,c;
+      trace_changes{Input,A}(d,t,n,c) &&
+      (\forall integer k; 0 <= k < c ==> \at(t[k],A) == \at(t[k],B)) &&
+      (\forall integer k; 0 <= k <= c ==> replay_same{Input,A,B}(d,t,n,k)) ==>
+      trace_changes{Input,B}(d,t,n,c);
+  lemma trace_changes_extend{Input,Trace}:
+    \forall unsigned int *d,*t, integer n,c;
+      trace_changes{Input,Trace}(d,t,n,c) &&
+      replay_value{Input,Trace}(d,t,n,c,n-1) !=
+      replay_value{Input,Trace}(d,t,n,c,n-1-\at(t[c],Trace)) ==>
+      trace_changes{Input,Trace}(d,t,n,c+1);
+} */
+
+/*@
+ strategy ChangesFrameUnfold:
+   \tactic("Wp.unfold", \when(H: P_replay_same(_,_,_,_,_,_,_)), \select(H), \children(ProofSMT)), ProofSMT;
+ strategy ChangesFrameAt:
+   \tactic("Wp.instance", \ingoal(L_replay_value(B,I,D,T,N,K,_)),
+     \when(H: \forall integer k; _ ==> P_replay_same(I,B,_,D,T,N,k)),
+     \select(H), \param("P1",K), \children(ChangesFrameUnfold)), ChangesFrameUnfold;
+ strategy ChangesPre:
+   \tactic("Wp.unfold", \when(H: P_trace_changes(_,_,_,_,_,_)), \select(H), \children(ChangesFrameAt)), ChangesFrameAt;
+ strategy ChangesPost:
+   \tactic("Wp.unfold", \goal(G: P_trace_changes(_,_,_,_,_,_)), \select(G), \children(ChangesPre));
+ proof ChangesPost: trace_changes_frame, trace_changes_extend;
+*/
+
+/*@
+ strategy TraceFrameUnfold:
+   \tactic("Wp.unfold", \when(H: P_replay_same(_,_,_,_,_,_,_)), \select(H), \children(TraceValueFirst)), TraceValueFirst;
+ strategy TraceFramePremise:
+   \tactic("Wp.cut", \when(H: (P: _) ==> P_replay_same(_,_,_,_,_,_,_)),
+     \select(H), \param("case","MODUS"), \param("clause",P),
+     \children(TraceFrameUnfold), \child("Clause",ProofSMT)), TraceFrameUnfold;
+ strategy TraceFrameAt:
+   \tactic("Wp.instance", \ingoal(L_replay_value(B,I,D,T,N,K,_)),
+     \when(H: \forall integer k; _ ==> P_replay_same(I,B,_,D,T,N,k)),
+     \select(H), \param("P1",K), \children(TraceFramePremise)), TraceFrameUnfold;
+ strategy TraceNewValue:
+   \tactic("Wp.unfold", \ingoal(T: L_replay_value(_,_,_,_,_,_,_)), \select(T), \children(TraceFrameAt)), TraceFrameAt;
+ proof TraceNewValue: trace_after_replay;
+ proof TraceFrameAt: trace_replay,trace_last_change;
+*/
+
+/*@
+ strategy TraceValueSecond:
+   \tactic("Wp.instance", \goal(_ != L_replay_value(B,I,D,T,N,K,J)),
+     \when(H: \forall integer j; L_replay_value(B,I,D,T,N,K,j) == _),
+     \select(H), \param("P1",J), \children(ProofSMT)),
+   \tactic("Wp.instance", \goal(_ != L_replay_value(B,I,D,T,N,K,J)),
+     \when(H: \forall integer j; _ == L_replay_value(B,I,D,T,N,K,j)),
+     \select(H), \param("P1",J), \children(ProofSMT)), ProofSMT;
+ strategy TraceValueFirst:
+   \tactic("Wp.instance", \ingoal(L_replay_value(B,I,D,T,N,K,J)),
+     \when(H: \forall integer j; L_replay_value(B,I,D,T,N,K,j) == _),
+     \select(H), \param("P1",J), \children(TraceValueSecond)),
+   \tactic("Wp.instance", \ingoal(L_replay_value(B,I,D,T,N,K,J)),
+     \when(H: \forall integer j; _ == L_replay_value(B,I,D,T,N,K,j)),
+     \select(H), \param("P1",J), \children(TraceValueSecond)), TraceValueSecond;
+*/
+
+/*@
+ strategy TraceChangesHere:
+   \tactic("Wp.unfold", \ingoal(L_replay_value(B,I,D,T,N,_,_)),
+     \when(H: P_trace_changes(B,I,D,T,N,_)), \select(H), \children(ProofSMT)), ProofSMT;
+ proof TraceChangesHere: trace_changes_values;
+*/
+
+/*@
+ strategy TraceArraySecond:
+   \tactic("Wp.array", \ingoal(T: _[_[_]][_]), \select(T), \children(ProofSMT)), ProofSMT;
+ strategy TraceArray:
+   \tactic("Wp.array", \ingoal(T: _[_[_]][_]), \select(T), \children(TraceArraySecond)), TraceArraySecond;
+ proof TraceArray: trace_prefix_frame,trace_prefix_written;
+ strategy TraceUseFramePremise:
+   \tactic("Wp.cut", \when(H: P ==> P_trace_changes(_,_,_,_,_,_)),
+     \select(H), \param("case","MODUS"), \param("clause",P), \children(ProofSMT)), ProofSMT;
+ strategy TraceUseFrame:
+   \tactic("Wp.lemma", \goal(P_trace_changes(B,I,D,T,N,C)),
+     \when(\forall integer k; _ ==> P_replay_same(I,B,A,D,T,N,k)), \select(0), \param("lemma","trace_changes_frame"),
+     \param("P1",I), \param("P2",B), \param("P3",A), \param("P4",D),
+     \param("P5",T), \param("P6",N), \param("P7",C), \children(TraceUseFramePremise)), ProofSMT;
+ proof TraceUseFrame: trace_final_changes;
+*/
+
+/*@
+ strategy TraceStoredRight:
+   \tactic("Wp.array", \goal(_ == (T: _[_[_]][_])), \select(T), \children(ProofSMT)), ProofSMT;
+ strategy TraceStored:
+   \tactic("Wp.array", \goal((T: _[_[_]][_]) == _), \select(T), \children(TraceStoredRight)), TraceStoredRight;
+ proof TraceStored: trace_p_frame,trace_p_after_frame;
+*/
+
+/*@
+ strategy ZeroTraceReplay:
+   \tactic("Wp.cut", \when(V <= 0), \when(0 <= V), \select(0),
+     \param("case","MODUS"), \param("clause",V == 0),
+     \children(TraceFrameAt), \child("Clause",ProofSMT)), TraceFrameAt;
+ strategy ZeroTraceBounds:
+   \tactic("Wp.cut", \when(V <= 0), \when(0 <= V), \select(0),
+     \param("case","MODUS"), \param("clause",V == 0), \children(ProofSMT)), ProofSMT;
+ proof ZeroTraceReplay: trace_replay;
+ proof ZeroTraceBounds: trace_bounds;
+*/

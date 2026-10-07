@@ -124,7 +124,7 @@ controls for lost forks and assumptions inserted into tested code.
 | [Candidate assignment check](../../spikes/clight-permute/tests/initialization/README.md) | Prior-assignment proofs for control paths and terminating Clight executions; actual AST check and negative controls. | Memory byte initialization, concrete divergent prefixes, and C translation remain separate. The checker is outside the production pipeline. |
 | [Source mutation matrix](../../spikes/clight-permute/tests/challenge/README.md) | Native tests detect changed data, status, trace, depth, and size behavior. | Finite executions and selected changes. |
 | [KLEE comparisons](../../spikes/clight-permute/tests/equiv-alive2/README.md) and [SAW comparisons](../../spikes/clight-permute/tests/equiv-saw/README.md) | Actual C and pinned solc bodies on explicit symbolic domains; completion and result handling. | Limited sizes or value families and explicit LLVM/runtime assumptions. |
-| [Frama-C status](status/frama-c.md) | Source-C memory, initialization, termination, trace, and reachability obligations. | Incomplete; no full source-C proof. |
+| [Frama-C status](status/frama-c.md) | Source-C memory, initialization, termination, trace, and reachability obligations. | All six components pass individually (2,749 goals); the combined run and two source control suites remain incomplete. |
 | [Fuzzing](../../spikes/clight-permute/tests/FUZZ_RESULTS.md), [MSan](../../spikes/clight-permute/tests/MSAN_RESULTS.md), [Fil-C](../../spikes/clight-permute/tests/FILC_RESULTS.md) | Execution errors, output disagreements, and runtime memory checks. | Coverage and sanitizer passes are not universal proofs. |
 
 Use [WORKING_STATUS.md](WORKING_STATUS.md) for current run status and

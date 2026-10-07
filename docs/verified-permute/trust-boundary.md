@@ -59,7 +59,7 @@ and completed checks. A timeout or unfinished check is not a success.
 | GCC/Clang, runtime, platform | Trusted source compilation and execution. This project does not use CompCert's compiler correctness theorem. |
 | Actual solc C++ body | Full-domain equivalence is unproved. The adapter uses pinned, hash-checked upstream bodies and unsigned value IDs, not the full compiler or persistent `Emission` state. |
 | KLEE and SAW | Limited C/C++ comparisons under explicit LLVM and runtime models. Size bounds, restricted families, successful allocation, and complete paths must be stated. |
-| Frama-C | Independent source-C proof attempt. Required obligations remain open. |
+| [Frama-C](status/frama-c.md) | Six source-C components pass individually, with a saved-input composition check. The combined run and two source control suites remain incomplete. ACSL, WP, its memory model and tactics, Why3, SMT solvers, and the result checker are trusted; these results are not imported into Rocq. |
 | [Candidate assignment check](../../spikes/clight-permute/tests/initialization/README.md) | Kernel-checked prior-assignment proofs for control paths and terminating Clight executions, including actual Permute. Memory initialization and C translation are separate. The concrete divergence/prefix link is open. It is not part of the production gate. |
 | Fuzzers, sanitizers, coverage, mutation tests | Evidence from executions and selected changes. Passing them is not a universal correctness theorem. |
 

@@ -1,8 +1,9 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 # Verification summary — 2026-10-07
 
-**Status: paused.** Work and evidence are saved in commit `fb9a9ae`.
-No verification jobs are running.
+**Status: paused at the user's request.** No verification jobs are running.
+The [Frama-C evidence](../../spikes/clight-permute/tests/results/frama-c-2026-10-07/README.md)
+records the latest work and the checks that remain incomplete.
 
 The aim is to test the proposed C ↔ Lean verification pipeline before use
 on larger programs. Permute is the test case. The current checked theorem
@@ -24,14 +25,21 @@ C ↔ Lean chain is not proved.
   across six compiler builds. Another 128 generated programs pass 38,400
   native comparisons. Symbolic C/C++ comparisons cover all permutations
   and unsigned 32-bit values at lengths 1–5 under the recorded runtime model.
-- **Frama-C:** 641/642 memory obligations are valid. Initialization controls
-  and all 25 tool tests pass. The experimental rank bounds lemma also passes.
+- **Frama-C:** all six components pass individually: safety 641/641,
+  termination 337/337, target 313/313, trace 393/393, status 495/495, and
+  success 570/570. These are 2,749 obligations, including helper lemmas.
+  A check of the saved inputs and reports confirms the same C, input domain,
+  and coverage of the full ACSL contract. Seven control suites and all 52
+  tool tests pass. These results use Frama-C/WP and SMT solvers, not Rocq.
 
 ## Remaining work
 
-1. **Finish the source-C proof.** Prove the rank frame/update lemmas and
-   main-loop termination, then complete the full functional contract.
-   The 641/642 result is not a complete memory-contract proof.
+1. **Finish the Frama-C validation.** The fresh combined run was stopped
+   during its trace component and has no completed root result. The status
+   source controls reject both faulty changes, but one expected property
+   is wrong, so that suite reports failure. The success source controls
+   stopped after their baseline passed. Preserve these limits when using
+   the six completed component proofs.
 2. **Close the Clight-to-C translation gap.** A changed Clight program can
    pass its proof yet print an uninitialized C read. The assignment checker
    is not a production gate. Memory initialization, concrete execution

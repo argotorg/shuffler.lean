@@ -1,7 +1,32 @@
 <!-- SPDX-License-Identifier: GPL-3.0-or-later -->
 # Permute working status
 
-## Paused at user request: 2026-10-07
+## Current pause: 2026-10-07
+
+The user asked to wrap up and commit the resumed Frama-C work. All runs from
+this task have stopped. No other verification campaign was restarted.
+
+All six components have complete individual reports: safety **641/641**,
+termination **337/337**, target **313/313**, trace **393/393**, status
+**495/495**, and success **570/570**. The saved-input audit checks every
+reported obligation, identical production C tokens, the same input domain,
+and full contract coverage. The total is **2,749 obligations**, with overlap
+between components. All **52 tool tests** and seven control suites pass.
+
+The fresh `full-final-20261007` run stopped during trace and has no completed
+root summary. The status source control suite reports failure: its wrong
+target mutation fails `collect_value` and `injective_selected`, while the
+test expects `collected_changed`. This expectation remains to be corrected.
+The success source control suite stopped after its 570/570 baseline; the
+parentheses run and two faulty variants remain incomplete or unrun.
+
+See [the Frama-C status](status/frama-c.md) and
+[the compressed evidence](../../spikes/clight-permute/tests/results/frama-c-2026-10-07/README.md).
+Production C, Rocq, the AST, and the printer are unchanged. No new bug was
+found in unchanged production C. F10 records a control-scope error.
+The printer and Lean–Rocq proof gaps remain open. Resume only on user request.
+
+## Historical pause: 2026-10-07
 
 The user asked to wrap up Frama-C and pause to save tokens. This instruction
 overrides the earlier 11:00 CEST deadline. No verification process remains

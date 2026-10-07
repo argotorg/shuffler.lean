@@ -4,6 +4,60 @@
 
 ## Current pause: 2026-10-07
 
+The user asked to wrap up and commit. All runs from this task have stopped.
+The [evidence archive](../../../spikes/clight-permute/tests/results/frama-c-2026-10-07/README.md)
+contains the proof inputs, reports, SMT obligations, controls, and hashes.
+
+| Component | Valid / scheduled goals | Saved run |
+| --- | ---: | --- |
+| Safety | 641/641 | `full-final-20261007/safety` |
+| Termination | 337/337 | `full-final-20261007/termination` |
+| Target | 313/313 | `full-final-20261007/target` |
+| Trace | 393/393 | `trace-promoted-20261007/trace` |
+| Status | 495/495 | `status-promoted-v14-20261007/status` |
+| Success | 570/570 | `success-source-controls-final-20261007/baseline` |
+
+All six components pass individually. The 2,749 obligations include helper
+lemmas and repeated facts across components. A separate check of the saved
+reports and annotated inputs passes the current report and composition
+checks. It checks identical C tokens, equal input conditions, matching
+contract definitions, and coverage of every full-contract clause.
+
+The input domain remains all valid permutations of lengths 1–1024, arbitrary
+initialized unsigned 32-bit data, and six valid, disjoint arrays. Scratch
+arrays need no initial contents. This contract does not cover invalid inputs.
+Termination is proved separately from partial correctness on the same C
+and inputs. Status excludes return value two; the proved
+`guarded_success_iff` lemma combines the guarded success conditions into
+the original equivalence. See the [tool review guide](../../../spikes/clight-permute/tests/frama-c/README.md).
+
+Seven control suites and all 52 tool tests pass. The status source suite
+rejects both faulty mutations, but reports failure because the wrong-target
+case expects `collected_changed` instead of the earlier failed prerequisite
+`collect_value`. That expectation remains to be corrected and checked.
+The success source suite stopped after its baseline passed. Its parentheses
+case was interrupted; its two faulty variants were not run.
+
+The fresh combined run stopped during trace. It has no completed root
+summary and is not a completed full run. Finish that run in a new directory
+and complete the two source control suites before declaring validation
+complete. No further proof jobs were started for this wrap-up.
+
+The resumed work also found an omitted prerequisite in an early focused
+mutation control ([F10](../FINDINGS.md#f10-a-focused-frama-c-mutation-test-omitted-a-failed-prerequisite)).
+Whole-component controls now include all prerequisites. A memory-dependent
+loop variant produced a false decrease condition in a terminating one-cell
+probe; the retained ghost-counter proof avoids that encoding issue. A missing
+reverse-scan invariant was an annotation gap. None is a bug found in unchanged
+production C. A 10-second safety timeout also cleared in the 30-second run.
+
+These are Frama-C/WP and SMT results. They are not proof terms checked by
+Rocq, and they do not prove the printer, compiler, or Lean–Rocq bridge.
+Production C and the Rocq proof are unchanged. The sections below preserve
+earlier states; they do not describe the current component results.
+
+## Historical pause: 2026-10-07
+
 The user asked to wrap up this work and pause. No Frama-C or solver process
 remains active. This overrides the earlier deadline. The result is still
 **641/642 memory goals valid**, with main-loop termination unproved.
@@ -249,7 +303,7 @@ Each passing run checked 695 valid cases with ten native calls per case,
 plus invalid-API cases. Source-regeneration rejection is recorded separately
 from semantic tests. No unrun formal verifier is reported as a success.
 
-## Resume instructions
+## Historical resume instructions
 
 Do not resume unless the user authorizes it. After authorization, use a new
 run name so that existing artifacts remain intact:

@@ -219,6 +219,29 @@ path. An `llvm.assume` probe did not hide the faulty return under the current
 KLEE settings; the assertion witness was retained. Do not report either
 of these two controls as a false pass.
 
+## F10: A focused Frama-C mutation test omitted a failed prerequisite
+
+An early termination control checked selected downstream goals after a
+wrong permutation store. Those goals passed because WP used the earlier
+`swap_endpoints` assertion. The control did not select that assertion's
+proof obligation, which failed. The focused result did not establish the
+mutated component.
+
+The source controls now check every obligation in the component, including
+all assertions, loop facts, helper lemmas, and tactic subgoals. The full
+production runner already required all obligations. It did not accept this
+incomplete proof.
+
+The corrected termination suite passes the original code and a change that
+only adds parentheses. It rejects the wrong store at `swap_endpoints` and
+a missing ghost decrement at the main-loop variant. The earlier failed
+control and the corrected results remain in the Frama-C evidence.
+
+The [archive](../../spikes/clight-permute/tests/results/frama-c-2026-10-07/README.md)
+retains both the focused control and the whole-component checks.
+
+This is a control-scope error. It is not a failure of unchanged production C.
+
 ## Explicit boundaries, not production failures
 
 - Forced allocation failure makes the allocation-free C succeed while the
@@ -230,5 +253,6 @@ of these two controls as a false pass.
   object. The C contract makes scratch arrays unspecified. A future claim
   about the full Emission object needs another relation.
 - Malformed-permutation rejection is not universally proved.
-- ACSL/source-C correctness and full C/C++ equivalence through size 1024
-  remain incomplete.
+- The six ACSL/source-C components pass individually, but the combined run
+  and two source control suites remain incomplete. Full C/C++ equivalence
+  through size 1024 remains unproved.
