@@ -84,8 +84,11 @@ Source-only cycles do not describe every such case: an open cycle can
 also need entry before its future top arrives. This is why a source
 extension needs a proved entry term, not only `E`.
 
-The identity is a paper accounting fact here. A source-aware optimization
-objective and a factor-two realization theorem remain open.
+The source-cycle lower bound and a factor-two realization theorem for a
+fixed assignment are now proved; see [the source proof](source-prefix-potential.md).
+Choosing an assignment remains open. The objective `H=E+2c-r` is sufficient
+on paper, but cannot be reduced to plain edge costs for this realizer; see
+[the source assignment note](source-assignment-surrogate.md).
 
 ## Reproduction
 

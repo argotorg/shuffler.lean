@@ -146,6 +146,16 @@ A general method that produces a candidate and dual certificate with
 movement omits some initial-cycle SWAP costs. No LP integrality or general
 rounding theorem closes this gap.
 
+A later focused assessment gives the paper objective `H=E+2c-r`, with
+`F≤H≤2S`. It needs full-cycle counts only for source-affected cycles.
+A separate kernel theorem shows that no signed rational edge matrix can
+give the universal pointwise bounds `F≤W≤2S` for this canonical realizer:
+six feasible assignments force `13≤12`. This does not rule out a global
+factor-two optimizer or a different realizer. See
+[the source assignment assessment](source-assignment-surrogate.md).
+`lake build Tests.OptimalitySourceEdgeObstruction` passed with 1590 jobs;
+its axiom audit lists only the same three standard axioms.
+
 Against the starting commit `4b8dfa7`, `Stack.lean`, `Trace.lean`, the original
 BBU implementation, and the mapping builder are unchanged. The Placement
 constructor body is unchanged; its only edit is a complexity comment.

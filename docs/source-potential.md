@@ -1,8 +1,10 @@
 # A source-entry potential for a fixed token assignment
 
-The bound on this potential is now proved for production traces. The
-source plan realizer and an optimizer for this potential remain separate
-tasks. The existing empty-source API does not change.
+The bound and the source plan realizer are now proved for production traces.
+The current API has no source-size cap; it fixes the initially unreachable
+source positions. See [the current source proof](source-prefix-potential.md).
+The argument below first uses a normalized source of at most 17 positions.
+An optimizer for the potential remains open.
 
 Let `n` be the source length, with `n <= 17`, and let `f` assign every
 source token and later birth token to its final target position. Let
@@ -30,10 +32,11 @@ A source plan supplies:
 - the birth deadline `b <= f(b) + 16`;
 - an available birth instruction at each real birth, using the source
   plus prior-birth counts from `docs/source-word-feasibility.md`;
-- the source-size bound `n <= 17`.
+- fixed assignments for source positions below the initial SWAP window.
 
-First apply a minimum top-SWAP implementation of `P_f` to the source.
-Its token-exact count is `K(P_f) + 2 c(P_f)`. Then run the remaining
+First apply a minimum top-SWAP implementation of `P_f⁻¹` to the source,
+using the production API's old-to-new position convention. Its token-exact
+count is `K(P_f) + 2 c(P_f)`. Then run the remaining
 virtual schedule as real births and SWAPs. Its SWAP count is
 `K(f) - K(P_f)`. The total is exactly `F(f)`.
 
@@ -118,8 +121,8 @@ Lean for every no-POP production trace. `SourceCycles.pairsBelow_card`
 connects the ordered-pair count with the full-cycle count used by
 `SourcePrefix.cycles_away_bound`. The final theorem includes the empty
 source case and has no source-size restriction. It bounds the numeric
-potential of the trace's extracted assignment; it does not yet build a
-source trace with that cost.
+potential of the trace's extracted assignment. `realizeSource` now builds
+a source trace with that exact SWAP count.
 
 The source-offset availability fact is also proved:
 `traceEvents_available_from` uses the exact source length plus event
@@ -136,9 +139,10 @@ instructions would then give total and baseline-surplus factor-two
 bounds, by the same weighted argument used for the empty source.
 
 No such minimum-`F` optimizer is supplied here. No global birth-order
-optimizer is supplied either. A source realizer must still be connected
-to the proved potential bound before this can be called a source
-approximation result.
+optimizer is supplied either. The source realizer is now connected to the
+proved potential bound, so the fixed-assignment approximation result holds.
+The weaker objective `H=E+2c-r` is sufficient on paper; see
+[the source assignment note](source-assignment-surrogate.md).
 
 ## An additive consequence for minimum moved count
 
@@ -152,8 +156,8 @@ F(f) <= E(f) + 2 floor((n - 1)/2) - 1 <= E(f) + 15.
 
 Thus minimum-`E` selection yields an additive bound of fifteen SWAPs
 above twice a comparison trace's SWAP count for normalized sources.
-This is a paper consequence with the same missing source-realizer
-bridge. It is not the requested factor-two surplus bound.
+This is a paper consequence of the proved source-realizer bound.
+It is not the requested factor-two surplus bound.
 
 ## Exact checks
 
@@ -166,5 +170,5 @@ assignment, so equal-copy reassignment cannot change the comparison.
 All 82,233 cases passed both intermediate inequalities and `F <= 2 S`.
 The largest ratio was exactly two. The report is
 `Bench/evidence-source-potential.json`. The Lean potential theorem now
-covers all no-POP traces, beyond this finite check. It still leaves the
-source realizer and assignment selection open.
+covers all no-POP traces, beyond this finite check. The source realizer
+is proved; assignment selection remains open.
