@@ -24,7 +24,7 @@ example : ¬({ certificate with scale := 0 }).Valid (target := target) gaps 1 :=
 example : ¬({ certificate with capWeight := fun _ => 63 }).Valid
     (target := target) gaps 1 := by decide
 example : ¬({ certificate with row := ![1, 1, 0] }).Valid
-    (target := target) gaps 1 := by unfold Certificate.Valid; decide
+    (target := target) gaps 1 := by unfold Certificate.Valid Certificate.ValidOn; decide
 
 private def assignment : Equiv.Perm (Fin target.length) :=
   Equiv.swap ⟨1, by decide⟩ ⟨2, by decide⟩

@@ -69,3 +69,42 @@ test('empty target has a zero certificate', () => {
   assert.equal(result.status, 'certified');
   assert.equal(result.candidateObjective, '0');
 });
+
+test('source tokens emit no code and hard births require DUP', () => {
+  const input = { source: ['a'], target: ['a', 'a'], hard: ['a'], reach: 1,
+    prices: { direct: [['a', 3]], dup: 3, swap: 2 },
+    candidate: { assignment: [0, 1], modes: ['dup'] },
+    certificate: { scale: 1, row: [2, 2], column: [0, 0], prefix: [0], upper: [0] } };
+  assert.equal(checkJointCertificate(input).candidateObjective, '6');
+  input.candidate.modes = ['direct'];
+  assert.throws(() => checkJointCertificate(input), /hard value/);
+});
+
+test('source copies do not receive generation discounts', () => {
+  const input = { source: ['a', 'a'], target: ['a', 'a'], reach: 1,
+    prices: { direct: [['a', 7]], dup: 2, swap: 3 },
+    candidate: { assignment: [0, 1], modes: [] },
+    certificate: { scale: 1, row: [3, 3], column: [0, 0], prefix: [0], upper: [0] } };
+  assert.equal(checkJointCertificate(input).lowerBoundNumerator, '0');
+  assert.equal(checkJointCertificate(input).gaps[0].reward, '0');
+});
+
+test('source value restrictions reject a changed old token', () => {
+  const input = { source: ['a'], target: ['a', 'b'], reach: 1,
+    prices: { direct: [['a', 2], ['b', 2]], dup: 3, swap: 3 },
+    candidate: { assignment: [1, 0], modes: ['direct'] },
+    certificate: { scale: 1, row: [3, 3], column: [0, 0], prefix: [], upper: [] } };
+  assert.throws(() => checkJointCertificate(input), /invalid endpoint assignment/);
+});
+
+test('frozen source tokens and hard fallback prices are checked', () => {
+  const input = { source: ['a', 'a', 'a', 'a'], target: ['a', 'a', 'a', 'a'], reach: 1,
+    prices: { direct: [['a', 3]], dup: 3, swap: 3 },
+    candidate: { assignment: [1, 0, 2, 3], modes: [] },
+    certificate: { scale: 1, row: [3, 3, 3, 3], column: [0, 0, 0, 0], prefix: [0, 0, 0], upper: [0, 0, 0] } };
+  assert.throws(() => checkJointCertificate(input), /invalid endpoint assignment/);
+  input.candidate.assignment = [0, 1, 2, 3];
+  assert.equal(checkJointCertificate(input).candidateObjective, '0');
+  input.hard = ['a']; input.prices.direct = [['a', 7]];
+  assert.throws(() => checkJointCertificate(input), /hard fallback price/);
+});

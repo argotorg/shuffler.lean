@@ -119,7 +119,7 @@ bound; it does not bound the bit length of arbitrary supplied numbers.
 `scripts/optimality-joint-dual.mjs` checks the certificate and the supplied
 candidate's endpoint permutation, lag bounds, birth methods, and exact
 objective. It does not solve an LP or run in production. The script uses
-seven focused tests and six hand-supplied examples, checked against an
+focused tests and six hand-supplied examples, checked against an
 independent exhaustive endpoint optimizer. The examples include unequal
 DUP and SWAP prices and a case where reuse is too costly in movement.
 Invalid dual signs, an invalid edge inequality, a missing DUP source,
@@ -223,3 +223,54 @@ only a data supplier. No trust in that solver enters the Lean theorem.
 Evidence and reproduction commands are in
 `Bench/evidence-periodic-joint-dual.json`. This was one named case, with
 no production scheduler rerun or new broad trace search.
+
+## A source case with a required DUP
+
+Source tokens are assignment rows with fixed values and no generation
+cost. Restrict each old row to target columns with its source value.
+Rows below the initial SWAP range must keep their identity. The same
+lag inequality applies to all rows. `Certificate.ValidOn` permits these
+edge restrictions; the old `Valid` predicate keeps the empty-source API.
+
+For an optional gap reward, the left endpoint's occurrence count must
+be at least the source count of its value. Earlier gaps concern copies
+already supplied by the source, so they receive no generation discount.
+If a value has no legal direct instruction, each gap after its supplied
+source copies is required. Replace its quota base `a` by `a+1` and set
+its reward to zero. The accounting price for such a value is the DUP
+price. This price does not grant permission to introduce it directly.
+
+The saved source case `planted-2026100783-83/wsupplied/g1b0` has baseline
+66 and schedule score 81. Its hard variable 42 must have two copies born
+by cut 19. A finite certificate with one nonzero quota weight gives
+`L=147,Q=1`. Its extracted plan has generation cost 66 and six moved
+tokens, so `J=150`. Thus the certificate meets `S+B=147` without plan
+attainment. It does not certify the 81-cost trace as optimal; the saved
+offline oracle result is 78.
+
+The source trace theorem uses the already proved generation baseline
+and the required quotas. It does not need the full source version of
+the optional generation-discount theorem. In this case the direct
+accounting total equals the baseline, and all optional rewards are zero.
+The general optional source-reward extension remains an offline model.
+
+`scripts/optimality-source-dual-check.mjs` reads that one saved witness,
+replays it, extracts its endpoint assignment, requests external dual
+data, and checks all integers. `Bench/evidence-source-joint-dual.json`
+records the result. A negative solver test removes the hard-value quota
+and checks that this relaxation cannot reach 147. No production
+scheduler or broad oracle run is part of this check.
+
+`Tests/OptimalitySourceDual.lean` checks the saved operations, their cost
+81, baseline 66, the integer coefficients, and lower bound 147. The
+mandatory quota follows from `sourcePlan_hard_quota`: after a hard value
+loses all spare copies at a cut, no later DUP can restore a spare copy.
+The test applies `Certificate.source_surplus_le_twice` to every trace
+from this source to this target without POP. The focused build takes
+10 seconds. It also checks that this certificate fails the sufficient
+exact-score test.
+
+This source certificate is sufficient. It need not certify every
+feasible source instance, even with an exact LP solver. Endpoint movement
+can omit initial-cycle SWAP costs. For example, `[a,b,c]` to `[b,a,c]`
+has two moved endpoints but needs three top-SWAP instructions.

@@ -14,17 +14,22 @@ const natural = value => { const result = integer(value); assert.ok(result >= 0n
 const sum = values => values.reduce((total, value) => total + value, 0n);
 const positivePart = value => value > 0n ? value : 0n;
 
-export function checkJointCertificate({ target, reach, prices, candidate, certificate }) {
+export function checkJointCertificate({ source = [], target, hard = [], reach, prices, candidate, certificate }) {
   assert.ok(Number.isSafeInteger(reach) && reach >= 1, 'invalid reach');
   const size = target.length, values = [...new Set(target)];
   const direct = new Map(prices.direct.map(([value, price]) => [value, natural(price)]));
   assert.equal(direct.size, prices.direct.length, 'duplicate direct price');
   assert.ok(values.every(value => direct.has(value)), 'missing direct introduction');
   const dup = natural(prices.dup), swap = natural(prices.swap);
-  const gaps = consecutiveIntervals(target).map(gap => ({ ...gap,
-    cut: gap.start + reach,
-    required: target.slice(0, gap.start + 1).filter(value => value === gap.value).length,
-    reward: 2n * positivePart(direct.get(gap.value) - dup) }));
+  const count = (items, value) => items.filter(item => item === value).length;
+  assert.ok(source.every(value => count(source, value) <= count(target, value)), 'source multiplicity exceeds target');
+  assert.ok(hard.every(value => direct.get(value) === dup), 'hard fallback price must equal DUP');
+  const gaps = consecutiveIntervals(target).map(gap => {
+    const ordinal = count(target.slice(0, gap.start + 1), gap.value);
+    const eligible = ordinal >= count(source, gap.value), forced = eligible && hard.includes(gap.value);
+    return { ...gap, cut: gap.start + reach, required: ordinal + Number(forced), forced,
+      reward: eligible && !forced ? 2n * positivePart(direct.get(gap.value) - dup) : 0n };
+  });
   const scale = natural(certificate.scale); assert.ok(scale > 0n, 'zero scale');
   const row = certificate.row.map(integer), column = certificate.column.map(integer);
   const prefix = certificate.prefix.map(natural), upper = certificate.upper.map(natural);
@@ -38,6 +43,8 @@ export function checkJointCertificate({ target, reach, prices, candidate, certif
   const expire = Array.from({ length: size }, (_, cut) => gaps.flatMap((gap, index) => gap.cut === cut ? [index] : []));
   for (let birth = 0; birth < size; birth++) {
     for (let output = Math.max(0, birth - reach); output < size; output++) {
+      if (birth < source.length && target[output] !== source[birth]) continue;
+      if (birth + reach + 1 < source.length && birth !== output) continue;
       assert.ok(row[birth] + column[output] - active.get(target[output]) >=
         (birth === output ? scale * swap : 0n), 'endpoint dual inequality fails');
     }
@@ -45,22 +52,27 @@ export function checkJointCertificate({ target, reach, prices, candidate, certif
   }
 
   const { assignment, modes } = candidate;
-  assert.equal(assignment.length, size); assert.equal(modes.length, size);
+  assert.equal(assignment.length, size); assert.equal(modes.length, size - source.length);
   assert.ok(new Set(assignment).size === size && assignment.every((output, birth) =>
-    Number.isInteger(output) && output >= 0 && output < size && birth <= output + reach), 'invalid endpoint assignment');
+    Number.isInteger(output) && output >= 0 && output < size && birth <= output + reach &&
+    (birth >= source.length || target[output] === source[birth]) &&
+    (birth + reach + 1 >= source.length || output === birth)), 'invalid endpoint assignment');
   const prior = new Map(), endpoints = new Map(values.map(value => [value,
     target.flatMap((item, index) => item === value ? [index] : [])]));
   const birthPrices = assignment.map((output, birth) => {
     const value = target[output], ordinal = prior.get(value) ?? 0;
     prior.set(value, ordinal + 1);
+    if (birth < source.length) return 0n;
+    const mode = modes[birth - source.length];
     const canDuplicate = ordinal > 0 && birth <= endpoints.get(value)[ordinal - 1] + reach;
-    assert.ok(modes[birth] === 'direct' || modes[birth] === 'dup', 'invalid birth method');
-    assert.ok(modes[birth] !== 'dup' || canDuplicate, 'DUP has no available copy');
-    return modes[birth] === 'dup' ? dup : direct.get(value);
+    assert.ok(mode === 'direct' || mode === 'dup', 'invalid birth method');
+    assert.ok(mode !== 'direct' || !hard.includes(value), 'hard value cannot be introduced directly');
+    assert.ok(mode !== 'dup' || canDuplicate, 'DUP has no available copy');
+    return mode === 'dup' ? dup : direct.get(value);
   });
   const generation = sum(birthPrices), moved = assignment.filter((output, birth) => output !== birth).length;
   const objective = 2n * generation + swap * BigInt(moved);
-  const allDirect = sum(target.map(value => direct.get(value)));
+  const allDirect = sum(target.map(value => direct.get(value))) - sum(source.map(value => direct.get(value)));
   const constant = 2n * allDirect + swap * BigInt(size);
   const upperBound = sum(row) + sum(column) - sum(gaps.map((gap, index) => BigInt(gap.required) * prefix[index])) + sum(upper);
   const lowerBound = scale * constant - upperBound, scaledGap = scale * objective - lowerBound;

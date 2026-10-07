@@ -40,7 +40,7 @@ function coefficient(form) {
   return rational(BigInt(match[1]) * denominator + BigInt(match[2] ?? 0) * (match[1].startsWith('-') ? -1n : 1n), denominator);
 }
 
-export function solveJointDual({ target, reach, prices }, {
+export function solveJointDual({ source = [], target, hard = [], reach, prices }, {
   solver = process.env.Z3_BIN ?? 'z3', timeoutMs = 30000, minimumLowerBound = null
 } = {}) {
   assert.ok(Number.isSafeInteger(reach) && reach >= 1);
@@ -48,20 +48,29 @@ export function solveJointDual({ target, reach, prices }, {
   const direct = new Map(prices.direct), size = target.length;
   assert.ok([prices.dup, prices.swap, ...direct.values()].every(price => Number.isSafeInteger(price) && price >= 0));
   assert.ok(target.every(value => direct.has(value)), 'missing direct price');
-  const gaps = consecutiveIntervals(target).map(gap => ({ ...gap,
-    required: target.slice(0, gap.start + 1).filter(value => value === gap.value).length,
-    reward: 2 * Math.max(direct.get(gap.value) - prices.dup, 0) }));
+  const count = (items, value) => items.filter(item => item === value).length;
+  assert.ok(source.every(value => count(source, value) <= count(target, value)), 'source multiplicity exceeds target');
+  assert.ok(hard.every(value => direct.get(value) === prices.dup), 'hard fallback price must equal DUP');
+  const gaps = consecutiveIntervals(target).map(gap => {
+    const ordinal = count(target.slice(0, gap.start + 1), gap.value);
+    const eligible = ordinal >= count(source, gap.value), forced = eligible && hard.includes(gap.value);
+    return { ...gap, required: ordinal + Number(forced),
+      reward: eligible && !forced ? 2 * Math.max(direct.get(gap.value) - prices.dup, 0) : 0 };
+  });
   const names = { row: target.map((_, index) => `a_${index}`), column: target.map((_, index) => `b_${index}`),
     prefix: gaps.map((_, index) => `l_${index}`), upper: gaps.map((_, index) => `m_${index}`) };
   const lines = [`(set-option :timeout ${timeoutMs})`, '(set-logic QF_LRA)'];
   for (const name of Object.values(names).flat()) lines.push(`(declare-const ${name} Real)`);
   for (const name of [...names.prefix, ...names.upper]) lines.push(`(assert (>= ${name} 0))`);
   for (let birth = 0; birth < size; birth++) for (let output = Math.max(0, birth - reach); output < size; output++) {
+    if (birth < source.length && target[output] !== source[birth]) continue;
+    if (birth + reach + 1 < source.length && birth !== output) continue;
     const weights = gaps.flatMap((gap, index) => gap.value === target[output] && birth <= gap.start + reach ? [names.prefix[index]] : []);
     lines.push(`(assert (>= (- (+ ${names.row[birth]} ${names.column[output]}) ${sum(weights)}) ${birth === output ? prices.swap : 0}))`);
   }
   gaps.forEach((gap, index) => lines.push(`(assert (>= (+ ${names.prefix[index]} ${names.upper[index]}) ${gap.reward}))`));
-  const constant = 2 * target.reduce((total, value) => total + direct.get(value), 0) + prices.swap * size;
+  const constant = 2 * (target.reduce((total, value) => total + direct.get(value), 0) -
+    source.reduce((total, value) => total + direct.get(value), 0)) + prices.swap * size;
   const upper = `(+ ${sum(names.row)} ${sum(names.column)} (- ${sum(gaps.map((gap, index) => `(* ${gap.required} ${names.prefix[index]})`))}) ${sum(names.upper)})`;
   lines.push(`(define-fun lower () Real (- ${constant} ${upper}))`);
   if (minimumLowerBound === null) lines.push('(maximize lower)');

@@ -31,14 +31,24 @@ structure Certificate (size gapCount : Nat) where
   quotaWeight : Fin gapCount → Nat
   capWeight : Fin gapCount → Nat
 
-def Certificate.Valid (cert : Certificate target.length gapCount)
-    (gaps : Fin gapCount → Gap) (swap : Nat) : Prop :=
+def Certificate.ValidOn (cert : Certificate target.length gapCount)
+    (gaps : Fin gapCount → Gap) (swap : Nat)
+    (allowed : Fin target.length → Fin target.length → Prop) : Prop :=
   0 < cert.scale ∧
-  (∀ birth output : Fin target.length, birth.val ≤ output.val + 16 →
+  (∀ birth output : Fin target.length, allowed birth output →
     (if birth = output then (↑(cert.scale * swap) : Int) else 0) +
       (∑ gap, if covers target (gaps gap) birth output then (cert.quotaWeight gap : Int) else 0)
       ≤ cert.row birth + cert.column output) ∧
   (∀ gap, cert.scale * (gaps gap).reward ≤ cert.quotaWeight gap + cert.capWeight gap)
+
+instance (cert : Certificate target.length gapCount)
+    (gaps : Fin gapCount → Gap) (swap : Nat)
+    (allowed : Fin target.length → Fin target.length → Prop) [DecidableRel allowed] :
+    Decidable (cert.ValidOn gaps swap allowed) := by unfold Certificate.ValidOn; infer_instance
+
+def Certificate.Valid (cert : Certificate target.length gapCount)
+    (gaps : Fin gapCount → Gap) (swap : Nat) : Prop :=
+  cert.ValidOn gaps swap (fun birth output => birth.val ≤ output.val + 16)
 
 instance (cert : Certificate target.length gapCount)
     (gaps : Fin gapCount → Gap) (swap : Nat) :

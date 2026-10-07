@@ -17,15 +17,15 @@ theorem fixed_weight_sum (assignment : Equiv.Perm (Fin size)) (weight : Int) :
   rw [← Finset.sum_filter]
   simp [Word.fixed, eq_comm, mul_comm]
 
-theorem Certificate.reward_le (cert : Certificate target.length gapCount)
-    (hvalid : cert.Valid gaps swap)
-    (assignment : Equiv.Perm (Fin target.length)) (hdeadline : BirthDeadlines 16 assignment)
+theorem Certificate.reward_le_of_edges (cert : Certificate target.length gapCount)
+    (hvalid : cert.ValidOn gaps swap allowed)
+    (assignment : Equiv.Perm (Fin target.length)) (hedges : ∀ birth, allowed birth (assignment birth))
     (reuse : Fin gapCount → Nat) (hcap : ∀ gap, reuse gap ≤ 1)
     (hquota : ∀ gap, (gaps gap).required + reuse gap ≤ prefixCount target (gaps gap) assignment) :
     cert.scale * (swap * (Word.fixed assignment).card +
       ∑ gap, (gaps gap).reward * reuse gap : Nat) ≤ cert.rewardUpper gaps := by
   have hedge := Finset.sum_le_sum (fun birth (_ : birth ∈ Finset.univ) =>
-    hvalid.2.1 birth (assignment birth) (hdeadline birth))
+    hvalid.2.1 birth (assignment birth) (hedges birth))
   rw [Finset.sum_add_distrib, Finset.sum_add_distrib,
     Equiv.sum_comp assignment cert.column, fixed_weight_sum] at hedge
   rw [Finset.sum_comm] at hedge
@@ -57,15 +57,15 @@ theorem Certificate.reward_le (cert : Certificate target.length gapCount)
   push_cast at hedge
   linarith
 
-theorem Certificate.lower_le (cert : Certificate target.length gapCount)
-    (hvalid : cert.Valid gaps swap)
-    (assignment : Equiv.Perm (Fin target.length)) (hdeadline : BirthDeadlines 16 assignment)
+theorem Certificate.lower_le_of_edges (cert : Certificate target.length gapCount)
+    (hvalid : cert.ValidOn gaps swap allowed)
+    (assignment : Equiv.Perm (Fin target.length)) (hedges : ∀ birth, allowed birth (assignment birth))
     (reuse : Fin gapCount → Nat) (hcap : ∀ gap, reuse gap ≤ 1)
     (hquota : ∀ gap, (gaps gap).required + reuse gap ≤ prefixCount target (gaps gap) assignment)
     (hcost : 2 * direct ≤ 2 * generation + ∑ gap, (gaps gap).reward * reuse gap) :
     cert.lowerNumerator gaps direct swap ≤
       cert.scale * (2 * generation + swap * assignment.support.card : Nat) := by
-  have hrewards := cert.reward_le hvalid assignment hdeadline reuse hcap hquota
+  have hrewards := cert.reward_le_of_edges hvalid assignment hedges reuse hcap hquota
   have hfixed := Word.fixed_add_support assignment
   have hcostInt : (2 * direct : Int) ≤ 2 * generation + ∑ gap, ((gaps gap).reward * reuse gap : Nat) := by
     exact_mod_cast hcost
@@ -77,5 +77,24 @@ theorem Certificate.lower_le (cert : Certificate target.length gapCount)
   push_cast at hrewards ⊢
   push_cast at hcostScaled
   nlinarith
+
+theorem Certificate.reward_le (cert : Certificate target.length gapCount)
+    (hvalid : cert.Valid gaps swap)
+    (assignment : Equiv.Perm (Fin target.length)) (hdeadline : BirthDeadlines 16 assignment)
+    (reuse : Fin gapCount → Nat) (hcap : ∀ gap, reuse gap ≤ 1)
+    (hquota : ∀ gap, (gaps gap).required + reuse gap ≤ prefixCount target (gaps gap) assignment) :
+    cert.scale * (swap * (Word.fixed assignment).card +
+      ∑ gap, (gaps gap).reward * reuse gap : Nat) ≤ cert.rewardUpper gaps :=
+  cert.reward_le_of_edges hvalid assignment hdeadline reuse hcap hquota
+
+theorem Certificate.lower_le (cert : Certificate target.length gapCount)
+    (hvalid : cert.Valid gaps swap)
+    (assignment : Equiv.Perm (Fin target.length)) (hdeadline : BirthDeadlines 16 assignment)
+    (reuse : Fin gapCount → Nat) (hcap : ∀ gap, reuse gap ≤ 1)
+    (hquota : ∀ gap, (gaps gap).required + reuse gap ≤ prefixCount target (gaps gap) assignment)
+    (hcost : 2 * direct ≤ 2 * generation + ∑ gap, (gaps gap).reward * reuse gap) :
+    cert.lowerNumerator gaps direct swap ≤
+      cert.scale * (2 * generation + swap * assignment.support.card : Nat) :=
+  cert.lower_le_of_edges hvalid assignment hdeadline reuse hcap hquota hcost
 
 end Shuffler.Optimality.BirthPlacement.Dual
