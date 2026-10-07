@@ -1,0 +1,923 @@
+{
+  "status": "named exact checks of a common-price optimal-face rounding claim",
+  "claim": "Every pair of assignments on one positive-SWAP-price canonical-gap-price optimum face admits an all-prefix-balanced row-token recoloring preserving their total moved count. This is stronger than the required canonical-cut balance.",
+  "priceDomain": {
+    "swap": [
+      1,
+      2
+    ],
+    "eachCanonicalGap": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ]
+  },
+  "records": [
+    {
+      "name": "unpriced-four-row-obstruction",
+      "target": [
+        0,
+        0,
+        1,
+        2
+      ],
+      "reach": 2,
+      "permutations": 18,
+      "words": 12,
+      "pricesChecked": 10,
+      "faces": 1,
+      "pairs": 0,
+      "nontrivialPairs": 0,
+      "colorings": 0,
+      "failures": [],
+      "roundingWitness": null,
+      "splitAssignmentPairs": 0,
+      "splitStats": {
+        "largeDiscrepancyCycles": 0,
+        "pairsWithSplits": 0,
+        "totalSplits": 0
+      },
+      "splitFailures": [],
+      "terminalFailures": []
+    },
+    {
+      "name": "pin-interval-overlap",
+      "target": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        0
+      ],
+      "reach": 2,
+      "permutations": 162,
+      "words": 19,
+      "pricesChecked": 1250,
+      "faces": 9,
+      "pairs": 8,
+      "nontrivialPairs": 0,
+      "colorings": 16,
+      "failures": [],
+      "roundingWitness": null,
+      "splitAssignmentPairs": 10,
+      "splitStats": {
+        "largeDiscrepancyCycles": 0,
+        "pairsWithSplits": 2,
+        "totalSplits": 2
+      },
+      "splitFailures": [],
+      "terminalFailures": []
+    },
+    {
+      "name": "safe-split-away-from-excess",
+      "target": [
+        0,
+        1,
+        1,
+        0,
+        1,
+        1,
+        0,
+        0
+      ],
+      "reach": 2,
+      "permutations": 1458,
+      "words": 60,
+      "pricesChecked": 31250,
+      "faces": 124,
+      "pairs": 237,
+      "nontrivialPairs": 33,
+      "colorings": 822,
+      "failures": [],
+      "roundingWitness": {
+        "input": {
+          "target": [
+            0,
+            1,
+            1,
+            0,
+            1,
+            1,
+            0,
+            0
+          ],
+          "reach": 2,
+          "swap": 1,
+          "gaps": [
+            {
+              "left": 0,
+              "weight": 0
+            },
+            {
+              "left": 1,
+              "weight": 0
+            },
+            {
+              "left": 2,
+              "weight": 0
+            },
+            {
+              "left": 3,
+              "weight": 2
+            },
+            {
+              "left": 4,
+              "weight": 0
+            },
+            {
+              "left": 6,
+              "weight": 0
+            }
+          ]
+        },
+        "dual": {
+          "status": "optimal",
+          "reward": "12",
+          "assignment": [
+            0,
+            1,
+            2,
+            3,
+            6,
+            7,
+            4,
+            5
+          ],
+          "row": [
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "0",
+            "-1",
+            "-1"
+          ],
+          "column": [
+            "3",
+            "1",
+            "1",
+            "3",
+            "1",
+            "1",
+            "2",
+            "2"
+          ],
+          "vertices": 36,
+          "arcs": 63
+        },
+        "first": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "second": [
+          0,
+          1,
+          2,
+          3,
+          6,
+          7,
+          4,
+          5
+        ],
+        "inputMoved": 4,
+        "bestOutputMoved": 4,
+        "outputWitness": [
+          [
+            0,
+            1,
+            2,
+            3,
+            4,
+            7,
+            6,
+            5
+          ],
+          [
+            0,
+            1,
+            2,
+            3,
+            6,
+            5,
+            4,
+            7
+          ]
+        ]
+      },
+      "splitAssignmentPairs": 1126,
+      "splitStats": {
+        "largeDiscrepancyCycles": 71,
+        "pairsWithSplits": 808,
+        "totalSplits": 1086
+      },
+      "splitFailures": [],
+      "terminalFailures": []
+    },
+    {
+      "name": "mixed-pin-value-job-obstruction",
+      "target": [
+        0,
+        0,
+        1,
+        1,
+        1,
+        1,
+        0,
+        0
+      ],
+      "reach": 2,
+      "permutations": 1458,
+      "words": 53,
+      "pricesChecked": 31250,
+      "faces": 9,
+      "pairs": 10,
+      "nontrivialPairs": 1,
+      "colorings": 24,
+      "failures": [],
+      "roundingWitness": {
+        "input": {
+          "target": [
+            0,
+            0,
+            1,
+            1,
+            1,
+            1,
+            0,
+            0
+          ],
+          "reach": 2,
+          "swap": 1,
+          "gaps": [
+            {
+              "left": 0,
+              "weight": 0
+            },
+            {
+              "left": 1,
+              "weight": 3
+            },
+            {
+              "left": 2,
+              "weight": 0
+            },
+            {
+              "left": 3,
+              "weight": 0
+            },
+            {
+              "left": 4,
+              "weight": 0
+            },
+            {
+              "left": 6,
+              "weight": 0
+            }
+          ]
+        },
+        "dual": {
+          "status": "optimal",
+          "reward": "14",
+          "assignment": [
+            0,
+            1,
+            6,
+            7,
+            2,
+            3,
+            4,
+            5
+          ],
+          "row": [
+            "0",
+            "0",
+            "0",
+            "0",
+            "-1",
+            "-1",
+            "-2",
+            "-2"
+          ],
+          "column": [
+            "4",
+            "4",
+            "1",
+            "1",
+            "2",
+            "2",
+            "3",
+            "3"
+          ],
+          "vertices": 36,
+          "arcs": 63
+        },
+        "first": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "second": [
+          0,
+          1,
+          6,
+          7,
+          2,
+          3,
+          4,
+          5
+        ],
+        "inputMoved": 6,
+        "bestOutputMoved": 6,
+        "outputWitness": [
+          [
+            0,
+            1,
+            2,
+            7,
+            4,
+            3,
+            6,
+            5
+          ],
+          [
+            0,
+            1,
+            6,
+            3,
+            2,
+            5,
+            4,
+            7
+          ]
+        ]
+      },
+      "splitAssignmentPairs": 19,
+      "splitStats": {
+        "largeDiscrepancyCycles": 1,
+        "pairsWithSplits": 5,
+        "totalSplits": 5
+      },
+      "splitFailures": [],
+      "terminalFailures": []
+    },
+    {
+      "name": "three-paired-values",
+      "target": [
+        0,
+        0,
+        1,
+        1,
+        2,
+        2,
+        0,
+        0
+      ],
+      "reach": 2,
+      "permutations": 1458,
+      "words": 147,
+      "pricesChecked": 6250,
+      "faces": 12,
+      "pairs": 15,
+      "nontrivialPairs": 1,
+      "colorings": 46,
+      "failures": [],
+      "roundingWitness": {
+        "input": {
+          "target": [
+            0,
+            0,
+            1,
+            1,
+            2,
+            2,
+            0,
+            0
+          ],
+          "reach": 2,
+          "swap": 1,
+          "gaps": [
+            {
+              "left": 0,
+              "weight": 0
+            },
+            {
+              "left": 1,
+              "weight": 3
+            },
+            {
+              "left": 2,
+              "weight": 0
+            },
+            {
+              "left": 4,
+              "weight": 0
+            },
+            {
+              "left": 6,
+              "weight": 0
+            }
+          ]
+        },
+        "dual": {
+          "status": "optimal",
+          "reward": "14",
+          "assignment": [
+            0,
+            1,
+            6,
+            7,
+            2,
+            3,
+            4,
+            5
+          ],
+          "row": [
+            "0",
+            "0",
+            "0",
+            "0",
+            "-1",
+            "-1",
+            "-2",
+            "-2"
+          ],
+          "column": [
+            "4",
+            "4",
+            "1",
+            "1",
+            "2",
+            "2",
+            "3",
+            "3"
+          ],
+          "vertices": 36,
+          "arcs": 62
+        },
+        "first": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "second": [
+          0,
+          1,
+          6,
+          7,
+          2,
+          3,
+          4,
+          5
+        ],
+        "inputMoved": 6,
+        "bestOutputMoved": 6,
+        "outputWitness": [
+          [
+            0,
+            1,
+            2,
+            7,
+            4,
+            3,
+            6,
+            5
+          ],
+          [
+            0,
+            1,
+            6,
+            3,
+            2,
+            5,
+            4,
+            7
+          ]
+        ]
+      },
+      "splitAssignmentPairs": 20,
+      "splitStats": {
+        "largeDiscrepancyCycles": 1,
+        "pairsWithSplits": 5,
+        "totalSplits": 5
+      },
+      "splitFailures": [],
+      "terminalFailures": []
+    },
+    {
+      "name": "interleaved-short-nonlast",
+      "target": [
+        0,
+        1,
+        0,
+        1,
+        2,
+        2,
+        0,
+        0
+      ],
+      "reach": 2,
+      "permutations": 1458,
+      "words": 168,
+      "pricesChecked": 6250,
+      "faces": 19,
+      "pairs": 17,
+      "nontrivialPairs": 1,
+      "colorings": 40,
+      "failures": [],
+      "roundingWitness": {
+        "input": {
+          "target": [
+            0,
+            1,
+            0,
+            1,
+            2,
+            2,
+            0,
+            0
+          ],
+          "reach": 2,
+          "swap": 1,
+          "gaps": [
+            {
+              "left": 0,
+              "weight": 2
+            },
+            {
+              "left": 1,
+              "weight": 0
+            },
+            {
+              "left": 2,
+              "weight": 2
+            },
+            {
+              "left": 4,
+              "weight": 0
+            },
+            {
+              "left": 6,
+              "weight": 0
+            }
+          ]
+        },
+        "dual": {
+          "status": "optimal",
+          "reward": "16",
+          "assignment": [
+            0,
+            6,
+            2,
+            1,
+            7,
+            3,
+            4,
+            5
+          ],
+          "row": [
+            "0",
+            "0",
+            "0",
+            "-1",
+            "-2",
+            "-2",
+            "-3",
+            "-3"
+          ],
+          "column": [
+            "5",
+            "1",
+            "5",
+            "2",
+            "3",
+            "3",
+            "4",
+            "4"
+          ],
+          "vertices": 36,
+          "arcs": 62
+        },
+        "first": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "second": [
+          0,
+          6,
+          2,
+          1,
+          7,
+          3,
+          4,
+          5
+        ],
+        "inputMoved": 6,
+        "bestOutputMoved": 6,
+        "outputWitness": [
+          [
+            0,
+            1,
+            2,
+            3,
+            6,
+            5,
+            4,
+            7
+          ],
+          [
+            0,
+            7,
+            2,
+            1,
+            4,
+            3,
+            6,
+            5
+          ]
+        ]
+      },
+      "splitAssignmentPairs": 26,
+      "splitStats": {
+        "largeDiscrepancyCycles": 1,
+        "pairsWithSplits": 8,
+        "totalSplits": 8
+      },
+      "splitFailures": [],
+      "terminalFailures": []
+    }
+  ],
+  "denominatorThree": {
+    "name": "three-copy-prefetch-denominator-three",
+    "input": {
+      "target": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        0,
+        0,
+        0
+      ],
+      "reach": 16,
+      "swap": 1,
+      "gaps": [
+        {
+          "left": 0,
+          "weight": 2
+        }
+      ]
+    },
+    "dual": {
+      "status": "optimal",
+      "reward": "22",
+      "assignment": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        17,
+        18,
+        19,
+        16,
+        15,
+        14
+      ],
+      "row": [
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "0",
+        "-1",
+        "-1",
+        "-1"
+      ],
+      "column": [
+        "3",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "1",
+        "2",
+        "2",
+        "2"
+      ],
+      "vertices": 98,
+      "arcs": 158
+    },
+    "inputAssignments": [
+      [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        17,
+        18,
+        19,
+        15,
+        16,
+        14
+      ]
+    ],
+    "inputMoved": 6,
+    "balancedColorings": 6,
+    "bestOutputMoved": 6,
+    "outputWitness": [
+      [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        18,
+        17,
+        16,
+        19
+      ],
+      [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        17,
+        16,
+        15,
+        18,
+        19
+      ],
+      [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        19,
+        15,
+        16,
+        17,
+        18,
+        14
+      ]
+    ]
+  },
+  "scope": "Only the six named target/reach instances and the one denominator-three case. Endpoint minima and all face pairs are independently enumerated. Any failure has a separate exact sparse-flow assignment dual. The terminal test uses one deterministic split sequence per pair, not all split sequences. No general theorem, LP integrality, production change, or runtime bound is claimed.",
+  "reproduce": "node scripts/optimality-priced-face-rounding.mjs Bench/evidence-priced-face-rounding.json"
+}
