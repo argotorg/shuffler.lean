@@ -1,0 +1,1267 @@
+{
+  "status": "validated reduced-cap counterexample to the proposed 2Q realization bound",
+  "scope": "All birth orders and ordinary equal-value copy exchange are allowed. There is one direct introduction per distinct value and every consecutive output interval is retained. R5 is a reduced-capacity result. It does not by itself refute a fixed-R16 theorem or any production approximation ratio against OPT.",
+  "finding": "R5, empty source, target a(bcde)^3a, Q2, capacity5, minimum5 SWAPs. This exceeds2Q4. With width32 LOADs and bytes-only cost, B179 and exactOPT184; the unique joint-objective minimum is all intervals selected with J2, so OPT-B=5>2J4. This refutes the proposed factor-two relation between that relaxation and a realization, not factor two relative to the true optimum.",
+  "checks": [
+    {
+      "word": [
+        "a",
+        "b",
+        "c",
+        "b",
+        "c",
+        "b",
+        "c",
+        "b",
+        "c",
+        "a"
+      ],
+      "reach": 3,
+      "plan": {
+        "problem": {
+          "source": [],
+          "target": [
+            "v:42",
+            "v:43",
+            "v:44",
+            "v:43",
+            "v:44",
+            "v:43",
+            "v:44",
+            "v:43",
+            "v:44",
+            "v:42"
+          ],
+          "spills": [
+            42,
+            43,
+            44
+          ],
+          "caps": {
+            "swap": 3,
+            "dup": 3
+          },
+          "id": "unnamed",
+          "missing": [
+            "v:42",
+            "v:43",
+            "v:44",
+            "v:43",
+            "v:44",
+            "v:43",
+            "v:44",
+            "v:43",
+            "v:44",
+            "v:42"
+          ],
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "gasModel": "cpp",
+          "loadWidths": [],
+          "model": "reduced-cap"
+        },
+        "values": [
+          "v:42",
+          "v:43",
+          "v:44"
+        ],
+        "budgets": [
+          1,
+          1,
+          1
+        ],
+        "intervals": [
+          {
+            "start": 1,
+            "end": 3,
+            "value": "v:43"
+          },
+          {
+            "start": 2,
+            "end": 4,
+            "value": "v:44"
+          },
+          {
+            "start": 3,
+            "end": 5,
+            "value": "v:43"
+          },
+          {
+            "start": 4,
+            "end": 6,
+            "value": "v:44"
+          },
+          {
+            "start": 5,
+            "end": 7,
+            "value": "v:43"
+          },
+          {
+            "start": 6,
+            "end": 8,
+            "value": "v:44"
+          },
+          {
+            "start": 0,
+            "end": 9,
+            "value": "v:42"
+          }
+        ],
+        "capacityFeasible": true
+      },
+      "frontier": {
+        "Q": 2,
+        "occupancy": [
+          1,
+          2,
+          3,
+          3,
+          3,
+          3,
+          3,
+          2,
+          1
+        ],
+        "maximumOccupancy": 3,
+        "capacityFeasible": true,
+        "ceilings": [
+          3,
+          4,
+          5,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          3
+        ],
+        "frontiers": [
+          3,
+          5,
+          6,
+          7,
+          8,
+          9,
+          9
+        ],
+        "firstFailure": {
+          "step": 1,
+          "before": 5,
+          "afterTwo": 7,
+          "required": 8
+        }
+      },
+      "result": {
+        "status": "reachable",
+        "states": 255,
+        "ops": [
+          [
+            "load",
+            42
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "dup",
+            2
+          ],
+          [
+            "dup",
+            2
+          ],
+          [
+            "load",
+            44
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "swap",
+            3
+          ],
+          [
+            "dup",
+            3
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            3
+          ],
+          [
+            "dup",
+            3
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "swap",
+            3
+          ]
+        ],
+        "direct": [
+          1,
+          1,
+          1
+        ],
+        "swaps": 4
+      },
+      "birthWord": [
+        "a",
+        "b",
+        "a",
+        "b",
+        "c",
+        "c",
+        "b",
+        "c",
+        "b",
+        "c"
+      ],
+      "upwardValues": [
+        "a",
+        "a",
+        "c",
+        "a"
+      ],
+      "replay": {
+        "target": [
+          "v:42",
+          "v:43",
+          "v:44",
+          "v:43",
+          "v:44",
+          "v:43",
+          "v:44",
+          "v:43",
+          "v:44",
+          "v:42"
+        ],
+        "added": [
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:43",
+          "v:44",
+          "v:44",
+          "v:43",
+          "v:44",
+          "v:43",
+          "v:44"
+        ],
+        "cost": {
+          "gas": 51,
+          "bytes": 20
+        },
+        "score": 71,
+        "instructions": 14
+      },
+      "carrierOnlyHops": 5
+    },
+    {
+      "word": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "b",
+        "c",
+        "d",
+        "b",
+        "c",
+        "d",
+        "b",
+        "c",
+        "d",
+        "a"
+      ],
+      "reach": 4,
+      "plan": {
+        "problem": {
+          "source": [],
+          "target": [
+            "v:42",
+            "v:43",
+            "v:44",
+            "v:45",
+            "v:43",
+            "v:44",
+            "v:45",
+            "v:43",
+            "v:44",
+            "v:45",
+            "v:43",
+            "v:44",
+            "v:45",
+            "v:42"
+          ],
+          "spills": [
+            42,
+            43,
+            44,
+            45
+          ],
+          "caps": {
+            "swap": 4,
+            "dup": 4
+          },
+          "id": "unnamed",
+          "missing": [
+            "v:42",
+            "v:43",
+            "v:44",
+            "v:45",
+            "v:43",
+            "v:44",
+            "v:45",
+            "v:43",
+            "v:44",
+            "v:45",
+            "v:43",
+            "v:44",
+            "v:45",
+            "v:42"
+          ],
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "gasModel": "cpp",
+          "loadWidths": [],
+          "model": "reduced-cap"
+        },
+        "values": [
+          "v:42",
+          "v:43",
+          "v:44",
+          "v:45"
+        ],
+        "budgets": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "intervals": [
+          {
+            "start": 1,
+            "end": 4,
+            "value": "v:43"
+          },
+          {
+            "start": 2,
+            "end": 5,
+            "value": "v:44"
+          },
+          {
+            "start": 3,
+            "end": 6,
+            "value": "v:45"
+          },
+          {
+            "start": 4,
+            "end": 7,
+            "value": "v:43"
+          },
+          {
+            "start": 5,
+            "end": 8,
+            "value": "v:44"
+          },
+          {
+            "start": 6,
+            "end": 9,
+            "value": "v:45"
+          },
+          {
+            "start": 7,
+            "end": 10,
+            "value": "v:43"
+          },
+          {
+            "start": 8,
+            "end": 11,
+            "value": "v:44"
+          },
+          {
+            "start": 9,
+            "end": 12,
+            "value": "v:45"
+          },
+          {
+            "start": 0,
+            "end": 13,
+            "value": "v:42"
+          }
+        ],
+        "capacityFeasible": true
+      },
+      "frontier": {
+        "Q": 3,
+        "occupancy": [
+          1,
+          2,
+          3,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          3,
+          2,
+          1
+        ],
+        "maximumOccupancy": 4,
+        "capacityFeasible": true,
+        "ceilings": [
+          4,
+          5,
+          6,
+          7,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          4
+        ],
+        "frontiers": [
+          4,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          13
+        ],
+        "firstFailure": {
+          "step": 1,
+          "before": 7,
+          "afterTwo": 9,
+          "required": 11
+        }
+      },
+      "result": {
+        "status": "reachable",
+        "states": 3117,
+        "ops": [
+          [
+            "load",
+            42
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "load",
+            44
+          ],
+          [
+            "dup",
+            3
+          ],
+          [
+            "dup",
+            3
+          ],
+          [
+            "dup",
+            3
+          ],
+          [
+            "load",
+            45
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "swap",
+            4
+          ],
+          [
+            "dup",
+            4
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            4
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            4
+          ],
+          [
+            "dup",
+            4
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            4
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "swap",
+            4
+          ]
+        ],
+        "direct": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "swaps": 6
+      },
+      "birthWord": [
+        "a",
+        "b",
+        "c",
+        "a",
+        "b",
+        "c",
+        "d",
+        "d",
+        "b",
+        "c",
+        "d",
+        "b",
+        "c",
+        "d"
+      ],
+      "upwardValues": [
+        "a",
+        "a",
+        "a",
+        "d",
+        "d",
+        "a"
+      ],
+      "replay": {
+        "target": [
+          "v:42",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:42"
+        ],
+        "added": [
+          "v:42",
+          "v:43",
+          "v:44",
+          "v:42",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:45",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:43",
+          "v:44",
+          "v:45"
+        ],
+        "cost": {
+          "gas": 72,
+          "bytes": 28
+        },
+        "score": 100,
+        "instructions": 20
+      },
+      "carrierOnlyHops": 7
+    },
+    {
+      "word": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e",
+        "b",
+        "c",
+        "d",
+        "e",
+        "b",
+        "c",
+        "d",
+        "e",
+        "a"
+      ],
+      "reach": 5,
+      "plan": {
+        "problem": {
+          "source": [],
+          "target": [
+            "v:42",
+            "v:43",
+            "v:44",
+            "v:45",
+            "v:46",
+            "v:43",
+            "v:44",
+            "v:45",
+            "v:46",
+            "v:43",
+            "v:44",
+            "v:45",
+            "v:46",
+            "v:42"
+          ],
+          "spills": [
+            42,
+            43,
+            44,
+            45,
+            46
+          ],
+          "caps": {
+            "swap": 5,
+            "dup": 5
+          },
+          "id": "unnamed",
+          "missing": [
+            "v:42",
+            "v:43",
+            "v:44",
+            "v:45",
+            "v:46",
+            "v:43",
+            "v:44",
+            "v:45",
+            "v:46",
+            "v:43",
+            "v:44",
+            "v:45",
+            "v:46",
+            "v:42"
+          ],
+          "weights": {
+            "gas": 1,
+            "bytes": 1
+          },
+          "gasModel": "cpp",
+          "loadWidths": [],
+          "model": "reduced-cap"
+        },
+        "values": [
+          "v:42",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46"
+        ],
+        "budgets": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "intervals": [
+          {
+            "start": 1,
+            "end": 5,
+            "value": "v:43"
+          },
+          {
+            "start": 2,
+            "end": 6,
+            "value": "v:44"
+          },
+          {
+            "start": 3,
+            "end": 7,
+            "value": "v:45"
+          },
+          {
+            "start": 4,
+            "end": 8,
+            "value": "v:46"
+          },
+          {
+            "start": 5,
+            "end": 9,
+            "value": "v:43"
+          },
+          {
+            "start": 6,
+            "end": 10,
+            "value": "v:44"
+          },
+          {
+            "start": 7,
+            "end": 11,
+            "value": "v:45"
+          },
+          {
+            "start": 8,
+            "end": 12,
+            "value": "v:46"
+          },
+          {
+            "start": 0,
+            "end": 13,
+            "value": "v:42"
+          }
+        ],
+        "capacityFeasible": true
+      },
+      "frontier": {
+        "Q": 2,
+        "occupancy": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          5,
+          5,
+          5,
+          5,
+          4,
+          3,
+          2,
+          1
+        ],
+        "maximumOccupancy": 5,
+        "capacityFeasible": true,
+        "ceilings": [
+          5,
+          6,
+          7,
+          8,
+          9,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          5
+        ],
+        "frontiers": [
+          5,
+          9,
+          10,
+          11,
+          12,
+          13,
+          13
+        ],
+        "firstFailure": {
+          "step": 1,
+          "before": 9,
+          "afterTwo": 11,
+          "required": 13
+        }
+      },
+      "result": {
+        "status": "reachable",
+        "states": 34699,
+        "ops": [
+          [
+            "load",
+            42
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "load",
+            44
+          ],
+          [
+            "dup",
+            3
+          ],
+          [
+            "load",
+            46
+          ],
+          [
+            "dup",
+            4
+          ],
+          [
+            "dup",
+            4
+          ],
+          [
+            "load",
+            45
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "swap",
+            5
+          ],
+          [
+            "dup",
+            5
+          ],
+          [
+            "dup",
+            5
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            5
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            5
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "swap",
+            5
+          ]
+        ],
+        "direct": [
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "swaps": 5
+      },
+      "birthWord": [
+        "a",
+        "b",
+        "c",
+        "a",
+        "e",
+        "b",
+        "c",
+        "d",
+        "d",
+        "e",
+        "b",
+        "c",
+        "d",
+        "e"
+      ],
+      "upwardValues": [
+        "a",
+        "e",
+        "e",
+        "e",
+        "a"
+      ],
+      "replay": {
+        "target": [
+          "v:42",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46",
+          "v:42"
+        ],
+        "added": [
+          "v:42",
+          "v:43",
+          "v:44",
+          "v:42",
+          "v:46",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:45",
+          "v:46",
+          "v:43",
+          "v:44",
+          "v:45",
+          "v:46"
+        ],
+        "cost": {
+          "gas": 72,
+          "bytes": 29
+        },
+        "score": 101,
+        "instructions": 19
+      },
+      "carrierOnlyHops": 5
+    }
+  ],
+  "independentR5": {
+    "directLimit": {
+      "status": "reachable",
+      "states": 90810,
+      "ops": [
+        [
+          "load",
+          42
+        ],
+        [
+          "load",
+          43
+        ],
+        [
+          "load",
+          44
+        ],
+        [
+          "dup",
+          3
+        ],
+        [
+          "load",
+          46
+        ],
+        [
+          "dup",
+          4
+        ],
+        [
+          "dup",
+          4
+        ],
+        [
+          "load",
+          45
+        ],
+        [
+          "dup",
+          1
+        ],
+        [
+          "swap",
+          5
+        ],
+        [
+          "dup",
+          5
+        ],
+        [
+          "dup",
+          5
+        ],
+        [
+          "swap",
+          1
+        ],
+        [
+          "dup",
+          5
+        ],
+        [
+          "swap",
+          1
+        ],
+        [
+          "dup",
+          5
+        ],
+        [
+          "swap",
+          1
+        ],
+        [
+          "dup",
+          1
+        ],
+        [
+          "swap",
+          5
+        ]
+      ],
+      "direct": 5
+    },
+    "weighted": {
+      "source": [],
+      "target": [
+        "v:42",
+        "v:43",
+        "v:44",
+        "v:45",
+        "v:46",
+        "v:43",
+        "v:44",
+        "v:45",
+        "v:46",
+        "v:43",
+        "v:44",
+        "v:45",
+        "v:46",
+        "v:42"
+      ],
+      "spills": [
+        42,
+        43,
+        44,
+        45,
+        46
+      ],
+      "caps": {
+        "swap": 5,
+        "dup": 5
+      },
+      "id": "unnamed",
+      "missing": [
+        "v:42",
+        "v:43",
+        "v:44",
+        "v:45",
+        "v:46",
+        "v:43",
+        "v:44",
+        "v:45",
+        "v:46",
+        "v:43",
+        "v:44",
+        "v:45",
+        "v:46",
+        "v:42"
+      ],
+      "weights": {
+        "gas": 0,
+        "bytes": 1
+      },
+      "gasModel": "cpp",
+      "loadWidths": [
+        [
+          42,
+          32
+        ],
+        [
+          43,
+          32
+        ],
+        [
+          44,
+          32
+        ],
+        [
+          45,
+          32
+        ],
+        [
+          46,
+          32
+        ]
+      ],
+      "model": "reduced-cap"
+    },
+    "oracle": {
+      "model": "reduced-cap",
+      "baseline": 179,
+      "reserve": true,
+      "states": 56649,
+      "expanded": 56594,
+      "edges": 434142,
+      "status": "optimal",
+      "cost": {
+        "gas": 72,
+        "bytes": 184
+      },
+      "score": 184,
+      "ops": [
+        [
+          "load",
+          42
+        ],
+        [
+          "load",
+          43
+        ],
+        [
+          "load",
+          44
+        ],
+        [
+          "load",
+          45
+        ],
+        [
+          "dup",
+          4
+        ],
+        [
+          "dup",
+          4
+        ],
+        [
+          "dup",
+          4
+        ],
+        [
+          "dup",
+          4
+        ],
+        [
+          "load",
+          46
+        ],
+        [
+          "swap",
+          4
+        ],
+        [
+          "dup",
+          5
+        ],
+        [
+          "dup",
+          5
+        ],
+        [
+          "swap",
+          1
+        ],
+        [
+          "dup",
+          5
+        ],
+        [
+          "swap",
+          1
+        ],
+        [
+          "dup",
+          5
+        ],
+        [
+          "swap",
+          1
+        ],
+        [
+          "dup",
+          1
+        ],
+        [
+          "swap",
+          5
+        ]
+      ],
+      "instructions": 19,
+      "excess": 5,
+      "milliseconds": 458.10888
+    },
+    "replay": {
+      "target": [
+        "v:42",
+        "v:43",
+        "v:44",
+        "v:45",
+        "v:46",
+        "v:43",
+        "v:44",
+        "v:45",
+        "v:46",
+        "v:43",
+        "v:44",
+        "v:45",
+        "v:46",
+        "v:42"
+      ],
+      "added": [
+        "v:42",
+        "v:43",
+        "v:44",
+        "v:45",
+        "v:42",
+        "v:43",
+        "v:44",
+        "v:45",
+        "v:46",
+        "v:46",
+        "v:43",
+        "v:44",
+        "v:45",
+        "v:46"
+      ],
+      "cost": {
+        "gas": 72,
+        "bytes": 184
+      },
+      "score": 184,
+      "instructions": 19
+    }
+  },
+  "independentMethods": "Value-presence BFS:34699 states, minimum5 SWAPs. Separate total-direct-limit BFS without presence constraints:90810 states, five introductions and minimum5 SWAPs. Unrestricted weighted Dijkstra:56649 states, exactOPT184. Each target needs all five absent kinds, so total direct limit5 means exactly one introduction perkind. Each extra width32 LOAD costs33 more bytes than DUP, exceeding the whole5-byte optimum excess.",
+  "r3Finding": "R3 a(bc)^4a needs four unrestricted SWAPs but five in the single-carrier DAG. The stored four-SWAP witness lifts a,a,c,a and preserves the required presence. This is a counterexample to the single-hole carrier invariant as a2Q construction."
+}
