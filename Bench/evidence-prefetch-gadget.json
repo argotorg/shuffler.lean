@@ -1,0 +1,194 @@
+{
+  "status": "finite forced-prefetch embedding with no E integrality gap",
+  "scope": "The long retained d gap forces two d births by index 2. The selected internal a gap forces three a births by index 4. Exact enumeration gives E=4 over 144 feasible endpoint permutations. The endpoint LP also returns an integral optimum E=4. This one gadget does not establish a general integrality theorem.",
+  "target": [
+    "d",
+    "a",
+    "a",
+    "a",
+    "a",
+    "b",
+    "c",
+    "d"
+  ],
+  "reach": 2,
+  "intervals": [
+    {
+      "start": 1,
+      "end": 2,
+      "value": "a"
+    },
+    {
+      "start": 2,
+      "end": 3,
+      "value": "a"
+    },
+    {
+      "start": 3,
+      "end": 4,
+      "value": "a"
+    },
+    {
+      "start": 0,
+      "end": 7,
+      "value": "d"
+    }
+  ],
+  "selected": [
+    1,
+    3
+  ],
+  "jobs": [
+    {
+      "value": "d",
+      "deadline": 2
+    },
+    {
+      "value": "a",
+      "deadline": 3
+    },
+    {
+      "value": "a",
+      "deadline": 4
+    },
+    {
+      "value": "a",
+      "deadline": 4
+    },
+    {
+      "value": "a",
+      "deadline": 6
+    },
+    {
+      "value": "b",
+      "deadline": 7
+    },
+    {
+      "value": "c",
+      "deadline": 8
+    },
+    {
+      "value": "d",
+      "deadline": 2
+    }
+  ],
+  "exact": {
+    "status": "optimal",
+    "objective": 4,
+    "word": [
+      "d",
+      "a",
+      "d",
+      "a",
+      "a",
+      "a",
+      "c",
+      "b"
+    ],
+    "assignment": [
+      0,
+      1,
+      7,
+      2,
+      4,
+      3,
+      6,
+      5
+    ],
+    "E": 4,
+    "retained": [],
+    "assignments": 144
+  },
+  "lp": {
+    "status": "optimal",
+    "objective": 4,
+    "exactObjective": "4/1",
+    "moved": 4,
+    "exactMoved": "4/1",
+    "retention": [],
+    "matrix": [
+      [
+        "1/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1"
+      ],
+      [
+        "0/1",
+        "1/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1"
+      ],
+      [
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "1/1"
+      ],
+      [
+        "0/1",
+        "0/1",
+        "1/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1"
+      ],
+      [
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "1/1",
+        "0/1",
+        "0/1",
+        "0/1"
+      ],
+      [
+        "0/1",
+        "0/1",
+        "0/1",
+        "1/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1"
+      ],
+      [
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "1/1",
+        "0/1"
+      ],
+      [
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "1/1",
+        "0/1",
+        "0/1"
+      ]
+    ],
+    "fractionalEntries": 0,
+    "milliseconds": 27.632198000000002
+  }
+}

@@ -37,3 +37,14 @@ test('generic endpoint costs have a fractional gap at length six', { skip: !proc
   assert.equal(solveQuotaLP(target, 2, jobs, { edgeCosts }).exactObjective, '1/2');
   assert.equal(solveQuotaLP(target, 2, jobs, { edgeCosts, integral: true }).objective, 1);
 });
+
+test('a forced-prefetch embedding has integral moved-endpoint optimum four', { skip: !process.env.Z3_BIN }, () => {
+  const target = ['d', 'a', 'a', 'a', 'a', 'b', 'c', 'd'];
+  const jobs = [{ value: 'd', deadline: 2 }, { value: 'a', deadline: 3 }, { value: 'a', deadline: 4 },
+    { value: 'a', deadline: 4 }, { value: 'a', deadline: 6 }, { value: 'b', deadline: 7 },
+    { value: 'c', deadline: 8 }, { value: 'd', deadline: 2 }];
+  assert.equal(exactObjective(target, 2, jobs).objective, 4);
+  const result = solveQuotaLP(target, 2, jobs);
+  assert.equal(result.objective, 4);
+  assert.equal(result.fractionalEntries, 0);
+});

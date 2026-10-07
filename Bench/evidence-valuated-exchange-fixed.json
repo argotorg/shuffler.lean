@@ -1,0 +1,120 @@
+{
+  "status": "finite counterexample to fixed one-value valuated exchange",
+  "valuation": "f(B) is minimum moved endpoints in a matching from birth positions B to fixed target positions T, under birth<=target+R. B must also meet fixed generation deadlines from every selected interval subset.",
+  "exchange": "For every feasible A,B and x in A minus B, require some y in B minus A with both exchanged sets feasible and cost(A)+cost(B)>=cost(A-x+y)+cost(B-y+x). Endpoint costs use exact assignment matching with a checked primal-dual certificate.",
+  "domain": {
+    "maximumSize": 8,
+    "reaches": [
+      1,
+      2,
+      3,
+      16
+    ],
+    "targets": "all position subsets of the ground set",
+    "generation": "all selected consecutive occurrence intervals",
+    "prices": null,
+    "stopping": "first failed exchange, by increasing ground-set size"
+  },
+  "instances": 402,
+  "bases": 1432,
+  "obligations": 7407,
+  "failures": [
+    {
+      "size": 5,
+      "targets": [
+        0,
+        1,
+        2
+      ],
+      "reach": 2,
+      "deadlines": [
+        2,
+        2,
+        4
+      ],
+      "selectedMask": 1,
+      "price": {},
+      "a": {
+        "births": [
+          0,
+          1,
+          4
+        ],
+        "moved": 1,
+        "extraDirect": 1,
+        "cost": 1
+      },
+      "b": {
+        "births": [
+          0,
+          2,
+          3
+        ],
+        "moved": 1,
+        "extraDirect": 0,
+        "cost": 1
+      },
+      "x": 1,
+      "attempts": [
+        {
+          "y": 2,
+          "aNext": [
+            0,
+            2,
+            4
+          ],
+          "bNext": [
+            0,
+            1,
+            3
+          ],
+          "first": {
+            "births": [
+              0,
+              2,
+              4
+            ],
+            "moved": 2,
+            "extraDirect": 1,
+            "cost": 2
+          },
+          "second": {
+            "births": [
+              0,
+              1,
+              3
+            ],
+            "moved": 1,
+            "extraDirect": 0,
+            "cost": 1
+          }
+        },
+        {
+          "y": 3,
+          "aNext": [
+            0,
+            3,
+            4
+          ],
+          "bNext": [
+            0,
+            1,
+            2
+          ],
+          "first": null,
+          "second": {
+            "births": [
+              0,
+              1,
+              2
+            ],
+            "moved": 0,
+            "extraDirect": 0,
+            "cost": 0
+          }
+        }
+      ]
+    }
+  ],
+  "reproduce": "node scripts/optimality-valuated-exchange.mjs fixed Bench/evidence-valuated-exchange-fixed.json"
+}
