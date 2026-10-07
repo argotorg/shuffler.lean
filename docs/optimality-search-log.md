@@ -716,3 +716,31 @@ against its matched saved v12/v13 results. The oracle settles 31 cases;
 the actual portfolio attains 30 of those optima. The wide-LOAD result of
 127 bytes equals the settled optimum. The separate 590-case saved-suite
 comparison is still running.
+
+### 2026-10-07 04:36 UTC
+
+Commits `3b9dd2b` and `17e5d38` record actual portfolio SWAP normalization and
+the separate direct-over-DUP normal form. `5f7e501` and `af2b0ec` record the
+saved weighted-plan, normalization, targeted v15, and one-gap carrier checks.
+
+The next trace-side result proves the joint old-copy and retained-gap
+movement lower bound. A gap from output `i` to output `j` contributes
+`floor((j-i-1)/16)`. Sparse prefix surplus charges this amount to upward
+SWAPs between its height cuts, even with anticipatory DUPs. Gaps of one value
+have disjoint counter levels, and paid gaps start after the original-source
+sparse demand has been discharged. Thus old demand plus all retained-gap
+demands is at most the actual SWAP count, without counting a SWAP twice.
+
+Adding omitted-interval introduction premiums gives a feasible trace-induced
+plan whose weighted cost plus baseline is at most the trace score. This is
+a lower-bound result. It does not provide a plan realizer or factor two.
+Production tests include a tight two-old-plus-one-gap movement example,
+anticipatory duplication, boundary distances, and rejected POP and DUP17.
+Eleven audited results use only standard axioms. The full
+`lake build Shuffler Tests optimality_bench` checkpoint passes 3043 jobs.
+
+The new reduced-reach counterexample `a(bcde)^3a` at reach five has gap
+demand two but needs five SWAPs with one direct introduction per kind. Three
+independent exact searches agree. It refutes the proposed general `2Q`
+realization bound, not a production factor-two-to-OPT theorem. Placement
+constraints require further work.
