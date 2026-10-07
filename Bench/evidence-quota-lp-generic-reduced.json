@@ -1,0 +1,204 @@
+{
+  "status": "checked generic-cost fractional gap; no claim against the E objective",
+  "scope": "The LP witness has exact rational cost 1/2. Exhaustive enumeration gives integer optimum 1. This refutes integrality of the full assignment-plus-generation-quota polytope. It does not refute integrality for the special moved-token objective E or optional-retention objective.",
+  "target": [
+    "a",
+    "a",
+    "a",
+    "a",
+    "b",
+    "c"
+  ],
+  "reach": 2,
+  "selected": [
+    1
+  ],
+  "jobs": [
+    {
+      "value": "a",
+      "deadline": 2
+    },
+    {
+      "value": "a",
+      "deadline": 3
+    },
+    {
+      "value": "a",
+      "deadline": 3
+    },
+    {
+      "value": "a",
+      "deadline": 5
+    },
+    {
+      "value": "b",
+      "deadline": 6
+    },
+    {
+      "value": "c",
+      "deadline": 7
+    }
+  ],
+  "edgeCosts": [
+    [
+      0,
+      2,
+      2,
+      2,
+      2,
+      2
+    ],
+    [
+      2,
+      2,
+      2,
+      0,
+      2,
+      0
+    ],
+    [
+      2,
+      2,
+      1,
+      2,
+      0,
+      2
+    ],
+    [
+      2,
+      0,
+      2,
+      2,
+      2,
+      2
+    ],
+    [
+      2,
+      2,
+      0,
+      2,
+      2,
+      0
+    ],
+    [
+      2,
+      2,
+      2,
+      0,
+      0,
+      2
+    ]
+  ],
+  "exact": {
+    "status": "optimal",
+    "objective": 1,
+    "word": [
+      "a",
+      "a",
+      "a",
+      "a",
+      "c",
+      "b"
+    ],
+    "assignment": [
+      0,
+      3,
+      2,
+      1,
+      5,
+      4
+    ],
+    "E": 4,
+    "retained": [],
+    "assignments": 144
+  },
+  "lp": {
+    "status": "optimal",
+    "objective": 0.5,
+    "exactObjective": "1/2",
+    "moved": 4.5,
+    "exactMoved": "9/2",
+    "retention": [],
+    "matrix": [
+      [
+        "1/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1"
+      ],
+      [
+        "0/1",
+        "0/1",
+        "0/1",
+        "1/2",
+        "0/1",
+        "1/2"
+      ],
+      [
+        "0/1",
+        "0/1",
+        "1/2",
+        "0/1",
+        "1/2",
+        "0/1"
+      ],
+      [
+        "0/1",
+        "1/1",
+        "0/1",
+        "0/1",
+        "0/1",
+        "0/1"
+      ],
+      [
+        "0/1",
+        "0/1",
+        "1/2",
+        "0/1",
+        "0/1",
+        "1/2"
+      ],
+      [
+        "0/1",
+        "0/1",
+        "0/1",
+        "1/2",
+        "1/2",
+        "0/1"
+      ]
+    ],
+    "fractionalEntries": 8,
+    "milliseconds": 29.178461
+  },
+  "argument": {
+    "zeroCostAssignment": [
+      0,
+      5,
+      4,
+      1,
+      2,
+      3
+    ],
+    "zeroCostBirthWord": [
+      "a",
+      "c",
+      "b",
+      "a",
+      "a",
+      "a"
+    ],
+    "violation": "Only two a births occur through cut 3, but three a jobs are due. The zero-cost edges force this unique permutation.",
+    "oneCostAssignment": [
+      0,
+      3,
+      2,
+      1,
+      5,
+      4
+    ],
+    "fractionalWitness": "The matrix is the average of the displayed zero-cost and one-cost permutations. It satisfies all row, column, endpoint-lag, and generation-quota constraints. Therefore its cost is 1/2.",
+    "scope": "The integer lower bound is a direct finite argument. LP optimality is reported by Z3; the displayed feasible witness already suffices to refute integrality."
+  }
+}

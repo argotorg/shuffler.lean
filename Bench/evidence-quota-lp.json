@@ -1,0 +1,25 @@
+{
+  "status": "finite LP comparison; no integrality theorem claimed",
+  "relaxation": "Variables x[b,j]>=0 have each row and column sum 1, and x[b,j]=0 when b>j+R. For each value v and cut k, sum x[b,j] over b<=k and target[j]=v is at least the count of generation jobs for v due through k. The objective is E=sum x[b,j] over b!=j. Generation matching remains separate from endpoint labels.",
+  "check": "Integer optimum is exhaustive over all endpoint permutations and separate sorted generation-deadline matches. LP models are checked with exact BigInt rational arithmetic. A zero integer optimum proves zero LP optimum from nonnegative objective without a solver call. The experiment stops at the first fractional objective or feasibility gap.",
+  "domain": {
+    "maximumLength": 7,
+    "reaches": [
+      1,
+      2,
+      3,
+      16
+    ],
+    "targets": "canonical words with at most 3 values",
+    "retention": "all subsets, with all-reuse tested first for each target"
+  },
+  "solver": "/nix/store/89ap2f0glliam9rb97davgb02w5m71fh-z3-4.16.0/bin/z3",
+  "cases": 33776,
+  "trivialZero": 23127,
+  "solverCases": 10649,
+  "infeasible": 2896,
+  "fractionalModels": 0,
+  "gaps": [],
+  "failures": [],
+  "reproduce": "Z3_BIN=<z3-path> node scripts/optimality-quota-lp.mjs Bench/evidence-quota-lp.json"
+}

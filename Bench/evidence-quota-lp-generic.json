@@ -1,0 +1,201 @@
+{
+  "status": "finite fractional objective gap for generic LP",
+  "objective": "Minimize independently sampled integer endpoint-edge costs in 0..9 under fixed generation deadlines. This checks general integrality, not just the moved-token objective E.",
+  "check": "Enumerate all lag-valid endpoint permutations and check generation deadlines by value independently. LP primal models and their costs are checked with exact rational arithmetic. Zero integer cost proves zero LP cost without a solver call. Stop at the first fractional objective gap.",
+  "domain": {
+    "maximumLength": 7,
+    "reaches": [
+      1,
+      2,
+      3,
+      16
+    ],
+    "targets": "all canonical words with at most 3 values until first gap",
+    "profiles": "four independent random edge matrices per selected interval plan; all, none, alternating, and two seeded random selections"
+  },
+  "seed": 2026100747,
+  "solver": "/nix/store/89ap2f0glliam9rb97davgb02w5m71fh-z3-4.16.0/bin/z3",
+  "cases": 6522,
+  "trivialZero": 20,
+  "solverCases": 6502,
+  "fractionalModels": 1,
+  "gaps": [
+    {
+      "target": [
+        "a",
+        "a",
+        "a",
+        "a",
+        "b",
+        "c"
+      ],
+      "reach": 2,
+      "selected": [
+        1
+      ],
+      "jobs": [
+        {
+          "value": "a",
+          "deadline": 2
+        },
+        {
+          "value": "a",
+          "deadline": 3
+        },
+        {
+          "value": "a",
+          "deadline": 3
+        },
+        {
+          "value": "a",
+          "deadline": 5
+        },
+        {
+          "value": "b",
+          "deadline": 6
+        },
+        {
+          "value": "c",
+          "deadline": 7
+        }
+      ],
+      "options": {
+        "edgeCosts": [
+          [
+            0,
+            5,
+            6,
+            0,
+            1,
+            3
+          ],
+          [
+            4,
+            2,
+            6,
+            0,
+            9,
+            0
+          ],
+          [
+            5,
+            2,
+            1,
+            8,
+            1,
+            3
+          ],
+          [
+            0,
+            2,
+            7,
+            2,
+            8,
+            2
+          ],
+          [
+            5,
+            7,
+            2,
+            2,
+            4,
+            0
+          ],
+          [
+            8,
+            0,
+            2,
+            4,
+            9,
+            6
+          ]
+        ]
+      },
+      "exact": {
+        "status": "optimal",
+        "objective": 11,
+        "word": [
+          "a",
+          "a",
+          "b",
+          "a",
+          "a",
+          "c"
+        ],
+        "assignment": [
+          0,
+          3,
+          4,
+          1,
+          2,
+          5
+        ],
+        "E": 4,
+        "retained": [],
+        "assignments": 144
+      },
+      "result": {
+        "status": "optimal",
+        "objective": 10.5,
+        "exactObjective": "21/2",
+        "moved": 4.5,
+        "exactMoved": "9/2",
+        "retention": [],
+        "matrix": [
+          [
+            "1/1",
+            "0/1",
+            "0/1",
+            "0/1",
+            "0/1",
+            "0/1"
+          ],
+          [
+            "0/1",
+            "0/1",
+            "0/1",
+            "1/2",
+            "0/1",
+            "1/2"
+          ],
+          [
+            "0/1",
+            "0/1",
+            "1/2",
+            "0/1",
+            "1/2",
+            "0/1"
+          ],
+          [
+            "0/1",
+            "1/1",
+            "0/1",
+            "0/1",
+            "0/1",
+            "0/1"
+          ],
+          [
+            "0/1",
+            "0/1",
+            "1/2",
+            "0/1",
+            "0/1",
+            "1/2"
+          ],
+          [
+            "0/1",
+            "0/1",
+            "0/1",
+            "1/2",
+            "1/2",
+            "0/1"
+          ]
+        ],
+        "fractionalEntries": 8,
+        "milliseconds": 20.3220580000052
+      }
+    }
+  ],
+  "failures": [],
+  "reproduce": "Z3_BIN=<z3-path> node scripts/optimality-quota-lp-objectives.mjs generic Bench/evidence-quota-lp-generic.json"
+}

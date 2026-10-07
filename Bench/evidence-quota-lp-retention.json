@@ -1,0 +1,66 @@
+{
+  "status": "finite retention LP comparison; no integrality theorem claimed",
+  "objective": "Minimize twice the generation premium above baseline plus swapPrice*E. Each retention y is in [0,1] and requires the kth equal-value birth by previousTargetPosition+R. Values with zero direct premium have no retention variable.",
+  "check": "Enumerate all lag-valid endpoint permutations and check generation deadlines by value independently. LP primal models and their costs are checked with exact rational arithmetic. Zero integer cost proves zero LP cost without a solver call. Stop at the first fractional objective gap.",
+  "domain": {
+    "maximumLength": 7,
+    "reaches": [
+      1,
+      2,
+      3,
+      16
+    ],
+    "targets": "all canonical words with at most 3 values until first gap",
+    "profiles": [
+      {
+        "premiums": {
+          "a": 1,
+          "b": 1,
+          "c": 1
+        },
+        "swapPrice": 1
+      },
+      {
+        "premiums": {
+          "a": 1,
+          "b": 2,
+          "c": 33
+        },
+        "swapPrice": 1
+      },
+      {
+        "premiums": {
+          "a": 3,
+          "b": 3,
+          "c": 3
+        },
+        "swapPrice": 3
+      },
+      {
+        "premiums": {
+          "a": 0,
+          "b": 1,
+          "c": 33
+        },
+        "swapPrice": 1
+      },
+      {
+        "premiums": {
+          "a": 1,
+          "b": 33,
+          "c": 2
+        },
+        "swapPrice": 7
+      }
+    ]
+  },
+  "seed": 2026100747,
+  "solver": "/nix/store/89ap2f0glliam9rb97davgb02w5m71fh-z3-4.16.0/bin/z3",
+  "cases": 11020,
+  "trivialZero": 6241,
+  "solverCases": 4779,
+  "fractionalModels": 0,
+  "gaps": [],
+  "failures": [],
+  "reproduce": "Z3_BIN=<z3-path> node scripts/optimality-quota-lp-objectives.mjs retention Bench/evidence-quota-lp-retention.json"
+}
