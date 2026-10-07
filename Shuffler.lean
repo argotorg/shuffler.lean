@@ -17,3 +17,5 @@ import Shuffler.Optimality.Schedule.Append.Theorems
 import Shuffler.Optimality.PrefixIntroduction.Theorems
 import Shuffler.Optimality.FrozenPrefix.Approximation
 import Shuffler.Optimality.Approximation.Drop
+import Shuffler.Optimality.Collective.InventoryBound.Theorems
+import Shuffler.Optimality.Collective.DeadlineCounts

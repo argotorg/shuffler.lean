@@ -643,3 +643,29 @@ The per-value sum of those increases is not yet proved. Plan realization,
 SWAP cost, and the global factor-two excess theorem remain open. The tests
 use production traces and include the height17/fresh-first-output obstruction.
 The v12 benchmark evidence run is still in progress on its pinned executable.
+
+### 2026-10-07 03:56 UTC
+
+Commit `0b1f68a` records the global retained-set capacity and strict direct
+count increases. The next group completes the introduction-cost lower bound.
+Each omitted paid interval gets a distinct direct-count level. Values absent
+from the source exclude the first level because baseline pays for it.
+This proves the omitted interval weight is bounded by generation surcharge.
+The score theorem adds the paid-weight floor to baseline and actual SWAP
+cost. Its finite maximum is a specification, not a production optimizer.
+
+The deadline-count proof gives an exact equality between new jobs due, old
+inventory, and crossing paid intervals. Its signed deadline bound preserves
+the source-height-17 obstruction. Tests cover repeated old values, capacity
+released by an old output, paid source-present reuse, empty states, and
+negative capacity cases. Plan realization and the global factor-two excess
+theorem remain open.
+
+The pinned v12 saved-suite run has finished: 590 cases, no errors or witness
+violations, 589 factor-two certificates, and 410 exact certificates. Compared
+with v8, 24 costs decrease and none increase. The frozen-prefix runtime bound
+integration is being checked separately before a new full build.
+
+The full `lake build Shuffler Tests optimality_bench` checkpoint passes
+3005 jobs, including the repaired frozen-bound test. Fourteen audited
+inventory-cost and deadline results use only the three standard axioms.

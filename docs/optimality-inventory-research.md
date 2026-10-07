@@ -1,8 +1,9 @@
 # Inventory and flow research
 
 This note records a proposed abstraction and the proved lemmas below.
-The full abstraction is not yet a Lean theorem or a new algorithm. It does
-not establish a general approximation ratio.
+The global introduction-cost lower bound is now proved for normalized
+no-POP production traces. Constructive plan realization and its SWAP bound
+remain open. The results do not establish a general approximation ratio.
 
 At a stack height of at least17, the next birth freezes one old position.
 Let `bag` contain the current top17 values. Let `b` be the target value at
@@ -197,9 +198,33 @@ from each production trace. Its `retained_capacity` theorem proves the global
 capacity inequality without a residency assumption. Its
 `unretained_direct_increase` theorem proves a strict direct-count increase
 between the start and stop output cuts of each omitted paid interval.
-Summing those disjoint increases into the weighted interval floor remains
-open. Constructive plan realization, its SWAP bound, and global factor two
-also remain open.
+`Collective.Counts.omitted_count_le` sums these disjoint intervals by an
+injection into direct-count levels. For each value v, the omitted count is
+at most `directCount(v) − (if v belongs to source then 0 else 1)`. Thus the
+first introduction of an initially absent value stays within baseline.
+The omitted interval weight is at most the proved generation surcharge.
+
+`Collective.InventoryBound` defines feasible paid sets, an upper bound on
+saved weight, and a finite maximum over feasible subsets. The maximum is a
+specification; no production planner evaluates it. The checked score theorem
+for every no-POP trace with source length at most 17 is:
+
+```
+baseline + swapPrice * trace.swapCount +
+  (paidIntervalWeight − maximumFeasibleSavedWeight) ≤ traceScore.
+```
+
+The abstract upper-weight certificate variant avoids subset enumeration in
+proof clients. Tests establish a 33-byte floor for two overlapping fresh
+intervals, a 66-byte floor for three alternating pairs, the extra seed slot
+after one old output, and a paid interval of a source-present value.
+
+`Collective.DeadlineCounts` proves the exact finite identity
+`dueJobs + source.length = cut + mandatory.card + crossingPaid.card`.
+Its signed deadline condition is equivalent to the inventory sum constraint.
+Tests cover duplicate source values, advanced deadlines, the height-17
+boundary, unpaid intervals, and empty stacks. Constructive plan realization,
+its SWAP bound, and global factor two remain open.
 
 The initial Reserve boundary condition still matters. At source height17,
 a fresh first output would leave17 mandatory copies. Truncating
