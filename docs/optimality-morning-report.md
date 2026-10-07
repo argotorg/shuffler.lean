@@ -87,8 +87,9 @@ so the certificate does not prove its 81-cost candidate optimal.
 be introduced directly, the source count is no larger than the target count
 through position `p`, and a later copy is required, then more than that count
 must be born before position `p+17`. The source certificate uses this theorem
-with the generation baseline. General optional source generation rewards are
-still an offline model.
+with the generation baseline. The [optional source generation-discount
+bridge](source-generation-discount.md) is now proved, including equality
+for cheapest legal birth methods and a source trace certificate theorem.
 
 See [dual certificate details](joint-dual-certificate.md),
 [source quota proof](../Shuffler/Optimality/BirthPlacement/Dual/SourceQuota.lean),

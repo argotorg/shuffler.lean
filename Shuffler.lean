@@ -29,4 +29,9 @@ import Shuffler.Optimality.BirthPlacement.Global.Theorems
 import Shuffler.Optimality.BirthPlacement.SourceCheapest.Theorems
 import Shuffler.Optimality.BirthPlacement.Dual.Trace
 import Shuffler.Optimality.BirthPlacement.Dual.Source
+import Shuffler.Optimality.BirthPlacement.Dual.Pairwise
+import Shuffler.Optimality.BirthPlacement.Dual.SourceDiscount.Cheapest
+import Shuffler.Optimality.BirthPlacement.Dual.SourceDiscount.Trace
+import Shuffler.Optimality.BirthPlacement.TracePlan.Rank
+import Shuffler.Optimality.BirthPlacement.Word.Backward
 import Shuffler.Optimality.Schedule.PostPass.Guarantees

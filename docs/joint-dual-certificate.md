@@ -252,7 +252,11 @@ The source trace theorem uses the already proved generation baseline
 and the required quotas. It does not need the full source version of
 the optional generation-discount theorem. In this case the direct
 accounting total equals the baseline, and all optional rewards are zero.
-The general optional source-reward extension remains an offline model.
+The general optional source generation-discount bridge is now proved.
+See [the source discount proof](source-generation-discount.md). It masks
+rewards for copies already supplied by the source and proves equality for
+the cheapest legal birth methods. The saved certificate above still uses
+the separate baseline and mandatory-quota API.
 
 `scripts/optimality-source-dual-check.mjs` reads that one saved witness,
 replays it, extracts its endpoint assignment, requests external dual
