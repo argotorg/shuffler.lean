@@ -47,6 +47,12 @@ endpoints and this word needs at least two SWAPs: every compatible token
 assignment moves positions 0, 1, 3, and 4, while each SWAP can account for
 at most two moved positions.
 
+`Tests/OptimalitySourceNormalization.lean` also checks the actual
+value-based `SwapRuns.normalize` function. It leaves the five-SWAP
+candidate at five. The three-SWAP entry and the later two-SWAP run are
+already minimum for their concrete endpoints. Equal-copy relabelling
+within each run cannot remove this failure.
+
 | Quantity | Candidate | Optimum | Baseline |
 |---|---:|---:|---:|
 | Gas | 21 | 12 | 6 |
