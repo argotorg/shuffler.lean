@@ -1,0 +1,351 @@
+{
+  "status": "finite exact comparison of a sparse priced-assignment flow and independent permutation enumeration",
+  "scope": "Seven small named cases and two saved price vectors. No production solver, scheduler change, broad random search, outer multiplier algorithm, LP rounding theorem, or Lean proof is claimed.",
+  "method": "BigInt successive shortest paths with Bellman-Ford; this small-check implementation does not claim the research note runtime.",
+  "cases": 7,
+  "assignments": 897,
+  "feasibleAssignments": 177,
+  "records": [
+    {
+      "fixture": {
+        "name": "empty",
+        "target": [],
+        "reach": 16,
+        "swap": 3,
+        "gaps": []
+      },
+      "permutations": 1,
+      "feasibleAssignments": 1,
+      "exactReward": "0",
+      "flow": {
+        "status": "optimal",
+        "reward": "0",
+        "assignment": [],
+        "row": [],
+        "column": [],
+        "vertices": 2,
+        "arcs": 0
+      },
+      "equal": true
+    },
+    {
+      "fixture": {
+        "name": "last-occurrence-entry",
+        "source": [
+          "b"
+        ],
+        "target": [
+          "a",
+          "b"
+        ],
+        "reach": 1,
+        "swap": 3,
+        "gaps": []
+      },
+      "permutations": 2,
+      "feasibleAssignments": 1,
+      "exactReward": "0",
+      "flow": {
+        "status": "optimal",
+        "reward": "0",
+        "assignment": [
+          1,
+          0
+        ],
+        "row": [
+          "-3",
+          "0"
+        ],
+        "column": [
+          "0",
+          "3"
+        ],
+        "vertices": 11,
+        "arcs": 13
+      },
+      "equal": true
+    },
+    {
+      "fixture": {
+        "name": "several-value-prices",
+        "target": [
+          "a",
+          "b",
+          "c",
+          "a",
+          "b",
+          "a"
+        ],
+        "reach": 2,
+        "swap": 3,
+        "gaps": [
+          {
+            "left": 0,
+            "weight": 9
+          },
+          {
+            "left": 1,
+            "weight": 2
+          },
+          {
+            "left": 3,
+            "weight": 5
+          }
+        ]
+      },
+      "permutations": 720,
+      "feasibleAssignments": 162,
+      "exactReward": "47",
+      "flow": {
+        "status": "optimal",
+        "reward": "47",
+        "assignment": [
+          0,
+          3,
+          5,
+          1,
+          2,
+          4
+        ],
+        "row": [
+          "0",
+          "0",
+          "0",
+          "-3",
+          "-3",
+          "-6"
+        ],
+        "column": [
+          "17",
+          "5",
+          "3",
+          "14",
+          "6",
+          "14"
+        ],
+        "vertices": 28,
+        "arcs": 46
+      },
+      "equal": true
+    },
+    {
+      "fixture": {
+        "name": "zero-swap-price",
+        "target": [
+          "a",
+          "b",
+          "a",
+          "b"
+        ],
+        "reach": 1,
+        "swap": 0,
+        "gaps": [
+          {
+            "left": 0,
+            "weight": 7
+          },
+          {
+            "left": 1,
+            "weight": 1
+          }
+        ]
+      },
+      "permutations": 24,
+      "feasibleAssignments": 8,
+      "exactReward": "15",
+      "flow": {
+        "status": "optimal",
+        "reward": "15",
+        "assignment": [
+          0,
+          2,
+          1,
+          3
+        ],
+        "row": [
+          "0",
+          "0",
+          "0",
+          "-1"
+        ],
+        "column": [
+          "7",
+          "1",
+          "7",
+          "1"
+        ],
+        "vertices": 19,
+        "arcs": 30
+      },
+      "equal": true
+    },
+    {
+      "fixture": {
+        "name": "source-fixed-value",
+        "source": [
+          "b",
+          "a"
+        ],
+        "target": [
+          "a",
+          "b",
+          "a",
+          "b"
+        ],
+        "reach": 1,
+        "swap": 2,
+        "gaps": [
+          {
+            "left": 0,
+            "weight": 4
+          },
+          {
+            "left": 1,
+            "weight": 6
+          }
+        ]
+      },
+      "permutations": 24,
+      "feasibleAssignments": 3,
+      "exactReward": "16",
+      "flow": {
+        "status": "optimal",
+        "reward": "16",
+        "assignment": [
+          1,
+          0,
+          3,
+          2
+        ],
+        "row": [
+          "0",
+          "0",
+          "0",
+          "-4"
+        ],
+        "column": [
+          "4",
+          "6",
+          "4",
+          "6"
+        ],
+        "vertices": 19,
+        "arcs": 28
+      },
+      "equal": true
+    },
+    {
+      "fixture": {
+        "name": "frozen-source",
+        "source": [
+          "a",
+          "b",
+          "a",
+          "b"
+        ],
+        "target": [
+          "a",
+          "b",
+          "b",
+          "a",
+          "a"
+        ],
+        "reach": 1,
+        "swap": 3,
+        "gaps": [
+          {
+            "left": 0,
+            "weight": 1
+          },
+          {
+            "left": 1,
+            "weight": 8
+          }
+        ]
+      },
+      "permutations": 120,
+      "feasibleAssignments": 2,
+      "exactReward": "18",
+      "flow": {
+        "status": "optimal",
+        "reward": "18",
+        "assignment": [
+          0,
+          1,
+          3,
+          2,
+          4
+        ],
+        "row": [
+          "0",
+          "0",
+          "-1",
+          "-8",
+          "0"
+        ],
+        "column": [
+          "4",
+          "11",
+          "8",
+          "1",
+          "3"
+        ],
+        "vertices": 23,
+        "arcs": 34
+      },
+      "equal": true
+    },
+    {
+      "fixture": {
+        "name": "frozen-conflict",
+        "source": [
+          "b",
+          "a",
+          "a"
+        ],
+        "target": [
+          "a",
+          "b",
+          "a"
+        ],
+        "reach": 1,
+        "swap": 3,
+        "gaps": []
+      },
+      "permutations": 6,
+      "feasibleAssignments": 0,
+      "exactReward": null,
+      "flow": {
+        "status": "infeasible",
+        "vertices": 15,
+        "arcs": 19
+      },
+      "equal": true
+    }
+  ],
+  "entryBoundary": {
+    "maximumEntryLoad": 2,
+    "maximumPositiveTimeLoad": 1
+  },
+  "savedPrices": [
+    {
+      "source": "Bench/evidence-periodic-joint-dual.json",
+      "vertices": 206,
+      "arcs": 375,
+      "rowColumnSum": "619",
+      "previousLowerNumerator": "1166",
+      "lowerNumerator": "1166",
+      "scale": "1"
+    },
+    {
+      "source": "Bench/evidence-source-joint-dual.json",
+      "vertices": 218,
+      "arcs": 409,
+      "rowColumnSum": "153",
+      "previousLowerNumerator": "147",
+      "lowerNumerator": "147",
+      "scale": "1"
+    }
+  ],
+  "reproduce": "node scripts/optimality-priced-assignment.mjs Bench/evidence-priced-assignment.json"
+}
