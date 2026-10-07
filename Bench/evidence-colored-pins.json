@@ -1,0 +1,177 @@
+{
+  "status": "finite check of an algebraic quota reformulation; no new trace oracle or production policy",
+  "predicate": "For each retained same-value gap p to t without a pinned same-value endpoint in (p,p+R], add [p+R,u+R), where u is the next unpinned same-value endpoint after p, or infinity if absent. At each cut count every pin in (k-R,k] plus each value covered by the union of its obligation intervals. This count must not exceed the number of target indices in (k-R,k].",
+  "comparison": "Compare all per-value quotas returned by the separate exact pinned-quota implementation, each first failed cut, and overall feasibility. This checks eight named targets, all their retained-gap and pin subsets, and four reaches.",
+  "domain": {
+    "fixtures": [
+      [],
+      [
+        "a"
+      ],
+      [
+        "a",
+        "a"
+      ],
+      [
+        "a",
+        "b",
+        "a"
+      ],
+      [
+        "a",
+        "b",
+        "b",
+        "a"
+      ],
+      [
+        "a",
+        "b",
+        "b",
+        "a",
+        "b",
+        "a"
+      ],
+      [
+        "a",
+        "a",
+        "b",
+        "a",
+        "b",
+        "a"
+      ],
+      [
+        "b",
+        "c",
+        "a",
+        "a",
+        "a",
+        "a",
+        "b",
+        "c"
+      ]
+    ],
+    "reaches": [
+      1,
+      2,
+      3,
+      16
+    ]
+  },
+  "plans": 296,
+  "comparisons": 41324,
+  "feasible": 23402,
+  "failures": [],
+  "counterexample": {
+    "status": "infeasible",
+    "cut": 3,
+    "obligations": [
+      {
+        "value": "a",
+        "start": 2,
+        "end": 7,
+        "gap": 1
+      }
+    ],
+    "cuts": [
+      {
+        "cut": 0,
+        "pinned": 1,
+        "uncovered": [],
+        "capacity": 1,
+        "required": 1,
+        "byValue": {
+          "a": 0,
+          "b": 0
+        }
+      },
+      {
+        "cut": 1,
+        "pinned": 1,
+        "uncovered": [],
+        "capacity": 2,
+        "required": 1,
+        "byValue": {
+          "a": 0,
+          "b": 0
+        }
+      },
+      {
+        "cut": 2,
+        "pinned": 1,
+        "uncovered": [
+          "a"
+        ],
+        "capacity": 2,
+        "required": 2,
+        "byValue": {
+          "a": 1,
+          "b": 0
+        }
+      },
+      {
+        "cut": 3,
+        "pinned": 2,
+        "uncovered": [
+          "a"
+        ],
+        "capacity": 2,
+        "required": 3,
+        "byValue": {
+          "a": 1,
+          "b": 1
+        }
+      },
+      {
+        "cut": 4,
+        "pinned": 1,
+        "uncovered": [
+          "a"
+        ],
+        "capacity": 2,
+        "required": 2,
+        "byValue": {
+          "a": 1,
+          "b": 1
+        }
+      },
+      {
+        "cut": 5,
+        "pinned": 0,
+        "uncovered": [
+          "a"
+        ],
+        "capacity": 2,
+        "required": 1,
+        "byValue": {
+          "a": 1,
+          "b": 1
+        }
+      },
+      {
+        "cut": 6,
+        "pinned": 0,
+        "uncovered": [
+          "a"
+        ],
+        "capacity": 1,
+        "required": 1,
+        "byValue": {
+          "a": 1,
+          "b": 2
+        }
+      },
+      {
+        "cut": 7,
+        "pinned": 0,
+        "uncovered": [],
+        "capacity": 0,
+        "required": 0,
+        "byValue": {
+          "a": 1,
+          "b": 2
+        }
+      }
+    ]
+  },
+  "reproduce": "node scripts/optimality-colored-pins.mjs Bench/evidence-colored-pins.json"
+}

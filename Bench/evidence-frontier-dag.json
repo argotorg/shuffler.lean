@@ -1,0 +1,2110 @@
+{
+  "status": "exact offline frontier-DAG specification with small independent checks; no production integration",
+  "objective": "Minimize 2*generationCost + swapPrice*E over empty-source lag-valid plans. E counts moved token positions. This is a plan objective, not an exact SWAP objective.",
+  "state": "Before birth b, all target slots below max(b-R,0) are already assigned. The frontier S contains the other assigned target slots and has size min(b,R). A DUP of v is available exactly when some index in S has target value v.",
+  "transition": "Choose an unassigned target index j>=b-R. If b>=R, the index b-R must belong to S union {j}; then remove it from that union to get the next frontier. Charge the cheapest legal birth of target[j] and the movement indicator j!=b.",
+  "scope": "Only 14 named small fixtures are checked against exhaustive endpoint-permutation optimization, with independent realizer replay. The state count grows as a degree-R+1 polynomial when R is fixed and as 2^n when R>=n. This is not suitable for production at R=16.",
+  "cases": 14,
+  "failures": [],
+  "records": [
+    {
+      "name": "empty",
+      "problem": {
+        "source": [],
+        "target": [],
+        "spills": [
+          42,
+          43,
+          44
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            0
+          ],
+          [
+            44,
+            2
+          ]
+        ],
+        "gasModel": "evm",
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "caps": {
+          "swap": 1,
+          "dup": 1
+        },
+        "id": "unnamed",
+        "missing": [],
+        "model": "reduced-cap"
+      },
+      "actual": {
+        "status": "optimal",
+        "objective": 0,
+        "generationCost": 0,
+        "E": 0,
+        "assignment": [],
+        "births": [],
+        "frontiers": [],
+        "states": 1,
+        "edges": 0
+      },
+      "exact": {
+        "status": "optimal",
+        "objective": 0,
+        "word": [],
+        "assignment": [],
+        "E": 0,
+        "retained": [],
+        "assignments": 1
+      },
+      "realization": {
+        "ops": [],
+        "swaps": 0,
+        "E": 0,
+        "D": 0,
+        "cycles": 0,
+        "target": [],
+        "added": [],
+        "cost": {
+          "gas": 0,
+          "bytes": 0
+        },
+        "score": 0,
+        "instructions": 0
+      }
+    },
+    {
+      "name": "empty",
+      "problem": {
+        "source": [],
+        "target": [],
+        "spills": [
+          42,
+          43,
+          44
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            0
+          ],
+          [
+            44,
+            2
+          ]
+        ],
+        "gasModel": "evm",
+        "weights": {
+          "gas": 1,
+          "bytes": 0
+        },
+        "caps": {
+          "swap": 1,
+          "dup": 1
+        },
+        "id": "unnamed",
+        "missing": [],
+        "model": "reduced-cap"
+      },
+      "actual": {
+        "status": "optimal",
+        "objective": 0,
+        "generationCost": 0,
+        "E": 0,
+        "assignment": [],
+        "births": [],
+        "frontiers": [],
+        "states": 1,
+        "edges": 0
+      },
+      "exact": {
+        "status": "optimal",
+        "objective": 0,
+        "word": [],
+        "assignment": [],
+        "E": 0,
+        "retained": [],
+        "assignments": 1
+      },
+      "realization": {
+        "ops": [],
+        "swaps": 0,
+        "E": 0,
+        "D": 0,
+        "cycles": 0,
+        "target": [],
+        "added": [],
+        "cost": {
+          "gas": 0,
+          "bytes": 0
+        },
+        "score": 0,
+        "instructions": 0
+      }
+    },
+    {
+      "name": "one-copy",
+      "problem": {
+        "source": [],
+        "target": [
+          "v:42"
+        ],
+        "spills": [
+          42,
+          43,
+          44
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            0
+          ],
+          [
+            44,
+            2
+          ]
+        ],
+        "gasModel": "evm",
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "caps": {
+          "swap": 1,
+          "dup": 1
+        },
+        "id": "unnamed",
+        "missing": [
+          "v:42"
+        ],
+        "model": "reduced-cap"
+      },
+      "actual": {
+        "status": "optimal",
+        "objective": 68,
+        "generationCost": 34,
+        "E": 0,
+        "assignment": [
+          0
+        ],
+        "births": [
+          {
+            "value": "v:42",
+            "kind": "load"
+          }
+        ],
+        "frontiers": [
+          []
+        ],
+        "states": 2,
+        "edges": 1
+      },
+      "exact": {
+        "status": "optimal",
+        "objective": 0,
+        "word": [
+          "v:42"
+        ],
+        "assignment": [
+          0
+        ],
+        "E": 0,
+        "retained": [],
+        "assignments": 1
+      },
+      "realization": {
+        "ops": [
+          [
+            "load",
+            42
+          ]
+        ],
+        "swaps": 0,
+        "E": 0,
+        "D": 0,
+        "cycles": 1,
+        "target": [
+          "v:42"
+        ],
+        "added": [
+          "v:42"
+        ],
+        "cost": {
+          "gas": 6,
+          "bytes": 34
+        },
+        "score": 34,
+        "instructions": 1
+      }
+    },
+    {
+      "name": "one-copy",
+      "problem": {
+        "source": [],
+        "target": [
+          "v:42"
+        ],
+        "spills": [
+          42,
+          43,
+          44
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            0
+          ],
+          [
+            44,
+            2
+          ]
+        ],
+        "gasModel": "evm",
+        "weights": {
+          "gas": 1,
+          "bytes": 0
+        },
+        "caps": {
+          "swap": 1,
+          "dup": 1
+        },
+        "id": "unnamed",
+        "missing": [
+          "v:42"
+        ],
+        "model": "reduced-cap"
+      },
+      "actual": {
+        "status": "optimal",
+        "objective": 12,
+        "generationCost": 6,
+        "E": 0,
+        "assignment": [
+          0
+        ],
+        "births": [
+          {
+            "value": "v:42",
+            "kind": "load"
+          }
+        ],
+        "frontiers": [
+          []
+        ],
+        "states": 2,
+        "edges": 1
+      },
+      "exact": {
+        "status": "optimal",
+        "objective": 0,
+        "word": [
+          "v:42"
+        ],
+        "assignment": [
+          0
+        ],
+        "E": 0,
+        "retained": [],
+        "assignments": 1
+      },
+      "realization": {
+        "ops": [
+          [
+            "load",
+            42
+          ]
+        ],
+        "swaps": 0,
+        "E": 0,
+        "D": 0,
+        "cycles": 1,
+        "target": [
+          "v:42"
+        ],
+        "added": [
+          "v:42"
+        ],
+        "cost": {
+          "gas": 6,
+          "bytes": 34
+        },
+        "score": 6,
+        "instructions": 1
+      }
+    },
+    {
+      "name": "adjacent-repeat",
+      "problem": {
+        "source": [],
+        "target": [
+          "v:42",
+          "v:42",
+          "v:42"
+        ],
+        "spills": [
+          42,
+          43,
+          44
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            0
+          ],
+          [
+            44,
+            2
+          ]
+        ],
+        "gasModel": "evm",
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "caps": {
+          "swap": 1,
+          "dup": 1
+        },
+        "id": "unnamed",
+        "missing": [
+          "v:42",
+          "v:42",
+          "v:42"
+        ],
+        "model": "reduced-cap"
+      },
+      "actual": {
+        "status": "optimal",
+        "objective": 72,
+        "generationCost": 36,
+        "E": 0,
+        "assignment": [
+          0,
+          1,
+          2
+        ],
+        "births": [
+          {
+            "value": "v:42",
+            "kind": "load"
+          },
+          {
+            "value": "v:42",
+            "kind": "dup"
+          },
+          {
+            "value": "v:42",
+            "kind": "dup"
+          }
+        ],
+        "frontiers": [
+          [],
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ],
+        "states": 7,
+        "edges": 9
+      },
+      "exact": {
+        "status": "optimal",
+        "objective": 0,
+        "word": [
+          "v:42",
+          "v:42",
+          "v:42"
+        ],
+        "assignment": [
+          0,
+          1,
+          2
+        ],
+        "E": 0,
+        "retained": [
+          true,
+          true
+        ],
+        "assignments": 4
+      },
+      "realization": {
+        "ops": [
+          [
+            "load",
+            42
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "dup",
+            1
+          ]
+        ],
+        "swaps": 0,
+        "E": 0,
+        "D": 0,
+        "cycles": 3,
+        "target": [
+          "v:42",
+          "v:42",
+          "v:42"
+        ],
+        "added": [
+          "v:42",
+          "v:42",
+          "v:42"
+        ],
+        "cost": {
+          "gas": 12,
+          "bytes": 36
+        },
+        "score": 36,
+        "instructions": 3
+      }
+    },
+    {
+      "name": "adjacent-repeat",
+      "problem": {
+        "source": [],
+        "target": [
+          "v:42",
+          "v:42",
+          "v:42"
+        ],
+        "spills": [
+          42,
+          43,
+          44
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            0
+          ],
+          [
+            44,
+            2
+          ]
+        ],
+        "gasModel": "evm",
+        "weights": {
+          "gas": 1,
+          "bytes": 0
+        },
+        "caps": {
+          "swap": 1,
+          "dup": 1
+        },
+        "id": "unnamed",
+        "missing": [
+          "v:42",
+          "v:42",
+          "v:42"
+        ],
+        "model": "reduced-cap"
+      },
+      "actual": {
+        "status": "optimal",
+        "objective": 24,
+        "generationCost": 12,
+        "E": 0,
+        "assignment": [
+          0,
+          1,
+          2
+        ],
+        "births": [
+          {
+            "value": "v:42",
+            "kind": "load"
+          },
+          {
+            "value": "v:42",
+            "kind": "dup"
+          },
+          {
+            "value": "v:42",
+            "kind": "dup"
+          }
+        ],
+        "frontiers": [
+          [],
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ],
+        "states": 7,
+        "edges": 9
+      },
+      "exact": {
+        "status": "optimal",
+        "objective": 0,
+        "word": [
+          "v:42",
+          "v:42",
+          "v:42"
+        ],
+        "assignment": [
+          0,
+          1,
+          2
+        ],
+        "E": 0,
+        "retained": [
+          true,
+          true
+        ],
+        "assignments": 4
+      },
+      "realization": {
+        "ops": [
+          [
+            "load",
+            42
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "dup",
+            1
+          ]
+        ],
+        "swaps": 0,
+        "E": 0,
+        "D": 0,
+        "cycles": 3,
+        "target": [
+          "v:42",
+          "v:42",
+          "v:42"
+        ],
+        "added": [
+          "v:42",
+          "v:42",
+          "v:42"
+        ],
+        "cost": {
+          "gas": 12,
+          "bytes": 36
+        },
+        "score": 12,
+        "instructions": 3
+      }
+    },
+    {
+      "name": "one-prefetch",
+      "problem": {
+        "source": [],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:42"
+        ],
+        "spills": [
+          42,
+          43,
+          44
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            0
+          ],
+          [
+            44,
+            2
+          ]
+        ],
+        "gasModel": "evm",
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "caps": {
+          "swap": 1,
+          "dup": 1
+        },
+        "id": "unnamed",
+        "missing": [
+          "v:42",
+          "v:43",
+          "v:42"
+        ],
+        "model": "reduced-cap"
+      },
+      "actual": {
+        "status": "optimal",
+        "objective": 76,
+        "generationCost": 37,
+        "E": 2,
+        "assignment": [
+          0,
+          2,
+          1
+        ],
+        "births": [
+          {
+            "value": "v:42",
+            "kind": "load"
+          },
+          {
+            "value": "v:42",
+            "kind": "dup"
+          },
+          {
+            "value": "v:43",
+            "kind": "load"
+          }
+        ],
+        "frontiers": [
+          [],
+          [
+            0
+          ],
+          [
+            2
+          ]
+        ],
+        "states": 7,
+        "edges": 9
+      },
+      "exact": {
+        "status": "optimal",
+        "objective": 2,
+        "word": [
+          "v:42",
+          "v:42",
+          "v:43"
+        ],
+        "assignment": [
+          0,
+          2,
+          1
+        ],
+        "E": 2,
+        "retained": [
+          true
+        ],
+        "assignments": 4
+      },
+      "realization": {
+        "ops": [
+          [
+            "load",
+            42
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "swap",
+            1
+          ]
+        ],
+        "swaps": 1,
+        "E": 2,
+        "D": 2,
+        "cycles": 2,
+        "target": [
+          "v:42",
+          "v:43",
+          "v:42"
+        ],
+        "added": [
+          "v:42",
+          "v:42",
+          "v:43"
+        ],
+        "cost": {
+          "gas": 17,
+          "bytes": 38
+        },
+        "score": 38,
+        "instructions": 4
+      }
+    },
+    {
+      "name": "one-prefetch",
+      "problem": {
+        "source": [],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:42"
+        ],
+        "spills": [
+          42,
+          43,
+          44
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            0
+          ],
+          [
+            44,
+            2
+          ]
+        ],
+        "gasModel": "evm",
+        "weights": {
+          "gas": 1,
+          "bytes": 0
+        },
+        "caps": {
+          "swap": 1,
+          "dup": 1
+        },
+        "id": "unnamed",
+        "missing": [
+          "v:42",
+          "v:43",
+          "v:42"
+        ],
+        "model": "reduced-cap"
+      },
+      "actual": {
+        "status": "optimal",
+        "objective": 34,
+        "generationCost": 17,
+        "E": 0,
+        "assignment": [
+          0,
+          1,
+          2
+        ],
+        "births": [
+          {
+            "value": "v:42",
+            "kind": "load"
+          },
+          {
+            "value": "v:43",
+            "kind": "load"
+          },
+          {
+            "value": "v:42",
+            "kind": "load"
+          }
+        ],
+        "frontiers": [
+          [],
+          [
+            0
+          ],
+          [
+            1
+          ]
+        ],
+        "states": 7,
+        "edges": 9
+      },
+      "exact": {
+        "status": "optimal",
+        "objective": 6,
+        "word": [
+          "v:42",
+          "v:43",
+          "v:42"
+        ],
+        "assignment": [
+          0,
+          1,
+          2
+        ],
+        "E": 0,
+        "retained": [
+          false
+        ],
+        "assignments": 4
+      },
+      "realization": {
+        "ops": [
+          [
+            "load",
+            42
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "load",
+            42
+          ]
+        ],
+        "swaps": 0,
+        "E": 0,
+        "D": 0,
+        "cycles": 3,
+        "target": [
+          "v:42",
+          "v:43",
+          "v:42"
+        ],
+        "added": [
+          "v:42",
+          "v:43",
+          "v:42"
+        ],
+        "cost": {
+          "gas": 17,
+          "bytes": 70
+        },
+        "score": 17,
+        "instructions": 3
+      }
+    },
+    {
+      "name": "two-prefetches",
+      "problem": {
+        "source": [],
+        "target": [
+          "v:43",
+          "v:44",
+          "v:42",
+          "v:42",
+          "v:42",
+          "v:42",
+          "v:43",
+          "v:44"
+        ],
+        "spills": [
+          42,
+          43,
+          44
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            0
+          ],
+          [
+            44,
+            2
+          ]
+        ],
+        "gasModel": "evm",
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "caps": {
+          "swap": 3,
+          "dup": 3
+        },
+        "id": "unnamed",
+        "missing": [
+          "v:43",
+          "v:44",
+          "v:42",
+          "v:42",
+          "v:42",
+          "v:42",
+          "v:43",
+          "v:44"
+        ],
+        "model": "reduced-cap"
+      },
+      "actual": {
+        "status": "optimal",
+        "objective": 94,
+        "generationCost": 46,
+        "E": 2,
+        "assignment": [
+          0,
+          1,
+          2,
+          3,
+          7,
+          5,
+          6,
+          4
+        ],
+        "births": [
+          {
+            "value": "v:43",
+            "kind": "load"
+          },
+          {
+            "value": "v:44",
+            "kind": "load"
+          },
+          {
+            "value": "v:42",
+            "kind": "load"
+          },
+          {
+            "value": "v:42",
+            "kind": "dup"
+          },
+          {
+            "value": "v:44",
+            "kind": "dup"
+          },
+          {
+            "value": "v:42",
+            "kind": "dup"
+          },
+          {
+            "value": "v:43",
+            "kind": "load"
+          },
+          {
+            "value": "v:42",
+            "kind": "dup"
+          }
+        ],
+        "frontiers": [
+          [],
+          [
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            2
+          ],
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            2,
+            3,
+            7
+          ],
+          [
+            3,
+            5,
+            7
+          ],
+          [
+            5,
+            6,
+            7
+          ]
+        ],
+        "states": 163,
+        "edges": 512
+      },
+      "exact": {
+        "status": "optimal",
+        "objective": 4,
+        "word": [
+          "v:43",
+          "v:44",
+          "v:42",
+          "v:42",
+          "v:44",
+          "v:42",
+          "v:43",
+          "v:42"
+        ],
+        "assignment": [
+          0,
+          1,
+          2,
+          3,
+          7,
+          5,
+          6,
+          4
+        ],
+        "E": 2,
+        "retained": [
+          true,
+          true,
+          true,
+          false,
+          true
+        ],
+        "assignments": 6144
+      },
+      "realization": {
+        "ops": [
+          [
+            "load",
+            43
+          ],
+          [
+            "load",
+            44
+          ],
+          [
+            "load",
+            42
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "dup",
+            3
+          ],
+          [
+            "dup",
+            2
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "dup",
+            2
+          ],
+          [
+            "swap",
+            3
+          ]
+        ],
+        "swaps": 1,
+        "E": 2,
+        "D": 2,
+        "cycles": 7,
+        "target": [
+          "v:43",
+          "v:44",
+          "v:42",
+          "v:42",
+          "v:42",
+          "v:42",
+          "v:43",
+          "v:44"
+        ],
+        "added": [
+          "v:43",
+          "v:44",
+          "v:42",
+          "v:42",
+          "v:44",
+          "v:42",
+          "v:43",
+          "v:42"
+        ],
+        "cost": {
+          "gas": 37,
+          "bytes": 47
+        },
+        "score": 47,
+        "instructions": 9
+      }
+    },
+    {
+      "name": "two-prefetches",
+      "problem": {
+        "source": [],
+        "target": [
+          "v:43",
+          "v:44",
+          "v:42",
+          "v:42",
+          "v:42",
+          "v:42",
+          "v:43",
+          "v:44"
+        ],
+        "spills": [
+          42,
+          43,
+          44
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            0
+          ],
+          [
+            44,
+            2
+          ]
+        ],
+        "gasModel": "evm",
+        "weights": {
+          "gas": 1,
+          "bytes": 0
+        },
+        "caps": {
+          "swap": 3,
+          "dup": 3
+        },
+        "id": "unnamed",
+        "missing": [
+          "v:43",
+          "v:44",
+          "v:42",
+          "v:42",
+          "v:42",
+          "v:42",
+          "v:43",
+          "v:44"
+        ],
+        "model": "reduced-cap"
+      },
+      "actual": {
+        "status": "optimal",
+        "objective": 74,
+        "generationCost": 37,
+        "E": 0,
+        "assignment": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "births": [
+          {
+            "value": "v:43",
+            "kind": "load"
+          },
+          {
+            "value": "v:44",
+            "kind": "load"
+          },
+          {
+            "value": "v:42",
+            "kind": "load"
+          },
+          {
+            "value": "v:42",
+            "kind": "dup"
+          },
+          {
+            "value": "v:42",
+            "kind": "dup"
+          },
+          {
+            "value": "v:42",
+            "kind": "dup"
+          },
+          {
+            "value": "v:43",
+            "kind": "load"
+          },
+          {
+            "value": "v:44",
+            "kind": "load"
+          }
+        ],
+        "frontiers": [
+          [],
+          [
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            2
+          ],
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            4,
+            5
+          ],
+          [
+            4,
+            5,
+            6
+          ]
+        ],
+        "states": 163,
+        "edges": 512
+      },
+      "exact": {
+        "status": "optimal",
+        "objective": 10,
+        "word": [
+          "v:43",
+          "v:44",
+          "v:42",
+          "v:42",
+          "v:42",
+          "v:42",
+          "v:43",
+          "v:44"
+        ],
+        "assignment": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "E": 0,
+        "retained": [
+          true,
+          true,
+          true,
+          false,
+          false
+        ],
+        "assignments": 6144
+      },
+      "realization": {
+        "ops": [
+          [
+            "load",
+            43
+          ],
+          [
+            "load",
+            44
+          ],
+          [
+            "load",
+            42
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "load",
+            44
+          ]
+        ],
+        "swaps": 0,
+        "E": 0,
+        "D": 0,
+        "cycles": 8,
+        "target": [
+          "v:43",
+          "v:44",
+          "v:42",
+          "v:42",
+          "v:42",
+          "v:42",
+          "v:43",
+          "v:44"
+        ],
+        "added": [
+          "v:43",
+          "v:44",
+          "v:42",
+          "v:42",
+          "v:42",
+          "v:42",
+          "v:43",
+          "v:44"
+        ],
+        "cost": {
+          "gas": 37,
+          "bytes": 49
+        },
+        "score": 37,
+        "instructions": 8
+      }
+    },
+    {
+      "name": "push0-between-copies",
+      "problem": {
+        "source": [],
+        "target": [
+          "v:42",
+          "l:0",
+          "l:0",
+          "v:42"
+        ],
+        "spills": [
+          42,
+          43,
+          44
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            0
+          ],
+          [
+            44,
+            2
+          ]
+        ],
+        "gasModel": "evm",
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "caps": {
+          "swap": 1,
+          "dup": 1
+        },
+        "id": "unnamed",
+        "missing": [
+          "v:42",
+          "l:0",
+          "l:0",
+          "v:42"
+        ],
+        "model": "reduced-cap"
+      },
+      "actual": {
+        "status": "optimal",
+        "objective": 77,
+        "generationCost": 37,
+        "E": 3,
+        "assignment": [
+          0,
+          3,
+          1,
+          2
+        ],
+        "births": [
+          {
+            "value": "v:42",
+            "kind": "load"
+          },
+          {
+            "value": "v:42",
+            "kind": "dup"
+          },
+          {
+            "value": "l:0",
+            "kind": "push"
+          },
+          {
+            "value": "l:0",
+            "kind": "push"
+          }
+        ],
+        "frontiers": [
+          [],
+          [
+            0
+          ],
+          [
+            3
+          ],
+          [
+            3
+          ]
+        ],
+        "states": 11,
+        "edges": 16
+      },
+      "exact": {
+        "status": "optimal",
+        "objective": 3,
+        "word": [
+          "v:42",
+          "v:42",
+          "l:0",
+          "l:0"
+        ],
+        "assignment": [
+          0,
+          3,
+          1,
+          2
+        ],
+        "E": 3,
+        "retained": [
+          true
+        ],
+        "assignments": 8
+      },
+      "realization": {
+        "ops": [
+          [
+            "load",
+            42
+          ],
+          [
+            "dup",
+            1
+          ],
+          [
+            "push",
+            "l:0"
+          ],
+          [
+            "swap",
+            1
+          ],
+          [
+            "push",
+            "l:0"
+          ],
+          [
+            "swap",
+            1
+          ]
+        ],
+        "swaps": 2,
+        "E": 3,
+        "D": 4,
+        "cycles": 2,
+        "target": [
+          "v:42",
+          "l:0",
+          "l:0",
+          "v:42"
+        ],
+        "added": [
+          "v:42",
+          "v:42",
+          "l:0",
+          "l:0"
+        ],
+        "cost": {
+          "gas": 19,
+          "bytes": 39
+        },
+        "score": 39,
+        "instructions": 6
+      }
+    },
+    {
+      "name": "push0-between-copies",
+      "problem": {
+        "source": [],
+        "target": [
+          "v:42",
+          "l:0",
+          "l:0",
+          "v:42"
+        ],
+        "spills": [
+          42,
+          43,
+          44
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            0
+          ],
+          [
+            44,
+            2
+          ]
+        ],
+        "gasModel": "evm",
+        "weights": {
+          "gas": 1,
+          "bytes": 0
+        },
+        "caps": {
+          "swap": 1,
+          "dup": 1
+        },
+        "id": "unnamed",
+        "missing": [
+          "v:42",
+          "l:0",
+          "l:0",
+          "v:42"
+        ],
+        "model": "reduced-cap"
+      },
+      "actual": {
+        "status": "optimal",
+        "objective": 32,
+        "generationCost": 16,
+        "E": 0,
+        "assignment": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "births": [
+          {
+            "value": "v:42",
+            "kind": "load"
+          },
+          {
+            "value": "l:0",
+            "kind": "push"
+          },
+          {
+            "value": "l:0",
+            "kind": "push"
+          },
+          {
+            "value": "v:42",
+            "kind": "load"
+          }
+        ],
+        "frontiers": [
+          [],
+          [
+            0
+          ],
+          [
+            1
+          ],
+          [
+            2
+          ]
+        ],
+        "states": 11,
+        "edges": 16
+      },
+      "exact": {
+        "status": "optimal",
+        "objective": 6,
+        "word": [
+          "v:42",
+          "l:0",
+          "l:0",
+          "v:42"
+        ],
+        "assignment": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "E": 0,
+        "retained": [
+          false
+        ],
+        "assignments": 8
+      },
+      "realization": {
+        "ops": [
+          [
+            "load",
+            42
+          ],
+          [
+            "push",
+            "l:0"
+          ],
+          [
+            "push",
+            "l:0"
+          ],
+          [
+            "load",
+            42
+          ]
+        ],
+        "swaps": 0,
+        "E": 0,
+        "D": 0,
+        "cycles": 4,
+        "target": [
+          "v:42",
+          "l:0",
+          "l:0",
+          "v:42"
+        ],
+        "added": [
+          "v:42",
+          "l:0",
+          "l:0",
+          "v:42"
+        ],
+        "cost": {
+          "gas": 16,
+          "bytes": 70
+        },
+        "score": 16,
+        "instructions": 4
+      }
+    },
+    {
+      "name": "mixed-widths",
+      "problem": {
+        "source": [],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:44",
+          "v:43",
+          "v:44"
+        ],
+        "spills": [
+          42,
+          43,
+          44
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            0
+          ],
+          [
+            44,
+            2
+          ]
+        ],
+        "gasModel": "evm",
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "caps": {
+          "swap": 2,
+          "dup": 2
+        },
+        "id": "unnamed",
+        "missing": [
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:44",
+          "v:43",
+          "v:44"
+        ],
+        "model": "reduced-cap"
+      },
+      "actual": {
+        "status": "optimal",
+        "objective": 88,
+        "generationCost": 44,
+        "E": 0,
+        "assignment": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "births": [
+          {
+            "value": "v:42",
+            "kind": "load"
+          },
+          {
+            "value": "v:43",
+            "kind": "load"
+          },
+          {
+            "value": "v:42",
+            "kind": "dup"
+          },
+          {
+            "value": "v:44",
+            "kind": "load"
+          },
+          {
+            "value": "v:43",
+            "kind": "load"
+          },
+          {
+            "value": "v:44",
+            "kind": "dup"
+          }
+        ],
+        "frontiers": [
+          [],
+          [
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "states": 42,
+        "edges": 96
+      },
+      "exact": {
+        "status": "optimal",
+        "objective": 2,
+        "word": [
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:44",
+          "v:43",
+          "v:44"
+        ],
+        "assignment": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "E": 0,
+        "retained": [
+          true,
+          false,
+          true
+        ],
+        "assignments": 162
+      },
+      "realization": {
+        "ops": [
+          [
+            "load",
+            42
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "dup",
+            2
+          ],
+          [
+            "load",
+            44
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "dup",
+            2
+          ]
+        ],
+        "swaps": 0,
+        "E": 0,
+        "D": 0,
+        "cycles": 6,
+        "target": [
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:44",
+          "v:43",
+          "v:44"
+        ],
+        "added": [
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:44",
+          "v:43",
+          "v:44"
+        ],
+        "cost": {
+          "gas": 28,
+          "bytes": 44
+        },
+        "score": 44,
+        "instructions": 6
+      }
+    },
+    {
+      "name": "mixed-widths",
+      "problem": {
+        "source": [],
+        "target": [
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:44",
+          "v:43",
+          "v:44"
+        ],
+        "spills": [
+          42,
+          43,
+          44
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            0
+          ],
+          [
+            44,
+            2
+          ]
+        ],
+        "gasModel": "evm",
+        "weights": {
+          "gas": 1,
+          "bytes": 0
+        },
+        "caps": {
+          "swap": 2,
+          "dup": 2
+        },
+        "id": "unnamed",
+        "missing": [
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:44",
+          "v:43",
+          "v:44"
+        ],
+        "model": "reduced-cap"
+      },
+      "actual": {
+        "status": "optimal",
+        "objective": 56,
+        "generationCost": 28,
+        "E": 0,
+        "assignment": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "births": [
+          {
+            "value": "v:42",
+            "kind": "load"
+          },
+          {
+            "value": "v:43",
+            "kind": "load"
+          },
+          {
+            "value": "v:42",
+            "kind": "dup"
+          },
+          {
+            "value": "v:44",
+            "kind": "load"
+          },
+          {
+            "value": "v:43",
+            "kind": "load"
+          },
+          {
+            "value": "v:44",
+            "kind": "dup"
+          }
+        ],
+        "frontiers": [
+          [],
+          [
+            0
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            2
+          ],
+          [
+            2,
+            3
+          ],
+          [
+            3,
+            4
+          ]
+        ],
+        "states": 42,
+        "edges": 96
+      },
+      "exact": {
+        "status": "optimal",
+        "objective": 4,
+        "word": [
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:44",
+          "v:43",
+          "v:44"
+        ],
+        "assignment": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "E": 0,
+        "retained": [
+          true,
+          false,
+          true
+        ],
+        "assignments": 162
+      },
+      "realization": {
+        "ops": [
+          [
+            "load",
+            42
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "dup",
+            2
+          ],
+          [
+            "load",
+            44
+          ],
+          [
+            "load",
+            43
+          ],
+          [
+            "dup",
+            2
+          ]
+        ],
+        "swaps": 0,
+        "E": 0,
+        "D": 0,
+        "cycles": 6,
+        "target": [
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:44",
+          "v:43",
+          "v:44"
+        ],
+        "added": [
+          "v:42",
+          "v:43",
+          "v:42",
+          "v:44",
+          "v:43",
+          "v:44"
+        ],
+        "cost": {
+          "gas": 28,
+          "bytes": 44
+        },
+        "score": 28,
+        "instructions": 6
+      }
+    }
+  ],
+  "reproduce": "node scripts/optimality-frontier-dag.mjs Bench/evidence-frontier-dag.json"
+}
