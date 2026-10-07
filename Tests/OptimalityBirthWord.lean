@@ -1,4 +1,4 @@
-import Shuffler.Optimality.BirthPlacement.Word.Theorems
+import Shuffler.Optimality.BirthPlacement.Word.Cached
 
 namespace Tests.OptimalityBirthWord
 
@@ -7,7 +7,7 @@ open Shuffler.Optimality.BirthPlacement
 private def births : Fin 4 → Bool := fun index => [true, false, true, false][index]
 private def target : Fin 4 → Bool := fun index => [false, false, true, true][index]
 private theorem balanced : Word.Balanced births target := by intro value; cases value <;> decide
-private def assignment := Word.optimal 2 births target balanced
+private def assignment := Word.cachedOptimal 2 births target balanced
 
 -- Both directions run. Position 1 has a correct value but must move.
 #guard List.ofFn (fun index => (assignment index).val) = [3, 0, 2, 1]
@@ -31,7 +31,14 @@ private theorem emptyBalanced : Word.Balanced emptyWord emptyWord := fun _ => rf
 example (other : Equiv.Perm (Fin 4))
     (hvalues : ∀ index, births index = target (other index))
     (hreach : ∀ index, index.val ≤ (other index).val + 2) :
-    assignment.support.card ≤ other.support.card :=
-  Word.support_card_le balanced other hvalues hreach
+    assignment.support.card ≤ other.support.card := by
+  rw [assignment, Word.cachedOptimal_eq]
+  exact Word.support_card_le balanced other hvalues hreach
+
+-- The pure table also has a total fallback for a key outside its stored set.
+#guard Word.Cache.lookup (Word.Cache.entries [1, 2, 1] (fun index : Nat => Fin.last index))
+  (fun index => Fin.last index) 1 = Fin.last 1
+#guard Word.Cache.lookup (Word.Cache.entries [1, 2, 1] (fun index : Nat => Fin.last index))
+  (fun index => Fin.last index) 3 = Fin.last 3
 
 end Tests.OptimalityBirthWord

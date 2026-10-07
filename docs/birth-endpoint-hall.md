@@ -37,6 +37,20 @@ moves no more tokens than any other value-compatible endpoint permutation
 that meets the same deadlines. The proof partitions the fixed positions
 by their value and adds the per-value bounds.
 
+The production wrappers use `Word.cachedOptimal`. It stores one endpoint
+map per distinct birth value and reuses that map in both directions.
+`Word.cachedOptimal_eq` proves exact equality with `Word.optimal`, including
+its choice between equal-cost assignments. The raw-word parser uses the
+same stored maps. Both input words are stored in vectors before the value
+scans. The map table is explicit data, so the compiled lookup function does
+not rebuild it.
+
+`Bench/BirthEndpointCache.lean` runs both permutation directions on stored
+lists with four repeated values. One local sample took 8893 ms for the
+original map and 113 ms for the stored map at length 160. The saved sample
+is `Bench/evidence-endpoint-cache.json`. These times are execution evidence,
+not a proof of a time bound.
+
 `Plan.optimizeEndpoints` uses this map in an existing birth plan. The
 birth word and all birth events stay the same. The map has the least
 possible number of moved endpoint tokens for that word. The realizer can

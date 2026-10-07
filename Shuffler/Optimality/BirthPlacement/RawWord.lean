@@ -1,5 +1,6 @@
 import Shuffler.Optimality.BirthPlacement.RawWord.Counts
 import Shuffler.Optimality.BirthPlacement.Plan
+import Shuffler.Optimality.BirthPlacement.Word.Cached
 
 namespace Shuffler.Optimality.BirthPlacement.RawWord
 
@@ -53,11 +54,12 @@ theorem Feasible.hall (h : Feasible spills target births) :
     omega
 
 def Feasible.assignment (h : Feasible spills target births) : Equiv.Perm (Fin target.length) :=
-  Word.optimal 16 (values births target.length h.length) (fun index => target[index]) h.balanced
+  Word.cachedOptimal 16 (values births target.length h.length) (fun index => target[index]) h.balanced
 
 theorem Feasible.assignment_value (h : Feasible spills target births) (index : Fin target.length) :
-    target[h.assignment index] = values births target.length h.length index :=
-  (Word.optimal_compatible h.balanced index).symm
+    target[h.assignment index] = values births target.length h.length index := by
+  simp only [Feasible.assignment, Word.cachedOptimal_eq]
+  exact (Word.optimal_compatible h.balanced index).symm
 
 theorem Feasible.assignment_birthWord (h : Feasible spills target births) :
     birthWord target h.assignment = births := by
@@ -75,7 +77,9 @@ def Feasible.plan (h : Feasible spills target births) : Plan spills target where
   assignment := h.assignment
   method := fun index => if Shuffler.Placement.Free spills (values births target.length h.length index)
     then .direct else .dup
-  deadlines := Word.optimal_deadline h.balanced h.hall
+  deadlines := by
+    simp only [Feasible.assignment, Word.cachedOptimal_eq]
+    exact Word.optimal_deadline h.balanced h.hall
   available index := by
     rw [h.assignment_birthWord, h.assignment_value]
     have ha := h.2.2 ⟨index.val, by rw [h.length]; exact index.isLt⟩

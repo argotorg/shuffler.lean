@@ -1,0 +1,12 @@
+{
+  "status": "production Lean endpoint cache timing sample",
+  "scope": "The original and cached production permutations are evaluated in both directions. The input is a stored list with four repeated values; birth word and target word are equal. The recorded times are one local sample in Lean's executable evaluator, not a runtime complexity proof.",
+  "correctness": "Word.cachedOptimal_eq proves equality of the full permutations. The benchmark also checks both-direction checksums against n*(n-1). A local IO reference forces each result before its ending clock read.",
+  "implementation": "The cached builder stores both word vectors, then builds one explicit dependent map table per distinct birth value. Generated C constructs the arrays and map table before creating lookup closures.",
+  "cases": [
+    { "length": 40, "original_ms": 169, "cached_ms": 10, "checksum": 1560 },
+    { "length": 80, "original_ms": 1199, "cached_ms": 30, "checksum": 6320 },
+    { "length": 160, "original_ms": 8893, "cached_ms": 113, "checksum": 25440 }
+  ],
+  "reproduce": "lake build Shuffler.Optimality.BirthPlacement.Word.Cached && lake env lean --run Bench/BirthEndpointCache.lean"
+}
