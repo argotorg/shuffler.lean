@@ -1,0 +1,82 @@
+{
+  "status": "finite exact evidence for the same-assignment potential; not a proved Lean theorem or endpoint optimizer",
+  "potential": "F(f)=K(f)+2*c(P_f), where P_f is the virtual source-prefix permutation and c excludes its cycle through the initial top.",
+  "checks": [
+    "Every prefix cycle stays inside one full assignment cycle.",
+    "2c <= K+q, with q the full source-only two-cycles that omit the initial top.",
+    "K+2q <= exact SWAP count.",
+    "F <= 2*exact SWAP count."
+  ],
+  "domain": {
+    "reaches": [
+      1,
+      2,
+      3,
+      4,
+      16
+    ],
+    "totalTokens": "0 through 7",
+    "sourceLength": "0 through min(totalTokens,reach+1)",
+    "endpoints": "all reachable labelled assignments; distinct token values make the final assignment explicit"
+  },
+  "searches": 146,
+  "cases": 82233,
+  "exceptionalCases": 6025,
+  "maximumRatio": 2,
+  "worst": {
+    "reach": 3,
+    "sourceLength": 3,
+    "size": 4,
+    "assignment": [
+      3,
+      0,
+      2,
+      1
+    ],
+    "exactSwaps": 2,
+    "exactOps": [
+      [
+        "push",
+        "l:3"
+      ],
+      [
+        "swap",
+        2
+      ],
+      [
+        "swap",
+        3
+      ]
+    ],
+    "K": 2,
+    "Kprefix": 1,
+    "c": 1,
+    "q": 0,
+    "F": 4,
+    "tokens": [
+      1,
+      0,
+      2
+    ],
+    "prefixCycles": [
+      [
+        0,
+        1
+      ]
+    ],
+    "fullCycles": [
+      [
+        0,
+        3,
+        1
+      ]
+    ],
+    "swaps": [
+      [
+        1,
+        0
+      ]
+    ]
+  },
+  "reproduce": "node scripts/optimality-source-potential.mjs Bench/evidence-source-potential.json"
+}
