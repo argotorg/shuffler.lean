@@ -1,5 +1,4 @@
-import Shuffler.Optimality.BirthPlacement.Dual.Generation
-import Shuffler.Optimality.BirthPlacement.Global.Theorems
+import Shuffler.Optimality.BirthPlacement.Dual.Trace
 
 namespace Tests.OptimalityPlanDual
 
@@ -51,6 +50,27 @@ example : 2 * baseline costs .bytesOnly spills [] (target : Multiset Value) = 10
 -- The final target occurrence is outside DUP reach in the direct birth word.
 example : ¬BirthAvailable spills target (birthWord target direct.assignment) 17 a .dup := by decide
 example : BirthAvailable spills target (birthWord target plan.assignment) 16 a .dup := by decide
+
+private theorem realizedScore : (traceCost costs (realize plan).built.trace).score .bytesOnly = 52 := by
+  rw [realize_score]
+  decide
+
+-- Twice the actual trace score meets the finite lower bound, so this trace
+-- is exactly optimal even though its plan objective counts two moved tokens.
+example (other : Trace spills [] target) (hpop : other.noPop) :
+    (traceCost costs (realize plan).built.trace).score .bytesOnly ≤
+      (traceCost costs other).score .bytesOnly :=
+  certificate.score_le costs .bytesOnly valid (realize plan).built.trace
+    (by rw [realizedScore]; decide) other hpop
+
+-- This certificate API does not require attainment of the plan objective.
+example (other : Trace spills [] target) (hpop : other.noPop) :
+    (traceCost costs (realize plan).built.trace).score .bytesOnly -
+        baseline costs .bytesOnly spills [] (target : Multiset Value) ≤
+      2 * ((traceCost costs other).score .bytesOnly -
+        baseline costs .bytesOnly spills [] (target : Multiset Value)) :=
+  certificate.surplus_le_twice costs .bytesOnly valid (realize plan).built.trace
+    (by rw [realizedScore]; decide) other hpop
 
 -- The existing global theorem now receives a finite numerical certificate.
 example (other : Trace spills [] target) (hpop : other.noPop) :

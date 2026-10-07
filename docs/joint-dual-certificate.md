@@ -167,3 +167,40 @@ quota, and check signed rational scaling.
 The certificate also does not establish that every instance has an
 integer candidate meeting its LP lower bound. That would require an
 integrality or rounding theorem that is still missing.
+
+## Certify a trace without minimizing the plan objective
+
+Let `L` be the scaled lower-bound numerator above, with denominator `Q`.
+`Dual.Certificate.trace_lower_le` proves
+
+```
+L <= 2*Q*score(other)
+```
+
+for every empty-source trace to the target without POP. Trace extraction
+provides a feasible plan whose moved-token count is at most twice the
+trace's SWAP count. No minimizing plan is needed for this bound.
+
+For any valid candidate trace, write `S=score(candidate)` and let `B` be
+the generation baseline. Two finite comparisons now suffice:
+
+```
+Q*(S+B) <= L  implies  S-B <= 2*(score(other)-B)
+2*Q*S   <= L  implies  S <= score(other).
+```
+
+The Lean theorems are `Certificate.surplus_le_twice`,
+`Certificate.score_le`, and `Certificate.weightedOptimal`. The last
+also takes the candidate's eligibility proof. The surplus theorem uses
+the already proved baseline bound for the comparison trace.
+
+These tests do not require the candidate to attain the LP or plan
+minimum. They give a separate algorithm target: find a feasible trace
+and valid dual data that meet the required comparison. A general
+algorithm with this guarantee and `O(n^2)` time is still not proved.
+
+The EVM example above has actual trace score 52 and `L=104,Q=1`.
+`Tests/OptimalityPlanDual.lean` proves that this trace is exactly optimal
+against every empty-source trace to the same target without POP. It
+also checks the direct surplus certificate, independently of the plan
+minimum theorem.
