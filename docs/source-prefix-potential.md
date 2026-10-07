@@ -62,7 +62,19 @@ It also proves factor two for total weighted gas/byte score and score above
 the generation baseline.
 
 The comparison can use any trace with the same labelled assignment, provided
-the plan's introduction cost is no greater. This does not choose an assignment for a new input.
+the plan's introduction cost is no greater. The canonical wrapper preserves
+the input methods, so its unconditional comparison is with that input.
+
+`SourcePlan.cheapest` chooses the least-cost available method at each absolute
+birth height, including the initial source height. `optimizeTraceAssignment`
+uses those methods before realization. It preserves the ordered birth values
+and additions. Lean proves factor two for weighted total score and score above
+the generation baseline against every no-POP trace with the same labelled
+assignment. The comparison trace can use different LOAD, PUSH, and DUP choices.
+Tests cover a source LOAD replaced by DUP, DUP replaced by PUSH0, and the
+DUP16/DUP17 source boundary.
+
+This does not choose an assignment for a new input.
 A general source-assignment optimizer remains open. Minimizing this potential
 would be one sufficient method; the proofs do not require that to be the next
 algorithm.
