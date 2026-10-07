@@ -1,0 +1,177 @@
+{
+  "status": "counterexample found; not a production mode",
+  "searches": 4107,
+  "cases": 369281,
+  "feasible": 144214,
+  "maximumRatio": 2.5,
+  "worst": {
+    "reach": 3,
+    "source": [
+      "l:0",
+      "l:1",
+      "l:2"
+    ],
+    "word": [
+      "l:1",
+      "l:2"
+    ],
+    "target": [
+      "l:1",
+      "l:2",
+      "l:2",
+      "l:0",
+      "l:1"
+    ],
+    "exactSwaps": 2,
+    "exactOps": [
+      [
+        "push",
+        "l:1"
+      ],
+      [
+        "swap",
+        3
+      ],
+      [
+        "push",
+        "l:2"
+      ],
+      [
+        "swap",
+        3
+      ]
+    ],
+    "assignment": [
+      3,
+      0,
+      2,
+      4,
+      1
+    ],
+    "moved": 4,
+    "entry": [
+      "l:1",
+      "l:0",
+      "l:2"
+    ],
+    "entrySwaps": 3,
+    "futureSwaps": 2,
+    "swaps": 5,
+    "ops": [
+      [
+        "swap",
+        1
+      ],
+      [
+        "swap",
+        2
+      ],
+      [
+        "swap",
+        1
+      ],
+      [
+        "push",
+        "l:1"
+      ],
+      [
+        "push",
+        "l:2"
+      ],
+      [
+        "swap",
+        3
+      ],
+      [
+        "swap",
+        1
+      ]
+    ]
+  },
+  "failures": [
+    {
+      "reach": 3,
+      "source": [
+        "l:0",
+        "l:1",
+        "l:2"
+      ],
+      "word": [
+        "l:1",
+        "l:2"
+      ],
+      "target": [
+        "l:1",
+        "l:2",
+        "l:2",
+        "l:0",
+        "l:1"
+      ],
+      "exactSwaps": 2,
+      "exactOps": [
+        [
+          "push",
+          "l:1"
+        ],
+        [
+          "swap",
+          3
+        ],
+        [
+          "push",
+          "l:2"
+        ],
+        [
+          "swap",
+          3
+        ]
+      ],
+      "assignment": [
+        3,
+        0,
+        2,
+        4,
+        1
+      ],
+      "moved": 4,
+      "entry": [
+        "l:1",
+        "l:0",
+        "l:2"
+      ],
+      "entrySwaps": 3,
+      "futureSwaps": 2,
+      "swaps": 5,
+      "ops": [
+        [
+          "swap",
+          1
+        ],
+        [
+          "swap",
+          2
+        ],
+        [
+          "swap",
+          1
+        ],
+        [
+          "push",
+          "l:1"
+        ],
+        [
+          "push",
+          "l:2"
+        ],
+        [
+          "swap",
+          3
+        ],
+        [
+          "swap",
+          1
+        ]
+      ]
+    }
+  ]
+}
