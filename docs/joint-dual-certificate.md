@@ -138,13 +138,31 @@ mu     = (64)
 
 has `C=207`, `U=67`, and `L=140`, which meets the candidate objective.
 
-`Dual.Certificate.reward_le` and `Dual.Certificate.lower_le` now prove
-the finite sum argument in Lean. The latter takes the generation
-discount inequality as an explicit premise. Tests check valid and
-invalid certificate fields, a failed reuse quota, and a signed rational
-scale. At this checkpoint, the occurrence-rank bridge is still separate:
-no Lean theorem yet turns this numerical certificate into
-`Plan.GloballyMinimal` for actual plans without that cost premise.
+`Dual.Certificate.reward_le` and `Dual.Certificate.lower_le` prove the
+finite sum argument in Lean. `Dual.generation_discount` constructs the
+needed cost bound for every actual `Plan`. It maps each DUP to a distinct
+preceding target occurrence using an order-preserving equal-value copy
+matching. The available-copy count proves that the mapped prefix quota
+is met. Thus the first copy receives no reward, and no gap receives two
+rewards.
+
+`Dual.Certificate.globallyMinimal` now gives `Plan.GloballyMinimal` from
+the finite validity checks and attainment alone. It has no remaining
+universal-word or generation-discount premise. The Lean representation
+uses one gap slot per target position, with zero reward at a value's last
+position. This avoids a separate enumeration of nonempty gaps. Its
+validity proposition states the mathematical sums directly; no kernel
+reduction-time bound is claimed. The offline checker uses suffix sums
+for its `O(n^2)` arithmetic-operation bound.
+
+`Tests/OptimalityPlanDual.lean` checks the actual EVM byte model on
+`[Var42, PUSH0 repeated 16 times, Var42]`. The certified plan swaps
+endpoint identities 16 and 17, has `E=2`, and has `J=104`. The direct
+birth word has `J=168`, while twice the generation baseline is 102.
+The finite certificate feeds the existing all-word factor-two surplus
+theorem. Another test uses different DUP and SWAP prices. The finite
+core tests also reject invalid certificate fields and a failed reuse
+quota, and check signed rational scaling.
 
 The certificate also does not establish that every instance has an
 integer candidate meeting its LP lower bound. That would require an
