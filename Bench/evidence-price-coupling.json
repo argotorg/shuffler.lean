@@ -1,0 +1,822 @@
+{
+  "status": "exact named obstruction to score-nonincreasing coordinate oracle exchanges",
+  "scope": "Empty source, reach one. Four positions; no production change, LP solve, broad search, or reach-16 embedding.",
+  "instance": {
+    "target": [
+      "a",
+      "b",
+      "a",
+      "b"
+    ],
+    "reach": 1,
+    "prices": {
+      "direct": [
+        [
+          "a",
+          11
+        ],
+        [
+          "b",
+          6
+        ]
+      ],
+      "dup": 1,
+      "swap": 1
+    },
+    "baseline": "19"
+  },
+  "permutations": 24,
+  "legalAssignments": 8,
+  "classes": [
+    {
+      "counts": [
+        1,
+        1
+      ],
+      "plans": 2,
+      "minimumMoved": 0,
+      "minimumScore": "34"
+    },
+    {
+      "counts": [
+        2,
+        1
+      ],
+      "plans": 2,
+      "minimumMoved": 2,
+      "minimumScore": "25"
+    },
+    {
+      "counts": [
+        1,
+        2
+      ],
+      "plans": 4,
+      "minimumMoved": 2,
+      "minimumScore": "30"
+    }
+  ],
+  "comparisonPlans": [
+    {
+      "assignment": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "word": [
+        "a",
+        "b",
+        "a",
+        "b"
+      ],
+      "modes": [
+        "direct",
+        "direct",
+        "direct",
+        "direct"
+      ],
+      "counts": [
+        1,
+        1
+      ],
+      "moved": 0,
+      "cycles": 0,
+      "generation": "34",
+      "score": "34"
+    },
+    {
+      "assignment": [
+        0,
+        2,
+        1,
+        3
+      ],
+      "word": [
+        "a",
+        "a",
+        "b",
+        "b"
+      ],
+      "modes": [
+        "direct",
+        "dup",
+        "direct",
+        "direct"
+      ],
+      "counts": [
+        2,
+        1
+      ],
+      "moved": 2,
+      "cycles": 1,
+      "generation": "24",
+      "score": "25"
+    },
+    {
+      "assignment": [
+        0,
+        1,
+        3,
+        2
+      ],
+      "word": [
+        "a",
+        "b",
+        "b",
+        "a"
+      ],
+      "modes": [
+        "direct",
+        "direct",
+        "dup",
+        "direct"
+      ],
+      "counts": [
+        1,
+        2
+      ],
+      "moved": 2,
+      "cycles": 1,
+      "generation": "29",
+      "score": "30"
+    }
+  ],
+  "tied": {
+    "prices": [
+      2,
+      2
+    ],
+    "supplied": {
+      "assignment": [
+        0,
+        2,
+        1,
+        3
+      ],
+      "word": [
+        "a",
+        "a",
+        "b",
+        "b"
+      ],
+      "modes": [
+        "direct",
+        "dup",
+        "direct",
+        "direct"
+      ],
+      "counts": [
+        2,
+        1
+      ],
+      "moved": 2,
+      "cycles": 1,
+      "generation": "24",
+      "score": "25"
+    },
+    "suppliedOracleOptimal": true,
+    "oracle": {
+      "status": "optimal",
+      "reward": "8",
+      "assignment": [
+        0,
+        1,
+        3,
+        2
+      ],
+      "row": [
+        "0",
+        "0",
+        "-1",
+        "-2"
+      ],
+      "column": [
+        "3",
+        "3",
+        "2",
+        "3"
+      ],
+      "vertices": 19,
+      "arcs": 30
+    },
+    "optimal": [
+      {
+        "assignment": [
+          0,
+          1,
+          2,
+          3
+        ],
+        "word": [
+          "a",
+          "b",
+          "a",
+          "b"
+        ],
+        "modes": [
+          "direct",
+          "direct",
+          "direct",
+          "direct"
+        ],
+        "counts": [
+          1,
+          1
+        ],
+        "moved": 0,
+        "cycles": 0,
+        "generation": "34",
+        "score": "34"
+      },
+      {
+        "assignment": [
+          0,
+          1,
+          3,
+          2
+        ],
+        "word": [
+          "a",
+          "b",
+          "b",
+          "a"
+        ],
+        "modes": [
+          "direct",
+          "direct",
+          "dup",
+          "direct"
+        ],
+        "counts": [
+          1,
+          2
+        ],
+        "moved": 2,
+        "cycles": 1,
+        "generation": "29",
+        "score": "30"
+      },
+      {
+        "assignment": [
+          0,
+          2,
+          1,
+          3
+        ],
+        "word": [
+          "a",
+          "a",
+          "b",
+          "b"
+        ],
+        "modes": [
+          "direct",
+          "dup",
+          "direct",
+          "direct"
+        ],
+        "counts": [
+          2,
+          1
+        ],
+        "moved": 2,
+        "cycles": 1,
+        "generation": "24",
+        "score": "25"
+      }
+    ],
+    "certificate": {
+      "scale": 1,
+      "row": [
+        "0",
+        "0",
+        "-1",
+        "-2"
+      ],
+      "column": [
+        "3",
+        "3",
+        "2",
+        "3"
+      ],
+      "prefix": [
+        2,
+        2
+      ],
+      "upper": [
+        18,
+        8
+      ]
+    },
+    "verified": {
+      "status": "lower-bound",
+      "scale": "1",
+      "lowerBoundNumerator": "42",
+      "candidateObjective": "50",
+      "generationCost": "24",
+      "moved": 2,
+      "scaledGap": "8",
+      "constant": "72",
+      "rewardUpperBoundNumerator": "30",
+      "gaps": [
+        {
+          "start": 0,
+          "end": 2,
+          "value": "a",
+          "cut": 1,
+          "required": 1,
+          "forced": false,
+          "reward": "20"
+        },
+        {
+          "start": 1,
+          "end": 3,
+          "value": "b",
+          "cut": 2,
+          "required": 1,
+          "forced": false,
+          "reward": "10"
+        }
+      ]
+    },
+    "surplusComparison": {
+      "candidatePlusBaseline": "44",
+      "lower": "42",
+      "passes": false
+    }
+  },
+  "coordinate": {
+    "prices": [
+      2,
+      3
+    ],
+    "supplied": {
+      "assignment": [
+        0,
+        1,
+        3,
+        2
+      ],
+      "word": [
+        "a",
+        "b",
+        "b",
+        "a"
+      ],
+      "modes": [
+        "direct",
+        "direct",
+        "dup",
+        "direct"
+      ],
+      "counts": [
+        1,
+        2
+      ],
+      "moved": 2,
+      "cycles": 1,
+      "generation": "29",
+      "score": "30"
+    },
+    "suppliedOracleOptimal": true,
+    "oracle": {
+      "status": "optimal",
+      "reward": "10",
+      "assignment": [
+        0,
+        1,
+        3,
+        2
+      ],
+      "row": [
+        "0",
+        "0",
+        "0",
+        "-2"
+      ],
+      "column": [
+        "3",
+        "4",
+        "2",
+        "3"
+      ],
+      "vertices": 19,
+      "arcs": 30
+    },
+    "optimal": [
+      {
+        "assignment": [
+          0,
+          1,
+          3,
+          2
+        ],
+        "word": [
+          "a",
+          "b",
+          "b",
+          "a"
+        ],
+        "modes": [
+          "direct",
+          "direct",
+          "dup",
+          "direct"
+        ],
+        "counts": [
+          1,
+          2
+        ],
+        "moved": 2,
+        "cycles": 1,
+        "generation": "29",
+        "score": "30"
+      }
+    ],
+    "certificate": {
+      "scale": 1,
+      "row": [
+        "0",
+        "0",
+        "0",
+        "-2"
+      ],
+      "column": [
+        "3",
+        "4",
+        "2",
+        "3"
+      ],
+      "prefix": [
+        2,
+        3
+      ],
+      "upper": [
+        18,
+        7
+      ]
+    },
+    "verified": {
+      "status": "lower-bound",
+      "scale": "1",
+      "lowerBoundNumerator": "42",
+      "candidateObjective": "60",
+      "generationCost": "29",
+      "moved": 2,
+      "scaledGap": "18",
+      "constant": "72",
+      "rewardUpperBoundNumerator": "30",
+      "gaps": [
+        {
+          "start": 0,
+          "end": 2,
+          "value": "a",
+          "cut": 1,
+          "required": 1,
+          "forced": false,
+          "reward": "20"
+        },
+        {
+          "start": 1,
+          "end": 3,
+          "value": "b",
+          "cut": 2,
+          "required": 1,
+          "forced": false,
+          "reward": "10"
+        }
+      ]
+    },
+    "surplusComparison": {
+      "candidatePlusBaseline": "49",
+      "lower": "42",
+      "passes": false
+    }
+  },
+  "coordinateCap": {
+    "prices": [
+      2,
+      10
+    ],
+    "supplied": {
+      "assignment": [
+        0,
+        1,
+        3,
+        2
+      ],
+      "word": [
+        "a",
+        "b",
+        "b",
+        "a"
+      ],
+      "modes": [
+        "direct",
+        "direct",
+        "dup",
+        "direct"
+      ],
+      "counts": [
+        1,
+        2
+      ],
+      "moved": 2,
+      "cycles": 1,
+      "generation": "29",
+      "score": "30"
+    },
+    "suppliedOracleOptimal": true,
+    "oracle": {
+      "status": "optimal",
+      "reward": "24",
+      "assignment": [
+        0,
+        1,
+        3,
+        2
+      ],
+      "row": [
+        "0",
+        "0",
+        "0",
+        "-2"
+      ],
+      "column": [
+        "3",
+        "11",
+        "2",
+        "10"
+      ],
+      "vertices": 19,
+      "arcs": 30
+    },
+    "optimal": [
+      {
+        "assignment": [
+          0,
+          1,
+          3,
+          2
+        ],
+        "word": [
+          "a",
+          "b",
+          "b",
+          "a"
+        ],
+        "modes": [
+          "direct",
+          "direct",
+          "dup",
+          "direct"
+        ],
+        "counts": [
+          1,
+          2
+        ],
+        "moved": 2,
+        "cycles": 1,
+        "generation": "29",
+        "score": "30"
+      }
+    ],
+    "certificate": {
+      "scale": 1,
+      "row": [
+        "0",
+        "0",
+        "0",
+        "-2"
+      ],
+      "column": [
+        "3",
+        "11",
+        "2",
+        "10"
+      ],
+      "prefix": [
+        2,
+        10
+      ],
+      "upper": [
+        18,
+        0
+      ]
+    },
+    "verified": {
+      "status": "lower-bound",
+      "scale": "1",
+      "lowerBoundNumerator": "42",
+      "candidateObjective": "60",
+      "generationCost": "29",
+      "moved": 2,
+      "scaledGap": "18",
+      "constant": "72",
+      "rewardUpperBoundNumerator": "30",
+      "gaps": [
+        {
+          "start": 0,
+          "end": 2,
+          "value": "a",
+          "cut": 1,
+          "required": 1,
+          "forced": false,
+          "reward": "20"
+        },
+        {
+          "start": 1,
+          "end": 3,
+          "value": "b",
+          "cut": 2,
+          "required": 1,
+          "forced": false,
+          "reward": "10"
+        }
+      ]
+    },
+    "surplusComparison": {
+      "candidatePlusBaseline": "49",
+      "lower": "42",
+      "passes": false
+    }
+  },
+  "joint": {
+    "prices": [
+      4,
+      4
+    ],
+    "supplied": {
+      "assignment": [
+        0,
+        2,
+        1,
+        3
+      ],
+      "word": [
+        "a",
+        "a",
+        "b",
+        "b"
+      ],
+      "modes": [
+        "direct",
+        "dup",
+        "direct",
+        "direct"
+      ],
+      "counts": [
+        2,
+        1
+      ],
+      "moved": 2,
+      "cycles": 1,
+      "generation": "24",
+      "score": "25"
+    },
+    "suppliedOracleOptimal": true,
+    "oracle": {
+      "status": "optimal",
+      "reward": "14",
+      "assignment": [
+        0,
+        1,
+        3,
+        2
+      ],
+      "row": [
+        "0",
+        "0",
+        "-1",
+        "-4"
+      ],
+      "column": [
+        "5",
+        "5",
+        "4",
+        "5"
+      ],
+      "vertices": 19,
+      "arcs": 30
+    },
+    "optimal": [
+      {
+        "assignment": [
+          0,
+          1,
+          3,
+          2
+        ],
+        "word": [
+          "a",
+          "b",
+          "b",
+          "a"
+        ],
+        "modes": [
+          "direct",
+          "direct",
+          "dup",
+          "direct"
+        ],
+        "counts": [
+          1,
+          2
+        ],
+        "moved": 2,
+        "cycles": 1,
+        "generation": "29",
+        "score": "30"
+      },
+      {
+        "assignment": [
+          0,
+          2,
+          1,
+          3
+        ],
+        "word": [
+          "a",
+          "a",
+          "b",
+          "b"
+        ],
+        "modes": [
+          "direct",
+          "dup",
+          "direct",
+          "direct"
+        ],
+        "counts": [
+          2,
+          1
+        ],
+        "moved": 2,
+        "cycles": 1,
+        "generation": "24",
+        "score": "25"
+      }
+    ],
+    "certificate": {
+      "scale": 1,
+      "row": [
+        "0",
+        "0",
+        "-1",
+        "-4"
+      ],
+      "column": [
+        "5",
+        "5",
+        "4",
+        "5"
+      ],
+      "prefix": [
+        4,
+        4
+      ],
+      "upper": [
+        16,
+        6
+      ]
+    },
+    "verified": {
+      "status": "lower-bound",
+      "scale": "1",
+      "lowerBoundNumerator": "44",
+      "candidateObjective": "50",
+      "generationCost": "24",
+      "moved": 2,
+      "scaledGap": "6",
+      "constant": "72",
+      "rewardUpperBoundNumerator": "28",
+      "gaps": [
+        {
+          "start": 0,
+          "end": 2,
+          "value": "a",
+          "cut": 1,
+          "required": 1,
+          "forced": false,
+          "reward": "20"
+        },
+        {
+          "start": 1,
+          "end": 3,
+          "value": "b",
+          "cut": 2,
+          "required": 1,
+          "forced": false,
+          "reward": "10"
+        }
+      ]
+    },
+    "surplusComparison": {
+      "candidatePlusBaseline": "44",
+      "lower": "44",
+      "passes": true
+    }
+  },
+  "reproduce": "node scripts/optimality-price-coupling.mjs Bench/evidence-price-coupling.json"
+}
