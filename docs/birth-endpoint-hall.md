@@ -31,6 +31,23 @@ remaining sets in increasing order. This is a computable equivalence.
 equivalence has more fixed positions. `Endpoint.optimal_fixed_eq` proves
 that its fixed positions are exactly the selected reservations.
 
+`Word.optimal` combines the maps for all values. Its forward and inverse
+maps are executable. `Word.support_card_le` proves that this permutation
+moves no more tokens than any other value-compatible endpoint permutation
+that meets the same deadlines. The proof partitions the fixed positions
+by their value and adds the per-value bounds.
+
+`Plan.optimizeEndpoints` uses this map in an existing birth plan. The
+birth word and all birth events stay the same. The map has the least
+possible number of moved endpoint tokens for that word. The realizer can
+then turn the plan into a production `Trace`.
+
+The Lean implementation uses finite sets and functions. Its tests execute
+both permutation directions and replay the resulting production traces.
+This file does not claim a proved runtime bound for that implementation.
+The number of moved endpoint tokens is an optimization objective. It is
+not the exact number of SWAP instructions.
+
 These results apply to a supplied birth word. They do not choose the birth
 word or its introduction methods. The number of moved endpoints can also
 exceed the number of positions with unequal values. With reach 2, word
