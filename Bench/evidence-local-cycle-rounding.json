@@ -1,0 +1,404 @@
+{
+  "status": "bounded exact permutation checks; no global rounding theorem or production change",
+  "local": {
+    "sizes": [
+      2,
+      3,
+      4
+    ],
+    "pairs": 616,
+    "splits": 1784,
+    "recombinations": 11816,
+    "tight": 508
+  },
+  "global": {
+    "maximumSize": 6,
+    "reaches": [
+      1,
+      2,
+      16
+    ],
+    "complete": true,
+    "instances": 837,
+    "endpointPermutations": 196270,
+    "coveredOrderedAssignmentPairs": 111699278,
+    "wordPairs": 2751360,
+    "alreadyBalanced": 2340690,
+    "roundedPairs": 410670,
+    "colorings": 954240,
+    "eFailureCount": 2592,
+    "eFailures": [
+      {
+        "target": [
+          0,
+          0,
+          1,
+          2
+        ],
+        "reach": 2,
+        "inputWords": [
+          [
+            0,
+            0,
+            1,
+            2
+          ],
+          [
+            2,
+            1,
+            0,
+            0
+          ]
+        ],
+        "inputAssignments": [
+          [
+            0,
+            1,
+            2,
+            3
+          ],
+          [
+            3,
+            2,
+            0,
+            1
+          ]
+        ],
+        "bound": 4,
+        "bestE": 5,
+        "bestK": 3,
+        "eWitness": [
+          [
+            0,
+            2,
+            1,
+            3
+          ],
+          [
+            3,
+            0,
+            2,
+            1
+          ]
+        ],
+        "kWitness": [
+          [
+            0,
+            2,
+            1,
+            3
+          ],
+          [
+            3,
+            0,
+            2,
+            1
+          ]
+        ]
+      },
+      {
+        "target": [
+          0,
+          0,
+          1,
+          2
+        ],
+        "reach": 2,
+        "inputWords": [
+          [
+            0,
+            0,
+            2,
+            1
+          ],
+          [
+            1,
+            2,
+            0,
+            0
+          ]
+        ],
+        "inputAssignments": [
+          [
+            0,
+            1,
+            3,
+            2
+          ],
+          [
+            2,
+            3,
+            0,
+            1
+          ]
+        ],
+        "bound": 6,
+        "bestE": 7,
+        "bestK": 5,
+        "eWitness": [
+          [
+            0,
+            3,
+            1,
+            2
+          ],
+          [
+            2,
+            0,
+            3,
+            1
+          ]
+        ],
+        "kWitness": [
+          [
+            0,
+            3,
+            1,
+            2
+          ],
+          [
+            2,
+            0,
+            3,
+            1
+          ]
+        ]
+      },
+      {
+        "target": [
+          0,
+          0,
+          0,
+          1,
+          2
+        ],
+        "reach": 2,
+        "inputWords": [
+          [
+            0,
+            0,
+            0,
+            1,
+            2
+          ],
+          [
+            0,
+            2,
+            1,
+            0,
+            0
+          ]
+        ],
+        "inputAssignments": [
+          [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          [
+            0,
+            4,
+            3,
+            1,
+            2
+          ]
+        ],
+        "bound": 4,
+        "bestE": 5,
+        "bestK": 3,
+        "eWitness": [
+          [
+            0,
+            1,
+            3,
+            2,
+            4
+          ],
+          [
+            0,
+            4,
+            1,
+            3,
+            2
+          ]
+        ],
+        "kWitness": [
+          [
+            0,
+            1,
+            3,
+            2,
+            4
+          ],
+          [
+            0,
+            4,
+            1,
+            3,
+            2
+          ]
+        ]
+      },
+      {
+        "target": [
+          0,
+          0,
+          0,
+          1,
+          2
+        ],
+        "reach": 2,
+        "inputWords": [
+          [
+            0,
+            0,
+            0,
+            1,
+            2
+          ],
+          [
+            1,
+            2,
+            0,
+            0,
+            0
+          ]
+        ],
+        "inputAssignments": [
+          [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            4,
+            0,
+            1,
+            2
+          ]
+        ],
+        "bound": 5,
+        "bestE": 6,
+        "bestK": 4,
+        "eWitness": [
+          [
+            0,
+            4,
+            1,
+            3,
+            2
+          ],
+          [
+            3,
+            0,
+            2,
+            1,
+            4
+          ]
+        ],
+        "kWitness": [
+          [
+            0,
+            4,
+            1,
+            3,
+            2
+          ],
+          [
+            3,
+            0,
+            2,
+            1,
+            4
+          ]
+        ]
+      },
+      {
+        "target": [
+          0,
+          0,
+          0,
+          1,
+          2
+        ],
+        "reach": 2,
+        "inputWords": [
+          [
+            0,
+            0,
+            0,
+            2,
+            1
+          ],
+          [
+            0,
+            1,
+            2,
+            0,
+            0
+          ]
+        ],
+        "inputAssignments": [
+          [
+            0,
+            1,
+            2,
+            4,
+            3
+          ],
+          [
+            0,
+            3,
+            4,
+            1,
+            2
+          ]
+        ],
+        "bound": 6,
+        "bestE": 7,
+        "bestK": 5,
+        "eWitness": [
+          [
+            0,
+            1,
+            4,
+            2,
+            3
+          ],
+          [
+            0,
+            3,
+            1,
+            4,
+            2
+          ]
+        ],
+        "kWitness": [
+          [
+            0,
+            1,
+            4,
+            2,
+            3
+          ],
+          [
+            0,
+            3,
+            1,
+            4,
+            2
+          ]
+        ]
+      }
+    ],
+    "kFailures": [],
+    "milliseconds": 3207
+  },
+  "scope": "All canonical target partitions through length 6, reaches 1/2/16, and all lag-valid input assignment pairs. Birth-word quotienting keeps the minimum input E for each word, which gives the strongest bound for every assignment with that word. Each rounded word has independently enumerated minimum E and minimum K endpoint assignments. Both proposed inequalities are checked separately. The report retains the first five E failures and counts all of them.",
+  "reproduce": "node scripts/optimality-local-cycle-rounding.mjs Bench/evidence-local-cycle-rounding.json"
+}
