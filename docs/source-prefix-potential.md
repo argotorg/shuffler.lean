@@ -39,5 +39,30 @@ not assert that the entry permutation meets the physical depth limit.
 The tests run the prefix program on an empty prefix, a two-cycle, a cycle through
 the top, a longer complete cycle, and one open cycle with two prefix cycles.
 
-This is a cycle-potential bound. It does not yet supply a source-plan realizer
-or a general optimizer for source assignments.
+## Production source plans
+
+`SourcePlan` adds an initial source to the birth-plan data. The source values
+must agree with the first token positions. A source token below the initial
+SWAP window must stay fixed. The boundary is `index + 17 < source.length`:
+at source height 18, position 1 is reachable with SWAP16, but position 0 is not.
+The remaining conditions are the birth deadlines and introduction availability.
+
+`SourceEntry.build` restricts `P⁻¹` to the source positions and runs the existing
+production permutation routine. Its proof shows that every moved source
+position is reachable. `realizeSource` then emits the supplied births and runs
+the remaining settle stages. It always returns a production trace, with no POP,
+the exact additions, and the prescribed birth events. Its SWAP count is exactly
+`K(f) + 2 * c`.
+
+`traceSourcePlan` extracts these conditions from any production trace without
+POP. This includes the source-window condition. `canonicalizeTraceAssignment`
+realizes that plan. Lean proves that it preserves the ordered birth events
+and additions and emits at most twice as many SWAPs as the supplied trace.
+It also proves factor two for total weighted gas/byte score and score above
+the generation baseline.
+
+The comparison can use any trace with the same labelled assignment, provided
+the plan's introduction cost is no greater. This does not choose an assignment for a new input.
+A general source-assignment optimizer remains open. Minimizing this potential
+would be one sufficient method; the proofs do not require that to be the next
+algorithm.
