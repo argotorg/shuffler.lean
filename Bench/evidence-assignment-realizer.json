@@ -1,0 +1,40 @@
+{
+  "status": "finite verification of a fixed-plan construction; not a joint-plan optimizer or production policy",
+  "construction": "After birth j, repeatedly SWAP the top token into its assigned final position if that position is below j. Stop when its assignment is at least j.",
+  "precondition": "Value-preserving bijection f from birth positions to target positions; b<=f(b)+R; a DUP birth of v at b has priorBornCount(v)>target.take(max(b-R,0)).count(v).",
+  "bounds": "Constructed SWAPs equal sum over permutation cycles(length-1), and are at most E=#{b:f(b)!=b}, the moved token support. E is not the number of value mismatches. For assignments extracted from actual traces, E<=2*actualSWAPs. The separate displacement bound D=sum_b ceil(abs(b-f(b))/R) satisfies constructed SWAPs<=D<=2*actualSWAPs.",
+  "fixedDomain": {
+    "reaches": [
+      1,
+      2,
+      3,
+      4,
+      16
+    ],
+    "births": "0 through 7",
+    "targetKinds": "periodic three-kind word",
+    "assignments": "every lag-valid permutation"
+  },
+  "traceDomain": {
+    "reaches": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      16
+    ],
+    "samplesPerReach": 1000,
+    "births": "chosen from 0,1,R,R+1,2R+1,4R",
+    "includes": "equal values, PUSH0, width 32 literals, LOAD widths 0/32, endpoint scalar weights",
+    "seed": 2026100743
+  },
+  "fixedPlans": 12576,
+  "extractedPlans": 6000,
+  "originalSwaps": 46747,
+  "constructedSwaps": 30691,
+  "maximumEOverSwaps": 1.6666666666666667,
+  "maximumDOverSwaps": 1.75,
+  "failures": [],
+  "reproduce": "node scripts/optimality-assignment-realizer.mjs Bench/evidence-assignment-realizer.json"
+}

@@ -1,0 +1,26 @@
+{
+  "status": "finite exact matching evidence; no polynomial selection algorithm or Lean theorem claimed",
+  "predicate": "For each value v and cut k, selected correct positions c with c<=k<c+R must number at most #births(v)<=k minus #targets(v)<=k-R.",
+  "checkedEquivalence": "A selected subset satisfies interval capacity iff some value-preserving bijection with birth<=target+R fixes every selected position. Sorted matching of the residual occurrences is then legal.",
+  "objective": "Maximum feasible selected-subset cardinality equals the maximum number of fixed points over all exact lag matchings. Thus minimum E, the moved token support, is n minus that cardinality. E is not the number of value mismatches. Extra fixed points in a nonmaximal residual assignment are permitted.",
+  "domain": {
+    "reaches": [
+      1,
+      2,
+      3,
+      16
+    ],
+    "length": "0 through 6",
+    "words": "canonical words with at most 3 kinds",
+    "targets": "all distinct permutations",
+    "subsets": "all subsets of equal birth/target positions"
+  },
+  "instances": 27064,
+  "feasibleInstances": 19233,
+  "subsets": 207060,
+  "feasibleSubsets": 154436,
+  "matchings": 171252,
+  "minEExceedsValueMismatches": 2000,
+  "failures": [],
+  "reproduce": "node scripts/optimality-fixed-points.mjs Bench/evidence-fixed-points.json"
+}

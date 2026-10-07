@@ -1,0 +1,256 @@
+{
+  "status": "finite exact fixed-word trace evidence; no global birth-order optimizer or Lean theorem claimed",
+  "scope": "The constructor chooses the cheapest legal birth mode by target-prefix counts, minimizes E over lag-valid equal-copy assignments with interval packing, then uses the assignment realizer. E counts moved token positions, not value mismatches.",
+  "oracle": "Complete Dijkstra on actual value stacks, with fixed next birth value, every legal SWAP and matching DUP, and each legal direct birth. No assignment criterion or target-prefix pruning is used. Equal-value SWAPs are omitted because they preserve the value stack and have positive cost.",
+  "checkedBounds": "For every feasible fixed word w, constructedCost-G(w) <= 2*(exactFixedWordOPT-G(w)); also constructedCost-B <= 2*(exactFixedWordOPT-B). G(w) is its minimum generation cost and B is the usual target generation baseline. Zero excess is checked separately. These are fixed-word comparisons, not comparisons with unrestricted OPT.",
+  "domain": {
+    "reaches": [
+      1,
+      2,
+      3,
+      16
+    ],
+    "length": "0 through 6",
+    "words": "canonical words with at most 3 kinds",
+    "targets": "all distinct permutations",
+    "profiles": [
+      {
+        "name": "variable-widths-0-2-32",
+        "values": [
+          "v:42",
+          "v:43",
+          "v:44"
+        ],
+        "spills": [
+          42,
+          43,
+          44
+        ],
+        "loadWidths": [
+          [
+            42,
+            0
+          ],
+          [
+            43,
+            2
+          ],
+          [
+            44,
+            32
+          ]
+        ],
+        "gasModel": "cpp"
+      },
+      {
+        "name": "variable-widths-32",
+        "values": [
+          "v:42",
+          "v:43",
+          "v:44"
+        ],
+        "spills": [
+          42,
+          43,
+          44
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ],
+          [
+            43,
+            32
+          ],
+          [
+            44,
+            32
+          ]
+        ],
+        "gasModel": "evm"
+      },
+      {
+        "name": "push0-small-literal-load32",
+        "values": [
+          "l:0",
+          "l:1",
+          "v:42"
+        ],
+        "spills": [
+          42
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ]
+        ],
+        "gasModel": "cpp"
+      },
+      {
+        "name": "push0-wide-literal-load0",
+        "values": [
+          "l:0",
+          "l:452312848583266388373324160190187140051835877600158453279131187530910662656",
+          "v:42"
+        ],
+        "spills": [
+          42
+        ],
+        "loadWidths": [
+          [
+            42,
+            0
+          ]
+        ],
+        "gasModel": "evm"
+      }
+    ],
+    "weights": [
+      {
+        "gas": 1,
+        "bytes": 0
+      },
+      {
+        "gas": 0,
+        "bytes": 1
+      },
+      {
+        "gas": 1,
+        "bytes": 1
+      },
+      {
+        "gas": 6,
+        "bytes": 1
+      }
+    ]
+  },
+  "searches": 11904,
+  "states": 575744,
+  "edges": 1668144,
+  "endpointCases": 433024,
+  "feasibleCases": 307728,
+  "infeasibleCases": 125296,
+  "exactConstructions": 265696,
+  "positiveWordExcess": 295824,
+  "zeroWordExcess": 11904,
+  "maximumWordExcessRatio": 1.6666666666666667,
+  "maximumBaselineExcessRatio": 1.6666666666666667,
+  "worst": {
+    "word": [
+      "v:42",
+      "v:42",
+      "v:43",
+      "v:43",
+      "v:43",
+      "v:44"
+    ],
+    "target": [
+      "v:43",
+      "v:43",
+      "v:44",
+      "v:42",
+      "v:42",
+      "v:43"
+    ],
+    "reach": 3,
+    "profile": "variable-widths-0-2-32",
+    "weights": {
+      "gas": 1,
+      "bytes": 0
+    },
+    "E": 6,
+    "constructedSwaps": 5,
+    "exactSwaps": 3,
+    "generationScore": 27,
+    "candidateScore": 42,
+    "exactScore": 36,
+    "candidateOps": [
+      [
+        "load",
+        42
+      ],
+      [
+        "dup",
+        1
+      ],
+      [
+        "load",
+        43
+      ],
+      [
+        "swap",
+        2
+      ],
+      [
+        "dup",
+        3
+      ],
+      [
+        "swap",
+        2
+      ],
+      [
+        "dup",
+        3
+      ],
+      [
+        "load",
+        44
+      ],
+      [
+        "swap",
+        3
+      ],
+      [
+        "swap",
+        2
+      ],
+      [
+        "swap",
+        1
+      ]
+    ],
+    "exactOps": [
+      [
+        "load",
+        42
+      ],
+      [
+        "dup",
+        1
+      ],
+      [
+        "load",
+        43
+      ],
+      [
+        "dup",
+        1
+      ],
+      [
+        "swap",
+        3
+      ],
+      [
+        "dup",
+        2
+      ],
+      [
+        "swap",
+        3
+      ],
+      [
+        "load",
+        44
+      ],
+      [
+        "swap",
+        3
+      ]
+    ]
+  },
+  "failures": [],
+  "reproduce": "node scripts/optimality-fixed-word-bound.mjs Bench/evidence-fixed-word-bound.json"
+}
