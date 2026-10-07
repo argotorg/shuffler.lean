@@ -126,6 +126,57 @@ example, target `a b a` at reach one can retain its a-gap, using birth
 word `a a b`. A cache comparison would need a bypass-like service slot;
 the interval statement above avoids transferring a different paging model.
 
+## A total-score bound when births pay for SWAPs
+
+Let `G_min` be the generation minimum above, and realize its birth plan.
+Let `S` be the resulting total score and `OPT` the least total score of
+an empty-source trace to the same target without POP. Such a trace has
+exactly `n` births. The plan realizer uses
+
+```
+W = E-c <= n
+```
+
+SWAPs, where `E` is its moved-position count and `c` its number of
+nontrivial permutation cycles. Therefore
+
+```
+S <= G_min+s*n.
+```
+
+If every legal birth has score at least the SWAP score `s`, then
+`s*n<=G_min`. Every comparison trace also has generation score at least
+`G_min`. It follows that
+
+```
+S <= 2*G_min <= 2*OPT.
+```
+
+This is a paper-level global factor-two bound for total score under the
+stated price condition. The byte-only EVM model meets it: each birth has
+at least one byte and SWAP has one byte. It does not imply a factor-two
+bound on surplus above the generation baseline.
+
+More generally, if every birth costs at least `q>0`, then
+`S<=(1+s/q)*OPT`. For the default EVM model with nonnegative gas and
+byte weights `g,b`, not both zero, one can use
+
+```
+q = 2*g+b
+s = 3*g+b
+1+s/q <= 5/2.
+```
+
+PUSH0 has score `q`; every other birth has at least that score. The
+byte-only case has ratio two. This price argument does not apply to
+arbitrary `PrimitiveCosts` without a lower bound on birth score.
+
+The flow and birth-plan construction above use `O(R*n*log n)` arithmetic
+operations. Trace realization is a separate step. These paper-level cost
+bounds do not add a production planner or a new Lean theorem. The
+repository's proved realizer applies at `R=16`; other reaches use the
+corresponding abstract common-reach model.
+
 ## What this does not solve
 
 Minimum generation does not give a factor-two surplus guarantee for
@@ -142,4 +193,4 @@ that was only a possible interval-flow route in
 `docs/optimality-inventory-research.md`. It does not extend the result to
 arbitrary source arrangements. It also does not select endpoint identities
 jointly with retained gaps, prove a rounding theorem, or prove the missing
-global factor-two constructor.
+global factor-two surplus constructor.
