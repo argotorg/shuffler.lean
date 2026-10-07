@@ -135,6 +135,10 @@ handles the final boundary and constructs births in deadline order. A
 min-cost-flow implementation takes `O(R*n*log n)` arithmetic operations,
 or `O(n log n)` at reach 16. This result excludes SWAP cost and is not a
 Lean theorem. See [exact generation](empty-source-generation.md).
+For the byte model, this also gives a paper factor-two bound on total
+score: each birth costs at least one byte, SWAP costs one byte, and the
+realizer uses at most `n` SWAPs. This is not a surplus bound or an
+implemented optimizer.
 
 With fixed gap prices, a sparse flow graph solves the priced assignment
 problem and supplies row/column dual potentials. Seven small named cases
@@ -162,6 +166,16 @@ regular bipartite edge-coloring construction proves balanced-word
 feasibility on paper. Expanding a rational denominator gives existence,
 not a runtime bound. The endpoint `K` bound remains open. See
 [local rounding](local-cycle-rounding.md).
+The finite checks minimize endpoint `K` by offline enumeration. Even an
+existence proof of the global bound would still need a constructive rounding
+and endpoint method within `O(n²)`. The proved minimum-`E` method does not
+supply that stronger method.
+
+An exact paper identity separates certificate failure into assignment
+reward slack, missed-gap cost, and excess priced copies. With capped optional
+prices it gives a necessary-and-sufficient test for a supplied realizer and
+dual to satisfy `C+B≤L`. Balanced prefix counts alone do not bound the
+assignment slack. See [the exact certificate condition](direct-certificate-invariant.md).
 
 The source objective `H=E+2c-r` satisfies `F≤H≤2S` on paper. It counts full
 cycles only where source entry affects the cost. At reach 16, at most eight
