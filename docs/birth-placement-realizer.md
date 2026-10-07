@@ -60,10 +60,10 @@ upwards. Thus all final positions are correct.
 ## The proved result
 
 `realize plan` returns a production `Trace` from `[]` to the exact target.
-It has no POP. It preserves the plan's requested birth instructions and
-introduces exactly its birth-word multiset. The instruction-preservation
-claim follows from the constructors and is tested; a separate general
-cost or ordered-instruction theorem is not yet included in this module.
+It has no POP. It preserves the plan's ordered birth values and requested
+direct/DUP instruction kinds, and introduces exactly its birth-word
+multiset. `RealizedPlan.events` and `realize_births` prove these ordered
+properties.
 
 Its SWAP count is exactly
 
@@ -73,6 +73,14 @@ number of moved assignment positions - number of nontrivial assignment cycles.
 
 This is `Permute.Permutation.arbitrarySwapCount`. In particular, its SWAP
 count is at most the number `E` of moved assignment positions.
+
+`realize_score` proves the exact weighted cost: the sum of the specified
+birth instruction prices, plus the SWAP price times this SWAP count.
+`Plan.cheapest` replaces each specified birth instruction with the
+cheapest available direct or DUP instruction. It preserves the assignment
+and birth word, and cannot increase the chosen weighted cost. The result
+also covers direct generation that is cheaper than DUP. A tie can select
+direct generation even if it increases a cost component with zero weight.
 
 The core interface is in
 `Shuffler/Optimality/BirthPlacement/Realize/State.lean`. The tests run the
@@ -85,8 +93,12 @@ direct generation, missing DUP parents, spilled variables, and wildcards.
 Any physical trace assigns birth tokens to final positions. Each moved
 token must take part in a SWAP, which suggests `E <= 2 * SWAPs`. Combined
 with an assignment that minimizes `E`, this gives the proposed factor-two
-movement bound for a fixed birth word. The trace-to-assignment link,
-weighted comparison, and assignment optimizer are separate proof tasks.
+movement bound for a fixed birth word. The trace-to-assignment link and
+assignment optimizer are separate proof tasks. The weighted comparison
+is proved conditionally by `realize_score_le_twice`: the planned birth
+cost must be no greater than the other trace's birth cost, and the planned
+`E` must be at most twice the other trace's SWAP count. A separate theorem
+proves the same bound after subtraction of a supplied generation baseline.
 
 An initial source needs more conditions. For example, changing
 `[a,b,c]` to `[b,a,c]` has two moved positions but needs three top SWAPs.

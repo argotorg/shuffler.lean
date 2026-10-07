@@ -1,5 +1,6 @@
 import Shuffler.Optimality.BirthPlacement.Realize.Lemmas
 import Shuffler.Optimality.DirectDominance.Theorems
+import Shuffler.Optimality.BirthPlacement.Events.Theorems
 
 namespace Shuffler.Optimality.BirthPlacement
 
@@ -24,19 +25,28 @@ theorem physicallyAvailable_of_counts (spills : SpillSet) (current target births
       omega
     simpa only [PhysicallyAvailable, hlen] using List.count_pos_iff.mp hp
 
+theorem traceEvents_appendDirect (trace : Trace spills source target) (value : Value)
+    (hfree : Shuffler.Placement.Free spills value) :
+    traceEvents (DirectDominance.appendDirect trace value hfree) =
+      traceEvents trace ++ [(.direct, value)] := by
+  cases value <;> try rfl
+  simp [Shuffler.Placement.Free, Value.can_be_freely_generated, SpillSet.is_spilled] at hfree
+
 -- Choose the first readable copy only after the count proof supplies one.
 -- The requested instruction kind is preserved even when direct generation is free.
 def appendBirth (spills : SpillSet) (current : Stack) (value : Value) (method : BirthMethod)
     (havailable : PhysicallyAvailable spills current value method) :
     { trace : Trace spills current (current ++ [value]) //
-      trace.noPop ∧ trace.additions = {value} ∧ trace.swapCount = 0 } := by
+      trace.noPop ∧ trace.additions = {value} ∧ trace.swapCount = 0 ∧
+        traceEvents trace = [(method, value)] } := by
   cases method with
   | direct =>
     change Shuffler.Placement.Free spills value at havailable
     exact ⟨DirectDominance.appendDirect (.Lit current) value havailable,
       (DirectDominance.appendDirect_noPop _ _ _).mpr trivial,
       by rw [DirectDominance.appendDirect_additions]; rfl,
-      by rw [DirectDominance.appendDirect_swapCount]; rfl⟩
+      by rw [DirectDominance.appendDirect_swapCount]; rfl,
+      by rw [traceEvents_appendDirect]; rfl⟩
   | dup =>
     let cut := current.length - 16
     let readable := current.drop cut
@@ -58,10 +68,12 @@ def appendBirth (spills : SpillSet) (current : Stack) (value : Value) (method : 
       simpa only [he, readable, position, List.getElem_drop] using hr
     let trace := Trace.Dup depth hdlen hdpos hdreach (.Lit (spills := spills) current)
     have he : current ++ [current[current.length - depth]] = current ++ [value] := by rw [hv]
-    refine ⟨he ▸ trace, (Trace.noPop_cast _ _).mpr trivial, ?_, ?_⟩
+    refine ⟨he ▸ trace, (Trace.noPop_cast _ _).mpr trivial, ?_, ?_, ?_⟩
     · rw [Trace.additions_cast]
       simp only [trace, Trace.additions, hv, zero_add]
     · rw [swapCount_cast]
       rfl
+    · rw [traceEvents_cast]
+      simp only [trace, traceEvents, hv, List.nil_append]
 
 end Shuffler.Optimality.BirthPlacement

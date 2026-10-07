@@ -1,4 +1,4 @@
-import Shuffler.Optimality.BirthPlacement.Realize.State
+import Shuffler.Optimality.BirthPlacement.Realize.Theorems
 import Shuffler.Optimality.Replay
 import Mathlib.GroupTheory.Perm.List
 
@@ -89,5 +89,35 @@ private def wildcard : Plan ∅ [.Wildcard, .Wildcard] where
 example (plan : Plan spills target) : (realize plan).built.trace.noPop := (realize plan).built.noPop
 example (plan : Plan spills target) :
     (realize plan).built.trace.swapCount ≤ plan.assignment.support.card := realize_swapCount_le_moved plan
+
+example (plan : Plan spills target) :
+    SwapRuns.births (realize plan).built.trace = birthWord target plan.assignment := realize_births plan
+
+private def zero : Value := .Lit 0
+private def zeros : Plan ∅ [zero, zero] where
+  assignment := 1
+  method := fun index => if index.val = 0 then .direct else .dup
+  deadlines := by decide
+  available := by decide
+
+private def cheapCosts : PrimitiveCosts := PrimitiveCosts.evm
+  (fun _ => .push0) (fun _ => .push ⟨31, by decide⟩)
+private def wideCosts : PrimitiveCosts := PrimitiveCosts.evm
+  (fun _ => .push ⟨31, by decide⟩) (fun _ => .push ⟨31, by decide⟩)
+
+#guard traceEvents (realize zeros).built.trace = [(.direct, zero), (.dup, zero)]
+#guard flatten (realize (zeros.cheapest cheapCosts .gasOnly)).built.trace = [.push zero, .push zero]
+#guard (traceCost cheapCosts (realize zeros).built.trace).gas = 5
+#guard (traceCost cheapCosts (realize (zeros.cheapest cheapCosts .gasOnly)).built.trace).gas = 4
+
+-- A tie in weighted gas can select a wider direct instruction.
+#guard (traceCost wideCosts (realize zeros).built.trace).bytes = 34
+#guard (traceCost wideCosts (realize (zeros.cheapest wideCosts .gasOnly)).built.trace).bytes = 66
+#guard flatten (realize (zeros.cheapest wideCosts .bytesOnly)).built.trace = [.push zero, .dup 1]
+
+example (costs : PrimitiveCosts) (weights : Weights) (plan : Plan spills target) :
+    (traceCost costs (realize (plan.cheapest costs weights)).built.trace).score weights ≤
+      (traceCost costs (realize plan).built.trace).score weights :=
+  realize_cheapest_score_le costs weights plan
 
 end Tests.OptimalityBirthPlan

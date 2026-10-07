@@ -17,6 +17,7 @@ structure BuildState (plan : Plan spills target) (height : Nat) where
   deadlines : BirthDeadlines 16 permutation
   unborn : ∀ index : Fin target.length, height ≤ index.val → permutation index = plan.assignment index
   count : built.trace.swapCount + arbitrarySwapCount permutation = arbitrarySwapCount plan.assignment
+  events : traceEvents built.trace = plan.events.take height
 
 def BuildState.initial (plan : Plan spills target) : BuildState plan 0 where
   height_le := Nat.zero_le _
@@ -26,6 +27,7 @@ def BuildState.initial (plan : Plan spills target) : BuildState plan 0 where
   deadlines := plan.deadlines
   unborn := fun _ _ => rfl
   count := by simp [Trace.swapCount]
+  events := rfl
 
 def BuildState.step (state : BuildState plan height) (hheight : height < target.length) :
     BuildState plan (height + 1) := by
@@ -53,7 +55,9 @@ def BuildState.step (state : BuildState plan height) (hheight : height < target.
     hgrowth ▸ birth.val
   have hbornPop : born.noPop := (Trace.noPop_cast _ _).mpr birth.property.1
   have hbornAdd : born.additions = {value} := (Trace.additions_cast _ _).trans birth.property.2.1
-  have hbornCount : born.swapCount = 0 := (swapCount_cast _ _).trans birth.property.2.2
+  have hbornCount : born.swapCount = 0 := (swapCount_cast _ _).trans birth.property.2.2.1
+  have hbornEvents : traceEvents born = [(plan.method top, value)] :=
+    (traceEvents_cast _ _).trans birth.property.2.2.2
   let placed := settleTrace spills target state.permutation top state.forward state.deadlines
   let combined := (state.built.trace.concat born).concat placed.trace
   have hpop : combined.noPop :=
@@ -66,7 +70,7 @@ def BuildState.step (state : BuildState plan height) (hheight : height < target.
       prefixValues_succ target plan.assignment height hheight]
     rfl
   refine ⟨by omega, placed.permutation, ⟨combined, hpop, hadd⟩,
-    placed.forward, placed.deadlines, ?_, ?_⟩
+    placed.forward, placed.deadlines, ?_, ?_, ?_⟩
   · intro index hi
     exact (placed.above index (by change height < index.val; omega)).trans
       (state.unborn index (by omega))
@@ -75,10 +79,14 @@ def BuildState.step (state : BuildState plan height) (hheight : height < target.
     have hs := state.count
     have hp := placed.count
     omega
+  · simp only [combined, traceEvents_concat, state.events, hbornEvents,
+      traceEvents_empty placed.trace placed.additions, List.append_nil]
+    exact (plan.events_take_succ height hheight).symm
 
 structure RealizedPlan (plan : Plan spills target) where
   built : BuiltTrace spills [] target (birthWord target plan.assignment : Multiset Value)
   count : built.trace.swapCount = arbitrarySwapCount plan.assignment
+  events : traceEvents built.trace = plan.events
 
 def BuildState.output (state : BuildState plan height) (hheight : ¬height < target.length) :
     RealizedPlan plan := by
@@ -91,12 +99,15 @@ def BuildState.output (state : BuildState plan height) (hheight : ¬height < tar
     have hlen := birthWord_length target plan.assignment
     simp only [prefixValues, he, ← hlen, List.take_length]
   let result := state.built.cast rfl ht hm
-  refine ⟨result, ?_⟩
-  have hc : state.built.trace.swapCount = arbitrarySwapCount plan.assignment := by
-    have h := state.count
-    have hz : arbitrarySwapCount state.permutation = 0 := by rw [hp, arbitrarySwapCount_one]
-    omega
-  exact (built_cast_swapCount state.built rfl ht hm).trans hc
+  refine ⟨result, ?_, ?_⟩
+  · have hc : state.built.trace.swapCount = arbitrarySwapCount plan.assignment := by
+      have h := state.count
+      have hz : arbitrarySwapCount state.permutation = 0 := by rw [hp, arbitrarySwapCount_one]
+      omega
+    exact (built_cast_swapCount state.built rfl ht hm).trans hc
+  · change traceEvents (state.built.cast rfl ht hm).trace = plan.events
+    rw [built_cast_events, state.events, he]
+    simp only [← plan.events_length, List.take_length]
 
 def BuildState.finish (height : Nat) (state : BuildState plan height) : RealizedPlan plan :=
   if hheight : height < target.length then BuildState.finish (height + 1) (state.step hheight)
