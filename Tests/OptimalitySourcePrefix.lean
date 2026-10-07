@@ -1,4 +1,5 @@
 import Shuffler.Optimality.BirthPlacement.SourcePrefix.Bounds
+import Shuffler.Optimality.BirthPlacement.SourcePrefix.Cost
 
 namespace Tests.OptimalitySourcePrefix
 
@@ -45,6 +46,10 @@ private def openCycle : Equiv.Perm (Fin 7) :=
 #guard permutation openCycle 5 5 = 5
 #guard permutation openCycle 5 6 = 6
 #guard arbitrarySwapCount openCycle = 5
+#guard arbitrarySwapCount (permutation openCycle 5) = 2
+#guard arbitrarySwapCount (run openCycle 5).permutation = 3
+#guard swapCount (permutation openCycle 5)⁻¹ 4 +
+  arbitrarySwapCount (run openCycle 5).permutation = 9
 
 -- The checked bound applies to the actual prefix program, for every assignment.
 example (assignment : Equiv.Perm (Fin size)) (height : Nat) (hh : height ≤ size)
@@ -52,6 +57,14 @@ example (assignment : Equiv.Perm (Fin size)) (height : Nat) (hh : height ≤ siz
     2 * (cyclesAwayFromTop (permutation assignment height) top).card ≤
       arbitrarySwapCount assignment + (closedPairs assignment height top).card :=
   cycles_away_bound assignment height hh top
+
+example (assignment : Equiv.Perm (Fin size)) (height : Nat) (hh : height ≤ size)
+    (top : Fin size) :
+    swapCount (permutation assignment height)⁻¹ top +
+      arbitrarySwapCount (run assignment height).permutation =
+        arbitrarySwapCount assignment +
+          2 * (cyclesAwayFromTop (permutation assignment height) top).card :=
+  entry_cost_add_remaining assignment height hh top
 
 -- Completion holds only for a full cycle inside the prefix. This open cycle does not finish.
 #guard (run openCycle 5).permutation ≠ 1

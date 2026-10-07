@@ -29,6 +29,13 @@ The main theorem is `SourcePrefix.cycles_away_bound` in
 `Shuffler/Optimality/BirthPlacement/SourcePrefix/Bounds.lean`.
 `SourcePrefix.closedPairs_eq_below` gives the source-top form of `q`.
 
+`SourcePrefix.permutation_cost_add_remaining` proves
+`K(P) + K(f * P) = K(f)`. Thus an optimal top-swap entry permutation followed
+by the remaining birth schedule has count `K(f) + 2 * c`. The entry uses
+`P⁻¹`, since the stack permutation API sends old positions to new positions.
+`SourcePrefix.entry_cost_add_remaining` proves this count identity. It does
+not assert that the entry permutation meets the physical depth limit.
+
 The tests run the prefix program on an empty prefix, a two-cycle, a cycle through
 the top, a longer complete cycle, and one open cycle with two prefix cycles.
 
