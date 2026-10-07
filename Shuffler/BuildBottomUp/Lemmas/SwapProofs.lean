@@ -19,11 +19,10 @@ structure Swapped (state next : State source target spills) (pos : Fin state.sta
 theorem swap_triple (state : State source target spills) (pos : Fin state.stack.length)
     (hbelow : pos.val + 1 < state.stack.length) (hreach : state.stack.isSwapReachable pos)
     (hnfinal : ¬ state.isFinal pos.val) :
-    ⦃fun s => s = state⦄ swapWith pos.val
-    ⦃fun _ next => Swapped state next pos; allowedErrors⦄ := by
+    ⦃True⦄ swapWith pos.val state
+    ⦃fun next => Swapped state next pos; allowedErrors⦄ := by
   -- Prove the checked preconditions before proving the state update.
   vcgen [swapWith, index] until (requires _ _)
-  all_goals subst_vars
   all_goals simp_all [requires]
   apply WPMonad.pure_le_wp_pure (m := Except Error) _ _ _
   change Swapped _ _ _
@@ -38,14 +37,14 @@ theorem swap_triple (state : State source target spills) (pos : Fin state.stack.
 theorem swap_spec (state : State source target spills) (pos : Fin state.stack.length)
     (hbelow : pos.val + 1 < state.stack.length) (hreach : state.stack.isSwapReachable pos)
     (hnfinal : ¬ state.isFinal pos.val) :
-    Spec ((swapWith pos.val).exec state) (fun next => Swapped state next pos) :=
-  Spec.of_action (swap_triple state pos hbelow hreach hnfinal)
+    Spec (swapWith pos.val state) (fun next => Swapped state next pos) :=
+  (spec_iff_triple _ _).mpr (swap_triple state pos hbelow hreach hnfinal)
 
 @[spec] theorem swapWith_spec (state : State source target spills) (offset : ℕ)
     (hlt : offset < state.stack.length) (hbelow : offset + 1 < state.stack.length)
     (hreach : state.stack.isSwapReachable ⟨offset, hlt⟩) (hnfinal : ¬ state.isFinal offset) :
-    ⦃fun s => s = state⦄ swapWith offset
-    ⦃fun _ next => Swapped state next ⟨offset, hlt⟩; allowedErrors⦄ :=
+    ⦃True⦄ swapWith offset state
+    ⦃fun next => Swapped state next ⟨offset, hlt⟩; allowedErrors⦄ :=
   swap_triple state ⟨offset, hlt⟩ hbelow hreach hnfinal
 
 theorem Swapped.invariant {state next : State source target spills}

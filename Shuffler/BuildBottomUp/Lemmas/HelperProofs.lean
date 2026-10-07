@@ -54,24 +54,24 @@ private theorem growth_append (state : State source target spills) (slot : Value
 @[spec] theorem push_spec (state : State source target spills) (slot : Value) (dest : Fin target.length)
     (hgen : slot.can_be_freely_generated ∨ spills.is_spilled slot)
     (hbound : state.mapping.symm dest = none) :
-    ⦃fun s => s = state⦄ push slot dest
-    ⦃fun _ next => Growth state next dest state.pending_generations; allowedErrors⦄ := by
-  vcgen [push] <;> subst_vars <;> simp_all
+    ⦃True⦄ push slot dest state
+    ⦃fun next => Growth state next dest state.pending_generations; allowedErrors⦄ := by
+  vcgen [push] <;> simp_all
   simpa only [eqRec_eq_cast] using growth_append _ slot dest hbound _
 
 @[spec] theorem dup_spec (state : State source target spills) (copy : Fin state.stack.length)
     (dest : Fin target.length) (hdup : state.stack.isDupReachable copy)
     (hbound : state.mapping.symm dest = none) :
-    ⦃fun s => s = state⦄ dup copy.val dest
-    ⦃fun _ next => Growth state next dest state.pending_generations; allowedErrors⦄ := by
-  vcgen [dup, index] <;> subst_vars <;> simp_all
+    ⦃True⦄ dup copy.val dest state
+    ⦃fun next => Growth state next dest state.pending_generations; allowedErrors⦄ := by
+  vcgen [dup, index] <;> simp_all
   simpa only [eqRec_eq_cast] using growth_append _ _ dest hbound _
 
 @[spec] theorem produce_spec (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest) :
-    ⦃fun s => s = state⦄ produce dest
-    ⦃fun _ next => Growth state next dest (state.pending_generations - 1); allowedErrors⦄ := by
-  vcgen [produce] <;> subst_vars
+    ⦃True⦄ produce dest state
+    ⦃fun next => Growth state next dest (state.pending_generations - 1); allowedErrors⦄ := by
+  vcgen [produce]
   all_goals first
     | exact Growth.top (by assumption)
     | exact Growth.decrement (by assumption)
@@ -120,8 +120,8 @@ theorem Swapped.retag (state : State source target spills) (pos : Fin state.stac
 
 @[spec] theorem generate_triple (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest) :
-    ⦃fun s => s = state⦄ generate dest.val
-    ⦃fun _ next => Generation state next dest; allowedErrors⦄ := by
+    ⦃True⦄ generate dest.val state
+    ⦃fun next => Generation state next dest; allowedErrors⦄ := by
   vcgen [generate]
   all_goals try simp only [Fin.val_inj] at *
   all_goals subst_vars
@@ -136,14 +136,14 @@ theorem Swapped.retag (state : State source target spills) (pos : Fin state.stac
 
 theorem generate_contract (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest) :
-    Spec ((generate dest.val).exec state) (fun next => Generation state next dest) :=
-  Spec.of_action (generate_triple state dest hbound havailable)
+    Spec (generate dest.val state) (fun next => Generation state next dest) :=
+  (spec_iff_triple _ _).mpr (generate_triple state dest hbound havailable)
 
 @[spec] theorem generate_offset_spec (state : State source target spills) (offset : ℕ)
     (hlt : offset < target.length) (hbound : state.mapping.symm ⟨offset, hlt⟩ = none)
     (havailable : state.isAvailable ⟨offset, hlt⟩) :
-    ⦃fun s => s = state⦄ generate offset
-    ⦃fun _ next => Generation state next ⟨offset, hlt⟩; allowedErrors⦄ :=
+    ⦃True⦄ generate offset state
+    ⦃fun next => Generation state next ⟨offset, hlt⟩; allowedErrors⦄ :=
   generate_triple state ⟨offset, hlt⟩ hbound havailable
 
 theorem Generation.invariant {state next : State source target spills} {dest : Fin target.length}
@@ -189,7 +189,7 @@ theorem Placement.swap_final {state : State source target spills} {dest : Fin ta
     (h : Placement dest state) (hbelow : dest.val + 1 < state.stack.length)
     (hreach : state.stack.isSwapReachable ⟨dest.val, h.in_bounds⟩)
     (hnfinal : ¬ state.isFinal dest) :
-    Spec ((swapWith dest.val).exec state) (fun next => Invariant (dest.val + 1) next) := by
+    Spec (swapWith dest.val state) (fun next => Invariant (dest.val + 1) next) := by
   apply (swap_spec state ⟨dest.val, h.in_bounds⟩ hbelow hreach hnfinal).mono
   intro next hs
   exact (hs.invariant h.toInvariant le_rfl).advance
@@ -209,7 +209,7 @@ theorem Invariant.swap_bound {state : State source target spills} {dest : Fin ta
     (hbound : state.mapping.symm dest = some pos)
     (hbelow : pos.val + 1 < state.stack.length) (hreach : state.stack.isSwapReachable pos)
     (hne : pos.val ≠ dest.val) :
-    Spec ((swapWith pos.val).exec state) (fun next => Placement dest next ∧ ¬ next.isFinal dest) := by
+    Spec (swapWith pos.val state) (fun next => Placement dest next ∧ ¬ next.isFinal dest) := by
   have hge := h.processed.bound_ge dest pos hbound le_rfl
   apply (swap_spec state pos hbelow hreach (state.boundNotFinal dest pos hbound hne)).mono
   intro next hs

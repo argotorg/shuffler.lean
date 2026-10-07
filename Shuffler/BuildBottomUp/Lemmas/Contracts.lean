@@ -1,4 +1,4 @@
-import Shuffler.BuildBottomUp.Lemmas.ActionProofs
+import Shuffler.BuildBottomUp.Defs
 import Std.Tactic.Do
 
 open Std.Internal.Do
@@ -6,6 +6,12 @@ open Std.Internal.Do
 set_option mvcgen.warning false
 
 namespace Shuffler.BuildBottomUp
+
+theorem except_ok_bind (value : α) (next : α → Except ε β) :
+    (Except.ok value >>= next) = next value := rfl
+
+theorem except_error_bind (err : ε) (next : α → Except ε β) :
+    (Except.error err >>= next) = .error err := rfl
 
 -- A blocked operation is allowed. An assertion error is excluded.
 def Spec (result : Except Error α) (post : α → Prop) : Prop :=
@@ -23,26 +29,6 @@ theorem spec_iff_triple (result : Except Error α) (post : α → Prop) :
   | ok value => exact ⟨fun h => ⟨fun _ => h⟩, fun h => h.le_wp trivial⟩
   | error err => cases err <;> exact ⟨fun h => ⟨fun _ => h⟩, fun h => h.le_wp trivial⟩
 
-theorem action_triple_iff (action : Action source target spills α)
-    (state : State source target spills) (post : α → State source target spills → Prop) :
-    (⦃fun s => s = state⦄ action ⦃post; allowedErrors⦄) ↔
-      Spec (action.run state) (fun r => post r.1 r.2) := by
-  constructor
-  · intro h
-    exact (spec_iff_triple _ _).mpr ⟨fun _ => h.le_wp state rfl⟩
-  · intro h
-    exact ⟨fun s hs => by subst s; exact ((spec_iff_triple _ _).mp h).le_wp trivial⟩
-
-theorem Spec.of_action {action : Action source target spills Unit}
-    {state : State source target spills} {post : State source target spills → Prop}
-    (h : ⦃fun s => s = state⦄ action ⦃fun _ s => post s; allowedErrors⦄) :
-    Spec (action.exec state) post := by
-  have hp : Spec (action.run state) (fun r => post r.2) :=
-    (spec_iff_triple _ _).mpr ⟨fun _ => h.le_wp state rfl⟩
-  cases heq : action.run state with
-  | ok result => simpa [Action.exec, heq, Spec] using hp
-  | error err => cases err <;> simp_all [Action.exec, Spec]
-
 @[spec] theorem requires_spec (condition : Prop) [Decidable condition] (reason : String) :
     ⦃condition⦄ requires condition reason ⦃fun _ => True; allowedErrors⦄ := by
   vcgen [requires] with finish
@@ -57,9 +43,9 @@ theorem Spec.of_action {action : Action source target spills Unit}
 
 @[spec] theorem swapDestinations_spec (state : State source target spills)
     (a b : ℕ) (ha : a < state.stack.length) (hb : b < state.stack.length) :
-    ⦃fun s => s = state⦄ swapDestinations a b
-    ⦃fun _ s => s = { state with mapping := state.mapping.swapDestinations ⟨a, ha⟩ ⟨b, hb⟩ }; allowedErrors⦄ := by
-  vcgen [swapDestinations, index] <;> subst_vars <;> simp_all
+    ⦃True⦄ swapDestinations a b state
+    ⦃fun s => s = { state with mapping := state.mapping.swapDestinations ⟨a, ha⟩ ⟨b, hb⟩ }; allowedErrors⦄ := by
+  vcgen [swapDestinations, index] <;> simp_all
 
 theorem Spec.bind {result : Except Error α} {pre : α → Prop} {next : α → Except Error β}
     {post : β → Prop} (h : Spec result pre)
@@ -123,10 +109,9 @@ theorem requires_of_true (condition : Prop) [Decidable condition] (h : condition
 
 theorem swapDestinations_result (state : State source target spills)
     (a b : Fin state.stack.length) :
-    (swapDestinations a.val b.val).exec state =
+    swapDestinations a.val b.val state =
       .ok { state with mapping := state.mapping.swapDestinations a b } := by
-  simp only [swapDestinations, Action.exec_get, Action.exec_lift, Action.exec_set,
-    index_eq]
+  simp only [swapDestinations, index_eq]
   rfl
 
 end Shuffler.BuildBottomUp

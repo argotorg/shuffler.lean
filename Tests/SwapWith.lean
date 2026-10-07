@@ -44,7 +44,7 @@ example : (boundState.depthOf 0).map Fin.val = .ok 2 := rfl
 example : (boundState.depthOf 2).map Fin.val = .ok 0 := rfl
 
 -- The values and both directions of the mapping move together.
-private def swapped := (swapWith 0).exec boundState
+private def swapped := swapWith 0 boundState
 
 example : swapped.map (·.stack) = .ok [.Lit 30, .Lit 20, .Lit 10] := by decide
 example : swapped.map (fun state => List.ofFn (fun i => (state.mapping i).map Fin.val)) =
@@ -77,19 +77,19 @@ example (offset : ℕ) : ¬ (surplusState 0).isFinal offset := by
   simp [State.isFinal]
 
 -- Surplus positions are allowed even when the target is empty.
-example : ((swapWith 0).exec (surplusState 1)).map (·.trace.swapCount) = .ok 1 := by
+example : (swapWith 0 (surplusState 1)).map (·.trace.swapCount) = .ok 1 := by
   decide
 
 -- The deepest reachable position can be swapped.
-example : ((swapWith 0).exec (surplusState MAX_SWAP_DEPTH)).map (·.trace.swapCount) = .ok 1 := by
+example : (swapWith 0 (surplusState MAX_SWAP_DEPTH)).map (·.trace.swapCount) = .ok 1 := by
   decide
 
 -- The top cannot be swapped with itself, even though it is within reach.
-example : (swapWith 0).exec (surplusState 0) =
+example : swapWith 0 (surplusState 0) =
     .error (.assertion "cannot swap the top with itself") := rfl
 
 -- A position one step beyond swap reach is rejected.
-example : (swapWith 0).exec (surplusState (MAX_SWAP_DEPTH + 1)) =
+example : swapWith 0 (surplusState (MAX_SWAP_DEPTH + 1)) =
     .error (.assertion "swap target is out of reach") := rfl
 
 private def finalState : State [.Lit 10, .Lit 20] [.Lit 10] ∅ where
@@ -100,7 +100,7 @@ private def finalState : State [.Lit 10, .Lit 20] [.Lit 10] ∅ where
   pending_generations := 0
 
 -- A position already assigned to itself cannot be moved.
-example : (swapWith 0).exec finalState =
+example : swapWith 0 finalState =
     .error (.assertion "swap target is already final") := rfl
 
 /-- info: 'Shuffler.BuildBottomUp.swapWith' depends on axioms: [propext, Classical.choice, Quot.sound] -/

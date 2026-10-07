@@ -8,40 +8,40 @@ namespace BuildBottomUpTests
 example (state : State source target spills) (slot : Value) (dest : Fin target.length)
     (hgen : slot.can_be_freely_generated ∨ spills.is_spilled slot)
     (hdest : state.mapping.symm dest = none) :
-    ((push slot dest).exec state).map (·.pending_generations) = .ok state.pending_generations := by
-  cases slot <;> simp [push, Action.exec, requires, hdest, hgen] <;> rfl
+    (push slot dest state).map (·.pending_generations) = .ok state.pending_generations := by
+  cases slot <;> simp [push, requires, hdest, hgen] <;> rfl
 
 example (state : State source target spills) (copy : Fin state.stack.length)
     (dest : Fin target.length) (hdup : state.stack.isDupReachable copy)
     (hdest : state.mapping.symm dest = none) :
-    ((dup copy.val dest).exec state).map (·.pending_generations) = .ok state.pending_generations := by
-  simp [dup, Action.exec, index, copy.isLt, requires, hdest, hdup]
+    (dup copy.val dest state).map (·.pending_generations) = .ok state.pending_generations := by
+  simp [dup, index, copy.isLt, requires, hdest, hdup]
   rfl
 
 -- Pushing a spilled variable records a load and keeps the previous trace.
 example (state : State source target spills) (id : VarId) (dest : Fin target.length)
     (hspilled : id ∈ spills) (hdest : state.mapping.symm dest = none) :
-    ((push (.Var id) dest).exec state).map
+    (push (.Var id) dest state).map
       (fun next => (⟨next.stack, next.trace⟩ : (res : Stack) × Trace spills source res)) =
       .ok ⟨state.stack ++ [.Var id], Trace.Load id hspilled state.trace⟩ := by
-  simp [push, Action.exec, requires, hdest, SpillSet.is_spilled, hspilled]
+  simp [push, requires, hdest, SpillSet.is_spilled, hspilled]
   rfl
 
 -- Literals and wildcards record pushes.
 example (state : State source target spills) (word : Word) (dest : Fin target.length)
     (hdest : state.mapping.symm dest = none) :
-    ((push (.Lit word) dest).exec state).map
+    (push (.Lit word) dest state).map
       (fun next => (⟨next.stack, next.trace⟩ : (res : Stack) × Trace spills source res)) =
       .ok ⟨state.stack ++ [.Lit word], Trace.Push (.Lit word) (by simp [Value.can_be_freely_generated]) state.trace⟩ := by
-  simp [push, Action.exec, requires, hdest, Value.can_be_freely_generated]
+  simp [push, requires, hdest, Value.can_be_freely_generated]
   rfl
 
 example (state : State source target spills) (dest : Fin target.length)
     (hdest : state.mapping.symm dest = none) :
-    ((push .Wildcard dest).exec state).map
+    (push .Wildcard dest state).map
       (fun next => (⟨next.stack, next.trace⟩ : (res : Stack) × Trace spills source res)) =
       .ok ⟨state.stack ++ [.Wildcard], Trace.Push .Wildcard (by decide) state.trace⟩ := by
-  simp [push, Action.exec, requires, hdest, Value.can_be_freely_generated]
+  simp [push, requires, hdest, Value.can_be_freely_generated]
   rfl
 
 private def emptyState (target : Stack) (spills : SpillSet) : State [] target spills where
@@ -59,16 +59,16 @@ private def observeState (result : Except Error (State source target spills)) :=
       List.ofFn (fun dest => (state.mapping.symm dest).map Fin.val), state.pending_generations)
 
 -- Produce loads a spilled variable and fills the last unbound target position.
-example : observeState ((produce 0).exec spilled) =
+example : observeState (produce 0 spilled) =
     .ok ([.Var ⟨37⟩], [.load ⟨37⟩], [some 0], 0) := rfl
 
 -- Push fills the binding but leaves the counter for produce to update.
-example : observeState ((push (.Var ⟨37⟩) 0).exec spilled) =
+example : observeState (push (.Var ⟨37⟩) 0 spilled) =
     .ok ([.Var ⟨37⟩], [.load ⟨37⟩], [some 0], 1) := rfl
 
-example : observeState ((produce 0).exec (emptyState [.Lit 0] ∅)) =
+example : observeState (produce 0 (emptyState [.Lit 0] ∅)) =
     .ok ([.Lit 0], [.push (.Lit 0)], [some 0], 0) := rfl
-example : observeState ((produce 0).exec (emptyState [.Wildcard] ∅)) =
+example : observeState (produce 0 (emptyState [.Wildcard] ∅)) =
     .ok ([.Wildcard], [.push .Wildcard], [some 0], 0) := rfl
 
 private def copyState (depth : ℕ) (spills : SpillSet) :
@@ -80,24 +80,24 @@ private def copyState (depth : ℕ) (spills : SpillSet) :
   pending_generations := 1
 
 -- The deepest reachable copy is duplicated, even if it is also spilled.
-example : observeState ((produce 0).exec (copyState MAX_DUP_DEPTH {⟨37⟩})) =
+example : observeState (produce 0 (copyState MAX_DUP_DEPTH {⟨37⟩})) =
     .ok ((copyState MAX_DUP_DEPTH {⟨37⟩}).stack ++ [.Var ⟨37⟩], [.dup 16], [some 16], 0) := rfl
 
 -- One slot beyond DUP reach blocks unless a spill can be loaded.
-example : (produce 0).exec (copyState (MAX_DUP_DEPTH + 1) ∅) = .error (.blocked 1) := rfl
-example : observeState ((produce 0).exec (copyState (MAX_DUP_DEPTH + 1) {⟨37⟩})) =
+example : produce 0 (copyState (MAX_DUP_DEPTH + 1) ∅) = .error (.blocked 1) := rfl
+example : observeState (produce 0 (copyState (MAX_DUP_DEPTH + 1) {⟨37⟩})) =
     .ok ((copyState (MAX_DUP_DEPTH + 1) {⟨37⟩}).stack ++ [.Var ⟨37⟩], [.load ⟨37⟩], [some 17], 0) := rfl
 
 -- Neither an empty spill set nor a different spilled ID permits a load.
-example : (push (.Var ⟨37⟩) 0).exec (emptyState [.Var ⟨37⟩] ∅) =
+example : push (.Var ⟨37⟩) 0 (emptyState [.Var ⟨37⟩] ∅) =
     .error (.assertion "pushed slot cannot be generated or loaded") := rfl
-example : (push (.Var ⟨38⟩) 0).exec spilled =
+example : push (.Var ⟨38⟩) 0 spilled =
     .error (.assertion "pushed slot cannot be generated or loaded") := rfl
 
 -- Produce requires a copy, a spill, or a value that can be freely generated.
-example : (produce 0).exec (emptyState [.Var ⟨37⟩] ∅) =
+example : produce 0 (emptyState [.Var ⟨37⟩] ∅) =
     .error (.assertion "generated slot has no copy on the stack and is not spilled") := rfl
-example : (produce 0).exec (emptyState [.Var ⟨37⟩] {⟨38⟩}) =
+example : produce 0 (emptyState [.Var ⟨37⟩] {⟨38⟩}) =
     .error (.assertion "generated slot has no copy on the stack and is not spilled") := rfl
 
 /-- info: 'Shuffler.BuildBottomUp.produce' depends on axioms: [propext, Classical.choice, Quot.sound] -/
@@ -105,9 +105,7 @@ example : (produce 0).exec (emptyState [.Var ⟨37⟩] {⟨38⟩}) =
 #print axioms produce
 
 -- A bound destination cannot be filled again.
-example : (do
-    push (.Var ⟨37⟩) 0
-    push (.Var ⟨37⟩) 0).exec spilled =
+example : (push (.Var ⟨37⟩) 0 >=> push (.Var ⟨37⟩) 0) spilled =
     .error (.assertion "destination already bound to a slot") := rfl
 
 end BuildBottomUpTests
