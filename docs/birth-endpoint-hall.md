@@ -62,6 +62,47 @@ This file does not claim a proved runtime bound for that implementation.
 The number of moved endpoint tokens is an optimization objective. It is
 not the exact number of SWAP instructions.
 
+## Cost with indexed data structures
+
+There is an `O(n log n)` implementation of the fixed-word endpoint method,
+where `n` is the word length, under the data-structure assumptions below.
+This is an implementation design, not a time bound for the current Lean
+evaluation.
+
+For each value, store its birth positions `b` and output deadlines `t + R`
+in one sorted event array. Combine events at the same cut. There are at
+most `2n` events across all values. A sweep computes the Hall slack at each
+event. Between two events, the slack is constant.
+
+A candidate identity endpoint `c → c` reserves `[c,c+R)`. Both ends are
+already events: `c` is a birth position, and `c + R` is an output deadline.
+Thus there is no need to store every cut of the stack for every value.
+Store the slack in a segment tree that supports a range minimum and a
+range addition. Accept the candidate if the minimum in its interval is
+at least one. On acceptance, subtract one from that interval. For `R = 0`,
+the interval is empty and every candidate is accepted.
+
+There are at most `n` candidates. Each range operation costs `O(log n)`.
+Sorting the event arrays and grouping by value cost `O(n log n)` with
+comparison maps. Tree construction and the slack sweeps cost `O(n)` in
+total. The arrays and current tree states use `O(n)` live space. This
+space bound assumes that old tree versions are discarded; it does not
+bound total allocation for a persistent implementation.
+
+After the scan, pair the remaining births and outputs in their stored
+order. This costs `O(n)`. With constant-time indexed stack and token-map
+updates, the existing schedule also needs `O(n)` work to emit its at most
+`n` births and `n` swaps. The reach is fixed, so a scan of the reachable
+stack window has constant cost. These assumptions give `O(n log n)` time
+and `O(n)` live space for endpoint selection, matching, and trace emission
+for one supplied word. They do not give an algorithm to choose a globally
+optimal birth word.
+
+The cache measurements above concern the current executable code. They
+do not measure this segment-tree design.
+
+## Trace comparison
+
 `optimizeTraceWord` extracts a feasible birth word from an empty-source
 trace without POP. It chooses the cheapest available introduction at each
 birth and an endpoint map with minimum moved-token count. Lean proves a
