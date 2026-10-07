@@ -8,8 +8,21 @@ token assignment is the supplied assignment.
 
 A general theorem that the new constructor's extracted token assignment
 equals its input assignment is still separate work. The tests check that
-identity in named examples. The existing source realizer has not yet been
-replaced.
+identity in named examples. The scheduler's nonempty-source birth candidate
+now uses this constructor. The old exact-count source realizer remains
+available for its existing API and comparison theorems.
+
+`SourceLazy.swapBound_le_sourcePotential` proves that the new SWAP count
+does not exceed the old source-prefix count. Every forced full cycle
+contains a moved prefix cycle, and these witnesses are disjoint. The
+optimization adapter preserves the birth events, so its gas and byte
+costs are each no greater than the old adapter's costs. The existing
+scheduler success and cost guarantees continue to apply.
+
+`SourceLazy.optimizeTraceAssignment_score_le` also proves that the new
+adapter does not increase the supplied trace's selected weighted cost.
+It uses the lower bound for the trace's own assignment and chooses birth
+methods of no greater cost.
 
 ## Statement
 
@@ -191,6 +204,10 @@ and frozen prefix. `Phase` chooses and compiles one local permutation.
 `Base` handles the initial source. `Birth` proves the readable count
 condition and emits the selected birth operation. `Build` supplies the
 terminating reverse recursion and returns the complete forward trace.
+Each reverse step stores the remaining permutation in two finite tables.
+`cachedPermutation_eq` proves that these tables preserve the permutation.
+They avoid repeated evaluation of nested permutation functions during
+cycle scans.
 
 `Tests/OptimalitySourceLazy.lean` checks the actual constructor. The old
 five-SWAP distinct-source plan uses three SWAPs. The two old nine-SWAP

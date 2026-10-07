@@ -20,8 +20,8 @@ def forcedCycles (reach height : Nat) (assignment : Equiv.Perm (Fin size)) :
     Finset (Equiv.Perm (Fin size)) :=
   assignment.cycleFactorsFinset.filter (Forced reach height)
 
--- This is the proposed exact fixed-assignment SWAP count. Its full
--- realization and production-trace lower bound are proof obligations.
+-- The constructor realizes this count. It also bounds every no-POP trace
+-- whose extracted token assignment equals the supplied assignment.
 def swapBound (reach height : Nat) (assignment : Equiv.Perm (Fin size)) : Nat :=
   arbitrarySwapCount assignment + 2 * (forcedCycles reach height assignment).card
 

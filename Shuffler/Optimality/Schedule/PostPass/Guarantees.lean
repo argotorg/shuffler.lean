@@ -13,7 +13,7 @@ theorem birthCandidate_births (costs : PrimitiveCosts) (weights : Weights)
         improveTraceWord_births costs weights incumbent.trace incumbent.noPop
   | cons value rest =>
       simpa only [birthCandidate, List.cons_ne_nil, dite_false, BuiltTrace.cast] using
-        optimizeTraceAssignment_births costs weights incumbent.trace incumbent.noPop
+        SourceLazy.optimizeTraceAssignment_births costs weights incumbent.trace incumbent.noPop
 
 theorem postPass_births (costs : PrimitiveCosts) (weights : Weights)
     (incumbent : BuiltTrace spills source target missing) :
@@ -51,7 +51,7 @@ theorem postPass_source_surplus_le_twice (costs : PrimitiveCosts) (weights : Wei
   simp only [birthCandidate, dite_eq_right hne] at hle
   simp only [postPass, birthCandidate, dite_eq_right hne]
   exact (Nat.sub_le_sub_right hle _).trans
-    (optimizeTraceAssignment_surplus_le_twice costs weights incumbent.trace other
+    (SourceLazy.optimizeTraceAssignment_surplus_le_twice costs weights incumbent.trace other
       incumbent.noPop hother hassignment)
 
 end Shuffler.Optimality.Schedule

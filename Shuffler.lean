@@ -28,6 +28,8 @@ import Shuffler.Optimality.BirthPlacement.Improve.Theorems
 import Shuffler.Optimality.BirthPlacement.RawWord.Theorems
 import Shuffler.Optimality.BirthPlacement.Global.Theorems
 import Shuffler.Optimality.BirthPlacement.SourceCheapest.Theorems
+import Shuffler.Optimality.BirthPlacement.SourceLazy.Theorems
+import Shuffler.Optimality.BirthPlacement.SourceLazy.Optimize.Theorems
 import Shuffler.Optimality.BirthPlacement.Dual.Trace
 import Shuffler.Optimality.BirthPlacement.Dual.Source
 import Shuffler.Optimality.BirthPlacement.Dual.Pairwise

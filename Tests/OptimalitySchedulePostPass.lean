@@ -40,7 +40,7 @@ private def mixedWeights : Weights := ⟨1, 1, by decide⟩
 #guard (replay savedSpills savedSource savedOps).map (fun replayed =>
   let final := Schedule.postPass savedCosts mixedWeights replayed.built
   (replayed.target, traceCost savedCosts replayed.built.trace, traceCost savedCosts final.trace)) =
-    some (savedTarget, ⟨107, 36⟩, ⟨101, 34⟩)
+    some (savedTarget, ⟨107, 36⟩, ⟨95, 32⟩)
 
 example (costs : PrimitiveCosts) (weights : Weights)
     (incumbent : Shuffler.Placement.BuiltTrace spills source target missing) :

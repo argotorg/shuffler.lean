@@ -17,9 +17,9 @@ private def costs : PrimitiveCosts := PrimitiveCosts.evm
     else .push ⟨0,by decide⟩)
   (fun _ => .push ⟨1,by decide⟩)
 
--- Normalized portfolio candidates score135. The original BBU still scores160.
+-- The source-cycle post-pass scores134. The original BBU still scores160.
 #guard (Schedule.build costs ⟨5,1,by decide⟩ {⟨44⟩} source target {one,zero,zero}).map
-  (fun result => (traceCost costs result.trace).score ⟨5,1,by decide⟩) = some 135
+  (fun result => (traceCost costs result.trace).score ⟨5,1,by decide⟩) = some 134
 
 #guard (Schedule.originalCandidate {⟨44⟩} source target {one,zero,zero}).map
   (fun result => (traceCost costs result.trace).score ⟨5,1,by decide⟩) = some 160

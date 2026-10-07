@@ -39,7 +39,7 @@ def phaseOfMovement (top : Fin target.length) (state : State plan (top.val + 1))
     (by rw [hlen]; omega)
   have he : plan.assignment * before.remaining⁻¹ * movement⁻¹ =
       plan.assignment * state.remaining⁻¹ := by
-    simp [before, State.rewind, mul_inv_rev, mul_assoc]
+    simp [before, State.rewind, cachedPermutation_eq, mul_inv_rev, mul_assoc]
   have hend : prefixValues target (plan.assignment * before.remaining⁻¹ * movement⁻¹) values.length =
       state.values := by rw [he, hlen]
   refine ⟨before, result.val.cast rfl hend rfl, ?_⟩
@@ -48,7 +48,7 @@ def phaseOfMovement (top : Fin target.length) (state : State plan (top.val + 1))
     apply Fin.ext
     simp only [hlen, Nat.add_sub_cancel]
   rw [ht]
-  exact hcount
+  simpa only [before, State.rewind, cachedPermutation_eq] using hcount
 
 def phase (top : Fin target.length) (state : State plan (top.val + 1))
     (hsource : source.length ≤ top.val) : Phase top state :=

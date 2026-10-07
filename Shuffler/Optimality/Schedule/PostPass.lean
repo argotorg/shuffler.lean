@@ -1,12 +1,13 @@
 import Shuffler.Optimality.BirthPlacement.Improve.Theorems
-import Shuffler.Optimality.BirthPlacement.SourceCheapest.Theorems
+import Shuffler.Optimality.BirthPlacement.SourceLazy.Optimize.Theorems
 
 namespace Shuffler.Optimality.Schedule
 
 open Shuffler.Placement
 
 -- Empty sources permit endpoint reassignment within the fixed birth word.
--- Other sources use the seed assignment and choose available birth methods.
+-- Other sources use the seed assignment, choose available birth methods,
+-- and delay source work according to cycle deadlines.
 def birthCandidate (costs : PrimitiveCosts) (weights : Weights)
     (incumbent : BuiltTrace spills source target missing) : BuiltTrace spills source target missing :=
   if hs : source = [] then
@@ -18,9 +19,9 @@ def birthCandidate (costs : PrimitiveCosts) (weights : Weights)
           empty.additions⟩
     built.cast hs.symm rfl rfl
   else
-    let candidate := BirthPlacement.optimizeTraceAssignment costs weights incumbent.trace incumbent.noPop
+    let candidate := BirthPlacement.SourceLazy.optimizeTraceAssignment costs weights incumbent.trace incumbent.noPop
     ⟨candidate.built.trace, candidate.built.noPop,
-      (BirthPlacement.optimizeTraceAssignment_additions costs weights incumbent.trace incumbent.noPop).trans
+      (BirthPlacement.SourceLazy.optimizeTraceAssignment_additions costs weights incumbent.trace incumbent.noPop).trans
         incumbent.additions⟩
 
 end Shuffler.Optimality.Schedule

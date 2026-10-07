@@ -1,4 +1,5 @@
 import Shuffler.Optimality.BirthPlacement.SourceLazy.Spec
+import Shuffler.Optimality.BirthPlacement.SourceLazy.Cached
 import Shuffler.Optimality.BirthPlacement.SourcePlan.Theorems
 
 namespace Shuffler.Optimality.BirthPlacement.SourceLazy
@@ -65,10 +66,11 @@ def State.rewind (top : Fin target.length) (state : State plan (top.val + 1))
     (hdeadline : BirthDeadlines 16 (movement⁻¹ * state.remaining)) : State plan top.val where
   source_le := hsource
   height_le := Nat.le_of_lt top.isLt
-  remaining := movement⁻¹ * state.remaining
-  above := habove
-  deadlines := hdeadline
+  remaining := cachedPermutation (movement⁻¹ * state.remaining)
+  above := by simpa only [cachedPermutation_eq] using habove
+  deadlines := by simpa only [cachedPermutation_eq] using hdeadline
   source_frozen := by
+    rw [cachedPermutation_eq]
     intro index hi
     have hr := state.source_frozen index hi
     have hm : movement index = index := by
@@ -79,6 +81,7 @@ def State.rewind (top : Fin target.length) (state : State plan (top.val + 1))
     simp only [Equiv.Perm.mul_apply, hr]
     exact (Equiv.Perm.inv_eq_iff_eq.mpr hm.symm)
   frozen := by
+    rw [cachedPermutation_eq]
     intro index hi
     have hm : movement index = index := by
       apply Equiv.Perm.notMem_support.mp
