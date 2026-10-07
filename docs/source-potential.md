@@ -1,8 +1,8 @@
 # A source-entry potential for a fixed token assignment
 
-This is a paper interface and proof. The full production-source theorem
-and an optimizer for this potential are not yet proved in Lean. It does
-not change the existing empty-source API.
+The bound on this potential is now proved for production traces. The
+source plan realizer and an optimizer for this potential remain separate
+tasks. The existing empty-source API does not change.
 
 Let `n` be the source length, with `n <= 17`, and let `f` assign every
 source token and later birth token to its final target position. Let
@@ -113,6 +113,20 @@ choosing an arbitrary minimum-`E` assignment among equal copies. The
 counterexample in `docs/source-entry-cost.md` shows why that distinction
 matters.
 
+`trace_sourcePotential_le_twice` now proves the combined inequality in
+Lean for every no-POP production trace. `SourceCycles.pairsBelow_card`
+connects the ordered-pair count with the full-cycle count used by
+`SourcePrefix.cycles_away_bound`. The final theorem includes the empty
+source case and has no source-size restriction. It bounds the numeric
+potential of the trace's extracted assignment; it does not yet build a
+source trace with that cost.
+
+The source-offset availability fact is also proved:
+`traceEvents_available_from` uses the exact source length plus event
+index and counts copies in `source ++ births`. Along with the existing
+`traceAssignment_deadlines` and `traceAssignment_birthWord`, it supplies
+the trace-side value, deadline, and birth-method conditions.
+
 ## What an endpoint optimizer would need
 
 An optimizer that minimizes `F` over the valid assignments for a fixed
@@ -122,9 +136,9 @@ instructions would then give total and baseline-surplus factor-two
 bounds, by the same weighted argument used for the empty source.
 
 No such minimum-`F` optimizer is supplied here. No global birth-order
-optimizer is supplied either. The prefix-cycle bound and source realizer
-must be connected to the proved trace-side bound before this can be
-called a full Lean result.
+optimizer is supplied either. A source realizer must still be connected
+to the proved potential bound before this can be called a source
+approximation result.
 
 ## An additive consequence for minimum moved count
 
@@ -151,5 +165,6 @@ assignment, so equal-copy reassignment cannot change the comparison.
 
 All 82,233 cases passed both intermediate inequalities and `F <= 2 S`.
 The largest ratio was exactly two. The report is
-`Bench/evidence-source-potential.json`. This is finite evidence for the
-paper argument, not a Lean proof of its full interface.
+`Bench/evidence-source-potential.json`. The Lean potential theorem now
+covers all no-POP traces, beyond this finite check. It still leaves the
+source realizer and assignment selection open.
