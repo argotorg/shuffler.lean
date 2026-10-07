@@ -150,7 +150,18 @@ A paper proof gives one local recombination with
 generation conditions, together with `J(X)=L`, give `C+B≤L`. The proof does
 not justify repeated use of the same cycle credit or prove that a required
 recombination always exists. The permutation check covers 11,816 local
-recombinations. See [local rounding](local-cycle-rounding.md).
+recombinations. A further two-word check through length 6 covers 837
+target/reach cases, 196,270 endpoint permutations, and 2,751,360 unordered
+word pairs. This covers 111,699,278 ordered input-permutation pairs; none
+fails the proposed `K` bound. These finite checks are not a global proof.
+
+The stronger `E` bound is false: one pair with input moved count 4 needs
+balanced output moved count at least 5, while output `K=3` is possible.
+The note gives a reach-16 embedding. For any number of input words, a
+regular bipartite edge-coloring construction proves balanced-word
+feasibility on paper. Expanding a rational denominator gives existence,
+not a runtime bound. The endpoint `K` bound remains open. See
+[local rounding](local-cycle-rounding.md).
 
 The source objective `H=E+2c-r` satisfies `F≤H≤2S` on paper. It counts full
 cycles only where source entry affects the cost. At reach 16, at most eight
