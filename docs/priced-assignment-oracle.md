@@ -46,7 +46,7 @@ Compress the global chain to the union of birth times and target
 deadlines. There are `O(n)` nodes and arcs. No edge for every possible
 birth/target pair is needed.
 
-For a source of length `m`, an old row `b<m` can only enter its fixed
+For a source of length `m<=n`, an old row `b<m` can only enter its fixed
 source value's chain, at that value's first deadline at or after `b`.
 That arc has reward `h_source[b](b)`. Its identity arc exists only when
 `source[b]=target[b]`. If `b+R+1<m`, give the old row only its legal
@@ -160,6 +160,11 @@ of at most `(G-B)+s*c` still permits the finite certificate `S+B<=L`.
 This is a possible accounting rule for a rounding proof, not a proved
 rounding guarantee. It does not apply unchanged to the source realizer,
 whose initial permutation can require extra SWAPs.
+
+[The direct certificate note](direct-certificate-invariant.md) gives
+an exact defect identity for capped optional prices. It includes the
+assignment slack of a plan that does not maximize the oracle reward,
+and checks the price boundary cases at an optimal fractional pair.
 
 One possible first step is to round the value birth-count matrix using
 its laminar prefix constraints. Constrain each rounded prefix count
