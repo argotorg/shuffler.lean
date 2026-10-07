@@ -1,0 +1,1419 @@
+{
+  "status": "exact offline assignment optima with checked primal-dual certificates",
+  "scope": "Birth jobs use the proved inventory deadline formula. This checker finds minimum value mismatches between source++birthWord and target over fixed-plan deadline assignments. It does not enforce DUP availability or time-ordered SWAP placement, and emits no production trace. The assignment certificates are checked in JavaScript; no Lean matching theorem is claimed.",
+  "complexity": "The dense assignment algorithm uses O(n^3) time and O(n^2) space. This does not meet the intended O(n^2) time target.",
+  "cases": [
+    {
+      "reach": 3,
+      "repetitions": 3,
+      "target": [
+        "a",
+        "x1",
+        "x2",
+        "x1",
+        "x2",
+        "x1",
+        "x2",
+        "a"
+      ],
+      "selected": [
+        0,
+        1,
+        2,
+        3,
+        4
+      ],
+      "gapDemand": 2,
+      "forcedSuffix": [
+        "x1",
+        "x2"
+      ],
+      "actualSuffix": [
+        "x1",
+        "x2"
+      ],
+      "match": {
+        "status": "optimal",
+        "columns": [
+          0,
+          1,
+          5,
+          3,
+          4,
+          6,
+          7,
+          2
+        ],
+        "cost": 4,
+        "rowDual": [
+          4,
+          3,
+          3,
+          3,
+          3,
+          2,
+          1,
+          4
+        ],
+        "columnDual": [
+          -4,
+          -3,
+          -3,
+          -3,
+          -3,
+          -2,
+          -1,
+          0
+        ],
+        "jobs": [
+          {
+            "output": 0,
+            "value": "a",
+            "origin": 0,
+            "deadline": 4
+          },
+          {
+            "output": 1,
+            "value": "x1",
+            "origin": 1,
+            "deadline": 5
+          },
+          {
+            "output": 2,
+            "value": "x2",
+            "origin": 2,
+            "deadline": 6
+          },
+          {
+            "output": 3,
+            "value": "x1",
+            "origin": 1,
+            "deadline": 5
+          },
+          {
+            "output": 4,
+            "value": "x2",
+            "origin": 2,
+            "deadline": 6
+          },
+          {
+            "output": 5,
+            "value": "x1",
+            "origin": 3,
+            "deadline": 7
+          },
+          {
+            "output": 6,
+            "value": "x2",
+            "origin": 4,
+            "deadline": 8
+          },
+          {
+            "output": 7,
+            "value": "a",
+            "origin": 0,
+            "deadline": 4
+          }
+        ],
+        "birthWord": [
+          "a",
+          "x1",
+          "a",
+          "x1",
+          "x2",
+          "x2",
+          "x1",
+          "x2"
+        ],
+        "fixedMismatches": 0,
+        "mismatches": 4,
+        "swapFloor": 2
+      }
+    },
+    {
+      "reach": 4,
+      "repetitions": 3,
+      "target": [
+        "a",
+        "x1",
+        "x2",
+        "x3",
+        "x1",
+        "x2",
+        "x3",
+        "x1",
+        "x2",
+        "x3",
+        "a"
+      ],
+      "selected": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "gapDemand": 2,
+      "forcedSuffix": [
+        "x1",
+        "x2",
+        "x3"
+      ],
+      "actualSuffix": [
+        "x1",
+        "x2",
+        "x3"
+      ],
+      "match": {
+        "status": "optimal",
+        "columns": [
+          0,
+          1,
+          2,
+          7,
+          4,
+          5,
+          6,
+          8,
+          9,
+          10,
+          3
+        ],
+        "cost": 5,
+        "rowDual": [
+          5,
+          4,
+          4,
+          4,
+          4,
+          4,
+          4,
+          3,
+          2,
+          1,
+          5
+        ],
+        "columnDual": [
+          -5,
+          -4,
+          -4,
+          -4,
+          -4,
+          -4,
+          -4,
+          -3,
+          -2,
+          -1,
+          0
+        ],
+        "jobs": [
+          {
+            "output": 0,
+            "value": "a",
+            "origin": 0,
+            "deadline": 5
+          },
+          {
+            "output": 1,
+            "value": "x1",
+            "origin": 1,
+            "deadline": 6
+          },
+          {
+            "output": 2,
+            "value": "x2",
+            "origin": 2,
+            "deadline": 7
+          },
+          {
+            "output": 3,
+            "value": "x3",
+            "origin": 3,
+            "deadline": 8
+          },
+          {
+            "output": 4,
+            "value": "x1",
+            "origin": 1,
+            "deadline": 6
+          },
+          {
+            "output": 5,
+            "value": "x2",
+            "origin": 2,
+            "deadline": 7
+          },
+          {
+            "output": 6,
+            "value": "x3",
+            "origin": 3,
+            "deadline": 8
+          },
+          {
+            "output": 7,
+            "value": "x1",
+            "origin": 4,
+            "deadline": 9
+          },
+          {
+            "output": 8,
+            "value": "x2",
+            "origin": 5,
+            "deadline": 10
+          },
+          {
+            "output": 9,
+            "value": "x3",
+            "origin": 6,
+            "deadline": 11
+          },
+          {
+            "output": 10,
+            "value": "a",
+            "origin": 0,
+            "deadline": 5
+          }
+        ],
+        "birthWord": [
+          "a",
+          "x1",
+          "x2",
+          "a",
+          "x1",
+          "x2",
+          "x3",
+          "x3",
+          "x1",
+          "x2",
+          "x3"
+        ],
+        "fixedMismatches": 0,
+        "mismatches": 5,
+        "swapFloor": 3
+      }
+    },
+    {
+      "reach": 5,
+      "repetitions": 3,
+      "target": [
+        "a",
+        "x1",
+        "x2",
+        "x3",
+        "x4",
+        "x1",
+        "x2",
+        "x3",
+        "x4",
+        "x1",
+        "x2",
+        "x3",
+        "x4",
+        "a"
+      ],
+      "selected": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "gapDemand": 2,
+      "forcedSuffix": [
+        "x1",
+        "x2",
+        "x3",
+        "x4"
+      ],
+      "actualSuffix": [
+        "x1",
+        "x2",
+        "x3",
+        "x4"
+      ],
+      "match": {
+        "status": "optimal",
+        "columns": [
+          0,
+          1,
+          2,
+          3,
+          9,
+          5,
+          6,
+          7,
+          8,
+          10,
+          11,
+          12,
+          13,
+          4
+        ],
+        "cost": 6,
+        "rowDual": [
+          6,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          5,
+          4,
+          3,
+          2,
+          1,
+          6
+        ],
+        "columnDual": [
+          -6,
+          -5,
+          -5,
+          -5,
+          -5,
+          -5,
+          -5,
+          -5,
+          -5,
+          -4,
+          -3,
+          -2,
+          -1,
+          0
+        ],
+        "jobs": [
+          {
+            "output": 0,
+            "value": "a",
+            "origin": 0,
+            "deadline": 6
+          },
+          {
+            "output": 1,
+            "value": "x1",
+            "origin": 1,
+            "deadline": 7
+          },
+          {
+            "output": 2,
+            "value": "x2",
+            "origin": 2,
+            "deadline": 8
+          },
+          {
+            "output": 3,
+            "value": "x3",
+            "origin": 3,
+            "deadline": 9
+          },
+          {
+            "output": 4,
+            "value": "x4",
+            "origin": 4,
+            "deadline": 10
+          },
+          {
+            "output": 5,
+            "value": "x1",
+            "origin": 1,
+            "deadline": 7
+          },
+          {
+            "output": 6,
+            "value": "x2",
+            "origin": 2,
+            "deadline": 8
+          },
+          {
+            "output": 7,
+            "value": "x3",
+            "origin": 3,
+            "deadline": 9
+          },
+          {
+            "output": 8,
+            "value": "x4",
+            "origin": 4,
+            "deadline": 10
+          },
+          {
+            "output": 9,
+            "value": "x1",
+            "origin": 5,
+            "deadline": 11
+          },
+          {
+            "output": 10,
+            "value": "x2",
+            "origin": 6,
+            "deadline": 12
+          },
+          {
+            "output": 11,
+            "value": "x3",
+            "origin": 7,
+            "deadline": 13
+          },
+          {
+            "output": 12,
+            "value": "x4",
+            "origin": 8,
+            "deadline": 14
+          },
+          {
+            "output": 13,
+            "value": "a",
+            "origin": 0,
+            "deadline": 6
+          }
+        ],
+        "birthWord": [
+          "a",
+          "x1",
+          "x2",
+          "x3",
+          "a",
+          "x1",
+          "x2",
+          "x3",
+          "x4",
+          "x4",
+          "x1",
+          "x2",
+          "x3",
+          "x4"
+        ],
+        "fixedMismatches": 0,
+        "mismatches": 6,
+        "swapFloor": 3
+      }
+    },
+    {
+      "reach": 8,
+      "repetitions": 3,
+      "target": [
+        "a",
+        "x1",
+        "x2",
+        "x3",
+        "x4",
+        "x5",
+        "x6",
+        "x7",
+        "x1",
+        "x2",
+        "x3",
+        "x4",
+        "x5",
+        "x6",
+        "x7",
+        "x1",
+        "x2",
+        "x3",
+        "x4",
+        "x5",
+        "x6",
+        "x7",
+        "a"
+      ],
+      "selected": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ],
+      "gapDemand": 2,
+      "forcedSuffix": [
+        "x1",
+        "x2",
+        "x3",
+        "x4",
+        "x5",
+        "x6",
+        "x7"
+      ],
+      "actualSuffix": [
+        "x1",
+        "x2",
+        "x3",
+        "x4",
+        "x5",
+        "x6",
+        "x7"
+      ],
+      "match": {
+        "status": "optimal",
+        "columns": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          15,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          7
+        ],
+        "cost": 9,
+        "rowDual": [
+          9,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          9
+        ],
+        "columnDual": [
+          -9,
+          -8,
+          -8,
+          -8,
+          -8,
+          -8,
+          -8,
+          -8,
+          -8,
+          -8,
+          -8,
+          -8,
+          -8,
+          -8,
+          -8,
+          -7,
+          -6,
+          -5,
+          -4,
+          -3,
+          -2,
+          -1,
+          0
+        ],
+        "jobs": [
+          {
+            "output": 0,
+            "value": "a",
+            "origin": 0,
+            "deadline": 9
+          },
+          {
+            "output": 1,
+            "value": "x1",
+            "origin": 1,
+            "deadline": 10
+          },
+          {
+            "output": 2,
+            "value": "x2",
+            "origin": 2,
+            "deadline": 11
+          },
+          {
+            "output": 3,
+            "value": "x3",
+            "origin": 3,
+            "deadline": 12
+          },
+          {
+            "output": 4,
+            "value": "x4",
+            "origin": 4,
+            "deadline": 13
+          },
+          {
+            "output": 5,
+            "value": "x5",
+            "origin": 5,
+            "deadline": 14
+          },
+          {
+            "output": 6,
+            "value": "x6",
+            "origin": 6,
+            "deadline": 15
+          },
+          {
+            "output": 7,
+            "value": "x7",
+            "origin": 7,
+            "deadline": 16
+          },
+          {
+            "output": 8,
+            "value": "x1",
+            "origin": 1,
+            "deadline": 10
+          },
+          {
+            "output": 9,
+            "value": "x2",
+            "origin": 2,
+            "deadline": 11
+          },
+          {
+            "output": 10,
+            "value": "x3",
+            "origin": 3,
+            "deadline": 12
+          },
+          {
+            "output": 11,
+            "value": "x4",
+            "origin": 4,
+            "deadline": 13
+          },
+          {
+            "output": 12,
+            "value": "x5",
+            "origin": 5,
+            "deadline": 14
+          },
+          {
+            "output": 13,
+            "value": "x6",
+            "origin": 6,
+            "deadline": 15
+          },
+          {
+            "output": 14,
+            "value": "x7",
+            "origin": 7,
+            "deadline": 16
+          },
+          {
+            "output": 15,
+            "value": "x1",
+            "origin": 8,
+            "deadline": 17
+          },
+          {
+            "output": 16,
+            "value": "x2",
+            "origin": 9,
+            "deadline": 18
+          },
+          {
+            "output": 17,
+            "value": "x3",
+            "origin": 10,
+            "deadline": 19
+          },
+          {
+            "output": 18,
+            "value": "x4",
+            "origin": 11,
+            "deadline": 20
+          },
+          {
+            "output": 19,
+            "value": "x5",
+            "origin": 12,
+            "deadline": 21
+          },
+          {
+            "output": 20,
+            "value": "x6",
+            "origin": 13,
+            "deadline": 22
+          },
+          {
+            "output": 21,
+            "value": "x7",
+            "origin": 14,
+            "deadline": 23
+          },
+          {
+            "output": 22,
+            "value": "a",
+            "origin": 0,
+            "deadline": 9
+          }
+        ],
+        "birthWord": [
+          "a",
+          "x1",
+          "x2",
+          "x3",
+          "x4",
+          "x5",
+          "x6",
+          "a",
+          "x1",
+          "x2",
+          "x3",
+          "x4",
+          "x5",
+          "x6",
+          "x7",
+          "x7",
+          "x1",
+          "x2",
+          "x3",
+          "x4",
+          "x5",
+          "x6",
+          "x7"
+        ],
+        "fixedMismatches": 0,
+        "mismatches": 9,
+        "swapFloor": 5
+      }
+    },
+    {
+      "reach": 16,
+      "repetitions": 3,
+      "target": [
+        "a",
+        "x1",
+        "x2",
+        "x3",
+        "x4",
+        "x5",
+        "x6",
+        "x7",
+        "x8",
+        "x9",
+        "x10",
+        "x11",
+        "x12",
+        "x13",
+        "x14",
+        "x15",
+        "x1",
+        "x2",
+        "x3",
+        "x4",
+        "x5",
+        "x6",
+        "x7",
+        "x8",
+        "x9",
+        "x10",
+        "x11",
+        "x12",
+        "x13",
+        "x14",
+        "x15",
+        "x1",
+        "x2",
+        "x3",
+        "x4",
+        "x5",
+        "x6",
+        "x7",
+        "x8",
+        "x9",
+        "x10",
+        "x11",
+        "x12",
+        "x13",
+        "x14",
+        "x15",
+        "a"
+      ],
+      "selected": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30
+      ],
+      "gapDemand": 2,
+      "forcedSuffix": [
+        "x1",
+        "x2",
+        "x3",
+        "x4",
+        "x5",
+        "x6",
+        "x7",
+        "x8",
+        "x9",
+        "x10",
+        "x11",
+        "x12",
+        "x13",
+        "x14",
+        "x15"
+      ],
+      "actualSuffix": [
+        "x1",
+        "x2",
+        "x3",
+        "x4",
+        "x5",
+        "x6",
+        "x7",
+        "x8",
+        "x9",
+        "x10",
+        "x11",
+        "x12",
+        "x13",
+        "x14",
+        "x15"
+      ],
+      "match": {
+        "status": "optimal",
+        "columns": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          31,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          15
+        ],
+        "cost": 17,
+        "rowDual": [
+          17,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          9,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          17
+        ],
+        "columnDual": [
+          -17,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -16,
+          -15,
+          -14,
+          -13,
+          -12,
+          -11,
+          -10,
+          -9,
+          -8,
+          -7,
+          -6,
+          -5,
+          -4,
+          -3,
+          -2,
+          -1,
+          0
+        ],
+        "jobs": [
+          {
+            "output": 0,
+            "value": "a",
+            "origin": 0,
+            "deadline": 17
+          },
+          {
+            "output": 1,
+            "value": "x1",
+            "origin": 1,
+            "deadline": 18
+          },
+          {
+            "output": 2,
+            "value": "x2",
+            "origin": 2,
+            "deadline": 19
+          },
+          {
+            "output": 3,
+            "value": "x3",
+            "origin": 3,
+            "deadline": 20
+          },
+          {
+            "output": 4,
+            "value": "x4",
+            "origin": 4,
+            "deadline": 21
+          },
+          {
+            "output": 5,
+            "value": "x5",
+            "origin": 5,
+            "deadline": 22
+          },
+          {
+            "output": 6,
+            "value": "x6",
+            "origin": 6,
+            "deadline": 23
+          },
+          {
+            "output": 7,
+            "value": "x7",
+            "origin": 7,
+            "deadline": 24
+          },
+          {
+            "output": 8,
+            "value": "x8",
+            "origin": 8,
+            "deadline": 25
+          },
+          {
+            "output": 9,
+            "value": "x9",
+            "origin": 9,
+            "deadline": 26
+          },
+          {
+            "output": 10,
+            "value": "x10",
+            "origin": 10,
+            "deadline": 27
+          },
+          {
+            "output": 11,
+            "value": "x11",
+            "origin": 11,
+            "deadline": 28
+          },
+          {
+            "output": 12,
+            "value": "x12",
+            "origin": 12,
+            "deadline": 29
+          },
+          {
+            "output": 13,
+            "value": "x13",
+            "origin": 13,
+            "deadline": 30
+          },
+          {
+            "output": 14,
+            "value": "x14",
+            "origin": 14,
+            "deadline": 31
+          },
+          {
+            "output": 15,
+            "value": "x15",
+            "origin": 15,
+            "deadline": 32
+          },
+          {
+            "output": 16,
+            "value": "x1",
+            "origin": 1,
+            "deadline": 18
+          },
+          {
+            "output": 17,
+            "value": "x2",
+            "origin": 2,
+            "deadline": 19
+          },
+          {
+            "output": 18,
+            "value": "x3",
+            "origin": 3,
+            "deadline": 20
+          },
+          {
+            "output": 19,
+            "value": "x4",
+            "origin": 4,
+            "deadline": 21
+          },
+          {
+            "output": 20,
+            "value": "x5",
+            "origin": 5,
+            "deadline": 22
+          },
+          {
+            "output": 21,
+            "value": "x6",
+            "origin": 6,
+            "deadline": 23
+          },
+          {
+            "output": 22,
+            "value": "x7",
+            "origin": 7,
+            "deadline": 24
+          },
+          {
+            "output": 23,
+            "value": "x8",
+            "origin": 8,
+            "deadline": 25
+          },
+          {
+            "output": 24,
+            "value": "x9",
+            "origin": 9,
+            "deadline": 26
+          },
+          {
+            "output": 25,
+            "value": "x10",
+            "origin": 10,
+            "deadline": 27
+          },
+          {
+            "output": 26,
+            "value": "x11",
+            "origin": 11,
+            "deadline": 28
+          },
+          {
+            "output": 27,
+            "value": "x12",
+            "origin": 12,
+            "deadline": 29
+          },
+          {
+            "output": 28,
+            "value": "x13",
+            "origin": 13,
+            "deadline": 30
+          },
+          {
+            "output": 29,
+            "value": "x14",
+            "origin": 14,
+            "deadline": 31
+          },
+          {
+            "output": 30,
+            "value": "x15",
+            "origin": 15,
+            "deadline": 32
+          },
+          {
+            "output": 31,
+            "value": "x1",
+            "origin": 16,
+            "deadline": 33
+          },
+          {
+            "output": 32,
+            "value": "x2",
+            "origin": 17,
+            "deadline": 34
+          },
+          {
+            "output": 33,
+            "value": "x3",
+            "origin": 18,
+            "deadline": 35
+          },
+          {
+            "output": 34,
+            "value": "x4",
+            "origin": 19,
+            "deadline": 36
+          },
+          {
+            "output": 35,
+            "value": "x5",
+            "origin": 20,
+            "deadline": 37
+          },
+          {
+            "output": 36,
+            "value": "x6",
+            "origin": 21,
+            "deadline": 38
+          },
+          {
+            "output": 37,
+            "value": "x7",
+            "origin": 22,
+            "deadline": 39
+          },
+          {
+            "output": 38,
+            "value": "x8",
+            "origin": 23,
+            "deadline": 40
+          },
+          {
+            "output": 39,
+            "value": "x9",
+            "origin": 24,
+            "deadline": 41
+          },
+          {
+            "output": 40,
+            "value": "x10",
+            "origin": 25,
+            "deadline": 42
+          },
+          {
+            "output": 41,
+            "value": "x11",
+            "origin": 26,
+            "deadline": 43
+          },
+          {
+            "output": 42,
+            "value": "x12",
+            "origin": 27,
+            "deadline": 44
+          },
+          {
+            "output": 43,
+            "value": "x13",
+            "origin": 28,
+            "deadline": 45
+          },
+          {
+            "output": 44,
+            "value": "x14",
+            "origin": 29,
+            "deadline": 46
+          },
+          {
+            "output": 45,
+            "value": "x15",
+            "origin": 30,
+            "deadline": 47
+          },
+          {
+            "output": 46,
+            "value": "a",
+            "origin": 0,
+            "deadline": 17
+          }
+        ],
+        "birthWord": [
+          "a",
+          "x1",
+          "x2",
+          "x3",
+          "x4",
+          "x5",
+          "x6",
+          "x7",
+          "x8",
+          "x9",
+          "x10",
+          "x11",
+          "x12",
+          "x13",
+          "x14",
+          "a",
+          "x1",
+          "x2",
+          "x3",
+          "x4",
+          "x5",
+          "x6",
+          "x7",
+          "x8",
+          "x9",
+          "x10",
+          "x11",
+          "x12",
+          "x13",
+          "x14",
+          "x15",
+          "x15",
+          "x1",
+          "x2",
+          "x3",
+          "x4",
+          "x5",
+          "x6",
+          "x7",
+          "x8",
+          "x9",
+          "x10",
+          "x11",
+          "x12",
+          "x13",
+          "x14",
+          "x15"
+        ],
+        "fixedMismatches": 0,
+        "mismatches": 17,
+        "swapFloor": 9
+      }
+    }
+  ]
+}
