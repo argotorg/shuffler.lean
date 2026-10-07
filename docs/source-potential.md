@@ -70,6 +70,15 @@ q <= M,
 K(f) + 2 q <= S.
 ```
 
+This first-touch bound is now proved for production traces in
+`SourceCycles.trace_selected_pairs_lower_bound`. The caller supplies a
+finite set of ordered two-cycles of `traceAssignment`; both positions
+must lie below the initial top. The proof extracts the actual SWAP
+endpoints, proves their product agrees with the existing token frame,
+and applies `selected_pairs_lower_bound` to that list. It has no
+source-size restriction. This proves the trace side of the selected-pair
+bound; it does not build a source plan or select a minimum-`F` assignment.
+
 ## The prefix-cycle bound
 
 Every virtual SWAP stays inside one original full `f`-cycle, so every
@@ -113,9 +122,9 @@ instructions would then give total and baseline-surplus factor-two
 bounds, by the same weighted argument used for the empty source.
 
 No such minimum-`F` optimizer is supplied here. No global birth-order
-optimizer is supplied either. The source trace extraction, prefix-cycle
-bound, first-touch bound, and source realizer must all be connected before
-this can be called a full Lean result.
+optimizer is supplied either. The prefix-cycle bound and source realizer
+must be connected to the proved trace-side bound before this can be
+called a full Lean result.
 
 ## An additive consequence for minimum moved count
 
