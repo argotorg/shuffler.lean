@@ -48,3 +48,16 @@ test('a forced-prefetch embedding has integral moved-endpoint optimum four', { s
   assert.equal(result.objective, 4);
   assert.equal(result.fractionalEntries, 0);
 });
+
+test('two retained prefetched values also give integral optimum four', { skip: !process.env.Z3_BIN }, () => {
+  const target = ['b', 'c', 'a', 'a', 'a', 'a', 'b', 'c'];
+  const jobs = [{ value: 'b', deadline: 3 }, { value: 'c', deadline: 4 }, { value: 'a', deadline: 5 },
+    { value: 'a', deadline: 6 }, { value: 'a', deadline: 6 }, { value: 'a', deadline: 8 },
+    { value: 'b', deadline: 3 }, { value: 'c', deadline: 4 }];
+  const exact = exactObjective(target, 3, jobs);
+  assert.equal(exact.objective, 4);
+  assert.equal(exact.assignments, 576);
+  const lp = solveQuotaLP(target, 3, jobs);
+  assert.equal(lp.objective, 4);
+  assert.equal(lp.fractionalEntries, 0);
+});
