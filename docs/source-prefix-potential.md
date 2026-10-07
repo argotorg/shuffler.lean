@@ -71,6 +71,9 @@ uses those methods before realization. It preserves the ordered birth values
 and additions. Lean proves factor two for weighted total score and score above
 the generation baseline against every no-POP trace with the same labelled
 assignment. The comparison trace can use different LOAD, PUSH, and DUP choices.
+Here, "same assignment" compares the other trace's extracted assignment with
+the supplied plan's assignment. There is no theorem here that re-extracting an
+assignment from the output trace returns the supplied assignment.
 Tests cover a source LOAD replaced by DUP, DUP replaced by PUSH0, and the
 DUP16/DUP17 source boundary.
 
