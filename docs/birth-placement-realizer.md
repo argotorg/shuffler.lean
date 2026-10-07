@@ -31,6 +31,36 @@ and the target, without a shadow stack.
 `Plan` in `Shuffler/Optimality/BirthPlacement/Plan.lean` contains these
 conditions and the chosen direct/DUP instruction for each birth.
 
+## Start from a raw birth word
+
+An input trace is not required to find a plan. `RawWord.Feasible` uses
+only the spill set, target, and proposed ordered birth values. Its three
+clauses are:
+
+1. The birth word and target have equal multisets.
+2. For every height `b` from zero through the word length,
+   `target.take (b - 16)` is a submultiset of `births.take b`.
+3. Before birth `b` of value `v`, either `Placement.Free spills v` holds,
+   or `count(v, births.take b) > count(v, target.take (b - 16))`.
+
+The first clause supplies exactly the required copies. The second clause
+supplies each copy before its final position leaves SWAP reach. The third
+clause permits either direct generation or a readable copy for DUP.
+These are finite tests on the two input lists. There is no shadow stack.
+
+`RawWord.feasible_iff_trace` proves that these clauses hold exactly when
+there is a no-POP trace from `[]` to the exact target with that ordered
+birth word. `RawWord.parse` returns a `Plan` and its word-equality proof
+when the clauses hold; it returns `none` otherwise. It computes an
+endpoint assignment with Hall matching. It does not search stack states.
+The returned plan can use `Plan.cheapest` or `Plan.optimizeFixedWord`
+before `realize` builds its production trace.
+
+The raw-word tests replay the actual constructor. They include a birth
+at its SWAP16 deadline, a birth one step too late, wrong counts, wrong
+lengths, an unavailable variable, a spilled variable, and a wildcard.
+They also check every pair of length-four words over two literal values.
+
 ## Place one new copy
 
 After each birth, inspect the top copy's assigned final position.
