@@ -25,3 +25,4 @@ import Shuffler.Optimality.Transport.Sparse.FreshSuffix
 import Shuffler.Optimality.Collective.GapTransport.Theorems
 import Shuffler.Optimality.BirthPlacement.Improve.Theorems
 import Shuffler.Optimality.BirthPlacement.RawWord.Theorems
+import Shuffler.Optimality.BirthPlacement.Global.Theorems
