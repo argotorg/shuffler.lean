@@ -5,6 +5,7 @@ import Shuffler.Optimality.ShortGrowth.Build
 import Shuffler.Optimality.Baseline
 import Shuffler.Optimality.Approximation.Defs
 import Shuffler.Optimality.SwapRuns.Theorems
+import Shuffler.Optimality.Schedule.PostPass
 
 namespace Shuffler.Optimality.Schedule
 
@@ -21,6 +22,11 @@ def cheaper (costs : PrimitiveCosts) (weights : Weights)
     BuiltTrace spills source target missing :=
   if preferCost weights (traceCost costs candidate.trace)
       (traceCost costs incumbent.trace) then candidate else incumbent
+
+-- Run one birth pass after the portfolio has selected its complete trace.
+def postPass (costs : PrimitiveCosts) (weights : Weights)
+    (incumbent : BuiltTrace spills source target missing) : BuiltTrace spills source target missing :=
+  cheaper costs weights (birthCandidate costs weights incumbent) incumbent
 
 -- Normalize each proposed trace before its cost is compared.
 def accept (costs : PrimitiveCosts) (weights : Weights)
@@ -64,8 +70,8 @@ def buildWith (strategies : List Strategy) (costs : PrimitiveCosts) (weights : W
     (ValueGraph.build spills source target).map (fun built => built.cast rfl rfl hz.symm)
   else
     (Shuffler.Placement.build spills source target missing).map fun initial =>
-      search strategies costs weights spills source target missing
-        (initialCandidates costs weights spills source target missing initial)
+      postPass costs weights (search strategies costs weights spills source target missing
+        (initialCandidates costs weights spills source target missing initial))
 
 def build (costs : PrimitiveCosts) (weights : Weights)
     (spills : SpillSet) (source target : Stack) (missing : Multiset Value) :

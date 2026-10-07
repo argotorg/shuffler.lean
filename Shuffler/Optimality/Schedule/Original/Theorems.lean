@@ -49,10 +49,11 @@ theorem buildWith_cost_le_normalized_original (strategies : List Strategy)
   · cases hc : Shuffler.Placement.build spills source target missing with
     | none => simp [buildWith, hz, hc] at hresult
     | some initial =>
-        have he : search strategies costs weights spills source target missing
-            (initialCandidates costs weights spills source target missing initial) = result :=
+        have he : postPass costs weights (search strategies costs weights spills source target missing
+            (initialCandidates costs weights spills source target missing initial)) = result :=
           Option.some.inj (by simpa only [buildWith, dite_eq_right hz, hc, Option.map_some] using hresult)
         rw [← he]
+        apply (postPass_le costs weights _).trans
         apply (search_le strategies costs weights spills source target missing _).trans
         simpa only [initialCandidates, horiginal, accept] using
           cheaper_le_proposed costs weights (SwapRuns.normalizeBuilt original)

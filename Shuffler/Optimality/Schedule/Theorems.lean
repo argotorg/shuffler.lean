@@ -70,6 +70,24 @@ theorem cheaper_le (costs : PrimitiveCosts) (weights : Weights)
     omega
   · exact Nat.le_refl _
 
+theorem cheaper_le_candidate (costs : PrimitiveCosts) (weights : Weights)
+    (candidate incumbent : BuiltTrace spills source target missing) :
+    (traceCost costs (cheaper costs weights candidate incumbent).trace).score weights ≤
+      (traceCost costs candidate.trace).score weights := by
+  unfold cheaper
+  split
+  · exact Nat.le_refl _
+  · rename_i h
+    simp only [preferCost, Bool.or_eq_true, decide_eq_true_eq,
+      Bool.and_eq_true, beq_iff_eq, not_or] at h
+    omega
+
+theorem postPass_le (costs : PrimitiveCosts) (weights : Weights)
+    (incumbent : BuiltTrace spills source target missing) :
+    (traceCost costs (postPass costs weights incumbent).trace).score weights ≤
+      (traceCost costs incumbent.trace).score weights :=
+  cheaper_le costs weights _ incumbent
+
 theorem accept_le (costs : PrimitiveCosts) (weights : Weights)
     (proposed : Option (BuiltTrace spills source target missing))
     (incumbent : BuiltTrace spills source target missing) :
@@ -172,12 +190,13 @@ theorem buildWith_cost_le_normalized_complete (strategies : List Strategy)
     exact (ValueGraph.build_weightedOptimal costs weights spills source target result hr).2
       (SwapRuns.normalizeBuilt baseline).trace
         ⟨(SwapRuns.normalizeBuilt baseline).noPop, (SwapRuns.normalizeBuilt baseline).additions⟩
-  · have he : search strategies costs weights spills source target missing
-        (initialCandidates costs weights spills source target missing baseline) = result :=
+  · have he : postPass costs weights (search strategies costs weights spills source target missing
+        (initialCandidates costs weights spills source target missing baseline)) = result :=
       Option.some.inj (by simpa only [buildWith, dite_eq_right hz, hbaseline, Option.map_some] using hresult)
     rw [← he]
-    exact (search_le strategies costs weights spills source target missing _).trans
-      (initialCandidates_le_normalized costs weights spills source target missing baseline)
+    exact (postPass_le costs weights _).trans
+      ((search_le strategies costs weights spills source target missing _).trans
+        (initialCandidates_le_normalized costs weights spills source target missing baseline))
 
 theorem buildWith_cost_le_complete (strategies : List Strategy)
     (costs : PrimitiveCosts) (weights : Weights)

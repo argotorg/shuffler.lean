@@ -33,8 +33,19 @@ private def previousStrategies : List Schedule.Strategy :=
   let policies : List Schedule.Strategy := [.balanced,.eager,.preserve]
   policies.map (·.withMode .relaxed) ++ policies ++ policies.map (·.withMode .chains)
 
-#guard (Schedule.buildWith previousStrategies costs .gasOnly spills source target missing).map
+-- Keep the historical comparison before the final birth pass explicit.
+private def previousSelection :=
+  (Shuffler.Placement.build spills source target missing).map fun initial =>
+    Schedule.search previousStrategies costs .gasOnly spills source target missing
+      (Schedule.initialCandidates costs .gasOnly spills source target missing initial)
+
+#guard previousSelection.map
   (fun result => traceCost costs result.trace) = some ⟨48,49⟩
+
+-- The source birth pass reduces this candidate's cost. The chain candidate
+-- still has the lower byte count at the same gas score.
+#guard (Schedule.buildWith previousStrategies costs .gasOnly spills source target missing).map
+  (fun result => traceCost costs result.trace) = some ⟨45,16⟩
 
 -- This control runs the actual raw policies, before portfolio normalization.
 #guard previousStrategies.map (fun strategy =>
