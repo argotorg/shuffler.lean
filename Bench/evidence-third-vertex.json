@@ -1,0 +1,307 @@
+{
+  "status": "exact non-half-integral vertex of the endpoint and fixed-generation-quota polytope",
+  "scope": "One named reach-16 instance. No optimizer, broad search, or gap for moved-position cost is claimed.",
+  "target": [
+    "a",
+    "f1",
+    "f2",
+    "f3",
+    "f4",
+    "f5",
+    "f6",
+    "f7",
+    "f8",
+    "f9",
+    "f10",
+    "f11",
+    "f12",
+    "f13",
+    "b",
+    "c",
+    "d",
+    "a",
+    "a",
+    "a"
+  ],
+  "reach": 16,
+  "selected": [
+    0
+  ],
+  "jobs": [
+    {
+      "value": "a",
+      "deadline": 16
+    },
+    {
+      "value": "f1",
+      "deadline": 17
+    },
+    {
+      "value": "f2",
+      "deadline": 18
+    },
+    {
+      "value": "f3",
+      "deadline": 19
+    },
+    {
+      "value": "f4",
+      "deadline": 20
+    },
+    {
+      "value": "f5",
+      "deadline": 21
+    },
+    {
+      "value": "f6",
+      "deadline": 22
+    },
+    {
+      "value": "f7",
+      "deadline": 23
+    },
+    {
+      "value": "f8",
+      "deadline": 24
+    },
+    {
+      "value": "f9",
+      "deadline": 25
+    },
+    {
+      "value": "f10",
+      "deadline": 26
+    },
+    {
+      "value": "f11",
+      "deadline": 27
+    },
+    {
+      "value": "f12",
+      "deadline": 28
+    },
+    {
+      "value": "f13",
+      "deadline": 29
+    },
+    {
+      "value": "b",
+      "deadline": 30
+    },
+    {
+      "value": "c",
+      "deadline": 31
+    },
+    {
+      "value": "d",
+      "deadline": 32
+    },
+    {
+      "value": "a",
+      "deadline": 16
+    },
+    {
+      "value": "a",
+      "deadline": 34
+    },
+    {
+      "value": "a",
+      "deadline": 35
+    }
+  ],
+  "first": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "second": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    17,
+    18,
+    19,
+    15,
+    16,
+    14
+  ],
+  "relativeCycle": [
+    14,
+    17,
+    15,
+    18,
+    16,
+    19
+  ],
+  "denominator": 3,
+  "support": [
+    {
+      "birth": 0,
+      "output": 0,
+      "amount": 3
+    },
+    {
+      "birth": 1,
+      "output": 1,
+      "amount": 3
+    },
+    {
+      "birth": 2,
+      "output": 2,
+      "amount": 3
+    },
+    {
+      "birth": 3,
+      "output": 3,
+      "amount": 3
+    },
+    {
+      "birth": 4,
+      "output": 4,
+      "amount": 3
+    },
+    {
+      "birth": 5,
+      "output": 5,
+      "amount": 3
+    },
+    {
+      "birth": 6,
+      "output": 6,
+      "amount": 3
+    },
+    {
+      "birth": 7,
+      "output": 7,
+      "amount": 3
+    },
+    {
+      "birth": 8,
+      "output": 8,
+      "amount": 3
+    },
+    {
+      "birth": 9,
+      "output": 9,
+      "amount": 3
+    },
+    {
+      "birth": 10,
+      "output": 10,
+      "amount": 3
+    },
+    {
+      "birth": 11,
+      "output": 11,
+      "amount": 3
+    },
+    {
+      "birth": 12,
+      "output": 12,
+      "amount": 3
+    },
+    {
+      "birth": 13,
+      "output": 13,
+      "amount": 3
+    },
+    {
+      "birth": 14,
+      "output": 14,
+      "amount": 2
+    },
+    {
+      "birth": 14,
+      "output": 17,
+      "amount": 1
+    },
+    {
+      "birth": 15,
+      "output": 15,
+      "amount": 2
+    },
+    {
+      "birth": 15,
+      "output": 18,
+      "amount": 1
+    },
+    {
+      "birth": 16,
+      "output": 16,
+      "amount": 2
+    },
+    {
+      "birth": 16,
+      "output": 19,
+      "amount": 1
+    },
+    {
+      "birth": 17,
+      "output": 15,
+      "amount": 1
+    },
+    {
+      "birth": 17,
+      "output": 17,
+      "amount": 2
+    },
+    {
+      "birth": 18,
+      "output": 16,
+      "amount": 1
+    },
+    {
+      "birth": 18,
+      "output": 18,
+      "amount": 2
+    },
+    {
+      "birth": 19,
+      "output": 14,
+      "amount": 1
+    },
+    {
+      "birth": 19,
+      "output": 19,
+      "amount": 2
+    }
+  ],
+  "counts": {
+    "first": 1,
+    "second": 4,
+    "required": 2,
+    "mixedNumerator": 6
+  },
+  "supportVariables": 26,
+  "rowColumnRank": 25,
+  "activeRank": 26,
+  "reproduce": "node scripts/optimality-third-vertex.mjs Bench/evidence-third-vertex.json"
+}
