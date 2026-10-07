@@ -177,19 +177,34 @@ per-value inequality `occurrences−directCount ≤ selectedCount`. It then
 proves the weighted later-introduction floor. `capacityMaximum` is a finite
 specification over subsets; production planning does not evaluate it.
 
-The connection between these two groups is still missing. It must prove
-that retained seeds give one consistent feasible interval set, and that
-each missing seed forces a distinct later direct introduction. Constructive
-realization of an interval plan, a bound on its SWAP cost, and the global
-factor-two theorem also remain open.
+`Collective.Inventory` defines the global mandatory multiset
+`source − target.take(c)`. Its theorems prove that this multiset is contained
+in the residual of every no-POP production trace. A paid reuse interval
+starts after the source-count-th output of its value. Its retained seed
+therefore needs a slot beyond the mandatory inventory. The proved capacity
+inequality is `mandatory.card + crossingPaidIntervals.card ≤ 16` at every
+positive output cut, for source length at most17. It includes repeated
+source values and the virtual final cuts.
 
-For a possible generalization, the mandatory-copy count at cut c is
-`q_v(c)=max(source.count(v)−target.take(c).count(v),0)`. A v reuse interval
-after the source-count-th v output has no mandatory v copy to share, so its
-seed would use an extra slot. This suggests capacity
-`16−sum_v q_v(c)` after initial frozen-prefix reduction. This profile and
-its full trace transfer have not been proved in Lean. A constructive model
-must also keep the initial Reserve boundary condition and require the
-mandatory count to fit; truncating a negative capacity to zero is not a
-feasibility proof. Transport cost must enter the plan objective because a
-retained seed can cost more SWAPs than another introduction.
+`Collective.HeightRelations` proves that height cuts are nested, and that a
+residual value remains present until its next output. `Collective.TraceDirect`
+proves that a value absent from a residual needs a new PUSH or LOAD before it
+can appear again. It also localizes this strict direct-count increase between
+two output cuts.
+
+`Collective.Retention` now constructs one set of retained paid intervals
+from each production trace. Its `retained_capacity` theorem proves the global
+capacity inequality without a residency assumption. Its
+`unretained_direct_increase` theorem proves a strict direct-count increase
+between the start and stop output cuts of each omitted paid interval.
+Summing those disjoint increases into the weighted interval floor remains
+open. Constructive plan realization, its SWAP bound, and global factor two
+also remain open.
+
+The initial Reserve boundary condition still matters. At source height17,
+a fresh first output would leave17 mandatory copies. Truncating
+`16−mandatory.card` to zero loses that failed constraint. Tests cover this
+case, repeated source values, paid and unpaid intervals, real and virtual
+cuts, and a production constructor that reloads both omitted fresh intervals.
+Transport cost must enter the plan objective because a retained seed can
+cost more SWAPs than another introduction.

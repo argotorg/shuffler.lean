@@ -628,3 +628,18 @@ Transport and old-position repair can share a SWAP, so their charges need
 one stated combination argument. The restricted interval floor alone does
 not establish the general factor-two excess guarantee. That guarantee
 remains open.
+
+### 2026-10-07 03:49 UTC
+
+Commit `a1c8493` records the residual-window and finite weighted interval
+lemmas. The next checked group extends the mandatory inventory to repeated
+source values. It proves nested height cuts, residual persistence, and the
+need for a later PUSH or LOAD after a residual loses a value. Each production
+trace now gives one retained paid-interval set whose crossings, plus the
+mandatory inventory, fit16 slots at every positive cut. Every omitted paid
+interval forces a strict direct-count increase between its output cuts.
+
+The per-value sum of those increases is not yet proved. Plan realization,
+SWAP cost, and the global factor-two excess theorem remain open. The tests
+use production traces and include the height17/fresh-first-output obstruction.
+The v12 benchmark evidence run is still in progress on its pinned executable.
