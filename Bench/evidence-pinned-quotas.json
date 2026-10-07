@@ -1,0 +1,217 @@
+{
+  "status": "finite exact pinned-set feasibility check; no polynomial joint optimizer or Lean theorem claimed",
+  "predicate": "For each value v, F_v(k) counts pinned births through k, r_v(k) counts generation jobs due through k, and u_v(k) counts unpinned target positions t with t+R<=k. Define h_v(k)=max_{s<=k}(0,r_v(s)-F_v(s),u_v(s)). At every cut, sum_v h_v(k) must be at most the number of unpinned birth slots through k. Cuts run through every generation and endpoint deadline, so per-value terminal totals are included.",
+  "construction": "Each unit increase in h creates a free value job due at that cut. Put the jobs in deadline order into the unpinned birth slots. Match generation jobs by sorted equal-value occurrence order. Independently match endpoint copies with the selected pinned identities and sorted residual occurrences.",
+  "exactCheck": "Enumerate every birth-to-target permutation satisfying birth<=target+R. Its target values determine the birth word. Check a separate value-preserving generation matching by sorted deadlines. Every subset of its identity positions is feasible. Compare this exhaustive family with the quota predicate and check each constructed completion.",
+  "domain": {
+    "reaches": [
+      1,
+      2,
+      3,
+      16
+    ],
+    "length": "0 through 6",
+    "targets": "canonical words with at most 3 values",
+    "generation": "every subset of consecutive equal-value retention intervals",
+    "pinned": "every subset of target positions"
+  },
+  "plans": 6192,
+  "pinnedSets": 353180,
+  "feasibleSets": 286556,
+  "assignments": 1691226,
+  "validAssignments": 1547824,
+  "infeasiblePlans": 334,
+  "failures": [],
+  "firstExchangeFailure": {
+    "target": [
+      "a",
+      "b",
+      "b",
+      "a",
+      "a"
+    ],
+    "reach": 2,
+    "selected": [
+      1
+    ],
+    "jobs": [
+      {
+        "value": "a",
+        "deadline": 2
+      },
+      {
+        "value": "b",
+        "deadline": 3
+      },
+      {
+        "value": "b",
+        "deadline": 4
+      },
+      {
+        "value": "a",
+        "deadline": 2
+      },
+      {
+        "value": "a",
+        "deadline": 6
+      }
+    ],
+    "a": [
+      2
+    ],
+    "b": [
+      1,
+      3
+    ],
+    "failedAdditions": [
+      1,
+      3
+    ],
+    "feasibleSets": [
+      [],
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        2
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        3
+      ],
+      [
+        0,
+        3
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        0,
+        1,
+        3
+      ],
+      [
+        4
+      ],
+      [
+        0,
+        4
+      ],
+      [
+        1,
+        4
+      ],
+      [
+        0,
+        1,
+        4
+      ],
+      [
+        2,
+        4
+      ],
+      [
+        0,
+        2,
+        4
+      ]
+    ]
+  },
+  "allReuseExchangeFailure": {
+    "target": [
+      "a",
+      "b",
+      "b",
+      "b",
+      "a"
+    ],
+    "reach": 2,
+    "selected": [
+      0,
+      1,
+      2
+    ],
+    "jobs": [
+      {
+        "value": "a",
+        "deadline": 2
+      },
+      {
+        "value": "b",
+        "deadline": 3
+      },
+      {
+        "value": "b",
+        "deadline": 3
+      },
+      {
+        "value": "b",
+        "deadline": 4
+      },
+      {
+        "value": "a",
+        "deadline": 2
+      }
+    ],
+    "a": [
+      2
+    ],
+    "b": [
+      1,
+      3
+    ],
+    "failedAdditions": [
+      1,
+      3
+    ],
+    "feasibleSets": [
+      [],
+      [
+        0
+      ],
+      [
+        1
+      ],
+      [
+        0,
+        1
+      ],
+      [
+        2
+      ],
+      [
+        0,
+        2
+      ],
+      [
+        3
+      ],
+      [
+        0,
+        3
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        0,
+        1,
+        3
+      ]
+    ]
+  },
+  "reproduce": "node scripts/optimality-pinned-quotas.mjs Bench/evidence-pinned-quotas.json"
+}
