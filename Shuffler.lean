@@ -19,3 +19,6 @@ import Shuffler.Optimality.FrozenPrefix.Approximation
 import Shuffler.Optimality.Approximation.Drop
 import Shuffler.Optimality.Collective.InventoryBound.Theorems
 import Shuffler.Optimality.Collective.DeadlineCounts
+import Shuffler.Optimality.Collective.RetainedWithoutDirect.Theorems
+import Shuffler.Optimality.Collective.InventoryOrder.Theorems
+import Shuffler.Optimality.Transport.Sparse.FreshSuffix

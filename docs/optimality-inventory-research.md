@@ -233,3 +233,36 @@ case, repeated source values, paid and unpaid intervals, real and virtual
 cuts, and a production constructor that reloads both omitted fresh intervals.
 Transport cost must enter the plan objective because a retained seed can
 cost more SWAPs than another introduction.
+
+## Retention and transport refinements
+
+`retainedWithoutDirect` removes paid intervals that contain a direct
+introduction between their output cuts. The subset still satisfies capacity.
+Its omitted count and weight have the same introduction-cost bounds as the
+original retained set. A production replay test has a resident a seed plus
+an extra LOAD in its first a interval. The refined set removes that interval
+and keeps the following interval. This supplies a trace-to-plan interface
+for future joint transport work; it is not a transport theorem for the gaps.
+
+`UnitSchedule` constructs a deadline-feasible order by merge sort. It proves
+that the unit-job capacity condition is equivalent to existence of such an
+order. `InventoryOrder` applies the result to a feasible paid-interval set.
+It does not prove that the order has a stack realization or the required
+SWAP cost. Fixed deadline orders can have different least SWAP costs.
+
+`Transport.Sparse` sums prefix surplus at cuts with one residue modulo 16.
+One legal SWAP can cross at most one such cut. The sum is bounded by the
+actual upward SWAP count for that value. The maximum over all 16 residues
+has the same bound. For source `value^q`, target `fresh ++ value^q`,
+`value` absent from `fresh`, and `q ≤ 16`, Lean proves:
+
+```
+q * (fresh.length / 16) + min(q, fresh.length % 16)
+  ≤ upwardCount(value).
+```
+
+The selected residue is `q−1`. For four old copies and eight fresh outputs,
+this bound is four SWAPs; rounding total distance divided by 16 gives two.
+Tests check the formula for every q from 0 through 16 and fresh length from
+0 through 33. The per-value gap transport bound and its disjoint combination
+with old-copy transport remain open.

@@ -67,17 +67,18 @@ theorem directBefore_start_lower (trace : Trace spills source target) (hpop : tr
       (takeHeight_noPop trace hpop).1 gap.value (List.mem_of_mem_take hm)
     exact (hd.resolve_left hs)
 
-theorem omitted_count_le (trace : Trace spills source target) (hpop : trace.noPop)
-    (value : Value) : intervalCount (omitted trace) value ≤
+theorem intervalCount_le_extraDirect (trace : Trace spills source target) (hpop : trace.noPop)
+    (selected : Finset (Interval target))
+    (hchange : ∀ gap ∈ selected, directBefore gap.value (gap.start.val + 1) trace <
+      directBefore gap.value (gap.stop.val + 1) trace)
+    (value : Value) : intervalCount selected value ≤
       directCount value trace - if value ∈ source then 0 else 1 := by
-  let gaps := (omitted trace).filter fun gap => gap.value = value
+  let gaps := selected.filter fun gap => gap.value = value
   let charge := fun gap : Interval target => directBefore value (gap.start.val + 1) trace
   have hincrease (gap : Interval target) (hg : gap ∈ gaps) :
       charge gap < directBefore value (gap.stop.val + 1) trace := by
     have hv := (Finset.mem_filter.mp hg).2
-    have ho := Finset.mem_sdiff.mp (Finset.mem_filter.mp hg).1
-    have hp := (Finset.mem_filter.mp ho.1).2
-    simpa only [charge, hv] using unretained_direct_increase trace hpop gap hp ho.2
+    simpa only [charge, hv] using hchange gap (Finset.mem_filter.mp hg).1
   have hstrict (left : Interval target) (hl : left ∈ gaps)
       (right : Interval target) (hr : right ∈ gaps) (horder : left.start < right.start) :
       charge left < charge right := by
@@ -105,6 +106,14 @@ theorem omitted_count_le (trace : Trace spills source target) (hpop : trace.noPo
   have hc := Finset.card_le_card hsub
   rw [Finset.card_image_iff.mpr hinj, Nat.card_Ico] at hc
   exact hc
+
+theorem omitted_count_le (trace : Trace spills source target) (hpop : trace.noPop)
+    (value : Value) : intervalCount (omitted trace) value ≤
+      directCount value trace - if value ∈ source then 0 else 1 := by
+  apply intervalCount_le_extraDirect trace hpop (omitted trace) _ value
+  intro gap hg
+  have ho := Finset.mem_sdiff.mp hg
+  exact unretained_direct_increase trace hpop gap (Finset.mem_filter.mp ho.1).2 ho.2
 
 theorem omitted_weight_le_generationSurcharge (costs : PrimitiveCosts) (weights : Weights)
     (trace : Trace spills source target) (hpop : trace.noPop) :

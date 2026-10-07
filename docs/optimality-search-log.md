@@ -669,3 +669,27 @@ integration is being checked separately before a new full build.
 The full `lake build Shuffler Tests optimality_bench` checkpoint passes
 3005 jobs, including the repaired frozen-bound test. Fourteen audited
 inventory-cost and deadline results use only the three standard axioms.
+
+### 2026-10-07 04:10 UTC
+
+Commits `d661737`, `74fa7f1`, and `28d163f` record the global inventory cost
+bound, frozen-prefix runtime certificate fix, and offline benchmark evidence.
+The saved script checkpoint passes 51 tests. The targeted v13 run passes all
+four exact frozen-prefix cases and uses 377 oracle states. The full/reduced
+baselines stay distinct, and the saved gap excess changes from one to two.
+
+The next proof group constructs a set of retained paid intervals with no
+direct introduction between each interval's output cuts. Its capacity and
+omitted-weight bounds are proved. A generic unit-job deadline theorem and its
+inventory specialization produce a deadline order, but do not claim a stack
+realization. Sparse prefix surpluses prove the restricted old-copy transport
+formula `q*(m/16)+min(q,m%16)` against production upward SWAP counts. Thirteen
+audited results use only standard axioms. Joint gap transport and global
+factor two remain open.
+
+The native normalizer hooks are pinned separately as
+`/tmp/optimality-bench-normalize-v14`, SHA256
+`1de9f2c380d0bbfcbe266a06d16c648c024f407ff61e6cfccb959cadc462c95d`.
+The default planner selection stays at seventeen algorithms. The two explicit
+reference-normalization selectors pass equal-swap and invalid-input smoke
+checks. The saved production-trace normalization suite is next.
