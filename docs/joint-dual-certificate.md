@@ -138,8 +138,14 @@ mu     = (64)
 
 has `C=207`, `U=67`, and `L=140`, which meets the candidate objective.
 
-The weak-duality argument is mathematical. At this checkpoint, no Lean
-theorem connects this numerical checker to `Plan.GloballyMinimal`.
+`Dual.Certificate.reward_le` and `Dual.Certificate.lower_le` now prove
+the finite sum argument in Lean. The latter takes the generation
+discount inequality as an explicit premise. Tests check valid and
+invalid certificate fields, a failed reuse quota, and a signed rational
+scale. At this checkpoint, the occurrence-rank bridge is still separate:
+no Lean theorem yet turns this numerical certificate into
+`Plan.GloballyMinimal` for actual plans without that cost premise.
+
 The certificate also does not establish that every instance has an
 integer candidate meeting its LP lower bound. That would require an
 integrality or rounding theorem that is still missing.
