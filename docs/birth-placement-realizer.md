@@ -1,9 +1,9 @@
 # Build a trace from a birth plan
 
 This construction starts with an empty source. It uses the production
-reach of sixteen. The plan-to-trace result is proved in Lean. It does not
-yet prove that a planner finds a global optimum or a factor-two result
-against every input trace.
+reach of sixteen. The plan-to-trace result and a factor-two comparison
+for a fixed ordered birth word are proved in Lean. The comparison does
+not yet permit different birth orders or a nonempty source.
 
 ## The plan
 
@@ -88,7 +88,7 @@ actual constructor and replay its operations. They cover an empty target,
 equal copies, several SWAPs after one birth, DUP16, SWAP16, unavailable
 direct generation, missing DUP parents, spilled variables, and wildcards.
 
-## Scope still to prove
+## The fixed-word factor-two result
 
 `traceAssignment` now computes the birth-token assignment induced by any
 no-POP trace. It satisfies the endpoint deadlines and the value mapping,
@@ -96,13 +96,48 @@ and its moved-token count satisfies `E <= 2 * SWAPs`. For an empty source,
 `tracePlan` also proves all birth availability conditions and preserves
 the ordered birth events. These proofs are in the `TracePlan` modules.
 
-Combined with an assignment that minimizes `E`, this gives the proposed
-factor-two movement bound for a fixed birth word. The optimizer and its
-integration are separate proof tasks. The weighted comparison
-is proved conditionally by `realize_score_le_twice`: the planned birth
-cost must be no greater than the other trace's birth cost, and the planned
-`E` must be at most twice the other trace's SWAP count. A separate theorem
-proves the same bound after subtraction of a supplied generation baseline.
+`Plan.optimizeEndpoints` computes a compatible deadline assignment with
+the least number `E` of moved positions. `Plan.optimizeFixedWord` combines
+that assignment with the cheapest available instruction at each birth.
+`optimizeTraceWord` extracts the word from an input trace, applies these
+two choices, and builds a production trace.
+
+For any no-POP comparison trace from `[]` to the same target, with the
+same ordered birth values, the optimized trace satisfies
+
+```text
+optimized score <= 2 * comparison score
+optimized score - B <= 2 * (comparison score - B).
+```
+
+Here `B` is the generation baseline for the target multiset. Scores use
+the supplied gas and byte weights. Both inequalities are proved in
+`FixedWord/Theorems.lean`, by `optimizeTraceWord_score_le_twice` and
+`optimizeTraceWord_surplus_le_twice`.
+
+The comparison trace can use any stack states, any SWAP sequence, any
+direct/DUP choices, and any assignment of equal copies. It must have the
+same ordered birth values. Thus the theorem does not fix the instruction
+kind used to introduce each value.
+
+The proof has three bounds. The other trace supplies an assignment with
+at most twice its SWAP count in moved positions. The endpoint optimizer
+uses no more moved positions than that assignment. The chosen birth
+instructions cost no more than the other trace's birth instructions.
+The realizer uses at most `E` SWAPs. These bounds give the total-score
+inequality. The generation baseline is at most the other trace's birth
+cost; subtraction gives the second inequality.
+
+`Tests/OptimalityFixedWord.lean` replays the actual constructor. It checks
+equal copies, direct generation cheaper than DUP, different birth
+instruction kinds for the same values, spilled loads, wildcards, DUP16,
+and SWAP16. It also checks every valid four-operation word over a
+six-operation alphabet in gas-only and bytes-only modes.
+
+## Scope still to prove
+
+Choosing the ordered birth word remains a separate task. The proved
+factor-two bound does not compare traces with different birth words.
 
 An initial source needs more conditions. For example, changing
 `[a,b,c]` to `[b,a,c]` has two moved positions but needs three top SWAPs.
