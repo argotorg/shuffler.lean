@@ -1,0 +1,249 @@
+{
+  "status": "finite exact weighted evidence, not a theorem or production policy",
+  "scope": "Source consists of equal old copies. Target is a fresh prefix using at most three kinds, followed by the old copies. Each candidate comes from one exact minimum-SWAP oracle witness under the selected plan's per-value introduction upper budgets and selected-cut presence. DUPs of kinds whose direct cost is at most DUP cost are then replaced by their direct operation, preserving all stack values and not increasing the scalar cost. This is not a production or polynomial-time constructor, and the witness need not minimize weighted cost within that plan.",
+  "quantifiers": "For every tested weighted input and every plan that minimizes the joint objective, the saved exact minimum-SWAP search supplies one suitable realization. The claim is existence of a realization for each tied minimizer, not a bound on every possible realization. The optimum comparison uses an independent unrestricted Pareto oracle.",
+  "objective": "Omit all retention intervals for kinds whose direct price is at most DUP price. Minimize over the remaining capacity-feasible selections: sum_v (roots_v - 1)*max(directPrice_v-DUPPrice,0) + SWAPPrice*(Qold+sum_selected floor((j-i-1)/R)).",
+  "domain": {
+    "reach": "1 through3",
+    "oldCopies": "0 through reach",
+    "freshLength": "0 through6",
+    "profiles": [
+      [
+        "load0",
+        "load0",
+        "load0"
+      ],
+      [
+        "load32",
+        "load32",
+        "load32"
+      ],
+      [
+        "literal32",
+        "literal32",
+        "literal32"
+      ],
+      [
+        "load0",
+        "literal32",
+        "load32"
+      ],
+      [
+        "load0",
+        "load32",
+        "literal32"
+      ],
+      [
+        "literal32",
+        "load0",
+        "load32"
+      ],
+      [
+        "literal32",
+        "load32",
+        "load0"
+      ],
+      [
+        "load32",
+        "load0",
+        "literal32"
+      ],
+      [
+        "load32",
+        "literal32",
+        "load0"
+      ],
+      [
+        "zero",
+        "load0",
+        "literal32"
+      ],
+      [
+        "zero",
+        "literal32",
+        "load0"
+      ],
+      [
+        "load0",
+        "zero",
+        "literal32"
+      ],
+      [
+        "literal32",
+        "zero",
+        "load0"
+      ],
+      [
+        "load0",
+        "literal32",
+        "zero"
+      ],
+      [
+        "literal32",
+        "load0",
+        "zero"
+      ]
+    ],
+    "weights": [
+      {
+        "gas": 1,
+        "bytes": 0
+      },
+      {
+        "gas": 0,
+        "bytes": 1
+      },
+      {
+        "gas": 1,
+        "bytes": 1
+      },
+      {
+        "gas": 4,
+        "bytes": 1
+      },
+      {
+        "gas": 22,
+        "bytes": 1
+      }
+    ]
+  },
+  "cachedPlanGroups": 1674,
+  "baseCases": 23364,
+  "weightedCases": 116820,
+  "states": 1559404,
+  "labels": 1658392,
+  "candidates": 127691,
+  "zeroExcess": 22523,
+  "lowerBoundViolations": 0,
+  "realizationViolations": 0,
+  "maximumRatio": 2,
+  "worst": {
+    "problem": {
+      "source": [],
+      "target": [
+        "v:42",
+        "v:43",
+        "v:43",
+        "v:44",
+        "v:42"
+      ],
+      "spills": [
+        42,
+        43,
+        44
+      ],
+      "loadWidths": [
+        [
+          42,
+          0
+        ],
+        [
+          43,
+          0
+        ],
+        [
+          44,
+          0
+        ]
+      ],
+      "weights": {
+        "gas": 1,
+        "bytes": 0
+      },
+      "caps": {
+        "swap": 2,
+        "dup": 2
+      },
+      "id": "unnamed",
+      "missing": [
+        "v:42",
+        "v:43",
+        "v:43",
+        "v:44",
+        "v:42"
+      ],
+      "gasModel": "cpp",
+      "model": "reduced-cap"
+    },
+    "B": 24,
+    "optimum": 27,
+    "jointFloor": 3,
+    "candidate": {
+      "selected": [
+        0,
+        1
+      ],
+      "premium": 0,
+      "qOld": 0,
+      "qGap": 1,
+      "swaps": 2,
+      "score": 30,
+      "cost": {
+        "gas": 30,
+        "bytes": 10
+      },
+      "ops": [
+        [
+          "load",
+          42
+        ],
+        [
+          "dup",
+          1
+        ],
+        [
+          "load",
+          43
+        ],
+        [
+          "dup",
+          1
+        ],
+        [
+          "swap",
+          2
+        ],
+        [
+          "load",
+          44
+        ],
+        [
+          "swap",
+          1
+        ]
+      ]
+    },
+    "best": {
+      "cost": {
+        "gas": 27,
+        "bytes": 9
+      },
+      "ops": [
+        [
+          "load",
+          42
+        ],
+        [
+          "load",
+          43
+        ],
+        [
+          "dup",
+          1
+        ],
+        [
+          "load",
+          44
+        ],
+        [
+          "load",
+          42
+        ]
+      ],
+      "instructions": 5
+    }
+  },
+  "first": null,
+  "cachePath": "Bench/plan-realization-cache.jsonl",
+  "reproduce": "node scripts/optimality-joint-objective.mjs Bench/evidence-joint-objective.json Bench/plan-realization-cache.jsonl"
+}

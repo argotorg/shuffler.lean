@@ -1,0 +1,1540 @@
+{
+  "checkpoint": "v13",
+  "status": "targeted frozen-prefix bound regression check",
+  "scope": "The fixed v13 runner adds a frozen-prefix transfer wrapper to the static excess bound. No new planning policy is included. All four oracle results are exact within the actual 16/17 model. This finite test is separate from the Lean lower-bound proof.",
+  "productionRunnerSha256": "0f6c8667f24b84e12a33eba5dda1aa0e264866b8df25fa826568245e715164e8",
+  "productionFingerprintsAtRun": {
+    "before": {
+      "source": {
+        "sha256": "0d3efbcc638d56aedcb34c11354e4be0102ba21d592468d83ab699e6aedb4016",
+        "files": 203
+      },
+      "artifacts": {
+        "sha256": "fdf5cb59fd45104dc88abddf650d222ae534391a5f9a8b5653d20e931e950cf3",
+        "files": 236
+      }
+    },
+    "after": {
+      "source": {
+        "sha256": "0d3efbcc638d56aedcb34c11354e4be0102ba21d592468d83ab699e6aedb4016",
+        "files": 203
+      },
+      "artifacts": {
+        "sha256": "fdf5cb59fd45104dc88abddf650d222ae534391a5f9a8b5653d20e931e950cf3",
+        "files": 236
+      }
+    }
+  },
+  "summary": {
+    "configuration": {
+      "suite": "input",
+      "inputPath": "/tmp/optimality-v13-frozen-input.jsonl",
+      "seed": 1,
+      "cases": 10000,
+      "stateLimit": 100000,
+      "skipOracle": false,
+      "noLean": false,
+      "selectedAlgorithms": [
+        "schedule",
+        "old-bbu"
+      ],
+      "weights": [
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          4,
+          1
+        ],
+        [
+          5,
+          1
+        ],
+        [
+          6,
+          1
+        ]
+      ],
+      "loadWidths": [
+        1,
+        2,
+        32
+      ],
+      "model": "actual-16/17",
+      "node": "v22.23.3",
+      "leanToolchain": "leanprover/lean4:v4.34.0",
+      "runnerSnapshot": {
+        "file": "/tmp/nix-shell.1Z8qMa/optimality-bench-zbUtmU/runner",
+        "sha256": "0f6c8667f24b84e12a33eba5dda1aa0e264866b8df25fa826568245e715164e8"
+      },
+      "versionBefore": {
+        "source": {
+          "sha256": "0d3efbcc638d56aedcb34c11354e4be0102ba21d592468d83ab699e6aedb4016",
+          "files": 203
+        },
+        "artifacts": {
+          "sha256": "fdf5cb59fd45104dc88abddf650d222ae534391a5f9a8b5653d20e931e950cf3",
+          "files": 236
+        }
+      },
+      "versionAfter": {
+        "source": {
+          "sha256": "0d3efbcc638d56aedcb34c11354e4be0102ba21d592468d83ab699e6aedb4016",
+          "files": 203
+        },
+        "artifacts": {
+          "sha256": "fdf5cb59fd45104dc88abddf650d222ae534391a5f9a8b5653d20e931e950cf3",
+          "files": 236
+        }
+      },
+      "stableArtifacts": true,
+      "stableSources": true
+    },
+    "witnessRatioReporting": {
+      "version": 2,
+      "finiteMaximumUsesPositiveReferenceExcess": true,
+      "zeroReferenceExcessReportedSeparately": true
+    },
+    "cases": 4,
+    "oracle": {
+      "optimal": 4
+    },
+    "oracleStates": 377,
+    "modelDisagreements": [],
+    "algorithms": {
+      "old-bbu": {
+        "cases": 4,
+        "successes": 4,
+        "feasibilityFailures": 0,
+        "oracleComparisons": 4,
+        "exact": 4,
+        "zeroExcessViolations": 0,
+        "maxCostRatio": 1,
+        "maxExcessRatio": 1,
+        "certificates": {
+          "exactBaseline": 1,
+          "exactLineage": 1,
+          "exactStatic": 4,
+          "exactNoGrowth": 0,
+          "twiceLineage": 1,
+          "twiceStatic": 4
+        },
+        "maxInstructionsPerSize": 0.08823529411764706,
+        "worstExcessCase": null,
+        "scope": "original-generation-and-final-permutation",
+        "witnessComparisons": 4,
+        "witnessViolations": 0,
+        "witnessPositiveExcessComparisons": 3,
+        "witnessZeroExcessComparisons": 1,
+        "witnessZeroExcessViolations": 0,
+        "maxCandidateExcessWithZeroWitness": 0,
+        "worstZeroExcessWitnessCase": null,
+        "maxWitnessExcessRatio": 1,
+        "worstWitnessCase": "regression-gap-tail-first-copy-moves",
+        "worstWitnessComparison": {
+          "caseId": "regression-gap-tail-first-copy-moves",
+          "baseline": 2,
+          "candidateScore": 4,
+          "witnessScore": 4,
+          "candidateExcess": 2,
+          "witnessExcess": 2
+        }
+      },
+      "schedule": {
+        "cases": 4,
+        "successes": 4,
+        "feasibilityFailures": 0,
+        "oracleComparisons": 4,
+        "exact": 4,
+        "zeroExcessViolations": 0,
+        "maxCostRatio": 1,
+        "maxExcessRatio": 1,
+        "certificates": {
+          "exactBaseline": 1,
+          "exactLineage": 1,
+          "exactStatic": 4,
+          "exactNoGrowth": 0,
+          "twiceLineage": 1,
+          "twiceStatic": 4
+        },
+        "maxInstructionsPerSize": 0.11764705882352941,
+        "worstExcessCase": null,
+        "scope": "completed-source-to-target",
+        "witnessComparisons": 4,
+        "witnessViolations": 0,
+        "witnessPositiveExcessComparisons": 3,
+        "witnessZeroExcessComparisons": 1,
+        "witnessZeroExcessViolations": 0,
+        "maxCandidateExcessWithZeroWitness": 0,
+        "worstZeroExcessWitnessCase": null,
+        "maxWitnessExcessRatio": 1,
+        "worstWitnessCase": "regression-gap-tail-first-copy-moves",
+        "worstWitnessComparison": {
+          "caseId": "regression-gap-tail-first-copy-moves",
+          "baseline": 2,
+          "candidateScore": 4,
+          "witnessScore": 4,
+          "candidateExcess": 2,
+          "witnessExcess": 2
+        }
+      }
+    }
+  },
+  "records": [
+    {
+      "problem": {
+        "missing": [
+          "l:0",
+          "v:42"
+        ],
+        "spills": [
+          42
+        ],
+        "loadWidths": [
+          [
+            42,
+            0
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "referenceOps": [
+          [
+            "dup",
+            1
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "push",
+            "l:0"
+          ],
+          [
+            "swap",
+            2
+          ]
+        ],
+        "expectedOracleScore": 4,
+        "id": "regression-gap-tail-first-copy-moves",
+        "source": [
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "v:42"
+        ],
+        "target": [
+          "v:42",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "v:42"
+        ],
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17"
+      },
+      "oracle": {
+        "model": "actual-16/17",
+        "baseline": 2,
+        "reserve": true,
+        "states": 186,
+        "expanded": 172,
+        "edges": 729,
+        "status": "optimal",
+        "cost": {
+          "gas": 11,
+          "bytes": 4
+        },
+        "score": 4,
+        "ops": [
+          [
+            "swap",
+            15
+          ],
+          [
+            "push",
+            "l:0"
+          ],
+          [
+            "load",
+            42
+          ]
+        ],
+        "instructions": 3,
+        "excess": 2,
+        "milliseconds": 7.834870000000002
+      },
+      "production": {
+        "elapsedNanos": 46224439,
+        "jsonBytes": 1028,
+        "result": {
+          "actualCaps": true,
+          "actualReserve": true,
+          "algorithms": {
+            "old-bbu": {
+              "certificate": null,
+              "certificates": {
+                "exactBaseline": false,
+                "exactLineage": false,
+                "exactNoGrowth": false,
+                "exactStatic": true,
+                "twiceLineage": false,
+                "twiceStatic": true
+              },
+              "cost": {
+                "bytes": 4,
+                "gas": 12
+              },
+              "instructions": 3,
+              "ops": [
+                [
+                  "swap",
+                  15
+                ],
+                [
+                  "dup",
+                  1
+                ],
+                [
+                  "load",
+                  42
+                ]
+              ],
+              "score": 4,
+              "status": "ok"
+            },
+            "schedule": {
+              "certificate": null,
+              "certificates": {
+                "exactBaseline": false,
+                "exactLineage": false,
+                "exactNoGrowth": false,
+                "exactStatic": true,
+                "twiceLineage": false,
+                "twiceStatic": true
+              },
+              "cost": {
+                "bytes": 4,
+                "gas": 11
+              },
+              "instructions": 4,
+              "ops": [
+                [
+                  "dup",
+                  1
+                ],
+                [
+                  "swap",
+                  16
+                ],
+                [
+                  "push",
+                  "l:0"
+                ],
+                [
+                  "swap",
+                  2
+                ]
+              ],
+              "score": 4,
+              "status": "ok"
+            }
+          },
+          "generationBaseline": 2,
+          "id": "regression-gap-tail-first-copy-moves",
+          "lineageExcess": 0,
+          "reference": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": false,
+              "exactNoGrowth": false,
+              "exactStatic": true,
+              "twiceLineage": false,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 4,
+              "gas": 11
+            },
+            "instructions": 3,
+            "ops": [
+              [
+                "swap",
+                15
+              ],
+              [
+                "push",
+                "l:0"
+              ],
+              [
+                "load",
+                42
+              ]
+            ],
+            "score": 4,
+            "status": "ok"
+          },
+          "staticExcess": 2
+        }
+      },
+      "comparisons": {
+        "old-bbu": {
+          "status": "ok",
+          "target": [
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42"
+          ],
+          "added": [
+            "l:0",
+            "v:42"
+          ],
+          "cost": {
+            "gas": 12,
+            "bytes": 4
+          },
+          "score": 4,
+          "instructions": 3,
+          "excess": 2,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "exact": true,
+          "costRatio": 1,
+          "excessRatio": 1,
+          "zeroExcessViolation": false,
+          "scope": "original-generation-and-final-permutation",
+          "witness": {
+            "baseline": 2,
+            "candidateScore": 4,
+            "witnessScore": 4,
+            "candidateCost": {
+              "gas": 12,
+              "bytes": 4
+            },
+            "witnessCost": {
+              "gas": 11,
+              "bytes": 4
+            },
+            "twiceExcessViolation": false,
+            "excessRatioAgainstWitness": 1,
+            "source": "oracle"
+          }
+        },
+        "schedule": {
+          "status": "ok",
+          "target": [
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42"
+          ],
+          "added": [
+            "v:42",
+            "l:0"
+          ],
+          "cost": {
+            "gas": 11,
+            "bytes": 4
+          },
+          "score": 4,
+          "instructions": 4,
+          "excess": 2,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "exact": true,
+          "costRatio": 1,
+          "excessRatio": 1,
+          "zeroExcessViolation": false,
+          "scope": "completed-source-to-target",
+          "witness": {
+            "baseline": 2,
+            "candidateScore": 4,
+            "witnessScore": 4,
+            "candidateCost": {
+              "gas": 11,
+              "bytes": 4
+            },
+            "witnessCost": {
+              "gas": 11,
+              "bytes": 4
+            },
+            "twiceExcessViolation": false,
+            "excessRatioAgainstWitness": 1,
+            "source": "oracle"
+          }
+        }
+      }
+    },
+    {
+      "problem": {
+        "missing": [
+          "l:0",
+          "v:42"
+        ],
+        "spills": [
+          42
+        ],
+        "loadWidths": [
+          [
+            42,
+            0
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "referenceOps": [
+          [
+            "dup",
+            1
+          ],
+          [
+            "swap",
+            16
+          ],
+          [
+            "push",
+            "l:0"
+          ],
+          [
+            "swap",
+            2
+          ]
+        ],
+        "expectedOracleScore": 4,
+        "id": "regression-gap-crosses-frozen-prefix",
+        "source": [
+          "v:42",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "v:42"
+        ],
+        "target": [
+          "v:42",
+          "l:0",
+          "v:42",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "v:42"
+        ],
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17"
+      },
+      "oracle": {
+        "model": "actual-16/17",
+        "baseline": 2,
+        "reserve": true,
+        "states": 187,
+        "expanded": 173,
+        "edges": 733,
+        "status": "optimal",
+        "cost": {
+          "gas": 11,
+          "bytes": 4
+        },
+        "score": 4,
+        "ops": [
+          [
+            "swap",
+            15
+          ],
+          [
+            "push",
+            "l:0"
+          ],
+          [
+            "load",
+            42
+          ]
+        ],
+        "instructions": 3,
+        "excess": 2,
+        "milliseconds": 3.3231370000000027
+      },
+      "production": {
+        "elapsedNanos": 73990155,
+        "jsonBytes": 1028,
+        "result": {
+          "actualCaps": true,
+          "actualReserve": true,
+          "algorithms": {
+            "old-bbu": {
+              "certificate": null,
+              "certificates": {
+                "exactBaseline": false,
+                "exactLineage": false,
+                "exactNoGrowth": false,
+                "exactStatic": true,
+                "twiceLineage": false,
+                "twiceStatic": true
+              },
+              "cost": {
+                "bytes": 4,
+                "gas": 12
+              },
+              "instructions": 3,
+              "ops": [
+                [
+                  "swap",
+                  15
+                ],
+                [
+                  "dup",
+                  1
+                ],
+                [
+                  "load",
+                  42
+                ]
+              ],
+              "score": 4,
+              "status": "ok"
+            },
+            "schedule": {
+              "certificate": null,
+              "certificates": {
+                "exactBaseline": false,
+                "exactLineage": false,
+                "exactNoGrowth": false,
+                "exactStatic": true,
+                "twiceLineage": false,
+                "twiceStatic": true
+              },
+              "cost": {
+                "bytes": 4,
+                "gas": 11
+              },
+              "instructions": 4,
+              "ops": [
+                [
+                  "dup",
+                  1
+                ],
+                [
+                  "swap",
+                  16
+                ],
+                [
+                  "push",
+                  "l:0"
+                ],
+                [
+                  "swap",
+                  2
+                ]
+              ],
+              "score": 4,
+              "status": "ok"
+            }
+          },
+          "generationBaseline": 2,
+          "id": "regression-gap-crosses-frozen-prefix",
+          "lineageExcess": 0,
+          "reference": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": false,
+              "exactNoGrowth": false,
+              "exactStatic": true,
+              "twiceLineage": false,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 4,
+              "gas": 11
+            },
+            "instructions": 3,
+            "ops": [
+              [
+                "swap",
+                15
+              ],
+              [
+                "push",
+                "l:0"
+              ],
+              [
+                "load",
+                42
+              ]
+            ],
+            "score": 4,
+            "status": "ok"
+          },
+          "staticExcess": 2
+        }
+      },
+      "comparisons": {
+        "old-bbu": {
+          "status": "ok",
+          "target": [
+            "v:42",
+            "l:0",
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42"
+          ],
+          "added": [
+            "l:0",
+            "v:42"
+          ],
+          "cost": {
+            "gas": 12,
+            "bytes": 4
+          },
+          "score": 4,
+          "instructions": 3,
+          "excess": 2,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "exact": true,
+          "costRatio": 1,
+          "excessRatio": 1,
+          "zeroExcessViolation": false,
+          "scope": "original-generation-and-final-permutation",
+          "witness": {
+            "baseline": 2,
+            "candidateScore": 4,
+            "witnessScore": 4,
+            "candidateCost": {
+              "gas": 12,
+              "bytes": 4
+            },
+            "witnessCost": {
+              "gas": 11,
+              "bytes": 4
+            },
+            "twiceExcessViolation": false,
+            "excessRatioAgainstWitness": 1,
+            "source": "oracle"
+          }
+        },
+        "schedule": {
+          "status": "ok",
+          "target": [
+            "v:42",
+            "l:0",
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42"
+          ],
+          "added": [
+            "v:42",
+            "l:0"
+          ],
+          "cost": {
+            "gas": 11,
+            "bytes": 4
+          },
+          "score": 4,
+          "instructions": 4,
+          "excess": 2,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "exact": true,
+          "costRatio": 1,
+          "excessRatio": 1,
+          "zeroExcessViolation": false,
+          "scope": "completed-source-to-target",
+          "witness": {
+            "baseline": 2,
+            "candidateScore": 4,
+            "witnessScore": 4,
+            "candidateCost": {
+              "gas": 11,
+              "bytes": 4
+            },
+            "witnessCost": {
+              "gas": 11,
+              "bytes": 4
+            },
+            "twiceExcessViolation": false,
+            "excessRatioAgainstWitness": 1,
+            "source": "oracle"
+          }
+        }
+      }
+    },
+    {
+      "problem": {
+        "missing": [
+          "v:42"
+        ],
+        "spills": [
+          42
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "referenceOps": [
+          [
+            "load",
+            42
+          ]
+        ],
+        "expectedOracleScore": 34,
+        "id": "regression-frozen-only-seed-baseline",
+        "source": [
+          "v:42",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "target": [
+          "v:42",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "v:42"
+        ],
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17"
+      },
+      "oracle": {
+        "model": "actual-16/17",
+        "baseline": 1,
+        "reserve": true,
+        "states": 2,
+        "expanded": 2,
+        "edges": 1,
+        "status": "optimal",
+        "cost": {
+          "gas": 6,
+          "bytes": 34
+        },
+        "score": 34,
+        "ops": [
+          [
+            "load",
+            42
+          ]
+        ],
+        "instructions": 1,
+        "excess": 33,
+        "milliseconds": 0.25288499999999914
+      },
+      "production": {
+        "elapsedNanos": 13774350,
+        "jsonBytes": 947,
+        "result": {
+          "actualCaps": true,
+          "actualReserve": true,
+          "algorithms": {
+            "old-bbu": {
+              "certificate": null,
+              "certificates": {
+                "exactBaseline": false,
+                "exactLineage": false,
+                "exactNoGrowth": false,
+                "exactStatic": true,
+                "twiceLineage": false,
+                "twiceStatic": true
+              },
+              "cost": {
+                "bytes": 34,
+                "gas": 6
+              },
+              "instructions": 1,
+              "ops": [
+                [
+                  "load",
+                  42
+                ]
+              ],
+              "score": 34,
+              "status": "ok"
+            },
+            "schedule": {
+              "certificate": null,
+              "certificates": {
+                "exactBaseline": false,
+                "exactLineage": false,
+                "exactNoGrowth": false,
+                "exactStatic": true,
+                "twiceLineage": false,
+                "twiceStatic": true
+              },
+              "cost": {
+                "bytes": 34,
+                "gas": 6
+              },
+              "instructions": 1,
+              "ops": [
+                [
+                  "load",
+                  42
+                ]
+              ],
+              "score": 34,
+              "status": "ok"
+            }
+          },
+          "generationBaseline": 1,
+          "id": "regression-frozen-only-seed-baseline",
+          "lineageExcess": 1,
+          "reference": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": false,
+              "exactNoGrowth": false,
+              "exactStatic": true,
+              "twiceLineage": false,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 34,
+              "gas": 6
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "load",
+                42
+              ]
+            ],
+            "score": 34,
+            "status": "ok"
+          },
+          "staticExcess": 33
+        }
+      },
+      "comparisons": {
+        "old-bbu": {
+          "status": "ok",
+          "target": [
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42"
+          ],
+          "added": [
+            "v:42"
+          ],
+          "cost": {
+            "gas": 6,
+            "bytes": 34
+          },
+          "score": 34,
+          "instructions": 1,
+          "excess": 33,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "exact": true,
+          "costRatio": 1,
+          "excessRatio": 1,
+          "zeroExcessViolation": false,
+          "scope": "original-generation-and-final-permutation",
+          "witness": {
+            "baseline": 1,
+            "candidateScore": 34,
+            "witnessScore": 34,
+            "candidateCost": {
+              "gas": 6,
+              "bytes": 34
+            },
+            "witnessCost": {
+              "gas": 6,
+              "bytes": 34
+            },
+            "twiceExcessViolation": false,
+            "excessRatioAgainstWitness": 1,
+            "source": "oracle"
+          }
+        },
+        "schedule": {
+          "status": "ok",
+          "target": [
+            "v:42",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42"
+          ],
+          "added": [
+            "v:42"
+          ],
+          "cost": {
+            "gas": 6,
+            "bytes": 34
+          },
+          "score": 34,
+          "instructions": 1,
+          "excess": 33,
+          "certificates": {
+            "exactBaseline": false,
+            "exactLineage": false,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": false,
+            "twiceStatic": true
+          },
+          "exact": true,
+          "costRatio": 1,
+          "excessRatio": 1,
+          "zeroExcessViolation": false,
+          "scope": "completed-source-to-target",
+          "witness": {
+            "baseline": 1,
+            "candidateScore": 34,
+            "witnessScore": 34,
+            "candidateCost": {
+              "gas": 6,
+              "bytes": 34
+            },
+            "witnessCost": {
+              "gas": 6,
+              "bytes": 34
+            },
+            "twiceExcessViolation": false,
+            "excessRatioAgainstWitness": 1,
+            "source": "oracle"
+          }
+        }
+      }
+    },
+    {
+      "problem": {
+        "missing": [
+          "v:42"
+        ],
+        "spills": [
+          42
+        ],
+        "loadWidths": [
+          [
+            42,
+            32
+          ]
+        ],
+        "weights": {
+          "gas": 0,
+          "bytes": 1
+        },
+        "referenceOps": [
+          [
+            "load",
+            42
+          ]
+        ],
+        "expectedOracleScore": 34,
+        "id": "regression-frozen-only-seed-reduced-baseline",
+        "source": [
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0"
+        ],
+        "target": [
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "l:0",
+          "v:42"
+        ],
+        "caps": {
+          "swap": 16,
+          "dup": 16
+        },
+        "gasModel": "cpp",
+        "model": "actual-16/17"
+      },
+      "oracle": {
+        "model": "actual-16/17",
+        "baseline": 34,
+        "reserve": true,
+        "states": 2,
+        "expanded": 2,
+        "edges": 1,
+        "status": "optimal",
+        "cost": {
+          "gas": 6,
+          "bytes": 34
+        },
+        "score": 34,
+        "ops": [
+          [
+            "load",
+            42
+          ]
+        ],
+        "instructions": 1,
+        "excess": 0,
+        "milliseconds": 0.08969199999999944
+      },
+      "production": {
+        "elapsedNanos": 13565790,
+        "jsonBytes": 946,
+        "result": {
+          "actualCaps": true,
+          "actualReserve": true,
+          "algorithms": {
+            "old-bbu": {
+              "certificate": null,
+              "certificates": {
+                "exactBaseline": true,
+                "exactLineage": true,
+                "exactNoGrowth": false,
+                "exactStatic": true,
+                "twiceLineage": true,
+                "twiceStatic": true
+              },
+              "cost": {
+                "bytes": 34,
+                "gas": 6
+              },
+              "instructions": 1,
+              "ops": [
+                [
+                  "load",
+                  42
+                ]
+              ],
+              "score": 34,
+              "status": "ok"
+            },
+            "schedule": {
+              "certificate": null,
+              "certificates": {
+                "exactBaseline": true,
+                "exactLineage": true,
+                "exactNoGrowth": false,
+                "exactStatic": true,
+                "twiceLineage": true,
+                "twiceStatic": true
+              },
+              "cost": {
+                "bytes": 34,
+                "gas": 6
+              },
+              "instructions": 1,
+              "ops": [
+                [
+                  "load",
+                  42
+                ]
+              ],
+              "score": 34,
+              "status": "ok"
+            }
+          },
+          "generationBaseline": 34,
+          "id": "regression-frozen-only-seed-reduced-baseline",
+          "lineageExcess": 0,
+          "reference": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": true,
+              "exactLineage": true,
+              "exactNoGrowth": false,
+              "exactStatic": true,
+              "twiceLineage": true,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 34,
+              "gas": 6
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "load",
+                42
+              ]
+            ],
+            "score": 34,
+            "status": "ok"
+          },
+          "staticExcess": 0
+        }
+      },
+      "comparisons": {
+        "old-bbu": {
+          "status": "ok",
+          "target": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42"
+          ],
+          "added": [
+            "v:42"
+          ],
+          "cost": {
+            "gas": 6,
+            "bytes": 34
+          },
+          "score": 34,
+          "instructions": 1,
+          "excess": 0,
+          "certificates": {
+            "exactBaseline": true,
+            "exactLineage": true,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": true,
+            "twiceStatic": true
+          },
+          "exact": true,
+          "costRatio": 1,
+          "excessRatio": 1,
+          "zeroExcessViolation": false,
+          "scope": "original-generation-and-final-permutation",
+          "witness": {
+            "baseline": 34,
+            "candidateScore": 34,
+            "witnessScore": 34,
+            "candidateCost": {
+              "gas": 6,
+              "bytes": 34
+            },
+            "witnessCost": {
+              "gas": 6,
+              "bytes": 34
+            },
+            "twiceExcessViolation": false,
+            "excessRatioAgainstWitness": 1,
+            "source": "oracle"
+          }
+        },
+        "schedule": {
+          "status": "ok",
+          "target": [
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "l:0",
+            "v:42"
+          ],
+          "added": [
+            "v:42"
+          ],
+          "cost": {
+            "gas": 6,
+            "bytes": 34
+          },
+          "score": 34,
+          "instructions": 1,
+          "excess": 0,
+          "certificates": {
+            "exactBaseline": true,
+            "exactLineage": true,
+            "exactNoGrowth": false,
+            "exactStatic": true,
+            "twiceLineage": true,
+            "twiceStatic": true
+          },
+          "exact": true,
+          "costRatio": 1,
+          "excessRatio": 1,
+          "zeroExcessViolation": false,
+          "scope": "completed-source-to-target",
+          "witness": {
+            "baseline": 34,
+            "candidateScore": 34,
+            "witnessScore": 34,
+            "candidateCost": {
+              "gas": 6,
+              "bytes": 34
+            },
+            "witnessCost": {
+              "gas": 6,
+              "bytes": 34
+            },
+            "twiceExcessViolation": false,
+            "excessRatioAgainstWitness": 1,
+            "source": "oracle"
+          }
+        }
+      }
+    }
+  ],
+  "reproduce": "node scripts/optimality-bench.mjs --input /tmp/optimality-v13-frozen-input.jsonl --runner /tmp/optimality-bench-frozen-v13 --algorithms schedule,old-bbu --output /tmp/optimality-v13-frozen.jsonl --summary /tmp/optimality-v13-frozen-summary.json --production-log /tmp/optimality-v13-frozen-native.jsonl",
+  "reproductionNote": "The cases and full records are included in this file. Exact checkpoint reproduction requires the executable SHA256 above."
+}

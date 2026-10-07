@@ -1,0 +1,407 @@
+{
+  "status": "exact reduced-capacity finite counterexample, with a direct transposition lower-bound argument",
+  "scope": "This refutes the least-index feasible deadline order as a general 2Q movement construction. It does not refute the existence of some 2Q realization or any production scheduler.",
+  "word": [
+    "a",
+    "b",
+    "b",
+    "c",
+    "c",
+    "d",
+    "d",
+    "e",
+    "a"
+  ],
+  "selected": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "reach": 4,
+  "oldCopies": 0,
+  "plan": {
+    "problem": {
+      "source": [],
+      "target": [
+        "v:42",
+        "v:43",
+        "v:43",
+        "v:44",
+        "v:44",
+        "v:45",
+        "v:45",
+        "v:46",
+        "v:42"
+      ],
+      "spills": [
+        42,
+        43,
+        44,
+        45,
+        46
+      ],
+      "caps": {
+        "swap": 4,
+        "dup": 4
+      },
+      "id": "unnamed",
+      "missing": [
+        "v:42",
+        "v:43",
+        "v:43",
+        "v:44",
+        "v:44",
+        "v:45",
+        "v:45",
+        "v:46",
+        "v:42"
+      ],
+      "weights": {
+        "gas": 1,
+        "bytes": 1
+      },
+      "gasModel": "cpp",
+      "loadWidths": [],
+      "model": "reduced-cap"
+    },
+    "values": [
+      "v:42",
+      "v:43",
+      "v:44",
+      "v:45",
+      "v:46"
+    ],
+    "budgets": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "intervals": [
+      {
+        "start": 1,
+        "end": 2,
+        "value": "v:43"
+      },
+      {
+        "start": 3,
+        "end": 4,
+        "value": "v:44"
+      },
+      {
+        "start": 5,
+        "end": 6,
+        "value": "v:45"
+      },
+      {
+        "start": 0,
+        "end": 8,
+        "value": "v:42"
+      }
+    ],
+    "capacityFeasible": true
+  },
+  "deadlines": [
+    5,
+    6,
+    6,
+    8,
+    8,
+    10,
+    10,
+    12,
+    5
+  ],
+  "leastIndexOrder": [
+    0,
+    1,
+    2,
+    3,
+    8,
+    4,
+    5,
+    6,
+    7
+  ],
+  "leastIndexBirthWord": [
+    "a",
+    "b",
+    "b",
+    "c",
+    "a",
+    "c",
+    "d",
+    "d",
+    "e"
+  ],
+  "fixedOrderResult": {
+    "status": "reachable",
+    "states": 229,
+    "ops": [
+      [
+        "load",
+        42
+      ],
+      [
+        "load",
+        43
+      ],
+      [
+        "dup",
+        1
+      ],
+      [
+        "load",
+        44
+      ],
+      [
+        "dup",
+        4
+      ],
+      [
+        "dup",
+        2
+      ],
+      [
+        "swap",
+        1
+      ],
+      [
+        "load",
+        45
+      ],
+      [
+        "dup",
+        1
+      ],
+      [
+        "swap",
+        2
+      ],
+      [
+        "load",
+        46
+      ],
+      [
+        "swap",
+        1
+      ]
+    ],
+    "direct": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "swaps": 3
+  },
+  "freeOrderResult": {
+    "status": "reachable",
+    "states": 3522,
+    "ops": [
+      [
+        "load",
+        42
+      ],
+      [
+        "dup",
+        1
+      ],
+      [
+        "load",
+        43
+      ],
+      [
+        "load",
+        44
+      ],
+      [
+        "dup",
+        1
+      ],
+      [
+        "dup",
+        3
+      ],
+      [
+        "swap",
+        4
+      ],
+      [
+        "load",
+        45
+      ],
+      [
+        "load",
+        46
+      ],
+      [
+        "dup",
+        2
+      ],
+      [
+        "swap",
+        3
+      ]
+    ],
+    "direct": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "swaps": 2
+  },
+  "alternateWord": [
+    "a",
+    "b",
+    "b",
+    "c",
+    "a",
+    "d",
+    "c",
+    "e",
+    "d"
+  ],
+  "alternateOrderResult": {
+    "status": "reachable",
+    "states": 289,
+    "ops": [
+      [
+        "load",
+        42
+      ],
+      [
+        "load",
+        43
+      ],
+      [
+        "dup",
+        1
+      ],
+      [
+        "load",
+        44
+      ],
+      [
+        "dup",
+        4
+      ],
+      [
+        "load",
+        45
+      ],
+      [
+        "dup",
+        3
+      ],
+      [
+        "swap",
+        2
+      ],
+      [
+        "load",
+        46
+      ],
+      [
+        "dup",
+        3
+      ],
+      [
+        "swap",
+        2
+      ]
+    ],
+    "direct": [
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "swaps": 2
+  },
+  "explicitAlternateWitness": [
+    [
+      "load",
+      42
+    ],
+    [
+      "load",
+      43
+    ],
+    [
+      "dup",
+      1
+    ],
+    [
+      "load",
+      44
+    ],
+    [
+      "dup",
+      4
+    ],
+    [
+      "load",
+      45
+    ],
+    [
+      "dup",
+      3
+    ],
+    [
+      "load",
+      46
+    ],
+    [
+      "dup",
+      3
+    ],
+    [
+      "swap",
+      2
+    ],
+    [
+      "swap",
+      4
+    ]
+  ],
+  "explicitAlternateReplay": {
+    "target": [
+      "v:42",
+      "v:43",
+      "v:43",
+      "v:44",
+      "v:44",
+      "v:45",
+      "v:45",
+      "v:46",
+      "v:42"
+    ],
+    "added": [
+      "v:42",
+      "v:43",
+      "v:43",
+      "v:44",
+      "v:42",
+      "v:45",
+      "v:44",
+      "v:46",
+      "v:45"
+    ],
+    "cost": {
+      "gas": 48,
+      "bytes": 21
+    },
+    "score": 69,
+    "instructions": 11
+  },
+  "Q": 1,
+  "lowerBoundArgument": "For the fixed birth word, positions 4,5,7,8 have values a,c,d,e but require c,d,e,a. All other positions already match. Two transpositions would each need to correct two positions. No pair of wrong positions has reciprocal values, so the first transposition cannot correct two. Hence at least three SWAPs are needed, regardless of when they occur. Each SWAP in an interleaved trace is also one transposition of positions in the completed fixed birth word; births prescribe the value of each new position. Equal-value copies do not change this four-position argument.",
+  "reproduce": "Call minimumPlanSwaps with the included plan and fixed birthOrder; its default state limit is 300000."
+}

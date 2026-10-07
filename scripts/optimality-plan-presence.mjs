@@ -21,12 +21,20 @@ export function ordinaryFreshPlan(word, selected, reach, old) {
   return { problem, values, budgets, intervals, capacityFeasible: checked.capacityFeasible };
 }
 
-export function minimumPlanSwaps(plan, { stateLimit = 300000 } = {}) {
+export function minimumPlanSwaps(plan, { stateLimit = 300000, birthOrder = null } = {}) {
   const { problem, values, budgets, intervals } = plan;
   if (values.length !== budgets.length || budgets.some(budget => !Number.isInteger(budget) || budget < 0)) {
     throw new Error('invalid per-value introduction budgets');
   }
   const desired = counts(problem.target), initialCounts = counts(problem.source);
+  if (birthOrder !== null) {
+    const born = counts(birthOrder);
+    if (birthOrder.length !== problem.target.length - problem.source.length ||
+        [...born].some(([value]) => !desired.has(value)) ||
+        [...desired].some(([value, count]) => (born.get(value) ?? 0) !== count - (initialCounts.get(value) ?? 0))) {
+      throw new Error('invalid birth order');
+    }
+  }
   if ([...initialCounts].some(([value, count]) => count > (desired.get(value) ?? 0))) {
     return { status: 'unreachable', states: 0, reason: 'count-balance' };
   }
@@ -59,6 +67,7 @@ export function minimumPlanSwaps(plan, { stateLimit = 300000 } = {}) {
     if (stack.length < problem.target.length && canFreeze) {
       const present = counts(stack);
       for (const [value, count] of desired) {
+        if (birthOrder !== null && value !== birthOrder[stack.length - problem.source.length]) continue;
         if ((present.get(value) ?? 0) >= count) continue;
         const position = stack.lastIndexOf(value), depth = stack.length - position;
         if (position >= 0 && depth <= problem.caps.dup) push([...stack, value], ['dup', depth]);

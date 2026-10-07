@@ -1,0 +1,575 @@
+{
+  "scope": "Pinned v13 versus v12 on four exact frozen-prefix regression cases. Scores and operation lists are read from the saved records. A null operation comparison means the algorithm was not selected for the v12 run.",
+  "v12RunnerSha256": "e3a116256ffef648ac0404d04006e46b4335df01c2ce9dbad42e4d1eba8e3f0b",
+  "v13RunnerSha256": "0f6c8667f24b84e12a33eba5dda1aa0e264866b8df25fa826568245e715164e8",
+  "cases": [
+    {
+      "id": "regression-gap-tail-first-copy-moves",
+      "optimum": 4,
+      "v12": {
+        "baseline": 2,
+        "staticExcess": 2,
+        "algorithms": {
+          "old-bbu": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": false,
+              "exactNoGrowth": false,
+              "exactStatic": true,
+              "twiceLineage": false,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 4,
+              "gas": 12
+            },
+            "instructions": 3,
+            "ops": [
+              [
+                "swap",
+                15
+              ],
+              [
+                "dup",
+                1
+              ],
+              [
+                "load",
+                42
+              ]
+            ],
+            "score": 4,
+            "status": "ok"
+          },
+          "schedule": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": false,
+              "exactNoGrowth": false,
+              "exactStatic": true,
+              "twiceLineage": false,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 4,
+              "gas": 11
+            },
+            "instructions": 4,
+            "ops": [
+              [
+                "dup",
+                1
+              ],
+              [
+                "swap",
+                16
+              ],
+              [
+                "push",
+                "l:0"
+              ],
+              [
+                "swap",
+                2
+              ]
+            ],
+            "score": 4,
+            "status": "ok"
+          },
+          "schedule-chain": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": false,
+              "exactNoGrowth": false,
+              "exactStatic": true,
+              "twiceLineage": false,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 4,
+              "gas": 11
+            },
+            "instructions": 4,
+            "ops": [
+              [
+                "dup",
+                1
+              ],
+              [
+                "swap",
+                16
+              ],
+              [
+                "push",
+                "l:0"
+              ],
+              [
+                "swap",
+                2
+              ]
+            ],
+            "score": 4,
+            "status": "ok"
+          }
+        }
+      },
+      "v13": {
+        "baseline": 2,
+        "staticExcess": 2,
+        "algorithms": {
+          "old-bbu": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": false,
+              "exactNoGrowth": false,
+              "exactStatic": true,
+              "twiceLineage": false,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 4,
+              "gas": 12
+            },
+            "instructions": 3,
+            "ops": [
+              [
+                "swap",
+                15
+              ],
+              [
+                "dup",
+                1
+              ],
+              [
+                "load",
+                42
+              ]
+            ],
+            "score": 4,
+            "status": "ok"
+          },
+          "schedule": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": false,
+              "exactNoGrowth": false,
+              "exactStatic": true,
+              "twiceLineage": false,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 4,
+              "gas": 11
+            },
+            "instructions": 4,
+            "ops": [
+              [
+                "dup",
+                1
+              ],
+              [
+                "swap",
+                16
+              ],
+              [
+                "push",
+                "l:0"
+              ],
+              [
+                "swap",
+                2
+              ]
+            ],
+            "score": 4,
+            "status": "ok"
+          }
+        }
+      },
+      "sameOperationLists": {
+        "old-bbu": true,
+        "schedule": true
+      }
+    },
+    {
+      "id": "regression-gap-crosses-frozen-prefix",
+      "optimum": 4,
+      "v12": {
+        "baseline": 2,
+        "staticExcess": 1,
+        "algorithms": {
+          "old-bbu": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": false,
+              "exactNoGrowth": false,
+              "exactStatic": false,
+              "twiceLineage": false,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 4,
+              "gas": 12
+            },
+            "instructions": 3,
+            "ops": [
+              [
+                "swap",
+                15
+              ],
+              [
+                "dup",
+                1
+              ],
+              [
+                "load",
+                42
+              ]
+            ],
+            "score": 4,
+            "status": "ok"
+          },
+          "schedule": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": false,
+              "exactNoGrowth": false,
+              "exactStatic": false,
+              "twiceLineage": false,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 4,
+              "gas": 11
+            },
+            "instructions": 4,
+            "ops": [
+              [
+                "dup",
+                1
+              ],
+              [
+                "swap",
+                16
+              ],
+              [
+                "push",
+                "l:0"
+              ],
+              [
+                "swap",
+                2
+              ]
+            ],
+            "score": 4,
+            "status": "ok"
+          },
+          "schedule-chain": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": false,
+              "exactNoGrowth": false,
+              "exactStatic": false,
+              "twiceLineage": false,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 4,
+              "gas": 11
+            },
+            "instructions": 4,
+            "ops": [
+              [
+                "dup",
+                1
+              ],
+              [
+                "swap",
+                16
+              ],
+              [
+                "push",
+                "l:0"
+              ],
+              [
+                "swap",
+                2
+              ]
+            ],
+            "score": 4,
+            "status": "ok"
+          }
+        }
+      },
+      "v13": {
+        "baseline": 2,
+        "staticExcess": 2,
+        "algorithms": {
+          "old-bbu": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": false,
+              "exactNoGrowth": false,
+              "exactStatic": true,
+              "twiceLineage": false,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 4,
+              "gas": 12
+            },
+            "instructions": 3,
+            "ops": [
+              [
+                "swap",
+                15
+              ],
+              [
+                "dup",
+                1
+              ],
+              [
+                "load",
+                42
+              ]
+            ],
+            "score": 4,
+            "status": "ok"
+          },
+          "schedule": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": false,
+              "exactNoGrowth": false,
+              "exactStatic": true,
+              "twiceLineage": false,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 4,
+              "gas": 11
+            },
+            "instructions": 4,
+            "ops": [
+              [
+                "dup",
+                1
+              ],
+              [
+                "swap",
+                16
+              ],
+              [
+                "push",
+                "l:0"
+              ],
+              [
+                "swap",
+                2
+              ]
+            ],
+            "score": 4,
+            "status": "ok"
+          }
+        }
+      },
+      "sameOperationLists": {
+        "old-bbu": true,
+        "schedule": true
+      }
+    },
+    {
+      "id": "regression-frozen-only-seed-baseline",
+      "optimum": 34,
+      "v12": {
+        "baseline": 1,
+        "staticExcess": 33,
+        "algorithms": {
+          "schedule": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": false,
+              "exactNoGrowth": false,
+              "exactStatic": true,
+              "twiceLineage": false,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 34,
+              "gas": 6
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "load",
+                42
+              ]
+            ],
+            "score": 34,
+            "status": "ok"
+          }
+        }
+      },
+      "v13": {
+        "baseline": 1,
+        "staticExcess": 33,
+        "algorithms": {
+          "old-bbu": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": false,
+              "exactNoGrowth": false,
+              "exactStatic": true,
+              "twiceLineage": false,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 34,
+              "gas": 6
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "load",
+                42
+              ]
+            ],
+            "score": 34,
+            "status": "ok"
+          },
+          "schedule": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": false,
+              "exactLineage": false,
+              "exactNoGrowth": false,
+              "exactStatic": true,
+              "twiceLineage": false,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 34,
+              "gas": 6
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "load",
+                42
+              ]
+            ],
+            "score": 34,
+            "status": "ok"
+          }
+        }
+      },
+      "sameOperationLists": {
+        "old-bbu": null,
+        "schedule": true
+      }
+    },
+    {
+      "id": "regression-frozen-only-seed-reduced-baseline",
+      "optimum": 34,
+      "v12": {
+        "baseline": 34,
+        "staticExcess": 0,
+        "algorithms": {
+          "schedule": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": true,
+              "exactLineage": true,
+              "exactNoGrowth": false,
+              "exactStatic": true,
+              "twiceLineage": true,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 34,
+              "gas": 6
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "load",
+                42
+              ]
+            ],
+            "score": 34,
+            "status": "ok"
+          }
+        }
+      },
+      "v13": {
+        "baseline": 34,
+        "staticExcess": 0,
+        "algorithms": {
+          "old-bbu": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": true,
+              "exactLineage": true,
+              "exactNoGrowth": false,
+              "exactStatic": true,
+              "twiceLineage": true,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 34,
+              "gas": 6
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "load",
+                42
+              ]
+            ],
+            "score": 34,
+            "status": "ok"
+          },
+          "schedule": {
+            "certificate": null,
+            "certificates": {
+              "exactBaseline": true,
+              "exactLineage": true,
+              "exactNoGrowth": false,
+              "exactStatic": true,
+              "twiceLineage": true,
+              "twiceStatic": true
+            },
+            "cost": {
+              "bytes": 34,
+              "gas": 6
+            },
+            "instructions": 1,
+            "ops": [
+              [
+                "load",
+                42
+              ]
+            ],
+            "score": 34,
+            "status": "ok"
+          }
+        }
+      },
+      "sameOperationLists": {
+        "old-bbu": null,
+        "schedule": true
+      }
+    }
+  ]
+}
