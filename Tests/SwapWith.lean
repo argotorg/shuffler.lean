@@ -20,14 +20,14 @@ example (size offset : ℕ) (h : size ≤ offset) :
 
 -- Target indices retain the original finality condition after conversion to a natural number.
 example (state : State source target spills) (offset : Fin target.length) :
-    state.IsFinal offset.val ↔
+    (∃ h, state.isFinal ⟨offset.val, h⟩) ↔
       (state.mapping.symm offset).map Fin.val = some offset.val := by
-  simp [State.IsFinal, offset.isLt]
+  simp [State.exists_isFinal_iff, offset.isLt]
 
 -- No offset at or beyond the target length is final.
 example (state : State source target spills) (offset : ℕ) (h : target.length ≤ offset) :
-    ¬ state.IsFinal offset := by
-  simp [State.IsFinal, Nat.not_lt.mpr h]
+    ¬ ∃ h, state.isFinal ⟨offset, h⟩ := by
+  simp [State.exists_isFinal_iff, Nat.not_lt.mpr h]
 
 private def boundState : State [.Lit 10, .Lit 20, .Lit 30] [.Lit 30, .Lit 10] ∅ where
   planned_mapping := ⊥
@@ -70,8 +70,8 @@ private def surplusState (depth : ℕ) :
   pending_generations := 0
 
 -- An empty target has no final offsets, including offsets beyond the working stack.
-example (offset : ℕ) : ¬ (surplusState 0).IsFinal offset := by
-  simp [State.IsFinal]
+example (offset : ℕ) : ¬ ∃ h, (surplusState 0).isFinal ⟨offset, h⟩ := by
+  simp [State.exists_isFinal_iff]
 example : ¬ (surplusState 0).isFinal ⟨0, by decide⟩ := by decide
 
 -- Surplus positions are allowed even when the target is empty.
