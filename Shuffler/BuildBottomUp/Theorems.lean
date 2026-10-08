@@ -11,6 +11,12 @@ theorem buildBottomUp_no_assertion (initial : State source target spills)
     buildBottomUp initial ≠ .error (.assertion reason) :=
   (buildBottomUp_spec initial h).noAssertion reason
 
+-- Every stack read, including the `m_destinationOf[pos]` read in c++ `isFinal`, is checked by
+-- `index`. No read is out of bounds.
+theorem buildBottomUp_in_bounds (initial : State source target spills) (h : initial.Valid) :
+    buildBottomUp initial ≠ .error (.assertion "offset is out of bounds") :=
+  buildBottomUp_no_assertion initial h _
+
 theorem buildBottomUp_error_is_blocked (initial : State source target spills)
     (h : initial.Valid) (he : buildBottomUp initial = .error err) :
     ∃ excess, err = .blocked excess :=
