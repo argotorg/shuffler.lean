@@ -36,9 +36,6 @@ inductive Error where
   | assertion (reason : String)
   deriving DecidableEq, Repr
 
-abbrev Action (source target : Stack) (spills : SpillSet) :=
-  State source target spills → Except Error (State source target spills)
-
 
 --- Utils ------------------------------------------------------------------------------------------
 
@@ -110,7 +107,9 @@ structure State.Valid (state : State source target spills) : Prop where
 --- Actions ----------------------------------------------------------------------------------------
 
 
-def push (slot : Value) (dest : Fin target.length) : Action source target spills := fun state => do
+def State.push (state : State source target spills)
+    (slot : Value) (dest : Fin target.length) : Except Error (State source target spills) := do
+
   let ⟨hbound⟩ ← requires (state.mapping.symm dest = none) "destination already bound to a slot"
   let ⟨hgen⟩ ← requires (slot.can_be_freely_generated ∨ spills.is_spilled slot) "pushed slot cannot be generated or loaded"
 
@@ -125,7 +124,9 @@ def push (slot : Value) (dest : Fin target.length) : Action source target spills
       state.mapping.push dest hbound
   }
 
-def dup (offset : ℕ) (dest : Fin target.length) : Action source target spills := fun state => do
+def State.dup (state : State source target spills)
+    (offset : ℕ) (dest : Fin target.length) : Except Error (State source target spills) := do
+
   let copy ← index state.stack.length offset
   let depth := state.stack.offsetToDepth copy
 
@@ -142,12 +143,16 @@ def dup (offset : ℕ) (dest : Fin target.length) : Action source target spills 
       state.mapping.push dest hbound
   }
 
-def swapDestinations (a b : ℕ) : Action source target spills := fun state => do
+def State.swapDestinations (state : State source target spills) (a b : ℕ)
+    : Except Error (State source target spills) := do
+
   let a ← index state.stack.length a
   let b ← index state.stack.length b
   return { state with mapping := state.mapping.swapDestinations a b }
 
-def swapWith (offset : ℕ) : Action source target spills := fun state => do
+def State.swapWith (state : State source target spills)
+    (offset : ℕ) : Except Error (State source target spills) := do
+
   let pos ← index state.stack.length offset
   let depth := state.stack.offsetToDepth pos
 
@@ -166,18 +171,20 @@ def swapWith (offset : ℕ) : Action source target spills := fun state => do
       (swap_depth_pos state.stack pos hbelow) hreach state.trace
   }
 
-def produce (targetOffset : Fin target.length) : Action source target spills := fun current => do
+def State.produce (current : State source target spills)
+    (targetOffset : Fin target.length) : Except Error (State source target spills) := do
+
   let mut state := current
 
   let slot := target[targetOffset.val]
   let copy := state.stack.shallowestCopyPosition slot
 
   if slot.is_junk then
-    state ← push slot targetOffset state
+    state ← state.push slot targetOffset
   else if let some pos := copy.filter (λ pos => state.stack.isDupReachable pos) then
-    state ← dup pos.val targetOffset state
+    state ← state.dup pos.val targetOffset
   else if slot.can_be_freely_generated ∨ spills.is_spilled slot then
-    state ← push slot targetOffset state
+    state ← state.push slot targetOffset
   else if h : copy.isSome then
     throw (.blocked (state.stack.offsetToDepth (copy.get h) - MAX_DUP_DEPTH))
   else
@@ -186,16 +193,18 @@ def produce (targetOffset : Fin target.length) : Action source target spills := 
   _ ← requires (state.positionOf targetOffset.val = some (state.stack.length - 1)) "generated slot is not bound to the top"
   return { state with pending_generations := state.pending_generations - 1 }
 
-def generate (targetOffset : ℕ) : Action source target spills := fun current => do
+def State.generate (current : State source target spills)
+    (targetOffset : ℕ) : Except Error (State source target spills) := do
+
   let mut state := current
-  state ← produce (← index target.length targetOffset) state
+  state ← state.produce (← index target.length targetOffset)
 
   if targetOffset + 1 < state.stack.length ∧ ¬ state.isFinal targetOffset then
     let top := state.stack.length - 1
     if (← slotAt state.stack targetOffset) = (← slotAt state.stack top) then
-      state ← swapDestinations targetOffset top state
+      state ← state.swapDestinations targetOffset top
     else if ← state.isSwapReachable targetOffset then
-      state ← swapWith targetOffset state
+      state ← state.swapWith targetOffset
   return state
 
 
@@ -205,12 +214,12 @@ def generate (targetOffset : ℕ) : Action source target spills := fun current =
 set_option mvcgen.warning false in
 open Std.Internal.Do in
 private theorem generate_pending_generations (state next : State source target spills) (offset : ℕ)
-    (h : generate offset state = .ok next) :
+    (h : state.generate offset = .ok next) :
     next.pending_generations = state.pending_generations - 1 := by
   have hs : ⦃True⦄
-      generate offset state
+      state.generate offset
       ⦃fun s => s.pending_generations = state.pending_generations - 1; epost⟨fun _ => True⟩⦄ := by
-    vcgen [generate, produce, push, dup, swapDestinations, swapWith,
+    vcgen [State.generate, State.produce, State.push, State.dup, State.swapDestinations, State.swapWith,
       requires, index, slotAt, State.isSwapReachable, State.depthOf]
     all_goals simp_all
   have hp := hs.le_wp trivial
@@ -261,7 +270,7 @@ where
            urgentToDup ≠ some targetOffset ∧
            state.stack.length - targetOffset < MAX_SWAP_DEPTH
       then
-        let ⟨next, _hgen⟩ ← (generate (urgentToDup.get h.1) state).attach
+        let ⟨next, _hgen⟩ ← (state.generate (urgentToDup.get h.1)).attach
         return ← loop targetOffset next
 
     let sourceTop := state.stack.length
@@ -271,7 +280,7 @@ where
        (state.positionOf sourceTop).isNone ∧
        sourceTop - targetOffset < MAX_SWAP_DEPTH
     then
-      let ⟨next, _hgen⟩ ← (generate sourceTop state).attach
+      let ⟨next, _hgen⟩ ← (state.generate sourceTop).attach
       return ← loop targetOffset next
 
     if h : (state.positionOf targetOffset).isSome then
@@ -293,7 +302,7 @@ where
       _ ← requires ((← slotAt state.stack pos) = (← slotAt state.stack sourceForTargetOffset))
         "selected copy differs from the bound slot"
 
-      state ← swapDestinations pos sourceForTargetOffset state
+      state ← state.swapDestinations pos sourceForTargetOffset
 
       if pos = targetOffset then
         return ← loop (targetOffset + 1) state
@@ -301,9 +310,9 @@ where
       if pos ≠ state.stack.length - 1 then
         if ¬ (← state.isSwapReachable pos) then
           throw (.blocked ((← state.depthOf pos) - MAX_SWAP_DEPTH))
-        state ← swapWith pos state
+        state ← state.swapWith pos
     else
-      state ← generate targetOffset state
+      state ← state.generate targetOffset
       if state.isFinal targetOffset then
         return ← loop (targetOffset + 1) state
 
@@ -311,7 +320,7 @@ where
     if targetOffset ≠ state.stack.length - 1 then
       if ¬ (← state.isSwapReachable targetOffset) then
         throw (.blocked ((← state.depthOf targetOffset) - MAX_SWAP_DEPTH))
-      state ← swapWith targetOffset state
+      state ← state.swapWith targetOffset
     return ← loop (targetOffset + 1) state
 
   -- Advancing reduces the first component; generating before a retry reduces the second.
