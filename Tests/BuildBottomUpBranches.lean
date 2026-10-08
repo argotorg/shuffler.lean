@@ -15,7 +15,7 @@ private def newTopState : State [.Lit 10, .Lit 20] [.Lit 20, .Lit 10, .Lit 7] �
   pending_generations := 1
 
 example :
-    (buildBottomUp newTopState).toOption.map
+    (buildBottomUp newTopState ⟨by decide, by decide, by decide⟩).toOption.map
         (fun result => result.1) = some [.Lit 20, .Lit 10, .Lit 7] := by
   native_decide
 
@@ -47,7 +47,7 @@ example : (List.ofFn fun i => decide (urgentState.isFinal i)).take 3 = [true, tr
   decide
 
 example :
-    (buildBottomUp urgentState).toOption.map
+    (buildBottomUp urgentState ⟨by decide, by decide, by decide⟩).toOption.map
         (fun result => result.1) = some urgentTarget := by
   native_decide
 
@@ -59,7 +59,7 @@ private def missingCopyState : State [.Lit 10, .Lit 20] [.Lit 20, .Lit 10, .Var 
   pending_generations := 1
 
 -- An unavailable target value returns an assertion error.
-example : (buildBottomUp missingCopyState).map (fun result => result.1) =
+example : (buildBottomUp.loop 0 missingCopyState).map (fun result => result.1) =
     .error (.assertion "generated slot has no copy on the stack and is not spilled") := by
   native_decide
 
@@ -70,9 +70,8 @@ private def surplusState : State [.Lit 10, .Lit 20, .Lit 7] [.Lit 20, .Lit 10, .
   mapping := ((⊥ : Mapping 3 3).bind 0 1 rfl rfl).bind 1 0 (by decide) (by decide)
   pending_generations := 1
 
--- A surplus generation returns the size assertion.
-example : (buildBottomUp surplusState).map (fun result => result.1) =
-    .error (.assertion "stack and target sizes differ") := by
+-- A surplus generation leaves a stack longer than the target.
+example : (buildBottomUp.loop 0 surplusState).map (fun result => result.1.length) = .ok 4 := by
   native_decide
 
 end BuildBottomUpBranchTests

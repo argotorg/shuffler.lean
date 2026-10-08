@@ -21,11 +21,11 @@ theorem loop_no_assertion (targetOffset : ℕ) (state : State source target spil
 -- Operations outside DUP or SWAP reach can still return a blocked error.
 theorem buildBottomUp_no_assertion (initial : State source target spills)
     (h : initial.Valid) (reason : String) :
-    buildBottomUp initial ≠ .error (.assertion reason) :=
+    buildBottomUp initial h ≠ .error (.assertion reason) :=
   (buildBottomUp_spec initial h).noAssertion reason
 
 theorem buildBottomUp_error_is_blocked (initial : State source target spills)
-    (h : initial.Valid) (he : buildBottomUp initial = .error err) :
+    (h : initial.Valid) (he : buildBottomUp initial h = .error err) :
     ∃ excess, err = .blocked excess :=
   (buildBottomUp_spec initial h).error he
 

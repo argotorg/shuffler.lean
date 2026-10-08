@@ -84,11 +84,11 @@ example : ((surplusState MAX_SWAP_DEPTH).swapWith 0).map (·.trace.swapCount) = 
 
 -- The top cannot be swapped with itself, even though it is within reach.
 example : (surplusState 0).swapWith 0 =
-    .error (.assertion "cannot swap the top with itself") := rfl
+    .error (.assertion "invalid swap target") := rfl
 
 -- A position one step beyond swap reach is rejected.
 example : (surplusState (MAX_SWAP_DEPTH + 1)).swapWith 0 =
-    .error (.assertion "swap target is out of reach") := rfl
+    .error (.assertion "invalid swap target") := rfl
 
 private def finalState : State [.Lit 10, .Lit 20] [.Lit 10] ∅ where
   planned_mapping := ⊥

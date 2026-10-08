@@ -20,7 +20,7 @@ example : (emptyState [.Var ⟨37⟩] ∅).generate 0 =
     .error (.assertion "generated slot has no copy on the stack and is not spilled") := rfl
 example : (emptyState [] ∅).swapWith 0 =
     .error (.assertion "offset is out of bounds") := rfl
-example : observe (buildBottomUp
+example : observe (buildBottomUp.loop 0
     { emptyState [.Lit 1] ∅ with pending_generations := 0 }) =
     .error (.assertion "working stack does not match target size") := by native_decide
 
@@ -31,7 +31,8 @@ example : observe (buildBottomUp.loop 3 (emptyState [.Wildcard, .Wildcard, .Wild
     .error (.assertion "offset is out of bounds") := by native_decide
 
 -- c++ `sourceTop < size && !destinationOf(sourceTop)` reads only below the target size. A stack
--- longer than the target must not cause a read at `sourceTop`. The loop reaches the exit check.
+-- longer than the target must not cause a read at `sourceTop`. The state is not valid, so the
+-- loop returns a stack longer than the target.
 private def surplusStack : State [.Lit 1, .Lit 2, .Lit 9] [.Lit 2, .Lit 3] ∅ where
   planned_mapping := ⊥
   stack := [.Lit 1, .Lit 2, .Lit 9]
@@ -39,10 +40,11 @@ private def surplusStack : State [.Lit 1, .Lit 2, .Lit 9] [.Lit 2, .Lit 3] ∅ w
   mapping := (⊥ : Mapping 3 2).bind 1 0 rfl rfl
   pending_generations := 1
 
-example : observe (buildBottomUp surplusStack) =
-    .error (.assertion "stack and target sizes differ") := by native_decide
+example : (buildBottomUp.loop 0 surplusStack).map (fun result => result.1.length) = .ok 4 := by
+  native_decide
 
--- An empty target skips the loop but still checks the stack size.
+-- An empty target skips the loop. The state is not valid, so the stack stays longer than the
+-- target.
 private def surplusAtExit : State [.Lit 1] [] ∅ where
   planned_mapping := ⊥
   stack := [.Lit 1]
@@ -50,14 +52,14 @@ private def surplusAtExit : State [.Lit 1] [] ∅ where
   mapping := ⊥
   pending_generations := 0
 
-example : observe (buildBottomUp surplusAtExit) =
-    .error (.assertion "stack and target sizes differ") := by native_decide
+example : (buildBottomUp.loop 0 surplusAtExit).map (fun result => result.1.length) = .ok 1 := by
+  native_decide
 
 -- An empty input and target need no operations.
-example : observe (buildBottomUp (emptyState [] ∅)) = .ok ([], []) := by native_decide
+example : observe (buildBottomUp (emptyState [] ∅) ⟨by decide, by decide, by decide⟩) = .ok ([], []) := by native_decide
 
 -- Start at target offset zero and generate every target position.
-example : observe (buildBottomUp (emptyState [.Lit 1, .Lit 2] ∅)) =
+example : observe (buildBottomUp (emptyState [.Lit 1, .Lit 2] ∅) ⟨by decide, by decide, by decide⟩) =
     .ok ([.Lit 1, .Lit 2], [.push (.Lit 1), .push (.Lit 2)]) := by native_decide
 
 private def boundState : State [.Lit 1] [.Lit 1] ∅ where
@@ -69,8 +71,12 @@ private def boundState : State [.Lit 1] [.Lit 1] ∅ where
 
 example : boundState.generate 0 =
     .error (.assertion "destination already bound to a slot") := rfl
+-- Finality is checked before the swap depth, so a final top reports finality.
 example : boundState.swapWith 0 =
-    .error (.assertion "cannot swap the top with itself") := rfl
+    .error (.assertion "swap target is already final") := rfl
+-- The top cannot be swapped with itself.
+example : { boundState with mapping := ⊥ }.swapWith 0 =
+    .error (.assertion "invalid swap target") := rfl
 example : boundState.isFinal ⟨0, by decide⟩ := by decide
 example : ¬ { boundState with mapping := ⊥ }.isFinal ⟨0, by decide⟩ := by decide
 
@@ -87,7 +93,7 @@ example : boundState.push (.Lit 1) 0 =
 example : boundState.push (.Var ⟨37⟩) 0 =
     .error (.assertion "destination already bound to a slot") := rfl
 -- Equal lengths do not imply that the mapping is complete.
-example : observe (buildBottomUp { boundState with mapping := ⊥ }) =
+example : observe (buildBottomUp.loop 0 { boundState with mapping := ⊥ }) =
     .error (.assertion "unmapped source slots") := by native_decide
 example : boundState.produce 0 =
     .error (.assertion "destination already bound to a slot") := rfl
@@ -107,7 +113,7 @@ private def copyState (padding : ℕ) (spills : SpillSet := ∅) : State
 example : observeState ((copyState 16).swapWith 0) =
     .ok (List.replicate 16 (.Lit 0) ++ [.Var ⟨37⟩], [.swap 16]) := rfl
 example : (copyState 17).swapWith 0 =
-    .error (.assertion "swap target is out of reach") := rfl
+    .error (.assertion "invalid swap target") := rfl
 
 -- A final slot below the top is rejected even when it is within reach.
 example : ({ copyState 1 with mapping := (⊥ : Mapping 2 3).bind 0 0 rfl rfl }).swapWith 0 =
@@ -116,7 +122,7 @@ example : ({ copyState 1 with mapping := (⊥ : Mapping 2 3).bind 0 0 rfl rfl })
 example : observeState ((copyState 15).dup 0 0) =
     .ok ((copyState 15).stack ++ [.Var ⟨37⟩], [.dup 16]) := rfl
 example : (copyState 16).dup 0 0 =
-    .error (.assertion "copy is outside DUP reach") := rfl
+    .error (.assertion "Stack too deep") := rfl
 example : boundState.dup 0 0 =
     .error (.assertion "destination already bound to a slot") := rfl
 example : (copyState 16).produce 0 = .error (.blocked 1) := rfl
@@ -176,10 +182,10 @@ private def urgentThenBlocked : State
   mapping := by simpa using shiftTwo 17
   pending_generations := 2
 
-example : observe (buildBottomUp urgentThenBlocked) = .error (.blocked 1) := by
+example : observe (buildBottomUp urgentThenBlocked ⟨by decide, by decide, by decide⟩) = .error (.blocked 1) := by
   native_decide
 
-example : observe (buildBottomUp boundState) =
+example : observe (buildBottomUp boundState ⟨by decide, by decide, by decide⟩) =
     .ok ([.Lit 1], []) := by native_decide
 
 end BuildBottomUpCheckedTests

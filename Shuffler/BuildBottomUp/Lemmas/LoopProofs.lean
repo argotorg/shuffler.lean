@@ -214,7 +214,7 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
   (loop_size cursor state inv).mono fun _ _ => trivial
 
 theorem buildBottomUp_spec (initial : State source target spills) (h : initial.Valid) :
-    Spec (buildBottomUp initial) (fun _ => True) := by
+    Spec (buildBottomUp initial h) (fun _ => True) := by
   apply (loop_size 0 initial (Invariant.initial h)).bind
   intro ⟨res, trace⟩ hsize
   simp only [requires_of_true _ hsize, except_ok_bind]

@@ -155,7 +155,7 @@ def State.dup (state : State source target spills)
   let depth := state.stack.offsetToDepth copy
 
   let ⟨hbound⟩ ← requires (state.positionOf dest = none) "destination already bound to a slot"
-  let ⟨hdup⟩ ← requires (state.stack.isDupReachable copy) "copy is outside DUP reach"
+  let ⟨hdup⟩ ← requires (state.stack.isDupReachable copy) "Stack too deep"
 
   return {
     state with
@@ -184,19 +184,16 @@ def State.swapWith (state : State source target spills)
   let pos ← index state.stack.length offset
   let depth := state.stack.offsetToDepth pos
 
-  let ⟨hbelow⟩ ← requires (pos.val + 1 < state.stack.length) "cannot swap the top with itself"
-  let ⟨hreach⟩ ← requires (state.stack.isSwapReachable pos) "swap target is out of reach"
   _ ← requires (¬ state.isFinal pos) "swap target is already final"
-
-  have heq : state.stack.length = (state.stack.swap pos (state.stack.length - 1)).length := List.length_swap.symm
+  let ⟨hdepth⟩ ← requires (1 ≤ depth.val ∧ depth ≤ MAX_SWAP_DEPTH) "invalid swap target"
 
   return {
     state with
     stack := state.stack.swap pos (state.stack.length - 1)
-    mapping := heq ▸
+    mapping := List.length_swap.symm ▸
       state.mapping.swapDestinations pos ⟨state.stack.length - 1, top_lt_length state.stack pos⟩
-    trace := swap_stack_eq state.stack pos ▸ Trace.Swap depth.val depth.isLt
-      (swap_depth_pos state.stack pos hbelow) hreach state.trace
+    trace := swap_stack_eq state.stack pos ▸
+      Trace.Swap depth.val depth.isLt hdepth.1 hdepth.2 state.trace
   }
 
 -- Produces the slot for `targetOffset`
@@ -269,7 +266,10 @@ private theorem generate_pending_generations (state next : State source target s
 --
 -- Loop invariant: every offset below `targetOffset` is final, i.e., holds the slot bound for it.
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:478-617.
-def buildBottomUp (initial : State source target spills) : Except Error ((res : Stack) × Trace spills source res) := do
+def buildBottomUp
+  (initial : State source target spills)
+  (_hvalid : initial.Valid)
+    : Except Error ((res : Stack) × Trace spills source res) := do
   let ⟨res, trace⟩ ← loop 0 initial
   _ ← requires (res.length = target.length) "stack and target sizes differ"
   return ⟨res, trace⟩
