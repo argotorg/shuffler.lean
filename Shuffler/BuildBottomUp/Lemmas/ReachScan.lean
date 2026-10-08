@@ -18,25 +18,39 @@ structure ScanProgress (cursor : ℕ) (state : State source target spills)
     (seen : List ℕ) (choice : Option ℕ) : Prop where
   selected : ∀ offset, choice = some offset → Urgent cursor state offset
   covered : ∀ offset ∈ seen, Urgent cursor state offset → choice.isSome
+  mem : ∀ offset, choice = some offset → offset ∈ seen
+  least : ∀ offset, choice = some offset → ∀ other ∈ seen, Urgent cursor state other → offset ≤ other
 
 theorem ScanProgress.skip {state : State source target spills}
     (h : ScanProgress cursor state seen choice)
-    (hs : ¬Urgent cursor state offset ∨ choice.isSome) :
+    (hs : ¬Urgent cursor state offset ∨ choice.isSome) (hlt : ∀ other ∈ seen, other < offset) :
     ScanProgress cursor state (seen ++ [offset]) choice := by
-  refine ⟨h.selected, ?_⟩
-  intro i hi hu
-  simp only [List.mem_append, List.mem_singleton] at hi
-  rcases hi with hi | rfl
-  · exact h.covered i hi hu
-  · exact hs.elim (fun hn => (hn hu).elim) id
+  refine ⟨h.selected, ?_, fun i hi => List.mem_append_left _ (h.mem i hi), ?_⟩
+  · intro i hi hu
+    simp only [List.mem_append, List.mem_singleton] at hi
+    rcases hi with hi | rfl
+    · exact h.covered i hi hu
+    · exact hs.elim (fun hn => (hn hu).elim) id
+  · intro i hi other hother hu
+    simp only [List.mem_append, List.mem_singleton] at hother
+    rcases hother with hother | rfl
+    · exact h.least i hi other hother hu
+    · exact Nat.le_of_lt (hlt i (h.mem i hi))
 
 theorem ScanProgress.select {state : State source target spills}
-    (hu : Urgent cursor state offset) :
-    ScanProgress cursor state seen (some offset) := by
-  refine ⟨?_, fun _ _ _ => rfl⟩
-  intro i hi
-  cases hi
-  exact hu
+    (h : ScanProgress cursor state seen none) (hu : Urgent cursor state offset) :
+    ScanProgress cursor state (seen ++ [offset]) (some offset) := by
+  refine ⟨?_, fun _ _ _ => rfl, fun i hi => ?_, fun i hi other hother hother_urgent => ?_⟩
+  · intro i hi
+    cases hi
+    exact hu
+  · cases hi
+    simp
+  · cases hi
+    simp only [List.mem_append, List.mem_singleton] at hother
+    rcases hother with hother | rfl
+    · exact absurd (h.covered other hother hother_urgent) (by simp)
+    · exact le_rfl
 
 theorem State.processed.unbound_ge {state : State source target spills}
     (h : state.processed cursor) (dest : Fin target.length)
@@ -115,6 +129,12 @@ theorem ScanProgress.choice {state : State source target spills} {choice : Optio
   obtain ⟨hlt, hnone, _⟩ := h.selected offset heq
   exact ⟨hlt, hnone⟩
 
+theorem range_prefix_lt (h : List.range' start n = pref ++ cur :: suff) :
+    ∀ other ∈ pref, other < cur := by
+  have hp := List.pairwise_lt_range' (s := start) (n := n)
+  rw [h, List.pairwise_append] at hp
+  exact fun other hother => hp.2.2 other hother cur (List.mem_cons_self ..)
+
 theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
     (hr : state.reachable) :
     ⦃True⦄ (do
@@ -137,14 +157,14 @@ theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
   vcgen [slotAt, index, State.depthOf] invariants
   · fun seen _ urgent => ScanProgress cursor state seen urgent
   all_goals try simp_all
-  case vc1 => exact ⟨by simp, by simp⟩
+  case vc1 => exact ⟨by simp, by simp, by simp, by simp⟩
   case vc10 => exact (not_lt_of_ge (by assumption)) (range_offset_lt (by assumption))
   case vc3 =>
     rename_i hprog hsome
-    exact hprog.skip (Or.inl fun ⟨_, hnone, _⟩ => by simp_all)
+    exact hprog.skip (Or.inl fun ⟨_, hnone, _⟩ => by simp_all) (range_prefix_lt (by assumption))
   case vc4 =>
     rename_i hprog _ hgen
-    refine hprog.skip (Or.inl fun ⟨_, _, hfree, hspill, _⟩ => ?_)
+    refine hprog.skip (Or.inl fun ⟨_, _, hfree, hspill, _⟩ => ?_) (range_prefix_lt (by assumption))
     rcases hgen with hjunk | hgen | hgen
     · exact hfree (Value.can_be_freely_generated_of_is_junk _ hjunk)
     · exact hfree hgen
@@ -156,10 +176,13 @@ theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
     exact hnreach (hp.1 ▸ hp.2)
   case vc6 =>
     rename_i hlt _ copy _ _ hnone hgen hcopy _ hdepth
-    exact ScanProgress.select ⟨hlt, hnone, hgen.2.1, hgen.2.2, copy, hcopy, hdepth.1, hdepth.2.1⟩
+    exact ScanProgress.select (by assumption)
+      ⟨hlt, hnone, hgen.2.1, hgen.2.2, copy, hcopy, hdepth.1, hdepth.2.1⟩
   case vc7 =>
     rename_i choice _ _ copy _ hprog _ _ hcopy _ hnot
     apply hprog.skip
+    swap
+    · exact range_prefix_lt (by assumption)
     cases choice with
     | some _ => exact Or.inr rfl
     | none =>
@@ -171,6 +194,7 @@ theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
   case vc8 =>
     rename_i hprog _ _ hall heq
     exact hprog.skip (Or.inl fun ⟨_, _, _, _, c, hc, _⟩ => hall c (heq.symm.trans hc))
+      (range_prefix_lt (by assumption))
 
 theorem copyScan_success (state : State source target spills) (copy : Fin state.stack.length)
     (initial : ℕ) (hinit : Chosen state copy initial) :

@@ -18,6 +18,7 @@ structure Growth (state next : State source target spills) (dest : Fin target.le
   preserved : ∀ i : Fin target.length, (∃ h, state.isFinal ⟨i, h⟩) → ∃ h, next.isFinal ⟨i, h⟩
   subset : state.stack ⊆ next.stack
   expected : next.expectedStack = state.expectedStack
+  others : ∀ j, j ≠ dest → (next.mapping.symm j).map Fin.val = (state.mapping.symm j).map Fin.val
 
 theorem Growth.top {state next : State source target spills} {dest : Fin target.length}
     (h : Growth state next dest pending) :
@@ -29,7 +30,7 @@ theorem Growth.decrement {state next : State source target spills} {dest : Fin t
     Growth state { next with pending_generations := next.pending_generations - 1 }
       dest (pending - 1) :=
   ⟨h.stack_eq, h.unbound, h.size, h.bound, h.count, by simp [h.pending_eq], h.preserved, h.subset,
-    (expectedStack_pending next _).trans h.expected⟩
+    (expectedStack_pending next _).trans h.expected, h.others⟩
 
 private theorem growth_append (state : State source target spills) (slot : Value)
     (dest : Fin target.length) (hdest : state.mapping.symm dest = none)
@@ -62,6 +63,8 @@ private theorem growth_append (state : State source target spills) (slot : Value
       Option.map_map, Function.comp_def] using hi
   · exact List.subset_append_left _ _
   · subst slot; exact expectedStack_append state dest hdest trace
+  · intro j hj
+    simp [Mapping.push_symm_apply_of_ne, hj, Option.map_map, Function.comp_def]
 
 @[spec] theorem push_spec (state : State source target spills) (slot : Value) (dest : Fin target.length)
     (hgen : slot.can_be_freely_generated ∨ spills.is_spilled slot)
