@@ -4,122 +4,141 @@ namespace Shuffler.ExactBuild
 
 open Shuffler.Placement
 
+-- The working suffix and the missing values give the rest of the target. The
+-- suffix is in SWAP reach, is in DUP reach while values are missing, and holds
+-- all seeds.
+structure Working (spills : SpillSet) (working target : Stack) (missing : Multiset Value) :
+    Prop where
+  small : working.length ≤ MAX_SWAP_DEPTH + 1
+  space : missing ≠ 0 → working.length ≤ MAX_DUP_DEPTH + 1
+  balance : (target : Multiset Value) = (working : Multiset Value) + missing
+  seeds : seeds spills missing ≤ (working : Multiset Value)
+
 structure PreparedProblem (spills : SpillSet) (source target : Stack)
     (missing : Multiset Value) where
   fixed : Stack
   working : Stack
   tail : Stack
-  trace : Trace spills source (fixed ++ working)
-  noPop : trace.noPop
-  additions : trace.additions = 0
+  built : BuiltTrace spills source (fixed ++ working) 0
   target_eq : target = fixed ++ tail
-  small : working.length ≤ MAX_SWAP_DEPTH + 1
-  space : missing ≠ 0 → working.length ≤ MAX_DUP_DEPTH + 1
-  balance : (tail : Multiset Value) = (working : Multiset Value) + missing
-  seeds : Shuffler.Placement.seeds spills missing ≤ (working : Multiset Value)
+  valid : Working spills working tail missing
 
-private theorem noPop_cast_source (h : source = other)
-    (trace : Trace spills source target) :
-    (h ▸ trace).noPop ↔ trace.noPop := by cases h; rfl
+private theorem reserve_target (h : Reserve spills source target missing) :
+    target = source.take (frozen source) ++ target.drop (frozen source) := by
+  calc
+    target = target.take (frozen source) ++ target.drop (frozen source) :=
+      (List.take_append_drop _ _).symm
+    _ = source.take (frozen source) ++ target.drop (frozen source) := by rw [h.2.1]
 
-private theorem additions_cast_source (h : source = other)
-    (trace : Trace spills source target) :
-    (h ▸ trace).additions = trace.additions := by cases h; rfl
+private theorem frozen_small (source : Stack) :
+    (source.drop (frozen source)).length ≤ MAX_SWAP_DEPTH + 1 := by
+  simp only [List.length_drop, frozen]
+  omega
+
+private theorem reserve_balance (h : Reserve spills source target missing) :
+    ((target.drop (frozen source) : Stack) : Multiset Value) =
+      ((source.drop (frozen source) : Stack) : Multiset Value) + missing := by
+  have hb := h.1
+  have hs : (source : Multiset Value) = ((source.take (frozen source) : Stack) : Multiset Value) +
+      ((source.drop (frozen source) : Stack) : Multiset Value) := by
+    rw [Multiset.coe_add, List.take_append_drop]
+  rw [reserve_target h, hs, ← Multiset.coe_add, add_assoc] at hb
+  exact add_left_cancel hb
+
+private theorem reserve_seeds (h : Reserve spills source target missing) :
+    seeds spills missing ≤ ((source.drop (frozen source) : Stack) : Multiset Value) :=
+  (Multiset.le_add_left _ _).trans h.2.2
+
+private theorem reserve_working (h : Reserve spills source target missing)
+    (hspace : missing ≠ 0 → (source.drop (frozen source)).length ≤ MAX_DUP_DEPTH + 1) :
+    Working spills (source.drop (frozen source)) (target.drop (frozen source)) missing :=
+  ⟨frozen_small source, hspace, reserve_balance h, reserve_seeds h⟩
+
+private theorem boundary_large {source : Stack} (hspace : ¬(source.drop (frozen source)).length ≤ MAX_DUP_DEPTH + 1) :
+    MAX_SWAP_DEPTH + 1 ≤ source.length := by
+  have hw : (source.drop (frozen source)).length ≤ source.length := by
+    simp only [List.length_drop]
+    omega
+  unfold MAX_SWAP_DEPTH MAX_DUP_DEPTH at *
+  omega
+
+private theorem boundary_lt (h : Reserve spills source target missing)
+    (hspace : ¬(source.drop (frozen source)).length ≤ MAX_DUP_DEPTH + 1) :
+    frozen source < target.length := by
+  have hlarge := boundary_large hspace
+  have hcard := congrArg Multiset.card h.1
+  simp only [Multiset.card_add, Multiset.coe_card] at hcard
+  dsimp [frozen]
+  unfold MAX_SWAP_DEPTH at hlarge ⊢
+  omega
+
+private theorem boundary_reserve (h : Reserve spills source target missing) (hzero : missing ≠ 0)
+    (hspace : ¬(source.drop (frozen source)).length ≤ MAX_DUP_DEPTH + 1) :
+    {target[frozen source]'(boundary_lt h hspace)} + seeds spills missing ≤
+      ((source.drop (frozen source) : Stack) : Multiset Value) := by
+  have hboundary : boundary source target missing =
+      {target[frozen source]'(boundary_lt h hspace)} := by
+    simp [boundary, hzero, boundary_large hspace,
+      List.getElem?_eq_getElem (boundary_lt h hspace)]
+  simpa only [hboundary, window] using h.2.2
+
+private theorem boundary_mem (h : Reserve spills source target missing) (hzero : missing ≠ 0)
+    (hspace : ¬(source.drop (frozen source)).length ≤ MAX_DUP_DEPTH + 1) :
+    target[frozen source]'(boundary_lt h hspace) ∈ source.drop (frozen source) :=
+  Multiset.mem_of_le (boundary_reserve h hzero hspace) (by simp)
+
+private theorem boundary_target (h : Reserve spills source target missing)
+    (hindex : frozen source < target.length) :
+    target = (source.take (frozen source) ++ [target[frozen source]]) ++
+      target.drop (frozen source + 1) := by
+  conv_lhs => rw [reserve_target h, List.drop_eq_getElem_cons hindex]
+  simp only [List.append_assoc, List.singleton_append]
+
+private theorem boundary_working (h : Reserve spills source target missing) (hzero : missing ≠ 0)
+    (hspace : ¬(source.drop (frozen source)).length ≤ MAX_DUP_DEPTH + 1)
+    (step : PlacementStep spills (source.take (frozen source)) (source.drop (frozen source))
+      (target[frozen source]'(boundary_lt h hspace)) 0) :
+    Working spills step.remaining (target.drop (frozen source + 1)) missing := by
+  have hindex := boundary_lt h hspace
+  have hstep : {target[frozen source]} + (step.remaining : Multiset Value) =
+      ((source.drop (frozen source) : Stack) : Multiset Value) := by
+    simpa only [add_zero] using step.balance
+  have hcard := congrArg Multiset.card hstep
+  simp only [Multiset.card_add, Multiset.card_singleton, Multiset.coe_card] at hcard
+  have hsmall := frozen_small source
+  have hbalance := reserve_balance h
+  have hreserve := boundary_reserve h hzero hspace
+  rw [List.drop_eq_getElem_cons hindex] at hbalance
+  change {target[frozen source]} + ((target.drop (frozen source + 1) : Stack) : Multiset Value) =
+    _ at hbalance
+  rw [← hstep, add_assoc] at hbalance
+  rw [← hstep] at hreserve
+  refine ⟨?_, fun _ => ?_, add_left_cancel hbalance, (add_le_add_iff_left _).mp hreserve⟩
+  · unfold MAX_DUP_DEPTH MAX_SWAP_DEPTH at *
+    omega
+  · unfold MAX_DUP_DEPTH MAX_SWAP_DEPTH at *
+    omega
 
 -- Keep the initially frozen prefix. Before any required growth from a full
 -- seventeen-slot window, place its reserved output and retain all seeds.
 def prepare (spills : SpillSet) (source target : Stack) (missing : Multiset Value)
-    (h : Reserve spills source target missing) :
-    PreparedProblem spills source target missing := by
+    (h : Reserve spills source target missing) : PreparedProblem spills source target missing :=
   let count := frozen source
   let fixed := source.take count
   let working := source.drop count
-  let tail := target.drop count
   have hsource : fixed ++ working = source := List.take_append_drop _ _
-  have htarget : target = fixed ++ tail := by
-    calc
-      target = target.take count ++ target.drop count := (List.take_append_drop _ _).symm
-      _ = fixed ++ tail := by rw [h.2.1]
-  have hsmall : working.length ≤ MAX_SWAP_DEPTH + 1 := by
-    simp only [working, List.length_drop, count, frozen]
-    omega
-  have hbalance : (tail : Multiset Value) = (working : Multiset Value) + missing := by
-    have hb := h.1
-    rw [htarget, ← hsource] at hb
-    simp only [← Multiset.coe_add, add_assoc] at hb
-    exact add_left_cancel hb
-  have hseeds : seeds spills missing ≤ (working : Multiset Value) :=
-    (Multiset.le_add_left _ _).trans h.2.2
-  let initialTrace : Trace spills source (fixed ++ working) := hsource.symm ▸ .Lit source
-  let unchanged (hspace : missing ≠ 0 → working.length ≤ MAX_DUP_DEPTH + 1) :
-      PreparedProblem spills source target missing := {
-    fixed := fixed
-    working := working
-    tail := tail
-    trace := initialTrace
-    noPop := (Trace.noPop_cast _ _).mpr trivial
-    additions := by rw [Trace.additions_cast]; rfl
-    target_eq := htarget
-    small := hsmall
-    space := hspace
-    balance := hbalance
-    seeds := hseeds
-  }
+  let initial := (BuiltTrace.lit spills source).castTarget hsource.symm
   if hzero : missing = 0 then
-    exact unchanged (fun hne => False.elim (hne hzero))
+    ⟨fixed, working, target.drop count, initial, reserve_target h,
+      reserve_working h fun hne => absurd hzero hne⟩
   else if hspace : working.length ≤ MAX_DUP_DEPTH + 1 then
-    exact unchanged (fun _ => hspace)
+    ⟨fixed, working, target.drop count, initial, reserve_target h,
+      reserve_working h fun _ => hspace⟩
   else
-    have hlarge : MAX_SWAP_DEPTH + 1 ≤ source.length := by
-      have hw : working.length ≤ source.length := by
-        simp only [working, List.length_drop]
-        omega
-      unfold MAX_SWAP_DEPTH MAX_DUP_DEPTH at *
-      omega
-    have hcard := congrArg Multiset.card h.1
-    simp only [Multiset.card_add, Multiset.coe_card] at hcard
-    have hindex : count < target.length := by
-      dsimp [count, frozen]
-      unfold MAX_SWAP_DEPTH at hlarge ⊢
-      omega
-    let value := target[count]'hindex
-    let rest := target.drop (count + 1)
-    have hboundary : boundary source target missing = {value} := by
-      simp [boundary, hzero, hlarge, count, value, List.getElem?_eq_getElem hindex]
-    have hreserve : {value} + seeds spills missing ≤ (working : Multiset Value) := by
-      simpa only [hboundary, working, count, window] using h.2.2
-    have hvalue : value ∈ working := Multiset.mem_of_le hreserve (by simp)
-    let step := placeExisting spills fixed working value hsmall hvalue
-    have hstepBalance : {value} + (step.remaining : Multiset Value) =
-        (working : Multiset Value) := by simpa only [add_zero] using step.balance
-    have hstepCard := congrArg Multiset.card hstepBalance
-    simp only [Multiset.card_add, Multiset.card_singleton, Multiset.coe_card] at hstepCard
-    have hremaining : step.remaining.length ≤ MAX_DUP_DEPTH + 1 := by
-      unfold MAX_DUP_DEPTH MAX_SWAP_DEPTH at *
-      omega
-    have htail : tail = value :: rest := List.drop_eq_getElem_cons hindex
-    refine {
-      fixed := fixed ++ [value]
-      working := step.remaining
-      tail := rest
-      trace := hsource ▸ step.trace
-      noPop := (noPop_cast_source _ _).mpr step.noPop
-      additions := (additions_cast_source _ _).trans step.additions
-      target_eq := ?_
-      small := ?_
-      space := fun _ => hremaining
-      balance := ?_
-      seeds := ?_
-    }
-    · rw [htarget, htail]
-      simp only [List.append_assoc, List.singleton_append]
-    · unfold MAX_DUP_DEPTH MAX_SWAP_DEPTH at *
-      omega
-    · rw [htail] at hbalance
-      change {value} + (rest : Multiset Value) = (working : Multiset Value) + missing at hbalance
-      rw [← hstepBalance, add_assoc] at hbalance
-      exact add_left_cancel hbalance
-    · rw [← hstepBalance] at hreserve
-      exact (add_le_add_iff_left ({value} : Multiset Value)).mp hreserve
+    let value := target[count]'(boundary_lt h hspace)
+    let step := placeExisting spills fixed working value (frozen_small source)
+      (boundary_mem h hzero hspace)
+    ⟨fixed ++ [value], step.remaining, target.drop (count + 1), step.built.cast hsource rfl rfl,
+      boundary_target h (boundary_lt h hspace), boundary_working h hzero hspace step⟩
 
 end Shuffler.ExactBuild

@@ -5,107 +5,87 @@ namespace Shuffler.ExactBuild
 
 open Shuffler.Placement
 
-structure BuiltTrace (spills : SpillSet) (source target : Stack) (missing : Multiset Value) where
-  trace : Trace spills source target
-  noPop : trace.noPop
-  additions : trace.additions = missing
+-- Fix value with step, then follow it with next on the rest of the target.
+def PlacementStep.andThen (step : PlacementStep spills fixed working value added)
+    (next : BuiltTrace spills ((fixed ++ [value]) ++ step.remaining)
+      ((fixed ++ [value]) ++ tail) rest)
+    (hmissing : added + rest = missing) :
+    BuiltTrace spills (fixed ++ working) (fixed ++ value :: tail) missing :=
+  (step.built.trans next).cast rfl (by simp only [List.append_assoc, List.singleton_append])
+    hmissing
 
-def BuiltTrace.cast {otherSource otherTarget : Stack} {otherMissing : Multiset Value}
-    (result : BuiltTrace spills source target missing)
-    (hs : source = otherSource) (ht : target = otherTarget) (hm : missing = otherMissing) :
-    BuiltTrace spills otherSource otherTarget otherMissing := by
-  subst otherSource otherTarget otherMissing
-  exact result
+theorem Working.nil (h : Working spills working [] missing) : working = [] ∧ missing = 0 := by
+  have hc := congrArg Multiset.card h.balance
+  simp only [Multiset.coe_nil, Multiset.card_zero, Multiset.card_add, Multiset.coe_card] at hc
+  exact ⟨List.length_eq_zero_iff.mp (by omega), Multiset.card_eq_zero.mp (by omega)⟩
 
-def BuiltTrace.trans (first : BuiltTrace spills source middle firstMissing)
-    (second : BuiltTrace spills middle target secondMissing) :
-    BuiltTrace spills source target (firstMissing + secondMissing) where
-  trace := first.trace.concat second.trace
-  noPop := first.trace.noPop_concat second.trace first.noPop second.noPop
-  additions := by rw [Trace.additions_concat, first.additions, second.additions]
+theorem Working.room (h : Working spills working target missing) (hv : value ∈ missing) :
+    working.length ≤ MAX_DUP_DEPTH + 1 :=
+  h.space fun he => by simp [he] at hv
 
-def PlacementStep.toBuiltTrace (step : PlacementStep spills fixed working value added) :
-    BuiltTrace spills (fixed ++ working) ((fixed ++ [value]) ++ step.remaining) added :=
-  ⟨step.trace, step.noPop, step.additions⟩
+theorem Working.available (h : Working spills working target missing) (hv : value ∈ missing) :
+    Free spills value ∨ value ∈ working := by
+  by_cases hf : Free spills value
+  · exact Or.inl hf
+  · exact Or.inr ((seeds_le_iff _ _ _).mp h.seeds value hv hf)
 
-private theorem remaining_balance {working tail remaining : Stack}
-    {value : Value} {missing : Multiset Value}
-    (hbalance : ((value :: tail : Stack) : Multiset Value) = (working : Multiset Value) + missing)
-    (hstep : {value} + (remaining : Multiset Value) = (working : Multiset Value)) :
-    (tail : Multiset Value) = (remaining : Multiset Value) + missing := by
-  apply add_left_cancel (a := ({value} : Multiset Value))
-  calc
-    {value} + (tail : Multiset Value) = (working : Multiset Value) + missing := by
-      simpa only [Multiset.singleton_add, Multiset.cons_coe] using hbalance
-    _ = {value} + ((remaining : Multiset Value) + missing) := by rw [← hstep, add_assoc]
+theorem Working.generate (h : Working spills working (value :: tail) missing)
+    (hv : value ∈ missing) (step : PlacementStep spills fixed working value {value}) :
+    Working spills step.remaining tail (missing.erase value) := by
+  have hremaining : (step.remaining : Multiset Value) = (working : Multiset Value) := by
+    apply add_left_cancel (a := ({value} : Multiset Value))
+    exact step.balance.trans (add_comm _ _)
+  have hlen : step.remaining.length = working.length := by
+    simpa only [Multiset.coe_card] using congrArg Multiset.card hremaining
+  refine ⟨hlen ▸ h.small, fun _ => hlen ▸ h.room hv, ?_, ?_⟩
+  · rw [hremaining]
+    exact balance_erase_missing h.balance hv
+  · rw [hremaining]
+    exact (seeds_mono (Multiset.erase_le _ _)).trans h.seeds
+
+theorem Working.source (h : Working spills working (value :: tail) missing)
+    (hv : value ∉ missing) : value ∈ working :=
+  (balance_erase_source h.balance hv).1
+
+theorem Working.place (h : Working spills working (value :: tail) missing)
+    (hv : value ∉ missing) (step : PlacementStep spills fixed working value 0) :
+    Working spills step.remaining tail missing := by
+  have hremaining : {value} + (step.remaining : Multiset Value) =
+      (working : Multiset Value) := by simpa only [add_zero] using step.balance
+  have hlen : step.remaining.length + 1 = working.length := by
+    simpa only [Multiset.card_add, Multiset.card_singleton, Multiset.coe_card,
+      Nat.add_comm] using congrArg Multiset.card hremaining
+  have hsmall := h.small
+  refine ⟨by omega, fun _ => by unfold MAX_SWAP_DEPTH MAX_DUP_DEPTH at *; omega, ?_, ?_⟩
+  · apply add_left_cancel (a := ({value} : Multiset Value))
+    calc
+      {value} + (tail : Multiset Value) = (working : Multiset Value) + missing := by
+        simpa only [Multiset.singleton_add, Multiset.cons_coe] using h.balance
+      _ = {value} + ((step.remaining : Multiset Value) + missing) := by
+        rw [← hremaining, add_assoc]
+  · have hvseed : value ∉ Placement.seeds spills missing := fun hm => hv ((mem_seeds _ _ _).mp hm).1
+    have hseeds := h.seeds
+    rw [← hremaining] at hseeds
+    exact (Multiset.le_cons_of_notMem hvseed).mp hseeds
 
 -- Each recursive call fixes one target value. With growth, every retained
 -- source stays in a working suffix of at most sixteen slots.
-def buildWorking (spills : SpillSet) (fixed working target : Stack) (missing : Multiset Value)
-    (hsmall : working.length ≤ MAX_SWAP_DEPTH + 1)
-    (hspace : missing ≠ 0 → working.length ≤ MAX_DUP_DEPTH + 1)
-    (hbalance : (target : Multiset Value) = (working : Multiset Value) + missing)
-    (hseeds : seeds spills missing ≤ (working : Multiset Value)) :
-    BuiltTrace spills (fixed ++ working) (fixed ++ target) missing := by
-  cases target with
-  | nil =>
-    have hc := congrArg Multiset.card hbalance
-    simp only [Multiset.coe_nil, Multiset.card_zero, Multiset.card_add, Multiset.coe_card] at hc
-    have hw : working = [] := List.length_eq_zero_iff.mp (by omega)
-    have hm : missing = 0 := Multiset.card_eq_zero.mp (by omega)
-    subst working missing
-    exact ⟨.Lit _, trivial, rfl⟩
-  | cons value tail =>
+def buildWorking (spills : SpillSet) (fixed working : Stack) :
+    (target : Stack) → (missing : Multiset Value) → Working spills working target missing →
+      BuiltTrace spills (fixed ++ working) (fixed ++ target) missing
+  | [], _, h => (BuiltTrace.lit spills _).cast rfl (by rw [h.nil.1]) h.nil.2.symm
+  | value :: tail, missing, h =>
     if hv : value ∈ missing then
-      have hn : missing ≠ 0 := by intro he; simp [he] at hv
-      have havailable : Free spills value ∨ value ∈ working := by
-        by_cases hf : Free spills value
-        · exact Or.inl hf
-        · exact Or.inr ((seeds_le_iff _ _ _).mp hseeds value hv hf)
-      let step := generateAndPlace spills fixed working value (hspace hn) havailable
-      have hremaining : (step.remaining : Multiset Value) = (working : Multiset Value) := by
-        apply add_left_cancel (a := ({value} : Multiset Value))
-        exact step.balance.trans (add_comm _ _)
-      have hlen : step.remaining.length = working.length := by
-        simpa only [Multiset.coe_card] using congrArg Multiset.card hremaining
-      have hnextBalance : (tail : Multiset Value) =
-          (step.remaining : Multiset Value) + missing.erase value := by
-        rw [hremaining]
-        exact balance_erase_missing hbalance hv
-      have hnextSeeds : seeds spills (missing.erase value) ≤
-          (step.remaining : Multiset Value) := by
-        rw [hremaining]
-        exact (seeds_mono (Multiset.erase_le _ _)).trans hseeds
-      let next := buildWorking spills (fixed ++ [value]) step.remaining tail
-        (missing.erase value) (by omega) (by intro _; rw [hlen]; exact hspace hn)
-        hnextBalance hnextSeeds
-      exact (step.toBuiltTrace.trans next).cast rfl
-        (by simp only [List.append_assoc, List.singleton_append])
-        (by simp only [Multiset.singleton_add, Multiset.cons_erase hv])
+      let step := generateAndPlace spills fixed working value (h.room hv) (h.available hv)
+      step.andThen
+        (buildWorking spills (fixed ++ [value]) step.remaining tail (missing.erase value)
+          (h.generate hv step))
+        ((Multiset.singleton_add _ _).trans (Multiset.cons_erase hv))
     else
-      have hvalue : value ∈ working := (balance_erase_source hbalance hv).1
-      let step := placeExisting spills fixed working value hsmall hvalue
-      have hremaining : {value} + (step.remaining : Multiset Value) =
-          (working : Multiset Value) := by simpa only [add_zero] using step.balance
-      have hlen : step.remaining.length + 1 = working.length := by
-        simpa only [Multiset.card_add, Multiset.card_singleton, Multiset.coe_card,
-          Nat.add_comm] using congrArg Multiset.card hremaining
-      have hnextSeeds : seeds spills missing ≤ (step.remaining : Multiset Value) := by
-        have hvseed : value ∉ seeds spills missing := by
-          intro hm
-          exact hv ((mem_seeds _ _ _).mp hm).1
-        rw [← hremaining] at hseeds
-        exact (Multiset.le_cons_of_notMem hvseed).mp hseeds
-      let next := buildWorking spills (fixed ++ [value]) step.remaining tail missing
-        (by omega) (by intro _; unfold MAX_SWAP_DEPTH MAX_DUP_DEPTH at *; omega)
-        (remaining_balance hbalance hremaining) hnextSeeds
-      exact (step.toBuiltTrace.trans next).cast rfl
-        (by simp only [List.append_assoc, List.singleton_append]) (zero_add _)
-termination_by target.length
-decreasing_by
-  all_goals
-    simp_all only [List.length_cons]
-    omega
+      let step := placeExisting spills fixed working value h.small (h.source hv)
+      step.andThen
+        (buildWorking spills (fixed ++ [value]) step.remaining tail missing (h.place hv step))
+        (zero_add _)
 
 -- This constructor returns data in Type. It executes finite searches and
 -- instruction constructors; it does not extract a trace from an existence proof.
@@ -127,13 +107,11 @@ Its linear estimate assumes O(1) mapping queries. The arbitrary `PEquiv`
 functions in a State have no evaluation-time bound from their type.
 -/
 def buildOfReserve (spills : SpillSet) (source target : Stack) (missing : Multiset Value)
-    (h : Reserve spills source target missing) : BuiltTrace spills source target missing := by
+    (h : Reserve spills source target missing) : BuiltTrace spills source target missing :=
   let prepared := prepare spills source target missing h
-  let first : BuiltTrace spills source (prepared.fixed ++ prepared.working) 0 :=
-    ⟨prepared.trace, prepared.noPop, prepared.additions⟩
   let rest := buildWorking spills prepared.fixed prepared.working prepared.tail missing
-    prepared.small prepared.space prepared.balance prepared.seeds
-  exact (first.trans rest).cast rfl prepared.target_eq.symm (zero_add _)
+    prepared.valid
+  (prepared.built.trans rest).cast rfl prepared.target_eq.symm (zero_add _)
 
 instance (spills : SpillSet) (source target : Stack) (missing : Multiset Value) :
     Decidable (Reserve spills source target missing) := by
