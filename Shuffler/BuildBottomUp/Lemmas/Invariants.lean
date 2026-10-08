@@ -1,6 +1,8 @@
 import Shuffler.BuildBottomUp.Lemmas.Contracts
 
-theorem Stack.shallowestCopyPosition_isSome (stack : Stack) (slot : Value) :
+namespace Shuffler.BuildBottomUp
+
+theorem _root_.Stack.shallowestCopyPosition_isSome (stack : Stack) (slot : Value) :
     (stack.shallowestCopyPosition slot).isSome ↔ slot ∈ stack := by
   simp only [Stack.shallowestCopyPosition, List.find?_isSome, List.mem_reverse,
     List.mem_finRange, true_and, decide_eq_true_eq]
@@ -18,16 +20,16 @@ theorem State.isAvailable_of_subset (state state' : State source target spills)
   exact h.imp_right (fun h => h.imp_right (fun h => hstack h))
 
 theorem State.isFinal_lt (state : State source target spills) (i : Fin target.length)
-    (h : state.isFinal i) : i.val < state.stack.length := by
-  simp only [State.isFinal, i.isLt, dite_true, Option.map_eq_some_iff] at h
+    (h : state.IsFinal i) : i.val < state.stack.length := by
+  simp only [State.IsFinal, i.isLt, dite_true, Option.map_eq_some_iff] at h
   obtain ⟨pos, _, hpos⟩ := h
   exact hpos ▸ pos.isLt
 
 theorem State.swapDestinations_isFinal (state : State source target spills)
-    (a b : Fin state.stack.length) (i : Fin target.length) (hi : state.isFinal i)
+    (a b : Fin state.stack.length) (i : Fin target.length) (hi : state.IsFinal i)
     (ha : i.val ≠ a.val) (hb : i.val ≠ b.val) :
     ((state.mapping.swapDestinations a b).symm i).map Fin.val = some i.val := by
-  simp only [State.isFinal, i.isLt, dite_true, Option.map_eq_some_iff] at hi
+  simp only [State.IsFinal, i.isLt, dite_true, Option.map_eq_some_iff] at hi
   obtain ⟨pos, hpos, heq⟩ := hi
   have hpa : pos ≠ a := by intro h; exact ha (heq ▸ congrArg Fin.val h)
   have hpb : pos ≠ b := by intro h; exact hb (heq ▸ congrArg Fin.val h)
@@ -37,15 +39,15 @@ theorem State.swapDestinations_isFinal (state : State source target spills)
 theorem State.isFinal_of_bound_iff (state : State source target spills)
     (dest : Fin target.length) (pos : Fin state.stack.length)
     (hbound : state.mapping.symm dest = some pos) :
-    state.isFinal dest ↔ pos.val = dest.val := by
-  simp [State.isFinal, dest.isLt, hbound]
+    state.IsFinal dest ↔ pos.val = dest.val := by
+  simp [State.IsFinal, dest.isLt, hbound]
 
 theorem State.boundNotFinal (state : State source target spills)
     (dest : Fin target.length) (pos : Fin state.stack.length)
     (hbound : state.mapping.symm dest = some pos) (hne : pos.val ≠ dest.val) :
-    ¬ state.isFinal pos.val := by
+    ¬ state.IsFinal pos.val := by
   intro hfinal
-  unfold State.isFinal at hfinal
+  unfold State.IsFinal at hfinal
   split at hfinal
   · rename_i hlt
     obtain ⟨p, hp, heq⟩ := Option.map_eq_some_iff.mp hfinal
@@ -67,26 +69,24 @@ theorem State.boundOfVal (state : State source target spills)
 theorem State.isFinal_of_bound_val_iff (state : State source target spills)
     (dest : Fin target.length) (offset : ℕ)
     (hbound : (state.mapping.symm dest).map Fin.val = some offset) :
-    state.isFinal dest ↔ offset = dest.val := by
-  simp [State.isFinal, dest.isLt, hbound]
+    state.IsFinal dest ↔ offset = dest.val := by
+  simp [State.IsFinal, dest.isLt, hbound]
 
 theorem State.boundNotFinal_of_not_final (state : State source target spills)
     (dest : Fin target.length) (pos : Fin state.stack.length)
-    (hbound : state.mapping.symm dest = some pos) (hnfinal : ¬ state.isFinal dest) :
-    ¬ state.isFinal pos.val :=
+    (hbound : state.mapping.symm dest = some pos) (hnfinal : ¬ state.IsFinal dest) :
+    ¬ state.IsFinal pos.val :=
   state.boundNotFinal dest pos hbound
     ((state.isFinal_of_bound_iff dest pos hbound).not.mp hnfinal)
 
-theorem Stack.belowOfNotTop (stack : Stack) (pos : Fin stack.length)
+theorem _root_.Stack.belowOfNotTop (stack : Stack) (pos : Fin stack.length)
     (hne : pos.val ≠ stack.length - 1) : pos.val + 1 < stack.length := by
   have := pos.isLt
   omega
 
 
-namespace Shuffler.BuildBottomUp
-
 def Processed (cursor : ℕ) (state : State source target spills) : Prop :=
-  ∀ i : Fin target.length, i.val < cursor → state.isFinal i
+  ∀ i : Fin target.length, i.val < cursor → state.IsFinal i
 
 structure Invariant (cursor : ℕ) (state : State source target spills) : Prop where
   processed : Processed cursor state
@@ -102,7 +102,7 @@ theorem Processed.advance
     {cursor : ℕ}
     {state : State source target spills}
     (hinv : Processed cursor state)
-    (hfinal : state.isFinal cursor) :
+    (hfinal : state.IsFinal cursor) :
     Processed (cursor + 1) state := by
   intro i hi
   by_cases hlt : i.val < cursor
@@ -120,7 +120,7 @@ theorem Processed.bound_ge {state : State source target spills}
   exact state.boundNotFinal dest pos hbound (by omega) hfinal
 
 theorem Invariant.advance {state : State source target spills}
-    (h : Invariant cursor state) (hfinal : state.isFinal cursor) :
+    (h : Invariant cursor state) (hfinal : state.IsFinal cursor) :
     Invariant (cursor + 1) state :=
   { h with processed := h.processed.advance hfinal }
 
@@ -135,7 +135,7 @@ theorem Invariant.cursor_le_length {state : State source target spills}
 
 theorem Invariant.not_final_ge {state : State source target spills}
     (h : Invariant cursor state) (pos : Fin state.stack.length)
-    (hnfinal : ¬ state.isFinal pos.val) : cursor ≤ pos.val := by
+    (hnfinal : ¬ state.IsFinal pos.val) : cursor ≤ pos.val := by
   by_contra hnle
   have hlt : pos.val < target.length := by have := h.size; omega
   exact hnfinal (h.processed ⟨pos.val, hlt⟩ (by change pos.val < cursor; omega))
@@ -147,7 +147,7 @@ theorem Invariant.retag {state : State source target spills}
       { state with mapping := state.mapping.swapDestinations a b } := by
   refine ⟨?_, h.size, ?_, h.available⟩
   · intro i hi
-    simpa only [State.isFinal, i.isLt, dite_true, Fin.eta] using
+    simpa only [State.IsFinal, i.isLt, dite_true, Fin.eta] using
       state.swapDestinations_isFinal a b i (h.processed i hi) (by omega) (by omega)
   · simpa using h.pending
 

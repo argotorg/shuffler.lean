@@ -43,16 +43,8 @@ private def urgentState : State urgentSource urgentTarget ∅ where
   pending_generations := 1
 
 -- The loop skips the first two destinations before it reaches the urgent copy.
-example : ∀ i : Fin urgentTarget.length, i.val < 2 → urgentState.isFinal i := by
-  intro i hi
-  rcases i with ⟨i, hibound⟩
-  change i < 2 at hi
-  have hcases : i = 0 ∨ i = 1 := by omega
-  rcases hcases with rfl | rfl
-  · change urgentState.isFinal 0
-    decide
-  · change urgentState.isFinal 1
-    decide
+example : (List.ofFn fun i => decide (urgentState.isFinal i)).take 3 = [true, true, false] := by
+  decide
 
 example :
     (buildBottomUp urgentState).toOption.map

@@ -1,4 +1,5 @@
 import Tests.BuildBottomUpObservations
+import Shuffler.BuildBottomUp.Lemmas.Contracts
 
 open Shuffler.BuildBottomUp
 
@@ -12,26 +13,21 @@ example (stack : Stack) (offset : Fin stack.length) :
   omega
 
 -- Reject offsets at or beyond the end, including every offset of an empty stack.
-example (state : State source target spills) (offset : ℕ) (h : state.stack.length ≤ offset) :
-    state.depthOf offset = .error (.assertion "offset is out of bounds") := by
-  simp [State.depthOf, index, Nat.not_lt.mpr h]
-  rfl
-
-example (state : State source target spills) (offset : ℕ) (h : state.stack.length ≤ offset) :
-    state.isSwapReachable offset = .error (.assertion "offset is out of bounds") := by
-  simp [State.isSwapReachable, State.depthOf, index, Nat.not_lt.mpr h]
+example (size offset : ℕ) (h : size ≤ offset) :
+    index size offset = .error (.assertion "offset is out of bounds") := by
+  simp [index, Nat.not_lt.mpr h]
   rfl
 
 -- Target indices retain the original finality condition after conversion to a natural number.
 example (state : State source target spills) (offset : Fin target.length) :
-    state.isFinal offset.val ↔
+    state.IsFinal offset.val ↔
       (state.mapping.symm offset).map Fin.val = some offset.val := by
-  simp [State.isFinal, offset.isLt]
+  simp [State.IsFinal, offset.isLt]
 
 -- No offset at or beyond the target length is final.
 example (state : State source target spills) (offset : ℕ) (h : target.length ≤ offset) :
-    ¬ state.isFinal offset := by
-  simp [State.isFinal, Nat.not_lt.mpr h]
+    ¬ state.IsFinal offset := by
+  simp [State.IsFinal, Nat.not_lt.mpr h]
 
 private def boundState : State [.Lit 10, .Lit 20, .Lit 30] [.Lit 30, .Lit 10] ∅ where
   planned_mapping := ⊥
@@ -40,11 +36,11 @@ private def boundState : State [.Lit 10, .Lit 20, .Lit 30] [.Lit 30, .Lit 10] �
   mapping := ((⊥ : Mapping 3 2).bind 0 1 rfl rfl).bind 2 0 (by decide) (by decide)
   pending_generations := 0
 
-example : (boundState.depthOf 0).map Fin.val = .ok 2 := rfl
-example : (boundState.depthOf 2).map Fin.val = .ok 0 := rfl
+example : (boundState.depthOf ⟨0, by decide⟩).val = 2 := rfl
+example : (boundState.depthOf ⟨2, by decide⟩).val = 0 := rfl
 
 -- The values and both directions of the mapping move together.
-private def swapped := swapWith 0 boundState
+private def swapped := boundState.swapWith 0
 
 example : swapped.map (·.stack) = .ok [.Lit 30, .Lit 20, .Lit 10] := by decide
 example : swapped.map (fun state => List.ofFn (fun i => (state.mapping i).map Fin.val)) =
@@ -55,7 +51,8 @@ example : swapped.map (·.pending_generations) = .ok boundState.pending_generati
 example : swapped.map (·.trace.swapCount) = .ok 1 := by decide
 
 -- Only the destination now at its own offset is final; the surplus position is not final.
-example : swapped.map (fun state => decide (state.isFinal 0 ∧ ¬ state.isFinal 1 ∧ ¬ state.isFinal 2)) = .ok true := by
+example : swapped.map (fun state => List.ofFn fun i => decide (state.isFinal i)) =
+    .ok [true, false, false] := by
   decide
 
 -- The trace records the depth from the top, which is two for source position zero.
@@ -73,23 +70,24 @@ private def surplusState (depth : ℕ) :
   pending_generations := 0
 
 -- An empty target has no final offsets, including offsets beyond the working stack.
-example (offset : ℕ) : ¬ (surplusState 0).isFinal offset := by
-  simp [State.isFinal]
+example (offset : ℕ) : ¬ (surplusState 0).IsFinal offset := by
+  simp [State.IsFinal]
+example : ¬ (surplusState 0).isFinal ⟨0, by decide⟩ := by decide
 
 -- Surplus positions are allowed even when the target is empty.
-example : (swapWith 0 (surplusState 1)).map (·.trace.swapCount) = .ok 1 := by
+example : ((surplusState 1).swapWith 0).map (·.trace.swapCount) = .ok 1 := by
   decide
 
 -- The deepest reachable position can be swapped.
-example : (swapWith 0 (surplusState MAX_SWAP_DEPTH)).map (·.trace.swapCount) = .ok 1 := by
+example : ((surplusState MAX_SWAP_DEPTH).swapWith 0).map (·.trace.swapCount) = .ok 1 := by
   decide
 
 -- The top cannot be swapped with itself, even though it is within reach.
-example : swapWith 0 (surplusState 0) =
+example : (surplusState 0).swapWith 0 =
     .error (.assertion "cannot swap the top with itself") := rfl
 
 -- A position one step beyond swap reach is rejected.
-example : swapWith 0 (surplusState (MAX_SWAP_DEPTH + 1)) =
+example : (surplusState (MAX_SWAP_DEPTH + 1)).swapWith 0 =
     .error (.assertion "swap target is out of reach") := rfl
 
 private def finalState : State [.Lit 10, .Lit 20] [.Lit 10] ∅ where
@@ -100,11 +98,11 @@ private def finalState : State [.Lit 10, .Lit 20] [.Lit 10] ∅ where
   pending_generations := 0
 
 -- A position already assigned to itself cannot be moved.
-example : swapWith 0 finalState =
+example : finalState.swapWith 0 =
     .error (.assertion "swap target is already final") := rfl
 
-/-- info: 'Shuffler.BuildBottomUp.swapWith' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+/-- info: 'Shuffler.BuildBottomUp.State.swapWith' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
-#print axioms swapWith
+#print axioms State.swapWith
 
 end SwapWithTests

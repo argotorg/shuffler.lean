@@ -18,11 +18,11 @@ structure Swapped (state next : State source target spills) (pos : Fin state.sta
 
 theorem swap_triple (state : State source target spills) (pos : Fin state.stack.length)
     (hbelow : pos.val + 1 < state.stack.length) (hreach : state.stack.isSwapReachable pos)
-    (hnfinal : ¬ state.isFinal pos.val) :
-    ⦃True⦄ swapWith pos.val state
+    (hnfinal : ¬ state.IsFinal pos.val) :
+    ⦃True⦄ state.swapWith pos.val
     ⦃fun next => Swapped state next pos; allowedErrors⦄ := by
   -- Prove the checked preconditions before proving the state update.
-  vcgen [swapWith, index] until (requires _ _)
+  vcgen [State.swapWith, index] until (requires _ _)
   all_goals simp_all [requires]
   apply WPMonad.pure_le_wp_pure (m := Except Error) _ _ _
   change Swapped _ _ _
@@ -36,14 +36,14 @@ theorem swap_triple (state : State source target spills) (pos : Fin state.stack.
 
 theorem swap_spec (state : State source target spills) (pos : Fin state.stack.length)
     (hbelow : pos.val + 1 < state.stack.length) (hreach : state.stack.isSwapReachable pos)
-    (hnfinal : ¬ state.isFinal pos.val) :
-    Spec (swapWith pos.val state) (fun next => Swapped state next pos) :=
+    (hnfinal : ¬ state.IsFinal pos.val) :
+    Spec (state.swapWith pos.val) (fun next => Swapped state next pos) :=
   (spec_iff_triple _ _).mpr (swap_triple state pos hbelow hreach hnfinal)
 
 @[spec] theorem swapWith_spec (state : State source target spills) (offset : ℕ)
     (hlt : offset < state.stack.length) (hbelow : offset + 1 < state.stack.length)
-    (hreach : state.stack.isSwapReachable ⟨offset, hlt⟩) (hnfinal : ¬ state.isFinal offset) :
-    ⦃True⦄ swapWith offset state
+    (hreach : state.stack.isSwapReachable ⟨offset, hlt⟩) (hnfinal : ¬ state.IsFinal offset) :
+    ⦃True⦄ state.swapWith offset
     ⦃fun next => Swapped state next ⟨offset, hlt⟩; allowedErrors⦄ :=
   swap_triple state ⟨offset, hlt⟩ hbelow hreach hnfinal
 
@@ -53,7 +53,7 @@ theorem Swapped.invariant {state next : State source target spills}
   refine ⟨?_, by rw [h.size, h.pending]; exact inv.size,
     by rw [h.count, h.pending]; exact inv.pending, ?_⟩
   · intro i hi
-    simpa only [State.isFinal, i.isLt, dite_true, h.mapping] using
+    simpa only [State.IsFinal, i.isLt, dite_true, h.mapping] using
       state.swapDestinations_isFinal pos ⟨state.stack.length - 1, by have := pos.isLt; omega⟩
         i (inv.processed i hi) (by omega) (by have := pos.isLt; dsimp; omega)
   · intro i
@@ -70,8 +70,8 @@ theorem Swapped.final {state next : State source target spills}
     {pos : Fin state.stack.length} (h : Swapped state next pos) (dest : Fin target.length)
     (hpos : pos.val = dest.val)
     (hbound : (state.mapping.symm dest).map Fin.val = some (state.stack.length - 1)) :
-    next.isFinal dest := by
+    next.IsFinal dest := by
   have htop := state.boundOfVal dest ⟨state.stack.length - 1, by have := pos.isLt; omega⟩ hbound
-  simp [State.isFinal, dest.isLt, h.mapping, htop, hpos]
+  simp [State.IsFinal, dest.isLt, h.mapping, htop, hpos]
 
 end Shuffler.BuildBottomUp

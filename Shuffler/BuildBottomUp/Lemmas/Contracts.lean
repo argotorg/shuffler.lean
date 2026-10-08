@@ -43,9 +43,9 @@ theorem spec_iff_triple (result : Except Error α) (post : α → Prop) :
 
 @[spec] theorem swapDestinations_spec (state : State source target spills)
     (a b : ℕ) (ha : a < state.stack.length) (hb : b < state.stack.length) :
-    ⦃True⦄ swapDestinations a b state
+    ⦃True⦄ state.swapDestinations a b
     ⦃fun s => s = { state with mapping := state.mapping.swapDestinations ⟨a, ha⟩ ⟨b, hb⟩ }; allowedErrors⦄ := by
-  vcgen [swapDestinations, index] <;> simp_all
+  vcgen [State.swapDestinations, index] <;> simp_all
 
 theorem Spec.bind {result : Except Error α} {pre : α → Prop} {next : α → Except Error β}
     {post : β → Prop} (h : Spec result pre)
@@ -85,33 +85,36 @@ theorem requires_of_true (condition : Prop) [Decidable condition] (h : condition
 @[simp] theorem slotAt_index (stack : Stack) (i : Fin stack.length) :
     slotAt stack i.val = .ok stack[i] := by simp [slotAt, index_eq]
 
-@[simp] theorem depthOf_index (state : State source target spills) (i : Fin state.stack.length) :
-    state.depthOf i.val = .ok (state.stack.offsetToDepth i) := by
-  simp [State.depthOf]
+-- Finality over any target offset. `isFinal` is the same fact for an offset on the stack.
+def State.IsFinal (state : State source target spills) (offset : ℕ) : Prop :=
+  if h : offset < target.length then
+    (state.mapping.symm ⟨offset, h⟩).map Fin.val = some offset
+  else False
 
-@[simp] theorem isSwapReachable_index (state : State source target spills) (i : Fin state.stack.length) :
-    state.isSwapReachable i.val = .ok (decide (state.stack.isSwapReachable i)) := by
-  simp [State.isSwapReachable, Stack.isSwapReachable]
+instance (state : State source target spills) (offset : ℕ) : Decidable (state.IsFinal offset) :=
+  by unfold State.IsFinal; infer_instance
 
-@[spec] theorem depthOf_spec (state : State source target spills) (offset : ℕ)
-    (hlt : offset < state.stack.length) :
-    ⦃True⦄ state.depthOf offset
-    ⦃fun depth => depth = state.stack.offsetToDepth ⟨offset, hlt⟩; allowedErrors⦄ := by
-  rw [depthOf_index state ⟨offset, hlt⟩]
-  exact ⟨fun _ => rfl⟩
-
-@[spec] theorem isSwapReachable_spec (state : State source target spills) (offset : ℕ)
-    (hlt : offset < state.stack.length) :
-    ⦃True⦄ state.isSwapReachable offset
-    ⦃fun reachable => reachable = decide (state.stack.isSwapReachable ⟨offset, hlt⟩); allowedErrors⦄ := by
-  rw [isSwapReachable_index state ⟨offset, hlt⟩]
-  exact ⟨fun _ => rfl⟩
+@[simp] theorem State.isFinal_iff (state : State source target spills) (i : Fin state.stack.length) :
+    state.isFinal i ↔ state.IsFinal i.val := by
+  simp only [State.isFinal, State.destinationOf, State.IsFinal, Option.map_eq_some_iff]
+  constructor
+  · rintro ⟨d, hd, hval⟩
+    have hlt : i.val < target.length := hval ▸ d.isLt
+    simp only [hlt, ↓reduceDIte]
+    refine ⟨i, ?_, rfl⟩
+    rw [PEquiv.eq_some_iff, hd]
+    exact congrArg some (Fin.ext hval)
+  · intro h
+    split_ifs at h with hlt
+    obtain ⟨j, hj, hval⟩ := h
+    obtain rfl : j = i := Fin.ext hval
+    exact ⟨_, (PEquiv.eq_some_iff _).mp hj, rfl⟩
 
 theorem swapDestinations_result (state : State source target spills)
     (a b : Fin state.stack.length) :
-    swapDestinations a.val b.val state =
+    state.swapDestinations a.val b.val =
       .ok { state with mapping := state.mapping.swapDestinations a b } := by
-  simp only [swapDestinations, index_eq]
+  simp only [State.swapDestinations, index_eq]
   rfl
 
 end Shuffler.BuildBottomUp
