@@ -2,6 +2,7 @@ import Shuffler.Mapping
 import Shuffler.Permute.Defs
 import Shuffler.Stack
 import Shuffler.Trace
+import Shuffler.Util
 import Std.Internal.Do
 import Std.Tactic.Do
 
@@ -50,12 +51,6 @@ def index (size offset : ℕ) : Except Error (Fin size) := do
 -- return the slot at offset if offset < stack.length. throw an assertion error otherwise.
 def slotAt (stack : Stack) (offset : ℕ) : Except Error Value := do
   return stack[← index stack.length offset]
-
--- pair the result with the equation that produced it.
-def Except.attach (x : Except ε α) : Except ε { a // x = .ok a } :=
-  match x with
-  | .ok a => .ok ⟨a, rfl⟩
-  | .error e => .error e
 
 
 --- Conversions ------------------------------------------------------------------------------------
