@@ -2,6 +2,7 @@ import Mathlib.Data.Nat.Notation
 import Mathlib.Data.Finset.Basic
 import Batteries.Data.List.Basic
 import Shuffler.Basic
+import Mathlib.Data.List.Forall2
 
 
 --- Values -----------------------------------------------------------------------------------------
@@ -100,3 +101,32 @@ lemma top_lt_length (stack : Stack) (pos : Fin stack.length) :
 
 lemma stack_push_len (stack : Stack) (slot : Value) :
   stack.length + 1 = (stack ++ [slot]).length := by simp
+
+
+--- Matching ---------------------------------------------------------------------------------------
+
+
+-- A wildcard in the target accepts any source value.
+def SlotMatches (actual target : Value) : Prop :=
+  target.is_junk ∨ actual = target
+
+instance (actual target : Value) : Decidable (SlotMatches actual target) := by
+  unfold SlotMatches
+  infer_instance
+
+def StackMatches (actual target : Stack) : Prop :=
+  List.Forall₂ SlotMatches actual target
+
+instance (actual target : Stack) : Decidable (StackMatches actual target) := by
+  unfold StackMatches
+  infer_instance
+
+theorem SlotMatches.refl (value : Value) : SlotMatches value value := Or.inr rfl
+
+theorem StackMatches.refl (stack : Stack) : StackMatches stack stack := by
+  induction stack with
+  | nil => exact .nil
+  | cons value rest ih => exact .cons (SlotMatches.refl value) ih
+
+theorem StackMatches.length_eq (h : StackMatches actual target) :
+    actual.length = target.length := List.Forall₂.length_eq h
