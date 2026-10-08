@@ -8,9 +8,6 @@ import Std.Tactic.Do
 
 -- TODO: make numeric types here match the c++ types
 -- TODO: make the Error.blocked args match the c++
--- TODO: isFinal should use `index` and assert on oob
--- TODO: positionOf is total over ℕ unlike c++. should also assert on oob.
--- TODO: positionOf / destinationOf abbrevs
 -- TODO: add a Depth / Offset type
 
 
@@ -57,26 +54,30 @@ def slotAt (stack : Stack) (offset : ℕ) : Except Error Value := do
 --- Conversions ------------------------------------------------------------------------------------
 
 
-def State.depthOf (state : State source target spills) (offset : ℕ) : Except Error (Fin state.stack.length) := do
-  return state.stack.offsetToDepth (← index state.stack.length offset)
+def State.depthOf (state : State source target spills) (offset : Fin state.stack.length) : Fin state.stack.length :=
+  state.stack.offsetToDepth offset
 
 
 --- Queries ----------------------------------------------------------------------------------------
 
 
-def State.isSwapReachable (state : State source target spills) (offset : ℕ) : Except Error Bool := do
-  return decide ((← depthOf state offset).val ≤ MAX_SWAP_DEPTH)
+def State.destinationOf (state : State source target spills) (offset : Fin state.stack.length) : Option (Fin target.length) :=
+  state.mapping offset
 
-instance (stack : Stack) (pos : Fin stack.length) : Decidable (stack.isSwapReachable pos) :=
-  by unfold Stack.isSwapReachable; infer_instance
+def State.positionOf (state : State source target spills) (offset : Fin target.length) : Option (Fin state.stack.length) :=
+  state.mapping.symm offset
 
-def State.isFinal (state : State source target spills) (offset : ℕ) : Prop :=
-  if h : offset < target.length then
-    (state.mapping.symm ⟨offset, h⟩).map Fin.val = some offset
-  else False
+def State.isSwapReachable (state : State source target spills) (offset : Fin state.stack.length) : Prop :=
+  (state.depthOf offset).val ≤ MAX_SWAP_DEPTH
 
-instance (state : State source target spills) (offset : ℕ) : Decidable (state.isFinal offset) :=
-  by unfold State.isFinal; infer_instance
+instance (state : State source target spills) (offset : Fin state.stack.length) :
+    Decidable (state.isSwapReachable offset) := by unfold State.isSwapReachable; infer_instance
+
+def State.isFinal (state : State source target spills) (pos : Fin state.stack.length) : Prop :=
+  (state.destinationOf pos).map Fin.val = some pos.val
+
+instance (state : State source target spills) (pos : Fin state.stack.length) :
+    Decidable (state.isFinal pos) := by unfold State.isFinal; infer_instance
 
 -- can the slot at target[target_offset] be generated?
 def State.isAvailable (state : State source target spills) (target_offset : Fin target.length) : Prop :=
@@ -89,9 +90,6 @@ instance (state : State source target spills) (dest : Fin target.length) :
     Decidable (state.isAvailable dest) := by
   unfold State.isAvailable
   infer_instance
-
-def State.positionOf (state : State source target spills) (offset : ℕ) : Option ℕ :=
-  if h : offset < target.length then (state.mapping.symm ⟨offset, h⟩).map Fin.val else none
 
 
 --- Predicates -------------------------------------------------------------------------------------
@@ -110,7 +108,7 @@ structure State.Valid (state : State source target spills) : Prop where
 def State.push (state : State source target spills)
     (slot : Value) (dest : Fin target.length) : Except Error (State source target spills) := do
 
-  let ⟨hbound⟩ ← requires (state.mapping.symm dest = none) "destination already bound to a slot"
+  let ⟨hbound⟩ ← requires (state.positionOf dest = none) "destination already bound to a slot"
   let ⟨hgen⟩ ← requires (slot.can_be_freely_generated ∨ spills.is_spilled slot) "pushed slot cannot be generated or loaded"
 
   return {
@@ -130,7 +128,7 @@ def State.dup (state : State source target spills)
   let copy ← index state.stack.length offset
   let depth := state.stack.offsetToDepth copy
 
-  let ⟨hbound⟩ ← requires (state.mapping.symm dest = none) "destination already bound to a slot"
+  let ⟨hbound⟩ ← requires (state.positionOf dest = none) "destination already bound to a slot"
   let ⟨hdup⟩ ← requires (state.stack.isDupReachable copy) "copy is outside DUP reach"
 
   return {
@@ -158,7 +156,7 @@ def State.swapWith (state : State source target spills)
 
   let ⟨hbelow⟩ ← requires (pos.val + 1 < state.stack.length) "cannot swap the top with itself"
   let ⟨hreach⟩ ← requires (state.stack.isSwapReachable pos) "swap target is out of reach"
-  _ ← requires (¬ state.isFinal pos.val) "swap target is already final"
+  _ ← requires (¬ state.isFinal pos) "swap target is already final"
 
   have heq : state.stack.length = (state.stack.swap pos (state.stack.length - 1)).length := List.length_swap.symm
 
@@ -190,7 +188,7 @@ def State.produce (current : State source target spills)
   else
     throw (.assertion "generated slot has no copy on the stack and is not spilled")
 
-  _ ← requires (state.positionOf targetOffset.val = some (state.stack.length - 1)) "generated slot is not bound to the top"
+  _ ← requires ((state.positionOf targetOffset).map Fin.val = some (state.stack.length - 1)) "generated slot is not bound to the top"
   return { state with pending_generations := state.pending_generations - 1 }
 
 def State.generate (current : State source target spills)
@@ -199,11 +197,11 @@ def State.generate (current : State source target spills)
   let mut state := current
   state ← state.produce (← index target.length targetOffset)
 
-  if targetOffset + 1 < state.stack.length ∧ ¬ state.isFinal targetOffset then
+  if targetOffset + 1 < state.stack.length then if ¬ state.isFinal (← index state.stack.length targetOffset) then
     let top := state.stack.length - 1
     if (← slotAt state.stack targetOffset) = (← slotAt state.stack top) then
       state ← state.swapDestinations targetOffset top
-    else if ← state.isSwapReachable targetOffset then
+    else if state.isSwapReachable (← index state.stack.length targetOffset) then
       state ← state.swapWith targetOffset
   return state
 
@@ -238,12 +236,12 @@ where
       _ ← requires (state.stack.length = target.length) "stack and target sizes differ"
       return ⟨state.stack, state.trace⟩
 
-    if targetOffset < state.stack.length ∧ state.isFinal targetOffset then
+    if targetOffset < state.stack.length then if state.isFinal (← index state.stack.length targetOffset) then
       return (← loop (targetOffset + 1) state)
 
     if state.pending_generations = 0 then do
       let ⟨hlen⟩ ← requires (state.stack.length = target.length) "working stack does not match target size"
-      let ⟨hbound⟩ ← requires (∀ i, (state.mapping i).isSome) "unmapped source slots"
+      let ⟨hbound⟩ ← requires (∀ i, (state.destinationOf i).isSome) "unmapped source slots"
 
       let ⟨res, trace⟩ ←
         (Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hlen hbound)).mapError
@@ -253,7 +251,7 @@ where
     let mut urgentToDup := none
     for offset in [targetOffset : target.length] do
 
-      if (state.positionOf offset).isSome then
+      if (state.positionOf (← index target.length offset)).isSome then
         continue
 
       let slot ← slotAt target offset
@@ -262,8 +260,8 @@ where
 
       if let some sourceCopy := state.stack.shallowestCopyPosition slot then
         if ¬ state.stack.isDupReachable sourceCopy then
-          throw (.blocked ((← state.depthOf sourceCopy) - MAX_DUP_DEPTH))
-        if (← state.depthOf sourceCopy) = MAX_DUP_DEPTH ∧ sourceCopy.val ≠ targetOffset ∧ urgentToDup.isNone then
+          throw (.blocked ((state.depthOf sourceCopy) - MAX_DUP_DEPTH))
+        if (state.depthOf sourceCopy) = MAX_DUP_DEPTH ∧ sourceCopy.val ≠ targetOffset ∧ urgentToDup.isNone then
           urgentToDup := some offset
 
     if h : urgentToDup.isSome ∧
@@ -276,15 +274,17 @@ where
     let sourceTop := state.stack.length
     if urgentToDup.isNone ∧
        sourceTop > targetOffset ∧
-       sourceTop < target.length ∧
-       (state.positionOf sourceTop).isNone ∧
-       sourceTop - targetOffset < MAX_SWAP_DEPTH
-    then
-      let ⟨next, _hgen⟩ ← (state.generate sourceTop).attach
-      return ← loop targetOffset next
+       sourceTop < target.length
+      then
+      if (state.positionOf (← index target.length sourceTop)).isNone ∧
+         sourceTop - targetOffset < MAX_SWAP_DEPTH
+      then
+        let ⟨next, _hgen⟩ ← (state.generate sourceTop).attach
+        return ← loop targetOffset next
 
-    if h : (state.positionOf targetOffset).isSome then
-      let boundForTarget := (state.positionOf targetOffset).get h
+    let dest ← index target.length targetOffset
+    if h : (state.positionOf dest).isSome then
+      let boundForTarget := ((state.positionOf dest).get h).val
       _ ← requires (boundForTarget ≥ targetOffset) "slot bound for the offset being filled is missing or already below it"
 
       let sourceForTargetOffset := boundForTarget
@@ -293,9 +293,10 @@ where
       if (← slotAt state.stack targetOffset) = (← slotAt state.stack sourceForTargetOffset) then
         pos := targetOffset
       else
-        for candidate in (List.range state.stack.length).reverse.take (← state.depthOf sourceForTargetOffset) do
+        for candidate in
+            (List.range state.stack.length).reverse.take (state.depthOf (← index state.stack.length sourceForTargetOffset)) do
           if (← slotAt state.stack candidate) = (← slotAt state.stack sourceForTargetOffset) ∧
-              ¬ state.isFinal candidate then
+              ¬ state.isFinal (← index state.stack.length candidate) then
             pos := candidate
             break
 
@@ -308,18 +309,18 @@ where
         return ← loop (targetOffset + 1) state
 
       if pos ≠ state.stack.length - 1 then
-        if ¬ (← state.isSwapReachable pos) then
-          throw (.blocked ((← state.depthOf pos) - MAX_SWAP_DEPTH))
+        if ¬ (state.isSwapReachable (← index state.stack.length pos)) then
+          throw (.blocked (state.depthOf (← index state.stack.length pos) - MAX_SWAP_DEPTH))
         state ← state.swapWith pos
     else
       state ← state.generate targetOffset
-      if state.isFinal targetOffset then
+      if state.isFinal (← index state.stack.length targetOffset) then
         return ← loop (targetOffset + 1) state
 
-    _ ← requires (¬ state.isFinal targetOffset) "target slot is already final"
+    _ ← requires (¬ state.isFinal (← index state.stack.length targetOffset)) "target slot is already final"
     if targetOffset ≠ state.stack.length - 1 then
-      if ¬ (← state.isSwapReachable targetOffset) then
-        throw (.blocked ((← state.depthOf targetOffset) - MAX_SWAP_DEPTH))
+      if ¬ (state.isSwapReachable (← index state.stack.length targetOffset)) then
+        throw (.blocked ((state.depthOf (← index state.stack.length targetOffset)) - MAX_SWAP_DEPTH))
       state ← state.swapWith targetOffset
     return ← loop (targetOffset + 1) state
 
