@@ -338,14 +338,14 @@ where
         -- revisit target offset
         return ← loop targetOffset next
 
-    let dest ← index target.length targetOffset
-    if h : (state.positionOf dest).isSome then -- a slot is bound for the target: retained or generated already
+    -- a slot is bound for the target: retained or generated already
+    if let some boundForTarget := state.positionOf (← index target.length targetOffset) then
+
       -- We go bottom-up, so the slot that should go into targetOffset is somewhere above
       -- Any equal slot that is not in place will do the trick: the one at `targetOffset` itself, else the shallowest one
-      let boundForTarget := ((state.positionOf dest).get h).val
       _ ← requires (boundForTarget ≥ targetOffset) "slot bound for the offset being filled is missing or already below it"
 
-      let sourceForTargetOffset := boundForTarget
+      let sourceForTargetOffset := boundForTarget.val
       let mut pos := sourceForTargetOffset
 
       if (← slotAt state.stack targetOffset) = (← slotAt state.stack sourceForTargetOffset) then

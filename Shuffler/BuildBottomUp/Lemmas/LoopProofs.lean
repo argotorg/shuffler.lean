@@ -128,7 +128,7 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
     exact retry _ (hgen.invariant inv) (hgen.decreases inv)
   rw [index_eq dest, except_ok_bind]
   rcases Option.eq_none_or_eq_some (state.positionOf dest) with hpos | ⟨carrier, hpos⟩
-  · simp only [hpos, Option.isSome_none, Bool.false_eq_true, ↓reduceDIte]
+  · simp only [hpos]
     have hb : state.mapping.symm dest = none := hpos
     apply (generate_contract state dest hb (inv.available dest)).bind
     intro next hgen
@@ -140,13 +140,12 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
       exact advance _ (hp.toInvariant.advance hf)
     · rw [ite_eq_right ((next.isFinal_iff current).not.mpr hf)]
       finish_checked cursor, next, hp, hf, advance
-  · simp only [hpos, Option.isSome_some, Option.get_some, ↓reduceDIte]
+  · simp only [hpos]
     have hb : state.mapping.symm dest = some carrier := hpos
     have hge := inv.processed.bound_ge dest carrier hb le_rfl
     have hcurrent : cursor < state.stack.length := lt_of_le_of_lt hge carrier.isLt
     let current : Fin state.stack.length := ⟨cursor, hcurrent⟩
-    have hreq : ((state.positionOf dest).get (by simp [hpos])).val ≥ cursor := by simpa [hpos] using hge
-    rw [requires_of_true _ hreq]
+    rw [requires_of_true _ hge]
     simp only [except_ok_bind]
     rw [slotAt_index state.stack current, slotAt_index state.stack carrier]
     simp only [except_ok_bind]
