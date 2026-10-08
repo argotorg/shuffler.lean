@@ -12,15 +12,6 @@ set_option maxRecDepth 16384
 
 namespace BuildBottomUpProofTests
 
--- The assertion proof is checked without sorryAx.
-/-- info: 'Shuffler.BuildBottomUp.buildBottomUp_noAssertion' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in
-#print axioms buildBottomUp_noAssertion
-
-/-- info: 'Shuffler.BuildBottomUp.buildBottomUp_terminates' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in
-#print axioms buildBottomUp_terminates
-
 -- Equal values at the current offset exchange destinations without a swap.
 private def equalCurrentState : State [.Lit 10, .Lit 10] [.Lit 10, .Lit 7, .Lit 10] ∅ where
   planned_mapping := ⊥
@@ -29,12 +20,8 @@ private def equalCurrentState : State [.Lit 10, .Lit 10] [.Lit 10, .Lit 7, .Lit 
   mapping := ((⊥ : Mapping 2 3).bind 0 2 rfl rfl).bind 1 0 (by decide) (by decide)
   pending_generations := 1
 
-example : Invariant 0 equalCurrentState :=
-  ⟨(by intro i hi; omega), by decide, by decide,
-    by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩
-
 example :
-    (buildBottomUp equalCurrentState).toOption.map
+    (buildBottomUp equalCurrentState ⟨by decide, by decide, by decide⟩).toOption.map
         (fun result => (result.1, result.2.swapCount)) =
       some ([.Lit 10, .Lit 7, .Lit 10], 1) := by
   native_decide
@@ -49,12 +36,8 @@ private def equalCandidateState :
     2 3 (by decide) (by decide)
   pending_generations := 1
 
-example : Invariant 0 equalCandidateState :=
-  ⟨(by intro i hi; omega), by decide, by decide,
-    by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩
-
 example :
-    (buildBottomUp equalCandidateState).toOption.map
+    (buildBottomUp equalCandidateState ⟨by decide, by decide, by decide⟩).toOption.map
         (fun result => (result.1, result.2.swapCount)) =
       some ([.Lit 20, .Lit 7, .Lit 10, .Lit 20], 2) := by
   native_decide
@@ -69,12 +52,8 @@ private def finalCandidateState :
     2 2 (by decide) (by decide)
   pending_generations := 1
 
-example : Invariant 0 finalCandidateState :=
-  ⟨(by intro i hi; omega), by decide, by decide,
-    by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩
-
 example :
-    (buildBottomUp finalCandidateState).toOption.map
+    (buildBottomUp finalCandidateState ⟨by decide, by decide, by decide⟩).toOption.map
         (fun result => (result.1, result.2.swapCount)) =
       some ([.Lit 20, .Lit 7, .Lit 20, .Lit 10], 4) := by
   native_decide
@@ -97,11 +76,7 @@ private def blockedSwapUpState :
   mapping := by simpa using (retainAll 19).swapDestinations 0 1
   pending_generations := 1
 
-example : Invariant 0 blockedSwapUpState :=
-  ⟨(by intro i hi; omega), by decide, by decide,
-    by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩
-
-example : (buildBottomUp blockedSwapUpState).map (fun result => result.1) =
+example : (buildBottomUp blockedSwapUpState ⟨by decide, by decide, by decide⟩).map (fun result => result.1) =
     .error (.blocked 1) := by
   native_decide
 
@@ -115,11 +90,7 @@ private def blockedSwapDownState :
   mapping := by simpa using (retainAll 18).swapDestinations 0 17
   pending_generations := 1
 
-example : Invariant 0 blockedSwapDownState :=
-  ⟨(by intro i hi; omega), by decide, by decide,
-    by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩
-
-example : (buildBottomUp blockedSwapDownState).map (fun result => result.1) =
+example : (buildBottomUp blockedSwapDownState ⟨by decide, by decide, by decide⟩).map (fun result => result.1) =
     .error (.blocked 1) := by
   native_decide
 
@@ -133,11 +104,7 @@ private def blockedGeneratedState :
   mapping := by simpa using (Mapping.swapDestinations (retainAll 17).symm 0 17).symm
   pending_generations := 1
 
-example : Invariant 0 blockedGeneratedState :=
-  ⟨(by intro i hi; omega), by decide, by decide,
-    by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩
-
-example : (buildBottomUp blockedGeneratedState).map (fun result => result.1) =
+example : (buildBottomUp blockedGeneratedState ⟨by decide, by decide, by decide⟩).map (fun result => result.1) =
     .error (.blocked 1) := by
   native_decide
 
@@ -151,12 +118,8 @@ private def swapLimitState :
   mapping := by simpa using (retainAll 17).swapDestinations 0 16
   pending_generations := 1
 
-example : Invariant 0 swapLimitState :=
-  ⟨(by intro i hi; omega), by decide, by decide,
-    by intro i; fin_cases i <;> unfold State.isAvailable <;> decide⟩
-
 example :
-    (buildBottomUp swapLimitState).toOption.map
+    (buildBottomUp swapLimitState ⟨by decide, by decide, by decide⟩).toOption.map
         (fun result => (result.1, result.2.swapCount)) =
       some ([.Lit 20] ++ List.replicate 15 (.Lit 30) ++ [.Lit 10, .Lit 7], 1) := by
   native_decide

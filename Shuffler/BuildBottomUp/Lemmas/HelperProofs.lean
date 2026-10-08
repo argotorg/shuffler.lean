@@ -1,4 +1,4 @@
-import Shuffler.BuildBottomUp.Lemmas.Swap
+import Shuffler.BuildBottomUp.Lemmas.SwapProofs
 
 open Std.Internal.Do
 
@@ -13,13 +13,13 @@ structure Growth (state next : State source target spills) (dest : Fin target.le
   bound : (next.mapping.symm dest).map Fin.val = some state.stack.length
   count : next.mapping.unmapped_target_slots + 1 = state.mapping.unmapped_target_slots
   pending_eq : next.pending_generations = pending
-  preserved : ∀ i : Fin target.length, state.isFinal i → next.isFinal i
+  preserved : ∀ i : Fin target.length, state.IsFinal i → next.IsFinal i
   subset : state.stack ⊆ next.stack
 
 theorem Growth.top {state next : State source target spills} {dest : Fin target.length}
     (h : Growth state next dest pending) :
-    next.positionOf dest.val = some (next.stack.length - 1) := by
-  simp [State.positionOf, dest.isLt, h.bound, h.size]
+    (next.positionOf dest).map Fin.val = some (next.stack.length - 1) := by
+  rw [State.positionOf, h.bound, h.size]; simp
 
 theorem Growth.decrement {state next : State source target spills} {dest : Fin target.length}
     (h : Growth state next dest pending) :
@@ -46,32 +46,32 @@ private theorem growth_append (state : State source target spills) (slot : Value
     have hne : i ≠ dest := by
       intro heq
       subst i
-      simp [State.isFinal, dest.isLt, hdest] at hi
-    simpa [State.isFinal, i.isLt, hne, Mapping.push_symm_apply_of_ne,
+      simp [State.IsFinal, dest.isLt, hdest] at hi
+    simpa [State.IsFinal, i.isLt, hne, Mapping.push_symm_apply_of_ne,
       Option.map_map, Function.comp_def] using hi
   · exact List.subset_append_left _ _
 
 @[spec] theorem push_spec (state : State source target spills) (slot : Value) (dest : Fin target.length)
     (hgen : slot.can_be_freely_generated ∨ spills.is_spilled slot)
     (hbound : state.mapping.symm dest = none) :
-    ⦃fun s => s = state⦄ push slot dest
-    ⦃fun _ next => Growth state next dest state.pending_generations; allowedErrors⦄ := by
-  vcgen [push] <;> subst_vars <;> simp_all
+    ⦃True⦄ state.push slot dest
+    ⦃fun next => Growth state next dest state.pending_generations; allowedErrors⦄ := by
+  vcgen [State.push] <;> simp_all [State.positionOf]
   simpa only [eqRec_eq_cast] using growth_append _ slot dest hbound _
 
 @[spec] theorem dup_spec (state : State source target spills) (copy : Fin state.stack.length)
     (dest : Fin target.length) (hdup : state.stack.isDupReachable copy)
     (hbound : state.mapping.symm dest = none) :
-    ⦃fun s => s = state⦄ dup copy.val dest
-    ⦃fun _ next => Growth state next dest state.pending_generations; allowedErrors⦄ := by
-  vcgen [dup, index] <;> subst_vars <;> simp_all
+    ⦃True⦄ state.dup copy.val dest
+    ⦃fun next => Growth state next dest state.pending_generations; allowedErrors⦄ := by
+  vcgen [State.dup, index] <;> simp_all [State.positionOf]
   simpa only [eqRec_eq_cast] using growth_append _ _ dest hbound _
 
 @[spec] theorem produce_spec (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest) :
-    ⦃fun s => s = state⦄ produce dest
-    ⦃fun _ next => Growth state next dest (state.pending_generations - 1); allowedErrors⦄ := by
-  vcgen [produce] <;> subst_vars
+    ⦃True⦄ state.produce dest
+    ⦃fun next => Growth state next dest (state.pending_generations - 1); allowedErrors⦄ := by
+  vcgen [State.produce]
   all_goals first
     | exact Growth.top (by assumption)
     | exact Growth.decrement (by assumption)
@@ -82,9 +82,9 @@ structure Generation (state next : State source target spills) (dest : Fin targe
   size : next.stack.length = state.stack.length + 1
   count : next.mapping.unmapped_target_slots + 1 = state.mapping.unmapped_target_slots
   pending : next.pending_generations = state.pending_generations - 1
-  preserved : ∀ i : Fin target.length, state.isFinal i → next.isFinal i
+  preserved : ∀ i : Fin target.length, state.IsFinal i → next.IsFinal i
   subset : state.stack ⊆ next.stack
-  position : next.isFinal dest ∨
+  position : next.IsFinal dest ∨
     (next.mapping.symm dest).map Fin.val = some (next.stack.length - 1)
 
 theorem Growth.generation {state next : State source target spills} {dest : Fin target.length}
@@ -105,12 +105,12 @@ theorem Growth.generation_swapped {state produced next : State source target spi
   have hne : i ≠ dest := by
     intro heq
     subst i
-    simp [State.isFinal, dest.isLt, hbound] at hi
+    simp [State.IsFinal, dest.isLt, hbound] at hi
   have hp := produced.swapDestinations_isFinal pos
     ⟨produced.stack.length - 1, by have := pos.isLt; omega⟩ i (h.preserved i hi)
     (fun heq => hne (Fin.ext (heq.trans hpos)))
     (by have := state.isFinal_lt i hi; have := h.size; dsimp; omega)
-  simpa only [State.isFinal, i.isLt, dite_true, hs.mapping] using hp
+  simpa only [State.IsFinal, i.isLt, dite_true, hs.mapping] using hp
 
 theorem Swapped.retag (state : State source target spills) (pos : Fin state.stack.length) :
     Swapped state
@@ -120,30 +120,30 @@ theorem Swapped.retag (state : State source target spills) (pos : Fin state.stac
 
 @[spec] theorem generate_triple (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest) :
-    ⦃fun s => s = state⦄ generate dest.val
-    ⦃fun _ next => Generation state next dest; allowedErrors⦄ := by
-  vcgen [generate]
+    ⦃True⦄ state.generate dest.val
+    ⦃fun next => Generation state next dest; allowedErrors⦄ := by
+  vcgen [State.generate]
   all_goals try simp only [Fin.val_inj] at *
   all_goals subst_vars
   all_goals first
     | exact Growth.generation (by assumption)
     | exact Growth.generation_swapped (by assumption) hbound _ rfl (by assumption)
     | exact Growth.generation_swapped (by assumption) hbound _ rfl (Swapped.retag _ _)
-    | exact of_decide_eq_true (Eq.symm (by assumption))
     | assumption
     | solve | simp_all
     | solve | omega
+    | (simp only [State.isSwapReachable, State.depthOf, Stack.isSwapReachable, Stack.offsetToDepth] at *; omega)
 
 theorem generate_contract (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest) :
-    Spec ((generate dest.val).exec state) (fun next => Generation state next dest) :=
-  Spec.of_action (generate_triple state dest hbound havailable)
+    Spec (state.generate dest.val) (fun next => Generation state next dest) :=
+  (spec_iff_triple _ _).mpr (generate_triple state dest hbound havailable)
 
 @[spec] theorem generate_offset_spec (state : State source target spills) (offset : ℕ)
     (hlt : offset < target.length) (hbound : state.mapping.symm ⟨offset, hlt⟩ = none)
     (havailable : state.isAvailable ⟨offset, hlt⟩) :
-    ⦃fun s => s = state⦄ generate offset
-    ⦃fun _ next => Generation state next ⟨offset, hlt⟩; allowedErrors⦄ :=
+    ⦃True⦄ state.generate offset
+    ⦃fun next => Generation state next ⟨offset, hlt⟩; allowedErrors⦄ :=
   generate_triple state ⟨offset, hlt⟩ hbound havailable
 
 theorem Generation.invariant {state next : State source target spills} {dest : Fin target.length}
@@ -153,7 +153,7 @@ theorem Generation.invariant {state next : State source target spills} {dest : F
   have hl := h.size
   have hc := h.count
   have hn := h.pending
-  refine ⟨fun i hi => h.preserved i (inv.processed i hi), by omega, by omega, ?_⟩
+  refine .of (fun i hi => h.preserved i (inv.processed i hi)) (by omega) (by omega) ?_
   intro i
   exact state.isAvailable_of_subset next h.subset i (inv.available i)
 
@@ -168,7 +168,7 @@ theorem Generation.decreases {state next : State source target spills} {dest : F
 structure Placement (dest : Fin target.length) (state : State source target spills) : Prop
     extends Invariant dest.val state where
   in_bounds : dest.val < state.stack.length
-  position : state.isFinal dest ∨
+  position : state.IsFinal dest ∨
     (state.mapping.symm dest).map Fin.val = some (state.stack.length - 1)
 
 theorem Generation.placement {state next : State source target spills} {dest : Fin target.length}
@@ -188,8 +188,8 @@ theorem Placement.finish_at_top {state : State source target spills} {dest : Fin
 theorem Placement.swap_final {state : State source target spills} {dest : Fin target.length}
     (h : Placement dest state) (hbelow : dest.val + 1 < state.stack.length)
     (hreach : state.stack.isSwapReachable ⟨dest.val, h.in_bounds⟩)
-    (hnfinal : ¬ state.isFinal dest) :
-    Spec ((swapWith dest.val).exec state) (fun next => Invariant (dest.val + 1) next) := by
+    (hnfinal : ¬ state.IsFinal dest) :
+    Spec (state.swapWith dest.val) (fun next => Invariant (dest.val + 1) next) := by
   apply (swap_spec state ⟨dest.val, h.in_bounds⟩ hbelow hreach hnfinal).mono
   intro next hs
   exact (hs.invariant h.toInvariant le_rfl).advance
@@ -199,8 +199,8 @@ theorem Invariant.bound_at_top {state : State source target spills} {dest : Fin 
     (h : Invariant dest.val state) (pos : Fin state.stack.length)
     (hbound : state.mapping.symm dest = some pos)
     (htop : pos.val = state.stack.length - 1) (hne : pos.val ≠ dest.val) :
-    Placement dest state ∧ ¬ state.isFinal dest := by
-  have := h.bound_ge dest pos hbound le_rfl
+    Placement dest state ∧ ¬ state.IsFinal dest := by
+  have := h.processed.bound_ge dest pos hbound le_rfl
   exact ⟨⟨h, by have := pos.isLt; omega, Or.inr (by simp [hbound, htop])⟩,
     (state.isFinal_of_bound_iff dest pos hbound).not.mpr hne⟩
 
@@ -209,8 +209,8 @@ theorem Invariant.swap_bound {state : State source target spills} {dest : Fin ta
     (hbound : state.mapping.symm dest = some pos)
     (hbelow : pos.val + 1 < state.stack.length) (hreach : state.stack.isSwapReachable pos)
     (hne : pos.val ≠ dest.val) :
-    Spec ((swapWith pos.val).exec state) (fun next => Placement dest next ∧ ¬ next.isFinal dest) := by
-  have hge := h.bound_ge dest pos hbound le_rfl
+    Spec (state.swapWith pos.val) (fun next => Placement dest next ∧ ¬ next.IsFinal dest) := by
+  have hge := h.processed.bound_ge dest pos hbound le_rfl
   apply (swap_spec state pos hbelow hreach (state.boundNotFinal dest pos hbound hne)).mono
   intro next hs
   have htop := hs.bound_top dest hbound

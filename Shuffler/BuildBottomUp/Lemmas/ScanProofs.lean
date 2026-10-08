@@ -18,46 +18,48 @@ private theorem copy_offset_lt
   exact List.mem_range.mp (List.mem_reverse.mp (List.mem_of_mem_take hmem))
 
 def UrgentChoice (state : State source target spills) (choice : Option ℕ) : Prop :=
-  ∀ offset, choice = some offset → offset < target.length ∧ state.positionOf offset = none
+  ∀ offset, choice = some offset → ∃ h : offset < target.length, state.positionOf ⟨offset, h⟩ = none
 
 @[spec] theorem urgentScan_triple (cursor : ℕ) (state : State source target spills) :
-    ⦃fun s => s = state⦄ (do
+    ⦃True⦄ (do
       let mut urgent := none
       for offset in [cursor : target.length] do
-        if (state.positionOf offset).isSome then
+        if (state.positionOf (← index target.length offset)).isSome then
           continue
         let slot ← slotAt target offset
         if slot.is_junk ∨ slot.can_be_freely_generated ∨ spills.is_spilled slot then
           continue
         if let some copy := state.stack.shallowestCopyPosition slot then
           if ¬ state.stack.isDupReachable copy then
-            throw (.blocked ((← state.depthOf copy) - MAX_DUP_DEPTH))
-          if (← state.depthOf copy) = MAX_DUP_DEPTH ∧ copy.val ≠ cursor ∧ urgent.isNone then
+            throw (.blocked ((state.depthOf copy) - MAX_DUP_DEPTH))
+          if (state.depthOf copy) = MAX_DUP_DEPTH ∧ copy.val ≠ cursor ∧ urgent.isNone then
             urgent := some offset
-      return urgent : Action source target spills (Option ℕ))
-    ⦃fun urgent next => UrgentChoice state urgent ∧ next = state; allowedErrors⦄ := by
+      return urgent : Except Error (Option ℕ))
+    ⦃fun urgent => UrgentChoice state urgent; allowedErrors⦄ := by
   simp only [Std.Legacy.Range.forIn_eq_forIn_range']
   vcgen invariants
-  · fun _ _ urgent next => UrgentChoice state urgent ∧ next = state
+  · fun _ _ urgent => UrgentChoice state urgent
   all_goals try simp_all [allowedErrors, UrgentChoice]
-  all_goals exact range_offset_lt (by assumption)
+  all_goals first
+    | exact range_offset_lt (by assumption)
+    | (subst_vars; exact ⟨_, by assumption⟩)
 
 def Chosen (state : State source target spills) (copy : Fin state.stack.length) (offset : ℕ) : Prop :=
   ∃ pos : Fin state.stack.length, pos.val = offset ∧
-    state.stack[pos] = state.stack[copy] ∧ ¬ state.isFinal pos.val
+    state.stack[pos] = state.stack[copy] ∧ ¬ state.IsFinal pos.val
 
 @[spec] theorem copyScan_triple (state : State source target spills) (copy : Fin state.stack.length)
     (initial : ℕ) (hinit : Chosen state copy initial) :
-    ⦃fun s => s = state⦄ (do
+    ⦃True⦄ (do
       let mut pos := initial
-      for candidate in (List.range state.stack.length).reverse.take (state.stack.offsetToDepth copy) do
-        if (← slotAt state.stack candidate) = (← slotAt state.stack copy) ∧ ¬ state.isFinal candidate then
+      for candidate in (List.range state.stack.length).reverse.take (state.depthOf copy) do
+        if (← slotAt state.stack candidate) = (← slotAt state.stack copy) ∧ ¬ state.isFinal (← index state.stack.length candidate) then
           pos := candidate
           break
-      return pos : Action source target spills ℕ)
-    ⦃fun pos next => Chosen state copy pos ∧ next = state; allowedErrors⦄ := by
+      return pos : Except Error ℕ)
+    ⦃fun pos => Chosen state copy pos; allowedErrors⦄ := by
   vcgen invariants
-  · fun _ _ pos next => Chosen state copy pos ∧ next = state
+  · fun _ _ pos => Chosen state copy pos
   all_goals try simp_all
   all_goals first
     | exact copy_offset_lt (by assumption)

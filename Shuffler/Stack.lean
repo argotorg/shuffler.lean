@@ -7,6 +7,13 @@ import Shuffler.Basic
 --- Values -----------------------------------------------------------------------------------------
 
 
+/-
+c++ compares Lits by instructionId, not by literal value, but since the Lits
+are all deduped so every same value Lit has the same instId, this is a valid
+model.
+
+https://github.com/argotorg/solidity/blob/6db6505030e17ce9a9c1dd9525fee509ad6cc2ac/libyul/backends/evm/ssa/InstructionStore.h#L199-L212
+-/
 inductive Value : Type where
   | Var (id : VarId)
   | Lit (val : Word)
@@ -31,7 +38,7 @@ def Value.can_be_freely_generated : Value → Prop
 instance (v : Value) : Decidable v.can_be_freely_generated := by
   cases v <;> unfold Value.can_be_freely_generated <;> infer_instance
 
--- Function return labels are not modelled yet, so no value is one.
+-- Function return labels are not modelled yet
 def Value.isFunctionReturnLabel : Value → Prop
 | FunctionReturnLabel => True
 | _ => False
@@ -81,10 +88,6 @@ lemma swap_stack_eq (stack : Stack) (pos : Fin stack.length) :
   have hpos : stack.length - 1 - (stack.offsetToDepth pos).val = pos.val := by
     dsimp [Stack.offsetToDepth]; omega
   rw [hpos, List.swap_comm]
-
-lemma swap_depth_pos (stack : Stack) (pos : Fin stack.length)
-    (hbelow : pos.val + 1 < stack.length) : 1 ≤ (stack.offsetToDepth pos).val := by
-  dsimp [Stack.offsetToDepth]; omega
 
 lemma top_lt_length (stack : Stack) (pos : Fin stack.length) :
     stack.length - 1 < stack.length := by
