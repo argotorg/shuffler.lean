@@ -50,8 +50,8 @@ theorem swap_spec (state : State source target spills) (pos : Fin state.stack.le
 theorem Swapped.invariant {state next : State source target spills}
     {pos : Fin state.stack.length} (h : Swapped state next pos)
     (inv : Invariant cursor state) (hpos : cursor ≤ pos.val) : Invariant cursor next := by
-  refine ⟨?_, by rw [h.size, h.pending]; exact inv.size,
-    by rw [h.count, h.pending]; exact inv.pending, ?_⟩
+  refine .of ?_ (by rw [h.size, h.pending]; exact inv.size)
+    (by rw [h.count, h.pending]; exact inv.pending) ?_
   · intro i hi
     simpa only [State.IsFinal, i.isLt, dite_true, h.mapping] using
       state.swapDestinations_isFinal pos ⟨state.stack.length - 1, by have := pos.isLt; omega⟩

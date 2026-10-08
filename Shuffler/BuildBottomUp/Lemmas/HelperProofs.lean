@@ -153,7 +153,7 @@ theorem Generation.invariant {state next : State source target spills} {dest : F
   have hl := h.size
   have hc := h.count
   have hn := h.pending
-  refine ⟨fun i hi => h.preserved i (inv.processed i hi), by omega, by omega, ?_⟩
+  refine .of (fun i hi => h.preserved i (inv.processed i hi)) (by omega) (by omega) ?_
   intro i
   exact state.isAvailable_of_subset next h.subset i (inv.available i)
 

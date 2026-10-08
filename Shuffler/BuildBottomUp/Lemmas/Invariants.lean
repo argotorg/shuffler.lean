@@ -88,15 +88,32 @@ theorem _root_.Stack.belowOfNotTop (stack : Stack) (pos : Fin stack.length)
 def Processed (cursor : ℕ) (state : State source target spills) : Prop :=
   ∀ i : Fin target.length, i.val < cursor → state.IsFinal i
 
-structure Invariant (cursor : ℕ) (state : State source target spills) : Prop where
-  processed : Processed cursor state
-  size : state.stack.length + state.pending_generations = target.length
-  pending : state.mapping.unmapped_target_slots = state.pending_generations
-  available : ∀ i, state.isAvailable i
+theorem processed_iff {cursor : ℕ} {state : State source target spills} :
+    Processed cursor state ↔
+      ∀ i : Fin target.length, i.val < cursor → (state.positionOf i).map Fin.val = some i.val := by
+  simp only [Processed, State.IsFinal, Fin.is_lt, dite_true, Fin.eta, State.positionOf]
+
+theorem Invariant.processed {state : State source target spills} (h : Invariant cursor state) :
+    Processed cursor state := processed_iff.mpr h.final
+
+theorem Invariant.size {state : State source target spills} (h : Invariant cursor state) :
+    state.stack.length + state.pending_generations = target.length := h.valid.size
+
+theorem Invariant.pending {state : State source target spills} (h : Invariant cursor state) :
+    state.mapping.unmapped_target_slots = state.pending_generations := h.valid.pending
+
+theorem Invariant.available {state : State source target spills} (h : Invariant cursor state) :
+    ∀ i, state.isAvailable i := h.valid.available
+
+theorem Invariant.of {state : State source target spills} (processed : Processed cursor state)
+    (size : state.stack.length + state.pending_generations = target.length)
+    (pending : state.mapping.unmapped_target_slots = state.pending_generations)
+    (available : ∀ i, state.isAvailable i) : Invariant cursor state :=
+  ⟨⟨size, pending, available⟩, processed_iff.mp processed⟩
 
 theorem Invariant.initial {state : State source target spills} (h : state.Valid) :
     Invariant 0 state :=
-  ⟨fun _ hi => (Nat.not_lt_zero _ hi).elim, h.size, h.pending, h.available⟩
+  ⟨h, fun _ hi => absurd hi (Nat.not_lt_zero _)⟩
 
 theorem Processed.advance
     {cursor : ℕ}
@@ -122,7 +139,7 @@ theorem Processed.bound_ge {state : State source target spills}
 theorem Invariant.advance {state : State source target spills}
     (h : Invariant cursor state) (hfinal : state.IsFinal cursor) :
     Invariant (cursor + 1) state :=
-  { h with processed := h.processed.advance hfinal }
+  .of (h.processed.advance hfinal) h.size h.pending h.available
 
 theorem Invariant.cursor_le_length {state : State source target spills}
     (h : Invariant cursor state) (hlt : cursor < target.length) :
@@ -145,7 +162,7 @@ theorem Invariant.retag {state : State source target spills}
     (ha : cursor ≤ a.val) (hb : cursor ≤ b.val) :
     Invariant cursor
       { state with mapping := state.mapping.swapDestinations a b } := by
-  refine ⟨?_, h.size, ?_, h.available⟩
+  refine .of ?_ h.size ?_ h.available
   · intro i hi
     simpa only [State.IsFinal, i.isLt, dite_true, Fin.eta] using
       state.swapDestinations_isFinal a b i (h.processed i hi) (by omega) (by omega)

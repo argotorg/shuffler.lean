@@ -119,6 +119,12 @@ structure State.Valid (state : State source target spills) : Prop where
   pending : state.mapping.unmapped_target_slots = state.pending_generations
   available : ∀ i, state.isAvailable i
 
+-- Loop invariant of `buildBottomUp.loop`: the state stays valid, and every offset below `targetOffset`
+-- is final, i.e., holds the slot bound for it.
+structure Invariant (targetOffset : ℕ) (state : State source target spills) : Prop where
+  valid : state.Valid
+  final : ∀ i : Fin target.length, i.val < targetOffset → (state.positionOf i).map Fin.val = some i.val
+
 
 --- Actions ----------------------------------------------------------------------------------------
 
