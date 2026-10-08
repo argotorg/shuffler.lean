@@ -1,5 +1,6 @@
 import Shuffler.BuildBottomUp.Lemmas.HelperProofs
 import Shuffler.BuildBottomUp.Lemmas.ScanProofs
+import Shuffler.Permute.Theorems
 
 open Std.Internal.Do
 
@@ -63,23 +64,23 @@ theorem Spec.ite_index {A : Prop} [Decidable A] {B : Fin size → Prop} [Decidab
     · rw [ite_eq_right hB]; exact hrest
   · rw [ite_eq_right hA]; exact hrest
 
-theorem loop_spec (cursor : ℕ) (state : State source target spills)
+-- The loop returns a stack of the target length.
+theorem loop_size (cursor : ℕ) (state : State source target spills)
     (inv : Invariant cursor state) :
-    Spec (buildBottomUp.loop cursor state) (fun _ => True) := by
+    Spec (buildBottomUp.loop cursor state) (fun r => r.1.length = target.length) := by
   rw [buildBottomUp.loop.eq_def]
   simp_loop
   by_cases hdone : cursor ≥ target.length
   · simp only [hdone, ↓reduceIte]
-    rw [requires_of_true _ (inv.complete_size hdone)]
-    trivial
+    exact inv.complete_size hdone
   have hc : cursor < target.length := Nat.lt_of_not_ge hdone
   have advance (next : State source target spills) (hi : Invariant (cursor + 1) next) :
-      Spec (buildBottomUp.loop (cursor + 1) next) (fun _ => True) :=
-    loop_spec (cursor + 1) next hi
+      Spec (buildBottomUp.loop (cursor + 1) next) (fun r => r.1.length = target.length) :=
+    loop_size (cursor + 1) next hi
   have retry (next : State source target spills) (hi : Invariant cursor next)
       (hlt : next.pending_generations < state.pending_generations) :
-      Spec (buildBottomUp.loop cursor next) (fun _ => True) :=
-    loop_spec cursor next hi
+      Spec (buildBottomUp.loop cursor next) (fun r => r.1.length = target.length) :=
+    loop_size cursor next hi
   simp only [hdone, ↓reduceIte]
   by_cases hskip : cursor < state.stack.length ∧ state.IsFinal cursor
   · rw [ite_eq_left hskip.1, index_eq ⟨cursor, hskip.1⟩, except_ok_bind,
@@ -97,12 +98,12 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
     have hp := state.mapping.complete_of_target_total (by omega) ht
     simp only [hz, ↓reduceIte, requires_of_true _ hp.1, except_ok_bind]
     rw [requires_of_true (∀ i, (state.destinationOf i).isSome) hp.2, except_ok_bind]
-    cases Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hp.1 hp.2) with
+    cases hperm : Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hp.1 hp.2) with
     | error err =>
       cases err
       simp [Except.mapError, Spec]
     | ok result =>
-      simp [Except.mapError, Spec]
+      simpa [Except.mapError, Spec, hp.1] using Shuffler.Permute.permute_length _ _ _ hperm
   simp only [hz, ↓reduceIte]
   have hscan := (spec_iff_triple _ _).mpr (urgentScan_triple cursor state)
   simp only [bind_pure] at hscan
@@ -207,8 +208,16 @@ decreasing_by
   · exact Prod.Lex.left _ _ (by omega)
   · exact Prod.Lex.right _ hlt
 
+theorem loop_spec (cursor : ℕ) (state : State source target spills)
+    (inv : Invariant cursor state) :
+    Spec (buildBottomUp.loop cursor state) (fun _ => True) :=
+  (loop_size cursor state inv).mono fun _ _ => trivial
+
 theorem buildBottomUp_spec (initial : State source target spills) (h : initial.Valid) :
-    Spec (buildBottomUp initial) (fun _ => True) :=
-  loop_spec 0 initial (Invariant.initial h)
+    Spec (buildBottomUp initial) (fun _ => True) := by
+  apply (loop_size 0 initial (Invariant.initial h)).bind
+  intro ⟨res, trace⟩ hsize
+  simp only [requires_of_true _ hsize, except_ok_bind]
+  trivial
 
 end Shuffler.BuildBottomUp

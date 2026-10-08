@@ -39,7 +39,7 @@ private def surplusStack : State [.Lit 1, .Lit 2, .Lit 9] [.Lit 2, .Lit 3] ∅ w
   mapping := (⊥ : Mapping 3 2).bind 1 0 rfl rfl
   pending_generations := 1
 
-example : observe (buildBottomUp.loop 0 surplusStack) =
+example : observe (buildBottomUp surplusStack) =
     .error (.assertion "stack and target sizes differ") := by native_decide
 
 -- An empty target skips the loop but still checks the stack size.

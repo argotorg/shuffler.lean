@@ -206,4 +206,22 @@ theorem permute_swapCount_le_three_mul_length_swaps
   exact (permute_swapCount_le_three_mul_arbitrarySwapCount spills source perm hresult).trans
     (Nat.mul_le_mul_left 3 (Permutation.arbitrarySwapCount_le_length_swaps perm swaps hprod))
 
+-- A successful `permute` returns a stack of the source length.
+theorem permute_length (spills : SpillSet) (source : Stack) (perm : Permutation source)
+    {res : Stack} {trace : Trace spills source res}
+    (h : permute spills source perm = .ok ⟨res, trace⟩) : res.length = source.length := by
+  rw [permute] at h
+  split at h
+  · rename_i hne
+    revert h
+    refine permute.go.induct_unfolding spills source hne
+      (motive := fun current _ _ _ result =>
+        result = .ok ⟨res, trace⟩ → res.length = source.length)
+      ?blocked_top ?swap_top ?blocked_pos ?swap_pos ?done source perm (.Lit source) rfl
+      <;> intro current perm trace hlen top htop <;> intros
+    case blocked_top h | blocked_pos h => cases h
+    case swap_top ih h | swap_pos ih h => exact ih h
+    case done h => cases h; exact hlen
+  · cases h; rfl
+
 end Shuffler.Permute

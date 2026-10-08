@@ -22,13 +22,7 @@ theorem loop_no_assertion (targetOffset : ℕ) (state : State source target spil
 theorem buildBottomUp_no_assertion (initial : State source target spills)
     (h : initial.Valid) (reason : String) :
     buildBottomUp initial ≠ .error (.assertion reason) :=
-  loop_no_assertion 0 initial (invariant_initial initial h) reason
-
--- Every stack read, including the `m_destinationOf[pos]` read in c++ `isFinal`, is checked by
--- `index`. No read is out of bounds.
-theorem buildBottomUp_in_bounds (initial : State source target spills) (h : initial.Valid) :
-    buildBottomUp initial ≠ .error (.assertion "offset is out of bounds") :=
-  buildBottomUp_no_assertion initial h _
+  (buildBottomUp_spec initial h).noAssertion reason
 
 theorem buildBottomUp_error_is_blocked (initial : State source target spills)
     (h : initial.Valid) (he : buildBottomUp initial = .error err) :

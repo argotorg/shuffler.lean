@@ -269,15 +269,16 @@ private theorem generate_pending_generations (state next : State source target s
 --
 -- Loop invariant: every offset below `targetOffset` is final, i.e., holds the slot bound for it.
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:478-617.
-def buildBottomUp (initial : State source target spills) : Except Error ((res : Stack) × Trace spills source res) :=
-  loop 0 initial
+def buildBottomUp (initial : State source target spills) : Except Error ((res : Stack) × Trace spills source res) := do
+  let ⟨res, trace⟩ ← loop 0 initial
+  _ ← requires (res.length = target.length) "stack and target sizes differ"
+  return ⟨res, trace⟩
 where
   -- Reads before a retry use `state` directly, so the termination proof can relate it to `_hgen`.
   loop (targetOffset : ℕ) (current : State source target spills) :
       Except Error ((res : Stack) × Trace spills source res) := do
     let mut state := current
     if targetOffset ≥ target.length then
-      _ ← requires (state.stack.length = target.length) "stack and target sizes differ"
       return ⟨state.stack, state.trace⟩
 
     -- the offset exists and already holds the slot bound for it: nothing to do
@@ -391,6 +392,7 @@ where
       if ¬ (state.isSwapReachable (← index state.stack.length targetOffset)) then
         throw (.blocked ((state.depthOf (← index state.stack.length targetOffset)) - MAX_SWAP_DEPTH))
       state ← state.swapWith targetOffset
+
     return ← loop (targetOffset + 1) state
 
   -- Advancing reduces the first component; generating before a retry reduces the second.
