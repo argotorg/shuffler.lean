@@ -14,6 +14,10 @@ import Std.Tactic.Do
 -- TODO: add a Depth / Offset type
 
 
+namespace Shuffler.BuildBottomUp
+
+variable {source target : Stack} {spills : SpillSet}
+
 --- Types ------------------------------------------------------------------------------------------
 
 
@@ -105,8 +109,6 @@ structure State.Valid (state : State source target spills) : Prop where
 
 --- Actions ----------------------------------------------------------------------------------------
 
-
-namespace Shuffler.BuildBottomUp
 
 def push (slot : Value) (dest : Fin target.length) : Action source target spills := fun state => do
   let ⟨hbound⟩ ← requires (state.mapping.symm dest = none) "destination already bound to a slot"
