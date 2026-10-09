@@ -85,30 +85,29 @@ theorem requires_of_true (condition : Prop) [Decidable condition] (h : condition
 @[simp] theorem slotAt_index (stack : Stack) (i : Fin stack.length) :
     slotAt stack i.val = .ok stack[i] := by simp [slotAt, index_eq]
 
--- Finality over any target offset. `isFinal` is the same fact for an offset on the stack.
-def State.IsFinal (state : State source target spills) (offset : ℕ) : Prop :=
-  if h : offset < target.length then
-    (state.mapping.symm ⟨offset, h⟩).map Fin.val = some offset
-  else False
+theorem State.isFinal_iff (state : State source target spills) (i : Fin state.stack.length) :
+    state.isFinal i ↔ ∃ h : i.val < state.stack.length, state.isFinal ⟨i.val, h⟩ :=
+  ⟨fun hf => ⟨i.isLt, hf⟩, fun ⟨_, hf⟩ => hf⟩
 
-instance (state : State source target spills) (offset : ℕ) : Decidable (state.IsFinal offset) :=
-  by unfold State.IsFinal; infer_instance
-
-@[simp] theorem State.isFinal_iff (state : State source target spills) (i : Fin state.stack.length) :
-    state.isFinal i ↔ state.IsFinal i.val := by
-  simp only [State.isFinal, State.destinationOf, State.IsFinal, Option.map_eq_some_iff]
+-- Finality of an offset, read from the target side of the mapping.
+theorem State.exists_isFinal_iff (state : State source target spills) (offset : ℕ) :
+    (∃ h : offset < state.stack.length, state.isFinal ⟨offset, h⟩) ↔
+      if h : offset < target.length then (state.mapping.symm ⟨offset, h⟩).map Fin.val = some offset
+      else False := by
   constructor
-  · rintro ⟨d, hd, hval⟩
-    have hlt : i.val < target.length := hval ▸ d.isLt
-    simp only [hlt, ↓reduceDIte]
-    refine ⟨i, ?_, rfl⟩
-    rw [PEquiv.eq_some_iff, hd]
-    exact congrArg some (Fin.ext hval)
+  · rintro ⟨hs, hf⟩
+    obtain ⟨d, hd, hval⟩ := Option.map_eq_some_iff.mp hf
+    change d.val = offset at hval
+    have hlt : offset < target.length := hval ▸ d.isLt
+    simp only [hlt, ↓reduceDIte, Option.map_eq_some_iff]
+    refine ⟨⟨offset, hs⟩, ?_, rfl⟩
+    rw [PEquiv.eq_some_iff]
+    exact hd.trans (congrArg some (Fin.ext hval))
   · intro h
     split_ifs at h with hlt
-    obtain ⟨j, hj, hval⟩ := h
-    obtain rfl : j = i := Fin.ext hval
-    exact ⟨_, (PEquiv.eq_some_iff _).mp hj, rfl⟩
+    obtain ⟨j, hj, hval⟩ := Option.map_eq_some_iff.mp h
+    subst hval
+    exact ⟨j.isLt, Option.map_eq_some_iff.mpr ⟨_, (PEquiv.eq_some_iff _).mp hj, rfl⟩⟩
 
 theorem swapDestinations_result (state : State source target spills)
     (a b : Fin state.stack.length) :

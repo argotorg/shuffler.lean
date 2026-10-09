@@ -1,3 +1,4 @@
+import Mathlib.Data.Finset.Sort
 import Shuffler.Mapping
 import Shuffler.Permute.Defs
 import Shuffler.Stack
@@ -109,6 +110,13 @@ instance (state : State source target spills) (dest : Fin target.length) :
   unfold State.isAvailable
   infer_instance
 
+-- can the slot at target[target_offset] be generated, loaded, or DUPed from the current stack?
+def State.isReachable (state : State source target spills) (target_offset : Fin target.length) : Prop :=
+  let slot := target[target_offset]
+  slot.can_be_freely_generated ∨
+  spills.is_spilled slot ∨
+  state.stack.hasCopy slot
+
 
 --- Predicates -------------------------------------------------------------------------------------
 
@@ -119,11 +127,32 @@ structure State.Valid (state : State source target spills) : Prop where
   pending : state.mapping.unmapped_target_slots = state.pending_generations
   available : ∀ i, state.isAvailable i
 
+-- Every target offset below `cursor` is final.
+def State.processed (cursor : ℕ) (state : State source target spills) : Prop :=
+  ∀ i : Fin target.length, i.val < cursor →
+    ∃ h : i.val < state.stack.length, state.isFinal ⟨i.val, h⟩
+
 -- Loop invariant of `buildBottomUp.loop`: the state stays valid, and every offset below `targetOffset`
 -- is final, i.e., holds the slot bound for it.
-structure Invariant (targetOffset : ℕ) (state : State source target spills) : Prop where
+structure State.invariant (targetOffset : ℕ) (state : State source target spills) : Prop where
   valid : state.Valid
-  final : ∀ i : Fin target.length, i.val < targetOffset → (state.positionOf i).map Fin.val = some i.val
+  processed : state.processed targetOffset
+
+-- Every target offset that no slot is bound to is reachable.
+def State.reachable (state : State source target spills) : Prop :=
+  ∀ dest, state.positionOf dest = none → state.isReachable dest
+
+-- The slots from `cursor` up are within SWAP reach, and the state is reachable.
+structure State.withinReach (cursor : ℕ) (state : State source target spills) : Prop where
+  width : state.stack.length - cursor ≤ MAX_SWAP_DEPTH
+  copies : state.reachable
+
+-- Bound targets retain their assigned values; unbound targets are generated.
+def State.expectedStack (state : State source target spills) : Stack :=
+  List.ofFn fun dest : Fin target.length =>
+    match state.mapping.symm dest with
+    | some pos => state.stack[pos]
+    | none => target[dest]
 
 
 --- Actions ----------------------------------------------------------------------------------------
@@ -403,5 +432,99 @@ where
       apply Prod.Lex.right
       rw [generate_pending_generations _ _ _ _hgen]
       exact Nat.sub_lt (Nat.pos_of_ne_zero (by assumption)) (by decide)
+
+
+--- Success condition ------------------------------------------------------------------------------
+
+
+namespace Success
+
+-- The target offsets that no stack slot is bound to.
+def holes (initial : State source target spills) : Finset (Fin target.length) :=
+  Finset.univ.filter (fun j => initial.mapping.symm j = none)
+
+-- The holes in increasing order.
+def holeList (initial : State source target spills) : List (Fin target.length) :=
+  (holes initial).sort
+
+-- The target offsets that a stack slot is bound to, in increasing order.
+def boundList (initial : State source target spills) : List (Fin target.length) :=
+  (Finset.univ.filter (fun j => (initial.mapping.symm j).isSome)).sort
+
+-- The initial stack with the target value of each hole added on top, in hole order.
+def augmentedStack (initial : State source target spills) : Stack :=
+  initial.stack ++ (holeList initial).map (fun j => target[j])
+
+-- The number of holes below `cursor`.
+def generatedBefore (initial : State source target spills) (cursor : Nat) : Nat :=
+  ((holes initial).filter (fun j => j.val < cursor)).card
+
+-- The stack length after the holes below `cursor` are generated.
+def prefixLength (initial : State source target spills) (cursor : Nat) : Nat :=
+  initial.stack.length + generatedBefore initial cursor
+
+-- The positions in DUP reach of that prefix of the augmented stack that hold `value`.
+def copyPositions (initial : State source target spills) (cursor : Nat) (value : Value) : Finset Nat :=
+  (Finset.range (prefixLength initial cursor)).filter fun i =>
+    prefixLength initial cursor ≤ i + (MAX_DUP_DEPTH + 1) ∧
+      (augmentedStack initial)[i]? = some value
+
+-- The number of copies of `value` in DUP reach at `cursor`.
+def copies (initial : State source target spills) (cursor : Nat) (value : Value) : Nat :=
+  (copyPositions initial cursor value).card
+
+-- A hole at or above `cursor` needs `value`, and only a DUP can supply it.
+def NeedsCopy (initial : State source target spills) (cursor : Nat) (value : Value) : Prop :=
+  ¬value.can_be_freely_generated ∧ ¬spills.is_spilled value ∧
+    ∃ j ∈ holes initial, cursor ≤ j.val ∧ target[j] = value
+
+-- Each hole at or above `cursor` can be generated, loaded, or DUPed at `cursor`.
+def Ready (initial : State source target spills) (cursor : Nat) : Prop :=
+  ∀ j ∈ holes initial, cursor ≤ j.val →
+    target[j].can_be_freely_generated ∨ spills.is_spilled target[j] ∨
+      0 < copies initial cursor target[j]
+
+-- The target offset of each augmented stack position: its bound offset, or its hole.
+def completedNext (initial : State source target spills) (i : Nat) : Nat :=
+  if hi : i < initial.stack.length then
+    ((initial.mapping ⟨i, hi⟩).map Fin.val).getD i
+  else ((holeList initial)[i - initial.stack.length]?.map Fin.val).getD i
+
+-- The cycle of each deep offset at or above `cursor` has no other offset at or above `cursor`.
+def CyclesReady (initial : State source target spills) (cursor : Nat) : Prop :=
+  ∀ i, cursor ≤ i → i < target.length - (MAX_SWAP_DEPTH + 1) →
+    ∀ k < target.length,
+      (completedNext initial)^[k] i < cursor ∨ (completedNext initial)^[k] i = i
+
+-- The bound target offset with 16 bound offsets above it, or `target.length` if none.
+def boundary (initial : State source target spills) : Nat :=
+  (((boundList initial)[initial.stack.length - (MAX_SWAP_DEPTH + 1)]?).map Fin.val).getD target.length
+
+-- One more than the highest hole, or zero if there are no holes.
+def generationEnd (initial : State source target spills) : Nat :=
+  (holes initial).sup (fun j => j.val + 1)
+
+-- The first offset where the boundary or the end of generation occurs.
+def cutoff (initial : State source target spills) : Nat :=
+  min (boundary initial) (generationEnd initial)
+
+-- At the boundary, the expected value is in place, needs no DUP, or has 2 copies in DUP reach.
+def BoundarySafe (initial : State source target spills) : Prop :=
+  ∀ v, initial.expectedStack[boundary initial]? = some v →
+    (augmentedStack initial)[boundary initial]? = some v ∨
+      ¬NeedsCopy initial (boundary initial) v ∨ 2 ≤ copies initial (boundary initial) v
+
+end Success
+
+-- buildBottomUp succeeds exactly when this holds; it uses only data from the initial state.
+def StaticSuccess (initial : State source target spills) : Prop :=
+  if initial.stack.length ≤ MAX_DUP_DEPTH + 1 then Success.Ready initial 0
+  else
+    (∀ c < Success.cutoff initial,
+      (Success.augmentedStack initial)[c]? = initial.expectedStack[c]?) ∧
+    (∀ c ≤ Success.cutoff initial, Success.Ready initial c) ∧
+    (if Success.generationEnd initial ≤ Success.boundary initial then
+      Success.CyclesReady initial (Success.generationEnd initial)
+    else Success.BoundarySafe initial)
 
 end Shuffler.BuildBottomUp

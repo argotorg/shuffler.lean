@@ -6,13 +6,13 @@ set_option mvcgen.warning false
 
 namespace Shuffler.BuildBottomUp
 
-private theorem range_offset_lt
+theorem range_offset_lt
     (h : List.range' start (stop - start) = pref ++ offset :: suff) : offset < stop := by
   have hmem : offset ∈ List.range' start (stop - start) := by rw [h]; simp
   have := List.mem_range'.mp hmem
   omega
 
-private theorem copy_offset_lt
+theorem copy_offset_lt
     (h : (List.range size).reverse.take depth = pref ++ offset :: suff) : offset < size := by
   have hmem : offset ∈ (List.range size).reverse.take depth := by rw [h]; simp
   exact List.mem_range.mp (List.mem_reverse.mp (List.mem_of_mem_take hmem))
@@ -46,7 +46,7 @@ def UrgentChoice (state : State source target spills) (choice : Option ℕ) : Pr
 
 def Chosen (state : State source target spills) (copy : Fin state.stack.length) (offset : ℕ) : Prop :=
   ∃ pos : Fin state.stack.length, pos.val = offset ∧
-    state.stack[pos] = state.stack[copy] ∧ ¬ state.IsFinal pos.val
+    state.stack[pos] = state.stack[copy] ∧ ¬ state.isFinal pos
 
 @[spec] theorem copyScan_triple (state : State source target spills) (copy : Fin state.stack.length)
     (initial : ℕ) (hinit : Chosen state copy initial) :
@@ -63,6 +63,6 @@ def Chosen (state : State source target spills) (copy : Fin state.stack.length) 
   all_goals try simp_all
   all_goals first
     | exact copy_offset_lt (by assumption)
-    | exact ⟨⟨_, copy_offset_lt (by assumption)⟩, rfl, (by symm; assumption), (by tauto)⟩
+    | exact ⟨⟨_, copy_offset_lt (by assumption)⟩, rfl, (by symm; assumption), (by subst_vars; tauto)⟩
 
 end Shuffler.BuildBottomUp
