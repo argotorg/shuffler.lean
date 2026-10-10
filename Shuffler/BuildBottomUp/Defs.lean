@@ -148,6 +148,7 @@ structure State.withinReach (cursor : ℕ) (state : State source target spills) 
   copies : state.reachable
 
 -- Bound targets retain their assigned values; unbound targets are generated.
+-- Bound wildcard targets also retain their assigned source values.
 def State.expectedStack (state : State source target spills) : Stack :=
   List.ofFn fun dest : Fin target.length =>
     match state.mapping.symm dest with
