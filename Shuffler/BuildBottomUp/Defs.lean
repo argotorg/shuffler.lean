@@ -1,4 +1,5 @@
 import Mathlib.Data.Finset.Sort
+import Shuffler.Contracts
 import Shuffler.Mapping
 import Shuffler.Permute.Defs
 import Shuffler.Stack
@@ -14,6 +15,9 @@ import Std.Tactic.Do
 
 
 namespace Shuffler.BuildBottomUp
+
+-- `Error` and `requires` are shared with BuildMapping; re-export them for `open Shuffler.BuildBottomUp`.
+export Shuffler (Error requires)
 
 variable {source target : Stack} {spills : SpillSet}
 
@@ -33,21 +37,8 @@ structure State (source target : Stack) (spills : SpillSet) where
   -- Number of target offsets whose slot still has to be produced; decremented by `produce`
   pending_generations : ℕ
 
--- BuildBottomUp reports blocked operations and assertion failures separately.
-inductive Error where
-  -- The slot is out of reach by `excess` slots (might be recoverable)
-  -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:277-281.
-  | blocked (excess : ℕ)
-  | assertion (reason : String)
-  deriving DecidableEq, Repr
-
-
 --- Utils ------------------------------------------------------------------------------------------
 
-
--- returns a proof of `condition` if it holds, or throws with an assertion error otherwise.
-def requires (condition : Prop) [Decidable condition] (reason : String) : Except Error (PLift condition) :=
-  if h : condition then pure ⟨h⟩ else throw (.assertion reason)
 
 -- convert offset to a `Fin size` if offset < size. throw an assertion error otherwise.
 def index (size offset : ℕ) : Except Error (Fin size) := do

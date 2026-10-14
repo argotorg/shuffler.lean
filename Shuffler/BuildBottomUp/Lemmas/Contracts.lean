@@ -7,12 +7,6 @@ set_option mvcgen.warning false
 
 namespace Shuffler.BuildBottomUp
 
-theorem except_ok_bind (value : α) (next : α → Except ε β) :
-    (Except.ok value >>= next) = next value := rfl
-
-theorem except_error_bind (err : ε) (next : α → Except ε β) :
-    (Except.error err >>= next) = .error err := rfl
-
 -- A blocked operation is allowed. An assertion error is excluded.
 def Spec (result : Except Error α) (post : α → Prop) : Prop :=
   match result with
@@ -74,10 +68,6 @@ theorem Spec.error {result : Except Error α} {post : α → Prop}
 
 @[simp] theorem spec_ok (value : α) (post : α → Prop) : Spec (.ok value) post ↔ post value := Iff.rfl
 @[simp] theorem spec_blocked (excess : ℕ) (post : α → Prop) : Spec (.error (.blocked excess)) post := trivial
-
-theorem requires_of_true (condition : Prop) [Decidable condition] (h : condition) (reason : String) :
-    requires condition reason = .ok ⟨h⟩ := by
-  simp [requires, h, pure, Except.pure]
 
 @[simp] theorem index_eq (i : Fin size) : index size i.val = .ok i := by
   simp [index, i.isLt, pure, Except.pure]
