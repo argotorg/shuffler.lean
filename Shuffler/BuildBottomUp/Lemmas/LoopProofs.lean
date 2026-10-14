@@ -15,7 +15,7 @@ set_option maxHeartbeats 2000000
 macro "simp_loop" : tactic => `(tactic| simp only [bind_assoc, pure_bind, except_ok_bind, except_error_bind])
 
 -- Verify the common placement tail of the actual loop body.
-macro "finish_checked " c:term ", " st:term ", " hp:term ", " hn:term ", " advance:term : tactic => `(tactic| (
+macro "finish_checked " c:term ", " st:term ", " hp:term ", " hn:term ", " expected:term ", " advance:term : tactic => `(tactic| (
   try rw [index_eq (⟨$c, ($hp).in_bounds⟩ : Fin ($st).stack.length)]
   try simp only [except_ok_bind]
   try rw [requires_of_true (¬ ($st).isFinal ⟨$c, ($hp).in_bounds⟩)
@@ -29,13 +29,13 @@ macro "finish_checked " c:term ", " st:term ", " hp:term ", " hn:term ", " advan
     · rw [ite_eq_right (not_not_intro hr)]
       try simp_loop
       apply (($hp).swap_final hbelow hr $hn).bind
-      intro final hinv
-      exact $advance _ hinv
+      rintro final ⟨hinv, he⟩
+      exact $advance _ hinv (he.trans $expected)
     · rw [ite_eq_left hr]
       exact True.intro
   · try dsimp +zetaDelta only at hnotTop
     simp +zetaDelta only [ne_eq, hnotTop, ↓reduceIte]
-    exact $advance _ (($hp).finish_at_top (not_not.mp hnotTop))))
+    exact $advance _ (($hp).finish_at_top (not_not.mp hnotTop)) $expected))
 
 theorem Spec.attach {x : Except Error α} {post : α → Prop} (h : Spec x post) :
     Spec x.attach (fun a => post a.val) := by
@@ -64,33 +64,32 @@ theorem Spec.ite_index {A : Prop} [Decidable A] {B : Fin size → Prop} [Decidab
     · rw [ite_eq_right hB]; exact hrest
   · rw [ite_eq_right hA]; exact hrest
 
--- The loop returns a stack of the target length.
-theorem loop_size (cursor : ℕ) (state : State source target spills)
-    (inv : Invariant cursor state) :
-    Spec (buildBottomUp.loop cursor state) (fun r => r.1.length = target.length) := by
+-- The loop returns the expected stack of its input state.
+theorem loop_spec (cursor : ℕ) (state : State source target spills)
+    (inv : state.invariant cursor) :
+    Spec (buildBottomUp.loop cursor state) (fun r => r.1 = state.expectedStack) := by
   rw [buildBottomUp.loop.eq_def]
   simp_loop
   by_cases hdone : cursor ≥ target.length
   · simp only [hdone, ↓reduceIte]
-    exact inv.complete_size hdone
+    exact inv.expected_done hdone
   have hc : cursor < target.length := Nat.lt_of_not_ge hdone
-  have advance (next : State source target spills) (hi : Invariant (cursor + 1) next) :
-      Spec (buildBottomUp.loop (cursor + 1) next) (fun r => r.1.length = target.length) :=
-    loop_size (cursor + 1) next hi
-  have retry (next : State source target spills) (hi : Invariant cursor next)
-      (hlt : next.pending_generations < state.pending_generations) :
-      Spec (buildBottomUp.loop cursor next) (fun r => r.1.length = target.length) :=
-    loop_size cursor next hi
+  have advance (next : State source target spills) (hi : next.invariant (cursor + 1))
+      (he : next.expectedStack = state.expectedStack) :
+      Spec (buildBottomUp.loop (cursor + 1) next) (fun r => r.1 = state.expectedStack) :=
+    (loop_spec (cursor + 1) next hi).mono (fun _ hr => hr.trans he)
+  have retry (next : State source target spills) (hi : next.invariant cursor)
+      (hlt : next.pending_generations < state.pending_generations)
+      (he : next.expectedStack = state.expectedStack) :
+      Spec (buildBottomUp.loop cursor next) (fun r => r.1 = state.expectedStack) :=
+    (loop_spec cursor next hi).mono (fun _ hr => hr.trans he)
   simp only [hdone, ↓reduceIte]
-  by_cases hskip : cursor < state.stack.length ∧ state.IsFinal cursor
-  · rw [ite_eq_left hskip.1, index_eq ⟨cursor, hskip.1⟩, except_ok_bind,
-      ite_eq_left ((state.isFinal_iff ⟨cursor, hskip.1⟩).mpr hskip.2)]
-    exact advance _ (inv.advance hskip.2)
+  obtain hfinal | hnfinal := em (∃ h, state.isFinal ⟨cursor, h⟩)
+  · rw [ite_eq_left hfinal.1, index_eq ⟨cursor, hfinal.1⟩, except_ok_bind,
+      ite_eq_left hfinal.2]
+    exact advance _ (inv.advance hfinal) rfl
   let dest : Fin target.length := ⟨cursor, hc⟩
-  have hnfinal : ¬ state.IsFinal cursor := by
-    intro hf
-    exact hskip ⟨state.isFinal_lt dest hf, hf⟩
-  rw [skip_unless_final (fun hlt => (state.isFinal_iff ⟨cursor, hlt⟩).not.mpr hnfinal)]
+  rw [skip_unless_final (fun hlt hf => hnfinal ⟨hlt, hf⟩)]
   by_cases hz : state.pending_generations = 0
   · have ht : ∀ j, (state.mapping.symm j).isSome :=
       (Mapping.unmapped_target_slots_eq_zero state.mapping).mp (inv.pending.trans hz)
@@ -103,7 +102,9 @@ theorem loop_size (cursor : ℕ) (state : State source target spills)
       cases err
       simp [Except.mapError, Spec]
     | ok result =>
-      simpa [Except.mapError, Spec, hp.1] using Shuffler.Permute.permute_length _ _ _ hperm
+      simpa [Except.mapError, Spec] using
+        (Shuffler.Permute.permute_applies_permutation_of_ok _ _ _ hperm).trans
+          (expectedStack_permutation state hp.1 hp.2)
   simp only [hz, ↓reduceIte]
   have hscan := (spec_iff_triple _ _).mpr (urgentScan_triple cursor state)
   simp only [bind_pure] at hscan
@@ -117,7 +118,7 @@ theorem loop_size (cursor : ℕ) (state : State source target spills)
       simpa [State.positionOf, hlt, u] using hnone
     apply (generate_contract state u hb (inv.available u)).attach.bind
     intro next hgen
-    exact retry _ (hgen.invariant inv) (hgen.decreases inv)
+    exact retry _ (hgen.invariant inv) (hgen.decreases inv) hgen.expected
   rw [dite_eq_right hurg]
   apply Spec.ite_index (fun hA => hA.2.2)
   · intro _ hB
@@ -126,7 +127,7 @@ theorem loop_size (cursor : ℕ) (state : State source target spills)
       simpa [State.positionOf, top] using hB.1
     apply (generate_contract state top hb (inv.available top)).attach.bind
     intro next hgen
-    exact retry _ (hgen.invariant inv) (hgen.decreases inv)
+    exact retry _ (hgen.invariant inv) (hgen.decreases inv) hgen.expected
   rw [index_eq dest, except_ok_bind]
   rcases Option.eq_none_or_eq_some (state.positionOf dest) with hpos | ⟨carrier, hpos⟩
   · simp only [hpos]
@@ -136,11 +137,11 @@ theorem loop_size (cursor : ℕ) (state : State source target spills)
     have hp := hgen.placement inv
     let current : Fin next.stack.length := ⟨cursor, hp.in_bounds⟩
     rw [index_eq current, except_ok_bind]
-    by_cases hf : next.IsFinal cursor
+    by_cases hf : ∃ h, next.isFinal ⟨cursor, h⟩
     · rw [ite_eq_left ((next.isFinal_iff current).mpr hf)]
-      exact advance _ (hp.toInvariant.advance hf)
+      exact advance _ (hp.toInvariant.advance hf) hgen.expected
     · rw [ite_eq_right ((next.isFinal_iff current).not.mpr hf)]
-      finish_checked cursor, next, hp, hf, advance
+      finish_checked cursor, next, hp, hf, hgen.expected, advance
   · simp only [hpos]
     have hb : state.mapping.symm dest = some carrier := hpos
     have hge := inv.processed.bound_ge dest carrier hb le_rfl
@@ -157,12 +158,13 @@ theorem loop_size (cursor : ℕ) (state : State source target spills)
       simp only [except_ok_bind]
       have hi := inv.retag current carrier (by rfl) hge
       apply advance _
-      apply hi.advance
-      have hd : (state.mapping.swapDestinations current carrier).symm dest = some current := by
-        simp [hb]
-      exact (State.isFinal_of_bound_iff
-        { state with mapping := state.mapping.swapDestinations current carrier }
-        dest current hd).mpr rfl
+      · apply hi.advance
+        have hd : (state.mapping.swapDestinations current carrier).symm dest = some current := by
+          simp [hb]
+        exact (State.isFinal_of_bound_iff
+          { state with mapping := state.mapping.swapDestinations current carrier }
+          dest current hd).mpr rfl
+      · exact (expectedStack_retag state current carrier hequal).symm
     rw [ite_eq_right hequal, index_eq carrier]
     simp only [except_ok_bind]
     have hscan := (spec_iff_triple _ _).mpr (copyScan_triple state carrier carrier.val
@@ -178,13 +180,15 @@ theorem loop_size (cursor : ℕ) (state : State source target spills)
     rw [swapDestinations_result state pos carrier]
     simp only [except_ok_bind]
     let retag := { state with mapping := state.mapping.swapDestinations pos carrier }
-    have hi : Invariant cursor retag := inv.retag pos carrier
+    have hi : retag.invariant cursor := inv.retag pos carrier
       (inv.not_final_ge pos hmovable) hge
     have hd : retag.mapping.symm dest = some pos := by simp [retag, hb]
+    have he : retag.expectedStack = state.expectedStack :=
+      (expectedStack_retag state pos carrier hequal).symm
     by_cases hplaced : pos.val = cursor
     · simp only [hplaced, ↓reduceIte]
       exact advance _ (hi.advance
-        ((retag.isFinal_of_bound_iff dest pos hd).mpr hplaced))
+        ((retag.isFinal_of_bound_iff dest pos hd).mpr hplaced)) he
     simp only [hplaced, ↓reduceIte]
     by_cases hnotTop : pos.val ≠ retag.stack.length - 1
     · dsimp +zetaDelta only at hnotTop
@@ -195,29 +199,25 @@ theorem loop_size (cursor : ℕ) (state : State source target spills)
       by_cases hr : retag.isSwapReachable pos
       · rw [ite_eq_right (not_not_intro hr)]
         apply (hi.swap_bound (dest := dest) pos hd hbelow hr hplaced).bind
-        intro next hp
-        finish_checked cursor, next, hp.1, hp.2, advance
+        rintro next ⟨hp, he'⟩
+        finish_checked cursor, next, hp.1, hp.2, he'.trans he, advance
       · rw [ite_eq_left hr]
         exact True.intro
     · dsimp +zetaDelta only at hnotTop
       simp only [ne_eq, hnotTop, ↓reduceIte]
       have hp := hi.bound_at_top (dest := dest) pos hd (not_not.mp hnotTop) hplaced
-      finish_checked cursor, retag, hp.1, hp.2, advance
+      finish_checked cursor, retag, hp.1, hp.2, he, advance
 termination_by (target.length - cursor, state.pending_generations)
 decreasing_by
   · exact Prod.Lex.left _ _ (by omega)
   · exact Prod.Lex.right _ hlt
 
-theorem loop_spec (cursor : ℕ) (state : State source target spills)
-    (inv : Invariant cursor state) :
-    Spec (buildBottomUp.loop cursor state) (fun _ => True) :=
-  (loop_size cursor state inv).mono fun _ _ => trivial
-
 theorem buildBottomUp_spec (initial : State source target spills) (h : initial.Valid) :
-    Spec (buildBottomUp initial h) (fun _ => True) := by
-  apply (loop_size 0 initial (Invariant.initial h)).bind
-  intro ⟨res, trace⟩ hsize
+    Spec (buildBottomUp initial h) (fun result => result.1 = initial.expectedStack) := by
+  apply (loop_spec 0 initial (State.invariant.initial h)).bind
+  intro ⟨res, trace⟩ he
+  have hsize : res.length = target.length := by simp [show res = _ from he, State.expectedStack]
   simp only [requires_of_true _ hsize, except_ok_bind]
-  trivial
+  exact he
 
 end Shuffler.BuildBottomUp

@@ -75,6 +75,21 @@ theorem permute_applies_permutation_reachable
     obtain rfl : source = [] := by simpa using Nat.eq_zero_of_not_pos hne
     exact ⟨[], .Lit [], rfl, by simp [apply_permutation]⟩
 
+theorem permute_applies_permutation_of_ok
+    (spills : SpillSet) (source : Stack) (perm : Permutation source)
+    {res : Stack} {trace : Trace spills source res}
+    (hresult : permute spills source perm = .ok ⟨res, trace⟩) :
+    res = apply_permutation source perm := by
+  have hreachable : all_swaps_reachable perm := by
+    by_contra hn
+    obtain ⟨_, he, _⟩ := permute_blocks_unreachable spills source perm hn
+    rw [hresult] at he
+    contradiction
+  obtain ⟨result, resultTrace, heq, hres⟩ :=
+    permute_applies_permutation_reachable spills source perm hreachable
+  have := congrArg (fun r => r.toOption.map (fun r => r.1)) (hresult.symm.trans heq)
+  exact (by simpa [Except.toOption] using this : res = result).trans hres
+
 -- `hne` makes the top position, `source.length - 1`, available.
 -- `hresult` says that `permute` successfully returned this stack and trace.
 -- The emitted swap count equals the count computed from the input permutation:

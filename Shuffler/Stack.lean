@@ -69,6 +69,10 @@ def Stack.isDupReachable (stack : Stack) (pos : Fin stack.length) : Prop :=
 instance (stack : Stack) (pos : Fin stack.length) : Decidable (stack.isDupReachable pos) :=
   by unfold Stack.isDupReachable; infer_instance
 
+-- Whether a copy of `slot` is within DUP reach
+def Stack.hasCopy (stack : Stack) (slot : Value) : Prop :=
+  ∃ pos : Fin stack.length, stack[pos] = slot ∧ stack.isDupReachable pos
+
 def Stack.isSwapReachable (stack : Stack) (pos : Fin stack.length) : Prop :=
   (stack.offsetToDepth pos) ≤ MAX_SWAP_DEPTH
 
