@@ -6,3 +6,4 @@ import Shuffler.BuildBottomUp.Theorems.Small
 import Shuffler.BuildBottomUp.Theorems.Wildcard
 import Shuffler.BuildBottomUp.Theorems.Feasibility
 import Shuffler.BuildBottomUp.Theorems.Audit
+import Shuffler.BuildBottomUp.Theorems.Complete
