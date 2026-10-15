@@ -20,5 +20,16 @@ def observe (result : Except Error ((res : Stack) × Trace spills source res)) :
     Except Error (Stack × List Operation) :=
   result.map fun ⟨stack, trace⟩ => (stack, operations trace)
 
+-- The production BBU call on a state whose Valid fields hold. A state that is
+-- not Valid gives an assertion error, so it cannot appear to succeed.
+def runIfValid (state : State source target spills) :
+    Except Error ((res : Stack) × Trace spills source res) :=
+  if hsize : state.stack.length + state.pending_generations = target.length then
+    if hpending : state.mapping.unmapped_target_slots = state.pending_generations then
+      if havailable : ∀ i, state.isAvailable i then
+        buildBottomUp state ⟨hsize, hpending, havailable⟩
+      else .error (.assertion "invalid state")
+    else .error (.assertion "invalid state")
+  else .error (.assertion "invalid state")
 
 end BuildBottomUpTestSupport
