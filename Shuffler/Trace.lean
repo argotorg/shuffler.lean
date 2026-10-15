@@ -3,6 +3,7 @@ import Mathlib.Data.Finset.Basic
 import Batteries.Data.List.Basic
 import Shuffler.Basic
 import Shuffler.Stack
+import Mathlib.Data.Multiset.AddSub
 
 abbrev SpillSet := Finset VarId
 
@@ -60,3 +61,30 @@ def Trace.swapCount : Trace spills source result → ℕ
   | .Pop _ trace => trace.swapCount
   | .Push _ _ trace => trace.swapCount
   | .Load _ _ trace => trace.swapCount
+
+-- The trace adds values without changing or removing existing positions.
+def Trace.onlyGenerates : Trace spills source result → Prop
+  | .Lit _ => True
+  | .Swap _ _ _ _ _ => False
+  | .Dup _ _ _ _ trace => trace.onlyGenerates
+  | .Pop _ _ => False
+  | .Push _ _ trace => trace.onlyGenerates
+  | .Load _ _ trace => trace.onlyGenerates
+
+def Trace.noPop : Trace spills source result → Prop
+  | .Lit _ => True
+  | .Swap _ _ _ _ trace => trace.noPop
+  | .Dup _ _ _ _ trace => trace.noPop
+  | .Pop _ _ => False
+  | .Push _ _ trace => trace.noPop
+  | .Load _ _ trace => trace.noPop
+
+-- Record the values actually added by DUP, PUSH, and LOAD.
+def Trace.additions : Trace spills source result → Multiset Value
+  | .Lit _ => 0
+  | .Swap _ _ _ _ trace => trace.additions
+  | @Dup _ _ prev idx hlen hlo _ trace =>
+      trace.additions + {prev[prev.length - idx]'(by omega)}
+  | .Pop _ trace => trace.additions
+  | .Push value _ trace => trace.additions + {value}
+  | .Load id _ trace => trace.additions + {.Var id}
