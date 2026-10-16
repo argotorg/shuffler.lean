@@ -1,7 +1,7 @@
 import Shuffler.BuildBottomUp.Theorems.Correctness
 import Shuffler.BuildBottomUp.Lemmas.SuccessProofs
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 -- buildBottomUp always succeeds on a valid initial stack of at most 16 slots, for a target of any
 -- length.
@@ -29,4 +29,4 @@ theorem buildBottomUp_correct_small (initial : State source target spills)
     ∃ trace : Trace spills source target, buildBottomUp initial h = .ok ⟨target, trace⟩ :=
   buildBottomUp_correct_within_dup_reach initial h (by omega) hmapped
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

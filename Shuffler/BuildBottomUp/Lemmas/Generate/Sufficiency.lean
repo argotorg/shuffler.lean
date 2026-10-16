@@ -33,8 +33,8 @@ private theorem Critical.unique {source : Stack} {left right : Value}
     have := l.isLt
     have := r.isLt
     omega
-  have hlv := Shuffler.BuildBottomUp.shallowestCopyPosition_value source left l hl
-  have hrv := Shuffler.BuildBottomUp.shallowestCopyPosition_value source right r hr
+  have hlv := Shuffler.Emission.shallowestCopyPosition_value source left l hl
+  have hrv := Shuffler.Emission.shallowestCopyPosition_value source right r hr
   rw [he] at hlv
   exact hlv.symm.trans hrv
 
@@ -55,14 +55,14 @@ private theorem Ready.after_append {source missing : Stack} (h : Ready spills so
   apply Or.inr ∘ Or.inr
   by_cases he : value = chosen
   · subst value
-    exact Shuffler.BuildBottomUp.hasCopy_append_new source chosen
+    exact Shuffler.Emission.hasCopy_append_new source chosen
   have hc : Stack.hasCopy source value := hcopy
   obtain ⟨pos, hp, hr⟩ := hc.shallowest
   have hd : (source.offsetToDepth pos).val ≠ MAX_DUP_DEPTH := by
     intro hd
     exact he (hsafe value hm hfree hspill ⟨pos, hp, hd⟩)
-  apply Shuffler.BuildBottomUp.hasCopy_append_old source value chosen pos
-    (Shuffler.BuildBottomUp.shallowestCopyPosition_value source value pos hp)
+  apply Shuffler.Emission.hasCopy_append_old source value chosen pos
+    (Shuffler.Emission.shallowestCopyPosition_value source value pos hp)
   rw [Stack.offsetToDepth_val] at hd
   rw [Stack.isDupReachable_iff_length] at hr
   have := pos.isLt

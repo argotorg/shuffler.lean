@@ -1,6 +1,6 @@
 import Shuffler.BuildBottomUp.Lemmas.LoopProofs
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 -- A valid initial state satisfies the loop invariant at offset zero.
 theorem invariant_initial (initial : State source target spills) (h : initial.Valid) :
@@ -26,4 +26,4 @@ theorem buildBottomUp_error_is_blocked (initial : State source target spills)
     ∃ excess, err = .blocked excess :=
   (buildBottomUp_spec initial h).error he
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

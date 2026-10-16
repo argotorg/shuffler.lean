@@ -1,7 +1,7 @@
 import Shuffler.BuildBottomUp.Theorems.Correctness
 import Shuffler.BuildBottomUp.Lemmas.NecessityProofs
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 -- Success requires that each unbound target value can be freely generated, is spilled, or has a
 -- copy in DUP reach of the initial stack.
@@ -58,4 +58,4 @@ theorem buildBottomUp_correct_iff_reachable_of_processed
   · intro hr
     exact buildBottomUp_correct_of_processed initial h hp ⟨hw, hr⟩ hmapped
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

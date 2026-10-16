@@ -5,7 +5,7 @@ open Std.Internal.Do
 
 set_option mvcgen.warning false
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 def Urgent (cursor : ℕ) (state : State source target spills) (offset : ℕ) : Prop :=
   ∃ h : offset < target.length,
@@ -190,4 +190,4 @@ theorem copyScan_success (state : State source target spills) (copy : Fin state.
     | exact ⟨⟨_, by assumption⟩, rfl, (by tauto), (by tauto)⟩
     | exact (not_lt_of_ge (by assumption)) (copy_offset_lt (by assumption))
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

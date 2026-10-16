@@ -1,7 +1,7 @@
 import Shuffler
 import Batteries.Tactic.PrintOpaques
 
-open Shuffler.BuildBottomUp
+open Shuffler.Emission
 
 namespace BuildBottomUpTerminationTests
 

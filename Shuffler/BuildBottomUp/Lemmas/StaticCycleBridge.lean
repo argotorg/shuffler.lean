@@ -1,7 +1,7 @@
 import Shuffler.BuildBottomUp.Lemmas.StaticPermutation
 import Shuffler.BuildBottomUp.Lemmas.StaticCycles
 
-namespace Shuffler.BuildBottomUp.Success
+namespace Shuffler.Emission.Success
 
 theorem completedPermutation_iterate_val (initial : State source target spills) (h : initial.Valid)
     (i : Fin target.length) (k : Nat) :
@@ -53,4 +53,4 @@ theorem cyclesReady_iff (initial : State source target spills) (h : initial.Vali
       have he := hs pos next hi hid (by omega) hc
       exact Or.inr (hv.symm.trans (congrArg Fin.val he).symm)
 
-end Shuffler.BuildBottomUp.Success
+end Shuffler.Emission.Success

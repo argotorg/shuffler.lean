@@ -1,7 +1,7 @@
 import Shuffler.BuildBottomUp.Lemmas.StaticTransition
 import Shuffler.BuildBottomUp.Lemmas.StaticTerminalCondition
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 namespace Success
 
@@ -49,4 +49,4 @@ theorem buildBottomUp_static_success_iff (initial : State source target spills)
       (Success.PrefixState.initial initial h)).trans
         (Success.staticSuccess_iff_suffix_of_large initial (by unfold MAX_DUP_DEPTH; omega)).symm
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

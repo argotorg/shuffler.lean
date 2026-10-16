@@ -5,7 +5,7 @@ open Std.Internal.Do
 
 set_option mvcgen.warning false
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 set_option maxRecDepth 16384
 set_option maxHeartbeats 2000000
@@ -297,4 +297,4 @@ theorem buildBottomUp_success_of_processed (initial : State source target spills
   rw [buildBottomUp_success_iff_loop, loop_zero_eq_of_processed initial hp]
   exact loop_success cursor initial ⟨h, hp⟩ hr
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

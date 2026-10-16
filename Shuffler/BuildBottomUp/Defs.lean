@@ -14,9 +14,9 @@ import Std.Tactic.Do
 -- TODO: Dup should not accept a FunctionReturnLabel
 
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
--- `Error` and `requires` are shared with BuildMapping; re-export them for `open Shuffler.BuildBottomUp`.
+-- `Error` and `requires` are shared with BuildMapping; re-export them for `open Shuffler.Emission`.
 export Shuffler (Error requires)
 
 variable {source target : Stack} {spills : SpillSet}
@@ -519,4 +519,4 @@ def StaticSuccess (initial : State source target spills) : Prop :=
       Success.CyclesReady initial (Success.generationEnd initial)
     else Success.BoundarySafe initial)
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

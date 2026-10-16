@@ -4,7 +4,7 @@ open Std.Internal.Do
 
 set_option mvcgen.warning false
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 -- Effects of adding one bound stack slot.
 structure Growth (state next : State source target spills) (dest : Fin target.length)
@@ -248,4 +248,4 @@ theorem State.invariant.swap_bound {state : State source target spills} {dest : 
   apply (next.isFinal_of_bound_val_iff dest _ htop).not.mpr
   omega
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission
