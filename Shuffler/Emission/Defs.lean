@@ -89,6 +89,20 @@ def State.isFinal (state : State source target spills) (pos : Fin state.stack.le
 instance (state : State source target spills) (pos : Fin state.stack.length) :
     Decidable (state.isFinal pos) := by unfold State.isFinal; infer_instance
 
+-- Whether the slot at `pos` has no target offset to go to and is to be popped
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:733-736 (at 6db6505).
+def State.isSurplus (state : State source target spills) (pos : Fin state.stack.length) : Prop :=
+  state.destinationOf pos = none
+
+instance (state : State source target spills) (pos : Fin state.stack.length) :
+    Decidable (state.isSurplus pos) := by unfold State.isSurplus; infer_instance
+
+-- A swap cannot reach the slot at `pos`: it is out of reach by `depth - MAX_SWAP_DEPTH` slots
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:811-814 (at 6db6505).
+def State.blockSwapUnreachable (state : State source target spills) (pos : Fin state.stack.length) : Error :=
+  .blocked ((state.depthOf pos).val - MAX_SWAP_DEPTH)
+
+
 --- Actions ----------------------------------------------------------------------------------------
 
 
@@ -157,6 +171,19 @@ def State.swapWith (state : State source target spills)
       state.mapping.swapDestinations pos ⟨state.stack.length - 1, top_lt_length state.stack pos⟩
     trace := swap_stack_eq state.stack pos ▸
       Trace.Swap depth.val depth.isLt hdepth.1 hdepth.2 state.trace
+  }
+
+-- Removes the top slot together with its destination, if any
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:785-789 (at 6db6505).
+def State.pop (state : State source target spills) : Except Error (State source target spills) := do
+
+  let ⟨hne⟩ ← requires (0 < state.stack.length) "pop on an empty stack"
+
+  return {
+    state with
+    stack := state.stack.dropLast
+    trace := .Pop hne state.trace
+    mapping := Mapping.pop (cast (by rw [List.length_dropLast, Nat.sub_add_cancel hne]) state.mapping)
   }
 
 end Shuffler.Emission
