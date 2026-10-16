@@ -82,11 +82,11 @@ def closestSurplus (self : MappingBuilder source target) (targetOffset : Fin tar
 -- binds a source slot to a target slot, returning a new mapping builder with the updated mapping
 def map (self : MappingBuilder source target) (sourceOffset : Fin source.length)
     (targetOffset : Fin target.length) : Except Error (MappingBuilder source target) := do
-  let ⟨_⟩ ← requires (sourceOffset.val < self.dropped.length) "dropped has no entry for the source slot"
-  _ ← requires (self.dropped[sourceOffset.val] = 0) "source slot is dropped"
-  let ⟨hs⟩ ← requires (self.mapping sourceOffset = none) "source slot already mapped"
-  let ⟨ht⟩ ← requires (self.mapping.symm targetOffset = none) "target slot already has a source"
-  return { self with mapping := self.mapping.bind sourceOffset targetOffset hs ht }
+  _ ← requires (← self.mappable sourceOffset) "source slot is not mappable"
+  -- hp, hd needed for bind
+  let ⟨hp⟩ ← requires (self.mapping sourceOffset = none) "source position already bound"
+  let ⟨hd⟩ ← requires (self.mapping.symm targetOffset = none) "target position already bound"
+  return { self with mapping := self.mapping.bind sourceOffset targetOffset hp hd }
 
 end MappingBuilder
 

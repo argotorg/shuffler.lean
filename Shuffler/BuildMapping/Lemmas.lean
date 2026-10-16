@@ -71,11 +71,17 @@ theorem mappable_ok (self : MappingBuilder source target) (s : Fin source.length
     List.getElem?_eq_getElem hlt, Option.some.injEq]
   rfl
 
+-- `mappable` returns `true` on a mappable slot; its bound check holds since `dropped[s]?` is `some`.
+theorem mappable_of_isMappable (self : MappingBuilder source target) (s : Fin source.length)
+    (hs : self.IsMappable s) : self.mappable s = .ok true := by
+  obtain ⟨hlt, h0⟩ := List.getElem?_eq_some_iff.mp hs.1
+  simp only [mappable, requires_of_true _ hlt, except_ok_bind, h0, hs.2]
+  rfl
+
 theorem map_ok (self : MappingBuilder source target) (s : Fin source.length) (t : Fin target.length)
     (hs : self.IsMappable s) (ht : self.mapping.symm t = none) :
     self.map s t = .ok { self with mapping := self.mapping.bind s t hs.2 ht } := by
-  obtain ⟨hlt, h0⟩ := List.getElem?_eq_some_iff.mp hs.1
-  simp only [map, requires_of_true _ hlt, except_ok_bind, requires_of_true _ h0,
+  simp only [map, mappable_of_isMappable self s hs, except_ok_bind, requires_of_true _ rfl,
     requires_of_true _ hs.2, requires_of_true _ ht]
   rfl
 
