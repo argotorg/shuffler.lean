@@ -1,7 +1,7 @@
 import Shuffler.BuildBottomUp.Defs
 
 namespace BuildBottomUpTestSupport
-open Shuffler.BuildBottomUp
+open Shuffler.Emission
 
 inductive Operation where
   | swap (depth : ℕ) | dup (index : ℕ) | pop | push (value : Value) | load (id : VarId)

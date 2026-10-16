@@ -1,7 +1,7 @@
 import Shuffler.BuildBottomUp.Lemmas.StaticCounts
 import Shuffler.BuildBottomUp.Lemmas.StaticCycles
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 namespace Success
 
@@ -79,4 +79,4 @@ theorem PrefixState.expected_value {initial state : State source target spills} 
 
 end Success
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

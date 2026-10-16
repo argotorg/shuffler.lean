@@ -7,7 +7,7 @@ set_option experimental.vcgen true
 set_option maxRecDepth 16384
 set_option maxHeartbeats 4000000
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 macro "finish_deep_bound " c:term ", " st:term ", " hw:term : tactic => `(tactic| (
   let bottom : Fin ($st).stack.length := ⟨$c, by
@@ -164,4 +164,4 @@ theorem loop_bound_mismatch_deep_noSuccess (cursor : Nat)
   · exact loop_bound_mismatch_deep_noSuccess_of_pending cursor state inv hw hpending hc
       current hcurrent carrier hb hv
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

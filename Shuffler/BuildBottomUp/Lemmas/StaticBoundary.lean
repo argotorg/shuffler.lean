@@ -7,7 +7,7 @@ set_option experimental.vcgen true
 set_option maxRecDepth 16384
 set_option maxHeartbeats 4000000
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 -- Both witnesses are copies in DUP reach, not merely copies somewhere on the stack.
 def TwoCopies (stack : Stack) (slot : Value) : Prop :=
@@ -400,4 +400,4 @@ theorem loop_bound_boundary_success_iff (cursor : Nat)
     · exact (loop_bound_mismatch_boundary_success_iff cursor state inv hr hw
         hpending hc current hcurrent carrier hb hv).mpr (hsafe.resolve_left hv)
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

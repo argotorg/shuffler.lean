@@ -1,6 +1,6 @@
 import Shuffler.BuildBottomUp.Lemmas.StaticData
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 namespace Success
 
@@ -109,4 +109,4 @@ theorem completedNext_lt (initial : State source target spills) (h : initial.Val
 
 end Success
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

@@ -1,7 +1,7 @@
 import Shuffler.BuildBottomUp.Lemmas.StaticPermutation
 import Shuffler.BuildBottomUp.Lemmas.StaticCycles
 
-namespace Shuffler.BuildBottomUp.Success
+namespace Shuffler.Emission.Success
 
 -- These state expressions describe the effects of the existing actions.
 abbrev retagged (state : State source target spills) (a b : Fin state.stack.length) :
@@ -222,4 +222,4 @@ theorem completedPermutation_congr (state next : State source target spills)
   simp only [completedPermutation_val]
   exact completedNext_congr state next hlen hm i.val
 
-end Shuffler.BuildBottomUp.Success
+end Shuffler.Emission.Success

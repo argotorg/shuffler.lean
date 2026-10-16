@@ -4,7 +4,7 @@ open Std.WP
 
 set_option experimental.vcgen true
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 def NoBlocked (result : Except Error α) : Prop :=
   match result with
@@ -181,4 +181,4 @@ theorem State.invariant.swap_bound_success {state : State source target spills} 
   apply (next.isFinal_of_bound_val_iff dest _ htop).not.mpr
   omega
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

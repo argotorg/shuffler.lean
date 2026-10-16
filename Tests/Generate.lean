@@ -1,6 +1,6 @@
 import Tests.BuildBottomUpObservations
 
-open Shuffler.BuildBottomUp
+open Shuffler.Emission
 
 namespace GenerateTests
 
@@ -61,7 +61,7 @@ example : observe ((unboundState (.Var ⟨37⟩ :: List.replicate (MAX_DUP_DEPTH
     [.Var ⟨37⟩]).generate 0) =
     .error (.blocked 1) := rfl
 
-/-- info: 'Shuffler.BuildBottomUp.State.generate' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+/-- info: 'Shuffler.Emission.State.generate' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms State.generate
 

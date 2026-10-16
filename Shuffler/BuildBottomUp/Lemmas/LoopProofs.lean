@@ -6,7 +6,7 @@ open Std.WP
 
 set_option experimental.vcgen true
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 set_option maxRecDepth 16384
 set_option maxHeartbeats 2000000
@@ -220,4 +220,4 @@ theorem buildBottomUp_spec (initial : State source target spills) (h : initial.V
   simp only [requires_of_true _ hsize, except_ok_bind]
   exact he
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

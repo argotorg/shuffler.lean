@@ -1,6 +1,6 @@
 import Shuffler.BuildBottomUp.Lemmas.Contracts
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 theorem _root_.Stack.shallowestCopyPosition_isSome (stack : Stack) (slot : Value) :
     (stack.shallowestCopyPosition slot).isSome ↔ slot ∈ stack := by
@@ -177,4 +177,4 @@ theorem State.invariant.complete_size {state : State source target spills}
   change state.stack.length < state.stack.length at this
   omega
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

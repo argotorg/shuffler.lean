@@ -1,6 +1,6 @@
 import Shuffler.BuildBottomUp.Defs
 
-open Shuffler.BuildBottomUp
+open Shuffler.Emission
 
 set_option maxRecDepth 16384
 

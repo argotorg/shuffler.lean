@@ -1,7 +1,7 @@
 import Shuffler.BuildBottomUp.Lemmas.StaticInvariant
 import Shuffler.BuildBottomUp.Lemmas.StaticBoundary
 
-namespace Shuffler.BuildBottomUp.Success
+namespace Shuffler.Emission.Success
 
 theorem PrefixState.mem_copyPositions_iff {initial state : State source target spills} {h : initial.Valid}
     (hp : PrefixState initial h cursor state) (value : Value) (i : Nat) :
@@ -67,4 +67,4 @@ theorem PrefixState.boundarySafe_iff {initial state : State source target spills
     subst v
     exact hall
 
-end Shuffler.BuildBottomUp.Success
+end Shuffler.Emission.Success

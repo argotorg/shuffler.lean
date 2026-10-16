@@ -2,7 +2,7 @@ import Shuffler.BuildBottomUp.Lemmas.StaticInvariant
 import Shuffler.BuildBottomUp.Lemmas.StaticCompletion
 import Shuffler.BuildBottomUp.Lemmas.StaticGeneration
 
-namespace Shuffler.BuildBottomUp.Success
+namespace Shuffler.Emission.Success
 
 theorem appended_valid (state : State source target spills) (h : state.Valid)
     (d : Fin target.length) (hd : state.mapping.symm d = none) (v : Value)
@@ -99,4 +99,4 @@ theorem PrefixState.produced_retag {initial state produced : State source target
     rw [hcur, hcomplete]
     exact hp.cycles.step_of_apply hc (stackIndex produced hiprod.valid top) hbound
 
-end Shuffler.BuildBottomUp.Success
+end Shuffler.Emission.Success

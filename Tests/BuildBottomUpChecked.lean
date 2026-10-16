@@ -2,7 +2,7 @@ import Shuffler.BuildBottomUp.Defs
 import Tests.BuildBottomUpObservations
 
 namespace BuildBottomUpCheckedTests
-open Shuffler.BuildBottomUp BuildBottomUpTestSupport
+open Shuffler.Emission BuildBottomUpTestSupport
 
 set_option maxRecDepth 16384
 

@@ -4,7 +4,7 @@ open Std.WP
 
 set_option experimental.vcgen true
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 theorem range_offset_lt
     (h : List.range' start (stop - start) = pref ++ offset :: suff) : offset < stop := by
@@ -65,4 +65,4 @@ def Chosen (state : State source target spills) (copy : Fin state.stack.length) 
     | exact copy_offset_lt (by assumption)
     | exact ⟨⟨_, copy_offset_lt (by assumption)⟩, rfl, (by symm; assumption), (by subst_vars; tauto)⟩
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

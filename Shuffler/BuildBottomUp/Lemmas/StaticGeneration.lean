@@ -6,7 +6,7 @@ set_option experimental.vcgen true
 set_option maxRecDepth 16384
 set_option maxHeartbeats 4000000
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 -- Exact inverse assignments after one production, before any placement.
 def ProducedMapping (state next : State source target spills) (dest : Fin target.length) : Prop :=
@@ -99,4 +99,4 @@ theorem generate_eq_after_produce_unequal_deep (state produced : State source ta
   rw [ite_eq_right (show ¬ produced.isSwapReachable current from hdeep)]
   rfl
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

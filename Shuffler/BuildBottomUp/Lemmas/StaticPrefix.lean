@@ -6,7 +6,7 @@ set_option experimental.vcgen true
 set_option maxRecDepth 16384
 set_option maxHeartbeats 4000000
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 -- A deep equal-value placement changes only the destinations. The scan cannot
 -- select either early-generation branch when at least sixteen slots remain.
@@ -132,4 +132,4 @@ theorem loop_hole_blocks_of_generate_deep (cursor : Nat) (state next : State sou
   rintro ⟨_, h, _⟩
   cases h
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

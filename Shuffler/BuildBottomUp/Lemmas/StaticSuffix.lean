@@ -1,6 +1,6 @@
 import Shuffler.BuildBottomUp.Lemmas.StaticData
 
-namespace Shuffler.BuildBottomUp.Success
+namespace Shuffler.Emission.Success
 
 def Terminal (initial : State source target spills) : Prop :=
   if generationEnd initial ≤ boundary initial then
@@ -51,4 +51,4 @@ theorem staticSuccess_iff_suffix_of_large (initial : State source target spills)
   simp [StaticSuccess, show ¬initial.stack.length ≤ MAX_DUP_DEPTH + 1 by omega,
     Suffix, Terminal]
 
-end Shuffler.BuildBottomUp.Success
+end Shuffler.Emission.Success

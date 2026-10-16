@@ -6,7 +6,7 @@ set_option experimental.vcgen true
 set_option maxRecDepth 16384
 set_option maxHeartbeats 4000000
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 -- A successful scan has checked each unbound target in the visited prefix.
 def CopiesSeen (state : State source target spills) (seen : List Nat) : Prop :=
@@ -115,4 +115,4 @@ theorem loop_success_iff_reachable_within_width (cursor : Nat) (state : State so
   ⟨loop_success_requires_reachable cursor state inv,
     fun hr => loop_success cursor state inv ⟨hw, hr⟩⟩
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

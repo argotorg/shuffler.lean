@@ -5,7 +5,7 @@ open Std.WP
 
 set_option experimental.vcgen true
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 structure Swapped (state next : State source target spills) (pos : Fin state.stack.length) : Prop where
   stack_eq : next.stack = state.stack.swap pos (state.stack.length - 1)
@@ -87,4 +87,4 @@ theorem Swapped.unbound {state next : State source target spills}
   have he := congrArg Option.isNone (h.mapping dest)
   cases hstate : state.mapping.symm dest <;> cases hnext : next.mapping.symm dest <;> simp_all
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

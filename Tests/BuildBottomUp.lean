@@ -1,6 +1,6 @@
 import Tests.BuildBottomUpObservations
 
-open Shuffler.BuildBottomUp BuildBottomUpTestSupport
+open Shuffler.Emission BuildBottomUpTestSupport
 
 namespace BuildBottomUpTests
 
@@ -100,7 +100,7 @@ example : (emptyState [.Var ⟨37⟩] ∅).produce 0 =
 example : (emptyState [.Var ⟨37⟩] {⟨38⟩}).produce 0 =
     .error (.assertion "generated slot has no copy on the stack and is not spilled") := rfl
 
-/-- info: 'Shuffler.BuildBottomUp.State.produce' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+/-- info: 'Shuffler.Emission.State.produce' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms State.produce
 

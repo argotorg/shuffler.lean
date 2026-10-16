@@ -1,7 +1,7 @@
 import Tests.BuildBottomUpObservations
 import Shuffler.BuildBottomUp.Lemmas.Contracts
 
-open Shuffler.BuildBottomUp
+open Shuffler.Emission
 
 namespace SwapWithTests
 
@@ -101,7 +101,7 @@ private def finalState : State [.Lit 10, .Lit 20] [.Lit 10] ∅ where
 example : finalState.swapWith 0 =
     .error (.assertion "swap target is already final") := rfl
 
-/-- info: 'Shuffler.BuildBottomUp.State.swapWith' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+/-- info: 'Shuffler.Emission.State.swapWith' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms State.swapWith
 

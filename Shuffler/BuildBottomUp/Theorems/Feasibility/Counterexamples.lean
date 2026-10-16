@@ -42,7 +42,7 @@ Reserve holds, and the stated trace reaches the exact target without POP.
    A valid trace is `DUP16; PUSH 0; SWAP1; SWAP15`.
 -/
 
-open Shuffler.Placement Shuffler.BuildBottomUp
+open Shuffler.Placement Shuffler.Emission
 
 set_option maxRecDepth 16384
 
