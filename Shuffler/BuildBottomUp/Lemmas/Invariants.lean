@@ -1,4 +1,5 @@
-import Shuffler.BuildBottomUp.Lemmas.Contracts
+import Shuffler.BuildBottomUp.Defs
+import Shuffler.Emission.Lemmas
 
 namespace Shuffler.Emission
 

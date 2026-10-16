@@ -1,4 +1,4 @@
-import Shuffler.BuildBottomUp.Defs
+import Shuffler.Emission.Defs
 import Std.Tactic.Do
 
 open Std.WP
