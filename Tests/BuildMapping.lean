@@ -3,7 +3,7 @@ import Shuffler
 open Shuffler.BuildMapping
 
 -- The theorems apply to the production function.
-example (source target : Stack) (dropped : List (Fin (2 ^ 8))) (strategy : WildcardSlotsStrategy)
+example (source target : Stack) (dropped : List Byte) (strategy : WildcardSlotsStrategy)
     (h : dropped.length = source.length) (reason : String) :
     buildMapping source target dropped strategy ≠ .error (.assertion reason) :=
   buildMapping_no_assertion source target dropped strategy h reason
@@ -14,7 +14,7 @@ private def a : Value := .Var ⟨0⟩
 private def b : Value := .Var ⟨1⟩
 
 -- The destination of every source slot, and whether a copy in a wildcard slot was seen.
-private def observe (source target : Stack) (dropped : List (Fin (2 ^ 8)))
+private def observe (source target : Stack) (dropped : List Byte)
     (strategy : WildcardSlotsStrategy := .Leave) :
     Option (List (Option ℕ) × Bool) :=
   match buildMapping source target dropped strategy with

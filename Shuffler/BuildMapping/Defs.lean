@@ -17,10 +17,11 @@ inductive CopyLocation : Type where
   | InWildcardSlots
   deriving DecidableEq, Repr
 
+abbrev Byte := Fin (2 ^ 8)
+
 -- source and target never change while the mapping is built, so they are parameters.
 structure MappingBuilder (source target : Stack) where
-  dropped : List (Fin (2 ^ 8))
-  hdropped : dropped.length = source.length
+  dropped : List Byte
   mapping : Mapping source.length target.length
   sawWildcardCopy : Bool := false
 
@@ -29,21 +30,23 @@ structure MappingBuilder (source target : Stack) where
 
 namespace MappingBuilder
 
+-- decides whether a source slot can be mapped to sth, ie. it is not dropped and not already mapped
+def mappable (self : MappingBuilder source target) (sourceOffset : Fin source.length) :
+    Except Error Bool := do
+  let ⟨_⟩ ← requires (sourceOffset.val < self.dropped.length) "dropped has no entry for the source slot"
+  return decide (self.dropped[sourceOffset.val] = 0 ∧ self.mapping sourceOffset = none)
+
+  -- decides whether a target slot is already assigned to a source slot
+def hasSourceAssigned (self : MappingBuilder source target) (targetOffset : Fin target.length) : Bool :=
+  (self.mapping.symm targetOffset).isSome
+
 -- decides whether a target slot is a wildcard slot
-def isWildcardTarget (_self : MappingBuilder source target) (targetOffset : Fin target.length) : Prop :=
+def isWildcardTarget (_self : MappingBuilder source target) (targetOffset : Fin target.length) : Bool :=
   target[targetOffset].is_junk
 
-instance (self : MappingBuilder source target) (targetOffset : Fin target.length) :
-    Decidable (self.isWildcardTarget targetOffset) := by
-  unfold isWildcardTarget; infer_instance
-
 -- decides whether a source slot is in a wildcard slot
-def inWildcardSlot (self : MappingBuilder source target) (sourceOffset : Fin source.length) : Prop :=
-  ∃ h : sourceOffset.val < target.length, self.isWildcardTarget ⟨sourceOffset.val, h⟩
-
-instance (self : MappingBuilder source target) (sourceOffset : Fin source.length) :
-    Decidable (self.inWildcardSlot sourceOffset) := by
-  unfold inWildcardSlot; infer_instance
+def inWildcardSlot (self : MappingBuilder source target) (sourceOffset : Fin source.length) : Bool :=
+  if h : sourceOffset.val < target.length then self.isWildcardTarget ⟨sourceOffset.val, h⟩ else false
 
 -- returns the absolute difference between two offsets
 def absDiff (_self : MappingBuilder source target) (sourceOffset : Fin source.length)
@@ -51,120 +54,93 @@ def absDiff (_self : MappingBuilder source target) (sourceOffset : Fin source.le
   if sourceOffset.val > targetOffset.val then sourceOffset.val - targetOffset.val
   else targetOffset.val - sourceOffset.val
 
--- decides whether a source slot can be mapped to sth, ie. it is not dropped and not already mapped
-def mappable (self : MappingBuilder source target) (sourceOffset : Fin source.length) : Prop :=
-  self.dropped[sourceOffset.val]'(by rw [self.hdropped]; exact sourceOffset.isLt) = 0 ∧
-    self.mapping sourceOffset = none
-
-instance (self : MappingBuilder source target) (sourceOffset : Fin source.length) :
-    Decidable (self.mappable sourceOffset) := by
-  unfold mappable; infer_instance
-
--- decides whether a target slot is already assigned to a source slot
-def hasSourceAssigned (self : MappingBuilder source target) (targetOffset : Fin target.length) : Prop :=
-  (self.mapping.symm targetOffset).isSome
-
-instance (self : MappingBuilder source target) (targetOffset : Fin target.length) :
-    Decidable (self.hasSourceAssigned targetOffset) := by
-  unfold hasSourceAssigned; infer_instance
-
 -- returns the mappable source slot closest to targetOffset (that is in a wildcardslot location), if any; on ties the shallower one wins
 def closestCopy (self : MappingBuilder source target) (targetOffset : Fin target.length)
-    (location : CopyLocation) : Option (Fin source.length) :=
-  (List.finRange source.length).foldl
-    (fun best i =>
-      if source[i] = target[targetOffset] ∧ self.mappable i ∧
-          (self.inWildcardSlot i ↔ location = .InWildcardSlots) then
-        match best with
-        | none => some i
-        | some b => if self.absDiff i targetOffset ≤ self.absDiff b targetOffset then some i else best
-      else best
-    ) none
+    (location : CopyLocation) : Except Error (Option (Fin source.length)) := do
+  let mut best : Option (Fin source.length) := none
+  for i in List.finRange source.length do
+    if source[i] = target[targetOffset] ∧ (← self.mappable i) ∧
+        (self.inWildcardSlot i ↔ location = .InWildcardSlots) then
+      match best with
+      | none => best := some i
+      | some b => if self.absDiff i targetOffset ≤ self.absDiff b targetOffset then best := some i
+  return best
 
--- helper, in C++ code in lines 192-199 of shuffler.cpp
+-- helper, in C++ code of shuffler.cpp in the `MappingBuilder` constructor: loop
+-- "the remaining wildcards absorb the closest surplus slot instead of having it popped"
 -- The mappable source slot closest to targetOffset; on ties the deeper one wins.
 def closestSurplus (self : MappingBuilder source target) (targetOffset : Fin target.length) :
-    Option (Fin source.length) :=
-  (List.finRange source.length).foldl
-    (fun best o =>
-      if self.mappable o then
-        match best with
-        | none => some o
-        | some b => if self.absDiff o targetOffset < self.absDiff b targetOffset then some o else best
-      else best
-    ) none
+    Except Error (Option (Fin source.length)) := do
+  let mut best : Option (Fin source.length) := none
+  for o in List.finRange source.length do
+    if ← self.mappable o then
+      match best with
+      | none => best := some o
+      | some b => if self.absDiff o targetOffset < self.absDiff b targetOffset then best := some o
+  return best
 
 -- binds a source slot to a target slot, returning a new mapping builder with the updated mapping
 def map (self : MappingBuilder source target) (sourceOffset : Fin source.length)
     (targetOffset : Fin target.length) : Except Error (MappingBuilder source target) := do
-  let ⟨hs⟩ ← requires (self.mappable sourceOffset) "source slot is dropped or already mapped"
+  let ⟨_⟩ ← requires (sourceOffset.val < self.dropped.length) "dropped has no entry for the source slot"
+  _ ← requires (self.dropped[sourceOffset.val] = 0) "source slot is dropped"
+  let ⟨hs⟩ ← requires (self.mapping sourceOffset = none) "source slot already mapped"
   let ⟨ht⟩ ← requires (self.mapping.symm targetOffset = none) "target slot already has a source"
-  return { self with mapping := self.mapping.bind sourceOffset targetOffset hs.2 ht }
+  return { self with mapping := self.mapping.bind sourceOffset targetOffset hs ht }
 
 end MappingBuilder
 
 
 ------------------------ buildMapping (in the constructor in shuffler.cpp) ----------------------------------
 
--- Each loop in the C++ constructor is one pass here: a foldlM over the offsets that threads the builder.
+def buildMapping (source target : Stack) (dropped : List Byte)
+    (strategy : WildcardSlotsStrategy) : Except Error (MappingBuilder source target) := do
+  _ ← requires (dropped.length = source.length) "dropped needs one entry per source slot"
+  let mut mb : MappingBuilder source target := { dropped, mapping := ⊥ }
 
--- slots already in place get mapped directly
-def mapInPlace (mb : MappingBuilder source target) : Except Error (MappingBuilder source target) :=
-  (List.finRange (min source.length target.length)).foldlM (fun mb j => do
+  -- slots already in place get mapped directly
+  for j in List.finRange (min source.length target.length) do
     let s := Fin.castLE (min_le_left _ _) j
     let t := Fin.castLE (min_le_right _ _) j
-    if source[s] = target[t] ∧ mb.mappable s then mb.map s t else return mb
-  ) mb
+    if source[s] = target[t] ∧ (← mb.mappable s) then
+      mb ← mb.map s t
 
--- the remaining target offsets take the closest unused copy, deepest first: what is left over is
--- generated on top, where that is cheapest
-def mapCopies (mb : MappingBuilder source target) : Except Error (MappingBuilder source target) :=
-  (List.finRange target.length).foldlM (fun mb t => do
-    if mb.hasSourceAssigned t ∨ mb.isWildcardTarget t then return mb
-    match mb.closestCopy t .OutsideWildcardSlots with
-    | some copy => mb.map copy t
-    | none => return mb
-  ) mb
+  -- the remaining target offsets take the closest unused copy, deepest first: what is left over is
+  -- generated on top, where that is cheapest
+  for t in List.finRange target.length do
+    if mb.hasSourceAssigned t ∨ mb.isWildcardTarget t then continue
+    match ← mb.closestCopy t .OutsideWildcardSlots with
+    | some copy => mb ← mb.map copy t
+    | none => pure ()
 
--- copies sitting in wildcard slots are taken or left according to the strategy
-def mapWildcardCopies (strategy : WildcardSlotsStrategy) (mb : MappingBuilder source target) :
-    Except Error (MappingBuilder source target) :=
-  (List.finRange target.length).foldlM (fun mb t => do
-    if mb.hasSourceAssigned t ∨ mb.isWildcardTarget t then return mb
-    match mb.closestCopy t .InWildcardSlots with
+  -- copies sitting in wildcard slots are taken or left according to the strategy
+  for t in List.finRange target.length do
+    if mb.hasSourceAssigned t ∨ mb.isWildcardTarget t then continue
+    match ← mb.closestCopy t .InWildcardSlots with
     | some copy =>
       -- a function return label is always taken, can't be duped or pushed;
-      if target[t].isFunctionReturnLabel then mb.map copy t
-      else if strategy = .Take then return { ← mb.map copy t with sawWildcardCopy := true }
-      else return { mb with sawWildcardCopy := true }
-    | none => return mb
-  ) mb
+      if target[t].isFunctionReturnLabel then
+        mb ← mb.map copy t
+      else
+        if strategy = .Take then
+          mb ← mb.map copy t
+        mb := { mb with sawWildcardCopy := true }
+    | none => pure ()
 
--- wildcards keep whatever sits there
-def keepWildcards (mb : MappingBuilder source target) : Except Error (MappingBuilder source target) :=
-  (List.finRange (min source.length target.length)).foldlM (fun mb j => do
+  -- wildcards keep whatever sits there
+  for j in List.finRange (min source.length target.length) do
     let s := Fin.castLE (min_le_left _ _) j
     let t := Fin.castLE (min_le_right _ _) j
-    if mb.isWildcardTarget t ∧ ¬ mb.hasSourceAssigned t ∧ mb.mappable s then mb.map s t
-    else return mb
-  ) mb
+    if mb.isWildcardTarget t ∧ ¬ mb.hasSourceAssigned t ∧ (← mb.mappable s) then
+      mb ← mb.map s t
 
--- the remaining wildcards absorb the closest surplus slot instead of having it popped
-def absorbSurplus (mb : MappingBuilder source target) : Except Error (MappingBuilder source target) :=
-  (List.finRange target.length).foldlM (fun mb t => do
-    if mb.hasSourceAssigned t ∨ ¬ mb.isWildcardTarget t then return mb
-    match mb.closestSurplus t with
-    | some best => mb.map best t
-    | none => return mb
-  ) mb
+  -- the remaining wildcards absorb the closest surplus slot instead of having it popped
+  for t in List.finRange target.length do
+    if mb.hasSourceAssigned t ∨ ¬ mb.isWildcardTarget t then continue
+    match ← mb.closestSurplus t with
+    | some best => mb ← mb.map best t
+    | none => pure ()
 
-def buildMapping (source target : Stack) (dropped : List (Fin (2 ^ 8)))
-    (strategy : WildcardSlotsStrategy) : Except Error (MappingBuilder source target) := do
-  let ⟨hsizes⟩ ← requires (dropped.length = source.length) "dropped needs one entry per source slot"
-  let mb ← mapInPlace { dropped, hdropped := hsizes, mapping := ⊥ }
-  let mb ← mapCopies mb
-  let mb ← mapWildcardCopies strategy mb
-  let mb ← keepWildcards mb
-  absorbSurplus mb
+  return mb
 
 end Shuffler.BuildMapping
