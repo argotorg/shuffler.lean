@@ -7,6 +7,11 @@ example (initial : State source target spills) (reason : String) :
     removeSurplus initial ≠ .error (.assertion reason) :=
   removeSurplus_no_assertion initial reason
 
+open Shuffler.Emission in
+example (initial result : State source target spills) (h : removeSurplus initial = .ok result)
+    (dest : Fin target.length) : result.boundValue dest = initial.boundValue dest :=
+  removeSurplus_keeps_bindings initial result h dest
+
 namespace RemoveSurplusTests
 open Shuffler.Emission BuildBottomUpTestSupport
 

@@ -183,7 +183,7 @@ def State.pop (state : State source target spills) : Except Error (State source 
     state with
     stack := state.stack.dropLast
     trace := .Pop hne state.trace
-    mapping := Mapping.pop (cast (by rw [List.length_dropLast, Nat.sub_add_cancel hne]) state.mapping)
+    mapping := (stack_pop_len state.stack hne ▸ state.mapping).pop
   }
 
 end Shuffler.Emission

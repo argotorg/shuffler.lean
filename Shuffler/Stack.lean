@@ -102,6 +102,10 @@ lemma top_lt_length (stack : Stack) (pos : Fin stack.length) :
 lemma stack_push_len (stack : Stack) (slot : Value) :
   stack.length + 1 = (stack ++ [slot]).length := by simp
 
+lemma stack_pop_len (stack : Stack) (h : 0 < stack.length) :
+    stack.length = stack.dropLast.length + 1 := by
+  simp; omega
+
 
 --- Matching ---------------------------------------------------------------------------------------
 

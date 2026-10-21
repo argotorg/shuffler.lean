@@ -1,11 +1,6 @@
 import Shuffler.BuildBottomUp.Defs
 import Shuffler.BuildBottomUp.Lemmas.Invariants
 
-@[simp] theorem Mapping.cast_symm (mapping : Mapping m t) (h : m = n) (dest : Fin t) :
-    (h ▸ mapping).symm dest = (mapping.symm dest).map (Fin.cast h) := by
-  subst n
-  simp
-
 namespace Shuffler.Emission
 
 theorem swap_eq_of_equal (stack : Stack) (a b : Fin stack.length)
