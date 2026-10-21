@@ -419,6 +419,33 @@ end Mapping
     (mapping.swapDestinations a b).unmapped_target_slots = mapping.unmapped_target_slots := by
   simp [Mapping.unmapped_target_slots]
 
+@[simp] theorem Mapping.cast_symm (mapping : Mapping m t) (h : m = n) (dest : Fin t) :
+    (h ▸ mapping).symm dest = (mapping.symm dest).map (Fin.cast h) := by
+  subst n
+  simp
+
+@[simp] theorem Mapping.cast_apply (mapping : Mapping m t) (h : m = n) (pos : Fin n) :
+    (h ▸ mapping) pos = mapping (Fin.cast h.symm pos) := by
+  subst n
+  simp
+
+-- Popping an unbound top keeps every binding: each target keeps the position it is bound to.
+theorem Mapping.pop_symm_of_top_none (mapping : Mapping (n + 1) t)
+    (htop : mapping (Fin.last n) = none) (dest : Fin t) :
+    (mapping.pop.symm dest).map Fin.castSucc = mapping.symm dest := by
+  change ((mapping.symm dest).bind _).map Fin.castSucc = _
+  cases h : mapping.symm dest with
+  | none => rfl
+  | some i =>
+    have hi : i.val < n := by
+      have hne : i ≠ Fin.last n := by
+        rintro rfl
+        rw [mapping.eq_some_iff.mp h] at htop
+        cases htop
+      have := i.isLt
+      exact lt_of_le_of_ne (Nat.lt_succ_iff.mp this) (fun heq => hne (Fin.ext heq))
+    simp [hi]
+
 @[simp] theorem Mapping.cast_symm_val (mapping : Mapping n target_len) (h : n = m)
     (i : Fin target_len) :
     ((h ▸ mapping).symm i).map Fin.val = (mapping.symm i).map Fin.val := by

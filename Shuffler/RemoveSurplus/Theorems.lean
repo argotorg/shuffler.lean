@@ -21,7 +21,17 @@ theorem removeSurplus_noSurplus (initial result : State source target spills)
     (h : removeSurplus initial = .ok result) : result.noSurplus := by
   have hs := (spec_iff_triple _ _).mpr (removeSurplus_triple initial)
   rw [h] at hs
-  exact hs
+  exact hs.1
+
+-- removeSurplus only ever pops surplus slots: every target offset that had a slot bound to it still
+-- has one, holding the same value, and no new binding appears. (A slot equal to the top may take over
+-- the top's destination first; the top is then surplus when it is popped.)
+theorem removeSurplus_keeps_bindings (initial result : State source target spills)
+    (h : removeSurplus initial = .ok result) (dest : Fin target.length) :
+    result.boundValue dest = initial.boundValue dest := by
+  have hs := (spec_iff_triple _ _).mpr (removeSurplus_triple initial)
+  rw [h] at hs
+  exact congrFun hs.2 dest
 
 -- Audit the whole function, including the loops and the actions.
 /-- info: 'Shuffler.Emission.removeSurplus' depends on opaque or partial definitions: [String.Internal.append] -/
@@ -39,5 +49,9 @@ theorem removeSurplus_noSurplus (initial result : State source target spills)
 /-- info: 'Shuffler.Emission.removeSurplus_noSurplus' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms removeSurplus_noSurplus
+
+/-- info: 'Shuffler.Emission.removeSurplus_keeps_bindings' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms removeSurplus_keeps_bindings
 
 end Shuffler.Emission
