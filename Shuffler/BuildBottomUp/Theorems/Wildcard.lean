@@ -1,7 +1,7 @@
 import Shuffler.Stack
 import Shuffler.BuildBottomUp.Theorems.Static
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 theorem expectedStack_matches (state : State source target spills)
     (hmapped : ∀ i j, state.mapping i = some j → SlotMatches state.stack[i] target[j]) :
@@ -36,4 +36,4 @@ theorem buildBottomUp_matches_iff_static (initial : State source target spills)
     obtain ⟨res, trace, hrun⟩ := (buildBottomUp_succeeds_iff_static initial h).mpr hs
     exact ⟨res, trace, hrun, buildBottomUp_matches_of_ok initial h hmapped hrun⟩
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

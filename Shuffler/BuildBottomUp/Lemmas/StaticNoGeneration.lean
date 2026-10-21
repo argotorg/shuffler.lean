@@ -1,7 +1,7 @@
 import Shuffler.BuildBottomUp.Lemmas.StaticCompletion
 import Shuffler.BuildBottomUp.Lemmas.StaticTerminal
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 namespace Success
 
@@ -71,4 +71,4 @@ theorem loop_success_iff_completedFixed (cursor : Nat) (state : State source tar
   rw [loop_success_iff_permutation cursor state inv hp hlen (Success.source_total state h)]
   exact Success.all_swaps_reachable_iff_completedFixed state h hlen (Success.source_total state h)
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

@@ -1,12 +1,7 @@
 import Shuffler.BuildBottomUp.Defs
 import Shuffler.BuildBottomUp.Lemmas.Invariants
 
-@[simp] theorem Mapping.cast_symm (mapping : Mapping m t) (h : m = n) (dest : Fin t) :
-    (h ▸ mapping).symm dest = (mapping.symm dest).map (Fin.cast h) := by
-  subst n
-  simp
-
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 theorem swap_eq_of_equal (stack : Stack) (a b : Fin stack.length)
     (heq : stack[a] = stack[b]) : stack.swap a b = stack := by
@@ -128,4 +123,4 @@ theorem expectedStack_permutation (state : State source target spills)
   simp [Shuffler.Permute.apply_permutation, State.expectedStack,
     state.mapping.eq_some_iff.mpr hb, perm]
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

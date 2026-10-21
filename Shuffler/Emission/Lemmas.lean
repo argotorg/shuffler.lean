@@ -1,11 +1,11 @@
-import Shuffler.BuildBottomUp.Defs
+import Shuffler.Emission.Defs
 import Std.Tactic.Do
 
 open Std.Internal.Do
 
 set_option mvcgen.warning false
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 -- A blocked operation is allowed. An assertion error is excluded.
 def Spec (result : Except Error α) (post : α → Prop) : Prop :=
@@ -106,4 +106,4 @@ theorem swapDestinations_result (state : State source target spills)
   simp only [State.swapDestinations, index_eq]
   rfl
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

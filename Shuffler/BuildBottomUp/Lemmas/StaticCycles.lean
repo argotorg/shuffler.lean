@@ -1,7 +1,7 @@
 import Mathlib.GroupTheory.Perm.Cycle.Basic
 
 open Equiv
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 variable {α : Type*} [DecidableEq α]
 
@@ -139,4 +139,4 @@ theorem ContractsCycles.fixed_below_iff {m c d : Nat} {p q : Equiv.Perm (Fin m)}
     · exact (h.fixed_iff hi).mpr (fun j hj hcycle => hall i j hi hid hj hcycle)
     · exact h.fixed i (by omega)
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

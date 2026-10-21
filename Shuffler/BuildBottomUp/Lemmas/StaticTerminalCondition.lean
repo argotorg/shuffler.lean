@@ -3,7 +3,7 @@ import Shuffler.BuildBottomUp.Lemmas.StaticCopyBridge
 import Shuffler.BuildBottomUp.Lemmas.StaticCycleBridge
 import Shuffler.BuildBottomUp.Lemmas.StaticNoGeneration
 
-namespace Shuffler.BuildBottomUp.Success
+namespace Shuffler.Emission.Success
 
 -- At the fixed cutoff, either all original holes are complete or the current
 -- assigned destination has exactly seventeen stack slots left to process.
@@ -63,4 +63,4 @@ theorem terminal_success_iff (initial : State source target spills) (hvalid : in
     rw [← hp'.ready_iff, ← hp'.boundarySafe_iff hc current carrier rfl hb] at hterminal
     simpa only [hcut, Terminal, ite_eq_right hfirst] using hterminal
 
-end Shuffler.BuildBottomUp.Success
+end Shuffler.Emission.Success

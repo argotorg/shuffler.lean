@@ -1,7 +1,7 @@
 import Shuffler.BuildBottomUp.Defs
 
 namespace BuildBottomUpExhaustiveTests
-open Shuffler.BuildBottomUp
+open Shuffler.Emission
 
 set_option maxRecDepth 16384
 

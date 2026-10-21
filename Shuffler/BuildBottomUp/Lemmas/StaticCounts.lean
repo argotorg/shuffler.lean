@@ -1,6 +1,6 @@
 import Shuffler.BuildBottomUp.Lemmas.StaticPermutation
 
-namespace Shuffler.BuildBottomUp.Success
+namespace Shuffler.Emission.Success
 
 theorem generatedBefore_le (initial : State source target spills) (cursor : Nat) :
     generatedBefore initial cursor ≤ initial.mapping.unmapped_target_slots :=
@@ -280,4 +280,4 @@ theorem augmentedStack_take_succ_hole (initial : State source target spills)
   rw [hvalue]
   rfl
 
-end Shuffler.BuildBottomUp.Success
+end Shuffler.Emission.Success

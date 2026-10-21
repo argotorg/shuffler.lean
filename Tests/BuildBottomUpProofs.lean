@@ -1,6 +1,6 @@
 import Shuffler
 
-open Shuffler.BuildBottomUp
+open Shuffler.Emission
 
 open Lean Elab Command in
 run_cmd do

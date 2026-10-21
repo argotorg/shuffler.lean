@@ -2,7 +2,7 @@ import Shuffler.BuildBottomUp.Lemmas.StaticInvariant
 import Shuffler.BuildBottomUp.Lemmas.StaticCompletion
 import Shuffler.BuildBottomUp.Lemmas.StaticGeneration
 
-namespace Shuffler.BuildBottomUp.Success
+namespace Shuffler.Emission.Success
 
 theorem completedPermutation_of_bound (state : State source target spills) (h : state.Valid)
     (carrier : Fin state.stack.length) (dest : Fin target.length)
@@ -52,4 +52,4 @@ theorem PrefixState.retag {initial state : State source target spills} {h : init
     exact hp.cycles.step_of_apply hc (stackIndex state hp.invariant.valid carrier)
       (completedPermutation_of_bound state hp.invariant.valid carrier _ hb)
 
-end Shuffler.BuildBottomUp.Success
+end Shuffler.Emission.Success

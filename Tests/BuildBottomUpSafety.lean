@@ -1,6 +1,6 @@
 import Shuffler
 
-open Shuffler.BuildBottomUp
+open Shuffler.Emission
 
 -- The theorem applies to the production function and excludes each assertion reason.
 example (initial : State source target spills) (h : initial.Valid) (reason : String) :

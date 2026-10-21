@@ -1,6 +1,6 @@
 import Shuffler.BuildBottomUp.Lemmas.StaticPermutation
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 private theorem permute_success_iff (spills : SpillSet) (stack : Stack)
     (perm : Shuffler.Permute.Permutation stack) :
@@ -52,4 +52,4 @@ theorem loop_success_iff_permutation (cursor : Nat) (state : State source target
     simp [Except.mapError, Succeeds]
 termination_by target.length - cursor
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission
