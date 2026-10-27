@@ -12,8 +12,8 @@ private def unboundState (stack target : Stack) : State stack target ∅ where
   pending_generations := target.length
 
 -- Observe the stack, source assigned to each target, swap count, and generation count.
-private def observe (result : Except Error (State source target spills)) :
-    Except Error (Stack × List (Option ℕ) × ℕ × ℕ) :=
+private def observe (result : Except ShuffleErr (State source target spills)) :
+    Except ShuffleErr (Stack × List (Option ℕ) × ℕ × ℕ) :=
   result.map fun state =>
     (state.stack, List.ofFn (fun d => (state.mapping.symm d).map Fin.val),
       state.trace.swapCount, state.pending_generations)
@@ -59,7 +59,7 @@ example : observe ((unboundState (.Lit 7 :: List.replicate (MAX_SWAP_DEPTH + 1) 
 -- A blocked duplication propagates the produce error.
 example : observe ((unboundState (.Var ⟨37⟩ :: List.replicate (MAX_DUP_DEPTH + 1) (.Lit 9))
     [.Var ⟨37⟩]).generate 0) =
-    .error (.blocked 1) := rfl
+    .error (.Blocked 1) := rfl
 
 /-- info: 'Shuffler.Emission.State.generate' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in

@@ -32,10 +32,10 @@ def UrgentChoice (state : State source target spills) (choice : Option ℕ) : Pr
           continue
         if let some copy := state.stack.shallowestCopyPosition slot then
           if ¬ state.stack.isDupReachable copy then
-            throw (.blocked ((state.depthOf copy) - MAX_DUP_DEPTH))
+            throw (.Blocked ((state.depthOf copy) - MAX_DUP_DEPTH))
           if (state.depthOf copy) = MAX_DUP_DEPTH ∧ copy.val ≠ cursor ∧ urgent.isNone then
             urgent := some offset
-      return urgent : Except Error (Option ℕ))
+      return urgent : Except ShuffleErr (Option ℕ))
     ⦃fun urgent => UrgentChoice state urgent; allowedErrors⦄ := by
   simp only [Std.Legacy.Range.forIn_eq_forIn_range']
   vcgen invariants
@@ -57,7 +57,7 @@ def Chosen (state : State source target spills) (copy : Fin state.stack.length) 
         if (← slotAt state.stack candidate) = (← slotAt state.stack copy) ∧ ¬ state.isFinal (← index state.stack.length candidate) then
           pos := candidate
           break
-      return pos : Except Error ℕ)
+      return pos : Except ShuffleErr ℕ)
     ⦃fun pos => Chosen state copy pos; allowedErrors⦄ := by
   vcgen invariants
   · fun _ _ pos => Chosen state copy pos

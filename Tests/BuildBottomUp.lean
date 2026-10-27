@@ -53,7 +53,7 @@ private def emptyState (target : Stack) (spills : SpillSet) : State [] target sp
 
 private def spilled : State [] [.Var ⟨37⟩] {⟨37⟩} := emptyState _ _
 
-private def observeState (result : Except Error (State source target spills)) :=
+private def observeState (result : Except ShuffleErr (State source target spills)) :=
   result.map fun state =>
     (state.stack, operations state.trace,
       List.ofFn (fun dest => (state.mapping.symm dest).map Fin.val), state.pending_generations)
@@ -84,7 +84,7 @@ example : observeState ((copyState MAX_DUP_DEPTH {⟨37⟩}).produce 0) =
     .ok ((copyState MAX_DUP_DEPTH {⟨37⟩}).stack ++ [.Var ⟨37⟩], [.dup 16], [some 16], 0) := rfl
 
 -- One slot beyond DUP reach blocks unless a spill can be loaded.
-example : (copyState (MAX_DUP_DEPTH + 1) ∅).produce 0 = .error (.blocked 1) := rfl
+example : (copyState (MAX_DUP_DEPTH + 1) ∅).produce 0 = .error (.Blocked 1) := rfl
 example : observeState ((copyState (MAX_DUP_DEPTH + 1) {⟨37⟩}).produce 0) =
     .ok ((copyState (MAX_DUP_DEPTH + 1) {⟨37⟩}).stack ++ [.Var ⟨37⟩], [.load ⟨37⟩], [some 17], 0) := rfl
 

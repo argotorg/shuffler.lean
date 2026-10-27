@@ -1,21 +1,13 @@
-import Mathlib.Data.Nat.Notation
+import Shuffler.Basic
 
--- Errors and runtime checks shared by BuildBottomUp and BuildMapping.
+-- Runtime checks shared by BuildBottomUp and BuildMapping.
 -- The definitions check conditions at runtime with `requires`; separate theorems prove that the
 -- checks never fail.
 
 namespace Shuffler
 
--- Operations report blocked operations and assertion failures separately.
-inductive Error where
-  -- The slot is out of reach by `excess` slots (might be recoverable)
-  -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:277-281.
-  | blocked (excess : ℕ)
-  | assertion (reason : String)
-  deriving DecidableEq, Repr
-
 -- returns a proof of `condition` if it holds, or throws with an assertion error otherwise.
-def requires (condition : Prop) [Decidable condition] (reason : String) : Except Error (PLift condition) :=
+def requires (condition : Prop) [Decidable condition] (reason : String) : Except ShuffleErr (PLift condition) :=
   if h : condition then pure ⟨h⟩ else throw (.assertion reason)
 
 theorem except_ok_bind (value : α) (next : α → Except ε β) :

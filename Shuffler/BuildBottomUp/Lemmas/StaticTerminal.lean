@@ -46,10 +46,10 @@ theorem loop_success_iff_permutation (cursor : Nat) (state : State source target
   rw [requires_of_true (∀ i, (state.destinationOf i).isSome) hsource, except_ok_bind]
   rw [← permute_success_iff spills state.stack (state.mapping.toPermutation hlen hsource)]
   cases heq : Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hlen hsource) with
-  | error err => simp [Except.mapError, Succeeds]
+  | error err => simp [Succeeds]
   | ok result =>
     obtain ⟨res, trace⟩ := result
-    simp [Except.mapError, Succeeds]
+    simp [Succeeds]
 termination_by target.length - cursor
 
 end Shuffler.Emission

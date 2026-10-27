@@ -127,10 +127,10 @@ theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
           continue
         if let some copy := state.stack.shallowestCopyPosition slot then
           if ¬ state.stack.isDupReachable copy then
-            throw (.blocked ((state.depthOf copy) - MAX_DUP_DEPTH))
+            throw (.Blocked ((state.depthOf copy) - MAX_DUP_DEPTH))
           if (state.depthOf copy) = MAX_DUP_DEPTH ∧ copy.val ≠ cursor ∧ urgent.isNone then
             urgent := some offset
-      return urgent : Except Error (Option ℕ))
+      return urgent : Except ShuffleErr (Option ℕ))
     ⦃fun urgent =>
       ScanProgress cursor state (List.range' cursor (target.length - cursor)) urgent⦄ := by
   simp only [Std.Legacy.Range.forIn_eq_forIn_range']
@@ -180,7 +180,7 @@ theorem copyScan_success (state : State source target spills) (copy : Fin state.
         if (← slotAt state.stack candidate) = (← slotAt state.stack copy) ∧ ¬ state.isFinal (← index state.stack.length candidate) then
           pos := candidate
           break
-      return pos : Except Error ℕ)
+      return pos : Except ShuffleErr ℕ)
     ⦃fun pos => Chosen state copy pos⦄ := by
   vcgen [slotAt, index] invariants
   · fun _ _ pos => Chosen state copy pos

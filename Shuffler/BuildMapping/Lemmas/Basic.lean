@@ -8,7 +8,7 @@ variable {source target : Stack}
 
 -- The result is `.ok` and satisfies `post`. Unlike BuildBottomUp's `Spec`, no error is allowed:
 -- buildMapping never blocks.
-def Succeeds (result : Except Error α) (post : α → Prop) : Prop :=
+def Succeeds (result : Except ShuffleErr α) (post : α → Prop) : Prop :=
   match result with
   | .ok value => post value
   | .error _ => False
@@ -17,29 +17,29 @@ def Succeeds (result : Except Error α) (post : α → Prop) : Prop :=
     Succeeds (.ok value) post ↔ post value := Iff.rfl
 
 @[simp] theorem succeeds_pure (value : α) (post : α → Prop) :
-    Succeeds (pure value : Except Error α) post ↔ post value := Iff.rfl
+    Succeeds (pure value : Except ShuffleErr α) post ↔ post value := Iff.rfl
 
-theorem Succeeds.exists {result : Except Error α} {post : α → Prop} (h : Succeeds result post) :
+theorem Succeeds.exists {result : Except ShuffleErr α} {post : α → Prop} (h : Succeeds result post) :
     ∃ value, result = .ok value ∧ post value := by
   cases result with
   | ok value => exact ⟨value, rfl, h⟩
   | error _ => exact h.elim
 
-theorem Succeeds.bind {result : Except Error α} {pre : α → Prop} {next : α → Except Error β}
+theorem Succeeds.bind {result : Except ShuffleErr α} {pre : α → Prop} {next : α → Except ShuffleErr β}
     {post : β → Prop} (h : Succeeds result pre) (step : ∀ value, pre value → Succeeds (next value) post) :
     Succeeds (result >>= next) post := by
   cases result with
   | ok value => exact step value h
   | error _ => exact h.elim
 
-theorem Succeeds.mono {result : Except Error α} {pre post : α → Prop}
+theorem Succeeds.mono {result : Except ShuffleErr α} {pre post : α → Prop}
     (h : Succeeds result pre) (step : ∀ value, pre value → post value) : Succeeds result post := by
   cases result with
   | ok value => exact step value h
   | error _ => exact h.elim
 
 -- A `for` loop succeeds if every iteration succeeds and preserves the invariant.
-theorem Succeeds.forIn (inv : β → Prop) (l : List α) (init : β) (f : α → β → Except Error (ForInStep β))
+theorem Succeeds.forIn (inv : β → Prop) (l : List α) (init : β) (f : α → β → Except ShuffleErr (ForInStep β))
     (h : inv init) (step : ∀ a b, inv b → Succeeds (f a b) fun r => inv r.value) :
     Succeeds (forIn l init f) inv := by
   induction l generalizing init with

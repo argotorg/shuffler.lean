@@ -74,7 +74,7 @@ private def boundaryState (copies : Nat) (spills : SpillSet := ∅) :=
 
 example : checked (boundaryState 1) false := by native_decide
 example : (buildBottomUp (boundaryState 1) (by native_decide)).map (fun result => result.1) =
-    .error (.blocked 1) := by native_decide
+    .error (.Blocked 1) := by native_decide
 example : checked (boundaryState 2) true := by native_decide
 example : checked (boundaryState 1 {⟨1⟩}) true := by native_decide
 
@@ -105,7 +105,7 @@ private def deepPermutation := stateFor (List.replicate 18 (.Lit 0))
 example : checked deepPermutation false := by native_decide
 example : deepPermutation.pending_generations = 0 := by decide
 example : (buildBottomUp deepPermutation (by native_decide)).map (fun result => result.1) =
-    .error (.blocked 1) := by native_decide
+    .error (.Blocked 1) := by native_decide
 
 private def deepIdentity := stateFor (List.replicate 24 (.Lit 0))
   (List.replicate 24 (.Lit 0)) (List.range 24)

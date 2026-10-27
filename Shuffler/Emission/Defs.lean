@@ -7,7 +7,7 @@ import Std.WP
 import Std.Tactic.Do
 
 -- TODO: make numeric types here match the c++ types
--- TODO: make the Error.blocked args match the c++
+-- TODO: make the ShuffleErr.Blocked args match the c++
 -- TODO: add a Depth / Offset type
 -- TODO: Dup should not accept a FunctionReturnLabel
 
@@ -38,12 +38,12 @@ structure State (source target : Stack) (spills : SpillSet) where
 
 
 -- convert offset to a `Fin size` if offset < size. throw an assertion error otherwise.
-def index (size offset : ℕ) : Except Error (Fin size) := do
+def index (size offset : ℕ) : Except ShuffleErr (Fin size) := do
   if h : offset < size then return ⟨offset, h⟩
   else throw (.assertion "offset is out of bounds")
 
 -- return the slot at offset if offset < stack.length. throw an assertion error otherwise.
-def slotAt (stack : Stack) (offset : ℕ) : Except Error Value := do
+def slotAt (stack : Stack) (offset : ℕ) : Except ShuffleErr Value := do
   return stack[← index stack.length offset]
 
 
@@ -96,8 +96,8 @@ instance (state : State source target spills) (pos : Fin state.stack.length) :
 
 -- A swap cannot reach the slot at `pos`: it is out of reach by `depth - MAX_SWAP_DEPTH` slots
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:811-814 (at 6db6505).
-def State.blockSwapUnreachable (state : State source target spills) (pos : Fin state.stack.length) : Error :=
-  .blocked ((state.depthOf pos).val - MAX_SWAP_DEPTH)
+def State.blockSwapUnreachable (state : State source target spills) (pos : Fin state.stack.length) : ShuffleErr :=
+  .Blocked ((state.depthOf pos).val - MAX_SWAP_DEPTH)
 
 
 --- Actions ----------------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ def State.blockSwapUnreachable (state : State source target spills) (pos : Fin s
 
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:780-784.
 def State.push (state : State source target spills)
-    (slot : Value) (dest : Fin target.length) : Except Error (State source target spills) := do
+    (slot : Value) (dest : Fin target.length) : Except ShuffleErr (State source target spills) := do
 
   let ⟨hbound⟩ ← requires (state.positionOf dest = none) "destination already bound to a slot"
   let ⟨hgen⟩ ← requires (slot.can_be_freely_generated ∨ spills.is_spilled slot) "pushed slot cannot be generated or loaded"
@@ -123,7 +123,7 @@ def State.push (state : State source target spills)
 
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:786-790.
 def State.dup (state : State source target spills)
-    (offset : ℕ) (dest : Fin target.length) : Except Error (State source target spills) := do
+    (offset : ℕ) (dest : Fin target.length) : Except ShuffleErr (State source target spills) := do
 
   let copy ← index state.stack.length offset
   let depth := state.stack.offsetToDepth copy
@@ -144,7 +144,7 @@ def State.dup (state : State source target spills)
 -- Exchanges the destinations of the slots at `a` and `b`
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:100-107.
 def State.swapDestinations (state : State source target spills) (a b : ℕ)
-    : Except Error (State source target spills) := do
+    : Except ShuffleErr (State source target spills) := do
 
   let a ← index state.stack.length a
   let b ← index state.stack.length b
@@ -153,7 +153,7 @@ def State.swapDestinations (state : State source target spills) (a b : ℕ)
 -- Swaps the top with the slot at `offset`, the destinations traveling along
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:767-772.
 def State.swapWith (state : State source target spills)
-    (offset : ℕ) : Except Error (State source target spills) := do
+    (offset : ℕ) : Except ShuffleErr (State source target spills) := do
 
   let pos ← index state.stack.length offset
   let depth := state.stack.offsetToDepth pos
@@ -172,7 +172,7 @@ def State.swapWith (state : State source target spills)
 
 -- Removes the top slot together with its destination, if any
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:785-789 (at 6db6505).
-def State.pop (state : State source target spills) : Except Error (State source target spills) := do
+def State.pop (state : State source target spills) : Except ShuffleErr (State source target spills) := do
 
   let ⟨hne⟩ ← requires (0 < state.stack.length) "pop on an empty stack"
 

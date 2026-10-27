@@ -7,7 +7,11 @@ def MAX_SWAP_DEPTH := 16
 def MAX_DUP_DEPTH := 15
 
 inductive ShuffleErr : Type where
-  | Blocked : ℕ → ShuffleErr
+  -- The slot is out of reach by `excess` slots (might be recoverable).
+  -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:277-281.
+  | Blocked (excess : ℕ)
+  | assertion (reason : String)
+  deriving DecidableEq, Repr
 
 abbrev Word := Fin (2 ^ 256)
 

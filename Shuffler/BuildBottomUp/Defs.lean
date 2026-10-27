@@ -80,7 +80,7 @@ def State.expectedStack (state : State source target spills) : Stack :=
 -- Produces the slot for `targetOffset`
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:388-405.
 def State.produce (current : State source target spills)
-    (targetOffset : Fin target.length) : Except Error (State source target spills) := do
+    (targetOffset : Fin target.length) : Except ShuffleErr (State source target spills) := do
 
   let mut state := current
 
@@ -94,7 +94,7 @@ def State.produce (current : State source target spills)
   else if slot.can_be_freely_generated ∨ spills.is_spilled slot then
     state ← state.push slot targetOffset
   else if h : copy.isSome then
-    throw (.blocked (state.stack.offsetToDepth (copy.get h) - MAX_DUP_DEPTH))
+    throw (.Blocked (state.stack.offsetToDepth (copy.get h) - MAX_DUP_DEPTH))
   else
     throw (.assertion "generated slot has no copy on the stack and is not spilled")
 
@@ -106,7 +106,7 @@ def State.produce (current : State source target spills)
 -- one, which may be its own placement. An equal slot there just takes over the destination.
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:410-426.
 def State.generate (current : State source target spills)
-    (targetOffset : ℕ) : Except Error (State source target spills) := do
+    (targetOffset : ℕ) : Except ShuffleErr (State source target spills) := do
 
   let mut state := current
   state ← state.produce (← index target.length targetOffset)
@@ -150,14 +150,14 @@ private theorem generate_pending_generations (state next : State source target s
 def buildBottomUp
   (initial : State source target spills)
   (_hvalid : initial.Valid)
-    : Except Error ((res : Stack) × Trace spills source res) := do
+    : Except ShuffleErr ((res : Stack) × Trace spills source res) := do
   let ⟨res, trace⟩ ← loop 0 initial
   _ ← requires (res.length = target.length) "stack and target sizes differ"
   return ⟨res, trace⟩
 where
   -- Reads before a retry use `state` directly, so the termination proof can relate it to `_hgen`.
   loop (targetOffset : ℕ) (current : State source target spills) :
-      Except Error ((res : Stack) × Trace spills source res) := do
+      Except ShuffleErr ((res : Stack) × Trace spills source res) := do
     let mut state := current
     if targetOffset ≥ target.length then
       return ⟨state.stack, state.trace⟩
@@ -173,8 +173,7 @@ where
 
       -- every slot goes to the offset it is bound for
       let ⟨res, trace⟩ ←
-        (Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hlen hbound)).mapError
-          (ε' := Error) fun (.Blocked excess) => .blocked excess
+        Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hlen hbound)
       return ⟨res, state.trace.concat trace⟩
 
     -- a target offset that needs something DUPed urgently before it goes out of dup reach
@@ -191,7 +190,7 @@ where
 
       if let some sourceCopy := state.stack.shallowestCopyPosition slot then
         if ¬ state.stack.isDupReachable sourceCopy then
-          throw (.blocked ((state.depthOf sourceCopy) - MAX_DUP_DEPTH))
+          throw (.Blocked ((state.depthOf sourceCopy) - MAX_DUP_DEPTH))
         -- a copy sitting at the offset being filled floats to the top when it is, so no hurry
         if (state.depthOf sourceCopy) = MAX_DUP_DEPTH ∧ sourceCopy.val ≠ targetOffset ∧ urgentToDup.isNone then
           urgentToDup := some offset
@@ -257,7 +256,7 @@ where
       -- if `pos` is not already at the top of the stack, swap it up
       if pos ≠ state.stack.length - 1 then
         if ¬ (state.isSwapReachable (← index state.stack.length pos)) then
-          throw (.blocked (state.depthOf (← index state.stack.length pos) - MAX_SWAP_DEPTH)) -- bail
+          throw (.Blocked (state.depthOf (← index state.stack.length pos) - MAX_SWAP_DEPTH)) -- bail
         state ← state.swapWith pos
     else
       -- the slot needs to be DUPed
@@ -271,7 +270,7 @@ where
     _ ← requires (¬ state.isFinal (← index state.stack.length targetOffset)) "target slot is already final"
     if targetOffset ≠ state.stack.length - 1 then
       if ¬ (state.isSwapReachable (← index state.stack.length targetOffset)) then
-        throw (.blocked ((state.depthOf (← index state.stack.length targetOffset)) - MAX_SWAP_DEPTH))
+        throw (.Blocked ((state.depthOf (← index state.stack.length targetOffset)) - MAX_SWAP_DEPTH))
       state ← state.swapWith targetOffset
 
     return ← loop (targetOffset + 1) state

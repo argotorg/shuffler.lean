@@ -8,16 +8,16 @@ set_option experimental.vcgen true
 namespace Shuffler.Emission
 
 -- A blocked operation is allowed. An assertion error is excluded.
-def Spec (result : Except Error α) (post : α → Prop) : Prop :=
+def Spec (result : Except ShuffleErr α) (post : α → Prop) : Prop :=
   match result with
   | .ok value => post value
-  | .error (.blocked _) => True
+  | .error (.Blocked _) => True
   | .error (.assertion _) => False
 
-def allowedErrors : Error → Prop :=
-  fun | .blocked _ => True | .assertion _ => False
+def allowedErrors : ShuffleErr → Prop :=
+  fun | .Blocked _ => True | .assertion _ => False
 
-theorem spec_iff_triple (result : Except Error α) (post : α → Prop) :
+theorem spec_iff_triple (result : Except ShuffleErr α) (post : α → Prop) :
     Spec result post ↔ ⦃True⦄ result ⦃post; allowedErrors⦄ := by
   cases result with
   | ok value => exact ⟨fun h => ⟨fun _ => h⟩, fun h => h.le_wp trivial⟩
@@ -41,7 +41,7 @@ theorem spec_iff_triple (result : Except Error α) (post : α → Prop) :
     ⦃fun s => s = { state with mapping := state.mapping.swapDestinations ⟨a, ha⟩ ⟨b, hb⟩ }; allowedErrors⦄ := by
   vcgen [State.swapDestinations, index] <;> simp_all
 
-theorem Spec.bind {result : Except Error α} {pre : α → Prop} {next : α → Except Error β}
+theorem Spec.bind {result : Except ShuffleErr α} {pre : α → Prop} {next : α → Except ShuffleErr β}
     {post : β → Prop} (h : Spec result pre)
     (step : ∀ value, pre value → Spec (next value) post) :
     Spec (result >>= next) post := by
@@ -49,25 +49,25 @@ theorem Spec.bind {result : Except Error α} {pre : α → Prop} {next : α → 
   | ok value => exact step value h
   | error err => cases err <;> exact h
 
-theorem Spec.mono {result : Except Error α} {pre post : α → Prop}
+theorem Spec.mono {result : Except ShuffleErr α} {pre post : α → Prop}
     (h : Spec result pre) (step : ∀ value, pre value → post value) : Spec result post := by
   cases result with
   | ok value => exact step value h
   | error err => cases err <;> exact h
 
-theorem Spec.noAssertion {result : Except Error α} {post : α → Prop}
+theorem Spec.noAssertion {result : Except ShuffleErr α} {post : α → Prop}
     (h : Spec result post) (reason : String) : result ≠ .error (.assertion reason) := by
   intro heq
   simp [heq, Spec] at h
 
-theorem Spec.error {result : Except Error α} {post : α → Prop}
-    (h : Spec result post) (heq : result = .error err) : ∃ excess, err = .blocked excess := by
+theorem Spec.error {result : Except ShuffleErr α} {post : α → Prop}
+    (h : Spec result post) (heq : result = .error err) : ∃ excess, err = .Blocked excess := by
   cases err with
-  | blocked excess => exact ⟨excess, rfl⟩
+  | Blocked excess => exact ⟨excess, rfl⟩
   | assertion reason => exact (h.noAssertion reason heq).elim
 
 @[simp] theorem spec_ok (value : α) (post : α → Prop) : Spec (.ok value) post ↔ post value := Iff.rfl
-@[simp] theorem spec_blocked (excess : ℕ) (post : α → Prop) : Spec (.error (.blocked excess)) post := trivial
+@[simp] theorem spec_blocked (excess : ℕ) (post : α → Prop) : Spec (.error (.Blocked excess)) post := trivial
 
 @[simp] theorem index_eq (i : Fin size) : index size i.val = .ok i := by
   simp [index, i.isLt, pure, Except.pure]

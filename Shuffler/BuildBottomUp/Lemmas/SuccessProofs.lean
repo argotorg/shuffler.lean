@@ -56,20 +56,20 @@ macro "finish_reachable " c:term ", " st:term ", " hp:term ", " hn:term ", " hr:
     simp +zetaDelta only [ne_eq, hnotTop, ↓reduceIte]
     exact $advance _ (($hp).finish_at_top (not_not.mp hnotTop)) ($hr).advance))
 
-theorem Succeeds.attach {x : Except Error α} {post : α → Prop} (h : Succeeds x post) :
+theorem Succeeds.attach {x : Except ShuffleErr α} {post : α → Prop} (h : Succeeds x post) :
     Succeeds x.attach (fun a => post a.val) := by
   obtain ⟨value, rfl, hv⟩ := h
   exact ⟨⟨value, rfl⟩, rfl, hv⟩
 
 -- A successful result also satisfies every spec of its computation.
-theorem Succeeds.spec {x : Except Error α} {pre post : α → Prop} (h : Succeeds x pre)
+theorem Succeeds.spec {x : Except ShuffleErr α} {pre post : α → Prop} (h : Succeeds x pre)
     (hs : Spec x post) : Succeeds x post := by
   obtain ⟨value, rfl, _⟩ := h
   exact ⟨value, rfl, hs⟩
 
 -- The loop generates at `offset` only when both checks hold. Otherwise it continues with `rest`.
 theorem Succeeds.ite_index {A : Prop} [Decidable A] {B : Fin size → Prop} [DecidablePred B]
-    {gen rest : Except Error α} {post : α → Prop} (hlt : A → offset < size)
+    {gen rest : Except ShuffleErr α} {post : α → Prop} (hlt : A → offset < size)
     (hgen : (hA : A) → B ⟨offset, hlt hA⟩ → Succeeds gen post) (hrest : Succeeds rest post) :
     Succeeds (if A then index size offset >>= (fun i => if B i then gen else rest) else rest) post := by
   by_cases hA : A
@@ -81,7 +81,7 @@ theorem Succeeds.ite_index {A : Prop} [Decidable A] {B : Fin size → Prop} [Dec
 
 -- The generate-at-top branch falls through when its inner check fails at every index.
 theorem ite_index_eq_rest {A : Prop} [Decidable A] {B : Fin size → Prop} [DecidablePred B]
-    {gen rest : Except Error α} (hlt : A → offset < size) (h : ∀ i, ¬ B i) :
+    {gen rest : Except ShuffleErr α} (hlt : A → offset < size) (h : ∀ i, ¬ B i) :
     (if A then index size offset >>= (fun i => if B i then gen else rest) else rest) = rest := by
   by_cases hA : A
   · rw [ite_eq_left hA, index_eq ⟨offset, hlt hA⟩, except_ok_bind, ite_eq_right (h _)]
@@ -121,7 +121,7 @@ theorem loop_success (cursor : ℕ) (state : State source target spills)
     obtain ⟨res, trace, heq, _⟩ := Shuffler.Permute.permute_applies_permutation_reachable
       spills state.stack (state.mapping.toPermutation hp.1 hp.2)
       (inv.permutation_reachable hr hp.1 hp.2)
-    simp only [heq, Except.mapError, except_ok_bind]
+    simp only [heq, except_ok_bind]
     exact ⟨_, rfl, trivial⟩
   simp only [hz, ↓reduceIte]
   have hscan := Succeeds.of_triple _ _ (urgentScan_success cursor state hr.copies)

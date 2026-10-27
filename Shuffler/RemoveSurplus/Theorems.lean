@@ -13,7 +13,7 @@ theorem removeSurplus_no_assertion (initial : State source target spills) (reaso
 
 -- Its only error is a surplus slot out of swap reach.
 theorem removeSurplus_error_is_blocked (initial : State source target spills)
-    (he : removeSurplus initial = .error err) : ∃ excess, err = .blocked excess :=
+    (he : removeSurplus initial = .error err) : ∃ excess, err = .Blocked excess :=
   ((spec_iff_triple _ _).mpr (removeSurplus_triple initial)).error he
 
 -- After removeSurplus, every slot has a destination.

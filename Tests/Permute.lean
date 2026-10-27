@@ -96,6 +96,7 @@ example : (Trace.Lit (spills := ∅) []).swapCount ≤
 example : (match permute ∅ (List.replicate 18 (.Var ⟨0⟩))
     (Equiv.swap (0 : Fin 18) (17 : Fin 18)) with
     | .error (.Blocked depth) => depth == 1
+    | .error (.assertion _) => false
     | .ok _ => false) = true := by native_decide
 
 end PermuteTests

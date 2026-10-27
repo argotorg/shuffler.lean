@@ -34,10 +34,10 @@ theorem urgentScan_reachable_on_success (cursor : Nat) (state : State source tar
           continue
         if let some copy := state.stack.shallowestCopyPosition slot then
           if ¬ state.stack.isDupReachable copy then
-            throw (.blocked ((state.depthOf copy) - MAX_DUP_DEPTH))
+            throw (.Blocked ((state.depthOf copy) - MAX_DUP_DEPTH))
           if (state.depthOf copy) = MAX_DUP_DEPTH ∧ copy.val ≠ cursor ∧ urgent.isNone then
             urgent := some offset
-      return urgent : Except Error (Option ℕ))
+      return urgent : Except ShuffleErr (Option ℕ))
     ⦃fun _ => CopiesSeen state (List.range' cursor (target.length - cursor));
       (fun _ => True)⦄ := by
   simp only [Std.Legacy.Range.forIn_eq_forIn_range']
@@ -64,7 +64,7 @@ theorem urgentScan_reachable_on_success (cursor : Nat) (state : State source tar
     have hav := ha j
     simp_all [State.isAvailable, Option.isSome_iff_exists]
 
-theorem Succeeds.bind_left {result : Except Error α} {next : α → Except Error β}
+theorem Succeeds.bind_left {result : Except ShuffleErr α} {next : α → Except ShuffleErr β}
     {post : β → Prop} (h : Succeeds (result >>= next) post) :
     Succeeds result (fun _ => True) := by
   cases result with
@@ -72,7 +72,7 @@ theorem Succeeds.bind_left {result : Except Error α} {next : α → Except Erro
   | ok value => exact ⟨value, rfl, trivial⟩
 
 -- A triple gives its postcondition on every ok result.
-theorem post_of_triple_ok {result : Except Error α} {post : α → Prop} {errors : Error → Prop}
+theorem post_of_triple_ok {result : Except ShuffleErr α} {post : α → Prop} {errors : ShuffleErr → Prop}
     (h : ⦃True⦄ result ⦃post; errors⦄) (heq : result = .ok value) : post value := by
   subst heq
   exact h.le_wp trivial

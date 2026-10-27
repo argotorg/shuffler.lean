@@ -41,7 +41,7 @@ private def stateOf (source target : Stack) (dests : List (Option ℕ)) : State 
   pending_generations := 0
 
 -- The resulting stack, the operations performed, and the destination of every remaining slot.
-private def observe (result : Except Error (State source target spills)) :=
+private def observe (result : Except ShuffleErr (State source target spills)) :=
   result.map fun state =>
     (state.stack, operations state.trace, List.ofFn fun pos => (state.mapping pos).map Fin.val)
 
@@ -70,7 +70,7 @@ example : observe (removeSurplus (stateOf [] [] [])) = .ok ([], [], []) := by de
 
 -- A surplus slot at depth 17 is one slot out of swap reach.
 example : observe (removeSurplus (stateOf (x :: List.replicate 17 a) (List.replicate 17 a)
-    (none :: (List.range 17).map some))) = .error (.blocked 1) := by native_decide
+    (none :: (List.range 17).map some))) = .error (.Blocked 1) := by native_decide
 
 -- At depth 16 it is still reachable: it is swapped to the top and popped. The slot swapped down keeps
 -- its destination; buildBottomUp moves it later.

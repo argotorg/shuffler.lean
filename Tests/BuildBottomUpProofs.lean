@@ -77,7 +77,7 @@ private def blockedSwapUpState :
   pending_generations := 1
 
 example : (buildBottomUp blockedSwapUpState ⟨by decide, by decide, by decide⟩).map (fun result => result.1) =
-    .error (.blocked 1) := by
+    .error (.Blocked 1) := by
   native_decide
 
 -- The bound copy is on top, but offset zero is one slot beyond SWAP reach.
@@ -91,7 +91,7 @@ private def blockedSwapDownState :
   pending_generations := 1
 
 example : (buildBottomUp blockedSwapDownState ⟨by decide, by decide, by decide⟩).map (fun result => result.1) =
-    .error (.blocked 1) := by
+    .error (.Blocked 1) := by
   native_decide
 
 -- Generation can leave its destination on top when the final swap is out of reach.
@@ -105,7 +105,7 @@ private def blockedGeneratedState :
   pending_generations := 1
 
 example : (buildBottomUp blockedGeneratedState ⟨by decide, by decide, by decide⟩).map (fun result => result.1) =
-    .error (.blocked 1) := by
+    .error (.Blocked 1) := by
   native_decide
 
 -- At the limit, SWAP16 succeeds and the last target slot is generated.

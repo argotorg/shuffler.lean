@@ -23,7 +23,7 @@ theorem buildBottomUp_no_assertion (initial : State source target spills)
 -- SWAP reach.
 theorem buildBottomUp_error_is_blocked (initial : State source target spills)
     (h : initial.Valid) (he : buildBottomUp initial h = .error err) :
-    ∃ excess, err = .blocked excess :=
+    ∃ excess, err = .Blocked excess :=
   (buildBottomUp_spec initial h).error he
 
 end Shuffler.Emission

@@ -75,6 +75,16 @@ theorem permute_applies_permutation_reachable
     obtain rfl : source = [] := by simpa using Nat.eq_zero_of_not_pos hne
     exact ⟨[], .Lit [], rfl, by simp [apply_permutation]⟩
 
+-- Permutation can return a blocked error, but cannot return an assertion error.
+theorem permute_no_assertion
+    (spills : SpillSet) (source : Stack) (perm : Permutation source) (reason : String) :
+    permute spills source perm ≠ .error (.assertion reason) := by
+  by_cases hreachable : all_swaps_reachable perm
+  · obtain ⟨res, trace, heq, _⟩ := permute_applies_permutation_reachable spills source perm hreachable
+    simp [heq]
+  · obtain ⟨excess, heq, _⟩ := permute_blocks_unreachable spills source perm hreachable
+    simp [heq]
+
 theorem permute_applies_permutation_of_ok
     (spills : SpillSet) (source : Stack) (perm : Permutation source)
     {res : Stack} {trace : Trace spills source res}
