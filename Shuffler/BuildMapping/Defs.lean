@@ -74,19 +74,6 @@ def closestCopy (self : MappingBuilder source target) (targetOffset : Fin target
       | some b => if self.absDiff i targetOffset ≤ self.absDiff b targetOffset then best := some i
   return best
 
--- helper, in C++ code of shuffler.cpp in the `MappingBuilder` constructor: loop
--- "the remaining wildcards absorb the closest surplus slot instead of having it popped"
--- The mappable source slot closest to targetOffset; on ties the deeper one wins.
-def closestSurplus (self : MappingBuilder source target) (targetOffset : Fin target.length) :
-    Except Error (Option (Fin source.length)) := do
-  let mut best : Option (Fin source.length) := none
-  for o in List.finRange source.length do
-    if ← self.mappable o then
-      match best with
-      | none => best := some o
-      | some b => if self.absDiff o targetOffset < self.absDiff b targetOffset then best := some o
-  return best
-
 -- binds a source slot to a target slot, returning a new mapping builder with the updated mapping
 def map (self : MappingBuilder source target) {n m : ℕ} (sourceOffset : Fin n)
     (targetOffset : Fin m) (hs : n ≤ source.length := by omega)
@@ -105,56 +92,6 @@ end MappingBuilder
 ------------------------ buildMapping (in the constructor in shuffler.cpp) ----------------------------------
 
 def buildMapping (source target : Stack) (dropped : List Byte)
-    (strategy : WildcardSlotsStrategy) : Except Error (BuildMappingResult source target) := do
-  _ ← requires (dropped.length = source.length) "dropped needs one entry per source slot"
-  let mut mb : MappingBuilder source target := { dropped, mapping := ⊥ }
-
-  -- slots already in place get mapped directly
-  for j in List.finRange (min source.length target.length) do
-    let s := Fin.castLE (min_le_left _ _) j
-    let t := Fin.castLE (min_le_right _ _) j
-    if source[s] = target[t] ∧ (← mb.mappable s) then
-      mb ← mb.map s t
-
-  -- the remaining target offsets take the closest unused copy, deepest first: what is left over is
-  -- generated on top, where that is cheapest
-  for t in List.finRange target.length do
-    if mb.hasSourceAssigned t ∨ mb.isWildcardTarget t then continue
-    match ← mb.closestCopy t .OutsideWildcardSlots with
-    | some copy => mb ← mb.map copy t
-    | none => pure ()
-
-  -- copies sitting in wildcard slots are taken or left according to the strategy
-  for t in List.finRange target.length do
-    if mb.hasSourceAssigned t ∨ mb.isWildcardTarget t then continue
-    match ← mb.closestCopy t .InWildcardSlots with
-    | some copy =>
-      -- a function return label is always taken, can't be duped or pushed;
-      if target[t].isFunctionReturnLabel then
-        mb ← mb.map copy t
-      else
-        if strategy = .Take then
-          mb ← mb.map copy t
-        mb := { mb with sawWildcardCopy := true }
-    | none => pure ()
-
-  -- wildcards keep whatever sits there
-  for j in List.finRange (min source.length target.length) do
-    let s := Fin.castLE (min_le_left _ _) j
-    let t := Fin.castLE (min_le_right _ _) j
-    if mb.isWildcardTarget t ∧ ¬ mb.hasSourceAssigned t ∧ (← mb.mappable s) then
-      mb ← mb.map s t
-
-  -- the remaining wildcards absorb the closest surplus slot instead of having it popped
-  for t in List.finRange target.length do
-    if mb.hasSourceAssigned t ∨ ¬ mb.isWildcardTarget t then continue
-    match ← mb.closestSurplus t with
-    | some best => mb ← mb.map best t
-    | none => pure ()
-
-  return { mapping := mb.mapping, sawWildcardCopy := mb.sawWildcardCopy }
-
-def buildMapping_new (source target : Stack) (dropped : List Byte)
     (wildcardSlotStrategy : WildcardSlotsStrategy) : Except Error (BuildMappingResult source target) := do
   let mut mb : MappingBuilder source target := { dropped, mapping := ⊥ }
 

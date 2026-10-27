@@ -1,16 +1,9 @@
 import Shuffler.BuildMapping.Defs
-import Shuffler.BuildMapping.Lemmas.Equivalence
 import Shuffler.BuildMapping.Lemmas.InPlace
 import Shuffler.BuildMapping.Lemmas.Strategies.Proof
 import Batteries.Tactic.PrintOpaques
 
 namespace Shuffler.BuildMapping
-
--- Both implementations return the same result for every input.
-theorem buildMapping_new_eq_buildMapping (source target : Stack) (dropped : List Byte)
-    (strategy : WildcardSlotsStrategy) :
-    buildMapping_new source target dropped strategy = buildMapping source target dropped strategy :=
-  Equivalence.buildMapping_eq source target dropped strategy
 
 -- buildMapping succeeds if and only if `dropped` has one entry per source slot.
 theorem buildMapping_ok (source target : Stack) (dropped : List Byte)
@@ -86,18 +79,6 @@ theorem buildMapping_differs_of_sawWildcardCopy (source target : Stack) (dropped
 /-- info: 'Shuffler.BuildMapping.buildMapping' does not use any opaque or partial definitions -/
 #guard_msgs in
 #print opaques buildMapping
-
-/-- info: 'Shuffler.BuildMapping.buildMapping_new' does not use any opaque or partial definitions -/
-#guard_msgs in
-#print opaques buildMapping_new
-
-/-- info: 'Shuffler.BuildMapping.buildMapping_new' depends on axioms: [propext, Quot.sound] -/
-#guard_msgs in
-#print axioms buildMapping_new
-
-/-- info: 'Shuffler.BuildMapping.buildMapping_new_eq_buildMapping' depends on axioms: [propext, Quot.sound] -/
-#guard_msgs in
-#print axioms buildMapping_new_eq_buildMapping
 
 /-- info: 'Shuffler.BuildMapping.buildMapping' depends on axioms: [propext, Quot.sound] -/
 #guard_msgs in

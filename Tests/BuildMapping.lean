@@ -2,11 +2,6 @@ import Shuffler
 
 open Shuffler.BuildMapping
 
--- The new entry point returns the same result, including errors and the copy flag.
-example (source target : Stack) (dropped : List Byte) (strategy : WildcardSlotsStrategy) :
-    buildMapping_new source target dropped strategy = buildMapping source target dropped strategy :=
-  buildMapping_new_eq_buildMapping source target dropped strategy
-
 -- The theorems apply to the production function.
 example (source target : Stack) (dropped : List Byte) (strategy : WildcardSlotsStrategy) :
     (∃ result, buildMapping source target dropped strategy = .ok result) ↔

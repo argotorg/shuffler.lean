@@ -44,9 +44,11 @@ theorem buildMapping_succeeds_in_place (source target : Stack) (dropped : List B
     (hvalue : source[s] = target[t]) (hdrop : dropped[s.val]? = some 0) :
     Succeeds (buildMapping source target dropped strategy) fun result =>
       result.mapping s = some t := by
-  unfold buildMapping
+  rw [Strategies.buildMapping_eq_phases]
+  unfold Strategies.initialPasses Strategies.copyPass Strategies.suffix
+    Strategies.copyStep Strategies.keepStep Strategies.surplusStep
+  simp only [bind_assoc, pure_bind]
   rw [requires_of_true _ hsizes, except_ok_bind]
-  dsimp only
   let j : Fin (min source.length target.length) :=
     ⟨s.val, Nat.lt_min.mpr ⟨s.isLt, by rw [hpos]; exact t.isLt⟩⟩
   have hjs : Fin.castLE (min_le_left source.length target.length) j = s := Fin.ext rfl

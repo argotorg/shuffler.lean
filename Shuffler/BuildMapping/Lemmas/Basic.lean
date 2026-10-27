@@ -1,4 +1,4 @@
-import Shuffler.BuildMapping.Defs
+import Shuffler.BuildMapping.Lemmas.Strategies.Phases
 
 namespace Shuffler.BuildMapping
 
@@ -200,9 +200,11 @@ theorem buildMapping_valid (source target : Stack) (dropped : List Byte)
     Succeeds (buildMapping source target dropped strategy) fun result =>
       ∀ s t, result.mapping s = some t →
         dropped[s.val]? = some 0 ∧ SlotMatches source[s] target[t] := by
-  unfold buildMapping
+  rw [Strategies.buildMapping_eq_phases]
+  unfold Strategies.initialPasses Strategies.copyPass Strategies.suffix
+    Strategies.copyStep Strategies.keepStep Strategies.surplusStep
+  simp only [bind_assoc, pure_bind]
   rw [requires_of_true _ hsizes, except_ok_bind]
-  dsimp only
 
   -- Direct bindings preserve a diagonal mapping and use equal values.
   refine (Succeeds.forIn (fun mb : MappingBuilder source target =>

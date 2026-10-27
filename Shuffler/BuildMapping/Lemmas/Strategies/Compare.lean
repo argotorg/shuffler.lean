@@ -1,4 +1,4 @@
-import Shuffler.BuildMapping.Lemmas.Strategies.Phases
+import Shuffler.BuildMapping.Lemmas.Basic
 
 namespace Shuffler.BuildMapping.Strategies
 
