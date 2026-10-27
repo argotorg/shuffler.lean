@@ -1,0 +1,6 @@
+	/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/bin/../../pizfix/lib/ld-fil1-x86_64.so (0x7b33ed8fa000)
+	libc++.so.1 => /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/bin/../../pizfix/lib/libc++.so.1 (0x7b33eca00000)
+	libc++abi.so.1 => /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/bin/../../pizfix/lib/libc++abi.so.1 (0x7b33ec400000)
+	libc.so => /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/bin/../../pizfix/lib/libc.so (0x7b33ebe00000)
+	libpizlo.so => /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/bin/../../pizfix/lib/libpizlo.so (0x7b33eba00000)
+	libyoloc.so => /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/bin/../../pizfix/lib/ld-fil1-x86_64.so (0x7b33ed8fa000)

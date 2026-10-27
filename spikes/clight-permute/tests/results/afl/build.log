@@ -1,0 +1,5 @@
+solc oracle: cd1b0a209b17d3f6dd124bd89e1b9bcdff79b912; 3 source hashes checked
+oracle checks: three modified sources and invalid selectors rejected
+clang version 21.1.8
+x86_64-unknown-linux-gnu
+AFL++ target: /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/afl/permute-afl

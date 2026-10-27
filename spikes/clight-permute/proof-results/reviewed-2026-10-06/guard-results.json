@@ -1,0 +1,130 @@
+[
+  {
+    "case": "baseline",
+    "exit": 0,
+    "results": [
+      {
+        "name": "baseline",
+        "coqc": 0,
+        "coqchk": 0,
+        "assumption_gate": 0,
+        "kernel_context_gate": 0,
+        "contract_gate": 0,
+        "expected_result": true
+      }
+    ],
+    "pass": true
+  },
+  {
+    "case": "admitted",
+    "exit": 0,
+    "results": [
+      {
+        "name": "admitted",
+        "coqc": 0,
+        "coqchk": 0,
+        "assumption_gate": 1,
+        "kernel_context_gate": 1,
+        "contract_gate": 0,
+        "expected_result": true
+      }
+    ],
+    "pass": true
+  },
+  {
+    "case": "false_assumption",
+    "exit": 0,
+    "results": [
+      {
+        "name": "false_assumption",
+        "coqc": 0,
+        "coqchk": 0,
+        "assumption_gate": 1,
+        "kernel_context_gate": 1,
+        "contract_gate": 0,
+        "expected_result": true
+      }
+    ],
+    "pass": true
+  },
+  {
+    "case": "shadowed_assumption",
+    "exit": 0,
+    "results": [
+      {
+        "name": "shadowed_assumption",
+        "coqc": 0,
+        "coqchk": 0,
+        "assumption_gate": 1,
+        "kernel_context_gate": 1,
+        "contract_gate": 0,
+        "expected_result": true
+      }
+    ],
+    "pass": true
+  },
+  {
+    "case": "unchecked_recursion",
+    "exit": 0,
+    "results": [
+      {
+        "name": "unchecked_recursion",
+        "coqc": 0,
+        "coqchk": 0,
+        "assumption_gate": 1,
+        "kernel_context_gate": 1,
+        "contract_gate": 0,
+        "expected_result": true
+      }
+    ],
+    "pass": true
+  },
+  {
+    "case": "unchecked_positivity",
+    "exit": 0,
+    "results": [
+      {
+        "name": "unchecked_positivity",
+        "coqc": 0,
+        "coqchk": 0,
+        "assumption_gate": 1,
+        "kernel_context_gate": 1,
+        "contract_gate": 0,
+        "expected_result": true
+      }
+    ],
+    "pass": true
+  },
+  {
+    "case": "impossible_precondition",
+    "exit": 0,
+    "results": [
+      {
+        "name": "impossible_precondition",
+        "coqc": 0,
+        "coqchk": 0,
+        "assumption_gate": 0,
+        "kernel_context_gate": 0,
+        "contract_gate": 1,
+        "expected_result": true
+      }
+    ],
+    "pass": true
+  },
+  {
+    "case": "true_postcondition",
+    "exit": 0,
+    "results": [
+      {
+        "name": "true_postcondition",
+        "coqc": 0,
+        "coqchk": 0,
+        "assumption_gate": 0,
+        "kernel_context_gate": 0,
+        "contract_gate": 1,
+        "expected_result": true
+      }
+    ],
+    "pass": true
+  }
+]

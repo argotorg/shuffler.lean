@@ -1,0 +1,6 @@
+File "./Extract.v", line 13, characters 0-72:
+Warning: Setting extraction output directory by default to
+"/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/proof-challenge/reviewed-mutations/control_same_literal/proofs".
+Use "Set Extraction Output Directory" or command line option
+"-output-directory" to set a different directory for extracted files to
+appear in. [extraction-default-directory,extraction,default]

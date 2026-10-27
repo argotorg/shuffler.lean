@@ -1,0 +1,293 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* Definitions and proved lemma obligations. No user axioms. */
+/*@ axiomatic PermuteRank {
+logic integer moved{L}(unsigned int *p, integer k) =
+    k <= 0 ? 0 : moved(p,k-1) + (p[k-1] != k-1 ? 1 : 0);
+
+lemma moved_bounds_all{L}:
+    \forall unsigned int *p, integer k;
+      0 <= moved(p,k) <= (k <= 0 ? 0 : k);
+
+  check lemma moved_frame_all{A,B}:
+    \forall unsigned int *p, integer k;
+      (\forall integer i; 0 <= i < k ==> \at(p[i],A) == \at(p[i],B)) ==>
+      moved{A}(p,k) == moved{B}(p,k);
+
+  check lemma moved_update_all{A,B}:
+    \forall unsigned int *p, integer k,j;
+      (\forall integer i; 0 <= i < k && i != j ==> \at(p[i],A) == \at(p[i],B)) ==>
+      moved{B}(p,k) == moved{A}(p,k) +
+        (0 <= j < k ? ((\at(p[j],B) != j ? 1 : 0) - (\at(p[j],A) != j ? 1 : 0)) : 0);
+
+  check lemma moved_bounds{L}:
+    \forall unsigned int *p, integer k;
+      0 <= k ==> 0 <= moved(p,k) <= k;
+
+  lemma moved_frame{A,B}:
+    \forall unsigned int *p, integer k;
+      0 <= k && (\forall integer i; 0 <= i < k ==> \at(p[i],A) == \at(p[i],B)) ==>
+      moved{A}(p,k) == moved{B}(p,k);
+
+  check lemma moved_update{A,B}:
+    \forall unsigned int *p, integer k,j;
+      0 <= k && (\forall integer i; 0 <= i < k && i != j ==> \at(p[i],A) == \at(p[i],B)) ==>
+      moved{B}(p,k) == moved{A}(p,k) +
+        (0 <= j < k ? ((\at(p[j],B) != j ? 1 : 0) - (\at(p[j],A) != j ? 1 : 0)) : 0);
+
+lemma moved_exchange_count{A,B}:
+   \forall unsigned int *p, integer top,pos;
+     0 <= pos < top && \at(p[pos],A) != pos &&
+     (\at(p[top],A) != top ==> pos == \at(p[top],A)) &&
+     \at(p[pos],B) == \at(p[top],A) &&
+     (\forall integer i; 0 <= i < top && i != pos ==> \at(p[i],A) == \at(p[i],B)) ==>
+     moved{B}(p,top) == moved{A}(p,top) - (\at(p[top],A) == top ? 0 : 1);
+} */
+
+/*@ axiomatic PermuteInjective {
+predicate injective{L}(unsigned int *p, integer n) =
+    \forall integer i,j; 0 <= i < n && 0 <= j < n && p[i] == p[j] ==> i == j;
+  lemma injective_swap{A,B}:
+    \forall unsigned int *p, integer n,a,b;
+      0 <= a < n && 0 <= b < n && a != b && injective{A}(p,n) &&
+      \at(p[a],B) == \at(p[b],A) && \at(p[b],B) == \at(p[a],A) &&
+      (\forall integer i; 0 <= i < n && i != a && i != b ==> \at(p[i],A) == \at(p[i],B)) ==>
+      injective{B}(p,n);
+} */
+
+/*@ axiomatic PermuteSelectedInjective {
+predicate selected_injective{L}(unsigned int *d, unsigned int *t, unsigned int *p, integer n,integer k) =
+   \forall integer i,j; 0 <= i < n && 0 <= j < n && (i < k || d[i] == t[i]) &&
+     (j < k || d[j] == t[j]) && p[i] == p[j] ==> i == j;
+
+lemma selected_injective_step{A,B}:
+   \forall unsigned int *d,*t,*p, integer n,k,dest;
+     0 <= k < n && \at(d[k],A) != \at(t[k],A) && selected_injective{A}(d,t,p,n,k) &&
+     (\forall integer i; 0 <= i < n && (i < k || \at(d[i],A) == \at(t[i],A)) ==> \at(p[i],A) != dest) &&
+     (\forall integer i; 0 <= i < n ==> \at(d[i],A) == \at(d[i],B) && \at(t[i],A) == \at(t[i],B)) &&
+     \at(p[k],B) == dest &&
+     (\forall integer i; 0 <= i < n && i != k ==> \at(p[i],A) == \at(p[i],B)) ==>
+     selected_injective{B}(d,t,p,n,k+1);
+} */
+/*@ axiomatic PermuteSelectedMarked {
+predicate selected_marked{L}(unsigned int *d, unsigned int *t, unsigned int *p, unsigned int *u, integer n,integer k) =
+   \forall integer i; 0 <= i < n && (i < k || d[i] == t[i]) ==> 0 <= p[i] < n && u[p[i]] != 0;
+
+lemma selected_marked_step{A,B}:
+   \forall unsigned int *d,*t,*p,*u, integer n,k,dest;
+     0 <= k < n && 0 <= dest < n && \at(d[k],A) != \at(t[k],A) && selected_marked{A}(d,t,p,u,n,k) &&
+     (\forall integer i; 0 <= i < n ==> \at(d[i],A) == \at(d[i],B) && \at(t[i],A) == \at(t[i],B)) &&
+     \at(p[k],B) == dest && \at(u[dest],B) != 0 &&
+     (\forall integer i; 0 <= i < n && i != k ==> \at(p[i],A) == \at(p[i],B)) &&
+     (\forall integer i; 0 <= i < n && i != dest ==> \at(u[i],A) == \at(u[i],B)) ==>
+     selected_marked{B}(d,t,p,u,n,k+1);
+} */
+
+/*@
+  strategy RankSMT: \prover("CVC5", "Z3", 3.0);
+  strategy RankUnfoldSecond:
+    \tactic("Wp.unfold", \when(0 < N), \ingoal(T: L_moved(_,_,N)),
+      \select(T), \children(RankSMT)), RankSMT;
+  strategy RankUnfoldFirst:
+    \tactic("Wp.unfold", \when(0 < N), \ingoal(T: L_moved(_,_,N)),
+      \select(T), \children(RankUnfoldSecond)), RankSMT;
+  strategy RankPoint:
+    \tactic("Wp.instance", \when(0 < N), \when(H: \forall integer j; _),
+      \select(H), \param("P1",N-1), \children(RankUnfoldFirst)), RankUnfoldFirst;
+  strategy RankFramePremise:
+    \tactic("Wp.cut", \when(H: (P: (\forall integer j; _)) ==> _),
+      \select(H), \param("case","MODUS"), \param("clause",P), \children(RankPoint),
+      \child("Clause",RankSMT)), RankPoint;
+  strategy RankPrevious:
+    \tactic("Wp.instance",
+      \when(H: \forall integer i; 0 <= i ==> i < N ==> ((\forall integer j; _) ==> _)),
+      \select(H), \param("P1",N-1), \children(RankFramePremise)), RankSMT;
+  strategy RankInduct:
+    \tactic("Wp.induction", \ingoal(L_moved(_,_,K)), \select(K),
+      \param("base",0), \children(RankSMT), \child("Induction (sup)",RankPrevious));
+  proof RankInduct: moved_bounds_all, moved_frame_all, moved_update_all;
+  strategy RankUpdateCorollary:
+    \tactic("Wp.lemma", \goal(L_moved(A,P,K) + _ == L_moved(B,P,K)),
+      \ingoal(shift_uint32(P,J)), \select(0),
+      \param("lemma","moved_update_all"), \param("P1",B), \param("P2",A),
+      \param("P3",P), \param("P4",K), \param("P5",J), \children(RankSMT));
+
+  strategy RankFrameCorollary:
+    \tactic("Wp.lemma", \goal(L_moved(A,P,K) == L_moved(B,P,K)), \select(0),
+      \param("lemma","moved_frame_all"), \param("P1",A), \param("P2",B),
+      \param("P3",P), \param("P4",K), \children(RankSMT));
+  proof RankSMT: moved_bounds;
+  proof RankFrameCorollary: moved_frame;
+  proof RankUpdateCorollary: moved_update;
+*/
+
+/*@
+ strategy RankExchangeCount:
+   \tactic("Wp.lemma", \goal(L_moved(A,P,K) + _ == L_moved(B,P,K)),
+     \when(0 <= J), \when(J < K),
+     \select(0), \param("lemma","moved_update_all"),
+     \param("P1",B), \param("P2",A), \param("P3",P), \param("P4",K), \param("P5",J),
+     \children(RankSMT));
+ proof RankExchangeCount: moved_exchange_count;
+*/
+
+/*@
+strategy InjectivePre:
+  \tactic("Wp.unfold", \when(H: P_injective(_,_,_)), \select(H), \children(ProofSMT));
+strategy InjectivePost:
+  \tactic("Wp.unfold", \goal(G: P_injective(_,_,_)), \select(G), \children(InjectivePre));
+proof InjectivePost: injective_swap;
+*/
+
+/*@
+
+ strategy SelectedPair:
+   \tactic("Wp.instance", \goal(I == J), \when(H: \forall integer a,b; _),
+     \select(H), \param("P1",I), \param("P2",J), \children(ProofSMT)), ProofSMT;
+ strategy SelectedPre:
+   \tactic("Wp.unfold", \when(H: P_selected_injective(_,_,_,_,_,_)), \select(H), \children(SelectedPair));
+ strategy SelectedPost:
+   \tactic("Wp.unfold", \goal(G: P_selected_injective(_,_,_,_,_,_)), \select(G), \children(SelectedPre));
+ proof SelectedPost: selected_injective_step;
+*/
+
+/*@
+
+ strategy MarkedPoint:
+   \tactic("Wp.instance", \ingoal(_[shift_uint32(U,_[shift_uint32(P,I)])]),
+     \when(H: \forall integer j; _), \select(H), \param("P1",I), \children(MarkedDataAt));
+ strategy MarkedPre:
+   \tactic("Wp.unfold", \when(H: P_selected_marked(_,_,_,_,_,_,_)), \select(H), \children(MarkedPoint));
+ strategy MarkedIndex:
+   \tactic("Wp.cut", \when(M[shift_uint32(D,K)] != M[shift_uint32(T,K)]),
+     \ingoal(_[shift_uint32(U,_[shift_uint32(P,I)])]), \select(0),
+     \param("case","CASES"), \param("clause",I == K), \children(MarkedPre)), MarkedPre;
+ strategy MarkedPost:
+   \tactic("Wp.unfold", \goal(G: P_selected_marked(_,_,_,_,_,_,_)), \select(G), \children(MarkedIndex));
+ proof MarkedPost: selected_marked_step;
+*/
+
+/*@ strategy ProofSMT: \prover("Z3", "CVC5", 10.0); */
+/*@
+  proof InjectivePost: swap_injective;
+
+*/
+/*@
+  strategy SwapFramePremise:
+    \tactic("Wp.cut", \when(H: P ==> _),
+      \select(H), \param("case","MODUS"), \param("clause",P), \children(ProofSMT)), ProofSMT;
+  strategy SwapCount:
+    \tactic("Wp.lemma",
+      \ingoal(L_moved(B: A[shift_uint32(P,J)[_]][shift_uint32(P,K)[_]],P,K)),
+      \select(0), \param("lemma","moved_exchange_count"),
+      \param("P1",B), \param("P2",A), \param("P3",P), \param("P4",K), \param("P5",J),
+      \children(SwapFramePremise)), SwapCountAliasRight;
+
+  strategy SwapInjectiveAlias:
+    \tactic("Wp.lemma", \goal(P_injective(B,P,N)),
+      \when(B == A[shift_uint32(P,J)[_]][shift_uint32(P,K)[_]]),
+      \select(0), \param("lemma","injective_swap"),
+      \param("P1",B), \param("P2",A), \param("P3",P), \param("P4",N),
+      \param("P5",J), \param("P6",K), \children(SwapFramePremise)), InjectivePost;
+  strategy SwapInjective:
+    \tactic("Wp.lemma",
+      \goal(P_injective(B: A[shift_uint32(P,J)[_]][shift_uint32(P,K)[_]],P,N)),
+      \select(0), \param("lemma","injective_swap"),
+      \param("P1",B), \param("P2",A), \param("P3",P), \param("P4",N),
+      \param("P5",J), \param("P6",K), \children(SwapFramePremise)), SwapInjectiveAlias;
+  strategy StoredArrayRight:
+    \tactic("Wp.array", \goal(_ == (T: _[_[_]][_])), \select(T), \children(ProofSMT)), ProofSMT;
+  strategy StoredArray:
+    \tactic("Wp.array", \goal((T: _[_[_]][_]) == _), \select(T), \children(StoredArrayRight)), StoredArrayRight;
+  proof SwapCount: rank_change;
+  proof SwapInjective: swap_post_injective;
+
+  strategy RankFrameUse:
+    \tactic("Wp.lemma", \goal(L_moved(A,P,K) == L_moved(B,P,K)), \select(0),
+      \param("lemma","moved_frame"), \param("P1",A), \param("P2",B),
+      \param("P3",P), \param("P4",K), \children(SwapFramePremise));
+  proof RankFrameUse: rank_frame;
+  proof StoredArray: swap_prefix_frame, permutation_frame;
+*/
+
+/*@
+
+ strategy FillInjectiveAlias:
+   \tactic("Wp.lemma", \goal(P_selected_injective(B,S,T,P,N,_)),
+     \when(B == A[shift_uint32(P,K)[D]][shift_uint32(U,D)[_]]),
+     \select(0), \param("lemma","selected_injective_step"),
+     \param("P1",B), \param("P2",A), \param("P3",S), \param("P4",T), \param("P5",P),
+     \param("P6",N), \param("P7",K), \param("P8",D), \children(SwapFramePremise)), SelectedPost;
+ strategy FillInjective:
+   \tactic("Wp.lemma", \goal(P_selected_injective(B: A[shift_uint32(P,K)[D]][shift_uint32(U,D)[_]],S,T,P,N,_)),
+     \select(0), \param("lemma","selected_injective_step"),
+     \param("P1",B), \param("P2",A), \param("P3",S), \param("P4",T), \param("P5",P),
+     \param("P6",N), \param("P7",K), \param("P8",D), \children(SwapFramePremise)), FillInjectiveAlias;
+
+ strategy FillMarkedAlias:
+   \tactic("Wp.lemma", \goal(P_selected_marked(B,S,T,P,U,N,_)),
+     \when(B == A[shift_uint32(P,K)[D]][shift_uint32(U,D)[_]]),
+     \select(0), \param("lemma","selected_marked_step"),
+     \param("P1",B), \param("P2",A), \param("P3",S), \param("P4",T), \param("P5",P),
+     \param("P6",U), \param("P7",N), \param("P8",K), \param("P9",D), \children(SwapFramePremise)), MarkedPost;
+ strategy FillMarked:
+   \tactic("Wp.lemma", \goal(P_selected_marked(B: A[shift_uint32(P,K)[D]][shift_uint32(U,D)[_]],S,T,P,U,N,_)),
+     \select(0), \param("lemma","selected_marked_step"),
+     \param("P1",B), \param("P2",A), \param("P3",S), \param("P4",T), \param("P5",P),
+     \param("P6",U), \param("P7",N), \param("P8",K), \param("P9",D), \children(SwapFramePremise)), FillMarkedAlias;
+ proof FillInjective: fill_post_injective;
+ proof FillMarked: fill_post_marked;
+ proof MarkedPre: fill_fresh;
+ proof StoredArray: fill_data_frame,fill_target_frame,fill_perm_frame,fill_used_frame,fill_mark;
+*/
+/*@
+ strategy MarkedUsedAt:
+   \tactic("Wp.instance", \ingoal(_[shift_uint32(U,V: _[shift_uint32(P,I)])]),
+     \when(H: \forall integer j; _ ==> _[shift_uint32(U,j)] == _[shift_uint32(U,j)]),
+     \select(H), \param("P1",V), \children(ProofSMT)), ProofSMT;
+ strategy MarkedPermutationAt:
+   \tactic("Wp.instance", \ingoal(_[shift_uint32(U,_[shift_uint32(P,I)])]),
+     \when(H: \forall integer j; _ ==> _[shift_uint32(P,j)] == _[shift_uint32(P,j)]),
+     \select(H), \param("P1",I), \children(MarkedUsedAt)), MarkedUsedAt;
+ strategy MarkedDataAt:
+   \tactic("Wp.instance", \ingoal(_[shift_uint32(U,_[shift_uint32(P,I)])]),
+     \when(H: \forall integer j; _ ==> (_[shift_uint32(D,j)] == _[shift_uint32(D,j)] && _[shift_uint32(T,j)] == _[shift_uint32(T,j)])),
+     \select(H), \param("P1",I), \children(MarkedPermutationAt)), MarkedPermutationAt;
+*/
+
+/*@ proof SelectedPost: fill_pre_injective;
+  */
+
+/*@
+ strategy PreMarkedUsed:
+   \tactic("Wp.instance", \ingoal(M[shift_uint32(U,M[shift_uint32(P,I)])]),
+     \when(H: \forall integer j; _ ==> M[shift_uint32(U,M[shift_uint32(P,j)])] != 0),
+     \select(H), \param("P1",I), \children(ProofSMT)), ProofSMT;
+ strategy PreMarkedBound:
+   \tactic("Wp.instance", \ingoal(M[shift_uint32(U,M[shift_uint32(P,I)])]),
+     \when(H: \forall integer j; 0 <= j ==> j < N ==> M[shift_uint32(P,j)] < N),
+     \select(H), \param("P1",I), \children(PreMarkedUsed)), PreMarkedUsed;
+ strategy PreMarked:
+   \tactic("Wp.unfold", \goal(G: P_selected_marked(_,_,_,_,_,_,_)), \select(G), \children(PreMarkedBound));
+ strategy SwapCountAliasLeft:
+   \tactic("Wp.lemma",
+     \when(A[shift_uint32(P,J)[_]][shift_uint32(P,K)[_]] == B),
+     \ingoal(L_moved(B,P,K)),
+     \select(0), \param("lemma","moved_exchange_count"),
+     \param("P1",B), \param("P2",A), \param("P3",P), \param("P4",K), \param("P5",J),
+     \children(SwapFramePremise)), ProofSMT;
+ strategy SwapCountAliasRight:
+   \tactic("Wp.lemma",
+     \when(B == A[shift_uint32(P,J)[_]][shift_uint32(P,K)[_]]),
+     \ingoal(L_moved(B,P,K)),
+     \select(0), \param("lemma","moved_exchange_count"),
+     \param("P1",B), \param("P2",A), \param("P3",P), \param("P4",K), \param("P5",J),
+     \children(SwapFramePremise)), SwapCountAliasLeft;
+ proof PreMarked: fill_pre_marked;
+*/
+
+/*@
+ strategy TraceAssign:
+   \tactic("Wp.valid", \ingoal(T: included(shift_uint32(P,I),1,shift_uint32(P,0),N)),
+     \select(T), \children(ProofSMT)), ProofSMT;
+ proof TraceAssign: "@assigns";
+*/

@@ -1,0 +1,116 @@
+[
+  {
+    "repo": "aig",
+    "commit": "4b8c3a8b92d12c806dc3a5d079551a1825deec7e",
+    "url": "https://raw.githubusercontent.com/GaloisInc/aig/4b8c3a8b92d12c806dc3a5d079551a1825deec7e/LICENSE",
+    "license": "BSD-style; see source notice"
+  },
+  {
+    "repo": "argo",
+    "commit": "61a513df6b240fba5f17f1e79f86f7bd3aeee563",
+    "url": "https://raw.githubusercontent.com/GaloisInc/argo/61a513df6b240fba5f17f1e79f86f7bd3aeee563/argo/LICENSE",
+    "license": "BSD-style; see source notice"
+  },
+  {
+    "repo": "crucible",
+    "commit": "31cc4ad4a5d476458610cfeaf962fb098a24b1c9",
+    "url": "https://raw.githubusercontent.com/GaloisInc/crucible/31cc4ad4a5d476458610cfeaf962fb098a24b1c9/LICENSE",
+    "license": "BSD-style; see source notice"
+  },
+  {
+    "repo": "cryptol",
+    "commit": "6173b60ad40822a1563ea4f569b04a70806b67fd",
+    "url": "https://raw.githubusercontent.com/GaloisInc/cryptol/6173b60ad40822a1563ea4f569b04a70806b67fd/LICENSE",
+    "license": "BSD-style; see source notice"
+  },
+  {
+    "repo": "cryptol-specs",
+    "commit": "eb53737ef8f925428f9db58e28577c7e9a76b1b9",
+    "url": "https://raw.githubusercontent.com/GaloisInc/cryptol-specs/eb53737ef8f925428f9db58e28577c7e9a76b1b9/LICENSE",
+    "license": "BSD-style; see source notice"
+  },
+  {
+    "repo": "dwarf",
+    "commit": "82dbd0adbdaf68af924fd918b37ff00c678ac05e",
+    "url": "https://raw.githubusercontent.com/GaloisInc/dwarf/82dbd0adbdaf68af924fd918b37ff00c678ac05e/LICENSE",
+    "license": "BSD-style; see source notice"
+  },
+  {
+    "repo": "elf-edit",
+    "commit": "f64ed273442edad6ee6910fdaf3541d6b0e312a3",
+    "url": "https://raw.githubusercontent.com/GaloisInc/elf-edit/f64ed273442edad6ee6910fdaf3541d6b0e312a3/LICENSE",
+    "license": "BSD-style; see source notice"
+  },
+  {
+    "repo": "flexdis86",
+    "commit": "668343e8dee865f7bbd9a334bd8c99b78db16f29",
+    "url": "https://raw.githubusercontent.com/GaloisInc/flexdis86/668343e8dee865f7bbd9a334bd8c99b78db16f29/LICENSE",
+    "license": "BSD-style; see source notice"
+  },
+  {
+    "repo": "jvm-parser",
+    "commit": "65e33e8536880a0be14378fb046633fbb552f5ac",
+    "url": "https://raw.githubusercontent.com/GaloisInc/jvm-parser/65e33e8536880a0be14378fb046633fbb552f5ac/LICENSE",
+    "license": "BSD-style; see source notice"
+  },
+  {
+    "repo": "language-rust",
+    "commit": "f23c2b055217479bd3d1525dc9455d0f8bfcc394",
+    "url": "https://raw.githubusercontent.com/GaloisInc/language-rust/f23c2b055217479bd3d1525dc9455d0f8bfcc394/LICENSE",
+    "license": "BSD-style; see source notice"
+  },
+  {
+    "repo": "language-sally",
+    "commit": "0413c8686b55a38fd1a2e88d605aaee72303504f",
+    "url": "https://raw.githubusercontent.com/GaloisInc/language-sally/0413c8686b55a38fd1a2e88d605aaee72303504f/LICENSE",
+    "license": "BSD-style; see source notice"
+  },
+  {
+    "repo": "llvm-pretty",
+    "commit": "45bb7504bcc7ac3936a41b7ffcd45153cb062214",
+    "url": "https://raw.githubusercontent.com/GaloisInc/llvm-pretty/45bb7504bcc7ac3936a41b7ffcd45153cb062214/LICENSE",
+    "license": "BSD-style; see source notice"
+  },
+  {
+    "repo": "llvm-pretty-bc-parser",
+    "commit": "b78d998c9b90a27a5c892156169ae47245c6174c",
+    "url": "https://raw.githubusercontent.com/GaloisInc/llvm-pretty-bc-parser/b78d998c9b90a27a5c892156169ae47245c6174c/LICENSE",
+    "license": "BSD-style; see source notice"
+  },
+  {
+    "repo": "lmdb",
+    "commit": "69303907de45fdd3bfae00fee37a0eddd4befe3c",
+    "url": "https://raw.githubusercontent.com/GaloisInc/lmdb/69303907de45fdd3bfae00fee37a0eddd4befe3c/lmdb/LICENSE",
+    "license": "BSD-style; see source notice"
+  },
+  {
+    "repo": "macaw",
+    "commit": "e6697f34a62a5d59ee06e429dcbd9a89793c0c36",
+    "url": "https://raw.githubusercontent.com/GaloisInc/macaw/e6697f34a62a5d59ee06e429dcbd9a89793c0c36/LICENSE",
+    "license": "BSD-style; see source notice"
+  },
+  {
+    "repo": "mir-json",
+    "commit": "7e12cecee9aceefd903191f4bd888d68e9a9cc0a",
+    "license": "MIT OR Apache-2.0",
+    "url": "https://github.com/GaloisInc/mir-json/blob/7e12cecee9aceefd903191f4bd888d68e9a9cc0a/Cargo.toml"
+  },
+  {
+    "repo": "parameterized-utils",
+    "commit": "6cd1f32c67f973e74576f1d15eeeb2a344cd9ece",
+    "url": "https://raw.githubusercontent.com/GaloisInc/parameterized-utils/6cd1f32c67f973e74576f1d15eeeb2a344cd9ece/LICENSE",
+    "license": "BSD-style; see source notice"
+  },
+  {
+    "repo": "rme",
+    "commit": "963f0b71e3f992bd43c40255168d39072cb7b0f2",
+    "url": "https://raw.githubusercontent.com/GaloisInc/rme/963f0b71e3f992bd43c40255168d39072cb7b0f2/rme/LICENSE",
+    "license": "BSD-style; see source notice"
+  },
+  {
+    "repo": "what4",
+    "commit": "121714d2f67780de49a246915b27d009741cae80",
+    "url": "https://raw.githubusercontent.com/GaloisInc/what4/121714d2f67780de49a246915b27d009741cae80/what4/LICENSE",
+    "license": "BSD-style; see source notice"
+  }
+]

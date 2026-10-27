@@ -1,0 +1,8 @@
+INFO: Running with entropic power schedule (0xFF, 100).
+INFO: Seed: 1955666468
+INFO:      364 files found in /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/guided/report.1ntNm3/corpus
+INFO: -max_len is not provided; libFuzzer will not generate inputs larger than 6402 bytes
+INFO: seed corpus: files: 364 min: 1b max: 6402b total: 1017096b rss: 28Mb
+#365	INITED exec/s: 0 rss: 29Mb
+#365	DONE   lim: 4 exec/s: 0 rss: 29Mb
+Done 365 runs in 0 second(s)
