@@ -1,8 +1,8 @@
 import Shuffler.BuildBottomUp.Lemmas.StaticPermutation
 
-open Std.Internal.Do
+open Std.WP
 
-set_option mvcgen.warning false
+set_option experimental.vcgen true
 set_option maxRecDepth 16384
 set_option maxHeartbeats 4000000
 
@@ -31,7 +31,7 @@ theorem producedMapping_append (state : State source target spills) (slot : Valu
 
 theorem produce_mapping (state : State source target spills) (dest : Fin target.length) :
     ⦃True⦄ state.produce dest
-    ⦃fun next => ProducedMapping state next dest; epost⟨fun _ => True⟩⦄ := by
+    ⦃fun next => ProducedMapping state next dest; (fun _ => True)⦄ := by
   vcgen [State.produce, State.push, State.dup, requires, index]
   all_goals try simp_all [State.positionOf]
   all_goals

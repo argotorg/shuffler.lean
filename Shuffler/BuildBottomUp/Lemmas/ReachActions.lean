@@ -1,8 +1,8 @@
 import Shuffler.BuildBottomUp.Lemmas.Reachability
 
-open Std.Internal.Do
+open Std.WP
 
-set_option mvcgen.warning false
+set_option experimental.vcgen true
 
 namespace Shuffler.BuildBottomUp
 
@@ -11,8 +11,8 @@ def NoBlocked (result : Except Error α) : Prop :=
   | .error (.blocked _) => False
   | _ => True
 
-def noBlockedErrors : EPost⟨Error → Prop⟩ :=
-  epost⟨fun | .blocked _ => False | .assertion _ => True⟩
+def noBlockedErrors : Error → Prop :=
+  fun | .blocked _ => False | .assertion _ => True
 
 def Succeeds (result : Except Error α) (post : α → Prop) : Prop :=
   ∃ value, result = .ok value ∧ post value
@@ -22,7 +22,7 @@ theorem Succeeds.of_triple (result : Except Error α) (post : α → Prop)
   have hp := h.le_wp trivial
   cases result with
   | ok value => exact ⟨value, rfl, hp⟩
-  | error err => simp [wp, WP.wpTrans, EPost.Cons.head_bot] at hp
+  | error err => simp [wp, WP.wpTrans] at hp
 
 -- A triple under `noBlockedErrors` excludes blocked errors.
 theorem noBlocked_of_triple {result : Except Error α}

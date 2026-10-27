@@ -1,9 +1,9 @@
 import Shuffler.BuildBottomUp.Defs
 import Std.Tactic.Do
 
-open Std.Internal.Do
+open Std.WP
 
-set_option mvcgen.warning false
+set_option experimental.vcgen true
 
 namespace Shuffler.BuildBottomUp
 
@@ -14,8 +14,8 @@ def Spec (result : Except Error α) (post : α → Prop) : Prop :=
   | .error (.blocked _) => True
   | .error (.assertion _) => False
 
-def allowedErrors : EPost⟨Error → Prop⟩ :=
-  epost⟨fun | .blocked _ => True | .assertion _ => False⟩
+def allowedErrors : Error → Prop :=
+  fun | .blocked _ => True | .assertion _ => False
 
 theorem spec_iff_triple (result : Except Error α) (post : α → Prop) :
     Spec result post ↔ ⦃True⦄ result ⦃post; allowedErrors⦄ := by

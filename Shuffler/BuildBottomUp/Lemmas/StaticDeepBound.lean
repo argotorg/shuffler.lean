@@ -1,9 +1,9 @@
 import Shuffler.BuildBottomUp.Lemmas.StaticBoundary
 import Shuffler.BuildBottomUp.Lemmas.StaticTerminal
 
-open Std.Internal.Do
+open Std.WP
 
-set_option mvcgen.warning false
+set_option experimental.vcgen true
 set_option maxRecDepth 16384
 set_option maxHeartbeats 4000000
 
