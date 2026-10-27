@@ -3,18 +3,25 @@ import Batteries.Tactic.PrintOpaques
 
 namespace Shuffler.BuildMapping
 
--- buildMapping succeeds whenever `dropped` has one entry per source slot: none of its
--- `requires` checks fails.
+-- buildMapping succeeds if and only if `dropped` has one entry per source slot.
 theorem buildMapping_ok (source target : Stack) (dropped : List Byte)
-    (strategy : WildcardSlotsStrategy) (hsizes : dropped.length = source.length) :
-    ∃ mb, buildMapping source target dropped strategy = .ok mb :=
-  let ⟨mb, h, _⟩ := (buildMapping_succeeds source target dropped strategy hsizes).exists
-  ⟨mb, h⟩
+    (strategy : WildcardSlotsStrategy) :
+    (∃ mb, buildMapping source target dropped strategy = .ok mb) ↔
+      dropped.length = source.length := by
+  constructor
+  · rintro ⟨mb, h⟩
+    by_cases hsizes : dropped.length = source.length
+    · exact hsizes
+    · simp only [buildMapping, requires, dite_eq_right hsizes] at h
+      cases h
+  · intro hsizes
+    let ⟨mb, h, _⟩ := (buildMapping_succeeds source target dropped strategy hsizes).exists
+    exact ⟨mb, h⟩
 
 theorem buildMapping_no_assertion (source target : Stack) (dropped : List Byte)
     (strategy : WildcardSlotsStrategy) (hsizes : dropped.length = source.length) (reason : String) :
     buildMapping source target dropped strategy ≠ .error (.assertion reason) := by
-  obtain ⟨mb, h⟩ := buildMapping_ok source target dropped strategy hsizes
+  obtain ⟨mb, h⟩ := (buildMapping_ok source target dropped strategy).mpr hsizes
   rw [h]
   nofun
 

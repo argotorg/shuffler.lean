@@ -3,6 +3,11 @@ import Shuffler
 open Shuffler.BuildMapping
 
 -- The theorems apply to the production function.
+example (source target : Stack) (dropped : List Byte) (strategy : WildcardSlotsStrategy) :
+    (∃ mb, buildMapping source target dropped strategy = .ok mb) ↔
+      dropped.length = source.length :=
+  buildMapping_ok source target dropped strategy
+
 example (source target : Stack) (dropped : List Byte) (strategy : WildcardSlotsStrategy)
     (h : dropped.length = source.length) (reason : String) :
     buildMapping source target dropped strategy ≠ .error (.assertion reason) :=
@@ -23,6 +28,13 @@ private def observe (source target : Stack) (dropped : List Byte)
 
 -- A `dropped` list of the wrong length is an assertion error.
 #guard observe [a, b] [a, b] [0] == none
+#guard observe [a] [a] [0, 0] == none
+#guard observe [] [] [0] == none
+
+-- Empty stacks and different source and target lengths can succeed.
+#guard observe [] [] [] == some ([], false)
+#guard observe [] [a] [] == some ([], false)
+#guard observe [a] [] [0] == some ([none], false)
 
 -- Slots already in place stay there.
 #guard observe [a, b] [a, b] [0, 0] == some ([some 0, some 1], false)
