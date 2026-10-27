@@ -1,5 +1,9 @@
-import Shuffler.BuildBottomUp.Lemmas.Generate.Basic
+module
+
+public import Shuffler.BuildBottomUp.Theorems.Feasibility.Defs
 import Shuffler.BuildBottomUp.Lemmas.Reachability
+
+@[expose] public section
 
 namespace Shuffler.Generate
 

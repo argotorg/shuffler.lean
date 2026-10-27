@@ -1,9 +1,15 @@
-import Mathlib.Data.Nat.Notation
-import Mathlib.Data.Finset.Basic
-import Batteries.Data.List.Basic
-import Shuffler.Basic
-import Mathlib.Data.List.Forall2
+module
 
+public import Batteries.Data.List.Basic
+public import Shuffler.Basic
+public import Mathlib.Tactic.ToDual
+import Batteries.Data.List.Lemmas
+import Mathlib.Data.Finset.Attr
+import Mathlib.Data.List.Forall2
+import Mathlib.Tactic.Finiteness.Attr
+import Mathlib.Tactic.SetLike
+
+@[expose] public section
 
 --- Values -----------------------------------------------------------------------------------------
 

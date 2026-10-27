@@ -1,5 +1,10 @@
-import Shuffler.BuildBottomUp.Defs
+module
+
+public import Shuffler.BuildBottomUp.Defs
 import Shuffler.BuildBottomUp.Lemmas.Invariants
+import Shuffler.Emission.Lemmas
+
+@[expose] public section
 
 namespace Shuffler.Emission
 

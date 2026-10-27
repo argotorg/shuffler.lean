@@ -1,5 +1,11 @@
+module
+
+public import Shuffler.Resolve.Defs
+public import Shuffler.Resolve.Properties
 import Shuffler.Resolve.Lemmas
 import Shuffler.Resolve.Lemmas.PreservationHelpers
+
+@[expose] public section
 
 open Std.Do
 

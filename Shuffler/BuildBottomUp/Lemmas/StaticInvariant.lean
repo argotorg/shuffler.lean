@@ -1,5 +1,13 @@
+module
+
+public import Shuffler.BuildBottomUp.Lemmas.StaticCycles
+public import Shuffler.BuildBottomUp.Lemmas.StaticPermutation
+import Shuffler.BuildBottomUp.Lemmas.Invariants
+import Shuffler.BuildBottomUp.Lemmas.Reachability
 import Shuffler.BuildBottomUp.Lemmas.StaticCounts
-import Shuffler.BuildBottomUp.Lemmas.StaticCycles
+import Shuffler.BuildBottomUp.Lemmas.StaticData
+
+@[expose] public section
 
 namespace Shuffler.Emission
 

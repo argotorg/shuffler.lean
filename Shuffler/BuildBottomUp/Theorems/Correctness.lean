@@ -1,4 +1,10 @@
+module
+
+public import Shuffler.BuildBottomUp.Defs
 import Shuffler.BuildBottomUp.Lemmas.LoopProofs
+import Shuffler.BuildBottomUp.Lemmas.Values
+
+@[expose] public section
 
 namespace Shuffler.Emission
 

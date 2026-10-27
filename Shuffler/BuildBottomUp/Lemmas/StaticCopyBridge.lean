@@ -1,5 +1,10 @@
-import Shuffler.BuildBottomUp.Lemmas.StaticInvariant
-import Shuffler.BuildBottomUp.Lemmas.StaticBoundary
+module
+
+public import Shuffler.BuildBottomUp.Lemmas.StaticInvariant
+public import Shuffler.BuildBottomUp.Lemmas.StaticBoundary
+import Shuffler.BuildBottomUp.Lemmas.StaticData
+
+@[expose] public section
 
 namespace Shuffler.Emission.Success
 

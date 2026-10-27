@@ -1,6 +1,12 @@
-import Shuffler.BuildBottomUp.Lemmas.StaticInvariant
-import Shuffler.BuildBottomUp.Lemmas.StaticCompletion
-import Shuffler.BuildBottomUp.Lemmas.StaticGeneration
+module
+
+public import Shuffler.BuildBottomUp.Lemmas.StaticInvariant
+public import Shuffler.BuildBottomUp.Lemmas.StaticCompletion
+import Shuffler.BuildBottomUp.Lemmas.Invariants
+import Shuffler.BuildBottomUp.Lemmas.StaticCounts
+import Shuffler.BuildBottomUp.Lemmas.Values
+
+@[expose] public section
 
 namespace Shuffler.Emission.Success
 

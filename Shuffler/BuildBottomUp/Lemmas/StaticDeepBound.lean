@@ -1,5 +1,14 @@
-import Shuffler.BuildBottomUp.Lemmas.StaticBoundary
+module
+
+public import Shuffler.BuildBottomUp.Lemmas.ReachActions
+import Shuffler.BuildBottomUp.Lemmas.Invariants
+import Shuffler.BuildBottomUp.Lemmas.LoopProofs
+import Shuffler.BuildBottomUp.Lemmas.NecessityProofs
+import Shuffler.BuildBottomUp.Lemmas.ReachScan
 import Shuffler.BuildBottomUp.Lemmas.StaticTerminal
+import Shuffler.BuildBottomUp.Lemmas.SuccessProofs
+
+@[expose] public section
 
 open Std.WP
 

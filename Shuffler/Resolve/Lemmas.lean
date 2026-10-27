@@ -1,5 +1,8 @@
-import Shuffler.Resolve.Defs
-import Std.Tactic.Do
+module
+
+public import Shuffler.Resolve.Defs
+
+@[expose] public section
 
 open Std.Do
 set_option mvcgen.warning false

@@ -1,10 +1,9 @@
-import Mathlib.Data.Finset.Sort
-import Shuffler.Contracts
-import Shuffler.Mapping
-import Shuffler.Stack
-import Shuffler.Trace
-import Std.WP
-import Std.Tactic.Do
+module
+
+public import Shuffler.Mapping
+public import Shuffler.Trace
+
+@[expose] public section
 
 -- TODO: make numeric types here match the c++ types
 -- TODO: add a Depth / Offset type

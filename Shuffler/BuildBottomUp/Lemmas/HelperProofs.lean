@@ -1,4 +1,11 @@
-import Shuffler.BuildBottomUp.Lemmas.SwapProofs
+module
+
+public import Shuffler.BuildBottomUp.Lemmas.SwapProofs
+import Shuffler.BuildBottomUp.Lemmas.Invariants
+import Shuffler.BuildBottomUp.Lemmas.Values
+import Std.WP.Triple.SpecLemmas
+
+@[expose] public section
 
 open Std.WP
 

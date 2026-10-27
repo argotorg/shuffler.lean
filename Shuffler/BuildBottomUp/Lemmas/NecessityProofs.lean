@@ -1,4 +1,14 @@
+module
+
+public import Shuffler.BuildBottomUp.Lemmas.ReachActions
+import Shuffler.BuildBottomUp.Lemmas.Invariants
+import Shuffler.BuildBottomUp.Lemmas.LoopProofs
+import Shuffler.BuildBottomUp.Lemmas.ReachScan
 import Shuffler.BuildBottomUp.Lemmas.SuccessProofs
+import Shuffler.BuildBottomUp.Lemmas.Values
+import Std.WP.Triple.SpecLemmas
+
+@[expose] public section
 
 open Std.WP
 

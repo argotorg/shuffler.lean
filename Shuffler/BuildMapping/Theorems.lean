@@ -1,7 +1,13 @@
-import Shuffler.BuildMapping.Defs
+module
+
+public import Shuffler.BuildMapping.Defs
+import all Batteries.Tactic.PrintOpaques
+
+import all Init.Data.Nat.Bitwise.Basic
 import Shuffler.BuildMapping.Lemmas.InPlace
 import Shuffler.BuildMapping.Lemmas.Strategies.Proof
-import Batteries.Tactic.PrintOpaques
+
+@[expose] public section
 
 namespace Shuffler.BuildMapping
 

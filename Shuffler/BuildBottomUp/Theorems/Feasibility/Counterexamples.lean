@@ -1,5 +1,10 @@
-import Shuffler.BuildBottomUp.Theorems.Feasibility.Defs
+module
+
+public meta import Shuffler.BuildBottomUp.Defs
 import Shuffler.BuildBottomUp.Defs
+import Shuffler.BuildBottomUp.Theorems.Feasibility.Defs
+
+@[expose] public section
 
 /-!
 Examples where the current BBU fails although a trace exists

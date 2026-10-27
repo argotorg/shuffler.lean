@@ -1,8 +1,16 @@
-import Shuffler.BuildBottomUp.Lemmas.StaticStepValues
-import Shuffler.BuildBottomUp.Lemmas.StaticPreservation
+module
+
+public import Shuffler.BuildBottomUp.Lemmas.ReachActions
+public import Shuffler.BuildBottomUp.Lemmas.StaticInvariant
+import Shuffler.BuildBottomUp.Lemmas.Invariants
+import Shuffler.BuildBottomUp.Lemmas.StaticCounts
+import Shuffler.BuildBottomUp.Lemmas.StaticDeepBound
 import Shuffler.BuildBottomUp.Lemmas.StaticGrowth
 import Shuffler.BuildBottomUp.Lemmas.StaticPrefix
-import Shuffler.BuildBottomUp.Lemmas.StaticDeepBound
+import Shuffler.BuildBottomUp.Lemmas.StaticPreservation
+import Shuffler.BuildBottomUp.Lemmas.StaticStepValues
+
+@[expose] public section
 
 namespace Shuffler.Emission.Success
 

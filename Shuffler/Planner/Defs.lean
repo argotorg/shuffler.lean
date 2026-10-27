@@ -1,5 +1,8 @@
-import Shuffler.Basic
-import Shuffler.Trace
+module
+
+public import Shuffler.Trace
+
+@[expose] public section
 
 namespace Shuffler.Planner
 

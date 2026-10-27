@@ -1,6 +1,10 @@
-import Shuffler.Contracts
-import Shuffler.Mapping
-import Shuffler.Stack
+module
+
+public import Shuffler.Contracts
+public import Shuffler.Mapping
+public import Shuffler.Stack
+
+@[expose] public section
 
 namespace Shuffler.BuildMapping
 

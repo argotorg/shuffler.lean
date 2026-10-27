@@ -1,5 +1,8 @@
-import Shuffler.BuildBottomUp.Lemmas.StaticPermutation
-import Shuffler.BuildBottomUp.Lemmas.StaticCycles
+module
+
+public import Shuffler.BuildBottomUp.Lemmas.StaticPermutation
+
+@[expose] public section
 
 namespace Shuffler.Emission.Success
 

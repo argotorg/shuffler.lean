@@ -1,5 +1,9 @@
-import Shuffler.BuildBottomUp.Lemmas.NecessityProofs
-import Mathlib.Data.Finset.Sort
+module
+
+public import Shuffler.BuildBottomUp.Defs
+import Shuffler.BuildBottomUp.Lemmas.Reachability
+
+@[expose] public section
 
 namespace Shuffler.Emission
 

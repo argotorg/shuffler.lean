@@ -1,4 +1,8 @@
-import Shuffler.BuildBottomUp.Lemmas.StaticData
+module
+
+public import Shuffler.BuildBottomUp.Defs
+
+@[expose] public section
 
 namespace Shuffler.Emission.Success
 

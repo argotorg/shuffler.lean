@@ -1,4 +1,9 @@
-import Shuffler.Resolve.Defs
+module
+
+public import Shuffler.Mapping
+public import Shuffler.Planner.Defs
+
+@[expose] public section
 
 namespace Shuffler.Planner
 

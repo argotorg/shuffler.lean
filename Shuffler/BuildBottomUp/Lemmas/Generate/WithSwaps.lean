@@ -1,5 +1,17 @@
+module
+
+public import Shuffler.BuildBottomUp.Theorems.Feasibility.Defs
+import Mathlib.Algebra.Order.Group.Multiset
+import Mathlib.Order.SuccPred.Nat
+import Mathlib.Tactic.NormNum.Ineq
+import Mathlib.Tactic.NormNum.Pow
+import Shuffler.BuildBottomUp.Lemmas.Placement.Basic
 import Shuffler.BuildBottomUp.Lemmas.Placement.Necessity
+import Shuffler.BuildBottomUp.Lemmas.Placement.Prepare
+import Shuffler.BuildBottomUp.Lemmas.Placement.Resources
 import Shuffler.BuildBottomUp.Lemmas.Placement.Sufficiency
+
+@[expose] public section
 
 namespace Shuffler.Generate.WithSwaps
 

@@ -1,5 +1,12 @@
-import Shuffler.RemoveSurplus.Lemmas
-import Batteries.Tactic.PrintOpaques
+module
+
+public import Shuffler.RemoveSurplus.Lemmas
+import all Batteries.Tactic.PrintOpaques
+
+import all Init.Data.Nat.Bitwise.Basic
+import all Init.Data.Repr
+
+@[expose] public section
 
 namespace Shuffler.Emission
 

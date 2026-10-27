@@ -1,5 +1,9 @@
+module
+
+public import Shuffler.BuildBottomUp.Theorems.Feasibility.Defs
 import Shuffler.BuildBottomUp.Lemmas.Placement.Basic
-import Mathlib.Data.List.Perm.Basic
+
+@[expose] public section
 
 namespace Shuffler.Placement
 

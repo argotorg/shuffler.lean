@@ -1,10 +1,10 @@
-import Mathlib.Data.Nat.Notation
-import Mathlib.Data.Finset.Basic
-import Batteries.Data.List.Basic
-import Shuffler.Basic
-import Shuffler.Contracts
-import Shuffler.Stack
-import Mathlib.Data.Multiset.AddSub
+module
+
+public import Shuffler.Contracts
+public import Shuffler.Stack
+public import Mathlib.Data.Finset.Insert
+
+@[expose] public section
 
 abbrev SpillSet := Finset VarId
 

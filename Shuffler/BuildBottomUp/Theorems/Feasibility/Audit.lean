@@ -1,4 +1,8 @@
-import Shuffler.BuildBottomUp.Theorems.Feasibility.Theorems
+module
+
+import all Shuffler.BuildBottomUp.Theorems.Feasibility.Theorems
+
+@[expose] public section
 
 -- Audit the axioms of each feasibility statement.
 

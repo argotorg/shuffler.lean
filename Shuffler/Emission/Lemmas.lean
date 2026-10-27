@@ -1,5 +1,12 @@
-import Shuffler.Emission.Defs
-import Std.Tactic.Do
+module
+
+public import Shuffler.Emission.Defs
+public import Std.WP.Monad.Instances
+public import Std.WP.Triple.Basic
+import Batteries.Data.Except
+import Std.WP.Triple.SpecLemmas
+
+@[expose] public section
 
 open Std.WP
 

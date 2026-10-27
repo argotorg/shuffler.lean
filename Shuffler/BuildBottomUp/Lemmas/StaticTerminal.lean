@@ -1,4 +1,12 @@
-import Shuffler.BuildBottomUp.Lemmas.StaticPermutation
+module
+
+public import Shuffler.BuildBottomUp.Lemmas.ReachActions
+import Shuffler.BuildBottomUp.Lemmas.Invariants
+import Shuffler.BuildBottomUp.Lemmas.LoopProofs
+import Shuffler.BuildBottomUp.Lemmas.SuccessProofs
+import Shuffler.Permute.Theorems
+
+@[expose] public section
 
 namespace Shuffler.Emission
 

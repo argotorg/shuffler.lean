@@ -1,8 +1,12 @@
-import Shuffler.BuildBottomUp.Theorems.Safety
-import Shuffler.BuildBottomUp.Theorems.Correctness
-import Shuffler.BuildBottomUp.Theorems.Static
-import Shuffler.BuildBottomUp.Theorems.Reachability
-import Shuffler.BuildBottomUp.Theorems.Small
-import Shuffler.BuildBottomUp.Theorems.Wildcard
-import Shuffler.BuildBottomUp.Theorems.Feasibility
-import Shuffler.BuildBottomUp.Theorems.Audit
+module
+
+public import Shuffler.BuildBottomUp.Theorems.Safety
+public import Shuffler.BuildBottomUp.Theorems.Correctness
+public import Shuffler.BuildBottomUp.Theorems.Static
+public import Shuffler.BuildBottomUp.Theorems.Reachability
+public import Shuffler.BuildBottomUp.Theorems.Small
+public import Shuffler.BuildBottomUp.Theorems.Wildcard
+public import Shuffler.BuildBottomUp.Theorems.Feasibility
+public import Shuffler.BuildBottomUp.Theorems.Audit
+
+@[expose] public section

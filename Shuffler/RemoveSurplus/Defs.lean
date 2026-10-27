@@ -1,4 +1,8 @@
-import Shuffler.Emission.Defs
+module
+
+public import Shuffler.Emission.Defs
+
+@[expose] public section
 
 namespace Shuffler.Emission
 

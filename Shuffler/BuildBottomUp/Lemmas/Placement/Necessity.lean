@@ -1,5 +1,11 @@
-import Shuffler.BuildBottomUp.Lemmas.Placement.TraceInvariants
+module
+
+public import Shuffler.BuildBottomUp.Theorems.Feasibility.Defs
 import Shuffler.BuildBottomUp.Lemmas.Placement.Resources
+import Shuffler.BuildBottomUp.Lemmas.Placement.TraceInvariants
+import Shuffler.BuildBottomUp.Lemmas.Reachability
+
+@[expose] public section
 
 namespace Shuffler.Placement
 

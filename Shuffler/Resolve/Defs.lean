@@ -1,6 +1,9 @@
-import Shuffler.Planner.Defs
-import Shuffler.Mapping
-import Shuffler.Contracts
+module
+
+public import Shuffler.Planner.Defs
+public import Shuffler.Mapping
+
+@[expose] public section
 
 namespace Shuffler.Planner
 

@@ -1,4 +1,8 @@
-import Shuffler.BuildBottomUp.Theorems.Feasibility.Defs
+module
+
+public import Shuffler.Trace
+
+@[expose] public section
 
 theorem Trace.onlyGenerates_cast (h : result = other)
     (trace : Trace spills source result) :

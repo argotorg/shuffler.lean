@@ -1,5 +1,11 @@
-import Shuffler.BuildBottomUp.Defs
-import Shuffler.Emission.Lemmas
+module
+
+public import Shuffler.Emission.Lemmas
+import Mathlib.Tactic.NormNum.Ineq
+import Mathlib.Tactic.NormNum.Pow
+import Std.WP.Triple.SpecLemmas
+
+@[expose] public section
 
 open Std.WP
 

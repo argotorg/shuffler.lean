@@ -1,6 +1,8 @@
-import Init.Data.List.Basic
-import Mathlib.Data.Nat.Basic
-import Mathlib.GroupTheory.Perm.Support
+module
+
+public import Mathlib.GroupTheory.Perm.Support
+
+@[expose] public section
 
 namespace Shuffler.Permute
 

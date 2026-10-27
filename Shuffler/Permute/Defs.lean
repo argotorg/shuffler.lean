@@ -1,6 +1,10 @@
-import Shuffler.Trace
-import Shuffler.Permute.Lemmas
-import Mathlib.GroupTheory.Perm.Cycle.Factors
+module
+
+public import Shuffler.Trace
+public import Shuffler.Permute.Lemmas
+public import Mathlib.GroupTheory.Perm.Cycle.Factors
+
+@[expose] public section
 
 namespace Shuffler.Permute
 

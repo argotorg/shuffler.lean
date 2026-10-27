@@ -1,5 +1,11 @@
-import Shuffler.RemoveSurplus.Defs
-import Shuffler.Emission.Lemmas
+module
+
+public import Shuffler.RemoveSurplus.Defs
+public import Shuffler.Emission.Lemmas
+import Mathlib.Algebra.Group.Nat.Defs
+import Std.WP.Triple.SpecLemmas
+
+@[expose] public section
 
 open Std.WP
 

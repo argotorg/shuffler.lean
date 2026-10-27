@@ -1,7 +1,10 @@
-import Shuffler.Resolve.Properties
+module
+
+public import Shuffler.Resolve.Lemmas.PreservationHelpers
+import Mathlib.Data.Fintype.Card
 import Shuffler.Resolve.Lemmas
-import Shuffler.Resolve.Lemmas.PreservationHelpers
-import Std.Tactic.Do
+
+@[expose] public section
 
 open Std.Do
 set_option mvcgen.warning false

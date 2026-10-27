@@ -1,7 +1,10 @@
+module
+
+public import Shuffler.BuildBottomUp.Theorems.Feasibility.Defs
 import Shuffler.BuildBottomUp.Lemmas.Placement.Basic
-import Shuffler.BuildBottomUp.Lemmas.Generate.Basic
 import Shuffler.BuildBottomUp.Lemmas.Reachability
-import Mathlib.Algebra.Order.Monoid.Multiset
+
+@[expose] public section
 
 namespace Shuffler.Placement
 

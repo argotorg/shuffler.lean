@@ -1,6 +1,10 @@
-import Shuffler.BuildBottomUp.Theorems.Correctness
+module
+
+public import Shuffler.BuildBottomUp.Lemmas.StaticDecision
 import Shuffler.BuildBottomUp.Lemmas.StaticProof
-import Shuffler.BuildBottomUp.Lemmas.StaticDecision
+import Shuffler.BuildBottomUp.Theorems.Correctness
+
+@[expose] public section
 
 namespace Shuffler.Emission
 
