@@ -1,4 +1,5 @@
 import Shuffler.BuildMapping.Defs
+import Shuffler.BuildMapping.Lemmas.Equivalence
 import Shuffler.BuildMapping.Lemmas.InPlace
 import Shuffler.BuildMapping.Lemmas.Strategies.Proof
 import Batteries.Tactic.PrintOpaques
@@ -9,7 +10,8 @@ namespace Shuffler.BuildMapping
 theorem MappingBuilder.closestCopy_new_eq_closestCopy {source target : Stack}
     (self : MappingBuilder source target) (targetOffset : Fin target.length)
     (location : CopyLocation) :
-    self.closestCopy_new targetOffset location = self.closestCopy targetOffset location := rfl
+    self.closestCopy_new targetOffset location = self.closestCopy targetOffset location :=
+  Equivalence.closestCopy_eq self targetOffset location
 
 -- buildMapping succeeds if and only if `dropped` has one entry per source slot.
 theorem buildMapping_ok (source target : Stack) (dropped : List Byte)
