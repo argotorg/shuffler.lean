@@ -4,7 +4,7 @@ open Shuffler.BuildMapping
 
 -- The theorems apply to the production function.
 example (source target : Stack) (dropped : List Byte) (strategy : WildcardSlotsStrategy) :
-    (∃ mb, buildMapping source target dropped strategy = .ok mb) ↔
+    (∃ result, buildMapping source target dropped strategy = .ok result) ↔
       dropped.length = source.length :=
   buildMapping_ok source target dropped strategy
 
@@ -23,7 +23,7 @@ private def observe (source target : Stack) (dropped : List Byte)
     (strategy : WildcardSlotsStrategy := .Leave) :
     Option (List (Option ℕ) × Bool) :=
   match buildMapping source target dropped strategy with
-  | .ok mb => some ((List.ofFn mb.mapping).map (·.map Fin.val), mb.sawWildcardCopy)
+  | .ok result => some ((List.ofFn result.mapping).map (·.map Fin.val), result.sawWildcardCopy)
   | .error _ => none
 
 -- A `dropped` list of the wrong length is an assertion error.

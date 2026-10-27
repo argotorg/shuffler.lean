@@ -25,6 +25,10 @@ structure MappingBuilder (source target : Stack) where
   mapping : Mapping source.length target.length
   sawWildcardCopy : Bool := false
 
+structure BuildMappingResult (source target : Stack) where
+  mapping : Mapping source.length target.length
+  sawWildcardCopy : Bool
+
 
 ------------------------------------ helpers (methods in the C++ shuffler code) ------------------------------------
 
@@ -94,7 +98,7 @@ end MappingBuilder
 ------------------------ buildMapping (in the constructor in shuffler.cpp) ----------------------------------
 
 def buildMapping (source target : Stack) (dropped : List Byte)
-    (strategy : WildcardSlotsStrategy) : Except Error (MappingBuilder source target) := do
+    (strategy : WildcardSlotsStrategy) : Except Error (BuildMappingResult source target) := do
   _ ← requires (dropped.length = source.length) "dropped needs one entry per source slot"
   let mut mb : MappingBuilder source target := { dropped, mapping := ⊥ }
 
@@ -141,6 +145,6 @@ def buildMapping (source target : Stack) (dropped : List Byte)
     | some best => mb ← mb.map best t
     | none => pure ()
 
-  return mb
+  return { mapping := mb.mapping, sawWildcardCopy := mb.sawWildcardCopy }
 
 end Shuffler.BuildMapping
