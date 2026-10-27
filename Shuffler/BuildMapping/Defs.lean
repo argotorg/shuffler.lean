@@ -152,7 +152,7 @@ def buildMapping (source target : Stack) (dropped : List Byte)
   return { mapping := mb.mapping, sawWildcardCopy := mb.sawWildcardCopy }
 
 def buildMapping_new (source target : Stack) (dropped : List Byte)
-    (strategy : WildcardSlotsStrategy) : Except Error (BuildMappingResult source target) := do
+    (wildcardSlotStrategy : WildcardSlotsStrategy) : Except Error (BuildMappingResult source target) := do
   let mut mb : MappingBuilder source target := { dropped, mapping := ⊥ }
 
   _ ← requires (dropped.length = source.length) "dropped needs one entry per source slot"
@@ -172,18 +172,16 @@ def buildMapping_new (source target : Stack) (dropped : List Byte)
         mb ← mb.map copy j
 
   -- copies sitting in wildcard slots are taken or left according to the strategy
-  for t in List.finRange target.length do
-    if mb.hasSourceAssigned t ∨ mb.isWildcardTarget t then continue
-    match ← mb.closestCopy t .InWildcardSlots with
-    | some copy =>
-      -- a function return label is always taken, can't be duped or pushed;
-      if target[t].isFunctionReturnLabel then
-        mb ← mb.map copy t
-      else
-        if strategy = .Take then
-          mb ← mb.map copy t
-        mb := { mb with sawWildcardCopy := true }
-    | none => pure ()
+  for j in List.finRange target.length do
+    if ¬ mb.hasSourceAssigned j ∧ ¬ mb.isWildcardTarget j then
+      if let some copy ← mb.closestCopy j .InWildcardSlots then
+        -- a function return label is always taken, can't be duped or pushed
+        if target[j].isFunctionReturnLabel then
+          mb ← mb.map copy j
+        else
+          mb := { mb with sawWildcardCopy := true }
+          if wildcardSlotStrategy = .Take then
+            mb ← mb.map copy j
 
   -- wildcards keep whatever sits there
   for j in List.finRange (min source.length target.length) do
