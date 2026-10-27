@@ -28,7 +28,7 @@ def removeSurplus (initial : State source target spills) : Except ShuffleErr (St
     match shallowestSurplus, deepestReachableSurplus with
     | none, _ => break
     -- there is a surplus but we can't reach it
-    | some shallowest, none => throw (state.blockSwapUnreachable (← index state.stack.length shallowest))
+    | some shallowest, none => throw (← state.blockSwapUnreachable (← index state.stack.length shallowest))
     | some shallowest, some deepest =>
       let top := state.stack.length - 1
       if shallowest ≠ top then

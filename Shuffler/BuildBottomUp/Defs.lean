@@ -94,7 +94,7 @@ def State.produce (current : State source target spills)
   else if slot.can_be_freely_generated ∨ spills.is_spilled slot then
     state ← state.push slot targetOffset
   else if h : copy.isSome then
-    throw (.Blocked (state.stack.offsetToDepth (copy.get h) - MAX_DUP_DEPTH))
+    throw (← state.blockDupUnreachable (copy.get h))
   else
     throw (.assertion "generated slot has no copy on the stack and is not spilled")
 
@@ -190,7 +190,7 @@ where
 
       if let some sourceCopy := state.stack.shallowestCopyPosition slot then
         if ¬ state.stack.isDupReachable sourceCopy then
-          throw (.Blocked ((state.depthOf sourceCopy) - MAX_DUP_DEPTH))
+          throw (← state.blockDupUnreachable sourceCopy)
         -- a copy sitting at the offset being filled floats to the top when it is, so no hurry
         if (state.depthOf sourceCopy) = MAX_DUP_DEPTH ∧ sourceCopy.val ≠ targetOffset ∧ urgentToDup.isNone then
           urgentToDup := some offset
@@ -256,7 +256,7 @@ where
       -- if `pos` is not already at the top of the stack, swap it up
       if pos ≠ state.stack.length - 1 then
         if ¬ (state.isSwapReachable (← index state.stack.length pos)) then
-          throw (.Blocked (state.depthOf (← index state.stack.length pos) - MAX_SWAP_DEPTH)) -- bail
+          throw (← state.blockSwapUnreachable (← index state.stack.length pos)) -- bail
         state ← state.swapWith pos
     else
       -- the slot needs to be DUPed
@@ -270,7 +270,7 @@ where
     _ ← requires (¬ state.isFinal (← index state.stack.length targetOffset)) "target slot is already final"
     if targetOffset ≠ state.stack.length - 1 then
       if ¬ (state.isSwapReachable (← index state.stack.length targetOffset)) then
-        throw (.Blocked ((state.depthOf (← index state.stack.length targetOffset)) - MAX_SWAP_DEPTH))
+        throw (← state.blockSwapUnreachable (← index state.stack.length targetOffset))
       state ← state.swapWith targetOffset
 
     return ← loop (targetOffset + 1) state

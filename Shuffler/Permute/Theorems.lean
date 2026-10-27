@@ -3,16 +3,18 @@ import Shuffler.Permute.Optimality
 namespace Shuffler.Permute
 
 -- `hnreachable` says that `perm` moves a position deeper than `MAX_SWAP_DEPTH`.
--- The run returns `.Blocked x`, where `x` is positive.
--- The witness `i ∈ perm.support` identifies a moved position in the input permutation.
--- Its depth, `i.rev.val`, exceeds the limit by exactly `x`.
+-- The run returns `.Blocked i.val excess`, where `excess` is positive.
+-- The reported position `i` is in the input permutation's support.
+-- Its depth, `i.rev.val`, exceeds the limit by exactly `excess`.
 theorem permute_blocks_unreachable
     (spills : SpillSet)
     (source : Stack) (perm : Permutation source)
     (hnreachable : ¬all_swaps_reachable perm) :
-    ∃ x, permute spills source perm = .error (.Blocked x)
-      ∧ x > 0
-      ∧ ∃ i ∈ perm.support, i.rev.val = x + MAX_SWAP_DEPTH := by
+    ∃ (i : Fin source.length) (excess : ℕ),
+      permute spills source perm = .error (.Blocked i.val excess)
+        ∧ excess > 0
+        ∧ i ∈ perm.support
+        ∧ i.rev.val = excess + MAX_SWAP_DEPTH := by
   rw [permute]
   split
   · rename_i hne
