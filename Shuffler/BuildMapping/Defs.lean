@@ -192,11 +192,14 @@ def buildMapping_new (source target : Stack) (dropped : List Byte)
       mb ← mb.map j j
 
   -- the remaining wildcards absorb the closest surplus slot instead of having it popped
-  for t in List.finRange target.length do
-    if mb.hasSourceAssigned t ∨ ¬ mb.isWildcardTarget t then continue
-    match ← mb.closestSurplus t with
-    | some best => mb ← mb.map best t
-    | none => pure ()
+  for j in List.finRange target.length do
+    if mb.isWildcardTarget j ∧ ¬ mb.hasSourceAssigned j then
+      let mut best : Option (Fin source.length) := none
+      for o in List.finRange source.length do
+        if (← mb.mappable o) ∧ (¬ best.isSome ∨ best.any (λ b => mb.absDiff o j < mb.absDiff b j)) then
+          best := some o
+      if h : best.isSome then
+        mb ← mb.map (best.get h) j
 
   return { mapping := mb.mapping, sawWildcardCopy := mb.sawWildcardCopy }
 
