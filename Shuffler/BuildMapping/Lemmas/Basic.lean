@@ -104,7 +104,7 @@ theorem closestCopy_succeeds_matches (self : MappingBuilder source target) (targ
     split
     · simp [hi]
       exact hcond.1
-    · split <;> simp_all
+    · exact hinv
   · exact hinv
 
 -- Preserve the contract used by callers that only need a mappable source.
