@@ -67,7 +67,7 @@ instance (self : MappingBuilder source target) (s : Fin source.length) :
 theorem mappable_ok (self : MappingBuilder source target) (s : Fin source.length)
     (h : self.dropped.length = source.length) : self.mappable s = .ok (decide (self.IsMappable s)) := by
   have hlt : s.val < self.dropped.length := by rw [h]; exact s.isLt
-  simp only [mappable, requires_of_true _ hlt, except_ok_bind, IsMappable,
+  simp only [mappable, Fin.castLE_refl, requires_of_true _ hlt, except_ok_bind, IsMappable,
     List.getElem?_eq_getElem hlt, Option.some.injEq]
   rfl
 
@@ -75,13 +75,13 @@ theorem mappable_ok (self : MappingBuilder source target) (s : Fin source.length
 theorem mappable_of_isMappable (self : MappingBuilder source target) (s : Fin source.length)
     (hs : self.IsMappable s) : self.mappable s = .ok true := by
   obtain ⟨hlt, h0⟩ := List.getElem?_eq_some_iff.mp hs.1
-  simp only [mappable, requires_of_true _ hlt, except_ok_bind, h0, hs.2]
+  simp only [mappable, Fin.castLE_refl, requires_of_true _ hlt, except_ok_bind, h0, hs.2]
   rfl
 
 theorem map_ok (self : MappingBuilder source target) (s : Fin source.length) (t : Fin target.length)
     (hs : self.IsMappable s) (ht : self.mapping.symm t = none) :
     self.map s t = .ok { self with mapping := self.mapping.bind s t hs.2 ht } := by
-  simp only [map, mappable_of_isMappable self s hs, except_ok_bind, requires_of_true _ rfl,
+  simp only [map, Fin.castLE_refl, mappable_of_isMappable self s hs, except_ok_bind, requires_of_true _ rfl,
     requires_of_true _ hs.2, requires_of_true _ ht]
   rfl
 

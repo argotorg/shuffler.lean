@@ -35,8 +35,9 @@ structure BuildMappingResult (source target : Stack) where
 namespace MappingBuilder
 
 -- decides whether a source slot can be mapped to sth, ie. it is not dropped and not already mapped
-def mappable (self : MappingBuilder source target) (sourceOffset : Fin source.length) :
-    Except Error Bool := do
+def mappable (self : MappingBuilder source target) {n : ℕ} (sourceOffset : Fin n)
+    (h : n ≤ source.length := by omega) : Except Error Bool := do
+  let sourceOffset := sourceOffset.castLE h
   let ⟨_⟩ ← requires (sourceOffset.val < self.dropped.length) "dropped has no entry for the source slot"
   return decide (self.dropped[sourceOffset.val] = 0 ∧ self.mapping sourceOffset = none)
 
@@ -84,8 +85,11 @@ def closestSurplus (self : MappingBuilder source target) (targetOffset : Fin tar
   return best
 
 -- binds a source slot to a target slot, returning a new mapping builder with the updated mapping
-def map (self : MappingBuilder source target) (sourceOffset : Fin source.length)
-    (targetOffset : Fin target.length) : Except Error (MappingBuilder source target) := do
+def map (self : MappingBuilder source target) {n m : ℕ} (sourceOffset : Fin n)
+    (targetOffset : Fin m) (hs : n ≤ source.length := by omega)
+    (ht : m ≤ target.length := by omega) : Except Error (MappingBuilder source target) := do
+  let sourceOffset := sourceOffset.castLE hs
+  let targetOffset := targetOffset.castLE ht
   _ ← requires (← self.mappable sourceOffset) "source slot is not mappable"
   -- hp, hd needed for bind
   let ⟨hp⟩ ← requires (self.mapping sourceOffset = none) "source position already bound"
@@ -108,6 +112,57 @@ def buildMapping (source target : Stack) (dropped : List Byte)
     let t := Fin.castLE (min_le_right _ _) j
     if source[s] = target[t] ∧ (← mb.mappable s) then
       mb ← mb.map s t
+
+  -- the remaining target offsets take the closest unused copy, deepest first: what is left over is
+  -- generated on top, where that is cheapest
+  for t in List.finRange target.length do
+    if mb.hasSourceAssigned t ∨ mb.isWildcardTarget t then continue
+    match ← mb.closestCopy t .OutsideWildcardSlots with
+    | some copy => mb ← mb.map copy t
+    | none => pure ()
+
+  -- copies sitting in wildcard slots are taken or left according to the strategy
+  for t in List.finRange target.length do
+    if mb.hasSourceAssigned t ∨ mb.isWildcardTarget t then continue
+    match ← mb.closestCopy t .InWildcardSlots with
+    | some copy =>
+      -- a function return label is always taken, can't be duped or pushed;
+      if target[t].isFunctionReturnLabel then
+        mb ← mb.map copy t
+      else
+        if strategy = .Take then
+          mb ← mb.map copy t
+        mb := { mb with sawWildcardCopy := true }
+    | none => pure ()
+
+  -- wildcards keep whatever sits there
+  for j in List.finRange (min source.length target.length) do
+    let s := Fin.castLE (min_le_left _ _) j
+    let t := Fin.castLE (min_le_right _ _) j
+    if mb.isWildcardTarget t ∧ ¬ mb.hasSourceAssigned t ∧ (← mb.mappable s) then
+      mb ← mb.map s t
+
+  -- the remaining wildcards absorb the closest surplus slot instead of having it popped
+  for t in List.finRange target.length do
+    if mb.hasSourceAssigned t ∨ ¬ mb.isWildcardTarget t then continue
+    match ← mb.closestSurplus t with
+    | some best => mb ← mb.map best t
+    | none => pure ()
+
+  return { mapping := mb.mapping, sawWildcardCopy := mb.sawWildcardCopy }
+
+def buildMapping_new (source target : Stack) (dropped : List Byte)
+    (strategy : WildcardSlotsStrategy) : Except Error (BuildMappingResult source target) := do
+  let mut mb : MappingBuilder source target := { dropped, mapping := ⊥ }
+
+  _ ← requires (dropped.length = source.length) "dropped needs one entry per source slot"
+
+  let common := min source.length target.length
+
+  -- slots already in place get mapped directly
+  for j in List.finRange common do
+    if source[j] = target[j] ∧ (← mb.mappable j) then
+      mb ← mb.map j j
 
   -- the remaining target offsets take the closest unused copy, deepest first: what is left over is
   -- generated on top, where that is cheapest
