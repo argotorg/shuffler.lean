@@ -9,7 +9,7 @@ private theorem permute_success_iff (spills : SpillSet) (stack : Stack)
   constructor
   · rintro ⟨result, hs⟩
     by_contra hn
-    obtain ⟨_, he, _⟩ := Shuffler.Permute.permute_blocks_unreachable spills stack perm hn
+    obtain ⟨_, _, he, _⟩ := Shuffler.Permute.permute_blocks_unreachable spills stack perm hn
     rw [hs] at he
     contradiction
   · intro hr

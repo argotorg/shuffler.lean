@@ -135,7 +135,8 @@ private theorem generate_pending_generations (state next : State source target s
       state.generate offset
       ⦃fun s => s.pending_generations = state.pending_generations - 1; (fun _ => True)⦄ := by
     vcgen [State.generate, State.produce, State.push, State.dup, State.swapDestinations, State.swapWith,
-      requires, index, slotAt, State.isSwapReachable, State.depthOf]
+      State.blockDupUnreachable, State.block, requires, index, slotAt,
+      State.isSwapReachable, State.depthOf]
     all_goals simp_all
   have hp := hs.le_wp trivial
   rw [h] at hp

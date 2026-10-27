@@ -32,7 +32,7 @@ def UrgentChoice (state : State source target spills) (choice : Option ℕ) : Pr
           continue
         if let some copy := state.stack.shallowestCopyPosition slot then
           if ¬ state.stack.isDupReachable copy then
-            throw (.Blocked ((state.depthOf copy) - MAX_DUP_DEPTH))
+            throw (← state.blockDupUnreachable copy)
           if (state.depthOf copy) = MAX_DUP_DEPTH ∧ copy.val ≠ cursor ∧ urgent.isNone then
             urgent := some offset
       return urgent : Except ShuffleErr (Option ℕ))

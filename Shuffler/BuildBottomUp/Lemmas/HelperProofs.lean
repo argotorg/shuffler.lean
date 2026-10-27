@@ -89,9 +89,14 @@ private theorem growth_append (state : State source target spills) (slot : Value
     | exact Growth.decrement (by assumption)
     | exact Or.inl (Value.can_be_freely_generated_of_is_junk _ (by assumption))
     | simp_all [allowedErrors, State.isAvailable, Option.isSome_iff_exists]
-  all_goals
+  case vc10 =>
     rename_i hcopy
     exact shallowestCopyPosition_value state.stack target[dest.val] _ hcopy.1
+  case vc16 =>
+    rename_i filtered hsome hnone hfilter _
+    intro hreach
+    exact hnone _ (hfilter.symm.trans (Option.filter_eq_some_iff.mpr
+      ⟨(Option.some_get hsome).symm, by simpa using hreach⟩))
 
 structure Generation (state next : State source target spills) (dest : Fin target.length) : Prop where
   stack_eq : next.stack = state.stack ++ [target[dest]] ∨

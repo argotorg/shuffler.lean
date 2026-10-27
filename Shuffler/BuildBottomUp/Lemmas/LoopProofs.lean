@@ -32,6 +32,7 @@ macro "finish_checked " c:term ", " st:term ", " hp:term ", " hn:term ", " expec
       rintro final ⟨hinv, he⟩
       exact $advance _ hinv (he.trans $expected)
     · rw [ite_eq_left hr]
+      rw [blockSwapUnreachable_eq _ _ hr]
       exact True.intro
   · try dsimp +zetaDelta only at hnotTop
     simp +zetaDelta only [ne_eq, hnotTop, ↓reduceIte]
@@ -100,7 +101,7 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
     cases hperm : Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hp.1 hp.2) with
     | error err =>
       cases err with
-      | Blocked excess => simp [Spec]
+      | Blocked offset excess => simp [Spec]
       | assertion reason =>
         exact (Shuffler.Permute.permute_no_assertion _ _ _ reason hperm).elim
     | ok result =>
@@ -204,6 +205,7 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
         rintro next ⟨hp, he'⟩
         finish_checked cursor, next, hp.1, hp.2, he'.trans he, advance
       · rw [ite_eq_left hr]
+        rw [blockSwapUnreachable_eq _ _ hr]
         exact True.intro
     · dsimp +zetaDelta only at hnotTop
       simp only [ne_eq, hnotTop, ↓reduceIte]

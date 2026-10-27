@@ -84,7 +84,7 @@ example : observeState ((copyState MAX_DUP_DEPTH {⟨37⟩}).produce 0) =
     .ok ((copyState MAX_DUP_DEPTH {⟨37⟩}).stack ++ [.Var ⟨37⟩], [.dup 16], [some 16], 0) := rfl
 
 -- One slot beyond DUP reach blocks unless a spill can be loaded.
-example : (copyState (MAX_DUP_DEPTH + 1) ∅).produce 0 = .error (.Blocked 1) := rfl
+example : (copyState (MAX_DUP_DEPTH + 1) ∅).produce 0 = .error (.Blocked 0 1) := rfl
 example : observeState ((copyState (MAX_DUP_DEPTH + 1) {⟨37⟩}).produce 0) =
     .ok ((copyState (MAX_DUP_DEPTH + 1) {⟨37⟩}).stack ++ [.Var ⟨37⟩], [.load ⟨37⟩], [some 17], 0) := rfl
 

@@ -95,7 +95,7 @@ example : (Trace.Lit (spills := ∅) []).swapCount ≤
 -- A permutation that moves an unreachable position remains blocked.
 example : (match permute ∅ (List.replicate 18 (.Var ⟨0⟩))
     (Equiv.swap (0 : Fin 18) (17 : Fin 18)) with
-    | .error (.Blocked depth) => depth == 1
+    | .error (.Blocked offset excess) => offset == 0 && excess == 1
     | .error (.assertion _) => false
     | .ok _ => false) = true := by native_decide
 

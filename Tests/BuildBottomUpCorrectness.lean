@@ -87,7 +87,7 @@ example : ∀ i j, (copyState 16 0).mapping i = some j →
       ((.Var ⟨37⟩ :: List.replicate 16 (.Lit 0)) ++ [.Var ⟨37⟩])[j] := by decide
 
 example : (buildBottomUp (copyState 16 0) copyState_16_0_valid).map (fun result => result.1) =
-    .error (.Blocked 1) := by native_decide
+    .error (.Blocked 0 1) := by native_decide
 
 -- Validity and the size bound do not imply that the mapping respects target values.
 private def mismatched : State [.Lit 1] [.Lit 2] ∅ where

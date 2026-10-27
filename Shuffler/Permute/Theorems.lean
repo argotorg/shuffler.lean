@@ -21,18 +21,24 @@ theorem permute_blocks_unreachable
     refine permute.go.induct_unfolding spills source hne
       (motive := fun _ remaining _ _ result =>
         ¬all_swaps_reachable remaining →
-          ∃ x, result = .error (.Blocked x)
-            ∧ x > 0
-            ∧ ∃ i ∈ remaining.support, i.rev.val = x + MAX_SWAP_DEPTH)
+          ∃ (i : Fin source.length) (excess : ℕ),
+            result = .error (.Blocked i.val excess)
+              ∧ excess > 0
+              ∧ i ∈ remaining.support
+              ∧ i.rev.val = excess + MAX_SWAP_DEPTH)
       ?blocked_top ?swap_top ?blocked_pos ?swap_pos ?done source perm (.Lit source) rfl hnreachable
       <;> intro current perm trace hlen top htop <;> intros
     case blocked_top ht idx hdepth _ =>
-      exact ⟨idx - MAX_SWAP_DEPTH, rfl, by omega, perm top, by simpa using ht, by omega⟩
+      exact ⟨perm top, idx - MAX_SWAP_DEPTH, rfl, by omega, by simpa using ht, by omega⟩
     case swap_top ih hnreach | swap_pos ih hnreach =>
-      exact blocked_of_reachable_swap _ _ _
-        (by dsimp [Fin.rev]; omega) (by omega) ih hnreach
+      obtain ⟨i, excess, hresult, hpos, hi, hdepth⟩ := ih (fun hreach =>
+        hnreach ((all_swaps_reachable_swap_iff _ _ _
+          (by dsimp [Fin.rev]; omega) (by omega)).mp hreach))
+      exact ⟨i, excess, hresult, hpos,
+        (unreachable_mem_support_swap _ _ _ _
+          (by dsimp [Fin.rev]; omega) (by omega) (by omega)).mp hi, hdepth⟩
     case blocked_pos pos hpos _ idx hdepth _ =>
-      exact ⟨idx - MAX_SWAP_DEPTH, rfl, by omega, pos, by simpa using hpos, by omega⟩
+      exact ⟨pos, idx - MAX_SWAP_DEPTH, rfl, by omega, by simpa using hpos, by omega⟩
     case done hsearch hnreach =>
       exact False.elim (hnreach (by
         simp [all_swaps_reachable, foldl_find_out_of_place_eq_one perm hsearch]))
@@ -84,7 +90,7 @@ theorem permute_no_assertion
   by_cases hreachable : all_swaps_reachable perm
   · obtain ⟨res, trace, heq, _⟩ := permute_applies_permutation_reachable spills source perm hreachable
     simp [heq]
-  · obtain ⟨excess, heq, _⟩ := permute_blocks_unreachable spills source perm hreachable
+  · obtain ⟨_, _, heq, _⟩ := permute_blocks_unreachable spills source perm hreachable
     simp [heq]
 
 theorem permute_applies_permutation_of_ok
@@ -94,7 +100,7 @@ theorem permute_applies_permutation_of_ok
     res = apply_permutation source perm := by
   have hreachable : all_swaps_reachable perm := by
     by_contra hn
-    obtain ⟨_, he, _⟩ := permute_blocks_unreachable spills source perm hn
+    obtain ⟨_, _, he, _⟩ := permute_blocks_unreachable spills source perm hn
     rw [hresult] at he
     contradiction
   obtain ⟨result, resultTrace, heq, hres⟩ :=

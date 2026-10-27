@@ -340,23 +340,30 @@ theorem removeSurplus_triple (initial : State source target spills) :
       state.boundValue = initial.boundValue
   case inv2 =>
     rename_i state _ _
-    exact fun pref _ found => SurplusScan state pref found
+    -- No reachable surplus slot was seen if the second scan result is empty.
+    exact fun pref _ found => SurplusScan state pref found ∧
+      (found.2 = none → ∀ pos ∈ pref, state.isSurplus pos → ¬ state.isSwapReachable pos)
   case inv3 =>
     rename_i state _ _ _ _ _ _ _ _ _ _
     exact fun _ _ equal => ∀ e, equal = some e → ∃ h : e < state.stack.length - 1,
       state.isSurplus ⟨e, by omega⟩ ∧ state.stack[e]'(by omega) = state.stack[state.stack.length - 1]'(by omega)
-  all_goals try simp_all [allowedErrors, State.blockSwapUnreachable]
   all_goals try casesm* _ ∧ _
+  all_goals try simp_all [allowedErrors]
   all_goals first
+    | (apply_assumption
+       exact (SurplusScan.shallowest hyp _ hyp).choose_spec.1)
+    | (constructor
+       · first
+           | exact SurplusScan.skip hyp hyp
+           | exact SurplusScan.first_unreachable hyp hyp hyp hyp
+           | exact SurplusScan.later_unreachable hyp hyp
+       · aesop)
     | exact SurplusScan.top_ready hyp hyp hyp
     | exact retag_ready _ _ _ _ hyp
     | exact ⟨outer_pop hyp (SurplusScan.not_noSurplus hyp hyp) hyp, (retag_bound _ _ _ _ hyp).trans hyp⟩
     | exact SurplusScan.start _
-    | exact SurplusScan.skip hyp hyp
     | exact SurplusScan.first_reachable hyp hyp hyp hyp hyp
-    | exact SurplusScan.first_unreachable hyp hyp hyp hyp
     | exact SurplusScan.later_reachable hyp hyp hyp hyp
-    | exact SurplusScan.later_unreachable hyp hyp
     | exact Or.inl (SurplusScan.noSurplus_of_none hyp hyp)
     | exact outer_pop hyp (SurplusScan.not_noSurplus hyp hyp) hyp
     | exact Or.inl (noSurplus_of_nil _ hyp)

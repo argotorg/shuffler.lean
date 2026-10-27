@@ -34,14 +34,14 @@ theorem urgentScan_reachable_on_success (cursor : Nat) (state : State source tar
           continue
         if let some copy := state.stack.shallowestCopyPosition slot then
           if ¬ state.stack.isDupReachable copy then
-            throw (.Blocked ((state.depthOf copy) - MAX_DUP_DEPTH))
+            throw (← state.blockDupUnreachable copy)
           if (state.depthOf copy) = MAX_DUP_DEPTH ∧ copy.val ≠ cursor ∧ urgent.isNone then
             urgent := some offset
       return urgent : Except ShuffleErr (Option ℕ))
     ⦃fun _ => CopiesSeen state (List.range' cursor (target.length - cursor));
       (fun _ => True)⦄ := by
   simp only [Std.Legacy.Range.forIn_eq_forIn_range']
-  vcgen [slotAt, index, State.depthOf] invariants
+  vcgen [slotAt, index, State.depthOf, State.blockDupUnreachable, State.block, requires] invariants
   · fun seen _ _ => CopiesSeen state seen
   all_goals try simp_all [CopiesSeen]
   all_goals

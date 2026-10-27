@@ -31,6 +31,7 @@ macro "finish_deep_bound " c:term ", " st:term ", " hw:term : tactic => `(tactic
       have hwidth := $hw
       omega
     rw [ite_eq_left (show ¬($st).isSwapReachable bottom from hreach)]
+    rw [blockSwapUnreachable_eq $st bottom hreach]
     rintro ⟨_, h, _⟩
     cases h
   · have hf : ($st).isFinal bottom := (($st).isFinal_iff bottom).mpr (not_not.mp hnfinal)
@@ -110,6 +111,7 @@ theorem loop_bound_mismatch_deep_noSuccess_of_reachable (cursor : Nat)
         rw [hs.size]; exact hw
       finish_deep_bound cursor, next, hwidth
     · rw [ite_eq_left (show ¬retag.isSwapReachable pos from hreach)]
+      rw [blockSwapUnreachable_eq retag pos hreach]
       rintro ⟨_, h, _⟩
       cases h
   · dsimp +zetaDelta only at hnotTop

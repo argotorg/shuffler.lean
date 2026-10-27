@@ -127,7 +127,7 @@ theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
           continue
         if let some copy := state.stack.shallowestCopyPosition slot then
           if ¬ state.stack.isDupReachable copy then
-            throw (.Blocked ((state.depthOf copy) - MAX_DUP_DEPTH))
+            throw (← state.blockDupUnreachable copy)
           if (state.depthOf copy) = MAX_DUP_DEPTH ∧ copy.val ≠ cursor ∧ urgent.isNone then
             urgent := some offset
       return urgent : Except ShuffleErr (Option ℕ))
@@ -138,7 +138,7 @@ theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
   · fun seen _ urgent => ScanProgress cursor state seen urgent
   all_goals try simp_all
   case vc1 => exact ⟨by simp, by simp⟩
-  case vc10 => exact (not_lt_of_ge (by assumption)) (range_offset_lt (by assumption))
+  case vc12 => exact (not_lt_of_ge (by assumption)) (range_offset_lt (by assumption))
   case vc3 =>
     rename_i hprog hsome
     exact hprog.skip (Or.inl fun ⟨_, hnone, _⟩ => by simp_all)
@@ -149,15 +149,15 @@ theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
     · exact hfree (Value.can_be_freely_generated_of_is_junk _ hjunk)
     · exact hfree hgen
     · exact hspill hgen
-  case vc5 =>
-    rename_i hlt _ copy _ _ hnone hgen hcopy hnreach
+  case vc6 | vc7 =>
+    rename_i hlt _ copy _ _ _ hnone hgen hcopy hnreach _
     obtain ⟨p, hp⟩ := hr.filtered ⟨_, hlt⟩ hnone (by tauto)
     simp [hcopy] at hp
     exact hnreach (hp.1 ▸ hp.2)
-  case vc6 =>
+  case vc8 =>
     rename_i hlt _ copy _ _ hnone hgen hcopy _ hdepth
     exact ScanProgress.select ⟨hlt, hnone, hgen.2.1, hgen.2.2, copy, hcopy, hdepth.1, hdepth.2.1⟩
-  case vc7 =>
+  case vc9 =>
     rename_i choice _ _ copy _ hprog _ _ hcopy _ hnot
     apply hprog.skip
     cases choice with
@@ -168,7 +168,7 @@ theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
       simp only [hcopy, Option.some.injEq] at hc
       subst hc
       exact hnot hd hne rfl
-  case vc8 =>
+  case vc10 =>
     rename_i hprog _ _ hall heq
     exact hprog.skip (Or.inl fun ⟨_, _, _, _, c, hc, _⟩ => hall c (heq.symm.trans hc))
 

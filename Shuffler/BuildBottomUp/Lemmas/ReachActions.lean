@@ -8,11 +8,11 @@ namespace Shuffler.Emission
 
 def NoBlocked (result : Except ShuffleErr α) : Prop :=
   match result with
-  | .error (.Blocked _) => False
+  | .error (.Blocked _ _) => False
   | _ => True
 
 def noBlockedErrors : ShuffleErr → Prop :=
-  fun | .Blocked _ => False | .assertion _ => True
+  fun | .Blocked _ _ => False | .assertion _ => True
 
 def Succeeds (result : Except ShuffleErr α) (post : α → Prop) : Prop :=
   ∃ value, result = .ok value ∧ post value
@@ -31,7 +31,7 @@ theorem noBlocked_of_triple {result : Except ShuffleErr α}
   cases result with
   | ok value => trivial
   | error err => cases err with
-    | Blocked excess => exact False.elim hp
+    | Blocked offset excess => exact False.elim hp
     | assertion reason => trivial
 
 theorem Spec.success {result : Except ShuffleErr α} {post : α → Prop}
@@ -71,7 +71,8 @@ theorem generate_noBlocked (state : State source target spills) (dest : Fin targ
   have hfilter := h.filtered dest
   apply noBlocked_of_triple
   vcgen [State.generate, State.produce, State.push, State.dup, State.swapDestinations,
-    State.swapWith, requires, index, slotAt, State.isSwapReachable, State.depthOf]
+    State.swapWith, State.blockDupUnreachable, State.block, requires, index, slotAt,
+    State.isSwapReachable, State.depthOf]
   all_goals simp_all [noBlockedErrors]
 
 theorem generate_success (state : State source target spills) (dest : Fin target.length)

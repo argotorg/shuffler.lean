@@ -129,6 +129,7 @@ theorem loop_hole_blocks_of_generate_deep (cursor : Nat) (state next : State sou
   rw [ite_eq_right ((next.isFinal_iff pos).not.mpr hnf), requires_of_true _ ((next.isFinal_iff pos).not.mpr hnf)]
   simp only [except_ok_bind]
   rw [ite_eq_left hnt, ite_eq_left (show ¬ next.isSwapReachable pos from hdeep)]
+  rw [blockSwapUnreachable_eq next pos hdeep]
   rintro ⟨_, h, _⟩
   cases h
 
