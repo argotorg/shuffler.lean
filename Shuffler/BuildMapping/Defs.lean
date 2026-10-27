@@ -166,11 +166,10 @@ def buildMapping_new (source target : Stack) (dropped : List Byte)
 
   -- the remaining target offsets take the closest unused copy, deepest first: what is left over is
   -- generated on top, where that is cheapest
-  for t in List.finRange target.length do
-    if mb.hasSourceAssigned t ∨ mb.isWildcardTarget t then continue
-    match ← mb.closestCopy t .OutsideWildcardSlots with
-    | some copy => mb ← mb.map copy t
-    | none => pure ()
+  for j in List.finRange target.length do
+    if ¬ mb.hasSourceAssigned j ∧ ¬ mb.isWildcardTarget j then
+      if let some copy ← mb.closestCopy j .OutsideWildcardSlots then
+        mb ← mb.map copy j
 
   -- copies sitting in wildcard slots are taken or left according to the strategy
   for t in List.finRange target.length do
