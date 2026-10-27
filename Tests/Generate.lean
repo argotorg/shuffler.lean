@@ -59,7 +59,7 @@ example : observe ((unboundState (.Lit 7 :: List.replicate (MAX_SWAP_DEPTH + 1) 
 -- A blocked duplication propagates the produce error.
 example : observe ((unboundState (.Var ⟨37⟩ :: List.replicate (MAX_DUP_DEPTH + 1) (.Lit 9))
     [.Var ⟨37⟩]).generate 0) =
-    .error (.Blocked 0 1) := rfl
+    .error (.Blocked ⟨0, 1⟩) := rfl
 
 /-- info: 'Shuffler.Emission.State.generate' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in

@@ -125,7 +125,7 @@ example : (copyState 16).dup 0 0 =
     .error (.assertion "Stack too deep") := rfl
 example : boundState.dup 0 0 =
     .error (.assertion "destination already bound to a slot") := rfl
-example : (copyState 16).produce 0 = .error (.Blocked 0 1) := rfl
+example : (copyState 16).produce 0 = .error (.Blocked ⟨0, 1⟩) := rfl
 
 -- A reachable copy takes priority over a spill load, including at DUP16.
 example : observeState ((copyState 15 {⟨37⟩}).produce 0) =
@@ -161,7 +161,7 @@ example : (((State.generate · 0) >=> (State.generate · 1)) (emptyState [.Lit 1
 -- A failed action stops the sequence and returns no state.
 example : ((·.generate 0) >=> (·.generate 0) >=> (·.generate 2)) (emptyState [.Lit 1, .Lit 1] ∅) =
     .error (.assertion "destination already bound to a slot") := rfl
-example : ((·.produce 0) >=> (·.generate 100)) (copyState 16) = .error (.Blocked 0 1) := rfl
+example : ((·.produce 0) >=> (·.generate 100)) (copyState 16) = .error (.Blocked ⟨0, 1⟩) := rfl
 
 -- A blocked source found later in the scan must override an earlier urgent copy.
 -- This guards against changing the urgent search to an early-return find.
@@ -182,7 +182,7 @@ private def urgentThenBlocked : State
   mapping := by simpa using shiftTwo 17
   pending_generations := 2
 
-example : observe (buildBottomUp urgentThenBlocked ⟨by decide, by decide, by decide⟩) = .error (.Blocked 0 1) := by
+example : observe (buildBottomUp urgentThenBlocked ⟨by decide, by decide, by decide⟩) = .error (.Blocked ⟨0, 1⟩) := by
   native_decide
 
 example : observe (buildBottomUp boundState ⟨by decide, by decide, by decide⟩) =

@@ -98,7 +98,7 @@ instance (state : State source target spills) (pos : Fin state.stack.length) :
 def State.block (state : State source target spills) (pos : Fin state.stack.length)
     (excess : ℕ) : Except ShuffleErr ShuffleErr := do
   _ ← requires (excess > 0) "blocked excess must be positive"
-  return .Blocked pos.val excess
+  return .Blocked ⟨pos.val, excess⟩
 
 -- A swap cannot reach the slot at `pos`: it is out of reach by `depth - MAX_SWAP_DEPTH` slots
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:800-803.

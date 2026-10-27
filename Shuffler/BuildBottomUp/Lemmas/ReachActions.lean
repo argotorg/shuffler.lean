@@ -8,11 +8,11 @@ namespace Shuffler.Emission
 
 def NoBlocked (result : Except ShuffleErr α) : Prop :=
   match result with
-  | .error (.Blocked _ _) => False
+  | .error (.Blocked _) => False
   | _ => True
 
 def noBlockedErrors : ShuffleErr → Prop :=
-  fun | .Blocked _ _ => False | .assertion _ => True
+  fun | .Blocked _ => False | .assertion _ => True
 
 def Succeeds (result : Except ShuffleErr α) (post : α → Prop) : Prop :=
   ∃ value, result = .ok value ∧ post value
@@ -31,7 +31,7 @@ theorem noBlocked_of_triple {result : Except ShuffleErr α}
   cases result with
   | ok value => trivial
   | error err => cases err with
-    | Blocked offset excess => exact False.elim hp
+    | Blocked blocked => exact False.elim hp
     | assertion reason => trivial
 
 theorem Spec.success {result : Except ShuffleErr α} {post : α → Prop}

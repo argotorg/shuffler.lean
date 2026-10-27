@@ -70,7 +70,7 @@ example : observe (removeSurplus (stateOf [] [] [])) = .ok ([], [], []) := by de
 
 -- A surplus slot at depth 17 is one slot out of swap reach.
 example : observe (removeSurplus (stateOf (x :: List.replicate 17 a) (List.replicate 17 a)
-    (none :: (List.range 17).map some))) = .error (.Blocked 0 1) := by native_decide
+    (none :: (List.range 17).map some))) = .error (.Blocked ⟨0, 1⟩) := by native_decide
 
 -- At depth 16 it is still reachable: it is swapped to the top and popped. The slot swapped down keeps
 -- its destination; buildBottomUp moves it later.

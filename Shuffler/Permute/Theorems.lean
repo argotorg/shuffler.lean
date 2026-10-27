@@ -3,7 +3,7 @@ import Shuffler.Permute.Optimality
 namespace Shuffler.Permute
 
 -- `hnreachable` says that `perm` moves a position deeper than `MAX_SWAP_DEPTH`.
--- The run returns `.Blocked i.val excess`, where `excess` is positive.
+-- The run returns `.Blocked ⟨i.val, excess⟩`, where `excess` is positive.
 -- The reported position `i` is in the input permutation's support.
 -- Its depth, `i.rev.val`, exceeds the limit by exactly `excess`.
 theorem permute_blocks_unreachable
@@ -11,7 +11,7 @@ theorem permute_blocks_unreachable
     (source : Stack) (perm : Permutation source)
     (hnreachable : ¬all_swaps_reachable perm) :
     ∃ (i : Fin source.length) (excess : ℕ),
-      permute spills source perm = .error (.Blocked i.val excess)
+      permute spills source perm = .error (.Blocked ⟨i.val, excess⟩)
         ∧ excess > 0
         ∧ i ∈ perm.support
         ∧ i.rev.val = excess + MAX_SWAP_DEPTH := by
@@ -22,7 +22,7 @@ theorem permute_blocks_unreachable
       (motive := fun _ remaining _ _ result =>
         ¬all_swaps_reachable remaining →
           ∃ (i : Fin source.length) (excess : ℕ),
-            result = .error (.Blocked i.val excess)
+            result = .error (.Blocked ⟨i.val, excess⟩)
               ∧ excess > 0
               ∧ i ∈ remaining.support
               ∧ i.rev.val = excess + MAX_SWAP_DEPTH)

@@ -11,11 +11,11 @@ namespace Shuffler.Emission
 def Spec (result : Except ShuffleErr α) (post : α → Prop) : Prop :=
   match result with
   | .ok value => post value
-  | .error (.Blocked _ _) => True
+  | .error (.Blocked _) => True
   | .error (.assertion _) => False
 
 def allowedErrors : ShuffleErr → Prop :=
-  fun | .Blocked _ _ => True | .assertion _ => False
+  fun | .Blocked _ => True | .assertion _ => False
 
 theorem spec_iff_triple (result : Except ShuffleErr α) (post : α → Prop) :
     Spec result post ↔ ⦃True⦄ result ⦃post; allowedErrors⦄ := by
@@ -37,13 +37,13 @@ theorem spec_iff_triple (result : Except ShuffleErr α) (post : α → Prop) :
 
 theorem block_eq (state : State source target spills) (pos : Fin state.stack.length)
     (excess : ℕ) (h : excess > 0) :
-    state.block pos excess = .ok (.Blocked pos.val excess) := by
+    state.block pos excess = .ok (.Blocked ⟨pos.val, excess⟩) := by
   simp [State.block, requires, h, pure, Except.pure, bind, Except.bind]
 
 theorem blockSwapUnreachable_eq (state : State source target spills)
     (pos : Fin state.stack.length) (h : ¬ state.isSwapReachable pos) :
     state.blockSwapUnreachable pos =
-      .ok (.Blocked pos.val ((state.depthOf pos).val - MAX_SWAP_DEPTH)) := by
+      .ok (.Blocked ⟨pos.val, (state.depthOf pos).val - MAX_SWAP_DEPTH⟩) := by
   apply block_eq
   simp only [State.isSwapReachable] at h
   omega
@@ -51,7 +51,7 @@ theorem blockSwapUnreachable_eq (state : State source target spills)
 theorem blockDupUnreachable_eq (state : State source target spills)
     (pos : Fin state.stack.length) (h : ¬ state.stack.isDupReachable pos) :
     state.blockDupUnreachable pos =
-      .ok (.Blocked pos.val ((state.depthOf pos).val - MAX_DUP_DEPTH)) := by
+      .ok (.Blocked ⟨pos.val, (state.depthOf pos).val - MAX_DUP_DEPTH⟩) := by
   apply block_eq
   simp only [Stack.isDupReachable, State.depthOf] at *
   omega
@@ -59,7 +59,7 @@ theorem blockDupUnreachable_eq (state : State source target spills)
 @[spec] theorem blockSwapUnreachable_spec (state : State source target spills)
     (pos : Fin state.stack.length) :
     ⦃¬ state.isSwapReachable pos⦄ state.blockSwapUnreachable pos
-    ⦃fun err => err = .Blocked pos.val ((state.depthOf pos).val - MAX_SWAP_DEPTH);
+    ⦃fun err => err = .Blocked ⟨pos.val, (state.depthOf pos).val - MAX_SWAP_DEPTH⟩;
       allowedErrors⦄ := by
   refine ⟨fun h => ?_⟩
   rw [blockSwapUnreachable_eq state pos h]
@@ -68,7 +68,7 @@ theorem blockDupUnreachable_eq (state : State source target spills)
 @[spec] theorem blockDupUnreachable_spec (state : State source target spills)
     (pos : Fin state.stack.length) :
     ⦃¬ state.stack.isDupReachable pos⦄ state.blockDupUnreachable pos
-    ⦃fun err => err = .Blocked pos.val ((state.depthOf pos).val - MAX_DUP_DEPTH);
+    ⦃fun err => err = .Blocked ⟨pos.val, (state.depthOf pos).val - MAX_DUP_DEPTH⟩;
       allowedErrors⦄ := by
   refine ⟨fun h => ?_⟩
   rw [blockDupUnreachable_eq state pos h]
@@ -100,13 +100,13 @@ theorem Spec.noAssertion {result : Except ShuffleErr α} {post : α → Prop}
   simp [heq, Spec] at h
 
 theorem Spec.error {result : Except ShuffleErr α} {post : α → Prop}
-    (h : Spec result post) (heq : result = .error err) : ∃ offset excess, err = .Blocked offset excess := by
+    (h : Spec result post) (heq : result = .error err) : ∃ blocked, err = .Blocked blocked := by
   cases err with
-  | Blocked offset excess => exact ⟨offset, excess, rfl⟩
+  | Blocked blocked => exact ⟨blocked, rfl⟩
   | assertion reason => exact (h.noAssertion reason heq).elim
 
 @[simp] theorem spec_ok (value : α) (post : α → Prop) : Spec (.ok value) post ↔ post value := Iff.rfl
-@[simp] theorem spec_blocked (offset excess : ℕ) (post : α → Prop) : Spec (.error (.Blocked offset excess)) post := trivial
+@[simp] theorem spec_blocked (blocked : Blocked) (post : α → Prop) : Spec (.error (.Blocked blocked)) post := trivial
 
 @[simp] theorem index_eq (i : Fin size) : index size i.val = .ok i := by
   simp [index, i.isLt, pure, Except.pure]

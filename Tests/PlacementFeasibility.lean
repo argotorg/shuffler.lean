@@ -155,6 +155,6 @@ example : CanPlace ∅ literalSource literalTarget {.Lit 1} :=
   ⟨finishLiteral, True.intro, rfl⟩
 
 example : (Shuffler.Emission.buildBottomUp literalState literalState_valid).map
-    (fun result => result.1) = .error (.Blocked 0 1) := by native_decide
+    (fun result => result.1) = .error (.Blocked ⟨0, 1⟩) := by native_decide
 
 end PlacementFeasibilityTests

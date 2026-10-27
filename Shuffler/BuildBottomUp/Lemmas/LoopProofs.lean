@@ -101,7 +101,7 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
     cases hperm : Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hp.1 hp.2) with
     | error err =>
       cases err with
-      | Blocked offset excess => simp [Spec]
+      | Blocked blocked => simp [Spec]
       | assertion reason =>
         exact (Shuffler.Permute.permute_no_assertion _ _ _ reason hperm).elim
     | ok result =>
