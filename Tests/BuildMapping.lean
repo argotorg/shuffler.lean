@@ -13,6 +13,40 @@ example (source target : Stack) (dropped : List Byte) (strategy : WildcardSlotsS
     buildMapping source target dropped strategy ≠ .error (.assertion reason) :=
   buildMapping_no_assertion source target dropped strategy h reason
 
+-- Every binding uses a source that is not dropped and matches its target.
+example (source target : Stack) (dropped : List Byte) (strategy : WildcardSlotsStrategy)
+    {result : BuildMappingResult source target}
+    (hrun : buildMapping source target dropped strategy = .ok result)
+    (s : Fin source.length) (t : Fin target.length) (hbound : result.mapping s = some t) :
+    dropped[s.val]? = some 0 ∧ SlotMatches source[s] target[t] :=
+  buildMapping_valid_of_ok source target dropped strategy hrun s t hbound
+
+-- A target that is not a wildcard requires the same value.
+example (source target : Stack) (dropped : List Byte) (strategy : WildcardSlotsStrategy)
+    {result : BuildMappingResult source target}
+    (hrun : buildMapping source target dropped strategy = .ok result)
+    (s : Fin source.length) (t : Fin target.length) (hbound : result.mapping s = some t)
+    (htarget : ¬ target[t].is_junk) : source[s] = target[t] :=
+  (buildMapping_valid_of_ok source target dropped strategy hrun s t hbound).2.resolve_left htarget
+
+-- A dropped source has no binding.
+example (source target : Stack) (dropped : List Byte) (strategy : WildcardSlotsStrategy)
+    {result : BuildMappingResult source target}
+    (hrun : buildMapping source target dropped strategy = .ok result)
+    (s : Fin source.length) (hdrop : dropped[s.val]? ≠ some 0) : result.mapping s = none := by
+  cases hbound : result.mapping s with
+  | none => rfl
+  | some t => exact (hdrop (buildMapping_valid_of_ok source target dropped strategy hrun s t hbound).1).elim
+
+-- Later passes keep equal values at the same offset bound to each other.
+example (source target : Stack) (dropped : List Byte) (strategy : WildcardSlotsStrategy)
+    {result : BuildMappingResult source target}
+    (hrun : buildMapping source target dropped strategy = .ok result)
+    (s : Fin source.length) (t : Fin target.length) (hpos : s.val = t.val)
+    (hvalue : source[s] = target[t]) (hdrop : dropped[s.val]? = some 0) :
+    result.mapping s = some t :=
+  buildMapping_in_place_of_ok source target dropped strategy hrun s t hpos hvalue hdrop
+
 namespace BuildMappingTests
 
 private def a : Value := .Var ⟨0⟩
@@ -39,11 +73,26 @@ private def observe (source target : Stack) (dropped : List Byte)
 -- Slots already in place stay there.
 #guard observe [a, b] [a, b] [0, 0] == some ([some 0, some 1], false)
 
+-- Later passes use other copies without moving a slot that is already in place.
+#guard observe [a, a, b] [a, b] [0, 0, 0] == some ([some 0, none, some 1], false)
+#guard observe [a, b, a] [b, b, a, a] [0, 0, 0] == some ([some 3, some 1, some 2], false)
+#guard observe [.Wildcard, a, b] [.Wildcard, b, a] [0, 0, 0] ==
+  some ([some 0, some 2, some 1], false)
+#guard observe [a, b, a, b] [.Wildcard, a, a, b] [0, 0, 0, 0] (strategy := .Leave) ==
+  some ([some 0, none, some 2, some 3], true)
+#guard observe [a, b, a, b] [.Wildcard, a, a, b] [0, 0, 0, 0] (strategy := .Take) ==
+  some ([some 1, some 0, some 2, some 3], true)
+
 -- Each target offset takes the copy of its value.
 #guard observe [a, b] [b, a] [0, 0] == some ([some 1, some 0], false)
 
 -- A dropped slot is never mapped.
 #guard observe [a] [a] [1] == some ([none], false)
+#guard observe [a] [a] [255] == some ([none], false)
+#guard observe [a, a] [a, a] [1, 0] == some ([none, some 1], false)
+
+-- A dropped source cannot fill a wildcard target either.
+#guard observe [a] [.Wildcard] [255] == some ([none], false)
 
 -- A wildcard target keeps whatever sits there.
 #guard observe [a, b] [.Wildcard, b] [0, 0] == some ([some 0, some 1], false)

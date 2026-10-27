@@ -89,12 +89,13 @@ theorem symm_eq_none_of_not_hasSourceAssigned (self : MappingBuilder source targ
     (h : ¬ self.hasSourceAssigned t) : self.mapping.symm t = none := by
   simpa [hasSourceAssigned] using h
 
--- closestCopy succeeds and only returns mappable copies.
-theorem closestCopy_succeeds (self : MappingBuilder source target) (targetOffset : Fin target.length)
+-- closestCopy returns a mappable source with the requested target value.
+theorem closestCopy_succeeds_matches (self : MappingBuilder source target) (targetOffset : Fin target.length)
     (location : CopyLocation) (h : self.dropped.length = source.length) :
-    Succeeds (self.closestCopy targetOffset location) fun r => ∀ c, r = some c → self.IsMappable c := by
+    Succeeds (self.closestCopy targetOffset location) fun r =>
+      ∀ c, r = some c → self.IsMappable c ∧ source[c] = target[targetOffset] := by
   unfold closestCopy
-  -- Invariant: the best copy found so far is mappable.
+  -- The best copy found so far is mappable and has the requested value.
   refine (Succeeds.forIn _ _ _ _ (by simp) fun i best hinv => ?_).bind fun r hr => hr
   simp only [mappable_ok self i h, except_ok_bind]
   split
@@ -102,8 +103,15 @@ theorem closestCopy_succeeds (self : MappingBuilder source target) (targetOffset
     have hi : self.IsMappable i := of_decide_eq_true hcond.2.1
     split
     · simp [hi]
+      exact hcond.1
     · split <;> simp_all
   · exact hinv
+
+-- Preserve the contract used by callers that only need a mappable source.
+theorem closestCopy_succeeds (self : MappingBuilder source target) (targetOffset : Fin target.length)
+    (location : CopyLocation) (h : self.dropped.length = source.length) :
+    Succeeds (self.closestCopy targetOffset location) fun r => ∀ c, r = some c → self.IsMappable c :=
+  (closestCopy_succeeds_matches self targetOffset location h).mono fun _ hr c hc => (hr c hc).1
 
 -- closestSurplus succeeds and only returns mappable slots.
 theorem closestSurplus_succeeds (self : MappingBuilder source target) (targetOffset : Fin target.length)
@@ -120,6 +128,29 @@ theorem closestSurplus_succeeds (self : MappingBuilder source target) (targetOff
     · simp [ho]
     · split <;> simp_all
   · exact hinv
+
+-- Every binding uses a source that is not dropped and matches its target value.
+def BindingsValid (self : MappingBuilder source target) : Prop :=
+  ∀ s t, self.mapping s = some t →
+    self.dropped[s.val]? = some 0 ∧ SlotMatches source[s] target[t]
+
+theorem bindingsValid_bot (dropped : List Byte) :
+    BindingsValid ({ dropped, mapping := ⊥ } : MappingBuilder source target) := by
+  intro s t h
+  simp at h
+
+theorem bindingsValid_bind (self : MappingBuilder source target) (hvalid : self.BindingsValid)
+    (s : Fin source.length) (t : Fin target.length) (hs : self.IsMappable s)
+    (ht : self.mapping.symm t = none) (hmatches : SlotMatches source[s] target[t]) :
+    BindingsValid { self with mapping := self.mapping.bind s t hs.2 ht } := by
+  intro i j hij
+  by_cases hi : i = s
+  · subst hi
+    simp only [Mapping.bind_apply, Option.some.injEq] at hij
+    subst hij
+    exact ⟨hs.1, hmatches⟩
+  · rw [Mapping.bind_apply_of_ne self.mapping s t hs.2 ht i hi] at hij
+    exact hvalid i j hij
 
 end MappingBuilder
 
@@ -163,22 +194,22 @@ theorem diagonal_bind {a b : ℕ} (m : Mapping a b) (hdiag : Diagonal m)
 
 --- buildMapping -----------------------------------------------------------------------------------
 
--- Each loop of buildMapping is proved with `Succeeds.forIn`. No loop changes `dropped`, so
--- `dropped.length = source.length` is part of every loop invariant. Every `map` call is on a free
--- target and a mappable source, so none of its `requires` fails.
-theorem buildMapping_succeeds (source target : Stack) (dropped : List Byte)
+-- Each loop keeps the dropped entries and preserves the validity of every binding.
+theorem buildMapping_valid (source target : Stack) (dropped : List Byte)
     (strategy : WildcardSlotsStrategy) (hsizes : dropped.length = source.length) :
-    Succeeds (buildMapping source target dropped strategy) fun _ => True := by
+    Succeeds (buildMapping source target dropped strategy) fun result =>
+      ∀ s t, result.mapping s = some t →
+        dropped[s.val]? = some 0 ∧ SlotMatches source[s] target[t] := by
   unfold buildMapping
   rw [requires_of_true _ hsizes, except_ok_bind]
   dsimp only
 
-  -- slots already in place: the loop only binds a slot to the target at the same offset, so the
-  -- target is still free when the source is, and the mapping stays diagonal.
+  -- Direct bindings preserve a diagonal mapping and use equal values.
   refine (Succeeds.forIn (fun mb : MappingBuilder source target =>
-    Diagonal mb.mapping ∧ mb.dropped.length = source.length) _ _ _ ⟨diagonal_bot, hsizes⟩ ?_).bind
-    fun mb ⟨_, h⟩ => ?_
-  · intro j mb ⟨hdiag, h⟩
+    Diagonal mb.mapping ∧ mb.dropped = dropped ∧ mb.BindingsValid) _ _ _
+    ⟨diagonal_bot, rfl, bindingsValid_bot dropped⟩ ?_).bind fun mb ⟨_, hd, hv⟩ => ?_
+  · intro j mb ⟨hdiag, hd, hv⟩
+    have h : mb.dropped.length = source.length := hd ▸ hsizes
     simp only [mappable_ok mb _ h, except_ok_bind]
     split
     · next hcond =>
@@ -186,65 +217,86 @@ theorem buildMapping_succeeds (source target : Stack) (dropped : List Byte)
       have ht := diagonal_symm_eq_none mb.mapping hdiag (Fin.castLE (min_le_left _ _) j)
         (Fin.castLE (min_le_right _ _) j) rfl hs.2
       rw [map_ok mb _ _ hs ht]
-      exact ⟨diagonal_bind _ hdiag _ _ rfl hs.2 ht, h⟩
-    · exact ⟨hdiag, h⟩
+      exact ⟨diagonal_bind _ hdiag _ _ rfl hs.2 ht, hd,
+        bindingsValid_bind mb hv _ _ hs ht (Or.inr hcond.1)⟩
+    · exact ⟨hdiag, hd, hv⟩
 
-  -- the closest unused copy outside wildcard slots
-  refine (Succeeds.forIn (fun mb : MappingBuilder source target => mb.dropped.length = source.length)
-    _ _ _ h ?_).bind fun mb h => ?_
-  · intro t mb h
+  -- The closest copy outside wildcard slots has the target value.
+  refine (Succeeds.forIn (fun mb : MappingBuilder source target =>
+    mb.dropped = dropped ∧ mb.BindingsValid) _ _ _ ⟨hd, hv⟩ ?_).bind fun mb ⟨hd, hv⟩ => ?_
+  · intro t mb ⟨hd, hv⟩
+    have h : mb.dropped.length = source.length := hd ▸ hsizes
     split
-    · exact h
+    · exact ⟨hd, hv⟩
     · next hfree =>
-      refine (closestCopy_succeeds mb t _ h).bind fun r hr => ?_
+      refine (closestCopy_succeeds_matches mb t _ h).bind fun r hr => ?_
       split
       · next copy =>
-        rw [map_ok mb _ _ (hr copy rfl) (symm_eq_none_of_not_hasSourceAssigned mb t (not_or.mp hfree).1)]
-        exact h
-      · exact h
+        have hs := (hr copy rfl).1
+        have ht := symm_eq_none_of_not_hasSourceAssigned mb t (not_or.mp hfree).1
+        rw [map_ok mb _ _ hs ht]
+        exact ⟨hd, bindingsValid_bind mb hv _ _ hs ht (Or.inr (hr copy rfl).2)⟩
+      · exact ⟨hd, hv⟩
 
-  -- copies in wildcard slots
-  refine (Succeeds.forIn (fun mb : MappingBuilder source target => mb.dropped.length = source.length)
-    _ _ _ h ?_).bind fun mb h => ?_
-  · intro t mb h
+  -- Copies in wildcard slots also have the target value, under either strategy.
+  refine (Succeeds.forIn (fun mb : MappingBuilder source target =>
+    mb.dropped = dropped ∧ mb.BindingsValid) _ _ _ ⟨hd, hv⟩ ?_).bind fun mb ⟨hd, hv⟩ => ?_
+  · intro t mb ⟨hd, hv⟩
+    have h : mb.dropped.length = source.length := hd ▸ hsizes
     split
-    · exact h
+    · exact ⟨hd, hv⟩
     · next hfree =>
-      refine (closestCopy_succeeds mb t _ h).bind fun r hr => ?_
+      refine (closestCopy_succeeds_matches mb t _ h).bind fun r hr => ?_
       split
       · next copy =>
-        rw [map_ok mb _ _ (hr copy rfl) (symm_eq_none_of_not_hasSourceAssigned mb t (not_or.mp hfree).1)]
+        have hs := (hr copy rfl).1
+        have ht := symm_eq_none_of_not_hasSourceAssigned mb t (not_or.mp hfree).1
+        have hv' := bindingsValid_bind mb hv _ _ hs ht (Or.inr (hr copy rfl).2)
+        rw [map_ok mb _ _ hs ht]
         split
-        · exact h
+        · exact ⟨hd, hv'⟩
         · split
-          · exact h
-          · exact h
-      · exact h
+          · exact ⟨hd, hv'⟩
+          · exact ⟨hd, hv⟩
+      · exact ⟨hd, hv⟩
 
-  -- wildcards keep whatever sits there
-  refine (Succeeds.forIn (fun mb : MappingBuilder source target => mb.dropped.length = source.length)
-    _ _ _ h ?_).bind fun mb h => ?_
-  · intro j mb h
+  -- A wildcard accepts the value at its offset.
+  refine (Succeeds.forIn (fun mb : MappingBuilder source target =>
+    mb.dropped = dropped ∧ mb.BindingsValid) _ _ _ ⟨hd, hv⟩ ?_).bind fun mb ⟨hd, hv⟩ => ?_
+  · intro j mb ⟨hd, hv⟩
+    have h : mb.dropped.length = source.length := hd ▸ hsizes
     simp only [mappable_ok mb _ h, except_ok_bind]
     split
     · next hcond =>
-      rw [map_ok mb _ _ (of_decide_eq_true hcond.2.2)
-        (symm_eq_none_of_not_hasSourceAssigned mb _ hcond.2.1)]
-      exact h
-    · exact h
+      have hs := of_decide_eq_true hcond.2.2
+      have ht := symm_eq_none_of_not_hasSourceAssigned mb _ hcond.2.1
+      rw [map_ok mb _ _ hs ht]
+      exact ⟨hd, bindingsValid_bind mb hv _ _ hs ht (Or.inl (of_decide_eq_true hcond.1))⟩
+    · exact ⟨hd, hv⟩
 
-  -- the remaining wildcards absorb the closest surplus slot
-  refine (Succeeds.forIn (fun mb : MappingBuilder source target => mb.dropped.length = source.length)
-    _ _ _ h ?_).bind fun _ _ => trivial
-  · intro t mb h
+  -- A remaining wildcard accepts the closest surplus value.
+  refine (Succeeds.forIn (fun mb : MappingBuilder source target =>
+    mb.dropped = dropped ∧ mb.BindingsValid) _ _ _ ⟨hd, hv⟩ ?_).bind fun mb ⟨hd, hv⟩ => ?_
+  · intro t mb ⟨hd, hv⟩
+    have h : mb.dropped.length = source.length := hd ▸ hsizes
     split
-    · exact h
+    · exact ⟨hd, hv⟩
     · next hfree =>
       refine (closestSurplus_succeeds mb t h).bind fun r hr => ?_
       split
       · next best =>
-        rw [map_ok mb _ _ (hr best rfl) (symm_eq_none_of_not_hasSourceAssigned mb t (not_or.mp hfree).1)]
-        exact h
-      · exact h
+        have hs := hr best rfl
+        have ht := symm_eq_none_of_not_hasSourceAssigned mb t (not_or.mp hfree).1
+        rw [map_ok mb _ _ hs ht]
+        exact ⟨hd, bindingsValid_bind mb hv _ _ hs ht
+          (Or.inl (of_decide_eq_true (Decidable.of_not_not (not_or.mp hfree).2)))⟩
+      · exact ⟨hd, hv⟩
+  · simpa only [succeeds_pure, BindingsValid, hd] using hv
+
+-- Keep the success-only contract for callers that do not need the binding properties.
+theorem buildMapping_succeeds (source target : Stack) (dropped : List Byte)
+    (strategy : WildcardSlotsStrategy) (hsizes : dropped.length = source.length) :
+    Succeeds (buildMapping source target dropped strategy) fun _ => True :=
+  (buildMapping_valid source target dropped strategy hsizes).mono fun _ _ => trivial
 
 end Shuffler.BuildMapping
