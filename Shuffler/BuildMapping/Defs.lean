@@ -74,6 +74,17 @@ def closestCopy (self : MappingBuilder source target) (targetOffset : Fin target
       | some b => if self.absDiff i targetOffset ≤ self.absDiff b targetOffset then best := some i
   return best
 
+def closestCopy_new (self : MappingBuilder source target) (targetOffset : Fin target.length)
+    (location : CopyLocation) : Except Error (Option (Fin source.length)) := do
+  let mut best : Option (Fin source.length) := none
+  for i in List.finRange source.length do
+    if source[i] = target[targetOffset] ∧ (← self.mappable i) ∧
+        (self.inWildcardSlot i ↔ location = .InWildcardSlots) then
+      match best with
+      | none => best := some i
+      | some b => if self.absDiff i targetOffset ≤ self.absDiff b targetOffset then best := some i
+  return best
+
 -- binds a source slot to a target slot, returning a new mapping builder with the updated mapping
 def map (self : MappingBuilder source target) {n m : ℕ} (sourceOffset : Fin n)
     (targetOffset : Fin m) (hs : n ≤ source.length := by omega)

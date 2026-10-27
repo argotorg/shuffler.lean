@@ -5,6 +5,12 @@ import Batteries.Tactic.PrintOpaques
 
 namespace Shuffler.BuildMapping
 
+-- Both searches return the same result, including errors, for every input.
+theorem MappingBuilder.closestCopy_new_eq_closestCopy {source target : Stack}
+    (self : MappingBuilder source target) (targetOffset : Fin target.length)
+    (location : CopyLocation) :
+    self.closestCopy_new targetOffset location = self.closestCopy targetOffset location := rfl
+
 -- buildMapping succeeds if and only if `dropped` has one entry per source slot.
 theorem buildMapping_ok (source target : Stack) (dropped : List Byte)
     (strategy : WildcardSlotsStrategy) :
@@ -74,6 +80,18 @@ theorem buildMapping_differs_of_sawWildcardCopy (source target : Stack) (dropped
     ∃ t s, ¬ target[t].is_junk ∧ ¬ target[t].isFunctionReturnLabel ∧
       leave.mapping.symm t = none ∧ take.mapping.symm t = some s :=
   (Strategies.comparison_of_ok source target dropped hleave htake).2.2 hflag
+
+/-- info: 'Shuffler.BuildMapping.MappingBuilder.closestCopy_new' does not use any opaque or partial definitions -/
+#guard_msgs in
+#print opaques MappingBuilder.closestCopy_new
+
+/-- info: 'Shuffler.BuildMapping.MappingBuilder.closestCopy_new' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in
+#print axioms MappingBuilder.closestCopy_new
+
+/-- info: 'Shuffler.BuildMapping.MappingBuilder.closestCopy_new_eq_closestCopy' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in
+#print axioms MappingBuilder.closestCopy_new_eq_closestCopy
 
 -- Audit the whole function, including the passes and `map`.
 /-- info: 'Shuffler.BuildMapping.buildMapping' does not use any opaque or partial definitions -/
