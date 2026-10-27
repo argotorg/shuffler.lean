@@ -47,6 +47,34 @@ example (source target : Stack) (dropped : List Byte) (strategy : WildcardSlotsS
     result.mapping s = some t :=
   buildMapping_in_place_of_ok source target dropped strategy hrun s t hpos hvalue hdrop
 
+-- Both strategies report the same copy flag.
+example (source target : Stack) (dropped : List Byte)
+    {leave take : BuildMappingResult source target}
+    (hleave : buildMapping source target dropped .Leave = .ok leave)
+    (htake : buildMapping source target dropped .Take = .ok take) :
+    leave.sawWildcardCopy = take.sawWildcardCopy :=
+  buildMapping_sawWildcardCopy_eq source target dropped hleave htake
+
+-- The copy flag states exactly when the strategies produce different mappings.
+example (source target : Stack) (dropped : List Byte)
+    {leave take : BuildMappingResult source target}
+    (hleave : buildMapping source target dropped .Leave = .ok leave)
+    (htake : buildMapping source target dropped .Take = .ok take) :
+    leave.mapping = take.mapping ↔ leave.sawWildcardCopy = false :=
+  buildMapping_mapping_eq_iff source target dropped hleave htake
+
+-- The witness from a true flag rules out equality of the mappings.
+example (source target : Stack) (dropped : List Byte)
+    {leave take : BuildMappingResult source target}
+    (hleave : buildMapping source target dropped .Leave = .ok leave)
+    (htake : buildMapping source target dropped .Take = .ok take)
+    (hflag : leave.sawWildcardCopy = true) : leave.mapping ≠ take.mapping := by
+  obtain ⟨t, s, _, _, hfree, hbound⟩ :=
+    buildMapping_differs_of_sawWildcardCopy source target dropped hleave htake hflag
+  intro heq
+  rw [heq, hbound] at hfree
+  cases hfree
+
 namespace BuildMappingTests
 
 private def a : Value := .Var ⟨0⟩
@@ -106,5 +134,46 @@ private def observe (source target : Stack) (dropped : List Byte)
 -- A function return label is always taken and does not count as a seen wildcard copy.
 #guard observe [.FunctionReturnLabel, b] [.Wildcard, .FunctionReturnLabel] [0, 0] ==
   some ([some 1, some 0], false)
+#guard observe [.FunctionReturnLabel, b] [.Wildcard, .FunctionReturnLabel] [0, 0] (strategy := .Take) ==
+  some ([some 1, some 0], false)
+
+-- An assigned target does not request another copy from its wildcard slot.
+#guard observe [a, a] [.Wildcard, a] [0, 0] (strategy := .Leave) ==
+  some ([some 0, some 1], false)
+#guard observe [a, a] [.Wildcard, a] [0, 0] (strategy := .Take) ==
+  some ([some 0, some 1], false)
+
+-- A dropped copy does not set the flag; the other source fills the wildcard.
+#guard observe [a, b] [.Wildcard, a] [255, 0] (strategy := .Leave) ==
+  some ([none, some 0], false)
+#guard observe [a, b] [.Wildcard, a] [255, 0] (strategy := .Take) ==
+  some ([none, some 0], false)
+
+private def listsOfLength (values : List α) : ℕ → List (List α)
+  | 0 => [[]]
+  | n + 1 => values.flatMap fun value => (listsOfLength values n).map (value :: ·)
+
+private def smallStacks : List Stack :=
+  (List.range 4).flatMap (listsOfLength [a, b, .Wildcard, .FunctionReturnLabel])
+
+-- Check both production runs for every stack pair up to length three and every
+-- dropped list over 0, 1, and 255. Errors count as failures; no case is filtered.
+-- The report counts cases, execution errors, flag differences, and failures of
+-- the equivalence between equal mappings and a false flag.
+private def strategyReport : ℕ × ℕ × ℕ × ℕ :=
+  smallStacks.foldl (fun report source =>
+    smallStacks.foldl (fun report target =>
+      (listsOfLength ([0, 1, 255] : List Byte) source.length).foldl
+        (fun (tested, errors, flagErrors, mappingErrors) dropped =>
+          match observe source target dropped .Leave, observe source target dropped .Take with
+          | some (leaveMapping, leaveFlag), some (takeMapping, takeFlag) =>
+            (tested + 1, errors,
+              flagErrors + if leaveFlag == takeFlag then 0 else 1,
+              mappingErrors + if (leaveMapping == takeMapping) == !leaveFlag then 0 else 1)
+          | _, _ => (tested + 1, errors + 1, flagErrors, mappingErrors)) report) report)
+    (0, 0, 0, 0)
+
+-- There are 85 target stacks and 1885 source/drop pairs: 85 * 1885 = 160225.
+example : strategyReport = (160225, 0, 0, 0) := by native_decide
 
 end BuildMappingTests
