@@ -42,11 +42,14 @@ def mappable (self : MappingBuilder source target) {n : ℕ} (sourceOffset : Fin
   return decide (self.dropped[sourceOffset.val] = 0 ∧ self.mapping sourceOffset = none)
 
   -- decides whether a target slot is already assigned to a source slot
-def hasSourceAssigned (self : MappingBuilder source target) (targetOffset : Fin target.length) : Bool :=
+def hasSourceAssigned (self : MappingBuilder source target) {n : ℕ} (targetOffset : Fin n)
+    (h : n ≤ target.length := by omega) : Bool :=
+  let targetOffset := targetOffset.castLE h
   (self.mapping.symm targetOffset).isSome
 
 -- decides whether a target slot is a wildcard slot
-def isWildcardTarget (_self : MappingBuilder source target) (targetOffset : Fin target.length) : Bool :=
+def isWildcardTarget (_self : MappingBuilder source target) {n : ℕ} (targetOffset : Fin n)
+    (h : n ≤ target.length := by omega) : Bool :=
   target[targetOffset].is_junk
 
 -- decides whether a source slot is in a wildcard slot
@@ -184,11 +187,9 @@ def buildMapping_new (source target : Stack) (dropped : List Byte)
             mb ← mb.map copy j
 
   -- wildcards keep whatever sits there
-  for j in List.finRange (min source.length target.length) do
-    let s := Fin.castLE (min_le_left _ _) j
-    let t := Fin.castLE (min_le_right _ _) j
-    if mb.isWildcardTarget t ∧ ¬ mb.hasSourceAssigned t ∧ (← mb.mappable s) then
-      mb ← mb.map s t
+  for j in List.finRange common do
+    if mb.isWildcardTarget j ∧ ¬ mb.hasSourceAssigned j ∧ (← mb.mappable j) then
+      mb ← mb.map j j
 
   -- the remaining wildcards absorb the closest surplus slot instead of having it popped
   for t in List.finRange target.length do
