@@ -1,6 +1,6 @@
 import Tests.BuildBottomUpObservations
 
-open Shuffler.Emission BuildBottomUpTestSupport
+open Shuffler Shuffler.Emission BuildBottomUpTestSupport
 
 namespace BuildBottomUpTests
 

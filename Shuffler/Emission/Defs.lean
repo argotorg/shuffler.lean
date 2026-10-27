@@ -16,9 +16,6 @@ import Std.Tactic.Do
 
 namespace Shuffler.Emission
 
--- `Error` and `requires` are shared with BuildMapping; re-export them for `open Shuffler.Emission`.
-export Shuffler (Error requires)
-
 variable {source target : Stack} {spills : SpillSet}
 
 --- Types ------------------------------------------------------------------------------------------
