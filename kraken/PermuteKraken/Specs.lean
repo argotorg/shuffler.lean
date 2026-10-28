@@ -26,6 +26,25 @@ public theorem AddrExpr.zeroExtend_interp_base_idx [Labels] (b i : Reg64) (d : I
     BitVec.ofInt_add, BitVec.ofInt_add, show Width.W8.bytes = (1 : Int) from rfl, Int.mul_one,
     BitVec.ofInt_toInt, BitVec.ofInt_toInt]
 
+
+/-- The address of `disp(base, index, 2)`, at 64-bit address size. -/
+public theorem AddrExpr.zeroExtend_interp_base_idx2 [Labels] (b i : Reg64) (d : Int64)
+    (regs : Reg64s) (rng : Std.Rco Int64) :
+    ((AddrExpr.interp (address_size := .mk .W64)
+        (a := ⟨some (.reg b), some ⟨i, .W16⟩, .int64 d⟩) regs rng).zeroExtend 64)
+      = regs.get64 b + regs.get64 i * 2#64 + BitVec.ofInt 64 d.toInt := by
+  simp only [AddrExpr.interp, ConstExpr.interp, BitVec.toAddressSize, Reg64s.get64]
+  have htake : ∀ x : BitVec 64, x.take Width.W64.bits = x := by
+    intro x
+    simp [BitVec.take, BitVec.extractLsb']
+  rw [htake, htake]
+  have hsigned : ∀ x : BitVec 64, x.signed = x.toInt := fun _ => rfl
+  rw [hsigned, hsigned,
+    show ∀ y : BitVec Width.W64.bits, BitVec.zeroExtend 64 y = y from fun _ => rfl,
+    BitVec.ofInt_add, BitVec.ofInt_add, show Width.W16.bytes = (2 : Int) from rfl, BitVec.ofInt_mul,
+    BitVec.ofInt_toInt, BitVec.ofInt_toInt]
+  rfl
+
 namespace Program.WP
 
 variable [Host] [FunDecls] {Q : Unit → MachineData → Prop} {E : Int64 → MachineData → Prop}
@@ -184,6 +203,78 @@ local macro "run_step" : tactic =>
   simp only [Directive.interp, Instr.interp, Operation.interp, Operand.interp,
     RegOrMem.interp, MachineData.load, MachineData.set, MachineData.setReg,
     AddrExpr.zeroExtend_interp_base_idx, Width.bytes, hload, Effects.All, ite_true,
+    Reg64s.set_low_W32]
+  exact hn _ (by rwa [hload, Option.get!_some] at hpre)
+
+
+/-- `lea disp(%b, %i, 2), %rd` -/
+@[spec] public theorem lea_base_idx2_spec (rd b i : Reg64) (d : Int64) :
+    ⦃ fun s => Q () { s with
+        regs := s.regs.set64 rd (s.regs.get64 b + s.regs.get64 i * 2#64 + BitVec.ofInt 64 d.toInt) } ⦄
+      (Directive.instr (.regular .W64 .W64
+        (.lea (.low rd .W64) ⟨some (.reg b), some ⟨i, .W16⟩, .int64 d⟩)))
+    ⦃ Q; E ⦄ :=
+  ⟨fun _ hq => Program.wp_single fun _ _ _ _ hn _ => by
+    run_step
+    rw [AddrExpr.zeroExtend_interp_base_idx2]
+    exact hn _ hq⟩
+
+/-- `movw %r16, disp(%b)` -/
+@[spec] public theorem mov_store_word_spec (b : Reg64) (d : Int64) (r : Reg64) :
+    ⦃ fun s =>
+        let a := s.regs.get64 b + BitVec.ofInt 64 d.toInt
+        (Mem.loadInt s.dmem a 2).isSome = true
+        ∧ Q () { s with dmem := Mem.storeInt s.dmem a 2 (s.regs.get (.low r .W16)).toInt } ⦄
+      (Directive.instr (.regular .W64 .W16
+          (.mov (.mem ⟨some (.reg b), none, .int64 d⟩) (.regOrMem (.reg (.low r .W16))))))
+    ⦃ Q; E ⦄ := by
+  refine ⟨fun s hpre => ?_⟩
+  obtain ⟨hmapped, hpre⟩ := hpre
+  obtain ⟨v, hload⟩ := Option.isSome_iff_exists.mp hmapped
+  refine Program.wp_single fun _ _ _ _ hn _ => ?_
+  simp only [Directive.interp, Instr.interp, Operation.interp, Operand.interp,
+    RegOrMem.interp, MachineData.set, MachineData.store,
+    AddrExpr.zeroExtend_interp_base_disp, Width.bytes, hload, Effects.All, ite_true]
+  exact hn _ hpre
+
+/-- `movzwl disp(%b), %r32` -/
+@[spec] public theorem movzx_load_word_spec (r b : Reg64) (d : Int64) :
+    ⦃ fun s =>
+        let a := s.regs.get64 b + BitVec.ofInt 64 d.toInt
+        let v := ((BitVec.ofInt 16 (Mem.loadInt s.dmem a 2).get!).zeroExtend 32).zeroExtend 64
+        (Mem.loadInt s.dmem a 2).isSome = true
+        ∧ Q () { s with regs := s.regs.set64 r v } ⦄
+      (Directive.instr (.regular .W64 .W32
+          (.movzx (w' := .W16) (.reg (.low r .W32)) (.mem ⟨some (.reg b), none, .int64 d⟩))))
+    ⦃ Q; E ⦄ := by
+  refine ⟨fun s hpre => ?_⟩
+  obtain ⟨hmapped, hpre⟩ := hpre
+  obtain ⟨v, hload⟩ := Option.isSome_iff_exists.mp hmapped
+  refine Program.wp_single fun _ _ _ _ hn _ => ?_
+  simp only [Directive.interp, Instr.interp, Operation.interp, Operand.interp,
+    RegOrMem.interp, MachineData.load, MachineData.set, MachineData.setReg,
+    AddrExpr.zeroExtend_interp_base_disp, Width.bytes, hload, Effects.All,
+    Reg64s.set_low_W32]
+  exact hn _ (by rwa [hload, Option.get!_some] at hpre)
+
+/-- `movzwl disp(%b, %i, 2), %r32` -/
+@[spec] public theorem movzx_load_word_idx2_spec (r b i : Reg64) (d : Int64) :
+    ⦃ fun s =>
+        let a := s.regs.get64 b + s.regs.get64 i * 2#64 + BitVec.ofInt 64 d.toInt
+        let v := ((BitVec.ofInt 16 (Mem.loadInt s.dmem a 2).get!).zeroExtend 32).zeroExtend 64
+        (Mem.loadInt s.dmem a 2).isSome = true
+        ∧ Q () { s with regs := s.regs.set64 r v } ⦄
+      (Directive.instr (.regular .W64 .W32
+          (.movzx (w' := .W16) (.reg (.low r .W32))
+            (.mem ⟨some (.reg b), some ⟨i, .W16⟩, .int64 d⟩))))
+    ⦃ Q; E ⦄ := by
+  refine ⟨fun s hpre => ?_⟩
+  obtain ⟨hmapped, hpre⟩ := hpre
+  obtain ⟨v, hload⟩ := Option.isSome_iff_exists.mp hmapped
+  refine Program.wp_single fun _ _ _ _ hn _ => ?_
+  simp only [Directive.interp, Instr.interp, Operation.interp, Operand.interp,
+    RegOrMem.interp, MachineData.load, MachineData.set, MachineData.setReg,
+    AddrExpr.zeroExtend_interp_base_idx2, Width.bytes, hload, Effects.All,
     Reg64s.set_low_W32]
   exact hn _ (by rwa [hload, Option.get!_some] at hpre)
 
