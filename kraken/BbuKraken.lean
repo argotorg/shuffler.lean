@@ -1,5 +1,7 @@
 import BbuKraken.Asm
 import BbuKraken.AsmTest
+import BbuKraken.Bin
+import BbuKraken.BinLayout
 import BbuKraken.Contracts
 import BbuKraken.Final
 import BbuKraken.Kit

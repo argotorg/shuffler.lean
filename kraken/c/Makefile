@@ -21,7 +21,7 @@ harness: harness.c permute.S
 	$(CC) -O1 -o $@ harness.c permute.S
 
 bbu_harness: bbu_harness.c build_bottom_up.S permute.S
-	$(CC) -O1 -o $@ bbu_harness.c build_bottom_up.S permute.S
+	$(CC) -O1 -no-pie -o $@ bbu_harness.c build_bottom_up.S permute.S
 
 clean:
 	rm -f harness bbu_harness
