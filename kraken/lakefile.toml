@@ -1,0 +1,19 @@
+name = "PermuteKraken"
+version = "0.1.0"
+defaultTargets = ["PermuteKraken"]
+
+[leanOptions]
+autoImplicit = false
+relaxedAutoImplicit = false
+
+[[require]]
+name = "Kraken"
+git = "https://github.com/AeneasVerif/kraken.git"
+rev = "2fd79ae53504b5db4407de57efa9d4bd4fbc3e2b"
+
+[[lean_lib]]
+name = "PermuteKraken"
+
+[[lean_exe]]
+name = "model"
+root = "ModelMain"
