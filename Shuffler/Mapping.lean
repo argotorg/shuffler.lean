@@ -1,4 +1,4 @@
-import Mathlib.Data.PEquiv
+import Mathlib.Basic.PEquiv
 import Mathlib.Logic.Equiv.Basic
 import Mathlib.Data.Fintype.EquivFin
 import Mathlib.Data.Finset.Card

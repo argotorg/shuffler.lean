@@ -1,8 +1,8 @@
 import Shuffler.BuildBottomUp.Lemmas.SwapProofs
 
-open Std.Internal.Do
+open Std.WP
 
-set_option mvcgen.warning false
+set_option experimental.vcgen true
 
 namespace Shuffler.BuildBottomUp
 
@@ -65,19 +65,19 @@ private theorem growth_append (state : State source target spills) (slot : Value
 
 @[spec] theorem push_spec (state : State source target spills) (slot : Value) (dest : Fin target.length)
     (hgen : slot.can_be_freely_generated ∨ spills.is_spilled slot)
-    (hbound : state.mapping.symm dest = none) (hslot : slot = target[dest]) :
+    (hfree : state.mapping.symm dest = none) (hslot : slot = target[dest]) :
     ⦃True⦄ state.push slot dest
     ⦃fun next => Growth state next dest state.pending_generations; allowedErrors⦄ := by
   vcgen [State.push] <;> simp_all [State.positionOf]
-  simpa only [eqRec_eq_cast] using growth_append _ slot dest hbound hslot _
+  simpa only [eqRec_eq_cast] using growth_append _ slot dest hfree hslot _
 
 @[spec] theorem dup_spec (state : State source target spills) (copy : Fin state.stack.length)
     (dest : Fin target.length) (hdup : state.stack.isDupReachable copy)
-    (hbound : state.mapping.symm dest = none) (hslot : state.stack[copy] = target[dest]) :
+    (hfree : state.mapping.symm dest = none) (hslot : state.stack[copy] = target[dest]) :
     ⦃True⦄ state.dup copy.val dest
     ⦃fun next => Growth state next dest state.pending_generations; allowedErrors⦄ := by
   vcgen [State.dup, index] <;> simp_all [State.positionOf]
-  simpa only [eqRec_eq_cast] using growth_append _ _ dest hbound hslot _
+  simpa only [eqRec_eq_cast] using growth_append _ _ dest hfree hslot _
 
 @[spec] theorem produce_spec (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest) :

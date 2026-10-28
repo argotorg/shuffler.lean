@@ -1,8 +1,8 @@
 import Shuffler.BuildBottomUp.Lemmas.StaticPermutation
 
-open Std.Internal.Do
+open Std.WP
 
-set_option mvcgen.warning false
+set_option experimental.vcgen true
 set_option maxRecDepth 16384
 set_option maxHeartbeats 4000000
 
@@ -51,7 +51,6 @@ theorem loop_equal_bound_eq (cursor : Nat) (state : State source target spills)
     slotAt_index state.stack carrier]
   simp only [except_ok_bind]
   rw [ite_eq_left hv]
-  try simp only [except_ok_bind]
   rw [requires_of_true _ hv, except_ok_bind, swapDestinations_result state current carrier,
     except_ok_bind]
 

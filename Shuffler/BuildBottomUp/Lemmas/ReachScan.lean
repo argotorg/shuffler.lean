@@ -1,9 +1,9 @@
 import Shuffler.BuildBottomUp.Lemmas.ReachActions
 import Shuffler.BuildBottomUp.Lemmas.ScanProofs
 
-open Std.Internal.Do
+open Std.WP
 
-set_option mvcgen.warning false
+set_option experimental.vcgen true
 
 namespace Shuffler.BuildBottomUp
 
@@ -186,7 +186,6 @@ theorem copyScan_success (state : State source target spills) (copy : Fin state.
   · fun _ _ pos => Chosen state copy pos
   all_goals try simp_all
   all_goals first
-    | exact copy_offset_lt (by assumption)
     | exact ⟨⟨_, by assumption⟩, rfl, (by tauto), (by tauto)⟩
     | exact (not_lt_of_ge (by assumption)) (copy_offset_lt (by assumption))
 

@@ -5,7 +5,7 @@ import Shuffler.Permute.Defs
 import Shuffler.Stack
 import Shuffler.Trace
 import Shuffler.Util
-import Std.Internal.Do
+import Std.WP
 import Std.Tactic.Do
 
 -- TODO: make numeric types here match the c++ types
@@ -266,14 +266,14 @@ def State.generate (current : State source target spills)
 
 --- buildBottomUp -----------------------------------------------------------------------------------
 
-set_option mvcgen.warning false in
-open Std.Internal.Do in
+set_option experimental.vcgen true in
+open Std.WP in
 private theorem generate_pending_generations (state next : State source target spills) (offset : ℕ)
     (h : state.generate offset = .ok next) :
     next.pending_generations = state.pending_generations - 1 := by
   have hs : ⦃True⦄
       state.generate offset
-      ⦃fun s => s.pending_generations = state.pending_generations - 1; epost⟨fun _ => True⟩⦄ := by
+      ⦃fun s => s.pending_generations = state.pending_generations - 1; (fun _ => True)⦄ := by
     vcgen [State.generate, State.produce, State.push, State.dup, State.swapDestinations, State.swapWith,
       requires, index, slotAt, State.isSwapReachable, State.depthOf]
     all_goals simp_all

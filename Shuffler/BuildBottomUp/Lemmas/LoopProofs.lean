@@ -2,9 +2,9 @@ import Shuffler.BuildBottomUp.Lemmas.HelperProofs
 import Shuffler.BuildBottomUp.Lemmas.ScanProofs
 import Shuffler.Permute.Theorems
 
-open Std.Internal.Do
+open Std.WP
 
-set_option mvcgen.warning false
+set_option experimental.vcgen true
 
 namespace Shuffler.BuildBottomUp
 

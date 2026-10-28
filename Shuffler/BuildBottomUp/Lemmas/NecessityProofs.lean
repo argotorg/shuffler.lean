@@ -1,8 +1,8 @@
 import Shuffler.BuildBottomUp.Lemmas.SuccessProofs
 
-open Std.Internal.Do
+open Std.WP
 
-set_option mvcgen.warning false
+set_option experimental.vcgen true
 set_option maxRecDepth 16384
 set_option maxHeartbeats 4000000
 
@@ -39,7 +39,7 @@ theorem urgentScan_reachable_on_success (cursor : Nat) (state : State source tar
             urgent := some offset
       return urgent : Except Error (Option ℕ))
     ⦃fun _ => CopiesSeen state (List.range' cursor (target.length - cursor));
-      epost⟨fun _ => True⟩⦄ := by
+      (fun _ => True)⦄ := by
   simp only [Std.Legacy.Range.forIn_eq_forIn_range']
   vcgen [slotAt, index, State.depthOf] invariants
   · fun seen _ _ => CopiesSeen state seen
@@ -72,7 +72,7 @@ theorem Succeeds.bind_left {result : Except Error α} {next : α → Except Erro
   | ok value => exact ⟨value, rfl, trivial⟩
 
 -- A triple gives its postcondition on every ok result.
-theorem post_of_triple_ok {result : Except Error α} {post : α → Prop} {errors : EPost⟨Error → Prop⟩}
+theorem post_of_triple_ok {result : Except Error α} {post : α → Prop} {errors : Error → Prop}
     (h : ⦃True⦄ result ⦃post; errors⦄) (heq : result = .ok value) : post value := by
   subst heq
   exact h.le_wp trivial

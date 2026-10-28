@@ -1,8 +1,8 @@
 import Shuffler.BuildBottomUp.Lemmas.Contracts
 
-open Std.Internal.Do
+open Std.WP
 
-set_option mvcgen.warning false
+set_option experimental.vcgen true
 
 namespace Shuffler.BuildBottomUp
 
