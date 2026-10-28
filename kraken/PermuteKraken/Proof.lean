@@ -50,27 +50,14 @@ abbrev Frame (ra : Int64) (t : MachineData) : Prop :=
 -- The loop state after `k` swaps, with `k` in `rcx`.
 abbrev Common (p0 : Perm) (ra : Int64) (t : MachineData) : Prop :=
   Frame s ra t ∧ t.regs.get64 .r9 = P s ∧ t.regs.get64 .r11 = T s
-    ∧ t.regs.get64 .r10 = N s - 1#64 ∧ t.regs.get64 .rdi = P s + (N s - 1#64)
+    ∧ t.regs.get64 .r10 = N s - 1#64
+    ∧ t.regs.get64 .rdi = P s + BitVec.ofNat 64 (2 * ((N s).toNat - 1))
     ∧ (t.regs.get64 .rcx).toNat ≤ steps p0
-    ∧ Mem.Contains t.dmem (P s) (bytes (p0.state (t.regs.get64 .rcx).toNat).toList)
+    ∧ Mem.Contains t.dmem (P s) (words (p0.state (t.regs.get64 .rcx).toNat).toList)
     ∧ Mem.Contains t.dmem (T s) (bytes (p0.trace (t.regs.get64 .rcx).toNat))
     ∧ 0 < (N s).toNat
 
 end
-
-theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64)
-    (hlen : p0.toList.length = (N s).toNat) (hn : (N s).toNat ≤ MAX_N)
-    (hperm : Mem.Contains s.dmem (P s) (words p0.toList))
-    (hmap : Mem.Mapped (blocks s) s.dmem)
-    (hd1 : Mem.Blocks.Disjoint (heap s) [(S s - 16#64, 16)])
-    (hd2 : Mem.Blocks.Disjoint [(P s, 2 * (N s).toNat)] [(T s, 2 * (N s).toNat), (B s, 4)]) :
-    ⦃ fun t => t = s.pushRa ra ⦄
-      permuteAsm
-    ⦃ (fun _ _ => False); fun a t => a = ra ∧ Result s p0 (t.regs.get64 .rax) t
-        ∧ Mem.Mapped (blocks s) t.dmem ∧ (pmod s).Agree s t ⦄ := by
-  sorry
-
-/-
 
 -- The swap state in `t`: the count `k` is in `rcx`.
 abbrev cur (p0 : Perm) (t : MachineData) : List Nat := (p0.state (t.regs.get64 .rcx).toNat).toList
@@ -80,22 +67,22 @@ def Inv (s : MachineData) (p0 : Perm) (ra : Int64) : CfgLabel → MachineData �
   | .entry, t | .label "permute", t => t = s.pushRa ra
   | .label ".L7", t => Common s p0 ra t
   | .label ".L3", t => Common s p0 ra t
-      ∧ target (cur p0 t) = some (t.regs.get64 .rax).toNat
+      ∧ target (cur p0 t) = some (t.regs.get64 .rdx).toNat
   | .label ".L13", t => Common s p0 ra t
       ∧ (cur p0 t)[(N s).toNat - 1]! = (N s).toNat - 1
-      ∧ t.regs.get64 .rdx = N s - 1#64
+      ∧ t.regs.get64 .rax = N s - 1#64
       ∧ t.regs.get64 .rsi = BitVec.ofNat 64
           ((lastMisplaced (cur p0 t) ((N s).toNat - 1)).getD ((N s).toNat - 1))
   | .label ".L5", t => Common s p0 ra t
       ∧ (cur p0 t)[(N s).toNat - 1]! = (N s).toNat - 1
-      ∧ t.regs.get64 .rax = N s - 1#64
-      ∧ (t.regs.get64 .rdx).toNat < (N s).toNat - 1
+      ∧ t.regs.get64 .rdx = N s - 1#64
+      ∧ (t.regs.get64 .rax).toNat < (N s).toNat - 1
       ∧ t.regs.get64 .rsi = BitVec.ofNat 64
-          ((lastMisplaced (cur p0 t) (t.regs.get64 .rdx).toNat).getD ((N s).toNat - 1))
+          ((lastMisplaced (cur p0 t) (t.regs.get64 .rax).toNat).getD ((N s).toNat - 1))
   | .label ".L12", t => Common s p0 ra t
-      ∧ step (cur p0 t) = .blocked ⟨(t.regs.get64 .rax).toNat, (t.regs.get64 .rdx).toNat - 16⟩
-      ∧ (t.regs.get64 .rax).toNat < 256 ∧ 16 < (t.regs.get64 .rdx).toNat
-      ∧ (t.regs.get64 .rdx).toNat < 256
+      ∧ step (cur p0 t) = .blocked ⟨(t.regs.get64 .rdx).toNat, (t.regs.get64 .rax).toNat - 16⟩
+      ∧ (t.regs.get64 .rdx).toNat < MAX_N ∧ 16 < (t.regs.get64 .rax).toNat
+      ∧ (t.regs.get64 .rax).toNat < MAX_N
   | .label ".L1", t => Frame s ra t ∧ Result s p0 (t.regs.get64 .rcx) t
   | _, _ => False
 
@@ -107,9 +94,8 @@ def Var (s : MachineData) (p0 : Perm) (l : Label) (t : MachineData) : Nat :=
   | "permute" => (n + 1) * (steps p0 + 1)
   | ".L7" => (n + 1) * (r + 1)
   | ".L3" | ".L13" => (n + 1) * r
-  | ".L5" => (n + 1) * r + (n - (t.regs.get64 .rdx).toNat)
+  | ".L5" => (n + 1) * r + (n - (t.regs.get64 .rax).toNat)
   | _ => 0
-
 /-! ## Frame transfer -/
 
 section
@@ -222,12 +208,12 @@ theorem entry_contains_heap {s : MachineData} (hd1 : Mem.Blocks.Disjoint (heap s
   exact (h.storeInt_of_disjoint' i1 hd1 ha v).storeInt_of_disjoint' i2 hd1 ha w
 
 
-theorem L12_inside {s : MachineData} {i n : Nat} (h : i + n ≤ 2) :
+theorem L12_inside {s : MachineData} {i n : Nat} (h : i + n ≤ 4) :
     Mem.Blocks.Inside (B s + BitVec.ofNat 64 i) n (heap s) :=
   Or.inr (Or.inr (Or.inl (by
     rw [BitVec.add_comm, BitVec.add_sub_cancel, BitVec.toNat_ofNat]; omega)))
 
-theorem L12_sub16 (x : BitVec 64) (h1 : 16 < x.toNat) (h2 : x.toNat < 256) :
+theorem L12_sub16 (x : BitVec 64) (h1 : 16 < x.toNat) (h2 : x.toNat < 1024) :
     (BitVec.setWidth 64 (x.take 32 - 16#32)).toNat = x.toNat - 16 := by
   simp only [BitVec.take, BitVec.toNat_setWidth, BitVec.toNat_sub]
   simp
@@ -252,7 +238,7 @@ theorem L13_target (l : List Nat) (hn : 0 < l.length) (htop : l[l.length - 1]! =
   rw [lastMisplaced_succ]
   simp [htop]
 
-theorem L13_lm (l : List Nat) (hn : 0 < l.length) (h256 : l.length ≤ 256) {N : BitVec 64}
+theorem L13_lm (l : List Nat) (hn : 0 < l.length) (hl : l.length ≤ 1024) {N : BitVec 64}
     (hN : N.toNat = l.length) :
     BitVec.ofNat 64 ((lastMisplaced l (l.length - 1)).getD (l.length - 1)) = N - 1#64
       ↔ lastMisplaced l (l.length - 1) = none := by
@@ -280,6 +266,7 @@ theorem L13_k (p0 : Perm) (k : Nat) (hk : k ≤ steps p0) (h : (step (p0.state k
   · omega
 
 
+
 /-! ## `.L7` -/
 
 theorem L7_len {p0 : Perm} {s t : MachineData} (hlen : p0.toList.length = (N s).toNat) :
@@ -294,20 +281,14 @@ theorem L7_lt {p0 : Perm} {s t : MachineData} {ra : Int64} (hlen : p0.toList.len
   rwa [Perm.length_state, hlen] at this
 
 theorem L7_load {p0 : Perm} {s t : MachineData} {ra : Int64} (hlen : p0.toList.length = (N s).toNat)
-    (hn : (N s).toNat ≤ 256) (h : Common s p0 ra t) :
-    Mem.loadInt t.dmem (t.regs.rdi.toBitVec + BitVec.ofInt 64 (Int64.toInt 0)) 1
+    (hn : (N s).toNat ≤ MAX_N) (h : Common s p0 ra t) :
+    Mem.loadInt t.dmem (t.regs.rdi.toBitVec + BitVec.ofInt 64 (Int64.toInt 0)) 2
       = some ((cur p0 t)[(N s).toNat - 1]! : Int) := by
+  have hn' : (N s).toNat ≤ 1024 := hn
   have hv := L7_lt hlen h
   obtain ⟨-, -, -, -, hdi, -, hcp, -, h0⟩ := h
-  have e : t.regs.rdi.toBitVec + BitVec.ofInt 64 (Int64.toInt 0)
-      = P s + BitVec.ofNat 64 ((N s).toNat - 1) := by
-    rw [show BitVec.ofInt 64 (Int64.toInt 0) = 0#64 from rfl, BitVec.add_zero, ← Reg64s.get64_rdi, hdi]
-    generalize P s = p at *
-    generalize hN : N s = x at *
-    bv_omega
-  rw [e]
-  exact hcp.load_byte (by rw [Perm.length_state, hlen]; omega) (by simp only [cur] at hv; omega)
-    (by rw [Perm.length_state, hlen]; omega)
+  rw [show BitVec.ofInt 64 (Int64.toInt 0) = 0#64 from rfl, BitVec.add_zero, ← Reg64s.get64_rdi, hdi]
+  exact hcp.load_word (by rw [Perm.length_state, hlen]; omega) (by simp only [cur] at hv; omega)
 
 -- A length-one permutation is the identity, so `step` is done.
 theorem L7_step_one {l : List Nat} (hl : l.length = 1) (h0 : l[0]! = 0) : step l = .done := by
@@ -321,14 +302,14 @@ theorem L7_k_eq {p0 : Perm} {k : Nat} (hk : k ≤ steps p0)
   · have := p0.step_state_lt k hlt; simp_all
   · exact heq
 
-theorem L7_top_iff {x : BitVec 64} {v : Nat} (h0 : 0 < x.toNat) (hn : x.toNat ≤ 256)
-    (hv : v < x.toNat) :
+theorem L7_top_iff {x : BitVec 64} {v : Nat} (h0 : 0 < x.toNat) (hv : v < x.toNat) :
     (x - 1#64 - BitVec.ofNat 64 v == BitVec.zero 64) = decide (v = x.toNat - 1) := by
   by_cases h : v = x.toNat - 1
   · simp only [h, decide_true, beq_iff_eq, BitVec.zero_eq]; bv_omega
   · simp only [h, decide_false, beq_eq_false_iff_ne, ne_eq, BitVec.zero_eq]; bv_omega
 
-theorem L7_zero_iff {v : Nat} (hv : v < 256) : (BitVec.ofNat 64 v == BitVec.zero 64) = decide (v = 0) := by
+theorem L7_zero_iff {v : Nat} (hv : v < 65536) :
+    (BitVec.ofNat 64 v == BitVec.zero 64) = decide (v = 0) := by
   by_cases h : v = 0
   · simp [h]
   · simp only [h, decide_false, beq_eq_false_iff_ne, ne_eq, BitVec.zero_eq]; bv_omega
@@ -348,26 +329,26 @@ theorem L7_result {p0 : Perm} {s t t' : MachineData} {ra : Int64} (h : Common s 
 /-! ## `.L5` -/
 
 -- The `cmovne` in `.L5` keeps the last out-of-place position below `i + 1`.
-theorem L5_rsi {l : List Nat} {i n : Nat} (hx : l[i]! < 256) (hi : i < 256) {rdx rsi : BitVec 64}
-    (hrdx : rdx.toNat = i) (hrsi : rsi = BitVec.ofNat 64 ((lastMisplaced l i).getD n)) :
-    (if BitVec.ofNat 64 l[i]! - rdx = 0#64 then rsi else rdx)
+theorem L5_rsi {l : List Nat} {i n : Nat} (hx : l[i]! < 65536) (hi : i < 65536) {rax rsi : BitVec 64}
+    (hrax : rax.toNat = i) (hrsi : rsi = BitVec.ofNat 64 ((lastMisplaced l i).getD n)) :
+    (if BitVec.ofNat 64 l[i]! - rax = 0#64 then rsi else rax)
       = BitVec.ofNat 64 ((lastMisplaced l (i + 1)).getD n) := by
   rw [lastMisplaced_succ]
   by_cases h : l[i]! = i
-  · have e : BitVec.ofNat 64 l[i]! - rdx = 0#64 := by rw [h]; bv_omega
+  · have e : BitVec.ofNat 64 l[i]! - rax = 0#64 := by rw [h]; bv_omega
     simp only [e, ite_true]
     simp [h, hrsi]
-  · have e : BitVec.ofNat 64 l[i]! - rdx ≠ 0#64 := by
+  · have e : BitVec.ofNat 64 l[i]! - rax ≠ 0#64 := by
       intro he
       generalize l[i]! = x at hx he h
-      subst hrdx
+      subst hrax
       bv_omega
     simp only [e, ite_false, ne_eq, h, not_false_eq_true, ite_true, Option.getD_some]
     apply BitVec.eq_of_toNat_eq
     rw [BitVec.toNat_ofNat]
     omega
 
--- The loop test of `.L5`: `rax - (i + 1) = 0` iff the scan reached `n - 1`.
+-- The loop test of `.L5`: `rdx - (i + 1) = 0` iff the scan reached `n - 1`.
 theorem L5_cond {n x a : BitVec 64} (ha : a = n - 1#64) (h0 : 0 < n.toNat) (hi : x.toNat < n.toNat - 1) :
     a - (1#64 + x) = 0#64 ↔ x.toNat + 1 = n.toNat - 1 := by
   subst ha
@@ -375,34 +356,34 @@ theorem L5_cond {n x a : BitVec 64} (ha : a = n - 1#64) (h0 : 0 < n.toNat) (hi :
 
 -- One step of the scan in `.L5`.
 theorem L5_step {s t t' : MachineData} {p0 : Perm} {ra : Int64}
-    (hlen : p0.toList.length = (N s).toNat) (hn : (N s).toNat ≤ 256)
+    (hlen : p0.toList.length = (N s).toNat) (hn : (N s).toNat ≤ MAX_N)
     (h : Inv s p0 ra (.label ".L5") t) (hcr : CommonRegs t t') (hm : t'.dmem = t.dmem)
-    (hrax : t'.regs.get64 .rax = t.regs.get64 .rax)
-    (hrdx : t'.regs.get64 .rdx = 1#64 + t.regs.get64 .rdx)
-    (hrsi : t'.regs.get64 .rsi = if BitVec.ofNat 64 (cur p0 t)[(t.regs.get64 .rdx).toNat]!
-      - t.regs.get64 .rdx = 0#64 then t.regs.get64 .rsi else t.regs.get64 .rdx) :
+    (hrdx : t'.regs.get64 .rdx = t.regs.get64 .rdx)
+    (hrax : t'.regs.get64 .rax = 1#64 + t.regs.get64 .rax)
+    (hrsi : t'.regs.get64 .rsi = if BitVec.ofNat 64 (cur p0 t)[(t.regs.get64 .rax).toNat]!
+      - t.regs.get64 .rax = 0#64 then t.regs.get64 .rsi else t.regs.get64 .rax) :
     Common s p0 ra t' ∧ (cur p0 t')[(N s).toNat - 1]! = (N s).toNat - 1
-      ∧ t'.regs.get64 .rax = N s - 1#64
-      ∧ (t'.regs.get64 .rdx).toNat = (t.regs.get64 .rdx).toNat + 1
-      ∧ (t.regs.get64 .rdx).toNat + 1 ≤ (N s).toNat - 1
+      ∧ t'.regs.get64 .rdx = N s - 1#64
+      ∧ (t'.regs.get64 .rax).toNat = (t.regs.get64 .rax).toNat + 1
+      ∧ (t.regs.get64 .rax).toNat + 1 ≤ (N s).toNat - 1
       ∧ t'.regs.get64 .rsi = BitVec.ofNat 64
-          ((lastMisplaced (cur p0 t') (t'.regs.get64 .rdx).toNat).getD ((N s).toNat - 1))
+          ((lastMisplaced (cur p0 t') (t'.regs.get64 .rax).toNat).getD ((N s).toNat - 1))
       ∧ t'.regs.get64 .rcx = t.regs.get64 .rcx := by
+  have hn' : (N s).toNat ≤ 1024 := hn
   simp only [Inv] at h
-  obtain ⟨hc, htop, hrax0, hi, hrsi0⟩ := h
+  obtain ⟨hc, htop, hrdx0, hi, hrsi0⟩ := h
   have hrcx : t'.regs.get64 .rcx = t.regs.get64 .rcx := hcr.2 _ (by simp)
   have hcur : cur p0 t' = cur p0 t := cur_congr hrcx
-  have hd : (t'.regs.get64 .rdx).toNat = (t.regs.get64 .rdx).toNat + 1 := by
-    rw [hrdx]
-    generalize t.regs.get64 .rdx = x at hi ⊢
+  have hd : (t'.regs.get64 .rax).toNat = (t.regs.get64 .rax).toNat + 1 := by
+    rw [hrax]
+    generalize t.regs.get64 .rax = x at hi ⊢
     bv_omega
-  have hl : (cur p0 t).length = (N s).toNat := by simp [cur, Perm.length_state, hlen]
-  have hx : (cur p0 t)[(t.regs.get64 .rdx).toNat]! < 256 := by
-    have := (p0.state (t.regs.get64 .rcx).toNat).getElem!_lt (i := (t.regs.get64 .rdx).toNat)
+  have hx : (cur p0 t)[(t.regs.get64 .rax).toNat]! < 65536 := by
+    have := (p0.state (t.regs.get64 .rcx).toNat).getElem!_lt (i := (t.regs.get64 .rax).toNat)
       (by rw [Perm.length_state, hlen]; omega)
     rw [Perm.length_state, hlen] at this
     unfold cur; omega
-  refine ⟨hc.congr hcr hm, hcur ▸ htop, hrax.trans hrax0, hd, by omega, ?_, hrcx⟩
+  refine ⟨hc.congr hcr hm, hcur ▸ htop, hrdx.trans hrdx0, hd, by omega, ?_, hrcx⟩
   rw [hcur, hd, hrsi]
   exact L5_rsi hx (by omega) rfl hrsi0
 
@@ -438,7 +419,7 @@ theorem L3_step {l : List Nat} {pos : Nat} (h : target l = some pos) (hl : 0 < l
   simp only [step, h, MAX_SWAP_DEPTH, gt_iff_lt]
   simp [Nat.ne_of_gt hl]
 
-theorem L3_cond (d : BitVec 64) (hd : d.toNat < 256) :
+theorem L3_cond (d : BitVec 64) (hd : d.toNat < 1024) :
     ((!(((d - 16#64).toNat : Int) != (d.toNat : Int) - 16)) && !(d - 16#64 == BitVec.zero 64))
       = decide (16 < d.toNat) := by
   by_cases h : 16 < d.toNat
@@ -472,66 +453,65 @@ theorem L3_k_lt {p0 : Perm} {k idx pos : Nat} (hk : k ≤ steps p0)
   rw [← he, h] at this
   simp [Step.isSwap] at this
 
-theorem L3_byte (x : Nat) (hx : x < 256) :
-    BitVec.setWidth 64 (BitVec.setWidth 32 (BitVec.ofInt 8 (x : Int))) = BitVec.ofNat 64 x :=
-  zeroExtend_ofInt_byte x hx
+theorem L3_word (x : Nat) (hx : x < 65536) :
+    BitVec.setWidth 64 (BitVec.setWidth 32 (BitVec.ofInt 16 (x : Int))) = BitVec.ofNat 64 x :=
+  zeroExtend_ofInt_word x hx
 
-theorem L3_toNat_ofNat (x : Nat) (hx : x < 256) : (BitVec.ofNat 64 x).toNat = x := by
+theorem L3_toNat_ofNat (x : Nat) (hx : x < 65536) : (BitVec.ofNat 64 x).toNat = x := by
   simp only [BitVec.toNat_ofNat]; omega
 
--- The memory of the swap path: the trace byte, then the two `perm` bytes.
+-- The memory of the swap path: the trace byte, then the two `perm` words.
 theorem L3_mem {m : Mem 64} {Pa Ta : BitVec 64} {rest : List (BitVec 64 × Nat)} {l tr : List Nat}
     {pos : Nat} (d : BitVec 64)
-    (hP : Mem.Contains m Pa (bytes l)) (hT : Mem.Contains m Ta (bytes tr))
-    (hd2 : Mem.Blocks.Disjoint [(Pa, l.length)] ((Ta, 2 * l.length) :: rest))
-    (hl : 0 < l.length) (hl256 : l.length ≤ 256) (hpos : pos < l.length - 1)
+    (hP : Mem.Contains m Pa (words l)) (hT : Mem.Contains m Ta (bytes tr))
+    (hd2 : Mem.Blocks.Disjoint [(Pa, 2 * l.length)] ((Ta, 2 * l.length) :: rest))
+    (hl : 0 < l.length) (hlN : l.length ≤ MAX_N) (hpos : pos < l.length - 1)
     (hlt : ∀ i < l.length, l[i]! < l.length) (htr : tr.length < 2 * l.length) :
     (m.storeInt (Ta + .ofNat 64 tr.length) 1 (d.take 8).toInt).loadInt
-        (Pa + .ofNat 64 (l.length - 1)) 1 = some (l[l.length - 1]! : Int)
+        (Pa + .ofNat 64 (2 * (l.length - 1))) 2 = some (l[l.length - 1]! : Int)
     ∧ (m.storeInt (Ta + .ofNat 64 tr.length) 1 (d.take 8).toInt).loadInt
-        (Pa + .ofNat 64 pos) 1 = some (l[pos]! : Int)
+        (Pa + .ofNat 64 (2 * pos)) 2 = some (l[pos]! : Int)
     ∧ Mem.Contains
         (((m.storeInt (Ta + .ofNat 64 tr.length) 1 (d.take 8).toInt).storeInt
-          (Pa + .ofNat 64 (l.length - 1)) 1 ((BitVec.ofNat 64 l[pos]!).take 8).toInt).storeInt
-          (Pa + .ofNat 64 pos) 1 ((BitVec.ofNat 64 l[l.length - 1]!).take 8).toInt)
-        Pa (bytes (swapEntries l (l.length - 1) pos))
+          (Pa + .ofNat 64 (2 * (l.length - 1))) 2 ((BitVec.ofNat 64 l[pos]!).take 16).toInt).storeInt
+          (Pa + .ofNat 64 (2 * pos)) 2 ((BitVec.ofNat 64 l[l.length - 1]!).take 16).toInt)
+        Pa (words (swapEntries l (l.length - 1) pos))
     ∧ Mem.Contains
         (((m.storeInt (Ta + .ofNat 64 tr.length) 1 (d.take 8).toInt).storeInt
-          (Pa + .ofNat 64 (l.length - 1)) 1 ((BitVec.ofNat 64 l[pos]!).take 8).toInt).storeInt
-          (Pa + .ofNat 64 pos) 1 ((BitVec.ofNat 64 l[l.length - 1]!).take 8).toInt)
+          (Pa + .ofNat 64 (2 * (l.length - 1))) 2 ((BitVec.ofNat 64 l[pos]!).take 16).toInt).storeInt
+          (Pa + .ofNat 64 (2 * pos)) 2 ((BitVec.ofNat 64 l[l.length - 1]!).take 16).toInt)
         Ta (bytes tr ++ [d.toNat.toUInt8]) := by
-  have hlb : (bytes l).length = l.length := length_bytes l
+  have hN : l.length ≤ 1024 := hlN
+  have hlw : (words l).length = 2 * l.length := length_words l
   have htb : (bytes tr).length = tr.length := length_bytes tr
   have hinT : Mem.Blocks.Inside (Ta + .ofNat 64 tr.length) 1 ((Ta, 2 * l.length) :: rest) :=
     Mem.Blocks.Inside.base_add (by rw [BitVec.toNat_ofNat]; omega)
-  have hinP : ∀ i < l.length, Mem.Blocks.Inside (Pa + .ofNat 64 i) 1 [(Pa, l.length)] := fun i hi =>
-    Mem.Blocks.Inside.base_add (by rw [BitVec.toNat_ofNat]; omega)
+  have hinP : ∀ i < l.length, Mem.Blocks.Inside (Pa + .ofNat 64 (2 * i)) 2 [(Pa, 2 * l.length)] :=
+    fun i hi => Mem.Blocks.Inside.base_add (by rw [BitVec.toNat_ofNat]; omega)
   have hP1 := hP.storeInt_of_disjoint' hinT hd2 (Mem.Blocks.Inside.base (by omega)) (d.take 8).toInt
   have htop := hlt (l.length - 1) (by omega)
   have hposv := hlt pos (by omega)
-  refine ⟨hP1.load_byte (by omega) (by omega) (by omega), hP1.load_byte (by omega) (by omega) (by omega),
-    ?_, ?_⟩
-  · have hP2 := hP1.set_byte (i := l.length - 1) (by omega) (by omega)
-      (toBytes_one_take (BitVec.ofNat 64 l[pos]!))
-    rw [L3_toNat_ofNat _ (by omega), ← bytes_set] at hP2
-    have hP3 := hP2.set_byte (i := pos) (by simp [length_bytes]; omega) (by simp [length_bytes]; omega)
-      (toBytes_one_take (BitVec.ofNat 64 l[l.length - 1]!))
-    rw [L3_toNat_ofNat _ (by omega), ← bytes_set] at hP3
+  refine ⟨hP1.load_word (by omega) (by omega), hP1.load_word (by omega) (by omega), ?_, ?_⟩
+  · have hP2 := hP1.set_word (i := l.length - 1) (x := l[pos]!) (v := ((BitVec.ofNat 64 l[pos]!).take 16).toInt) (by omega) (by omega)
+      (by rw [toBytes_two_take, L3_toNat_ofNat _ (by omega)])
+    have hP3 := hP2.set_word (i := pos) (x := l[l.length - 1]!)
+      (v := ((BitVec.ofNat 64 l[l.length - 1]!).take 16).toInt) (by simp; omega) (by simp; omega)
+      (by rw [toBytes_two_take, L3_toNat_ofNat _ (by omega)])
     exact hP3
   · have hT1 := hT.append_byte (by omega) (toBytes_one_take d)
     rw [htb] at hT1
     have hT2 := hT1.storeInt_of_disjoint (hinP (l.length - 1) (by omega)) hd2
-      (Mem.Blocks.Inside.base (by simp [htb]; omega)) ((BitVec.ofNat 64 l[pos]!).take 8).toInt
+      (Mem.Blocks.Inside.base (by simp [htb]; omega)) ((BitVec.ofNat 64 l[pos]!).take 16).toInt
     exact hT2.storeInt_of_disjoint (hinP pos (by omega)) hd2
       (Mem.Blocks.Inside.base (by simp [htb]; omega)) _
 
 theorem L3_frame {s t t' : MachineData} {ra : Int64}
     (hd : Mem.Blocks.Disjoint (heap s) [(S s - 16#64, 16)]) (h : Frame s ra t) (hr : FrameRegs t t')
-    {a1 a2 a3 : BitVec 64} {v1 v2 v3 : Int} (h1 : Mem.Blocks.Inside a1 1 (heap s))
-    (h2 : Mem.Blocks.Inside a2 1 (heap s)) (h3 : Mem.Blocks.Inside a3 1 (heap s))
-    (hm : t'.dmem = ((t.dmem.storeInt a1 1 v1).storeInt a2 1 v2).storeInt a3 1 v3) : Frame s ra t' :=
-  have f1 := Frame.store (t' := { t with dmem := t.dmem.storeInt a1 1 v1 }) hd h (fun _ _ => rfl) h1 rfl
-  have f2 := Frame.store (t' := { t with dmem := (t.dmem.storeInt a1 1 v1).storeInt a2 1 v2 }) hd f1
+    {a1 a2 a3 : BitVec 64} {n1 n2 n3 : Nat} {v1 v2 v3 : Int} (h1 : Mem.Blocks.Inside a1 n1 (heap s))
+    (h2 : Mem.Blocks.Inside a2 n2 (heap s)) (h3 : Mem.Blocks.Inside a3 n3 (heap s))
+    (hm : t'.dmem = ((t.dmem.storeInt a1 n1 v1).storeInt a2 n2 v2).storeInt a3 n3 v3) : Frame s ra t' :=
+  have f1 := Frame.store (t' := { t with dmem := t.dmem.storeInt a1 n1 v1 }) hd h (fun _ _ => rfl) h1 rfl
+  have f2 := Frame.store (t' := { t with dmem := (t.dmem.storeInt a1 n1 v1).storeInt a2 n2 v2 }) hd f1
     (fun _ _ => rfl) h2 rfl
   Frame.store hd f2 hr h3 hm
 
@@ -543,24 +523,22 @@ theorem L3_eT2 (r c : BitVec 64) :
     r + (1#64 + c) + BitVec.ofInt 64 (-1 : Int64).toInt = r + .ofNat 64 c.toNat := by
   simp; bv_omega
 
-theorem L3_eL (p n : BitVec 64) (h : 0 < n.toNat) :
-    p + (n - 1#64) + BitVec.ofInt 64 (Int64.toInt 0) = p + .ofNat 64 (n.toNat - 1) := by
+theorem L3_eP (p a : BitVec 64) :
+    p + a * 2#64 + BitVec.ofInt 64 (Int64.toInt 0) = p + .ofNat 64 (2 * a.toNat) := by
   simp; bv_omega
-
-theorem L3_eP (p a : BitVec 64) : p + a + BitVec.ofInt 64 (Int64.toInt 0) = p + .ofNat 64 a.toNat := by
-  simp
 
 
 theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64)
-    (hlen : p0.toList.length = (N s).toNat) (hn : (N s).toNat ≤ 256)
-    (hperm : Mem.Contains s.dmem (P s) (bytes p0.toList))
+    (hlen : p0.toList.length = (N s).toNat) (hn : (N s).toNat ≤ MAX_N)
+    (hperm : Mem.Contains s.dmem (P s) (words p0.toList))
     (hmap : Mem.Mapped (blocks s) s.dmem)
     (hd1 : Mem.Blocks.Disjoint (heap s) [(S s - 16#64, 16)])
-    (hd2 : Mem.Blocks.Disjoint [(P s, (N s).toNat)] [(T s, 2 * (N s).toNat), (B s, 2)]) :
+    (hd2 : Mem.Blocks.Disjoint [(P s, 2 * (N s).toNat)] [(T s, 2 * (N s).toNat), (B s, 4)]) :
     ⦃ fun t => t = s.pushRa ra ⦄
       permuteAsm
     ⦃ (fun _ _ => False); fun a t => a = ra ∧ Result s p0 (t.regs.get64 .rax) t
         ∧ Mem.Mapped (blocks s) t.dmem ∧ (pmod s).Agree s t ⦄ := by
+  have hn' : (N s).toNat ≤ 1024 := hn
   refine ⟨fun s₀ h₀ => ?_⟩
   subst h₀
   refine Program.WP.cfg (Inv s p0 ra) (Var s p0) ?_ rfl
@@ -597,16 +575,18 @@ theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64
       · have hz' : s.regs.get64 .rdi ≠ 0#64 := by
           simpa [MachineData.pushRa, CondCode.interp_z, StatusFlags.zf_from_result] using hz
         refine ⟨frame_entry hmap ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_, ?_, ?_, ?_, ?_, ?_,
-          entry_contains_heap hd1 hperm (Mem.Blocks.Inside.base (by simp [length_bytes, hlen])) _ _,
+          entry_contains_heap hd1 hperm (Mem.Blocks.Inside.base (by simp [length_words, hlen])) _ _,
           fun i hi => by simp [bytes, Perm.trace] at hi,
           Nat.pos_of_ne_zero fun h => hz' (BitVec.eq_of_toNat_eq h)⟩
         all_goals simp [MachineData.pushRa]
-        all_goals bv_omega
+        all_goals first
+          | bv_omega
+          | (simp only [Reg64s.get64_rdi] at hz' hn'; rw [← UInt64.toNat_toBitVec]; bv_omega)
       · simp [Var]
   -- .L13
   case right.right.left t ht =>
     simp only [Inv] at ht
-    obtain ⟨hc, htop, hrdx, hrsi⟩ := ht
+    obtain ⟨hc, htop, hrax, hrsi⟩ := ht
     have hc' := hc
     obtain ⟨hf, h9, h11, h10, hdi, hk, hP', hT', hn0⟩ := hc'
     have hl : (cur p0 t).length = (N s).toNat := by simp [cur, Perm.length_state, hlen]
@@ -615,8 +595,8 @@ theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64
     kvcgen64
     · rename_i hz
       simp [CondCode.interp_z, StatusFlags.zf_from_result] at hz
-      have heq : t.regs.get64 .rsi = t.regs.get64 .rdx := by simp; bv_omega
-      rw [hrsi, hrdx] at heq
+      have heq : t.regs.get64 .rsi = t.regs.get64 .rax := by simp; bv_omega
+      rw [hrsi, hrax] at heq
       have hdone := L13_done _ hn0 htop (hlm.mp heq)
       have hks := L13_k p0 _ hk (by rw [hdone]; rfl)
       cfg_goto
@@ -629,8 +609,8 @@ theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64
         simp [Var, hks]
     · rename_i hz
       simp [CondCode.interp_z, StatusFlags.zf_from_result] at hz
-      have hne : ¬ t.regs.get64 .rsi = t.regs.get64 .rdx := by simp; bv_omega
-      rw [hrsi, hrdx] at hne
+      have hne : ¬ t.regs.get64 .rsi = t.regs.get64 .rax := by simp; bv_omega
+      rw [hrsi, hrax] at hne
       obtain ⟨pos, hpos⟩ := Option.ne_none_iff_exists'.mp (mt hlm.mpr hne)
       have hlt := (lastMisplaced_spec _ _ pos hpos).1
       rw [hpos] at hrsi
@@ -646,15 +626,16 @@ theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64
     obtain ⟨hC, htgt⟩ := ht
     have ⟨hf, h9, h11, h10, hdi, hk, hPc, hTc, hN0⟩ := hC
     simp only [Reg64s.get64_r9, Reg64s.get64_r10, Reg64s.get64_r11, Reg64s.get64_rdi,
-      Reg64s.get64_rax, Reg64s.get64_rcx, cur] at h9 h10 h11 hdi hk hPc hTc htgt
+      Reg64s.get64_rcx, cur] at h9 h10 h11 hdi hk hPc hTc htgt
+    simp only [Reg64s.get64_rdx] at htgt
     have hl : (p0.state t.regs.rcx.toBitVec.toNat).toList.length = (N s).toNat := by
       rw [Perm.length_state, hlen]
     have hpos := L3_pos _ htgt
     have hstep := L3_step htgt (by rw [hl]; exact hN0)
     rw [hl] at hpos hstep
-    have hd : (t.regs.r10.toBitVec - t.regs.rax.toBitVec).toNat
-        = (N s).toNat - 1 - t.regs.rax.toBitVec.toNat := by
-      rw [h10]; simp only [N, Reg64s.get64_rdi] at hpos hn hN0 ⊢; bv_omega
+    have hd : (t.regs.r10.toBitVec - t.regs.rdx.toBitVec).toNat
+        = (N s).toNat - 1 - t.regs.rdx.toBitVec.toNat := by
+      rw [h10]; simp only [N, Reg64s.get64_rdi] at hpos hn' hN0 ⊢; bv_omega
     kvcgen64
     case vc1 =>
       rename_i hc
@@ -670,7 +651,7 @@ theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64
         · rw [cur_congr rfl]
           simp only [cur, Reg64s.get64_rax, Reg64s.get64_rdx, Reg64s.get64_rcx, hd]
           exact hstep
-        all_goals simp only [Reg64s.get64_rax, Reg64s.get64_rdx, hd]
+        all_goals simp only [Reg64s.get64_rax, Reg64s.get64_rdx, hd, MAX_N]
         all_goals omega
       · right
         refine ⟨?_, by decide⟩
@@ -682,12 +663,11 @@ theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64
     all_goals rw [ite_eq_right_of_eq_false _ _ (eq_false (by omega))] at hstep
     all_goals have hks := L3_k_lt hk hstep
     all_goals
-      simp only [Reg64s.get64_rax, Reg64s.get64_rcx, Reg64s.get64_rdi,
-        Reg64s.get64_r11]
+      simp only [Reg64s.get64_rax, Reg64s.get64_rcx, Reg64s.get64_rdi, Reg64s.get64_r11]
       have hsl := p0.steps_lt (by rw [hlen]; exact hN0)
       rw [hlen] at hsl
-      have hM := L3_mem (m := t.dmem) (pos := t.regs.rax.toBitVec.toNat)
-        (t.regs.r10.toBitVec - t.regs.rax.toBitVec) hPc hTc (by rw [hl]; exact hd2) (by rw [hl]; exact hN0)
+      have hM := L3_mem (m := t.dmem) (pos := t.regs.rdx.toBitVec.toNat)
+        (t.regs.r10.toBitVec - t.regs.rdx.toBitVec) hPc hTc (by rw [hl]; exact hd2) (by rw [hl]; exact hN0)
         (by rw [hl]; exact hn) (by rw [hl]; exact hpos) (fun i hi => (p0.state _).getElem!_lt hi)
         (by rw [Perm.length_trace, hl]; omega)
       have eT : t.regs.r11.toBitVec + 1#64 + t.regs.rcx.toBitVec + BitVec.ofInt 64 (-1 : Int64).toInt
@@ -697,11 +677,11 @@ theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64
           = s.regs.get64 .rdx + .ofNat 64 (p0.trace t.regs.rcx.toBitVec.toNat).length := by
         rw [Perm.length_trace, h11]; exact L3_eT2 _ _
       have eL : t.regs.rdi.toBitVec + BitVec.ofInt 64 (Int64.toInt 0)
-          = s.regs.get64 .rsi + .ofNat 64 ((p0.state t.regs.rcx.toBitVec.toNat).toList.length - 1) := by
-        rw [hdi, hl]; exact L3_eL _ _ hN0
-      have eP : t.regs.r9.toBitVec + t.regs.rax.toBitVec + BitVec.ofInt 64 (Int64.toInt 0)
-          = s.regs.get64 .rsi + .ofNat 64 t.regs.rax.toBitVec.toNat := by
-        rw [h9]; exact L3_eP _ _
+          = s.regs.get64 .rsi + .ofNat 64 (2 * ((p0.state t.regs.rcx.toBitVec.toNat).toList.length - 1)) := by
+        rw [hdi, hl]; simp
+      have eP : t.regs.r9.toBitVec + t.regs.rdx.toBitVec * 2#64 + BitVec.ofInt 64 (Int64.toInt 0)
+          + BitVec.ofInt 64 (Int64.toInt 0) = s.regs.get64 .rsi + .ofNat 64 (2 * t.regs.rdx.toBitVec.toNat) := by
+        rw [h9, L3_eP _ _]; simp
       try simp only [eT, eT2, eL, eP]
       have hmap := hf.2.2.2.2.2.2.2.2.2.1
     case vc2 =>
@@ -716,12 +696,12 @@ theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64
     case vc7 =>
       have hlt := fun i hi => (p0.state t.regs.rcx.toBitVec.toNat).getElem!_lt (i := i) hi
       have htop := hlt ((p0.state t.regs.rcx.toBitVec.toNat).toList.length - 1) (by omega)
-      have hposv := hlt t.regs.rax.toBitVec.toNat (by omega)
+      have hposv := hlt t.regs.rdx.toBitVec.toNat (by omega)
       have ek : (1#64 + t.regs.rcx.toBitVec).toNat = t.regs.rcx.toBitVec.toNat + 1 := by
         rw [BitVec.toNat_add, BitVec.toNat_ofNat]; omega
       rw [hM.1, hM.2.1]
       simp only [Option.get!_some]
-      rw [L3_byte _ (by omega), L3_byte _ (by omega)]
+      rw [L3_word _ (by omega), L3_word _ (by omega)]
       simp only [Inv]
       refine ⟨L3_frame hd1 hf (by simp [FrameRegs]) (.tail (.base_add ?_)) (.base_add ?_) (.base_add ?_) rfl,
         ?_, ?_, ?_, ?_, ?_, ?_, ?_, hN0⟩
@@ -734,7 +714,7 @@ theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64
       · exact hC.2.2.2.2.1
       · show (1#64 + t.regs.rcx.toBitVec).toNat ≤ _
         rw [ek]; omega
-      · show Mem.Contains _ _ (bytes (p0.state (1#64 + t.regs.rcx.toBitVec).toNat).toList)
+      · show Mem.Contains _ _ (words (p0.state (1#64 + t.regs.rcx.toBitVec).toNat).toList)
         rw [ek, Perm.state_succ, Perm.advance_eq _ hstep]
         exact hM.2.2.1
       · show Mem.Contains _ _ (bytes (p0.trace (1#64 + t.regs.rcx.toBitVec).toNat))
@@ -760,14 +740,14 @@ theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64
     have hsp : t.regs.rsp.toBitVec = S s - 16#64 := by rw [← Reg64s.get64_rsp]; exact ht.1.1
     have hl := L7_len (t := t) hlen
     generalize hcv : (cur p0 t)[(N s).toNat - 1]! = v at hv hload
-    have hz : BitVec.setWidth 64 (BitVec.setWidth 32 (BitVec.ofInt 8 (v : Int))) = BitVec.ofNat 64 v :=
-      zeroExtend_ofInt_byte _ (by omega)
+    have hz : BitVec.setWidth 64 (BitVec.setWidth 32 (BitVec.ofInt 16 (v : Int))) = BitVec.ofNat 64 v :=
+      zeroExtend_ofInt_word _ (by omega)
     have hvn : (BitVec.ofNat 64 v).toNat = v := by simp; omega
     kvcgen64
     case vc1 => rw [Reg64s.get64_rdi, hload]; rfl
     case vc2 hnz =>
       simp only [hload, Option.get!_some, hz, CondCode.interp_nz, StatusFlags.zf_from_result, hr10,
-        L7_top_iff h0 hn hv, Bool.not_eq_true', decide_eq_false_iff_not] at hnz
+        L7_top_iff h0 hv, Bool.not_eq_true', decide_eq_false_iff_not] at hnz
       simp only [hload, Option.get!_some, hz]
       cfg_goto
       · exact stack_ok (by simpa using hsp)
@@ -784,9 +764,9 @@ theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64
         omega
     case vc3 hnz _ hz0 =>
       simp only [hload, Option.get!_some, hz, CondCode.interp_nz, StatusFlags.zf_from_result, hr10,
-        L7_top_iff h0 hn hv, Bool.not_eq_false', decide_eq_true_eq] at hnz
+        L7_top_iff h0 hv, Bool.not_eq_false', decide_eq_true_eq] at hnz
       simp only [hload, Option.get!_some, hz, CondCode.interp_z, StatusFlags.zf_from_result,
-        BitVec.and_self, L7_zero_iff (by omega : v < 256), decide_eq_true_eq] at hz0
+        BitVec.and_self, L7_zero_iff (by omega : v < 65536), decide_eq_true_eq] at hz0
       simp only [hload, Option.get!_some, hz]
       have e : (N s).toNat - 1 = 0 := hnz.symm.trans hz0
       rw [e] at hcv
@@ -800,26 +780,26 @@ theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64
         exact Nat.mul_pos (by omega) (by omega)
     case vc4 hnz _ hz0 =>
       simp only [hload, Option.get!_some, hz, CondCode.interp_nz, StatusFlags.zf_from_result, hr10,
-        L7_top_iff h0 hn hv, Bool.not_eq_false', decide_eq_true_eq] at hnz
+        L7_top_iff h0 hv, Bool.not_eq_false', decide_eq_true_eq] at hnz
       simp only [hload, Option.get!_some, hz, CondCode.interp_z, StatusFlags.zf_from_result,
-        BitVec.and_self, L7_zero_iff (by omega : v < 256), decide_eq_false_iff_not] at hz0
+        BitVec.and_self, L7_zero_iff (by omega : v < 65536), decide_eq_false_iff_not] at hz0
       have hnz' : v = (N s).toNat - 1 := hnz
       simp only [hload, Option.get!_some, hz, Inv]
       refine ⟨Common.congr ht ⟨by simp [FrameRegs], by simp⟩ rfl, ?_, ?_, ?_, ?_⟩
       · show (cur p0 t)[_]! = _
         rw [hcv, hnz']
-      · simp only [Reg64s.get64_rax]
+      · simp only [Reg64s.get64_rdx]
         rw [hnz']
         generalize N s = x at *
         bv_omega
-      · simp only [Reg64s.get64_rdx, BitVec.toNat_ofNat]
+      · simp only [Reg64s.get64_rax, BitVec.toNat_ofNat]
         omega
       · show _ = BitVec.ofNat 64 ((lastMisplaced (cur p0 t) _).getD _)
         simp [lastMisplaced_zero, hnz]
     case vc5 hnz _ hz0 =>
       simp only [hload, Option.get!_some, hz, CondCode.interp_z, StatusFlags.zf_from_result,
-        BitVec.and_self, L7_zero_iff (by omega : v < 256), decide_eq_false_iff_not] at hz0
-      simp only [Var, Reg64s.get64_rcx, Reg64s.get64_rdx]
+        BitVec.and_self, L7_zero_iff (by omega : v < 65536), decide_eq_false_iff_not] at hz0
+      simp only [Var, Reg64s.get64_rcx, Reg64s.get64_rax]
       left
       simp only [BitVec.toNat_ofNat, Nat.zero_mod, Nat.sub_zero]
       rw [Nat.mul_succ]
@@ -828,26 +808,24 @@ theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64
   case right.right.right.right.right.left t ht =>
     have hinv := ht
     simp only [Inv] at ht
-    obtain ⟨hc, htop, hrax, hi, hrsi⟩ := ht
+    obtain ⟨hc, htop, hrdx, hi, hrsi⟩ := ht
     have hc0 := hc
     obtain ⟨hf, hr9, hr11, hr10, hrdi, hk, hPc, hTc, hn0⟩ := hc0
     have hl : (cur p0 t).length = (N s).toNat := by simp [cur, Perm.length_state, hlen]
-    have hx : (cur p0 t)[(t.regs.get64 .rdx).toNat]! < 256 := by
-      have := (p0.state (t.regs.get64 .rcx).toNat).getElem!_lt (i := (t.regs.get64 .rdx).toNat)
+    have hx : (cur p0 t)[(t.regs.get64 .rax).toNat]! < 65536 := by
+      have := (p0.state (t.regs.get64 .rcx).toNat).getElem!_lt (i := (t.regs.get64 .rax).toNat)
         (by rw [Perm.length_state, hlen]; omega)
       rw [Perm.length_state, hlen] at this
       unfold cur; omega
-    have hload : Mem.loadInt t.dmem (t.regs.get64 .r9 + t.regs.get64 .rdx
-        + BitVec.ofInt 64 (Int64.toInt 0)) 1 = some ((cur p0 t)[(t.regs.get64 .rdx).toNat]! : Int) := by
-      have := hPc.load_byte (i := (t.regs.get64 .rdx).toNat) (by rw [hl]; omega) hx (by rw [hl]; omega)
-      rw [← this]
-      simp only [Reg64s.get64_r9] at hr9
-      simp [hr9]
-    have hload' : Mem.loadInt t.dmem (t.regs.r9.toBitVec + t.regs.rdx.toBitVec
-        + BitVec.ofInt 64 (Int64.toInt 0)) 1 = some ((cur p0 t)[(t.regs.get64 .rdx).toNat]! : Int) := hload
-    have hr8 : BitVec.setWidth 64 (BitVec.setWidth 32 (BitVec.ofInt 8
-        ((cur p0 t)[(t.regs.get64 .rdx).toNat]! : Int))) = BitVec.ofNat 64 (cur p0 t)[(t.regs.get64 .rdx).toNat]! :=
-      zeroExtend_ofInt_byte _ hx
+    have hload : Mem.loadInt t.dmem (t.regs.get64 .r9 + t.regs.get64 .rax * 2#64
+        + BitVec.ofInt 64 (Int64.toInt 0)) 2 = some ((cur p0 t)[(t.regs.get64 .rax).toNat]! : Int) := by
+      rw [hr9, L3_eP _ _]
+      exact hPc.load_word (by rw [hl]; omega) hx
+    have hload' : Mem.loadInt t.dmem (t.regs.r9.toBitVec + t.regs.rax.toBitVec * 2#64
+        + BitVec.ofInt 64 (Int64.toInt 0)) 2 = some ((cur p0 t)[(t.regs.get64 .rax).toNat]! : Int) := hload
+    have hr8 : BitVec.setWidth 64 (BitVec.setWidth 32 (BitVec.ofInt 16
+        ((cur p0 t)[(t.regs.get64 .rax).toNat]! : Int))) = BitVec.ofNat 64 (cur p0 t)[(t.regs.get64 .rax).toNat]! :=
+      zeroExtend_ofInt_word _ hx
     kvcgen64
     · rw [hload]; rfl
     all_goals rename_i hcond
@@ -857,22 +835,22 @@ theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64
     all_goals intro u hu
     all_goals have hrcxu : u.regs.get64 .rcx = t.regs.get64 .rcx := by rw [← hu]; simp
     all_goals (
-      obtain ⟨hcu, htopu, hraxu, hdu, hle, hrsiu, -⟩ := L5_step hlen hn hinv (t' := u)
+      obtain ⟨hcu, htopu, hrdxu, hdu, hle, hrsiu, -⟩ := L5_step hlen hn hinv (t' := u)
         (by rw [← hu]; simp [CommonRegs, FrameRegs]) (by rw [← hu]) (by rw [← hu]; simp) (by rw [← hu]; simp)
         (by rw [← hu]; simp [cur]))
-    all_goals have hcond' := L5_cond hrax hn0 hi
+    all_goals have hcond' := L5_cond hrdx hn0 hi
     -- jne .L5: the scan goes on.
-    · have hne : (t.regs.get64 .rdx).toNat + 1 ≠ (N s).toNat - 1 := by
+    · have hne : (t.regs.get64 .rax).toNat + 1 ≠ (N s).toNat - 1 := by
         exact fun h => by simp_all
       cfg_goto
       · exact stack_ok (by rw [← hu]; simpa using hf.1)
       · simp only [Inv]
-        exact ⟨hcu, htopu, hraxu, by omega, hrsiu⟩
+        exact ⟨hcu, htopu, hrdxu, by omega, hrsiu⟩
       · left
         simp only [Var, hrcxu, hdu]
         exact Nat.add_lt_add_left (by omega) _
     -- jmp .L13: the scan is complete.
-    · have heq : (t.regs.get64 .rdx).toNat + 1 = (N s).toNat - 1 := by
+    · have heq : (t.regs.get64 .rax).toNat + 1 = (N s).toNat - 1 := by
         exact hcond'.mp (by simpa using hcond)
       cfg_goto
       · exact stack_ok (by rw [← hu]; simpa using hf.1)
@@ -888,30 +866,29 @@ theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64
   -- .L12
   case right.right.right.right.right.right.left t ht =>
     simp only [Inv] at ht
-    obtain ⟨⟨hf, -, -, -, -, hk, -, -, -⟩, hstep, hax, hdx1, hdx2⟩ := ht
+    obtain ⟨⟨hf, -, -, -, -, hk, -, -, -⟩, hstep, hdx, hax1, hax2⟩ := ht
     have hrbx : t.regs.get64 .rbx = B s := hf.2.1
     have hrbx' : t.regs.rbx.toBitVec = B s := hf.2.1
     have hmapt : Mem.Mapped (blocks s) t.dmem := hf.2.2.2.2.2.2.2.2.2.1
     have e0 : BitVec.ofInt 64 (Int64.toInt 0) = 0#64 := by simp
-    have e1 : BitVec.ofInt 64 (Int64.toInt 1) = 1#64 := by simp
+    have e2 : BitVec.ofInt 64 (Int64.toInt 2) = 2#64 := by simp
     kvcgen64
     · rw [hrbx, e0]
       exact hmapt.loadInt_isSome (L12_inside (i := 0) (by omega)).tail
-    · simp only [Reg64s.get64_rbx, hrbx', e0, e1]
-      exact (hmapt.storeInt _ _ _).loadInt_isSome (L12_inside (i := 1) (by omega)).tail
+    · simp only [Reg64s.get64_rbx, hrbx', e0, e2]
+      exact (hmapt.storeInt _ _ _).loadInt_isSome (L12_inside (i := 2) (by omega)).tail
     · simp only [Inv]
-      rw [hrbx', e0, e1]
-      have hf1 : Frame s ra { t with dmem := Mem.storeInt t.dmem (B s + 0#64) 1 (t.regs.rax.toBitVec.take 8).toInt } :=
+      rw [hrbx', e0, e2]
+      have hf1 : Frame s ra { t with dmem := Mem.storeInt t.dmem (B s + 0#64) 2 (t.regs.rdx.toBitVec.take 16).toInt } :=
         Frame.store hd1 hf (by simp [FrameRegs]) (L12_inside (i := 0) (by omega)) rfl
-      refine ⟨Frame.store hd1 hf1 (by simp [FrameRegs]) (L12_inside (i := 1) (by omega)) rfl, ?_⟩
+      refine ⟨Frame.store hd1 hf1 (by simp [FrameRegs]) (L12_inside (i := 2) (by omega)) rfl, ?_⟩
       simp only [Result, L12_permute hk hstep]
       refine ⟨rfl, ?_⟩
       have c0 : Mem.Contains t.dmem (B s) [] := fun i hi => by simp at hi
-      have c1 := c0.append_byte (by decide) (toBytes_one_take t.regs.rax.toBitVec)
-      have c2 := c1.append_byte (by simp) (toBytes_one_take
-        (BitVec.setWidth 64 (t.regs.rdx.toBitVec.take 32 - 16#32)))
-      rw [L12_sub16 t.regs.rdx.toBitVec hdx1 hdx2] at c2
-      simpa [bytes] using c2
+      have c1 := c0.append_word (by decide) (t.regs.rdx.toBitVec.take 16).toInt
+      have c2 := c1.append_word (by simp [Int.toBytes_length]) ((BitVec.setWidth 64 (t.regs.rax.toBitVec.take 32 - 16#32)).take 16).toInt
+      rw [toBytes_two_take, toBytes_two_take, L12_sub16 t.regs.rax.toBitVec hax1 hax2] at c2
+      simpa [words] using c2
     · exact Or.inr ⟨rfl, by omega⟩
   -- .L1
   case right.right.right.right.right.right.right t ht =>
@@ -940,7 +917,5 @@ theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64
       · apply MachineData.stackBelow_of_add_eight
         simp [MachineData.pushRa, hrsp]
         bv_omega
--/
-
 
 end State
