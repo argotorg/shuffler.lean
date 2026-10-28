@@ -1,0 +1,15 @@
+/build/
+/artifacts/
+__pycache__/
+*.vo
+*.vos
+*.vok
+*.glob
+.*.aux
+.lia.cache
+*.cmi
+*.cmo
+/full/full_exported.ml
+/full/full_exported.mli
+/full/print-full
+/full/permute.proved.*
