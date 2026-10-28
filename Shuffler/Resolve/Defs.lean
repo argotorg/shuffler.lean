@@ -77,7 +77,6 @@ def resolve (init : State source target)
 
   -- retained slots above the blocked one; the source offset of a retained slot is the one its destination
   -- maps back to, while generated and surplus slots have no source
-  -- See Shuffler.cpp:960-966.
   let mut candidates : List (Fin source.length) := ∅
   for pos in (List.finRange currentSize).drop (blocked.offset + 1) do
     if let some destination := current.destinationOf pos then
@@ -86,7 +85,6 @@ def resolve (init : State source target)
 
   for dropped in List.finRange blocked.excess do
     -- classes can shift as copies get dropped, so pick one victim at a time
-    -- See Shuffler.cpp:967-978.
     let mut best : Option (Fin source.length) := none
     let mut bestClass : ℕ := 0
     for offset in candidates do
@@ -108,7 +106,6 @@ def resolve (init : State source target)
       let ⟨hcls⟩ ← requires cls.isSome "cls must have a value here"
       let ⟨hoff⟩ ← requires (mapping.destinationOf offset).isSome "offset must be bound"
       -- within a class prefer the slot whose target is highest
-      -- See Shuffler.cpp:979-988.
       if ¬ best.isSome ∨
          cls.get hcls < bestClass ∨
         (cls.get hcls = bestClass ∧ (best >>= mapping.destinationOf).any (λ dest => (mapping.destinationOf offset).get hoff > dest))
