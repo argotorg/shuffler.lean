@@ -1,9 +1,9 @@
 import Shuffler.RemoveSurplus.Defs
 import Shuffler.Emission.Lemmas
 
-open Std.Internal.Do
+open Std.WP
 
-set_option mvcgen.warning false
+set_option experimental.vcgen true
 
 namespace Shuffler.Emission
 
@@ -142,7 +142,7 @@ theorem boundValue_pop (state : State source target spills) (hne : 0 < state.sta
       allowedErrors⦄ := by
   vcgen [State.pop]
   all_goals simp_all
-  all_goals rename_i h _; exact boundValue_pop _ h.1 h.2
+  all_goals rename_i h; exact boundValue_pop _ h.1 h.2
 
 --- Scans ------------------------------------------------------------------------------------------
 
@@ -328,6 +328,9 @@ theorem outer_pop {old : State source target spills} {k n : ℕ} {P : Prop} (hin
   · exact absurd h hsur
   · right; omega
 
+-- `vcgen` can state the scan result as a literal pair, so its projections can need `rfl`.
+local macro "hyp" : term => `(by first | assumption | rfl)
+
 theorem removeSurplus_triple (initial : State source target spills) :
     ⦃True⦄ removeSurplus initial
     ⦃fun res => res.noSurplus ∧ res.boundValue = initial.boundValue; allowedErrors⦄ := by
@@ -339,34 +342,31 @@ theorem removeSurplus_triple (initial : State source target spills) :
     rename_i state _ _
     exact fun pref _ found => SurplusScan state pref found
   case inv3 =>
-    rename_i state _ _ _ _ _ _ _ _ _
+    rename_i state _ _ _ _ _ _ _ _ _ _
     exact fun _ _ equal => ∀ e, equal = some e → ∃ h : e < state.stack.length - 1,
       state.isSurplus ⟨e, by omega⟩ ∧ state.stack[e]'(by omega) = state.stack[state.stack.length - 1]'(by omega)
   all_goals try simp_all [allowedErrors, State.blockSwapUnreachable]
   all_goals try casesm* _ ∧ _
   all_goals first
-    | exact SurplusScan.top_ready (by assumption) (by assumption) (by assumption)
-    | exact retag_ready _ _ _ _ (by assumption)
-    | exact ⟨outer_pop (by assumption) (SurplusScan.not_noSurplus (by assumption) (by assumption))
-        (by assumption), (retag_bound _ _ _ _ (by assumption)).trans (by assumption)⟩
+    | exact SurplusScan.top_ready hyp hyp hyp
+    | exact retag_ready _ _ _ _ hyp
+    | exact ⟨outer_pop hyp (SurplusScan.not_noSurplus hyp hyp) hyp, (retag_bound _ _ _ _ hyp).trans hyp⟩
     | exact SurplusScan.start _
-    | exact SurplusScan.skip (by assumption) (by assumption)
-    | exact SurplusScan.first_reachable (by assumption) (by assumption) (by assumption) (by assumption)
-        (by assumption)
-    | exact SurplusScan.first_unreachable (by assumption) (by assumption) (by assumption) (by assumption)
-    | exact SurplusScan.later_reachable (by assumption) (by assumption) (by assumption) (by assumption)
-    | exact SurplusScan.later_unreachable (by assumption) (by assumption)
-    | exact Or.inl (SurplusScan.noSurplus_of_none (by assumption) (by assumption))
-    | exact outer_pop (by assumption) (SurplusScan.not_noSurplus (by assumption) (by assumption))
-        (by assumption)
-    | exact Or.inl (noSurplus_of_nil _ (by assumption))
-    | exact outer_end (by assumption)
-    | exact SurplusScan.deepest_swappable (by assumption) (by assumption) (by assumption) (by assumption)
-    | exact absurd (SurplusScan.shallowest_lt (by assumption) (by assumption)) (by omega)
-    | exact List.length_pos_iff.mpr (by assumption)
-    | exact range_lt (by assumption)
-    | (have := List.length_pos_iff.mpr (by assumption : _ ≠ []); omega)
-    | (have := range_lt (by assumption); omega)
-    | exact lt_of_exists_lt (by assumption)
+    | exact SurplusScan.skip hyp hyp
+    | exact SurplusScan.first_reachable hyp hyp hyp hyp hyp
+    | exact SurplusScan.first_unreachable hyp hyp hyp hyp
+    | exact SurplusScan.later_reachable hyp hyp hyp hyp
+    | exact SurplusScan.later_unreachable hyp hyp
+    | exact Or.inl (SurplusScan.noSurplus_of_none hyp hyp)
+    | exact outer_pop hyp (SurplusScan.not_noSurplus hyp hyp) hyp
+    | exact Or.inl (noSurplus_of_nil _ hyp)
+    | exact outer_end hyp
+    | exact SurplusScan.deepest_swappable hyp hyp hyp hyp
+    | exact absurd (SurplusScan.shallowest_lt hyp hyp) (by omega)
+    | exact List.length_pos_iff.mpr hyp
+    | exact range_lt hyp
+    | (have := List.length_pos_iff.mpr (hyp : _ ≠ []); omega)
+    | (have := range_lt hyp; omega)
+    | exact lt_of_exists_lt hyp
 
 end Shuffler.Emission

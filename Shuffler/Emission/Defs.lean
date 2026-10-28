@@ -3,7 +3,7 @@ import Shuffler.Contracts
 import Shuffler.Mapping
 import Shuffler.Stack
 import Shuffler.Trace
-import Std.Internal.Do
+import Std.WP
 import Std.Tactic.Do
 
 -- TODO: make numeric types here match the c++ types
