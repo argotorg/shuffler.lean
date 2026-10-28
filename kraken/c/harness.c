@@ -8,7 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-int64_t permute(uint64_t n, uint8_t *perm, uint8_t *trace, uint8_t *blocked);
+/* the bound on n in permute.c */
+#define MAX_N 1024
+
+int64_t permute(uint64_t n, uint16_t *perm, uint8_t *trace, uint16_t *blocked);
 
 static void print_perm(int n, const int *p)
 {
@@ -74,7 +77,7 @@ static void shallow_perm(int n, int *p)
 
 static int gen(void)
 {
-	int p[256];
+	int p[MAX_N];
 	for (int n = 0; n <= 6; n++)
 		all_perms(n);
 	for (int r = 0; r < 2000; r++) {
@@ -87,10 +90,30 @@ static int gen(void)
 		shallow_perm(n, p);
 		print_perm(n, p);
 	}
-	shallow_perm(256, p);
-	print_perm(256, p);
-	random_perm(256, p);
-	print_perm(256, p);
+	for (int r = 0; r < 300; r++) {
+		int n = next() % (MAX_N + 1);
+		shallow_perm(n, p);
+		print_perm(n, p);
+	}
+	for (int r = 0; r < 100; r++) {
+		int n = next() % (MAX_N + 1);
+		random_perm(n, p);
+		print_perm(n, p);
+	}
+	int sizes[] = { 255, 256, 257, 300, MAX_N - 1, MAX_N };
+	for (int s = 0; s < 6; s++) {
+		int n = sizes[s];
+		shallow_perm(n, p);
+		print_perm(n, p);
+		random_perm(n, p);
+		print_perm(n, p);
+	}
+	/* one swap of two slots far below the top: blocked with a large offset and excess */
+	for (int i = 0; i < MAX_N; i++)
+		p[i] = i;
+	p[300] = 301;
+	p[301] = 300;
+	print_perm(MAX_N, p);
 	return 0;
 }
 
@@ -98,7 +121,10 @@ static int run(void)
 {
 	uint64_t n;
 	while (scanf("%lu", &n) == 1) {
-		uint8_t perm[256], trace[512], blocked[2];
+		if (n > MAX_N)
+			return 1;
+		uint16_t perm[MAX_N], blocked[2];
+		uint8_t trace[2 * MAX_N];
 		for (uint64_t i = 0; i < n; i++) {
 			unsigned v;
 			if (scanf("%u", &v) != 1)
