@@ -162,7 +162,9 @@ def swap (p : Perm) (i j : Nat) (hi : i < p.toList.length) (hj : j < p.toList.le
     grind
   inj := by
     intro a b ha hb h
-    simp only [swapEntries, List.length_set] at ha hb h
+    simp only [swapEntries, List.length_set] at ha hb
+    simp only [swapEntries, List.getElem_set, getElem!_pos p.toList i hi,
+      getElem!_pos p.toList j hj] at h
     have := p.inj a b ha hb
     have := p.inj a i ha hi
     have := p.inj a j ha hj
