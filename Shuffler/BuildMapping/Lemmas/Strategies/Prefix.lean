@@ -1,4 +1,4 @@
-import Shuffler.BuildMapping.Lemmas.Strategies.Phases
+import Shuffler.BuildMapping.Lemmas.Basic
 
 namespace Shuffler.BuildMapping.Strategies
 
@@ -41,17 +41,5 @@ theorem prefix_succeeds (source target : Stack) (dropped : List Byte)
         (symm_eq_none_of_not_hasSourceAssigned mb t (not_or.mp hfree).1)]
       exact ⟨hd, hf⟩
     · exact ⟨hd, hf⟩
-
--- The phase definitions give the same computation as buildMapping.
-theorem buildMapping_eq_phases (source target : Stack) (dropped : List Byte)
-    (strategy : WildcardSlotsStrategy) :
-    buildMapping source target dropped strategy = (do
-      _ ← requires (dropped.length = source.length) "dropped needs one entry per source slot"
-      let mb ← initialPasses source target dropped
-      let mb ← copyPass strategy mb
-      let mb ← suffix mb
-      pure { mapping := mb.mapping, sawWildcardCopy := mb.sawWildcardCopy }) := by
-  simp only [buildMapping, initialPasses, copyPass, suffix, bind_assoc, pure_bind]
-  rfl
 
 end Shuffler.BuildMapping.Strategies

@@ -75,6 +75,14 @@ theorem buildMapping_differs_of_sawWildcardCopy (source target : Stack) (dropped
       leave.mapping.symm t = none ∧ take.mapping.symm t = some s :=
   (Strategies.comparison_of_ok source target dropped hleave htake).2.2 hflag
 
+/-- info: 'Shuffler.BuildMapping.MappingBuilder.closestCopy' does not use any opaque or partial definitions -/
+#guard_msgs in
+#print opaques MappingBuilder.closestCopy
+
+/-- info: 'Shuffler.BuildMapping.MappingBuilder.closestCopy' depends on axioms: [propext, Quot.sound] -/
+#guard_msgs in
+#print axioms MappingBuilder.closestCopy
+
 -- Audit the whole function, including the passes and `map`.
 /-- info: 'Shuffler.BuildMapping.buildMapping' does not use any opaque or partial definitions -/
 #guard_msgs in
