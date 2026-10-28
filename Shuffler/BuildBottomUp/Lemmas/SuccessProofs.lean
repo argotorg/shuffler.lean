@@ -117,7 +117,7 @@ theorem loop_success (cursor : ℕ) (state : State source target spills)
     have hs := inv.size
     have hp := state.mapping.complete_of_target_total (by omega) ht
     simp only [hz, ↓reduceIte, requires_of_true _ hp.1, except_ok_bind]
-    rw [requires_of_true (∀ i, (state.destinationOf i).isSome) hp.2, except_ok_bind]
+    rw [requires_of_true (∀ i, (state.mapping.destinationOf i).isSome) hp.2, except_ok_bind]
     obtain ⟨res, trace, heq, _⟩ := Shuffler.Permute.permute_applies_permutation_reachable
       spills state.stack (state.mapping.toPermutation hp.1 hp.2)
       (inv.permutation_reachable hr hp.1 hp.2)
@@ -133,7 +133,7 @@ theorem loop_success (cursor : ℕ) (state : State source target spills)
     obtain ⟨hlt, hnone⟩ := hu.choice (urgent.get hurg.1) (Option.some_get hurg.1).symm
     let u : Fin target.length := ⟨urgent.get hurg.1, hlt⟩
     have hb : state.mapping.symm u = none := by
-      simpa [State.positionOf, hlt, u] using hnone
+      simpa [Mapping.positionOf, hlt, u] using hnone
     have hready : Ready state u := (hu.selected u.val (Option.some_get hurg.1).symm).ready
     apply (generate_reachable state u hb (inv.available u) hr
       (inv.processed.unbound_ge u hb) hready).attach.bind
@@ -148,7 +148,7 @@ theorem loop_success (cursor : ℕ) (state : State source target spills)
   · intro hA hB
     let top : Fin target.length := ⟨state.stack.length, hA.2.2⟩
     have hb : state.mapping.symm top = none := by
-      simpa [State.positionOf, top] using hB.1
+      simpa [Mapping.positionOf, top] using hB.1
     have hn : urgent = none := Option.isNone_iff_eq_none.mp hA.1
     have hready : Ready state top := (hn ▸ hu).ready_none inv.processed hB.2 top
     apply (generate_reachable state top hb (inv.available top) hr
@@ -160,7 +160,7 @@ theorem loop_success (cursor : ℕ) (state : State source target spills)
     have := inv.cursor_le_length hc
     omega
   rw [index_eq dest, except_ok_bind]
-  rcases Option.eq_none_or_eq_some (state.positionOf dest) with hpos | ⟨carrier, hpos⟩
+  rcases Option.eq_none_or_eq_some (state.mapping.positionOf dest) with hpos | ⟨carrier, hpos⟩
   · simp only [hpos]
     have hb : state.mapping.symm dest = none := hpos
     apply (generate_reachable state dest hb (inv.available dest) hr le_rfl

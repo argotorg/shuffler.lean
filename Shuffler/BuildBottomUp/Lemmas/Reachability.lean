@@ -90,7 +90,7 @@ theorem State.withinReach.retag {state : State source target spills}
   refine ⟨h.width, ?_⟩
   intro dest hd
   apply h.copies dest
-  simpa [State.positionOf] using hd
+  simpa [Mapping.positionOf] using hd
 
 theorem State.withinReach.swap {state next : State source target spills}
     (h : state.withinReach cursor) (pos : Fin state.stack.length)

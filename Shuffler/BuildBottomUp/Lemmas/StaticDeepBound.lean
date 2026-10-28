@@ -67,7 +67,7 @@ theorem loop_bound_mismatch_deep_noSuccess_of_reachable (cursor : Nat)
   erw [heq, except_ok_bind]
   simp only [hnotearly, and_false, ↓reduceDIte]
   rw [ite_index_eq_rest (fun hA => hA.2.2) (fun _ hB => hB), index_eq dest, except_ok_bind]
-  have hposition : state.positionOf dest = some carrier := hb
+  have hposition : state.mapping.positionOf dest = some carrier := hb
   simp only [hposition]
   have hslot : slotAt state.stack cursor = .ok state.stack[current] :=
     hcurrent ▸ slotAt_index state.stack current

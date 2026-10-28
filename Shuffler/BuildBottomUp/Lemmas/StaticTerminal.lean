@@ -31,7 +31,7 @@ theorem loop_success_iff_permutation (cursor : Nat) (state : State source target
     have hr : state.reachable := by
       intro j hb
       have ht := (Mapping.unmapped_target_slots_eq_zero state.mapping).mp (inv.pending.trans hp)
-      simp only [State.positionOf] at hb
+      simp only [Mapping.positionOf] at hb
       simpa [hb] using ht j
     have hw : state.stack.length - cursor ≤ MAX_SWAP_DEPTH := by omega
     have hperm := inv.permutation_reachable ⟨hw, hr⟩ hlen hsource
@@ -43,7 +43,7 @@ theorem loop_success_iff_permutation (cursor : Nat) (state : State source target
     exact loop_success_iff_permutation (cursor + 1) state (inv.advance hfinal) hp hlen hsource
   rw [skip_unless_final (fun hlt hf => hnfinal ⟨hlt, hf⟩)]
   simp only [hp, ↓reduceIte, requires_of_true _ hlen, except_ok_bind]
-  rw [requires_of_true (∀ i, (state.destinationOf i).isSome) hsource, except_ok_bind]
+  rw [requires_of_true (∀ i, (state.mapping.destinationOf i).isSome) hsource, except_ok_bind]
   rw [← permute_success_iff spills state.stack (state.mapping.toPermutation hlen hsource)]
   cases heq : Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hlen hsource) with
   | error err => simp [Succeeds]

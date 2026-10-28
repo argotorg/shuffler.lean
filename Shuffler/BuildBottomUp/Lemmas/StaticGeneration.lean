@@ -34,7 +34,7 @@ theorem produce_mapping (state : State source target spills) (dest : Fin target.
     ⦃fun next => ProducedMapping state next dest; (fun _ => True)⦄ := by
   vcgen [State.produce, State.push, State.dup, State.blockDupUnreachable, State.block,
     requires, index]
-  all_goals try simp_all [State.positionOf]
+  all_goals try simp_all [Mapping.positionOf]
   all_goals
     simpa only [eqRec_eq_cast] using producedMapping_append _ _ dest (by assumption) _ _
 

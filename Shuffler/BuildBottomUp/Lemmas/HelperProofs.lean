@@ -21,8 +21,8 @@ structure Growth (state next : State source target spills) (dest : Fin target.le
 
 theorem Growth.top {state next : State source target spills} {dest : Fin target.length}
     (h : Growth state next dest pending) :
-    (next.positionOf dest).map Fin.val = some (next.stack.length - 1) := by
-  rw [State.positionOf, h.bound, h.size]; simp
+    (next.mapping.positionOf dest).map Fin.val = some (next.stack.length - 1) := by
+  rw [Mapping.positionOf, h.bound, h.size]; simp
 
 theorem Growth.decrement {state next : State source target spills} {dest : Fin target.length}
     (h : Growth state next dest pending) :
@@ -68,7 +68,7 @@ private theorem growth_append (state : State source target spills) (slot : Value
     (hfree : state.mapping.symm dest = none) (hslot : slot = target[dest]) :
     ⦃True⦄ state.push slot dest
     ⦃fun next => Growth state next dest state.pending_generations; allowedErrors⦄ := by
-  vcgen [State.push] <;> simp_all [State.positionOf]
+  vcgen [State.push] <;> simp_all [Mapping.positionOf]
   simpa only [eqRec_eq_cast] using growth_append _ slot dest hfree hslot _
 
 @[spec] theorem dup_spec (state : State source target spills) (copy : Fin state.stack.length)
@@ -76,7 +76,7 @@ private theorem growth_append (state : State source target spills) (slot : Value
     (hfree : state.mapping.symm dest = none) (hslot : state.stack[copy] = target[dest]) :
     ⦃True⦄ state.dup copy.val dest
     ⦃fun next => Growth state next dest state.pending_generations; allowedErrors⦄ := by
-  vcgen [State.dup, index] <;> simp_all [State.positionOf]
+  vcgen [State.dup, index] <;> simp_all [Mapping.positionOf]
   simpa only [eqRec_eq_cast] using growth_append _ _ dest hfree hslot _
 
 @[spec] theorem produce_spec (state : State source target spills) (dest : Fin target.length)
@@ -114,14 +114,14 @@ structure Generation (state next : State source target spills) (dest : Fin targe
 theorem Growth.generation {state next : State source target spills} {dest : Fin target.length}
     (h : Growth state next dest (state.pending_generations - 1)) : Generation state next dest :=
   ⟨Or.inl h.stack_eq, h.unbound, h.size, h.count, h.pending_eq, h.preserved, h.subset, h.expected,
-    Or.inr (by simpa [State.positionOf, dest.isLt] using h.top)⟩
+    Or.inr (by simpa [Mapping.positionOf, dest.isLt] using h.top)⟩
 
 theorem Growth.generation_swapped {state produced next : State source target spills}
     {dest : Fin target.length} (h : Growth state produced dest (state.pending_generations - 1))
     (hbound : state.mapping.symm dest = none) (pos : Fin produced.stack.length)
     (hpos : pos.val = dest.val) (hs : Swapped produced next pos) : Generation state next dest := by
   have htop : (produced.mapping.symm dest).map Fin.val = some (produced.stack.length - 1) := by
-    simpa [State.positionOf, dest.isLt] using h.top
+    simpa [Mapping.positionOf, dest.isLt] using h.top
   refine ⟨Or.inr ?_, fun j => (hs.unbound j).trans (h.unbound j),
     hs.size.trans h.size, by rw [hs.count]; exact h.count,
     hs.pending.trans h.pending_eq, ?_, (fun _ hi => hs.subset (h.subset hi)), hs.expected.trans h.expected,

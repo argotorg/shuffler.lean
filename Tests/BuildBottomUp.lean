@@ -9,13 +9,13 @@ example (state : State source target spills) (slot : Value) (dest : Fin target.l
     (hgen : slot.can_be_freely_generated ∨ spills.is_spilled slot)
     (hdest : state.mapping.symm dest = none) :
     (state.push slot dest).map (·.pending_generations) = .ok state.pending_generations := by
-  cases slot <;> simp [State.push, State.positionOf, requires, hdest, hgen] <;> rfl
+  cases slot <;> simp [State.push, Mapping.positionOf, requires, hdest, hgen] <;> rfl
 
 example (state : State source target spills) (copy : Fin state.stack.length)
     (dest : Fin target.length) (hdup : state.stack.isDupReachable copy)
     (hdest : state.mapping.symm dest = none) :
     (state.dup copy.val dest).map (·.pending_generations) = .ok state.pending_generations := by
-  simp [State.dup, State.positionOf, index, copy.isLt, requires, hdest, hdup]
+  simp [State.dup, Mapping.positionOf, index, copy.isLt, requires, hdest, hdup]
   rfl
 
 -- Pushing a spilled variable records a load and keeps the previous trace.
@@ -24,7 +24,7 @@ example (state : State source target spills) (id : VarId) (dest : Fin target.len
     (state.push (.Var id) dest).map
       (fun next => (⟨next.stack, next.trace⟩ : (res : Stack) × Trace spills source res)) =
       .ok ⟨state.stack ++ [.Var id], Trace.Load id hspilled state.trace⟩ := by
-  simp [State.push, State.positionOf, requires, hdest, SpillSet.is_spilled, hspilled]
+  simp [State.push, Mapping.positionOf, requires, hdest, SpillSet.is_spilled, hspilled]
   rfl
 
 -- Literals and wildcards record pushes.
@@ -33,7 +33,7 @@ example (state : State source target spills) (word : Word) (dest : Fin target.le
     (state.push (.Lit word) dest).map
       (fun next => (⟨next.stack, next.trace⟩ : (res : Stack) × Trace spills source res)) =
       .ok ⟨state.stack ++ [.Lit word], Trace.Push (.Lit word) (by simp [Value.can_be_freely_generated]) state.trace⟩ := by
-  simp [State.push, State.positionOf, requires, hdest, Value.can_be_freely_generated]
+  simp [State.push, Mapping.positionOf, requires, hdest, Value.can_be_freely_generated]
   rfl
 
 example (state : State source target spills) (dest : Fin target.length)
@@ -41,7 +41,7 @@ example (state : State source target spills) (dest : Fin target.length)
     (state.push .Wildcard dest).map
       (fun next => (⟨next.stack, next.trace⟩ : (res : Stack) × Trace spills source res)) =
       .ok ⟨state.stack ++ [.Wildcard], Trace.Push .Wildcard (by decide) state.trace⟩ := by
-  simp [State.push, State.positionOf, requires, hdest, Value.can_be_freely_generated]
+  simp [State.push, Mapping.positionOf, requires, hdest, Value.can_be_freely_generated]
   rfl
 
 private def emptyState (target : Stack) (spills : SpillSet) : State [] target spills where

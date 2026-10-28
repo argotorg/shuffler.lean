@@ -19,13 +19,13 @@ theorem copy_offset_lt
   exact List.mem_range.mp (List.mem_reverse.mp (List.mem_of_mem_take hmem))
 
 def UrgentChoice (state : State source target spills) (choice : Option ℕ) : Prop :=
-  ∀ offset, choice = some offset → ∃ h : offset < target.length, state.positionOf ⟨offset, h⟩ = none
+  ∀ offset, choice = some offset → ∃ h : offset < target.length, state.mapping.positionOf ⟨offset, h⟩ = none
 
 @[spec] theorem urgentScan_triple (cursor : ℕ) (state : State source target spills) :
     ⦃True⦄ (do
       let mut urgent := none
       for offset in [cursor : target.length] do
-        if (state.positionOf (← index target.length offset)).isSome then
+        if (state.mapping.positionOf (← index target.length offset)).isSome then
           continue
         let slot ← slotAt target offset
         if slot.is_junk ∨ slot.can_be_freely_generated ∨ spills.is_spilled slot then

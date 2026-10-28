@@ -27,7 +27,7 @@ theorem urgentScan_reachable_on_success (cursor : Nat) (state : State source tar
     ⦃True⦄ (do
       let mut urgent := none
       for offset in [cursor : target.length] do
-        if (state.positionOf (← index target.length offset)).isSome then
+        if (state.mapping.positionOf (← index target.length offset)).isSome then
           continue
         let slot ← slotAt target offset
         if slot.is_junk ∨ slot.can_be_freely_generated ∨ spills.is_spilled slot then
@@ -51,7 +51,7 @@ theorem urgentScan_reachable_on_success (cursor : Nat) (state : State source tar
     target[j.val].can_be_freely_generated ∨ SpillSet.is_spilled spills target[j.val] ∨
       Stack.hasCopy state.stack target[j.val]) j hj hb
   all_goals subst_vars
-  case vc3.inr => simp_all [State.positionOf]
+  case vc3.inr => simp_all [Mapping.positionOf]
   case vc4.inr =>
     rcases (by assumption : target[j].is_junk ∨ target[j].can_be_freely_generated ∨ SpillSet.is_spilled spills target[j]) with hjunk | hfree | hspill
     · exact Or.inl (Value.can_be_freely_generated_of_is_junk _ hjunk)

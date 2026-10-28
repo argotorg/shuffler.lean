@@ -57,7 +57,7 @@ theorem PrefixState.copies_iff {initial state : State source target spills} {h :
 
 theorem PrefixState.ready_iff {initial state : State source target spills} {h : initial.Valid}
     (hp : PrefixState initial h cursor state) : Ready initial cursor ↔ state.reachable := by
-  simp only [Ready, State.reachable, State.isReachable, State.positionOf, mem_holes, ← hp.copies_iff, hp.unbound]
+  simp only [Ready, State.reachable, State.isReachable, Mapping.positionOf, mem_holes, ← hp.copies_iff, hp.unbound]
   constructor
   · intro hs j ⟨hb, hc⟩
     exact hs j hb hc

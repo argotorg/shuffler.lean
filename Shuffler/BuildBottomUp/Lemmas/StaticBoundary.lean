@@ -247,7 +247,7 @@ theorem loop_bound_mismatch_boundary_success_iff (cursor : Nat)
   erw [heq, except_ok_bind]
   simp only [hnotearly, and_false, ↓reduceDIte]
   rw [ite_index_eq_rest (fun hA => hA.2.2) (fun _ hB => hB), index_eq dest, except_ok_bind]
-  have hposition : state.positionOf dest = some carrier := hb
+  have hposition : state.mapping.positionOf dest = some carrier := hb
   simp only [hposition]
   have hslot : slotAt state.stack cursor = .ok state.stack[current] :=
     hcurrent ▸ slotAt_index state.stack current
@@ -287,7 +287,7 @@ theorem loop_bound_mismatch_boundary_success_iff (cursor : Nat)
     · change state.stack.length - (cursor + 1) ≤ MAX_SWAP_DEPTH
       omega
     · intro j hj
-      exact hr j (by simpa [retag, State.positionOf] using hj)
+      exact hr j (by simpa [retag, Mapping.positionOf] using hj)
   by_cases hnotTop : pos.val ≠ retag.stack.length - 1
   · dsimp +zetaDelta only at hnotTop
     simp only [ne_eq, hnotTop, not_false_eq_true, ↓reduceIte]
@@ -396,7 +396,7 @@ theorem loop_bound_boundary_success_iff (cursor : Nat)
       · change state.stack.length - (cursor + 1) ≤ MAX_SWAP_DEPTH
         omega
       · intro j hj
-        exact hr j (by simpa [next, State.positionOf] using hj)
+        exact hr j (by simpa [next, Mapping.positionOf] using hj)
     · exact (loop_bound_mismatch_boundary_success_iff cursor state inv hr hw
         hpending hc current hcurrent carrier hb hv).mpr (hsafe.resolve_left hv)
 

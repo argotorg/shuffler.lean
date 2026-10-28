@@ -54,7 +54,7 @@ theorem copies_zero_pos_iff (initial : State source target spills) (value : Valu
 
 theorem ready_zero_iff (initial : State source target spills) :
     Ready initial 0 ↔ initial.reachable := by
-  simp [Ready, State.reachable, State.isReachable, State.positionOf, copies_zero_pos_iff]
+  simp [Ready, State.reachable, State.isReachable, Mapping.positionOf, copies_zero_pos_iff]
 
 end Success
 

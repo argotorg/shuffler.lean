@@ -44,7 +44,7 @@ theorem loop_equal_bound_eq (cursor : Nat) (state : State source target spills)
   simp only [hnotearly, and_false, ↓reduceDIte]
   rw [ite_index_eq_rest (fun hA => hA.2.2) (fun _ hB => hB),
     index_eq ⟨cursor, hc⟩, except_ok_bind]
-  have hposition : state.positionOf ⟨cursor, hc⟩ = some carrier := hb
+  have hposition : state.mapping.positionOf ⟨cursor, hc⟩ = some carrier := hb
   simp only [hposition]
   subst hcurrent
   rw [requires_of_true _ hge, except_ok_bind, slotAt_index state.stack current,
@@ -92,7 +92,7 @@ theorem loop_hole_eq_of_generate_final (cursor : Nat) (state next : State source
   erw [heq, except_ok_bind]
   simp only [hnotearly, and_false, ↓reduceDIte]
   rw [ite_index_eq_rest (fun hA => hA.2.2) (fun _ hB => hB), index_eq ⟨cursor, hc⟩, except_ok_bind]
-  have hposition : state.positionOf ⟨cursor, hc⟩ = none := hb
+  have hposition : state.mapping.positionOf ⟨cursor, hc⟩ = none := hb
   simp only [hposition]
   rw [hg, except_ok_bind]
   have hlt := hf.1
@@ -119,7 +119,7 @@ theorem loop_hole_blocks_of_generate_deep (cursor : Nat) (state next : State sou
   erw [heq, except_ok_bind]
   simp only [hnotearly, and_false, ↓reduceDIte]
   rw [ite_index_eq_rest (fun hA => hA.2.2) (fun _ hB => hB), index_eq ⟨cursor, hc⟩, except_ok_bind]
-  have hposition : state.positionOf ⟨cursor, hc⟩ = none := hb
+  have hposition : state.mapping.positionOf ⟨cursor, hc⟩ = none := hb
   simp only [hposition]
   rw [hg, except_ok_bind]
   subst hpos

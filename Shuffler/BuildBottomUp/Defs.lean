@@ -58,7 +58,7 @@ structure State.invariant (targetOffset : ℕ) (state : State source target spil
 
 -- Every target offset that no slot is bound to is reachable.
 def State.reachable (state : State source target spills) : Prop :=
-  ∀ dest, state.positionOf dest = none → state.isReachable dest
+  ∀ dest, state.mapping.positionOf dest = none → state.isReachable dest
 
 -- The slots from `cursor` up are within SWAP reach, and the state is reachable.
 structure State.withinReach (cursor : ℕ) (state : State source target spills) : Prop where
@@ -98,7 +98,7 @@ def State.produce (current : State source target spills)
   else
     throw (.assertion "generated slot has no copy on the stack and is not spilled")
 
-  _ ← requires ((state.positionOf targetOffset).map Fin.val = some (state.stack.length - 1)) "generated slot is not bound to the top"
+  _ ← requires ((state.mapping.positionOf targetOffset).map Fin.val = some (state.stack.length - 1)) "generated slot is not bound to the top"
   return { state with pending_generations := state.pending_generations - 1 }
 
 -- Produces the slot for `targetOffset` and moves it toward its place right away: if the offset exists
@@ -170,7 +170,7 @@ where
     -- all is generated, the final permutation
     if state.pending_generations = 0 then do
       let ⟨hlen⟩ ← requires (state.stack.length = target.length) "working stack does not match target size"
-      let ⟨hbound⟩ ← requires (∀ i, (state.destinationOf i).isSome) "unmapped source slots"
+      let ⟨hbound⟩ ← requires (∀ i, (state.mapping.destinationOf i).isSome) "unmapped source slots"
 
       -- every slot goes to the offset it is bound for
       let ⟨res, trace⟩ ←
@@ -182,7 +182,7 @@ where
     for offset in [targetOffset : target.length] do -- going bottom-up so we can start from targetOffset
 
       -- only offsets no slot is bound for yet (ie that need to be duped) can be urgent
-      if (state.positionOf (← index target.length offset)).isSome then
+      if (state.mapping.positionOf (← index target.length offset)).isSome then
         continue
 
       let slot ← slotAt target offset
@@ -212,7 +212,7 @@ where
        sourceTop > targetOffset ∧ -- the new top sits above the current targetOffset
        sourceTop < target.length -- the new top is in the target offset range
       then
-      if (state.positionOf (← index target.length sourceTop)).isNone ∧ -- no slot is bound for the offset at the source top yet
+      if (state.mapping.positionOf (← index target.length sourceTop)).isNone ∧ -- no slot is bound for the offset at the source top yet
          sourceTop - targetOffset < MAX_SWAP_DEPTH -- targetOffset stays in swap reach
       then
         -- we generate the slot demanded at source top
@@ -221,7 +221,7 @@ where
         return ← loop targetOffset next
 
     -- a slot is bound for the target: retained or generated already
-    if let some boundForTarget := state.positionOf (← index target.length targetOffset) then
+    if let some boundForTarget := state.mapping.positionOf (← index target.length targetOffset) then
 
       -- We go bottom-up, so the slot that should go into targetOffset is somewhere above
       -- Any equal slot that is not in place will do the trick: the one at `targetOffset` itself, else the shallowest one

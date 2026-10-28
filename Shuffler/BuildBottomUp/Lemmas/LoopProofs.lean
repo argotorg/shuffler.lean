@@ -97,7 +97,7 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
     have hs := inv.size
     have hp := state.mapping.complete_of_target_total (by omega) ht
     simp only [hz, ↓reduceIte, requires_of_true _ hp.1, except_ok_bind]
-    rw [requires_of_true (∀ i, (state.destinationOf i).isSome) hp.2, except_ok_bind]
+    rw [requires_of_true (∀ i, (state.mapping.destinationOf i).isSome) hp.2, except_ok_bind]
     cases hperm : Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hp.1 hp.2) with
     | error err =>
       cases err with
@@ -118,7 +118,7 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
     obtain ⟨hlt, hnone⟩ := hu (urgent.get hurg.1) (Option.some_get hurg.1).symm
     let u : Fin target.length := ⟨urgent.get hurg.1, hlt⟩
     have hb : state.mapping.symm u = none := by
-      simpa [State.positionOf, hlt, u] using hnone
+      simpa [Mapping.positionOf, hlt, u] using hnone
     apply (generate_contract state u hb (inv.available u)).attach.bind
     intro next hgen
     exact retry _ (hgen.invariant inv) (hgen.decreases inv) hgen.expected
@@ -127,12 +127,12 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
   · intro _ hB
     let top : Fin target.length := ⟨state.stack.length, by omega⟩
     have hb : state.mapping.symm top = none := by
-      simpa [State.positionOf, top] using hB.1
+      simpa [Mapping.positionOf, top] using hB.1
     apply (generate_contract state top hb (inv.available top)).attach.bind
     intro next hgen
     exact retry _ (hgen.invariant inv) (hgen.decreases inv) hgen.expected
   rw [index_eq dest, except_ok_bind]
-  rcases Option.eq_none_or_eq_some (state.positionOf dest) with hpos | ⟨carrier, hpos⟩
+  rcases Option.eq_none_or_eq_some (state.mapping.positionOf dest) with hpos | ⟨carrier, hpos⟩
   · simp only [hpos]
     have hb : state.mapping.symm dest = none := hpos
     apply (generate_contract state dest hb (inv.available dest)).bind

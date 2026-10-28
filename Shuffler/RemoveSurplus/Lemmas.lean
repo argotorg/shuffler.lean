@@ -17,7 +17,7 @@ def State.noSurplus (state : State source target spills) : Prop :=
 
 -- The value of the slot bound for target offset `dest`, or none if no slot is bound for it.
 def State.boundValue (state : State source target spills) (dest : Fin target.length) : Option Value :=
-  (state.positionOf dest).map fun pos => state.stack[pos]
+  (state.mapping.positionOf dest).map fun pos => state.stack[pos]
 
 -- The top slot, if any, has no destination.
 def State.topSurplus (state : State source target spills) : Prop :=
@@ -32,7 +32,7 @@ theorem boundValue_swap (state : State source target spills) (a b : Fin state.st
       mapping := List.length_swap.symm ▸ state.mapping.swapDestinations a b
     }.boundValue = state.boundValue := by
   funext dest
-  simp only [State.boundValue, State.positionOf, Mapping.cast_symm, Mapping.swapDestinations_symm_apply,
+  simp only [State.boundValue, Mapping.positionOf, Mapping.cast_symm, Mapping.swapDestinations_symm_apply,
     Option.map_map]
   cases state.mapping.symm dest with
   | none => rfl
@@ -53,7 +53,7 @@ theorem topSurplus_swap (state : State source target spills) (pos : Fin state.st
       trace := trace
       mapping := List.length_swap.symm ▸ state.mapping.swapDestinations pos ⟨_, htop⟩ } := by
   intro h
-  simp only [State.isSurplus, State.destinationOf, Mapping.cast_apply, Mapping.swapDestinations_apply]
+  simp only [State.isSurplus, Mapping.destinationOf, Mapping.cast_apply, Mapping.swapDestinations_apply]
   have : (Fin.cast List.length_swap.symm.symm ⟨(state.stack.swap pos (state.stack.length - 1)).length - 1, h⟩ :
       Fin state.stack.length) = ⟨_, htop⟩ := Fin.ext (by simp)
   rw [this, Equiv.swap_apply_right]
@@ -65,7 +65,7 @@ theorem boundValue_retag (state : State source target spills) (a b : Fin state.s
     (heq : state.stack[a] = state.stack[b]) :
     { state with mapping := state.mapping.swapDestinations a b }.boundValue = state.boundValue := by
   funext dest
-  simp only [State.boundValue, State.positionOf, Mapping.swapDestinations_symm_apply, Option.map_map]
+  simp only [State.boundValue, Mapping.positionOf, Mapping.swapDestinations_symm_apply, Option.map_map]
   cases state.mapping.symm dest with
   | none => rfl
   | some pos =>
@@ -80,7 +80,7 @@ theorem topSurplus_retag (state : State source target spills) (a : Fin state.sta
     (ha : state.isSurplus a) (htop : state.stack.length - 1 < state.stack.length) :
     State.topSurplus { state with mapping := state.mapping.swapDestinations a ⟨_, htop⟩ } := by
   intro _
-  simp only [State.isSurplus, State.destinationOf, Mapping.swapDestinations_apply,
+  simp only [State.isSurplus, Mapping.destinationOf, Mapping.swapDestinations_apply,
     Equiv.swap_apply_right]
   exact ha
 
@@ -96,13 +96,13 @@ theorem boundValue_pop (state : State source target spills) (hne : 0 < state.sta
   have hfree : (hlen ▸ state.mapping) (Fin.last state.stack.dropLast.length) = none := by
     rw [Mapping.cast_apply]
     have := htop (by omega)
-    simp only [State.isSurplus, State.destinationOf] at this
+    simp only [State.isSurplus, Mapping.destinationOf] at this
     convert this using 2
     ext; simp
   funext dest
   have hkeep := Mapping.pop_symm_of_top_none _ hfree dest
   rw [Mapping.cast_symm] at hkeep
-  simp only [State.boundValue, State.positionOf]
+  simp only [State.boundValue, Mapping.positionOf]
   cases hq : (hlen ▸ state.mapping).pop.symm dest with
   | none =>
     rw [hq] at hkeep

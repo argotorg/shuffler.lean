@@ -9,7 +9,7 @@ namespace Shuffler.Emission
 
 def Urgent (cursor : ℕ) (state : State source target spills) (offset : ℕ) : Prop :=
   ∃ h : offset < target.length,
-    state.positionOf ⟨offset, h⟩ = none ∧
+    state.mapping.positionOf ⟨offset, h⟩ = none ∧
     ¬target[offset].can_be_freely_generated ∧ ¬spills.is_spilled target[offset] ∧
     ∃ copy, state.stack.shallowestCopyPosition target[offset] = some copy ∧
       (state.stack.offsetToDepth copy).val = MAX_DUP_DEPTH ∧ copy.val ≠ cursor
@@ -74,7 +74,7 @@ theorem ScanProgress.no_urgent {state : State source target spills}
     have := j.isLt
     exact ⟨j.val - cursor, by omega, by omega⟩
   have hu : Urgent cursor state j.val :=
-    ⟨j.isLt, by simp [State.positionOf, hb], hfree, hspill, copy, hcopy, hdepth, hn⟩
+    ⟨j.isLt, by simp [Mapping.positionOf, hb], hfree, hspill, copy, hcopy, hdepth, hn⟩
   exact Bool.noConfusion (h.covered j.val hm hu)
 
 theorem ScanProgress.ready_none {state : State source target spills}
@@ -120,7 +120,7 @@ theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
     ⦃True⦄ (do
       let mut urgent := none
       for offset in [cursor : target.length] do
-        if (state.positionOf (← index target.length offset)).isSome then
+        if (state.mapping.positionOf (← index target.length offset)).isSome then
           continue
         let slot ← slotAt target offset
         if slot.is_junk ∨ slot.can_be_freely_generated ∨ spills.is_spilled slot then

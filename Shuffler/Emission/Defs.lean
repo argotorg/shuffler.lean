@@ -58,17 +58,6 @@ def State.depthOf (state : State source target spills) (offset : Fin state.stack
 --- Queries ----------------------------------------------------------------------------------------
 
 
--- The destination of the slot at `offset`: the target offset it is bound for, or none for a surplus slot.
--- Whether absence is expected is the caller's business - after `removeSurplus` every slot has one.
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:729-732.
-def State.destinationOf (state : State source target spills) (offset : Fin state.stack.length) : Option (Fin target.length) :=
-  state.mapping offset
-
--- The position of the slot bound for `offset`, or none if no slot is bound for it
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:84-87.
-def State.positionOf (state : State source target spills) (offset : Fin target.length) : Option (Fin state.stack.length) :=
-  state.mapping.symm offset
-
 -- Whether a swap can reach the slot at `offset`; trivially true for the top itself
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:747-750.
 def State.isSwapReachable (state : State source target spills) (offset : Fin state.stack.length) : Prop :=
@@ -80,7 +69,7 @@ instance (state : State source target spills) (offset : Fin state.stack.length) 
 -- Whether the slot at `pos` is bound for `pos` itself, i.e., already is at its final target offset
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:735-738.
 def State.isFinal (state : State source target spills) (pos : Fin state.stack.length) : Prop :=
-  (state.destinationOf pos).map Fin.val = some pos.val
+  (state.mapping.destinationOf pos).map Fin.val = some pos.val
 
 instance (state : State source target spills) (pos : Fin state.stack.length) :
     Decidable (state.isFinal pos) := by unfold State.isFinal; infer_instance
@@ -88,7 +77,7 @@ instance (state : State source target spills) (pos : Fin state.stack.length) :
 -- Whether the slot at `pos` has no target offset to go to and is to be popped
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:733-736 (at 6db6505).
 def State.isSurplus (state : State source target spills) (pos : Fin state.stack.length) : Prop :=
-  state.destinationOf pos = none
+  state.mapping.destinationOf pos = none
 
 instance (state : State source target spills) (pos : Fin state.stack.length) :
     Decidable (state.isSurplus pos) := by unfold State.isSurplus; infer_instance
@@ -120,7 +109,7 @@ def State.blockDupUnreachable (state : State source target spills) (pos : Fin st
 def State.push (state : State source target spills)
     (slot : Value) (dest : Fin target.length) : Except ShuffleErr (State source target spills) := do
 
-  let ⟨hbound⟩ ← requires (state.positionOf dest = none) "destination already bound to a slot"
+  let ⟨hbound⟩ ← requires (state.mapping.positionOf dest = none) "destination already bound to a slot"
   let ⟨hgen⟩ ← requires (slot.can_be_freely_generated ∨ spills.is_spilled slot) "pushed slot cannot be generated or loaded"
 
   return {
@@ -141,7 +130,7 @@ def State.dup (state : State source target spills)
   let copy ← index state.stack.length offset
   let depth := state.stack.offsetToDepth copy
 
-  let ⟨hbound⟩ ← requires (state.positionOf dest = none) "destination already bound to a slot"
+  let ⟨hbound⟩ ← requires (state.mapping.positionOf dest = none) "destination already bound to a slot"
   let ⟨hdup⟩ ← requires (state.stack.isDupReachable copy) "Stack too deep"
 
   return {

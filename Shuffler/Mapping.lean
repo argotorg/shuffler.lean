@@ -10,6 +10,15 @@ namespace Mapping
 
 variable {source_len target_len : ℕ}
 
+-- The destination of the slot at `offset`: the target offset it is bound for, or none for a surplus slot.
+-- Whether absence is expected is the caller's business - after `removeSurplus` every slot has one.
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:729-732.
+def destinationOf (mapping : Mapping source_len target_len) (offset : Fin source_len) : Option (Fin target_len) := mapping offset
+
+-- The position of the slot bound for `offset`, or none if no slot is bound for it
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:84-87.
+def positionOf (mapping : Mapping source_len target_len) (offset : Fin target_len) : Option (Fin source_len) := mapping.symm offset
+
 -- pop removes the top source position and its binding, if any; all other bindings stay unchanged.
 def pop : (mapping : Mapping (source_len + 1) target_len) → Mapping source_len target_len
 | ⟨toFun, invFun, hinv⟩ => by
