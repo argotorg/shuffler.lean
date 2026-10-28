@@ -1,0 +1,18 @@
+diff --git a/registers.sail b/registers.sail
+index 5da16f7..cf7a103 100644
+--- a/registers.sail
++++ b/registers.sail
+@@ -171 +171,3 @@ val update_aux_carry_flag_sub: forall 'm, 'm >= 4. (bits('m), bits('m)) -> unit
+-function update_aux_carry_flag_sub(first, second) = update_carry_flag_sub(first[3..0], second[3..0])
++function update_aux_carry_flag_sub(first, second) = {
++    rflags[AF] = if unsigned(first[3..0]) < unsigned(second[3..0]) then 0b1 else 0b0;
++}
+@@ -174 +176,3 @@ val update_aux_carry_flag_add: forall 'm, 'm >= 4. (bits('m), bits('m)) -> unit
+-function update_aux_carry_flag_add(first, second) = update_carry_flag_add(first[3..0], second[3..0])
++function update_aux_carry_flag_add(first, second) = {
++    rflags[AF] = if unsigned(first[3..0]) + unsigned(second[3..0]) > 15 then 0b1 else 0b0;
++}
+@@ -214 +218 @@ function update_rflags_add(first, second, result) = {
+-}
+\ No newline at end of file
++}

@@ -1,0 +1,8 @@
+diff --git a/ArchSemX86/X86Inst.v b/ArchSemX86/X86Inst.v
+--- a/ArchSemX86/X86Inst.v
++++ b/ArchSemX86/X86Inst.v
+@@ -81 +81,3 @@
+-Module IMonFromSail := IMonFromSail SA SI ArchExtra Arch X86.Interface.
++Module IMonFromSail.
++  Include FromSail.IMonFromSail SA SI ArchExtra Arch X86.Interface.
++End IMonFromSail.

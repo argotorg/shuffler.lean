@@ -1,0 +1,22 @@
+diff --git a/decode.sail b/decode.sail
+index c26097a..320d9eb 100644
+--- a/decode.sail
++++ b/decode.sail
+@@ -20,0 +21 @@ union ast = {
++    JMP32: imm32, // near relative jump in 64-bit mode
+diff --git a/tiny-x86.sail b/tiny-x86.sail
+index 566ac46..b0d6f74 100644
+--- a/tiny-x86.sail
++++ b/tiny-x86.sail
+@@ -930,0 +931,11 @@ function clause execute(JMP(rel8)) = {
++function clause execute(JMP32(rel32)) = {
++    let displacement = sail_sign_extend(rel32, 64);
++    rip = rip + displacement;
++}
++
++function clause decode_one_byte_instruction(0xE9, instruction_ptr, read_offset, decoded_prefixes) = {
++    fail_if_lock(decoded_prefixes.lock, "JMP");
++    let operand = read_memory(4, instruction_ptr + read_offset, create_iFetchAccessDescriptor());
++    Some(read_offset + 4, JMP32(operand))
++}
++
