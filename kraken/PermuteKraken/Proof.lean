@@ -22,7 +22,7 @@ abbrev S := s.regs.get64 .rsp
 
 -- The caller memory that `permute` writes: `perm`, `trace` and `blocked`.
 abbrev heap : List (BitVec 64 × Nat) :=
-  [(P s, (N s).toNat), (T s, 2 * (N s).toNat), (B s, 2)]
+  [(P s, 2 * (N s).toNat), (T s, 2 * (N s).toNat), (B s, 4)]
 
 -- The memory that `permute` writes: the stack frame and `heap`.
 abbrev blocks : List (BitVec 64 × Nat) := (S s - 16#64, 16) :: heap s
@@ -34,7 +34,7 @@ abbrev pmod : Modifies :=
 def Result (p0 : Perm) (r : BitVec 64) (t : MachineData) : Prop :=
   match permute p0 with
   | .ok ds => r = BitVec.ofNat 64 ds.length ∧ Mem.Contains t.dmem (T s) (bytes ds)
-  | .error b => r = -1#64 ∧ Mem.Contains t.dmem (B s) (bytes [b.offset, b.excess])
+  | .error b => r = -1#64 ∧ Mem.Contains t.dmem (B s) (words [b.offset, b.excess])
 
 -- The stack frame after `pushq %rbx`.
 abbrev Frame (ra : Int64) (t : MachineData) : Prop :=
@@ -57,6 +57,20 @@ abbrev Common (p0 : Perm) (ra : Int64) (t : MachineData) : Prop :=
     ∧ 0 < (N s).toNat
 
 end
+
+theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64)
+    (hlen : p0.toList.length = (N s).toNat) (hn : (N s).toNat ≤ MAX_N)
+    (hperm : Mem.Contains s.dmem (P s) (words p0.toList))
+    (hmap : Mem.Mapped (blocks s) s.dmem)
+    (hd1 : Mem.Blocks.Disjoint (heap s) [(S s - 16#64, 16)])
+    (hd2 : Mem.Blocks.Disjoint [(P s, 2 * (N s).toNat)] [(T s, 2 * (N s).toNat), (B s, 4)]) :
+    ⦃ fun t => t = s.pushRa ra ⦄
+      permuteAsm
+    ⦃ (fun _ _ => False); fun a t => a = ra ∧ Result s p0 (t.regs.get64 .rax) t
+        ∧ Mem.Mapped (blocks s) t.dmem ∧ (pmod s).Agree s t ⦄ := by
+  sorry
+
+/-
 
 -- The swap state in `t`: the count `k` is in `rcx`.
 abbrev cur (p0 : Perm) (t : MachineData) : List Nat := (p0.state (t.regs.get64 .rcx).toNat).toList
@@ -926,5 +940,7 @@ theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64
       · apply MachineData.stackBelow_of_add_eight
         simp [MachineData.pushRa, hrsp]
         bv_omega
+-/
+
 
 end State

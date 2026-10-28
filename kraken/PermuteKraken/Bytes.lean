@@ -1,15 +1,26 @@
 /-
-Memory lemmas for byte arrays that hold lists of small numbers.
+Memory lemmas for byte and word arrays that hold lists of small numbers.
 -/
 import Kraken.StateCfg
 import Kraken.SeparationMem
 
 namespace PermuteKraken
 
+-- The bound on `n` in `c/permute.c`: the EVM stack limit.
+def MAX_N : Nat := 1024
+
 -- The bytes of a list of numbers below 256.
 def bytes (l : List Nat) : List UInt8 := l.map Nat.toUInt8
 
+-- The bytes of a list of numbers below 65536, two bytes for each (`uint16_t`, little endian).
+def words (l : List Nat) : List UInt8 := l.flatMap fun x => [x.toUInt8, (x / 256).toUInt8]
+
 theorem length_bytes (l : List Nat) : (bytes l).length = l.length := by simp [bytes]
+
+theorem length_words (l : List Nat) : (words l).length = 2 * l.length := by
+  induction l with
+  | nil => rfl
+  | cons x l ih => simp [words] at ih ⊢; omega
 
 theorem bytes_append (l l' : List Nat) : bytes (l ++ l') = bytes l ++ bytes l' := by
   simp [bytes]

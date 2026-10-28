@@ -8,10 +8,10 @@
  * the number of swaps. If a swap is deeper than MAX_SWAP_DEPTH, permute writes
  * the offset and the excess of that swap to blocked and returns -1.
  *
- * n <= 256, perm holds a permutation of 0 .. n - 1, trace has room for 2n
- * bytes, and blocked has room for 2 bytes.
+ * n <= 1024, perm holds a permutation of 0 .. n - 1 (n words), trace has room
+ * for 2n bytes, and blocked has room for 2 words.
  */
-int64_t permute(uint64_t n, uint8_t *perm, uint8_t *trace, uint8_t *blocked)
+int64_t permute(uint64_t n, uint16_t *perm, uint8_t *trace, uint16_t *blocked)
 {
 	if (n == 0)
 		return 0;
@@ -34,7 +34,7 @@ int64_t permute(uint64_t n, uint8_t *perm, uint8_t *trace, uint8_t *blocked)
 			return -1;
 		}
 		trace[k++] = idx;
-		uint8_t tmp = perm[top];
+		uint16_t tmp = perm[top];
 		perm[top] = perm[pos];
 		perm[pos] = tmp;
 	}

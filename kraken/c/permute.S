@@ -11,46 +11,46 @@ permute:
 	movq	%rsi, %r9
 	movq	%rdx, %r11
 	leaq	-1(%rdi), %r10
-	leaq	(%rsi,%r10), %rdi
+	leaq	(%rsi,%r10,2), %rdi
 	jmp	.L7
 .L13:
-	cmpq	%rdx, %rsi
+	cmpq	%rax, %rsi
 	je	.L1
-	movq	%rsi, %rax
+	movq	%rsi, %rdx
 	.p2align 6
 .L3:
-	movq	%r10, %rdx
-	subq	%rax, %rdx
-	cmpq	$16, %rdx
+	movq	%r10, %rax
+	subq	%rdx, %rax
+	cmpq	$16, %rax
 	ja	.L12
 	addq	$1, %rcx
-	movb	%dl, -1(%r11,%rcx)
-	movzbl	(%rdi), %edx
-	addq	%r9, %rax
-	movzbl	(%rax), %esi
-	movb	%sil, (%rdi)
-	movb	%dl, (%rax)
+	movb	%al, -1(%r11,%rcx)
+	movzwl	(%rdi), %esi
+	leaq	(%r9,%rdx,2), %rax
+	movzwl	(%rax), %edx
+	movw	%dx, (%rdi)
+	movw	%si, (%rax)
 .L7:
-	movzbl	(%rdi), %eax
-	cmpq	%rax, %r10
+	movzwl	(%rdi), %edx
+	cmpq	%rdx, %r10
 	jne	.L3
-	testq	%rax, %rax
+	testq	%rdx, %rdx
 	je	.L1
-	movq	%rax, %rsi
-	movl	$0, %edx
+	movq	%rdx, %rsi
+	movl	$0, %eax
 	.p2align 5
 .L5:
-	movzbl	(%r9,%rdx), %r8d
-	cmpq	%rdx, %r8
-	cmovne	%rdx, %rsi
-	addq	$1, %rdx
-	cmpq	%rdx, %rax
+	movzwl	(%r9,%rax,2), %r8d
+	cmpq	%rax, %r8
+	cmovne	%rax, %rsi
+	addq	$1, %rax
+	cmpq	%rax, %rdx
 	jne	.L5
 	jmp	.L13
 .L12:
-	movb	%al, (%rbx)
-	subl	$16, %edx
-	movb	%dl, 1(%rbx)
+	movw	%dx, (%rbx)
+	subl	$16, %eax
+	movw	%ax, 2(%rbx)
 	movq	$-1, %rcx
 .L1:
 	movq	%rcx, %rax
