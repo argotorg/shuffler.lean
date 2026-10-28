@@ -545,7 +545,8 @@ theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64
     (hd2 : Mem.Blocks.Disjoint [(P s, (N s).toNat)] [(T s, 2 * (N s).toNat), (B s, 2)]) :
     ⦃ fun t => t = s.pushRa ra ⦄
       permuteAsm
-    ⦃ (fun _ _ => False); fun a t => a = ra ∧ Result s p0 (t.regs.get64 .rax) t ∧ (pmod s).Agree s t ⦄ := by
+    ⦃ (fun _ _ => False); fun a t => a = ra ∧ Result s p0 (t.regs.get64 .rax) t
+        ∧ Mem.Mapped (blocks s) t.dmem ∧ (pmod s).Agree s t ⦄ := by
   refine ⟨fun s₀ h₀ => ?_⟩
   subst h₀
   refine Program.WP.cfg (Inv s p0 ra) (Var s p0) ?_ rfl
@@ -901,7 +902,7 @@ theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64
   -- .L1
   case right.right.right.right.right.right.right t ht =>
     simp only [Inv] at ht
-    obtain ⟨⟨hrsp, -, hrbp, h12, h13, h14, h15, hc1, hc2, -, hu⟩, hres⟩ := ht
+    obtain ⟨⟨hrsp, -, hrbp, h12, h13, h14, h15, hc1, hc2, hmb, hu⟩, hres⟩ := ht
     have hl1 : t.dmem.loadInt (t.regs.get64 .rsp) 8 =
         some (Int.ofBytes (Int.toBytes 8 (s.regs.get64 .rbx).toInt)) := by
       rw [hrsp]; exact hc1.loadInt_eq (Int.toBytes_length _ _)
@@ -914,7 +915,7 @@ theorem permute_spec [Host] [FunDecls] (p0 : Perm) (s : MachineData) (ra : Int64
     kvcgen64
     · simp [hl1]
     · simp [MachineData.retAddr, hl2]
-    · refine Or.inr ⟨⟨?_, L1_result_congr hres rfl, fun r hr => ?_, hu⟩, fun _ _ _ => ?_⟩
+    · refine Or.inr ⟨⟨?_, L1_result_congr hres rfl, hmb, fun r hr => ?_, hu⟩, fun _ _ _ => ?_⟩
       · simp only [MachineData.retAddr, Reg64s.get64_rsp, hl2, Option.map_some, Option.get!_some]
         exact Int64.ofBitVec_ofBytes_toBytes ra
       · cases r <;> simp at hr ⊢
