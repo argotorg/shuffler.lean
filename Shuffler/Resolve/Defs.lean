@@ -1,4 +1,5 @@
 import Shuffler.Planner.Defs
+import Shuffler.Mapping
 
 namespace Shuffler.Planner
 
@@ -9,7 +10,8 @@ variable {source target : Stack}
 def resolve (state : State source target)
     (mapping : Mapping source.length target.length)
     (blocked : Blocked)
-    {currentSize : ℕ} (current : Mapping currentSize target.length) : Bool × State source target := by
+    {currentSize : ℕ} (current : Mapping currentSize target.length) : Bool × State source target :=
+      let droppedNow : List Byte := ∅
   sorry
 
 end Shuffler.Planner

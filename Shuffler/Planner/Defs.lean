@@ -1,4 +1,4 @@
-import Shuffler.BuildMapping.Defs
+import Shuffler.Basic
 import Shuffler.Trace
 
 namespace Shuffler.Planner
@@ -8,6 +8,6 @@ namespace Shuffler.Planner
 structure State (source target : Stack) where
   spills : SpillSet
   spillingAllowed : Bool
-  dropped : Vector BuildMapping.Byte source.length
+  dropped : Vector Byte source.length
 
 end Shuffler.Planner

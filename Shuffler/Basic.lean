@@ -20,6 +20,8 @@ inductive ShuffleErr : Type where
 
 abbrev Word := Fin (2 ^ 256)
 
+abbrev Byte := Fin (2 ^ 8)
+
 structure VarId where
   val : ℕ
   deriving DecidableEq

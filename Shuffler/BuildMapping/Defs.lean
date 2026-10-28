@@ -17,8 +17,6 @@ inductive CopyLocation : Type where
   | InWildcardSlots
   deriving DecidableEq, Repr
 
-abbrev Byte := Fin (2 ^ 8)
-
 -- source and target never change while the mapping is built, so they are parameters.
 structure MappingBuilder (source target : Stack) where
   dropped : List Byte
