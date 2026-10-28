@@ -2,10 +2,18 @@ import Mathlib.Data.Nat.Notation
 import Mathlib.Data.Finset.Basic
 import Batteries.Data.List.Basic
 import Shuffler.Basic
+import Shuffler.Contracts
 import Shuffler.Stack
 import Mathlib.Data.Multiset.AddSub
 
 abbrev SpillSet := Finset VarId
+
+-- Add a variable slot to the spill set; reject other slots and duplicate IDs.
+-- See solidity/libyul/backends/evm/ssa/spill/SpillSet.h:42.
+def SpillSet.add (spills : SpillSet) (slot : Value) : Except ShuffleErr SpillSet := do
+  let .Var id := slot | throw (.assertion "spill candidate must be a variable")
+  _ ← Shuffler.requires (id ∉ spills) "value already spilled"
+  return insert id spills
 
 def SpillSet.is_spilled (spills : SpillSet) : (val : Value) → Prop
 | .Var id => id ∈ spills

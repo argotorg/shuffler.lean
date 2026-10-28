@@ -30,6 +30,13 @@ def Value.is_junk : Value → Prop
 instance (v : Value) : Decidable v.is_junk := by
   cases v <;> unfold Value.is_junk <;> infer_instance
 
+def Value.isVariable : Value → Prop
+| Var _ => True
+| _ => False
+
+instance (v : Value) : Decidable v.isVariable := by
+  cases v <;> unfold Value.isVariable <;> infer_instance
+
 def Value.can_be_freely_generated : Value → Prop
 | Lit _ => True
 | Wildcard => True
