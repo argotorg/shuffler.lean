@@ -21,15 +21,15 @@ take_bound:
 .LB71:
 	cmpq	64(%rdi,%rax,8), %rdx
 	jne	.LB70
-	cmpq	%rax, 2112(%rdi,%rax,8)
+	cmpq	%rax, 8256(%rdi,%rax,8)
 	je	.LB70
 	movq	%rax, %rsi
 .LB69:
-	leaq	264(%rsi), %rax
+	leaq	1032(%rsi), %rax
 	movq	(%rdi,%rax,8), %rdx
-	movq	2112(%r8), %r9
+	movq	8256(%r8), %r9
 	movq	%r9, (%rdi,%rax,8)
-	movq	%rdx, 2112(%r8)
+	movq	%rdx, 8256(%r8)
 	cmpq	%rcx, %rsi
 	je	.LB75
 	movq	(%rdi), %rdx
@@ -61,10 +61,10 @@ take_bound:
 	movl	$0, %eax
 	ret
 .LB68:
-	movq	2112(%rax), %rdx
-	movq	2112(%r8), %rcx
-	movq	%rcx, 2112(%rax)
-	movq	%rdx, 2112(%r8)
+	movq	8256(%rax), %rdx
+	movq	8256(%r8), %rcx
+	movq	%rcx, 8256(%rax)
+	movq	%rdx, 8256(%r8)
 	movl	$0, %eax
 .LB66:
 	ret

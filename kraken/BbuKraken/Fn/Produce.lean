@@ -348,7 +348,7 @@ theorem rd_target {x : Word} (hx : x.toNat < nOf m S) :
 theorem hdr_isSome (hw : Wf m S) {k : Nat} (hk : k < 8) :
     (m.loadInt (wordAt S k) 8).isSome = true := by
   have hs := hw.struct_lt
-  simp only [WORDS] at hs
+  simp only [WORDS_eq] at hs
   refine Mem.Mapped.loadInt_isSome hw.mapped (inside_append.mpr ?_)
   by_cases hk3 : k < 3
   · exact Or.inl (Or.inl (by simp only [wordAt]; bv_omega))
@@ -364,17 +364,17 @@ theorem tgt_isSome (hw : Wf m S) {d : Nat} (hd : d < nOf m S) :
 theorem stOf_setPending (hw : Wf m S) (x : Word) :
     stOf (m.storeInt (wordAt S 1) 8 x.toInt) S = { stOf m S with pending := x.toNat } := by
   have hs := hw.struct_lt
-  have hn := hw.n_le
-  simp only [WORDS] at hs
-  have hk : ∀ k, k < 520 → k ≠ 1 →
+  have hn : _ ≤ 1024 := hw.n_le
+  simp only [WORDS_eq] at hs
+  have hk : ∀ k, k < 2056 → k ≠ 1 →
       rd (m.storeInt (wordAt S 1) 8 x.toInt) (wordAt S k) = rd m (wordAt S k) := fun k hk h1 =>
     rd_store_other _ (by simp only [wordAt]; bv_omega)
   have hop : ∀ j, j < 12 * nOf m S →
       rd (m.storeInt (wordAt S 1) 8 x.toInt) (wordAt (opsOf m S) j) = rd m (wordAt (opsOf m S) j) :=
     fun j hj => rd_storeInt_of_disjoint fun y hy ho => hw.disj_struct y
-      (by simp only [Mem.Blocks.Inside, or_false, WORDS] at hy ⊢; bv_omega)
+      (by simp only [Mem.Blocks.Inside, or_false, WORDS_eq] at hy ⊢; bv_omega)
       (Or.inl (by simp only [Mem.Blocks.Inside, or_false] at ho ⊢; bv_omega))
-  have hlen := hw.len_le
+  have hlen : _ ≤ 1024 := hw.len_le
   have hnops := hw.nops_le
   have ho : opsOf (m.storeInt (wordAt S 1) 8 x.toInt) S = opsOf m S := hk 6 (by omega) (by omega)
   simp only [stOf, hk 0 (by omega) (by omega), hk 2 (by omega) (by omega),
@@ -382,8 +382,8 @@ theorem stOf_setPending (hw : Wf m S) (x : Word) :
   congr 1
   · refine List.map_congr_left fun i hi => ?_
     have := List.mem_range.mp hi
-    simp only [slotOf, STACK, DEST, hk (8 + i) (by omega) (by omega),
-      hk (264 + i) (by omega) (by omega)]
+    simp only [slotOf, STACK, DEST_eq, hk (8 + i) (by omega) (by omega),
+      hk (1032 + i) (by omega) (by omega)]
   · refine List.map_congr_left fun i hi => ?_
     have := List.mem_range.mp hi
     simp only [opOf, ho, hop (2 * i) (by omega), hop (2 * i + 1) (by omega)]
@@ -410,9 +410,9 @@ theorem blk_disj {m : Mem 64} {S : Addr} (hw : Wf m S) {k : Nat} (hk : k < WORDS
     Mem.Blocks.Disjoint [(wordAt S k, 8)] [(blkOf m S, 16)] := by
   intro x hx hb
   have hs := hw.struct_lt
-  simp only [WORDS] at hs hk
+  simp only [WORDS_eq] at hs hk
   refine hw.disj_struct x ?_ (inside_of_mem (by simp) hb)
-  simp only [Mem.Blocks.Inside, or_false, WORDS] at hx ⊢
+  simp only [Mem.Blocks.Inside, or_false, WORDS_eq] at hx ⊢
   bv_omega
 
 -- A store to `blocked` keeps the pointer to it.
@@ -435,7 +435,7 @@ theorem hdr_isSome' {m m' : Mem 64} {S : Addr} (hw : Wf m S)
     (hm : Mem.Mapped (writable m S ++ readable m S) m') {k : Nat} (hk : k < 8) :
     (m'.loadInt (wordAt S k) 8).isSome = true := by
   have hs := hw.struct_lt
-  simp only [WORDS] at hs
+  simp only [WORDS_eq] at hs
   refine Mem.Mapped.loadInt_isSome hm (inside_append.mpr ?_)
   by_cases hk3 : k < 3
   · exact Or.inl (Or.inl (by simp only [wordAt]; bv_omega))
@@ -706,7 +706,7 @@ theorem msb_test (v : Word) (r) :
     CondCode.s.interp (StatusFlags.from_result (v &&& v) r) = v.msb := by
   simp [CondCode.interp, StatusFlags.from_result]
 
-theorem encOpt_msb {c : Nat} (h : c < 256) : (encOpt (some c)).msb = false := by
+theorem encOpt_msb {c : Nat} (h : c < 1024) : (encOpt (some c)).msb = false := by
   rw [encOpt, BitVec.msb_eq_decide]
   simp only [BitVec.toNat_ofNat, decide_eq_false_iff_not, Nat.not_le]
   omega
@@ -778,7 +778,7 @@ theorem Fm.addA {m : Mem 64} {c : MachineData} (hpre : Pre 96 produceA s) (h : F
     (hc : c.dmem = m) (hrdi : rdi c = rdi s) (hst : stOf m (rdi s) = st s) : addA c := by
   have hn := h.n hpre
   obtain ⟨-, -, -, hl, ho⟩ := hpre
-  show (stOf c.dmem (rdi c)).len < 256 ∧ (stOf c.dmem (rdi c)).ops.length < 6 * nOf c.dmem (rdi c)
+  show (stOf c.dmem (rdi c)).len < 1024 ∧ (stOf c.dmem (rdi c)).ops.length < 6 * nOf c.dmem (rdi c)
   rw [hc, hrdi, hst, hn]
   exact ⟨hl, ho⟩
 
@@ -869,7 +869,7 @@ theorem Base.pos {s t c u : MachineData} {ra : Int64} {st' : St} (hpre : Pre 96 
 
 -- The test `position_of(s, d) == s->len - 1` at `.LB28`.
 theorem pos_test {o : Option Nat} {L : Nat} {r : Word} (hr : r.toNat = L) (hL : 1 ≤ L)
-    (hL' : L ≤ 257) (ho : ∀ p, o = some p → p < L) :
+    (hL' : L ≤ 1025) (ho : ∀ p, o = some p → p < L) :
     encOpt o - (r - 1#64) = 0#64 ↔ o = some (L - 1) := by
   cases o with
   | none =>
@@ -886,7 +886,7 @@ theorem pos_test {o : Option Nat} {L : Nat} {r : Word} (hr : r.toNat = L) (hL : 
 theorem Fm.setPending {s : MachineData} {ra : Int64} {m : Mem 64} (hpre : Pre 96 produceA s) (h : Fm s ra m) (x : Word) :
     Fm s ra (m.storeInt (wordAt (rdi s) 1) 8 x.toInt) := by
   have hs := h.wf.struct_lt
-  simp only [WORDS] at hs
+  simp only [WORDS_eq] at hs
   refine h.store hpre (fun y hy => ?_) (rd_store_other _ ?_) (rd_store_other _ ?_)
   · refine Or.inl ?_
     simp only [Mem.Blocks.Inside, or_false, wordAt] at hy ⊢
@@ -908,7 +908,7 @@ theorem entry_stack (x : Word) :
 theorem entry_stack40 (x : Word) : (x - 8#64 - (x - 40#64)).toNat < 2 ^ 63 := by
   bv_omega
 
-theorem encOpt_none {o : Option Nat} (hlt : ∀ c, o = some c → c < 256)
+theorem encOpt_none {o : Option Nat} (hlt : ∀ c, o = some c → c < 1024)
     (h : (encOpt o).msb = true) : o = none := by
   cases o with
   | none => rfl
@@ -972,7 +972,7 @@ theorem be_sub15 (x : Word) (af of : Bool) :
     · right; apply BitVec.eq_of_toNat_eq; rw [BitVec.toNat_sub]; simp; omega
 
 -- The depth `len - c` of the copy `c` and the test value `len - 1 - c`.
-theorem depth_bv {r : Word} {L c : Nat} (hr : r.toNat = L) (hc : c < L) (hL : L < 256) :
+theorem depth_bv {r : Word} {L c : Nat} (hr : r.toNat = L) (hc : c < L) (hL : L < 1024) :
     (r - BitVec.ofNat 64 c + -1#64).toNat = L - 1 - c
       ∧ r - BitVec.ofNat 64 c = BitVec.ofNat 64 (L - c) := by
   subst hr
@@ -991,7 +991,7 @@ theorem entry_depth {s u : MachineData} (hpre : Pre 96 produceA s)
       ∧ rd u.dmem u.regs.rbx.toBitVec - u.regs.rax.toBitVec = BitVec.ofNat 64 ((st s).len - c) := by
   obtain ⟨c, hc⟩ := encOpt_some hs
   have hlt := shallowestCopy_lt hc
-  have hlen : (st s).len < 256 := hpre.2.2.2.1
+  have hlen : (st s).len < 1024 := hpre.2.2.2.1
   have hr : (rd u.dmem u.regs.rbx.toBitVec).toNat = (st s).len := by
     rw [hux, ← hst, st_len, wordAt_zero]
   rw [hax, hc]
@@ -1257,7 +1257,7 @@ theorem produce_body [Host] [FunDecls]
         cases hc : cp s with
         | none => rfl
         | some c =>
-          have hlen : (st s).len < 256 := hpre.2.2.2.1
+          have hlen : (st s).len < 1024 := hpre.2.2.2.1
           rw [hc, encOpt_msb (by have := shallowestCopy_lt hc; omega)] at hz; cases hz
       cfg_goto
       · apply MachineData.stackAtOrBelow_of_toNat_lt
@@ -1282,7 +1282,7 @@ theorem produce_body [Host] [FunDecls]
         produce_err (emit_blocked hl.v0 hf hp0 hc)
       have hcl := shallowestCopy_lt hc
       have hfar : 15 < (st s).len - 1 - c := hf c hc
-      have hlen : (st s).len < 256 := hpre.2.2.2.1
+      have hlen : (st s).len < 1024 := hpre.2.2.2.1
       have h0 : (rd t.dmem s.regs.rdi.toBitVec).toNat = (st s).len := by
         rw [← hl.st, st_len, wordAt_zero]; rfl
       rw [blkStores_eq hw]
@@ -1326,8 +1326,8 @@ theorem produce_body [Host] [FunDecls]
       rw [hA] at hr hP
       obtain ⟨hr0, hst'⟩ : rax t = 0#64 ∧ stOf t.dmem (rdi s) = st' := hr
       obtain ⟨hlen', -, hpend, -⟩ := add_shape hA
-      have hlen : (st s).len < 256 := hpre.2.2.2.1
-      have hL : 1 ≤ st'.len ∧ st'.len ≤ 257 := by rw [hlen']; omega
+      have hlen : (st s).len < 1024 := hpre.2.2.2.1
+      have hL : 1 ≤ st'.len ∧ st'.len ≤ 1025 := by rw [hlen']; omega
       have hpt : ∀ {u : MachineData}, stOf u.dmem (rdi s) = st' →
           (encOpt (positionOf st' (dd s)) - (rd u.dmem (rdi s) - 1#64) = 0#64
             ↔ positionOf st' (dd s) = some (st'.len - 1)) := fun hsu =>
@@ -1442,7 +1442,7 @@ theorem produce_body [Host] [FunDecls]
       rw [BitVec.and_self, hv] at hz
       rw [msb_test, hax] at hs
       have hcp : cp s = none :=
-        encOpt_none (fun c hc => by have := shallowestCopy_lt hc; have := hpre.2.2.2.1; omega) hs
+        encOpt_none (fun c hc => by have := shallowestCopy_lt hc; have : _ < 1024 := hpre.2.2.2.1; omega) hs
       cfg_goto
       · apply MachineData.stackAtOrBelow_of_toNat_lt
         simp only [Reg64s.get64_rsp, pushRa_rsp, hB.rsp]

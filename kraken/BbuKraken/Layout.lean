@@ -9,10 +9,10 @@ function specs.
 
 The model state and environment are functions of the memory and the address `S`
 of the struct (`stOf`, `envOf`), so a spec needs no ghost state. The struct is
-520 words: 8 header words (len, pending, nops, n, target, spilled, ops,
-blocked), then `stack[256]` from word 8 and `dest[256]` from word 264. Operation
-`i` is the words `2i` and `2i + 1` from `ops`. The ops buffer holds `6n`
-operations.
+`WORDS` words: 8 header words (len, pending, nops, n, target, spilled, ops,
+blocked), then `stack[MAX_N]` from word `STACK` and `dest[MAX_N]` from word
+`DEST`. Operation `i` is the words `2i` and `2i + 1` from `ops`. The ops buffer
+holds `6n` operations.
 -/
 
 open Std.WP Lean.Order
@@ -32,9 +32,12 @@ def rdb (m : Mem 64) (a : Addr) : BitVec 8 := BitVec.ofInt 8 (m.loadInt a 1).get
 abbrev wordAt (b : Addr) (k : Nat) : Addr := b + BitVec.ofNat 64 (8 * k)
 
 def STACK : Nat := 8
-def DEST : Nat := 264
+def DEST : Nat := STACK + MAX_N
 -- The size of the struct in words.
-def WORDS : Nat := 520
+def WORDS : Nat := DEST + MAX_N
+-- The values, for `simp only` before `omega`.
+theorem DEST_eq : DEST = 1032 := rfl
+theorem WORDS_eq : WORDS = 2056 := rfl
 
 section
 variable (m : Mem 64) (S : Addr)
@@ -77,7 +80,7 @@ def splBlocks : List (Addr × Nat) :=
 -- The memory that the functions write: len, pending and nops, the stack and
 -- dest arrays, the ops buffer and `blocked`.
 def writable : List (Addr × Nat) :=
-  [(S, 24), (wordAt S STACK, 8 * 512), (opsOf m S, 96 * nOf m S), (blkOf m S, 16)]
+  [(S, 24), (wordAt S STACK, 8 * (2 * MAX_N)), (opsOf m S, 96 * nOf m S), (blkOf m S, 16)]
 
 -- The memory that the functions only read: the rest of the header, the target
 -- and the spilled bytes.
@@ -98,9 +101,9 @@ structure Wf : Prop where
     ((opsOf m S, 96 * nOf m S) :: (blkOf m S, 16) :: (tgtOf m S, 8 * nOf m S) :: splBlocks m S)
   disj_ops : Mem.Blocks.Disjoint [(opsOf m S, 96 * nOf m S)] ((tgtOf m S, 8 * nOf m S) :: splBlocks m S)
   disj_blk : Mem.Blocks.Disjoint [(blkOf m S, 16)] ((tgtOf m S, 8 * nOf m S) :: splBlocks m S)
-  len_le : (rd m (wordAt S 0)).toNat ≤ 256
+  len_le : (rd m (wordAt S 0)).toNat ≤ MAX_N
   nops_le : (rd m (wordAt S 2)).toNat ≤ 6 * nOf m S
-  n_le : nOf m S ≤ 256
+  n_le : nOf m S ≤ MAX_N
 
 end
 
@@ -283,7 +286,7 @@ theorem envOf_congr (h : Mem.UnchangedOutside l m m') (hw : Wf m S)
 -- range keeps the well formedness.
 theorem Wf.congr (h : Mem.UnchangedOutside l m m') (hw : Wf m S)
     (hd : Mem.Blocks.Disjoint (readable m S) l) (hm : Mem.Mapped (writable m S) m')
-    (hlen : (rd m' (wordAt S 0)).toNat ≤ 256) (hnops : (rd m' (wordAt S 2)).toNat ≤ 6 * nOf m S) :
+    (hlen : (rd m' (wordAt S 0)).toNat ≤ MAX_N) (hnops : (rd m' (wordAt S 2)).toNat ≤ 6 * nOf m S) :
     Wf m' S := by
   obtain ⟨-, hr, hwr⟩ := envOf_congr h hw hd
   have hn : nOf m' S = nOf m S := congrArg BitVec.toNat (hdr_congr h hd (k := 3) (by omega) (by omega))
@@ -318,10 +321,10 @@ theorem stOf_congr (h : Mem.UnchangedOutside l m m') (hw : Wf m S)
   have hlo : ∀ {k}, k < 3 → rd m' (wordAt S k) = rd m (wordAt S k) := fun hk =>
     rd_congr h (disjoint_mono (bs' := writable m S) (fun x hx => Or.inl (by
       simp only [Mem.Blocks.Inside, or_false] at hx; bv_omega)) hwr)
-  have hslot : ∀ {k}, STACK ≤ k → k < STACK + 512 → rd m' (wordAt S k) = rd m (wordAt S k) :=
+  have hslot : ∀ {k}, STACK ≤ k → k < WORDS → rd m' (wordAt S k) = rd m (wordAt S k) :=
     fun hk1 hk2 => rd_congr h (disjoint_mono (bs' := writable m S) (fun x hx => Or.inr (Or.inl (by
       have := hw.struct_lt
-      simp only [Mem.Blocks.Inside, or_false, STACK, WORDS] at hx hk1 hk2 this ⊢; bv_omega))) hwr)
+      simp only [Mem.Blocks.Inside, or_false, STACK, DEST, WORDS, MAX_N] at hx hk1 hk2 this ⊢; bv_omega))) hwr)
   have hop : ∀ {k}, k < 12 * nOf m S → rd m' (wordAt (opsOf m S) k) = rd m (wordAt (opsOf m S) k) :=
     fun hk => rd_congr h (disjoint_mono (bs' := writable m S) (fun x hx => Or.inr (Or.inr (Or.inl (by
       have := hw.n_le
@@ -332,8 +335,8 @@ theorem stOf_congr (h : Mem.UnchangedOutside l m m') (hw : Wf m S)
   congr 1
   · refine List.map_congr_left fun i hi => ?_
     have := List.mem_range.mp hi
-    simp only [slotOf, hslot (k := STACK + i) (by omega) (by simp only [STACK]; omega),
-      hslot (k := DEST + i) (by simp only [STACK, DEST]; omega) (by simp only [STACK, DEST]; omega)]
+    simp only [slotOf, hslot (k := STACK + i) (by omega) (by simp only [WORDS, DEST, STACK]; omega),
+      hslot (k := DEST + i) (by simp only [STACK, DEST]; omega) (by simp only [WORDS, DEST]; omega)]
   · refine List.map_congr_left fun i hi => ?_
     have := List.mem_range.mp hi
     simp only [opOf, ho, hop (k := 2 * i) (by omega), hop (k := 2 * i + 1) (by omega)]
@@ -376,34 +379,34 @@ theorem Pre.disj {F : Nat} {A : MachineData → Prop} {s : MachineData} (hpre : 
   obtain ⟨hw, hf, -⟩ := hpre
   intro x hr hl
   have hsl := hw.struct_lt
-  simp only [WORDS] at hsl
+  simp only [WORDS, DEST, STACK, MAX_N] at hsl
   -- `x` in the struct
   have hst : ∀ c n, c + n ≤ 8 * WORDS → (x - (rdi s + BitVec.ofNat 64 c)).toNat + 1 ≤ n →
       Mem.Blocks.Inside x 1 [(rdi s, 8 * WORDS)] := by
     intro c n hc hx
-    simp only [Mem.Blocks.Inside, or_false, WORDS] at hc ⊢; bv_omega
+    simp only [Mem.Blocks.Inside, or_false, WORDS, DEST, STACK, MAX_N] at hc ⊢; bv_omega
   simp only [mod] at hl
   rcases hl with hl | hl | hl | hl | hl | hl
   · exact hf.disj x (Or.inl hl) (inside_append.mpr (Or.inr hr))
   · -- (S, 24)
     rcases hr with hr | hr | hr
     · simp only [wordAt] at hr; bv_omega
-    · exact hw.disj_struct x (hst 0 24 (by simp [WORDS]) (by simpa using hl)) (Or.inr (Or.inr (Or.inl hr)))
-    · exact hw.disj_struct x (hst 0 24 (by simp [WORDS]) (by simpa using hl)) (Or.inr (Or.inr (Or.inr hr)))
+    · exact hw.disj_struct x (hst 0 24 (by simp [WORDS, DEST, STACK, MAX_N]) (by simpa using hl)) (Or.inr (Or.inr (Or.inl hr)))
+    · exact hw.disj_struct x (hst 0 24 (by simp [WORDS, DEST, STACK, MAX_N]) (by simpa using hl)) (Or.inr (Or.inr (Or.inr hr)))
   · -- the stack and dest arrays
-    simp only [STACK] at hl
+    simp only [STACK, MAX_N] at hl
     rcases hr with hr | hr | hr
     · simp only [wordAt] at hr hl; bv_omega
-    · exact hw.disj_struct x (hst 64 4096 (by simp [WORDS]) hl) (Or.inr (Or.inr (Or.inl hr)))
-    · exact hw.disj_struct x (hst 64 4096 (by simp [WORDS]) hl) (Or.inr (Or.inr (Or.inr hr)))
+    · exact hw.disj_struct x (hst (8 * STACK) (8 * (2 * MAX_N)) (by simp [WORDS, DEST, STACK, MAX_N]) hl) (Or.inr (Or.inr (Or.inl hr)))
+    · exact hw.disj_struct x (hst (8 * STACK) (8 * (2 * MAX_N)) (by simp [WORDS, DEST, STACK, MAX_N]) hl) (Or.inr (Or.inr (Or.inr hr)))
   · -- ops
     rcases hr with hr | hr | hr
-    · exact hw.disj_struct x (hst 24 40 (by simp [WORDS]) hr) (Or.inl hl)
+    · exact hw.disj_struct x (hst 24 40 (by simp [WORDS, DEST, STACK, MAX_N]) hr) (Or.inl hl)
     · exact hw.disj_ops x (Or.inl hl) (Or.inl hr)
     · exact hw.disj_ops x (Or.inl hl) (Or.inr hr)
   · -- blocked
     rcases hr with hr | hr | hr
-    · exact hw.disj_struct x (hst 24 40 (by simp [WORDS]) hr) (Or.inr (Or.inl hl))
+    · exact hw.disj_struct x (hst 24 40 (by simp [WORDS, DEST, STACK, MAX_N]) hr) (Or.inr (Or.inl hl))
     · exact hw.disj_blk x (Or.inl hl) (Or.inl hr)
     · exact hw.disj_blk x (Or.inl hl) (Or.inr hr)
   · exact hl

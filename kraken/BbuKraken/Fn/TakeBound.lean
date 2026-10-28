@@ -299,19 +299,19 @@ section
 variable {m : Mem 64} {S : Addr}
 
 -- A store to the dest word of slot `i` keeps the other words of the struct.
-theorem rd_store_dest_other (hw : Wf m S) {i k : Nat} (hi : i < 256) (hk : k < WORDS)
+theorem rd_store_dest_other (hw : Wf m S) {i k : Nat} (hi : i < 1024) (hk : k < WORDS)
     (hne : k ≠ DEST + i) (v : Int) :
     rd (m.storeInt (wordAt S (DEST + i)) 8 v) (wordAt S k) = rd m (wordAt S k) :=
-  rd_storeInt_of_disjoint (disjoint_wordAt (Ne.symm hne) (by simp only [DEST, WORDS]; omega) hk
+  rd_storeInt_of_disjoint (disjoint_wordAt (Ne.symm hne) (by simp only [DEST_eq, WORDS_eq]; omega) hk
     hw.struct_lt)
 
 -- A store to the dest word of slot `i` keeps the ops buffer.
-theorem rd_store_dest_ops (hw : Wf m S) {i j : Nat} (hi : i < 256) (hj : j < 12 * nOf m S) (v : Int) :
+theorem rd_store_dest_ops (hw : Wf m S) {i j : Nat} (hi : i < 1024) (hj : j < 12 * nOf m S) (v : Int) :
     rd (m.storeInt (wordAt S (DEST + i)) 8 v) (wordAt (opsOf m S) j) = rd m (wordAt (opsOf m S) j) := by
   have hs := hw.struct_lt
   have ho := hw.ops_lt
   refine rd_storeInt_of_disjoint fun x hx hy => hw.disj_struct x ?_ (Or.inl ?_)
-  · simp only [Mem.Blocks.Inside, or_false, DEST, WORDS] at hx hs ⊢
+  · simp only [Mem.Blocks.Inside, or_false, DEST_eq, WORDS_eq] at hx hs ⊢
     bv_omega
   · simp only [Mem.Blocks.Inside, or_false] at hy ⊢
     bv_omega
@@ -319,18 +319,18 @@ theorem rd_store_dest_ops (hw : Wf m S) {i j : Nat} (hi : i < 256) (hj : j < 12 
 theorem stOf_store_dest (hw : Wf m S) {i : Nat} (hi : i < (rd m (wordAt S 0)).toNat) (v : Word) :
     stOf (m.storeInt (wordAt S (DEST + i)) 8 v.toInt) S =
       { stOf m S with slots := (stOf m S).slots.set i ⟨(stOf m S).val i, v.toNat⟩ } := by
-  have hlen := hw.len_le
-  have hi' : i < 256 := by omega
+  have hlen : _ ≤ 1024 := hw.len_le
+  have hi' : i < 1024 := by omega
   have hk : ∀ {k}, k < WORDS → k ≠ DEST + i →
       rd (m.storeInt (wordAt S (DEST + i)) 8 v.toInt) (wordAt S k) = rd m (wordAt S k) :=
     fun hk hne => rd_store_dest_other hw hi' hk hne _
   have ho : opsOf (m.storeInt (wordAt S (DEST + i)) 8 v.toInt) S = opsOf m S :=
-    hk (k := 6) (by decide) (by simp only [DEST]; omega)
+    hk (k := 6) (by decide) (by simp only [DEST_eq]; omega)
   have hnops := hw.nops_le
   rw [stOf_val_rd hi]
-  simp only [stOf, hk (k := 0) (by decide) (by simp only [DEST]; omega),
-    hk (k := 1) (by decide) (by simp only [DEST]; omega),
-    hk (k := 2) (by decide) (by simp only [DEST]; omega)]
+  simp only [stOf, hk (k := 0) (by decide) (by simp only [DEST_eq]; omega),
+    hk (k := 1) (by decide) (by simp only [DEST_eq]; omega),
+    hk (k := 2) (by decide) (by simp only [DEST_eq]; omega)]
   congr 1
   · refine List.ext_getElem (by simp) fun j h1 h2 => ?_
     simp only [List.length_map, List.length_range] at h1
@@ -338,10 +338,10 @@ theorem stOf_store_dest (hw : Wf m S) {i : Nat} (hi : i < (rd m (wordAt S 0)).to
     simp only [List.getElem_map, List.getElem_range, slotOf]
     split
     · subst_vars
-      rw [hk (by simp only [STACK, WORDS]; omega) (by simp only [STACK, DEST]; omega),
+      rw [hk (by simp only [STACK, WORDS_eq]; omega) (by simp only [STACK, DEST_eq]; omega),
         rd_store_same _ rfl, BitVec.ofInt_toInt]
-    · rw [hk (by simp only [STACK, WORDS]; omega) (by simp only [STACK, DEST]; omega),
-        hk (by simp only [DEST, WORDS]; omega) (by omega)]
+    · rw [hk (by simp only [STACK, WORDS_eq]; omega) (by simp only [STACK, DEST_eq]; omega),
+        hk (by simp only [DEST_eq, WORDS_eq]; omega) (by omega)]
   · refine List.map_congr_left fun j hj => ?_
     have := List.mem_range.mp hj
     simp only [opOf, ho, rd_store_dest_ops hw hi' (j := 2 * j) (by omega),
@@ -352,11 +352,11 @@ end
 section
 variable {F : Nat} {s : MachineData} {ra : Int64} {A : MachineData → Prop} {m : Mem 64}
 
-theorem Mid.store_dest (hF : 8 ≤ F) (hpre : Pre F A s) (h : Mid F s ra m) {i : Nat} (hi : i < 256)
+theorem Mid.store_dest (hF : 8 ≤ F) (hpre : Pre F A s) (h : Mid F s ra m) {i : Nat} (hi : i < 1024)
     (v : Int) : Mid F s ra (m.storeInt (wordAt (rdi s) (DEST + i)) 8 v) :=
-  h.store hF hpre (inside_arr (by simp only [STACK, DEST]; omega) (by simp only [DEST, WORDS]; omega))
-    (rd_store_dest_other h.wf hi (by decide) (by simp only [DEST]; omega) v)
-    (rd_store_dest_other h.wf hi (by decide) (by simp only [DEST]; omega) v)
+  h.store hF hpre (inside_arr (by simp only [STACK, DEST_eq]; omega) (by simp only [DEST_eq, WORDS_eq]; omega))
+    (rd_store_dest_other h.wf hi (by decide) (by simp only [DEST_eq]; omega) v)
+    (rd_store_dest_other h.wf hi (by decide) (by simp only [DEST_eq]; omega) v)
 
 theorem val_set_self (st : St) (a b x : Nat) :
     ({ st with slots := st.slots.set a ⟨st.val a, x⟩ } : St).val b = st.val b := by
@@ -371,12 +371,12 @@ theorem Mid.swap (hF : 8 ≤ F) (hpre : Pre F A s) (h : Mid F s ra m) {a b : Nat
         (wordAt (rdi s) (DEST + b)) 8 va.toInt)
       ∧ stOf ((m.storeInt (wordAt (rdi s) (DEST + a)) 8 vb.toInt).storeInt
         (wordAt (rdi s) (DEST + b)) 8 va.toInt) (rdi s) = swapDest (stOf m (rdi s)) a b := by
-  have hl := h.wf.len_le
+  have hl : _ ≤ 1024 := h.wf.len_le
   rw [stOf_len_rd] at ha hb
   have h1 := h.store_dest hF hpre (i := a) (by omega) vb.toInt
   have e1 := stOf_store_dest h.wf ha vb
   have hb1 : b < (rd (m.storeInt (wordAt (rdi s) (DEST + a)) 8 vb.toInt) (wordAt (rdi s) 0)).toNat := by
-    rw [rd_store_dest_other h.wf (by omega) (by decide) (by simp only [DEST]; omega)]
+    rw [rd_store_dest_other h.wf (by omega) (by decide) (by simp only [DEST_eq]; omega)]
     exact hb
   refine ⟨h1.store_dest hF hpre (by omega) _, ?_⟩
   rw [stOf_store_dest h1.wf hb1 va, e1]
@@ -389,7 +389,7 @@ theorem blk_disj {S : Addr} (hw : Wf m S) {j k : Nat} (hj : j < 2) (hk : k < WOR
   have hb := hw.blk_lt
   intro x hx hy
   refine hw.disj_struct x ?_ (Or.inr (Or.inl ?_))
-  · simp only [Mem.Blocks.Inside, or_false, WORDS] at hy hs hk ⊢
+  · simp only [Mem.Blocks.Inside, or_false, WORDS_eq] at hy hs hk ⊢
     bv_omega
   · simp only [Mem.Blocks.Inside, or_false] at hx ⊢
     bv_omega
@@ -513,8 +513,8 @@ theorem len_m0 (hpre : Pre 16 takeBoundA s) : (rd (m0 s ra) (rdi s)).toNat = (st
 theorem addr_stack (S x : BitVec 64) : S + x * 8#64 + 64#64 = wordAt S (STACK + x.toNat) := by
   simp only [wordAt, STACK]; bv_omega
 
-theorem addr_dest (S x : BitVec 64) : S + x * 8#64 + 2112#64 = wordAt S (DEST + x.toNat) := by
-  simp only [wordAt, DEST]; bv_omega
+theorem addr_dest (S x : BitVec 64) : S + x * 8#64 + 8256#64 = wordAt S (DEST + x.toNat) := by
+  simp only [wordAt, DEST_eq]; bv_omega
 
 theorem val_m0 (hpre : Pre 16 takeBoundA s) {x : BitVec 64} (hx : x.toNat < (st s).len) :
     rd (m0 s ra) (rdi s + x * 8#64 + 64#64) = (st s).val x.toNat := by
@@ -522,7 +522,7 @@ theorem val_m0 (hpre : Pre 16 takeBoundA s) {x : BitVec 64} (hx : x.toNat < (st 
   rw [addr_stack, stOf_val_rd (by rwa [stOf_len_rd] at hx)]
 
 theorem dest_m0 (hpre : Pre 16 takeBoundA s) {x : BitVec 64} (hx : x.toNat < (st s).len) :
-    (rd (m0 s ra) (rdi s + x * 8#64 + 2112#64)).toNat = (st s).dest x.toNat := by
+    (rd (m0 s ra) (rdi s + x * 8#64 + 8256#64)).toNat = (st s).dest x.toNat := by
   rw [← st_m0 (ra := ra) hpre] at hx ⊢
   rw [addr_dest, stOf_dest_rd (by rwa [stOf_len_rd] at hx)]
 
@@ -537,7 +537,7 @@ theorem val_m0' (hpre : Pre 16 takeBoundA s) {x : BitVec 64} (hx : x.toNat < (st
 
 theorem dest_m0' (hpre : Pre 16 takeBoundA s) {x : BitVec 64} (hx : x.toNat < (st s).len) :
     (rd (Mem.storeInt s.dmem (s.regs.rsp.toBitVec - 8#64) 8 ra.toBitVec.toInt)
-      (s.regs.rdi.toBitVec + x * 8#64 + 2112#64)).toNat = (st s).dest x.toNat := dest_m0 hpre hx
+      (s.regs.rdi.toBitVec + x * 8#64 + 8256#64)).toNat = (st s).dest x.toNat := dest_m0 hpre hx
 
 theorem len_isSome (hpre : Pre 16 takeBoundA s) :
     ((Mem.storeInt s.dmem (s.regs.rsp.toBitVec - 8#64) 8 ra.toBitVec.toInt).loadInt
@@ -546,16 +546,16 @@ theorem len_isSome (hpre : Pre 16 takeBoundA s) :
   rwa [show wordAt (rdi s) 0 = s.regs.rdi.toBitVec by simp [wordAt]] at this
 
 theorem arr_isSome (hpre : Pre 16 takeBoundA s) {x : BitVec 64} (k : BitVec 64)
-    (hk : k = 64#64 ∨ k = 2112#64) (hx : x.toNat < (st s).len) :
+    (hk : k = 64#64 ∨ k = 8256#64) (hx : x.toNat < (st s).len) :
     ((m0 s ra).loadInt (rdi s + x * 8#64 + k) 8).isSome = true := by
   have hw := (Mid.init (ra := ra) (by decide) hpre).wf
-  have hl : (rd (m0 s ra) (wordAt (rdi s) 0)).toNat ≤ 256 := hw.len_le
+  have hl : (rd (m0 s ra) (wordAt (rdi s) 0)).toNat ≤ 1024 := hw.len_le
   rw [← st_m0 (ra := ra) hpre, stOf_len_rd] at hx
   rcases hk with rfl | rfl
   · rw [addr_stack]
-    exact hw.load_writable (inside_arr (by simp only [STACK]; omega) (by simp only [STACK, WORDS]; omega))
+    exact hw.load_writable (inside_arr (by simp only [STACK]; omega) (by simp only [STACK, WORDS_eq]; omega))
   · rw [addr_dest]
-    exact hw.load_writable (inside_arr (by simp only [STACK, DEST]; omega) (by simp only [DEST, WORDS]; omega))
+    exact hw.load_writable (inside_arr (by simp only [STACK, DEST_eq]; omega) (by simp only [DEST_eq, WORDS_eq]; omega))
 
 theorem len_lt : (st s).len < 2 ^ 64 := by
   rw [stOf_len_rd]; exact BitVec.isLt _
@@ -577,7 +577,7 @@ theorem scan_val (hpre : Pre 16 takeBoundA s) {t : MachineData} {c : Nat} (hk : 
 
 theorem scan_dest (hpre : Pre 16 takeBoundA s) {t : MachineData} {c : Nat} (hk : Keep s ra t)
     (hdi : rdi t = rdi s) (hax : rax t = BitVec.ofNat 64 c) (hc : c < (st s).len) :
-    (rd t.dmem (rdi t + rax t * 8#64 + 2112#64)).toNat = (st s).dest c := by
+    (rd t.dmem (rdi t + rax t * 8#64 + 8256#64)).toNat = (st s).dest c := by
   have hc' : (BitVec.ofNat 64 c).toNat < (st s).len := by
     rw [BitVec.toNat_ofNat]; exact Nat.lt_of_le_of_lt (Nat.mod_le _ _) hc
   rw [hk.mem, hdi, hax]
@@ -586,7 +586,7 @@ theorem scan_dest (hpre : Pre 16 takeBoundA s) {t : MachineData} {c : Nat} (hk :
 
 theorem scan_isSome (hpre : Pre 16 takeBoundA s) {t : MachineData} {c : Nat} (hk : Keep s ra t)
     (hdi : rdi t = rdi s) (hax : rax t = BitVec.ofNat 64 c) (hc : c < (st s).len) (k : BitVec 64)
-    (hkk : k = 64#64 ∨ k = 2112#64) :
+    (hkk : k = 64#64 ∨ k = 8256#64) :
     (t.dmem.loadInt (rdi t + rax t * 8#64 + k) 8).isSome = true := by
   have hc' : (BitVec.ofNat 64 c).toNat < (st s).len := by
     rw [BitVec.toNat_ofNat]; exact Nat.lt_of_le_of_lt (Nat.mod_le _ _) hc
@@ -919,19 +919,19 @@ theorem takeBound_body [Host] [FunDecls] (hswap : Spec "swap_with" swapWithF swa
     have hst : stOf t.dmem (rdi s) = st s := by rw [hk.mem]; exact st_m0 hpre
     have hp64 : pos < 2 ^ 64 := Nat.lt_trans hpl len_lt
     have hpN : (rsi t).toNat = pos := by rw [hsi, BitVec.toNat_ofNat, Nat.mod_eq_of_lt hp64]
-    have haP : rdi t + (rsi t + 264#64) * 8#64 = wordAt (rdi s) (DEST + pos) := by
-      rw [hdi, ← hpN]; simp only [wordAt, DEST]; bv_omega
-    have haB : r8 t + 2112#64 = wordAt (rdi s) (DEST + bN s) := by rw [hr8, addr_dest]
-    have hsP : (t.dmem.loadInt (rdi t + (rsi t + 264#64) * 8#64) 8).isSome = true := by
+    have haP : rdi t + (rsi t + 1032#64) * 8#64 = wordAt (rdi s) (DEST + pos) := by
+      rw [hdi, ← hpN]; simp only [wordAt, DEST_eq]; bv_omega
+    have haB : r8 t + 8256#64 = wordAt (rdi s) (DEST + bN s) := by rw [hr8, addr_dest]
+    have hsP : (t.dmem.loadInt (rdi t + (rsi t + 1032#64) * 8#64) 8).isSome = true := by
       rw [haP, hk.mem]
       have := arr_isSome (ra := ra) hpre (x := rsi t) _ (Or.inr rfl) (by rw [hpN]; exact hpl)
       rwa [addr_dest, hpN] at this
-    have hsB : (t.dmem.loadInt (r8 t + 2112#64) 8).isSome = true := by
+    have hsB : (t.dmem.loadInt (r8 t + 8256#64) 8).isSome = true := by
       rw [hk.mem, hr8]; exact arr_isSome hpre _ (Or.inr rfl) hb
     have hlen : (st s).len = (rd t.dmem (wordAt (rdi s) 0)).toNat := by rw [← hst, stOf_len_rd]
     have hsw := Mid.swap (by decide) hpre ho.mid (a := pos) (b := bN s) (by rw [hst]; exact hpl)
-      (by rw [hst]; exact hb) (va := rd t.dmem (rdi t + (rsi t + 264#64) * 8#64))
-      (vb := rd t.dmem (r8 t + 2112#64))
+      (by rw [hst]; exact hb) (va := rd t.dmem (rdi t + (rsi t + 1032#64) * 8#64))
+      (vb := rd t.dmem (r8 t + 8256#64))
       (by rw [haP, stOf_dest_rd (by omega)]) (by rw [haB, stOf_dest_rd (by omega)])
     rw [← haP, ← haB, hst] at hsw
     have hL : ∀ m, stOf m (rdi s) = swapDest (st s) pos (bN s) → (rd m (rdi t)).toNat = (st s).len := by
@@ -1025,7 +1025,7 @@ theorem takeBound_body [Host] [FunDecls] (hswap : Spec "swap_with" swapWithF swa
     have hb7 : rdi t + 56#64 = wordAt (rdi s) 7 := by rw [hdi]
     have hB0 : rd t.dmem (rdi t + 56#64) = blkOf t.dmem (rdi s) := by rw [hb7]; rfl
     have hs7 : (t.dmem.loadInt (rdi t + 56#64) 8).isSome = true := by
-      rw [hb7]; exact hw.isSome_struct (by simp only [wordAt, WORDS]; bv_omega)
+      rw [hb7]; exact hw.isSome_struct (by simp only [wordAt, WORDS_eq]; bv_omega)
     have hsB : (t.dmem.loadInt (blkOf t.dmem (rdi s)) 8).isSome = true :=
       hw.load_writable (inside_writable (Or.inr (Or.inr (Or.inr (by simp)))))
     have e0 : wordAt (blkOf t.dmem (rdi s)) 0 = blkOf t.dmem (rdi s) := by simp [wordAt]
@@ -1101,14 +1101,14 @@ theorem takeBound_body [Host] [FunDecls] (hswap : Spec "swap_with" swapWithF swa
     have hT : tN s < (st s).len := by omega
     have hst : stOf t.dmem (rdi s) = st s := by rw [hk.mem]; exact st_m0 hpre
     have hlen : (st s).len = (rd t.dmem (wordAt (rdi s) 0)).toNat := by rw [← hst, stOf_len_rd]
-    have haT : rax t + 2112#64 = wordAt (rdi s) (DEST + tN s) := by rw [hax, addr_dest]
-    have haB : r8 t + 2112#64 = wordAt (rdi s) (DEST + bN s) := by rw [hr8, addr_dest]
-    have hsT : (t.dmem.loadInt (rax t + 2112#64) 8).isSome = true := by
+    have haT : rax t + 8256#64 = wordAt (rdi s) (DEST + tN s) := by rw [hax, addr_dest]
+    have haB : r8 t + 8256#64 = wordAt (rdi s) (DEST + bN s) := by rw [hr8, addr_dest]
+    have hsT : (t.dmem.loadInt (rax t + 8256#64) 8).isSome = true := by
       rw [hk.mem, hax]; exact arr_isSome hpre _ (Or.inr rfl) hT
-    have hsB : (t.dmem.loadInt (r8 t + 2112#64) 8).isSome = true := by
+    have hsB : (t.dmem.loadInt (r8 t + 8256#64) 8).isSome = true := by
       rw [hk.mem, hr8]; exact arr_isSome hpre _ (Or.inr rfl) hb
     have hsw := Mid.swap (by decide) hpre ho.mid (a := tN s) (b := bN s) (by rw [hst]; exact hT)
-      (by rw [hst]; exact hb) (va := rd t.dmem (rax t + 2112#64)) (vb := rd t.dmem (r8 t + 2112#64))
+      (by rw [hst]; exact hb) (va := rd t.dmem (rax t + 8256#64)) (vb := rd t.dmem (r8 t + 8256#64))
       (by rw [haT, stOf_dest_rd (by omega)]) (by rw [haB, stOf_dest_rd (by omega)])
     rw [← haT, ← haB, hst] at hsw
     have hres : takeBound (st s) (tN s) (bN s) = .ok (swapDest (st s) (tN s) (bN s), true) := by

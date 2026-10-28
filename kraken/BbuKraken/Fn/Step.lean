@@ -281,7 +281,7 @@ theorem st_pushes (hpre : Pre 152 stepA s) : stOf (pushes s ra) (rdi s) = st s :
 theorem hdr_isSome {m : Mem 64} {S : Addr} (hw : Wf m S) {k : Nat} (hk : k < 8) :
     (m.loadInt (wordAt S k) 8).isSome = true := by
   have hs := hw.struct_lt
-  simp only [WORDS] at hs
+  simp only [WORDS_eq] at hs
   refine Mem.Mapped.loadInt_isSome hw.mapped (inside_append.mpr ?_)
   by_cases hk3 : k < 3
   · exact Or.inl (Or.inl (by simp only [wordAt]; bv_omega))
@@ -290,9 +290,9 @@ theorem hdr_isSome {m : Mem 64} {S : Addr} (hw : Wf m S) {k : Nat} (hk : k < 8) 
 theorem arr_isSome {m : Mem 64} {S : Addr} (hw : Wf m S) {k : Nat} (hk1 : STACK ≤ k)
     (hk : k < WORDS) : (m.loadInt (wordAt S k) 8).isSome = true := by
   have hs := hw.struct_lt
-  simp only [WORDS, STACK] at hs hk hk1
+  simp only [WORDS_eq, STACK] at hs hk hk1
   refine Mem.Mapped.loadInt_isSome hw.mapped (inside_append.mpr ?_)
-  exact Or.inl (Or.inr (Or.inl (by simp only [wordAt, STACK]; bv_omega)))
+  exact Or.inl (Or.inr (Or.inl (by simp only [wordAt, STACK, MAX_N]; bv_omega)))
 end
 
 /-! ## The `blocked` block -/
@@ -307,9 +307,9 @@ theorem blk_disj {m : Mem 64} {S : Addr} (hw : Wf m S) {k : Nat} (hk : k < WORDS
     Mem.Blocks.Disjoint [(wordAt S k, 8)] [(blkOf m S, 16)] := by
   intro x hx hb
   have hs := hw.struct_lt
-  simp only [WORDS] at hs hk
+  simp only [WORDS_eq] at hs hk
   refine hw.disj_struct x ?_ (inside_of_mem (by simp) hb)
-  simp only [Mem.Blocks.Inside, or_false, WORDS] at hx ⊢
+  simp only [Mem.Blocks.Inside, or_false, WORDS_eq] at hx ⊢
   bv_omega
 
 -- A store to `blocked` keeps the pointer to it.
@@ -344,7 +344,7 @@ theorem hdr_isSome' {m m' : Mem 64} {S : Addr} (hw : Wf m S)
     (hm : Mem.Mapped (writable m S ++ readable m S) m') {k : Nat} (hk : k < 8) :
     (m'.loadInt (wordAt S k) 8).isSome = true := by
   have hs := hw.struct_lt
-  simp only [WORDS] at hs
+  simp only [WORDS_eq] at hs
   refine Mem.Mapped.loadInt_isSome hm (inside_append.mpr ?_)
   by_cases hk3 : k < 3
   · exact Or.inl (Or.inl (by simp only [wordAt]; bv_omega))
@@ -497,11 +497,11 @@ theorem disp7 (a : Addr) : a + BitVec.ofInt 64 (Int64.toInt 56) = wordAt a 7 := 
 
 -- The word of `dest[i]`.
 theorem disp_dest (a i : Word) :
-    a + i * 8#64 + BitVec.ofInt 64 (Int64.toInt 2112) = wordAt a (DEST + i.toNat) := by
-  simp only [wordAt, DEST]
+    a + i * 8#64 + BitVec.ofInt 64 (Int64.toInt 8256) = wordAt a (DEST + i.toNat) := by
+  simp only [wordAt, DEST_eq]
   apply BitVec.eq_of_toNat_eq
   simp only [BitVec.toNat_add, BitVec.toNat_mul, BitVec.toNat_ofNat, BitVec.toNat_ofInt]
-  have : Int64.toInt 2112 = 2112 := by decide
+  have : Int64.toInt 8256 = 8256 := by decide
   rw [this]
   omega
 
@@ -647,19 +647,19 @@ theorem step_fin {e : Env} {st : St} {t : Nat} (h : ¬ (t < st.len ∧ st.dest t
     (hp : st.pending = 0) : step e st t = .ok (st, .finish) := by
   simp [step, h, hp]
 
-theorem msb_small {u : Nat} (h : u ≤ 256) : (BitVec.ofNat 64 u).msb = false := by
+theorem msb_small {u : Nat} (h : u ≤ 1024) : (BitVec.ofNat 64 u).msb = false := by
   rw [BitVec.msb_eq_decide]
   simp only [BitVec.toNat_ofNat, decide_eq_false_iff_not, Nat.not_le]
   omega
 
-theorem toNat_small {u : Nat} (h : u ≤ 256) : (BitVec.ofNat 64 u).toNat = u := by
+theorem toNat_small {u : Nat} (h : u ≤ 1024) : (BitVec.ofNat 64 u).toNat = u := by
   simp only [BitVec.toNat_ofNat]; omega
 
-theorem eq_toNat_of_ofNat {u : Nat} {w : Word} (hu : u ≤ 256) (h : BitVec.ofNat 64 u = w) :
+theorem eq_toNat_of_ofNat {u : Nat} {w : Word} (hu : u ≤ 1024) (h : BitVec.ofNat 64 u = w) :
     u = w.toNat := by
   rw [← h, toNat_small hu]
 
-theorem n_le (hpre : Pre 152 stepA s) : (env s).n ≤ 256 := by
+theorem n_le (hpre : Pre 152 stepA s) : (env s).n ≤ 1024 := by
   rw [env_n]; exact hpre.1.n_le
 
 theorem T_lt (hpre : Pre 152 stepA s) : T s < (env s).n := hpre.2.2.1
@@ -702,12 +702,12 @@ theorem sub_of {L T : Nat} (hlt : T ≤ L) :
   obtain ⟨j, rfl⟩ : ∃ j, L = j + T := ⟨L - T, by omega⟩
   rw [Nat.add_sub_cancel, BitVec.ofNat_add, BitVec.add_sub_cancel]
 
-theorem last_of {L T : Nat} (hL : L ≤ 256) (hlt : T < L)
+theorem last_of {L T : Nat} (hL : L ≤ 1024) (hlt : T < L)
     (h : BitVec.ofNat 64 L + -1#64 = BitVec.ofNat 64 T) : T = L - 1 := by
   rw [ofNat_pred (by omega)] at h
   exact (ofNat_inj64 (by omega) (by omega) h).symm
 
-theorem gap_of {L T : Nat} (hL : L ≤ 256) (hlt : T < L) :
+theorem gap_of {L T : Nat} (hL : L ≤ 1024) (hlt : T < L) :
     (BitVec.ofNat 64 L - BitVec.ofNat 64 T + -1#64).toNat = L - 1 - T := by
   rw [sub_of (by omega), ofNat_pred (by omega), BitVec.toNat_ofNat, Nat.mod_eq_of_lt (by omega)]
   omega
@@ -879,9 +879,9 @@ theorem rd_len' {m : Mem 64} {S : Addr} : rd m (wordAt S 0) = BitVec.ofNat 64 (s
 theorem dest_isSome {m : Mem 64} {S : Addr} (hw : Wf m S) {i : Word}
     (hi : i.toNat < (rd m (wordAt S 0)).toNat) :
     (m.loadInt (wordAt S (DEST + i.toNat)) 8).isSome = true := by
-  have := hw.len_le
-  refine arr_isSome hw (by simp only [STACK, DEST]; omega) ?_
-  simp only [WORDS, DEST]
+  have : _ ≤ 1024 := hw.len_le
+  refine arr_isSome hw (by simp only [STACK, DEST_eq]; omega) ?_
+  simp only [WORDS_eq, DEST_eq]
   omega
 
 -- `.LB107`: write `blocked` and return `-1`.
@@ -897,7 +897,7 @@ theorem at107_out (hpre : Pre 152 stepA s) (hb : Base s ra t)
     (h13 : u.regs.r13 = t.regs.r13) (h15 : u.regs.r15 = t.regs.r15) (hax : rax u = -1#64) :
     At89 s ra u := by
   have hw := hb.fm.wf
-  have hL := hw.len_le
+  have hL : _ ≤ 1024 := hw.len_le
   rw [rd_len] at hL
   rw [hb.rbp, blkOf_def, blkOf_def, blkOf_store hw (by decide), hb.rbx] at hm
   have hu : u.dmem = ((t.dmem.storeInt (wordAt (blkOf t.dmem (rdi s)) 0) 8 (rsi s).toInt).storeInt
@@ -949,7 +949,7 @@ theorem gen_pre (hpre : Pre 152 stepA s) (hb : Base s ra t) (hst : st' s t = st 
   have h1 := n_le hpre
   have h2 := hpre.2.2.2.1
   have h3 := hpre.2.2.2.2
-  unfold generateA
+  unfold generateA MAX_N
   rw [st_call hc hdi, hst, cap_call hpre hb hc hdi]
   omega
 
@@ -1053,7 +1053,7 @@ theorem take_preR {dx : UInt64} (hpre : Pre 152 stepA s) (hb : Base s ra u)
   rw [st_callR hb, cap_callR hpre hb]
   exact ⟨hdx, hops⟩
 
-theorem pos_none {st : St} {k : Nat} {w : Word} (hL : st.len ≤ 256)
+theorem pos_none {st : St} {k : Nat} {w : Word} (hL : st.len ≤ 1024)
     (h : w = encOpt (positionOf st k)) (hm : w.msb = true) : positionOf st k = none := by
   cases hp : positionOf st k with
   | none => rfl
@@ -1062,7 +1062,7 @@ theorem pos_none {st : St} {k : Nat} {w : Word} (hL : st.len ≤ 256)
     rw [h, encOpt, msb_small (Nat.le_trans (Nat.le_of_lt (positionOf_lt hp)) hL)] at hm
     cases hm
 
-theorem pos_some {st : St} {k : Nat} {w : Word} (hL : st.len ≤ 256)
+theorem pos_some {st : St} {k : Nat} {w : Word} (hL : st.len ≤ 1024)
     (h : w = encOpt (positionOf st k)) (hm : w.msb = false) : positionOf st k = some w.toNat := by
   cases hp : positionOf st k with
   | none =>
@@ -1241,7 +1241,7 @@ theorem j2_add16 {t : MachineData} (hpre : Pre 152 stepA s) (hb : Base s ra t) :
     (t.regs.rbx.toBitVec + 16#64).toNat = T s + 16 := by
   rw [hb.rbx]; exact toNat_add (rsi_small hpre)
 
-theorem j2_msb_encOpt {o : Option Nat} (h : ∀ p, o = some p → p ≤ 256) :
+theorem j2_msb_encOpt {o : Option Nat} (h : ∀ p, o = some p → p ≤ 1024) :
     (encOpt o).msb = true ↔ o = none := by
   cases o with
   | none => exact ⟨fun _ => rfl, fun _ => by decide⟩
@@ -1350,9 +1350,9 @@ theorem step_body [Host] [FunDecls]
     case vc6 =>
       rename_i hlt
       have hw := (fm_pushes hpre (ra := ra)).wf
-      have := hw.len_le
-      refine arr_isSome hw (by simp only [STACK, DEST]; omega) ?_
-      simp only [WORDS, DEST, rdi, Reg64s.get64_rdi] at *
+      have : _ ≤ 1024 := hw.len_le
+      refine arr_isSome hw (by simp only [STACK, DEST_eq]; omega) ?_
+      simp only [WORDS_eq, DEST_eq, rdi, Reg64s.get64_rdi] at *
       omega
     case vc7 =>
       rename_i hlt hd
@@ -1651,7 +1651,7 @@ theorem step_body [Host] [FunDecls]
     all_goals clear hurg hpos htake hswap hgen
     all_goals step_norm
     all_goals obtain ⟨-, hlt, hd, hdx, hops, hs⟩ := ht
-    all_goals have hL : (st' s t).len ≤ 256 := (by have h := hb.fm.wf.len_le; rw [rd_len] at h; exact h)
+    all_goals have hL : (st' s t).len ≤ 1024 := (by have h := hb.fm.wf.len_le; rw [rd_len] at h; exact h)
     all_goals have hdx' : t.regs.rdx.toBitVec = BitVec.ofNat 64 (st' s t).len := hdx
     all_goals try (
       have hp := hyp% (Post swapWithF swapWithR _ _)
@@ -1701,7 +1701,7 @@ theorem step_body [Host] [FunDecls]
     all_goals clear hurg hgen hpos htake hswap
     all_goals step_norm
     all_goals obtain ⟨-, hst, hpd, hs⟩ := ht
-    all_goals have hL : (st s).len ≤ 256 := (by
+    all_goals have hL : (st s).len ≤ 1024 := (by
       rw [← hst]; have h := hb.fm.wf.len_le; rw [rd_len] at h; exact h)
     all_goals try (
       have hp := hyp% (Post positionOfF positionOfR _ _)
@@ -1810,8 +1810,8 @@ theorem step_body [Host] [FunDecls]
     obtain ⟨-, hst, hpd, u, hcx, hdx, hu, hs⟩ := ht
     have hn := n_le hpre
     have htn := T_lt hpre
-    have hll : (st s).len < 256 := by have := hpre.2.2.2.1; omega
-    have hun' : u ≤ 256 := by rcases hu with h | h <;> omega
+    have hll : (st s).len < 1024 := by have := hpre.2.2.2.1; omega
+    have hun' : u ≤ 1024 := by rcases hu with h | h <;> omega
     have hlen : (rd t.dmem (wordAt t.regs.rbp.toBitVec 0)).toNat = (st s).len := by
       rw [hb.rbp]; exact len_of hst
     have hbx : t.regs.rbx.toBitVec.toNat = T s := by rw [hb.rbx]

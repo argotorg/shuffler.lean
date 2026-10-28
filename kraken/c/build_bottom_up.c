@@ -20,7 +20,7 @@ struct op {
 	uint64_t kind, arg;
 };
 
-int64_t permute(uint64_t n, uint8_t *perm, uint8_t *trace, uint8_t *blocked);
+int64_t permute(uint64_t n, uint16_t *perm, uint8_t *trace, uint16_t *blocked);
 
 /*
  * Values are numbers: 0 is a wildcard, 1 a function return label, 2 + 2 id a
@@ -32,7 +32,7 @@ struct st {
 	const uint8_t *spilled;
 	struct op *ops;
 	uint64_t *blocked;
-	uint64_t stack[256], dest[256];
+	uint64_t stack[1024], dest[1024];
 };
 
 static int is_free(uint64_t v)
@@ -262,7 +262,9 @@ UNIT static int64_t step(struct st *s, uint64_t t)
 /* the final permutation; len = n and dest is a permutation */
 UNIT static int64_t finish(struct st *s)
 {
-	uint8_t perm[256], trace[512], blocked[2];
+	uint16_t perm[1024];
+	uint8_t trace[2048];
+	uint16_t blocked[2];
 	for (uint64_t i = 0; i < s->len; i++)
 		perm[i] = s->dest[i];
 	int64_t k = permute(s->len, perm, trace, blocked);
@@ -282,7 +284,7 @@ UNIT static int64_t finish(struct st *s)
  * variable id is spilled. Write the operations to ops and return their number,
  * write the blocked offset and excess and return BLOCKED, or return ASSERTION.
  *
- * m <= n <= 256, dest holds distinct offsets below n, every variable id in
+ * m <= n <= 1024, dest holds distinct offsets below n, every variable id in
  * target is an index of spilled, and ops has room for 6n entries.
  */
 int64_t build_bottom_up(uint64_t m, uint64_t n, const uint64_t *source,

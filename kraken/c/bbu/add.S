@@ -24,7 +24,7 @@ add:
 	addq	$1, 16(%rbx)
 	movq	(%rbx), %rax
 	movq	%r12, 64(%rbx,%rax,8)
-	movq	%rbp, 2112(%rbx,%rax,8)
+	movq	%rbp, 8256(%rbx,%rax,8)
 	addq	$1, %rax
 	movq	%rax, (%rbx)
 	movl	$0, %eax

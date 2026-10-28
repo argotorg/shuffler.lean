@@ -3,7 +3,7 @@ swap_with:
 	cmpq	%r8, %rsi
 	jnb	.LB23
 	leaq	(%rdi,%rsi,8), %rax
-	cmpq	%rsi, 2112(%rax)
+	cmpq	%rsi, 8256(%rax)
 	je	.LB24
 	leaq	-1(%r8), %rcx
 	subq	%rsi, %rcx
@@ -24,10 +24,10 @@ swap_with:
 	movq	56(%rdx), %rsi
 	movq	%rsi, 64(%rax)
 	movq	%rcx, 56(%rdx)
-	movq	2112(%rax), %rcx
-	movq	2104(%rdx), %rsi
-	movq	%rsi, 2112(%rax)
-	movq	%rcx, 2104(%rdx)
+	movq	8256(%rax), %rcx
+	movq	8248(%rdx), %rsi
+	movq	%rsi, 8256(%rax)
+	movq	%rcx, 8248(%rdx)
 	movl	$0, %eax
 	ret
 .LB23:

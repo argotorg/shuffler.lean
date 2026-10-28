@@ -1,7 +1,7 @@
 build_bottom_up:
 	pushq	%rbp
 	pushq	%rbx
-	subq	$4168, %rsp
+	subq	$16456, %rsp
 	movq	%rsi, %rbx
 	movq	%rdi, (%rsp)
 	movq	%rsi, %rax
@@ -11,9 +11,9 @@ build_bottom_up:
 	movq	%rsi, 24(%rsp)
 	movq	%rcx, 32(%rsp)
 	movq	%r9, 40(%rsp)
-	movq	4192(%rsp), %rax
+	movq	16480(%rsp), %rax
 	movq	%rax, 48(%rsp)
-	movq	4200(%rsp), %rax
+	movq	16488(%rsp), %rax
 	movq	%rax, 56(%rsp)
 	testq	%rdi, %rdi
 	je	.LB109
@@ -24,7 +24,7 @@ build_bottom_up:
 	movq	(%rsi,%rax,8), %rdx
 	movq	%rdx, 64(%rsp,%rax,8)
 	movq	(%r8,%rax,8), %rdx
-	movq	%rdx, 2112(%rsp,%rax,8)
+	movq	%rdx, 8256(%rsp,%rax,8)
 	addq	$1, %rax
 	cmpq	%rax, %rdi
 	jne	.LB110
@@ -49,7 +49,7 @@ build_bottom_up:
 .LB116:
 	movq	16(%rsp), %rax
 .LB108:
-	addq	$4168, %rsp
+	addq	$16456, %rsp
 	popq	%rbx
 	popq	%rbp
 	ret

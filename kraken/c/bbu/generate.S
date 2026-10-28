@@ -14,7 +14,7 @@ generate:
 	cmpq	%rdx, %rcx
 	jnb	.LB41
 	leaq	0(%rbp,%rbx,8), %rcx
-	movq	2112(%rcx), %rsi
+	movq	8256(%rcx), %rsi
 	cmpq	%rbx, %rsi
 	je	.LB41
 	leaq	0(%rbp,%rdx,8), %rax
@@ -31,9 +31,9 @@ generate:
 	popq	%rbp
 	ret
 .LB52:
-	movq	2104(%rax), %rdx
-	movq	%rdx, 2112(%rcx)
-	movq	%rsi, 2104(%rax)
+	movq	8248(%rax), %rdx
+	movq	%rdx, 8256(%rcx)
+	movq	%rsi, 8248(%rax)
 	movl	$0, %eax
 	jmp	.LB41
 .LB53:

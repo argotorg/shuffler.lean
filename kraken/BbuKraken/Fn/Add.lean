@@ -205,20 +205,20 @@ variable {m : Mem 64} {S : Addr}
 -- The struct before the stores of `add`.
 structure Lay (m : Mem 64) (S : Addr) : Prop where
   wf : Wf m S
-  len : (rd m S).toNat < 256
+  len : (rd m S).toNat < 1024
   nops : (rd m (S + 16#64)).toNat < 6 * nOf m S
 
 theorem Lay.nat (h : Lay m S) :
-    S.toNat + 4160 ≤ 2 ^ 64 ∧ (rd m (S + 48#64)).toNat + 96 * nOf m S ≤ 2 ^ 64
-      ∧ 4160 ≤ (rd m (S + 48#64) - S).toNat ∧ 96 * nOf m S ≤ (S - rd m (S + 48#64)).toNat := by
-  have hs : S.toNat + 4160 ≤ 2 ^ 64 := h.wf.struct_lt
+    S.toNat + 16448 ≤ 2 ^ 64 ∧ (rd m (S + 48#64)).toNat + 96 * nOf m S ≤ 2 ^ 64
+      ∧ 16448 ≤ (rd m (S + 48#64) - S).toNat ∧ 96 * nOf m S ≤ (S - rd m (S + 48#64)).toNat := by
+  have hs : S.toNat + 16448 ≤ 2 ^ 64 := h.wf.struct_lt
   have ho : (rd m (S + 48#64)).toNat + 96 * nOf m S ≤ 2 ^ 64 := h.wf.ops_lt
   have hn := h.nops
   refine ⟨hs, ho, Nat.not_lt.mp fun hx => ?_, Nat.not_lt.mp fun hx => ?_⟩
-  · refine h.wf.disj_struct (rd m (S + 48#64)) (Or.inl (show _ + 1 ≤ 4160 by omega)) (Or.inl ?_)
+  · refine h.wf.disj_struct (rd m (S + 48#64)) (Or.inl (show _ + 1 ≤ 16448 by omega)) (Or.inl ?_)
     show (rd m (S + 48#64) - rd m (S + 48#64)).toNat + 1 ≤ 96 * nOf m S
     simp only [BitVec.sub_self, BitVec.toNat_zero]; omega
-  · refine h.wf.disj_struct S (Or.inl (show (S - S).toNat + 1 ≤ 4160 by simp)) (Or.inl ?_)
+  · refine h.wf.disj_struct S (Or.inl (show (S - S).toNat + 1 ≤ 16448 by simp)) (Or.inl ?_)
     show (S - rd m (S + 48#64)).toNat + 1 ≤ 96 * nOf m S
     omega
 
@@ -256,7 +256,7 @@ theorem rd_st3 (h : Lay m S) (v w x : Int) :
 def stores (m : Mem 64) (S : Addr) (v d c r : Word) : Mem 64 :=
   (((((m.storeInt (opA m S) 8 c.toInt).storeInt (opA m S + 8#64) 8 r.toInt).storeInt (S + 16#64) 8
     (1#64 + rd m (S + 16#64)).toInt).storeInt (S + rd m S * 8#64 + 64#64) 8 v.toInt).storeInt
-    (S + rd m S * 8#64 + 2112#64) 8 d.toInt).storeInt S 8 (1#64 + rd m S).toInt
+    (S + rd m S * 8#64 + 8256#64) 8 d.toInt).storeInt S 8 (1#64 + rd m S).toInt
 
 theorem stores_un (h : Lay m S) (v d c r : Word) :
     Mem.UnchangedOutside (writable m S) m (stores m S v d c r) := by
@@ -265,7 +265,7 @@ theorem stores_un (h : Lay m S) (v d c r : Word) :
   have hl := h.len
   have h0 : Mem.UnchangedOutside (writable m S) m m := fun _ _ => rfl
   refine ((((((h0.storeInt ?_ _).storeInt ?_ _).storeInt ?_ _).storeInt ?_ _).storeInt ?_ _).storeInt ?_ _)
-  all_goals simp only [writable, opsOf, wordAt, STACK, Mem.Blocks.Inside, Nat.reduceMul]
+  all_goals simp only [writable, opsOf, wordAt, STACK, MAX_N, Mem.Blocks.Inside, Nat.reduceMul]
   · exact Or.inr (Or.inr (Or.inl (by bv_omega)))
   · exact Or.inr (Or.inr (Or.inl (by bv_omega)))
   · exact Or.inl (by bv_omega)
@@ -297,13 +297,13 @@ theorem stOf_stores (h : Lay m S) (v d c r : Word) :
       rd_store_other _ (by bv_omega), rd_store_other _ (by bv_omega), rd_store_other _ (by bv_omega)]
   have hslot : ∀ i < (rd m S).toNat, slotOf (stores m S v d c r) S i = slotOf m S i := by
     intro i hi
-    simp only [slotOf, stores, STACK, DEST]
+    simp only [slotOf, stores, STACK, DEST_eq]
     rw [rd_store_other _ (by bv_omega), rd_store_other _ (by bv_omega), rd_store_other _ (by bv_omega),
       rd_store_other _ (by bv_omega), rd_store_other _ (by bv_omega), rd_store_other _ (by bv_omega),
       rd_store_other _ (by bv_omega), rd_store_other _ (by bv_omega), rd_store_other _ (by bv_omega),
       rd_store_other _ (by bv_omega), rd_store_other _ (by bv_omega), rd_store_other _ (by bv_omega)]
   have hslotL : slotOf (stores m S v d c r) S (rd m S).toNat = ⟨v, d.toNat⟩ := by
-    simp only [slotOf, stores, STACK, DEST]
+    simp only [slotOf, stores, STACK, DEST_eq]
     rw [rd_store_other _ (by bv_omega), rd_store_other _ (by bv_omega), rd_store_same _ (by bv_omega),
       rd_store_other _ (by bv_omega), rd_store_same _ (by bv_omega), BitVec.ofInt_toInt,
       BitVec.ofInt_toInt]
@@ -339,7 +339,7 @@ theorem ns_test (v : Word) (r) :
   simp [CondCode.interp, StatusFlags.from_result]
 
 -- `jns` after `testq` of the result of `position_of`.
-theorem pos_ns {st : St} {d : Nat} (hl : st.len ≤ 256) (r) :
+theorem pos_ns {st : St} {d : Nat} (hl : st.len ≤ 1024) (r) :
     CondCode.ns.interp (StatusFlags.from_result (encOpt (positionOf st d) &&& encOpt (positionOf st d)) r)
       = (positionOf st d).isSome := by
   rw [ns_test]
@@ -361,7 +361,7 @@ theorem Fm.lay (hpre : Pre 56 addA s) (h : Fm s ra m) (hst : stOf m (rdi s) = st
   obtain ⟨-, -, hl, ho⟩ := hpre
   rw [← hst] at hl ho
   refine ⟨h.wf, ?_, ?_⟩
-  · simpa [St.len, stOf, wordAt] using hl
+  · simpa [St.len, stOf, wordAt, MAX_N] using hl
   · rw [hn]; simpa [stOf, cap] using ho
 
 theorem Fm.after_stores (hpre : Pre 56 addA s) (h : Fm s ra m) (hl : Lay m (rdi s)) (v d c r : Word) :
@@ -393,7 +393,7 @@ theorem Fm.after_stores (hpre : Pre 56 addA s) (h : Fm s ra m) (hl : Lay m (rdi 
   · rw [hsv (k := 40) (by omega) (by omega)]; exact h.rbp
   · rw [hsv (k := 48) (by omega) (by omega)]; exact h.rbx
   · exact ((((((hm0.storeInt _ _ _).storeInt _ _ _).storeInt _ _ _).storeInt _ _ _).storeInt _ _ _).storeInt _ _ _)
-  · simp only [wordAt, Nat.reduceMul, BitVec.add_zero] at hsl hlen ⊢; omega
+  · simp only [wordAt, Nat.reduceMul, BitVec.add_zero, MAX_N] at hsl hlen ⊢; omega
   · simp only [wordAt, Nat.reduceMul] at hop hnops ⊢; omega
   · exact ((((((h.map.storeInt _ _ _).storeInt _ _ _).storeInt _ _ _).storeInt _ _ _).storeInt _ _ _).storeInt _ _ _)
   · intro x hx
@@ -518,7 +518,7 @@ theorem add_body [Host] [FunDecls]
       clear ‹Post positionOfF positionOfR _ _› ‹(mod positionOfF _).Agree _ _›
       have hl := hA.fm.lay hpre hA.mst
       have hw := hA.fm.wf
-      have h256 : (st s).len ≤ 256 := Nat.le_of_lt hpre.2.2.1
+      have h256 : (st s).len ≤ 1024 := Nat.le_of_lt hpre.2.2.1
       bbu_norm at *
       try simp only [hA.rbx, hA.rbp, hA.r12, hA.r13, hA.r14, hA.r15, hA.ax] at *
       simp only [pos_ns h256] at *
@@ -542,7 +542,7 @@ theorem add_body [Host] [FunDecls]
       · obtain ⟨h1, h2, h3, h4⟩ := hl.nat
         have := hl.nops
         have := hl.len
-        simp only [writable, readable, opsOf, wordAt, STACK, List.cons_append, Mem.Blocks.Inside,
+        simp only [writable, readable, opsOf, wordAt, STACK, MAX_N, List.cons_append, Mem.Blocks.Inside,
           Nat.reduceMul]
         first
         | (left; bv_omega)

@@ -7,7 +7,7 @@ step:
 	cmpq	(%rdi), %rsi
 	jnb	.LB90
 	leaq	1(%rsi), %rax
-	cmpq	%rsi, 2112(%rdi,%rsi,8)
+	cmpq	%rsi, 8256(%rdi,%rsi,8)
 	je	.LB89
 .LB90:
 	cmpq	$0, 8(%rbp)
@@ -43,7 +43,7 @@ step:
 	movq	0(%rbp), %rdx
 	cmpq	%rdx, %rbx
 	jnb	.LB103
-	cmpq	%rbx, 2112(%rbp,%rbx,8)
+	cmpq	%rbx, 8256(%rbp,%rbx,8)
 	je	.LB104
 .LB96:
 	leaq	-1(%rdx), %rax
@@ -108,7 +108,7 @@ step:
 	cmpq	%rdx, %rbx
 	jnb	.LB89
 	leaq	1(%rbx), %rax
-	cmpq	%rbx, 2112(%rbp,%rbx,8)
+	cmpq	%rbx, 8256(%rbp,%rbx,8)
 	jne	.LB96
 	jmp	.LB89
 .LB107:

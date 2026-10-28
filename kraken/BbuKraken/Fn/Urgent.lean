@@ -296,7 +296,7 @@ theorem fm_pushes (hpre : Pre 64 urgentA s) : Fm s ra (pushes s ra) := by
 theorem hdr_isSome {m : Mem 64} {S a : Addr} (hw : Wf m S) {k : Nat} (hk : k < 8)
     (ha : a = wordAt S k) : (m.loadInt a 8).isSome = true := by
   have hs := hw.struct_lt
-  simp only [WORDS] at hs
+  simp only [WORDS_eq] at hs
   subst ha
   refine Mem.Mapped.loadInt_isSome hw.mapped (inside_append.mpr ?_)
   by_cases hk3 : k < 3
@@ -324,9 +324,9 @@ theorem blk_disj {m : Mem 64} {S : Addr} (hw : Wf m S) {k : Nat} (hk : k < WORDS
     Mem.Blocks.Disjoint [(wordAt S k, 8)] [(blkOf m S, 16)] := by
   intro x hx hb
   have hs := hw.struct_lt
-  simp only [WORDS] at hs hk
+  simp only [WORDS_eq] at hs hk
   refine hw.disj_struct x ?_ (inside_of_mem (by simp) hb)
-  simp only [Mem.Blocks.Inside, or_false, WORDS] at hx ⊢
+  simp only [Mem.Blocks.Inside, or_false, WORDS_eq] at hx ⊢
   bv_omega
 
 -- A store to `blocked` keeps the pointer to it.
@@ -353,7 +353,7 @@ theorem hdr_isSome' {m m' : Mem 64} {S : Addr} (hw : Wf m S)
     (hm : Mem.Mapped (writable m S ++ readable m S) m') {k : Nat} (hk : k < 8) :
     (m'.loadInt (wordAt S k) 8).isSome = true := by
   have hs := hw.struct_lt
-  simp only [WORDS] at hs
+  simp only [WORDS_eq] at hs
   refine Mem.Mapped.loadInt_isSome hm (inside_append.mpr ?_)
   by_cases hk3 : k < 3
   · exact Or.inl (Or.inl (by simp only [wordAt]; bv_omega))
@@ -492,8 +492,8 @@ theorem zf_sub (a b : Word) : ((a - b == BitVec.zero 64) = true) ↔ a = b := by
 theorem zf_sub' (a b : Word) : ((a - b == BitVec.zero 64) = false) ↔ a ≠ b := by
   rw [← Bool.not_eq_true, zf_sub]
 
--- `rbx + 1` for `rbx < 256`.
-theorem toNat_one_add {x : Word} (h : x.toNat < 256) : (1#64 + x).toNat = x.toNat + 1 := by
+-- `rbx + 1` for `rbx < 1024`.
+theorem toNat_one_add {x : Word} (h : x.toNat < 1024) : (1#64 + x).toNat = x.toNat + 1 := by
   rw [BitVec.toNat_add]; simp only [BitVec.toNat_ofNat]; omega
 
 -- The stack at the loop labels.
@@ -704,8 +704,8 @@ theorem isFree_odd {v : Word} (ho : v.toNat % 2 = 1) (h1 : v ≠ 1#64) : isFree 
 theorem isFree_even {v : Word} (h0 : v ≠ 0#64) (he : v.toNat % 2 = 0) : isFree v = false := by
   simp [isFree, h0, he]
 
--- The sign of an optional position below 256.
-theorem msb_encOpt {o : Option Nat} (h : ∀ p, o = some p → p < 256) : (encOpt o).msb = o.isNone := by
+-- The sign of an optional position below 1024.
+theorem msb_encOpt {o : Option Nat} (h : ∀ p, o = some p → p < 1024) : (encOpt o).msb = o.isNone := by
   cases o with
   | none => decide
   | some p =>
@@ -778,7 +778,7 @@ theorem pos_rax {t c u : MachineData} (hsc : st c = st s) (hrsi : rsi c = t.regs
   exact h
 
 -- The sign of the result of `position_of`.
-theorem pos_msb {st : St} {d : Nat} (hlen : st.len ≤ 256) :
+theorem pos_msb {st : St} {d : Nat} (hlen : st.len ≤ 1024) :
     (encOpt (positionOf st d)).msb = (positionOf st d).isNone :=
   msb_encOpt fun _ h => by have := positionOf_lt h; omega
 
@@ -861,7 +861,7 @@ theorem z_depth {u : MachineData} (hl : Lp s ra u) {c : Nat} (hc : c < (st s).le
   rw [z_sub, depth_eq hl hc]
 
 -- The test `c != t && u == n` before the `cmove` of `.LB85`.
-theorem dup_cond {u : MachineData} (hl : Lp s ra u) {c : Nat} (hc : c < 256) :
+theorem dup_cond {u : MachineData} (hl : Lp s ra u) {c : Nat} (hc : c < 1024) :
     ((u.regs.r15.toBitVec != BitVec.ofNat 64 c) && (u.regs.r14.toBitVec == u.regs.r13.toBitVec))
       = decide (c ≠ (rsi s).toNat ∧ u.regs.r14.toNat = (env s).n) := by
   rw [hl.r15, hl.r13, env_n]
@@ -874,7 +874,7 @@ theorem dup_cond {u : MachineData} (hl : Lp s ra u) {c : Nat} (hc : c < 256) :
 end
 
 -- The sign of the result of `shallowest_copy`.
-theorem copy_msb {st : St} {v : Word} (hlen : st.len ≤ 256) :
+theorem copy_msb {st : St} {v : Word} (hlen : st.len ≤ 1024) :
     (encOpt (shallowestCopy st v)).msb = (shallowestCopy st v).isNone :=
   msb_encOpt fun _ h => by have := shallowestCopy_lt h; omega
 
@@ -961,7 +961,7 @@ theorem urgent_body [Host] [FunDecls]
         omega
   case right.right.left t ht =>
     obtain ⟨hfm, hrsp, hrbp, c, hrax, hrdx, hc16, hurg⟩ := ht
-    have hlen : (st s).len ≤ 256 := by rw [st_len]; exact hpre.1.len_le
+    have hlen : (st s).len ≤ 1024 := by rw [st_len]; exact hpre.1.len_le
     have hbl := hfm.wf.blk_lt
     kvcgen64
     all_goals simp only [rd_def] at *
@@ -1022,7 +1022,7 @@ theorem urgent_body [Host] [FunDecls]
           | assertion => rw [h] at hout; exact hout.elim
   case right.right.right.right.left t ht =>
     obtain ⟨hlp, hlt, hurg⟩ := ht
-    have hn := hpre.1.n_le
+    have hn : _ ≤ 1024 := hpre.1.n_le
     have h1 : (1#64 + t.regs.rbx.toBitVec).toNat = t.regs.rbx.toNat + 1 :=
       toNat_one_add (x := t.regs.rbx.toBitVec) (by simp only [N, UInt64.toNat_toBitVec] at *; omega)
     have h1' : ({ toBitVec := 1#64 + t.regs.rbx.toBitVec } : UInt64).toNat = t.regs.rbx.toNat + 1 := h1
@@ -1054,8 +1054,8 @@ theorem urgent_body [Host] [FunDecls]
         omega
   case right.right.right.right.right.left t ht =>
     obtain ⟨hlp, hlt, hurg⟩ := ht
-    have hlen : (st s).len ≤ 256 := by rw [st_len]; exact hpre.1.len_le
-    have hn := hpre.1.n_le
+    have hlen : (st s).len ≤ 1024 := by rw [st_len]; exact hpre.1.len_le
+    have hn : _ ≤ 1024 := hpre.1.n_le
     kvcgen64
     all_goals simp only [rd_def] at *
     all_goals try simp only [disp4, idx, ns_test, z_test, z_odd, nz_one] at *
@@ -1134,8 +1134,8 @@ theorem urgent_body [Host] [FunDecls]
       simp only [V, hbx]; simp
   case right.right.right.right.right.right t ht =>
     obtain ⟨⟨hlp, hlt, hurg⟩, hnone, hv, hfree⟩ := ht
-    have hlen : (st s).len ≤ 256 := by rw [st_len]; exact hpre.1.len_le
-    have hn := hpre.1.n_le
+    have hlen : (st s).len ≤ 1024 := by rw [st_len]; exact hpre.1.len_le
+    have hn : _ ≤ 1024 := hpre.1.n_le
     have he : envOf t.dmem t.regs.rbp.toBitVec = env s := by
       rw [hlp.rbp]; exact (keeps hpre hlp.fm.un).1
     have hd : t.regs.rbx.toNat < (env s).n := by rw [env_n]; exact hlt

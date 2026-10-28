@@ -77,21 +77,21 @@ theorem positionOf_body [Host] [FunDecls] : Body positionOfAsm positionOfF posit
   case right.right.left t ht =>
     obtain ⟨hk, hdi, hsi, hdx, i, hax, hi, hb⟩ := ht
     dsimp only [rdi, rsi, rdx, rax] at hdi hsi hdx hax
-    have hi64 : i < 256 := Nat.lt_of_lt_of_le hi hw.len_le
-    have haddr : t.regs.get64 .rdi + t.regs.get64 .rax * 8#64 + BitVec.ofInt 64 (Int64.toInt 2112)
+    have hi64 : i < 1024 := Nat.lt_of_lt_of_le hi hw.len_le
+    have haddr : t.regs.get64 .rdi + t.regs.get64 .rax * 8#64 + BitVec.ofInt 64 (Int64.toInt 8256)
         = wordAt (rdi s) (DEST + i) := by
-      have h : BitVec.ofInt 64 (Int64.toInt 2112) = 2112#64 := by decide
+      have h : BitVec.ofInt 64 (Int64.toInt 8256) = 8256#64 := by decide
       rw [hdi, hax, h]
-      simp only [DEST, wordAt, rdi]
+      simp only [DEST_eq, wordAt, rdi]
       bv_omega
     kvcgen64
     case vc1 =>
       rw [hk.mem, haddr]
-      exact hw.load_writable (inside_arr (by simp only [STACK, DEST]; omega)
-        (by simp only [DEST, WORDS]; omega))
+      exact hw.load_writable (inside_arr (by simp only [STACK, DEST_eq]; omega)
+        (by simp only [DEST_eq, WORDS_eq]; omega))
     case vc2 hz =>
       have heq : rd t.dmem (t.regs.get64 .rdi + t.regs.get64 .rax * 8#64
-          + BitVec.ofInt 64 (Int64.toInt 2112)) = t.regs.get64 .rsi :=
+          + BitVec.ofInt 64 (Int64.toInt 8256)) = t.regs.get64 .rsi :=
         beq_iff_eq.mp ((z_sub _ _ _ _ _).symm.trans hz)
       rw [hk.mem, haddr, hsi] at heq
       cfg_goto
@@ -106,7 +106,7 @@ theorem positionOf_body [Host] [FunDecls] : Body positionOfAsm positionOfF posit
       have hne : rd (s.pushRa ra).dmem (wordAt (rdi s) (DEST + i)) ≠ rsi s := by
         intro h
         have h' : rd t.dmem (t.regs.get64 .rdi + t.regs.get64 .rax * 8#64
-            + BitVec.ofInt 64 (Int64.toInt 2112)) = t.regs.get64 .rsi := by
+            + BitVec.ofInt 64 (Int64.toInt 8256)) = t.regs.get64 .rsi := by
           rw [hk.mem, haddr, hsi]; exact h
         have := (z_sub _ _ _ _ _).symm.trans hz
         exact (beq_eq_false_iff_ne.mp this) h'
@@ -144,7 +144,7 @@ theorem positionOf_body [Host] [FunDecls] : Body positionOfAsm positionOfF posit
       have hne : rd (s.pushRa ra).dmem (wordAt (rdi s) (DEST + i)) ≠ rsi s := by
         intro h
         have h' : rd t.dmem (t.regs.get64 .rdi + t.regs.get64 .rax * 8#64
-            + BitVec.ofInt 64 (Int64.toInt 2112)) = t.regs.get64 .rsi := by
+            + BitVec.ofInt 64 (Int64.toInt 8256)) = t.regs.get64 .rsi := by
           rw [hk.mem, haddr, hsi]; exact h
         have := (z_sub _ _ _ _ _).symm.trans hz
         exact (beq_eq_false_iff_ne.mp this) h'

@@ -89,7 +89,7 @@ theorem shallowestCopy_body [Host] [FunDecls] :
   case right.right.left t ht =>
     obtain ⟨hk, hdi, hsi, i, hax, hi, hb⟩ := ht
     dsimp only [rdi, rsi, rax] at hdi hsi hax
-    have hi64 : i ≤ 256 := Nat.le_trans hi hw.len_le
+    have hi64 : i ≤ 1024 := Nat.le_trans hi hw.len_le
     have haddr : i ≠ 0 → t.regs.get64 .rdi + (t.regs.get64 .rax - 1#64) * 8#64
         + BitVec.ofInt 64 (Int64.toInt 64) = wordAt (rdi s) (STACK + (i - 1)) := fun h0 => by
       have h : BitVec.ofInt 64 (Int64.toInt 64) = 64#64 := by decide
@@ -122,7 +122,7 @@ theorem shallowestCopy_body [Host] [FunDecls] :
         + BitVec.ofInt 64 (Int64.toInt 64)) 8).isSome = true
       rw [hk.mem, haddr h0]
       exact hw.load_writable (inside_arr (by simp only [STACK]; omega)
-        (by simp only [STACK, WORDS]; omega))
+        (by simp only [STACK, WORDS_eq]; omega))
     case vc3 _ hz hnz =>
       have h0 : i ≠ 0 := by simpa using hz0.symm.trans ((z_and_self _ _).symm.trans hz)
       have hne : rd (s.pushRa ra).dmem (wordAt (rdi s) (STACK + (i - 1))) ≠ rsi s := by

@@ -98,6 +98,25 @@ local macro "run_step" : tactic =>
     AddrExpr.zeroExtend_interp_base_idx8, Width.bytes, hload, Effects.All]
   exact hn _ hpre
 
+/-- `movw %r16, disp(%b, %i, 2)` -/
+@[spec] public theorem mov_store_word_idx2_spec (b i : Reg64) (d : Int64) (r : Reg64) :
+    ⦃ fun s =>
+        let a := s.regs.get64 b + s.regs.get64 i * 2#64 + BitVec.ofInt 64 d.toInt
+        (Mem.loadInt s.dmem a 2).isSome = true
+        ∧ Q () { s with dmem := Mem.storeInt s.dmem a 2 (s.regs.get (.low r .W16)).toInt } ⦄
+      (Directive.instr (.regular .W64 .W16
+          (.mov (.mem ⟨some (.reg b), some ⟨i, .W16⟩, .int64 d⟩)
+            (.regOrMem (.reg (.low r .W16))))))
+    ⦃ Q; E ⦄ := by
+  refine ⟨fun s hpre => ?_⟩
+  obtain ⟨hmapped, hpre⟩ := hpre
+  obtain ⟨v, hload⟩ := Option.isSome_iff_exists.mp hmapped
+  refine Program.wp_single fun _ _ _ _ hn _ => ?_
+  simp only [Directive.interp, Instr.interp, Operation.interp, Operand.interp,
+    RegOrMem.interp, MachineData.set, MachineData.store,
+    AddrExpr.zeroExtend_interp_base_idx2, Width.bytes, hload, Effects.All]
+  exact hn _ hpre
+
 /-- `movq $i, disp(%b)` -/
 @[spec] public theorem mov_store_imm_spec (b : Reg64) (d i : Int64) :
     ⦃ fun s =>

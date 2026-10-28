@@ -16,11 +16,12 @@ int64_t build_bottom_up(uint64_t m, uint64_t n, const uint64_t *source,
 
 struct state {
 	int m, n, k;
-	uint32_t source[256], target[256];
-	int dest[256], spills[256];
+	uint32_t source[1024], target[1024];
+	int dest[1024], spills[1024];
 };
 
-static int is_spilled(const struct state *s, uint32_t v)
+/* Not is_spilled: test/bin_objdump.sh finds the code by that name. */
+static int in_spills(const struct state *s, uint32_t v)
 {
 	if (v < 2 || v % 2)
 		return 0;
@@ -33,7 +34,7 @@ static int is_spilled(const struct state *s, uint32_t v)
 /* a literal or wildcard, a spilled variable or a value on the source stack */
 static int available(const struct state *s, uint32_t v)
 {
-	if (v == 0 || (v % 2 && v != 1) || is_spilled(s, v))
+	if (v == 0 || (v % 2 && v != 1) || in_spills(s, v))
 		return 1;
 	for (int i = 0; i < s->m; i++)
 		if (s->source[i] == v)
@@ -133,7 +134,7 @@ static void random_state(int mmax, int nmax)
 			s.spills[s.k++] = v;
 	for (int i = 0; i < s.m; i++)
 		s.source[i] = random_value(vars, lits);
-	int p[256];
+	int p[1024];
 	for (int j = 0; j < s.n; j++)
 		p[j] = j;
 	for (int j = s.n - 1; j > 0; j--) {
@@ -168,7 +169,7 @@ static void deep_state(void)
 	s.k = 0;
 	for (int i = 0; i < s.m; i++)
 		s.source[i] = next() % 8 ? 2 + 2 * (next() % vars) : 3;
-	int p[256];
+	int p[1024];
 	for (int j = 0; j < s.n; j++)
 		p[j] = j;
 	for (int j = s.n - 1; j > 0; j--) {
@@ -182,6 +183,56 @@ static void deep_state(void)
 		s.target[j] = s.source[next() % s.m];
 	for (int i = 0; i < s.m; i++)
 		if (next() % 4)
+			s.target[s.dest[i]] = s.source[i];
+	print_state(&s);
+}
+
+/* a literal, a wildcard or a spilled variable */
+static int pushable(const struct state *s, uint32_t v)
+{
+	return v == 0 || (v % 2 && v != 1) || in_spills(s, v);
+}
+
+/*
+ * A state with 257 to 1024 slots. The source slots are bound for their own
+ * offset, except near the top. In 3 of 4 states every value is pushable, so
+ * that most states are ok. The other states may hold any value and bind any
+ * source slot near its offset.
+ */
+static void big_state(void)
+{
+	struct state s;
+	int vars = 1 + next() % 8, lits = 1 + next() % 3, any = next() % 4 == 0;
+	s.n = 257 + next() % 768;
+	s.m = next() % (s.n + 1);
+	s.k = 0;
+	for (int v = 0; v < vars; v++)
+		if (next() % 8)
+			s.spills[s.k++] = v;
+	for (int i = 0; i < s.m; i++)
+		do
+			s.source[i] = random_value(vars, lits);
+		while (!any && !pushable(&s, s.source[i]));
+	int p[1024];
+	for (int j = 0; j < s.n; j++)
+		p[j] = j;
+	for (int j = any || s.m < 12 ? 0 : s.m - 12; j + 1 < s.n; j++)
+		if (next() % 16 == 0) {
+			int r = j + 1 + next() % 8, t;
+			if (r >= s.n)
+				r = s.n - 1;
+			t = p[j];
+			p[j] = p[r];
+			p[r] = t;
+		}
+	for (int i = 0; i < s.m; i++)
+		s.dest[i] = p[i];
+	for (int j = 0; j < s.n; j++)
+		do
+			s.target[j] = random_value(vars, lits);
+		while (!available(&s, s.target[j]) || (!any && !pushable(&s, s.target[j])));
+	for (int i = 0; i < s.m; i++)
+		if (next() % 2)
 			s.target[s.dest[i]] = s.source[i];
 	print_state(&s);
 }
@@ -200,6 +251,8 @@ static int gen(void)
 		random_state(256, 256);
 	for (int r = 0; r < 5000; r++)
 		deep_state();
+	for (int r = 0; r < 40; r++)
+		big_state();
 	return 0;
 }
 
@@ -207,8 +260,8 @@ static int run(void)
 {
 	uint64_t m, n, k;
 	while (scanf("%lu %lu", &m, &n) == 2) {
-		uint64_t source[256], target[256], dest[256], ops[2 * 6 * 256];
-		uint8_t spilled[256] = { 0 };
+		uint64_t source[1024], target[1024], dest[1024], ops[2 * 6 * 1024];
+		uint8_t spilled[1024] = { 0 };
 		uint64_t blocked[2];
 		for (uint64_t i = 0; i < m; i++)
 			if (scanf("%lu", &source[i]) != 1)

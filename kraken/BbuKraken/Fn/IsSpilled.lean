@@ -211,11 +211,11 @@ theorem inside_hdr0 {m : Mem 64} {S : Addr} {k : Nat} (hk : k < 3) :
 -- The words of the stack and dest arrays are writable.
 theorem inside_arr {m : Mem 64} {S : Addr} {k : Nat} (h1 : STACK ≤ k) (h2 : k < WORDS) :
     Mem.Blocks.Inside (wordAt S k) 8 (writable m S) := by
-  simp only [STACK, WORDS] at h1 h2
+  simp only [STACK, WORDS_eq] at h1 h2
   have : wordAt S k = wordAt S STACK + BitVec.ofNat 64 (8 * (k - 8)) := by
     simp only [STACK]; bv_omega
   rw [this]
-  exact (Mem.Blocks.Inside.base_add (by simp only [BitVec.toNat_ofNat]; omega)).tail
+  exact (Mem.Blocks.Inside.base_add (by simp only [BitVec.toNat_ofNat, MAX_N]; omega)).tail
 
 theorem Wf.load_readable {m : Mem 64} {S x : Addr} {n : Nat} (hw : Wf m S)
     (h : Mem.Blocks.Inside x n (readable m S)) : (m.loadInt x n).isSome = true :=

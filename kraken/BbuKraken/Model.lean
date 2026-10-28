@@ -18,6 +18,8 @@ abbrev Word := BitVec 64
 
 def MAX_SWAP_DEPTH : Nat := 16
 def MAX_DUP_DEPTH : Nat := 15
+-- The bound on `n` in `c/build_bottom_up.c`: the EVM stack limit.
+def MAX_N : Nat := 1024
 
 -- An operation: `kind` is 0 for a swap, 1 for a dup and 2 for a push, `arg` the
 -- depth of a swap or dup, or the value of a push.

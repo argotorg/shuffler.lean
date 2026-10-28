@@ -370,7 +370,7 @@ theorem step_shape {e : Env} {st st' : St} {t t' : Nat} (h : step e st t = .ok (
 -- `2 * pending + 2 * (n - t)` by at least the number of operations it adds.
 structure Inv (e : Env) (st : St) (t : Nat) : Prop where
   len_pending : st.len + st.pending = e.n
-  n_le : e.n ≤ 256
+  n_le : e.n ≤ MAX_N
   t_le : t ≤ e.n
   dests : Dests e.n st.dests
   ops_le : st.ops.length + 2 * st.pending + 2 * (e.n - t) ≤ 4 * e.n
@@ -382,7 +382,7 @@ theorem map_dest_zipWith (source : List Word) (dests : List Nat)
   | cons x xs ih => cases dests <;> simp_all
 
 theorem Inv_init {e : Env} {source : List Word} {dests : List Nat}
-    (hl : source.length = dests.length) (hm : dests.length ≤ e.n) (hn : e.n ≤ 256)
+    (hl : source.length = dests.length) (hm : dests.length ≤ e.n) (hn : e.n ≤ MAX_N)
     (hd : Dests e.n dests) :
     Inv e ⟨List.zipWith Slot.mk source dests, e.n - source.length, []⟩ 0 := by
   have hds : St.dests ⟨List.zipWith Slot.mk source dests, e.n - source.length, []⟩ = dests :=

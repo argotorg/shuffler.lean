@@ -14,12 +14,12 @@ namespace Bbu
 
 -- The hypotheses of `permute_spec` for the permutation `p0`.
 def PermHyp (s : MachineData) (p0 : Perm) : Prop :=
-  p0.toList.length = (State.N s).toNat ∧ (State.N s).toNat ≤ 256
-    ∧ Mem.Contains s.dmem (State.P s) (bytes p0.toList)
+  p0.toList.length = (State.N s).toNat ∧ (State.N s).toNat ≤ Bbu.MAX_N
+    ∧ Mem.Contains s.dmem (State.P s) (words p0.toList)
     ∧ Mem.Mapped (State.blocks s) s.dmem
     ∧ Mem.Blocks.Disjoint (State.heap s) [(State.S s - 16#64, 16)]
-    ∧ Mem.Blocks.Disjoint [(State.P s, (State.N s).toNat)]
-        [(State.T s, 2 * (State.N s).toNat), (State.B s, 2)]
+    ∧ Mem.Blocks.Disjoint [(State.P s, 2 * (State.N s).toNat)]
+        [(State.T s, 2 * (State.N s).toNat), (State.B s, 4)]
 
 def PermPre (s : MachineData) : Prop := ∃ p0, PermHyp s p0
 def PermPost (s t : MachineData) : Prop :=
@@ -31,8 +31,8 @@ theorem PermHyp.unique {s : MachineData} {p q : Perm} (hp : PermHyp s p) (hq : P
     p = q := by
   obtain ⟨hpl, hn, hpc, -⟩ := hp
   obtain ⟨hql, -, hqc, -⟩ := hq
-  have hb : bytes p.toList = bytes q.toList := by
-    apply List.ext_getElem (by simp [length_bytes, hpl, hql])
+  have hb : words p.toList = words q.toList := by
+    apply List.ext_getElem (by simp [length_words, hpl, hql])
     intro i h1 h2
     have e1 := hpc i h1
     have e2 := hqc i h2
@@ -41,13 +41,18 @@ theorem PermHyp.unique {s : MachineData} {p q : Perm} (hp : PermHyp s p) (hq : P
   have hl : p.toList = q.toList := by
     apply List.ext_getElem (by rw [hpl, hql])
     intro i h1 h2
-    have := congrArg (·[i]?) hb
-    simp only [bytes, List.getElem?_map, List.getElem?_eq_getElem h1,
-      List.getElem?_eq_getElem h2, Option.map_some, Option.some.injEq] at this
+    have e0 := congrArg (·[2 * i]?) hb
+    have e1 := congrArg (·[2 * i + 1]?) hb
+    simp only [getElem?_words, List.getElem?_eq_getElem h1, List.getElem?_eq_getElem h2,
+      show 2 * i / 2 = i by omega, show (2 * i + 1) / 2 = i by omega, show 2 * i % 2 = 0 by omega,
+      show (2 * i + 1) % 2 = 1 by omega, Option.map_some, Option.some.injEq, ite_true,
+      show ¬ (1 = 0) by omega, ite_false] at e0 e1
     have a1 := p.lt i h1
     have a2 := q.lt i h2
-    have := congrArg UInt8.toNat this
-    simp only [Nat.toUInt8, UInt8.toNat_ofNat'] at this
+    have hN : (State.N s).toNat ≤ 1024 := hn
+    have c0 := congrArg UInt8.toNat e0
+    have c1 := congrArg UInt8.toNat e1
+    simp only [Nat.toUInt8, UInt8.toNat_ofNat'] at c0 c1
     omega
   cases p; cases q
   cases hl
@@ -139,7 +144,7 @@ local macro "cfg_goto" : tactic => `(tactic| (
 -- Normalize the registers and close a goal on addresses.
 local macro "bvo" : tactic => `(tactic| (
   simp only [Reg64s.get64_rsp, Reg64s.get64_rdi, Reg64s.get64_rax, Reg64s.get64_rbx,
-    Reg64s.get64_rdx, Reg64s.get64_rsi, Reg64s.get64_rcx, finishF, Mem.Blocks.Inside, or_false,
+    Reg64s.get64_rdx, Reg64s.get64_rsi, Reg64s.get64_rcx, finishF_eq, Mem.Blocks.Inside, or_false,
     Int64.reduceToInt, BitVec.ofInt_ofNat] at *
   bv_omega))
 
@@ -148,9 +153,9 @@ namespace FinishProof
 section
 variable (s : MachineData) (ra : Int64)
 
--- The frame of `finish` after `subq $784, %rsp`.
+-- The frame of `finish` after `subq $4112, %rsp`.
 structure Fr (t : MachineData) : Prop where
-  hrsp : rsp t = rsp s - 800#64
+  hrsp : rsp t = rsp s - 4128#64
   hrbx : t.regs.get64 .rbx = rdi s
   hrbp : t.regs.get64 .rbp = s.regs.get64 .rbp
   h12 : t.regs.get64 .r12 = s.regs.get64 .r12
@@ -167,8 +172,8 @@ def opAt (o : Addr) (m : Mem 64) (i : Nat) : Op :=
 
 -- The copy loop has written `j` swaps of `L`.
 def OkInv (L : List Nat) (j : Nat) (t : MachineData) : Prop :=
-  rsi t = rsp s - 784#64 + BitVec.ofNat 64 L.length
-    ∧ Mem.Contains t.dmem (rsp s - 784#64) (bytes L)
+  rsi t = rsp s - 4112#64 + BitVec.ofNat 64 L.length
+    ∧ Mem.Contains t.dmem (rsp s - 4112#64) (bytes L)
     ∧ rd t.dmem (wordAt (rdi s) 2) = BitVec.ofNat 64 ((st s).ops.length + j)
     ∧ (List.range ((st s).ops.length + j)).map (opAt (opsOf s.dmem (rdi s)) t.dmem)
         = (st s).ops ++ (L.take j).map Op.swap
@@ -179,26 +184,26 @@ def FInv (p0 : Perm) : CfgLabel → MachineData → Prop
   | .entry, t | .label "finish", t => t = s.pushRa ra
   | .label ".LB56", t => Fr s ra t ∧ Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem
       ∧ rdi t = rd s.dmem (wordAt (rdi s) 0) ∧ (rax t).toNat < p0.toList.length
-      ∧ Mem.Contains t.dmem (rsp s - 272#64) (bytes (p0.toList.take (rax t).toNat))
+      ∧ Mem.Contains t.dmem (rsp s - 2064#64) (words (p0.toList.take (rax t).toNat))
   | .label ".LB55", t => Fr s ra t ∧ Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem
       ∧ rdi t = rd s.dmem (wordAt (rdi s) 0)
-      ∧ Mem.Contains t.dmem (rsp s - 272#64) (bytes p0.toList)
+      ∧ Mem.Contains t.dmem (rsp s - 2064#64) (words p0.toList)
   | .label ".LB61", t => Fr s ra t ∧ ∃ L, permute p0 = .ok L ∧ ∃ j < L.length,
-      rdx t = rsp s - 784#64 + BitVec.ofNat 64 j ∧ OkInv s L j t
+      rdx t = rsp s - 4112#64 + BitVec.ofNat 64 j ∧ OkInv s L j t
   | .label ".LB59", t => Fr s ra t ∧ ∃ L, permute p0 = .ok L ∧ OkInv s L L.length t
   | .label ".LB54", t => Fr s ra t ∧ Wf t.dmem (rdi s) ∧ finishR s t
       ∧ Mem.UnchangedOutside (frame finishF s :: writable s.dmem (rdi s)) s.dmem t.dmem
   | .label ".LB57", t => Fr s ra t ∧ Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem
       ∧ ∃ b, permute p0 = .error b
-        ∧ Mem.Contains t.dmem (rsp s - 786#64) (bytes [b.offset, b.excess])
+        ∧ Mem.Contains t.dmem (rsp s - 4116#64) (words [b.offset, b.excess])
   | _, _ => False
 
 def FVar (l : Label) (t : MachineData) : Nat :=
   match l with
-  | "finish" => 2000
-  | ".LB56" => 1000 + (256 - (rax t).toNat)
-  | ".LB55" => 1000
-  | ".LB61" => 600 - (rdx t - (rsp s - 784#64)).toNat
+  | "finish" => 5000
+  | ".LB56" => 3000 + (1024 - (rax t).toNat)
+  | ".LB55" => 3000
+  | ".LB61" => 2100 - (rdx t - (rsp s - 4112#64)).toNat
   | ".LB57" => 1
   | _ => 0
 
@@ -250,9 +255,9 @@ theorem Fr.store (h : Fr s ra t) (hr : FrameRegs t t') {a : Addr} {n : Nat} {v :
       (Or.inl (by rw [show rsp s - 8#64 - (rsp s - 16#64) = 8#64 by bv_omega, Int.toBytes_length]; decide)) v
   · exact h10.storeInt _ _ _
 
--- The prologue: `pushq %rbx` and `subq $784, %rsp` after the call.
+-- The prologue: `pushq %rbx` and `subq $4112, %rsp` after the call.
 theorem Fr.entry (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s))
-    (hrsp : rsp t = rsp s - 800#64) (hrbx : t.regs.get64 .rbx = rdi s)
+    (hrsp : rsp t = rsp s - 4128#64) (hrbx : t.regs.get64 .rbx = rdi s)
     (hrbp : t.regs.get64 .rbp = s.regs.get64 .rbp) (h12 : t.regs.get64 .r12 = s.regs.get64 .r12)
     (h13 : t.regs.get64 .r13 = s.regs.get64 .r13) (h14 : t.regs.get64 .r14 = s.regs.get64 .r14)
     (h15 : t.regs.get64 .r15 = s.regs.get64 .r15)
@@ -260,11 +265,11 @@ theorem Fr.entry (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s))
       (s.regs.get64 .rbx).toInt) :
     Fr s ra t ∧ Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem := by
   have hle := hf.le
-  simp only [finishF] at hle
+  simp only [finishF_eq] at hle
   have i1 : Mem.Blocks.Inside (rsp s - 8#64) 8 [frame finishF s] :=
-    Or.inl (by simp only [finishF]; bv_omega)
+    Or.inl (by simp only [finishF_eq]; bv_omega)
   have i2 : Mem.Blocks.Inside (rsp s - 16#64) 8 [frame finishF s] :=
-    Or.inl (by simp only [finishF]; bv_omega)
+    Or.inl (by simp only [finishF_eq]; bv_omega)
   have hmap : Mem.Mapped (frame finishF s :: writable s.dmem (rdi s)) s.dmem := by
     intro x hx
     rcases hx with hx | hx
@@ -300,13 +305,13 @@ theorem inside_hdr (hw : Wf s.dmem (rdi s)) {k : Nat} (hk : k < 3) :
     ∀ x, Mem.Blocks.Inside x 1 [(wordAt (rdi s) k, 8)] → Mem.Blocks.Inside x 1 (writable s.dmem (rdi s)) := by
   intro x hx
   have := hw.struct_lt
-  simp only [Mem.Blocks.Inside, or_false, WORDS] at hx this
+  simp only [Mem.Blocks.Inside, or_false, WORDS_eq] at hx this
   exact Or.inl (by bv_omega)
 
 -- The state after `movq (%rdi), %rdi` in the prologue.
 theorem entry_next (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) {t : MachineData} {P : Prop}
     {a1 a2 a3 : Addr} (e1 : a1 = rsp s - 8#64) (e2 : a2 = rsp s - 16#64) (e3 : a3 = rdi s)
-    (hrsp : rsp t = rsp s - 800#64) (hrbx : t.regs.get64 .rbx = rdi s)
+    (hrsp : rsp t = rsp s - 4128#64) (hrbx : t.regs.get64 .rbx = rdi s)
     (hrbp : t.regs.get64 .rbp = s.regs.get64 .rbp) (h12 : t.regs.get64 .r12 = s.regs.get64 .r12)
     (h13 : t.regs.get64 .r13 = s.regs.get64 .r13) (h14 : t.regs.get64 .r14 = s.regs.get64 .r14)
     (h15 : t.regs.get64 .r15 = s.regs.get64 .r15)
@@ -328,11 +333,11 @@ theorem entry_val (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) {a1 a2 : Add
     rd ((s.dmem.storeInt a1 8 x).storeInt a2 8 y) (rdi s) = rd s.dmem (wordAt (rdi s) 0) := by
   subst e1 e2
   have hle := hf.le
-  simp only [finishF] at hle
+  simp only [finishF_eq] at hle
   have u0 : Mem.UnchangedOutside [frame finishF s] s.dmem s.dmem := fun _ _ => rfl
-  have u := (u0.storeInt (Or.inl (by simp only [finishF]; bv_omega) :
+  have u := (u0.storeInt (Or.inl (by simp only [finishF_eq]; bv_omega) :
       Mem.Blocks.Inside (rsp s - 8#64) 8 [frame finishF s]) x).storeInt
-    (Or.inl (by simp only [finishF]; bv_omega) : Mem.Blocks.Inside (rsp s - 16#64) 8 [frame finishF s]) y
+    (Or.inl (by simp only [finishF_eq]; bv_omega) : Mem.Blocks.Inside (rsp s - 16#64) 8 [frame finishF s]) y
   have := rd_congr u (disj_frame hf (inside_hdr hw (k := 0) (by omega)))
   simpa [wordAt] using this
 
@@ -341,8 +346,8 @@ theorem inside_arr (hw : Wf s.dmem (rdi s)) {k : Nat} (hk : STACK ≤ k) (hk2 : 
     ∀ x, Mem.Blocks.Inside x 1 [(wordAt (rdi s) k, 8)] → Mem.Blocks.Inside x 1 (writable s.dmem (rdi s)) := by
   intro x hx
   have := hw.struct_lt
-  simp only [Mem.Blocks.Inside, or_false, WORDS, STACK] at hx this hk hk2
-  exact Or.inr (Or.inl (by simp only [wordAt, STACK]; bv_omega))
+  simp only [Mem.Blocks.Inside, or_false, WORDS_eq, STACK] at hx this hk hk2
+  exact Or.inr (Or.inl (by simp only [wordAt, STACK, Bbu.MAX_N]; bv_omega))
 
 theorem len_eq {p0 : Perm} (hp0 : p0.toList = (st s).slots.map Slot.dest) :
     p0.toList.length = (rd s.dmem (wordAt (rdi s) 0)).toNat := by
@@ -357,16 +362,16 @@ theorem get_eq {p0 : Perm} (hp0 : p0.toList = (st s).slots.map Slot.dest) {i : N
 theorem lb56_step (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) {p0 : Perm}
     (hp0 : p0.toList = (st s).slots.map Slot.dest) (hfr : Fr s ra t)
     (hu : Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem) (hi : (rax t).toNat < p0.toList.length)
-    (hc : Mem.Contains t.dmem (rsp s - 272#64) (bytes (p0.toList.take (rax t).toNat)))
+    (hc : Mem.Contains t.dmem (rsp s - 2064#64) (words (p0.toList.take (rax t).toNat)))
     {a b : Addr} (ea : a = wordAt (rdi s) (DEST + (rax t).toNat))
-    (eb : b = rsp s - 272#64 + BitVec.ofNat 64 (rax t).toNat)
-    (hr : FrameRegs t t') (hm : t'.dmem = t.dmem.storeInt b 1 ((rd t.dmem a).take 8).toInt) :
+    (eb : b = rsp s - 2064#64 + BitVec.ofNat 64 (2 * (rax t).toNat))
+    (hr : FrameRegs t t') (hm : t'.dmem = t.dmem.storeInt b 2 ((rd t.dmem a).take 16).toInt) :
     Fr s ra t' ∧ Mem.UnchangedOutside [frame finishF s] s.dmem t'.dmem
-      ∧ Mem.Contains t'.dmem (rsp s - 272#64) (bytes (p0.toList.take ((rax t).toNat + 1))) := by
+      ∧ Mem.Contains t'.dmem (rsp s - 2064#64) (words (p0.toList.take ((rax t).toNat + 1))) := by
   have hle := hf.le
-  simp only [finishF] at hle
-  have h256 : (rax t).toNat < 256 := by have := hw.len_le; rw [len_eq hp0] at hi; omega
-  have hin : Mem.Blocks.Inside b 1 [frame finishF s] := Or.inl (by subst eb; simp only [finishF]; bv_omega)
+  simp only [finishF_eq] at hle
+  have h1024 : (rax t).toNat < 1024 := by have : _ ≤ 1024 := hw.len_le; rw [len_eq hp0] at hi; omega
+  have hin : Mem.Blocks.Inside b 2 [frame finishF s] := Or.inl (by subst eb; simp only [finishF_eq]; bv_omega)
   refine ⟨Fr.store hfr hr ?_ hm, ?_, ?_⟩
   · intro x h1 h2
     subst eb
@@ -375,29 +380,32 @@ theorem lb56_step (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) {p0 : Perm}
   · rw [hm]; exact hu.storeInt hin _
   · have hv : rd t.dmem a = rd s.dmem a := by
       subst ea
-      exact rd_congr hu (disj_frame hf (inside_arr hw (by simp only [STACK, DEST]; omega) (by simp only [WORDS, DEST]; omega)))
-    have hb : Int.toBytes 1 ((rd t.dmem a).take 8).toInt = [p0.toList[(rax t).toNat].toUInt8] := by
-      rw [toBytes_one_take, hv, ea, get_eq hp0 hi]
-    have hlen : (bytes (p0.toList.take (rax t).toNat)).length = (rax t).toNat := by
-      simp only [length_bytes, List.length_take]; omega
-    have := hc.append_byte (by omega) hb
-    rw [hlen, ← eb, ← hm] at this
-    rwa [List.take_add_one, List.getElem?_eq_getElem hi, Option.toList_some, bytes_append]
+      exact rd_congr hu (disj_frame hf (inside_arr hw (by simp only [STACK, DEST_eq]; omega) (by simp only [WORDS_eq, DEST_eq]; omega)))
+    have hb : Int.toBytes 2 ((rd t.dmem a).take 16).toInt
+        = [p0.toList[(rax t).toNat].toUInt8, (p0.toList[(rax t).toNat] / 256).toUInt8] := by
+      rw [toBytes_two_take, hv, ea, get_eq hp0 hi]
+    have hlen : (words (p0.toList.take (rax t).toNat)).length = 2 * (rax t).toNat := by
+      simp only [length_words, List.length_take]; omega
+    have := hc.append_word (by omega) ((rd t.dmem a).take 16).toInt
+    rw [hlen, ← eb, ← hm, hb] at this
+    rw [List.take_add_one, List.getElem?_eq_getElem hi, Option.toList_some,
+      show ∀ l x, words (l ++ [x]) = words l ++ [x.toUInt8, (x / 256).toUInt8] from fun l x => by simp [words]]
+    exact this
 
 -- The end of an iteration of `.LB56`: `addq $1, %rax; cmpq %rdi, %rax; jne .LB56`.
 theorem lb56_next (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) {p0 : Perm}
     (hp0 : p0.toList = (st s).slots.map Slot.dest)
     (h : FInv s ra p0 (.label ".LB56") t)
     {a b : Addr} (ea : a = wordAt (rdi s) (DEST + (rax t).toNat))
-    (eb : b = rsp s - 272#64 + BitVec.ofNat 64 (rax t).toNat)
-    (hr : FrameRegs t t') (hm : t'.dmem = t.dmem.storeInt b 1 ((rd t.dmem a).take 8).toInt)
+    (eb : b = rsp s - 2064#64 + BitVec.ofNat 64 (2 * (rax t).toNat))
+    (hr : FrameRegs t t') (hm : t'.dmem = t.dmem.storeInt b 2 ((rd t.dmem a).take 16).toInt)
     (hrax : rax t' = 1#64 + rax t) (hrdi : rdi t' = rdi t) :
     (rax t' ≠ rdi t → FInv s ra p0 (.label ".LB56") t')
       ∧ (rax t' = rdi t → FInv s ra p0 (.label ".LB55") t') := by
   obtain ⟨hfr, hu, hrdi0, hi, hc⟩ := h
   obtain ⟨h1, h2, h3⟩ := lb56_step hf hw hp0 hfr hu hi hc ea eb hr hm
   have hl := len_eq hp0
-  have hle := hw.len_le
+  have hle : _ ≤ 1024 := hw.len_le
   have hx : (rax t').toNat = (rax t).toNat + 1 := by rw [hrax]; bv_omega
   rw [← hx] at h3
   refine ⟨fun hne => ⟨h1, h2, hrdi.trans hrdi0, ?_, h3⟩, fun he => ⟨h1, h2, hrdi.trans hrdi0, ?_⟩⟩
@@ -424,30 +432,30 @@ theorem contains_of_uo {l : List (Addr × Nat)} {m m' : Mem 64} {a : Addr} {bs :
 -- `call permute` at `.LB55`, in the state `c`.
 theorem lb55_call (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) {p0 : Perm}
     (hp0 : p0.toList = (st s).slots.map Slot.dest) (h : FInv s ra p0 (.label ".LB55") t)
-    {c : MachineData} (hS : State.S c = rsp s - 800#64) (hN : State.N c = rdi t)
-    (hP : State.P c = rsp s - 272#64) (hT : State.T c = rsp s - 784#64)
-    (hB : State.B c = rsp s - 786#64) (hm : c.dmem = t.dmem) (hr : FrameRegs t c) :
+    {c : MachineData} (hS : State.S c = rsp s - 4128#64) (hN : State.N c = rdi t)
+    (hP : State.P c = rsp s - 2064#64) (hT : State.T c = rsp s - 4112#64)
+    (hB : State.B c = rsp s - 4116#64) (hm : c.dmem = t.dmem) (hr : FrameRegs t c) :
     PermHyp c p0 ∧ ∀ u, PermPost c u → (PermMod c).Agree c u →
       Fr s ra u ∧ Mem.UnchangedOutside [frame finishF s] s.dmem u.dmem
         ∧ State.Result c p0 (rax u) u := by
   obtain ⟨hfr, hu, hrdi, hc⟩ := h
   have hle := hf.le
-  simp only [finishF] at hle
+  simp only [finishF_eq] at hle
   have hl := len_eq hp0
-  have hl256 := hw.len_le
+  have hl1024 : _ ≤ 1024 := hw.len_le
   have hN' : (State.N c).toNat = p0.toList.length := by rw [hN, hrdi, hl]
   -- The blocks of `permute` lie in the frame, below the saved `rbx`.
   have hsub : ∀ x, Mem.Blocks.Inside x 1 (State.blocks c) → Mem.Blocks.Inside x 1 [frame finishF s] := by
     intro x hx
     simp only [Mem.Blocks.Inside, or_false, hS, hP, hT, hB, hN'] at hx
-    simp only [Mem.Blocks.Inside, or_false, finishF]
+    simp only [Mem.Blocks.Inside, or_false, finishF_eq]
     rcases hx with hx | hx | hx | hx <;> bv_omega
   have hsv : Mem.Blocks.Disjoint [(rsp s - 16#64, 16)] (State.blocks c) := by
     intro x h1 h2
     simp only [Mem.Blocks.Inside, or_false, hS, hP, hT, hB, hN'] at h1 h2
     rcases h2 with h2 | h2 | h2 | h2 <;> bv_omega
   have hhyp : PermHyp c p0 := by
-    refine ⟨hN'.symm, by omega, ?_, ?_, ?_, ?_⟩
+    refine ⟨hN'.symm, by simp only [Bbu.MAX_N]; omega, ?_, ?_, ?_, ?_⟩
     · rw [hm, hP]; exact hc
     · intro x hx; rw [hm]; exact hfr.map x (Or.inl ((hsub x hx).resolve_right id))
     · intro x h1 h2
@@ -492,8 +500,8 @@ theorem inside_ops (hw : Wf s.dmem (rdi s)) {k : Nat} (hk : k < 12 * nOf s.dmem 
 -- The copy loop `.LB61` starts with no swap written.
 theorem okinv_zero (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) {L : List Nat}
     (hu : Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem)
-    (hrsi : rsi t = rsp s - 784#64 + BitVec.ofNat 64 L.length)
-    (hc : Mem.Contains t.dmem (rsp s - 784#64) (bytes L)) : OkInv s L 0 t := by
+    (hrsi : rsi t = rsp s - 4112#64 + BitVec.ofNat 64 L.length)
+    (hc : Mem.Contains t.dmem (rsp s - 4112#64) (bytes L)) : OkInv s L 0 t := by
   have hn := hw.nops_le
   refine ⟨hrsi, hc, ?_, ?_, uo_mono hu fun x hx => hx.imp_right False.elim⟩
   · rw [rd_congr hu (disj_frame hf (inside_hdr hw (k := 2) (by omega)))]
@@ -511,16 +519,16 @@ theorem okinv_zero (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) {L : List N
 theorem lb55_ret (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) {p0 : Perm}
     (hp0 : p0.toList = (st s).slots.map Slot.dest) {u : MachineData} (hfr : Fr s ra u)
     (hu : Mem.UnchangedOutside [frame finishF s] s.dmem u.dmem) {c : MachineData}
-    (hT : State.T c = rsp s - 784#64) (hB : State.B c = rsp s - 786#64)
+    (hT : State.T c = rsp s - 4112#64) (hB : State.B c = rsp s - 4116#64)
     (hres : State.Result c p0 (rax u) u) (hr : FrameRegs u t) (hm : t.dmem = u.dmem) :
     ((rax u).msb = true → FInv s ra p0 (.label ".LB57") t)
-      ∧ ((rax u).msb = false → rsi t = rax u + (rsp s - 784#64) →
+      ∧ ((rax u).msb = false → rsi t = rax u + (rsp s - 4112#64) →
         (rax u = 0 → FInv s ra p0 (.label ".LB59") t)
-          ∧ (rax u ≠ 0 → rdx t = rsp s - 784#64 → FInv s ra p0 (.label ".LB61") t)) := by
+          ∧ (rax u ≠ 0 → rdx t = rsp s - 4112#64 → FInv s ra p0 (.label ".LB61") t)) := by
   have hfr' := hfr.congr hr hm
   have hu' : Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem := hm ▸ hu
   have hl := len_eq hp0
-  have hl256 := hw.len_le
+  have hl1024 : _ ≤ 1024 := hw.len_le
   rcases hp : permute p0 with b | L
   · simp only [State.Result, hp] at hres
     refine ⟨fun _ => ⟨hfr', hu', b, hp, ?_⟩, fun hs => ?_⟩
@@ -528,7 +536,7 @@ theorem lb55_ret (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) {p0 : Perm}
     · rw [hres.1] at hs; exact absurd hs (by decide)
   · simp only [State.Result, hp] at hres
     have hL := (permute_ok_bound hp).1
-    have hc : Mem.Contains t.dmem (rsp s - 784#64) (bytes L) := by rw [hm, ← hT]; exact hres.2
+    have hc : Mem.Contains t.dmem (rsp s - 4112#64) (bytes L) := by rw [hm, ← hT]; exact hres.2
     refine ⟨fun hs => ?_, fun _ hrsi => ⟨fun hz => ⟨hfr', L, hp, ?_⟩,
       fun hnz hrdx => ⟨hfr', L, hp, 0, ?_, ?_, okinv_zero hf hw hu' ?_ hc⟩⟩⟩
     · rw [hres.1, BitVec.msb_eq_toNat] at hs
@@ -551,15 +559,15 @@ theorem Fr.of_uo (hf : FrameOk finishF s) (h : Fr s ra t) (hr : FrameRegs t t')
     (hu : Mem.UnchangedOutside l t.dmem t'.dmem)
     (hm : Mem.Mapped (frame finishF s :: writable s.dmem (rdi s)) t'.dmem) : Fr s ra t' := by
   have hle := hf.le
-  simp only [finishF] at hle
+  simp only [finishF_eq] at hle
   obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, -⟩ := h
   simp only [FrameRegs, List.mem_cons, List.not_mem_nil, or_false, forall_eq_or_imp, forall_eq] at hr
   obtain ⟨e1, e2, e3, e4, e5, e6, e7⟩ := hr
   refine ⟨e1.trans h1, e2.trans h2, e3.trans h3, e4.trans h4, e5.trans h5, e6.trans h6, e7.trans h7,
     contains_of_uo h8 hu fun x hx hx' => hf.disj x ?_ (inside_append.mpr (Or.inl (hl x hx'))),
     contains_of_uo h9 hu fun x hx hx' => hf.disj x ?_ (inside_append.mpr (Or.inl (hl x hx'))), hm⟩
-  · simp only [Mem.Blocks.Inside, or_false, Int.toBytes_length, finishF] at hx ⊢; bv_omega
-  · simp only [Mem.Blocks.Inside, or_false, Int.toBytes_length, finishF] at hx ⊢; bv_omega
+  · simp only [Mem.Blocks.Inside, or_false, Int.toBytes_length, finishF_eq] at hx ⊢; bv_omega
+  · simp only [Mem.Blocks.Inside, or_false, Int.toBytes_length, finishF_eq] at hx ⊢; bv_omega
 
 -- `x <<< 4` for a small `x`.
 theorem shl4 (x : Nat) (_hx : x < 2 ^ 59) : (BitVec.ofNat 64 x).shiftLeft 4 = BitVec.ofNat 64 (16 * x) := by
@@ -585,10 +593,10 @@ theorem lb61_next (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
   subst eN eO ek ec0 ec8 eb
   have hsl := hw.struct_lt
   have hol := hw.ops_lt
-  have hnl := hw.n_le
-  simp only [WORDS] at hsl
+  have hnl : _ ≤ 1024 := hw.n_le
+  simp only [WORDS_eq] at hsl
   have hle := hf.le
-  simp only [finishF] at hle
+  simp only [finishF_eq] at hle
   have hLb := permute_ok_bound hL
   have hK : (st s).ops.length + j + 1 ≤ 6 * nOf s.dmem (rdi s) := by
     have h1 := hA.2
@@ -613,13 +621,13 @@ theorem lb61_next (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
   have hos : ∀ {i k : Nat}, k < 12 * nOf s.dmem (rdi s) → i < WORDS →
       Mem.Blocks.Disjoint [(wordAt (opsOf s.dmem (rdi s)) k, 8)] [(wordAt (rdi s) i, 8)] := by
     intro i k hk hi x h1 h2
-    simp only [Mem.Blocks.Inside, or_false, WORDS] at h1 h2 hi
-    exact hw.disj_struct x (by simp only [Mem.Blocks.Inside, or_false, WORDS]; bv_omega)
+    simp only [Mem.Blocks.Inside, or_false, WORDS_eq] at h1 h2 hi
+    exact hw.disj_struct x (by simp only [Mem.Blocks.Inside, or_false, WORDS_eq]; bv_omega)
       (Or.inl (by bv_omega))
   have hm1N : rd m1 (wordAt (rdi s) 2) = rd t.dmem (wordAt (rdi s) 2) := by
-    rw [e1, ha0]; exact rd_storeInt_of_disjoint (hos (by omega) (by simp [WORDS]))
+    rw [e1, ha0]; exact rd_storeInt_of_disjoint (hos (by omega) (by simp [WORDS_eq]))
   have hm1O : rd m1 (wordAt (rdi s) 6) = rd t.dmem (wordAt (rdi s) 6) := by
-    rw [e1, ha0]; exact rd_storeInt_of_disjoint (hos (by omega) (by simp [WORDS]))
+    rw [e1, ha0]; exact rd_storeInt_of_disjoint (hos (by omega) (by simp [WORDS_eq]))
   have ha1 : a1 = wordAt (opsOf s.dmem (rdi s)) (2 * ((st s).ops.length + j) + 1) := by
     rw [ea1, hm1O, hm1N, hO, hn, shl4 _ (by omega)]
     simp only [wordAt]
@@ -630,24 +638,24 @@ theorem lb61_next (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
     have := hLb.2 _ (List.getElem_mem hj)
     simp only [PermuteKraken.MAX_SWAP_DEPTH] at this
     omega
-  have hfL : ∀ x, Mem.Blocks.Inside x 1 [(rsp s - 784#64, (bytes L).length)] →
+  have hfL : ∀ x, Mem.Blocks.Inside x 1 [(rsp s - 4112#64, (bytes L).length)] →
       Mem.Blocks.Inside x 1 [frame finishF s] := by
     have h1 := len_eq hp0
-    have h2 := hw.len_le
+    have h2 : _ ≤ 1024 := hw.len_le
     intro x hx
-    simp only [Mem.Blocks.Inside, or_false, length_bytes, finishF] at hx ⊢
+    simp only [Mem.Blocks.Inside, or_false, length_bytes, finishF_eq] at hx ⊢
     bv_omega
   have hbyte : BitVec.setWidth 64 (BitVec.setWidth 32 (BitVec.ofInt 8 (m1.loadInt (rdx t) 1).get!))
       = BitVec.ofNat 64 L[j] := by
-    have hc1 : Mem.Contains m1 (rsp s - 784#64) (bytes L) := by
+    have hc1 : Mem.Contains m1 (rsp s - 4112#64) (bytes L) := by
       rw [e1]
       refine hc.storeInt_of_disjoint' (bs₁ := [(a0, 8)]) (Mem.Blocks.Inside.base (Nat.le_refl 8))
         (fun x h2 h1 => hf.disj x (hfL x h2) (inside_append.mpr (Or.inl ?_)))
         (Mem.Blocks.Inside.base (Nat.le_refl _)) 0
       rw [ha0] at h1
       exact inside_ops hw (by omega) x h1
-    have hL512 : L.length < 2 ^ 64 := by have := len_eq hp0; have := hw.len_le; omega
-    rw [hrdx0, hc1.load_byte hj (by omega) hL512, Option.get!_some, hLj]
+    have hL2048 : L.length < 2 ^ 64 := by have := len_eq hp0; have : _ ≤ 1024 := hw.len_le; omega
+    rw [hrdx0, hc1.load_byte hj (by omega) hL2048, Option.get!_some, hLj]
     exact zeroExtend_ofInt_byte _ hv
   have hmap2 : Mem.Mapped (frame finishF s :: writable s.dmem (rdi s)) m2 := by
     rw [e2, e1]; exact (hfr.map.storeInt _ _ _).storeInt _ _ _
@@ -687,7 +695,7 @@ theorem lb61_next (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
           (wordAt (opsOf s.dmem (rdi s)) (2 * ((st s).ops.length + j) + 1)) 8
           (BitVec.ofNat 64 L[j]).toInt) (wordAt (rdi s) 2)
           = BitVec.ofNat 64 ((st s).ops.length + j) := by
-        rw [rd_storeInt_of_disjoint (hos (by omega) (by simp [WORDS])), hm1N, hn]
+        rw [rd_storeInt_of_disjoint (hos (by omega) (by simp [WORDS_eq])), hm1N, hn]
       rw [hm, rd_storeInt_self _ (fun x hx => hmap2 x (Or.inr (Or.inl (by simp only [Mem.Blocks.Inside, or_false] at hx; bv_omega)))), hm2N]
       bv_omega
     · have hd : ∀ i, i < 2 * ((st s).ops.length + j) →
@@ -699,7 +707,7 @@ theorem lb61_next (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
         rcases h2 with h2 | h2 | h2 | h2
         · simp only [Mem.Blocks.Inside, or_false] at h1; bv_omega
         · simp only [Mem.Blocks.Inside, or_false] at h1; bv_omega
-        · exact hos (k := i) (i := 2) (by omega) (by simp [WORDS]) x h1 (Or.inl h2)
+        · exact hos (k := i) (i := 2) (by omega) (by simp [WORDS_eq]) x h1 (Or.inl h2)
         · exact h2
       have hmapt := hfr.map
       rw [← Nat.add_assoc, List.range_succ, List.map_append, List.take_add_one,
@@ -710,8 +718,8 @@ theorem lb61_next (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
         simp only [opAt]
         rw [rd_congr hU3 (hd _ (by omega)), rd_congr hU3 (hd _ (by omega))]
       · simp only [List.map_cons, List.map_nil, opAt, Op.swap, List.cons.injEq, and_true]
-        have hw0 := hos (k := 2 * ((st s).ops.length + j)) (i := 2) (by omega) (by simp [WORDS])
-        have hw1 := hos (k := 2 * ((st s).ops.length + j) + 1) (i := 2) (by omega) (by simp [WORDS])
+        have hw0 := hos (k := 2 * ((st s).ops.length + j)) (i := 2) (by omega) (by simp [WORDS_eq])
+        have hw1 := hos (k := 2 * ((st s).ops.length + j) + 1) (i := 2) (by omega) (by simp [WORDS_eq])
         have h01 := disjoint_wordAt (b := opsOf s.dmem (rdi s))
           (j := 2 * ((st s).ops.length + j) + 1) (k := 2 * ((st s).ops.length + j))
           (K := 12 * nOf s.dmem (rdi s)) (by omega) (by omega) (by omega) (by omega)
@@ -727,8 +735,8 @@ theorem lb61_next (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
           rw [hm, rd_storeInt_of_disjoint (disjoint_symm hw1)]
           exact rd_storeInt_self _ (hmw _ (by omega) _ (hfr.map.storeInt _ _ _))
         rw [k0, k1]; rfl
-  have hrdx' : rdx t' = rsp s - 784#64 + BitVec.ofNat 64 (j + 1) := by rw [hrdx, hrdx0]; bv_omega
-  have hL512 : L.length ≤ 512 := by have := len_eq hp0; have := hw.len_le; omega
+  have hrdx' : rdx t' = rsp s - 4112#64 + BitVec.ofNat 64 (j + 1) := by rw [hrdx, hrdx0]; bv_omega
+  have hL2048 : L.length ≤ 2048 := by have := len_eq hp0; have : _ ≤ 1024 := hw.len_le; omega
   refine ⟨fun hne => ⟨hfr', L, hL, j + 1, ?_, hrdx', hok⟩, fun he => ⟨hfr', L, hL, ?_⟩⟩
   · have : j + 1 ≠ L.length := fun h => hne (by rw [hrdx', hrsi0, h])
     omega
@@ -788,20 +796,20 @@ theorem lb61_some (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
           (t.regs.rbx.toBitVec + BitVec.ofInt 64 (Int64.toInt 16)) 8).isSome := by
   obtain ⟨hfr, L, hL, j, hj, hrdx0, hrsi0, hc, hn, hops, hu⟩ := h
   have hrbx : t.regs.rbx.toBitVec = rdi s := by simpa using hfr.hrbx
-  have hrdx : t.regs.rdx.toBitVec = rsp s - 784#64 + BitVec.ofNat 64 j := by simpa [rdx] using hrdx0
+  have hrdx : t.regs.rdx.toBitVec = rsp s - 4112#64 + BitVec.ofNat 64 j := by simpa [rdx] using hrdx0
   have hsl := hw.struct_lt
   have hol := hw.ops_lt
-  have hnl := hw.n_le
-  simp only [WORDS] at hsl
+  have hnl : _ ≤ 1024 := hw.n_le
+  simp only [WORDS_eq] at hsl
   have hle := hf.le
-  simp only [finishF] at hle
+  simp only [finishF_eq] at hle
   have hLb := permute_ok_bound hL
   have hK : (st s).ops.length + j + 1 ≤ 6 * nOf s.dmem (rdi s) := by
     have h1 := hA.2
     have h3 : p0.toList.length = (st s).len := by rw [hp0]; simp [St.len]
     simp only [cap] at h1
     omega
-  have hL512 : L.length ≤ 512 := by have := len_eq hp0; have := hw.len_le; omega
+  have hL2048 : L.length ≤ 2048 := by have := len_eq hp0; have : _ ≤ 1024 := hw.len_le; omega
   have hdr : Mem.Blocks.Disjoint (readable s.dmem (rdi s))
       [frame finishF s, (wordAt (rdi s) 2, 8), (opsOf s.dmem (rdi s), 96 * nOf s.dmem (rdi s))] := by
     refine disjoint_symm (disjoint_mono ?_ (disjoint_symm (Pre.disj ⟨hw, hf, hA⟩)))
@@ -830,8 +838,8 @@ theorem lb61_some (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
   have hos : ∀ {i k : Nat}, k < 12 * nOf s.dmem (rdi s) → i < WORDS →
       Mem.Blocks.Disjoint [(wordAt (opsOf s.dmem (rdi s)) k, 8)] [(wordAt (rdi s) i, 8)] := by
     intro i k hk hi x h1 h2
-    simp only [Mem.Blocks.Inside, or_false, WORDS] at h1 h2 hi
-    exact hw.disj_struct x (by simp only [Mem.Blocks.Inside, or_false, WORDS]; bv_omega)
+    simp only [Mem.Blocks.Inside, or_false, WORDS_eq] at h1 h2 hi
+    exact hw.disj_struct x (by simp only [Mem.Blocks.Inside, or_false, WORDS_eq]; bv_omega)
       (Or.inl (by bv_omega))
   have ha0 : lb61A0 t.dmem t.regs.rbx.toBitVec
       = wordAt (opsOf s.dmem (rdi s)) (2 * ((st s).ops.length + j)) := by
@@ -840,9 +848,9 @@ theorem lb61_some (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
     simp only [wordAt, Int64.reduceToInt, BitVec.ofInt_ofNat]
     bv_omega
   have hm1N : rd (lb61M1 t.dmem t.regs.rbx.toBitVec) (wordAt (rdi s) 2) = rd t.dmem (wordAt (rdi s) 2) := by
-    rw [lb61M1, ha0]; exact rd_storeInt_of_disjoint (hos (by omega) (by simp [WORDS]))
+    rw [lb61M1, ha0]; exact rd_storeInt_of_disjoint (hos (by omega) (by simp [WORDS_eq]))
   have hm1O : rd (lb61M1 t.dmem t.regs.rbx.toBitVec) (wordAt (rdi s) 6) = rd t.dmem (wordAt (rdi s) 6) := by
-    rw [lb61M1, ha0]; exact rd_storeInt_of_disjoint (hos (by omega) (by simp [WORDS]))
+    rw [lb61M1, ha0]; exact rd_storeInt_of_disjoint (hos (by omega) (by simp [WORDS_eq]))
   have ha1 : lb61A1 t.dmem t.regs.rbx.toBitVec
       = wordAt (opsOf s.dmem (rdi s)) (2 * ((st s).ops.length + j) + 1) := by
     simp only [lb61A1, e16, e48, ← rd.eq_1]
@@ -856,8 +864,8 @@ theorem lb61_some (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
   have hF : Mem.Mapped [frame finishF s] t.dmem := fun x hx => hfr.map x (hx.imp_right False.elim)
   have pb : Mem.Blocks.Inside (t.regs.rdx.toBitVec + BitVec.ofInt 64 (Int64.toInt 0)) 1 [frame finishF s] := by
     have hlen := len_eq hp0
-    have hwl := hw.len_le
-    simp only [Mem.Blocks.Inside, or_false, finishF, hrdx, Int64.reduceToInt, BitVec.ofInt_ofNat]
+    have hwl : _ ≤ 1024 := hw.len_le
+    simp only [Mem.Blocks.Inside, or_false, finishF_eq, hrdx, Int64.reduceToInt, BitVec.ofInt_ofNat]
     bv_omega
   rw [e16, e48]
   refine ⟨hmapT.loadInt_isSome p16, hmapT.loadInt_isSome p48, ?_,
@@ -893,10 +901,10 @@ theorem lb59_next (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
     rw [hrbx]; simp [wordAt]
   rw [e16, ← rd.eq_1, hn] at hrax
   have hsl := hw.struct_lt
-  have hnl := hw.n_le
-  simp only [WORDS] at hsl
+  have hnl : _ ≤ 1024 := hw.n_le
+  simp only [WORDS_eq] at hsl
   have hle := hf.le
-  simp only [finishF] at hle
+  simp only [finishF_eq] at hle
   have hLb := permute_ok_bound hL
   have hK : (st s).ops.length + L.length ≤ 6 * nOf s.dmem (rdi s) := by
     have h1 := hA.2
@@ -920,7 +928,7 @@ theorem lb59_next (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
     rcases h2 with h2 | h2 | h2 | h2
     · exact hf.disj x (Or.inl h2) (inside_append.mpr (Or.inl (Or.inl (by bv_omega))))
     · simp only [wordAt] at h2; bv_omega
-    · exact hw.disj_struct x (by simp only [Mem.Blocks.Inside, or_false, WORDS]; bv_omega) (Or.inl h2)
+    · exact hw.disj_struct x (by simp only [Mem.Blocks.Inside, or_false, WORDS_eq]; bv_omega) (Or.inl h2)
     · exact h2
   have hwt : Wf t.dmem (rdi s) :=
     Wf.congr hu hw hdr (fun x hx => hfr.map x (Or.inr hx)) (by rw [rd_congr hu hd0]; exact hw.len_le)
@@ -959,13 +967,13 @@ def lb57A (m : Mem 64) (x : Addr) : Addr :=
   BitVec.ofInt 64 (m.loadInt (x + BitVec.ofInt 64 (Int64.toInt 56)) 8).get!
 
 def lb57V (m : Mem 64) (sp : Addr) (k : Int64) : Word :=
-  BitVec.setWidth 64 (BitVec.setWidth 32 (BitVec.ofInt 8 (m.loadInt (sp + BitVec.ofInt 64 k.toInt) 1).get!))
+  BitVec.setWidth 64 (BitVec.setWidth 32 (BitVec.ofInt 16 (m.loadInt (sp + BitVec.ofInt 64 k.toInt) 2).get!))
 
 def lb57M1 (m : Mem 64) (x sp : Addr) : Mem 64 :=
-  m.storeInt (lb57A m x + BitVec.ofInt 64 (Int64.toInt 0)) 8 (lb57V m sp 14).toInt
+  m.storeInt (lb57A m x + BitVec.ofInt 64 (Int64.toInt 0)) 8 (lb57V m sp 12).toInt
 
 def lb57Mem (m : Mem 64) (x sp : Addr) : Mem 64 :=
-  (lb57M1 m x sp).storeInt (lb57A (lb57M1 m x sp) x + BitVec.ofInt 64 (Int64.toInt 8)) 8 (lb57V m sp 15).toInt
+  (lb57M1 m x sp).storeInt (lb57A (lb57M1 m x sp) x + BitVec.ofInt 64 (Int64.toInt 8)) 8 (lb57V m sp 14).toInt
 
 -- `.LB57`: `permute` is blocked; write `blocked` and return -1.
 theorem lb57_next (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finishA s) {p0 : Perm}
@@ -975,28 +983,28 @@ theorem lb57_next (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
     FInv s ra p0 (.label ".LB54") t' := by
   obtain ⟨hfr, hu, b, hb, hc⟩ := h
   have hrbx : t.regs.rbx.toBitVec = rdi s := by simpa using hfr.hrbx
-  have hrsp : t.regs.rsp.toBitVec = rsp s - 800#64 := by simpa [rsp] using hfr.hrsp
+  have hrsp : t.regs.rsp.toBitVec = rsp s - 4128#64 := by simpa [rsp] using hfr.hrsp
   have hsl := hw.struct_lt
-  simp only [WORDS] at hsl
+  simp only [WORDS_eq] at hsl
   have hbl := hw.blk_lt
   have hle := hf.le
-  simp only [finishF] at hle
+  simp only [finishF_eq] at hle
   have hlt := permute_err_bound hb
   have hlen := len_eq hp0
-  have hwl := hw.len_le
-  -- The bytes of `b`.
-  have hv : ∀ (i : Nat) (k : Int64) (v : Nat), i < 2 → k.toInt = 14 + i → [b.offset, b.excess][i]! = v →
+  have hwl : _ ≤ 1024 := hw.len_le
+  -- The words of `b`.
+  have hv : ∀ (i : Nat) (k : Int64) (v : Nat), i < 2 → k.toInt = 12 + 2 * i → [b.offset, b.excess][i]! = v →
       lb57V t.dmem t.regs.rsp.toBitVec k = BitVec.ofNat 64 v := by
     intro i k v hi hk hv
-    have hl : [b.offset, b.excess][i]! < 256 := by
+    have hl : [b.offset, b.excess][i]! < 65536 := by
       rcases i with _ | _ | _ <;> simp at hi ⊢ <;> omega
     simp only [lb57V]
-    rw [hk, show t.regs.rsp.toBitVec + BitVec.ofInt 64 (14 + (i : Int))
-      = rsp s - 786#64 + BitVec.ofNat 64 i by rw [hrsp]; bv_omega,
-      hc.load_byte (by simp; omega) hl (by simp), Option.get!_some, ← hv]
-    exact zeroExtend_ofInt_byte _ hl
-  have hv14 := hv 0 14 b.offset (by omega) (by decide) rfl
-  have hv15 := hv 1 15 b.excess (by omega) (by decide) rfl
+    rw [hk, show t.regs.rsp.toBitVec + BitVec.ofInt 64 (12 + 2 * (i : Int))
+      = rsp s - 4116#64 + BitVec.ofNat 64 (2 * i) by rw [hrsp]; bv_omega,
+      hc.load_word (by simp; omega) hl, Option.get!_some, ← hv]
+    exact zeroExtend_ofInt_word _ hl
+  have hv12 := hv 0 12 b.offset (by omega) (by decide) rfl
+  have hv14 := hv 1 14 b.excess (by omega) (by decide) rfl
   -- `blocked`.
   have hdr : Mem.Blocks.Disjoint (readable s.dmem (rdi s)) [frame finishF s] := by
     refine disjoint_symm (disjoint_mono ?_ (disjoint_symm (Pre.disj ⟨hw, hf, hA⟩)))
@@ -1011,14 +1019,14 @@ theorem lb57_next (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
   have hd7 : Mem.Blocks.Disjoint [(blkOf s.dmem (rdi s), 8)] [(wordAt (rdi s) 7, 8)] := by
     intro x h1 h2
     simp only [Mem.Blocks.Inside, or_false] at h1 h2
-    exact hw.disj_struct x (by simp only [Mem.Blocks.Inside, or_false, WORDS, wordAt] at h2 ⊢; bv_omega)
+    exact hw.disj_struct x (by simp only [Mem.Blocks.Inside, or_false, WORDS_eq, wordAt] at h2 ⊢; bv_omega)
       (Or.inr (Or.inl (by bv_omega)))
   have hA0 : lb57A t.dmem t.regs.rbx.toBitVec = blkOf s.dmem (rdi s) := by
     simp only [lb57A, e56, ← rd.eq_1]; exact hB
   have hM1 : lb57M1 t.dmem t.regs.rbx.toBitVec t.regs.rsp.toBitVec
       = t.dmem.storeInt (blkOf s.dmem (rdi s)) 8 (BitVec.ofNat 64 b.offset).toInt := by
     simp only [lb57M1]
-    rw [hA0, hv14]
+    rw [hA0, hv12]
     simp
   have hA1 : lb57A (t.dmem.storeInt (blkOf s.dmem (rdi s)) 8 (BitVec.ofNat 64 b.offset).toInt)
       t.regs.rbx.toBitVec = blkOf s.dmem (rdi s) := by
@@ -1026,7 +1034,7 @@ theorem lb57_next (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
     rw [rd_storeInt_of_disjoint hd7]; exact hB
   have hm' : t'.dmem = (t.dmem.storeInt (blkOf s.dmem (rdi s)) 8 (BitVec.ofNat 64 b.offset).toInt).storeInt
       (blkOf s.dmem (rdi s) + 8#64) 8 (BitVec.ofNat 64 b.excess).toInt := by
-    rw [hm, lb57Mem, hM1, hA1, hv15]
+    rw [hm, lb57Mem, hM1, hA1, hv14]
     simp
   -- The memory that `.LB57` writes.
   have hU2 : Mem.UnchangedOutside [(blkOf s.dmem (rdi s), 8), (blkOf s.dmem (rdi s) + 8#64, 8)]
@@ -1067,7 +1075,7 @@ theorem lb57_next (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
     simp only [Mem.Blocks.Inside, or_false, wordAt] at h1
     rcases h2 with h2 | h2 | h2
     · exact hf.disj x (Or.inl h2) (inside_append.mpr (Or.inl (Or.inl (by bv_omega))))
-    · exact hw.disj_struct x (by simp only [Mem.Blocks.Inside, or_false, WORDS]; bv_omega) (Or.inr (Or.inl h2))
+    · exact hw.disj_struct x (by simp only [Mem.Blocks.Inside, or_false, WORDS_eq]; bv_omega) (Or.inr (Or.inl h2))
     · exact h2
   have hwt : Wf t'.dmem (rdi s) :=
     Wf.congr hUs hw hdl (fun x hx => hmap' x (Or.inr hx))
@@ -1089,8 +1097,8 @@ theorem lb57_next (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
 
 theorem lb57_some (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finishA s) {p0 : Perm}
     (h : FInv s ra p0 (.label ".LB57") t) :
-    (t.dmem.loadInt (t.regs.rsp.toBitVec + BitVec.ofInt 64 (Int64.toInt 15)) 1).isSome
-      ∧ (t.dmem.loadInt (t.regs.rsp.toBitVec + BitVec.ofInt 64 (Int64.toInt 14)) 1).isSome
+    (t.dmem.loadInt (t.regs.rsp.toBitVec + BitVec.ofInt 64 (Int64.toInt 14)) 2).isSome
+      ∧ (t.dmem.loadInt (t.regs.rsp.toBitVec + BitVec.ofInt 64 (Int64.toInt 12)) 2).isSome
       ∧ (t.dmem.loadInt (t.regs.rbx.toBitVec + BitVec.ofInt 64 (Int64.toInt 56)) 8).isSome
       ∧ (t.dmem.loadInt (lb57A t.dmem t.regs.rbx.toBitVec + BitVec.ofInt 64 (Int64.toInt 0)) 8).isSome
       ∧ ((lb57M1 t.dmem t.regs.rbx.toBitVec t.regs.rsp.toBitVec).loadInt
@@ -1100,12 +1108,12 @@ theorem lb57_some (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
             + BitVec.ofInt 64 (Int64.toInt 8)) 8).isSome := by
   obtain ⟨hfr, hu, -⟩ := h
   have hrbx : t.regs.rbx.toBitVec = rdi s := by simpa using hfr.hrbx
-  have hrsp : t.regs.rsp.toBitVec = rsp s - 800#64 := by simpa [rsp] using hfr.hrsp
+  have hrsp : t.regs.rsp.toBitVec = rsp s - 4128#64 := by simpa [rsp] using hfr.hrsp
   have hsl := hw.struct_lt
-  simp only [WORDS] at hsl
+  simp only [WORDS_eq] at hsl
   have hbl := hw.blk_lt
   have hle := hf.le
-  simp only [finishF] at hle
+  simp only [finishF_eq] at hle
   have hdr : Mem.Blocks.Disjoint (readable s.dmem (rdi s)) [frame finishF s] := by
     refine disjoint_symm (disjoint_mono ?_ (disjoint_symm (Pre.disj ⟨hw, hf, hA⟩)))
     intro x hx
@@ -1119,7 +1127,7 @@ theorem lb57_some (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
   have hd7 : Mem.Blocks.Disjoint [(blkOf s.dmem (rdi s), 8)] [(wordAt (rdi s) 7, 8)] := by
     intro x h1 h2
     simp only [Mem.Blocks.Inside, or_false] at h1 h2
-    exact hw.disj_struct x (by simp only [Mem.Blocks.Inside, or_false, WORDS, wordAt] at h2 ⊢; bv_omega)
+    exact hw.disj_struct x (by simp only [Mem.Blocks.Inside, or_false, WORDS_eq, wordAt] at h2 ⊢; bv_omega)
       (Or.inr (Or.inl (by bv_omega)))
   have hA0 : lb57A t.dmem t.regs.rbx.toBitVec + BitVec.ofInt 64 (Int64.toInt 0) = blkOf s.dmem (rdi s) := by
     simp only [lb57A, e56, ← rd.eq_1, hB]; simp
@@ -1137,8 +1145,8 @@ theorem lb57_some (hf : FrameOk finishF s) (hw : Wf s.dmem (rdi s)) (hA : finish
   have hM1 : Mem.Mapped (frame finishF s :: writable s.dmem (rdi s))
       (lb57M1 t.dmem t.regs.rbx.toBitVec t.regs.rsp.toBitVec) := hfr.map.storeInt _ _ _
   refine ⟨hfr.map.loadInt_isSome (Or.inl ?_), hfr.map.loadInt_isSome (Or.inl ?_), ?_, ?_, ?_, ?_⟩
-  · simp only [finishF, Int64.reduceToInt, BitVec.ofInt_ofNat]; rw [hrsp]; bv_omega
-  · simp only [finishF, Int64.reduceToInt, BitVec.ofInt_ofNat]; rw [hrsp]; bv_omega
+  · simp only [finishF_eq, Int64.reduceToInt, BitVec.ofInt_ofNat]; rw [hrsp]; bv_omega
+  · simp only [finishF_eq, Int64.reduceToInt, BitVec.ofInt_ofNat]; rw [hrsp]; bv_omega
   · rw [e56]; exact hmapT.loadInt_isSome p56
   · rw [hA0]; exact hfr.map.loadInt_isSome (by simpa using pB 0 (by omega))
   · rw [e56]; exact (hmapT.storeInt _ _ _).loadInt_isSome p56
@@ -1156,7 +1164,7 @@ theorem finish_body [Host] [FunDecls] (hperm : Program.WP.CallSpec "permute" Per
     ⟨⟨_, hpre.2.2.1.1, fun i j hi hj => hpre.2.2.1.2 i hi j hj⟩, rfl⟩
   obtain ⟨hw, hf, hA⟩ := hpre
   have hle := hf.le
-  simp only [finishF] at hle
+  simp only [finishF_eq] at hle
   refine Program.WP.cfg (FInv s ra p0) (FVar s) ?_ rfl
   cfg_cases
   case left t ht =>
@@ -1180,7 +1188,7 @@ theorem finish_body [Host] [FunDecls] (hperm : Program.WP.CallSpec "permute" Per
     have hmap0 := mapped_entry hf hw
     have hd0 := disj_frame hf (inside_hdr hw (k := 0) (by omega))
     have hsl := hw.struct_lt
-    simp only [WORDS] at hsl
+    simp only [WORDS_eq] at hsl
     have hlen : p0.toList.length = (rd s.dmem (wordAt (rdi s) 0)).toNat := by rw [hp0]; simp [stOf]
     have hv : rd (Mem.storeInt t.dmem (t.regs.rsp.toBitVec - 8#64) 8 t.regs.rbx.toBitVec.toInt)
         t.regs.rdi.toBitVec = rd s.dmem (wordAt (rdi s) 0) := by
@@ -1209,7 +1217,7 @@ theorem finish_body [Host] [FunDecls] (hperm : Program.WP.CallSpec "permute" Per
         have : p0.toList = [] := List.eq_nil_of_length_eq_zero (by simpa using hlen)
         rw [this]
         intro i hi
-        simp [bytes] at hi
+        simp [words] at hi
       · simp [FVar]
     · rename_i hz
       simp [CondCode.interp_z, StatusFlags.zf_from_result] at hz
@@ -1227,7 +1235,7 @@ theorem finish_body [Host] [FunDecls] (hperm : Program.WP.CallSpec "permute" Per
         simp only [wordAt, rdi] at this
         omega
       · intro i hi
-        simp [bytes] at hi
+        simp [words] at hi
     · simp [FVar]
   case right.right.left t ht =>
     have ht0 := ht
@@ -1236,10 +1244,10 @@ theorem finish_body [Host] [FunDecls] (hperm : Program.WP.CallSpec "permute" Per
     have hrbx := hfr.hrbx
     have hrsp := hfr.hrsp
     have hsl := hw.struct_lt
-    simp only [WORDS] at hsl
-    have h256 : (rax t).toNat < 256 := by have := hw.len_le; rw [len_eq hp0] at hi; omega
+    simp only [WORDS_eq] at hsl
+    have h1024 : (rax t).toNat < 1024 := by have : _ ≤ 1024 := hw.len_le; rw [len_eq hp0] at hi; omega
     kvcgen64
-    · exact hfr.map.loadInt_isSome (Or.inr (Or.inr (Or.inl (by simp only [STACK]; bvo))))
+    · exact hfr.map.loadInt_isSome (Or.inr (Or.inr (Or.inl (by simp only [STACK, Bbu.MAX_N]; bvo))))
     · exact hfr.map.loadInt_isSome (Or.inl (by bvo))
     · rename_i hz
       cfg_goto
@@ -1247,10 +1255,10 @@ theorem finish_body [Host] [FunDecls] (hperm : Program.WP.CallSpec "permute" Per
         simp only [MachineData.pushRa, Reg64s.get64_rsp, Reg64s.set64_rsp] at *
         bvo
       · refine (lb56_next hf hw hp0 ht0
-          (a := t.regs.rbx.toBitVec + t.regs.rax.toBitVec * 8#64 + BitVec.ofInt 64 (Int64.toInt 2112))
-          (b := t.regs.rsp.toBitVec + t.regs.rax.toBitVec + BitVec.ofInt 64 (Int64.toInt 528))
+          (a := t.regs.rbx.toBitVec + t.regs.rax.toBitVec * 8#64 + BitVec.ofInt 64 (Int64.toInt 8256))
+          (b := t.regs.rsp.toBitVec + t.regs.rax.toBitVec * 2#64 + BitVec.ofInt 64 (Int64.toInt 2064))
           ?_ ?_ ?_ ?_ ?_ ?_).1 ?_
-        · simp only [DEST]; bvo
+        · simp only [DEST_eq]; bvo
         · bvo
         · intro r hr; simp only [List.mem_cons, List.not_mem_nil, or_false] at hr
           rcases hr with rfl | rfl | rfl | rfl | rfl | rfl | rfl <;> rfl
@@ -1264,10 +1272,10 @@ theorem finish_body [Host] [FunDecls] (hperm : Program.WP.CallSpec "permute" Per
         bvo
     · rename_i hz
       refine (lb56_next hf hw hp0 ht0
-          (a := t.regs.rbx.toBitVec + t.regs.rax.toBitVec * 8#64 + BitVec.ofInt 64 (Int64.toInt 2112))
-          (b := t.regs.rsp.toBitVec + t.regs.rax.toBitVec + BitVec.ofInt 64 (Int64.toInt 528))
+          (a := t.regs.rbx.toBitVec + t.regs.rax.toBitVec * 8#64 + BitVec.ofInt 64 (Int64.toInt 8256))
+          (b := t.regs.rsp.toBitVec + t.regs.rax.toBitVec * 2#64 + BitVec.ofInt 64 (Int64.toInt 2064))
           ?_ ?_ ?_ ?_ ?_ ?_).2 ?_
-      · simp only [DEST]; bvo
+      · simp only [DEST_eq]; bvo
       · bvo
       · intro r hr; simp only [List.mem_cons, List.not_mem_nil, or_false] at hr
         rcases hr with rfl | rfl | rfl | rfl | rfl | rfl | rfl <;> rfl
@@ -1373,8 +1381,8 @@ theorem finish_body [Host] [FunDecls] (hperm : Program.WP.CallSpec "permute" Per
     obtain ⟨hfr, L, hL, j, hj, hrdx, hrsi, hc, hn, hops, hu⟩ := ht
     have hrsp := hfr.hrsp
     have hrbx := hfr.hrbx
-    have hLb : L.length ≤ 512 := by
-      have := (permute_ok_bound hL).1; have := len_eq hp0; have := hw.len_le; omega
+    have hLb : L.length ≤ 2048 := by
+      have := (permute_ok_bound hL).1; have := len_eq hp0; have : _ ≤ 1024 := hw.len_le; omega
     obtain ⟨s1, s2, s3, s4, s5, s6, s7, s8⟩ := lb61_some hf hw hA hp0 ht0
     kvcgen64
     all_goals try decide
@@ -1428,7 +1436,7 @@ theorem finish_body [Host] [FunDecls] (hperm : Program.WP.CallSpec "permute" Per
     have hmid : Kit.Mid finishF s ra t.dmem := ⟨rd_of_contains hfr.cra, hfr.map, hu⟩
     have hcbx := rd_of_contains hfr.cbx
     kvcgen64
-    · exact hfr.map.loadInt_isSome (Or.inl (by simp only [finishF]; bvo))
+    · exact hfr.map.loadInt_isSome (Or.inl (by simp only [finishF_eq]; bvo))
     · refine Option.isSome_iff_exists.mpr ⟨ra, Kit.Mid.retAddr (by decide) ⟨hw, hf, hA⟩ hmid ?_⟩
       simp [rsp]
       bvo
@@ -1439,7 +1447,7 @@ theorem finish_body [Host] [FunDecls] (hperm : Program.WP.CallSpec "permute" Per
         bvo
       · intro q hq
         cases q <;> simp at hq ⊢
-        · rw [show 784#64 + t.regs.rsp.toBitVec = rsp s - 16#64 by simp at hrsp; bvo]
+        · rw [show 4112#64 + t.regs.rsp.toBitVec = rsp s - 16#64 by simp at hrsp; bvo]
           exact hcbx
         · exact hfr.hrbp
         · exact hfr.h12

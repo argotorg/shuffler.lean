@@ -5,7 +5,7 @@ position_of:
 	movl	$0, %eax
 	.p2align 5
 .LB8:
-	cmpq	%rsi, 2112(%rdi,%rax,8)
+	cmpq	%rsi, 8256(%rdi,%rax,8)
 	je	.LB5
 	addq	$1, %rax
 	cmpq	%rdx, %rax

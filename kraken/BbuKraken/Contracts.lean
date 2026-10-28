@@ -51,20 +51,20 @@ def swapWithR (s t : MachineData) : Prop :=
 
 -- `add(s, v, d, kind, arg)`
 def addF : Nat := 56
-def addA (s : MachineData) : Prop := (st s).len < 256 ∧ (st s).ops.length < cap s
+def addA (s : MachineData) : Prop := (st s).len < MAX_N ∧ (st s).ops.length < cap s
 def addR (s t : MachineData) : Prop :=
   Res (rdi s) (add (st s) (rsi s) (rdx s).toNat ⟨rcx s, r8 s⟩) (Ok s t (fun _ => 0#64) id) t
 
 -- `produce(s, d)`
 def produceF : Nat := 96
 def produceA (s : MachineData) : Prop :=
-  (rsi s).toNat < (env s).n ∧ (st s).len < 256 ∧ (st s).ops.length < cap s
+  (rsi s).toNat < (env s).n ∧ (st s).len < MAX_N ∧ (st s).ops.length < cap s
 def produceR (s t : MachineData) : Prop :=
   Res (rdi s) (produce (env s) (st s) (rsi s).toNat) (Ok s t (fun _ => 0#64) id) t
 
 -- `generate(s, d)`
 def generateF : Nat := 120
-def generateA (s : MachineData) : Prop := (st s).len < 256 ∧ (st s).ops.length + 2 ≤ cap s
+def generateA (s : MachineData) : Prop := (st s).len < MAX_N ∧ (st s).ops.length + 2 ≤ cap s
 def generateR (s t : MachineData) : Prop :=
   Res (rdi s) (generate (env s) (st s) (rsi s).toNat) (Ok s t (fun _ => 0#64) id) t
 
@@ -96,7 +96,13 @@ def stepR (s t : MachineData) : Prop :=
   Res (rdi s) (step (env s) (st s) (rsi s).toNat) (Ok s t (fun r => encNext r.2) Prod.fst) t
 
 -- `finish(s)`, for a permutation of the destinations
-def finishF : Nat := 816
+-- The locals of `finish` from `rsp` after `subq`: `blocked` at 12, `trace` at 16,
+-- then `perm` at `finishPerm`.
+def finishPerm : Nat := 16 + 2 * MAX_N
+def finishLocals : Nat := finishPerm + 2 * MAX_N
+-- The return address, `pushq %rbx`, the locals and the frame of `permute`.
+def finishF : Nat := 8 + 8 + finishLocals + 16
+theorem finishF_eq : finishF = 4144 := rfl
 def finishA (s : MachineData) : Prop :=
   IsPerm ((st s).slots.map Slot.dest) ∧ (st s).ops.length + 2 * (st s).len ≤ cap s
 def finishR (s t : MachineData) : Prop :=

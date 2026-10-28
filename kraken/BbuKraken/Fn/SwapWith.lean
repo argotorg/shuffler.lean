@@ -74,7 +74,7 @@ local macro "swap_mid" : tactic => `(tactic| (
     try simp only [shl4]
     try bbu_rd
     apply inside_writable
-    simp only [opsOf, STACK, WORDS]
+    simp only [opsOf, STACK, WORDS_eq]
     bbu_norm
   · right; right; left; bv_omega
   · right; right; left; bv_omega
@@ -95,20 +95,20 @@ def fin (s : MachineData) (ra : Int64) : Mem 64 :=
   let m3 := m2.storeInt (S + 16#64) 8 (1#64 + rd m2 (S + 16#64)).toInt
   let m4 := m3.storeInt (S + r * 8#64 + 64#64) 8 (rd m3 (S + L * 8#64 + 56#64)).toInt
   let m5 := m4.storeInt (S + L * 8#64 + 56#64) 8 (rd m3 (S + r * 8#64 + 64#64)).toInt
-  let m6 := m5.storeInt (S + r * 8#64 + 2112#64) 8 (rd m5 (S + L * 8#64 + 2104#64)).toInt
-  m6.storeInt (S + L * 8#64 + 2104#64) 8 (rd m5 (S + r * 8#64 + 2112#64)).toInt
+  let m6 := m5.storeInt (S + r * 8#64 + 8256#64) 8 (rd m5 (S + L * 8#64 + 8248#64)).toInt
+  m6.storeInt (S + L * 8#64 + 8248#64) 8 (rd m5 (S + r * 8#64 + 8256#64)).toInt
 
 -- The facts of `Pre` for `bv_omega`.
 theorem facts (hpre : Pre swapWithF swapWithA s) :
     (s.regs.rsp.toBitVec.toNat ≤ s.regs.rdi.toBitVec.toNat ∨
-      s.regs.rdi.toBitVec.toNat + 4160 ≤ s.regs.rsp.toBitVec.toNat - 8)
-    ∧ s.regs.rdi.toBitVec.toNat + 4160 ≤ 2 ^ 64 ∧ 8 ≤ s.regs.rsp.toBitVec.toNat
-    ∧ (rd s.dmem s.regs.rdi.toBitVec).toNat ≤ 256
+      s.regs.rdi.toBitVec.toNat + 16448 ≤ s.regs.rsp.toBitVec.toNat - 8)
+    ∧ s.regs.rdi.toBitVec.toNat + 16448 ≤ 2 ^ 64 ∧ 8 ≤ s.regs.rsp.toBitVec.toNat
+    ∧ (rd s.dmem s.regs.rdi.toBitVec).toNat ≤ 1024
     ∧ (rd s.dmem (s.regs.rdi.toBitVec + 16#64)).toNat < 6 * nOf s.dmem s.regs.rdi.toBitVec
-    ∧ nOf s.dmem s.regs.rdi.toBitVec ≤ 256
+    ∧ nOf s.dmem s.regs.rdi.toBitVec ≤ 1024
     ∧ ((rd s.dmem (s.regs.rdi.toBitVec + 48#64)).toNat + 96 * nOf s.dmem s.regs.rdi.toBitVec
           ≤ s.regs.rdi.toBitVec.toNat
-        ∨ s.regs.rdi.toBitVec.toNat + 4160 ≤ (rd s.dmem (s.regs.rdi.toBitVec + 48#64)).toNat)
+        ∨ s.regs.rdi.toBitVec.toNat + 16448 ≤ (rd s.dmem (s.regs.rdi.toBitVec + 48#64)).toNat)
     ∧ (rd s.dmem (s.regs.rdi.toBitVec + 48#64)).toNat + 96 * nOf s.dmem s.regs.rdi.toBitVec
         ≤ 2 ^ 64
     ∧ (s.regs.rsp.toBitVec.toNat ≤ (rd s.dmem (s.regs.rdi.toBitVec + 48#64)).toNat
@@ -119,14 +119,14 @@ theorem facts (hpre : Pre swapWithF swapWithA s) :
   have hsep := hfr.sep_struct (by decide)
   have hst := hw.struct_lt
   have hle := hfr.le
-  have hlen := hw.len_le
-  have hn := hw.n_le
+  have hlen : _ ≤ 1024 := hw.len_le
+  have hn : _ ≤ 1024 := hw.n_le
   have hnlt : (st s).ops.length < cap s := hpre.2.2
   simp only [cap, st, nops_stOf] at hnlt
   have hso := hw.sep_ops (by omega)
   have hol := hw.ops_lt
   have hfo := hfr.sep_ops (by decide) (by omega)
-  simp only [swapWithF, WORDS, opsOf] at hsep hst hle hso hol hfo
+  simp only [swapWithF, WORDS_eq, opsOf] at hsep hst hle hso hol hfo
   bbu_norm at hsep hst hle hlen hn hnlt hso hol hfo
   exact ⟨hsep, hst, hle, hlen, hnlt, hn, hso, hol, hfo⟩
 
@@ -158,7 +158,7 @@ theorem rd_fin_pend (hpre : Pre swapWithF swapWithA s)
 
 -- A slot after the stores of `swap_with`.
 local macro "slot_tac" : tactic => `(tactic| (
-  simp only [slotOf, Slot.mk.injEq, fin, shl4, STACK, DEST]; bbu_norm; bbu_rd
+  simp only [slotOf, Slot.mk.injEq, fin, shl4, STACK, DEST_eq]; bbu_norm; bbu_rd
   refine ⟨?_, ?_⟩ <;> swap_fin))
 
 -- The slots after the stores: slots `r` and `L - 1` change places.
@@ -271,13 +271,13 @@ theorem R_fin {t : MachineData} (hpre : Pre swapWithF swapWithA s)
     (hpos : s.regs.rsi.toBitVec.toNat < (rd s.dmem s.regs.rdi.toBitVec).toNat)
     (hdep : 1 ≤ (rd s.dmem s.regs.rdi.toBitVec).toNat - 1 - s.regs.rsi.toBitVec.toNat ∧
       (rd s.dmem s.regs.rdi.toBitVec).toNat - 1 - s.regs.rsi.toBitVec.toNat ≤ 16)
-    (hdz : ¬rd s.dmem (s.regs.rdi.toBitVec + s.regs.rsi.toBitVec * 8#64 + 2112#64)
+    (hdz : ¬rd s.dmem (s.regs.rdi.toBitVec + s.regs.rsi.toBitVec * 8#64 + 8256#64)
       - s.regs.rsi.toBitVec = 0#64)
     (hm : t.dmem = fin s ra) (hax : t.regs.rax.toBitVec = 0#64) : swapWithR s t := by
   obtain ⟨_, _, _, _, hnlt, _, _, _, _⟩ := facts hpre
   have hd : (st s).dest (rsi s).toNat ≠ (rsi s).toNat := by
     rw [dest_stOf (by bbu_norm; exact hpos), slot_addr]
-    simp only [DEST]; bbu_norm; bv_omega
+    simp only [DEST_eq]; bbu_norm; bv_omega
   rw [swapWithR, swapWith_eq (by rw [len_st]; exact hpos) hd (by rw [len_st]; exact hdep.1)
     (by rw [len_st]; exact hdep.2)]
   refine ⟨hax, ?_⟩
@@ -341,18 +341,18 @@ theorem swapWith_body [Host] [FunDecls] : Body swapWithAsm swapWithF swapWithA s
     have hsep := hfr.sep_struct (by decide)
     have hst := hw.struct_lt
     have hle := hfr.le
-    have hlen := hw.len_le
+    have hlen : _ ≤ 1024 := hw.len_le
     have hnops := hw.nops_le
-    have hn := hw.n_le
-    simp only [swapWithF, WORDS] at hsep hst hle
+    have hn : _ ≤ 1024 := hw.n_le
+    simp only [swapWithF, WORDS_eq] at hsep hst hle
     bbu_norm at hsep hst hle hlen hnops hn hw
     have hnlt : (rd s.dmem (s.regs.rdi.toBitVec + 16#64)).toNat < 6 * nOf s.dmem s.regs.rdi.toBitVec := by
       have := hA; simp only [swapWithA, cap, st, nops_stOf] at this; bbu_norm at this; exact this
     have hso := hw.sep_ops (by omega)
     have hol := hw.ops_lt
-    simp only [opsOf, WORDS] at hso hol
+    simp only [opsOf, WORDS_eq] at hso hol
     bbu_norm at hso hol
-    have hR : ∀ a, (a - s.regs.rdi.toBitVec).toNat + 8 ≤ 4160 →
+    have hR : ∀ a, (a - s.regs.rdi.toBitVec).toNat + 8 ≤ 16448 →
         rd (Mem.storeInt s.dmem (s.regs.rsp.toBitVec - 8#64) 8 ra.toBitVec.toInt) a = rd s.dmem a :=
       fun a ha => rd_store_other _ (by bv_omega)
     kvcgen64
@@ -380,8 +380,8 @@ theorem swapWith_body [Host] [FunDecls] : Body swapWithAsm swapWithF swapWithA s
       · refine ⟨rfl, rfl, ?_, swapWith_err (Or.inr (Or.inl ?_))⟩
         · intro q hq; cases q <;> first | rfl | simp at hq
         · rw [dest_stOf (by bbu_norm; exact hpos), slot_addr]
-          simp only [DEST]; bbu_norm
-          have : rd s.dmem (s.regs.rdi.toBitVec + s.regs.rsi.toBitVec * 8#64 + 2112#64) =
+          simp only [DEST_eq]; bbu_norm
+          have : rd s.dmem (s.regs.rdi.toBitVec + s.regs.rsi.toBitVec * 8#64 + 8256#64) =
             s.regs.rsi.toBitVec := by bv_omega
           rw [this]
       · simp
@@ -426,5 +426,5 @@ theorem swapWith_body [Host] [FunDecls] : Body swapWithAsm swapWithF swapWithA s
         refine Mid.wf hpre hmid ?_ ?_ <;> bbu_norm
         · rw [hrd.1]; exact hlen
         · rw [hrd.2]; bv_omega
-    all_goals (repeat apply loadInt_isSome_store); exact hw.isSome_struct (by simp only [WORDS]; bv_omega)
+    all_goals (repeat apply loadInt_isSome_store); exact hw.isSome_struct (by simp only [WORDS_eq]; bv_omega)
 end Bbu

@@ -24,7 +24,7 @@ position_of:
 	movl	$0, %eax
 	.p2align 5
 .LB8:
-	cmpq	%rsi, 2112(%rdi,%rax,8)
+	cmpq	%rsi, 8256(%rdi,%rax,8)
 	je	.LB5
 	addq	$1, %rax
 	cmpq	%rdx, %rax
@@ -79,7 +79,7 @@ add:
 	addq	$1, 16(%rbx)
 	movq	(%rbx), %rax
 	movq	%r12, 64(%rbx,%rax,8)
-	movq	%rbp, 2112(%rbx,%rax,8)
+	movq	%rbp, 8256(%rbx,%rax,8)
 	addq	$1, %rax
 	movq	%rax, (%rbx)
 	movl	$0, %eax
@@ -100,7 +100,7 @@ swap_with:
 	cmpq	%r8, %rsi
 	jnb	.LB23
 	leaq	(%rdi,%rsi,8), %rax
-	cmpq	%rsi, 2112(%rax)
+	cmpq	%rsi, 8256(%rax)
 	je	.LB24
 	leaq	-1(%r8), %rcx
 	subq	%rsi, %rcx
@@ -121,10 +121,10 @@ swap_with:
 	movq	56(%rdx), %rsi
 	movq	%rsi, 64(%rax)
 	movq	%rcx, 56(%rdx)
-	movq	2112(%rax), %rcx
-	movq	2104(%rdx), %rsi
-	movq	%rsi, 2112(%rax)
-	movq	%rcx, 2104(%rdx)
+	movq	8256(%rax), %rcx
+	movq	8248(%rdx), %rsi
+	movq	%rsi, 8256(%rax)
+	movq	%rcx, 8248(%rdx)
 	movl	$0, %eax
 	ret
 .LB23:
@@ -250,7 +250,7 @@ generate:
 	cmpq	%rdx, %rcx
 	jnb	.LB41
 	leaq	0(%rbp,%rbx,8), %rcx
-	movq	2112(%rcx), %rsi
+	movq	8256(%rcx), %rsi
 	cmpq	%rbx, %rsi
 	je	.LB41
 	leaq	0(%rbp,%rdx,8), %rax
@@ -267,9 +267,9 @@ generate:
 	popq	%rbp
 	ret
 .LB52:
-	movq	2104(%rax), %rdx
-	movq	%rdx, 2112(%rcx)
-	movq	%rsi, 2104(%rax)
+	movq	8248(%rax), %rdx
+	movq	%rdx, 8256(%rcx)
+	movq	%rsi, 8248(%rax)
 	movl	$0, %eax
 	jmp	.LB41
 .LB53:
@@ -284,7 +284,7 @@ generate:
 	.type	finish, @function
 finish:
 	pushq	%rbx
-	subq	$784, %rsp
+	subq	$4112, %rsp
 	movq	%rdi, %rbx
 	movq	(%rdi), %rdi
 	testq	%rdi, %rdi
@@ -292,15 +292,15 @@ finish:
 	movl	$0, %eax
 	.p2align 5
 .LB56:
-	movq	2112(%rbx,%rax,8), %rdx
-	movb	%dl, 528(%rsp,%rax)
+	movq	8256(%rbx,%rax,8), %rdx
+	movw	%dx, 2064(%rsp,%rax,2)
 	addq	$1, %rax
 	cmpq	%rdi, %rax
 	jne	.LB56
 .LB55:
-	leaq	14(%rsp), %rcx
+	leaq	12(%rsp), %rcx
 	leaq	16(%rsp), %rdx
-	leaq	528(%rsp), %rsi
+	leaq	2064(%rsp), %rsi
 	call	permute
 	testq	%rax, %rax
 	js	.LB57
@@ -325,13 +325,13 @@ finish:
 .LB59:
 	movq	16(%rbx), %rax
 .LB54:
-	addq	$784, %rsp
+	addq	$4112, %rsp
 	popq	%rbx
 	ret
 .LB57:
-	movzbl	15(%rsp), %edx
+	movzwl	14(%rsp), %edx
 	movq	56(%rbx), %rax
-	movzbl	14(%rsp), %ecx
+	movzwl	12(%rsp), %ecx
 	movq	%rcx, (%rax)
 	movq	56(%rbx), %rax
 	movq	%rdx, 8(%rax)
@@ -362,15 +362,15 @@ take_bound:
 .LB71:
 	cmpq	64(%rdi,%rax,8), %rdx
 	jne	.LB70
-	cmpq	%rax, 2112(%rdi,%rax,8)
+	cmpq	%rax, 8256(%rdi,%rax,8)
 	je	.LB70
 	movq	%rax, %rsi
 .LB69:
-	leaq	264(%rsi), %rax
+	leaq	1032(%rsi), %rax
 	movq	(%rdi,%rax,8), %rdx
-	movq	2112(%r8), %r9
+	movq	8256(%r8), %r9
 	movq	%r9, (%rdi,%rax,8)
-	movq	%rdx, 2112(%r8)
+	movq	%rdx, 8256(%r8)
 	cmpq	%rcx, %rsi
 	je	.LB75
 	movq	(%rdi), %rdx
@@ -402,10 +402,10 @@ take_bound:
 	movl	$0, %eax
 	ret
 .LB68:
-	movq	2112(%rax), %rdx
-	movq	2112(%r8), %rcx
-	movq	%rcx, 2112(%rax)
-	movq	%rdx, 2112(%r8)
+	movq	8256(%rax), %rdx
+	movq	8256(%r8), %rcx
+	movq	%rcx, 8256(%rax)
+	movq	%rdx, 8256(%r8)
 	movl	$0, %eax
 .LB66:
 	ret
@@ -496,7 +496,7 @@ step:
 	cmpq	(%rdi), %rsi
 	jnb	.LB90
 	leaq	1(%rsi), %rax
-	cmpq	%rsi, 2112(%rdi,%rsi,8)
+	cmpq	%rsi, 8256(%rdi,%rsi,8)
 	je	.LB89
 .LB90:
 	cmpq	$0, 8(%rbp)
@@ -532,7 +532,7 @@ step:
 	movq	0(%rbp), %rdx
 	cmpq	%rdx, %rbx
 	jnb	.LB103
-	cmpq	%rbx, 2112(%rbp,%rbx,8)
+	cmpq	%rbx, 8256(%rbp,%rbx,8)
 	je	.LB104
 .LB96:
 	leaq	-1(%rdx), %rax
@@ -597,7 +597,7 @@ step:
 	cmpq	%rdx, %rbx
 	jnb	.LB89
 	leaq	1(%rbx), %rax
-	cmpq	%rbx, 2112(%rbp,%rbx,8)
+	cmpq	%rbx, 8256(%rbp,%rbx,8)
 	jne	.LB96
 	jmp	.LB89
 .LB107:
@@ -623,7 +623,7 @@ step:
 build_bottom_up:
 	pushq	%rbp
 	pushq	%rbx
-	subq	$4168, %rsp
+	subq	$16456, %rsp
 	movq	%rsi, %rbx
 	movq	%rdi, (%rsp)
 	movq	%rsi, %rax
@@ -633,9 +633,9 @@ build_bottom_up:
 	movq	%rsi, 24(%rsp)
 	movq	%rcx, 32(%rsp)
 	movq	%r9, 40(%rsp)
-	movq	4192(%rsp), %rax
+	movq	16480(%rsp), %rax
 	movq	%rax, 48(%rsp)
-	movq	4200(%rsp), %rax
+	movq	16488(%rsp), %rax
 	movq	%rax, 56(%rsp)
 	testq	%rdi, %rdi
 	je	.LB109
@@ -646,7 +646,7 @@ build_bottom_up:
 	movq	(%rsi,%rax,8), %rdx
 	movq	%rdx, 64(%rsp,%rax,8)
 	movq	(%r8,%rax,8), %rdx
-	movq	%rdx, 2112(%rsp,%rax,8)
+	movq	%rdx, 8256(%rsp,%rax,8)
 	addq	$1, %rax
 	cmpq	%rax, %rdi
 	jne	.LB110
@@ -671,7 +671,7 @@ build_bottom_up:
 .LB116:
 	movq	16(%rsp), %rax
 .LB108:
-	addq	$4168, %rsp
+	addq	$16456, %rsp
 	popq	%rbx
 	popq	%rbp
 	ret
