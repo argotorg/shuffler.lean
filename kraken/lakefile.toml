@@ -1,6 +1,6 @@
 name = "PermuteKraken"
 version = "0.1.0"
-defaultTargets = ["PermuteKraken"]
+defaultTargets = ["PermuteKraken", "BbuKraken"]
 
 [leanOptions]
 autoImplicit = false
@@ -17,3 +17,10 @@ name = "PermuteKraken"
 [[lean_exe]]
 name = "model"
 root = "ModelMain"
+
+[[lean_lib]]
+name = "BbuKraken"
+
+[[lean_exe]]
+name = "bbu_model"
+root = "BbuModelMain"
