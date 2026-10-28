@@ -196,7 +196,8 @@ def At17 (t : MachineData) : Prop :=
 
 end
 
-theorem shl4 (x : BitVec 64) : x <<< 4 = x * 16#64 := by bv_decide
+theorem shl4 (x : BitVec 64) : x <<< 4 = x * 16#64 := by
+  rw [BitVec.shiftLeft_eq_mul_twoPow]; rfl
 
 section
 variable {m : Mem 64} {S : Addr}

@@ -45,25 +45,27 @@ def topF : Nat := 8 + 16 + 4168 + finishF
 
 -- The memory that `build_bottom_up` writes and reads.
 def topOut : List (Addr × Nat) := [(opsArg s, 96 * nArg s), (blkArg s, 16)]
+-- The inputs that the callees read: the target and the spilled bytes.
+def topRd : List (Addr × Nat) := (tgtArg s, 8 * nArg s) :: topSpl s
 def topIn : List (Addr × Nat) :=
-  (rsp s, 16) :: (srcArg s, 8 * mArg s) :: (dstArg s, 8 * mArg s) :: (tgtArg s, 8 * nArg s)
-    :: topSpl s
+  (rsp s, 16) :: (srcArg s, 8 * mArg s) :: (dstArg s, 8 * mArg s) :: topRd s
 
+-- The arguments at `rsp`, `source` and `dest` are read before the first store to
+-- the ops buffer or `blocked`, so these may overlap them. The arguments at `rsp`
+-- lie above the frame. `m ≤ n` follows from `dests` (`TopPre.m_le`). The callees
+-- need `tgt_lt`, `ops_lt` and `blk_lt` (`Wf`).
 structure TopPre : Prop where
-  m_le : mArg s ≤ nArg s
   n_le : nArg s ≤ 256
   dests : Dests (nArg s) (topDests s)
   mapped : Mem.Mapped (frame topF s :: topOut s ++ topIn s) s.dmem
   rsp_le : topF ≤ (rsp s).toNat
-  rsp_lt : (rsp s).toNat + 16 ≤ 2 ^ 64
-  src_lt : (srcArg s).toNat + 8 * mArg s ≤ 2 ^ 64
-  dst_lt : (dstArg s).toNat + 8 * mArg s ≤ 2 ^ 64
   tgt_lt : (tgtArg s).toNat + 8 * nArg s ≤ 2 ^ 64
   ops_lt : (opsArg s).toNat + 96 * nArg s ≤ 2 ^ 64
   blk_lt : (blkArg s).toNat + 16 ≤ 2 ^ 64
-  disj_frame : Mem.Blocks.Disjoint [frame topF s] (topOut s ++ topIn s)
-  disj_ops : Mem.Blocks.Disjoint [(opsArg s, 96 * nArg s)] ((blkArg s, 16) :: topIn s)
-  disj_blk : Mem.Blocks.Disjoint [(blkArg s, 16)] (topIn s)
+  disj_frame : Mem.Blocks.Disjoint [frame topF s]
+    (topOut s ++ (srcArg s, 8 * mArg s) :: (dstArg s, 8 * mArg s) :: topRd s)
+  disj_ops : Mem.Blocks.Disjoint [(opsArg s, 96 * nArg s)] (topRd s)
+  disj_blk : Mem.Blocks.Disjoint [(blkArg s, 16)] (topRd s)
 
 def topMod : Modifies :=
   ⟨[.rax, .rcx, .rdx, .rsi, .rdi, .r8, .r9, .r10, .r11], frame topF s :: topOut s⟩
@@ -108,6 +110,18 @@ variable {s : MachineData}
 theorem _root_.Bbu.TopPre.rsp_ge (hp : TopPre s) : 5008 ≤ (rsp s).toNat := by
   have := hp.rsp_le; simp only [topF, finishF] at this; omega
 
+-- A list of distinct offsets below `n` has at most `n` entries.
+theorem Dests.length_le {n : Nat} {l : List Nat} (h : Dests n l) : l.length ≤ n := by
+  have hnd : l.Nodup := List.pairwise_iff_getElem.mpr fun i j hi hj hij he => by
+    have := h.2 i hi j hj he; omega
+  have := hnd.length_le_of_subset (l₂ := List.range n) fun x hx => by
+    obtain ⟨i, hi, rfl⟩ := List.mem_iff_getElem.mp hx
+    exact List.mem_range.mpr (h.1 i hi)
+  simpa using this
+
+theorem _root_.Bbu.TopPre.m_le (hp : TopPre s) : mArg s ≤ nArg s := by
+  simpa [topDests] using Dests.length_le hp.dests
+
 theorem inside_head {x : Addr} {p : Addr × Nat} {l : List (Addr × Nat)}
     (h : Mem.Blocks.Inside x 1 [p]) : Mem.Blocks.Inside x 1 (p :: l) := by
   obtain ⟨a, k⟩ := p; exact h.elim Or.inl False.elim
@@ -124,14 +138,17 @@ theorem topOut_frame (hp : TopPre s) :
     ∀ x, Mem.Blocks.Inside x 1 (topOut s) → ¬ Mem.Blocks.Inside x 1 [frame topF s] :=
   fun x hx hf => hp.disj_frame x hf (inside_append.mpr (.inl hx))
 
-theorem topIn_out (hp : TopPre s) :
-    ∀ x, Mem.Blocks.Inside x 1 (topIn s) → ¬ Mem.Blocks.Inside x 1 (frame topF s :: topOut s) := by
+theorem topRd_out (hp : TopPre s) :
+    ∀ x, Mem.Blocks.Inside x 1 (topRd s) → ¬ Mem.Blocks.Inside x 1 (frame topF s :: topOut s) := by
   intro x hx hf
   rcases hf with hf | hf | hf | hf
-  · exact hp.disj_frame x (Or.inl hf) (inside_append.mpr (.inr hx))
-  · exact hp.disj_ops x (Or.inl hf) hx.tail
+  · exact hp.disj_frame x (Or.inl hf) (inside_append.mpr (.inr hx.tail.tail))
+  · exact hp.disj_ops x (Or.inl hf) hx
   · exact hp.disj_blk x (Or.inl hf) hx
   · exact hf
+
+theorem topRd_in {x : Addr} (h : Mem.Blocks.Inside x 1 (topRd s)) : Mem.Blocks.Inside x 1 (topIn s) :=
+  h.tail.tail.tail
 
 end
 
@@ -155,20 +172,20 @@ section
 variable {s : MachineData} {m : Mem 64}
 
 theorem Hd.rd_in (hp : TopPre s) (h : Hd s m) {a : Addr}
-    (ha : ∀ y, Mem.Blocks.Inside y 1 [(a, 8)] → Mem.Blocks.Inside y 1 (topIn s)) :
+    (ha : ∀ y, Mem.Blocks.Inside y 1 [(a, 8)] → Mem.Blocks.Inside y 1 (topRd s)) :
     rd m a = rd s.dmem a :=
-  rd_congr h.un fun y hy => topIn_out hp y (ha y hy)
+  rd_congr h.un fun y hy => topRd_out hp y (ha y hy)
 
 theorem Hd.rdb_in (hp : TopPre s) (h : Hd s m) {a : Addr}
-    (ha : ∀ y, Mem.Blocks.Inside y 1 [(a, 1)] → Mem.Blocks.Inside y 1 (topIn s)) :
+    (ha : ∀ y, Mem.Blocks.Inside y 1 [(a, 1)] → Mem.Blocks.Inside y 1 (topRd s)) :
     rdb m a = rdb s.dmem a :=
-  rdb_congr h.un fun y hy => topIn_out hp y (ha y hy)
+  rdb_congr h.un fun y hy => topRd_out hp y (ha y hy)
 
 theorem Hd.tgt_rd (hp : TopPre s) (h : Hd s m) {d : Nat} (hd : d < nArg s) :
     rd m (wordAt (tgtArg s) d) = rd s.dmem (wordAt (tgtArg s) d) :=
-  h.rd_in hp fun y hy => Or.inr (Or.inr (Or.inr (Or.inl (by
+  h.rd_in hp fun y hy => Or.inl (by
     have := hp.tgt_lt; have := hp.n_le
-    simp only [Mem.Blocks.Inside, or_false, wordAt] at hy ⊢; bv_omega))))
+    simp only [Mem.Blocks.Inside, or_false, wordAt] at hy ⊢; bv_omega)
 
 theorem Hd.nOf_eq (h : Hd s m) : nOf m (bS s) = nArg s := by unfold nOf; rw [h.n]
 
@@ -198,13 +215,13 @@ theorem Hd.w_sub (hp : TopPre s) (h : Hd s m) {x : Addr}
 
 theorem Hd.r_sub (hp : TopPre s) (h : Hd s m) {x : Addr}
     (hx : Mem.Blocks.Inside x 1 (readable m (bS s))) :
-    Mem.Blocks.Inside x 1 [(bS s, 8 * WORDS)] ∨ Mem.Blocks.Inside x 1 (topIn s) := by
+    Mem.Blocks.Inside x 1 [(bS s, 8 * WORDS)] ∨ Mem.Blocks.Inside x 1 (topRd s) := by
   have := hp.rsp_ge
   simp only [readable, nOf, tgtOf, h.n, h.tgt, h.spl_eq hp] at hx
   rcases hx with hx | hx | hx
   · left; simp only [Mem.Blocks.Inside, or_false, WORDS, bS, rsp] at *; bv_omega
-  · exact .inr (Or.inr (Or.inr (Or.inr (Or.inl hx))))
-  · exact .inr hx.tail.tail.tail.tail
+  · exact .inr (Or.inl hx)
+  · exact .inr hx.tail
 
 theorem Hd.map_all (hp : TopPre s) (h : Hd s m) (hmap : Mem.Mapped (frame topF s :: topOut s) m) :
     Mem.Mapped (frame topF s :: topOut s ++ topIn s) m :=
@@ -224,7 +241,7 @@ theorem Hd.wf (hp : TopPre s) (h : Hd s m) (hmap : Mem.Mapped (frame topF s :: t
       · exact (inside_append.mpr (.inl hx)).tail
     · rcases h.r_sub hp hx with hx | hx
       · exact inside_head (hst x hx)
-      · exact (inside_append.mpr (.inr hx)).tail
+      · exact (inside_append.mpr (.inr (topRd_in hx))).tail
   · simp only [WORDS, bS, rsp] at *; bv_omega
   · simp only [opsOf, nOf, h.ops, h.n]; exact hp.ops_lt
   · simp only [blkOf, h.blk]; exact hp.blk_lt
@@ -236,23 +253,22 @@ theorem Hd.wf (hp : TopPre s) (h : Hd s m) (hmap : Mem.Mapped (frame topF s :: t
     rcases hr with hr | hr | hr | hr
     · exact .inl (Or.inl hr)
     · exact .inl (Or.inr (Or.inl hr))
-    · exact .inr (Or.inr (Or.inr (Or.inr (Or.inl hr))))
-    · exact .inr hr.tail.tail.tail.tail
-  · simp only [opsOf, nOf, blkOf, tgtOf, splBlocks, splOf, h.ops, h.n, h.blk, h.tgt, h.spl] at hsp ⊢
+    · exact .inr (Or.inr (Or.inr (Or.inl hr)))
+    · exact .inr hr.tail.tail.tail
+  · simp only [opsOf, nOf, tgtOf, splBlocks, splOf, h.ops, h.n, h.tgt, h.spl] at hsp ⊢
     rw [hsp]
     intro x hx hr
     refine hp.disj_ops x hx ?_
-    rcases hr with hr | hr | hr
+    rcases hr with hr | hr
     · exact Or.inl hr
-    · exact Or.inr (Or.inr (Or.inr (Or.inr (Or.inl hr))))
-    · exact hr.tail.tail.tail.tail.tail
+    · exact hr.tail
   · simp only [nOf, blkOf, tgtOf, splBlocks, splOf, h.n, h.blk, h.tgt, h.spl] at hsp ⊢
     rw [hsp]
     intro x hx hr
     refine hp.disj_blk x hx ?_
     rcases hr with hr | hr
-    · exact Or.inr (Or.inr (Or.inr (Or.inl hr)))
-    · exact hr.tail.tail.tail.tail
+    · exact Or.inl hr
+    · exact hr.tail
   · rw [h.nOf_eq]; exact hnops
   · rw [h.nOf_eq]; exact hp.n_le
 
@@ -296,7 +312,7 @@ theorem Fm.pre {F : Nat} {A : MachineData → Prop} {c : MachineData} (hp : TopP
       · exact topOut_frame hp x hw hx'
     · rcases h.hd.r_sub hp hr with hr | hr
       · simp only [Mem.Blocks.Inside, or_false, hrsp, WORDS, finishF, bS, rsp] at *; bv_omega
-      · exact topIn_out hp x hr (inside_head hx')
+      · exact topRd_out hp x hr (inside_head hx')
 
 -- A callee with the struct at `rsp` keeps `Fm`.
 theorem Fm.call {F : Nat} {A : MachineData → Prop} {R : MachineData → MachineData → Prop}
@@ -404,7 +420,7 @@ theorem Fm.env (hp : TopPre s) (h : Fm s ra m) :
   simp only [envOf, topEnv, htv, ite_true, splOf, h.hd.spl]
   congr 1
   refine h.hd.rdb_in hp fun y hy => ?_
-  refine (inside_of_mem (List.mem_filterMap.mpr ⟨d, List.mem_range.mpr hd, ?_⟩) hy).tail.tail.tail.tail
+  refine (inside_of_mem (List.mem_filterMap.mpr ⟨d, List.mem_range.mpr hd, ?_⟩) hy).tail
   simp only [h2, he, and_self, ite_true]
 
 theorem length_topSource : (topSource s).length = mArg s := by simp [topSource]
@@ -489,11 +505,13 @@ structure Rg (t : MachineData) : Prop where
   r14 : t.regs.r14 = s.regs.r14
   r15 : t.regs.r15 = s.regs.r15
 
--- `.LB110`: the copy loop at the index `i` in `rax`.
+-- `.LB110`: the copy loop at the index `i` in `rax`. Only the frame changed, so the
+-- inputs are as at the start.
 def At110 (t : MachineData) : Prop :=
   Fm s ra t.dmem ∧ Rg s t ∧ t.regs.rdi.toBitVec = rdi s ∧ t.regs.rsi.toBitVec = srcArg s
     ∧ t.regs.r8.toBitVec = dstArg s ∧ t.regs.rax.toNat < mArg s ∧ H012 (s := s) t.dmem
     ∧ Copied (s := s) t.dmem t.regs.rax.toNat
+    ∧ Mem.UnchangedOutside [frame topF s] s.dmem t.dmem
 
 -- `.LB109`: no sources.
 def At109 (t : MachineData) : Prop :=
@@ -563,9 +581,10 @@ variable {s : MachineData} {ra : Int64}
 -- The entry block jumps to `.LB110`.
 theorem at110_entry {t : MachineData} (h : Fm s ra t.dmem ∧ H012 (s := s) t.dmem) (hrg : Rg s t)
     (hdi : t.regs.rdi.toBitVec = rdi s) (hsi : t.regs.rsi.toBitVec = srcArg s)
-    (h8 : t.regs.r8.toBitVec = dstArg s) (hax : t.regs.rax.toNat = 0) (hm : 0 < mArg s) :
+    (h8 : t.regs.r8.toBitVec = dstArg s) (hax : t.regs.rax.toNat = 0) (hm : 0 < mArg s)
+    (hu : Mem.UnchangedOutside [frame topF s] s.dmem t.dmem) :
     At110 s ra t :=
-  ⟨h.1, hrg, hdi, hsi, h8, by omega, h.2, by rw [hax]; intro j hj; omega⟩
+  ⟨h.1, hrg, hdi, hsi, h8, by omega, h.2, by rw [hax]; intro j hj; omega, hu⟩
 
 -- The entry block jumps to `.LB109`.
 theorem at109_entry (hp : TopPre s) {t : MachineData} (h : Fm s ra t.dmem ∧ H012 (s := s) t.dmem)
@@ -615,14 +634,6 @@ variable {s : MachineData} {ra : Int64}
 
 theorem eS_eq : eS s = bS s := by simp only [eS, eR, bS, rsp, Reg64s.get64_rsp]; bv_omega
 
--- The frame does not overlap an input block.
-theorem frame_sep_in (hp : TopPre s) {b : Addr} {k : Nat}
-    (hb : ∀ x, Mem.Blocks.Inside x 1 [(b, k)] → Mem.Blocks.Inside x 1 (topIn s)) (hk : 0 < k) :
-    (rsp s - BitVec.ofNat 64 topF).toNat + topF ≤ b.toNat
-      ∨ b.toNat + k ≤ (rsp s - BitVec.ofNat 64 topF).toNat :=
-  sep_of_disjoint (fun x hx hy => hp.disj_frame x hx (inside_append.mpr (.inr (hb x hy))))
-    (by simp [topF, finishF]) hk
-
 -- The memory after one round of the copy loop, in the form of the `kvcgen64` goals.
 def cpM (m : Mem 64) (R SI R8 A : Addr) : Mem 64 :=
   (m.storeInt (R + A * 8#64 + 64#64) 8 (BitVec.toInt (rd m (SI + A * 8#64)))).storeInt
@@ -638,35 +649,52 @@ theorem ent_isSome (hp : TopPre s) {a : Addr}
   · exact hp.mapped.loadInt_isSome (Or.inl h)
   · exact hp.mapped.loadInt_isSome (Or.inr (Or.inr (Or.inr (Or.inl h))))
 
+theorem and4_of {a b c d : Prop} (h : a ∧ b ∧ c) (hd : d) : a ∧ b ∧ c ∧ d := ⟨h.1, h.2.1, h.2.2, hd⟩
+
 set_option maxHeartbeats 1000000 in
 theorem copy_step (hp : TopPre s) {m : Mem 64} (h : Fm s ra m) (h0 : H012 (s := s) m)
-    {i : Nat} (hc : Copied (s := s) m i) {R SI R8 A : Addr} (hR : R = bS s) (hSI : SI = srcArg s)
+    {i : Nat} (hc : Copied (s := s) m i) (hu : Mem.UnchangedOutside [frame topF s] s.dmem m)
+    {R SI R8 A : Addr} (hR : R = bS s) (hSI : SI = srcArg s)
     (h8 : R8 = dstArg s) (hA : A.toNat = i) (hi : i < mArg s) :
     Fm s ra (cpM m R SI R8 A) ∧ H012 (s := s) (cpM m R SI R8 A)
-      ∧ Copied (s := s) (cpM m R SI R8 A) (i + 1) := by
+      ∧ Copied (s := s) (cpM m R SI R8 A) (i + 1)
+      ∧ Mem.UnchangedOutside [frame topF s] s.dmem (cpM m R SI R8 A) := by
   subst hR hSI h8 hA
   have hge := hp.rsp_ge
   have hml := hp.m_le
   have hnl := hp.n_le
-  have hsl := hp.src_lt
-  have hdl := hp.dst_lt
-  have hs := frame_sep_in hp (b := srcArg s) (k := 8 * mArg s)
-    (fun x hy => Or.inr (inside_head hy)) (by omega)
-  have hd := frame_sep_in hp (b := dstArg s) (k := 8 * mArg s)
-    (fun x hy => Or.inr (Or.inr (inside_head hy))) (by omega)
+  top_nrm at hge hml hnl hi
+  -- The source and dest words are not in the frame.
   have hsrc : rd m (srcArg s + A * 8#64) = rd s.dmem (wordAt (srcArg s) A.toNat) := by
-    rw [h.hd.rd_in hp fun y hy => Or.inr (Or.inl (by
-      simp only [Mem.Blocks.Inside, or_false] at hy ⊢; top_nrm at hy hi hsl ⊢; bv_omega))]
+    rw [rd_congr hu fun y hy hl => hp.disj_frame y hl (inside_append.mpr (.inr (Or.inl (by
+      simp only [Mem.Blocks.Inside, or_false] at hy ⊢; top_nrm at hy ⊢; bv_omega))))]
     refine congrArg (rd s.dmem) ?_
     top_nrm; bv_omega
   have hdst : rd m (dstArg s + A * 8#64) = rd s.dmem (wordAt (dstArg s) A.toNat) := by
-    rw [h.hd.rd_in hp fun y hy => Or.inr (Or.inr (Or.inl (by
-      simp only [Mem.Blocks.Inside, or_false] at hy ⊢; top_nrm at hy hi hdl ⊢; bv_omega)))]
+    rw [rd_congr hu fun y hy hl => hp.disj_frame y hl (inside_append.mpr (.inr (Or.inr (Or.inl (by
+      simp only [Mem.Blocks.Inside, or_false] at hy ⊢; top_nrm at hy ⊢; bv_omega)))))]
     refine congrArg (rd s.dmem) ?_
     top_nrm; bv_omega
+  have hdis : ∀ v, rd (m.storeInt (bS s + A * 8#64 + 64#64) 8 v) (dstArg s + A * 8#64)
+      = rd m (dstArg s + A * 8#64) := fun v =>
+    rd_storeInt_of_disjoint fun y hy1 hy2 => hp.disj_frame y
+      (by simp only [Mem.Blocks.Inside, or_false, topF, finishF, Nat.reduceAdd] at hy1 ⊢
+          top_nrm at hy1 ⊢; bv_omega)
+      (inside_append.mpr (.inr (Or.inr (Or.inl (by
+        simp only [Mem.Blocks.Inside, or_false] at hy2 ⊢; top_nrm at hy2 ⊢; bv_omega)))))
+  have hcp : cpM m (bS s) (srcArg s) (dstArg s) A
+      = (m.storeInt (bS s + A * 8#64 + 64#64) 8 (rd m (srcArg s + A * 8#64)).toInt).storeInt
+        (bS s + A * 8#64 + 2112#64) 8 (rd m (dstArg s + A * 8#64)).toInt := by
+    simp only [cpM, hdis]
+  rw [hcp]
+  refine and4_of ?_ ((hu.storeInt ?_ _).storeInt ?_ _)
+  rotate_left
+  · simp only [Mem.Blocks.Inside, or_false, topF, finishF, Nat.reduceAdd]; top_nrm; bv_omega
+  · simp only [Mem.Blocks.Inside, or_false, topF, finishF, Nat.reduceAdd]; top_nrm; bv_omega
+  clear hcp hdis hu
   have hc' := fun j hj => hc j hj
   obtain ⟨e0, e1, e2⟩ := h0
-  simp only [cpM, topF, finishF, Nat.reduceAdd, Copied, H012] at *
+  simp only [Copied, H012] at *
   top_nrm at *
   have h1 := h.store hp (a := s.regs.rsp.toBitVec - 4192#64 + A * 8#64 + 64#64)
     (by simp only [Mem.Blocks.Inside, or_false]; top_nrm; bv_omega)
@@ -691,9 +719,10 @@ variable {t t' : MachineData}
 theorem at110_mem (hp : TopPre s) (h : At110 s ra t)
     (hm : t'.dmem = cpM t.dmem t.regs.rsp.toBitVec t.regs.rsi.toBitVec t.regs.r8.toBitVec
       t.regs.rax.toBitVec) :
-    Fm s ra t'.dmem ∧ H012 (s := s) t'.dmem ∧ Copied (s := s) t'.dmem (t.regs.rax.toNat + 1) := by
-  obtain ⟨hfm, hrg, -, hsi, h8, hax, h012, hcp⟩ := h
-  rw [hm]; exact copy_step hp hfm h012 hcp hrg.rsp hsi h8 rfl hax
+    Fm s ra t'.dmem ∧ H012 (s := s) t'.dmem ∧ Copied (s := s) t'.dmem (t.regs.rax.toNat + 1)
+      ∧ Mem.UnchangedOutside [frame topF s] s.dmem t'.dmem := by
+  obtain ⟨hfm, hrg, -, hsi, h8, hax, h012, hcp, hu⟩ := h
+  rw [hm]; exact copy_step hp hfm h012 hcp hu hrg.rsp hsi h8 rfl hax
 
 theorem at110_next (hp : TopPre s) (h : At110 s ra t)
     (hm : t'.dmem = cpM t.dmem t.regs.rsp.toBitVec t.regs.rsi.toBitVec t.regs.r8.toBitVec
@@ -701,14 +730,14 @@ theorem at110_next (hp : TopPre s) (h : At110 s ra t)
     (hsi : t'.regs.rsi.toBitVec = srcArg s) (h8 : t'.regs.r8.toBitVec = dstArg s)
     (hax : t'.regs.rax.toNat = t.regs.rax.toNat + 1) (hlt : t'.regs.rax.toNat < mArg s) :
     At110 s ra t' := by
-  obtain ⟨c1, c2, c3⟩ := at110_mem hp h hm
-  exact ⟨c1, hrg, hdi, hsi, h8, hlt, c2, hax ▸ c3⟩
+  obtain ⟨c1, c2, c3, c4⟩ := at110_mem hp h hm
+  exact ⟨c1, hrg, hdi, hsi, h8, hlt, c2, hax ▸ c3, c4⟩
 
 theorem at115_next (hp : TopPre s) (h : At110 s ra t)
     (hm : t'.dmem = cpM t.dmem t.regs.rsp.toBitVec t.regs.rsi.toBitVec t.regs.r8.toBitVec
       t.regs.rax.toBitVec) (hrg : Rg s t') (hax : t.regs.rax.toNat + 1 = mArg s)
     (hn : 0 < nArg s) : At115 s ra t' := by
-  obtain ⟨c1, c2, c3⟩ := at110_mem hp h hm
+  obtain ⟨c1, c2, c3, -⟩ := at110_mem hp h hm
   exact ⟨c1, hrg, hn, st0_of hp c2 (hax ▸ c3)⟩
 
 -- `.LB115` jumps to `.LB114` with `t = 0`.
@@ -730,16 +759,14 @@ theorem at110_some (hp : TopPre s) (h : At110 s ra t) {a : Addr}
       ∨ a = t.regs.rsp.toBitVec + t.regs.rax.toBitVec * 8#64 + 64#64
       ∨ a = t.regs.rsp.toBitVec + t.regs.rax.toBitVec * 8#64 + 2112#64) :
     (t.dmem.loadInt a 8).isSome := by
-  obtain ⟨hfm, hrg, -, hsi, h8, hax, -, -⟩ := h
+  obtain ⟨hfm, hrg, -, hsi, h8, hax, -, -, -⟩ := h
   have hmap := hfm.hd.map_all hp hfm.map
   have hge := hp.rsp_ge
   have hml := hp.m_le
   have hnl := hp.n_le
-  have hsl := hp.src_lt
-  have hdl := hp.dst_lt
   have hr := hrg.rsp
   have hax' : t.regs.rax.toBitVec.toNat < mArg s := hax
-  top_nrm at hge hml hnl hsl hdl hr hax' hsi h8
+  top_nrm at hge hml hnl hr hax' hsi h8
   rcases ha with rfl | rfl | rfl | rfl
   · exact hmap.loadInt_isSome (Or.inr (Or.inr (Or.inr (Or.inr (Or.inl (by
       top_nrm; bv_omega))))))
@@ -749,17 +776,24 @@ theorem at110_some (hp : TopPre s) (h : At110 s ra t) {a : Addr}
     simp only [topF, finishF, Nat.reduceAdd]; top_nrm; bv_omega))
 end
 
+-- The entry block writes only in the frame.
+set_option maxHeartbeats 1000000 in
+theorem ent_un (hp : TopPre s) : Mem.UnchangedOutside [frame topF s] s.dmem (eM s ra) := by
+  have hge := hp.rsp_ge
+  simp only [rsp, Reg64s.get64_rsp] at hge
+  simp only [eM, eM10, eM9, eM3]
+  repeat (refine Mem.UnchangedOutside.storeInt ?_ (by
+    simp only [Mem.Blocks.Inside, topF, finishF, rsp, Reg64s.get64_rsp, Nat.reduceAdd,
+      or_false, eS, eR]
+    bv_omega) _)
+  exact fun _ _ => rfl
+
 set_option maxHeartbeats 1000000 in
 theorem ent_fm (hp : TopPre s) : Fm s ra (eM s ra) ∧ H012 (s := s) (eM s ra) := by
   have hge := hp.rsp_ge
   simp only [rsp, Reg64s.get64_rsp] at hge
   refine Fm.mk0 hp ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_
-  · simp only [eM, eM10, eM9, eM3]
-    repeat (refine Mem.UnchangedOutside.storeInt ?_ (by
-      simp only [Mem.Blocks.Inside, topF, finishF, rsp, Reg64s.get64_rsp, Nat.reduceAdd,
-        or_false, eS, eR]
-      bv_omega) _)
-    exact fun _ _ => rfl
+  · exact ent_un hp
   · simp only [eM, eM10, eM9, eM3]
     repeat (refine Mem.Mapped.storeInt ?_ _ _ _)
     exact fun x hx => hp.mapped x (inside_head hx)
@@ -1260,8 +1294,7 @@ theorem buildBottomUp_body [Host] [FunDecls]
   case right.left t ht =>
     subst ht
     have hge := hp.rsp_ge
-    have hlt := hp.rsp_lt
-    simp only [rsp, Reg64s.get64_rsp] at hge hlt
+    simp only [rsp, Reg64s.get64_rsp] at hge
     clear hstep hfin
     kvcgen64
     all_goals bbu_norm at *
@@ -1278,10 +1311,11 @@ theorem buildBottomUp_body [Host] [FunDecls]
       · left; show 2 ^ 20 + 1 < 2 ^ 21; omega
     case vc14 _ hz _ =>
       bbu_flags at hz
-      refine at110_entry ?_ ⟨?_, rfl, rfl, rfl, rfl, rfl⟩ rfl rfl rfl rfl ?_
+      refine at110_entry ?_ ⟨?_, rfl, rfl, rfl, rfl, rfl⟩ rfl rfl rfl rfl ?_ ?_
       · exact ent_fm hp
       · simp only [bS, rsp, Reg64s.get64_rsp]; bv_omega
       · simp only [mArg, rdi, Reg64s.get64_rdi, BitVec.and_self] at hz ⊢; bv_omega
+      · exact ent_un hp
     case vc15 =>
       left; have := hp.m_le; have := hp.n_le
       show 2 ^ 20 + 2 + (mArg s - _) < 2 ^ 21
@@ -1289,7 +1323,7 @@ theorem buildBottomUp_body [Host] [FunDecls]
     all_goals ent_some
   case right.right.left t ht =>
     have h110 := ht
-    obtain ⟨hfm, hrg, hdi, hsi, h8, hax, h012, hcp⟩ := ht
+    obtain ⟨hfm, hrg, hdi, hsi, h8, hax, h012, hcp, -⟩ := ht
     have hax' : t.regs.rax.toBitVec.toNat < mArg s := hax
     have hge := hp.rsp_ge
     have hml := hp.m_le

@@ -91,11 +91,12 @@ structure Wf : Prop where
   ops_lt : (opsOf m S).toNat + 96 * nOf m S ≤ 2 ^ 64
   blk_lt : (blkOf m S).toNat + 16 ≤ 2 ^ 64
   tgt_lt : (tgtOf m S).toNat + 8 * nOf m S ≤ 2 ^ 64
-  -- The struct, the ops buffer and `blocked` do not overlap each other or the inputs.
+  -- The struct does not overlap the ops buffer, `blocked` or the inputs. The ops buffer
+  -- and `blocked` do not overlap the inputs. They may overlap each other: `blocked` is
+  -- written only at a return of -1, after the last store to the ops buffer.
   disj_struct : Mem.Blocks.Disjoint [(S, 8 * WORDS)]
     ((opsOf m S, 96 * nOf m S) :: (blkOf m S, 16) :: (tgtOf m S, 8 * nOf m S) :: splBlocks m S)
-  disj_ops : Mem.Blocks.Disjoint [(opsOf m S, 96 * nOf m S)]
-    ((blkOf m S, 16) :: (tgtOf m S, 8 * nOf m S) :: splBlocks m S)
+  disj_ops : Mem.Blocks.Disjoint [(opsOf m S, 96 * nOf m S)] ((tgtOf m S, 8 * nOf m S) :: splBlocks m S)
   disj_blk : Mem.Blocks.Disjoint [(blkOf m S, 16)] ((tgtOf m S, 8 * nOf m S) :: splBlocks m S)
   len_le : (rd m (wordAt S 0)).toNat ≤ 256
   nops_le : (rd m (wordAt S 2)).toNat ≤ 6 * nOf m S
@@ -301,7 +302,7 @@ theorem Wf.congr (h : Mem.UnchangedOutside l m m') (hw : Wf m S)
   · rw [hb]; exact hw.blk_lt
   · rw [ht, hn]; exact hw.tgt_lt
   · rw [ho, hn, hb, ht, hspl]; exact hw.disj_struct
-  · rw [ho, hn, hb, ht, hspl]; exact hw.disj_ops
+  · rw [ho, hn, ht, hspl]; exact hw.disj_ops
   · rw [hn, hb, ht, hspl]; exact hw.disj_blk
   · rw [hn]; exact hnops
   · rw [hn]; exact hw.n_le
@@ -398,8 +399,8 @@ theorem Pre.disj {F : Nat} {A : MachineData → Prop} {s : MachineData} (hpre : 
   · -- ops
     rcases hr with hr | hr | hr
     · exact hw.disj_struct x (hst 24 40 (by simp [WORDS]) hr) (Or.inl hl)
-    · exact hw.disj_ops x (Or.inl hl) (Or.inr (Or.inl hr))
-    · exact hw.disj_ops x (Or.inl hl) (Or.inr (Or.inr hr))
+    · exact hw.disj_ops x (Or.inl hl) (Or.inl hr)
+    · exact hw.disj_ops x (Or.inl hl) (Or.inr hr)
   · -- blocked
     rcases hr with hr | hr | hr
     · exact hw.disj_struct x (hst 24 40 (by simp [WORDS]) hr) (Or.inr (Or.inl hl))

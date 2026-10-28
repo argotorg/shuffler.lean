@@ -41,7 +41,8 @@ theorem depth_ok (L r : BitVec 64) (hlt : r.toNat < L.toNat)
     1 ≤ L.toNat - 1 - r.toNat ∧ L.toNat - 1 - r.toNat ≤ 16 := by
   bv_omega
 
-theorem shl4 (x : BitVec 64) : x <<< 4 = x * 16#64 := by bv_decide
+theorem shl4 (x : BitVec 64) : x <<< 4 = x * 16#64 := by
+  rw [BitVec.shiftLeft_eq_mul_twoPow]; rfl
 
 theorem swapWith_eq {st : St} {pos : Nat} (h1 : pos < st.len) (h2 : st.dest pos ≠ pos)
     (h3 : 1 ≤ st.len - 1 - pos) (h4 : st.len - 1 - pos ≤ MAX_SWAP_DEPTH) :
