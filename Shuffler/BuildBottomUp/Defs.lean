@@ -78,7 +78,7 @@ def State.expectedStack (state : State source target spills) : Stack :=
 -- Produces the slot for `targetOffset`
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:388-405.
 def State.produce (current : State source target spills)
-    (targetOffset : Fin target.length) : Except ShuffleErr (State source target spills) := do
+    (targetOffset : Fin target.length) : Except ShuffleErr (Result source target spills) := do
 
   let mut state := current
 
@@ -92,22 +92,24 @@ def State.produce (current : State source target spills)
   else if slot.can_be_freely_generated ∨ spills.is_spilled slot then
     state ← state.push slot targetOffset
   else if h : copy.isSome then
-    throw (← state.blockDupUnreachable (copy.get h))
+    return ← state.blockDupUnreachable (copy.get h)
   else
     throw (.assertion "generated slot has no copy on the stack and is not spilled")
 
   _ ← requires ((state.mapping.positionOf targetOffset).map Fin.val = some (state.stack.length - 1)) "generated slot is not bound to the top"
-  return { state with pending_generations := state.pending_generations - 1 }
+  return ⟨none, { state with pending_generations := state.pending_generations - 1 }⟩
 
 -- Produces the slot for `targetOffset` and moves it toward its place right away: if the offset exists
 -- already and holds a slot that is not final, a single swap places the produced slot and floats the other
 -- one, which may be its own placement. An equal slot there just takes over the destination.
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:410-426.
 def State.generate (current : State source target spills)
-    (targetOffset : ℕ) : Except ShuffleErr (State source target spills) := do
+    (targetOffset : ℕ) : Except ShuffleErr (Result source target spills) := do
 
   let mut state := current
-  state ← state.produce (← index target.length targetOffset)
+  let result ← state.produce (← index target.length targetOffset)
+  if result.blocked.isSome then return result
+  state := result.state
 
   -- `produce` left the slot on top; swap it down only if its offset exists strictly below the top:
   -- as the top itself it is in place already, beyond the height it has to wait on top anyway
@@ -119,7 +121,7 @@ def State.generate (current : State source target spills)
     else if state.isSwapReachable (← index state.stack.length targetOffset) then
       state ← state.swapWith targetOffset
     -- out of swap reach: leave the slot on top; buildBottomUp re-checks reach when filling the offset
-  return state
+  return ⟨none, state⟩
 
 
 --- buildBottomUp -----------------------------------------------------------------------------------
@@ -127,7 +129,7 @@ def State.generate (current : State source target spills)
 set_option experimental.vcgen true in
 open Std.WP in
 private theorem generate_pending_generations (state next : State source target spills) (offset : ℕ)
-    (h : state.generate offset = .ok next) :
+    (h : state.generate offset = .ok ⟨none, next⟩) :
     next.pending_generations = state.pending_generations - 1 := by
   have hs : ⦃True⦄
       state.generate offset
@@ -149,17 +151,18 @@ private theorem generate_pending_generations (state next : State source target s
 def buildBottomUp
   (initial : State source target spills)
   (_hvalid : initial.Valid)
-    : Except ShuffleErr ((res : Stack) × Trace spills source res) := do
-  let ⟨res, trace⟩ ← loop 0 initial
-  _ ← requires (res.length = target.length) "stack and target sizes differ"
-  return ⟨res, trace⟩
+    : Except ShuffleErr (Result source target spills) := do
+  let result ← loop 0 initial
+  if result.blocked.isSome then return result
+  _ ← requires (result.state.stack.length = target.length) "stack and target sizes differ"
+  return result
 where
   -- Reads before a retry use `state` directly, so the termination proof can relate it to `_hgen`.
   loop (targetOffset : ℕ) (current : State source target spills) :
-      Except ShuffleErr ((res : Stack) × Trace spills source res) := do
+      Except ShuffleErr (Result source target spills) := do
     let mut state := current
     if targetOffset ≥ target.length then
-      return ⟨state.stack, state.trace⟩
+      return ⟨none, state⟩
 
     -- the offset exists and already holds the slot bound for it: nothing to do
     if targetOffset < state.stack.length then if state.isFinal (← index state.stack.length targetOffset) then
@@ -171,9 +174,7 @@ where
       let ⟨hbound⟩ ← requires (∀ i, (state.mapping.destinationOf i).isSome) "unmapped source slots"
 
       -- every slot goes to the offset it is bound for
-      let ⟨res, trace⟩ ←
-        Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hlen hbound)
-      return ⟨res, state.trace.concat trace⟩
+      return ← Shuffler.Permute.permute state (state.mapping.toPermutation hlen hbound)
 
     -- a target offset that needs something DUPed urgently before it goes out of dup reach
     let mut urgentToDup := none
@@ -189,7 +190,7 @@ where
 
       if let some sourceCopy := state.stack.shallowestCopyPosition slot then
         if ¬ state.stack.isDupReachable sourceCopy then
-          throw (← state.blockDupUnreachable sourceCopy)
+          return ← state.blockDupUnreachable sourceCopy
         -- a copy sitting at the offset being filled floats to the top when it is, so no hurry
         if (state.depthOf sourceCopy) = MAX_DUP_DEPTH ∧ sourceCopy.val ≠ targetOffset ∧ urgentToDup.isNone then
           urgentToDup := some offset
@@ -199,7 +200,9 @@ where
            state.stack.length - targetOffset < MAX_SWAP_DEPTH -- and duping it doesn't make the target go out of swap range
       then
         -- generate it
-        let ⟨next, _hgen⟩ ← (state.generate (urgentToDup.get h.1)).attach
+        let ⟨result, _hgen⟩ ← (state.generate (urgentToDup.get h.1)).attach
+        if result.blocked.isSome then return result
+        let next := result.state
         -- and revisit the current target in the next iteration
         return ← loop targetOffset next
 
@@ -214,7 +217,9 @@ where
          sourceTop - targetOffset < MAX_SWAP_DEPTH -- targetOffset stays in swap reach
       then
         -- we generate the slot demanded at source top
-        let ⟨next, _hgen⟩ ← (state.generate sourceTop).attach
+        let ⟨result, _hgen⟩ ← (state.generate sourceTop).attach
+        if result.blocked.isSome then return result
+        let next := result.state
         -- revisit target offset
         return ← loop targetOffset next
 
@@ -255,11 +260,13 @@ where
       -- if `pos` is not already at the top of the stack, swap it up
       if pos ≠ state.stack.length - 1 then
         if ¬ (state.isSwapReachable (← index state.stack.length pos)) then
-          throw (← state.blockSwapUnreachable (← index state.stack.length pos)) -- bail
+          return ← state.blockSwapUnreachable (← index state.stack.length pos) -- bail
         state ← state.swapWith pos
     else
       -- the slot needs to be DUPed
-      state ← state.generate targetOffset
+      let result ← state.generate targetOffset
+      if result.blocked.isSome then return result
+      state := result.state
 
       -- `generate` might have already placed the slot into the target offset, then we're done for this offset
       if state.isFinal (← index state.stack.length targetOffset) then
@@ -269,7 +276,7 @@ where
     _ ← requires (¬ state.isFinal (← index state.stack.length targetOffset)) "target slot is already final"
     if targetOffset ≠ state.stack.length - 1 then
       if ¬ (state.isSwapReachable (← index state.stack.length targetOffset)) then
-        throw (← state.blockSwapUnreachable (← index state.stack.length targetOffset))
+        return ← state.blockSwapUnreachable (← index state.stack.length targetOffset)
       state ← state.swapWith targetOffset
 
     return ← loop (targetOffset + 1) state

@@ -19,7 +19,7 @@ open Shuffler.Permute
 def permuteAtLowestHeight
     {source target : Stack} {spills : SpillSet}
     (state : State source target spills) :
-    Except ShuffleErr ((result : Stack) × Trace spills state.stack result) := do
+    Except ShuffleErr (Result source target spills) := do
 
   let mut permutation : Permutation state.stack := 1
 
@@ -56,7 +56,7 @@ def permuteAtLowestHeight
     have hi : i.val < parked.length := by simp [parked, hsz]
     permutation := permutation.setValue parked[i] holes[i]
 
-  permute spills state.stack permutation
+  permute state permutation
 
 
 end Shuffler.PermuteAtLowestHeight

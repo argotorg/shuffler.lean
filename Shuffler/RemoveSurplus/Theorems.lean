@@ -25,7 +25,7 @@ theorem removeSurplus_error_is_blocked (initial : State source target spills)
 
 -- After removeSurplus, every slot has a destination.
 theorem removeSurplus_noSurplus (initial result : State source target spills)
-    (h : removeSurplus initial = .ok result) : result.noSurplus := by
+    (h : removeSurplus initial = .ok ⟨none, result⟩) : result.noSurplus := by
   have hs := (spec_iff_triple _ _).mpr (removeSurplus_triple initial)
   rw [h] at hs
   exact hs.1
@@ -34,7 +34,7 @@ theorem removeSurplus_noSurplus (initial result : State source target spills)
 -- has one, holding the same value, and no new binding appears. (A slot equal to the top may take over
 -- the top's destination first; the top is then surplus when it is popped.)
 theorem removeSurplus_keeps_bindings (initial result : State source target spills)
-    (h : removeSurplus initial = .ok result) (dest : Fin target.length) :
+    (h : removeSurplus initial = .ok ⟨none, result⟩) (dest : Fin target.length) :
     result.boundValue dest = initial.boundValue dest := by
   have hs := (spec_iff_triple _ _).mpr (removeSurplus_triple initial)
   rw [h] at hs

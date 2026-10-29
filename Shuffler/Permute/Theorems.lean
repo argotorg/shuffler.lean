@@ -8,16 +8,18 @@ import Shuffler.Permute.Optimality
 
 namespace Shuffler.Permute
 
+open Emission
+
 -- `hnreachable` says that `perm` moves a position deeper than `MAX_SWAP_DEPTH`.
--- The run returns `.Blocked ⟨i.val, excess⟩`, where `excess` is positive.
+-- The run returns a blocked result and the state, where `excess` is positive.
 -- The reported position `i` is in the input permutation's support.
 -- Its depth, `i.rev.val`, exceeds the limit by exactly `excess`.
 theorem permute_blocks_unreachable
     (spills : SpillSet)
-    (source : Stack) (perm : Permutation source)
+    (initial : Emission.State source target spills) (perm : Permutation initial.stack)
     (hnreachable : ¬all_swaps_reachable perm) :
-    ∃ (i : Fin source.length) (excess : ℕ),
-      permute spills source perm = .error (.Blocked ⟨i.val, excess⟩)
+    ∃ (i : Fin initial.stack.length) (excess : ℕ) (state : State source target spills),
+      permute initial perm = .ok ⟨some ⟨i.val, excess⟩, state⟩
         ∧ excess > 0
         ∧ i ∈ perm.support
         ∧ i.rev.val = excess + MAX_SWAP_DEPTH := by
@@ -59,10 +61,10 @@ theorem permute_blocks_unreachable
 -- This also covers the empty stack, which requires no swaps.
 theorem permute_applies_permutation_reachable
     (spills : SpillSet)
-    (source : Stack) (perm : Permutation source)
+    (initial : Emission.State source target spills) (perm : Permutation initial.stack)
     (hreachable : all_swaps_reachable perm) :
-    ∃ (res : Stack) (trace : Trace spills source res),
-      permute spills source perm = .ok ⟨res, trace⟩ ∧ res = apply_permutation source perm := by
+    ∃ result : State source target spills,
+      permute initial perm = .ok ⟨none, result⟩ ∧ result.stack = apply_permutation initial.stack perm := by
   rw [permute]
   split
   · rename_i hne
@@ -91,8 +93,8 @@ theorem permute_applies_permutation_reachable
 
 -- Permutation can return a blocked error, but cannot return an assertion error.
 theorem permute_no_assertion
-    (spills : SpillSet) (source : Stack) (perm : Permutation source) (reason : String) :
-    permute spills source perm ≠ .error (.assertion reason) := by
+    (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack) (reason : String) :
+    permute initial perm ≠ .error (.assertion reason) := by
   by_cases hreachable : all_swaps_reachable perm
   · obtain ⟨res, trace, heq, _⟩ := permute_applies_permutation_reachable spills source perm hreachable
     simp [heq]
@@ -100,10 +102,10 @@ theorem permute_no_assertion
     simp [heq]
 
 theorem permute_applies_permutation_of_ok
-    (spills : SpillSet) (source : Stack) (perm : Permutation source)
-    {res : Stack} {trace : Trace spills source res}
-    (hresult : permute spills source perm = .ok ⟨res, trace⟩) :
-    res = apply_permutation source perm := by
+    (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack)
+    {result : State source target spills}
+    (hresult : permute initial perm = .ok ⟨none, result⟩) :
+    result.stack = apply_permutation initial.stack perm := by
   have hreachable : all_swaps_reachable perm := by
     by_contra hn
     obtain ⟨_, _, he, _⟩ := permute_blocks_unreachable spills source perm hn
@@ -121,10 +123,10 @@ theorem permute_applies_permutation_of_ok
 -- This is an exact count for the returned trace.
 theorem permute_swapCount
     (spills : SpillSet)
-    (source : Stack) (perm : Permutation source) (hne : 0 < source.length)
-    {res : Stack} {resultTrace : Trace spills source res}
-    (hresult : permute spills source perm = .ok ⟨res, resultTrace⟩) :
-    resultTrace.swapCount = Permutation.swapCount perm ⟨source.length - 1, by omega⟩ := by
+    (initial : Emission.State source target spills) (perm : Permutation initial.stack) (hne : 0 < initial.stack.length)
+    {result : State source target spills}
+    (hresult : permute initial perm = .ok ⟨none, result⟩) :
+    (result.trace.swapCount - initial.trace.swapCount) = Permutation.swapCount perm ⟨initial.stack.length - 1, by omega⟩ := by
   rw [permute, dite_eq_left hne] at hresult
   have hgo := permute.go.induct spills source hne
     (motive := fun current remaining trace hlen =>
@@ -176,10 +178,10 @@ theorem permute_swapCount
 -- This upper bound also covers the empty stack, without requiring a top position.
 theorem permute_swapCount_le
     (spills : SpillSet)
-    (source : Stack) (perm : Permutation source)
-    {res : Stack} {trace : Trace spills source res}
-    (hresult : permute spills source perm = .ok ⟨res, trace⟩) :
-    trace.swapCount ≤ perm.support.card + perm.cycleFactorsFinset.card := by
+    (initial : Emission.State source target spills) (perm : Permutation initial.stack)
+    {result : State source target spills}
+    (hresult : permute initial perm = .ok ⟨none, result⟩) :
+    (result.trace.swapCount - initial.trace.swapCount) ≤ perm.support.card + perm.cycleFactorsFinset.card := by
   by_cases hne : 0 < source.length
   · rw [permute_swapCount spills source perm hne hresult]
     exact Permutation.swapCount_le perm _
@@ -193,12 +195,12 @@ theorem permute_swapCount_le
 -- Thus `permute` attains the minimum for the given position permutation, including equal values.
 -- The comparison allows every swap depth, so it also covers all permitted top swaps.
 theorem permute_swapCount_optimal
-    (spills : SpillSet) (source : Stack) (perm : Permutation source)
-    (hne : 0 < source.length) {res : Stack} {trace : Trace spills source res}
-    (hresult : permute spills source perm = .ok ⟨res, trace⟩) :
-    IsLeast {n | ∃ swaps : List (Fin source.length),
-      (swaps.map (Equiv.swap ⟨source.length - 1, by omega⟩)).prod = perm ∧ swaps.length = n}
-      trace.swapCount := by
+    (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack)
+    (hne : 0 < initial.stack.length) {result : State source target spills}
+    (hresult : permute initial perm = .ok ⟨none, result⟩) :
+    IsLeast {n | ∃ swaps : List (Fin initial.stack.length),
+      (swaps.map (Equiv.swap ⟨initial.stack.length - 1, by omega⟩)).prod = perm ∧ swaps.length = n}
+      (result.trace.swapCount - initial.trace.swapCount) := by
   rw [permute_swapCount spills source perm hne hresult]
   exact Permutation.swapCount_isLeast perm _
 
@@ -207,11 +209,11 @@ theorem permute_swapCount_optimal
 -- Each cycle of length at least two that excludes the top adds exactly two swaps.
 -- If there are no such cycles, `permute` also attains the arbitrary-swap minimum.
 theorem permute_swapCount_eq_arbitrarySwapCount_add
-    (spills : SpillSet) (source : Stack) (perm : Permutation source)
-    (hne : 0 < source.length) {res : Stack} {trace : Trace spills source res}
-    (hresult : permute spills source perm = .ok ⟨res, trace⟩) :
-    trace.swapCount = Permutation.arbitrarySwapCount perm +
-      2 * (Permutation.cyclesAwayFromTop perm ⟨source.length - 1, by omega⟩).card := by
+    (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack)
+    (hne : 0 < initial.stack.length) {result : State source target spills}
+    (hresult : permute initial perm = .ok ⟨none, result⟩) :
+    (result.trace.swapCount - initial.trace.swapCount) = Permutation.arbitrarySwapCount perm +
+      2 * (Permutation.cyclesAwayFromTop perm ⟨initial.stack.length - 1, by omega⟩).card := by
   rw [permute_swapCount spills source perm hne hresult]
   exact Permutation.swapCount_eq_arbitrarySwapCount_add perm _
 
@@ -220,10 +222,10 @@ theorem permute_swapCount_eq_arbitrarySwapCount_add
 -- `arbitrarySwapCount_isLeast` proves that `arbitrarySwapCount perm` is that minimum.
 -- The inequality also covers the empty stack and a minimum of zero swaps.
 theorem permute_swapCount_le_three_mul_arbitrarySwapCount
-    (spills : SpillSet) (source : Stack) (perm : Permutation source)
-    {res : Stack} {trace : Trace spills source res}
-    (hresult : permute spills source perm = .ok ⟨res, trace⟩) :
-    trace.swapCount ≤ 3 * Permutation.arbitrarySwapCount perm := by
+    (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack)
+    {result : State source target spills}
+    (hresult : permute initial perm = .ok ⟨none, result⟩) :
+    (result.trace.swapCount - initial.trace.swapCount) ≤ 3 * Permutation.arbitrarySwapCount perm := by
   by_cases hne : 0 < source.length
   · rw [permute_swapCount spills source perm hne hresult]
     exact Permutation.swapCount_le_three_mul_arbitrarySwapCount perm _
@@ -236,19 +238,19 @@ theorem permute_swapCount_le_three_mul_arbitrarySwapCount
 -- Its count is at most three times the length of any such list, even if the list is not shortest.
 -- This applies the factor-three bound using the lower bound on `swaps.length`.
 theorem permute_swapCount_le_three_mul_length_swaps
-    (spills : SpillSet) (source : Stack) (perm : Permutation source)
-    {res : Stack} {trace : Trace spills source res}
-    (hresult : permute spills source perm = .ok ⟨res, trace⟩)
-    (swaps : List (Fin source.length × Fin source.length))
+    (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack)
+    {result : State source target spills}
+    (hresult : permute initial perm = .ok ⟨none, result⟩)
+    (swaps : List (Fin initial.stack.length × Fin initial.stack.length))
     (hprod : (swaps.map (fun p => Equiv.swap p.1 p.2)).prod = perm) :
-    trace.swapCount ≤ 3 * swaps.length := by
+    (result.trace.swapCount - initial.trace.swapCount) ≤ 3 * swaps.length := by
   exact (permute_swapCount_le_three_mul_arbitrarySwapCount spills source perm hresult).trans
     (Nat.mul_le_mul_left 3 (Permutation.arbitrarySwapCount_le_length_swaps perm swaps hprod))
 
 -- A successful `permute` returns a stack of the source length.
-theorem permute_length (spills : SpillSet) (source : Stack) (perm : Permutation source)
-    {res : Stack} {trace : Trace spills source res}
-    (h : permute spills source perm = .ok ⟨res, trace⟩) : res.length = source.length := by
+theorem permute_length (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack)
+    {result : State source target spills}
+    (h : permute initial perm = .ok ⟨none, result⟩) : result.stack.length = initial.stack.length := by
   rw [permute] at h
   split at h
   · rename_i hne

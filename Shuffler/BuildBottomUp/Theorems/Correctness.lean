@@ -11,9 +11,9 @@ namespace Shuffler.Emission
 -- On success, each bound target slot holds the value of its bound stack slot, and each unbound
 -- target slot holds its target value.
 theorem buildBottomUp_expected_of_ok (initial : State source target spills)
-    (h : initial.Valid) {res : Stack} {trace : Trace spills source res}
-    (hrun : buildBottomUp initial h = .ok ⟨res, trace⟩) :
-    res = initial.expectedStack := by
+    (h : initial.Valid) {result : State source target spills}
+    (hrun : buildBottomUp initial h = .ok ⟨none, result⟩) :
+    result.stack = initial.expectedStack := by
   have hs := buildBottomUp_spec initial h
   simpa [hrun, Spec] using hs
 
@@ -21,8 +21,8 @@ theorem buildBottomUp_expected_of_ok (initial : State source target spills)
 theorem buildBottomUp_correct_of_ok (initial : State source target spills)
     (h : initial.Valid)
     (hmapped : ∀ i j, initial.mapping i = some j → initial.stack[i] = target[j])
-    {res : Stack} {trace : Trace spills source res}
-    (hrun : buildBottomUp initial h = .ok ⟨res, trace⟩) : res = target :=
+    {result : State source target spills}
+    (hrun : buildBottomUp initial h = .ok ⟨none, result⟩) : result.stack = target :=
   (buildBottomUp_expected_of_ok initial h hrun).trans (expectedStack_eq_target initial hmapped)
 
 end Shuffler.Emission
