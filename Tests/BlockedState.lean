@@ -1,4 +1,5 @@
 import Batteries.Data.Except
+import Mathlib.Data.Fintype.Perm
 import Shuffler.PermuteAtLowestHeight.Defs
 import Shuffler.RemoveSurplus.Defs
 import Tests.BuildBottomUpObservations
@@ -42,6 +43,7 @@ private def observe (result : Except ShuffleErr (Result source target spills)) :
 
 private abbrev values (n : ℕ) : Stack := (List.range n).map (fun i => .Var ⟨i⟩)
 private abbrev ids (n : ℕ) : List (Option ℕ) := (List.range n).map some
+private abbrev slots (slotIds : List ℕ) : Stack := slotIds.map (fun i => .Var ⟨i⟩)
 
 -- A pop before blocking remains in the returned stack, trace, and mapping.
 example : observe (removeSurplus (stateOf (values 19) (values 17)
@@ -55,19 +57,19 @@ private abbrev deepPerm : Permutation deepState.stack := Equiv.swap ⟨18, by de
 -- A reachable swap occurs before a later cycle blocks at depth 17.
 example : observe (permute deepState deepPerm) =
     .ok ⟨some ⟨1, 1⟩, (values 19).swap 18 17, [.swap 1],
-      ids 19, 0, ids 19⟩ := by native_decide
+      (ids 19).swap 18 17, 0, ids 19⟩ := by native_decide
 
 -- The final permutation in buildBottomUp returns the same partial state.
 example : observe (buildBottomUp.loop 0
     (stateOf (values 19) (values 19) ((ids 19).swap 18 17 |>.swap 0 1))) =
     .ok ⟨some ⟨1, 1⟩, (values 19).swap 18 17, [.swap 1],
-      ((ids 19).swap 18 17).swap 0 1, 0, (ids 19).swap 18 17 |>.swap 0 1⟩ := by native_decide
+      (ids 19).swap 0 1, 0, (ids 19).swap 18 17 |>.swap 0 1⟩ := by native_decide
 
 -- The lowest-height stage also returns the swaps before blocking.
 example : observe (Shuffler.PermuteAtLowestHeight.permuteAtLowestHeight
     (stateOf (values 19) (values 19) ((ids 19).swap 18 17 |>.swap 0 1))) =
     .ok ⟨some ⟨1, 1⟩, (values 19).swap 18 17, [.swap 1],
-      ((ids 19).swap 18 17).swap 0 1, 0, (ids 19).swap 18 17 |>.swap 0 1⟩ := by native_decide
+      (ids 19).swap 0 1, 0, (ids 19).swap 18 17 |>.swap 0 1⟩ := by native_decide
 
 private abbrev prefixState : State [.Var ⟨2⟩, .Var ⟨1⟩, .Var ⟨0⟩] (values 3) ∅ where
   planned_mapping := mappingOf _ _ (ids 3)
@@ -79,7 +81,7 @@ private abbrev prefixState : State [.Var ⟨2⟩, .Var ⟨1⟩, .Var ⟨0⟩] (v
 -- Success appends to the input trace.
 example : observe (permute prefixState (Equiv.swap ⟨0, by decide⟩ ⟨2, by decide⟩)) =
     .ok ⟨none, (values 3).swap 0 2, [.swap 2, .swap 2],
-      ids 3, 0, ids 3⟩ := by native_decide
+      [some 2, some 1, some 0], 0, ids 3⟩ := by native_decide
 
 -- Empty stages complete without a trace operation.
 example : observe (permute (stateOf [] [] []) 1) = .ok ⟨none, [], [], [], 0, []⟩ := by decide
@@ -102,7 +104,7 @@ example : (observe (permute (stateOf (values 18) (values 18) (ids 18)) (Equiv.sw
 -- Parking a value returns its swaps and keeps the planned mapping.
 example : observe (Shuffler.PermuteAtLowestHeight.permuteAtLowestHeight
     (stateOf [.Var ⟨0⟩, .Var ⟨1⟩] [.Var ⟨1⟩, .Lit 0, .Var ⟨0⟩] [some 2, some 0] 1)) =
-    .ok ⟨none, [.Var ⟨1⟩, .Var ⟨0⟩], [.swap 1], [some 2, some 0], 1, [some 2, some 0]⟩ := by
+    .ok ⟨none, [.Var ⟨1⟩, .Var ⟨0⟩], [.swap 1], [some 0, some 2], 1, [some 2, some 0]⟩ := by
   native_decide
 
 private abbrev retagSource : Stack := (values 19).set 2 (.Var ⟨1⟩)
@@ -115,5 +117,49 @@ private abbrev retagState := stateOf retagSource
 example : observe (buildBottomUp retagState (by constructor <;> native_decide)) =
     .ok ⟨some ⟨0, 2⟩, retagSource.swap 2 18, [.swap 16],
       (retagDestinations.swap 2 1).swap 2 18, 1, retagDestinations⟩ := by native_decide
+
+-- Equal slots already at desired offsets stay, including slots below SWAP reach.
+example : observe (permute
+    (stateOf (List.replicate 18 (.Var ⟨0⟩)) (List.replicate 18 (.Var ⟨0⟩)) (ids 18))
+    (Equiv.swap ⟨0, by decide⟩ ⟨17, by decide⟩)) =
+    .ok ⟨none, List.replicate 18 (.Var ⟨0⟩), [], ids 18, 0, ids 18⟩ := by native_decide
+
+-- Equal slots need not be adjacent to be in the same group.
+example : observe (permute (stateOf (slots [0, 1, 0, 2]) (slots [0, 1, 0, 2]) (ids 4))
+    (Equiv.swap ⟨0, by decide⟩ ⟨2, by decide⟩)) =
+    .ok ⟨none, slots [0, 1, 0, 2], [], ids 4, 0, ids 4⟩ := by native_decide
+
+-- An equal misplaced slot exchanges destinations with a fixed top without a SWAP.
+example : observe (permute (stateOf (slots [0, 1, 1]) (slots [1, 0, 1]) (ids 3))
+    (Equiv.swap ⟨0, by decide⟩ ⟨1, by decide⟩)) =
+    .ok ⟨none, slots [1, 0, 1], [.swap 2, .swap 1],
+      [some 1, some 0, some 2], 0, ids 3⟩ := by native_decide
+
+-- An equal slot at the top's destination also exchanges destinations without a SWAP.
+example : observe (permute (stateOf (slots [0, 1, 0]) (slots [1, 0, 0]) (ids 3))
+    (Equiv.swap ⟨0, by decide⟩ ⟨1, by decide⟩)) =
+    .ok ⟨none, slots [1, 0, 0], [.swap 1, .swap 2],
+      [some 1, some 0, some 2], 0, ids 3⟩ := by native_decide
+
+-- A mapping exchange below SWAP reach remains in the state when the next exchange blocks.
+private abbrev equalDeepStack := (values 19).set 18 (.Var ⟨1⟩)
+example : observe (permute (stateOf equalDeepStack equalDeepStack (ids 19))
+    (Equiv.swap ⟨0, by decide⟩ ⟨1, by decide⟩)) =
+    .ok ⟨some ⟨0, 2⟩, equalDeepStack, [], (ids 19).swap 1 18, 0, ids 19⟩ := by native_decide
+
+-- Stayers keep their offsets; the other equal slots take vacant offsets in ascending order.
+example : observe (permute
+    (stateOf (slots [0, 1, 0, 2, 0, 3]) (slots [2, 1, 0, 0, 3, 0]) (ids 6))
+    (Equiv.swap ⟨0, by decide⟩ ⟨3, by decide⟩ *
+      Equiv.swap ⟨2, by decide⟩ ⟨5, by decide⟩ * Equiv.swap ⟨4, by decide⟩ ⟨5, by decide⟩)) =
+    .ok ⟨none, slots [2, 1, 0, 0, 3, 0], [.swap 1, .swap 2, .swap 5],
+      [some 3, some 1, some 2, some 0, some 5, some 4], 0, ids 6⟩ := by native_decide
+
+-- Check every permutation of four slots drawn from two values against the requested stack.
+example : ∀ a b c d : Fin 2, ∀ perm : Equiv.Perm (Fin 4),
+    let stack := slots [a.val, b.val, c.val, d.val]
+    (match permute (stateOf stack stack (ids 4)) perm with
+    | .ok ⟨none, result⟩ => decide (result.stack = apply_permutation stack perm)
+    | _ => false) = true := by native_decide
 
 end BlockedStateTests

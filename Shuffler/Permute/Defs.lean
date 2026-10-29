@@ -165,9 +165,12 @@ def permute
         | none => .ok ⟨none, state⟩
     termination_by Permutation.measure perm ⟨state.stack.length - 1, by omega⟩
     decreasing_by
+      · exact Prod.Lex.left _ _ (Permutation.measure_place_top_lt perm _ ht)
       · simp only [eq_mpr_eq_cast]
         rw [Permutation.measure_cast List.length_swap.symm _ hne]
         exact Prod.Lex.left _ _ (Permutation.measure_place_top_lt perm _ ht)
+      · obtain ⟨heq, hlt⟩ := Permutation.measure_swap_pos_lt perm _ pos (not_not.mp ht) hpos
+        exact Prod.Lex.right' _ heq.le hlt
       · obtain ⟨heq, hlt⟩ := Permutation.measure_swap_pos_lt perm _ pos (not_not.mp ht) hpos
         simp only [eq_mpr_eq_cast]
         rw [Permutation.measure_cast List.length_swap.symm _ hne]
