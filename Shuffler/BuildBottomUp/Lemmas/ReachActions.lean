@@ -82,7 +82,7 @@ theorem generate_noBlocked (state : State source target spills) (dest : Fin targ
   vcgen [-produce_spec, State.produce, State.push, State.dup, State.swapDestinations,
     State.swapWith, State.blockDupUnreachable, State.block, requires, index, slotAt,
     State.isSwapReachable, State.depthOf]
-  all_goals simp_all [noBlockedErrors, Result.blocked]
+  all_goals simp_all [noBlockedErrors]
   all_goals contradiction
 
 theorem generate_success (state : State source target spills) (dest : Fin target.length)

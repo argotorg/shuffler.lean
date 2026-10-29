@@ -1,3 +1,7 @@
+module
+
+public meta import Shuffler.Resolve.Properties
+public meta import Shuffler.Resolve.Defs
 import Shuffler.Resolve.Properties
 import Shuffler.Resolve.Defs
 import Mathlib.Tactic.FinCases
