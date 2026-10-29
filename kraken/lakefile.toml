@@ -1,6 +1,6 @@
 name = "PermuteKraken"
 version = "0.1.0"
-defaultTargets = ["PermuteKraken", "BbuKraken"]
+defaultTargets = ["PermuteKraken", "BbuKraken", "ProofKit", "ProofKitTest"]
 
 [leanOptions]
 autoImplicit = false
@@ -24,3 +24,9 @@ name = "BbuKraken"
 [[lean_exe]]
 name = "bbu_model"
 root = "BbuModelMain"
+
+[[lean_lib]]
+name = "ProofKit"
+
+[[lean_lib]]
+name = "ProofKitTest"
