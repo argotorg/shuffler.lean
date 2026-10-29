@@ -338,12 +338,16 @@ theorem outer_pop {old : State source target spills} {k n : ℕ} {P : Prop} (hin
 local macro "hyp" : term => `(by first | assumption | rfl)
 
 theorem removeSurplus_triple (initial : State source target spills) :
-    ⦃True⦄ removeSurplus initial
+    ⦃True⦄ (((removeSurplus initial) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)
     ⦃fun res => res.noSurplus ∧ res.boundValue = initial.boundValue; allowedErrors⦄ := by
   vcgen [removeSurplus, index, slotAt]
   case inv1 =>
-    exact fun pref _ state => (state.noSurplus ∨ state.stack.length + pref.length ≤ initial.stack.length) ∧
-      state.boundValue = initial.boundValue
+    exact fun pref remaining result =>
+      match result.1 with
+      | some r => r.blocked.isSome = true ∧ remaining = []
+      | none => (result.2.noSurplus ∨ result.2.stack.length + pref.length ≤ initial.stack.length) ∧
+        result.2.boundValue = initial.boundValue
   case inv2 =>
     rename_i state _ _
     -- No reachable surplus slot was seen if the second scan result is empty.
@@ -353,8 +357,12 @@ theorem removeSurplus_triple (initial : State source target spills) :
     rename_i state _ _ _ _ _ _ _ _ _ _
     exact fun _ _ equal => ∀ e, equal = some e → ∃ h : e < state.stack.length - 1,
       state.isSurplus ⟨e, by omega⟩ ∧ state.stack[e]'(by omega) = state.stack[state.stack.length - 1]'(by omega)
+  all_goals try casesm* Option (Result _ _ _)
+  all_goals try dsimp only at *
   all_goals try casesm* _ ∧ _
   all_goals try simp_all [allowedErrors]
+  all_goals try subst_vars
+  all_goals try simp_all
   all_goals first
     | (apply_assumption
        exact (SurplusScan.shallowest hyp _ hyp).choose_spec.1)
@@ -365,8 +373,6 @@ theorem removeSurplus_triple (initial : State source target spills) :
            | exact SurplusScan.later_unreachable hyp hyp
        · aesop)
     | exact SurplusScan.top_ready hyp hyp hyp
-    | exact retag_ready _ _ _ _ hyp
-    | exact ⟨outer_pop hyp (SurplusScan.not_noSurplus hyp hyp) hyp, (retag_bound _ _ _ _ hyp).trans hyp⟩
     | exact SurplusScan.start _
     | exact SurplusScan.first_reachable hyp hyp hyp hyp hyp
     | exact SurplusScan.later_reachable hyp hyp hyp hyp
@@ -381,5 +387,13 @@ theorem removeSurplus_triple (initial : State source target spills) :
     | (have := List.length_pos_iff.mpr (hyp : _ ≠ []); omega)
     | (have := range_lt hyp; omega)
     | exact lt_of_exists_lt hyp
+    | (rename_i hchoice
+       exact retag_ready _ _ _ _ (hchoice _ rfl))
+    | (rename_i st shallowest deepest equal popped outer nonempty nontop hlen scan unreach hchoice hpopped
+       first
+       | (have hbad := outer.2; contradiction)
+       | exact ⟨outer_pop outer.1 (SurplusScan.not_noSurplus scan rfl) (by simpa using nonempty),
+           (retag_bound _ _ _ _ (hchoice _ rfl)).trans outer.2⟩)
+
 
 end Shuffler.Emission

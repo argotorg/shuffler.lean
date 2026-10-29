@@ -1,6 +1,7 @@
 module
 
 public import Shuffler.BuildBottomUp.Lemmas.Reachability
+import Shuffler.BuildBottomUp.Lemmas.Completion
 import Shuffler.BuildBottomUp.Lemmas.Invariants
 import Std.WP.Triple.SpecLemmas
 
@@ -73,18 +74,22 @@ theorem State.reachable.filtered {state : State source target spills} (h : state
 
 theorem generate_noBlocked (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (h : state.reachable) :
-    NoBlocked (state.generate dest.val) := by
+    NoBlocked ((((state.generate dest.val) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) := by
   have hfilter := h.filtered dest
   apply noBlocked_of_triple
-  vcgen [State.generate, State.produce, State.push, State.dup, State.swapDestinations,
+  rw [generate_completed]
+  vcgen [-produce_spec, State.produce, State.push, State.dup, State.swapDestinations,
     State.swapWith, State.blockDupUnreachable, State.block, requires, index, slotAt,
     State.isSwapReachable, State.depthOf]
-  all_goals simp_all [noBlockedErrors]
+  all_goals simp_all [noBlockedErrors, Result.blocked]
+  all_goals contradiction
 
 theorem generate_success (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest)
     (h : state.reachable) :
-    Succeeds (state.generate dest.val) (fun next => Generation state next dest) :=
+    Succeeds ((((state.generate dest.val) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) (fun next => Generation state next dest) :=
   (generate_contract state dest hbound havailable).success (generate_noBlocked state dest hbound h)
 
 theorem Growth.final_swapped {state produced next : State source target spills}
@@ -118,9 +123,11 @@ theorem generate_final (state : State source target spills) (dest : Fin target.l
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest)
     (hle : dest.val ≤ state.stack.length)
     (hreach : state.stack.length - dest.val ≤ MAX_SWAP_DEPTH) :
-    Spec (state.generate dest.val) (fun next => ∃ h, next.isFinal ⟨dest, h⟩) := by
+    Spec ((((state.generate dest.val) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) (fun next => ∃ h, next.isFinal ⟨dest, h⟩) := by
   apply (spec_iff_triple _ _).mpr
-  vcgen [State.generate]
+  rw [generate_completed]
+  vcgen
   all_goals try simp only [Fin.val_inj] at *
   all_goals subst_vars
   all_goals try assumption
@@ -139,7 +146,8 @@ theorem generate_final (state : State source target spills) (dest : Fin target.l
 theorem generate_reachable (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest)
     (hr : state.withinReach cursor) (hcursor : cursor ≤ dest.val) (hready : Ready state dest) :
-    Succeeds (state.generate dest.val) (fun next =>
+    Succeeds ((((state.generate dest.val) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) (fun next =>
       Generation state next dest ∧ next.reachable ∧
       (dest.val ≤ state.stack.length → ∃ h, next.isFinal ⟨dest, h⟩)) := by
   obtain ⟨next, heq, hg⟩ := generate_success state dest hbound havailable hr.copies

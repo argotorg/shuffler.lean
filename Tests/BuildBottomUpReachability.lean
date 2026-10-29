@@ -14,33 +14,33 @@ example (state : State source target spills) :
 
 example (state : State source target spills) (inv : state.invariant cursor)
     (hw : state.stack.length - cursor ≤ MAX_SWAP_DEPTH) :
-    Succeeds (buildBottomUp.loop cursor state) (fun _ => True) ↔ state.reachable :=
+    Succeeds (((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) ↔ state.reachable :=
   loop_success_iff_reachable_within_width cursor state inv hw
 
 -- A final prefix permits an initial stack larger than the DUP window.
 example (initial : State source target spills) (hvalid : initial.Valid)
     (hprocessed : initial.processed cursor)
     (hwidth : initial.stack.length - cursor ≤ MAX_SWAP_DEPTH) :
-    (∃ (res : Stack) (trace : Trace spills source res),
-      buildBottomUp initial hvalid = .ok ⟨res, trace⟩) ↔ initial.reachable :=
+    (∃ result : State _ _ _, (buildBottomUp initial hvalid) = .ok ⟨none, result⟩) ↔ initial.reachable :=
   buildBottomUp_succeeds_iff_reachable_of_processed initial hvalid hprocessed hwidth
 
 example (initial : State source target spills) (hvalid : initial.Valid)
     (hprocessed : initial.processed cursor)
     (hwidth : initial.stack.length - cursor ≤ MAX_SWAP_DEPTH)
     (hmapped : ∀ i j, initial.mapping i = some j → initial.stack[i] = target[j]) :
-    (∃ trace : Trace spills source target,
-      buildBottomUp initial hvalid = .ok ⟨target, trace⟩) ↔ initial.reachable :=
+    (∃ result : State _ _ _,
+      (buildBottomUp initial hvalid) = .ok ⟨none, result⟩ ∧ result.stack = target) ↔ initial.reachable :=
   buildBottomUp_correct_iff_reachable_of_processed initial hvalid hprocessed hwidth hmapped
 
 example (initial : State source target spills) (hvalid : initial.Valid)
-    (hrun : buildBottomUp initial hvalid = .ok result) : initial.reachable :=
+    (hrun : buildBottomUp initial hvalid = .ok ⟨none, result⟩) : initial.reachable :=
   buildBottomUp_reachable_of_ok initial hvalid hrun
 
 example (initial : State source target spills) (hvalid : initial.Valid)
     (hcondition : ∃ cursor, initial.processed cursor ∧ initial.withinReach cursor) :
-    ∃ (res : Stack) (trace : Trace spills source res),
-      buildBottomUp initial hvalid = .ok ⟨res, trace⟩ := by
+    ∃ result : State _ _ _, (buildBottomUp initial hvalid) = .ok ⟨none, result⟩ := by
   obtain ⟨cursor, hp, hr⟩ := hcondition
   exact buildBottomUp_succeeds_of_processed initial hvalid hp hr
 
@@ -67,8 +67,8 @@ private def buried : Stack := [.Var ⟨37⟩] ++ List.replicate 32 (.Lit 0)
 private theorem shallow_valid : (finalPrefix shallow).Valid := ⟨by decide, by decide, by decide⟩
 
 -- A 33-slot final prefix succeeds when the requested variable is at the top.
-example : ∃ trace : Trace ∅ shallow (shallow ++ [.Var ⟨37⟩]),
-    buildBottomUp (finalPrefix shallow) shallow_valid = .ok ⟨_, trace⟩ := by
+example : ∃ result : State _ _ _,
+      (buildBottomUp (finalPrefix shallow) shallow_valid) = .ok ⟨none, result⟩ ∧ result.stack = (shallow ++ [.Var ⟨37⟩]) := by
   apply buildBottomUp_correct_of_processed (cursor := 33) (finalPrefix shallow) shallow_valid
   · unfold State.processed
     decide
@@ -78,7 +78,9 @@ example : ∃ trace : Trace ∅ shallow (shallow ++ [.Var ⟨37⟩]),
       decide
   · decide
 
-example : (buildBottomUp (finalPrefix shallow) shallow_valid).map (fun result => result.1) =
+example : (((((buildBottomUp (finalPrefix shallow) shallow_valid) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1) =
     .ok (shallow ++ [.Var ⟨37⟩]) := by native_decide
 
 -- A final prefix alone does not make a buried variable available to DUP.
@@ -88,11 +90,12 @@ example : (finalPrefix buried).stack.length - 33 ≤ MAX_SWAP_DEPTH := by decide
 example : ¬State.reachable (finalPrefix buried) := by
   unfold State.reachable State.isReachable Stack.hasCopy
   decide
-example : (buildBottomUp (finalPrefix buried) buried_valid).map (fun result => result.1) =
+example : (((((buildBottomUp (finalPrefix buried) buried_valid) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1) =
     .error (.Blocked ⟨0, 17⟩) := by native_decide
 
-example : ¬∃ (res : Stack) (trace : Trace ∅ buried res),
-    buildBottomUp (finalPrefix buried) buried_valid = .ok ⟨res, trace⟩ := by
+example : ¬∃ result : State _ _ _, (buildBottomUp (finalPrefix buried) buried_valid) = .ok ⟨none, result⟩ := by
   rw [buildBottomUp_succeeds_iff_reachable_of_processed (cursor := 33)
     (finalPrefix buried) buried_valid
     (by unfold State.processed; decide) (by decide)]
@@ -110,7 +113,9 @@ private def swapState : State swapSource swapTarget ∅ where
 
 -- SWAP16 can succeed with 17 active slots and no final bottom prefix.
 private theorem swapState_valid : swapState.Valid := ⟨by decide, by decide, by decide⟩
-example : (buildBottomUp swapState swapState_valid).map (fun result => result.1) =
+example : (((((buildBottomUp swapState swapState_valid) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1) =
     .ok swapTarget := by native_decide
 example : ¬∃ cursor, swapState.processed cursor ∧ swapState.withinReach cursor := by
   rintro ⟨cursor, hp, hr⟩

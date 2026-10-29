@@ -125,8 +125,10 @@ theorem ScanProgress.choice {state : State source target spills} {choice : Optio
 theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
     (hr : state.reachable) :
     ⦃True⦄ (do
+      let mut returned : Option (Result source target spills) := none
       let mut urgent := none
       for offset in [cursor : target.length] do
+        returned := none
         if (state.mapping.positionOf (← index target.length offset)).isSome then
           continue
         let slot ← slotAt target offset
@@ -134,24 +136,25 @@ theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
           continue
         if let some copy := state.stack.shallowestCopyPosition slot then
           if ¬ state.stack.isDupReachable copy then
-            throw (← state.blockDupUnreachable copy)
+            returned := some (← state.blockDupUnreachable copy)
+            break
           if (state.depthOf copy) = MAX_DUP_DEPTH ∧ copy.val ≠ cursor ∧ urgent.isNone then
             urgent := some offset
-      return urgent : Except ShuffleErr (Option ℕ))
-    ⦃fun urgent =>
-      ScanProgress cursor state (List.range' cursor (target.length - cursor)) urgent⦄ := by
+      return (returned, urgent) : Except ShuffleErr (Option (Result source target spills) × Option ℕ))
+    ⦃fun result => result.1 = none ∧
+      ScanProgress cursor state (List.range' cursor (target.length - cursor)) result.2⦄ := by
   simp only [Std.Legacy.Range.forIn_eq_forIn_range']
   vcgen [slotAt, index, State.depthOf] invariants
-  · fun seen _ urgent => ScanProgress cursor state seen urgent
+  · fun seen _ result => result.1 = none ∧ ScanProgress cursor state seen result.2
   all_goals try simp_all
   case vc1 => exact ⟨by simp, by simp⟩
   case vc12 => exact (not_lt_of_ge (by assumption)) (range_offset_lt (by assumption))
   case vc3 =>
     rename_i hprog hsome
-    exact hprog.skip (Or.inl fun ⟨_, hnone, _⟩ => by simp_all)
+    exact hprog.2.skip (Or.inl fun ⟨_, hnone, _⟩ => by simp_all)
   case vc4 =>
     rename_i hprog _ hgen
-    refine hprog.skip (Or.inl fun ⟨_, _, hfree, hspill, _⟩ => ?_)
+    refine hprog.2.skip (Or.inl fun ⟨_, _, hfree, hspill, _⟩ => ?_)
     rcases hgen with hjunk | hgen | hgen
     · exact hfree (Value.can_be_freely_generated_of_is_junk _ hjunk)
     · exact hfree hgen
@@ -163,10 +166,10 @@ theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
     exact hnreach (hp.1 ▸ hp.2)
   case vc8 =>
     rename_i hlt _ copy _ _ hnone hgen hcopy _ hdepth
-    exact ScanProgress.select ⟨hlt, hnone, hgen.2.1, hgen.2.2, copy, hcopy, hdepth.1, hdepth.2.1⟩
+    exact ScanProgress.select ⟨by assumption, hnone, hgen.2.1, hgen.2.2, _, hcopy, hdepth.1, hdepth.2.1⟩
   case vc9 =>
     rename_i choice _ _ copy _ hprog _ _ hcopy _ hnot
-    apply hprog.skip
+    apply hprog.2.skip
     cases choice with
     | some _ => exact Or.inr rfl
     | none =>
@@ -177,7 +180,7 @@ theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
       exact hnot hd hne rfl
   case vc10 =>
     rename_i hprog _ _ hall heq
-    exact hprog.skip (Or.inl fun ⟨_, _, _, _, c, hc, _⟩ => hall c (heq.symm.trans hc))
+    exact hprog.2.skip (Or.inl fun ⟨_, _, _, _, c, hc, _⟩ => hall c (heq.symm.trans hc))
 
 theorem copyScan_success (state : State source target spills) (copy : Fin state.stack.length)
     (initial : ℕ) (hinit : Chosen state copy initial) :

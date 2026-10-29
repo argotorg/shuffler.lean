@@ -76,7 +76,7 @@ def permute
           let stack' := state.stack.swap (state.stack.length - 1) (state.stack.length - 1 - idx)
           let perm' := perm * Equiv.swap top (perm top)
 
-          have h1 : idx < state.stack.length := by simpa [idx, hlen] using (perm top).rev.isLt
+          have h1 : idx < state.stack.length := (perm top).rev.isLt
           have h2 : 1 ≤ idx := by
             -- we need the isLt proof of it
             have hlt := (perm top).isLt
@@ -91,7 +91,7 @@ def permute
             trace := trace'
             mapping := List.length_swap.symm ▸ state.mapping
           } (cast (congrArg (fun n => Equiv.Perm (Fin n)) List.length_swap.symm) perm')
-            hne
+            (by simpa [stack'] using hne)
 
       -- search for the shallowest out of place element
       else
@@ -118,7 +118,7 @@ def permute
             let stack' := state.stack.swap (state.stack.length - 1) (state.stack.length - 1 - idx)
             let perm' := perm * Equiv.swap top pos
 
-            have h1 : idx < state.stack.length := by simpa [idx, hlen] using pos.rev.isLt
+            have h1 : idx < state.stack.length := pos.rev.isLt
             have h2 : 1 ≤ idx := by dsimp [idx, Fin.rev]; omega
             have h3 : idx ≤ MAX_SWAP_DEPTH := by omega
             let trace' := .Swap idx h1 h2 h3 state.trace
@@ -128,14 +128,16 @@ def permute
               trace := trace'
               mapping := List.length_swap.symm ▸ state.mapping
             } (cast (congrArg (fun n => Equiv.Perm (Fin n)) List.length_swap.symm) perm')
-              hne
+              (by simpa [stack'] using hne)
 
         -- we're done
         | none => .ok ⟨none, state⟩
     termination_by Permutation.measure perm ⟨state.stack.length - 1, by omega⟩
     decreasing_by
-      · exact Prod.Lex.left _ _ (Permutation.measure_place_top_lt perm _ ht)
+      · rw [Permutation.measure_cast List.length_swap.symm _ hne]
+        exact Prod.Lex.left _ _ (Permutation.measure_place_top_lt perm _ ht)
       · obtain ⟨heq, hlt⟩ := Permutation.measure_swap_pos_lt perm _ pos (not_not.mp ht) hpos
+        rw [Permutation.measure_cast List.length_swap.symm _ hne]
         exact Prod.Lex.right' _ heq.le hlt
 
 -- applies the permutation perm to the source stack via the inverse equivalence

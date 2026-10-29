@@ -28,8 +28,12 @@ theorem loop_equal_bound_eq (cursor : Nat) (state : State source target spills)
     (carrier : Fin state.stack.length)
     (hb : state.mapping.symm ⟨cursor, hc⟩ = some carrier)
     (hv : state.stack[current] = state.stack[carrier]) :
-    buildBottomUp.loop cursor state = buildBottomUp.loop (cursor + 1)
-      { state with mapping := state.mapping.swapDestinations current carrier } := by
+    ((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) = ((((buildBottomUp.loop (cursor + 1)
+      { state with mapping := state.mapping.swapDestinations current carrier }) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+        if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+        pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) := by
   have hge := inv.processed.bound_ge ⟨cursor, hc⟩ carrier hb le_rfl
   have hnotearly : ¬state.stack.length - cursor < MAX_SWAP_DEPTH := by omega
   rw [buildBottomUp.loop.eq_def]
@@ -47,9 +51,10 @@ theorem loop_equal_bound_eq (cursor : Nat) (state : State source target spills)
   rw [skip_unless_final (fun hlt hf => hnfinal ⟨hlt, hf⟩)]
   simp only [hp, ↓reduceIte]
   have hscan := Succeeds.of_triple _ _ (urgentScan_success cursor state hr)
-  simp only [bind_pure] at hscan
-  obtain ⟨urgent, heq, _⟩ := hscan
+  simp only [Prod.mk.eta, bind_pure] at hscan
+  obtain ⟨⟨_, urgent⟩, heq, rfl, _⟩ := hscan
   erw [heq, except_ok_bind]
+  simp_loop
   simp only [hnotearly, and_false, ↓reduceDIte]
   rw [ite_index_eq_rest (fun hA => hA.2.2) (fun _ hB => hB),
     index_eq ⟨cursor, hc⟩, except_ok_bind]
@@ -72,9 +77,13 @@ theorem loop_equal_bound_success_iff (cursor : Nat) (state : State source target
     (carrier : Fin state.stack.length)
     (hb : state.mapping.symm ⟨cursor, hc⟩ = some carrier)
     (hv : state.stack[current] = state.stack[carrier]) :
-    Succeeds (buildBottomUp.loop cursor state) (fun _ => True) ↔
-      state.reachable ∧ Succeeds (buildBottomUp.loop (cursor + 1)
-        { state with mapping := state.mapping.swapDestinations current carrier }) (fun _ => True) := by
+    Succeeds (((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) ↔
+      state.reachable ∧ Succeeds (((((buildBottomUp.loop (cursor + 1)
+        { state with mapping := state.mapping.swapDestinations current carrier }) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+        if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+        pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) := by
   constructor
   · intro hs
     have hr := loop_success_requires_reachable cursor state inv hs
@@ -86,8 +95,13 @@ theorem loop_hole_eq_of_generate_final (cursor : Nat) (state next : State source
     (hr : state.reachable) (hw : MAX_SWAP_DEPTH ≤ state.stack.length - cursor)
     (hp : state.pending_generations ≠ 0) (hc : cursor < target.length)
     (hb : state.mapping.symm ⟨cursor, hc⟩ = none)
-    (hg : state.generate cursor = .ok next) (hf : ∃ h, next.isFinal ⟨cursor, h⟩) :
-    buildBottomUp.loop cursor state = buildBottomUp.loop (cursor + 1) next := by
+    (hg : (((state.generate cursor) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) = .ok next) (hf : ∃ h, next.isFinal ⟨cursor, h⟩) :
+    ((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) = ((((buildBottomUp.loop (cursor + 1) next) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+        if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+        pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) := by
   have hn : ¬ ∃ h, state.isFinal ⟨cursor, h⟩ := by simp [State.exists_isFinal_iff, hc, hb]
   have hnotearly : ¬state.stack.length - cursor < MAX_SWAP_DEPTH := by omega
   rw [buildBottomUp.loop.eq_def]
@@ -96,13 +110,15 @@ theorem loop_hole_eq_of_generate_final (cursor : Nat) (state next : State source
   rw [skip_unless_final (fun hlt => (state.isFinal_iff ⟨cursor, hlt⟩).not.mpr hn)]
   simp only [hp, ↓reduceIte]
   have hscan := Succeeds.of_triple _ _ (urgentScan_success cursor state hr)
-  simp only [bind_pure] at hscan
-  obtain ⟨urgent, heq, _⟩ := hscan
+  simp only [Prod.mk.eta, bind_pure] at hscan
+  obtain ⟨⟨_, urgent⟩, heq, rfl, _⟩ := hscan
   erw [heq, except_ok_bind]
+  simp_loop
   simp only [hnotearly, and_false, ↓reduceDIte]
   rw [ite_index_eq_rest (fun hA => hA.2.2) (fun _ hB => hB), index_eq ⟨cursor, hc⟩, except_ok_bind]
   have hposition : state.mapping.positionOf ⟨cursor, hc⟩ = none := hb
   simp only [hposition]
+  simp_loop
   rw [hg, except_ok_bind]
   have hlt := hf.1
   rw [index_eq ⟨cursor, hlt⟩, except_ok_bind, ite_eq_left ((next.isFinal_iff ⟨cursor, hlt⟩).mpr hf)]
@@ -111,10 +127,13 @@ theorem loop_hole_blocks_of_generate_deep (cursor : Nat) (state next : State sou
     (hr : state.reachable) (hw : MAX_SWAP_DEPTH ≤ state.stack.length - cursor)
     (hp : state.pending_generations ≠ 0) (hc : cursor < target.length)
     (hb : state.mapping.symm ⟨cursor, hc⟩ = none)
-    (hg : state.generate cursor = .ok next) (hnf : ¬ ∃ h, next.isFinal ⟨cursor, h⟩)
+    (hg : (((state.generate cursor) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) = .ok next) (hnf : ¬ ∃ h, next.isFinal ⟨cursor, h⟩)
     (pos : Fin next.stack.length) (hpos : pos.val = cursor)
     (hbelow : pos.val + 1 < next.stack.length) (hdeep : ¬next.stack.isSwapReachable pos) :
-    ¬Succeeds (buildBottomUp.loop cursor state) (fun _ => True) := by
+    ¬Succeeds (((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) := by
   have hn : ¬ ∃ h, state.isFinal ⟨cursor, h⟩ := by simp [State.exists_isFinal_iff, hc, hb]
   have hnotearly : ¬state.stack.length - cursor < MAX_SWAP_DEPTH := by omega
   rw [buildBottomUp.loop.eq_def]
@@ -123,13 +142,15 @@ theorem loop_hole_blocks_of_generate_deep (cursor : Nat) (state next : State sou
   rw [skip_unless_final (fun hlt => (state.isFinal_iff ⟨cursor, hlt⟩).not.mpr hn)]
   simp only [hp, ↓reduceIte]
   have hscan := Succeeds.of_triple _ _ (urgentScan_success cursor state hr)
-  simp only [bind_pure] at hscan
-  obtain ⟨urgent, heq, _⟩ := hscan
+  simp only [Prod.mk.eta, bind_pure] at hscan
+  obtain ⟨⟨_, urgent⟩, heq, rfl, _⟩ := hscan
   erw [heq, except_ok_bind]
+  simp_loop
   simp only [hnotearly, and_false, ↓reduceDIte]
   rw [ite_index_eq_rest (fun hA => hA.2.2) (fun _ hB => hB), index_eq ⟨cursor, hc⟩, except_ok_bind]
   have hposition : state.mapping.positionOf ⟨cursor, hc⟩ = none := hb
   simp only [hposition]
+  simp_loop
   rw [hg, except_ok_bind]
   subst hpos
   have hnt : pos.val ≠ next.stack.length - 1 := by omega
@@ -139,6 +160,7 @@ theorem loop_hole_blocks_of_generate_deep (cursor : Nat) (state next : State sou
   simp only [except_ok_bind]
   rw [ite_eq_left hnt, ite_eq_left (show ¬ next.isSwapReachable pos from hdeep)]
   rw [blockSwapUnreachable_eq next pos hdeep]
+  simp_loop
   rintro ⟨_, h, _⟩
   cases h
 

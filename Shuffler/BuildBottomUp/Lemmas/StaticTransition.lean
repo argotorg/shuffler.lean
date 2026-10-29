@@ -21,9 +21,15 @@ theorem PrefixState.step {initial state : State source target spills} {h : initi
     (hc : cursor < cutoff initial) (hr : state.reachable) :
     (((augmentedStack initial)[cursor]? = initial.expectedStack[cursor]?) →
       ∃ next, PrefixState initial h (cursor+1) next ∧
-        buildBottomUp.loop cursor state = buildBottomUp.loop (cursor+1) next) ∧
+        ((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+          if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+          pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) = ((((buildBottomUp.loop (cursor+1) next) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+            if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+            pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) ∧
     (((augmentedStack initial)[cursor]? ≠ initial.expectedStack[cursor]?) →
-      ¬Succeeds (buildBottomUp.loop cursor state) (fun _ => True)) := by
+      ¬Succeeds (((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+        if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+        pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True)) := by
   obtain ⟨hct, hcs, hpending, hwidth⟩ := hp.before_cutoff hn hc
   let dest : Fin target.length := ⟨cursor,hct⟩
   let current : Fin state.stack.length := ⟨cursor,hcs⟩
@@ -72,7 +78,8 @@ theorem PrefixState.step {initial state : State source target spills} {h : initi
       let next := retagged produced current' top
       have hnext : PrefixState initial h (cursor+1) next :=
         hp.produced_retag hct hb hg hm current' top rfl hbprod hv
-      have hgenerate : state.generate cursor = .ok next :=
+      have hgenerate : (((state.generate cursor) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+        if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) = .ok next :=
         generate_eq_after_produce_equal state produced dest hproduce current' top rfl htop hbelow hbprod hv
       have hfinal : ∃ h, next.isFinal ⟨cursor, h⟩ := hnext.invariant.processed dest (by dsimp [dest]; omega)
       exact ⟨next, hnext, loop_hole_eq_of_generate_final cursor state next hr hsmall hpending hct hb hgenerate hfinal⟩

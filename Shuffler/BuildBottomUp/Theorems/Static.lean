@@ -15,11 +15,13 @@ theorem buildBottomUp_succeeds_iff_static (initial : State source target spills)
     (∃ result : State source target spills, buildBottomUp initial h = .ok ⟨none, result⟩) ↔
       StaticSuccess initial := by
   constructor
-  · rintro ⟨res, trace, hrun⟩
-    exact (buildBottomUp_static_success_iff initial h).mp ⟨⟨res, trace⟩, hrun, trivial⟩
+  · rintro ⟨result, hrun⟩
+    exact (buildBottomUp_static_success_iff initial h).mp
+      ⟨_, completedTrace_of_ok hrun, trivial⟩
   · intro hs
-    obtain ⟨⟨res, trace⟩, hrun, _⟩ := (buildBottomUp_static_success_iff initial h).mpr hs
-    exact ⟨res, trace, hrun⟩
+    obtain ⟨value, heq, _⟩ := (buildBottomUp_static_success_iff initial h).mpr hs
+    obtain ⟨result, hrun, _⟩ := completedTrace_ok_inversion heq
+    exact ⟨result, hrun⟩
 
 -- If the mapping connects only slots of equal value, buildBottomUp returns the target if and only
 -- if StaticSuccess holds.
@@ -29,11 +31,10 @@ theorem buildBottomUp_correct_iff_static (initial : State source target spills)
     (∃ result : State source target spills,
       buildBottomUp initial h = .ok ⟨none, result⟩ ∧ result.stack = target) ↔ StaticSuccess initial := by
   constructor
-  · rintro ⟨trace, hrun⟩
-    exact (buildBottomUp_succeeds_iff_static initial h).mp ⟨target, trace, hrun⟩
+  · rintro ⟨result, hrun, _⟩
+    exact (buildBottomUp_succeeds_iff_static initial h).mp ⟨result, hrun⟩
   · intro hs
-    obtain ⟨res, trace, hrun⟩ := (buildBottomUp_succeeds_iff_static initial h).mpr hs
-    obtain rfl := buildBottomUp_correct_of_ok initial h hmapped hrun
-    exact ⟨trace, hrun⟩
+    obtain ⟨result, hrun⟩ := (buildBottomUp_succeeds_iff_static initial h).mpr hs
+    exact ⟨result, hrun, buildBottomUp_correct_of_ok initial h hmapped hrun⟩
 
 end Shuffler.Emission

@@ -3,6 +3,7 @@ module
 public import Shuffler.Emission.Defs
 public import Std.WP.Monad.Instances
 public import Std.WP.Triple.Basic
+public import Shuffler.Util
 import Batteries.Data.Except
 import Std.WP.Triple.SpecLemmas
 
@@ -13,6 +14,152 @@ open Std.WP
 set_option experimental.vcgen true
 
 namespace Shuffler.Emission
+
+@[simp] theorem completed_ok (state : State source target spills) :
+    (((.ok ⟨none, state⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) = .ok state := rfl
+
+@[simp] theorem completed_blocked (state : State source target spills) (blocked : Blocked) :
+    (((.ok ⟨some blocked, state⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) = .error (.Blocked blocked) := rfl
+
+@[simp] theorem completed_error (err : ShuffleErr) :
+    (((.error err : Except ShuffleErr (Result source target spills)) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) = .error err := rfl
+
+@[simp] theorem completedTrace_ok (state : State source target spills) :
+    ((((.ok ⟨none, state⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) = .ok ⟨state.stack, state.trace⟩ := rfl
+
+@[simp] theorem completedTrace_blocked (state : State source target spills) (blocked : Blocked) :
+    ((((.ok ⟨some blocked, state⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) = .error (.Blocked blocked) := rfl
+
+@[simp] theorem completedTrace_error (err : ShuffleErr) :
+    ((((.error err : Except ShuffleErr (Result source target spills)) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) = .error err := rfl
+
+@[simp] theorem completed_bind (x : Except ShuffleErr α)
+    (f : α → Except ShuffleErr (Result source target spills)) :
+    (((x >>= f) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) = x >>= (fun a => (((f a) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+          if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) := by
+  cases x <;> rfl
+
+@[simp] theorem completedTrace_bind (x : Except ShuffleErr α)
+    (f : α → Except ShuffleErr (Result source target spills)) :
+    ((((x >>= f) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) = x >>= (fun a => ((((f a) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+        if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+        pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) := by
+  cases x <;> rfl
+
+theorem completed_continue (run : Except ShuffleErr (Result source target spills))
+    (next : Result source target spills → Except ShuffleErr (Result source target spills)) :
+    (run >>= fun r => (((if r.blocked.isSome then pure r else next r) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
+      (((run : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+        if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state => (((next ⟨none, state⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+            if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) := by
+  cases run with
+  | error err => rfl
+  | ok r => cases r with
+    | mk blocked state => cases blocked <;> rfl
+
+@[simp] theorem completed_ite (p : Prop) [Decidable p]
+    (a b : Except ShuffleErr (Result source target spills)) :
+    (((if p then a else b) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) = if p then ((a : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+          if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) else ((b : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+          if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) := by
+  split <;> rfl
+
+theorem completed_ok_inversion {run : Except ShuffleErr (Result source target spills)}
+    {state : State source target spills} (h : ((run : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) = .ok state) :
+    run = .ok ⟨none, state⟩ := by
+  cases run with
+  | error err => cases h
+  | ok r => cases r with
+    | mk blocked current => cases blocked with
+      | some blocked => cases h
+      | none => cases h; rfl
+
+theorem completedTrace_guard (run : Except ShuffleErr (Result source target spills))
+    (next : Result source target spills → Except ShuffleErr ((stack : Stack) × Trace spills source stack)) :
+    (run >>= fun r => if r.blocked.isSome then ((((pure r) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) else next r) =
+      (((run : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+        if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state => next ⟨none, state⟩) := by
+  cases run with
+  | error err => rfl
+  | ok r => cases r with
+    | mk blocked state => cases blocked <;> rfl
+
+theorem completedTrace_attach_guard (run : Except ShuffleErr (Result source target spills))
+    (next : {r // run = .ok r} → Except ShuffleErr ((stack : Stack) × Trace spills source stack)) :
+    (run.attach >>= fun r => if r.val.blocked.isSome then ((((pure r.val) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) else next r) =
+      ((((run : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+        if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)).attach >>= fun state =>
+        next ⟨⟨none, state.val⟩, completed_ok_inversion state.property⟩) := by
+  cases run with
+  | error err => rfl
+  | ok r => cases r with
+    | mk blocked state => cases blocked <;> rfl
+
+@[simp] theorem completedTrace_ite (p : Prop) [Decidable p]
+    (a b : Except ShuffleErr (Result source target spills)) :
+    ((((if p then a else b) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) =
+      if p then (((a : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+        if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+        pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) else (((b : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+          if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+          pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) := by
+  split <;> rfl
+
+@[simp] theorem completedTrace_dite (p : Prop) [Decidable p]
+    (a : p → Except ShuffleErr (Result source target spills))
+    (b : ¬p → Except ShuffleErr (Result source target spills)) :
+    ((((if h : p then a h else b h) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) =
+      if h : p then ((((a h) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+        if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+        pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) else ((((b h) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+          if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+          pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) := by
+  split <;> rfl
+
+-- Relate the proof projection to the result returned by the algorithm.
+theorem completedTrace_of_ok {run : Except ShuffleErr (Result source target spills)}
+    {state : State source target spills} (h : run = .ok ⟨none, state⟩) :
+    (((run : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) = .ok ⟨state.stack, state.trace⟩ := by
+  rw [h]
+  rfl
+
+theorem completedTrace_ok_inversion {run : Except ShuffleErr (Result source target spills)}
+    {value : (stack : Stack) × Trace spills source stack}
+    (h : (((run : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) = .ok value) :
+    ∃ state, run = .ok ⟨none, state⟩ ∧ ⟨state.stack, state.trace⟩ = value := by
+  cases run with
+  | error err => cases h
+  | ok r => cases r with
+    | mk blocked state => cases blocked with
+      | some blocked => cases h
+      | none => exact ⟨state, rfl, Except.ok.inj h⟩
 
 -- A blocked operation is allowed. An assertion error is excluded.
 def Spec (result : Except ShuffleErr α) (post : α → Prop) : Prop :=
@@ -44,13 +191,13 @@ theorem spec_iff_triple (result : Except ShuffleErr α) (post : α → Prop) :
 
 theorem block_eq (state : State source target spills) (pos : Fin state.stack.length)
     (excess : ℕ) (h : excess > 0) :
-    state.block pos excess = .ok (.Blocked ⟨pos.val, excess⟩) := by
+    state.block pos excess = .ok ⟨some ⟨pos.val, excess⟩, state⟩ := by
   simp [State.block, requires, h, pure, Except.pure, bind, Except.bind]
 
 theorem blockSwapUnreachable_eq (state : State source target spills)
     (pos : Fin state.stack.length) (h : ¬ state.isSwapReachable pos) :
     state.blockSwapUnreachable pos =
-      .ok (.Blocked ⟨pos.val, (state.depthOf pos).val - MAX_SWAP_DEPTH⟩) := by
+      .ok ⟨some ⟨pos.val, (state.depthOf pos).val - MAX_SWAP_DEPTH⟩, state⟩ := by
   apply block_eq
   simp only [State.isSwapReachable] at h
   omega
@@ -58,7 +205,7 @@ theorem blockSwapUnreachable_eq (state : State source target spills)
 theorem blockDupUnreachable_eq (state : State source target spills)
     (pos : Fin state.stack.length) (h : ¬ state.stack.isDupReachable pos) :
     state.blockDupUnreachable pos =
-      .ok (.Blocked ⟨pos.val, (state.depthOf pos).val - MAX_DUP_DEPTH⟩) := by
+      .ok ⟨some ⟨pos.val, (state.depthOf pos).val - MAX_DUP_DEPTH⟩, state⟩ := by
   apply block_eq
   simp only [Stack.isDupReachable, State.depthOf] at *
   omega
@@ -66,7 +213,7 @@ theorem blockDupUnreachable_eq (state : State source target spills)
 @[spec] theorem blockSwapUnreachable_spec (state : State source target spills)
     (pos : Fin state.stack.length) :
     ⦃¬ state.isSwapReachable pos⦄ state.blockSwapUnreachable pos
-    ⦃fun err => err = .Blocked ⟨pos.val, (state.depthOf pos).val - MAX_SWAP_DEPTH⟩;
+    ⦃fun result => result = ⟨some ⟨pos.val, (state.depthOf pos).val - MAX_SWAP_DEPTH⟩, state⟩;
       allowedErrors⦄ := by
   refine ⟨fun h => ?_⟩
   rw [blockSwapUnreachable_eq state pos h]
@@ -75,7 +222,7 @@ theorem blockDupUnreachable_eq (state : State source target spills)
 @[spec] theorem blockDupUnreachable_spec (state : State source target spills)
     (pos : Fin state.stack.length) :
     ⦃¬ state.stack.isDupReachable pos⦄ state.blockDupUnreachable pos
-    ⦃fun err => err = .Blocked ⟨pos.val, (state.depthOf pos).val - MAX_DUP_DEPTH⟩;
+    ⦃fun result => result = ⟨some ⟨pos.val, (state.depthOf pos).val - MAX_DUP_DEPTH⟩, state⟩;
       allowedErrors⦄ := by
   refine ⟨fun h => ?_⟩
   rw [blockDupUnreachable_eq state pos h]

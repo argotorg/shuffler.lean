@@ -10,19 +10,22 @@ import Shuffler.Permute.Theorems
 
 namespace Shuffler.Emission
 
-private theorem permute_success_iff (spills : SpillSet) (stack : Stack)
-    (perm : Shuffler.Permute.Permutation stack) :
-    (∃ result, Shuffler.Permute.permute spills stack perm = .ok result) ↔
+private theorem permute_success_iff (spills : SpillSet) (state : State source target spills)
+    (perm : Shuffler.Permute.Permutation state.stack) :
+    (∃ result, ((((Shuffler.Permute.permute state perm) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) = .ok result) ↔
       Shuffler.Permute.all_swaps_reachable perm := by
   constructor
   · rintro ⟨result, hs⟩
+    obtain ⟨next, hrun, _⟩ := completedTrace_ok_inversion hs
     by_contra hn
-    obtain ⟨_, _, he, _⟩ := Shuffler.Permute.permute_blocks_unreachable spills stack perm hn
-    rw [hs] at he
-    contradiction
+    obtain ⟨_, _, _, he, _⟩ := Shuffler.Permute.permute_blocks_unreachable spills state perm hn
+    rw [hrun] at he
+    cases he
   · intro hr
-    obtain ⟨res, trace, he, _⟩ := Shuffler.Permute.permute_applies_permutation_reachable spills stack perm hr
-    exact ⟨⟨res, trace⟩, he⟩
+    obtain ⟨result, he, _⟩ := Shuffler.Permute.permute_applies_permutation_reachable spills state perm hr
+    exact ⟨_, completedTrace_of_ok he⟩
 
 set_option maxRecDepth 16384 in
 set_option maxHeartbeats 4000000 in
@@ -30,7 +33,9 @@ theorem loop_success_iff_permutation (cursor : Nat) (state : State source target
     (inv : state.invariant cursor) (hp : state.pending_generations = 0)
     (hlen : state.stack.length = target.length)
     (hsource : ∀ i, (state.mapping i).isSome) :
-    Succeeds (buildBottomUp.loop cursor state) (fun _ => True) ↔
+    Succeeds (((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) ↔
       Shuffler.Permute.all_swaps_reachable (state.mapping.toPermutation hlen hsource) := by
   rw [buildBottomUp.loop.eq_def]
   simp_loop
@@ -52,12 +57,8 @@ theorem loop_success_iff_permutation (cursor : Nat) (state : State source target
   rw [skip_unless_final (fun hlt hf => hnfinal ⟨hlt, hf⟩)]
   simp only [hp, ↓reduceIte, requires_of_true _ hlen, except_ok_bind]
   rw [requires_of_true (∀ i, (state.mapping.destinationOf i).isSome) hsource, except_ok_bind]
-  rw [← permute_success_iff spills state.stack (state.mapping.toPermutation hlen hsource)]
-  cases heq : Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hlen hsource) with
-  | error err => simp [Succeeds]
-  | ok result =>
-    obtain ⟨res, trace⟩ := result
-    simp [Succeeds]
+  simpa only [Succeeds, and_true] using
+    (permute_success_iff spills state (state.mapping.toPermutation hlen hsource))
 termination_by target.length - cursor
 
 end Shuffler.Emission

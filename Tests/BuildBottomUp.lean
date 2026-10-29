@@ -59,16 +59,19 @@ private def observeState (result : Except ShuffleErr (State source target spills
       List.ofFn (fun dest => (state.mapping.symm dest).map Fin.val), state.pending_generations)
 
 -- Produce loads a spilled variable and fills the last unbound target position.
-example : observeState (spilled.produce 0) =
+example : observeState ((((spilled.produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
     .ok ([.Var ⟨37⟩], [.load ⟨37⟩], [some 0], 0) := rfl
 
 -- Push fills the binding but leaves the counter for produce to update.
 example : observeState (spilled.push (.Var ⟨37⟩) 0) =
     .ok ([.Var ⟨37⟩], [.load ⟨37⟩], [some 0], 1) := rfl
 
-example : observeState ((emptyState [.Lit 0] ∅).produce 0) =
+example : observeState (((((emptyState [.Lit 0] ∅).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
     .ok ([.Lit 0], [.push (.Lit 0)], [some 0], 0) := rfl
-example : observeState ((emptyState [.Wildcard] ∅).produce 0) =
+example : observeState (((((emptyState [.Wildcard] ∅).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
     .ok ([.Wildcard], [.push .Wildcard], [some 0], 0) := rfl
 
 private def copyState (depth : ℕ) (spills : SpillSet) :
@@ -80,12 +83,15 @@ private def copyState (depth : ℕ) (spills : SpillSet) :
   pending_generations := 1
 
 -- The deepest reachable copy is duplicated, even if it is also spilled.
-example : observeState ((copyState MAX_DUP_DEPTH {⟨37⟩}).produce 0) =
+example : observeState (((((copyState MAX_DUP_DEPTH {⟨37⟩}).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
     .ok ((copyState MAX_DUP_DEPTH {⟨37⟩}).stack ++ [.Var ⟨37⟩], [.dup 16], [some 16], 0) := rfl
 
 -- One slot beyond DUP reach blocks unless a spill can be loaded.
-example : (copyState (MAX_DUP_DEPTH + 1) ∅).produce 0 = .error (.Blocked ⟨0, 1⟩) := rfl
-example : observeState ((copyState (MAX_DUP_DEPTH + 1) {⟨37⟩}).produce 0) =
+example : ((((copyState (MAX_DUP_DEPTH + 1) ∅).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) = .error (.Blocked ⟨0, 1⟩) := rfl
+example : observeState (((((copyState (MAX_DUP_DEPTH + 1) {⟨37⟩}).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
     .ok ((copyState (MAX_DUP_DEPTH + 1) {⟨37⟩}).stack ++ [.Var ⟨37⟩], [.load ⟨37⟩], [some 17], 0) := rfl
 
 -- Neither an empty spill set nor a different spilled ID permits a load.
@@ -95,9 +101,11 @@ example : spilled.push (.Var ⟨38⟩) 0 =
     .error (.assertion "pushed slot cannot be generated or loaded") := rfl
 
 -- Produce requires a copy, a spill, or a value that can be freely generated.
-example : (emptyState [.Var ⟨37⟩] ∅).produce 0 =
+example : ((((emptyState [.Var ⟨37⟩] ∅).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) =
     .error (.assertion "generated slot has no copy on the stack and is not spilled") := rfl
-example : (emptyState [.Var ⟨37⟩] {⟨38⟩}).produce 0 =
+example : ((((emptyState [.Var ⟨37⟩] {⟨38⟩}).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) =
     .error (.assertion "generated slot has no copy on the stack and is not spilled") := rfl
 
 /-- info: 'Shuffler.Emission.State.produce' depends on axioms: [propext, Classical.choice, Quot.sound] -/

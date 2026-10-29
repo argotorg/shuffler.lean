@@ -97,8 +97,8 @@ private def literalState : State literalSource literalTarget ∅ where
 
 private theorem literalState_valid : literalState.Valid := ⟨by decide, by decide, by decide⟩
 example : ∀ i j, literalState.mapping i = some j → literalState.stack[i] = literalTarget[j] := by decide
-#guard decide ((buildBottomUp literalState literalState_valid).map (fun result => result.1) =
-    .error (.Blocked ⟨0, 1⟩))
+#guard decide ((buildBottomUp literalState literalState_valid).map (fun result => result.blocked) =
+    .ok (some ⟨0, 1⟩))
 example : Reserve ∅ literalSource literalTarget {one} := by decide
 
 private def literalSwapped : Trace ∅ literalSource ([one] ++ List.replicate 16 zero) :=
@@ -121,8 +121,8 @@ private def seedState : State seedSource seedTarget ∅ where
 
 private theorem seedState_valid : seedState.Valid := ⟨by decide, by decide, by decide⟩
 example : ∀ i j, seedState.mapping i = some j → seedState.stack[i] = seedTarget[j] := by decide
-#guard decide ((buildBottomUp seedState seedState_valid).map (fun result => result.1) =
-    .error (.Blocked ⟨0, 1⟩))
+#guard decide ((buildBottomUp seedState seedState_valid).map (fun result => result.blocked) =
+    .ok (some ⟨0, 1⟩))
 example : Reserve ∅ seedSource seedTarget {a} := by decide
 
 private def seedSwapped : Trace ∅ seedSource (List.replicate 16 zero ++ [a]) :=
@@ -143,8 +143,8 @@ private def equalState : State equalSource equalSource ∅ where
   pending_generations := 0
 
 private theorem equalState_valid : equalState.Valid := ⟨by decide, by decide, by decide⟩
-#guard decide ((buildBottomUp equalState equalState_valid).map (fun result => result.1) =
-    .error (.Blocked ⟨0, 1⟩))
+#guard decide ((buildBottomUp equalState equalState_valid).map (fun result => result.blocked) =
+    .ok (some ⟨0, 1⟩))
 example : Reserve ∅ equalSource equalSource 0 := by decide
 
 private def equalTrace : Trace ∅ equalSource equalSource := .Lit equalSource
@@ -164,8 +164,8 @@ private def hiddenState : State hiddenSource hiddenTarget ∅ where
 private theorem hiddenState_valid : hiddenState.Valid := ⟨by decide, by decide, by decide⟩
 example : ∀ i j, hiddenState.mapping i = some j → hiddenState.stack[i] = hiddenTarget[j] := by decide
 example : Shuffler.Generate.Ready ∅ hiddenSource [zero, a] := by decide
-#guard decide ((buildBottomUp hiddenState hiddenState_valid).map (fun result => result.1) =
-    .error (.Blocked ⟨1, 1⟩))
+#guard decide ((buildBottomUp hiddenState hiddenState_valid).map (fun result => result.blocked) =
+    .ok (some ⟨1, 1⟩))
 example : Reserve ∅ hiddenSource hiddenTarget ({zero} + {a}) := by decide
 
 private def hiddenDuped : Trace ∅ hiddenSource (hiddenSource ++ [a]) :=

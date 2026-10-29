@@ -20,7 +20,9 @@ namespace Success
 theorem loop_success_iff_suffix (initial : State source target spills) (h : initial.Valid)
     (hn : 16 < initial.stack.length) (cursor : Nat) (state : State source target spills)
     (hc : cursor ≤ cutoff initial) (hp : PrefixState initial h cursor state) :
-    Succeeds (buildBottomUp.loop cursor state) (fun _ => True) ↔ Suffix initial cursor := by
+    Succeeds (((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) ↔ Suffix initial cursor := by
   by_cases he : cursor = cutoff initial
   · subst cursor
     rw [terminal_success_iff initial h hn state hp]
@@ -37,7 +39,9 @@ theorem loop_success_iff_suffix (initial : State source target spills) (h : init
     · have hnrun := hblock hv
       have hnsuffix : ¬Suffix initial cursor := fun hs => hv (hs.1 cursor le_rfl hlt)
       exact iff_of_false hnrun hnsuffix
-  · have hnrun : ¬Succeeds (buildBottomUp.loop cursor state) (fun _ => True) :=
+  · have hnrun : ¬Succeeds (((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+    if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+    pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) :=
       fun hs => hr (loop_success_requires_reachable cursor state hp.invariant hs)
     have hnsuffix : ¬Suffix initial cursor :=
       fun hs => hr (hp.ready_iff.mp (hs.2.1 cursor le_rfl hlt.le))
@@ -48,7 +52,9 @@ end Success
 
 theorem buildBottomUp_static_success_iff (initial : State source target spills)
     (h : initial.Valid) :
-    Succeeds (buildBottomUp initial h) (fun _ => True) ↔ StaticSuccess initial := by
+    Succeeds (((((buildBottomUp initial h) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) ↔ StaticSuccess initial := by
   by_cases hsmall : initial.stack.length ≤ MAX_DUP_DEPTH + 1
   · exact iff_of_true (buildBottomUp_success initial h hsmall)
       ((staticSuccess_iff_reachable_of_small initial hsmall).mpr

@@ -19,7 +19,9 @@ namespace Shuffler.Emission.Success
 theorem terminal_success_iff (initial : State source target spills) (hvalid : initial.Valid)
     (hn : 16 < initial.stack.length) (state : State source target spills)
     (hp : PrefixState initial hvalid (cutoff initial) state) :
-    Succeeds (buildBottomUp.loop (cutoff initial) state) (fun _ => True) ↔
+    Succeeds (((((buildBottomUp.loop (cutoff initial) state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) ↔
       Ready initial (cutoff initial) ∧ Terminal initial := by
   by_cases hfirst : generationEnd initial ≤ boundary initial
   · have hcut : cutoff initial = generationEnd initial := by
@@ -37,7 +39,9 @@ theorem terminal_success_iff (initial : State source target spills) (hvalid : in
       exact hp'.invariant.pending.symm.trans hz
     have hr : Ready initial (generationEnd initial) := hp'.ready_iff.mpr
       (fun j hj => False.elim (hnone j hj))
-    have hterminal : Succeeds (buildBottomUp.loop (generationEnd initial) state) (fun _ => True) ↔
+    have hterminal : Succeeds (((((buildBottomUp.loop (generationEnd initial) state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) ↔
         CyclesReady initial (generationEnd initial) := by
       rw [loop_success_iff_completedFixed _ state hp'.invariant hp'.invariant.valid hpending,
         hp'.cycles.fixed_below_iff, cyclesReady_iff initial hvalid]

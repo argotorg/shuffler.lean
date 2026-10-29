@@ -29,8 +29,10 @@ def UrgentChoice (state : State source target spills) (choice : Option ℕ) : Pr
 
 @[spec] theorem urgentScan_triple (cursor : ℕ) (state : State source target spills) :
     ⦃True⦄ (do
+      let mut returned : Option (Result source target spills) := none
       let mut urgent := none
       for offset in [cursor : target.length] do
+        returned := none
         if (state.mapping.positionOf (← index target.length offset)).isSome then
           continue
         let slot ← slotAt target offset
@@ -38,18 +40,20 @@ def UrgentChoice (state : State source target spills) (choice : Option ℕ) : Pr
           continue
         if let some copy := state.stack.shallowestCopyPosition slot then
           if ¬ state.stack.isDupReachable copy then
-            throw (← state.blockDupUnreachable copy)
+            returned := some (← state.blockDupUnreachable copy)
+            break
           if (state.depthOf copy) = MAX_DUP_DEPTH ∧ copy.val ≠ cursor ∧ urgent.isNone then
             urgent := some offset
-      return urgent : Except ShuffleErr (Option ℕ))
-    ⦃fun urgent => UrgentChoice state urgent; allowedErrors⦄ := by
+      return (returned, urgent) : Except ShuffleErr (Option (Result source target spills) × Option ℕ))
+    ⦃fun result => (∀ r, result.1 = some r → r.blocked.isSome = true) ∧ UrgentChoice state result.2; allowedErrors⦄ := by
   simp only [Std.Legacy.Range.forIn_eq_forIn_range']
   vcgen invariants
-  · fun _ _ urgent => UrgentChoice state urgent
-  all_goals try simp_all [allowedErrors, UrgentChoice]
+  · fun _ _ result => (∀ r, result.1 = some r → r.blocked.isSome = true) ∧ UrgentChoice state result.2
+  all_goals try simp_all [UrgentChoice]
+  all_goals try subst_vars
+  all_goals try simp_all
   all_goals first
     | exact range_offset_lt (by assumption)
-    | (subst_vars; exact ⟨_, by assumption⟩)
 
 def Chosen (state : State source target spills) (copy : Fin state.stack.length) (offset : ℕ) : Prop :=
   ∃ pos : Fin state.stack.length, pos.val = offset ∧

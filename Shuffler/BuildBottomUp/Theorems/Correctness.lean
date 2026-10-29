@@ -15,7 +15,7 @@ theorem buildBottomUp_expected_of_ok (initial : State source target spills)
     (hrun : buildBottomUp initial h = .ok ⟨none, result⟩) :
     result.stack = initial.expectedStack := by
   have hs := buildBottomUp_spec initial h
-  simpa [hrun, Spec] using hs
+  simpa [completedTrace_of_ok hrun, Spec] using hs
 
 -- If the mapping connects only slots of equal value, a successful run returns the target.
 theorem buildBottomUp_correct_of_ok (initial : State source target spills)

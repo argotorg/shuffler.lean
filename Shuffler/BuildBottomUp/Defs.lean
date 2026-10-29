@@ -133,14 +133,15 @@ private theorem generate_pending_generations (state next : State source target s
     next.pending_generations = state.pending_generations - 1 := by
   have hs : ⦃True⦄
       state.generate offset
-      ⦃fun s => s.pending_generations = state.pending_generations - 1; (fun _ => True)⦄ := by
+      ⦃fun result => result.blocked = none →
+        result.state.pending_generations = state.pending_generations - 1; (fun _ => True)⦄ := by
     vcgen [State.generate, State.produce, State.push, State.dup, State.swapDestinations, State.swapWith,
       State.blockDupUnreachable, State.block, requires, index, slotAt,
       State.isSwapReachable, State.depthOf]
     all_goals simp_all
   have hp := hs.le_wp trivial
   rw [h] at hp
-  exact hp
+  exact hp rfl
 
 -- Builds the target bottom-up. Every offset either holds its slot already, gets a retained slot that is
 -- floating above it, or gets a freshly generated slot.
@@ -287,7 +288,8 @@ where
     all_goals try exact Prod.Lex.left _ _ (by omega)
     all_goals
       apply Prod.Lex.right
-      rw [generate_pending_generations _ _ _ _hgen]
+      have hnone : result.blocked = none := by simpa using ‹¬ result.blocked.isSome = true›
+      rw [generate_pending_generations _ _ _ (by simpa only [← hnone] using _hgen)]
       exact Nat.sub_lt (Nat.pos_of_ne_zero (by assumption)) (by decide)
 
 

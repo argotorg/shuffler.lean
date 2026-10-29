@@ -69,7 +69,9 @@ end Success
 -- With no pending generation, only the deep fixed points of the completed assignment matter.
 theorem loop_success_iff_completedFixed (cursor : Nat) (state : State source target spills)
     (inv : state.invariant cursor) (h : state.Valid) (hp : state.pending_generations = 0) :
-    Succeeds (buildBottomUp.loop cursor state) (fun _ => True) ↔
+    Succeeds (((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) ↔
       ∀ i : Fin target.length, i.val < target.length - (MAX_SWAP_DEPTH + 1) →
         Success.completedPermutation state h i = i := by
   have hlen : state.stack.length = target.length := by have := h.size; omega

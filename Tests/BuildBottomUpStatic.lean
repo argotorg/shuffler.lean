@@ -14,7 +14,9 @@ private instance (state : State source target spills) : Decidable state.Valid :=
     ⟨fun ⟨hs, hp, ha⟩ => ⟨hs, hp, ha⟩, fun h => ⟨h.size, h.pending, h.available⟩⟩
 
 private def succeeds (state : State source target spills) (h : state.Valid) : Bool :=
-  match buildBottomUp state h with
+  match ((((buildBottomUp state h) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+    if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+    pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) with
   | .ok _ => true
   | .error _ => false
 
@@ -51,7 +53,9 @@ private def emptyState : State [] [] ∅ where
 
 private theorem emptyState_valid : emptyState.Valid := ⟨by decide, by decide, by decide⟩
 example : decide (StaticSuccess emptyState) = true := by native_decide
-example : (buildBottomUp emptyState emptyState_valid).map (fun result => result.1) = .ok [] := by
+example : (((((buildBottomUp emptyState emptyState_valid) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1) = .ok [] := by
   native_decide
 
 private def x : Value := .Var ⟨1⟩
@@ -73,7 +77,9 @@ private def boundaryState (copies : Nat) (spills : SpillSet := ∅) :=
   stateFor (boundarySource copies) (boundaryTarget copies) boundaryDestinations spills
 
 example : checked (boundaryState 1) false := by native_decide
-example : (buildBottomUp (boundaryState 1) (by native_decide)).map (fun result => result.1) =
+example : (((((buildBottomUp (boundaryState 1) (by native_decide)) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1) =
     .error (.Blocked ⟨0, 1⟩) := by native_decide
 example : checked (boundaryState 2) true := by native_decide
 example : checked (boundaryState 1 {⟨1⟩}) true := by native_decide
@@ -104,7 +110,9 @@ private def deepPermutation := stateFor (List.replicate 18 (.Lit 0))
 
 example : checked deepPermutation false := by native_decide
 example : deepPermutation.pending_generations = 0 := by decide
-example : (buildBottomUp deepPermutation (by native_decide)).map (fun result => result.1) =
+example : (((((buildBottomUp deepPermutation (by native_decide)) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1) =
     .error (.Blocked ⟨0, 1⟩) := by native_decide
 
 private def deepIdentity := stateFor (List.replicate 24 (.Lit 0))
@@ -124,14 +132,18 @@ example : checked fixedAfterGeneration true := by native_decide
 -- Success uses the assigned values. A wildcard target need not equal its result.
 private def wildcard := stateFor [x] [.Wildcard] [0]
 example : checked wildcard true := by native_decide
-example : (buildBottomUp wildcard (by native_decide)).map (fun result => result.1) = .ok [x] := by
+example : (((((buildBottomUp wildcard (by native_decide)) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1) = .ok [x] := by
   native_decide
 
 -- Validity alone also permits a value-incorrect concrete mapping.
 private def mismatched := stateFor (List.replicate 20 (.Lit 0))
   (List.replicate 21 (.Lit 1)) (List.range 20)
 example : checked mismatched true := by native_decide
-example : (buildBottomUp mismatched (by native_decide)).map (fun result => result.1) =
+example : (((((buildBottomUp mismatched (by native_decide)) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1) =
     .ok (List.replicate 20 (.Lit 0) ++ [.Lit 1]) := by native_decide
 
 -- The equivalence theorem has a validity assumption. This input lacks its target value.

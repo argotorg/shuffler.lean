@@ -1,6 +1,7 @@
 module
 
 public import Shuffler.BuildBottomUp.Lemmas.SwapProofs
+import Shuffler.BuildBottomUp.Lemmas.Completion
 import Shuffler.BuildBottomUp.Lemmas.Invariants
 import Shuffler.BuildBottomUp.Lemmas.Values
 import Std.WP.Triple.SpecLemmas
@@ -86,9 +87,10 @@ private theorem growth_append (state : State source target spills) (slot : Value
   vcgen [State.dup, index] <;> simp_all [Mapping.positionOf]
   simpa only [eqRec_eq_cast] using growth_append _ _ dest hfree hslot _
 
-@[spec] theorem produce_spec (state : State source target spills) (dest : Fin target.length)
+@[spec high] theorem produce_spec (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest) :
-    ⦃True⦄ state.produce dest
+    ⦃True⦄ (((state.produce dest) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)
     ⦃fun next => Growth state next dest (state.pending_generations - 1); allowedErrors⦄ := by
   vcgen [State.produce]
   all_goals first
@@ -96,10 +98,10 @@ private theorem growth_append (state : State source target spills) (slot : Value
     | exact Growth.decrement (by assumption)
     | exact Or.inl (Value.can_be_freely_generated_of_is_junk _ (by assumption))
     | simp_all [allowedErrors, State.isAvailable, Option.isSome_iff_exists]
-  case vc10 =>
+  case vc12 =>
     rename_i hcopy
     exact shallowestCopyPosition_value state.stack target[dest.val] _ hcopy.1
-  case vc16 =>
+  case vc19 =>
     rename_i filtered hsome hnone hfilter _
     intro hreach
     exact hnone _ (hfilter.symm.trans (Option.filter_eq_some_iff.mpr
@@ -158,9 +160,11 @@ theorem Swapped.retag (state : State source target spills) (pos : Fin state.stac
 
 @[spec] theorem generate_triple (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest) :
-    ⦃True⦄ state.generate dest.val
+    ⦃True⦄ (((state.generate dest.val) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)
     ⦃fun next => Generation state next dest; allowedErrors⦄ := by
-  vcgen [State.generate]
+  rw [generate_completed]
+  vcgen
   all_goals try simp only [Fin.val_inj] at *
   all_goals subst_vars
   all_goals first
@@ -175,13 +179,15 @@ theorem Swapped.retag (state : State source target spills) (pos : Fin state.stac
 
 theorem generate_contract (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest) :
-    Spec (state.generate dest.val) (fun next => Generation state next dest) :=
+    Spec ((((state.generate dest.val) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) (fun next => Generation state next dest) :=
   (spec_iff_triple _ _).mpr (generate_triple state dest hbound havailable)
 
 @[spec] theorem generate_offset_spec (state : State source target spills) (offset : ℕ)
     (hlt : offset < target.length) (hbound : state.mapping.symm ⟨offset, hlt⟩ = none)
     (havailable : state.isAvailable ⟨offset, hlt⟩) :
-    ⦃True⦄ state.generate offset
+    ⦃True⦄ (((state.generate offset) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)
     ⦃fun next => Generation state next ⟨offset, hlt⟩; allowedErrors⦄ :=
   generate_triple state ⟨offset, hlt⟩ hbound havailable
 

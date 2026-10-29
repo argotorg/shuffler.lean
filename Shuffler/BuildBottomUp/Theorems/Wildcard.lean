@@ -35,10 +35,10 @@ theorem buildBottomUp_matches_iff_static (initial : State source target spills)
       buildBottomUp initial h = .ok ⟨none, result⟩ ∧ StackMatches result.stack target) ↔
       StaticSuccess initial := by
   constructor
-  · rintro ⟨res, trace, hrun, _⟩
-    exact (buildBottomUp_succeeds_iff_static initial h).mp ⟨res, trace, hrun⟩
+  · rintro ⟨result, hrun, _⟩
+    exact (buildBottomUp_succeeds_iff_static initial h).mp ⟨result, hrun⟩
   · intro hs
-    obtain ⟨res, trace, hrun⟩ := (buildBottomUp_succeeds_iff_static initial h).mpr hs
-    exact ⟨res, trace, hrun, buildBottomUp_matches_of_ok initial h hmapped hrun⟩
+    obtain ⟨result, hrun⟩ := (buildBottomUp_succeeds_iff_static initial h).mpr hs
+    exact ⟨result, hrun, buildBottomUp_matches_of_ok initial h hmapped hrun⟩
 
 end Shuffler.Emission

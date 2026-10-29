@@ -13,8 +13,9 @@ namespace Shuffler.Emission
 theorem buildBottomUp_succeeds_small (initial : State source target spills)
     (h : initial.Valid) (hsmall : initial.stack.length ≤ MAX_DUP_DEPTH + 1) :
     ∃ result : State source target spills, buildBottomUp initial h = .ok ⟨none, result⟩ := by
-  obtain ⟨⟨res, trace⟩, heq, _⟩ := buildBottomUp_success initial h hsmall
-  exact ⟨res, trace, heq⟩
+  obtain ⟨value, heq, _⟩ := buildBottomUp_success initial h hsmall
+  obtain ⟨result, hrun, _⟩ := completedTrace_ok_inversion heq
+  exact ⟨result, hrun⟩
 
 -- For an initial stack of at most 16 slots, if the mapping connects only slots of equal value,
 -- buildBottomUp always returns the target.
@@ -23,9 +24,8 @@ theorem buildBottomUp_correct_within_dup_reach (initial : State source target sp
     (hmapped : ∀ i j, initial.mapping i = some j → initial.stack[i] = target[j]) :
     ∃ result : State source target spills,
       buildBottomUp initial h = .ok ⟨none, result⟩ ∧ result.stack = target := by
-  obtain ⟨res, trace, heq⟩ := buildBottomUp_succeeds_small initial h hsmall
-  obtain rfl := buildBottomUp_correct_of_ok initial h hmapped heq
-  exact ⟨trace, heq⟩
+  obtain ⟨result, hrun⟩ := buildBottomUp_succeeds_small initial h hsmall
+  exact ⟨result, hrun, buildBottomUp_correct_of_ok initial h hmapped hrun⟩
 
 -- The same result for an initial stack of at most 14 slots.
 theorem buildBottomUp_correct_small (initial : State source target spills)

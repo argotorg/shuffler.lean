@@ -2,7 +2,14 @@ import Shuffler.Permute.Theorems
 
 namespace PermuteTests
 
-open Shuffler.Permute
+open Shuffler.Permute Shuffler.Emission
+
+private def stateOf (spills : SpillSet) (source : Stack) : State source source spills where
+  planned_mapping := ⊥
+  stack := source
+  trace := .Lit source
+  mapping := ⊥
+  pending_generations := 0
 
 -- The arbitrary-swap minimum exists even when there are no positions.
 example : Permutation.arbitrarySwapCount (1 : Equiv.Perm (Fin 0)) = 0 := by simp
@@ -62,24 +69,24 @@ example : Permutation.arbitrarySwapCount
 private def source : Stack := [.Var ⟨0⟩, .Var ⟨1⟩, .Var ⟨2⟩]
 
 private def runSummary (source : Stack) (perm : Permutation source) : Option (Stack × ℕ) :=
-  match permute ∅ source perm with
-  | .ok ⟨res, trace⟩ => some (res, trace.swapCount)
-  | .error _ => none
+  match permute (stateOf ∅ source) perm with
+  | .ok ⟨none, result⟩ => some (result.stack, result.trace.swapCount)
+  | _ => none
 
 -- Evaluate the production algorithm, including the result and its emitted count.
 example : runSummary source belowTop =
     some ([.Var ⟨1⟩, .Var ⟨0⟩, .Var ⟨2⟩], 3) := by native_decide
 
-example {res : Stack} {trace : Trace ∅ source res}
-    (hresult : permute ∅ source belowTop = .ok ⟨res, trace⟩) :
+example {result : State source source ∅}
+    (hresult : permute (stateOf ∅ source) belowTop = .ok ⟨none, result⟩) :
     IsLeast {n | ∃ swaps : List (Fin 3),
-      (swaps.map (Equiv.swap 2)).prod = belowTop ∧ swaps.length = n} trace.swapCount :=
-  permute_swapCount_optimal ∅ source belowTop (by decide) hresult
+      (swaps.map (Equiv.swap 2)).prod = belowTop ∧ swaps.length = n} result.trace.swapCount :=
+  permute_swapCount_optimal ∅ (stateOf ∅ source) belowTop (by decide) hresult
 
-example {res : Stack} {trace : Trace ∅ source res}
-    (hresult : permute ∅ source belowTop = .ok ⟨res, trace⟩) :
-    trace.swapCount ≤ 3 * [(0, 1)].length := by
-  apply permute_swapCount_le_three_mul_length_swaps ∅ source belowTop hresult
+example {result : State source source ∅}
+    (hresult : permute (stateOf ∅ source) belowTop = .ok ⟨none, result⟩) :
+    result.trace.swapCount ≤ 3 * [(0, 1)].length := by
+  apply permute_swapCount_le_three_mul_length_swaps ∅ (stateOf ∅ source) belowTop hresult
     ([(0, 1)] : List (Fin 3 × Fin 3))
   exact mul_one belowTop
 
@@ -90,13 +97,11 @@ example : runSummary [.Var ⟨0⟩, .Var ⟨0⟩, .Var ⟨0⟩] belowTop =
 -- The upper bound also applies to a successful run on the empty stack.
 example : (Trace.Lit (spills := ∅) []).swapCount ≤
     3 * Permutation.arbitrarySwapCount (1 : Permutation []) :=
-  permute_swapCount_le_three_mul_arbitrarySwapCount ∅ [] 1 rfl
+  permute_swapCount_le_three_mul_arbitrarySwapCount ∅ (stateOf ∅ []) 1 rfl
 
 -- A permutation that moves an unreachable position remains blocked.
-example : (match permute ∅ (List.replicate 18 (.Var ⟨0⟩))
-    (Equiv.swap (0 : Fin 18) (17 : Fin 18)) with
-    | .error (.Blocked blocked) => blocked.offset == 0 && blocked.excess == 1
-    | .error (.assertion _) => false
-    | .ok _ => false) = true := by native_decide
+example : (match permute (stateOf ∅ (List.replicate 18 (.Var ⟨0⟩))) (Equiv.swap (0 : Fin 18) (17 : Fin 18)) with
+    | .ok ⟨some blocked, _⟩ => blocked.offset == 0 && blocked.excess == 1
+    | _ => false) = true := by native_decide
 
 end PermuteTests
