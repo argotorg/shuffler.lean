@@ -1,121 +1,116 @@
-import Tests.BuildBottomUpObservations
+import Shuffler.BuildBottomUp.Lemmas.StaticDecision
 
-open Shuffler Shuffler.Emission BuildBottomUpTestSupport
+open Shuffler.Emission
+
+set_option maxRecDepth 16384
 
 namespace BuildBottomUpTests
 
--- The C++ helpers leave the counter unchanged; produce updates it.
-example (state : State source target spills) (slot : Value) (dest : Fin target.length)
-    (hgen : slot.can_be_freely_generated ∨ spills.is_spilled slot)
-    (hdest : state.mapping.symm dest = none) :
-    (state.push slot dest).map (·.pending_generations) = .ok state.pending_generations := by
-  cases slot <;> simp [State.push, Mapping.positionOf, requires, hdest, hgen] <;> rfl
+private instance (state : State source target spills) : Decidable state.Valid :=
+  decidable_of_iff
+    (state.stack.length + state.pending_generations = target.length ∧
+      state.mapping.unmapped_target_slots = state.pending_generations ∧
+      (∀ j, state.isAvailable j) ∧
+      ∀ j, target[j].isFunctionReturnLabel → (state.mapping.symm j).isSome)
+    ⟨fun ⟨hs, hp, ha, hl⟩ => ⟨hs, hp, ha, hl⟩,
+      fun h => ⟨h.size, h.pending, h.available, h.labels_bound⟩⟩
 
-example (state : State source target spills) (copy : Fin state.stack.length)
-    (dest : Fin target.length) (hdup : state.stack.isDupReachable copy)
-    (hlabel : ¬state.stack[copy].isFunctionReturnLabel)
-    (hdest : state.mapping.symm dest = none) :
-    (state.dup copy.val dest).map (·.pending_generations) = .ok state.pending_generations := by
-  simp [State.dup, Mapping.positionOf, index, copy.isLt, requires, hdest, hdup,
-    ← Fin.getElem_fin, hlabel]
-  rfl
+-- Every injection from source positions to target positions.
+private def mappings (m n : ℕ) : List (Mapping m n) :=
+  (List.finRange m).foldl (fun maps src => maps.flatMap fun mapping =>
+    (List.finRange n).filterMap fun dest =>
+      if hs : mapping src = none then
+        if hd : mapping.symm dest = none then some (mapping.bind src dest hs hd)
+        else none
+      else none) [⊥]
 
--- Pushing a spilled variable records a load and keeps the previous trace.
-example (state : State source target spills) (id : VarId) (dest : Fin target.length)
-    (hspilled : id ∈ spills) (hdest : state.mapping.symm dest = none) :
-    (state.push (.Var id) dest).map
-      (fun next => (⟨next.stack, next.trace⟩ : (res : Stack) × Trace spills source res)) =
-      .ok ⟨state.stack ++ [.Var id], Trace.Load id hspilled state.trace⟩ := by
-  simp [State.push, Mapping.positionOf, requires, hdest, SpillSet.is_spilled, hspilled]
-  rfl
+-- Binds source position i to destinations[i]. Out of range or taken destinations are skipped.
+private def mappingByDest (n m : ℕ) (destinations : List ℕ) : Mapping n m :=
+  (List.finRange n).foldl (fun mapping i =>
+    match destinations[i.val]? with
+    | some j =>
+      if hj : j < m then
+        if hi : mapping i = none then
+          if hu : mapping.symm ⟨j, hj⟩ = none then mapping.bind i ⟨j, hj⟩ hi hu
+          else mapping
+        else mapping
+      else mapping
+    | none => mapping) ⊥
 
--- Literals and wildcards record pushes.
-example (state : State source target spills) (word : Word) (dest : Fin target.length)
-    (hdest : state.mapping.symm dest = none) :
-    (state.push (.Lit word) dest).map
-      (fun next => (⟨next.stack, next.trace⟩ : (res : Stack) × Trace spills source res)) =
-      .ok ⟨state.stack ++ [.Lit word], Trace.Push (.Lit word) (by simp [Value.can_be_freely_generated]) state.trace⟩ := by
-  simp [State.push, Mapping.positionOf, requires, hdest, Value.can_be_freely_generated]
-  rfl
+private def initial (source target : Stack) (mapping : Mapping source.length target.length) :
+    State source target ∅ where
+  planned_mapping := mapping
+  stack := source
+  trace := .Lit source
+  mapping := mapping
+  pending_generations := target.length - source.length
 
-example (state : State source target spills) (dest : Fin target.length)
-    (hdest : state.mapping.symm dest = none) :
-    (state.push .Wildcard dest).map
-      (fun next => (⟨next.stack, next.trace⟩ : (res : Stack) × Trace spills source res)) =
-      .ok ⟨state.stack ++ [.Wildcard], Trace.Push .Wildcard (by decide) state.trace⟩ := by
-  simp [State.push, Mapping.positionOf, requires, hdest, Value.can_be_freely_generated]
-  rfl
+-- Bound destinations retain their assigned values. Unbound destinations are generated.
+-- The values and mappings are independent, so the expected stack need not equal target.
+private def expectedStack (state : State source target spills) : Stack :=
+  List.ofFn fun dest : Fin target.length =>
+    match state.mapping.symm dest with
+    | some pos => state.stack[pos]
+    | none => target[dest]
 
-private def emptyState (target : Stack) (spills : SpillSet) : State [] target spills where
-  planned_mapping := ⊥
-  stack := []
-  trace := .Lit []
-  mapping := ⊥
-  pending_generations := target.length
+-- These stacks fit within reach, so every valid state must produce the expected stack.
+private def matchesExpected (state : State source target ∅) : Option Bool :=
+  if h : state.Valid then
+    some (match buildBottomUp state h with
+      | .ok result => result.blocked.isNone && decide (result.state.stack = expectedStack state)
+      | .error _ => false)
+  else none
 
-private def spilled : State [] [.Var ⟨37⟩] {⟨37⟩} := emptyState _ _
+-- Every source of length below 4, every longer target of length below 5 over two values, and every
+-- injection between them. Invalid states are skipped.
+private def exhaustive : List Bool :=
+  (List.range 4).flatMap fun m => ((List.range 5).drop m).flatMap fun n =>
+    (List.replicate m [.Lit 0, .Lit 1]).sections.flatMap fun source =>
+      (List.replicate n [.Lit 0, .Lit 1]).sections.flatMap fun target =>
+        (mappings source.length target.length).filterMap fun mapping =>
+          matchesExpected (initial source target mapping)
 
-private def observeState (result : Except ShuffleErr (State source target spills)) :=
-  result.map fun state =>
-    (state.stack, operations state.trace,
-      List.ofFn (fun dest => (state.mapping.symm dest).map Fin.val), state.pending_generations)
+-- The count also checks that the validity filter does not skip every case.
+example : (exhaustive.length, exhaustive.count false) = (4675, 0) := by native_decide
 
--- Produce loads a spilled variable and fills the last unbound target position.
-example : observeState ((((spilled.produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
-  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
-    .ok ([.Var ⟨37⟩], [.load ⟨37⟩], [some 0], 0) := rfl
+private def nextSeed (seed : ℕ) : ℕ := (seed * 1664525 + 1013904223) % 4294967296
 
--- Push fills the binding but leaves the counter for produce to update.
-example : observeState (spilled.push (.Var ⟨37⟩) 0) =
-    .ok ([.Var ⟨37⟩], [.load ⟨37⟩], [some 0], 1) := rfl
+private def shuffle (seed : ℕ) (xs : List α) : List α :=
+  ((List.range xs.length).reverse.foldl (fun (seed, values) i =>
+    let seed := nextSeed seed
+    (seed, values.swap i (seed % (i + 1)))) (seed, xs)).2
 
-example : observeState (((((emptyState [.Lit 0] ∅).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
-  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
-    .ok ([.Lit 0], [.push (.Lit 0)], [some 0], 0) := rfl
-example : observeState (((((emptyState [.Wildcard] ∅).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
-  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
-    .ok ([.Wildcard], [.push .Wildcard], [some 0], 0) := rfl
+private def sampleValue (seed : ℕ) : Value :=
+  match seed % 8 with
+  | 0 => .Var ⟨1⟩
+  | 1 => .Var ⟨2⟩
+  | 2 => .Lit 1
+  | _ => .Lit 0
 
-private def copyState (depth : ℕ) (spills : SpillSet) :
-    State (.Var ⟨37⟩ :: List.replicate depth (.Lit 0)) [.Var ⟨37⟩] spills where
-  planned_mapping := ⊥
-  stack := .Var ⟨37⟩ :: List.replicate depth (.Lit 0)
-  trace := .Lit _
-  mapping := ⊥
-  pending_generations := 1
+-- The StaticSuccess prediction and the buildBottomUp outcome for one pseudorandom valid state.
+private def sample (n extra seed : ℕ) : Option (Bool × Bool) :=
+  let source : Stack := (List.range n).map (fun i => sampleValue (nextSeed (seed + i)))
+  let mapping := mappingByDest source.length (n + extra) (shuffle seed (List.range (n + extra)))
+  let target : Stack := List.ofFn fun j : Fin (n + extra) =>
+    match mapping.symm j with
+    | some i => source[i]
+    | none => sampleValue (nextSeed (seed + j.val))
+  let state := initial source target (by simpa [target] using mapping)
+  if h : state.Valid then
+    some (decide (StaticSuccess state),
+      match buildBottomUp state h with
+      | .ok result => result.blocked.isNone
+      | .error _ => false)
+  else none
 
--- The deepest reachable copy is duplicated, even if it is also spilled.
-example : observeState (((((copyState MAX_DUP_DEPTH {⟨37⟩}).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
-  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
-    .ok ((copyState MAX_DUP_DEPTH {⟨37⟩}).stack ++ [.Var ⟨37⟩], [.dup 16], [some 16], 0) := rfl
+-- Report valid cases, successful runs, blocked runs, and disagreements between StaticSuccess and
+-- buildBottomUp. Stack sizes cross the DUP and SWAP limits.
+private def sampleReport : ℕ × ℕ × ℕ × ℕ :=
+  let outcomes := [0, 1, 15, 16, 17, 18, 20, 28].flatMap fun n =>
+    (List.range 8).flatMap fun extra => (List.range 12).filterMap (sample n extra)
+  (outcomes.length, outcomes.countP (·.2), outcomes.countP (!·.2),
+    outcomes.countP fun (predicted, actual) => predicted != actual)
 
--- One slot beyond DUP reach blocks unless a spill can be loaded.
-example : ((((copyState (MAX_DUP_DEPTH + 1) ∅).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
-  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) = .error (.Blocked ⟨0, 1⟩) := rfl
-example : observeState (((((copyState (MAX_DUP_DEPTH + 1) {⟨37⟩}).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
-  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
-    .ok ((copyState (MAX_DUP_DEPTH + 1) {⟨37⟩}).stack ++ [.Var ⟨37⟩], [.load ⟨37⟩], [some 17], 0) := rfl
-
--- Neither an empty spill set nor a different spilled ID permits a load.
-example : (emptyState [.Var ⟨37⟩] ∅).push (.Var ⟨37⟩) 0 =
-    .error (.assertion "pushed slot cannot be generated or loaded") := rfl
-example : spilled.push (.Var ⟨38⟩) 0 =
-    .error (.assertion "pushed slot cannot be generated or loaded") := rfl
-
--- Produce requires a copy, a spill, or a value that can be freely generated.
-example : ((((emptyState [.Var ⟨37⟩] ∅).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
-  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) =
-    .error (.assertion "generated slot has no copy on the stack and is not spilled") := rfl
-example : ((((emptyState [.Var ⟨37⟩] {⟨38⟩}).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
-  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) =
-    .error (.assertion "generated slot has no copy on the stack and is not spilled") := rfl
-
-/-- info: 'Shuffler.Emission.State.produce' depends on axioms: [propext, Classical.choice, Quot.sound] -/
-#guard_msgs in
-#print axioms State.produce
-
--- A bound destination cannot be filled again.
-example : ((·.push (.Var ⟨37⟩) 0) >=> (·.push (.Var ⟨37⟩) 0)) spilled =
-    .error (.assertion "destination already bound to a slot") := rfl
+example : sampleReport = (644, 414, 230, 0) := by native_decide
 
 end BuildBottomUpTests
