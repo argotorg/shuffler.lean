@@ -1,6 +1,7 @@
 name = "shuffler-lean"
 version = "0.1.0"
 defaultTargets = ["Shuffler"]
+testDriver = "Tests"
 
 [[lean_lib]]
 name = "Shuffler"

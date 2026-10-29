@@ -8,4 +8,4 @@ Either run `nix develop` or install [elan](https://github.com/leanprover/elan).
 
 Then run `lake build` to compile the project.
 
-Run `lake build Tests` to check the proofs and regression tests.
+Run `lake test` to run the property tests.
