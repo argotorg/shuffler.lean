@@ -9,6 +9,9 @@ import BbuKraken.Layout
 import BbuKraken.Link
 import BbuKraken.Model
 import BbuKraken.Names
+import BbuKraken.Sep.Atoms
+import BbuKraken.Sep.AtomsTest
+import BbuKraken.Sep.Fields
 import BbuKraken.ModelLemmas
 import BbuKraken.ModelTest
 import BbuKraken.Specs
