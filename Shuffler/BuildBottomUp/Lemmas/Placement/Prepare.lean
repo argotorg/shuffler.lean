@@ -37,7 +37,7 @@ theorem Reserve.prepare {spills : SpillSet} {source target : Stack} {missing : M
   have hboundary : boundary source target missing = {value} := by
     simp [boundary, hmissing, hlarge, f, value, List.getElem?_eq_getElem hindex]
   have hreserve : {value} + seeds spills missing ≤ (window source : Multiset Value) := by
-    simpa only [hboundary] using h.2.2
+    simpa only [hboundary] using h.2.2.1
   have hvalue : value ∈ window source :=
     Multiset.mem_of_le hreserve (by simp)
   have hperm : (window source).Perm (value :: working) := List.perm_cons_erase hvalue

@@ -12,7 +12,7 @@ namespace Shuffler.Generate
 theorem Available.step {source : Stack} {value : Value}
     (h : Available spills source value) :
     ∃ trace : Trace spills source (source ++ [value]), trace.onlyGenerates := by
-  rcases h with hfree | hspill | ⟨pos, hvalue, hreach⟩
+  rcases h with hfree | hspill | ⟨hlabel, pos, hvalue, hreach⟩
   · exact ⟨.Push value hfree (.Lit source), trivial⟩
   · cases value with
     | Var id => exact ⟨.Load id hspill (.Lit source), trivial⟩
@@ -20,7 +20,10 @@ theorem Available.step {source : Stack} {value : Value}
   · subst value
     let depth := source.offsetToDepth pos
     let trace := Trace.Dup (depth.val + 1) (Nat.succ_le_of_lt depth.isLt)
-      (Nat.succ_pos _) (Nat.add_le_add_right hreach 1) (Trace.Lit (spills := spills) source)
+      (Nat.succ_pos _) (Nat.add_le_add_right hreach 1) (by
+        have hi : source.length - (depth.val + 1) = pos.val := by
+          dsimp [depth]; rw [Stack.offsetToDepth_val]; have := pos.isLt; omega
+        simpa only [hi, Fin.getElem_fin] using hlabel) (Trace.Lit (spills := spills) source)
     refine ⟨dup_stack_eq source pos ▸ trace, ?_⟩
     exact (Trace.onlyGenerates_cast _ _).mpr trivial
 
@@ -59,10 +62,11 @@ private theorem Ready.after_append {source missing : Stack} (h : Ready spills so
   by_cases hspill : spills.is_spilled value
   · exact Or.inr (Or.inl hspill)
   apply Or.inr ∘ Or.inr
+  refine ⟨hcopy.1, ?_⟩
   by_cases he : value = chosen
   · subst value
     exact Shuffler.Emission.hasCopy_append_new source chosen
-  have hc : Stack.hasCopy source value := hcopy
+  have hc : Stack.hasCopy source value := hcopy.2
   obtain ⟨pos, hp, hr⟩ := hc.shallowest
   have hd : (source.offsetToDepth pos).val ≠ MAX_DUP_DEPTH := by
     intro hd

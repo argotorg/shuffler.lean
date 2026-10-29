@@ -65,13 +65,17 @@ theorem Swapped.invariant {state next : State source target spills}
     {pos : Fin state.stack.length} (h : Swapped state next pos)
     (inv : state.invariant cursor) (hpos : cursor ≤ pos.val) : next.invariant cursor := by
   refine .of ?_ (by rw [h.size, h.pending]; exact inv.size)
-    (by rw [h.count, h.pending]; exact inv.pending) ?_
+    (by rw [h.count, h.pending]; exact inv.pending) ?_ ?_
   · intro i hi
     simpa only [State.exists_isFinal_iff, i.isLt, dite_true, h.mapping] using
       state.swapDestinations_isFinal pos ⟨state.stack.length - 1, by have := pos.isLt; omega⟩
         i (inv.processed i hi) (by omega) (by have := pos.isLt; dsimp; omega)
   · intro i
     exact state.isAvailable_of_subset next h.subset i (inv.available i)
+  · intro j hj
+    have he := congrArg Option.isSome (h.mapping j)
+    simpa [Mapping.swapDestinations_symm_apply] using he.trans (by
+      simpa using inv.labels_bound j hj)
 
 theorem Swapped.bound_top {state next : State source target spills}
     {pos : Fin state.stack.length} (h : Swapped state next pos) (dest : Fin target.length)

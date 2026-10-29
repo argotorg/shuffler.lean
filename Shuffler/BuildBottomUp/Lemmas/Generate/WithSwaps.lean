@@ -24,7 +24,7 @@ theorem CanGenerate.ready (h : CanGenerate spills source missing) :
   have hseeds : seeds spills missing ≤ (window source : Multiset Value) := by
     obtain ⟨trace, hnoPop, rfl⟩ := hplan
     exact seeds_le_window trace hnoPop
-  refine ⟨hseeds, ?_⟩
+  refine ⟨hseeds, ?_, hreserve.2.2.2⟩
   by_cases hz : missing = 0
   · simp [hz, seeds]
   by_cases hsmall : source.length ≤ MAX_DUP_DEPTH + 1
@@ -52,7 +52,7 @@ theorem Ready.canGenerate (h : Ready spills source missing) :
       unfold MAX_SWAP_DEPTH MAX_DUP_DEPTH at *
       omega
     refine ⟨source ++ missing.toList, Reserve.canPlace ?_⟩
-    refine ⟨?_, by simp [hf], ?_⟩
+    refine ⟨?_, by simp [hf], ?_, h.2.2⟩
     · simp only [← Multiset.coe_add, Multiset.coe_toList]
     · simpa [boundary, hlarge, hf, window] using h.1
   · have hlarge : MAX_SWAP_DEPTH + 1 ≤ source.length := by
@@ -65,7 +65,7 @@ theorem Ready.canGenerate (h : Ready spills source missing) :
       intro he
       have hc := congrArg Multiset.card he
       simp only [Multiset.coe_card, hwindow] at hc
-      have := h.2
+      have := h.2.1
       unfold MAX_SWAP_DEPTH MAX_DUP_DEPTH at *
       omega
     obtain ⟨value, hreserve⟩ := Multiset.lt_iff_cons_le.mp (lt_of_le_of_ne h.1 hne)
@@ -94,7 +94,7 @@ theorem Ready.canGenerate (h : Ready spills source missing) :
         Multiset Value) = {value}
       rw [← hfixed]
       simp
-    refine ⟨target, Reserve.canPlace ⟨hbalance, hprefix, ?_⟩⟩
+    refine ⟨target, Reserve.canPlace ⟨hbalance, hprefix, ?_, h.2.2⟩⟩
     simpa only [hboundary, Multiset.singleton_add] using hreserve
 
 end Shuffler.Generate.WithSwaps

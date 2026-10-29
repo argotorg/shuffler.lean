@@ -14,7 +14,8 @@ theorem run_spec (source target : Stack) (mapping : Mapping source.length target
     (spills : SpillSet)
     (havailable : ∀ j : Fin target.length, target[j].can_be_freely_generated ∨
       spills.is_spilled target[j] ∨
-      ∃ i dest, mapping i = some dest ∧ source[i] = target[j]) :
+      ∃ i dest, mapping i = some dest ∧ source[i] = target[j])
+    (hlabels : ∀ j : Fin target.length, target[j].isFunctionReturnLabel → (mapping.symm j).isSome) :
     ∃ result, run source target mapping spills = .ok result ∧
       result.state.planned_mapping = mapping ∧ result.Positive := by
   let initial : State source target spills := {
@@ -69,10 +70,16 @@ theorem run_spec (source target : Stack) (mapping : Mapping source.length target
           simp only [State.boundValue, initial, Mapping.positionOf,
             mapping.eq_some_iff.mpr hb, Option.map_some]
           exact congrArg some hv
+      have hlabels' : ∀ j : Fin target.length,
+          target[j].isFunctionReturnLabel → (permuted.state.mapping.symm j).isSome := by
+        intro j hj
+        rw [← boundValue_isSome, hbound, boundValue_isSome]
+        exact hlabels j hj
       rw [requires_of_true _ hsize, except_ok_bind,
-        requires_of_true _ hpending, except_ok_bind, requires_of_true _ havailable, except_ok_bind]
+        requires_of_true _ hpending, except_ok_bind, requires_of_true _ havailable, except_ok_bind,
+        requires_of_true _ (by simpa only [Fin.getElem_fin] using hlabels'), except_ok_bind]
       obtain ⟨result, hb, hbpositive, hbplan⟩ :=
-        buildBottomUp_ok permuted.state ⟨hsize, hpending, havailable⟩
+        buildBottomUp_ok permuted.state ⟨hsize, hpending, havailable, hlabels'⟩
       exact ⟨result, hb, hbplan.trans (hpplan.trans hrplan), hbpositive⟩
 
 end Shuffler.Emission

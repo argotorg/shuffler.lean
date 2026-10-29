@@ -34,7 +34,8 @@ namespace Shuffler.Placement
 
 /-- The central equivalence: Reserve holds exactly when a production trace
 reaches this fixed concrete target with exactly the fixed missing multiset.
-The trace may use SWAP, DUP, PUSH, and LOAD, but no POP or extra additions. -/
+The trace may use SWAP, DUP, PUSH, and LOAD, but no POP or extra additions.
+Function return labels cannot be added. -/
 theorem canPlace_iff_reserve (spills : SpillSet) (source target : Stack)
     (missing : Multiset Value) :
     CanPlace spills source target missing ↔ Reserve spills source target missing :=
@@ -79,6 +80,7 @@ namespace Shuffler.Generate
 /-- Permit only DUP, PUSH, and LOAD. The original source remains a prefix,
 followed by exactly the missing values in any order. Each requested value
 must initially be within DUP reach, or be available through PUSH or LOAD.
+Function return labels cannot be added.
 General placement permits SWAP, so it does not guarantee success under this
 stricter operation constraint. -/
 theorem canGenerate_iff_ready (spills : SpillSet) (source missing : Stack) :
@@ -92,7 +94,8 @@ namespace Shuffler.Generate.WithSwaps
 /-- A consequence of exact placement with no required final order. SWAP,
 DUP, PUSH, and LOAD may add exactly the missing multiset. Each distinct
 needed nonfree kind must occur in the initial top 17 slots, and there must
-be at most 16 such kinds. Repeated demand for one kind needs only one seed. -/
+be at most 16 such kinds. Repeated demand for one kind needs only one seed.
+Function return labels cannot be added. -/
 theorem canGenerate_iff_ready (spills : SpillSet) (source : Stack) (missing : Multiset Value) :
     CanGenerate spills source missing ↔ Ready spills source missing :=
   ⟨CanGenerate.ready, Ready.canGenerate⟩

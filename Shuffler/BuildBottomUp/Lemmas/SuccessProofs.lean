@@ -154,7 +154,7 @@ theorem loop_success (cursor : ℕ) (state : State source target spills)
       simpa [Mapping.positionOf, hlt, u] using hnone
     have hready : Ready state u := (hu.selected u.val (Option.some_get hurg.1).symm).ready
     apply (generate_reachable state u hb (inv.available u) hr
-      (inv.processed.unbound_ge u hb) hready).attach.bind
+      (inv.processed.unbound_ge u hb) hready (inv.not_label_of_unbound u hb)).attach.bind
     rintro next ⟨hg, hcopies, _⟩
     apply retry _ (hg.invariant inv) ⟨?_, hcopies⟩ (hg.decreases inv)
     have := hg.size
@@ -170,7 +170,7 @@ theorem loop_success (cursor : ℕ) (state : State source target spills)
     have hn : urgent = none := Option.isNone_iff_eq_none.mp hA.1
     have hready : Ready state top := (hn ▸ hu).ready_none inv.processed hB.2 top
     apply (generate_reachable state top hb (inv.available top) hr
-      (Nat.le_of_lt hA.2.1) hready).attach.bind
+      (Nat.le_of_lt hA.2.1) hready (inv.not_label_of_unbound top hb)).attach.bind
     rintro next ⟨hg, hcopies, _⟩
     apply retry _ (hg.invariant inv) ⟨?_, hcopies⟩ (hg.decreases inv)
     have := hg.size
@@ -183,7 +183,7 @@ theorem loop_success (cursor : ℕ) (state : State source target spills)
     have hb : state.mapping.symm dest = none := hpos
     simp_loop
     apply (generate_reachable state dest hb (inv.available dest) hr le_rfl
-      (hu.ready_cursor inv.processed hr hc hurg)).bind
+      (hu.ready_cursor inv.processed hr hc hurg) (inv.not_label_of_unbound dest hb)).bind
     rintro next ⟨hg, hcopies, hf⟩
     have hfinal := hf (inv.cursor_le_length hc)
     change (∃ h, next.isFinal ⟨cursor, h⟩) at hfinal

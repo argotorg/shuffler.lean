@@ -10,8 +10,10 @@ private instance (state : State source target spills) : Decidable state.Valid :=
   decidable_of_iff
     (state.stack.length + state.pending_generations = target.length ∧
       state.mapping.unmapped_target_slots = state.pending_generations ∧
-      ∀ j, state.isAvailable j)
-    ⟨fun ⟨hs, hp, ha⟩ => ⟨hs, hp, ha⟩, fun h => ⟨h.size, h.pending, h.available⟩⟩
+      (∀ j, state.isAvailable j) ∧
+      ∀ j, target[j].isFunctionReturnLabel → (state.mapping.symm j).isSome)
+    ⟨fun ⟨hs, hp, ha, hl⟩ => ⟨hs, hp, ha, hl⟩,
+      fun h => ⟨h.size, h.pending, h.available, h.labels_bound⟩⟩
 
 private def succeeds (state : State source target spills) (h : state.Valid) : Bool :=
   match ((((buildBottomUp state h) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
@@ -51,7 +53,7 @@ private def emptyState : State [] [] ∅ where
   mapping := ⊥
   pending_generations := 0
 
-private theorem emptyState_valid : emptyState.Valid := ⟨by decide, by decide, by decide⟩
+private theorem emptyState_valid : emptyState.Valid := ⟨by decide, by decide, by decide, by decide⟩
 example : decide (StaticSuccess emptyState) = true := by native_decide
 example : (((((buildBottomUp emptyState emptyState_valid) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
   if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>

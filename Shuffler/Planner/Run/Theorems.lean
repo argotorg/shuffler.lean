@@ -17,9 +17,10 @@ namespace Shuffler.Planner
 theorem run_ok (source target : Stack) (spills : SpillSet) (spillingAllowed : Bool)
     (strategy : BuildMapping.WildcardSlotsStrategy)
     (havailable : ∀ value ∈ target, value.is_junk ∨ value.can_be_freely_generated ∨
-      value ∈ source ∨ spills.is_spilled value) :
+      value ∈ source ∨ spills.is_spilled value)
+    (hlabels : target.count .FunctionReturnLabel ≤ source.count .FunctionReturnLabel) :
     ∃ result, run source target spills spillingAllowed strategy = .ok result := by
-  obtain ⟨result, hr, _⟩ := run_spec source target spills spillingAllowed strategy havailable
+  obtain ⟨result, hr, _⟩ := run_spec source target spills spillingAllowed strategy havailable hlabels
   exact ⟨result, hr⟩
 
 -- The target checks and the progress check hold on every attempt.
@@ -27,9 +28,10 @@ theorem run_no_assertion (source target : Stack) (spills : SpillSet) (spillingAl
     (strategy : BuildMapping.WildcardSlotsStrategy)
     (havailable : ∀ value ∈ target, value.is_junk ∨ value.can_be_freely_generated ∨
       value ∈ source ∨ spills.is_spilled value)
+    (hlabels : target.count .FunctionReturnLabel ≤ source.count .FunctionReturnLabel)
     (reason : String) :
     run source target spills spillingAllowed strategy ≠ .error (.assertion reason) := by
-  obtain ⟨result, hr⟩ := run_ok source target spills spillingAllowed strategy havailable
+  obtain ⟨result, hr⟩ := run_ok source target spills spillingAllowed strategy havailable hlabels
   rw [hr]
   intro he
   cases he
