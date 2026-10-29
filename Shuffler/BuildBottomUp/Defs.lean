@@ -203,9 +203,9 @@ where
         -- generate it
         let ⟨result, _hgen⟩ ← (state.generate (urgentToDup.get h.1)).attach
         if result.blocked.isSome then return result
-        let next := result.state
+        state := result.state
         -- and revisit the current target in the next iteration
-        return ← loop targetOffset next
+        return ← loop targetOffset state
 
     -- a slot whose offset is exactly where the result of a dup would end up is in place for free,
     -- as long as nothing is urgent and targetOffset stays in reach for the slot generated after it
@@ -220,9 +220,9 @@ where
         -- we generate the slot demanded at source top
         let ⟨result, _hgen⟩ ← (state.generate sourceTop).attach
         if result.blocked.isSome then return result
-        let next := result.state
+        state := result.state
         -- revisit target offset
-        return ← loop targetOffset next
+        return ← loop targetOffset state
 
     -- a slot is bound for the target: retained or generated already
     if let some boundForTarget := state.mapping.positionOf (← index target.length targetOffset) then
