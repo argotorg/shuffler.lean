@@ -11,6 +11,7 @@ The tool runs `kvcgen64` on `WP.wp body (fun _ => Q) E s` with `s`, `Q` and
 whose target is `E a t` is a jump to `a` (a label, or `t.retAddr.get!` for
 `ret`). The hypotheses that `vcgen` adds on the way are the path condition.
 The other goals are side conditions (loads, flags); the tool counts them.
+An exit that the normalization tactic closes is dead: it gets no defs.
 
 The state is the state of the VC that the proof will see, after the same
 normalization tactic, so the printed def matches that goal up to `rfl`.
@@ -214,9 +215,9 @@ def runBlock (body : Expr) (norm : TSyntax `Lean.Parser.Tactic.tacticSeq) :
         if ← isProp d.type then hs := hs.push d.fvarId
       return hs
     let (_, g1) ← g.revert newHyps
-    let gs' ← Tactic.run g1 (evalTactic (← `(tactic| ($norm))))
+    let gs' ← Tactic.run g1 (evalTactic (← `(tactic| try ($norm))))
     let some g2 := gs'.head? | exits := exits.push ⟨"dead", #[], #[], s⟩; continue
-    let (hs, g3) ← g2.introN newHyps.size
+    let (hs, g3) ← g2.intros
     let ex ← g3.withContext do
       let t ← instantiateMVars (← g3.getType)
       let conds ← hs.mapM fun h => do instantiateMVars (← h.getType)
@@ -260,7 +261,12 @@ syntax (name := symexecCmd) "#symexec " ident " from " str (" using " tacticSeq)
     let norm ← match norm? with
       | some n => pure n
       | none => `(Lean.Parser.Tactic.tacticSeq| symexec_norm)
-    let (exits, side) ← runBlock bodyE norm
+    -- `vcgen` needs the scoped instances of these namespaces; open them for this block only
+    Lean.pushScope
+    let (exits, side) ← try
+        for ns in [`Std.WP, `Lean.Order, `Program.WP] do Lean.activateScoped ns
+        runBlock bodyE norm
+      finally Lean.popScope
     let base := s!"{pn}.{lbl.replace "." ""}"
     let mut out := s!"-- #symexec {pn} from \"{lbl}\": {body.size} instructions, " ++
       s!"{exits.size} exits, side goals {side.toList}\n"
@@ -270,6 +276,7 @@ syntax (name := symexecCmd) "#symexec " ident " from " str (" using " tacticSeq)
       i := i + 1
       let nm := s!"{base}.x{i}"
       out := out ++ s!"\n-- exit {i}: {ex.kind}\n"
+      if ex.kind == "dead" then continue
       let mut j := 0
       for c in ex.conds do
         j := j + 1

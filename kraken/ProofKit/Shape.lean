@@ -55,18 +55,22 @@ def vcKind (g : MVarId) : MetaM VcKind := g.withContext do
         if h.isConstOf ``Mem.loadInt then return .load
         if h.isConstOf ``MachineData.retAddr then return .retAddr
   match_expr t with
-  | Program.Intercept _ _ _ _ _ a _ =>
+  | Program.Intercept _ ls _ _ _ a _ =>
     match_expr a with
     | Labels.label _ l =>
-      if let some s ← strLit? l then return .goto s else return .jumpOut
+      let some s ← strLit? l | return .jumpOut
+      -- a label that is not in `ls` is outside the cfg
+      if let some (_, es) := ls.listLit? then
+        unless (← es.mapM strLit?).contains (some s) do return .jumpOut
+      return .goto s
     | Option.get! _ _ x =>
       if x.isAppOfArity ``MachineData.retAddr 1 then return .ret else return .jumpOut
     | _ => return .jumpOut
-  | And p _ =>
+  | And _ _ =>
     -- `I b s ∧ Program.Decreases ...` as `Program.WP.cfg` gives it for a fall-through
     if (← instantiateMVars t).find? (fun e => e.isAppOf ``Program.Decreases) |>.isSome then
       return .fall
-    if p.hasFVar then return .other
+    if t.hasFVar || t.hasMVar then return .other
     return .closed
   | _ =>
     if !t.hasFVar && !t.hasMVar then return .closed

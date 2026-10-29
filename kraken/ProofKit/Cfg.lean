@@ -85,8 +85,10 @@ def armMatches (kind : Name) (l? : Option String) (k : VcKind) : Bool :=
     | some (_, _, tac) =>
       setGoals [g]
       let tag := (← g.getTag)
-      try evalTactic tac
-      catch e => throwError "vc_by_shape: the tactic for the {k.name} goal {tag} fails:\n{e.toMessageData}"
+      -- not backtracking: an abort (`.internal`) keeps the error that the tactic logged
+      Tactic.tryCatch (evalTactic tac) fun e => do
+        if e matches .internal .. then throw e
+        throwError "vc_by_shape: the tactic for the {k.name} goal {tag} fails:\n{e.toMessageData}"
       out := out ++ (← getUnsolvedGoals)
   setGoals out.toList
 
@@ -101,9 +103,10 @@ partial def strLits (e : Expr) (acc : Array String := #[]) : Array String :=
   | _ => acc
 
 /-- `#cfg_skeleton p`: print a `Program.WP.cfg` proof for `p` with a hole
-(`sorry`) for the invariant of each block, a hole for the variant of each
-label on a cycle of the block graph (jumps and fall-throughs) or that a block
-at or after it jumps to, and one `case` per block. The other labels get the
+(`sorry`) for the invariant of each block, a hole for the proof of the entry
+invariant, a hole for the variant of each label that is on a cycle of the block
+graph (jumps and fall-throughs), that a block at or after it jumps to, or that
+reaches such a label, and one `case` per block. The other labels get the
 variant `0`: on each edge into them the block index increases. -/
 syntax (name := cfgSkeleton) "#cfg_skeleton " ident : command
 
@@ -124,9 +127,8 @@ syntax (name := cfgSkeleton) "#cfg_skeleton " ident : command
       (d.find? fun e => e.isConstOf ``Operation.jmp || e.isConstOf ``Operation.ret).isSome
     let succ := (bs.zip targets).zipIdx.map fun (((_, body), ts), i) =>
       ts.map idx ++ (if ends body || i + 1 ≥ bs.size then #[] else #[i + 1])
-    -- a label needs a variant if it is on a cycle (it reaches itself), or if a
-    -- block at or after it jumps to it
-    let reach (i : Nat) : Bool := Id.run do
+    -- the blocks that block `i` reaches
+    let reach (i : Nat) : Array Nat := Id.run do
       let mut seen : Array Nat := #[]
       let mut todo := succ[i]!.toList
       for _ in [0:bs.size * bs.size + 1] do
@@ -137,16 +139,20 @@ syntax (name := cfgSkeleton) "#cfg_skeleton " ident : command
           if seen.contains j then continue
           seen := seen.push j
           todo := todo ++ succ[j]!.toList
-      return seen.contains i
+      return seen
+    -- a label needs a variant if it is on a cycle (it reaches itself), if a
+    -- block at or after it jumps to it, or if it reaches such a label
     let backTarget (l : String) := (targets.zipIdx.any fun (ts, j) => j ≥ idx l && ts.contains l)
-    let back := labels.filter fun l => reach (idx l) || backTarget l
+    let back0 := labels.filter fun l => (reach (idx l)).contains (idx l) || backTarget l
+    let back := labels.filter fun l =>
+      back0.contains l || (reach (idx l)).any fun j => back0.any (idx · == j)
     let q (s : String) := s!"\"{s}\""
     let mut out := "refine Program.WP.cfg (fun\n    | .entry, t => sorry\n"
     for l in labels do
       out := out ++ s!"    | .label {q l}, t => sorry\n"
     out := out ++ "    | _, _ => False)\n"
     let var := back.foldl (fun acc l => acc ++ s!"    | {q l}, _ => sorry\n") "  (fun\n"
-    out := out ++ s!"{var}    | _, _ => 0) ?_ rfl\ncfg_blocks\n"
+    out := out ++ s!"{var}    | _, _ => 0) ?_ sorry\ncfg_blocks\n"
     for ((l?, body), ts) in bs.zip targets do
       let n := l?.getD "entry"
       let ts := ts.toList.map q

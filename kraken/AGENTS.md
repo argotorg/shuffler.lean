@@ -151,7 +151,7 @@ checks the result.
 | `cfg_goto` | A jump to a label of the cfg. It leaves three goals: the stack, the invariant of the label, the variant. |
 | `cfg_stk` | The stack goal of `cfg_goto` when `rsp` is below the `rsp` at entry. |
 | `vc_by_shape \| kind => tac …` | Runs `tac` on each goal of that kind. The kinds are `load`, `retAddr`, `goto "L"`, `ret`, `jumpOut`, `fall`, `closed`, `other`. The first arm that matches is used. A goal that no arm matches stays. A tactic failure is an error that gives the kind and the tag. |
-| `#cfg_skeleton p` | Prints a `Program.WP.cfg` proof for `p` with a `sorry` for each invariant, each variant hole and each block. It marks a label that is on a cycle as a variant hole. |
+| `#cfg_skeleton p` | Prints a `Program.WP.cfg` proof for `p` with a `sorry` for each invariant, each variant hole and each block. A label gets a variant hole if it is on a cycle, if a block at or after it jumps to it, or if it reaches such a label. The entry proof is a `sorry` too. |
 
 Notes:
 - `kvcgen64` splits `I ∧ Decreases`, so the parts of a fall-through show as `other` and `closed`,
