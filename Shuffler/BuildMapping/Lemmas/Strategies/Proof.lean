@@ -1,6 +1,10 @@
+module
+
+public import Shuffler.BuildMapping.Lemmas.Strategies.Compare
 import Shuffler.BuildMapping.Lemmas.Strategies.Prefix
 import Shuffler.BuildMapping.Lemmas.Strategies.Suffix
-import Shuffler.BuildMapping.Lemmas.Strategies.Compare
+
+@[expose] public section
 
 namespace Shuffler.BuildMapping.Strategies
 

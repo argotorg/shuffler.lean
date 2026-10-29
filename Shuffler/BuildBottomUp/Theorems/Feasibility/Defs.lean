@@ -1,4 +1,9 @@
-import Shuffler.Trace
+module
+
+public import Shuffler.Trace
+public import Mathlib.Data.Finset.Filter
+
+@[expose] public section
 
 /-!
 Definitions for the feasibility statements in `Theorems.lean`. The instruction

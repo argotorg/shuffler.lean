@@ -1,5 +1,10 @@
-import Shuffler.BuildBottomUp.Lemmas.StaticCompletion
+module
+
+public import Shuffler.BuildBottomUp.Lemmas.StaticCompletion
+public import Shuffler.BuildBottomUp.Lemmas.ReachActions
 import Shuffler.BuildBottomUp.Lemmas.StaticTerminal
+
+@[expose] public section
 
 namespace Shuffler.Emission
 

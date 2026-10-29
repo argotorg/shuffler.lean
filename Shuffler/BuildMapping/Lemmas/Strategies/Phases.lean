@@ -1,4 +1,8 @@
-import Shuffler.BuildMapping.Defs
+module
+
+public import Shuffler.BuildMapping.Defs
+
+@[expose] public section
 
 namespace Shuffler.BuildMapping.MappingBuilder
 

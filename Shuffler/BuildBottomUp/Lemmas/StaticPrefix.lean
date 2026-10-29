@@ -1,4 +1,13 @@
-import Shuffler.BuildBottomUp.Lemmas.StaticPermutation
+module
+
+public import Shuffler.BuildBottomUp.Lemmas.ReachActions
+import Shuffler.BuildBottomUp.Lemmas.Invariants
+import Shuffler.BuildBottomUp.Lemmas.LoopProofs
+import Shuffler.BuildBottomUp.Lemmas.NecessityProofs
+import Shuffler.BuildBottomUp.Lemmas.ReachScan
+import Shuffler.BuildBottomUp.Lemmas.SuccessProofs
+
+@[expose] public section
 
 open Std.WP
 

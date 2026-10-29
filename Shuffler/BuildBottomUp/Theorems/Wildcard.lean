@@ -1,5 +1,10 @@
-import Shuffler.Stack
+module
+
+public import Shuffler.BuildBottomUp.Defs
+import Shuffler.BuildBottomUp.Theorems.Correctness
 import Shuffler.BuildBottomUp.Theorems.Static
+
+@[expose] public section
 
 namespace Shuffler.Emission
 

@@ -1,4 +1,8 @@
-import Shuffler.Permute.Defs
+module
+
+public import Shuffler.Permute.Defs
+
+@[expose] public section
 
 namespace Shuffler.Permute.Permutation
 

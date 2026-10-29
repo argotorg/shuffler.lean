@@ -1,4 +1,8 @@
-import Mathlib.GroupTheory.Perm.Cycle.Basic
+module
+
+public import Mathlib.GroupTheory.Perm.Cycle.Basic
+
+@[expose] public section
 
 open Equiv
 namespace Shuffler.Emission

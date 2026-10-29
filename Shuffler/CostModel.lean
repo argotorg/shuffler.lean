@@ -1,4 +1,8 @@
-import Shuffler.Trace
+module
+
+public import Shuffler.Trace
+
+@[expose] public section
 
 /-!
 Costs for traces with a fixed spill set and source stack. Placement fixes the

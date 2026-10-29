@@ -1,5 +1,12 @@
-import Shuffler.BuildBottomUp.Theorems.Correctness
+module
+
+public import Shuffler.BuildBottomUp.Defs
+import Shuffler.BuildBottomUp.Lemmas.Invariants
 import Shuffler.BuildBottomUp.Lemmas.NecessityProofs
+import Shuffler.BuildBottomUp.Lemmas.SuccessProofs
+import Shuffler.BuildBottomUp.Theorems.Correctness
+
+@[expose] public section
 
 namespace Shuffler.Emission
 

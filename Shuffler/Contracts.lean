@@ -1,4 +1,11 @@
-import Shuffler.Basic
+module
+
+public import Shuffler.Basic
+import Mathlib.Data.Finset.Attr
+import Mathlib.Tactic.Finiteness.Attr
+import Mathlib.Tactic.SetLike
+
+@[expose] public section
 
 -- Runtime checks shared by BuildBottomUp and BuildMapping.
 -- The definitions check conditions at runtime with `requires`; separate theorems prove that the

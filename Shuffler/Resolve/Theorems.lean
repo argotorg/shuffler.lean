@@ -1,7 +1,15 @@
+module
+
+import all Batteries.Tactic.PrintOpaques
+
+import all Init.Data.Nat.Bitwise.Basic
+public import Shuffler.Resolve.Defs
+public import Shuffler.Resolve.Properties
 import Shuffler.Resolve.Lemmas
 import Shuffler.Resolve.Lemmas.Preservation
 import Shuffler.Resolve.Lemmas.Progress
-import Batteries.Tactic.PrintOpaques
+
+@[expose] public section
 
 open Std.Do
 

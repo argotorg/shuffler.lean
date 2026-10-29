@@ -1,9 +1,17 @@
-import Shuffler.BuildBottomUp.Lemmas.Placement.Necessity
-import Shuffler.BuildBottomUp.Lemmas.Placement.Sufficiency
+module
+
+public import Shuffler.BuildBottomUp.Theorems.Feasibility.Defs
+import Mathlib.Algebra.Order.Group.Multiset
+import Mathlib.Tactic.NormNum.Ineq
+import Mathlib.Tactic.NormNum.Pow
 import Shuffler.BuildBottomUp.Lemmas.Generate.Necessity
 import Shuffler.BuildBottomUp.Lemmas.Generate.Sufficiency
 import Shuffler.BuildBottomUp.Lemmas.Generate.WithSwaps
-import Shuffler.Stack
+import Shuffler.BuildBottomUp.Lemmas.Placement.Necessity
+import Shuffler.BuildBottomUp.Lemmas.Placement.Sufficiency
+import Shuffler.BuildBottomUp.Lemmas.Placement.TraceInvariants
+
+@[expose] public section
 
 /-!
 The definitions are in `Defs.lean`.

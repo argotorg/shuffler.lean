@@ -1,5 +1,12 @@
+module
+
+public import Shuffler.BuildBottomUp.Defs
+public import Shuffler.Emission.Lemmas
 import Shuffler.BuildBottomUp.Lemmas.Invariants
 import Shuffler.BuildBottomUp.Lemmas.Values
+import Std.WP.Triple.SpecLemmas
+
+@[expose] public section
 
 open Std.WP
 

@@ -1,6 +1,11 @@
-import Shuffler.Resolve.Properties
-import Std.WP
-import Std.Tactic.Do
+module
+
+public import Shuffler.Resolve.Properties
+public import Shuffler.Resolve.Defs
+import Shuffler.Resolve.Lemmas
+import Std.WP.Triple.SpecLemmas
+
+@[expose] public section
 
 open Std.WP
 

@@ -1,5 +1,14 @@
-import Shuffler.BuildBottomUp.Lemmas.Placement.Resources
+module
+
+public import Shuffler.BuildBottomUp.Theorems.Feasibility.Defs
+import Mathlib.Algebra.Order.Group.Multiset
+import Mathlib.Tactic.NormNum.Ineq
+import Mathlib.Tactic.NormNum.Pow
+import Shuffler.BuildBottomUp.Lemmas.Placement.Basic
 import Shuffler.BuildBottomUp.Lemmas.Placement.Permute
+import Shuffler.BuildBottomUp.Lemmas.Placement.Resources
+
+@[expose] public section
 
 namespace Shuffler.Placement
 

@@ -1,4 +1,8 @@
-import Shuffler.BuildMapping.Lemmas.Basic
+module
+
+public import Shuffler.BuildMapping.Lemmas.Basic
+
+@[expose] public section
 
 namespace Shuffler.BuildMapping
 

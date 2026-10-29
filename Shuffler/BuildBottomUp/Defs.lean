@@ -1,13 +1,11 @@
-import Mathlib.Data.Finset.Sort
-import Shuffler.Contracts
-import Shuffler.Emission.Defs
-import Shuffler.Mapping
-import Shuffler.Permute.Defs
-import Shuffler.Stack
-import Shuffler.Trace
-import Shuffler.Util
-import Std.WP
-import Std.Tactic.Do
+module
+
+public import Shuffler.Emission.Defs
+public import Shuffler.Permute.Defs
+public import Shuffler.Util
+import Std.WP.Triple.SpecLemmas
+
+@[expose] public section
 
 namespace Shuffler.Emission
 

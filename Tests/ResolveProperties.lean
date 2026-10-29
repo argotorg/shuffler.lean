@@ -1,4 +1,5 @@
 import Shuffler.Resolve.Properties
+import Shuffler.Resolve.Defs
 import Mathlib.Tactic.FinCases
 
 namespace ResolvePropertyTests

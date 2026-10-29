@@ -1,6 +1,13 @@
-import Mathlib.Data.Nat.Notation
-import Mathlib.Data.Finset.Basic
-import Batteries.Data.List.Basic
+module
+
+public import Mathlib.Data.Nat.Notation
+public import Aesop.BuiltinRules
+public import Mathlib.Tactic.Attr.Core
+import Mathlib.Data.Finset.Attr
+import Mathlib.Tactic.Finiteness.Attr
+import Mathlib.Tactic.SetLike
+
+@[expose] public section
 
 -- Zero indexed from the top of the stack.
 def MAX_SWAP_DEPTH := 16

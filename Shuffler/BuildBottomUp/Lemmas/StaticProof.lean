@@ -1,5 +1,15 @@
-import Shuffler.BuildBottomUp.Lemmas.StaticTransition
+module
+
+public import Shuffler.BuildBottomUp.Lemmas.ReachActions
+public import Shuffler.BuildBottomUp.Lemmas.StaticInvariant
+public import Shuffler.BuildBottomUp.Lemmas.StaticSuffix
+import Shuffler.BuildBottomUp.Lemmas.NecessityProofs
+import Shuffler.BuildBottomUp.Lemmas.StaticData
 import Shuffler.BuildBottomUp.Lemmas.StaticTerminalCondition
+import Shuffler.BuildBottomUp.Lemmas.StaticTransition
+import Shuffler.BuildBottomUp.Lemmas.SuccessProofs
+
+@[expose] public section
 
 namespace Shuffler.Emission
 

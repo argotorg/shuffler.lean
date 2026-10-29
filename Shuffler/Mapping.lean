@@ -1,7 +1,11 @@
-import Mathlib.Basic.PEquiv
-import Mathlib.Logic.Equiv.Basic
+module
+
+public import Mathlib.Basic.PEquiv
+public import Mathlib.Data.Finset.Card
+public import Mathlib.Data.Fintype.Basic
 import Mathlib.Data.Fintype.EquivFin
-import Mathlib.Data.Finset.Card
+
+@[expose] public section
 
 -- A Mapping is a partial bijection between source positions and target positions.
 abbrev Mapping (source_len target_len : ℕ) := PEquiv (Fin source_len) (Fin target_len)

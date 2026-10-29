@@ -1,8 +1,18 @@
-import Shuffler.BuildBottomUp.Theorems.Safety
-import Shuffler.BuildBottomUp.Theorems.Static
-import Shuffler.BuildBottomUp.Theorems.Reachability
-import Shuffler.BuildBottomUp.Theorems.Small
-import Batteries.Tactic.PrintOpaques
+module
+
+import all Shuffler.BuildBottomUp.Theorems.Safety
+import all Shuffler.BuildBottomUp.Theorems.Static
+import all Shuffler.BuildBottomUp.Theorems.Reachability
+import all Shuffler.BuildBottomUp.Theorems.Small
+import all Batteries.Tactic.PrintOpaques
+
+import all Init.Data.Nat.Bitwise.Basic
+import all Init.Data.Repr
+import all Init.Data.Range.Basic
+
+import all Init.Prelude
+
+@[expose] public section
 
 namespace Shuffler.Emission
 

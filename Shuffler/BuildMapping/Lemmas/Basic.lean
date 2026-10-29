@@ -1,4 +1,8 @@
-import Shuffler.BuildMapping.Lemmas.Strategies.Phases
+module
+
+public import Shuffler.BuildMapping.Lemmas.Strategies.Phases
+
+@[expose] public section
 
 namespace Shuffler.BuildMapping
 

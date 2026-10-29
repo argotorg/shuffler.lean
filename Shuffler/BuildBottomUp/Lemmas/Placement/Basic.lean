@@ -1,4 +1,8 @@
-import Shuffler.BuildBottomUp.Theorems.Feasibility.Defs
+module
+
+public import Shuffler.BuildBottomUp.Theorems.Feasibility.Defs
+
+@[expose] public section
 
 theorem Trace.noPop_cast (h : result = other) (trace : Trace spills source result) :
     (h ▸ trace).noPop ↔ trace.noPop := by cases h; rfl

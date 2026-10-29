@@ -1,4 +1,10 @@
-import Shuffler.BuildBottomUp.Lemmas.HelperProofs
+module
+
+public import Shuffler.BuildBottomUp.Lemmas.HelperProofs
+import Shuffler.BuildBottomUp.Lemmas.Invariants
+import Shuffler.BuildBottomUp.Lemmas.Values
+
+@[expose] public section
 
 -- These equations do not depend on the order of the two subtractions in the
 -- implementation of offsetToDepth.

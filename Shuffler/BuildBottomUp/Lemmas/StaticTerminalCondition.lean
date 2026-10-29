@@ -1,7 +1,16 @@
-import Shuffler.BuildBottomUp.Lemmas.StaticSuffix
+module
+
+public import Shuffler.BuildBottomUp.Lemmas.StaticSuffix
+public import Shuffler.BuildBottomUp.Lemmas.ReachActions
+public import Shuffler.BuildBottomUp.Lemmas.StaticInvariant
+import Shuffler.BuildBottomUp.Lemmas.Invariants
 import Shuffler.BuildBottomUp.Lemmas.StaticCopyBridge
+import Shuffler.BuildBottomUp.Lemmas.StaticCounts
 import Shuffler.BuildBottomUp.Lemmas.StaticCycleBridge
+import Shuffler.BuildBottomUp.Lemmas.StaticData
 import Shuffler.BuildBottomUp.Lemmas.StaticNoGeneration
+
+@[expose] public section
 
 namespace Shuffler.Emission.Success
 

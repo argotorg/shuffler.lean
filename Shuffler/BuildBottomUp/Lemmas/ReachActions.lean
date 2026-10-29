@@ -1,4 +1,10 @@
-import Shuffler.BuildBottomUp.Lemmas.Reachability
+module
+
+public import Shuffler.BuildBottomUp.Lemmas.Reachability
+import Shuffler.BuildBottomUp.Lemmas.Invariants
+import Std.WP.Triple.SpecLemmas
+
+@[expose] public section
 
 open Std.WP
 

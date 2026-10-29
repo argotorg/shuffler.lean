@@ -1,6 +1,12 @@
-import Shuffler.BuildBottomUp.Lemmas.Placement.Basic
-import Shuffler.BuildBottomUp.Lemmas.Reachability
-import Batteries.Data.List.Perm
+module
+
+public import Shuffler.BuildBottomUp.Theorems.Feasibility.Defs
+import Mathlib.Algebra.Order.Group.Multiset
+import Mathlib.Order.SuccPred.Nat
+import Mathlib.Tactic.NormNum.Ineq
+import Mathlib.Tactic.NormNum.Pow
+
+@[expose] public section
 
 namespace Shuffler.Placement
 
