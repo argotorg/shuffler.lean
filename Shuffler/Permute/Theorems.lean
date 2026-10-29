@@ -46,7 +46,9 @@ theorem permute_blocks_unreachable
       ?blocked_top ?swap_top ?blocked_pos ?swap_pos ?done initial perm hne hnreachable
       <;> intro state perm hne top htop <;> intros
     case blocked_top ht idx hdepth _ =>
-      exact ⟨perm top, idx - MAX_SWAP_DEPTH, _, rfl, by omega, by simpa using ht, by omega⟩
+      refine ⟨perm top, idx - MAX_SWAP_DEPTH, state, ?_, by omega, by simpa using ht, by omega⟩
+      simpa only [depthOf_eq_rev] using blockSwapUnreachable_eq state (perm top)
+        (by simpa only [State.isSwapReachable, depthOf_eq_rev, not_le] using hdepth)
     case swap_top ih hnreach | swap_pos ih hnreach =>
       obtain ⟨i, excess, state, hresult, hpos, hi, hdepth⟩ := ih (fun hreach =>
         hnreach ((all_swaps_reachable_swap_iff _ _ _
@@ -59,7 +61,9 @@ theorem permute_blocks_unreachable
               ((Permutation.mem_support_cast List.length_swap.symm _ _).mp hi),
         by simpa +zetaDelta [Fin.rev] using hdepth⟩
     case blocked_pos pos hpos _ idx hdepth _ =>
-      exact ⟨pos, idx - MAX_SWAP_DEPTH, _, rfl, by omega, by simpa using hpos, by omega⟩
+      refine ⟨pos, idx - MAX_SWAP_DEPTH, state, ?_, by omega, by simpa using hpos, by omega⟩
+      simpa only [depthOf_eq_rev] using blockSwapUnreachable_eq state pos
+        (by simpa only [State.isSwapReachable, depthOf_eq_rev, not_le] using hdepth)
     case done hsearch hnreach =>
       exact False.elim (hnreach (by
         simp [all_swaps_reachable, foldl_find_out_of_place_eq_one perm hsearch]))
@@ -155,6 +159,8 @@ theorem permute_swapCount
   · omega
   · intro state perm hne top htop ht idx hdepth result hresult
     rw [permute.go.eq_1, dite_eq_left ht, dite_eq_left hdepth] at hresult
+    rw [blockSwapUnreachable_eq state (perm top)
+      (by simpa only [State.isSwapReachable, depthOf_eq_rev, not_le] using hdepth)] at hresult
     cases hresult
   · intro state perm hne top htop ht idx hdepth stack' perm' h1 h2 h3 trace' ih
       result hresult
@@ -171,6 +177,8 @@ theorem permute_swapCount
     dsimp only [search, idx] at hsearch hdepth
     rw [permute.go.eq_1, dite_eq_right ht] at hresult
     simp only [hsearch, dite_eq_left hdepth] at hresult
+    rw [blockSwapUnreachable_eq state pos
+      (by simpa only [State.isSwapReachable, depthOf_eq_rev, not_le] using hdepth)] at hresult
     cases hresult
   · intro state perm hne top htop ht search pos hpos hsearch idx hdepth hpos_ne hlt
       stack' perm' h1 h2 h3 trace' ih result hresult
@@ -279,7 +287,14 @@ theorem permute_length (spills : SpillSet) (initial : Emission.State source targ
         run = .ok ⟨none, result⟩ → result.stack.length = state.stack.length)
       ?blocked_top ?swap_top ?blocked_pos ?swap_pos ?done initial perm hne
       <;> intro state perm hne top htop <;> intros
-    case blocked_top h | blocked_pos h => cases h
+    case blocked_top ht idx hdepth h =>
+      rw [blockSwapUnreachable_eq state (perm top)
+        (by simpa only [State.isSwapReachable, depthOf_eq_rev, not_le] using hdepth)] at h
+      cases h
+    case blocked_pos pos hpos hsearch idx hdepth h =>
+      rw [blockSwapUnreachable_eq state pos
+        (by simpa only [State.isSwapReachable, depthOf_eq_rev, not_le] using hdepth)] at h
+      cases h
     case swap_top ih h | swap_pos ih h => simpa +zetaDelta only [List.length_swap] using ih h
     case done h => cases h; rfl
   · cases h; rfl

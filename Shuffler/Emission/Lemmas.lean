@@ -189,6 +189,12 @@ theorem spec_iff_triple (result : Except ShuffleErr α) (post : α → Prop) :
     ⦃True⦄ slotAt stack offset ⦃fun slot => slot = stack[offset]; allowedErrors⦄ := by
   vcgen [slotAt] with finish
 
+theorem depthOf_eq_rev (state : State source target spills) (pos : Fin state.stack.length) :
+    state.depthOf pos = pos.rev := by
+  apply Fin.ext
+  dsimp [State.depthOf, Stack.offsetToDepth, Fin.rev]
+  omega
+
 theorem block_eq (state : State source target spills) (pos : Fin state.stack.length)
     (excess : ℕ) (h : excess > 0) :
     state.block pos excess = .ok ⟨some ⟨pos.val, excess⟩, state⟩ := by
