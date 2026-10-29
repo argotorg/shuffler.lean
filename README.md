@@ -47,3 +47,7 @@ Both builds replay an input file and print `case <tab> c++ <tab> lean` for a dif
 ```
 build/fuzz/fuzz build/afl-out/default/crashes/<file>
 ```
+
+CI (`.github/workflows/fuzz.yml`) runs `Fuzz/ci.sh`: 30 minutes for each push to `main` and 2 minutes
+for other pushes and pull requests, with the corpus kept in the Actions cache. A difference fails the
+job and the inputs are uploaded as the `fuzz-crashes` artifact.
