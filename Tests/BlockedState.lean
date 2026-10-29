@@ -1,5 +1,4 @@
 import Batteries.Data.Except
-import Mathlib.Data.Fintype.Perm
 import Shuffler.PermuteAtLowestHeight.Defs
 import Shuffler.RemoveSurplus.Defs
 import Tests.BuildBottomUpObservations
