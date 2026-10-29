@@ -1,7 +1,11 @@
-import Shuffler.Basic
-import Shuffler.Contracts
-import Shuffler.Emission.Defs
-import Shuffler.Permute.Defs
+module
+
+public import Shuffler.Basic
+public import Shuffler.Contracts
+public import Shuffler.Emission.Defs
+public import Shuffler.Permute.Defs
+
+@[expose] public section
 
 namespace Shuffler.PermuteAtLowestHeight
 
