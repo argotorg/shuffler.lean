@@ -2,7 +2,7 @@ import BbuKraken.Fn.Loop.Machine
 import BbuKraken.Fn.Loop.Model
 
 /-!
-The end of an iteration of `buildBottomUp`: `.LB78` (`generate T`), `.LB84` and `.LB86`
+The end of an iteration of `buildBottomUp`: `.LB75` (`generate T`), `.LB81` and `.LB83`
 (`placeTop`: swap the top into `T`).
 -/
 
@@ -21,7 +21,7 @@ private theorem n_le' (hpre : Pre loopF loopA s) (hb : Base s ra t) : (env s).n 
   exact hb.fm.wf.n_le
 
 private theorem len_le' (hb : Base s ra t) : (st' s t).len ≤ 1024 := by
-  rw [len_stOf]; exact hb.fm.wf.len_le
+  rw [len_stOf]; exact Nat.le_trans hb.fm.wf.len_le hb.fm.wf.n_le
 
 -- The word `len`.
 private theorem rd_len (hb : Base s ra t) :
@@ -34,12 +34,11 @@ private theorem iter_lt {T : Nat} {r : M (St × Next)} (h : Iter s T r) : T < (e
   exact hT
 
 -- The word of `dest[i]`.
-private theorem dest_addr (a w : Word) : a + w * 8#64 + 8256#64 = wordAt a (DEST + w.toNat) := by
+private theorem dest_addr (a w : Word) : a + w * 8#64 + 72#64 = wordAt a (DEST + w.toNat) := by
   simp only [wordAt, DEST_eq]
   apply BitVec.eq_of_toNat_eq
   simp only [BitVec.toNat_add, BitVec.toNat_mul, BitVec.toNat_ofNat]
   omega
-
 
 private theorem r14_succ {T : Nat} (hT : t.regs.r14.toBitVec = BitVec.ofNat 64 T)
     (h : T + 1 < 2 ^ 64) : (t.regs.r14.toBitVec + 1#64).toNat = T + 1 := by
@@ -55,18 +54,18 @@ private theorem rdi_mk {r : Reg64s} {z f d} (hb : Base s ra t)
   exact hb.rbp
 
 private theorem swap_pre {c : MachineData} (hpre : Pre loopF loopA s) (hb : Base s ra t)
-    (hops : (st' s t).trace.length < cap s) (hc : c.dmem = t.dmem) (hdi : rdi c = rdi s) :
-    swapWithA c := by
+    (hpos : Pos (env s).n (st' s t)) (hops : (st' s t).trace.length < cap s)
+    (hc : c.dmem = t.dmem) (hdi : rdi c = rdi s) : swapWithA c := by
   unfold swapWithA
-  rw [st_call hc hdi, cap_call hpre hb hc hdi]
-  exact hops
+  rw [st_call hc hdi, cap_call hpre hb hc hdi, env_call hpre hb hc hdi]
+  exact ⟨hpos, hops⟩
 
 private theorem swap_pre_mk {r : Reg64s} {z f} (hpre : Pre loopF loopA s) (hb : Base s ra t)
-    (hops : (st' s t).trace.length < cap s) (hsp : r.rsp = t.regs.rsp)
-    (hdi : r.rdi.toBitVec = t.regs.rbp.toBitVec) :
+    (hpos : Pos (env s).n (st' s t)) (hops : (st' s t).trace.length < cap s)
+    (hsp : r.rsp = t.regs.rsp) (hdi : r.rdi.toBitVec = t.regs.rbp.toBitVec) :
     Pre swapWithF swapWithA (MachineData.mk r z f t.dmem) := by
   have hd := rdi_mk (z := z) (f := f) (d := t.dmem) hb hdi
-  refine Kit.Fm.pre (k := 80) (by decide) hpre hb.fm rfl ?_ hd (swap_pre hpre hb hops rfl hd)
+  refine Kit.Fm.pre (k := 80) (by decide) hpre hb.fm rfl ?_ hd (swap_pre hpre hb hpos hops rfl hd)
   simp only [rsp, Reg64s.get64_rsp]
   rw [hsp]
   exact hb.rsp
@@ -89,39 +88,39 @@ private theorem swap_call {t' : MachineData} {r : Reg64s} {z f}
   simp only [rsi, Reg64s.get64_rsi] at h
   rwa [hsi] at h
 
-private theorem at68_mk {r : Reg64s} {z f} {T' : Nat} (hb : Base s ra t)
+private theorem at64_mk {r : Reg64s} {z f} {T' : Nat} (hb : Base s ra t)
     (hsp : r.rsp = t.regs.rsp) (hbp : r.rbp = t.regs.rbp) (h14 : r.r14 = t.regs.r14)
     (hT : t.regs.r14.toBitVec + 1#64 = BitVec.ofNat 64 T')
     (hi : InvL (env s) (st' s t) T' ∧ loop (env s) (st' s t) T' = R0 s) :
-    At68 s ra (MachineData.mk r z f t.dmem) :=
+    At64 s ra (MachineData.mk r z f t.dmem) :=
   ⟨⟨hb.fm, by rw [hsp]; exact hb.rsp, by rw [hbp]; exact hb.rbp⟩, T',
     by rw [h14]; exact hT, hi⟩
 
-private theorem at111_mk {r : Reg64s} {z f} {c k : Nat} (hb : Base s ra t)
+private theorem at109_mk {r : Reg64s} {z f} {c k : Nat} (hb : Base s ra t)
     (hsp : r.rsp = t.regs.rsp) (hbp : r.rbp = t.regs.rbp) (h14 : r.r14 = t.regs.r14)
     (hc : t.regs.r14.toBitVec = BitVec.ofNat 64 c) (hk : r.rax.toBitVec - 17#64 = BitVec.ofNat 64 k)
-    (hR : R0 s = .error (.blocked c k)) : At111 s ra (MachineData.mk r z f t.dmem) :=
+    (hR : R0 s = .error (.blocked c k)) : At109 s ra (MachineData.mk r z f t.dmem) :=
   ⟨⟨hb.fm, by rw [hsp]; exact hb.rsp, by rw [hbp]; exact hb.rbp⟩, c, k, by rw [h14]; exact hc,
     hk, hR⟩
 
--- The variant at `.LB68` after the slot `T`.
-private theorem v68_lt {r : Reg64s} {z f d} {T : Nat} (hT : T < (env s).n)
+-- The variant at `.LB64` after the slot `T`.
+private theorem v64_lt {r : Reg64s} {z f d} {T : Nat} (hT : T < (env s).n)
     (h14 : r.r14 = t.regs.r14) (hu : (t.regs.r14.toBitVec + 1#64).toNat = T + 1)
     (ht : t.regs.r14.toBitVec.toNat = T)
     (hp : (stOf d (rdi s)).pendingGenerations ≤ (stOf t.dmem (rdi s)).pendingGenerations) :
-    V s ".LB68" (MachineData.mk r z f d) < W * outer s t t.regs.r14.toBitVec.toNat := by
+    V s ".LB64" (MachineData.mk r z f d) < W * outer s t t.regs.r14.toBitVec.toNat := by
   simp only [V, outer, W, st']
   rw [h14, hu, ht]
   omega
 
-private theorem v65 {u : MachineData} : V s ".LB65" u = 0 := by
+private theorem v61 {u : MachineData} : V s ".LB61" u = 0 := by
   simp [V]
 
--- An error of a callee gives `.LB65`.
-private theorem at65_of {α : Type} {r : M α} {Q : α → Prop} {t' : MachineData} {z f}
+-- An error of a callee gives `.LB61`.
+private theorem at61_of {α : Type} {r : M α} {Q : α → Prop} {t' : MachineData} {z f}
     (hb : Base s ra t') (hR : ∀ e, r = .error e → R0 s = .error e) (h : Res (rdi s) r Q t')
     (hok : ∀ a, Q a → rax t' = 0#64) (hne : rax t' ≠ 0#64) :
-    At65 s ra (MachineData.mk t'.regs z f t'.dmem) := by
+    At61 s ra (MachineData.mk t'.regs z f t'.dmem) := by
   cases r with
   | ok a => exact absurd (hok a h) hne
   | error e =>
@@ -145,8 +144,10 @@ private theorem gen_pre_mk {r : Reg64s} {z f} {T : Nat} (hpre : Pre loopF loopA 
     rw [hsp]
     exact hb.rsp
   · unfold generateA
-    rw [st_call rfl hd, cap_call (c := MachineData.mk r z f t.dmem) hpre hb rfl hd, cap_n]
-    exact ctx_genA hctx hpd
+    rw [st_call rfl hd, cap_call (c := MachineData.mk r z f t.dmem) hpre hb rfl hd, cap_n,
+      env_call (c := MachineData.mk r z f t.dmem) hpre hb rfl hd]
+    have := (ctx_bounds hctx).1
+    exact ⟨hctx.2.1.1.pos, show (st' s t).len < _ by omega, (ctx_genA hctx hpd).2⟩
 
 -- The call of `generate`.
 private theorem gen_call {t' : MachineData} {r : Reg64s} {z f}
@@ -166,10 +167,10 @@ private theorem gen_call {t' : MachineData} {r : Reg64s} {z f}
   simp only [rsi, Reg64s.get64_rsi] at h
   rwa [hsi] at h
 
--- The variant at `.LB86` after `.LB78`.
-private theorem v86_lt {r : Reg64s} {z f d} (h14 : r.r14 = t.regs.r14)
+-- The variant at `.LB83` after `.LB75`.
+private theorem v83_lt {r : Reg64s} {z f d} (h14 : r.r14 = t.regs.r14)
     (hp : (stOf d (rdi s)).pendingGenerations ≤ (stOf t.dmem (rdi s)).pendingGenerations) :
-    V s ".LB86" (MachineData.mk r z f d) < V s ".LB78" t := by
+    V s ".LB83" (MachineData.mk r z f d) < V s ".LB75" t := by
   simp only [V, outer, W, st']
   rw [h14]
   omega
@@ -180,13 +181,13 @@ set_option experimental.vcgen true
 
 variable [Host] [FunDecls] {s : MachineData} {ra : Int64}
 
--- `generate T`; `.LB65` on an error, `.LB96` if `len ≤ T`, `.LB68` if the slot at `T` is
--- final, else `.LB86`.
-theorem lb78 (hgen : Spec "generate" generateF generateA generateR)
-    (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB78") := by
+-- `generate T`; `.LB61` on an error, `.LB93` if `len ≤ T`, `.LB64` if the slot at `T` is
+-- final, else `.LB83`.
+theorem lb75 (hgen : Spec "generate" generateF generateA generateR)
+    (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB75") := by
   loop_case
   intro t ht
-  have h : At78 s ra t := ht
+  have h : At75 s ra t := ht
   clear ht
   obtain ⟨hb, T, hT, hctx, hpd, hstep⟩ := h
   have hn := n_le' hpre hb
@@ -211,11 +212,11 @@ theorem lb78 (hgen : Spec "generate" generateF generateA generateR)
       Bool.not_eq_true', beq_eq_false_iff_ne, BitVec.zero_eq] at hnz
     loop_goto
     · exact stack_mk hb'.rsp
-    · show At65 s ra _
-      refine at65_of hb' (fun e he => ?_) hres (fun _ h => h.1) hnz
+    · show At61 s ra _
+      refine at61_of hb' (fun e he => ?_) hres (fun _ h => h.1) hnz
       exact iter_err ⟨_, hctx, by rw [hstep, he]; rfl⟩
     · left
-      rw [v65]
+      rw [v61]
       simp only [V]
       omega
   case vc4 =>
@@ -272,11 +273,11 @@ theorem lb78 (hgen : Spec "generate" generateF generateA generateR)
     rw [← cap_n] at hops
     loop_goto
     · exact stack_mk hb'.rsp
-    · show At86 s ra _
+    · show At83 s ra _
       exact ⟨⟨hb'.fm, hb'.rsp, hb'.rbp⟩, hlen, T, by rw [h14']; exact hT, ⟨_, hctx, hs2⟩,
-        hops, hf, hd⟩
+        hops, hf, hd, hctx.2.1.1.pos.generate hq⟩
     · left
-      exact v86_lt h14'
+      exact v83_lt h14'
         (by show (st' s t').pendingGenerations ≤ (st' s t).pendingGenerations; omega)
   case vc8 =>
     rw [Kit.nz_sub, Bool.not_eq_false', beq_iff_eq, dest_addr, hb'.rbp, hr14'] at hz
@@ -286,22 +287,22 @@ theorem lb78 (hgen : Spec "generate" generateF generateA generateR)
     have hi := iter_next ⟨_, hctx, hs2⟩
     loop_goto
     · exact stack_mk hb'.rsp
-    · show At68 s ra _
-      exact at68_mk hb' rfl rfl rfl (by rw [h14', hT, BitVec.ofNat_add]) hi
+    · show At64 s ra _
+      exact at64_mk hb' rfl rfl rfl (by rw [h14', hT, BitVec.ofNat_add]) hi
     · left
       refine Nat.lt_of_lt_of_le (m := W * outer s t t.regs.r14.toBitVec.toNat) ?_ ?_
-      · exact v68_lt hTn h14' (r14_succ hT (by omega)) hr14
+      · exact v64_lt hTn h14' (r14_succ hT (by omega)) hr14
           (by show (st' s t').pendingGenerations ≤ (st' s t).pendingGenerations; omega)
       · simp only [V]
         exact Nat.le_add_right _ _
 
--- `.LB97` if `len ≤ T`, `.LB98` if the slot at `T` is final, else `.LB86`.
-theorem lb84 (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB84") := by
+-- `.LB94` if `len ≤ T`, `.LB95` if the slot at `T` is final, else `.LB83`.
+theorem lb81 (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB81") := by
   loop_case
   intro t ht
-  have h : At84 s ra t := ht
+  have h : At81 s ra t := ht
   clear ht
-  obtain ⟨hb, T, hT, hit, hops⟩ := h
+  obtain ⟨hb, T, hT, hit, hops, hpos⟩ := h
   have hTn := iter_lt hit
   have hn := n_le' hpre hb
   have hL := len_le' hb
@@ -352,20 +353,20 @@ theorem lb84 (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB84") := by
       rw [dest_stOf (by rw [← len_stOf]; exact hf)]
       intro he
       exact hz (BitVec.eq_of_toNat_eq (he.trans hr14.symm))
-    show At86 s ra _
-    exact ⟨⟨hb.fm, hb.rsp, hb.rbp⟩, hlen, T, hT, hit, hops, hf, hd⟩
+    show At83 s ra _
+    exact ⟨⟨hb.fm, hb.rsp, hb.rbp⟩, hlen, T, hT, hit, hops, hf, hd, hpos⟩
   · simp only [V, outer, st']
     omega
 
--- `.LB68` if `T` is the top, `.LB111` if the top is out of reach, else `swapWith T` and
--- `.LB68`.
-theorem lb86 (hswap : Spec "swapWith" swapWithF swapWithA swapWithR)
-    (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB86") := by
+-- `.LB64` if `T` is the top, `.LB109` if the top is out of reach, else `swapWith T`, then
+-- `.LB64` or `.LB61` on an error.
+theorem lb83 (hswap : Spec "swapWith" swapWithF swapWithA swapWithR)
+    (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB83") := by
   loop_case
   intro t ht
-  have h : At86 s ra t := ht
+  have h : At83 s ra t := ht
   clear ht
-  obtain ⟨hb, hax, T, hT, hit, hops, hTl, hd⟩ := h
+  obtain ⟨hb, hax, T, hT, hit, hops, hTl, hd, hpos⟩ := h
   have hTn := iter_lt hit
   have hn := n_le' hpre hb
   have hL := len_le' hb
@@ -382,11 +383,11 @@ theorem lb86 (hswap : Spec "swapWith" swapWithF swapWithA swapWithR)
     have hi := iter_next hit
     loop_goto
     · exact stack_mk hb.rsp
-    · show At68 s ra _
-      exact at68_mk hb rfl rfl rfl (by rw [hT, BitVec.ofNat_add]) hi
+    · show At64 s ra _
+      exact at64_mk hb rfl rfl rfl (by rw [hT, BitVec.ofNat_add]) hi
     · left
       refine Nat.lt_of_lt_of_le (m := W * outer s t t.regs.r14.toBitVec.toNat) ?_ ?_
-      · exact v68_lt hTn rfl (r14_succ hT (by omega)) hr14 (Nat.le_refl _)
+      · exact v64_lt hTn rfl (r14_succ hT (by omega)) hr14 (Nat.le_refl _)
       · simp only [V]
         exact Nat.le_add_right _ _
   case vc2 =>
@@ -400,8 +401,8 @@ theorem lb86 (hswap : Spec "swapWith" swapWithF swapWithA swapWithR)
     have hR := iter_err hit
     loop_goto
     · exact stack_mk hb.rsp
-    · show At111 s ra _
-      refine at111_mk hb rfl rfl rfl hT ?_ hR
+    · show At109 s ra _
+      refine at109_mk hb rfl rfl rfl hT ?_ hR
       show t.regs.rax.toBitVec - t.regs.r14.toBitVec - 17#64 = _
       have hk : (st' s t).len - T - 17 = (st' s t).len - 1 - T - MAX_SWAP_DEPTH := by
         simp only [MAX_SWAP_DEPTH]; omega
@@ -413,7 +414,7 @@ theorem lb86 (hswap : Spec "swapWith" swapWithF swapWithA swapWithR)
     rw [hb.rsp]
     exact hb.fm.call_isSome (k := 80) (by decide) hpre
   case vc4 =>
-    exact swap_pre_mk hpre hb hops rfl rfl
+    exact swap_pre_mk hpre hb hpos hops rfl rfl
   all_goals rename_i hz ha t' hp hag af hnz
   all_goals obtain ⟨hb', h14', hres⟩ := swap_call hpre hb hp hag rfl rfl rfl rfl rfl
   all_goals clear hp hag
@@ -424,36 +425,36 @@ theorem lb86 (hswap : Spec "swapWith" swapWithF swapWithA swapWithR)
       ofNat_pred (by omega), toNat_small (by omega)] at ha
   all_goals have hne : T ≠ (st' s t).len - 1 := fun h => hz (by rw [h])
   all_goals rw [pt_swap hTl hd hne (by simp only [MAX_SWAP_DEPTH]; omega)] at hit
-  all_goals simp only [CondCode.interp_nz, StatusFlags.zf_from_result, BitVec.and_self,
-    Bool.not_eq_true', Bool.not_eq_false', beq_iff_eq, beq_eq_false_iff_ne, BitVec.zero_eq] at hnz
+  all_goals simp only [CondCode.interp_z, StatusFlags.zf_from_result, BitVec.and_self, beq_iff_eq,
+    beq_eq_false_iff_ne, BitVec.zero_eq] at hnz
   case vc5 =>
-    loop_goto
-    · exact stack_mk hb'.rsp
-    · show At65 s ra _
-      refine at65_of hb' (fun e he => ?_) hres (fun _ h => h.1) hnz
-      rw [he] at hit
-      exact iter_err hit
-    · left
-      rw [v65]
-      simp only [V]
-      omega
-  all_goals obtain ⟨q, hq, -, hst⟩ :=
-    res_ok_of_msb hres (by rw [show rax t' = 0#64 from hnz] <;> rfl)
-  case vc6 =>
+    obtain ⟨q, hq, -, hst⟩ := res_ok_of_msb hres (by rw [show rax t' = 0#64 from hnz]; rfl)
     rw [hq] at hit
     have hi := iter_next hit
     rw [← hst] at hi
-    show At68 s ra _
-    exact at68_mk hb' rfl rfl rfl (by rw [h14', hT, BitVec.ofNat_add]) hi
-  case vc7 =>
-    obtain ⟨-, -, hpd⟩ := swapWith_shape hq
-    left
-    refine Nat.lt_of_lt_of_le (m := W * outer s t t.regs.r14.toBitVec.toNat) ?_ ?_
-    · refine v68_lt hTn h14' (r14_succ hT (by omega)) hr14 (Nat.le_of_eq ?_)
-      show (st' s t').pendingGenerations = (st' s t).pendingGenerations
-      rw [hst, hpd]
-    · simp only [V]
-      exact Nat.le_add_right _ _
+    loop_goto
+    · exact stack_mk hb'.rsp
+    · show At64 s ra _
+      exact at64_mk hb' rfl rfl rfl (by rw [h14', hT, BitVec.ofNat_add]) hi
+    · obtain ⟨-, -, hpd⟩ := swapWith_shape hq
+      left
+      refine Nat.lt_of_lt_of_le (m := W * outer s t t.regs.r14.toBitVec.toNat) ?_ ?_
+      · refine v64_lt hTn h14' (r14_succ hT (by omega)) hr14 (Nat.le_of_eq ?_)
+        show (st' s t').pendingGenerations = (st' s t).pendingGenerations
+        rw [hst, hpd]
+      · simp only [V]
+        exact Nat.le_add_right _ _
+  case vc6 =>
+    loop_goto
+    · exact stack_mk hb'.rsp
+    · show At61 s ra _
+      refine at61_of hb' (fun e he => ?_) hres (fun _ h => h.1) hnz
+      rw [he] at hit
+      exact iter_err hit
+    · left
+      rw [v61]
+      simp only [V]
+      omega
 
 end Loop
 

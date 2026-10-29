@@ -35,7 +35,7 @@ theorem dup_corr : DupStmt := by
     rw [← hpos]
     simp only [requires, hp, hreach, ↓reduceDIte, pure, Except.pure, bind, Except.bind,
       Option.map_none, Option.isSome_none, Bool.false_eq_true, ↓reduceIte]
-    refine ⟨?_, ?_, h.pendingGenerations, ?_⟩
+    refine ⟨?_, ?_, h.pendingGenerations, ?_, ?_, ?_, h.target⟩
     · show state.stack ++ [state.stack[(⟨c, hcl⟩ : Fin _)]] = _
       rw [h.get ⟨c, hcl⟩]
       simp [h.stack]
@@ -58,6 +58,11 @@ theorem dup_corr : DupStmt := by
         List.map_nil]
       congr 3
       omega
+    · exact h.pos.addState (by simpa [Bbu.Env.n] using hd) (by rw [← hpos]; rfl)
+    · intro s hs
+      rcases List.mem_append.mp hs with hs | hs
+      · exact h.canon s hs
+      · rw [List.mem_singleton.mp hs]; exact h.canonVal c
   · obtain ⟨k, hk⟩ := Option.ne_none_iff_exists'.mp hp
     rw [hk] at hpos
     rw [← hpos]

@@ -2,8 +2,8 @@ import BbuKraken.Kit
 
 /-!
 Lemmas for the body triples of `push` (`c/bbu/push.S`) and `dup` (`c/bbu/dup.S`).
-Both save three registers, call `positionOf`, and then write the new slot and the
-operation.
+Both read `m_positionOf[_destination]`, write the destination, the position, one
+operation and the slot, and add 1 to `nops` and `len`. Neither has a frame or a call.
 -/
 
 open Std.WP Lean.Order
@@ -12,244 +12,335 @@ open scoped Program.WP
 namespace Bbu
 
 namespace PushDup
+open Kit
 
--- The registers that `push` and `dup` save, in the order of the pushes.
-abbrev regs : List Reg64 := [.r12, .rbp, .rbx]
-
--- The memory of `push` and `dup`: the frame of 40 bytes, the saved words and the struct.
-abbrev Fm := Kit.Fm 40 regs
+/-! ## Reads after stores of 1, 4 and 8 bytes -/
 
 section
-variable {s : MachineData} {ra : Int64} {A : MachineData → Prop}
+variable {m : Mem 64}
 
--- The state `c` after the call to `positionOf`.
-structure After (s : MachineData) (ra : Int64) (c : MachineData) : Prop where
-  fm : Fm s ra c.dmem
-  mst : stOf c.dmem (rdi s) = st s
-  ax : c.regs.rax.toBitVec = encOpt (positionOf (st s) (rdx s).toNat)
-  rsp : c.regs.rsp.toBitVec = rsp s - 32#64
-  rbx : c.regs.rbx.toBitVec = s.regs.rdi.toBitVec
-  rbp : c.regs.rbp.toBitVec = s.regs.rsi.toBitVec
-  r12 : c.regs.r12.toBitVec = s.regs.rdx.toBitVec
-  r13 : c.regs.r13 = s.regs.r13
-  r14 : c.regs.r14 = s.regs.r14
-  r15 : c.regs.r15 = s.regs.r15
+theorem rd_store_off {a b : Addr} {n : Nat} (v : Int) (h : n ≤ (b - a).toNat ∧ 8 ≤ (a - b).toNat) :
+    rd (m.storeInt a n v) b = rd m b := by
+  rw [rd, rd, Mem.loadInt_congr (m' := m)]
+  intro i hi
+  exact Mem.get?_storeInt_of_ne _ _ _ _ _ fun j hj he => by bv_omega
 
-theorem after {C c : MachineData} (hp : Post 8 positionOfR C c) (hag : (mod 8 C).Agree C c)
-    (hpre : Pre 40 A s) (hm : C.dmem = Kit.pushes s ra regs)
-    (hsp : C.regs.rsp.toBitVec = rsp s - 32#64) (hdi : C.regs.rdi = s.regs.rdi)
-    (hsi : C.regs.rsi.toBitVec = s.regs.rdx.toBitVec)
-    (hbx : C.regs.rbx.toBitVec = s.regs.rdi.toBitVec) (hbp : C.regs.rbp.toBitVec = s.regs.rsi.toBitVec)
-    (h12 : C.regs.r12.toBitVec = s.regs.rdx.toBitVec) (h13 : C.regs.r13 = s.regs.r13)
-    (h14 : C.regs.r14 = s.regs.r14) (h15 : C.regs.r15 = s.regs.r15) : After s ra c := by
-  have hrdi : rdi C = rdi s := by simp only [rdi, Reg64s.get64_rdi, hdi]
-  have hreg : ∀ r, r ∉ (mod 8 C).regs → c.regs.get64 r = C.regs.get64 r := hag.1
-  obtain ⟨-, -, hrax, hst⟩ := id hp
-  have hs := Kit.st_pushes (rs := regs) (ra := ra) (by decide) hpre
-  simp only [st', st, hrdi, hm, hs] at hst
-  simp only [rax, st, hrdi, hm, hs, rsi, Reg64s.get64_rsi, hsi] at hrax
-  have g := fun r (h : r ∉ (mod 8 C).regs) => hreg r h
-  refine ⟨Kit.Fm.call (k := 32) (by decide) (by decide) hpre (Kit.Fm.init (by decide) hpre) hm hsp
-    hrdi hp hag, hst, hrax, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
-  · have := g .rsp (by simp [mod]); simp only [Reg64s.get64_rsp] at this; rw [this, hsp]
-  · have := g .rbx (by simp [mod]); simp only [Reg64s.get64_rbx] at this; rw [this, hbx]
-  · have := g .rbp (by simp [mod]); simp only [Reg64s.get64_rbp] at this; rw [this, hbp]
-  · have := g .r12 (by simp [mod]); simp only [Reg64s.get64_r12] at this; rw [this, h12]
-  · have := g .r13 (by simp [mod]); simp only [Reg64s.get64_r13] at this
-    rw [← h13]; exact UInt64.toBitVec_inj.mp this
-  · have := g .r14 (by simp [mod]); simp only [Reg64s.get64_r14] at this
-    rw [← h14]; exact UInt64.toBitVec_inj.mp this
-  · have := g .r15 (by simp [mod]); simp only [Reg64s.get64_r15] at this
-    rw [← h15]; exact UInt64.toBitVec_inj.mp this
+theorem rdb_store_off {a b : Addr} {n : Nat} (v : Int) (h : n ≤ (b - a).toNat ∧ 1 ≤ (a - b).toNat) :
+    rdb (m.storeInt a n v) b = rdb m b := by
+  rw [rdb, rdb, Mem.loadInt_congr (m' := m)]
+  intro i hi
+  exact Mem.get?_storeInt_of_ne _ _ _ _ _ fun j hj he => by bv_omega
+
+theorem rdb_store_same {a b : Addr} (v : Int) (h : a = b) :
+    rdb (m.storeInt a 1 v) b = BitVec.ofInt 8 v := by
+  subst h
+  rw [rdb, Mem.loadInt_storeInt _ _ _ _ (by decide), Option.get!_some, ofBytes_toBytes, Int.take]
+  simp [BitVec.ofInt]
+
+-- Byte `i` of a store of `n` bytes.
+theorem get?_store_idx (a : Addr) {n i : Nat} (v : Int) (hi : i < n) (hn : n ≤ 2 ^ 64) :
+    (m.storeInt a n v).get? (a + BitVec.ofNat 64 i) = (Int.toBytes n v)[i]? := by
+  have hl := Int.toBytes_length n v
+  rw [Mem.storeInt, Mem.storeBytes, Std.ExtHashMap.get?_eq_getElem?, Std.ExtHashMap.union_eq,
+    Std.ExtHashMap.getElem?_union, ← Std.ExtHashMap.get?_eq_getElem?,
+    get?_At_idx _ a i (by omega) (by omega), List.getElem?_eq_getElem (by omega)]
+  rfl
+
+theorem loadInt_bytes {a : Addr} (bs : List UInt8)
+    (h : ∀ i < bs.length, m.get? (a + BitVec.ofNat 64 i) = bs[i]?) :
+    m.loadInt a bs.length = some (Int.ofBytes bs) := by
+  rw [Mem.loadInt, Mem.loadBytes, List.map_congr_left (fun i hi => h i (List.mem_range.mp hi)),
+    List.map_range_getElem?, List.allSome_map_some]
+  rfl
 
 end
--- `jne` after `cmpq $-1` of the result of `positionOf`.
-theorem pos_nz {st : St} {d : Nat} (hl : st.len ≤ 1024) (r) :
-    CondCode.nz.interp (StatusFlags.from_result (encOpt (positionOf st d) - 18446744073709551615#64) r)
-      = (positionOf st d).isSome := by
-  rw [Kit.nz_sub]
-  cases hp : positionOf st d with
-  | none => simp [encOpt]
-  | some p =>
-    have : p < st.len := by
-      simp only [positionOf, List.findIdx?_eq_some_iff_getElem] at hp; exact hp.1
-    simp only [encOpt, Option.isSome_some, Bool.not_eq_eq_eq_not, Bool.not_true, beq_eq_false_iff_ne]
-    intro h
-    have := congrArg BitVec.toNat h
-    simp only [BitVec.toNat_ofNat] at this
+
+/-! ## Address arithmetic
+
+`omega` is not complete for the `% 2 ^ 64` terms of `bv_omega`, and it can run for a very
+long time on a `% 2 ^ 64` of a term that is not in `[0, 2 ^ 65)`. `addr_omega` first cancels
+the common base of two addresses, then removes each `%` (a term below `2 ^ 64`, or a term in
+`[2 ^ 64, 2 ^ 65)`). It fails at once if a `%` stays. -/
+
+theorem add_sub_left' (B x : Addr) : B + x - B = x := by
+  rw [BitVec.add_comm, BitVec.add_sub_cancel]
+
+theorem add_sub_add_left' (B x y : Addr) : B + x - (B + y) = x - y := by bv_omega
+
+theorem sub_add_left' (B y : Addr) : B - (B + y) = -y := by bv_omega
+
+theorem toNat_mul_small (x : Addr) (k : Nat) (h : x.toNat * k < 2 ^ 64) :
+    (x * BitVec.ofNat 64 k).toNat = x.toNat * k := by
+  rw [BitVec.toNat_mul, BitVec.toNat_ofNat]
+  rcases Nat.eq_zero_or_pos x.toNat with h0 | h0
+  · simp [h0]
+  · rw [Nat.mod_eq_of_lt (a := k) (Nat.lt_of_le_of_lt (Nat.le_mul_of_pos_left k h0) h)]
+    exact Nat.mod_eq_of_lt h
+
+-- The address of operation `N` as the asm computes it.
+theorem mul12 (N : Addr) : (N + N * 2#64) * 4#64 = N * 12#64 := by
+  rw [BitVec.add_mul, BitVec.mul_assoc, ← BitVec.mul_add]; rfl
+
+macro "addr_omega" : tactic =>
+  `(tactic| ((try simp only [mul12, BitVec.add_assoc, add_sub_left', add_sub_add_left',
+      sub_add_left', BitVec.sub_self, BitVec.toNat_add, BitVec.toNat_sub, BitVec.toNat_neg]) <;>
+    (try simp (disch := omega) only [toNat_mul_small]) <;>
+    (try simp -implicitDefEqProofs only [bitvec_to_nat]) <;>
+    (try simp (disch := omega) only [Nat.mod_eq_of_lt]) <;>
+    (try simp (disch := omega) only [Nat.mod_eq_sub_mod]) <;>
+    (try simp (disch := omega) only [Nat.mod_eq_of_lt]) <;>
+    (fail_if_success simp only [Nat.mod_def]) <;> omega))
+
+-- Two accesses in two separate regions `B1` (`l1` bytes) and `B2` (`l2` bytes).
+theorem region_sep {a b B1 B2 : Addr} {n k l1 l2 : Nat}
+    (hs : l1 ≤ (B2 - B1).toNat ∧ l2 ≤ (B1 - B2).toNat) (hn : 0 < n) (hk : 0 < k)
+    (ha : (a - B1).toNat + n ≤ l1) (hb : (b - B2).toNat + k ≤ l2) :
+    n ≤ (b - a).toNat ∧ k ≤ (a - b).toNat := by
+  bv_omega
+
+theorem region_sep' {a b B1 B2 : Addr} {n k l1 l2 : Nat}
+    (hs : l2 ≤ (B1 - B2).toNat ∧ l1 ≤ (B2 - B1).toNat) (hn : 0 < n) (hk : 0 < k)
+    (ha : (a - B1).toNat + n ≤ l1) (hb : (b - B2).toNat + k ≤ l2) :
+    n ≤ (b - a).toNat ∧ k ≤ (a - b).toNat :=
+  region_sep ⟨hs.2, hs.1⟩ hn hk ha hb
+
+-- The facts of `facts` that `omega` does not need after `region_sep`.
+set_option hygiene false in
+macro "pd_clear" : tactic => `(tactic| ((try clear hs1) <;> (try clear hs2) <;> (try clear hs3) <;>
+  (try clear hs4) <;> (try clear hs5) <;> (try clear hs6)))
+
+-- An offset in a region: the address must have the base of the region as its first term,
+-- so that `rw` fails at once for an address in another region.
+macro "pd_off" : tactic => `(tactic| ((try simp only [BitVec.add_assoc]) <;>
+  (first | rw [add_sub_left'] | rw [BitVec.sub_self]) <;> addr_omega))
+
+-- The side conditions of the reads: an access in one region against an access in another
+-- region (with the facts `hs1` to `hs6` of `facts`), or two accesses in the same region.
+set_option hygiene false in
+macro "pd_disch" : tactic => `(tactic| first
+  | (refine region_sep hs1 ?_ ?_ ?_ ?_ <;> pd_clear <;> first | pd_off | omega)
+  | (refine region_sep' hs1 ?_ ?_ ?_ ?_ <;> pd_clear <;> first | pd_off | omega)
+  | (refine region_sep hs2 ?_ ?_ ?_ ?_ <;> pd_clear <;> first | pd_off | omega)
+  | (refine region_sep' hs2 ?_ ?_ ?_ ?_ <;> pd_clear <;> first | pd_off | omega)
+  | (refine region_sep hs3 ?_ ?_ ?_ ?_ <;> pd_clear <;> first | pd_off | omega)
+  | (refine region_sep' hs3 ?_ ?_ ?_ ?_ <;> pd_clear <;> first | pd_off | omega)
+  | (refine region_sep hs4 ?_ ?_ ?_ ?_ <;> pd_clear <;> first | pd_off | omega)
+  | (refine region_sep' hs4 ?_ ?_ ?_ ?_ <;> pd_clear <;> first | pd_off | omega)
+  | (refine region_sep hs5 ?_ ?_ ?_ ?_ <;> pd_clear <;> first | pd_off | omega)
+  | (refine region_sep' hs5 ?_ ?_ ?_ ?_ <;> pd_clear <;> first | pd_off | omega)
+  | (refine region_sep hs6 ?_ ?_ ?_ ?_ <;> pd_clear <;> first | pd_off | omega)
+  | (refine region_sep' hs6 ?_ ?_ ?_ ?_ <;> pd_clear <;> first | pd_off | omega)
+  | (pd_clear; addr_omega)
+  | fail)
+
+/-- The reads after stores. A read at the address of a store must have the same address
+term: a failed `omega` call or a failed `rfl` with unfolding is slow, so the `_same`
+lemmas use only a reducible `rfl`. -/
+macro "pd_rd" loc:(Lean.Parser.Tactic.location)? : tactic =>
+  `(tactic| repeat (first
+    | simp (disch := with_reducible rfl) only [rd_store_same, rdb_store_same, BitVec.ofInt_toInt,
+        BitVec.ofInt_ofNat] $(loc)?
+    | simp (disch := pd_disch) only [rd_store_off, rdb_store_off] $(loc)?))
+
+/-! ## The addresses of the model as the asm computes them -/
+
+theorem ofNat_mul_toNat (x : Addr) (c : Nat) :
+    BitVec.ofNat 64 (c * x.toNat) = x * BitVec.ofNat 64 c := by
+  apply BitVec.eq_of_toNat_eq
+  simp [BitVec.toNat_mul, Nat.mul_comm]
+
+theorem wordAt_toNat (B x : Addr) : wordAt B x.toNat = B + x * 8#64 := by
+  simp only [wordAt, ofNat_mul_toNat]
+
+theorem wordAt_dest (S x : Addr) : wordAt S (DEST + x.toNat) = S + x * 8#64 + 72#64 := by
+  simp only [wordAt, DEST_eq, Nat.mul_add, BitVec.ofNat_add, ofNat_mul_toNat, BitVec.add_assoc,
+    BitVec.add_comm (BitVec.ofNat 64 (8 * 9))]
+
+theorem wordAt_pos (S x : Addr) : wordAt S (POS + x.toNat) = S + x * 8#64 + 8264#64 := by
+  simp only [wordAt, POS_eq, Nat.mul_add, BitVec.ofNat_add, ofNat_mul_toNat, BitVec.add_assoc,
+    BitVec.add_comm (BitVec.ofNat 64 (8 * 1033))]
+
+/-! ## The slot of an operation -/
+
+-- A word with the bytes 0, 0, 0, 0, 1, 5 at the bottom holds the junk slot.
+theorem ofWord_low {w : Word} {y : Nat} (hw : w.toNat = y * 2 ^ 48 + 5 * 2 ^ 40 + 2 ^ 32) :
+    StackSlot.ofWord w = .junk := by
+  simp only [StackSlot.ofWord, StackSlot.junk, Junk, Unreachable, StackSlot.mk.injEq]
+  refine ⟨?_, ?_, ?_⟩ <;> apply BitVec.eq_of_toNat_eq <;>
+    rw [BitVec.extractLsb'_toNat, Nat.shiftRight_eq_div_pow, hw]
+  · show _ = 0; omega
+  · show _ = 1; omega
+  · show _ = 5; omega
+
+theorem ofWord_junk {m : Mem 64} {a : Addr} (hm : Mem.Mapped [(a, 8)] m)
+    (h0 : ∀ i < 4, m.get? (a + BitVec.ofNat 64 i) = some 0)
+    (h4 : m.get? (a + 4#64) = some 1) (h5 : m.get? (a + 5#64) = some 5) :
+    StackSlot.ofWord (rd m a) = .junk := by
+  obtain ⟨x6, hx6⟩ := Option.isSome_iff_exists.mp (hm (a + 6#64) (Or.inl (by bv_omega)))
+  obtain ⟨x7, hx7⟩ := Option.isSome_iff_exists.mp (hm (a + 7#64) (Or.inl (by bv_omega)))
+  have hl : m.loadInt a 8 = some (Int.ofBytes [0, 0, 0, 0, 1, 5, x6, x7]) :=
+    loadInt_bytes [0, 0, 0, 0, 1, 5, x6, x7] fun i hi => by
+      match i, hi with
+      | 0, _ | 1, _ | 2, _ | 3, _ => exact h0 _ (by decide)
+      | 4, _ => exact h4
+      | 5, _ => exact h5
+      | 6, _ => exact hx6
+      | 7, _ => exact hx7
+  have h6 := x6.toNat_lt
+  have h7 := x7.toNat_lt
+  have hv : Int.ofBytes [0, 0, 0, 0, 1, 5, x6, x7] =
+      (((x6.toNat + 256 * x7.toNat) * 2 ^ 48 + 5 * 2 ^ 40 + 2 ^ 32 : Nat) : Int) := by
+    simp only [Int.ofBytes, List.foldr_cons, List.foldr_nil, UInt8.reduceToNat]
     omega
+  refine ofWord_low (y := x6.toNat + 256 * x7.toNat) ?_
+  rw [rd, hl, Option.get!_some, hv, BitVec.ofInt_natCast, BitVec.toNat_ofNat]
+  exact Nat.mod_eq_of_lt (by omega)
+
+/-! ## The precondition as facts for `omega` -/
 
 section
-variable {m : Mem 64} {S : Addr}
+variable {s : MachineData} {A : MachineData → Prop}
 
--- The reads after stores, one store at a time.
-macro "pd_rds" : tactic => `(tactic| (
-  repeat (first
-    | (rw [rd_store_same]; rotate_left; bv_omega)
-    | (rw [rd_store_other]; rotate_left; bv_omega))
-  try simp only [BitVec.ofInt_toInt]))
+-- The bounds and the separations of `Pre`. A separation of two regions is a pair of
+-- distances (the form of `region_sep`): `hs1` struct and frame, `hs2` data and frame, `hs3`
+-- operations and frame, `hs4` struct and data, `hs5` struct and operations, `hs6` data and
+-- operations.
+theorem facts (hpre : Pre 8 A s) (hL : (st s).len < (env s).n) (hd : (rdx s).toNat < (env s).n)
+    (hN : (st s).trace.length < cap s) :
+    (rd s.dmem s.regs.rdi.toBitVec).toNat < nOf s.dmem s.regs.rdi.toBitVec
+    ∧ s.regs.rdx.toBitVec.toNat < nOf s.dmem s.regs.rdi.toBitVec
+    ∧ (rd s.dmem (s.regs.rdi.toBitVec + 16#64)).toNat < 6 * nOf s.dmem s.regs.rdi.toBitVec
+    ∧ nOf s.dmem s.regs.rdi.toBitVec ≤ 1024
+    ∧ (16456 ≤ (s.regs.rsp.toBitVec - 8#64 - s.regs.rdi.toBitVec).toNat
+      ∧ 8 ≤ (s.regs.rdi.toBitVec - (s.regs.rsp.toBitVec - 8#64)).toNat)
+    ∧ (8 * nOf s.dmem s.regs.rdi.toBitVec
+        ≤ (s.regs.rsp.toBitVec - 8#64 - rd s.dmem (s.regs.rdi.toBitVec + 64#64)).toNat
+      ∧ 8 ≤ (rd s.dmem (s.regs.rdi.toBitVec + 64#64) - (s.regs.rsp.toBitVec - 8#64)).toNat)
+    ∧ (72 * nOf s.dmem s.regs.rdi.toBitVec
+        ≤ (s.regs.rsp.toBitVec - 8#64 - rd s.dmem (s.regs.rdi.toBitVec + 48#64)).toNat
+      ∧ 8 ≤ (rd s.dmem (s.regs.rdi.toBitVec + 48#64) - (s.regs.rsp.toBitVec - 8#64)).toNat)
+    ∧ (16456 ≤ (rd s.dmem (s.regs.rdi.toBitVec + 64#64) - s.regs.rdi.toBitVec).toNat
+      ∧ 8 * nOf s.dmem s.regs.rdi.toBitVec
+        ≤ (s.regs.rdi.toBitVec - rd s.dmem (s.regs.rdi.toBitVec + 64#64)).toNat)
+    ∧ (16456 ≤ (rd s.dmem (s.regs.rdi.toBitVec + 48#64) - s.regs.rdi.toBitVec).toNat
+      ∧ 72 * nOf s.dmem s.regs.rdi.toBitVec
+        ≤ (s.regs.rdi.toBitVec - rd s.dmem (s.regs.rdi.toBitVec + 48#64)).toNat)
+    ∧ (8 * nOf s.dmem s.regs.rdi.toBitVec
+        ≤ (rd s.dmem (s.regs.rdi.toBitVec + 48#64) - rd s.dmem (s.regs.rdi.toBitVec + 64#64)).toNat
+      ∧ 72 * nOf s.dmem s.regs.rdi.toBitVec
+        ≤ (rd s.dmem (s.regs.rdi.toBitVec + 64#64) - rd s.dmem (s.regs.rdi.toBitVec + 48#64)).toNat)
+    ∧ s.regs.rdi.toBitVec.toNat + 16456 ≤ 2 ^ 64
+    ∧ (rd s.dmem (s.regs.rdi.toBitVec + 64#64)).toNat + 8 * nOf s.dmem s.regs.rdi.toBitVec ≤ 2 ^ 64
+    ∧ (rd s.dmem (s.regs.rdi.toBitVec + 48#64)).toNat + 72 * nOf s.dmem s.regs.rdi.toBitVec
+      ≤ 2 ^ 64 := by
+  have hw := hpre.1
+  have hfr := hpre.2.1
+  have hle := hfr.le
+  have hsep := hfr.sep_struct (by decide)
+  have hst := hw.struct_lt
+  have hn : _ ≤ 1024 := hw.n_le
+  simp only [cap, st, env, n_envOf, len_stOf, nops_stOf] at hL hd hN
+  have hn0 : 0 < nOf s.dmem (rdi s) := by omega
+  have hsd := hw.sep_data hn0
+  have hso := hw.sep_ops hn0
+  have hdo := hw.sep_data_ops hn0
+  have hdl := hw.data_lt
+  have hol := hw.ops_lt
+  have hfd := hfr.sep_data (by decide) hn0
+  have hfo := hfr.sep_ops (by decide) hn0
+  simp only [WORDS_eq, dataOf, opsOf] at hle hsep hst hsd hso hdo hdl hol hfd hfo
+  bbu_norm at hL hd hN hle hsep hst hn hsd hso hdo hdl hol hfd hfo ⊢
+  generalize nOf s.dmem s.regs.rdi.toBitVec = n at *
+  refine ⟨hL, hd, hN, hn, ⟨?_, ?_⟩, ⟨?_, ?_⟩, ⟨?_, ?_⟩, ⟨?_, ?_⟩, ⟨?_, ?_⟩, ⟨?_, ?_⟩, hst, hdl,
+    hol⟩ <;> bv_omega
 
--- The struct before the stores.
-structure Lay (m : Mem 64) (S : Addr) : Prop where
-  wf : Wf m S
-  len : (rd m S).toNat < 1024
-  nops : (rd m (S + 16#64)).toNat < 6 * nOf m S
 
-theorem Lay.nat (h : Lay m S) :
-    S.toNat + 16448 ≤ 2 ^ 64 ∧ (rd m (S + 48#64)).toNat + 96 * nOf m S ≤ 2 ^ 64
-      ∧ 16448 ≤ (rd m (S + 48#64) - S).toNat ∧ 96 * nOf m S ≤ (S - rd m (S + 48#64)).toNat := by
-  have hs : S.toNat + 16448 ≤ 2 ^ 64 := h.wf.struct_lt
-  have ho : (rd m (S + 48#64)).toNat + 96 * nOf m S ≤ 2 ^ 64 := h.wf.ops_lt
-  have hn := h.nops
-  refine ⟨hs, ho, Nat.not_lt.mp fun hx => ?_, Nat.not_lt.mp fun hx => ?_⟩
-  · refine h.wf.disj_struct (rd m (S + 48#64)) (Or.inl (show _ + 1 ≤ 16448 by omega)) (Or.inl ?_)
-    show (rd m (S + 48#64) - rd m (S + 48#64)).toNat + 1 ≤ 96 * nOf m S
-    simp only [BitVec.sub_self, BitVec.toNat_zero]; omega
-  · refine h.wf.disj_struct S (Or.inl (show (S - S).toNat + 1 ≤ 16448 by simp)) (Or.inl ?_)
-    show (S - rd m (S + 48#64)).toNat + 1 ≤ 96 * nOf m S
-    omega
+-- The word that `cmpq $-1, 8264(%rdi,%rdx,8)` reads is `m_positionOf[d]`.
+theorem pos_word {ra : Int64} (hpre : Pre 8 A s) (hL : (st s).len < (env s).n)
+    (hd : (rdx s).toNat < (env s).n) (hN : (st s).trace.length < cap s) :
+    optOf (rd (Mem.storeInt s.dmem (s.regs.rsp.toBitVec - 8#64) 8 ra.toBitVec.toInt)
+      (s.regs.rdi.toBitVec + s.regs.rdx.toBitVec * 8#64 + 8264#64))
+      = positionOf (st s) (rdx s).toNat := by
+  obtain ⟨-, hd', -, hn, hs1, -⟩ := facts hpre hL hd hN
+  clear hpre hL hd hN
+  simp only [st, rdi, rdx, Reg64s.get64_rdi, Reg64s.get64_rdx]
+  rw [positionOf_stOf hd', wordAt_pos]
+  generalize nOf s.dmem s.regs.rdi.toBitVec = n at *
+  pd_rd
 
--- The address of the new operation.
-abbrev opA (m : Mem 64) (S : Addr) : Addr := rd m (S + 48#64) + rd m (S + 16#64) * 16#64
-
--- The memory after the stores of `push` and `dup`: the destination of the new slot,
--- the new operation `⟨c, r⟩`, `nops + 1`, the value of the new slot and `len + 1`.
-def stores (m : Mem 64) (S : Addr) (v d : Word) (c : Int) (r : Word) : Mem 64 :=
-  (((((m.storeInt (S + rd m S * 8#64 + 8256#64) 8 d.toInt).storeInt (opA m S) 8 c).storeInt
-    (opA m S + 8#64) 8 r.toInt).storeInt (S + 16#64) 8 (1#64 + rd m (S + 16#64)).toInt).storeInt
-    (S + rd m S * 8#64 + 64#64) 8 v.toInt).storeInt S 8 (1#64 + rd m S).toInt
-
-theorem stores_un (h : Lay m S) (v d : Word) (c : Int) (r : Word) :
-    Mem.UnchangedOutside (writable m S) m (stores m S v d c r) := by
-  obtain ⟨h1, h2, h3, h4⟩ := h.nat
-  have := h.nops
-  have hl := h.len
-  have h0 : Mem.UnchangedOutside (writable m S) m m := fun _ _ => rfl
-  refine (((((h0.storeInt ?_ _).storeInt ?_ _).storeInt ?_ _).storeInt ?_ _).storeInt ?_ _).storeInt ?_ _
-  all_goals simp only [writable, opsOf, wordAt, STACK, MAX_N, Mem.Blocks.Inside, Nat.reduceMul]
-  · exact Or.inr (Or.inl (by bv_omega))
-  · exact Or.inr (Or.inr (Or.inl (by bv_omega)))
-  · exact Or.inr (Or.inr (Or.inl (by bv_omega)))
-  · exact Or.inl (by bv_omega)
-  · exact Or.inr (Or.inl (by bv_omega))
-  · exact Or.inl (by bv_omega)
-
--- The facts for `bv_omega` of a `Lay`.
-local macro "lay_facts" h:term : tactic => `(tactic| (
-  obtain ⟨h1, h2, h3, h4⟩ := ($h).nat
-  have hn := ($h).nops
-  have hl := ($h).len
-  generalize nOf m S = n at h2 h4 hn))
-
-section
-variable (h : Lay m S) (v d : Word) (c : Int) (r : Word)
-include h
-
-theorem stores_len : rd (stores m S v d c r) S = 1#64 + rd m S := by
-  lay_facts h; simp only [stores]; pd_rds
-
-theorem stores_pend : rd (stores m S v d c r) (wordAt S 1) = rd m (wordAt S 1) := by
-  lay_facts h; simp only [stores, wordAt]; pd_rds
-
-theorem stores_nops : rd (stores m S v d c r) (wordAt S 2) = 1#64 + rd m (S + 16#64) := by
-  lay_facts h; simp only [stores, wordAt]; pd_rds
-
-theorem stores_ops : opsOf (stores m S v d c r) S = rd m (S + 48#64) := by
-  lay_facts h; simp only [stores, opsOf, wordAt, Nat.reduceMul]; pd_rds
-
-theorem stores_slot {i : Nat} (hi : i < (rd m S).toNat) :
-    slotOf (stores m S v d c r) S i = slotOf m S i := by
-  lay_facts h; simp only [slotOf, stores, wordAt, STACK, DEST_eq]; pd_rds
-
-theorem stores_slotL : slotOf (stores m S v d c r) S (rd m S).toNat = ⟨v, d.toNat⟩ := by
-  lay_facts h; simp only [slotOf, stores, wordAt, STACK, DEST_eq]; pd_rds
-
-theorem stores_op {i : Nat} (hi : i < (rd m (S + 16#64)).toNat) :
-    opOf (stores m S v d c r) S i = opOf m S i := by
-  simp only [opOf]
-  rw [stores_ops h]
-  lay_facts h; simp only [stores, opsOf, wordAt, Nat.reduceMul]; pd_rds
-
-theorem stores_opN : opOf (stores m S v d c r) S (rd m (S + 16#64)).toNat = ⟨BitVec.ofInt 64 c, r⟩ := by
-  simp only [opOf]
-  rw [stores_ops h]
-  lay_facts h; simp only [stores, wordAt]; pd_rds
-
-theorem stOf_stores :
-    stOf (stores m S v d c r) S =
-      { stOf m S with slots := (stOf m S).slots ++ [(⟨v, d.toNat⟩ : Slot)]
-                      trace := (stOf m S).trace ++ [(⟨BitVec.ofInt 64 c, r⟩ : Op)] } := by
-  have hl1 : (1#64 + rd m S).toNat = (rd m S).toNat + 1 := by have := h.len; bv_omega
-  have hn1 : (1#64 + rd m (S + 16#64)).toNat = (rd m (S + 16#64)).toNat + 1 := by
-    have := h.nops; have := h.wf.ops_lt; bv_omega
-  have hw0 : wordAt S 0 = S := by simp [wordAt]
-  have hw2 : wordAt S 2 = S + 16#64 := rfl
-  simp only [stOf, stores_len h, stores_pend h, stores_nops h, hl1, hn1, List.range_succ,
-    List.map_append, List.map_cons, List.map_nil, stores_slotL h, stores_opN h, hw0, hw2]
-  congr 2
-  · exact List.map_congr_left fun i hi => stores_slot h v d c r (List.mem_range.mp hi)
-  · exact List.map_congr_left fun i hi => stores_op h v d c r (List.mem_range.mp hi)
+-- The flag of `cmpq $-1, 8264(%rdi,%rdx,8)` tells if the destination has a slot.
+theorem pos_flag {ra : Int64} (hpre : Pre 8 A s) (hL : (st s).len < (env s).n)
+    (hd : (rdx s).toNat < (env s).n) (hN : (st s).trace.length < cap s)
+    {r : StatusFlags.from_result.Remaining} {b : Bool}
+    (h : CondCode.nz.interp (StatusFlags.from_result
+      (rd (Mem.storeInt s.dmem (s.regs.rsp.toBitVec - 8#64) 8 ra.toBitVec.toInt)
+        (s.regs.rdi.toBitVec + s.regs.rdx.toBitVec * 8#64 + 8264#64) - 18446744073709551615#64)
+      r) = b) :
+    (positionOf (st s) (rdx s).toNat).isSome = b := by
+  rw [← pos_word (ra := ra) hpre hL hd hN, ← h, nz_sub]
+  simp only [optOf]
+  split <;> simp_all
 
 end
 
-end
-section
-variable {s : MachineData} {ra : Int64} {A : MachineData → Prop} {m : Mem 64}
+/-! ## The model state after `add` -/
 
-theorem Fm.lay (hpre : Pre 40 A s) (hA : (st s).len < MAX_N ∧ (st s).trace.length < cap s)
-    (h : Fm s ra m) (hst : stOf m (rdi s) = st s) : Lay m (rdi s) := by
-  have hn : nOf m (rdi s) = nOf s.dmem (rdi s) :=
-    congrArg BitVec.toNat (hdr_congr h.un hpre.disj (k := 3) (by omega) (by omega))
-  obtain ⟨hl, ho⟩ := hA
-  rw [← hst] at hl ho
-  refine ⟨h.wf, ?_, ?_⟩
-  · simpa [St.len, stOf, wordAt, MAX_N] using hl
-  · rw [hn]; simpa [stOf, cap] using ho
-
-theorem Fm.after_stores (hpre : Pre 40 A s) (h : Fm s ra m) (hl : Lay m (rdi s)) (v d : Word)
-    (c : Int) (r : Word) : Fm s ra (stores m (rdi s) v d c r) := by
-  have hwr := (h.keeps hpre).2.2
-  have hm0 : Mem.Mapped (writable m (rdi s)) m := fun x hx => h.wf.mapped x (inside_append.mpr (Or.inl hx))
-  have hst := stOf_stores hl v d c r
-  have hsl := congrArg (fun t => t.slots.length) hst
-  have hop := congrArg (fun t => t.trace.length) hst
-  simp only [stOf, List.length_map, List.length_range, List.length_append, List.length_cons,
-    List.length_nil] at hsl hop
-  have hlen := hl.len
-  have hnops := hl.nops
-  refine Kit.Fm.write (by decide) hpre h (hwr ▸ stores_un hl v d c r) ?_ ?_ ?_
-  · rw [← hwr]
-    exact ((((((hm0.storeInt _ _ _).storeInt _ _ _).storeInt _ _ _).storeInt _ _ _).storeInt _ _ _).storeInt _ _ _)
-  · simp only [wordAt, Nat.reduceMul, BitVec.add_zero, MAX_N] at hsl hlen ⊢; omega
-  · have hn : nOf m (rdi s) = nOf s.dmem (rdi s) :=
-      congrArg BitVec.toNat (hdr_congr h.un hpre.disj (k := 3) (by omega) (by omega))
-    simp only [wordAt, Nat.reduceMul] at hop hnops ⊢; omega
-
--- A load from the struct regions after stores that keep them mapped.
-theorem isSome_of {m m' : Mem 64} {S a : Addr} (_hw : Wf m S)
-    (hm : Mem.Mapped (writable m S ++ readable m S) m')
-    (hin : Mem.Blocks.Inside a 8 (writable m S ++ readable m S)) : (m'.loadInt a 8).isSome = true :=
-  hm.loadInt_isSome hin
-
--- The pops read the saved words.
-theorem Fm.pops (h : Fm s ra m) {a : Addr} (ha : a = rsp s - 32#64) :
-    rd m a = s.regs.rbx.toBitVec ∧ rd m (a + 8#64) = s.regs.rbp.toBitVec
-      ∧ rd m (a + 8#64 + 8#64) = s.regs.r12.toBitVec := by
-  subst ha
-  refine ⟨h.saved 2 (by decide), ?_, ?_⟩
-  · rw [show rsp s - 32#64 + 8#64 = rsp s - 24#64 by bv_omega]; exact h.saved 1 (by decide)
-  · rw [show rsp s - 32#64 + 8#64 + 8#64 = rsp s - 16#64 by bv_omega]; exact h.saved 0 (by decide)
-
--- The result of `push` and `dup` depends on `rax` and the memory.
-theorem res_congr {r : M St} {t t' : MachineData} (hm : t'.dmem = t.dmem) (hax : rax t' = rax t)
-    (h : Res (rdi s) r (Ok s t (fun _ => 0#64) id) t) : Res (rdi s) r (Ok s t' (fun _ => 0#64) id) t' := by
-  unfold Res at *
-  rcases r with (⟨p, x⟩ | _) | a
-  · exact ⟨hax.trans h.1, hm ▸ h.2.1, hm ▸ h.2.2⟩
-  · exact hax.trans h
-  · exact ⟨hax.trans h.1, by simp only [st', hm]; exact h.2⟩
-
-end
+-- The model state after `add`, from the words in memory.
+theorem st_add {m m' : Mem 64} {S : Addr} {slot : StackSlot} {d : Nat} {op : Op}
+    (hnone : positionOf (stOf m S) d = none) (hn : nOf m' S = nOf m S)
+    (hlen : (rd m' (wordAt S 0)).toNat = (rd m (wordAt S 0)).toNat + 1)
+    (hpend : rd m' (wordAt S 1) = rd m (wordAt S 1))
+    (hnops : (rd m' (wordAt S 2)).toNat = (rd m (wordAt S 2)).toNat + 1)
+    (hdata : dataOf m' S = dataOf m S)
+    (hval : ∀ i < (rd m (wordAt S 0)).toNat,
+      rd m' (wordAt (dataOf m S) i) = rd m (wordAt (dataOf m S) i))
+    (hvalL : StackSlot.ofWord (rd m' (wordAt (dataOf m S) (rd m (wordAt S 0)).toNat)) = slot)
+    (hdest : ∀ i < (rd m (wordAt S 0)).toNat,
+      rd m' (wordAt S (DEST + i)) = rd m (wordAt S (DEST + i)))
+    (hdestL : (rd m' (wordAt S (DEST + (rd m (wordAt S 0)).toNat))).toNat = d)
+    (hpos : ∀ e < nOf m S, e ≠ d → rd m' (wordAt S (POS + e)) = rd m (wordAt S (POS + e)))
+    (hposd : optOf (rd m' (wordAt S (POS + d))) = some (rd m (wordAt S 0)).toNat)
+    (hop : ∀ i < (rd m (wordAt S 2)).toNat, opOf m' S i = opOf m S i)
+    (hopN : opOf m' S (rd m (wordAt S 2)).toNat = op) :
+    add (stOf m S) slot d op = .ok (stOf m' S) := by
+  unfold add
+  rw [hnone]
+  simp only [Option.isSome_none, Bool.false_eq_true, ite_false, Except.ok.injEq]
+  symm
+  apply stOf_eq
+  · simp [St.len, stOf, hlen]
+  · simp [stOf, hpend]
+  · simp [stOf, hnops]
+  · intro i hi
+    simp only [St.len, stOf, List.length_append, List.length_map, List.length_range,
+      List.length_singleton] at hi
+    simp only [stOf]
+    rcases Nat.lt_or_ge i (rd m (wordAt S 0)).toNat with h | h
+    · rw [List.getElem_append_left (by simpa using h)]
+      simp only [List.getElem_map, List.getElem_range, slotOf, hdata, hval i h, hdest i h]
+    · have : i = (rd m (wordAt S 0)).toNat := by omega
+      subst this
+      rw [List.getElem_append_right (by simp)]
+      simp only [List.length_map, List.length_range, Nat.sub_self, List.getElem_singleton, slotOf,
+        hdata, hvalL, hdestL]
+  · simp [stOf, hn]
+  · intro e he
+    simp only [stOf, List.length_set, List.length_map, List.length_range] at he
+    simp only [stOf, List.getElem_set]
+    split
+    · subst_vars; rw [hposd]; simp [St.len]
+    · simp only [List.getElem_map, List.getElem_range]; rw [hpos e he (Ne.symm ‹_›)]
+  · intro i hi
+    simp only [stOf, List.length_append, List.length_map, List.length_range,
+      List.length_singleton] at hi
+    simp only [stOf]
+    rcases Nat.lt_or_ge i (rd m (wordAt S 2)).toNat with h | h
+    · rw [List.getElem_append_left (by simpa using h)]
+      simp only [List.getElem_map, List.getElem_range, hop i h]
+    · have : i = (rd m (wordAt S 2)).toNat := by omega
+      subst this
+      rw [List.getElem_append_right (by simp)]
+      simp only [List.length_map, List.length_range, Nat.sub_self, List.getElem_singleton, hopN]
 
 end PushDup
 

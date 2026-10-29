@@ -1,15 +1,19 @@
 shallowestCopyPosition:
 	movq	(%rdi), %rax
-	.p2align 4
-.LB11:
+	.p2align 5
+.LB6:
 	testq	%rax, %rax
-	je	.LB14
+	je	.LB9
 	subq	$1, %rax
-	cmpq	%rsi, 64(%rdi,%rax,8)
-	jne	.LB11
+	movq	64(%rdi), %rdx
+	movq	%rsi, %rcx
+	xorq	(%rdx,%rax,8), %rcx
+	movq	%rcx, %rdx
+	salq	$16, %rdx
+	jne	.LB6
 	ret
-.LB14:
+.LB9:
 	movq	$-1, %rax
-.LB10:
+.LB7:
 	ret
 	.size	shallowestCopyPosition, .-shallowestCopyPosition

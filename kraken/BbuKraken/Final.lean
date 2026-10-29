@@ -1,5 +1,4 @@
 import BbuKraken.Fn.IsSpilled
-import BbuKraken.Fn.PositionOf
 import BbuKraken.Fn.ShallowestCopy
 import BbuKraken.Fn.SwapWith
 import BbuKraken.Fn.Push
@@ -30,17 +29,16 @@ theorem buildBottomUp_correct [Host] (L : Linked) :
   letI : Embeds State.permuteAsm := ⟨⟨L.j, L.hp⟩⟩
   have hperm := permute_callSpec L.permute_decl
   have hspill := Program.WP.callSpec_of_triple L.isSpilled_decl isSpilled_body
-  have hpos := Program.WP.callSpec_of_triple L.positionOf_decl positionOf_body
   have hcopy := Program.WP.callSpec_of_triple L.shallowestCopy_decl shallowestCopy_body
-  have hpush := Program.WP.callSpec_of_triple L.push_decl (push_body hpos)
-  have hdup := Program.WP.callSpec_of_triple L.dup_decl (dup_body hpos)
+  have hpush := Program.WP.callSpec_of_triple L.push_decl push_body
+  have hdup := Program.WP.callSpec_of_triple L.dup_decl dup_body
   have hswap := Program.WP.callSpec_of_triple L.swapWith_decl swapWith_body
   have hprod := Program.WP.callSpec_of_triple L.produce_decl
-    (produce_body hcopy hspill hpush hdup hpos)
+    (produce_body hcopy hspill hpush hdup)
   have hgen := Program.WP.callSpec_of_triple L.generate_decl (generate_body hprod hswap)
   have hfin := Program.WP.callSpec_of_triple L.finish_decl (finish_body hperm)
   have hloop := Program.WP.callSpec_of_triple L.loop_decl
-    (loop_body hfin hpos hspill hcopy hgen hswap)
+    (loop_body hfin hspill hcopy hgen hswap)
   exact buildBottomUp_body hloop
 
 end Bbu

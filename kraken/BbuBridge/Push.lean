@@ -14,7 +14,7 @@ private theorem mpr_apply {m n k : Nat} (hc : Mapping m k = Mapping n k) (M : Ma
   subst hmn; rfl
 
 theorem push_corr : PushStmt := by
-  intro e source st state v d hd h hv
+  intro e source st state v d hd h hc hv
   have hgen : (decode v).can_be_freely_generated ∨ (spillSet e).is_spilled (decode v) := by
     rcases hv with hv | hv
     · exact .inl ((isFree_iff v).mp hv)
@@ -27,7 +27,7 @@ theorem push_corr : PushStmt := by
     rw [← hpos]
     simp only [requires, hp, hgen, ↓reduceDIte, pure, Except.pure, bind, Except.bind,
       Option.map_none, Option.isSome_none, Bool.false_eq_true, ↓reduceIte]
-    refine ⟨?_, ?_, h.pendingGenerations, ?_⟩
+    refine ⟨?_, ?_, h.pendingGenerations, ?_, ?_, ?_, h.target⟩
     · show state.stack ++ [decode v] = _
       simp [h.stack]
     · intro i
@@ -45,7 +45,7 @@ theorem push_corr : PushStmt := by
           Mapping.push_apply_top state.mapping ⟨d, hd⟩ hp]
         simp [Bbu.St.dest, hl]
     · dsimp only
-      conv_rhs => rw [← encode_decode v]
+      conv_rhs => rw [← encode_decode hc]
       revert hgen
       generalize decode v = x
       intro hgen
@@ -53,6 +53,11 @@ theorem push_corr : PushStmt := by
       all_goals first
         | simp [traceOps, encodeOp, h.trace]
         | simp [Value.can_be_freely_generated, SpillSet.is_spilled] at hgen
+    · exact h.pos.addState (by simpa [Bbu.Env.n] using hd) (by rw [← hpos]; rfl)
+    · intro s hs
+      rcases List.mem_append.mp hs with hs | hs
+      · exact h.canon s hs
+      · rw [List.mem_singleton.mp hs]; exact hc
   · obtain ⟨k, hk⟩ := Option.ne_none_iff_exists'.mp hp
     rw [hk] at hpos
     rw [← hpos]

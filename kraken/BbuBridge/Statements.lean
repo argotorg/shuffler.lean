@@ -15,9 +15,9 @@ open Shuffler Shuffler.Emission
 
 -- `add` with a push is `State.push`.
 def PushStmt : Prop :=
-  ∀ (e : Bbu.Env) (source : Stack) (st : Bbu.St) (state : OState e source) (v : Bbu.Word)
+  ∀ (e : Bbu.Env) (source : Stack) (st : Bbu.St) (state : OState e source) (v : Bbu.StackSlot)
     (d : Nat) (hd : d < (tgt e).length),
-    Rel e st state → (Bbu.isFree v = true ∨ Bbu.isSpilled e v = true) →
+    Rel e st state → Canon v → (Bbu.canBeFreelyGenerated v = true ∨ Bbu.isSpilled e v = true) →
     Corr (Rel e) (Bbu.add st v d (.push v)) (state.push (decode v) ⟨d, hd⟩)
 
 -- `add` with a dup of the slot at `c` is `State.dup`.
@@ -68,8 +68,8 @@ def CopyScanStmt : Prop :=
 def FinishStmt : Prop :=
   ∀ (e : Bbu.Env) (source : Stack) (st : Bbu.St) (state : OState e source),
     Rel e st state →
-    (if st.len = e.n then Bbu.finish st else .error .assertion) =
-      encodeRes (post (tgt e) (origFinish state))
+    Corr ResRel (if st.len = e.n then Bbu.finish st else .error .assertion)
+      (post (tgt e) (origFinish state))
 
 /-! ## The branches of `step` after the urgent scan -/
 
@@ -125,24 +125,24 @@ def StepStmt : Prop :=
 
 def LoopStmt : Prop :=
   ∀ (e : Bbu.Env) (source : Stack) (st : Bbu.St) (state : OState e source) (t : Nat),
-    Rel e st state → Bbu.loop e st t = encodeRes (post (tgt e) (buildBottomUp.loop t state))
+    Rel e st state → Corr ResRel (Bbu.loop e st t) (post (tgt e) (buildBottomUp.loop t state))
 
 /-! ## The initial state -/
 
 def InitValidStmt : Prop :=
-  ∀ (e : Bbu.Env) (source : List Bbu.Word) (dests : List Nat) (h : ModelValid e source dests),
+  ∀ (e : Bbu.Env) (source : List Bbu.StackSlot) (dests : List Nat) (h : ModelValid e source dests),
     (initState e source dests h).Valid
 
 def InitRelStmt : Prop :=
-  ∀ (e : Bbu.Env) (source : List Bbu.Word) (dests : List Nat) (h : ModelValid e source dests),
-    Rel e (initSt e source dests) (initState e source dests h)
+  ∀ (e : Bbu.Env) (source : List Bbu.StackSlot) (dests : List Nat) (h : ModelValid e source dests),
+    Rel e (Bbu.init e source dests) (initState e source dests h)
 
 def ExpectedStmt : Prop :=
-  ∀ (e : Bbu.Env) (source : List Bbu.Word) (dests : List Nat) (h : ModelValid e source dests),
+  ∀ (e : Bbu.Env) (source : List Bbu.StackSlot) (dests : List Nat) (h : ModelValid e source dests),
     (initState e source dests h).expectedStack = (expected e source dests).map decode
 
 def MappedStmt : Prop :=
-  ∀ (e : Bbu.Env) (source : List Bbu.Word) (dests : List Nat) (h : ModelValid e source dests),
+  ∀ (e : Bbu.Env) (source : List Bbu.StackSlot) (dests : List Nat) (h : ModelValid e source dests),
     Mapped e source dests →
     ∀ i j, (initState e source dests h).mapping i = some j →
       (initState e source dests h).stack[i] = (tgt e)[j]

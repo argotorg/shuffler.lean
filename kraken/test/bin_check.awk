@@ -12,7 +12,12 @@
 #   C  (objdump) The symbol comment "<sym+off>" after a branch target goes.
 #   S  (objdump) The suffix "q" goes from call, ret, jmp, lea and cmovCC. Kraken
 #                prints these without a suffix: the width is 64, or the register
-#                operand gives it.
+#                operand gives it. The suffix "l" goes from lea when the destination
+#                is a 32-bit register, and from cmovCC when both operands are 32-bit
+#                registers (objdump prints "cmovCCq" for 64 bits).
+#   A  (objdump) movabsq with an immediate source and a 64-bit register destination
+#                becomes movq, as Kraken prints it. The size tells the two encodings
+#                apart.
 #   X  (objdump) movzSD and movsSD with a register source become movzx and movsx, as
 #                Kraken prints them. The register names give the widths.
 #   N  (objdump) Hex numbers become decimal. A displacement keeps its sign, and a
@@ -43,12 +48,16 @@ function blanks(t) {
 	gsub(/[ \t]+/, " ", t); gsub(/, /, ",", t); sub(/^ /, "", t); sub(/ $/, "", t)
 	return t
 }
-function norm_objdump(t,   m, ops, s, w, out, h) {
+function norm_objdump(t,   m, ops, r32, s, w, out, h) {
 	sub(/ <[^>]*>[ \t]*$/, "", t)  # Rule C.
 	t = blanks(t)
 	m = t; sub(/ .*/, "", m)
 	ops = substr(t, length(m) + 2)
 	if (m ~ /^(call|ret|jmp|lea|cmov[a-z]+)q$/) m = substr(m, 1, length(m) - 1)  # Rule S.
+	r32 = "%(e[a-z][a-z]|r[0-9]+d)"
+	if ((m == "leal" && ops ~ ("," r32 "$")) || (m ~ /^cmov[a-z]+l$/ && ops ~ ("^" r32 "," r32 "$")))
+		m = substr(m, 1, length(m) - 1)  # Rule S.
+	if (m == "movabsq" && ops ~ /^\$0x[0-9a-f]+,%r([a-z][a-z]|[0-9]+)$/) m = "movq"  # Rule A.
 	if (m ~ /^mov[sz][bwl][wlq]$/ && ops ~ /^%/) m = substr(m, 1, 4) "x"  # Rule X.
 	# Rule N.
 	s = substr(m, length(m))

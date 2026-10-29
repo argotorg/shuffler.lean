@@ -29,29 +29,33 @@ theorem produce_corr (hpush : PushStmt) (hdup : DupStmt) : ProduceStmt := by
     rw [← h'.positionOf ⟨d, hd⟩, ← h'.len]
     by_cases hc : (state'.positionOf ⟨d, hd⟩).map Fin.val = some (state'.stack.length - 1)
     · rw [requires_of_true _ hc, ite_eq_right (not_not.mpr hc)]
-      exact ⟨h'.stack, h'.dest, by simp [h'.pendingGenerations], h'.trace⟩
+      exact ⟨h'.stack, h'.dest, by simp [h'.pendingGenerations], h'.trace,
+        h'.pos.congr rfl rfl, h'.canon, h'.target⟩
     · rw [ite_eq_left hc]
       simp only [requires, dite_eq_right hc]
       rfl
   -- A push of a free or spilled value.
-  have hpush' : ∀ v : Bbu.Word,
+  have hpush' : ∀ v : Bbu.StackSlot, Canon v →
       (decode v).can_be_freely_generated ∨ (spillSet e).is_spilled (decode v) →
       Corr (Rel e) ((Bbu.add st v d (.push v)).bind _) (state.push (decode v) ⟨d, hd⟩ >>= _) :=
-    fun v hg => produce_corr_bind (hpush e source st state v d hd h
+    fun v hv hg => produce_corr_bind (hpush e source st state v d hd h hv
       (by rwa [isFree_iff, isSpilled_iff])) hfin
   unfold Bbu.produce Bbu.emit State.produce
   dsimp only
   rw [tgt_get e d hd]
+  have hcv := h.canonTarget d
+  revert hcv
   generalize e.target[d]! = v
+  intro hcv
   -- A wildcard.
-  by_cases h0 : v = 0
+  by_cases h0 : Bbu.isJunk v = true
   · rw [ite_eq_left h0, ite_eq_left ((isJunk_iff v).mpr h0)]
-    exact hpush' v (.inl ((isFree_iff v).mp (by simp [h0, Bbu.isFree])))
+    exact hpush' v hcv (.inl ((isFree_iff v).mp (by unfold Bbu.isJunk at h0; simp [Bbu.canBeFreelyGenerated, h0])))
   rw [ite_eq_right h0, ite_eq_right (mt (isJunk_iff v).mp h0)]
   have hfree : (decode v).can_be_freely_generated ∨ (spillSet e).is_spilled (decode v) ↔
-      (Bbu.isFree v || Bbu.isSpilled e v) = true := by
+      (Bbu.canBeFreelyGenerated v || Bbu.isSpilled e v) = true := by
     rw [Bool.or_eq_true, isFree_iff, isSpilled_iff]
-  have hc := h.shallowestCopyPosition v
+  have hc := h.shallowestCopyPosition hcv
   cases hco : state.stack.shallowestCopyPosition (decode v) with
   | none =>
     -- No copy: a push, or an assertion.
@@ -60,7 +64,7 @@ theorem produce_corr (hpush : PushStmt) (hdup : DupStmt) : ProduceStmt := by
     simp only [Option.filter_none]
     by_cases hg : (decode v).can_be_freely_generated ∨ (spillSet e).is_spilled (decode v)
     · rw [ite_eq_left hg, ite_eq_left (hfree.mp hg)]
-      exact hpush' v hg
+      exact hpush' v hcv hg
     · rw [ite_eq_right hg, ite_eq_right (mt hfree.mpr hg)]
       rfl
   | some pos =>
@@ -71,7 +75,7 @@ theorem produce_corr (hpush : PushStmt) (hdup : DupStmt) : ProduceStmt := by
       have := List.find?_some hco
       simp only [decide_eq_true_eq] at this
       rw [h.get] at this
-      exact decode_injective this
+      exact decode_inj (h.canonVal _) hcv this
     have hpl : pos.val < st.len := h.len ▸ pos.isLt
     have hreach : state.stack.isDupReachable pos ↔ st.len - 1 - pos.val ≤ Bbu.MAX_DUP_DEPTH := by
       unfold Stack.isDupReachable Stack.offsetToDepth
@@ -86,7 +90,7 @@ theorem produce_corr (hpush : PushStmt) (hdup : DupStmt) : ProduceStmt := by
       Bool.false_eq_true, ite_false]
     by_cases hg : (decode v).can_be_freely_generated ∨ (spillSet e).is_spilled (decode v)
     · rw [ite_eq_left hg, ite_eq_left (hfree.mp hg)]
-      exact hpush' v hg
+      exact hpush' v hcv hg
     -- The copy is out of dup reach.
     rw [ite_eq_right hg, ite_eq_right (mt hfree.mpr hg)]
     have hx : (state.depthOf pos).val - MAX_DUP_DEPTH > 0 := by

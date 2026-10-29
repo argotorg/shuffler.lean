@@ -180,17 +180,10 @@ theorem cap_call (hpre : Pre loopF loopA s) (hb : Base s ra t) (hc : c.dmem = t.
   show 6 * nOf c.dmem (rdi c) = _
   rw [hc, hdi, hb.fm.n hpre]
 
-theorem positionOf_post (hp : Post positionOfF positionOfR c t') (hc : c.dmem = t.dmem)
-    (hdi : rdi c = rdi s) :
-    rax t' = encOpt (positionOf (st' s t) (rsi c).toNat) ∧ st' s t' = st' s t := by
-  have h := hp.2.2
-  unfold positionOfR at h
-  rw [st_call hc hdi] at h
-  exact ⟨h.1, by simpa only [st', hdi] using h.2⟩
 
 theorem isSpilled_post (hpre : Pre loopF loopA s) (hb : Base s ra t)
     (hp : Post isSpilledF isSpilledR c t') (hc : c.dmem = t.dmem) (hdi : rdi c = rdi s) :
-    rax t' = BitVec.ofNat 64 (isSpilled (env s) (rsi c)).toNat ∧ st' s t' = st' s t := by
+    rax t' = BitVec.ofNat 64 (isSpilled (env s) (slot c)).toNat ∧ st' s t' = st' s t := by
   have h := hp.2.2
   unfold isSpilledR at h
   rw [st_call hc hdi, env_call hpre hb hc hdi] at h
@@ -198,7 +191,7 @@ theorem isSpilled_post (hpre : Pre loopF loopA s) (hb : Base s ra t)
 
 theorem shallowestCopy_post (hp : Post shallowestCopyF shallowestCopyR c t') (hc : c.dmem = t.dmem)
     (hdi : rdi c = rdi s) :
-    rax t' = encOpt (shallowestCopyPosition (st' s t) (rsi c)) ∧ st' s t' = st' s t := by
+    rax t' = encOpt (shallowestCopyPosition (st' s t) (slot c)) ∧ st' s t' = st' s t := by
   have h := hp.2.2
   unfold shallowestCopyR at h
   rw [st_call hc hdi] at h
@@ -222,11 +215,11 @@ theorem swapWith_post (hp : Post swapWithF swapWithR c t') (hc : c.dmem = t.dmem
   exact Res.imp h fun _ ⟨h1, h2⟩ => ⟨h1, by simpa only [st', hdi, id] using h2⟩
 
 theorem finish_post (hp : Post finishF finishR c t') (hc : c.dmem = t.dmem) (hdi : rdi c = rdi s) :
-    Res (rdi s) (finish (st' s t)) (fun ops => rax t' = 0#64 ∧ (st' s t').trace = ops) t' := by
+    Res (rdi s) (finish (st' s t)) (fun r => rax t' = 0#64 ∧ st' s t' = r) t' := by
   have h := hp.2.2
   unfold finishR at h
   rw [hdi, st_call hc hdi] at h
-  exact Res.imp h fun _ ⟨h1, h2⟩ => ⟨h1, by simpa only [st', hdi] using h2⟩
+  exact Res.imp h fun _ ⟨h1, h2⟩ => ⟨h1, by simpa only [st', hdi, id] using h2⟩
 
 -- An ok result has a word with no sign bit in `rax`.
 theorem res_ok_of_msb {α : Type} {S : Addr} {r : M α} {Q : α → Prop} {u : MachineData}
@@ -258,8 +251,8 @@ theorem Fm.store (hpre : Pre loopF loopA s) (h : Fm s ra m) {a : Addr} {v : Int}
     Fm s ra (m.storeInt a 8 v) ∧ rd (m.storeInt a 8 v) (rsp s - 72#64) = rd m (rsp s - 72#64) := by
   have hle : 4224 ≤ (rsp s).toNat := hpre.2.1.le
   have hm := h.toMid.store_w (by decide) hpre ha v
-  refine ⟨⟨hm, hm.wf hpre (h0 ▸ h.wf.len_le) (by rw [h2, ← h.n hpre]; exact h.wf.nops_le),
-    fun i hi => ?_⟩, rd_store_frame hpre ha (slot_in hpre) v⟩
+  refine ⟨⟨hm, hm.wf hpre (by rw [h0, ← h.n hpre]; exact h.wf.len_le)
+    (by rw [h2, ← h.n hpre]; exact h.wf.nops_le), fun i hi => ?_⟩, rd_store_frame hpre ha (slot_in hpre) v⟩
   rw [rd_store_frame hpre ha ?_ v]
   · exact h.saved i hi
   · simp only [regs, List.length_cons, List.length_nil] at hi
@@ -271,111 +264,242 @@ theorem Fm.store (hpre : Pre loopF loopA s) (h : Fm s ra m) {a : Addr} {v : Int}
 end
 
 section
-variable {m : Mem 64} {S : Addr}
+variable {m : Mem 64} {S : Addr} {k : Nat}
+
+-- A word of `m_destinationOf` or `m_positionOf` is in `writable`.
+theorem inside_word (hk1 : DEST ≤ k) (hk : k < WORDS) :
+    Mem.Blocks.Inside (wordAt S k) 8 (writable m S) := by
+  apply inside_writable
+  simp only [wordAt, DEST_eq, WORDS_eq] at hk1 hk ⊢
+  right; left
+  constructor <;> bv_omega
 
 -- The dest word of slot `i` is in `writable`.
 theorem inside_dest {i : Nat} (hi : i < 1024) :
-    Mem.Blocks.Inside (wordAt S (DEST + i)) 8 (writable m S) := by
-  have : wordAt S (DEST + i) = wordAt S STACK + BitVec.ofNat 64 (8 * (DEST + i - 8)) := by
-    simp only [STACK, DEST_eq]; bv_omega
-  rw [this]
-  exact (Mem.Blocks.Inside.base_add (by simp only [BitVec.toNat_ofNat, MAX_N, DEST_eq]; omega)).tail
+    Mem.Blocks.Inside (wordAt S (DEST + i)) 8 (writable m S) :=
+  inside_word (Nat.le_add_right _ _) (by simp only [DEST_eq, WORDS_eq]; omega)
+
+-- A store to a word of the struct keeps the other words of the struct.
+theorem rd_store_word (hw : Wf m S) {j : Nat} (hk : k < WORDS) (hj : j < WORDS) (hne : j ≠ k)
+    (v : Int) : rd (m.storeInt (wordAt S k) 8 v) (wordAt S j) = rd m (wordAt S j) :=
+  rd_storeInt_of_disjoint (disjoint_wordAt (Ne.symm hne) hk hj hw.struct_lt)
 
 -- A store to the dest word of slot `i` keeps the other words of the struct.
 theorem rd_store_dest_other (hw : Wf m S) {i k : Nat} (hi : i < 1024) (hk : k < WORDS)
     (hne : k ≠ DEST + i) (v : Int) :
     rd (m.storeInt (wordAt S (DEST + i)) 8 v) (wordAt S k) = rd m (wordAt S k) :=
-  rd_storeInt_of_disjoint (disjoint_wordAt (Ne.symm hne) (by simp only [DEST_eq, WORDS_eq]; omega) hk
-    hw.struct_lt)
+  rd_store_word hw (by simp only [DEST_eq, WORDS_eq]; omega) hk hne v
 
--- A store to the dest word of slot `i` keeps the ops buffer.
-theorem rd_store_dest_ops (hw : Wf m S) {i j : Nat} (hi : i < 1024) (hj : j < 12 * nOf m S) (v : Int) :
-    rd (m.storeInt (wordAt S (DEST + i)) 8 v) (wordAt (opsOf m S) j) = rd m (wordAt (opsOf m S) j) := by
+-- A store to a word of the struct keeps the working stack.
+theorem rd_store_data (hw : Wf m S) (hk : k < WORDS) {i : Nat} (hi : i < nOf m S) (v : Int) :
+    rd (m.storeInt (wordAt S k) 8 v) (wordAt (dataOf m S) i) = rd m (wordAt (dataOf m S) i) := by
+  have hs := hw.struct_lt
+  have hd := hw.data_lt
+  refine rd_storeInt_of_disjoint fun x hx hy => hw.disj_struct x ?_ (Or.inl ?_)
+  · simp only [Mem.Blocks.Inside, or_false, WORDS_eq] at hx hs hk ⊢; bv_omega
+  · simp only [Mem.Blocks.Inside, or_false] at hy ⊢; bv_omega
+
+-- A store to a word of the struct keeps the ops buffer.
+theorem opOf_store_word (hw : Wf m S) (hk1 : DEST ≤ k) (hk : k < WORDS) {i : Nat}
+    (hi : i < 6 * nOf m S) (v : Int) :
+    opOf (m.storeInt (wordAt S k) 8 v) S i = opOf m S i := by
   have hs := hw.struct_lt
   have ho := hw.ops_lt
-  refine rd_storeInt_of_disjoint fun x hx hy => hw.disj_struct x ?_ (Or.inl ?_)
-  · simp only [Mem.Blocks.Inside, or_false, DEST_eq, WORDS_eq] at hx hs ⊢
-    bv_omega
-  · simp only [Mem.Blocks.Inside, or_false] at hy ⊢
-    bv_omega
+  have ho' : opsOf (m.storeInt (wordAt S k) 8 v) S = opsOf m S :=
+    rd_store_word hw hk (by simp only [WORDS_eq]; omega) (by simp only [DEST_eq] at hk1; omega) v
+  have hin : ∀ (a : Addr) (n : Nat), (a - opAt m S i).toNat + n ≤ 12 →
+      Mem.Blocks.Disjoint [(wordAt S k, 8)] [(a, n)] := fun a n hc x hx hy =>
+    hw.disj_struct x (by simp only [Mem.Blocks.Inside, or_false, WORDS_eq] at hx hs hk ⊢; bv_omega)
+      (Or.inr (Or.inl (by simp only [Mem.Blocks.Inside, or_false] at hy; bv_omega)))
+  simp only [opOf, opAt, ho']
+  rw [rdb_storeInt_of_disjoint (hin _ 1 (by simp)), rdb_storeInt_of_disjoint (hin _ 1 (by bv_omega)),
+    rd_storeInt_of_disjoint (hin _ 8 (by bv_omega))]
 
+-- A store to a word of `m_destinationOf` or `m_positionOf` keeps the values, the
+-- pending count and the trace.
+theorem stOf_store_word (hw : Wf m S) (hk1 : DEST ≤ k) (hk : k < WORDS) (v : Int) :
+    stOf (m.storeInt (wordAt S k) 8 v) S =
+      ⟨(List.range (rd m (wordAt S 0)).toNat).map fun i =>
+        ⟨(stOf m S).val i, (rd (m.storeInt (wordAt S k) 8 v) (wordAt S (DEST + i))).toNat⟩,
+      (List.range (nOf m S)).map fun d => optOf (rd (m.storeInt (wordAt S k) 8 v) (wordAt S (POS + d))),
+      (stOf m S).pendingGenerations, (stOf m S).trace⟩ := by
+  have hlen := hw.len_le
+  have hnops := hw.nops_le
+  have hk' : 9 ≤ k := hk1
+  have hw' : ∀ {j}, j < 9 → rd (m.storeInt (wordAt S k) 8 v) (wordAt S j) = rd m (wordAt S j) :=
+    fun hj => rd_store_word hw hk (by simp only [WORDS_eq]; omega) (by omega) v
+  have hn : nOf (m.storeInt (wordAt S k) 8 v) S = nOf m S := congrArg BitVec.toNat (hw' (j := 3) (by omega))
+  have hda : dataOf (m.storeInt (wordAt S k) 8 v) S = dataOf m S := hw' (j := 8) (by omega)
+  conv => lhs; unfold stOf
+  rw [hw' (j := 0) (by omega), hw' (j := 1) (by omega), hw' (j := 2) (by omega), hn]
+  congr 1
+  · refine List.map_congr_left fun i hi => ?_
+    have := List.mem_range.mp hi
+    simp only [slotOf, hda, val_stOf this, rd_store_data hw hk (i := i) (by omega)]
+  · refine List.map_congr_left fun i hi => ?_
+    have := List.mem_range.mp hi
+    exact opOf_store_word hw hk1 hk (by omega) v
+
+-- A store to the dest word of slot `i`.
 theorem stOf_store_dest (hw : Wf m S) {i : Nat} (hi : i < (rd m (wordAt S 0)).toNat) (v : Word) :
     stOf (m.storeInt (wordAt S (DEST + i)) 8 v.toInt) S =
       { stOf m S with slots := (stOf m S).slots.set i ⟨(stOf m S).val i, v.toNat⟩ } := by
-  have hlen : _ ≤ 1024 := hw.len_le
-  have hi' : i < 1024 := by omega
-  have hk : ∀ {k}, k < WORDS → k ≠ DEST + i →
-      rd (m.storeInt (wordAt S (DEST + i)) 8 v.toInt) (wordAt S k) = rd m (wordAt S k) :=
-    fun hk hne => rd_store_dest_other hw hi' hk hne _
-  have ho : opsOf (m.storeInt (wordAt S (DEST + i)) 8 v.toInt) S = opsOf m S :=
-    hk (k := 6) (by decide) (by simp only [DEST_eq]; omega)
-  have hnops := hw.nops_le
-  rw [val_stOf hi]
-  simp only [stOf, hk (k := 0) (by decide) (by simp only [DEST_eq]; omega),
-    hk (k := 1) (by decide) (by simp only [DEST_eq]; omega),
-    hk (k := 2) (by decide) (by simp only [DEST_eq]; omega)]
+  have hl : _ ≤ 1024 := Nat.le_trans hw.len_le hw.n_le
+  have hn : _ ≤ 1024 := hw.n_le
+  rw [stOf_store_word hw (Nat.le_add_right _ _) (by simp only [DEST_eq, WORDS_eq]; omega)]
   congr 1
-  · refine List.ext_getElem (by simp) fun j h1 h2 => ?_
+  · refine List.ext_getElem (by simp [stOf]) fun j h1 h2 => ?_
     simp only [List.length_map, List.length_range] at h1
     rw [List.getElem_set]
-    simp only [List.getElem_map, List.getElem_range, slotOf]
+    simp only [List.getElem_map, List.getElem_range]
     split
     · subst_vars
-      rw [hk (by simp only [STACK, WORDS_eq]; omega) (by simp only [STACK, DEST_eq]; omega),
-        rd_store_same _ rfl, BitVec.ofInt_toInt]
-    · rw [hk (by simp only [STACK, WORDS_eq]; omega) (by simp only [STACK, DEST_eq]; omega),
-        hk (by simp only [DEST_eq, WORDS_eq]; omega) (by omega)]
-  · refine List.map_congr_left fun j hj => ?_
-    have := List.mem_range.mp hj
-    simp only [opOf, ho, rd_store_dest_ops hw hi' (j := 2 * j) (by omega),
-      rd_store_dest_ops hw hi' (j := 2 * j + 1) (by omega)]
+      rw [rd_store_same _ rfl, BitVec.ofInt_toInt]
+    · rw [rd_store_dest_other hw (by omega) (by simp only [DEST_eq, WORDS_eq]; omega) (by omega)]
+      simp [stOf, St.val, slotOf, h1]
+  · refine List.map_congr_left fun d hd => ?_
+    have := List.mem_range.mp hd
+    rw [rd_store_dest_other hw (by omega) (by simp only [POS_eq, WORDS_eq]; omega)
+      (by simp only [POS_eq, DEST_eq]; omega)]
+
+-- A store to the `m_positionOf` word of the dest `d`.
+theorem stOf_store_pos (hw : Wf m S) {d : Nat} (hd : d < nOf m S) (v : Word) :
+    stOf (m.storeInt (wordAt S (POS + d)) 8 v.toInt) S =
+      { stOf m S with positionOf := (stOf m S).positionOf.set d (optOf v) } := by
+  have hl : _ ≤ 1024 := Nat.le_trans hw.len_le hw.n_le
+  have hn : _ ≤ 1024 := hw.n_le
+  have hk : POS + d < WORDS := by simp only [POS_eq, WORDS_eq]; omega
+  rw [stOf_store_word hw (by simp only [POS_eq, DEST_eq]; omega) hk]
+  congr 1
+  · refine List.ext_getElem (by simp [stOf]) fun j h1 h2 => ?_
+    simp only [List.length_map, List.length_range] at h1
+    simp only [List.getElem_map, List.getElem_range]
+    rw [rd_store_word hw hk (by simp only [DEST_eq, WORDS_eq]; omega)
+      (by simp only [POS_eq, DEST_eq]; omega)]
+    simp [stOf, St.val, slotOf, h1]
+  · refine List.ext_getElem (by simp [stOf]) fun e h1 h2 => ?_
+    simp only [List.length_map, List.length_range] at h1
+    rw [List.getElem_set]
+    simp only [List.getElem_map, List.getElem_range, stOf]
+    split
+    · subst_vars
+      rw [rd_store_same _ rfl, BitVec.ofInt_toInt]
+    · rw [rd_store_word hw hk (by simp only [POS_eq, WORDS_eq]; omega) (by omega)]
 
 theorem val_set_self (st : St) (a b x : Nat) :
     ({ st with slots := st.slots.set a ⟨st.val a, x⟩ } : St).val b = st.val b := by
   simp only [St.val, List.getElem?_set]
   by_cases hb : b < st.slots.length <;> split <;> simp_all [Nat.not_lt.mpr]
 
+-- The slots of `swapDestinations` before `m_positionOf` follows.
+abbrev swapSlots (st : St) (a b : Nat) : St :=
+  { st with slots := (st.slots.set a ⟨st.val a, st.dest b⟩).set b ⟨st.val b, st.dest a⟩ }
+
+theorem swapSlots_dest_a (st : St) {a b : Nat} (ha : a < st.len) :
+    (swapSlots st a b).dest a = if a = b then st.dest a else st.dest b := by
+  simp only [St.len] at ha
+  by_cases hab : a = b
+  · subst hab; simp [St.dest, ha]
+  · simp [St.dest, ha, hab, Ne.symm hab]
+
+theorem swapSlots_dest_b (st : St) {a b : Nat} (hb : b < st.len) :
+    (swapSlots st a b).dest b = st.dest a := by
+  simp only [St.len] at hb
+  simp [St.dest, hb]
+
+theorem optOf_ofNat {a : Nat} (h : a < 2 ^ 64 - 1) : optOf (BitVec.ofNat 64 a) = some a := by
+  have hm : (-1#64 : Word).toNat = 2 ^ 64 - 1 := by decide
+  have ha : (BitVec.ofNat 64 a).toNat = a := by simp only [BitVec.toNat_ofNat]; omega
+  simp only [optOf]
+  rw [ite_eq_right_iff.mpr fun he => by rw [he, hm] at ha; omega, ha]
+
 end
+
+/-! ## The inline swap -/
+
+-- The memory after the inline `swapDestinations` of `.LB74` and `.LB77`: the dest words
+-- of `a` and `b` change places, then the `m_positionOf` words of the two dests follow.
+def swapMem (m : Mem 64) (S : Addr) (a b : Nat) : Mem 64 :=
+  let va := rd m (wordAt S (DEST + a))
+  let m2 := (m.storeInt (wordAt S (DEST + a)) 8 (rd m (wordAt S (DEST + b))).toInt).storeInt
+    (wordAt S (DEST + b)) 8 va.toInt
+  (m2.storeInt (wordAt S (POS + (rd m2 (wordAt S (DEST + a))).toNat)) 8
+    (BitVec.ofNat 64 a).toInt).storeInt (wordAt S (POS + va.toNat)) 8 (BitVec.ofNat 64 b).toInt
 
 section
 variable {s : MachineData} {ra : Int64} {m : Mem 64}
 
+theorem Fm.store_word (hpre : Pre loopF loopA s) (h : Fm s ra m) {k : Nat} (hk1 : DEST ≤ k)
+    (hk : k < WORDS) (v : Int) :
+    Fm s ra (m.storeInt (wordAt (rdi s) k) 8 v)
+      ∧ rd (m.storeInt (wordAt (rdi s) k) 8 v) (rsp s - 72#64) = rd m (rsp s - 72#64) := by
+  have hk' : 9 ≤ k := hk1
+  exact h.store hpre ((h.keeps hpre).2.2 ▸ inside_word hk1 hk)
+    (rd_store_word h.wf hk (by decide) (by omega) v) (rd_store_word h.wf hk (by decide) (by omega) v)
+
 theorem Fm.store_dest (hpre : Pre loopF loopA s) (h : Fm s ra m) {i : Nat} (hi : i < 1024) (v : Int) :
     Fm s ra (m.storeInt (wordAt (rdi s) (DEST + i)) 8 v)
       ∧ rd (m.storeInt (wordAt (rdi s) (DEST + i)) 8 v) (rsp s - 72#64) = rd m (rsp s - 72#64) :=
-  h.store hpre (inside_dest hi)
-    (rd_store_dest_other h.wf hi (by decide) (by simp only [DEST_eq]; omega) v)
-    (rd_store_dest_other h.wf hi (by decide) (by simp only [DEST_eq]; omega) v)
+  h.store_word hpre (Nat.le_add_right _ _) (by simp only [DEST_eq, WORDS_eq]; omega) v
 
--- The two stores of the dest words of `a` and `b` give `swapDestinations`, and keep the local
--- `urgentToDup`.
+-- The inline swap gives `swapDestinations`, and keeps `Fm` and the local `urgentToDup`.
 theorem Fm.swap (hpre : Pre loopF loopA s) (h : Fm s ra m) {a b : Nat}
-    (ha : a < (stOf m (rdi s)).len) (hb : b < (stOf m (rdi s)).len) {va vb : Word}
-    (hva : va.toNat = (stOf m (rdi s)).dest a) (hvb : vb.toNat = (stOf m (rdi s)).dest b) :
-    Fm s ra ((m.storeInt (wordAt (rdi s) (DEST + a)) 8 vb.toInt).storeInt
-        (wordAt (rdi s) (DEST + b)) 8 va.toInt)
-      ∧ stOf ((m.storeInt (wordAt (rdi s) (DEST + a)) 8 vb.toInt).storeInt
-        (wordAt (rdi s) (DEST + b)) 8 va.toInt) (rdi s) = swapDestinations (stOf m (rdi s)) a b
-      ∧ rd ((m.storeInt (wordAt (rdi s) (DEST + a)) 8 vb.toInt).storeInt
-        (wordAt (rdi s) (DEST + b)) 8 va.toInt) (rsp s - 72#64) = rd m (rsp s - 72#64) := by
-  have hl : _ ≤ 1024 := h.wf.len_le
+    (ha : a < (stOf m (rdi s)).len) (hb : b < (stOf m (rdi s)).len)
+    (hda : (stOf m (rdi s)).dest a < nOf m (rdi s)) (hdb : (stOf m (rdi s)).dest b < nOf m (rdi s)) :
+    Fm s ra (swapMem m (rdi s) a b)
+      ∧ stOf (swapMem m (rdi s) a b) (rdi s) = swapDestinations (stOf m (rdi s)) a b
+      ∧ rd (swapMem m (rdi s) a b) (rsp s - 72#64) = rd m (rsp s - 72#64) := by
+  have hl : _ ≤ 1024 := Nat.le_trans h.wf.len_le h.wf.n_le
+  have hn : _ ≤ 1024 := h.wf.n_le
   rw [len_stOf] at ha hb
+  rw [dest_stOf ha] at hda
+  rw [dest_stOf hb] at hdb
+  -- The two dest words.
+  generalize hva : rd m (wordAt (rdi s) (DEST + a)) = va at hda
+  generalize hvb : rd m (wordAt (rdi s) (DEST + b)) = vb at hdb
   obtain ⟨h1, r1⟩ := h.store_dest hpre (i := a) (by omega) vb.toInt
   have e1 := stOf_store_dest h.wf ha vb
   have hb1 : b < (rd (m.storeInt (wordAt (rdi s) (DEST + a)) 8 vb.toInt) (wordAt (rdi s) 0)).toNat := by
     rw [rd_store_dest_other h.wf (by omega) (by decide) (by simp only [DEST_eq]; omega)]
     exact hb
   obtain ⟨h2, r2⟩ := h1.store_dest hpre (i := b) (by omega) va.toInt
-  refine ⟨h2, ?_, r2.trans r1⟩
-  rw [stOf_store_dest h1.wf hb1 va, e1]
-  simp only [swapDestinations, val_set_self, hva, hvb]
+  have e2 := stOf_store_dest h1.wf hb1 va
+  generalize hm2 : (m.storeInt (wordAt (rdi s) (DEST + a)) 8 vb.toInt).storeInt
+    (wordAt (rdi s) (DEST + b)) 8 va.toInt = m2 at h2 r2 e2
+  -- The state after the two dest stores.
+  have hla : a < (stOf m (rdi s)).len := by rw [len_stOf]; exact ha
+  have hlb : b < (stOf m (rdi s)).len := by rw [len_stOf]; exact hb
+  have e12 : stOf m2 (rdi s) = swapSlots (stOf m (rdi s)) a b := by
+    rw [e2, e1, val_set_self]; simp only [swapSlots, dest_stOf ha, dest_stOf hb, hva, hvb]
+  have ha2 : a < (rd m2 (wordAt (rdi s) 0)).toNat := by
+    rw [← len_stOf, e12]; simpa [St.len] using hla
+  -- The dest of `a` after the two dest stores.
+  generalize hx : (rd m2 (wordAt (rdi s) (DEST + a))).toNat = x
+  have hx' : x = (swapSlots (stOf m (rdi s)) a b).dest a := by rw [← e12, dest_stOf ha2, hx]
+  have hva' : va.toNat = (stOf m (rdi s)).dest a := by rw [dest_stOf ha, hva]
+  have hxn : x < nOf m (rdi s) := by
+    rw [hx', swapSlots_dest_a _ hla, dest_stOf ha, dest_stOf hb, hva, hvb]
+    split <;> assumption
+  obtain ⟨h3, r3⟩ := h2.store_word hpre (k := POS + x) (by simp only [POS_eq, DEST_eq]; omega)
+    (by simp only [POS_eq, WORDS_eq]; omega) (BitVec.ofNat 64 a).toInt
+  have e3 := stOf_store_pos h2.wf (d := x) (by rw [h2.n hpre, ← h.n hpre]; exact hxn) (BitVec.ofNat 64 a)
+  obtain ⟨h4, r4⟩ := h3.store_word hpre (k := POS + va.toNat) (by simp only [POS_eq, DEST_eq]; omega)
+    (by simp only [POS_eq, WORDS_eq]; omega) (BitVec.ofNat 64 b).toInt
+  have e4 := stOf_store_pos h3.wf (d := va.toNat) (by rw [h3.n hpre, ← h.n hpre]; exact hda)
+    (BitVec.ofNat 64 b)
+  refine ⟨?_, ?_, ?_⟩
+  · simp only [swapMem, hva, hvb, hm2, hx]; exact h4
+  · simp only [swapMem, hva, hvb, hm2, hx]
+    rw [e4, e3, hx', e12, optOf_ofNat (by omega), optOf_ofNat (by omega), hva',
+      ← swapSlots_dest_b _ hlb]
+    rfl
+  · simp only [swapMem, hva, hvb, hm2, hx]; rw [r4, r3, r2, r1]
 
 -- The two stores to `blocked` of a blocked error give `Res`, and keep `Fm`.
 theorem Fm.blocked (hpre : Pre loopF loopA s) (h : Fm s ra m) {u : MachineData} {c k : Nat}
     (hm : u.dmem = (m.storeInt (wordAt (blkOf m (rdi s)) 0) 8 (BitVec.ofNat 64 c).toInt).storeInt
       (wordAt (blkOf m (rdi s)) 1) 8 (BitVec.ofNat 64 k).toInt) (hr : rax u = -1#64) :
-    Fm s ra u.dmem ∧ Res (rdi s) (.error (.blocked c k) : M (List Op))
-      (fun ops => rax u = 0#64 ∧ (st' s u).trace = ops) u := by
+    Fm s ra u.dmem ∧ Res (rdi s) (.error (.blocked c k) : M St) (Ok s u (fun _ => 0#64) id) u := by
   have hb := h.wf.blk_lt
   refine ⟨hm ▸ h.blk (by decide) hpre _ _, hr, ?_, ?_⟩
   · rw [hm, blkOf_store2 h.wf, rd_store_other _ (by simp only [wordAt]; bv_omega),

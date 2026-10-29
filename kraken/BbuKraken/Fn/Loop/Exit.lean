@@ -2,9 +2,9 @@ import BbuKraken.Fn.Loop.Machine
 import BbuKraken.Fn.Loop.Model
 
 /-!
-The exit blocks of `buildBottomUp`: `.LB65` (the pops and `ret`), `.LB66` (the end of
-the loop), `.LB69` (`permuteDestinations`), the blocked labels `.LB107`, `.LB110` and
-`.LB111`, and the labels that set `-2`.
+The exit blocks of `buildBottomUp`: `.LB61` (the pops and `ret`), `.LB62` (the end of
+the loop), `.LB65` (`permuteDestinations`), the blocked labels `.LB103`, `.LB108` and
+`.LB109`, and the labels that set `-2`.
 -/
 
 open Std.WP Lean.Order
@@ -19,7 +19,7 @@ variable {s : MachineData} {ra : Int64}
 
 -- `-2` in `rax` gives the result of a failed assertion.
 theorem atErr_out {t u : MachineData} (h : AtErr s ra t) (hm : u.dmem = t.dmem)
-    (hsp : u.regs.rsp = t.regs.rsp) (hax : rax u = -2#64) : At65 s ra u := by
+    (hsp : u.regs.rsp = t.regs.rsp) (hax : rax u = -2#64) : At61 s ra u := by
   refine ⟨hm ▸ h.1.fm, hsp ▸ h.1.rsp, ?_⟩
   unfold loopR
   rw [show loop (env s) (st s) 0 = R0 s from rfl, h.2]
@@ -50,8 +50,8 @@ theorem loopR_congr {t u : MachineData} (h : loopR s t) (hm : u.dmem = t.dmem)
   · exact hax.trans h
   · exact ⟨hax.trans h.1, by rw [st', hm]; exact h.2⟩
 
--- A word of the frame at `.LB65` is mapped.
-theorem At65.isSome (hpre : Pre loopF loopA s) {t : MachineData} (h : At65 s ra t) {a : Addr}
+-- A word of the frame at `.LB61` is mapped.
+theorem At61.isSome (hpre : Pre loopF loopA s) {t : MachineData} (h : At61 s ra t) {a : Addr}
     {k : Nat} (hk : 16 ≤ k ∧ k ≤ 56) (ha : a = rsp s - BitVec.ofNat 64 k) :
     (t.dmem.loadInt a 8).isSome = true := by
   have hle : 4224 ≤ (rsp s).toNat := hpre.2.1.le
@@ -60,20 +60,20 @@ theorem At65.isSome (hpre : Pre loopF loopA s) {t : MachineData} (h : At65 s ra 
   simp only [ha, loopF_eq]
   bv_omega
 
-theorem At65.sp {t u : MachineData} (h : At65 s ra t)
+theorem At61.sp {t u : MachineData} (h : At61 s ra t)
     (hsp : u.regs.rsp.toBitVec = 24#64 + t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64 + 8#64 + 8#64 + 8#64) :
     rsp u = rsp s - 8#64 := by
   simp only [rsp, Reg64s.get64_rsp, hsp, h.2.1]; bv_omega
 
-theorem At65.retSome (hpre : Pre loopF loopA s) {t u : MachineData} (h : At65 s ra t)
+theorem At61.retSome (hpre : Pre loopF loopA s) {t u : MachineData} (h : At61 s ra t)
     (hu : u.dmem = t.dmem)
     (hsp : u.regs.rsp.toBitVec = 24#64 + t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64 + 8#64 + 8#64 + 8#64) :
     u.retAddr.isSome = true := by
   rw [Kit.Mid.retAddr (by decide) hpre (hu ▸ h.1.toMid) (h.sp hsp)]; rfl
 
--- The pops and `ret` of `.LB65`.
-theorem At65.ret [Host] {ls : List Label} {I' : CfgLabel → Nat → Unit → MachineData → Prop}
-    (hpre : Pre loopF loopA s) {t u : MachineData} (h : At65 s ra t) (hu : u.dmem = t.dmem)
+-- The pops and `ret` of `.LB61`.
+theorem At61.ret [Host] {ls : List Label} {I' : CfgLabel → Nat → Unit → MachineData → Prop}
+    (hpre : Pre loopF loopA s) {t u : MachineData} (h : At61 s ra t) (hu : u.dmem = t.dmem)
     (hsp : u.regs.rsp.toBitVec = 24#64 + t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64 + 8#64 + 8#64 + 8#64)
     (hbx : u.regs.rbx.toBitVec = rd t.dmem (24#64 + t.regs.rsp.toBitVec))
     (hbp : u.regs.rbp.toBitVec = rd t.dmem (24#64 + t.regs.rsp.toBitVec + 8#64))
@@ -134,14 +134,14 @@ theorem Base.blk_ld4 (h : Base s ra t) (x : Word) :
   rw [h.w7, blkOf_def, blkOf_def, blk0 t.dmem, h.fm.wf.blkOf_store (by decide)]
   exact h.fm.wf.blk_isSome (h.fm.wf.mapped.storeInt _ _ _) (k := 1) (by decide)
 
--- The two stores of a blocked label give `At65`.
+-- The two stores of a blocked label give `At61`.
 theorem Base.blk_out (hpre : Pre loopF loopA s) (h : Base s ra t) {u : MachineData} {c k : Nat}
     {x y : Word} (hx : x = BitVec.ofNat 64 c) (hy : y = BitVec.ofNat 64 k)
     (hR : R0 s = .error (.blocked c k))
     (hm : u.dmem = (t.dmem.storeInt (rd t.dmem (t.regs.rbp.toBitVec + 56#64)) 8 x.toInt).storeInt
       (rd (t.dmem.storeInt (rd t.dmem (t.regs.rbp.toBitVec + 56#64)) 8 x.toInt)
         (t.regs.rbp.toBitVec + 56#64) + 8#64) 8 y.toInt)
-    (hsp : u.regs.rsp = t.regs.rsp) (hr : rax u = -1#64) : At65 s ra u := by
+    (hsp : u.regs.rsp = t.regs.rsp) (hr : rax u = -1#64) : At61 s ra u := by
   subst hx hy
   rw [h.w7, blkOf_def, blkOf_def, blk0 t.dmem, h.fm.wf.blkOf_store (by decide)] at hm
   obtain ⟨hf, hres⟩ := Fm.blocked hpre h.fm hm hr
@@ -155,8 +155,8 @@ end
 section
 variable {s : MachineData} {ra : Int64} {t c t' : MachineData}
 
--- The precondition of `permuteDestinations` at `.LB69`.
-theorem lb69_pre (hpre : Pre loopF loopA s) (hb : Base s ra t) (hc : c.dmem = t.dmem)
+-- The precondition of `permuteDestinations` at `.LB65`.
+theorem lb65_pre (hpre : Pre loopF loopA s) (hb : Base s ra t) (hc : c.dmem = t.dmem)
     (hsp : c.regs.rsp = t.regs.rsp) (hdi : rdi c = rdi s)
     (hperm : IsPerm ((st' s t).slots.map Slot.dest))
     (hops : (st' s t).trace.length + 2 * (st' s t).len ≤ 6 * (env s).n) :
@@ -170,22 +170,22 @@ theorem lb69_pre (hpre : Pre loopF loopA s) (hb : Base s ra t) (hc : c.dmem = t.
   show _ ≤ 6 * nOf s.dmem (rdi s)
   rw [← n_envOf]; exact hops
 
--- The return of `permuteDestinations` gives `At65`.
-theorem lb69_out [Host] (hpre : Pre loopF loopA s) (hb : Base s ra t) (hR : R0 s = finish (st' s t))
+-- The return of `permuteDestinations` gives `At61`.
+theorem lb65_out [Host] (hpre : Pre loopF loopA s) (hb : Base s ra t) (hR : R0 s = finish (st' s t))
     (hc : c.dmem = t.dmem) (hsp : c.regs.rsp = t.regs.rsp) (hdi : rdi c = rdi s)
     (hbp : c.regs.rbp = t.regs.rbp) (hp : Post finishF finishR c t')
-    (hag : (mod finishF c).Agree c t') : At65 s ra t' := by
+    (hag : (mod finishF c).Agree c t') : At61 s ra t' := by
   have hb' := Base.call (by decide) hpre hb hp hag hc hsp hdi hbp
   refine ⟨hb'.fm, hb'.rsp, ?_⟩
   unfold loopR
   rw [show loop (env s) (st s) 0 = R0 s from rfl, hR]
-  exact finish_post hp hc hdi
+  exact Res.imp (finish_post hp hc hdi) fun _ h => h
 
 end
 
 set_option experimental.vcgen true
 
-/-- The block `movq $-2, %rax; jmp .LB65`. -/
+/-- The block `movq $-2, %rax; jmp .LB61`. -/
 local macro "err_case" : tactic =>
   `(tactic|
     (loop_case
@@ -198,19 +198,18 @@ local macro "err_case" : tactic =>
 
 variable [Host] [FunDecls] {s : MachineData} {ra : Int64}
 
-theorem lb90 : OblAt s ra (.label ".LB90") := by err_case
-theorem lb92 : OblAt s ra (.label ".LB92") := by err_case
+theorem lb87 : OblAt s ra (.label ".LB87") := by err_case
+theorem lb89 : OblAt s ra (.label ".LB89") := by err_case
+theorem lb93 : OblAt s ra (.label ".LB93") := by err_case
 theorem lb94 : OblAt s ra (.label ".LB94") := by err_case
+theorem lb95 : OblAt s ra (.label ".LB95") := by err_case
 theorem lb96 : OblAt s ra (.label ".LB96") := by err_case
-theorem lb97 : OblAt s ra (.label ".LB97") := by err_case
-theorem lb98 : OblAt s ra (.label ".LB98") := by err_case
-theorem lb99 : OblAt s ra (.label ".LB99") := by err_case
 
 -- The pops and `ret`.
-theorem lb65 (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB65") := by
+theorem lb61 (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB61") := by
   loop_case
   intro t ht
-  have h : At65 s ra t := ht
+  have h : At61 s ra t := ht
   clear ht
   kvcgen64
   all_goals bbu_norm at *
@@ -224,10 +223,10 @@ theorem lb65 (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB65") := by
   case vc8 => exact h.ret hpre rfl rfl rfl rfl rfl rfl rfl rfl rfl
 
 -- The end of the loop: `0` if `len = n`, else `-2`.
-theorem lb66 (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB66") := by
+theorem lb62 (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB62") := by
   loop_case
   intro t ht
-  have h : At66 s ra t := ht
+  have h : At62 s ra t := ht
   clear ht
   kvcgen64
   all_goals bbu_norm at *
@@ -252,7 +251,7 @@ theorem lb66 (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB66") := by
     exact ⟨⟨h.1.fm, h.1.rsp, h.1.rbp⟩, by rw [h.2.2]; simp [hne]⟩
   case vc3 =>
     have heq : (st' s t).len = (env s).n := ofNat_inj64 hl (by omega) (by simpa using hc)
-    show At65 s ra _
+    show At61 s ra _
     refine ⟨h.1.fm, h.1.rsp, ?_⟩
     unfold loopR
     rw [show loop (env s) (st s) 0 = R0 s from rfl, h.2.2]
@@ -260,11 +259,11 @@ theorem lb66 (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB66") := by
     exact ⟨rfl, rfl⟩
 
 -- No slot is pending: `permuteDestinations` if `len = n`, else `-2`.
-theorem lb69 (hfin : Spec "permuteDestinations" finishF finishA finishR)
-    (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB69") := by
+theorem lb65 (hfin : Spec "permuteDestinations" finishF finishA finishR)
+    (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB65") := by
   loop_case
   intro t ht
-  have h : At69 s ra t := ht
+  have h : At65 s ra t := ht
   clear ht
   obtain ⟨hb, h13, h15, T, hctx, ho, hp⟩ := h
   obtain ⟨hR, hperm, hops⟩ := ctx_fin hctx ho hp
@@ -280,20 +279,20 @@ theorem lb69 (hfin : Spec "permuteDestinations" finishF finishA finishR)
   case vc2 =>
     rw [hb.rsp]
     exact Kit.Mid.call_isSome (k := 80) (by decide) hpre hb.fm.toMid
-  case vc3 => exact lb69_pre hpre hb rfl rfl hb.rbp hperm hops
+  case vc3 => exact lb65_pre hpre hb rfl rfl hb.rbp hperm hops
   case vc4 =>
     rename_i t' hpost hag
-    have h65 := lb69_out hpre hb hR (by rfl) (by rfl) (by exact hb.rbp) (by rfl) hpost hag
+    have h61 := lb65_out hpre hb hR (by rfl) (by rfl) (by exact hb.rbp) (by rfl) hpost hag
     loop_goto
-    · exact stack_of h65.2.1
-    · exact h65
+    · exact stack_of h61.2.1
+    · exact h61
     · simp [V]
 
 -- A copy is out of reach for a dup: store the blocked slot and the excess, `-1`.
-theorem lb107 (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB107") := by
+theorem lb103 (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB103") := by
   loop_case
   intro t ht
-  have h : At107 s ra t := ht
+  have h : At103 s ra t := ht
   clear ht
   kvcgen64
   all_goals bbu_norm at *
@@ -302,15 +301,17 @@ theorem lb107 (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB107") := by
   case vc3 => exact h.1.blk_ld3 _
   case vc4 => exact h.1.blk_ld4 _
   case vc5 =>
-    obtain ⟨c, k, hc, hk, hR⟩ := h.2
-    exact h.1.blk_out hpre hc hk hR rfl rfl rfl
-  case vc6 => simp [V]
+    loop_goto
+    · exact stack_of h.1.rsp
+    · obtain ⟨c, k, hc, hk, hR⟩ := h.2
+      exact h.1.blk_out hpre hc hk hR rfl rfl rfl
+    · simp [V]
 
 -- The slot at `rsi` is out of reach for a swap.
-theorem lb110 (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB110") := by
+theorem lb108 (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB108") := by
   loop_case
   intro t ht
-  have h : At110 s ra t := ht
+  have h : At108 s ra t := ht
   clear ht
   kvcgen64
   all_goals bbu_norm at *
@@ -318,17 +319,18 @@ theorem lb110 (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB110") := by
   case vc2 => exact h.1.blk_ld2
   case vc3 => exact h.1.blk_ld3 _
   case vc4 => exact h.1.blk_ld4 _
-  loop_goto
-  · exact stack_of h.1.rsp
-  · obtain ⟨c, k, hc, hk, hR⟩ := h.2
-    exact h.1.blk_out hpre hc hk hR rfl rfl rfl
-  · simp [V]
+  case vc5 =>
+    loop_goto
+    · exact stack_of h.1.rsp
+    · obtain ⟨c, k, hc, hk, hR⟩ := h.2
+      exact h.1.blk_out hpre hc hk hR rfl rfl rfl
+    · simp [V]
 
 -- The slot at `r14` is out of reach for a swap.
-theorem lb111 (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB111") := by
+theorem lb109 (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB109") := by
   loop_case
   intro t ht
-  have h : At111 s ra t := ht
+  have h : At109 s ra t := ht
   clear ht
   kvcgen64
   all_goals bbu_norm at *
@@ -336,11 +338,12 @@ theorem lb111 (hpre : Pre loopF loopA s) : OblAt s ra (.label ".LB111") := by
   case vc2 => exact h.1.blk_ld2
   case vc3 => exact h.1.blk_ld3 _
   case vc4 => exact h.1.blk_ld4 _
-  loop_goto
-  · exact stack_of h.1.rsp
-  · obtain ⟨c, k, hc, hk, hR⟩ := h.2
-    exact h.1.blk_out hpre hc hk hR rfl rfl rfl
-  · simp [V]
+  case vc5 =>
+    loop_goto
+    · exact stack_of h.1.rsp
+    · obtain ⟨c, k, hc, hk, hR⟩ := h.2
+      exact h.1.blk_out hpre hc hk hR rfl rfl rfl
+    · simp [V]
 
 end Loop
 

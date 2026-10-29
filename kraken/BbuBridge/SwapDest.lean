@@ -19,7 +19,8 @@ theorem swapDest_corr : SwapDestStmt := by
     rw [show index state.stack.length a = .ok ⟨a, hla⟩ from index_eq ⟨a, hla⟩,
       show index state.stack.length b = .ok ⟨b, hlb⟩ from index_eq ⟨b, hlb⟩]
     rfl
-  refine ⟨?_, ?_, h.pendingGenerations, h.trace⟩
+  refine ⟨?_, ?_, h.pendingGenerations, h.trace, h.pos.swapDest ha hb,
+    canon_set (canon_set h.canon (h.canonVal a)) (h.canonVal b), h.target⟩
   · show state.stack = _
     rw [h.stack]
     apply List.ext_getElem

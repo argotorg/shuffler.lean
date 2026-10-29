@@ -26,55 +26,57 @@ abbrev Ok {α : Type} (s t : MachineData) (enc : α → Word) (f : α → St) (a
 
 /-! ## Contracts -/
 
+-- The slot in `rsi`.
+abbrev slot (s : MachineData) : StackSlot := StackSlot.ofWord (rsi s)
+
 -- `isSpilled(e, _slot)`, for `_slot` in the target.
 def isSpilledF : Nat := 8
 def isSpilledA (s : MachineData) : Prop :=
-  ∃ offset < (env s).n, (env s).target[offset]! = rsi s
+  ∃ offset < (env s).n, (env s).target[offset]! = slot s
 def isSpilledR (s t : MachineData) : Prop :=
-  rax t = BitVec.ofNat 64 (isSpilled (env s) (rsi s)).toNat ∧ st' s t = st s
-
--- `positionOf(e, _destination)`
-def positionOfF : Nat := 8
-def positionOfA (_ : MachineData) : Prop := True
-def positionOfR (s t : MachineData) : Prop :=
-  rax t = encOpt (positionOf (st s) (rsi s).toNat) ∧ st' s t = st s
+  rax t = BitVec.ofNat 64 (isSpilled (env s) (slot s)).toNat ∧ st' s t = st s
 
 -- `shallowestCopyPosition(e, _slot)`
 def shallowestCopyF : Nat := 8
 def shallowestCopyA (_ : MachineData) : Prop := True
 def shallowestCopyR (s t : MachineData) : Prop :=
-  rax t = encOpt (shallowestCopyPosition (st s) (rsi s)) ∧ st' s t = st s
+  rax t = encOpt (shallowestCopyPosition (st s) (slot s)) ∧ st' s t = st s
 
--- `swapWith(e, _pos)`
-def swapWithF : Nat := 8
-def swapWithA (s : MachineData) : Prop := (st s).trace.length < cap s
+-- `swapWith(e, _pos)`. The return address and three `pushq`.
+def swapWithF : Nat := 32
+def swapWithA (s : MachineData) : Prop := Pos (env s).n (st s) ∧ (st s).trace.length < cap s
 def swapWithR (s t : MachineData) : Prop :=
   Res (rdi s) (swapWith (st s) (rsi s).toNat) (Ok s t (fun _ => 0#64) id) t
 
 -- `push(e, _slot, _destination)`
-def pushF : Nat := 40
-def pushA (s : MachineData) : Prop := (st s).len < MAX_N ∧ (st s).trace.length < cap s
+def pushF : Nat := 8
+def pushA (s : MachineData) : Prop :=
+  (rdx s).toNat < (env s).n ∧ (st s).len < (env s).n ∧ (st s).trace.length < cap s
 def pushR (s t : MachineData) : Prop :=
-  Res (rdi s) (add (st s) (rsi s) (rdx s).toNat (.push (rsi s))) (Ok s t (fun _ => 0#64) id) t
+  Res (rdi s) (add (st s) (slot s) (rdx s).toNat (.push (slot s))) (Ok s t (fun _ => 0#64) id) t
 
 -- `dup(e, _copy, _destination)`
-def dupF : Nat := 40
+def dupF : Nat := 8
 def dupA (s : MachineData) : Prop :=
-  (rsi s).toNat < (st s).len ∧ (st s).len < MAX_N ∧ (st s).trace.length < cap s
+  (rsi s).toNat < (st s).len ∧ (rdx s).toNat < (env s).n ∧ (st s).len < (env s).n
+    ∧ (st s).trace.length < cap s
 def dupR (s t : MachineData) : Prop :=
   Res (rdi s) (add (st s) ((st s).val (rsi s).toNat) (rdx s).toNat
     (.dup ((st s).len - (rsi s).toNat))) (Ok s t (fun _ => 0#64) id) t
 
--- `produce(e, _targetOffset)`
-def produceF : Nat := 80
+-- `produce(e, _targetOffset)`. The return address, six `pushq`, `subq $8` and the
+-- frame of a callee.
+def produceF : Nat := 8 + 48 + 8 + 8
 def produceA (s : MachineData) : Prop :=
-  (rsi s).toNat < (env s).n ∧ (st s).len < MAX_N ∧ (st s).trace.length < cap s
+  (rsi s).toNat < (env s).n ∧ (st s).len < (env s).n ∧ (st s).trace.length < cap s
 def produceR (s t : MachineData) : Prop :=
   Res (rdi s) (produce (env s) (st s) (rsi s).toNat) (Ok s t (fun _ => 0#64) id) t
 
--- `generate(e, _targetOffset)`
-def generateF : Nat := 104
-def generateA (s : MachineData) : Prop := (st s).len < MAX_N ∧ (st s).trace.length + 2 ≤ cap s
+-- `generate(e, _targetOffset)`. The return address, two `pushq` and the frame of `produce`.
+def generateF : Nat := 8 + 16 + produceF
+theorem generateF_eq : generateF = 96 := rfl
+def generateA (s : MachineData) : Prop :=
+  Pos (env s).n (st s) ∧ (st s).len < (env s).n ∧ (st s).trace.length + 2 ≤ cap s
 def generateR (s t : MachineData) : Prop :=
   Res (rdi s) (generate (env s) (st s) (rsi s).toNat) (Ok s t (fun _ => 0#64) id) t
 
@@ -89,7 +91,7 @@ theorem finishF_eq : finishF = 4144 := rfl
 def finishA (s : MachineData) : Prop :=
   IsPerm ((st s).slots.map Slot.dest) ∧ (st s).trace.length + 2 * (st s).len ≤ cap s
 def finishR (s t : MachineData) : Prop :=
-  Res (rdi s) (finish (st s)) (fun ops => rax t = 0#64 ∧ (st' s t).trace = ops) t
+  Res (rdi s) (finish (st s)) (Ok s t (fun _ => 0#64) id) t
 
 -- `buildBottomUp(e)`: `loop` from offset 0
 -- The return address, six `pushq`, `subq $24` and the frame of `permuteDestinations`.
@@ -97,7 +99,7 @@ def loopF : Nat := 8 + 48 + 24 + finishF
 theorem loopF_eq : loopF = 4224 := rfl
 def loopA (s : MachineData) : Prop := Inv (env s) (st s) 0
 def loopR (s t : MachineData) : Prop :=
-  Res (rdi s) (loop (env s) (st s) 0) (fun ops => rax t = 0#64 ∧ (st' s t).trace = ops) t
+  Res (rdi s) (loop (env s) (st s) 0) (Ok s t (fun _ => 0#64) id) t
 
 /-! ## Specs -/
 

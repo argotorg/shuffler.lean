@@ -23,49 +23,6 @@ def Dests (n : Nat) (l : List Nat) : Prop :=
 theorem St.length_dests (st : St) : st.dests.length = st.len := by
   simp [St.dests, St.len]
 
-theorem Dests.append {n d : Nat} {l : List Nat} (h : Dests n l) (hd : d < n) (hl : d ∉ l) :
-    Dests n (l ++ [d]) := by
-  obtain ⟨h1, h2⟩ := h
-  constructor
-  · intro i hi
-    simp only [List.length_append, List.length_singleton] at hi
-    rw [List.getElem_append]
-    split
-    · exact h1 i _
-    · simpa using hd
-  · intro i hi j hj hij
-    simp only [List.length_append, List.length_singleton] at hi hj
-    rw [List.getElem_append, List.getElem_append] at hij
-    split at hij <;> split at hij
-    · exact h2 i _ j _ hij
-    · simp at hij; exact absurd (hij ▸ List.getElem_mem _) hl
-    · simp at hij; exact absurd (hij ▸ List.getElem_mem _) hl
-    · omega
-
-theorem Dests.swap {n a b : Nat} {l : List Nat} (h : Dests n l) (ha : a < l.length)
-    (hb : b < l.length) : Dests n (swapEntries l a b) := by
-  obtain ⟨h1, h2⟩ := h
-  unfold swapEntries
-  constructor
-  · intro i hi
-    simp only [List.length_set] at hi
-    simp only [List.getElem_set, getElem!_pos l a ha, getElem!_pos l b hb]
-    split
-    · exact h1 a ha
-    · split
-      · exact h1 b hb
-      · exact h1 i hi
-  · intro i hi j hj hij
-    simp only [List.length_set] at hi hj
-    simp only [List.getElem_set, getElem!_pos l a ha, getElem!_pos l b hb] at hij
-    have := h2 a ha b hb
-    have := h2 i hi a ha
-    have := h2 i hi b hb
-    have := h2 j hj a ha
-    have := h2 j hj b hb
-    have := h2 i hi j hj
-    split at hij <;> split at hij <;> (try split at hij) <;> (try split at hij) <;> grind
-
 theorem St.dest_eq (st : St) (i : Nat) : st.dest i = st.dests[i]! := by
   simp [St.dest, St.dests, getElem!_def]
   cases st.slots[i]? <;> rfl
@@ -74,51 +31,230 @@ theorem swapDest_dests (st : St) (a b : Nat) :
     (swapDestinations st a b).dests = swapEntries st.dests a b := by
   simp [swapDestinations, St.dests, swapEntries, List.map_set, St.dest_eq]
 
-theorem positionOf_none {st : St} {d : Nat} (h : positionOf st d = none) : d ∉ st.dests := by
-  simp only [positionOf, List.findIdx?_eq_none_iff] at h
-  simp only [St.dests, List.mem_map, not_exists, not_and]
-  intro x hx hd
-  have := h x hx
-  simp [hd] at this
-
-theorem positionOf_some {st : St} {d b : Nat} (h : positionOf st d = some b) : b < st.len := by
-  simp only [positionOf, List.findIdx?_eq_some_iff_getElem] at h
-  obtain ⟨hb, -⟩ := h
-  exact hb
-
-theorem shallowestCopy_lt {st : St} {v : Word} {c : Nat}
-    (h : shallowestCopyPosition st v = some c) :
+theorem shallowestCopy_lt {st : St} {slot : StackSlot} {c : Nat}
+    (h : shallowestCopyPosition st slot = some c) :
     c < st.len := by
   simpa using List.mem_reverse.mp (List.mem_of_find?_eq_some h)
 
+/-! ## Positions -/
+
+-- `m_positionOf` is the inverse of `m_destinationOf`.
+structure Pos (n : Nat) (st : St) : Prop where
+  length : st.positionOf.length = n
+  iff : ∀ d i, positionOf st d = some i ↔ ∃ h : i < st.dests.length, st.dests[i] = d
+
+theorem Pos.congr {n : Nat} {st st' : St} (hp : Pos n st) (h1 : st'.positionOf = st.positionOf)
+    (h2 : st'.dests = st.dests) : Pos n st' := by
+  refine ⟨h1 ▸ hp.length, fun d i => ?_⟩
+  simp only [positionOf, h1, h2]
+  exact hp.iff d i
+
+theorem positionOf_none {n : Nat} {st : St} {d : Nat} (hp : Pos n st)
+    (h : positionOf st d = none) : d ∉ st.dests := by
+  intro hm
+  obtain ⟨i, hi, rfl⟩ := List.getElem_of_mem hm
+  have := (hp.iff _ i).2 ⟨hi, rfl⟩
+  simp [h] at this
+
+theorem positionOf_some {n : Nat} {st : St} {d b : Nat} (hp : Pos n st)
+    (h : positionOf st d = some b) : b < st.len := by
+  obtain ⟨hb, -⟩ := (hp.iff d b).1 h
+  simpa [St.length_dests] using hb
+
+theorem positionOf_dest {n : Nat} {st : St} {d b : Nat} (hp : Pos n st)
+    (h : positionOf st d = some b) : st.dest b = d := by
+  obtain ⟨hb, hd⟩ := (hp.iff d b).1 h
+  rw [St.dest_eq, getElem!_pos st.dests b hb, hd]
+
+theorem positionOf_lt {n : Nat} {st : St} {d b : Nat} (hp : Pos n st)
+    (h : positionOf st d = some b) : d < n := by
+  rw [← hp.length]
+  refine Nat.lt_of_not_le fun hd => ?_
+  simp [positionOf, List.getElem?_eq_none hd] at h
+
+-- The model of the original: the first slot bound for `d`.
+theorem Pos.findIdx {n : Nat} {st : St} (hp : Pos n st) (d : Nat) :
+    positionOf st d = st.slots.findIdx? (·.dest == d) := by
+  have hf : st.slots.findIdx? (·.dest == d) = st.dests.findIdx? (· == d) := by
+    simp [St.dests, List.findIdx?_map, Function.comp_def]
+  rw [hf]
+  cases h : positionOf st d with
+  | none =>
+    have := positionOf_none hp h
+    symm
+    rw [List.findIdx?_eq_none_iff]
+    intro x hx
+    simp only [beq_eq_false_iff_ne, ne_eq]
+    rintro rfl
+    exact this hx
+  | some i =>
+    obtain ⟨hi, hd⟩ := (hp.iff d i).1 h
+    symm
+    rw [List.findIdx?_eq_some_iff_getElem]
+    refine ⟨hi, by simp [hd], fun j hj => ?_⟩
+    have hj' : j < st.dests.length := by omega
+    simp only [ne_eq]
+    intro hjd
+    have := (hp.iff d j).2 ⟨hj', by simpa using hjd⟩
+    rw [h] at this
+    cases this
+    omega
+
+theorem Pos.addState {n : Nat} {st : St} {v : StackSlot} {d : Nat} {op : Op} (hp : Pos n st)
+    (hd : d < n) (hn : positionOf st d = none) :
+    Pos n { st with
+      slots := st.slots ++ [⟨v, d⟩]
+      positionOf := st.positionOf.set d (some st.len)
+      trace := st.trace ++ [op] } := by
+  have hm := positionOf_none hp hn
+  have hl := hp.length
+  refine ⟨by simp [hl], fun d' i => ?_⟩
+  have hi := hp.iff d' i
+  simp only [positionOf, St.dests, St.len, List.getElem?_set] at hi hm ⊢
+  simp only [List.map_append, List.length_append, List.length_map, List.length_singleton,
+    List.map_cons, List.map_nil]
+  by_cases e : d = d'
+  · subst e
+    simp only [↓reduceIte, hl, hd]
+    constructor
+    · rintro ⟨⟩; exact ⟨by omega, by simp⟩
+    · rintro ⟨h1, h2⟩
+      rw [List.getElem_append] at h2
+      split at h2
+      · exact absurd (h2 ▸ List.getElem_mem _) hm
+      · rename_i hlt; simp only [List.length_map] at hlt; simp only [Option.join_some, Option.some.injEq]; omega
+  · simp only [e, ↓reduceIte, hi]
+    constructor
+    · rintro ⟨h1, h2⟩; exact ⟨by simp at h1 ⊢; omega, by rw [List.getElem_append_left]; exact h2⟩
+    · rintro ⟨h1, h2⟩
+      rw [List.getElem_append] at h2
+      split at h2
+      · rename_i hlt; exact ⟨hlt, h2⟩
+      · simp at h2; exact absurd h2 e
+
+theorem Pos.unique {n : Nat} {st : St} (hp : Pos n st) {i j : Nat} (hi : i < st.dests.length)
+    (hj : j < st.dests.length) (h : st.dests[i] = st.dests[j]) : i = j := by
+  have h1 := (hp.iff st.dests[j] i).2 ⟨hi, h⟩
+  have h2 := (hp.iff st.dests[j] j).2 ⟨hj, rfl⟩
+  rw [h1] at h2
+  cases h2
+  rfl
+
+theorem Pos.swapDest {n : Nat} {st : St} {a b : Nat} (hp : Pos n st) (ha : a < st.len)
+    (hb : b < st.len) : Pos n (swapDestinations st a b) := by
+  rw [← St.length_dests] at ha hb
+  have hl := hp.length
+  have hu := @Pos.unique n st hp
+  have hpa := hp.iff st.dests[a] a
+  have hpb := hp.iff st.dests[b] b
+  have hda := positionOf_lt hp (hpa.2 ⟨ha, rfl⟩)
+  have hdb := positionOf_lt hp (hpb.2 ⟨hb, rfl⟩)
+  have hd : ∀ i (h : i < st.dests.length), (swapDestinations st a b).dests[i]'(by
+      rw [swapDest_dests]; simpa [swapEntries] using h) =
+      if i = b then st.dests[a] else if i = a then st.dests[b] else st.dests[i] := by
+    intro i h
+    simp only [swapDest_dests, swapEntries, List.getElem_set, getElem!_pos st.dests a ha,
+      getElem!_pos st.dests b hb]
+    grind
+  have hq : ∀ d, positionOf (swapDestinations st a b) d =
+      if d = st.dests[a] then some b else if d = st.dests[b] then some a else positionOf st d := by
+    have hA : (swapDestinations st a b).dest a = st.dests[b] := by
+      rw [St.dest_eq, getElem!_pos _ a (by rw [swapDest_dests]; simpa [swapEntries] using ha), hd a ha]
+      grind
+    have hB : (swapDestinations st a b).dest b = st.dests[a] := by
+      rw [St.dest_eq, getElem!_pos _ b (by rw [swapDest_dests]; simpa [swapEntries] using hb), hd b hb]
+      simp
+    have hP : (swapDestinations st a b).positionOf = (st.positionOf.set
+        ((swapDestinations st a b).dest a) (some a)).set ((swapDestinations st a b).dest b) (some b) := rfl
+    intro d
+    rw [positionOf, hP, hA, hB, positionOf]
+    simp only [List.getElem?_set, List.length_set, hl, hda, hdb, ↓reduceIte]
+    by_cases h1 : st.dests[a] = d <;> by_cases h2 : st.dests[b] = d <;> simp_all [eq_comm]
+  have hl' : (swapDestinations st a b).dests.length = st.dests.length := by
+    simp [swapDest_dests, swapEntries]
+  refine ⟨by simp [swapDestinations, hl], fun d i => ?_⟩
+  rw [hq]
+  have hi := hp.iff d i
+  constructor
+  · intro h
+    by_cases e1 : d = st.dests[a]
+    · rw [ite_eq_left e1, Option.some.injEq] at h
+      subst h
+      exact ⟨hl' ▸ hb, by rw [hd b hb, ite_eq_left rfl, e1]⟩
+    by_cases e2 : d = st.dests[b]
+    · rw [ite_eq_right e1, ite_eq_left e2, Option.some.injEq] at h
+      subst h
+      have hab : a ≠ b := fun h => e1 (by subst h; exact e2)
+      exact ⟨hl' ▸ ha, by rw [hd a ha, ite_eq_right hab, ite_eq_left rfl, e2]⟩
+    rw [ite_eq_right e1, ite_eq_right e2] at h
+    obtain ⟨hi', hdi⟩ := hi.1 h
+    have hib : i ≠ b := fun h => e2 (by subst h; exact hdi.symm)
+    have hia : i ≠ a := fun h => e1 (by subst h; exact hdi.symm)
+    exact ⟨hl' ▸ hi', by rw [hd i hi']; simp [hib, hia, hdi]⟩
+  · rintro ⟨hi', hdi⟩
+    rw [hd i (hl' ▸ hi')] at hdi
+    by_cases hib : i = b
+    · subst hib; simp [← hdi]
+    by_cases hia : i = a
+    · subst hia
+      simp only [hib, ↓reduceIte] at hdi
+      have : d ≠ st.dests[i] := fun h => hib (hu ha hb (h ▸ hdi).symm)
+      rw [ite_eq_right this, ite_eq_left hdi.symm]
+    simp only [hib, hia, ↓reduceIte] at hdi
+    have e1 : d ≠ st.dests[a] := fun h => hia (hu (hl' ▸ hi') ha (hdi.trans h))
+    have e2 : d ≠ st.dests[b] := fun h => hib (hu (hl' ▸ hi') hb (hdi.trans h))
+    simp only [e1, e2, ↓reduceIte]
+    exact hi.2 ⟨hl' ▸ hi', hdi⟩
+
+theorem Pos.dests {n : Nat} {st : St} (hp : Pos n st) : Dests n st.dests :=
+  ⟨fun i h => positionOf_lt hp ((hp.iff _ i).2 ⟨h, rfl⟩), fun _ hi _ hj h => hp.unique hi hj h⟩
+
 /-! ## Shape of the actions -/
 
-theorem add_ok {st st' : St} {v : Word} {d : Nat} {op : Op} (h : add st v d op = .ok st') :
+theorem add_ok {st st' : St} {slot : StackSlot} {d : Nat} {op : Op}
+    (h : add st slot d op = .ok st') :
     positionOf st d = none
-      ∧ st' = { st with slots := st.slots ++ [⟨v, d⟩], trace := st.trace ++ [op] } := by
+      ∧ st' = { st with
+        slots := st.slots ++ [⟨slot, d⟩]
+        positionOf := st.positionOf.set d (some st.len)
+        trace := st.trace ++ [op] } := by
   unfold add at h
   split at h
   · cases h
   · cases h; rename_i hp; exact ⟨Option.not_isSome_iff_eq_none.mp hp, rfl⟩
 
-theorem add_shape {st st' : St} {v : Word} {d : Nat} {op : Op} (h : add st v d op = .ok st') :
+theorem add_shape {st st' : St} {slot : StackSlot} {d : Nat} {op : Op}
+    (h : add st slot d op = .ok st') :
     st'.len = st.len + 1 ∧ st'.trace = st.trace ++ [op]
       ∧ st'.pendingGenerations = st.pendingGenerations
-      ∧ st'.slots = st.slots ++ [⟨v, d⟩] := by
+      ∧ st'.slots = st.slots ++ [⟨slot, d⟩] := by
   obtain ⟨-, rfl⟩ := add_ok h
   simp [St.len]
 
-theorem add_dests {st st' : St} {v : Word} {d : Nat} {op : Op} (h : add st v d op = .ok st') :
-    d ∉ st.dests ∧ st'.dests = st.dests ++ [d] := by
-  obtain ⟨hp, rfl⟩ := add_ok h
-  exact ⟨positionOf_none hp, by simp [St.dests]⟩
+theorem Pos.add {n : Nat} {st st' : St} {slot : StackSlot} {d : Nat} {op : Op} (hp : Pos n st)
+    (hd : d < n) (h : add st slot d op = .ok st') : Pos n st' := by
+  obtain ⟨hn, rfl⟩ := add_ok h
+  exact hp.addState hd hn
+
+-- The value exchange of `swapWith` keeps the destinations.
+theorem set_getElem!_self (l : List Nat) (a : Nat) : l.set a l[a]! = l := by
+  by_cases h : a < l.length
+  · rw [getElem!_pos l a h, List.set_getElem_self]
+  · exact List.set_eq_of_length_le (by omega)
+
+theorem swapVals_dests (st : St) (a b : Nat) :
+    ((st.slots.set a ⟨st.val b, st.dest a⟩).set b ⟨st.val a, st.dest b⟩).map Slot.dest
+      = st.dests := by
+  rw [List.map_set, List.map_set]
+  change (st.dests.set a (st.dest a)).set b (st.dest b) = st.dests
+  rw [St.dest_eq, St.dest_eq, set_getElem!_self, set_getElem!_self]
 
 theorem swapWith_ok {st st' : St} {pos : Nat} (h : swapWith st pos = .ok st') :
     pos < st.len ∧ 1 ≤ st.len - 1 - pos ∧ st.len - 1 - pos ≤ MAX_SWAP_DEPTH ∧
-      st' = { st with
-        slots := (st.slots.set pos ⟨st.val (st.len - 1), st.dest (st.len - 1)⟩).set (st.len - 1)
-          ⟨st.val pos, st.dest pos⟩
-        trace := st.trace ++ [.swap (st.len - 1 - pos)] } := by
+      st' = swapDestinations { st with
+        slots := (st.slots.set pos ⟨st.val (st.len - 1), st.dest pos⟩).set (st.len - 1)
+          ⟨st.val pos, st.dest (st.len - 1)⟩
+        trace := st.trace ++ [.swap (st.len - 1 - pos)] } pos (st.len - 1) := by
   unfold swapWith at h
   split at h
   · cases h
@@ -127,24 +263,26 @@ theorem swapWith_ok {st st' : St} {pos : Nat} (h : swapWith st pos = .ok st') :
     · cases h
     · cases h; rename_i h1 h2; exact ⟨by omega, by omega, by omega, rfl⟩
 
-theorem swapWith_shape {st st' : St} {pos : Nat} (h : swapWith st pos = .ok st') :
-    st'.len = st.len ∧ st'.trace.length = st.trace.length + 1
-      ∧ st'.pendingGenerations = st.pendingGenerations := by
-  obtain ⟨-, -, -, rfl⟩ := swapWith_ok h
-  simp [St.len]
-
-theorem swapWith_dests {st st' : St} {pos : Nat} (h : swapWith st pos = .ok st') :
-    pos < st.len ∧ st'.dests = swapEntries st.dests pos (st.len - 1) := by
-  obtain ⟨hp, -, -, rfl⟩ := swapWith_ok h
-  exact ⟨hp, by simp [St.dests, swapEntries, List.map_set, St.dest_eq]⟩
-
 theorem swapDest_shape (st : St) (a b : Nat) :
     (swapDestinations st a b).len = st.len ∧ (swapDestinations st a b).trace = st.trace
       ∧ (swapDestinations st a b).pendingGenerations = st.pendingGenerations := by
   simp [swapDestinations, St.len]
 
+theorem swapWith_shape {st st' : St} {pos : Nat} (h : swapWith st pos = .ok st') :
+    st'.len = st.len ∧ st'.trace.length = st.trace.length + 1
+      ∧ st'.pendingGenerations = st.pendingGenerations := by
+  obtain ⟨-, -, -, rfl⟩ := swapWith_ok h
+  simp [swapDestinations, St.len]
+
+theorem Pos.swapWith {n : Nat} {st st' : St} {pos : Nat} (hp : Pos n st)
+    (h : swapWith st pos = .ok st') : Pos n st' := by
+  obtain ⟨h1, -, -, rfl⟩ := swapWith_ok h
+  refine Pos.swapDest (hp.congr rfl (swapVals_dests st pos (st.len - 1))) ?_ ?_
+  · simp [St.len] at h1 ⊢; omega
+  · simp [St.len] at h1 ⊢; omega
+
 theorem emit_add {e : Env} {st st' : St} {d : Nat} (h : emit e st d = .ok st') :
-    ∃ v op, add st v d op = .ok st' := by
+    ∃ slot op, add st slot d op = .ok st' := by
   unfold emit at h
   dsimp only at h
   repeat' split at h
@@ -172,11 +310,11 @@ theorem produce_shape {e : Env} {st st' : St} {d : Nat} (h : produce e st d = .o
   simp [St.len] at h1 ⊢
   simp [h1, h2, h3]
 
-theorem produce_dests {e : Env} {st st' : St} {d : Nat} (h : produce e st d = .ok st') :
-    d ∉ st.dests ∧ st'.dests = st.dests ++ [d] := by
+theorem Pos.produce {n : Nat} {e : Env} {st st' : St} {d : Nat} (hp : Pos n st) (hd : d < n)
+    (h : produce e st d = .ok st') : Pos n st' := by
   obtain ⟨s, hs, rfl⟩ := produce_ok h
-  obtain ⟨v, op, h⟩ := emit_add hs
-  exact add_dests (st' := s) h
+  obtain ⟨v, op, hs⟩ := emit_add hs
+  exact (hp.add hd hs).congr rfl rfl
 
 theorem generate_ok {e : Env} {st st' : St} {d : Nat} (h : generate e st d = .ok st') :
     d < e.n ∧ ∃ s, produce e st d = .ok s ∧
@@ -210,17 +348,14 @@ theorem generate_shape {e : Env} {st st' : St} {d : Nat} (h : generate e st d = 
   · obtain ⟨h4, h5, h6⟩ := swapWith_shape h
     omega
 
-theorem generate_dests {e : Env} {st st' : St} {d : Nat} (h : generate e st d = .ok st')
-    (hd : Dests e.n st.dests) : Dests e.n st'.dests := by
+theorem Pos.generate {e : Env} {st st' : St} {d : Nat} (hp : Pos e.n st)
+    (h : generate e st d = .ok st') : Pos e.n st' := by
   obtain ⟨hn, s, hs, h⟩ := generate_ok h
-  obtain ⟨hm, hds⟩ := produce_dests hs
-  have hs' : Dests e.n s.dests := hds ▸ hd.append hn hm
-  have hl := s.length_dests
+  have hs' := hp.produce hn hs
   rcases h with rfl | ⟨hlt, rfl⟩ | h
   · exact hs'
-  · rw [swapDest_dests]; exact hs'.swap (by omega) (by omega)
-  · obtain ⟨hp, h⟩ := swapWith_dests h
-    rw [h]; exact hs'.swap (by omega) (by omega)
+  · exact hs'.swapDest (by omega) (by omega)
+  · exact hs'.swapWith h
 
 theorem movableCopy_lt {st : St} {b c : Nat} (h : movableCopy st b = some c) : c < st.len := by
   have := List.mem_of_find?_eq_some h
@@ -261,17 +396,11 @@ theorem takeBound_shape {st : St} {t b : Nat} {r : St × Bool} (hb : b < st.len)
     obtain ⟨h4, h5, h6⟩ := swapWith_shape h
     rw [h2] at h5; omega
 
-theorem takeBound_dests {n : Nat} {st : St} {t b : Nat} {r : St × Bool} (hb : b < st.len)
-    (h : takeBound st t b = .ok r) (hd : Dests n st.dests) : Dests n r.1.dests := by
-  obtain ⟨pos, hpos, h⟩ := takeBound_ok hb h
-  have hl := st.length_dests
-  have h1 : Dests n (swapDestinations st pos b).dests := by
-    rw [swapDest_dests]; exact hd.swap (by omega) (by omega)
-  rcases h with h | h
-  · rw [h]; exact h1
-  · obtain ⟨hp, h⟩ := swapWith_dests h
-    have := (swapDestinations st pos b).length_dests
-    rw [h]; exact h1.swap (by omega) (by omega)
+theorem Pos.takeBound {n : Nat} {st : St} {t b : Nat} {r : St × Bool} (hp : Pos n st)
+    (hb : b < st.len) (h : takeBound st t b = .ok r) : Pos n r.1 := by
+  obtain ⟨pos, hpos, h | h⟩ := takeBound_ok hb h
+  · rw [h]; exact hp.swapDest hpos hb
+  · exact (hp.swapDest hpos hb).swapWith h
 
 theorem placeTop_ok {st st' : St} {t : Nat} {nx : Next} (h : placeTop st t = .ok (st', nx)) :
     nx = .next (t + 1) ∧ t < st.len ∧ (st' = st ∨ swapWith st t = .ok st') := by
@@ -293,13 +422,11 @@ theorem placeTop_shape {st st' : St} {t : Nat} {nx : Next} (h : placeTop st t = 
   · obtain ⟨h1, h2, h3⟩ := swapWith_shape h
     omega
 
-theorem placeTop_dests {n : Nat} {st st' : St} {t : Nat} {nx : Next}
-    (h : placeTop st t = .ok (st', nx)) (hd : Dests n st.dests) : Dests n st'.dests := by
+theorem Pos.placeTop {n : Nat} {st st' : St} {t : Nat} {nx : Next} (hp : Pos n st)
+    (h : placeTop st t = .ok (st', nx)) : Pos n st' := by
   obtain ⟨-, -, rfl | h⟩ := placeTop_ok h
-  · exact hd
-  · obtain ⟨hp, h⟩ := swapWith_dests h
-    have := st.length_dests
-    rw [h]; exact hd.swap (by omega) (by omega)
+  · exact hp
+  · exact hp.swapWith h
 
 -- The four ways of an iteration that continues.
 theorem step_next {e : Env} {st st' : St} {t t' : Nat} (h : step e st t = .ok (st', .next t')) :
@@ -361,14 +488,16 @@ theorem step_finish {e : Env} {st st' : St} {t : Nat} (h : step e st t = .ok (st
     · cases h
     · cases placeTop_next h
 
-theorem step_shape {e : Env} {st st' : St} {t t' : Nat} (h : step e st t = .ok (st', .next t')) :
+
+theorem step_shape {n : Nat} {e : Env} {st st' : St} {t t' : Nat} (hp : Pos n st)
+    (h : step e st t = .ok (st', .next t')) :
     st'.trace.length ≤ st.trace.length + 3 ∧ st'.len ≤ st.len + 1
       ∧ st'.len + st'.pendingGenerations = st.len + st.pendingGenerations := by
-  rcases step_next h with ⟨-, rfl⟩ | ⟨-, hp, d, h⟩ | ⟨-, b, r, hb, hr, h⟩ | ⟨-, hp, s, hs, h⟩
+  rcases step_next h with ⟨-, rfl⟩ | ⟨-, hp', d, h⟩ | ⟨-, b, r, hb, hr, h⟩ | ⟨-, hp', s, hs, h⟩
   · omega
   · obtain ⟨h1, h2, h3⟩ := generate_shape h
     omega
-  · obtain ⟨h1, h2, h3⟩ := takeBound_shape (positionOf_some hb) hr
+  · obtain ⟨h1, h2, h3⟩ := takeBound_shape (positionOf_some hp hb) hr
     rcases h with rfl | ⟨nx, h⟩
     · omega
     · obtain ⟨h4, h5, h6⟩ := placeTop_shape h
@@ -387,24 +516,69 @@ structure Inv (e : Env) (st : St) (targetOffset : Nat) : Prop where
   len_pending : st.len + st.pendingGenerations = e.n
   n_le : e.n ≤ MAX_N
   t_le : targetOffset ≤ e.n
-  dests : Dests e.n st.dests
+  pos : Pos e.n st
   ops_le : st.trace.length + 2 * st.pendingGenerations + 2 * (e.n - targetOffset) ≤ 4 * e.n
 
-theorem map_dest_zipWith (source : List Word) (dests : List Nat)
+theorem Inv.dests {e : Env} {st : St} {t : Nat} (hi : Inv e st t) : Dests e.n st.dests :=
+  hi.pos.dests
+
+theorem map_dest_zipWith (source : List StackSlot) (dests : List Nat)
     (h : source.length = dests.length) : (List.zipWith Slot.mk source dests).map Slot.dest = dests := by
   induction source generalizing dests with
   | nil => cases dests <;> simp_all
   | cons x xs ih => cases dests <;> simp_all
 
-theorem Inv_init {e : Env} {source : List Word} {dests : List Nat}
+-- `initPositionOf` after the first `k` binds.
+theorem initPositionOf_prefix {n : Nat} {dests : List Nat} (hd : Dests n dests) :
+    ∀ k (hk : k ≤ dests.length),
+      ((List.range k).foldl (fun p i => p.set dests[i]! (some i)) (List.replicate n none)).length = n
+      ∧ ∀ d i, (((List.range k).foldl (fun p i => p.set dests[i]! (some i))
+          (List.replicate n none))[d]?).join = some i ↔ ∃ h : i < k, dests[i]'(by omega) = d := by
+  intro k
+  induction k with
+  | zero =>
+    intro _
+    refine ⟨by simp, fun d i => ?_⟩
+    simp only [List.range_zero, List.foldl_nil, List.getElem?_replicate]
+    constructor
+    · intro h; split at h <;> simp at h
+    · rintro ⟨h, -⟩; omega
+  | succ k ih =>
+    intro hk
+    obtain ⟨ih1, ih2⟩ := ih (by omega)
+    have hk' : k < dests.length := by omega
+    rw [List.range_succ, List.foldl_append]
+    simp only [List.foldl_cons, List.foldl_nil]
+    rw [getElem!_pos dests k hk']
+    refine ⟨by rw [List.length_set, ih1], fun d i => ?_⟩
+    rw [List.getElem?_set]
+    by_cases e : dests[k] = d
+    · rw [ite_eq_left e, ih1, ite_eq_left (e ▸ hd.1 k hk'), Option.join_some, Option.some.injEq]
+      constructor
+      · rintro rfl; exact ⟨by omega, e⟩
+      · rintro ⟨hi, hid⟩
+        exact (hd.2 i (by omega) k hk' (hid.trans e.symm)).symm
+    · rw [ite_eq_right e, ih2]
+      constructor
+      · rintro ⟨hi, hid⟩; exact ⟨by omega, hid⟩
+      · rintro ⟨hi, hid⟩
+        refine ⟨Nat.lt_of_le_of_ne (by omega) fun h => e ?_, hid⟩
+        subst h; exact hid
+
+theorem Pos_init {e : Env} {source : List StackSlot} {dests : List Nat}
+    (hl : source.length = dests.length) (hd : Dests e.n dests) : Pos e.n (init e source dests) := by
+  have hds : (init e source dests).dests = dests := map_dest_zipWith source dests hl
+  obtain ⟨h1, h2⟩ := initPositionOf_prefix hd dests.length (Nat.le_refl _)
+  refine ⟨h1, fun d i => ?_⟩
+  simp only [positionOf, hds]
+  exact h2 d i
+
+theorem Inv_init {e : Env} {source : List StackSlot} {dests : List Nat}
     (hl : source.length = dests.length) (hm : dests.length ≤ e.n) (hn : e.n ≤ MAX_N)
-    (hd : Dests e.n dests) :
-    Inv e ⟨List.zipWith Slot.mk source dests, e.n - source.length, []⟩ 0 := by
-  have hds : St.dests ⟨List.zipWith Slot.mk source dests, e.n - source.length, []⟩ = dests :=
-    map_dest_zipWith source dests hl
-  refine ⟨?_, hn, Nat.zero_le _, by rw [hds]; exact hd, ?_⟩
-  · simp only [St.len, List.length_zipWith]; omega
-  · simp only [List.length_nil]; omega
+    (hd : Dests e.n dests) : Inv e (init e source dests) 0 := by
+  refine ⟨?_, hn, Nat.zero_le _, Pos_init hl hd, ?_⟩
+  · simp only [init, St.len, List.length_zipWith]; omega
+  · simp only [init, List.length_nil]; omega
 
 theorem step_inv {e : Env} {st st' : St} {t t' : Nat} (hi : Inv e st t) (ht : t < e.n)
     (h : step e st t = .ok (st', .next t')) : Inv e st' t' := by
@@ -412,20 +586,20 @@ theorem step_inv {e : Env} {st st' : St} {t t' : Nat} (hi : Inv e st t) (ht : t 
   rcases step_next h with ⟨rfl, rfl⟩ | ⟨rfl, hp, d, h⟩ | ⟨rfl, b, r, hb, hr, h⟩ | ⟨rfl, hp, s, hs, h⟩
   · exact ⟨h1, h2, by omega, h4, by omega⟩
   · obtain ⟨g1, g2, g3⟩ := generate_shape h
-    exact ⟨by omega, h2, h3, generate_dests h h4, by omega⟩
-  · have hb' := positionOf_some hb
+    exact ⟨by omega, h2, h3, h4.generate h, by omega⟩
+  · have hb' := positionOf_some h4 hb
     obtain ⟨g1, g2, g3⟩ := takeBound_shape hb' hr
-    have gd := takeBound_dests hb' hr h4
+    have gp := h4.takeBound hb' hr
     rcases h with rfl | ⟨nx, h⟩
-    · exact ⟨by omega, h2, by omega, gd, by omega⟩
+    · exact ⟨by omega, h2, by omega, gp, by omega⟩
     · obtain ⟨k1, k2, k3⟩ := placeTop_shape h
-      exact ⟨by omega, h2, by omega, placeTop_dests h gd, by omega⟩
+      exact ⟨by omega, h2, by omega, gp.placeTop h, by omega⟩
   · obtain ⟨g1, g2, g3⟩ := generate_shape hs
-    have gd := generate_dests hs h4
+    have gp := h4.generate hs
     rcases h with rfl | ⟨nx, h⟩
-    · exact ⟨by omega, h2, by omega, gd, by omega⟩
+    · exact ⟨by omega, h2, by omega, gp, by omega⟩
     · obtain ⟨k1, k2, k3⟩ := placeTop_shape h
-      exact ⟨by omega, h2, by omega, placeTop_dests h gd, by omega⟩
+      exact ⟨by omega, h2, by omega, gp.placeTop h, by omega⟩
 
 -- The precondition of `step`.
 theorem Inv.lt {e : Env} {st : St} {t : Nat} (hi : Inv e st t) (ht : t < e.n) :
@@ -448,6 +622,35 @@ theorem Inv.finish {e : Env} {st : St} {t : Nat} (hi : Inv e st t)
   have := d1 i h
   unfold St.dests at hl this
   omega
+
+theorem finish_ok {st st' : St} (h : finish st = .ok st') :
+    ∃ (hp : IsPerm (st.slots.map Slot.dest)) (swaps : List Nat),
+      PermuteKraken.permute ⟨_, hp.1, fun i j hi hj => hp.2 i hi j hj⟩ = .ok swaps
+        ∧ st' = swaps.foldl swapTop st := by
+  unfold finish at h
+  dsimp only at h
+  split at h
+  · rename_i hp
+    split at h
+    · rename_i swaps hs
+      cases h
+      exact ⟨hp, swaps, hs, rfl⟩
+    · cases h
+  · cases h
+
+-- The swaps of `finish` keep the length, the mapping and `pendingGenerations`, and
+-- add a swap each to the trace.
+theorem foldl_swapTop (swaps : List Nat) (st : St) :
+    (swaps.foldl swapTop st).len = st.len
+      ∧ (swaps.foldl swapTop st).positionOf = st.positionOf
+      ∧ (swaps.foldl swapTop st).pendingGenerations = st.pendingGenerations
+      ∧ (swaps.foldl swapTop st).trace = st.trace ++ swaps.map Op.swap := by
+  induction swaps generalizing st with
+  | nil => simp
+  | cons x xs ih =>
+    obtain ⟨h1, h2, h3, h4⟩ := ih (swapTop st x)
+    simp only [List.foldl_cons, h1, h2, h3, h4]
+    simp [swapTop, St.len]
 
 theorem depth_le (p : PermuteKraken.Perm) : p.depth ≤ 16 := by
   unfold PermuteKraken.Perm.depth
@@ -496,7 +699,7 @@ theorem loop_error {e : Env} {st : St} {t : Nat} {err : Err} (ht : t < e.n)
   split <;> simp_all
 
 theorem loop_ge {e : Env} {st : St} {t : Nat} (ht : ¬t < e.n) :
-    loop e st t = if st.len = e.n then .ok st.trace else .error .assertion := by
+    loop e st t = if st.len = e.n then .ok st else .error .assertion := by
   rw [loop, ite_eq_right ht]
 
 /-! ## Spilled congruence -/
@@ -504,8 +707,9 @@ theorem loop_ge {e : Env} {st : St} {t : Nat} (ht : ¬t < e.n) :
 section Congr
 
 -- `s` and `s'` agree on the ids of the variables in the target.
-variable {tg : List Word} {s s' : Nat → UInt8}
-  (H : ∀ v ∈ tg, 2 ≤ v.toNat → v.toNat % 2 = 0 → s ((v.toNat - 2) / 2) = s' ((v.toNat - 2) / 2))
+variable {tg : List StackSlot} {s s' : Nat → UInt8}
+  (H : ∀ v ∈ tg, v.kind = Value → v.valueOpcode ≠ Const →
+    s v.payload.toNat = s' v.payload.toNat)
 include H
 
 theorem isSpilled_congr (d : Nat) : isSpilled ⟨tg, s⟩ tg[d]! = isSpilled ⟨tg, s'⟩ tg[d]! := by
@@ -513,9 +717,12 @@ theorem isSpilled_congr (d : Nat) : isSpilled ⟨tg, s⟩ tg[d]! = isSpilled ⟨
   dsimp only
   by_cases hd : d < tg.length
   · rw [getElem!_pos tg d hd]
-    by_cases hv : 2 ≤ tg[d].toNat ∧ tg[d].toNat % 2 = 0
+    by_cases hv : tg[d].kind = Value ∧ tg[d].valueOpcode ≠ Const
     · rw [H _ (List.getElem_mem hd) hv.1 hv.2]
-    · have : (decide (2 ≤ tg[d].toNat) && tg[d].toNat % 2 == 0) = false := by grind
+    · have : (tg[d].kind == Value && !isLiteralValue tg[d]) = false := by
+        simp only [isLiteralValue, Bool.and_eq_false_iff, beq_eq_false_iff_ne, ne_eq,
+          Bool.not_eq_eq_eq_not, Bool.not_false, beq_iff_eq]
+        grind
       simp only [this, Bool.false_and]
   · rw [getElem!_neg tg d hd]
     rfl
@@ -568,11 +775,11 @@ decreasing_by
 
 end Congr
 
--- `buildBottomUp` reads `spilled` only at the ids of the variables in the target.
+-- `buildBottomUp` reads `spills` only at the ids of the variables in the target.
 theorem buildBottomUp_congr {e e' : Env} (ht : e.target = e'.target)
-    (hs : ∀ v ∈ e.target, 2 ≤ v.toNat → v.toNat % 2 = 0 →
-      e.spills ((v.toNat - 2) / 2) = e'.spills ((v.toNat - 2) / 2))
-    (source : List Word) (dests : List Nat) :
+    (hs : ∀ v ∈ e.target, v.kind = Value → v.valueOpcode ≠ Const →
+      e.spills v.payload.toNat = e'.spills v.payload.toNat)
+    (source : List StackSlot) (dests : List Nat) :
     buildBottomUp e source dests = buildBottomUp e' source dests := by
   obtain ⟨tg, s⟩ := e
   obtain ⟨tg', s'⟩ := e'

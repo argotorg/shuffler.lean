@@ -5,11 +5,14 @@ A model of `Shuffler.Emission.buildBottomUp` without Mathlib. Each definition
 mirrors a function of `c/build_bottom_up.c`, and so the parts of the Lean
 original.
 
-A value is a 64-bit word: 0 is a wildcard, 1 the function return label,
-2 + 2 * i the variable with index i and 3 + 2 * i the literal with index i. A
-slot of the working stack is a value and the target offset that it is bound
-for. The original allows slots that are bound for no offset; `buildBottomUp`
-starts with every slot bound, so the model does not represent them.
+A `StackSlot` and an `Op` have the fields of `StackSlot` and `struct op` in the
+C, which have the layout of the C++ `StackSlot` and `ShuffleOp`. The padding is
+not part of the model; `BbuKraken.Layout` gives the bytes of the fields. A slot
+of the working stack (`Slot`) is a `StackSlot` and the target offset that it is
+bound for: the C keeps these in `m_data` and `m_destinationOf`. The original
+allows slots that are bound for no offset; `buildBottomUp` starts with every
+slot bound, so the model does not represent them. `St.positionOf` is
+`m_positionOf`: the position of the slot bound for each target offset.
 -/
 
 namespace Bbu
@@ -21,37 +24,65 @@ def MAX_DUP_DEPTH : Nat := 15
 -- The bound on `n` in `c/build_bottom_up.c`: the EVM stack limit.
 def MAX_N : Nat := 1024
 
--- An operation: `kind` is 0 for a swap, 1 for a dup and 2 for a push, `arg` the
--- depth of a swap or dup, or the value of a push.
+-- `StackSlot::Kind`
+def Value : BitVec 8 := 0
+def Junk : BitVec 8 := 1
+def FunctionCallReturnLabel : BitVec 8 := 2
+def FunctionReturnLabel : BitVec 8 := 3
+
+-- The `InstOpcode`s that the C reads or writes.
+def Const : BitVec 8 := 0
+def Unreachable : BitVec 8 := 5
+
+-- `StackSlot`
+structure StackSlot where
+  payload : BitVec 32
+  kind : BitVec 8
+  valueOpcode : BitVec 8
+  deriving DecidableEq, Repr, Inhabited
+
+-- `StackSlot::makeJunk`
+def StackSlot.junk : StackSlot := ⟨0, Junk, Unreachable⟩
+
+-- `ShuffleOp::Kind`
+def Swap : BitVec 8 := 0
+def Dup : BitVec 8 := 1
+def Push : BitVec 8 := 3
+def Load : BitVec 8 := 4
+
+-- `struct op`: a swap or dup with its depth and a junk slot, or a push or load
+-- with depth 0 and its slot.
 structure Op where
-  kind : Word
-  arg : Word
+  kind : BitVec 8
+  depth : BitVec 8
+  slot : StackSlot
   deriving DecidableEq, Repr
 
-def Op.swap (depth : Nat) : Op := ⟨0, .ofNat 64 depth⟩
-def Op.dup (depth : Nat) : Op := ⟨1, .ofNat 64 depth⟩
-def Op.push (v : Word) : Op := ⟨2, v⟩
+-- `record`
+def Op.swap (depth : Nat) : Op := ⟨Swap, .ofNat 8 depth, .junk⟩
+def Op.dup (depth : Nat) : Op := ⟨Dup, .ofNat 8 depth, .junk⟩
 
 -- The inputs that do not change: `spills id` is not zero if variable `id` is spilled.
 structure Env where
-  target : List Word
+  target : List StackSlot
   spills : Nat → UInt8
 
 def Env.n (e : Env) : Nat := e.target.length
 
 structure Slot where
-  val : Word
+  val : StackSlot
   dest : Nat
   deriving DecidableEq, Repr
 
 structure St where
   slots : List Slot
+  positionOf : List (Option Nat)
   pendingGenerations : Nat
   trace : List Op
   deriving DecidableEq, Repr
 
 def St.len (st : St) : Nat := st.slots.length
-def St.val (st : St) (i : Nat) : Word := (st.slots[i]?.map Slot.val).getD 0
+def St.val (st : St) (i : Nat) : StackSlot := (st.slots[i]?.map Slot.val).getD default
 def St.dest (st : St) (i : Nat) : Nat := (st.slots[i]?.map Slot.dest).getD 0
 
 inductive Err where
@@ -70,50 +101,71 @@ inductive Next where
 
 /-! ## Queries -/
 
-def isFree (slot : Word) : Bool := slot == 0 || (slot.toNat % 2 == 1 && slot != 1)
+-- `StackSlot::isJunk`
+def isJunk (slot : StackSlot) : Bool := slot.kind == Junk
 
-def isSpilled (e : Env) (slot : Word) : Bool :=
-  2 ≤ slot.toNat && slot.toNat % 2 == 0 && e.spills ((slot.toNat - 2) / 2) != 0
+-- `StackSlot::isLiteralValue`
+def isLiteralValue (slot : StackSlot) : Bool := slot.valueOpcode == Const
+
+-- `canBeFreelyGenerated`
+def canBeFreelyGenerated (slot : StackSlot) : Bool :=
+  isLiteralValue slot || slot.kind == Junk || slot.kind == FunctionCallReturnLabel
+
+-- `isSpilled`
+def isSpilled (e : Env) (slot : StackSlot) : Bool :=
+  slot.kind == Value && !isLiteralValue slot && e.spills slot.payload.toNat != 0
+
+-- `recordPush`: a pushed non-literal value can only be a spill reload.
+def Op.push (slot : StackSlot) : Op :=
+  ⟨if slot.kind == Value && !isLiteralValue slot then Load else Push, 0, slot⟩
 
 -- `Mapping.positionOf`: the position of the slot bound for `destination`.
 def positionOf (st : St) (destination : Nat) : Option Nat :=
-  st.slots.findIdx? (·.dest == destination)
+  (st.positionOf[destination]?).join
 
 -- `Stack.shallowestCopyPosition`: the last position that holds `slot`.
-def shallowestCopyPosition (st : St) (slot : Word) : Option Nat :=
+def shallowestCopyPosition (st : St) (slot : StackSlot) : Option Nat :=
   (List.range st.len).reverse.find? (st.val · == slot)
 
 /-! ## Actions -/
 
--- `Mapping.swapDestinations`
+-- `Mapping.swapDestinations`: the slots at `a` and `b` exchange their
+-- destinations, and `m_positionOf` follows.
 def swapDestinations (st : St) (a b : Nat) : St :=
-  { st with slots := (st.slots.set a ⟨st.val a, st.dest b⟩).set b ⟨st.val b, st.dest a⟩ }
+  let st := { st with
+    slots := (st.slots.set a ⟨st.val a, st.dest b⟩).set b ⟨st.val b, st.dest a⟩ }
+  { st with positionOf := (st.positionOf.set (st.dest a) (some a)).set (st.dest b) (some b) }
 
--- `push` and `dup`: add `slot` bound for `destination` on top, with the operation `op`.
-def add (st : St) (slot : Word) (destination : Nat) (op : Op) : M St :=
+-- `push` and `dup`: `m_mapping.push(destination)` binds a new top slot
+-- `slot`, with the operation `op`.
+def add (st : St) (slot : StackSlot) (destination : Nat) (op : Op) : M St :=
   if (positionOf st destination).isSome then .error .assertion
-  else .ok { st with slots := st.slots ++ [⟨slot, destination⟩], trace := st.trace ++ [op] }
+  else .ok { st with
+    slots := st.slots ++ [⟨slot, destination⟩]
+    positionOf := st.positionOf.set destination (some st.len)
+    trace := st.trace ++ [op] }
 
--- `swapWith`
+-- `swapWith`: the slots at `pos` and the top exchange, then their destinations,
+-- so that the destinations travel along.
 def swapWith (st : St) (pos : Nat) : M St :=
   if st.len ≤ pos ∨ st.dest pos = pos then .error .assertion
   else
     let top := st.len - 1
     let depth := top - pos
     if depth < 1 ∨ MAX_SWAP_DEPTH < depth then .error .assertion
-    else .ok { st with
-      slots := (st.slots.set pos ⟨st.val top, st.dest top⟩).set top ⟨st.val pos, st.dest pos⟩
-      trace := st.trace ++ [.swap depth] }
+    else .ok (swapDestinations { st with
+      slots := (st.slots.set pos ⟨st.val top, st.dest pos⟩).set top ⟨st.val pos, st.dest top⟩
+      trace := st.trace ++ [.swap depth] } pos top)
 
 -- The push or dup of `produce`
 def emit (e : Env) (st : St) (targetOffset : Nat) : M St :=
   let slot := e.target[targetOffset]!
   let copy := shallowestCopyPosition st slot
-  if slot = 0 then add st slot targetOffset (.push slot)
+  if isJunk slot then add st slot targetOffset (.push slot)
   else match copy.filter (fun copy => st.len - 1 - copy ≤ MAX_DUP_DEPTH) with
     | some copy => add st slot targetOffset (.dup (st.len - copy))
     | none =>
-      if isFree slot || isSpilled e slot then add st slot targetOffset (.push slot)
+      if canBeFreelyGenerated slot || isSpilled e slot then add st slot targetOffset (.push slot)
       else match copy with
         | some copy => .error (.blocked copy (st.len - 1 - copy - MAX_DUP_DEPTH))
         | none => .error .assertion
@@ -143,7 +195,7 @@ def urgentFrom (e : Env) (st : St) (targetOffset offset urgentToDup : Nat) : M N
     if (positionOf st offset).isSome then urgentFrom e st targetOffset (offset + 1) urgentToDup
     else
       let slot := e.target[offset]!
-      if isFree slot || isSpilled e slot then
+      if isJunk slot || canBeFreelyGenerated slot || isSpilled e slot then
         urgentFrom e st targetOffset (offset + 1) urgentToDup
       else match shallowestCopyPosition st slot with
         | none => urgentFrom e st targetOffset (offset + 1) urgentToDup
@@ -220,13 +272,23 @@ def IsPerm (l : List Nat) : Prop :=
 
 instance (l : List Nat) : Decidable (IsPerm l) := by unfold IsPerm; infer_instance
 
--- The final permutation. `buildBottomUp` keeps the destinations a permutation,
--- so the assertion does not occur; the C code has no such check.
-def finish (st : St) : M (List Op) :=
+-- A swap of `permuteDestinations`: the slots at `top - depth` and the top
+-- exchange; the mapping does not change.
+def swapTop (st : St) (depth : Nat) : St :=
+  let top := st.len - 1
+  { st with
+    slots := (st.slots.set (top - depth) ⟨st.val top, st.dest (top - depth)⟩).set top
+      ⟨st.val (top - depth), st.dest top⟩
+    trace := st.trace ++ [.swap depth] }
+
+-- `permuteDestinations`: the final permutation. `buildBottomUp` keeps the
+-- destinations a permutation, so the assertion does not occur; the C code has
+-- no such check.
+def finish (st : St) : M St :=
   let ds := st.slots.map Slot.dest
   if h : IsPerm ds then
     match PermuteKraken.permute ⟨ds, h.1, fun i j hi hj => h.2 i hi j hj⟩ with
-    | .ok swaps => .ok (st.trace ++ swaps.map Op.swap)
+    | .ok swaps => .ok (swaps.foldl swapTop st)
     | .error b => .error (.blocked b.offset b.excess)
   else .error .assertion
 
@@ -240,7 +302,7 @@ theorem map_ok {α β : Type} {x : M α} {f : α → β} {y : β} (h : x.map f =
     ∃ a, x = .ok a ∧ f a = y := by
   cases x <;> simp_all [Except.map]
 
-theorem add_pending {st st' : St} {slot : Word} {destination : Nat} {op : Op}
+theorem add_pending {st st' : St} {slot : StackSlot} {destination : Nat} {op : Op}
     (h : add st slot destination op = .ok st') :
     st'.pendingGenerations = st.pendingGenerations := by
   unfold add at h
@@ -321,22 +383,31 @@ theorem step_progress {e : Env} {st st' : St} {targetOffset targetOffset' : Nat}
     · cases h; exact .inl rfl
     · cases placeTop_next h; exact .inl rfl
 
--- The loop of `buildBottomUp` from `targetOffset`.
-def loop (e : Env) (st : St) (targetOffset : Nat) : M (List Op) :=
+-- The loop of `buildBottomUp` from `targetOffset`: the final state.
+def loop (e : Env) (st : St) (targetOffset : Nat) : M St :=
   if targetOffset < e.n then
     match _h : step e st targetOffset with
     | .ok (st', .next targetOffset') => loop e st' targetOffset'
     | .ok (st', .finish) => if st'.len = e.n then finish st' else .error .assertion
     | .error err => .error err
-  else if st.len = e.n then .ok st.trace else .error .assertion
+  else if st.len = e.n then .ok st else .error .assertion
 termination_by (e.n - targetOffset, st.pendingGenerations)
 decreasing_by
   rcases step_progress _h with h' | ⟨h', hp⟩
   · exact Prod.Lex.left _ _ (by omega)
   · subst h'; exact Prod.Lex.right _ hp
 
--- `buildBottomUp` from the source stack with the destination of each slot.
-def buildBottomUp (e : Env) (source : List Word) (dests : List Nat) : M (List Op) :=
-  loop e ⟨List.zipWith Slot.mk source dests, e.n - source.length, []⟩ 0
+-- The initial `m_positionOf`: `bind` of each source slot in order.
+def initPositionOf (n : Nat) (dests : List Nat) : List (Option Nat) :=
+  (List.range dests.length).foldl (fun p i => p.set dests[i]! (some i)) (List.replicate n none)
+
+-- The initial state for the source stack with the destination of each slot.
+def init (e : Env) (source : List StackSlot) (dests : List Nat) : St :=
+  ⟨List.zipWith Slot.mk source dests, initPositionOf e.n dests, e.n - source.length, []⟩
+
+-- `buildBottomUp` from the source stack with the destination of each slot: the
+-- final state, whose slots are the result stack and whose trace is the operations.
+def buildBottomUp (e : Env) (source : List StackSlot) (dests : List Nat) : M St :=
+  loop e (init e source dests) 0
 
 end Bbu

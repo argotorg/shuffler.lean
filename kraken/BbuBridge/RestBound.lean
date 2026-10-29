@@ -210,7 +210,7 @@ theorem restBound_corr (hcopy : CopyScanStmt) (hdest : SwapDestStmt) (hswap : Sw
   intro e source st state t u uo b h ht hu c4 c5 hb
   have htn : t < (tgt e).length := by rw [tgt_length]; exact ht
   have hl := h.len
-  have hbl : b < st.len := Bbu.positionOf_some hb
+  have hbl : b < st.len := Bbu.positionOf_some h.pos hb
   have hbs : b < state.stack.length := by omega
   have hpos : state.positionOf ⟨t, htn⟩ = some ⟨b, hbs⟩ := by
     have := h.positionOf ⟨t, htn⟩
@@ -252,7 +252,7 @@ theorem restBound_corr (hcopy : CopyScanStmt) (hdest : SwapDestStmt) (hswap : Sw
   · rw [ite_eq_left hv, ite_eq_left (show state.stack[t] = state.stack[b] by rw [hgt, hgb, hv])]
     exact rb_after hdest hswap st state t b t h hbl (by omega) hv
   rw [ite_eq_right hv,
-    ite_eq_right (show ¬ state.stack[t] = state.stack[b] by rw [hgt, hgb, decode_eq_iff]; exact hv),
+    ite_eq_right (show ¬ state.stack[t] = state.stack[b] by rw [hgt, hgb, decode_eq_iff (h.canonVal _) (h.canonVal _)]; exact hv),
     hcopy e source st state ⟨b, hbs⟩ h, except_ok_bind]
   obtain ⟨hp, hpv⟩ := rb_movableCopy st b hbl
   exact rb_after hdest hswap st state t b _ h hbl hp hpv

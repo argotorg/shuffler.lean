@@ -1,5 +1,6 @@
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 /*
  * Emission::buildBottomUp of solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp
@@ -8,12 +9,15 @@
  *
  * - std::optional<Blocked> is Status: OK for none, BLOCKED with the offset and the
  *   excess in m_blocked, or ASSERTION for a failed yulAssert.
- * - std::optional<StackOffset> is a StackOffset, with NONE for none.
- * - Mapping keeps only m_destinationOf; positionOf searches it.
+ * - std::optional<StackOffset> is a StackOffset, with NONE for none and hasValue for has_value.
+ * - No slot is surplus, so a destination is a StackOffset, not a std::optional.
  * - The checks marked `// Lean` come from the Lean original
  *   (Shuffler.BuildBottomUp.Defs), which the C++ does not have.
  * - push and dup do the check of m_mapping.push before the stack operation.
  * - UNIT marks a function that the Kraken proof treats as a separate unit.
+ * - StackSlot and struct op have the layout of StackSlot (StackSlot.h) and
+ *   ShuffleOp (ShuffleTrace.h), so that a C++ caller can pass a StackData and
+ *   a ShuffleTrace buffer as they are.
  */
 
 #define UNIT __attribute__((noinline, noclone))
@@ -24,12 +28,31 @@
 #define m_maxSwapDepth 16
 #define m_maxDupDepth 15
 
-typedef size_t StackOffset;
-#define NONE SIZE_MAX
+/// Array index into stack from the bottom (offset 0 = bottom)
+typedef struct { size_t value; } StackOffset;
+/// Distance from the stack top (depth 0 = top)
+typedef struct { size_t value; } StackDepth;
+#define NONE ((StackOffset){SIZE_MAX})
 
-/// 0 is junk (a wildcard), 1 the function return label,
-/// 2 + 2 * i the variable with index i, 3 + 2 * i the literal with index i
-typedef uint64_t StackSlot;
+/// std::optional<StackOffset>::has_value
+INLINE int hasValue(StackOffset const _offset)
+{
+	return _offset.value != SIZE_MAX;
+}
+
+/// StackSlot::Kind
+enum { Value = 0, Junk = 1, FunctionCallReturnLabel = 2, FunctionReturnLabel = 3 };
+
+/// InstOpcode (SSACFGTypes.h): the opcodes that the C reads or writes
+enum { Const = 0, Unreachable = 5 };
+
+/// StackSlot: m_payload, m_kind, m_valueOpcode and 2 bytes of padding, which nothing reads
+typedef struct {
+	uint32_t payload;
+	uint8_t kind;
+	uint8_t valueOpcode;
+} StackSlot;
+_Static_assert(sizeof(StackSlot) == 8 && _Alignof(StackSlot) == 4, "StackSlot layout");
 
 /// std::optional<Blocked>
 typedef int64_t Status;
@@ -37,11 +60,16 @@ enum { OK = 0, BLOCKED = -1, ASSERTION = -2 };
 
 #define yulAssert(cond, ...) do { if (!(cond)) return ASSERTION; } while (0)
 
-/// an operation of the trace: a swap or dup with its depth, or a push with its slot
-enum { SWAP, DUP, PUSH };
+/// ShuffleOp::Kind
+enum { Swap = 0, Dup = 1, Pop = 2, Push = 3, Load = 4, Store = 5 };
+
+/// ShuffleOp: a swap or dup with its depth and a junk slot, or a push or load with depth 0 and its slot
 struct op {
-	uint64_t kind, arg;
+	uint8_t kind;
+	uint8_t depth;
+	StackSlot slot;
 };
+_Static_assert(sizeof(struct op) == 12 && offsetof(struct op, slot) == 4, "ShuffleOp layout");
 
 int64_t permute(uint64_t n, uint16_t *perm, uint8_t *trace, uint16_t *blocked);
 
@@ -59,216 +87,253 @@ struct Emission {
 	struct op *m_trace;
 	// the offset and the excess of a Blocked
 	uint64_t *m_blocked;
-	// the working stack and its (in sync) mapping
-	StackSlot m_data[MAX_N];
+	// the working stack, which has room for m_targetSize slots
+	StackSlot *m_data;
+	// the mapping of the working stack
 	StackOffset m_destinationOf[MAX_N];
+	StackOffset m_positionOf[MAX_N];
 };
+
+/// StackSlot::operator== (defaulted): the members are the low 6 bytes, the shift drops the padding
+INLINE int slotEquals(StackSlot const _a, StackSlot const _b)
+{
+	uint64_t a, b;
+	memcpy(&a, &_a, sizeof a);
+	memcpy(&b, &_b, sizeof b);
+	return (a ^ b) << 16 == 0;
+}
 
 /// StackSlot::isJunk
 INLINE int isJunk(StackSlot const _slot)
 {
-	return _slot == 0;
+	return _slot.kind == Junk;
 }
 
-/// canBeFreelyGenerated: junk or a literal
+/// StackSlot::isLiteralValue
+INLINE int isLiteralValue(StackSlot const _slot)
+{
+	return _slot.valueOpcode == Const;
+}
+
+/// canBeFreelyGenerated
 INLINE int canBeFreelyGenerated(StackSlot const _slot)
 {
-	return _slot == 0 || (_slot & 1 && _slot != 1);
+	return isLiteralValue(_slot) || _slot.kind == Junk || _slot.kind == FunctionCallReturnLabel;
 }
 
 /// spill::isSpilled: a variable that is spilled
-UNIT static int isSpilled(struct Emission const *e, StackSlot const _slot)
+UNIT static int isSpilled(struct Emission const *this, StackSlot const _slot)
 {
-	return _slot >= 2 && !(_slot & 1) && e->m_spills[(_slot - 2) / 2];
+	return _slot.kind == Value && !isLiteralValue(_slot) && this->m_spills[_slot.payload];
 }
 
 /// Mapping::positionOf: the position of the slot bound for `_destination`, or NONE if no slot is bound for it
-UNIT static StackOffset positionOf(struct Emission const *e, StackOffset const _destination)
+INLINE StackOffset positionOf(struct Emission const *this, StackOffset const _destination)
 {
-	for (StackOffset pos = 0; pos < e->m_dataSize; pos++)
-		if (e->m_destinationOf[pos] == _destination)
-			return pos;
-	return NONE;
+	return this->m_positionOf[_destination.value];
+}
+
+/// Mapping::bind: Binds the slot at `_pos` for `_destination`; push and dup do the check
+INLINE void bind(struct Emission *this, StackOffset const _pos, StackOffset const _destination)
+{
+	this->m_destinationOf[_pos.value] = _destination;
+	this->m_positionOf[_destination.value] = _pos;
 }
 
 /// Mapping::swapDestinations: Exchanges the destinations of the slots at `_a` and `_b`
-INLINE void swapDestinations(struct Emission *e, StackOffset const _a, StackOffset const _b)
+INLINE void swapDestinations(struct Emission *this, StackOffset const _a, StackOffset const _b)
 {
-	StackOffset const destination = e->m_destinationOf[_a];
-	e->m_destinationOf[_a] = e->m_destinationOf[_b];
-	e->m_destinationOf[_b] = destination;
+	StackOffset const destination = this->m_destinationOf[_a.value];
+	this->m_destinationOf[_a.value] = this->m_destinationOf[_b.value];
+	this->m_destinationOf[_b.value] = destination;
+	this->m_positionOf[this->m_destinationOf[_a.value].value] = _a;
+	this->m_positionOf[this->m_destinationOf[_b.value].value] = _b;
 }
 
 /// Whether the slot at `_pos` is bound for `_pos` itself, i.e., already is at its final target offset
-INLINE int isFinal(struct Emission const *e, StackOffset const _pos)
+INLINE int isFinal(struct Emission const *this, StackOffset const _pos)
 {
-	return e->m_destinationOf[_pos] == _pos;
+	return this->m_destinationOf[_pos.value].value == _pos.value;
 }
 
 /// Depth of the slot at `_pos` below the top of the working stack
-INLINE size_t depthOf(struct Emission const *e, StackOffset const _pos)
+INLINE StackDepth depthOf(struct Emission const *this, StackOffset const _pos)
 {
-	return e->m_dataSize - 1 - _pos;
+	return (StackDepth){this->m_dataSize - 1 - _pos.value};
 }
 
 /// Whether a swap can reach the slot at `_pos`; trivially true for the top itself
-INLINE int isSwapReachable(struct Emission const *e, StackOffset const _pos)
+INLINE int isSwapReachable(struct Emission const *this, StackOffset const _pos)
 {
-	return depthOf(e, _pos) <= m_maxSwapDepth;
+	return depthOf(this, _pos).value <= m_maxSwapDepth;
 }
 
 /// Whether a dup can reach the slot at `_pos`
-INLINE int isDupReachable(struct Emission const *e, StackOffset const _pos)
+INLINE int isDupReachable(struct Emission const *this, StackOffset const _pos)
 {
-	return depthOf(e, _pos) <= m_maxDupDepth;
+	return depthOf(this, _pos).value <= m_maxDupDepth;
 }
 
 /// Stack::shallowestCopyPosition
-UNIT static StackOffset shallowestCopyPosition(struct Emission const *e, StackSlot const _slot)
+UNIT static StackOffset shallowestCopyPosition(struct Emission const *this, StackSlot const _slot)
 {
-	for (StackOffset pos = e->m_dataSize; pos-- > 0;)
-		if (e->m_data[pos] == _slot)
+	for (StackOffset pos = {this->m_dataSize}; pos.value-- > 0;)
+		if (slotEquals(this->m_data[pos.value], _slot))
 			return pos;
 	return NONE;
 }
 
-/// appends an operation to the trace
-INLINE void record(struct Emission *e, uint64_t const _kind, uint64_t const _arg)
+/// appends ShuffleOp::swap or ShuffleOp::dup to the trace
+INLINE void record(struct Emission *this, uint8_t const _kind, size_t const _depth)
 {
-	e->m_trace[e->m_traceSize].kind = _kind;
-	e->m_trace[e->m_traceSize].arg = _arg;
-	e->m_traceSize++;
+	this->m_trace[this->m_traceSize] = (struct op){_kind, (uint8_t)_depth, {0, Junk, Unreachable}};
+	this->m_traceSize++;
+}
+
+/// appends the operation of Stack::push to the trace: a pushed non-literal value can only be a spill reload
+INLINE void recordPush(struct Emission *this, StackSlot const _slot)
+{
+	uint8_t const kind = _slot.kind == Value && !isLiteralValue(_slot) ? Load : Push;
+	this->m_trace[this->m_traceSize] = (struct op){kind, 0, _slot};
+	this->m_traceSize++;
 }
 
 /// Swaps the top with the slot at `_pos`, the destinations traveling along
-UNIT static Status swapWith(struct Emission *e, StackOffset const _pos)
+UNIT static Status swapWith(struct Emission *this, StackOffset const _pos)
 {
-	yulAssert(_pos < e->m_dataSize);  // Lean
-	yulAssert(!isFinal(e, _pos), "swapping a final slot out of place");
-	StackOffset const top = e->m_dataSize - 1;
-	size_t const depth = depthOf(e, _pos);
-	yulAssert(1 <= depth && depth <= m_maxSwapDepth, "invalid swap target");  // Stack::swap
+	yulAssert(_pos.value < this->m_dataSize);  // Lean
+	yulAssert(!isFinal(this, _pos), "swapping a final slot out of place");
+	StackOffset const top = {this->m_dataSize - 1};
+	StackDepth const depth = depthOf(this, _pos);
+	yulAssert(1 <= depth.value && depth.value <= m_maxSwapDepth, "invalid swap target");  // Stack::swap
 	// m_stack.swap(_pos)
-	record(e, SWAP, depth);
-	StackSlot const slot = e->m_data[_pos];
-	e->m_data[_pos] = e->m_data[top];
-	e->m_data[top] = slot;
-	swapDestinations(e, _pos, top);
+	record(this, Swap, depth.value);
+	StackSlot const slot = this->m_data[_pos.value];
+	this->m_data[_pos.value] = this->m_data[top.value];
+	this->m_data[top.value] = slot;
+	swapDestinations(this, _pos, top);
 	return OK;
 }
 
 /// The check of m_mapping.push comes before m_stack.push here, as in the Kraken model (BbuKraken/Model.lean, add)
-UNIT static Status push(struct Emission *e, StackSlot const _slot, StackOffset const _destination)
+UNIT static Status push(struct Emission *this, StackSlot const _slot, StackOffset const _destination)
 {
 	// m_mapping.push(_destination): Binds the freshly pushed top slot for `_destination`, which no slot may be bound for yet
-	yulAssert(positionOf(e, _destination) == NONE, "destination already bound to a slot");
-	e->m_destinationOf[e->m_dataSize] = _destination;
+	yulAssert(!hasValue(positionOf(this, _destination)), "destination already bound to a slot");
+	bind(this, (StackOffset){this->m_dataSize}, _destination);
 	// m_stack.push(_slot)
-	record(e, PUSH, _slot);
-	e->m_data[e->m_dataSize] = _slot;
-	e->m_dataSize++;
+	recordPush(this, _slot);
+	this->m_data[this->m_dataSize] = _slot;
+	this->m_dataSize++;
 	return OK;
 }
 
 /// The check of m_mapping.push comes before m_stack.dup here, as in push
-UNIT static Status dup(struct Emission *e, StackOffset const _copy, StackOffset const _destination)
+UNIT static Status dup(struct Emission *this, StackOffset const _copy, StackOffset const _destination)
 {
 	// m_mapping.push(_destination): Binds the freshly pushed top slot for `_destination`, which no slot may be bound for yet
-	yulAssert(positionOf(e, _destination) == NONE, "destination already bound to a slot");
-	e->m_destinationOf[e->m_dataSize] = _destination;
+	yulAssert(!hasValue(positionOf(this, _destination)), "destination already bound to a slot");
+	bind(this, (StackOffset){this->m_dataSize}, _destination);
 	// m_stack.dup(_copy)
-	record(e, DUP, depthOf(e, _copy) + 1);
-	e->m_data[e->m_dataSize] = e->m_data[_copy];
-	e->m_dataSize++;
+	record(this, Dup, depthOf(this, _copy).value + 1);
+	this->m_data[this->m_dataSize] = this->m_data[_copy.value];
+	this->m_dataSize++;
 	return OK;
 }
 
 /// The slot at `_position` is out of reach by `_excess` slots
-INLINE Status block(struct Emission *e, StackOffset const _position, size_t const _excess)
+INLINE Status block(struct Emission *this, StackOffset const _position, size_t const _excess)
 {
 	yulAssert(_excess > 0);
-	e->m_blocked[0] = _position;
-	e->m_blocked[1] = _excess;
+	this->m_blocked[0] = _position.value;
+	this->m_blocked[1] = _excess;
 	return BLOCKED;
 }
 
 /// A swap cannot reach the slot at `_position`
-INLINE Status blockSwapUnreachable(struct Emission *e, StackOffset const _position)
+INLINE Status blockSwapUnreachable(struct Emission *this, StackOffset const _position)
 {
-	return block(e, _position, depthOf(e, _position) - m_maxSwapDepth);
+	return block(this, _position, depthOf(this, _position).value - m_maxSwapDepth);
 }
 
 /// A dup cannot reach the slot at `_position`
-INLINE Status blockDupUnreachable(struct Emission *e, StackOffset const _position)
+INLINE Status blockDupUnreachable(struct Emission *this, StackOffset const _position)
 {
-	return block(e, _position, depthOf(e, _position) - m_maxDupDepth);
+	return block(this, _position, depthOf(this, _position).value - m_maxDupDepth);
 }
 
 /// Produces the slot for `_targetOffset`
-UNIT static Status produce(struct Emission *e, StackOffset const _targetOffset)
+UNIT static Status produce(struct Emission *this, StackOffset const _targetOffset)
 {
-	StackSlot const slot = e->m_target[_targetOffset];
-	StackOffset const copy = shallowestCopyPosition(e, slot);
+	StackSlot const slot = this->m_target[_targetOffset.value];
+	StackOffset const copy = shallowestCopyPosition(this, slot);
 	Status status;
 	if (isJunk(slot))
-		status = push(e, slot, _targetOffset);
-	else if (copy != NONE && isDupReachable(e, copy))
-		status = dup(e, copy, _targetOffset);
-	else if (canBeFreelyGenerated(slot) || isSpilled(e, slot))
-		status = push(e, slot, _targetOffset);
-	else if (copy != NONE)
-		return blockDupUnreachable(e, copy);
+		status = push(this, slot, _targetOffset);
+	else if (hasValue(copy) && isDupReachable(this, copy))
+		status = dup(this, copy, _targetOffset);
+	else if (canBeFreelyGenerated(slot) || isSpilled(this, slot))
+		status = push(this, slot, _targetOffset);
+	else if (hasValue(copy))
+		return blockDupUnreachable(this, copy);
 	else
 		yulAssert(0, "generated slot has no copy on the stack and is not spilled");
 	if (status != OK)
 		return status;
-	yulAssert(positionOf(e, _targetOffset) == e->m_dataSize - 1);
-	if (e->m_pendingGenerations > 0)  // Lean: Nat subtraction
-		--e->m_pendingGenerations;
+	yulAssert(positionOf(this, _targetOffset).value == this->m_dataSize - 1);
+	if (this->m_pendingGenerations > 0)  // Lean: Nat subtraction
+		--this->m_pendingGenerations;
 	return OK;
 }
 
 /// Produces the slot for `_targetOffset` and moves it toward its place right away: if the offset exists
 /// already and holds a slot that is not final, a single swap places the produced slot and floats the other
 /// one, which may be its own placement. An equal slot there just takes over the destination.
-UNIT static Status generate(struct Emission *e, StackOffset const _targetOffset)
+UNIT static Status generate(struct Emission *this, StackOffset const _targetOffset)
 {
-	yulAssert(_targetOffset < e->m_targetSize);  // Lean
-	Status const blocked = produce(e, _targetOffset);
+	yulAssert(_targetOffset.value < this->m_targetSize);  // Lean
+	Status const blocked = produce(this, _targetOffset);
 	if (blocked != OK)
 		return blocked;
 	// `produce` left the slot on top; swap it down only if its offset exists strictly below the top:
 	// as the top itself it is in place already, beyond the height it has to wait on top anyway
-	if (_targetOffset + 1 < e->m_dataSize && !isFinal(e, _targetOffset))
+	if (_targetOffset.value + 1 < this->m_dataSize && !isFinal(this, _targetOffset))
 	{
-		if (e->m_data[_targetOffset] == e->m_data[e->m_dataSize - 1])
+		if (slotEquals(this->m_data[_targetOffset.value], this->m_data[this->m_dataSize - 1]))
 			// an equal slot stands at the offset: retag instead of swapping two equal slots
-			swapDestinations(e, _targetOffset, e->m_dataSize - 1);
-		else if (isSwapReachable(e, _targetOffset))
-			return swapWith(e, _targetOffset);
+			swapDestinations(this, _targetOffset, (StackOffset){this->m_dataSize - 1});
+		else if (isSwapReachable(this, _targetOffset))
+			return swapWith(this, _targetOffset);
 		// out of swap reach: leave the slot on top; buildBottomUp re-checks reach when filling the offset
 	}
 	return OK;
 }
 
 /// Emission::permute with the destinations: the permutation of permute.c, whose swaps go to the trace
-UNIT static Status permuteDestinations(struct Emission *e)
+/// and to m_data. The mapping is not used after the permutation, so it does not change.
+UNIT static Status permuteDestinations(struct Emission *this)
 {
 	uint16_t permutation[MAX_N];
 	uint8_t swaps[2 * MAX_N];
 	uint16_t blocked[2];
-	for (StackOffset i = 0; i < e->m_dataSize; i++)
-		permutation[i] = e->m_destinationOf[i];
-	int64_t const count = permute(e->m_dataSize, permutation, swaps, blocked);
+	for (size_t i = 0; i < this->m_dataSize; i++)
+		permutation[i] = this->m_destinationOf[i].value;
+	int64_t const count = permute(this->m_dataSize, permutation, swaps, blocked);
 	if (count < 0)
 	{
 		// the Blocked of the swaps of Emission::permute
-		e->m_blocked[0] = blocked[0];
-		e->m_blocked[1] = blocked[1];
+		this->m_blocked[0] = blocked[0];
+		this->m_blocked[1] = blocked[1];
 		return BLOCKED;
 	}
+	size_t const top = this->m_dataSize - 1;
 	for (int64_t i = 0; i < count; i++)
-		record(e, SWAP, swaps[i]);
+	{
+		StackSlot const slot = this->m_data[top - swaps[i]];
+		this->m_data[top - swaps[i]] = this->m_data[top];
+		this->m_data[top] = slot;
+		record(this, Swap, swaps[i]);
+	}
 	return OK;
 }
 
@@ -277,103 +342,103 @@ UNIT static Status permuteDestinations(struct Emission *e)
 /// Once everything is generated the rest is one final permutation.
 ///
 /// Loop invariant: every offset below `targetOffset` is final, i.e., holds the slot bound for it.
-UNIT static Status buildBottomUp(struct Emission *e)
+UNIT static Status buildBottomUp(struct Emission *this)
 {
-	for (StackOffset targetOffset = 0; targetOffset < e->m_targetSize; ++targetOffset)
+	for (StackOffset targetOffset = {0}; targetOffset.value < this->m_targetSize; ++targetOffset.value)
 	{
 		// the offset exists and already holds the slot bound for it: nothing to do
-		if (targetOffset < e->m_dataSize && isFinal(e, targetOffset))
+		if (targetOffset.value < this->m_dataSize && isFinal(this, targetOffset))
 			continue;
 
 		// all is generated, the final permutation
-		if (e->m_pendingGenerations == 0)
+		if (this->m_pendingGenerations == 0)
 		{
-			yulAssert(e->m_dataSize == e->m_targetSize);
+			yulAssert(this->m_dataSize == this->m_targetSize);
 			// every slot goes to the offset it is bound for
-			return permuteDestinations(e);
+			return permuteDestinations(this);
 		}
 
 		// a target offset that needs something DUPed urgently before it goes out of dup reach
 		StackOffset urgentToDup = NONE;
-		for (StackOffset offset = targetOffset; offset < e->m_targetSize; ++offset)  // going bottom-up so we can start from targetOffset
+		for (StackOffset offset = targetOffset; offset.value < this->m_targetSize; ++offset.value)  // going bottom-up so we can start from targetOffset
 		{
 			// only offsets no slot is bound for yet (ie that need to be duped) can be urgent
-			if (positionOf(e, offset) != NONE)
+			if (hasValue(positionOf(this, offset)))
 				continue;
-			StackSlot const slot = e->m_target[offset];
-			if (isJunk(slot) || canBeFreelyGenerated(slot) || isSpilled(e, slot))
+			StackSlot const slot = this->m_target[offset.value];
+			if (isJunk(slot) || canBeFreelyGenerated(slot) || isSpilled(this, slot))
 				continue;
-			StackOffset const sourceCopy = shallowestCopyPosition(e, slot);
-			if (sourceCopy != NONE)
+			StackOffset const sourceCopy = shallowestCopyPosition(this, slot);
+			if (hasValue(sourceCopy))
 			{
-				if (!isDupReachable(e, sourceCopy))
-					return blockDupUnreachable(e, sourceCopy);
+				if (!isDupReachable(this, sourceCopy))
+					return blockDupUnreachable(this, sourceCopy);
 				// a copy sitting at the offset being filled floats to the top when it is, so no hurry
-				if (depthOf(e, sourceCopy) == m_maxDupDepth && sourceCopy != targetOffset && urgentToDup == NONE)
+				if (depthOf(this, sourceCopy).value == m_maxDupDepth && sourceCopy.value != targetOffset.value && !hasValue(urgentToDup))
 					urgentToDup = offset;
 			}
 		}
 
 		if (
-			urgentToDup != NONE &&  // if there is a slot that is about to go out of dup range but demands more copies
-			urgentToDup != targetOffset &&  // and it's not the target offset anyways
-			e->m_dataSize - targetOffset < m_maxSwapDepth  // and duping it doesn't make the target go out of swap range
+			hasValue(urgentToDup) &&  // if there is a slot that is about to go out of dup range but demands more copies
+			urgentToDup.value != targetOffset.value &&  // and it's not the target offset anyways
+			this->m_dataSize - targetOffset.value < m_maxSwapDepth  // and duping it doesn't make the target go out of swap range
 		)
 		{
 			// generate it
-			Status const blocked = generate(e, urgentToDup);
+			Status const blocked = generate(this, urgentToDup);
 			if (blocked != OK)
 				return blocked;
 			// and revisit the current target in the next iteration (with unsigned wrapping this is also fine for 0)
-			--targetOffset;
+			--targetOffset.value;
 			continue;
 		}
 
 		// a slot whose offset is exactly where the result of a dup would end up is in place for free,
 		// as long as nothing is urgent and targetOffset stays in reach for the slot generated after it
-		StackOffset const sourceTop = e->m_dataSize;
+		StackOffset const sourceTop = {this->m_dataSize};
 		if (
-			urgentToDup == NONE &&  // nothing urgent
-			sourceTop > targetOffset &&  // the new top sits above the current targetOffset
-			sourceTop < e->m_targetSize &&  // the new top is in the target offset range
-			positionOf(e, sourceTop) == NONE &&  // no slot is bound for the offset at the source top yet
-			sourceTop - targetOffset < m_maxSwapDepth  // targetOffset stays in swap reach
+			!hasValue(urgentToDup) &&  // nothing urgent
+			sourceTop.value > targetOffset.value &&  // the new top sits above the current targetOffset
+			sourceTop.value < this->m_targetSize &&  // the new top is in the target offset range
+			!hasValue(positionOf(this, sourceTop)) &&  // no slot is bound for the offset at the source top yet
+			sourceTop.value - targetOffset.value < m_maxSwapDepth  // targetOffset stays in swap reach
 		)
 		{
 			// we generate the slot demanded at source top
-			Status const blocked = generate(e, sourceTop);
+			Status const blocked = generate(this, sourceTop);
 			if (blocked != OK)
 				return blocked;
 			// revisit target offset
-			--targetOffset;
+			--targetOffset.value;
 			continue;
 		}
 
 		if (
-			positionOf(e, targetOffset) != NONE  // a slot is bound for the target: retained or generated already
+			hasValue(positionOf(this, targetOffset))  // a slot is bound for the target: retained or generated already
 		)
 		{
 			// We go bottom-up, so the slot that should go into targetOffset is somewhere above
 			// Any equal slot that is not in place will do the trick: the one at `targetOffset` itself, else the shallowest one
-			StackOffset const boundForTarget = positionOf(e, targetOffset);
+			StackOffset const boundForTarget = positionOf(this, targetOffset);
 			yulAssert(
-				boundForTarget != NONE && boundForTarget >= targetOffset,
+				hasValue(boundForTarget) && boundForTarget.value >= targetOffset.value,
 				"slot bound for the offset being filled is missing or already below it"
 			);
 			StackOffset const sourceForTargetOffset = boundForTarget;
 			StackOffset pos = sourceForTargetOffset;
-			if (e->m_data[targetOffset] == e->m_data[sourceForTargetOffset])
+			if (slotEquals(this->m_data[targetOffset.value], this->m_data[sourceForTargetOffset.value]))
 				// if the slot currently occupying targetOffset happens to be an equal copy of that value we're done
 				// and can set `pos` directly to the target offset
 				pos = targetOffset;
 			else
 				// otherwise search if there is an equal, movable copy shallower than carrier
 				for (
-					size_t i = 0; i < depthOf(e, sourceForTargetOffset); ++i  // stackOffsets() | reverse | take(depthOf(...))
+					size_t i = 0; i < depthOf(this, sourceForTargetOffset).value; ++i  // stackOffsets() | reverse | take(depthOf(...))
 				)
 				{
-					StackOffset const candidate = e->m_dataSize - 1 - i;
-					if (e->m_data[candidate] == e->m_data[sourceForTargetOffset] && !isFinal(e, candidate))
+					StackOffset const candidate = {this->m_dataSize - 1 - i};
+					if (slotEquals(this->m_data[candidate.value], this->m_data[sourceForTargetOffset.value]) && !isFinal(this, candidate))
 					{
 						pos = candidate;
 						break;
@@ -381,21 +446,21 @@ UNIT static Status buildBottomUp(struct Emission *e)
 				}
 
 			// we picked a valid `pos`
-			yulAssert(e->m_data[pos] == e->m_data[sourceForTargetOffset]);
+			yulAssert(slotEquals(this->m_data[pos.value], this->m_data[sourceForTargetOffset.value]));
 
 			// update the destinations if needed
-			swapDestinations(e, pos, sourceForTargetOffset);
+			swapDestinations(this, pos, sourceForTargetOffset);
 
 			// we're already done
-			if (pos == targetOffset)
+			if (pos.value == targetOffset.value)
 				continue;
 
 			// if `pos` is not already at the top of the stack, swap it up
-			if (pos != e->m_dataSize - 1)
+			if (pos.value != this->m_dataSize - 1)
 			{
-				if (!isSwapReachable(e, pos))
-					return blockSwapUnreachable(e, pos);  // bail
-				Status const status = swapWith(e, pos);
+				if (!isSwapReachable(this, pos))
+					return blockSwapUnreachable(this, pos);  // bail
+				Status const status = swapWith(this, pos);
 				if (status != OK)
 					return status;
 			}
@@ -403,58 +468,62 @@ UNIT static Status buildBottomUp(struct Emission *e)
 		else
 		{
 			// the slot needs to be DUPed
-			Status const blocked = generate(e, targetOffset);
+			Status const blocked = generate(this, targetOffset);
 			if (blocked != OK)
 				return blocked;
 
 			// `generate` might have already placed the slot into the target offset, then we're done for this offset
-			yulAssert(targetOffset < e->m_dataSize);  // Lean
-			if (isFinal(e, targetOffset))
+			yulAssert(targetOffset.value < this->m_dataSize);  // Lean
+			if (isFinal(this, targetOffset))
 				continue;
 		}
 
 		// we might have to swap the top down into the target offset
-		yulAssert(targetOffset < e->m_dataSize);  // Lean
-		yulAssert(!isFinal(e, targetOffset));
-		if (targetOffset != e->m_dataSize - 1)
+		yulAssert(targetOffset.value < this->m_dataSize);  // Lean
+		yulAssert(!isFinal(this, targetOffset));
+		if (targetOffset.value != this->m_dataSize - 1)
 		{
-			if (!isSwapReachable(e, targetOffset))
-				return blockSwapUnreachable(e, targetOffset);
-			Status const status = swapWith(e, targetOffset);
+			if (!isSwapReachable(this, targetOffset))
+				return blockSwapUnreachable(this, targetOffset);
+			Status const status = swapWith(this, targetOffset);
 			if (status != OK)
 				return status;
 		}
 	}
-	yulAssert(e->m_dataSize == e->m_targetSize);
+	yulAssert(this->m_dataSize == this->m_targetSize);
 	return OK;
 }
 
 /*
  * The Emission constructor and Emission::run for a source stack without surplus:
- * dest[i] is the target offset of source slot i. Write the operations to ops and
- * return their number, write the blocked offset and excess and return BLOCKED, or
- * return ASSERTION.
+ * data holds the m source slots and dest[i] is the target offset of source slot i.
+ * Write the operations to ops and return their number, write the blocked offset
+ * and excess and return BLOCKED, or return ASSERTION. data is the working stack:
+ * on success it holds the n slots of the result, otherwise its content is
+ * undefined.
  *
- * m <= n <= MAX_N, dest holds distinct offsets below n, every variable id in
- * target is an index of spilled, and ops has room for 6n entries.
+ * m <= n <= MAX_N, data has room for n slots, dest holds distinct offsets below
+ * n, every variable id in target is an index of spilled, and ops has room for
+ * 6n entries (72n bytes).
  */
-int64_t build_bottom_up(uint64_t m, uint64_t n, const uint64_t *source,
-			const uint64_t *target, const uint64_t *dest,
+int64_t build_bottom_up(uint64_t m, uint64_t n, StackSlot *data,
+			const StackSlot *target, const uint64_t *dest,
 			const uint8_t *spilled, struct op *ops, uint64_t *blocked)
 {
-	struct Emission e;
-	e.m_target = target;
-	e.m_targetSize = n;
-	e.m_spills = spilled;
-	e.m_dataSize = m;
-	for (StackOffset i = 0; i < m; i++) {
-		e.m_data[i] = source[i];
-		e.m_destinationOf[i] = dest[i];
-	}
-	e.m_pendingGenerations = n - m;
-	e.m_traceSize = 0;
-	e.m_trace = ops;
-	e.m_blocked = blocked;
-	Status const status = buildBottomUp(&e);
-	return status == OK ? (int64_t)e.m_traceSize : status;
+	struct Emission emission;
+	emission.m_target = target;
+	emission.m_targetSize = n;
+	emission.m_spills = spilled;
+	emission.m_data = data;
+	emission.m_dataSize = m;
+	for (size_t i = 0; i < n; i++)
+		emission.m_positionOf[i] = NONE;
+	for (size_t i = 0; i < m; i++)
+		bind(&emission, (StackOffset){i}, (StackOffset){dest[i]});
+	emission.m_pendingGenerations = n - m;
+	emission.m_traceSize = 0;
+	emission.m_trace = ops;
+	emission.m_blocked = blocked;
+	Status const status = buildBottomUp(&emission);
+	return status == OK ? (int64_t)emission.m_traceSize : status;
 }

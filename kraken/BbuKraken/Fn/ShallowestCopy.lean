@@ -28,28 +28,46 @@ theorem find?_range_reverse_some {p : Nat → Bool} {n i : Nat} (hi : i < n) (hp
       exact ih hi fun j h1 h2 => h j h1 (by omega)
     · rw [hp]
 
-theorem shallowestCopy_none {m : Mem 64} {S : Addr} {v : Word}
-    (h : ∀ j < (rd m (wordAt S 0)).toNat, rd m (wordAt S (STACK + j)) ≠ v) :
-    shallowestCopyPosition (stOf m S) v = none := by
+theorem shallowestCopy_none {m : Mem 64} {S : Addr} {x : StackSlot}
+    (h : ∀ j < (rd m (wordAt S 0)).toNat, StackSlot.ofWord (rd m (wordAt (dataOf m S) j)) ≠ x) :
+    shallowestCopyPosition (stOf m S) x = none := by
   refine find?_range_reverse_none fun j hj => ?_
   rw [len_stOf] at hj
   simpa [val_stOf hj] using h j hj
 
-theorem shallowestCopy_some {m : Mem 64} {S : Addr} {v : Word} {i : Nat}
-    (hi : i < (rd m (wordAt S 0)).toNat) (hv : rd m (wordAt S (STACK + i)) = v)
-    (h : ∀ j, i < j → j < (rd m (wordAt S 0)).toNat → rd m (wordAt S (STACK + j)) ≠ v) :
-    shallowestCopyPosition (stOf m S) v = some i := by
+theorem shallowestCopy_some {m : Mem 64} {S : Addr} {x : StackSlot} {i : Nat}
+    (hi : i < (rd m (wordAt S 0)).toNat) (hv : StackSlot.ofWord (rd m (wordAt (dataOf m S) i)) = x)
+    (h : ∀ j, i < j → j < (rd m (wordAt S 0)).toNat →
+      StackSlot.ofWord (rd m (wordAt (dataOf m S) j)) ≠ x) :
+    shallowestCopyPosition (stOf m S) x = some i := by
   refine find?_range_reverse_some (by rwa [len_stOf]) (by simp [val_stOf hi, hv])
     fun j h1 h2 => ?_
   rw [len_stOf] at h2
   simpa [val_stOf h2] using h j h1 h2
 
--- The state at `.LB11` after the slots from `i` up that do not hold `rsi`.
+-- `xorq` then `salq $16` sets `nz` when the two words hold different slots.
+theorem nz_xor_shl (a b : Word) (r : StatusFlags.from_result.Remaining) :
+    CondCode.nz.interp (StatusFlags.from_result ((a ^^^ b).shiftLeft (((16#64).take 8).toNat &&& 63)) r)
+      = !(StackSlot.ofWord a == StackSlot.ofWord b) := by
+  rw [shiftLeft_imm, CondCode.interp_nz, StatusFlags.zf_from_result, Bool.eq_iff_iff]
+  simp [ofWord_eq_iff]
+
+-- Word `k < n` of the working stack is mapped.
+theorem Wf.data_isSome {m : Mem 64} {S : Addr} (hw : Wf m S) {k : Nat} (hk : k < nOf m S) :
+    (m.loadInt (wordAt (dataOf m S) k) 8).isSome = true := by
+  have := hw.data_lt
+  refine hw.mapped.loadInt_isSome (inside_append.mpr (Or.inl (inside_writable ?_)))
+  right; right; left
+  simp only [wordAt]
+  bv_omega
+
+-- The state at `.LB6` after the slots from `i` up that do not hold `rsi`.
 def CopyLoop (s : MachineData) (ra : Int64) (t : MachineData) : Prop :=
   Keep s ra t ∧ rdi t = rdi s ∧ rsi t = rsi s
     ∧ ∃ i, rax t = BitVec.ofNat 64 i ∧ i ≤ (rd (s.pushRa ra).dmem (wordAt (rdi s) 0)).toNat
       ∧ ∀ j, i ≤ j → j < (rd (s.pushRa ra).dmem (wordAt (rdi s) 0)).toNat
-        → rd (s.pushRa ra).dmem (wordAt (rdi s) (STACK + j)) ≠ rsi s
+        → StackSlot.ofWord (rd (s.pushRa ra).dmem (wordAt (dataOf (s.pushRa ra).dmem (rdi s)) j))
+          ≠ slot s
 
 theorem shallowestCopy_body [Host] [FunDecls] :
     Body shallowestCopyAsm shallowestCopyF shallowestCopyA shallowestCopyR := by
@@ -59,11 +77,11 @@ theorem shallowestCopy_body [Host] [FunDecls] :
   obtain ⟨hw, -, hst, -⟩ := pushRa_keeps (ra := ra) hpre
   refine Program.WP.cfg (fun
       | .entry, t | .label "shallowestCopyPosition", t => t = s.pushRa ra
-      | .label ".LB11", t => CopyLoop s ra t
-      | .label ".LB14", t => Keep s ra t ∧ shallowestCopyPosition (st s) (rsi s) = none
-      | .label ".LB10", t => Done s ra (encOpt (shallowestCopyPosition (st s) (rsi s))) t
+      | .label ".LB6", t => CopyLoop s ra t
+      | .label ".LB9", t => Keep s ra t ∧ shallowestCopyPosition (st s) (slot s) = none
+      | .label ".LB7", t => Done s ra (encOpt (shallowestCopyPosition (st s) (slot s))) t
       | _, _ => False)
-    (fun l t => if l = ".LB11" then (rax t).toNat + 1 else if l = "shallowestCopyPosition" then 2 ^ 64 + 1 else 0)
+    (fun l t => if l = ".LB6" then (rax t).toNat + 1 else if l = "shallowestCopyPosition" then 2 ^ 64 + 1 else 0)
     ?_ rfl
   cfg_cases
   case left t ht => subst ht; kvcgen64
@@ -83,12 +101,15 @@ theorem shallowestCopy_body [Host] [FunDecls] :
   case right.right.left t ht =>
     obtain ⟨hk, hdi, hsi, i, hax, hi, hb⟩ := ht
     dsimp only [rdi, rsi, rax] at hdi hsi hax
-    have hi64 : i ≤ 1024 := Nat.le_trans hi hw.len_le
-    have haddr : i ≠ 0 → t.regs.get64 .rdi + (t.regs.get64 .rax - 1#64) * 8#64
-        + BitVec.ofInt 64 (Int64.toInt 64) = wordAt (rdi s) (STACK + (i - 1)) := fun h0 => by
-      have h : BitVec.ofInt 64 (Int64.toInt 64) = 64#64 := by decide
-      rw [hdi, hax, h]
-      simp only [STACK, wordAt, rdi]
+    have hdata : rd t.dmem (t.regs.get64 .rdi + BitVec.ofInt 64 (Int64.toInt 64))
+        = dataOf (s.pushRa ra).dmem (rdi s) := by
+      rw [hk.mem, hdi, disp _ 8 64]; rfl
+    have haddr : i ≠ 0 → rd t.dmem (t.regs.get64 .rdi + BitVec.ofInt 64 (Int64.toInt 64))
+        + (t.regs.get64 .rax - 1#64) * 8#64 + BitVec.ofInt 64 (Int64.toInt 0)
+        = wordAt (dataOf (s.pushRa ra).dmem (rdi s)) (i - 1) := fun h0 => by
+      have h : BitVec.ofInt 64 (Int64.toInt 0) = 0#64 := by decide
+      rw [hdata, hax, h]
+      simp only [wordAt]
       bv_omega
     have hz0 : (t.regs.get64 .rax == 0#64) = (i == 0) := by
       rw [hax]
@@ -110,28 +131,35 @@ theorem shallowestCopy_body [Host] [FunDecls] :
         rw [← hst]
         exact shallowestCopy_none fun j hj => hb j (Nat.zero_le j) hj
       · simp
-    case vc2 _ hz =>
+    case vc2 =>
+      show (Mem.loadInt t.dmem (t.regs.get64 .rdi + BitVec.ofInt 64 (Int64.toInt 64)) 8).isSome = true
+      rw [hk.mem, hdi, disp _ 8 64]
+      exact hw.word_isSome hw.mapped (by simp only [WORDS_eq]; omega)
+    case vc3 _ hz =>
       have h0 : i ≠ 0 := by simpa using hz0.symm.trans ((Kit.z_test _ _).symm.trans hz)
-      show (Mem.loadInt t.dmem (t.regs.get64 .rdi + (t.regs.get64 .rax - 1#64) * 8#64
-        + BitVec.ofInt 64 (Int64.toInt 64)) 8).isSome = true
-      rw [hk.mem, haddr h0]
-      exact hw.word_isSome hw.mapped (by simp only [STACK, WORDS_eq]; omega)
-    case vc3 _ hz hnz =>
+      show (Mem.loadInt t.dmem (rd t.dmem (t.regs.get64 .rdi + BitVec.ofInt 64 (Int64.toInt 64))
+        + (t.regs.get64 .rax - 1#64) * 8#64 + BitVec.ofInt 64 (Int64.toInt 0)) 8).isSome = true
+      rw [haddr h0, hk.mem]
+      exact hw.data_isSome (Nat.lt_of_lt_of_le (by omega) (Nat.le_trans hi hw.len_le))
+    case vc4 => decide
+    case vc5 hz _ _ _ _ hnz =>
       have h0 : i ≠ 0 := by simpa using hz0.symm.trans ((Kit.z_test _ _).symm.trans hz)
-      have hne : rd (s.pushRa ra).dmem (wordAt (rdi s) (STACK + (i - 1))) ≠ rsi s := by
-        intro h
-        have h' : rd t.dmem (t.regs.get64 .rdi + (t.regs.get64 .rax - 1#64) * 8#64
-            + BitVec.ofInt 64 (Int64.toInt 64)) = t.regs.get64 .rsi := by
-          rw [hk.mem, haddr h0, hsi]; exact h
-        have := (Kit.nz_sub _ _ _).symm.trans hnz
-        simp only [Bool.not_eq_true', beq_eq_false_iff_ne] at this
-        exact this h'
+      have hne : StackSlot.ofWord (rd (s.pushRa ra).dmem (wordAt (dataOf (s.pushRa ra).dmem (rdi s)) (i - 1)))
+          ≠ slot s := by
+        have h := (nz_xor_shl _ _ _).symm.trans hnz
+        simp only [Bool.not_eq_true', beq_eq_false_iff_ne] at h
+        intro hc
+        apply h
+        show StackSlot.ofWord (t.regs.get64 .rsi) = StackSlot.ofWord (rd t.dmem (rd t.dmem
+          (t.regs.get64 .rdi + BitVec.ofInt 64 (Int64.toInt 64)) + (t.regs.get64 .rax - 1#64) * 8#64
+            + BitVec.ofInt 64 (Int64.toInt 0)))
+        rw [haddr h0, hk.mem, hsi, hc]
       have hax' : t.regs.get64 .rax - 1#64 = BitVec.ofNat 64 (i - 1) := by
         rw [hax]; bv_omega
       cfg_goto
       · exact stack_pushRa hk.sp
-      · refine ⟨hk.next rfl rfl rfl rfl rfl rfl rfl rfl, hdi, hsi, i - 1, hax', Nat.le_trans (Nat.sub_le i 1) hi,
-          fun j h1 h2 => ?_⟩
+      · refine ⟨hk.next rfl rfl rfl rfl rfl rfl rfl rfl, hdi, hsi, i - 1, hax',
+          Nat.le_trans (Nat.sub_le i 1) hi, fun j h1 h2 => ?_⟩
         rcases Nat.eq_or_lt_of_le h1 with rfl | h1
         · exact hne
         · exact hb j (by omega) h2
@@ -143,19 +171,23 @@ theorem shallowestCopy_body [Host] [FunDecls] :
         simp only [↓reduceIte]
         have : i - 1 < i := by omega
         exact Nat.add_lt_add_right (Nat.lt_of_le_of_lt (Nat.le_of_eq e1) (Nat.lt_of_lt_of_eq this e2.symm)) 1
-    case vc4 =>
+    case vc6 =>
       exact Option.isSome_iff_exists.mpr ⟨ra, (hk.next rfl rfl rfl rfl rfl rfl rfl rfl).retAddr⟩
-    case vc5 _ hz hnz =>
+    case vc7 hz _ _ _ _ hnz =>
       have h0 : i ≠ 0 := by simpa using hz0.symm.trans ((Kit.z_test _ _).symm.trans hz)
-      have heq : rd t.dmem (t.regs.get64 .rdi + (t.regs.get64 .rax - 1#64) * 8#64
-          + BitVec.ofInt 64 (Int64.toInt 64)) = t.regs.get64 .rsi := by
-        have := (Kit.nz_sub _ _ _).symm.trans hnz
-        exact beq_iff_eq.mp (cast (Bool.not_eq_false' _) this)
-      rw [hk.mem, haddr h0, hsi] at heq
+      have heq : StackSlot.ofWord (rd (s.pushRa ra).dmem (wordAt (dataOf (s.pushRa ra).dmem (rdi s)) (i - 1)))
+          = slot s := by
+        have h := (nz_xor_shl _ _ _).symm.trans hnz
+        simp only [Bool.not_eq_false', beq_iff_eq] at h
+        have h' : StackSlot.ofWord (t.regs.get64 .rsi) = StackSlot.ofWord (rd t.dmem (rd t.dmem
+          (t.regs.get64 .rdi + BitVec.ofInt 64 (Int64.toInt 64)) + (t.regs.get64 .rax - 1#64) * 8#64
+            + BitVec.ofInt 64 (Int64.toInt 0))) := h
+        rw [haddr h0, hk.mem, hsi] at h'
+        exact h'.symm
       refine Done.ret (R := shallowestCopyR) hpre
         (Keep.done (hk.next rfl rfl rfl rfl rfl rfl rfl rfl) ?_)
         fun t' hm hax => ⟨hax, by rw [st', hm]; exact hst⟩
-      show _ = encOpt (shallowestCopyPosition (stOf s.dmem (rdi s)) (rsi s))
+      show _ = encOpt (shallowestCopyPosition (stOf s.dmem (rdi s)) (slot s))
       rw [← hst, shallowestCopy_some (Nat.lt_of_lt_of_le (Nat.sub_lt (Nat.pos_of_ne_zero h0) Nat.one_pos) hi)
         heq fun j h1 h2 => hb j (by omega) h2]
       exact (show t.regs.get64 .rax - 1#64 = BitVec.ofNat 64 (i - 1) by rw [hax]; bv_omega)
@@ -168,5 +200,4 @@ theorem shallowestCopy_body [Host] [FunDecls] :
     kvcgen64
     · simp [ht.retAddr]
     · exact Done.ret (R := shallowestCopyR) hpre ht fun t' hm hax => ⟨hax, by rw [st', hm]; exact hst⟩
-
 end Bbu

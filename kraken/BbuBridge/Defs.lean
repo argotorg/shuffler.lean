@@ -5,7 +5,7 @@ import BbuBridge.Permute
 /-!
 The link between the model `Bbu.buildBottomUp` and the original
 `Shuffler.Emission.buildBottomUp`: the decoding of the model inputs, the initial
-original state, the relation between the states, and the encoding of the
+original state, the relation between the states, and the relation between the
 results.
 
 The original target is `e.target.map decode`, and the original spill set is
@@ -20,41 +20,60 @@ open Shuffler Shuffler.Emission
 
 /-! ## Values -/
 
--- The value of a word: 0 is a wildcard, 1 a function return label, 2 + 2 id a
--- variable and 3 + 2 id a literal.
-def decode (w : Bbu.Word) : Value :=
-  if w.toNat = 0 then .Wildcard
-  else if w.toNat = 1 then .FunctionReturnLabel
-  else if w.toNat % 2 = 0 then .Var ⟨(w.toNat - 2) / 2⟩
-  else .Lit (Fin.ofNat _ ((w.toNat - 3) / 2))
+-- The number of a slot: the payload, the kind and the opcode.
+def number (s : Bbu.StackSlot) : Nat :=
+  s.payload.toNat + 2 ^ 32 * s.kind.toNat + 2 ^ 40 * s.valueOpcode.toNat
 
-def number : Value → Nat
-  | .Wildcard => 0
-  | .FunctionReturnLabel => 1
-  | .Var id => 2 + 2 * id.val
-  | .Lit w => 3 + 2 * w.val
+def ofNumber (n : Nat) : Bbu.StackSlot :=
+  ⟨.ofNat 32 n, .ofNat 8 (n / 2 ^ 32), .ofNat 8 (n / 2 ^ 40)⟩
 
-def encode (v : Value) : Bbu.Word := BitVec.ofNat 64 (number v)
+theorem number_lt (s : Bbu.StackSlot) : number s < 2 ^ 48 := by
+  have := s.payload.isLt; have := s.kind.isLt; have := s.valueOpcode.isLt
+  simp only [number]; omega
 
-theorem encode_decode (w : Bbu.Word) : encode (decode w) = w := by
-  have hw := w.isLt
-  apply BitVec.eq_of_toNat_eq
-  simp only [encode, BitVec.toNat_ofNat]
+theorem ofNumber_number (s : Bbu.StackSlot) : ofNumber (number s) = s := by
+  obtain ⟨p, k, o⟩ := s
+  have := p.isLt; have := k.isLt; have := o.isLt
+  simp only [ofNumber, number, Bbu.StackSlot.mk.injEq]
+  refine ⟨?_, ?_, ?_⟩ <;> apply BitVec.eq_of_toNat_eq <;> simp only [BitVec.toNat_ofNat] <;> omega
+
+-- The value of a slot: a junk slot is a wildcard, a literal or a function call
+-- return label is a literal, and each other slot is a variable. The number of
+-- the slot is the literal or the variable id.
+def decode (s : Bbu.StackSlot) : Value :=
+  if s.kind = Bbu.Junk then .Wildcard
+  else if s.valueOpcode = Bbu.Const ∨ s.kind = Bbu.FunctionCallReturnLabel then
+    .Lit (Fin.ofNat _ (number s))
+  else .Var ⟨number s⟩
+
+def encode : Value → Bbu.StackSlot
+  | .Wildcard => .junk
+  | .FunctionReturnLabel => ⟨0, Bbu.FunctionReturnLabel, Bbu.Unreachable⟩
+  | .Var id => ofNumber id.val
+  | .Lit w => ofNumber w.val
+
+-- The model compares slots and the original compares values, so a junk slot
+-- must be `StackSlot.junk`.
+def Canon (s : Bbu.StackSlot) : Prop := s.kind = Bbu.Junk → s = .junk
+
+theorem canon_default : Canon default := by
+  intro h; cases h
+
+theorem encode_decode {s : Bbu.StackSlot} (h : Canon s) : encode (decode s) = s := by
   unfold decode
-  split_ifs with h0 h1 h2
-  · simp [number, h0]
-  · simp [number, h1]
-  · simp only [number]; omega
-  · simp only [number, Fin.val_ofNat]
-    rw [Nat.mod_eq_of_lt (a := (w.toNat - 3) / 2) (by omega)]
-    omega
+  split_ifs with h0 h1
+  · exact (h h0).symm
+  · simp only [encode, Fin.val_ofNat]
+    rw [Nat.mod_eq_of_lt (by have := number_lt s; omega), ofNumber_number]
+  · exact ofNumber_number s
 
-theorem decode_injective : Function.Injective decode := fun a b h => by
-  rw [← encode_decode a, ← encode_decode b, h]
+theorem decode_inj {a b : Bbu.StackSlot} (ha : Canon a) (hb : Canon b)
+    (h : decode a = decode b) : a = b := by
+  rw [← encode_decode ha, ← encode_decode hb, h]
 
--- The spilled variables: the ids of all words (below 2 ^ 63) with a nonzero byte.
+-- The spilled variables: the ids of all slots that the model takes as spilled.
 def spillSet (e : Bbu.Env) : SpillSet :=
-  ((Finset.range (2 ^ 63)).filter (fun i => e.spills i ≠ 0)).image VarId.mk
+  ((Finset.range (2 ^ 48)).filter (fun i => Bbu.isSpilled e (ofNumber i) = true)).image VarId.mk
 
 -- The original target.
 abbrev tgt (e : Bbu.Env) : Stack := e.target.map decode
@@ -65,27 +84,25 @@ abbrev OState (e : Bbu.Env) (source : Stack) := State source (tgt e) (spillSet e
 /-! ## Operations and results -/
 
 -- The model operation of a trace operation. A load is a push of the variable.
--- `buildBottomUp` never pops.
+-- `buildBottomUp` never pops; a pop has an unused kind.
 def encodeOp : TraceOp → Bbu.Op
   | .swap d => .swap d
   | .dup d => .dup d
   | .push v => .push (encode v)
   | .load id => .push (encode (.Var id))
-  | .pop => ⟨3, 0⟩
+  | .pop => ⟨2, 0, .junk⟩
 
 def encodeErr : ShuffleErr → Bbu.Err
   | .Blocked b => .blocked b.offset b.excess
   | .assertion _ => .assertion
 
--- A result of the original as a model result.
-def encodeM {α β : Type} (f : α → β) : Except ShuffleErr α → Bbu.M β
-  | .ok a => .ok (f a)
-  | .error err => .error (encodeErr err)
-
--- The operations of a result of `buildBottomUp`.
-def encodeRes {spills : SpillSet} {source : Stack} :
-    Except ShuffleErr ((res : Stack) × Trace spills source res) → Bbu.M (List Bbu.Op) :=
-  encodeM fun r => (traceOps r.2).map encodeOp
+-- A final model state and a result of `buildBottomUp` agree: the same stack
+-- (after `decode`) and the same operations (after `encodeOp`). The slots are
+-- canonical.
+def ResRel {spills : SpillSet} {source : Stack} (st : Bbu.St)
+    (r : (res : Stack) × Trace spills source res) : Prop :=
+  r.1 = st.slots.map (fun s => decode s.val) ∧ (traceOps r.2).map encodeOp = st.trace
+    ∧ ∀ s ∈ st.slots, Canon s.val
 
 -- A model result and an original result agree: related values, or the same error.
 def Corr {α β : Type} (R : α → β → Prop) : Bbu.M α → Except ShuffleErr β → Prop
@@ -96,16 +113,19 @@ def Corr {α β : Type} (R : α → β → Prop) : Bbu.M α → Except ShuffleEr
 /-! ## The precondition -/
 
 -- A target value can be pushed, loaded or DUPed from the source.
-def Available (e : Bbu.Env) (source : List Bbu.Word) (v : Bbu.Word) : Prop :=
-  Bbu.isFree v = true ∨ Bbu.isSpilled e v = true ∨ v ∈ source
+def Available (e : Bbu.Env) (source : List Bbu.StackSlot) (v : Bbu.StackSlot) : Prop :=
+  Bbu.canBeFreelyGenerated v = true ∨ Bbu.isSpilled e v = true ∨ v ∈ source
 
 -- The precondition of the model. `TopPre` gives the first three fields; the
--- original also needs that each target value is available (`State.Valid`).
-structure ModelValid (e : Bbu.Env) (source : List Bbu.Word) (dests : List Nat) : Prop where
+-- original also needs that each target value is available (`State.Valid`). The
+-- junk slots of the inputs are `StackSlot.junk`.
+structure ModelValid (e : Bbu.Env) (source : List Bbu.StackSlot) (dests : List Nat) : Prop where
   length : dests.length = source.length
   le : source.length ≤ e.n
   dests : Bbu.Dests e.n dests
   available : ∀ v ∈ e.target, Available e source v
+  canonSource : ∀ v ∈ source, Canon v
+  canonTarget : ∀ v ∈ e.target, Canon v
 
 /-! ## The initial state -/
 
@@ -132,7 +152,7 @@ def ofDests {m n : Nat} (ds : List Nat) (hl : ds.length = m) (hd : Bbu.Dests n d
       exact Fin.ext (hd.2 _ _ _ _ (this.trans (by rw [← h])))
 
 -- The original initial state of the model inputs.
-def initState (e : Bbu.Env) (source : List Bbu.Word) (dests : List Nat)
+def initState (e : Bbu.Env) (source : List Bbu.StackSlot) (dests : List Nat)
     (h : ModelValid e source dests) : OState e (source.map decode) :=
   let mapping : Mapping (source.map decode).length (tgt e).length :=
     ofDests dests (by simp [h.length]) (by simpa [tgt, Bbu.Env.n] using h.dests)
@@ -142,30 +162,30 @@ def initState (e : Bbu.Env) (source : List Bbu.Word) (dests : List Nat)
     mapping := mapping
     pending_generations := e.n - source.length }
 
--- The initial model state, as in `Bbu.buildBottomUp`.
-def initSt (e : Bbu.Env) (source : List Bbu.Word) (dests : List Nat) : Bbu.St :=
-  ⟨List.zipWith Bbu.Slot.mk source dests, e.n - source.length, []⟩
-
 -- The stack that `buildBottomUp` builds: the source value bound for each
 -- offset, or the target value. This is `State.expectedStack` of `initState`.
-def expected (e : Bbu.Env) (source : List Bbu.Word) (dests : List Nat) : List Bbu.Word :=
+def expected (e : Bbu.Env) (source : List Bbu.StackSlot) (dests : List Nat) : List Bbu.StackSlot :=
   (List.range e.n).map fun d =>
     match dests.idxOf? d with
     | some i => source[i]!
     | none => e.target[d]!
 
 -- The mapping connects only equal values.
-def Mapped (e : Bbu.Env) (source : List Bbu.Word) (dests : List Nat) : Prop :=
+def Mapped (e : Bbu.Env) (source : List Bbu.StackSlot) (dests : List Nat) : Prop :=
   ∀ i (h : i < source.length) (hd : i < dests.length), e.target[dests[i]]? = some source[i]
 
 /-! ## The relation -/
 
--- The model state `st` and the original state agree.
+-- The model state `st` and the original state agree. Also, `st.positionOf` is
+-- the position of each destination, and the slots and the target are canonical.
 structure Rel {source : Stack} (e : Bbu.Env) (st : Bbu.St) (state : OState e source) : Prop where
   stack : state.stack = st.slots.map fun s => decode s.val
   dest : ∀ i : Fin state.stack.length, (state.mapping i).map Fin.val = some (st.dest i)
   pendingGenerations : state.pending_generations = st.pendingGenerations
   trace : (traceOps state.trace).map encodeOp = st.trace
+  pos : Bbu.Pos e.n st
+  canon : ∀ s ∈ st.slots, Canon s.val
+  target : ∀ v ∈ e.target, Canon v
 
 /-! ## Parts of the original loop -/
 

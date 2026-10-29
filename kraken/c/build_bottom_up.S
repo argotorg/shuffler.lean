@@ -2,13 +2,16 @@
 	.text
 	.type	isSpilled, @function
 isSpilled:
+	movq	%rsi, %rdx
+	shrq	$32, %rdx
 	movl	$0, %eax
-	cmpq	$1, %rsi
-	jbe	.LB1
-	testb	$1, %sil
+	testb	%dl, %dl
 	jne	.LB1
-	subq	$2, %rsi
-	shrq	%rsi
+	movq	%rsi, %rdx
+	shrq	$40, %rdx
+	testb	%dl, %dl
+	je	.LB1
+	movl	%esi, %esi
 	movq	40(%rdi), %rax
 	cmpb	$0, (%rax,%rsi)
 	setne	%al
@@ -16,301 +19,303 @@ isSpilled:
 .LB1:
 	ret
 	.size	isSpilled, .-isSpilled
-	.type	positionOf, @function
-positionOf:
-	movq	(%rdi), %rdx
-	testq	%rdx, %rdx
-	je	.LB8
-	movl	$0, %eax
-	.p2align 5
-.LB7:
-	cmpq	%rsi, 8256(%rdi,%rax,8)
-	je	.LB5
-	addq	$1, %rax
-	cmpq	%rdx, %rax
-	jne	.LB7
-	movq	$-1, %rax
-	ret
-.LB8:
-	movq	$-1, %rax
-.LB5:
-	ret
-	.size	positionOf, .-positionOf
 	.type	shallowestCopyPosition, @function
 shallowestCopyPosition:
 	movq	(%rdi), %rax
-	.p2align 4
-.LB11:
+	.p2align 5
+.LB6:
 	testq	%rax, %rax
-	je	.LB14
+	je	.LB9
 	subq	$1, %rax
-	cmpq	%rsi, 64(%rdi,%rax,8)
-	jne	.LB11
+	movq	64(%rdi), %rdx
+	movq	%rsi, %rcx
+	xorq	(%rdx,%rax,8), %rcx
+	movq	%rcx, %rdx
+	salq	$16, %rdx
+	jne	.LB6
 	ret
-.LB14:
+.LB9:
 	movq	$-1, %rax
-.LB10:
+.LB7:
 	ret
 	.size	shallowestCopyPosition, .-shallowestCopyPosition
 	.type	swapWith, @function
 swapWith:
-	movq	(%rdi), %r8
-	cmpq	%r8, %rsi
-	jnb	.LB17
-	leaq	(%rdi,%rsi,8), %rax
-	cmpq	8256(%rax), %rsi
-	je	.LB18
-	movq	%r8, %rcx
-	subq	%rsi, %rcx
-	leaq	-2(%rcx), %rdx
-	cmpq	$15, %rdx
-	ja	.LB19
-	movq	16(%rdi), %rdx
-	salq	$4, %rdx
-	addq	48(%rdi), %rdx
-	movq	$0, (%rdx)
-	movq	16(%rdi), %rdx
-	salq	$4, %rdx
-	addq	48(%rdi), %rdx
-	subq	$1, %rcx
-	movq	%rcx, 8(%rdx)
-	addq	$1, 16(%rdi)
-	movq	64(%rax), %rcx
-	leaq	(%rdi,%r8,8), %rdx
-	movq	56(%rdx), %rsi
-	movq	%rsi, 64(%rax)
-	movq	%rcx, 56(%rdx)
-	movq	8256(%rax), %rcx
-	movq	8248(%rdx), %rsi
-	movq	%rsi, 8256(%rax)
-	movq	%rcx, 8248(%rdx)
+	movq	(%rdi), %r10
+	cmpq	%r10, %rsi
+	jnb	.LB12
+	movq	%rdi, %rax
+	movq	%rsi, %rdx
+	leaq	0(,%rsi,8), %rdi
+	leaq	(%rax,%rdi), %r11
+	cmpq	%rsi, 72(%r11)
+	je	.LB13
+	movq	%r10, %rsi
+	subq	%rdx, %rsi
+	leaq	-2(%rsi), %rcx
+	cmpq	$15, %rcx
+	ja	.LB14
+	pushq	%r12
+	pushq	%rbp
+	pushq	%rbx
+	leaq	-1(%r10), %r8
+	movq	16(%rax), %rcx
+	leaq	(%rcx,%rcx,2), %r9
+	movq	48(%rax), %rcx
+	leaq	(%rcx,%r9,4), %rcx
+	movb	$0, (%rcx)
+	subq	$1, %rsi
+	movb	%sil, 1(%rcx)
+	movl	$0, 4(%rcx)
+	movb	$1, 8(%rcx)
+	movb	$5, 9(%rcx)
+	addq	$1, 16(%rax)
+	movq	64(%rax), %r9
+	leaq	(%r9,%rdi), %rcx
+	movl	(%rcx), %r12d
+	movzbl	4(%rcx), %ebp
+	movzbl	5(%rcx), %ebx
+	leaq	0(,%r8,8), %rsi
+	movq	(%r9,%r8,8), %r9
+	movq	%r9, (%rcx)
+	movq	%rsi, %rcx
+	addq	64(%rax), %rcx
+	movl	%r12d, (%rcx)
+	movb	%bpl, 4(%rcx)
+	movb	%bl, 5(%rcx)
+	movq	72(%rax,%rdi), %rcx
+	movq	64(%rax,%r10,8), %rdi
+	movq	%rdi, 72(%r11)
+	movq	%rcx, 72(%rax,%rsi)
+	movq	72(%r11), %rsi
+	movq	%rdx, 8264(%rax,%rsi,8)
+	movq	%r8, 8264(%rax,%rcx,8)
 	movl	$0, %eax
+	popq	%rbx
+	popq	%rbp
+	popq	%r12
 	ret
-.LB17:
+.LB12:
 	movq	$-2, %rax
 	ret
-.LB18:
+.LB13:
 	movq	$-2, %rax
 	ret
-.LB19:
+.LB14:
 	movq	$-2, %rax
 	ret
 	.size	swapWith, .-swapWith
 	.type	push, @function
 push:
-	pushq	%r12
-	pushq	%rbp
-	pushq	%rbx
-	movq	%rdi, %rbx
-	movq	%rsi, %rbp
-	movq	%rdx, %r12
-	movq	%rdx, %rsi
-	call	positionOf
-	cmpq	$-1, %rax
+	movq	%rdi, %rax
+	movq	%rsi, %rcx
+	cmpq	$-1, 8264(%rdi,%rdx,8)
 	jne	.LB22
-	movq	(%rbx), %rax
-	movq	%r12, 8256(%rbx,%rax,8)
-	movq	16(%rbx), %rax
-	salq	$4, %rax
-	addq	48(%rbx), %rax
-	movq	$2, (%rax)
-	movq	16(%rbx), %rax
-	salq	$4, %rax
-	addq	48(%rbx), %rax
-	movq	%rbp, 8(%rax)
-	addq	$1, 16(%rbx)
-	movq	(%rbx), %rax
-	movq	%rbp, 64(%rbx,%rax,8)
-	addq	$1, %rax
-	movq	%rax, (%rbx)
+	movq	(%rdi), %rsi
+	movq	%rdx, 72(%rdi,%rsi,8)
+	movq	%rsi, 8264(%rdi,%rdx,8)
+	movq	%rcx, %rsi
+	shrq	$32, %rsi
+	movq	%rcx, %rdx
+	shrq	$40, %rdx
+	cmpb	$1, %dl
+	movl	$3, %edx
+	sbbb	$-1, %dl
+	testb	%sil, %sil
+	movl	$3, %esi
+	cmovne	%esi, %edx
+	movq	16(%rdi), %rsi
+	leaq	(%rsi,%rsi,2), %rdi
+	movq	48(%rax), %rsi
+	leaq	(%rsi,%rdi,4), %rsi
+	movb	%dl, (%rsi)
+	movb	$0, 1(%rsi)
+	movq	%rcx, 4(%rsi)
+	addq	$1, 16(%rax)
+	movq	(%rax), %rsi
+	movq	64(%rax), %rdx
+	movq	%rcx, (%rdx,%rsi,8)
+	addq	$1, (%rax)
 	movl	$0, %eax
-.LB20:
-	popq	%rbx
-	popq	%rbp
-	popq	%r12
 	ret
 .LB22:
 	movq	$-2, %rax
-	jmp	.LB20
+	ret
 	.size	push, .-push
 	.type	dup, @function
 dup:
-	pushq	%r12
-	pushq	%rbp
-	pushq	%rbx
-	movq	%rdi, %rbx
-	movq	%rsi, %rbp
-	movq	%rdx, %r12
-	movq	%rdx, %rsi
-	call	positionOf
-	cmpq	$-1, %rax
-	jne	.LB26
-	movq	(%rbx), %rdx
-	movq	%r12, 8256(%rbx,%rdx,8)
-	movq	16(%rbx), %rax
-	salq	$4, %rax
-	addq	48(%rbx), %rax
-	movq	$1, (%rax)
-	movq	16(%rbx), %rax
-	salq	$4, %rax
-	addq	48(%rbx), %rax
-	subq	%rbp, %rdx
-	movq	%rdx, 8(%rax)
-	addq	$1, 16(%rbx)
-	movq	(%rbx), %rax
-	movq	64(%rbx,%rbp,8), %rdx
-	movq	%rdx, 64(%rbx,%rax,8)
-	addq	$1, %rax
-	movq	%rax, (%rbx)
+	movq	%rdi, %rax
+	cmpq	$-1, 8264(%rdi,%rdx,8)
+	jne	.LB27
+	movq	(%rdi), %rcx
+	movq	%rdx, 72(%rdi,%rcx,8)
+	movq	%rcx, 8264(%rdi,%rdx,8)
+	movq	16(%rdi), %rdx
+	leaq	(%rdx,%rdx,2), %rdi
+	movq	48(%rax), %rdx
+	leaq	(%rdx,%rdi,4), %rdx
+	movb	$1, (%rdx)
+	subq	%rsi, %rcx
+	movb	%cl, 1(%rdx)
+	movl	$0, 4(%rdx)
+	movb	$1, 8(%rdx)
+	movb	$5, 9(%rdx)
+	addq	$1, 16(%rax)
+	movq	64(%rax), %rdx
+	movq	(%rax), %rcx
+	movq	(%rdx,%rsi,8), %rsi
+	movq	%rsi, (%rdx,%rcx,8)
+	addq	$1, (%rax)
 	movl	$0, %eax
-.LB24:
-	popq	%rbx
-	popq	%rbp
-	popq	%r12
 	ret
-.LB26:
+.LB27:
 	movq	$-2, %rax
-	jmp	.LB24
+	ret
 	.size	dup, .-dup
 	.type	produce, @function
 produce:
+	pushq	%r15
+	pushq	%r14
 	pushq	%r13
 	pushq	%r12
 	pushq	%rbp
 	pushq	%rbx
+	subq	$8, %rsp
 	movq	%rdi, %rbx
 	movq	%rsi, %rbp
-	movq	32(%rdi), %rax
-	movq	(%rax,%rsi,8), %r12
-	testq	%r12, %r12
-	je	.LB41
-	movq	%r12, %rsi
+	leaq	0(,%rsi,8), %r14
+	movq	%r14, %rax
+	addq	32(%rdi), %rax
+	movq	(%rax), %r13
+	movzbl	4(%rax), %r15d
+	movzbl	5(%rax), %eax
+	movb	%al, 7(%rsp)
+	movq	%r13, %rsi
 	call	shallowestCopyPosition
-	movq	%rax, %r13
+	cmpb	$1, %r15b
+	je	.LB39
+	movq	%rax, %r12
 	cmpq	$-1, %rax
 	je	.LB31
 	notq	%rax
 	addq	(%rbx), %rax
 	cmpq	$15, %rax
-	jbe	.LB42
+	jbe	.LB40
 .LB31:
-	testb	$1, %r12b
-	je	.LB39
-	cmpq	$1, %r12
-	jne	.LB32
-.LB39:
-	movq	%r12, %rsi
-	movq	%rbx, %rdi
-	call	isSpilled
-	testl	%eax, %eax
-	je	.LB34
+	cmpb	$0, 7(%rsp)
+	je	.LB32
+	cmpb	$2, %r15b
+	jne	.LB41
 .LB32:
 	movq	%rbp, %rdx
-	movq	%r12, %rsi
+	movq	%r13, %rsi
 	movq	%rbx, %rdi
 	call	push
-	movq	%rax, %r12
 .LB30:
-	testq	%r12, %r12
-	je	.LB43
+	testq	%rax, %rax
+	jne	.LB28
+	movq	(%rbx), %rcx
+	leaq	-1(%rcx), %rdx
+	cmpq	%rdx, 8264(%rbx,%r14)
+	jne	.LB37
+	movq	8(%rbx), %rdx
+	testq	%rdx, %rdx
+	je	.LB28
+	subq	$1, %rdx
+	movq	%rdx, 8(%rbx)
 .LB28:
-	movq	%r12, %rax
+	addq	$8, %rsp
 	popq	%rbx
 	popq	%rbp
 	popq	%r12
 	popq	%r13
+	popq	%r14
+	popq	%r15
 	ret
-.LB41:
-	movq	%rsi, %rdx
-	movl	$0, %esi
-	call	push
-	movq	%rax, %r12
-	jmp	.LB30
-.LB42:
+.LB39:
 	movq	%rbp, %rdx
 	movq	%r13, %rsi
 	movq	%rbx, %rdi
-	call	dup
-	movq	%rax, %r12
+	call	push
 	jmp	.LB30
-.LB34:
-	cmpq	$-1, %r13
-	je	.LB36
-	movq	(%rbx), %rax
-	subq	$16, %rax
-	movq	$-2, %r12
-	subq	%r13, %rax
-	je	.LB28
-	movq	56(%rbx), %rdx
-	movq	%r13, (%rdx)
-	movq	56(%rbx), %rdx
-	movq	%rax, 8(%rdx)
-	movq	$-1, %r12
-	jmp	.LB28
-.LB43:
-	movq	%rbp, %rsi
+.LB40:
+	movq	%rbp, %rdx
+	movq	%r12, %rsi
 	movq	%rbx, %rdi
-	call	positionOf
-	movq	%rax, %rdx
-	movq	(%rbx), %rax
-	subq	$1, %rax
-	cmpq	%rax, %rdx
-	jne	.LB38
-	movq	8(%rbx), %rax
-	testq	%rax, %rax
+	call	dup
+	jmp	.LB30
+.LB41:
+	movq	%r13, %rsi
+	movq	%rbx, %rdi
+	call	isSpilled
+	testl	%eax, %eax
+	jne	.LB32
+	cmpq	$-1, %r12
+	je	.LB35
+	movq	$-16, %rdx
+	subq	%r12, %rdx
+	movq	$-2, %rax
+	addq	(%rbx), %rdx
 	je	.LB28
-	subq	$1, %rax
-	movq	%rax, 8(%rbx)
+	movq	56(%rbx), %rax
+	movq	%r12, (%rax)
+	movq	56(%rbx), %rax
+	movq	%rdx, 8(%rax)
+	movq	$-1, %rax
 	jmp	.LB28
-.LB36:
-	movq	$-2, %r12
+.LB35:
+	movq	$-2, %rax
 	jmp	.LB28
-.LB38:
-	movq	$-2, %r12
+.LB37:
+	movq	$-2, %rax
 	jmp	.LB28
 	.size	produce, .-produce
 	.type	generate, @function
 generate:
 	cmpq	24(%rdi), %rsi
-	jnb	.LB47
+	jnb	.LB45
 	pushq	%rbp
 	pushq	%rbx
 	movq	%rdi, %rbp
 	movq	%rsi, %rbx
 	call	produce
 	testq	%rax, %rax
-	jne	.LB44
+	jne	.LB42
 	movq	0(%rbp), %rdx
 	leaq	1(%rbx), %rcx
 	cmpq	%rdx, %rcx
-	jnb	.LB44
-	leaq	0(%rbp,%rbx,8), %rcx
-	movq	8256(%rcx), %rsi
-	cmpq	%rsi, %rbx
-	je	.LB44
-	leaq	0(%rbp,%rdx,8), %rdi
-	movq	56(%rdi), %r8
-	cmpq	%r8, 64(%rcx)
-	je	.LB52
-	subq	%rbx, %rdx
-	subq	$1, %rdx
-	cmpq	$16, %rdx
-	jbe	.LB53
-.LB44:
+	jnb	.LB42
+	leaq	0(%rbp,%rbx,8), %rdi
+	movq	72(%rdi), %rsi
+	cmpq	%rbx, %rsi
+	je	.LB42
+	movq	64(%rbp), %r9
+	leaq	-1(%rdx), %r8
+	leaq	0(,%r8,8), %r10
+	movq	(%r9,%rbx,8), %rcx
+	xorq	(%r9,%r8,8), %rcx
+	salq	$16, %rcx
+	jne	.LB44
+	movq	72(%rbp,%r8,8), %rdx
+	movq	%rdx, 72(%rdi)
+	movq	%rsi, 72(%rbp,%r10)
+	movq	72(%rdi), %rdx
+	movq	%rbx, 8264(%rbp,%rdx,8)
+	movq	%r8, 8264(%rbp,%rsi,8)
+.LB42:
 	popq	%rbx
 	popq	%rbp
 	ret
-.LB52:
-	movq	8248(%rdi), %rdx
-	movq	%rdx, 8256(%rcx)
-	movq	%rsi, 8248(%rdi)
-	jmp	.LB44
-.LB53:
+.LB44:
+	subq	%rbx, %rdx
+	subq	$1, %rdx
+	cmpq	$16, %rdx
+	ja	.LB42
 	movq	%rbx, %rsi
 	movq	%rbp, %rdi
 	call	swapWith
-	jmp	.LB44
-.LB47:
+	jmp	.LB42
+.LB45:
 	movq	$-2, %rax
 	ret
 	.size	generate, .-generate
@@ -321,47 +326,64 @@ permuteDestinations:
 	movq	%rdi, %rbx
 	movq	(%rdi), %rdi
 	testq	%rdi, %rdi
-	je	.LB55
+	je	.LB51
 	movl	$0, %eax
 	.p2align 5
-.LB56:
-	movq	8256(%rbx,%rax,8), %rdx
+.LB52:
+	movq	72(%rbx,%rax,8), %rdx
 	movw	%dx, 2064(%rsp,%rax,2)
 	addq	$1, %rax
 	cmpq	%rdi, %rax
-	jne	.LB56
-.LB55:
+	jne	.LB52
+.LB51:
 	leaq	12(%rsp), %rcx
 	leaq	16(%rsp), %rdx
 	leaq	2064(%rsp), %rsi
 	call	permute
 	testq	%rax, %rax
-	js	.LB57
+	js	.LB60
+	jle	.LB56
+	movq	(%rbx), %rsi
+	leaq	-1(%rsi), %r10
+	leaq	0(,%r10,8), %rsi
 	leaq	16(%rsp), %rdx
-	leaq	(%rax,%rdx), %rsi
-	movl	$0, %eax
-	jle	.LB54
-	.p2align 6
-.LB60:
+	leaq	(%rax,%rdx), %r9
+.LB55:
+	movq	64(%rbx), %rcx
+	movzbl	(%rdx), %edi
+	movq	%r10, %rax
+	subq	%rdi, %rax
+	leaq	(%rcx,%rax,8), %rax
+	movl	(%rax), %r11d
+	movzbl	4(%rax), %r8d
+	movzbl	5(%rax), %edi
+	movq	(%rcx,%rsi), %rcx
+	movq	%rcx, (%rax)
+	movq	%rsi, %rax
+	addq	64(%rbx), %rax
+	movl	%r11d, (%rax)
+	movb	%r8b, 4(%rax)
+	movb	%dil, 5(%rax)
 	movzbl	(%rdx), %ecx
 	movq	16(%rbx), %rax
-	salq	$4, %rax
-	addq	48(%rbx), %rax
-	movq	$0, (%rax)
-	movq	16(%rbx), %rax
-	salq	$4, %rax
-	addq	48(%rbx), %rax
-	movq	%rcx, 8(%rax)
+	leaq	(%rax,%rax,2), %rdi
+	movq	48(%rbx), %rax
+	leaq	(%rax,%rdi,4), %rax
+	movb	$0, (%rax)
+	movb	%cl, 1(%rax)
+	movl	$0, 4(%rax)
+	movb	$1, 8(%rax)
+	movb	$5, 9(%rax)
 	addq	$1, 16(%rbx)
 	addq	$1, %rdx
-	cmpq	%rsi, %rdx
-	jne	.LB60
+	cmpq	%r9, %rdx
+	jne	.LB55
 	movl	$0, %eax
-.LB54:
+.LB50:
 	addq	$4112, %rsp
 	popq	%rbx
 	ret
-.LB57:
+.LB60:
 	movq	56(%rbx), %rax
 	movzwl	12(%rsp), %edx
 	movq	%rdx, (%rax)
@@ -369,7 +391,10 @@ permuteDestinations:
 	movzwl	14(%rsp), %edx
 	movq	%rdx, 8(%rax)
 	movq	$-1, %rax
-	jmp	.LB54
+	jmp	.LB50
+.LB56:
+	movl	$0, %eax
+	jmp	.LB50
 	.size	permuteDestinations, .-permuteDestinations
 	.type	buildBottomUp, @function
 buildBottomUp:
@@ -383,50 +408,51 @@ buildBottomUp:
 	movq	%rdi, %rbp
 	movq	24(%rdi), %r13
 	testq	%r13, %r13
-	je	.LB66
+	je	.LB62
 	movl	$0, %r14d
-	jmp	.LB88
-.LB69:
+	jmp	.LB85
+.LB65:
 	cmpq	%r13, %r15
-	jne	.LB90
+	jne	.LB87
 	movq	%rbp, %rdi
 	call	permuteDestinations
-	jmp	.LB65
-.LB107:
-	movq	56(%rbp), %rcx
-	movq	%rax, (%rcx)
+	jmp	.LB61
+.LB103:
+	movq	56(%rbp), %rdx
+	movq	%rax, (%rdx)
 	movq	56(%rbp), %rax
-	subq	$16, %rdx
-	movq	%rdx, 8(%rax)
+	subq	$16, %rcx
+	movq	%rcx, 8(%rax)
 	movq	$-1, %rax
-.LB65:
-	addq	$24, %rsp
-	popq	%rbx
-	popq	%rbp
-	popq	%r12
-	popq	%r13
-	popq	%r14
-	popq	%r15
-	ret
+	jmp	.LB61
+	.p2align 5
 .LB73:
 	addq	$1, %rbx
 	cmpq	%r13, %rbx
-	je	.LB106
-.LB70:
-	movq	%rbx, %rsi
-	movq	%rbp, %rdi
-	call	positionOf
-	cmpq	$-1, %rax
+	je	.LB102
+.LB66:
+	cmpq	$-1, 8264(%rbp,%rbx,8)
 	jne	.LB73
 	movq	32(%rbp), %rax
-	movq	(%rax,%rbx,8), %r12
-	testq	%r12, %r12
+	leaq	(%rax,%rbx,8), %rax
+	movq	(%rax), %r12
+	movzbl	4(%rax), %edx
+	movzbl	5(%rax), %eax
+	leal	-1(%rdx), %ecx
+	cmpb	$1, %cl
+	jbe	.LB73
+	testb	%al, %al
 	je	.LB73
-	testb	$1, %r12b
-	je	.LB100
-	cmpq	$1, %r12
-	jne	.LB73
-.LB100:
+	movzbl	%dl, %edx
+	salq	$32, %rdx
+	movabsq	$-1095216660481, %rdi
+	andq	%rdi, %r12
+	orq	%rdx, %r12
+	movzbl	%al, %eax
+	salq	$40, %rax
+	movabsq	$-280375465082881, %rdi
+	andq	%rdi, %r12
+	orq	%rax, %r12
 	movq	%r12, %rsi
 	movq	%rbp, %rdi
 	call	isSpilled
@@ -437,234 +463,265 @@ buildBottomUp:
 	call	shallowestCopyPosition
 	cmpq	$-1, %rax
 	je	.LB73
-	movq	%r15, %rdx
-	subq	%rax, %rdx
-	leaq	-1(%rdx), %rcx
-	cmpq	$15, %rcx
-	ja	.LB107
-	cmpq	$16, %rdx
-	jne	.LB73
+	movq	%r15, %rcx
+	subq	%rax, %rcx
+	leaq	-1(%rcx), %rdx
+	cmpq	$15, %rdx
+	ja	.LB103
 	cmpq	%r14, %rax
+	setne	%cl
+	cmpq	$15, %rdx
+	sete	%al
+	testb	%al, %cl
 	je	.LB73
 	movq	8(%rsp), %rax
 	cmpq	$-1, %rax
 	cmove	%rbx, %rax
 	movq	%rax, 8(%rsp)
 	jmp	.LB73
-.LB106:
+.LB102:
 	movq	8(%rsp), %rax
-	cmpq	$-1, %rax
-	je	.LB71
 	cmpq	%r14, %rax
-	je	.LB71
+	je	.LB67
+	cmpq	$-1, %rax
+	je	.LB67
 	movq	%r15, %rax
 	subq	%r14, %rax
 	cmpq	$15, %rax
-	jbe	.LB108
-.LB77:
-	movq	%r14, %rsi
-	movq	%rbp, %rdi
-	call	positionOf
-	movq	%rax, %rsi
+	jbe	.LB104
+.LB74:
+	movq	8264(%rbp,%r14,8), %rax
 	cmpq	$-1, %rax
-	je	.LB78
+	je	.LB75
 	cmpq	%r14, %rax
-	jb	.LB92
-	leaq	0(%rbp,%rax,8), %rcx
-	movq	64(%rcx), %rax
-	cmpq	%rax, 64(%rbp,%r14,8)
-	jne	.LB109
-	leaq	1032(%r14), %rax
-	movq	0(%rbp,%rax,8), %rdx
-	movq	8256(%rcx), %rsi
-	movq	%rsi, 0(%rbp,%rax,8)
-	movq	%rdx, 8256(%rcx)
-	jmp	.LB68
-.LB108:
-	movq	8(%rsp), %rsi
-	movq	%rbp, %rdi
-	call	generate
-	testq	%rax, %rax
-	jne	.LB65
-	subq	$1, %r14
-	jmp	.LB68
-.LB109:
-	movq	%r15, %rdx
-	subq	%rsi, %rdx
-	cmpq	$1, %rdx
-	je	.LB80
-	leaq	-1(%r15), %rdx
-	jmp	.LB83
-	.p2align 4
-.LB81:
-	subq	$1, %rdx
-	cmpq	%rdx, %rsi
-	je	.LB82
-.LB83:
-	cmpq	64(%rbp,%rdx,8), %rax
-	jne	.LB81
-	cmpq	%rdx, 8256(%rbp,%rdx,8)
-	je	.LB81
-	movq	%rdx, %rsi
-.LB82:
-	cmpq	64(%rbp,%rsi,8), %rax
-	jne	.LB94
-.LB80:
-	leaq	1032(%rsi), %rax
-	movq	0(%rbp,%rax,8), %rdx
-	movq	8256(%rcx), %rdi
-	movq	%rdi, 0(%rbp,%rax,8)
-	movq	%rdx, 8256(%rcx)
-	cmpq	%rsi, %r14
-	je	.LB95
-	leaq	-1(%r15), %rax
-	cmpq	%rsi, %rax
-	je	.LB84
-	subq	%rsi, %r15
-	leaq	-1(%r15), %rax
-	cmpq	$16, %rax
-	ja	.LB110
-	movq	%rbp, %rdi
-	call	swapWith
-	testq	%rax, %rax
-	jne	.LB65
-.LB84:
-	movq	0(%rbp), %rax
-	cmpq	%rax, %r14
-	jnb	.LB97
-	cmpq	%r14, 8256(%rbp,%r14,8)
-	je	.LB98
-.LB86:
-	leaq	-1(%rax), %rdx
-	cmpq	%r14, %rdx
-	je	.LB68
-	subq	%r14, %rax
-	leaq	-1(%rax), %rdx
-	cmpq	$16, %rdx
-	ja	.LB111
-	movq	%r14, %rsi
-	movq	%rbp, %rdi
-	call	swapWith
-	testq	%rax, %rax
-	jne	.LB65
-.LB68:
+	jb	.LB89
+	movq	64(%rbp), %rcx
+	leaq	0(,%rax,8), %r8
+	movq	(%rcx,%rax,8), %rdi
+	movq	%rdi, %rdx
+	xorq	(%rcx,%r14,8), %rdx
+	salq	$16, %rdx
+	jne	.LB105
+	movq	72(%rbp,%r14,8), %rdx
+	leaq	8(%r14), %rcx
+	movq	72(%rbp,%rax,8), %rsi
+	movq	%rsi, 8(%rbp,%rcx,8)
+	movq	%rdx, 72(%rbp,%r8)
+	movq	8(%rbp,%rcx,8), %rcx
+	movq	%r14, 8264(%rbp,%rcx,8)
+	movq	%rax, 8264(%rbp,%rdx,8)
+.LB64:
 	addq	$1, %r14
 	movq	24(%rbp), %r13
 	cmpq	%r13, %r14
-	jnb	.LB66
-.LB88:
+	jnb	.LB62
+.LB85:
 	movq	0(%rbp), %r15
 	cmpq	%r15, %r14
-	jnb	.LB67
-	cmpq	%r14, 8256(%rbp,%r14,8)
-	je	.LB68
-.LB67:
+	jnb	.LB63
+	cmpq	%r14, 72(%rbp,%r14,8)
+	je	.LB64
+.LB63:
 	cmpq	$0, 8(%rbp)
-	je	.LB69
+	je	.LB65
 	movq	%r14, %rbx
 	movq	$-1, 8(%rsp)
 	cmpq	%r13, %r14
-	jb	.LB70
-.LB71:
+	jb	.LB66
+.LB67:
 	cmpq	%r15, %r14
 	setb	%dl
 	cmpq	%r13, %r15
 	setb	%al
 	testb	%al, %dl
-	je	.LB77
+	je	.LB74
 	cmpq	$-1, 8(%rsp)
-	jne	.LB77
-	movq	%r15, %rsi
-	movq	%rbp, %rdi
-	call	positionOf
-	cmpq	$-1, %rax
-	jne	.LB77
+	jne	.LB74
+	cmpq	$-1, 8264(%rbp,%r15,8)
+	jne	.LB74
 	movq	%r15, %rax
 	subq	%r14, %rax
 	cmpq	$15, %rax
-	ja	.LB77
+	ja	.LB74
 	movq	%r15, %rsi
 	movq	%rbp, %rdi
 	call	generate
 	testq	%rax, %rax
-	jne	.LB65
+	jne	.LB61
 	subq	$1, %r14
-	jmp	.LB68
-.LB110:
+	jmp	.LB64
+.LB104:
+	movq	8(%rsp), %rsi
+	movq	%rbp, %rdi
+	call	generate
+	testq	%rax, %rax
+	je	.LB106
+.LB61:
+	addq	$24, %rsp
+	popq	%rbx
+	popq	%rbp
+	popq	%r12
+	popq	%r13
+	popq	%r14
+	popq	%r15
+	ret
+.LB106:
+	subq	$1, %r14
+	jmp	.LB64
+.LB105:
+	movq	%r15, %rdx
+	subq	%rax, %rdx
+	cmpq	$1, %rdx
+	je	.LB90
+	leaq	-1(%r15), %rsi
+	jmp	.LB80
+	.p2align 5
+.LB78:
+	subq	$1, %rsi
+	cmpq	%rsi, %rax
+	je	.LB107
+.LB80:
+	movq	%rdi, %rdx
+	xorq	(%rcx,%rsi,8), %rdx
+	salq	$16, %rdx
+	jne	.LB78
+	cmpq	%rsi, 72(%rbp,%rsi,8)
+	je	.LB78
+	xorq	(%rcx,%rsi,8), %rdi
+	salq	$16, %rdi
+	je	.LB77
+	movq	$-2, %rax
+	jmp	.LB61
+.LB107:
+	movq	%rax, %rsi
+.LB77:
+	movq	72(%rbp,%rsi,8), %rdx
+	leaq	8(%rsi), %rcx
+	movq	72(%rbp,%rax,8), %rdi
+	movq	%rdi, 8(%rbp,%rcx,8)
+	movq	%rdx, 72(%rbp,%r8)
+	movq	8(%rbp,%rcx,8), %rcx
+	movq	%rsi, 8264(%rbp,%rcx,8)
+	movq	%rax, 8264(%rbp,%rdx,8)
+	cmpq	%rsi, %r14
+	je	.LB92
+	leaq	-1(%r15), %rax
+	cmpq	%rsi, %rax
+	je	.LB81
+	subq	%rsi, %r15
+	leaq	-1(%r15), %rax
+	cmpq	$16, %rax
+	ja	.LB108
+	movq	%rbp, %rdi
+	call	swapWith
+	testq	%rax, %rax
+	jne	.LB61
+.LB81:
+	movq	0(%rbp), %rax
+	cmpq	%rax, %r14
+	jnb	.LB94
+	cmpq	%r14, 72(%rbp,%r14,8)
+	je	.LB95
+.LB83:
+	leaq	-1(%rax), %rdx
+	cmpq	%r14, %rdx
+	je	.LB64
+	subq	%r14, %rax
+	leaq	-1(%rax), %rdx
+	cmpq	$16, %rdx
+	ja	.LB109
+	movq	%r14, %rsi
+	movq	%rbp, %rdi
+	call	swapWith
+	testq	%rax, %rax
+	je	.LB64
+	jmp	.LB61
+.LB90:
+	movq	%rax, %rsi
+	jmp	.LB77
+.LB108:
 	movq	56(%rbp), %rax
 	movq	%rsi, (%rax)
 	movq	56(%rbp), %rax
 	subq	$17, %r15
 	movq	%r15, 8(%rax)
 	movq	$-1, %rax
-	jmp	.LB65
-.LB78:
+	jmp	.LB61
+.LB75:
 	movq	%r14, %rsi
 	movq	%rbp, %rdi
 	call	generate
 	testq	%rax, %rax
-	jne	.LB65
+	jne	.LB61
 	movq	0(%rbp), %rax
 	cmpq	%rax, %r14
-	jnb	.LB96
-	cmpq	%r14, 8256(%rbp,%r14,8)
-	jne	.LB86
-	jmp	.LB68
-.LB111:
+	jnb	.LB93
+	cmpq	%r14, 72(%rbp,%r14,8)
+	jne	.LB83
+	jmp	.LB64
+.LB109:
 	movq	56(%rbp), %rdx
 	movq	%r14, (%rdx)
 	movq	56(%rbp), %rdx
 	subq	$17, %rax
 	movq	%rax, 8(%rdx)
 	movq	$-1, %rax
-	jmp	.LB65
-.LB95:
-	movq	%rsi, %r14
-	jmp	.LB68
-.LB66:
-	cmpq	%r13, 0(%rbp)
-	jne	.LB99
-	movl	$0, %eax
-	jmp	.LB65
-.LB90:
-	movq	$-2, %rax
-	jmp	.LB65
+	jmp	.LB61
 .LB92:
+	movq	%rsi, %r14
+	jmp	.LB64
+.LB62:
+	cmpq	%r13, 0(%rbp)
+	jne	.LB96
+	movl	$0, %eax
+	jmp	.LB61
+.LB87:
 	movq	$-2, %rax
-	jmp	.LB65
+	jmp	.LB61
+.LB89:
+	movq	$-2, %rax
+	jmp	.LB61
+.LB93:
+	movq	$-2, %rax
+	jmp	.LB61
 .LB94:
 	movq	$-2, %rax
-	jmp	.LB65
+	jmp	.LB61
+.LB95:
+	movq	$-2, %rax
+	jmp	.LB61
 .LB96:
 	movq	$-2, %rax
-	jmp	.LB65
-.LB97:
-	movq	$-2, %rax
-	jmp	.LB65
-.LB98:
-	movq	$-2, %rax
-	jmp	.LB65
-.LB99:
-	movq	$-2, %rax
-	jmp	.LB65
+	jmp	.LB61
 	.size	buildBottomUp, .-buildBottomUp
 	.globl	build_bottom_up
 	.type	build_bottom_up, @function
 build_bottom_up:
-	subq	$16456, %rsp
+	subq	$16472, %rsp
 	movq	%rcx, 32(%rsp)
 	movq	%rsi, 24(%rsp)
 	movq	%r9, 40(%rsp)
+	movq	%rdx, 64(%rsp)
 	movq	%rdi, (%rsp)
+	testq	%rsi, %rsi
+	je	.LB111
+	movq	%rsp, %rax
+	leaq	(%rax,%rsi,8), %rdx
+	.p2align 5
+.LB112:
+	movq	$-1, 8264(%rax)
+	addq	$8, %rax
+	cmpq	%rdx, %rax
+	jne	.LB112
+.LB111:
 	testq	%rdi, %rdi
 	je	.LB113
 	movl	$0, %eax
 	.p2align 5
 .LB114:
-	movq	(%rdx,%rax,8), %rcx
-	movq	%rcx, 64(%rsp,%rax,8)
-	movq	(%r8,%rax,8), %rcx
-	movq	%rcx, 8256(%rsp,%rax,8)
+	movq	(%r8,%rax,8), %rdx
+	movq	%rdx, 72(%rsp,%rax,8)
+	movq	%rax, 8264(%rsp,%rdx,8)
 	addq	$1, %rax
 	cmpq	%rax, %rdi
 	jne	.LB114
@@ -672,15 +729,15 @@ build_bottom_up:
 	subq	%rdi, %rsi
 	movq	%rsi, 8(%rsp)
 	movq	$0, 16(%rsp)
-	movq	16464(%rsp), %rax
+	movq	16480(%rsp), %rax
 	movq	%rax, 48(%rsp)
-	movq	16472(%rsp), %rax
+	movq	16488(%rsp), %rax
 	movq	%rax, 56(%rsp)
 	movq	%rsp, %rdi
 	call	buildBottomUp
 	testq	%rax, %rax
 	cmove	16(%rsp), %rax
-	addq	$16456, %rsp
+	addq	$16472, %rsp
 	ret
 	.size	build_bottom_up, .-build_bottom_up
 	.section	.note.GNU-stack,"",@progbits

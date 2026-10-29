@@ -18,6 +18,28 @@ private theorem cast_apply {m n k : Nat} (hmn : m = n) (M : Mapping m k) (i : Fi
     (hmn ▸ M) i = M (i.cast hmn.symm) := by
   subst hmn; rfl
 
+-- The model state after `swapWith`: the slots at `pos` and the top exchange.
+private theorem swapWith_slots (st : Bbu.St) (pos : Nat) (tr : List Bbu.Op) (hp : pos < st.len) :
+    (Bbu.swapDestinations { st with
+      slots := (st.slots.set pos ⟨st.val (st.len - 1), st.dest pos⟩).set (st.len - 1)
+        ⟨st.val pos, st.dest (st.len - 1)⟩
+      trace := tr } pos (st.len - 1)).slots =
+    (st.slots.set pos ⟨st.val (st.len - 1), st.dest (st.len - 1)⟩).set (st.len - 1)
+      ⟨st.val pos, st.dest pos⟩ := by
+  have ht : st.len - 1 < st.slots.length := by unfold Bbu.St.len at hp ⊢; omega
+  have hp' : pos < st.slots.length := hp
+  apply List.ext_getElem
+  · simp [Bbu.swapDestinations]
+  · intro i h1 h2
+    simp only [Bbu.swapDestinations, Bbu.St.val, Bbu.St.dest, List.getElem_set, List.getElem?_set,
+      List.length_set, ht, hp']
+    split_ifs <;> simp_all
+
+private theorem swapDest_eq (st : Bbu.St) (a b : Nat) :
+    Bbu.swapDestinations st a b = { st with
+      slots := (Bbu.swapDestinations st a b).slots
+      positionOf := (Bbu.swapDestinations st a b).positionOf } := rfl
+
 theorem swapWith_corr : SwapWithStmt := by
   intro e source st state pos h
   have hl := h.len
@@ -38,7 +60,10 @@ theorem swapWith_corr : SwapWithStmt := by
       by_cases hdepth : 1 ≤ st.len - 1 - pos ∧ st.len - 1 - pos ≤ MAX_SWAP_DEPTH
       · rw [ite_eq_right (by simp only [Bbu.MAX_SWAP_DEPTH, MAX_SWAP_DEPTH] at *; omega)]
         simp only [hdd, hdepth, and_self, dite_true]
-        refine ⟨?_, ?_, h.pendingGenerations, ?_⟩
+        have hpl : pos < st.len := by omega
+        rw [swapDest_eq, swapWith_slots st pos _ hpl]
+        refine ⟨?_, ?_, h.pendingGenerations, ?_, ?_,
+          canon_set (canon_set h.canon (h.canonVal _)) (h.canonVal _), h.target⟩
         · show state.stack.swap pos (state.stack.length - 1) = _
           rw [List.swap_eq_of_lt hp (by omega)]
           apply List.ext_getElem
@@ -66,6 +91,11 @@ theorem swapWith_corr : SwapWithStmt := by
         · dsimp only
           rw [traceOps_cast]
           simp [traceOps, encodeOp, h.trace, hdd]
+        · refine (Bbu.Pos.swapDest ?_ ?_ ?_).congr rfl ?_
+          · exact h.pos.congr rfl (Bbu.swapVals_dests st pos (st.len - 1))
+          · simp only [Bbu.St.len, List.length_set] at hpl ⊢; omega
+          · simp only [Bbu.St.len, List.length_set] at hpl ⊢; omega
+          · unfold Bbu.St.dests; rw [swapWith_slots st pos _ hpl]
       · rw [ite_eq_left (by simp only [Bbu.MAX_SWAP_DEPTH, MAX_SWAP_DEPTH] at *; omega)]
         simp only [hdd, hdepth, dite_false]
         exact rfl

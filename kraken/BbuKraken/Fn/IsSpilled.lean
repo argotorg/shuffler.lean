@@ -103,17 +103,6 @@ end Leaf
 
 /-! ## Flags and addresses -/
 
--- `testb $1, v; jne` jumps iff `v` is odd.
-theorem nz_and_one (v : BitVec 64) (af : Bool) :
-    CondCode.nz.interp (StatusFlags.from_result (v.take 8 &&& 1#8) { cf := false, af, of := false })
-      = decide (v.toNat % 2 = 1) := by
-  simp only [CondCode.interp_nz, StatusFlags.zf_from_result]
-  rw [Bool.eq_iff_iff]
-  simp only [Bool.not_eq_true', beq_eq_false_iff_ne, ne_eq, ← BitVec.toNat_inj, BitVec.toNat_and,
-    BitVec.take, BitVec.extractLsb'_toNat, Nat.shiftRight_zero, BitVec.toNat_ofNat, Nat.reducePow,
-    Nat.reduceMod, Nat.and_one_is_mod, decide_eq_true_eq, BitVec.zero_eq]
-  omega
-
 -- `cmpb $0, b; setne %al; movzbl %al, %eax` gives `b != 0`.
 theorem setne_zero (b : BitVec 8) (cf af of : Bool) :
     BitVec.setWidth 64 (BitVec.setWidth 32 (BitVec.ofNat 8
@@ -122,58 +111,81 @@ theorem setne_zero (b : BitVec 8) (cf af of : Bool) :
   simp only [CondCode.interp_nz, StatusFlags.zf_from_result, BitVec.sub_zero, BitVec.zero_eq, bne]
   cases (b == 0#8) <;> rfl
 
--- `subq $2, v; shrq v` for an even `v ≥ 2`.
-theorem sub_two_shr {v : BitVec 64} (h2 : 2 ≤ v.toNat) :
-    (v - 2#64).ushiftRight (((1#64).take 8).toNat &&& 63) = BitVec.ofNat 64 ((v.toNat - 2) / 2) := by
-  have h1 : ((1#64).take 8).toNat &&& 63 = 1 := by decide
-  rw [h1]
-  apply BitVec.eq_of_toNat_eq
-  simp only [BitVec.ushiftRight_eq, BitVec.toNat_ushiftRight, BitVec.toNat_sub, BitVec.toNat_ofNat,
-    Nat.shiftRight_eq_div_pow, Nat.pow_one]
-  have := v.isLt
-  omega
-
--- The words of the stack and dest arrays are writable.
-theorem inside_arr {m : Mem 64} {S : Addr} {k : Nat} (h1 : STACK ≤ k) (h2 : k < WORDS) :
-    Mem.Blocks.Inside (wordAt S k) 8 (writable m S) := by
-  simp only [STACK, WORDS_eq] at h1 h2
-  have : wordAt S k = wordAt S STACK + BitVec.ofNat 64 (8 * (k - 8)) := by
-    simp only [STACK]; bv_omega
-  rw [this]
-  exact (Mem.Blocks.Inside.base_add (by simp only [BitVec.toNat_ofNat, MAX_N]; omega)).tail
-
 theorem Wf.load_readable {m : Mem 64} {S x : Addr} {n : Nat} (hw : Wf m S)
     (h : Mem.Blocks.Inside x n (readable m S)) : (m.loadInt x n).isSome = true :=
   hw.mapped.loadInt_isSome (inside_append.mpr (Or.inr h))
 
 /-! ## `isSpilled` -/
 
--- A target value `v` that is a variable selects its spilled byte.
-theorem isSpilled_envOf {m : Mem 64} {S : Addr} {v : Word} {d : Nat} (hd : d < nOf m S)
-    (hv : rd m (wordAt (tgtOf m S) d) = v) (h2 : 2 ≤ v.toNat) (he : v.toNat % 2 = 0) :
-    isSpilled (envOf m S) v = (rdb m (splOf m S + BitVec.ofNat 64 ((v.toNat - 2) / 2)) != 0#8) := by
-  have ht : tgtVar m S ((v.toNat - 2) / 2) = true :=
-    List.any_eq_true.mpr ⟨d, List.mem_range.mpr hd, by simp [hv, h2, he]⟩
-  simp only [isSpilled, envOf, ht, ite_true, h2, he]
-  simp [bne]
-  congr 1
+-- `shrq $32; testb %dl, %dl; jne` jumps iff the kind (byte 4) is not 0.
+theorem nz_kind (w : Word) (r : StatusFlags.from_result.Remaining) :
+    CondCode.nz.interp (StatusFlags.from_result
+      ((w.ushiftRight (((32#64).take 8).toNat &&& 63)).take 8
+        &&& (w.ushiftRight (((32#64).take 8).toNat &&& 63)).take 8) r)
+      = ((StackSlot.ofWord w).kind != 0#8) := by
+  have : (w.ushiftRight (((32#64).take 8).toNat &&& 63)).take 8 = (StackSlot.ofWord w).kind := by
+    rw [ushiftRight_imm]; ext i hi; simp [StackSlot.ofWord, BitVec.take]
+  rw [this]; simp [CondCode.interp, StatusFlags.from_result, bne]
+
+-- `shrq $40; testb %dl, %dl; je` jumps iff the opcode (byte 5) is 0.
+theorem z_opcode (w : Word) (r : StatusFlags.from_result.Remaining) :
+    CondCode.z.interp (StatusFlags.from_result
+      ((w.ushiftRight (((40#64).take 8).toNat &&& 63)).take 8
+        &&& (w.ushiftRight (((40#64).take 8).toNat &&& 63)).take 8) r)
+      = ((StackSlot.ofWord w).valueOpcode == 0#8) := by
+  have : (w.ushiftRight (((40#64).take 8).toNat &&& 63)).take 8 = (StackSlot.ofWord w).valueOpcode := by
+    rw [ushiftRight_imm]; ext i hi; simp [StackSlot.ofWord, BitVec.take]
+  rw [this]; simp [CondCode.interp, StatusFlags.from_result]
+
+-- `movl %esi, %esi` gives the payload.
+theorem payload_take (w : Word) :
+    BitVec.setWidth 64 (w.take 32) = BitVec.ofNat 64 (StackSlot.ofWord w).payload.toNat := by
+  rw [BitVec.ofNat_toNat]
+  ext i hi
+  simp [StackSlot.ofWord, BitVec.take]
 
 -- The spilled byte of a target variable is in `splBlocks`.
-theorem inside_splBlocks {m : Mem 64} {S : Addr} {v : Word} {d : Nat} (hd : d < nOf m S)
-    (hv : rd m (wordAt (tgtOf m S) d) = v) (h2 : 2 ≤ v.toNat) (he : v.toNat % 2 = 0) :
-    Mem.Blocks.Inside (splOf m S + BitVec.ofNat 64 ((v.toNat - 2) / 2)) 1 (splBlocks m S) :=
-  inside_of_mem (p := (splOf m S + BitVec.ofNat 64 ((v.toNat - 2) / 2), 1)) (List.mem_filterMap.mpr ⟨d, List.mem_range.mpr hd, by simp [hv, h2, he]⟩)
+theorem inside_splBlocks {m : Mem 64} {S : Addr} {d i : Nat} (hd : d < nOf m S)
+    (hi : spillId (tgtSlot m S d) = some i) :
+    Mem.Blocks.Inside (splOf m S + BitVec.ofNat 64 i) 1 (splBlocks m S) :=
+  inside_of_mem (p := (splOf m S + BitVec.ofNat 64 i, 1))
+    (List.mem_filterMap.mpr ⟨d, List.mem_range.mpr hd, by simp [hi]⟩)
     (Mem.Blocks.Inside.base (Nat.le_refl 1))
 
+-- A target slot that is a variable selects its spilled byte.
+theorem isSpilled_envOf {m : Mem 64} {S : Addr} {d : Nat} (hd : d < nOf m S)
+    (hk : (tgtSlot m S d).kind = Value) (ho : (tgtSlot m S d).valueOpcode ≠ Const) :
+    isSpilled (envOf m S) (tgtSlot m S d)
+      = (rdb m (splOf m S + BitVec.ofNat 64 (tgtSlot m S d).payload.toNat) != 0#8) := by
+  have ht : tgtVar m S (tgtSlot m S d).payload.toNat = true :=
+    List.any_eq_true.mpr ⟨d, List.mem_range.mpr hd, by simp [spillId, hk, ho]⟩
+  simp [isSpilled, isLiteralValue, envOf, ht, hk, bne]
+  rw [beq_eq_false_iff_ne.mpr ho]
+  simp only [Bool.not_false, Bool.true_and]
+  congr 1
+
 -- The address of the spilled byte that `isSpilled` reads.
-theorem spl_addr {m : Mem 64} {S v : Addr} (h2 : 2 ≤ v.toNat) :
+theorem spl_addr {m : Mem 64} {S : Addr} {w : Word} :
     BitVec.ofInt 64 (m.loadInt (S + BitVec.ofInt 64 (Int64.toInt 40)) 8).get!
-        + (v - 2#64).ushiftRight (((1#64).take 8).toNat &&& 63) + BitVec.ofInt 64 (Int64.toInt 0)
-      = splOf m S + BitVec.ofNat 64 ((v.toNat - 2) / 2) := by
+        + BitVec.setWidth 64 (w.take 32) + BitVec.ofInt 64 (Int64.toInt 0)
+      = splOf m S + BitVec.ofNat 64 (StackSlot.ofWord w).payload.toNat := by
   have h40 : BitVec.ofInt 64 (Int64.toInt 40) = BitVec.ofNat 64 (8 * 5) := by decide
   have h0 : BitVec.ofInt 64 (Int64.toInt 0) = 0#64 := by decide
-  rw [sub_two_shr h2, h40, h0, BitVec.add_zero]
+  rw [payload_take, h40, h0, BitVec.add_zero]
   rfl
+
+-- Both jumps fall through: the slot is a variable.
+theorem var_of_flags {w : Word} {r r' : StatusFlags.from_result.Remaining}
+    (hnz : CondCode.nz.interp (StatusFlags.from_result
+      ((w.ushiftRight (((32#64).take 8).toNat &&& 63)).take 8
+        &&& (w.ushiftRight (((32#64).take 8).toNat &&& 63)).take 8) r) = false)
+    (hz : CondCode.z.interp (StatusFlags.from_result
+      ((w.ushiftRight (((40#64).take 8).toNat &&& 63)).take 8
+        &&& (w.ushiftRight (((40#64).take 8).toNat &&& 63)).take 8) r') = false) :
+    (StackSlot.ofWord w).kind = Value ∧ (StackSlot.ofWord w).valueOpcode ≠ Const := by
+  rw [nz_kind] at hnz
+  rw [z_opcode] at hz
+  simpa [Value, Const, bne] using And.intro hnz hz
 
 theorem isSpilled_body [Host] [FunDecls] : Body isSpilledAsm isSpilledF isSpilledA isSpilledR := by
   intro s ra
@@ -181,7 +193,7 @@ theorem isSpilled_body [Host] [FunDecls] : Body isSpilledAsm isSpilledF isSpille
   subst h₀
   refine Program.WP.cfg (fun
       | .entry, t | .label "isSpilled", t => t = s.pushRa ra
-      | .label ".LB1", t => Done s ra (BitVec.ofNat 64 (isSpilled (env s) (rsi s)).toNat) t
+      | .label ".LB1", t => Done s ra (BitVec.ofNat 64 (isSpilled (env s) (slot s)).toNat) t
       | _, _ => False)
     (fun _ _ => 0) ?_ rfl
   cfg_cases
@@ -197,51 +209,46 @@ theorem isSpilled_body [Host] [FunDecls] : Body isSpilledAsm isSpilledF isSpille
     subst ht
     obtain ⟨hw, -, -, henv⟩ := pushRa_keeps (ra := ra) hpre
     obtain ⟨d, hd, hv⟩ := hpre.2.2
-    rw [← henv] at hd hv
-    simp only [Env.n, envOf, List.length_map, List.length_range] at hd
-    replace hv : rd (s.pushRa ra).dmem (wordAt (tgtOf (s.pushRa ra).dmem (rdi s)) d) = rsi s := by
-      have hd' := hd
-      simp only [Reg64s.get64_rdi] at hd'
-      rw [← hv]; simp [envOf, hd']
+    rw [← henv, n_envOf] at hd
+    rw [← henv, target_get hd] at hv
+    change tgtSlot _ _ d = slot s at hv
     kvcgen64
-    all_goals simp only [pushRa_rbx, pushRa_rcx, pushRa_rdx, pushRa_rsi, pushRa_rdi,
+    all_goals simp only [pushRa_rbx, pushRa_rcx, pushRa_rsi, pushRa_rdi,
       pushRa_rbp, pushRa_r8, pushRa_r9, pushRa_r10, pushRa_r11, pushRa_r12, pushRa_r13, pushRa_r14,
       pushRa_r15] at *
-    case vc1 hbe _ =>
-      have h1 : s.regs.rsi.toNat < 2 :=
-        Nat.lt_succ_of_le (of_decide_eq_true ((Kit.be_sub_imm _ 1 (by decide) _ _).symm.trans hbe))
-      cfg_goto
-      · exact stack_pushRa rfl
-      · refine Done.intro rfl rfl ?_ rfl rfl rfl rfl rfl rfl
-        simp [isSpilled, show ¬ 2 ≤ s.regs.rsi.toNat by omega]
-      · simp
+    case vc1 => decide
     case vc2 _ _ hnz _ =>
-      have h1 : s.regs.rsi.toNat % 2 = 1 := of_decide_eq_true ((nz_and_one _ _).symm.trans hnz)
+      have hk : (StackSlot.ofWord s.regs.rsi.toBitVec).kind ≠ Value := by
+        have := (nz_kind _ _).symm.trans hnz
+        simpa [Value, bne] using this
       cfg_goto
       · exact stack_pushRa rfl
       · refine Done.intro rfl rfl ?_ rfl rfl rfl rfl rfl rfl
-        simp [isSpilled, h1]
+        simp [isSpilled, beq_eq_false_iff_ne.mpr hk]
       · simp
     case vc3 => decide
-    case vc4 => exact hw.word_isSome hw.mapped (k := 5) (by decide)
-    case vc5 hbe _ hnz _ _ _ _ =>
-      have h2 : 2 ≤ (rsi s).toNat :=
-        Nat.not_le.mp (of_decide_eq_false ((Kit.be_sub_imm _ 1 (by decide) _ _).symm.trans hbe))
-      have he : (rsi s).toNat % 2 = 0 := by
-        have : ¬ (rsi s).toNat % 2 = 1 := of_decide_eq_false ((nz_and_one _ _).symm.trans hnz)
-        omega
-      have h := hw.load_readable (inside_splBlocks hd hv h2 he).tail.tail
-      rw [← spl_addr h2] at h
+    case vc4 _ _ _ _ _ _ hz _ =>
+      have ho : (StackSlot.ofWord s.regs.rsi.toBitVec).valueOpcode = Const := by
+        have := (z_opcode _ _).symm.trans hz
+        simpa [Const] using this
+      cfg_goto
+      · exact stack_pushRa rfl
+      · refine Done.intro rfl rfl ?_ rfl rfl rfl rfl rfl rfl
+        simp [isSpilled, isLiteralValue, ho]
+      · simp
+    case vc5 => exact hw.word_isSome hw.mapped (k := 5) (by decide)
+    case vc6 _ _ _ _ hnz _ _ _ _ hz _ =>
+      obtain ⟨hk, ho⟩ := var_of_flags (w := s.regs.rsi.toBitVec) hnz hz
+      have hi : spillId (tgtSlot (s.pushRa ra).dmem (rdi s) d) = some (slot s).payload.toNat := by
+        rw [hv]; simp [spillId, hk, ho]; rfl
+      have h := hw.load_readable (inside_splBlocks hd hi).tail.tail
+      rw [← spl_addr] at h
       exact h
-    case vc6 hbe _ hnz _ _ _ _ =>
-      have h2 : 2 ≤ (rsi s).toNat :=
-        Nat.not_le.mp (of_decide_eq_false ((Kit.be_sub_imm _ 1 (by decide) _ _).symm.trans hbe))
-      have he : (rsi s).toNat % 2 = 0 := by
-        have : ¬ (rsi s).toNat % 2 = 1 := of_decide_eq_false ((nz_and_one _ _).symm.trans hnz)
-        omega
+    case vc7 _ _ _ _ hnz _ _ _ _ hz _ =>
+      obtain ⟨hk, ho⟩ := var_of_flags (w := rsi s) hnz hz
       refine Done.intro rfl rfl ?_ rfl rfl rfl rfl rfl rfl
-      rw [← henv, isSpilled_envOf hd hv h2 he, rdb, ← spl_addr h2]
+      rw [← hv, ← henv, isSpilled_envOf hd (hv ▸ hk) (hv ▸ ho), rdb, hv, ← spl_addr]
       exact setne_zero _ _ _ _
-    case vc7 => simp
+    case vc8 => simp
 
 end Bbu

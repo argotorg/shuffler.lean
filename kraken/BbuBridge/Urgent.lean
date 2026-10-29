@@ -36,12 +36,11 @@ private theorem origUrgent_eq {source target : Stack} {spills : SpillSet}
 
 variable {e : Bbu.Env} {source : Stack} {st : Bbu.St} {state : OState e source}
 
--- A junk value can be generated, so the test of the loop is `isFree || isSpilled`.
-private theorem urgent_gen_iff (e : Bbu.Env) (v : Bbu.Word) :
+-- The test of the loop.
+private theorem urgent_gen_iff (e : Bbu.Env) (v : Bbu.StackSlot) :
     ((decode v).is_junk ∨ (decode v).can_be_freely_generated ∨ (spillSet e).is_spilled (decode v)) ↔
-      (Bbu.isFree v || Bbu.isSpilled e v) = true := by
-  rw [Bool.or_eq_true, isFree_iff, isSpilled_iff]
-  exact ⟨fun h => h.elim (fun hj => .inl (Value.can_be_freely_generated_of_is_junk _ hj)) id, .inr⟩
+      (Bbu.isJunk v || Bbu.canBeFreelyGenerated v || Bbu.isSpilled e v) = true := by
+  rw [Bool.or_eq_true, Bool.or_eq_true, isJunk_iff, isFree_iff, isSpilled_iff, or_assoc]
 
 -- The scan from offset `d` on, with the related results `u` and `acc` so far.
 private theorem urgent_scan (h : Rel e st state) (t : Nat) :
@@ -68,11 +67,12 @@ private theorem urgent_scan (h : Rel e st state) (t : Nat) :
       rw [← Option.isSome_map (f := Fin.val), hp]; exact hs
     simp only [hs, hs', Bool.false_eq_true, ↓reduceIte, slotAt_index (tgt e) ⟨d, hd⟩, except_ok_bind,
       Fin.getElem_fin, tgt_get e d hd]
-    by_cases hg : (Bbu.isFree e.target[d]! || Bbu.isSpilled e e.target[d]!) = true
+    by_cases hg : (Bbu.isJunk e.target[d]! || Bbu.canBeFreelyGenerated e.target[d]! ||
+        Bbu.isSpilled e e.target[d]!) = true
     · simp only [hg, (urgent_gen_iff e _).mpr hg, ↓reduceIte]
       exact ih u acc (by omega) hu
     simp only [hg, mt (urgent_gen_iff e _).mp hg, Bool.false_eq_true, ↓reduceIte]
-    have hc := h.shallowestCopyPosition e.target[d]!
+    have hc := h.shallowestCopyPosition (h.canonTarget d)
     cases hsc : state.stack.shallowestCopyPosition (decode e.target[d]!) with
     | none =>
       rw [hsc, Option.map_none] at hc

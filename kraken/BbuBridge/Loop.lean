@@ -11,7 +11,7 @@ open Shuffler Shuffler.Emission
 
 theorem loop_corr_aux (hs : StepStmt) (hf : FinishStmt) (e : Bbu.Env) (source : Stack)
     (st : Bbu.St) (state : OState e source) (t : Nat) (h : Rel e st state) :
-    Bbu.loop e st t = encodeRes (post (tgt e) (buildBottomUp.loop t state)) := by
+    Corr ResRel (Bbu.loop e st t) (post (tgt e) (buildBottomUp.loop t state)) := by
   by_cases ht : t < e.n
   · have hc := hs e source st state t h ht
     cases hstep : Bbu.step e st t with
@@ -38,7 +38,7 @@ theorem loop_corr_aux (hs : StepStmt) (hf : FinishStmt) (e : Bbu.Env) (source : 
     · have hl' : state.stack.length = (tgt e).length := by rw [h.len, tgt_length, hl]
       rw [ite_eq_left hl]
       simp only [post, except_ok_bind, requires_of_true _ hl']
-      rw [← h.trace]; rfl
+      exact ⟨h.stack, h.trace, h.canon⟩
     · have hl' : ¬ state.stack.length = (tgt e).length := by rw [h.len, tgt_length]; exact hl
       rw [ite_eq_right hl]
       simp only [post, except_ok_bind, requires, hl']

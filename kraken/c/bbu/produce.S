@@ -1,96 +1,97 @@
 produce:
+	pushq	%r15
+	pushq	%r14
 	pushq	%r13
 	pushq	%r12
 	pushq	%rbp
 	pushq	%rbx
+	subq	$8, %rsp
 	movq	%rdi, %rbx
 	movq	%rsi, %rbp
-	movq	32(%rdi), %rax
-	movq	(%rax,%rsi,8), %r12
-	testq	%r12, %r12
-	je	.LB41
-	movq	%r12, %rsi
+	leaq	0(,%rsi,8), %r14
+	movq	%r14, %rax
+	addq	32(%rdi), %rax
+	movq	(%rax), %r13
+	movzbl	4(%rax), %r15d
+	movzbl	5(%rax), %eax
+	movb	%al, 7(%rsp)
+	movq	%r13, %rsi
 	call	shallowestCopyPosition
-	movq	%rax, %r13
+	cmpb	$1, %r15b
+	je	.LB39
+	movq	%rax, %r12
 	cmpq	$-1, %rax
 	je	.LB31
 	notq	%rax
 	addq	(%rbx), %rax
 	cmpq	$15, %rax
-	jbe	.LB42
+	jbe	.LB40
 .LB31:
-	testb	$1, %r12b
-	je	.LB39
-	cmpq	$1, %r12
-	jne	.LB32
-.LB39:
-	movq	%r12, %rsi
-	movq	%rbx, %rdi
-	call	isSpilled
-	testl	%eax, %eax
-	je	.LB34
+	cmpb	$0, 7(%rsp)
+	je	.LB32
+	cmpb	$2, %r15b
+	jne	.LB41
 .LB32:
 	movq	%rbp, %rdx
-	movq	%r12, %rsi
+	movq	%r13, %rsi
 	movq	%rbx, %rdi
 	call	push
-	movq	%rax, %r12
 .LB30:
-	testq	%r12, %r12
-	je	.LB43
+	testq	%rax, %rax
+	jne	.LB28
+	movq	(%rbx), %rcx
+	leaq	-1(%rcx), %rdx
+	cmpq	%rdx, 8264(%rbx,%r14)
+	jne	.LB37
+	movq	8(%rbx), %rdx
+	testq	%rdx, %rdx
+	je	.LB28
+	subq	$1, %rdx
+	movq	%rdx, 8(%rbx)
 .LB28:
-	movq	%r12, %rax
+	addq	$8, %rsp
 	popq	%rbx
 	popq	%rbp
 	popq	%r12
 	popq	%r13
+	popq	%r14
+	popq	%r15
 	ret
-.LB41:
-	movq	%rsi, %rdx
-	movl	$0, %esi
-	call	push
-	movq	%rax, %r12
-	jmp	.LB30
-.LB42:
+.LB39:
 	movq	%rbp, %rdx
 	movq	%r13, %rsi
 	movq	%rbx, %rdi
-	call	dup
-	movq	%rax, %r12
+	call	push
 	jmp	.LB30
-.LB34:
-	cmpq	$-1, %r13
-	je	.LB36
-	movq	(%rbx), %rax
-	subq	$16, %rax
-	movq	$-2, %r12
-	subq	%r13, %rax
-	je	.LB28
-	movq	56(%rbx), %rdx
-	movq	%r13, (%rdx)
-	movq	56(%rbx), %rdx
-	movq	%rax, 8(%rdx)
-	movq	$-1, %r12
-	jmp	.LB28
-.LB43:
-	movq	%rbp, %rsi
+.LB40:
+	movq	%rbp, %rdx
+	movq	%r12, %rsi
 	movq	%rbx, %rdi
-	call	positionOf
-	movq	%rax, %rdx
-	movq	(%rbx), %rax
-	subq	$1, %rax
-	cmpq	%rax, %rdx
-	jne	.LB38
-	movq	8(%rbx), %rax
-	testq	%rax, %rax
+	call	dup
+	jmp	.LB30
+.LB41:
+	movq	%r13, %rsi
+	movq	%rbx, %rdi
+	call	isSpilled
+	testl	%eax, %eax
+	jne	.LB32
+	cmpq	$-1, %r12
+	je	.LB35
+	movq	$-16, %rdx
+	subq	%r12, %rdx
+	movq	$-2, %rax
+	addq	(%rbx), %rdx
 	je	.LB28
-	subq	$1, %rax
-	movq	%rax, 8(%rbx)
+	movq	56(%rbx), %rax
+	movq	%r12, (%rax)
+	movq	56(%rbx), %rax
+	movq	%rdx, 8(%rax)
+	movq	$-1, %rax
 	jmp	.LB28
-.LB36:
-	movq	$-2, %r12
+.LB35:
+	movq	$-2, %rax
 	jmp	.LB28
-.LB38:
-	movq	$-2, %r12
+.LB37:
+	movq	$-2, %rax
 	jmp	.LB28
 	.size	produce, .-produce

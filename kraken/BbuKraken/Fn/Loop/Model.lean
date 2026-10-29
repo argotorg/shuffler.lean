@@ -32,7 +32,8 @@ theorem takeBound_ge {r : St × Bool} (h : takeBound st t b = .ok r) : t ≤ b :
   · omega
 
 -- An iteration keeps `t ≤ len`.
-theorem step_le (hle : t ≤ st.len) (h : step e st t = .ok (st', .next t')) : t' ≤ st'.len := by
+theorem step_le {n : Nat} (hp : Pos n st) (hle : t ≤ st.len)
+    (h : step e st t = .ok (st', .next t')) : t' ≤ st'.len := by
   unfold step at h
   split at h
   · cases h; omega
@@ -46,7 +47,7 @@ theorem step_le (hle : t ≤ st.len) (h : step e st t = .ok (st', .next t')) : t
   split at h
   · rename_i b hb
     obtain ⟨⟨s, done⟩, hs, h⟩ := bind_ok h
-    have hb' := positionOf_some hb
+    have hb' := positionOf_some hp hb
     have h1 := (takeBound_shape hb' hs).1
     have h2 := takeBound_ge hs
     cases done
@@ -56,6 +57,7 @@ theorem step_le (hle : t ≤ st.len) (h : step e st t = .ok (st', .next t')) : t
       omega
     · cases h; dsimp only at h1; omega
   · obtain ⟨s, hs, h⟩ := bind_ok h
+    have := (generate_shape hs).1
     split at h
     · cases h; omega
     · obtain ⟨h3, h4, -⟩ := placeTop_ok h
@@ -73,7 +75,7 @@ theorem ctx_iter (h : Ctx s T st0) : Iter s T (step (env s) st0 T) := ⟨st0, h,
 theorem iter_next (h : Iter s T (.ok (st', .next T'))) :
     InvL (env s) st' T' ∧ loop (env s) st' T' = R0 s := by
   obtain ⟨st0, ⟨hT, ⟨hi, hle⟩, hl⟩, hs⟩ := h
-  exact ⟨⟨step_inv hi hT hs, step_le hle hs⟩, (loop_next hT hs).symm.trans hl⟩
+  exact ⟨⟨step_inv hi hT hs, step_le hi.pos hle hs⟩, (loop_next hT hs).symm.trans hl⟩
 
 theorem iter_err (h : Iter s T (.error err)) : R0 s = .error err := by
   obtain ⟨st0, ⟨hT, -, hl⟩, hs⟩ := h
@@ -81,7 +83,7 @@ theorem iter_err (h : Iter s T (.error err)) : R0 s = .error err := by
 
 -- The loop at an offset `T ≥ n`.
 theorem loop_end (hT : ¬ T < (env s).n) (hl : loop (env s) st0 T = R0 s) :
-    R0 s = if st0.len = (env s).n then .ok st0.trace else .error .assertion :=
+    R0 s = if st0.len = (env s).n then .ok st0 else .error .assertion :=
   hl.symm.trans (loop_ge hT)
 
 -- No slot is pending: the result is the final permutation.
@@ -122,7 +124,8 @@ theorem uf_end : urgentFrom e st t e.n u = .ok u := by
 
 -- The scan skips `d`.
 theorem uf_skip (hd : d < e.n)
-    (h : (positionOf st d).isSome ∨ (isFree e.target[d]! || isSpilled e e.target[d]!) = true
+    (h : (positionOf st d).isSome
+      ∨ (isJunk e.target[d]! || canBeFreelyGenerated e.target[d]! || isSpilled e e.target[d]!) = true
       ∨ shallowestCopyPosition st e.target[d]! = none) :
     urgentFrom e st t d u = urgentFrom e st t (d + 1) u := by
   rw [urgentFrom, ite_eq_left hd]
@@ -137,7 +140,8 @@ theorem uf_skip (hd : d < e.n)
 
 -- A copy out of reach for a dup.
 theorem uf_far (hd : d < e.n) (hp : positionOf st d = none)
-    (hf : (isFree e.target[d]! || isSpilled e e.target[d]!) = false)
+    (hf : (isJunk e.target[d]! || canBeFreelyGenerated e.target[d]! || isSpilled e e.target[d]!)
+      = false)
     (hc : shallowestCopyPosition st e.target[d]! = some c) (hfar : MAX_DUP_DEPTH < st.len - 1 - c) :
     urgentFrom e st t d u = .error (.blocked c (st.len - 1 - c - MAX_DUP_DEPTH)) := by
   rw [urgentFrom, ite_eq_left hd]
@@ -145,7 +149,8 @@ theorem uf_far (hd : d < e.n) (hp : positionOf st d = none)
 
 -- A copy in reach for a dup.
 theorem uf_near (hd : d < e.n) (hp : positionOf st d = none)
-    (hf : (isFree e.target[d]! || isSpilled e e.target[d]!) = false)
+    (hf : (isJunk e.target[d]! || canBeFreelyGenerated e.target[d]! || isSpilled e e.target[d]!)
+      = false)
     (hc : shallowestCopyPosition st e.target[d]! = some c)
     (hnear : st.len - 1 - c ≤ MAX_DUP_DEPTH) :
     urgentFrom e st t d u = urgentFrom e st t (d + 1)

@@ -21,13 +21,13 @@ namespace Loop
 
 -- The labels of the blocks of `loopAsm`.
 def labels : List CfgLabel :=
-  [.entry, .label "buildBottomUp", .label ".LB69", .label ".LB107", .label ".LB65",
-    .label ".LB73", .label ".LB70", .label ".LB100", .label ".LB106", .label ".LB77",
-    .label ".LB108", .label ".LB109", .label ".LB81", .label ".LB83", .label ".LB82",
-    .label ".LB80", .label ".LB84", .label ".LB86", .label ".LB68", .label ".LB88",
-    .label ".LB67", .label ".LB71", .label ".LB110", .label ".LB78", .label ".LB111",
-    .label ".LB95", .label ".LB66", .label ".LB90", .label ".LB92", .label ".LB94",
-    .label ".LB96", .label ".LB97", .label ".LB98", .label ".LB99"]
+  [.entry, .label "buildBottomUp", .label ".LB65", .label ".LB103", .label ".LB73",
+    .label ".LB66", .label ".LB102", .label ".LB74", .label ".LB64", .label ".LB85",
+    .label ".LB63", .label ".LB67", .label ".LB104", .label ".LB61", .label ".LB106",
+    .label ".LB105", .label ".LB78", .label ".LB80", .label ".LB107", .label ".LB77",
+    .label ".LB81", .label ".LB83", .label ".LB90", .label ".LB108", .label ".LB75",
+    .label ".LB109", .label ".LB92", .label ".LB62", .label ".LB87", .label ".LB89",
+    .label ".LB93", .label ".LB94", .label ".LB95", .label ".LB96"]
 
 -- Each block of `loopAsm` has a label in `labels`.
 theorem labels_cover : loopAsm.ForallBlocks fun blk => blk.label ∈ labels := by
@@ -40,7 +40,6 @@ end Loop
 open Loop in
 theorem loop_body [Host] [FunDecls]
     (hfin : Spec "permuteDestinations" finishF finishA finishR)
-    (hpos : Spec "positionOf" positionOfF positionOfA positionOfR)
     (hspill : Spec "isSpilled" isSpilledF isSpilledA isSpilledR)
     (hcopy : Spec "shallowestCopyPosition" shallowestCopyF shallowestCopyA shallowestCopyR)
     (hgen : Spec "generate" generateF generateA generateR)
@@ -58,37 +57,37 @@ theorem loop_body [Host] [FunDecls]
     | rfl | rfl | rfl | rfl | rfl | rfl
   · exact entry
   · exact prologue hpre
-  · exact lb69 hfin hpre
-  · exact lb107 hpre
-  · exact lb65 hpre
+  · exact lb65 hfin hpre
+  · exact lb103 hpre
   · exact lb73 hpre
-  · exact lb70 hpos hpre
-  · exact lb100 hspill hcopy hpre
-  · exact lb106 hpre
-  · exact lb77 hpos hpre
-  · exact lb108 hgen hpre
-  · exact lb109 hpre
+  · exact lb66 hspill hcopy hpre
+  · exact lb102 hpre
+  · exact lb74 hpre
+  · exact lb64 hpre
+  · exact lb85
+  · exact lb63 hpre
+  · exact lb67 hgen hpre
+  · exact lb104 hgen hpre
+  · exact lb61 hpre
+  · exact lb106
+  · exact lb105 hpre
+  · exact lb78 hpre
+  · exact lb80 hpre
+  · exact lb107 hpre
+  · exact lb77 hswap hpre
   · exact lb81 hpre
-  · exact lb83 hpre
-  · exact lb82 hpre
-  · exact lb80 hswap hpre
-  · exact lb84 hpre
-  · exact lb86 hswap hpre
-  · exact lb68 hpre
-  · exact lb88 hpre
-  · exact lb67 hpre
-  · exact lb71 hpos hgen hpre
-  · exact lb110 hpre
-  · exact lb78 hgen hpre
-  · exact lb111 hpre
-  · exact lb95
-  · exact lb66 hpre
-  · exact lb90
+  · exact lb83 hswap hpre
+  · exact lb90 hpre
+  · exact lb108 hpre
+  · exact lb75 hgen hpre
+  · exact lb109 hpre
   · exact lb92
+  · exact lb62 hpre
+  · exact lb87
+  · exact lb89
+  · exact lb93
   · exact lb94
+  · exact lb95
   · exact lb96
-  · exact lb97
-  · exact lb98
-  · exact lb99
 
 end Bbu

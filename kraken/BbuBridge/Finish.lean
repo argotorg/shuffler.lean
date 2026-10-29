@@ -8,6 +8,60 @@ namespace BbuBridge
 
 open Shuffler Shuffler.Emission
 
+-- The stack after a swap with the slot at `depth` below the top.
+def swapStack (s : Stack) (depth : Nat) : Stack := s.swap (s.length - 1) (s.length - 1 - depth)
+
+-- A trace of swaps only: the stack after the swaps.
+theorem trace_swaps {spills : SpillSet} {a b : Stack} (t : Trace spills a b) :
+    ∀ swaps : List Nat, traceOps t = swaps.map TraceOp.swap → b = swaps.foldl swapStack a := by
+  induction t with
+  | Lit =>
+    intro swaps h
+    cases swaps with
+    | nil => rfl
+    | cons _ _ => simp [traceOps] at h
+  | Swap idx _ _ _ t ih =>
+    intro swaps h
+    obtain ⟨l₁, l₂, rfl, h1, h2⟩ := List.map_eq_append_iff.mp h.symm
+    obtain ⟨x, rfl, hx⟩ := List.map_eq_singleton_iff.mp h2
+    cases hx
+    rw [List.foldl_append, ← ih l₁ h1.symm]
+    rfl
+  | Dup _ _ _ _ _ _ | Pop _ _ _ | Push _ _ _ _ | Load _ _ _ _ =>
+    intro swaps h
+    obtain ⟨l₁, l₂, rfl, h1, h2⟩ := List.map_eq_append_iff.mp h.symm
+    obtain ⟨x, rfl, hx⟩ := List.map_eq_singleton_iff.mp h2
+    cases hx
+
+theorem swapTop_map (st : Bbu.St) (d : Nat) :
+    (Bbu.swapTop st d).slots.map (fun s => decode s.val)
+      = swapStack (st.slots.map fun s => decode s.val) d := by
+  rcases Nat.eq_zero_or_pos st.slots.length with h0 | hpos
+  · simp [Bbu.swapTop, swapStack, List.eq_nil_of_length_eq_zero h0]
+  · rw [swapStack, List.swap_eq_of_lt (by simp; omega) (by simp; omega)]
+    apply List.ext_getElem
+    · simp [Bbu.swapTop]
+    · intro i h1 h2
+      have ht : st.slots.length - 1 < st.slots.length := by omega
+      have hj : st.slots.length - 1 - d < st.slots.length := by omega
+      simp only [Bbu.swapTop, Bbu.St.len, Bbu.St.val, List.getElem_map, List.getElem_set,
+        List.length_map]
+      split_ifs <;> simp_all
+
+theorem foldl_swapTop_map (swaps : List Nat) (st : Bbu.St) :
+    (swaps.foldl Bbu.swapTop st).slots.map (fun s => decode s.val)
+      = swaps.foldl swapStack (st.slots.map fun s => decode s.val) := by
+  induction swaps generalizing st with
+  | nil => rfl
+  | cons d ds ih => simp only [List.foldl_cons, ih, swapTop_map]
+
+theorem foldl_swapTop_canon (swaps : List Nat) (st : Bbu.St) (hc : ∀ s ∈ st.slots, Canon s.val) :
+    ∀ s ∈ (swaps.foldl Bbu.swapTop st).slots, Canon s.val := by
+  induction swaps generalizing st with
+  | nil => exact hc
+  | cons d ds ih =>
+    exact ih _ (canon_set (canon_set hc (canon_val hc _)) (canon_val hc _))
+
 theorem finish_corr : FinishStmt := by
   intro e source st state h
   have hl := h.len
@@ -63,9 +117,16 @@ theorem finish_corr : FinishStmt := by
       rw [requires_of_true _ hrl]
       rfl
     rw [ho]
-    show _ = encodeRes (post (tgt e) (.ok ⟨res, state.trace.concat trace⟩))
+    show Corr ResRel _ (post (tgt e) (.ok ⟨res, state.trace.concat trace⟩))
     rw [hpost]
-    simp [encodeRes, encodeM, traceOps_concat, ← h.trace, hops, encodeOp]
+    obtain ⟨-, -, -, htr⟩ := Bbu.foldl_swapTop swaps st
+    refine ⟨?_, ?_, foldl_swapTop_canon swaps st h.canon⟩
+    · show res = _
+      rw [foldl_swapTop_map, ← h.stack]
+      exact trace_swaps trace swaps hops
+    · show (traceOps (state.trace.concat trace)).map encodeOp = _
+      rw [htr]
+      simp [traceOps_concat, ← h.trace, hops, encodeOp]
   · -- Blocked: the original is blocked at the same offset.
     rename_i b hp
     rw [permute_blocked_of_model _ _ _ _ hds hp]

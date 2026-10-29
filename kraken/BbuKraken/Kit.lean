@@ -225,27 +225,28 @@ theorem sep_of_disjoint {a b : Addr} {n k : Nat} (h : Mem.Blocks.Disjoint [(a, n
 -- The struct is the union of three blocks of `writable` and `readable`.
 theorem inside_struct {x : Addr} (h : Mem.Blocks.Inside x 1 [(S, 8 * WORDS)]) :
     Mem.Blocks.Inside x 1 (writable m S ++ readable m S) := by
-  simp only [Mem.Blocks.Inside, or_false, WORDS, DEST, STACK, MAX_N] at h
+  simp only [Mem.Blocks.Inside, or_false, WORDS, POS, DEST, MAX_N] at h
   rw [inside_append]
   by_cases h1 : (x - S).toNat < 24
   · exact Or.inl (Or.inl (by omega))
-  by_cases h2 : (x - S).toNat < 64
+  by_cases h2 : (x - S).toNat < 72
   · exact Or.inr (Or.inl (by simp only [wordAt]; bv_omega))
-  · exact Or.inl (Or.inr (Or.inl (by simp only [wordAt, STACK, MAX_N]; bv_omega)))
+  · exact Or.inl (Or.inr (Or.inl (by simp only [wordAt, DEST, MAX_N]; bv_omega)))
 
--- A change outside the header words 3 to 7 keeps `writable`.
+-- A change outside the header words 3 to 8 keeps `writable`.
 theorem writable_congr {m' : Mem 64} {l : List (Addr × Nat)} (h : Mem.UnchangedOutside l m m')
     (hd : Mem.Blocks.Disjoint (readable m S) l) : writable m' S = writable m S := by
-  simp only [writable, nOf, opsOf, blkOf, hdr_congr h hd (k := 3) (by omega) (by omega),
-    hdr_congr h hd (k := 6) (by omega) (by omega), hdr_congr h hd (k := 7) (by omega) (by omega)]
+  obtain ⟨hn, -, -, ho, hb, hda⟩ := hdr_congr' h hd
+  simp only [writable, hn, ho, hb, hda]
 
--- The blocks of `writable`: the words 0 to 2 of the header, the stack and dest arrays,
--- the ops buffer and `blocked`.
+-- The blocks of `writable`: the words 0 to 2 of the header, `m_destinationOf` and
+-- `m_positionOf`, the working stack, the ops buffer and `blocked`.
 theorem inside_writable {a : Addr} {n : Nat}
-    (h : (a - S).toNat + n ≤ 24 ∨ (8 * STACK ≤ (a - S).toNat ∧ (a - S).toNat + n ≤ 8 * WORDS)
-      ∨ (a - opsOf m S).toNat + n ≤ 96 * nOf m S ∨ (a - blkOf m S).toNat + n ≤ 16) :
+    (h : (a - S).toNat + n ≤ 24 ∨ (8 * DEST ≤ (a - S).toNat ∧ (a - S).toNat + n ≤ 8 * WORDS)
+      ∨ (a - dataOf m S).toNat + n ≤ 8 * nOf m S
+      ∨ (a - opsOf m S).toNat + n ≤ 72 * nOf m S ∨ (a - blkOf m S).toNat + n ≤ 16) :
     Mem.Blocks.Inside a n (writable m S) := by
-  simp only [writable, Mem.Blocks.Inside, wordAt, STACK, DEST, WORDS, MAX_N, or_false] at h ⊢
+  simp only [writable, Mem.Blocks.Inside, wordAt, POS, DEST, WORDS, MAX_N, or_false] at h ⊢
   bv_omega
 
 -- A load from the struct succeeds.
@@ -258,15 +259,31 @@ theorem disjoint_head {a b : Addr} {n k : Nat} {l : List (Addr × Nat)}
     (h : Mem.Blocks.Disjoint [(a, n)] ((b, k) :: l)) : Mem.Blocks.Disjoint [(a, n)] [(b, k)] :=
   fun x hx hy => h x hx (hy.elim Or.inl False.elim)
 
--- The ops buffer, `blocked` and the struct do not overlap.
-theorem Wf.sep_ops (hw : Wf m S) (hn : 0 < nOf m S) :
-    (opsOf m S).toNat + 96 * nOf m S ≤ S.toNat ∨ S.toNat + 8 * WORDS ≤ (opsOf m S).toNat :=
+-- The working stack, the ops buffer, `blocked` and the struct do not overlap.
+theorem Wf.sep_data (hw : Wf m S) (hn : 0 < nOf m S) :
+    (dataOf m S).toNat + 8 * nOf m S ≤ S.toNat ∨ S.toNat + 8 * WORDS ≤ (dataOf m S).toNat :=
   (sep_of_disjoint (disjoint_head hw.disj_struct) (by decide) (by omega)).symm
+
+theorem Wf.sep_ops (hw : Wf m S) (hn : 0 < nOf m S) :
+    (opsOf m S).toNat + 72 * nOf m S ≤ S.toNat ∨ S.toNat + 8 * WORDS ≤ (opsOf m S).toNat :=
+  (sep_of_disjoint (disjoint_head (fun x hx hy => hw.disj_struct x hx (Or.inr hy)))
+    (by decide) (by omega)).symm
 
 theorem Wf.sep_blk (hw : Wf m S) :
     (blkOf m S).toNat + 16 ≤ S.toNat ∨ S.toNat + 8 * WORDS ≤ (blkOf m S).toNat :=
-  (sep_of_disjoint (disjoint_head (fun x hx hy => hw.disj_struct x hx (Or.inr hy)))
+  (sep_of_disjoint (disjoint_head (fun x hx hy => hw.disj_struct x hx (Or.inr (Or.inr hy))))
     (by decide) (by decide)).symm
+
+theorem Wf.sep_data_ops (hw : Wf m S) (hn : 0 < nOf m S) :
+    (dataOf m S).toNat + 8 * nOf m S ≤ (opsOf m S).toNat
+      ∨ (opsOf m S).toNat + 72 * nOf m S ≤ (dataOf m S).toNat :=
+  sep_of_disjoint (disjoint_head hw.disj_data) (by omega) (by omega)
+
+theorem Wf.sep_data_blk (hw : Wf m S) (hn : 0 < nOf m S) :
+    (dataOf m S).toNat + 8 * nOf m S ≤ (blkOf m S).toNat
+      ∨ (blkOf m S).toNat + 16 ≤ (dataOf m S).toNat :=
+  sep_of_disjoint (disjoint_head (fun x hx hy => hw.disj_data x hx (Or.inr hy))) (by omega)
+    (by decide)
 
 -- The frame of a call does not overlap the struct.
 theorem FrameOk.sep_struct {F : Nat} {s : MachineData} (hf : FrameOk F s) (hF : 0 < F) :
@@ -276,19 +293,27 @@ theorem FrameOk.sep_struct {F : Nat} {s : MachineData} (hf : FrameOk F s) (hF : 
     (fun x hx hy => hf.disj x hx (inside_struct hy)) hF (by decide)
   bv_omega
 
--- The frame of a call does not overlap the ops buffer.
+-- The frame of a call does not overlap a block of `writable`.
+theorem FrameOk.sep_writable {F : Nat} {s : MachineData} (hf : FrameOk F s) (hF : 0 < F)
+    {a : Addr} {k : Nat} (hk : 0 < k) (ha : (a, k) ∈ writable s.dmem (rdi s)) :
+    (rsp s).toNat ≤ a.toNat ∨ a.toNat + k ≤ (rsp s).toNat - F := by
+  have hle := hf.le
+  have := sep_of_disjoint (a := rsp s - BitVec.ofNat 64 F) (n := F) (b := a) (k := k)
+    (fun x hx hy => hf.disj x hx (inside_append.mpr (Or.inl (inside_of_mem ha hy)))) hF hk
+  bv_omega
+
+-- The frame of a call does not overlap the working stack or the ops buffer.
+theorem FrameOk.sep_data {F : Nat} {s : MachineData} (hf : FrameOk F s) (hF : 0 < F)
+    (hn : 0 < nOf s.dmem (rdi s)) :
+    (rsp s).toNat ≤ (dataOf s.dmem (rdi s)).toNat
+      ∨ (dataOf s.dmem (rdi s)).toNat + 8 * nOf s.dmem (rdi s) ≤ (rsp s).toNat - F :=
+  hf.sep_writable hF (by omega) (by simp [writable])
+
 theorem FrameOk.sep_ops {F : Nat} {s : MachineData} (hf : FrameOk F s) (hF : 0 < F)
     (hn : 0 < nOf s.dmem (rdi s)) :
     (rsp s).toNat ≤ (opsOf s.dmem (rdi s)).toNat
-      ∨ (opsOf s.dmem (rdi s)).toNat + 96 * nOf s.dmem (rdi s) ≤ (rsp s).toNat - F := by
-  have hle := hf.le
-  have := sep_of_disjoint (a := rsp s - BitVec.ofNat 64 F) (n := F) (b := opsOf s.dmem (rdi s))
-    (k := 96 * nOf s.dmem (rdi s))
-    (fun x hx hy => hf.disj x hx (by
-      rw [inside_append]
-      exact Or.inl (by simp only [writable, Mem.Blocks.Inside] at hy ⊢; exact Or.inr (Or.inr (Or.inl (hy.resolve_right id))))))
-    hF (by omega)
-  bv_omega
+      ∨ (opsOf s.dmem (rdi s)).toNat + 72 * nOf s.dmem (rdi s) ≤ (rsp s).toNat - F :=
+  hf.sep_writable hF (by omega) (by simp [writable])
 
 end
 
@@ -304,34 +329,83 @@ theorem nops_stOf : (stOf m S).trace.length = (rd m (wordAt S 2)).toNat := by
   simp [stOf]
 
 theorem val_stOf {i : Nat} (hi : i < (rd m (wordAt S 0)).toNat) :
-    (stOf m S).val i = rd m (wordAt S (STACK + i)) := by
+    (stOf m S).val i = StackSlot.ofWord (rd m (wordAt (dataOf m S) i)) := by
   simp [St.val, stOf, hi, slotOf]
 
 theorem dest_stOf {i : Nat} (hi : i < (rd m (wordAt S 0)).toNat) :
     (stOf m S).dest i = (rd m (wordAt S (DEST + i))).toNat := by
   simp [St.dest, stOf, hi, slotOf]
 
+theorem positionOf_stOf {d : Nat} (hd : d < nOf m S) :
+    positionOf (stOf m S) d = optOf (rd m (wordAt S (POS + d))) := by
+  simp [positionOf, stOf, hd]
+
 -- The model state is `st` if the words in memory agree with `st`.
 theorem stOf_eq {st : St} (hlen : (rd m (wordAt S 0)).toNat = st.len)
     (hpend : (rd m (wordAt S 1)).toNat = st.pendingGenerations)
     (hnops : (rd m (wordAt S 2)).toNat = st.trace.length)
     (hslot : ∀ i (hi : i < st.len), slotOf m S i = st.slots[i])
+    (hplen : st.positionOf.length = nOf m S)
+    (hpos : ∀ d (hd : d < st.positionOf.length), optOf (rd m (wordAt S (POS + d))) = st.positionOf[d])
     (hop : ∀ i (hi : i < st.trace.length), opOf m S i = st.trace[i]) : stOf m S = st := by
-  obtain ⟨slots, pending, ops⟩ := st
+  obtain ⟨slots, pos, pending, ops⟩ := st
   simp only [St.len] at hlen hslot
+  simp only at hplen hpos
   simp only [stOf, hlen, hpend, hnops, St.mk.injEq, true_and]
-  constructor
+  refine ⟨?_, ?_, ?_⟩
   · exact List.ext_getElem (by simp) fun i h1 h2 => by simpa using hslot i h2
+  · exact List.ext_getElem (by simp [hplen]) fun d h1 h2 => by simpa using hpos d h2
   · exact List.ext_getElem (by simp) fun i h1 h2 => by simpa using hop i h2
 
 theorem target_get {d : Nat} (hd : d < nOf m S) :
-    (envOf m S).target[d]! = rd m (wordAt (tgtOf m S) d) := by
-  simp [envOf, hd]
+    (envOf m S).target[d]! = StackSlot.ofWord (rd m (wordAt (tgtOf m S) d)) := by
+  simp [envOf, hd, tgtSlot]
 
 theorem n_envOf : (envOf m S).n = nOf m S := by
   simp [Env.n, envOf]
 
 end
+
+/-! ## Slots -/
+
+theorem ofWord_bits {a b : Word} :
+    StackSlot.ofWord a = StackSlot.ofWord b ↔ ∀ j < 48, a.getLsbD j = b.getLsbD j := by
+  simp only [StackSlot.ofWord, StackSlot.mk.injEq]
+  constructor
+  · rintro ⟨h1, h2, h3⟩ j hj
+    by_cases hj1 : j < 32
+    · have := congrArg (·.getLsbD j) h1
+      simpa [BitVec.getLsbD_extractLsb', hj1] using this
+    by_cases hj2 : j < 40
+    · have := congrArg (·.getLsbD (j - 32)) h2
+      simp only [BitVec.getLsbD_extractLsb'] at this
+      rwa [show 32 + (j - 32) = j by omega, decide_eq_true (by omega : j - 32 < 8), Bool.true_and,
+        Bool.true_and] at this
+    · have := congrArg (·.getLsbD (j - 40)) h3
+      simp only [BitVec.getLsbD_extractLsb'] at this
+      rwa [show 40 + (j - 40) = j by omega, decide_eq_true (by omega : j - 40 < 8), Bool.true_and,
+        Bool.true_and] at this
+  · intro h
+    refine ⟨?_, ?_, ?_⟩ <;> ext k hk <;> simp only [BitVec.getElem_extractLsb'] <;> exact h _ (by omega)
+
+-- `(a ^ b) << 16 == 0` in the C: the two slots are equal.
+theorem ofWord_eq_iff (a b : Word) :
+    StackSlot.ofWord a = StackSlot.ofWord b ↔ (a ^^^ b) <<< 16 = 0#64 := by
+  rw [ofWord_bits]
+  constructor
+  · intro h
+    ext i hi
+    simp only [BitVec.getElem_shiftLeft, BitVec.getElem_zero]
+    by_cases hi16 : i < 16
+    · simp [hi16]
+    · simp only [hi16, decide_false, Bool.not_false, Bool.true_and, ← BitVec.getLsbD_eq_getElem]
+      rw [BitVec.getLsbD_xor, h (i - 16) (by omega), Bool.xor_self]
+  · intro h j hj
+    have := congrArg (·.getLsbD (j + 16)) h
+    simp only [BitVec.getLsbD_shiftLeft, BitVec.getLsbD_zero, BitVec.getLsbD_xor] at this
+    simp only [show j + 16 < 64 by omega, decide_true, show ¬ j + 16 < 16 by omega, decide_false,
+      Bool.not_false, Bool.true_and, Nat.add_sub_cancel] at this
+    simpa using this
 
 /-! ## Words of the struct -/
 
@@ -487,7 +561,7 @@ theorem Mid.n (hpre : Pre F A s) (h : Mid F s ra m) : nOf m (rdi s) = nOf s.dmem
 
 -- The struct stays well formed if `len` and `nops` stay in bounds.
 theorem Mid.wf (hpre : Pre F A s) (h : Mid F s ra m)
-    (hlen : (rd m (wordAt (rdi s) 0)).toNat ≤ MAX_N)
+    (hlen : (rd m (wordAt (rdi s) 0)).toNat ≤ nOf s.dmem (rdi s))
     (hnops : (rd m (wordAt (rdi s) 2)).toNat ≤ 6 * nOf s.dmem (rdi s)) : Wf m (rdi s) :=
   Wf.congr h.un hpre.1 hpre.disj (fun x hx => h.map x (Or.inr hx)) hlen hnops
 
@@ -724,7 +798,7 @@ theorem Fm.pre {G k : Nat} {c : MachineData} {A' : MachineData → Prop} (hG : k
 theorem Fm.write (hF : 8 * rs.length + 8 ≤ F) (hpre : Pre F A s) (h : Fm F rs s ra m)
     {m' : Mem 64} (hu : Mem.UnchangedOutside (writable s.dmem (rdi s)) m m')
     (hm : Mem.Mapped (writable s.dmem (rdi s)) m')
-    (hlen : (rd m' (wordAt (rdi s) 0)).toNat ≤ MAX_N)
+    (hlen : (rd m' (wordAt (rdi s) 0)).toNat ≤ nOf s.dmem (rdi s))
     (hnops : (rd m' (wordAt (rdi s) 2)).toNat ≤ 6 * nOf s.dmem (rdi s)) : Fm F rs s ra m' := by
   have hle := hpre.2.1.le
   -- the words of the frame are not in `writable`
@@ -766,7 +840,7 @@ theorem Fm.blk (hF : 8 * rs.length + 8 ≤ F) (hpre : Pre F A s) (h : Fm F rs s 
   refine h.write hF hpre (fun y hy => hu y fun hb => hy (hw y hb)) ?_ ?_ ?_
   · exact fun y hy =>
       (h.wf.mapped.storeInt _ _ _ |>.storeInt _ _ _) y (inside_append.mpr (Or.inl (hwr ▸ hy)))
-  · rw [hst (by decide)]; exact h.wf.len_le
+  · rw [hst (by decide), ← h.n hpre]; exact h.wf.len_le
   · rw [hst (by decide), ← h.n hpre]; exact h.wf.nops_le
 
 /-- `ret` from `u` with the memory `Fm` and the registers of the call gives the

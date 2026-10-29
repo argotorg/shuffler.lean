@@ -55,11 +55,11 @@ theorem generate_corr (hprod : ProduceStmt) (hswap : SwapWithStmt) (hdest : Swap
     show state'.stack.length - 1 = st'.len - 1 by omega]
   by_cases hv : st'.val d = st'.val (st'.len - 1)
   · -- An equal slot at `d` takes over the destination.
-    rw [ite_eq_left hv, ite_eq_left (decode_eq_iff.mpr hv)]
+    rw [ite_eq_left hv, ite_eq_left ((decode_eq_iff (h'.canonVal _) (h'.canonVal _)).mpr hv)]
     obtain ⟨s, hs, hr⟩ := hdest e source st' state' d (st'.len - 1) h' (by omega) (by omega)
     rw [hs, except_ok_bind]
     exact hr
-  rw [ite_eq_right hv, ite_eq_right (mt decode_eq_iff.mp hv), except_ok_bind]
+  rw [ite_eq_right hv, ite_eq_right (mt (decode_eq_iff (h'.canonVal _) (h'.canonVal _)).mp hv), except_ok_bind]
   -- A swap if the offset is in reach.
   have hreach : state'.isSwapReachable ⟨d, hdl⟩ ↔ st'.len - 1 - d ≤ Bbu.MAX_SWAP_DEPTH := by
     unfold State.isSwapReachable State.depthOf Stack.offsetToDepth

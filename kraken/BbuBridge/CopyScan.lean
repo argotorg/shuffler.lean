@@ -32,7 +32,7 @@ theorem copyScan_corr : CopyScanStmt := by
     have := List.mem_of_mem_take hc
     simpa using this
   rw [show c = (⟨c, hc'⟩ : Fin _).val from rfl, slotAt_index, slotAt_index, index_eq]
-  simp only [except_ok_bind, h.get, decode_eq_iff, h.isFinal, Bool.and_eq_true, beq_iff_eq,
+  simp only [except_ok_bind, h.get, decode_eq_iff (h.canonVal c) (h.canonVal b), h.isFinal, Bool.and_eq_true, beq_iff_eq,
     bne_iff_ne, ne_eq]
   split_ifs <;> rfl
 

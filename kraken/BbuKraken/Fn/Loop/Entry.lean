@@ -2,8 +2,8 @@ import BbuKraken.Fn.Loop.Machine
 import BbuKraken.Fn.Loop.Model
 
 /-!
-The entry of `buildBottomUp`: the prologue, then `.LB66` if `n = 0`, else the loop
-head `.LB88` at offset `0`.
+The entry of `buildBottomUp`: the prologue, then `.LB62` if `n = 0`, else the loop
+head `.LB85` at offset `0`.
 -/
 
 open Std.WP Lean.Order
@@ -56,12 +56,12 @@ theorem pro_base (hpre : Pre loopF loopA s) {t : MachineData} (hm : t.dmem = Kit
   ⟨hm ▸ fm0 hpre, by simp only [hsp, rsp, Reg64s.get64_rsp]; bv_omega, hbp⟩
 
 -- `n = 0`: the loop ends at once.
-theorem pro_66 (hpre : Pre loopF loopA s) {t : MachineData} (hm : t.dmem = Kit.pushes s ra regs)
+theorem pro_62 (hpre : Pre loopF loopA s) {t : MachineData} (hm : t.dmem = Kit.pushes s ra regs)
     (hsp : t.regs.rsp.toBitVec
       = s.regs.rsp.toBitVec - 8#64 - 8#64 - 8#64 - 8#64 - 8#64 - 8#64 - 8#64 - 24#64)
     (hbp : t.regs.rbp.toBitVec = s.regs.rdi.toBitVec)
     (h13 : t.regs.r13.toBitVec = rd (Kit.pushes s ra regs) (s.regs.rdi.toBitVec + 24#64))
-    (hz : rd (Kit.pushes s ra regs) (s.regs.rdi.toBitVec + 24#64) = 0#64) : At66 s ra t := by
+    (hz : rd (Kit.pushes s ra regs) (s.regs.rdi.toBitVec + 24#64) = 0#64) : At62 s ra t := by
   have hi : Inv (env s) (st s) 0 := hpre.2.2
   have hn := congrArg BitVec.toNat (hz.symm.trans (n0 hpre))
   have := hi.n_le
@@ -71,22 +71,22 @@ theorem pro_66 (hpre : Pre loopF loopA s) {t : MachineData} (hm : t.dmem = Kit.p
   exact loop_end (T := 0) (by omega) rfl
 
 -- `n ≠ 0`: the loop head at offset `0`.
-theorem pro_88 (hpre : Pre loopF loopA s) {t : MachineData} (hm : t.dmem = Kit.pushes s ra regs)
+theorem pro_85 (hpre : Pre loopF loopA s) {t : MachineData} (hm : t.dmem = Kit.pushes s ra regs)
     (hsp : t.regs.rsp.toBitVec
       = s.regs.rsp.toBitVec - 8#64 - 8#64 - 8#64 - 8#64 - 8#64 - 8#64 - 8#64 - 24#64)
     (hbp : t.regs.rbp.toBitVec = s.regs.rdi.toBitVec)
     (h13 : t.regs.r13.toBitVec = rd (Kit.pushes s ra regs) (s.regs.rdi.toBitVec + 24#64))
     (h14 : t.regs.r14.toBitVec = 0#64)
-    (hz : ¬ rd (Kit.pushes s ra regs) (s.regs.rdi.toBitVec + 24#64) = 0#64) : At88 s ra t := by
+    (hz : ¬ rd (Kit.pushes s ra regs) (s.regs.rdi.toBitVec + 24#64) = 0#64) : At85 s ra t := by
   have hn : (env s).n ≠ 0 := fun h => hz (by rw [n0 hpre, h])
   refine ⟨pro_base hpre hm hsp hbp, h13.trans (n0 hpre), 0, h14, ?_⟩
   rw [st0 hpre hm]
   exact ⟨by omega, ⟨hpre.2.2, Nat.zero_le _⟩, rfl⟩
 
--- The variant at `.LB88` after the prologue.
-theorem pro_v88 (hpre : Pre loopF loopA s) {t : MachineData} (hm : t.dmem = Kit.pushes s ra regs)
+-- The variant at `.LB85` after the prologue.
+theorem pro_v85 (hpre : Pre loopF loopA s) {t : MachineData} (hm : t.dmem = Kit.pushes s ra regs)
     (h14 : t.regs.r14.toBitVec = 0#64) (u : MachineData) :
-    V s ".LB88" t < V s "buildBottomUp" u := by
+    V s ".LB85" t < V s "buildBottomUp" u := by
   have hi : Inv (env s) (st s) 0 := hpre.2.2
   have h1 := hi.len_pending
   have h2 := hi.n_le
@@ -108,7 +108,7 @@ theorem entry : OblAt s ra .entry := by
   kvcgen64
   rfl
 
--- The prologue: the pushes, `n = 0` to `.LB66`, else `.LB88` at offset `0`.
+-- The prologue: the pushes, `n = 0` to `.LB62`, else `.LB85` at offset `0`.
 theorem prologue (hpre : Pre loopF loopA s) : OblAt s ra (.label "buildBottomUp") := by
   loop_case
   intro t ht
@@ -124,8 +124,8 @@ theorem prologue (hpre : Pre loopF loopA s) : OblAt s ra (.label "buildBottomUp"
       rw [Kit.z_test] at hc; exact beq_iff_eq.mp hc
     loop_goto
     · exact stack_of (pro_base (ra := ra) hpre (by rfl) (by rfl) (by rfl)).rsp
-    · show At66 s ra _
-      exact pro_66 hpre (by rfl) (by rfl) (by rfl) (by rfl) hz
+    · show At62 s ra _
+      exact pro_62 hpre (by rfl) (by rfl) (by rfl) (by rfl) hz
     · simp [V]
   case vc9 =>
     rename_i hc
@@ -133,9 +133,9 @@ theorem prologue (hpre : Pre loopF loopA s) : OblAt s ra (.label "buildBottomUp"
       rw [Kit.z_test] at hc; exact fun h => Bool.false_ne_true (hc.symm.trans (beq_iff_eq.mpr h))
     loop_goto
     · exact stack_of (pro_base (ra := ra) hpre (by rfl) (by rfl) (by rfl)).rsp
-    · show At88 s ra _
-      exact pro_88 hpre (by rfl) (by rfl) (by rfl) (by rfl) (by rfl) hz
-    · exact Or.inl (pro_v88 hpre (by rfl) (by rfl) _)
+    · show At85 s ra _
+      exact pro_85 hpre (by rfl) (by rfl) (by rfl) (by rfl) (by rfl) hz
+    · exact Or.inl (pro_v85 hpre (by rfl) (by rfl) _)
 
 end Loop
 
