@@ -11,7 +11,7 @@
     {
       # clang and AFL++ for the fuzzer builds in Fuzz/
       devShells.default = pkgs.mkShell.override { stdenv = pkgs.clangStdenv; } {
-        buildInputs = [ pkgs.elan pkgs.cmake pkgs.ninja pkgs.boost pkgs.fmt pkgs.nlohmann_json pkgs.range-v3 pkgs.aflplusplus ];
+        buildInputs = [ pkgs.elan pkgs.ccache pkgs.cmake pkgs.ninja pkgs.boost pkgs.fmt pkgs.nlohmann_json pkgs.range-v3 pkgs.aflplusplus ];
       };
     });
 }
