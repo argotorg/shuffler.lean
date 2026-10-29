@@ -40,7 +40,9 @@ tactics of this repo.
     An axiom with this name and a different type is not permitted.
 
   Not permitted: `sorryAx`, the `native_decide` axioms (`D._native.native_decide.ax_I_J`) and all
-  other axioms.
+  other axioms. Do not write an `axiom` declaration: a user axiom with the name and the type of a
+  `bv_decide` axiom is not different in the environment, so `test/axioms.sh` rejects each `axiom`
+  declaration in the `.lean` files of this package.
 - `bv_decide` is for small lemmas on words, as in `ProofKit/Idioms.lean`. It does not close the VCs
   of a function proof (see the KrakenTactics section).
 

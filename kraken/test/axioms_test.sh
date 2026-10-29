@@ -24,6 +24,35 @@ check() {
 	fi
 }
 
+# axiom_decls.awk must find the lines marked `-- yes` and no other line.
+cat > "$tmp/decls.lean" <<'EOF'
+axiom a : False -- yes
+  axiom b : False -- yes
+private axiom c : False -- yes
+@[simp] noncomputable axiom d : False -- yes
+/-- doc -/ axiom e : False -- yes
+/- a /- nested -/ comment -/ axiom f : False -- yes
+axiomatic : Nat
+theorem axiom_g : True := trivial
+-- axiom h : False
+/-
+axiom i : False
+/- -/
+axiom j : False
+-/
+def s := "/-"
+axiom k : False -- yes
+def t := "\"/-"
+axiom l : False -- yes
+EOF
+want=$(grep -n -- '-- yes$' "$tmp/decls.lean" | cut -d: -f1)
+got=$(awk -f "$here/axiom_decls.awk" "$tmp/decls.lean" | cut -d: -f2)
+if [ "$got" = "$want" ]; then
+	echo "ok axiom_decls: lines $(echo $got)"
+else
+	echo "FAIL axiom_decls: expected lines $(echo $want), got $(echo $got)"; fails=$((fails + 1))
+fi
+
 "$here/axioms.sh" > "$tmp/final" 2>&1 || true
 n=$(grep -c -e '^Bbu.buildBottomUp_correct:' -e '^Bbu.bbu_harness_correct:' \
 	-e '^State.permute_spec:' "$tmp/final" || true)
@@ -70,6 +99,17 @@ theorem Bbu.uses_ax : 1 = 2 := Bbu.ax.elim' Bbu.uses_ax
 check forged-bv fail '
 axiom Bbu.f._native.bv_decide.ax_1_1 : False
 theorem Bbu.f : 1 = 2 := Bbu.f._native.bv_decide.ax_1_1.elim' Bbu.f
+if ! grep -q 'not allowed: \[(Bbu.f, Bbu.f._native.bv_decide.ax_1_1)\]' "$tmp/out"; then
+	echo "FAIL forged-bv: the type check does not reject the axiom"; fails=$((fails + 1))
+fi
+check forged-bv-type fail '
+axiom Bbu.g._native.bv_decide.ax_1_1 :
+  Std.Tactic.BVDecide.Reflect.verifyBVExpr (.const false) "" = true
+theorem Bbu.g : True := (fun _ => trivial) Bbu.g._native.bv_decide.ax_1_1' Bbu.g
+# The type check accepts this axiom; only the scan for `axiom` declarations rejects it.
+if grep -q 'not allowed: \[' "$tmp/out" || ! grep -q '^Bbu.g: ' "$tmp/out"; then
+	echo "FAIL forged-bv-type: expected the type check to accept the axiom"; fails=$((fails + 1))
+fi
 check unknown fail '' Bbu.no_such_theorem
 
 if [ "$fails" -ne 0 ]; then exit 1; fi

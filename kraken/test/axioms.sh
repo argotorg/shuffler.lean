@@ -5,7 +5,8 @@
 #                                           type is
 #                                           `Std.Tactic.BVDecide.Reflect.verifyBVExpr _ _ = true`
 # sorryAx is not allowed, and the axiom D._native.native_decide.ax_I of native_decide is
-# not allowed.
+# not allowed. An `axiom` declaration in FILE or in a Lean file of this package is not
+# allowed (test/axiom_decls.awk finds them).
 #
 # Usage: axioms.sh [FILE NAME...]
 # With no arguments, check the final theorems. With arguments, check the theorems
@@ -23,6 +24,18 @@ fi
 src=$1
 shift
 names=$(printf '"%s", ' "$@")
+
+# A user `axiom` with the name and the type of a bv_decide axiom passes the check
+# below: Lean adds the bv_decide axiom as a plain axiom declaration with no mark. Thus
+# no `axiom` declaration is allowed in FILE or in the Lean files of this package. The
+# check below still runs: it is the only check for the imported packages.
+decls=$(find "$dir" -name .lake -prune -o -name '*.lean' -print0 |
+	xargs -0 awk -f "$dir/test/axiom_decls.awk" "$src")
+ok=true
+if [ -n "$decls" ]; then
+	printf 'axioms: axiom declaration not allowed:\n%s\n' "$decls" >&2
+	ok=false
+fi
 
 {
 	echo 'import Lean'
@@ -58,3 +71,4 @@ if ! (cd "$dir" && lake env lean "$tmp/Check.lean") > "$tmp/out" 2>&1; then
 	exit 1
 fi
 cat "$tmp/out"
+$ok
