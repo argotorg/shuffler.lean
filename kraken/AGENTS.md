@@ -12,9 +12,10 @@ tactics of this repo.
 | `BbuKraken/` | the model, the contracts and the asm proofs of `build_bottom_up` |
 | `BbuKraken/Kit.lean` | the shared lemmas and macros of the bbu proofs (`rd`, `bbu_norm`, `bbu_flags`, `bbu_rd`) |
 | `BbuKraken/Fn/` | one file (or directory) for each function of the asm |
-| `ProofKit/` | proof tools that do not depend on one function: `Shape`, `SymExec`, `Cfg`, `Idioms` |
+| `BbuKraken/Sep/` | the separation library: atoms, the struct view, the contracts with a frame (see below) |
+| `ProofKit/` | proof tools that do not depend on one function: `Shape`, `SymExec`, `Cfg`, `Idioms`, `SepLoad` |
 | `ProofKitTest/` | tests of the ProofKit tools on real `kvcgen64` VCs |
-| `test/` | shell tests: the model against the originals, the binary against the asm, the struct layout |
+| `test/` | shell tests: the model against the originals, the binary against the asm, the struct layout, the axioms; the field generator `gen_fields.sh` |
 
 ## Build and check
 
@@ -119,8 +120,10 @@ takes less than 2 s, and one `all_goals` block with `omega` alternatives takes 1
   of `∗`. It can assign a metavariable for the rest (`?R`).
 - `∗` is exact: `(P ∗ Q).get m` splits all of `m`. A top-level frame must hold all other memory.
 - It matches atoms by term. Normalize the addresses first (rule 2). Give the atom values (rule 8).
-- The package build does not build the separation modules. Make sure that your build has them
-  before you import them.
+- Lake builds a module of the Kraken package only when a module of this package imports it.
+  `BbuKraken/Sep/Atoms.lean` imports `Kraken.SepCancel`, so `lake build` builds the separation
+  modules. A file that imports a Kraken module gets the warning "designed for use with the
+  module system". The build passes with this warning.
 - `FrameWP` (X64/WP/Frame.lean) has no cfg rule and no call rule. Use the state wp
   (`Program.WP.cfg`, `kvcgen64`, `CallSpec`) and put the `∗` assertion inside the invariants and
   the contracts.
@@ -190,6 +193,56 @@ Notes:
 - No lemma yet: `movw`/`movzwl`, byte loads of slot fields, `movb` stores. These are memory patterns.
 - 9 lemmas use `bv_decide` (`pack40_*`, `pack32_*`, `slot_eq_iff`, `slot_beq`, `extract48_eq_iff`).
 
+### The separation library (BbuKraken/Sep/, ProofKit/SepLoad.lean)
+
+| File | Content |
+|---|---|
+| `Sep/Fields.lean` | The address of each member of `Emission` (`Fld.stack_size S`, `Fld.mapping_positionOf S i`, …) and the `fold_*` lemmas from the asm address forms. It is generated. Do not edit it. `Sep/Off.lean` has the offset lemmas that it uses. |
+| `Sep/Atoms.lean` | The atoms `Wd`, `B8`, `B16`, `B32` (8, 1, 2, 4 bytes) and `Arr` (words), with their load and store lemmas. `Wd.split` and `Wd.store411` for the 4+1+1-byte slot store. |
+| `Sep/View.lean` | `View S g`: the struct, the working stack and the trace buffer. The ghost `G` has `Vector` fields, so an array of the wrong length does not typecheck. `OpM` is one 12-byte record. |
+| `Sep/Stores.lean` | One load and one store lemma for each field, `View.focus`/`unfocus` for a record, and `view_load`. |
+| `Sep/Contract.lean` | `Stk`, `Pre`, `Post`, `Body`, `Spec`, `spec_of_body`, and the body state `Kp` (`init`, `next`, `retAddr`, `ret`, `agree`). |
+| `Sep/*Test.lean` | Tests. `ContractTest` has a body with `pushq`/`popq` and a call through a `Spec`. |
+
+- The memory part of each contract is `(View S g ∗ Stk sp fr v ∗ F).get m`. The frame `F` is a
+  parameter. At a call, the caller gives its return slot and `F` as the frame of the callee
+  (`Stk.call`). See `cal_body` in `Sep/ContractTest.lean`.
+- `sep_load [l₁, …]` (ProofKit) closes a load VC. It tries `with_reducible apply l h` for each lemma
+  `l` and each hypothesis `h : (P ∗ F).get m`, and closes the side goals with `assumption`.
+  `view_load` is `sep_load` with the `View` and `OpM` lemmas.
+  - The match is reducible: the memory and the address of the goal must be the same terms as in the
+    hypothesis. Fold the address first (`rw [hS, Fld.fold_stack_size]`). In `rbx_body`, the stack
+    addresses (`(s.pushRa ra).regs.rsp.toBitVec - 8#64` and `rsp s - 8#64 - 8#64`) are equal only
+    by unfolding, so `exact` is necessary there.
+- A load value goal after `symexec_norm` is `BitVec.ofInt 64 (Mem.loadInt m a 8).get! = …`.
+  `exact View.rd_len hm` closes it (`rd` unfolds). To put a loaded value in a store, use
+  `change (_ ∗ F).get (Mem.storeInt _ _ 8 (rd t.dmem A).toInt)`.
+- When the ghost in the hypothesis is not the same term as in the goal (for example
+  `{ g with … }`), use `(View.rd_data h :)`: the term elaborates with no expected type.
+
+Traps:
+1. **A lemma of one atom on a hypothesis with another atom first can take a `whnf` timeout.**
+   With reducible atoms, `exact B8.isSome h` with `h : (B32 a x ∗ F).get m` took a timeout at
+   400000 heartbeats (about 22 s). `fail_if_success` and `try` do not catch a timeout. For this
+   reason, the atoms are `@[irreducible]`: the same step fails in less than 1 s. In a proof of an
+   atom lemma, use `unfold Wd at h ⊢`. In a tactic that tries lemmas, use `with_reducible`.
+2. **A tactic that tries lemmas must not take a logged error as a success.** In a tactic block,
+   `apply l h` with an `h` that does not fit `l` logs an error, changes `l h` to `sorry` and closes
+   the goal. Run `apply` under `Term.withoutErrToSorry`, as `sep_load` does.
+3. **In `fail_if_success`, put the tactic form and `done`.** An error in a nested `by` in a term is
+   logged, not thrown. Then the tactic in `fail_if_success have … := f h (by simp)` succeeds when
+   `simp` fails, and the negative test does not test the step. Write the steps as tactics:
+   `fail_if_success (apply f h; simp; done)`.
+
+### The field generator (test/gen_fields.sh)
+
+- `test/gen_fields.sh` writes `BbuKraken/Sep/Fields.lean` from the g++ `offsetof` and `sizeof` of
+  `Emission` in `c/build_bottom_up.cpp`. Run it after a change to the struct.
+- `test/gen_fields.sh --check` does not write the file. It fails if the file is not current.
+- It fails if the struct has bytes that no member of the probe covers (a hole, or bytes after the
+  last member), or if an array element is not 8 bytes. `test/gen_fields_test.sh` tests these
+  cases and `--check`.
+
 ### BbuKraken/Kit.lean
 
 | Tactic | Use |
@@ -221,6 +274,6 @@ step, move it to `Kit.lean` or `ProofKit/`, with a test.
    states as definitions.
 3. In each block: `kvcgen64 [specs]`, then `vc_shapes` to see the goals.
 4. Replace `vc_shapes` with `vc_by_shape`. Write one arm for each kind. Use `idioms` for flags and a
-   field or `∗` lemma for each `load`.
+   field lemma, `view_load` or a `∗` lemma for each `load`.
 5. Check the file. Read the heartbeats of the new declaration (rule 5).
 6. Check the axioms with `test/axioms.sh FILE NAME`.
