@@ -32,7 +32,8 @@ tactics of this repo.
 - Heartbeats do not change from run to run. Wall time changes by about 20% on a machine with a high
   load. Compare heartbeats, not seconds. To measure one declaration, read `IO.getNumHeartbeats`
   before and after it.
-- Axioms: use `#print axioms NAME` on each final theorem. Permitted:
+- Axioms: `test/axioms.sh` checks the 3 final theorems; `test/axioms.sh FILE NAME...` checks
+  the theorems NAME... of FILE. `test/axioms_test.sh` tests the check. Permitted:
   - `propext`, `Classical.choice`, `Quot.sound`;
   - the `bv_decide` axioms. On this toolchain, each use of `bv_decide` adds one axiom
     `D._native.bv_decide.ax_I_J` with the type `Std.Tactic.BVDecide.Reflect.verifyBVExpr _ _ = true`.
@@ -220,4 +221,4 @@ step, move it to `Kit.lean` or `ProofKit/`, with a test.
 4. Replace `vc_shapes` with `vc_by_shape`. Write one arm for each kind. Use `idioms` for flags and a
    field or `∗` lemma for each `load`.
 5. Check the file. Read the heartbeats of the new declaration (rule 5).
-6. Check `#print axioms` on the final theorem.
+6. Check the axioms with `test/axioms.sh FILE NAME`.
