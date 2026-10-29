@@ -8,7 +8,7 @@ example (initial : State source target spills) (reason : String) :
   removeSurplus_no_assertion initial reason
 
 open Shuffler.Emission in
-example (initial result : State source target spills) (h : removeSurplus initial = .ok result)
+example (initial result : State source target spills) (h : removeSurplus initial = .ok ⟨none, result⟩)
     (dest : Fin target.length) : result.boundValue dest = initial.boundValue dest :=
   removeSurplus_keeps_bindings initial result h dest
 
@@ -46,36 +46,44 @@ private def observe (result : Except ShuffleErr (State source target spills)) :=
     (state.stack, operations state.trace, List.ofFn fun pos => (state.mapping pos).map Fin.val)
 
 -- Nothing is surplus: nothing happens.
-example : observe (removeSurplus (stateOf [a, b] [a, b] [some 0, some 1])) =
+example : observe ((((removeSurplus (stateOf [a, b] [a, b] [some 0, some 1])) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
     .ok ([a, b], [], [some 0, some 1]) := by decide
 
 -- A surplus top is popped directly.
-example : observe (removeSurplus (stateOf [a, x] [a] [some 0, none])) =
+example : observe ((((removeSurplus (stateOf [a, x] [a] [some 0, none])) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
     .ok ([a], [.pop], [some 0]) := by decide
 
 -- A surplus slot below the top is swapped up and popped; the top takes its place.
-example : observe (removeSurplus (stateOf [x, a] [a] [none, some 0])) =
+example : observe ((((removeSurplus (stateOf [x, a] [a] [none, some 0])) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
     .ok ([a], [.swap 1, .pop], [some 0]) := by decide
 
 -- A surplus slot equal to the top takes over the top's destination: no swap, just a pop.
-example : observe (removeSurplus (stateOf [a, a] [a] [none, some 0])) =
+example : observe ((((removeSurplus (stateOf [a, a] [a] [none, some 0])) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
     .ok ([a], [.pop], [some 0]) := by decide
 
 -- Every surplus slot is removed, one pass each.
-example : observe (removeSurplus (stateOf [x, y, a] [a] [none, none, some 0])) =
+example : observe ((((removeSurplus (stateOf [x, y, a] [a] [none, none, some 0])) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
     .ok ([a], [.swap 2, .pop, .pop], [some 0]) := by decide
 
 -- An empty stack has nothing to remove.
-example : observe (removeSurplus (stateOf [] [] [])) = .ok ([], [], []) := by decide
+example : observe ((((removeSurplus (stateOf [] [] [])) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) = .ok ([], [], []) := by decide
 
 -- A surplus slot at depth 17 is one slot out of swap reach.
-example : observe (removeSurplus (stateOf (x :: List.replicate 17 a) (List.replicate 17 a)
-    (none :: (List.range 17).map some))) = .error (.Blocked ⟨0, 1⟩) := by native_decide
+example : observe ((((removeSurplus (stateOf (x :: List.replicate 17 a) (List.replicate 17 a)
+    (none :: (List.range 17).map some))) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) = .error (.Blocked ⟨0, 1⟩) := by native_decide
 
 -- At depth 16 it is still reachable: it is swapped to the top and popped. The slot swapped down keeps
 -- its destination; buildBottomUp moves it later.
-example : observe (removeSurplus (stateOf (x :: List.replicate 16 a) (List.replicate 16 a)
-    (none :: (List.range 16).map some))) =
+example : observe ((((removeSurplus (stateOf (x :: List.replicate 16 a) (List.replicate 16 a)
+    (none :: (List.range 16).map some))) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
     .ok (List.replicate 16 a, [.swap 16, .pop], some 15 :: (List.range 15).map some) := by native_decide
 
 end RemoveSurplusTests

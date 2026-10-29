@@ -14,20 +14,26 @@ private def emptyState (target : Stack) (spills : SpillSet) : State [] target sp
   pending_generations := target.length
 
 -- The extra error cases are observable. No assertion is converted to Blocked.
-example : (emptyState [.Lit 1] ∅).generate 1 =
+example : ((((emptyState [.Lit 1] ∅).generate 1) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) =
     .error (.assertion "offset is out of bounds") := rfl
-example : (emptyState [.Var ⟨37⟩] ∅).generate 0 =
+example : ((((emptyState [.Var ⟨37⟩] ∅).generate 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) =
     .error (.assertion "generated slot has no copy on the stack and is not spilled") := rfl
 example : (emptyState [] ∅).swapWith 0 =
     .error (.assertion "offset is out of bounds") := rfl
-example : observe (buildBottomUp.loop 0
-    { emptyState [.Lit 1] ∅ with pending_generations := 0 }) =
+example : observe (((((buildBottomUp.loop 0
+    { emptyState [.Lit 1] ∅ with pending_generations := 0 }) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) =
     .error (.assertion "working stack does not match target size") := by native_decide
 
 -- c++ reads `m_destinationOf[pos]` unchecked. Here the caller checks the offset with `index`.
 -- Starting above the stack breaks the loop invariant. The finality read after generation is
 -- outside the stack.
-example : observe (buildBottomUp.loop 3 (emptyState [.Wildcard, .Wildcard, .Wildcard, .Wildcard] ∅)) =
+example : observe (((((buildBottomUp.loop 3 (emptyState [.Wildcard, .Wildcard, .Wildcard, .Wildcard] ∅)) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) =
     .error (.assertion "offset is out of bounds") := by native_decide
 
 -- c++ `sourceTop < size && !destinationOf(sourceTop)` reads only below the target size. A stack
@@ -40,7 +46,9 @@ private def surplusStack : State [.Lit 1, .Lit 2, .Lit 9] [.Lit 2, .Lit 3] ∅ w
   mapping := (⊥ : Mapping 3 2).bind 1 0 rfl rfl
   pending_generations := 1
 
-example : (buildBottomUp.loop 0 surplusStack).map (fun result => result.1.length) = .ok 4 := by
+example : (((((buildBottomUp.loop 0 surplusStack) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1.length) = .ok 4 := by
   native_decide
 
 -- An empty target skips the loop. The state is not valid, so the stack stays longer than the
@@ -52,14 +60,20 @@ private def surplusAtExit : State [.Lit 1] [] ∅ where
   mapping := ⊥
   pending_generations := 0
 
-example : (buildBottomUp.loop 0 surplusAtExit).map (fun result => result.1.length) = .ok 1 := by
+example : (((((buildBottomUp.loop 0 surplusAtExit) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1.length) = .ok 1 := by
   native_decide
 
 -- An empty input and target need no operations.
-example : observe (buildBottomUp (emptyState [] ∅) ⟨by decide, by decide, by decide⟩) = .ok ([], []) := by native_decide
+example : observe (((((buildBottomUp (emptyState [] ∅) ⟨by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) = .ok ([], []) := by native_decide
 
 -- Start at target offset zero and generate every target position.
-example : observe (buildBottomUp (emptyState [.Lit 1, .Lit 2] ∅) ⟨by decide, by decide, by decide⟩) =
+example : observe (((((buildBottomUp (emptyState [.Lit 1, .Lit 2] ∅) ⟨by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) =
     .ok ([.Lit 1, .Lit 2], [.push (.Lit 1), .push (.Lit 2)]) := by native_decide
 
 private def boundState : State [.Lit 1] [.Lit 1] ∅ where
@@ -69,7 +83,8 @@ private def boundState : State [.Lit 1] [.Lit 1] ∅ where
   mapping := (⊥ : Mapping 1 1).bind 0 0 rfl rfl
   pending_generations := 0
 
-example : boundState.generate 0 =
+example : (((boundState.generate 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) =
     .error (.assertion "destination already bound to a slot") := rfl
 -- Finality is checked before the swap depth, so a final top reports finality.
 example : boundState.swapWith 0 =
@@ -93,11 +108,15 @@ example : boundState.push (.Lit 1) 0 =
 example : boundState.push (.Var ⟨37⟩) 0 =
     .error (.assertion "destination already bound to a slot") := rfl
 -- Equal lengths do not imply that the mapping is complete.
-example : observe (buildBottomUp.loop 0 { boundState with mapping := ⊥ }) =
+example : observe (((((buildBottomUp.loop 0 { boundState with mapping := ⊥ }) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) =
     .error (.assertion "unmapped source slots") := by native_decide
-example : boundState.produce 0 =
+example : (((boundState.produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) =
     .error (.assertion "destination already bound to a slot") := rfl
-example : observeState ((emptyState [.Var ⟨37⟩] {⟨37⟩}).produce 0) =
+example : observeState (((((emptyState [.Var ⟨37⟩] {⟨37⟩}).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
     .ok ([.Var ⟨37⟩], [.load ⟨37⟩]) := rfl
 
 private def copyState (padding : ℕ) (spills : SpillSet := ∅) : State
@@ -125,22 +144,29 @@ example : (copyState 16).dup 0 0 =
     .error (.assertion "Stack too deep") := rfl
 example : boundState.dup 0 0 =
     .error (.assertion "destination already bound to a slot") := rfl
-example : (copyState 16).produce 0 = .error (.Blocked ⟨0, 1⟩) := rfl
+example : ((((copyState 16).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) = .error (.Blocked ⟨0, 1⟩) := rfl
 
 -- A reachable copy takes priority over a spill load, including at DUP16.
-example : observeState ((copyState 15 {⟨37⟩}).produce 0) =
+example : observeState (((((copyState 15 {⟨37⟩}).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
     .ok ((copyState 15).stack ++ [.Var ⟨37⟩], [.dup 16]) := rfl
-example : ((copyState 15 {⟨37⟩}).produce 0).map
+example : (((((copyState 15 {⟨37⟩}).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)).map
     (fun next => ((next.mapping.positionOf ⟨0, by simp⟩).map Fin.val, next.pending_generations)) = .ok (some 16, 16) := rfl
 -- Beyond DUP reach, a spill load succeeds and binds the new top.
-example : observeState ((copyState 16 {⟨37⟩}).produce 0) =
+example : observeState (((((copyState 16 {⟨37⟩}).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
     .ok ((copyState 16).stack ++ [.Var ⟨37⟩], [.load ⟨37⟩]) := rfl
-example : ((copyState 16 {⟨37⟩}).produce 0).map
+example : (((((copyState 16 {⟨37⟩}).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)).map
     (fun next => ((next.mapping.positionOf ⟨0, by simp⟩).map Fin.val, next.pending_generations)) = .ok (some 17, 17) := rfl
 -- Literal and junk production also bind the top and decrement exactly once.
-example : ((emptyState [.Lit 1] ∅).produce 0).map
+example : (((((emptyState [.Lit 1] ∅).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)).map
     (fun next => ((next.mapping.positionOf ⟨0, by simp⟩).map Fin.val, next.pending_generations)) = .ok (some 0, 0) := rfl
-example : ((emptyState [.Wildcard] ∅).produce 0).map
+example : (((((emptyState [.Wildcard] ∅).produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)).map
     (fun next => ((next.mapping.positionOf ⟨0, by simp⟩).map Fin.val, next.pending_generations)) = .ok (some 0, 0) := rfl
 
 -- DUP checks offsets against the current stack, including an empty stack.
@@ -152,16 +178,23 @@ example : boundState.dup 2 0 =
     .error (.assertion "offset is out of bounds") := rfl
 
 -- The second action sees the first action's stack, mapping, and pending count.
-example : (((State.generate · 0) >=> (State.generate · 1)) (emptyState [.Lit 1, .Lit 1] ∅)).map
+example : (((fun state => (((state.generate 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) >=> (fun state => (((state.generate 1) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state))) (emptyState [.Lit 1, .Lit 1] ∅)).map
       (fun (next : State [] [.Lit 1, .Lit 1] ∅) => (next.stack, operations next.trace,
         (next.mapping.positionOf ⟨0, by decide⟩).map Fin.val,
         (next.mapping.positionOf ⟨1, by decide⟩).map Fin.val, next.pending_generations)) =
     .ok ([.Lit 1, .Lit 1], [.push (.Lit 1), .dup 1], some 0, some 1, 0) := rfl
 
--- A failed action stops the sequence and returns no state.
-example : ((·.generate 0) >=> (·.generate 0) >=> (·.generate 2)) (emptyState [.Lit 1, .Lit 1] ∅) =
+-- An assertion stops the sequence. The completion projection also stops on blocking.
+example : ((fun state => (((state.generate 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) >=> (fun state => (((state.generate 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) >=> (fun state => (((state.generate 2) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state))) (emptyState [.Lit 1, .Lit 1] ∅) =
     .error (.assertion "destination already bound to a slot") := rfl
-example : ((·.produce 0) >=> (·.generate 100)) (copyState 16) = .error (.Blocked ⟨0, 1⟩) := rfl
+example : ((fun state => (((state.produce 0) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) >=> (fun state => (((state.generate 100) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state))) (copyState 16) = .error (.Blocked ⟨0, 1⟩) := rfl
 
 -- A blocked source found later in the scan must override an earlier urgent copy.
 -- This guards against changing the urgent search to an early-return find.
@@ -182,10 +215,14 @@ private def urgentThenBlocked : State
   mapping := by simpa using shiftTwo 17
   pending_generations := 2
 
-example : observe (buildBottomUp urgentThenBlocked ⟨by decide, by decide, by decide⟩) = .error (.Blocked ⟨0, 1⟩) := by
+example : observe (((((buildBottomUp urgentThenBlocked ⟨by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) = .error (.Blocked ⟨0, 1⟩) := by
   native_decide
 
-example : observe (buildBottomUp boundState ⟨by decide, by decide, by decide⟩) =
+example : observe (((((buildBottomUp boundState ⟨by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) =
     .ok ([.Lit 1], []) := by native_decide
 
 end BuildBottomUpCheckedTests

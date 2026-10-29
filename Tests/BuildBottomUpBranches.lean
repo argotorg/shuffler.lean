@@ -15,7 +15,9 @@ private def newTopState : State [.Lit 10, .Lit 20] [.Lit 20, .Lit 10, .Lit 7] �
   pending_generations := 1
 
 example :
-    (buildBottomUp newTopState ⟨by decide, by decide, by decide⟩).toOption.map
+    (((((buildBottomUp newTopState ⟨by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).toOption.map
         (fun result => result.1) = some [.Lit 20, .Lit 10, .Lit 7] := by
   native_decide
 
@@ -47,7 +49,9 @@ example : (List.ofFn fun i => decide (urgentState.isFinal i)).take 3 = [true, tr
   decide
 
 example :
-    (buildBottomUp urgentState ⟨by decide, by decide, by decide⟩).toOption.map
+    (((((buildBottomUp urgentState ⟨by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).toOption.map
         (fun result => result.1) = some urgentTarget := by
   native_decide
 
@@ -59,7 +63,9 @@ private def missingCopyState : State [.Lit 10, .Lit 20] [.Lit 20, .Lit 10, .Var 
   pending_generations := 1
 
 -- An unavailable target value returns an assertion error.
-example : (buildBottomUp.loop 0 missingCopyState).map (fun result => result.1) =
+example : (((((buildBottomUp.loop 0 missingCopyState) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1) =
     .error (.assertion "generated slot has no copy on the stack and is not spilled") := by
   native_decide
 
@@ -71,7 +77,9 @@ private def surplusState : State [.Lit 10, .Lit 20, .Lit 7] [.Lit 20, .Lit 10, .
   pending_generations := 1
 
 -- A surplus generation leaves a stack longer than the target.
-example : (buildBottomUp.loop 0 surplusState).map (fun result => result.1.length) = .ok 4 := by
+example : (((((buildBottomUp.loop 0 surplusState) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1.length) = .ok 4 := by
   native_decide
 
 end BuildBottomUpBranchTests

@@ -178,7 +178,9 @@ theorem Placement.boundary_finish_success_iff {state : State source target spill
     (hv : state.stack[dest.val]'h.in_bounds ≠
       state.stack[state.stack.length - 1]'(by have := h.in_bounds; omega)) :
     Succeeds (state.swapWith dest.val >>= fun next =>
-      buildBottomUp.loop (dest.val + 1) next) (fun _ => True) ↔
+      ((((buildBottomUp.loop (dest.val + 1) next) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+        if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+        pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) ↔
       ¬NeedsDup state (state.stack[state.stack.length - 1]'(by have := h.in_bounds; omega)) ∨
       TwoCopies state.stack (state.stack[state.stack.length - 1]'(by have := h.in_bounds; omega)) := by
   let bottom : Fin state.stack.length := ⟨dest.val, h.in_bounds⟩
@@ -225,7 +227,9 @@ macro "finish_boundary " c:term ", " st:term ", " hp:term ", " hn:term ", " hr:t
     omega
   rw [ite_eq_right (not_not_intro (show ($st).isSwapReachable bottom from hreach))]
   try simp_loop
-  exact (($hp).boundary_finish_success_iff $hr $hw $hn $hv).trans $hc))
+  change Succeeds (_ >>= _) _ ↔ _
+  simpa only [bind_assoc] using
+    (($hp).boundary_finish_success_iff $hr $hw $hn $hv).trans $hc))
 
 theorem loop_bound_mismatch_boundary_success_iff (cursor : Nat)
     (state : State source target spills) (inv : state.invariant cursor) (hr : state.reachable)
@@ -235,7 +239,9 @@ theorem loop_bound_mismatch_boundary_success_iff (cursor : Nat)
     (carrier : Fin state.stack.length)
     (hb : state.mapping.symm ⟨cursor, hc⟩ = some carrier)
     (hv : state.stack[current] ≠ state.stack[carrier]) :
-    Succeeds (buildBottomUp.loop cursor state) (fun _ => True) ↔
+    Succeeds (((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) ↔
       ¬NeedsDup state state.stack[carrier] ∨ TwoCopies state.stack state.stack[carrier] := by
   let dest : Fin target.length := ⟨cursor, hc⟩
   have hge := inv.processed.bound_ge dest carrier hb le_rfl
@@ -251,9 +257,10 @@ theorem loop_bound_mismatch_boundary_success_iff (cursor : Nat)
   rw [skip_unless_final (fun hlt => (state.isFinal_iff ⟨cursor, hlt⟩).not.mpr hnfinal)]
   simp only [hpending, ↓reduceIte]
   have hscan := Succeeds.of_triple _ _ (urgentScan_success cursor state hr)
-  simp only [bind_pure] at hscan
-  obtain ⟨urgent, heq, _⟩ := hscan
+  simp only [Prod.mk.eta, bind_pure] at hscan
+  obtain ⟨⟨_, urgent⟩, heq, rfl, _⟩ := hscan
   erw [heq, except_ok_bind]
+  simp_loop
   simp only [hnotearly, and_false, ↓reduceDIte]
   rw [ite_index_eq_rest (fun hA => hA.2.2) (fun _ hB => hB), index_eq dest, except_ok_bind]
   have hposition : state.mapping.positionOf dest = some carrier := hb
@@ -270,6 +277,7 @@ theorem loop_bound_mismatch_boundary_success_iff (cursor : Nat)
   obtain ⟨selected, heq, hselected⟩ := hcopies
   erw [heq, except_ok_bind]
   obtain ⟨pos, rfl, hequal, hmovable⟩ := hselected
+  simp only [except_ok_bind]
   rw [slotAt_index state.stack pos]
   simp only [except_ok_bind]
   rw [requires_of_true _ hequal]
@@ -379,7 +387,9 @@ theorem loop_bound_boundary_success_iff (cursor : Nat)
     (current : Fin state.stack.length) (hcurrent : current.val = cursor)
     (carrier : Fin state.stack.length)
     (hb : state.mapping.symm ⟨cursor, hc⟩ = some carrier) :
-    Succeeds (buildBottomUp.loop cursor state) (fun _ => True) ↔
+    Succeeds (((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) ↔
       state.reachable ∧ (state.stack[current] = state.stack[carrier] ∨
         ¬NeedsDup state state.stack[carrier] ∨ TwoCopies state.stack state.stack[carrier]) := by
   constructor

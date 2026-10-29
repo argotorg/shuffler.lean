@@ -22,11 +22,11 @@ def reloaded : Trace spills [.Var ⟨37⟩, .Var ⟨0⟩] [.Var ⟨37⟩, .Var �
 example : (loaded.concat (swapped.concat reloaded)).swapCount = 1 := rfl
 
 -- An empty spill set and an absent ID cannot supply permission to load.
-#check_failure (Trace.Load (spills := ∅) ⟨0⟩ (by decide) (.Lit []))
-#check_failure (Trace.Load (spills := spills) ⟨1⟩ (by decide) (.Lit []))
+#check_failure (Trace.Load (spills := ∅) ⟨0⟩ (of_decide_eq_true rfl) (.Lit []))
+#check_failure (Trace.Load (spills := spills) ⟨1⟩ (of_decide_eq_true rfl) (.Lit []))
 
 -- Only variable IDs can be loaded, and concatenation preserves the spill set.
-#check_failure (Trace.Load (spills := spills) (Value.Lit 0) (by decide) (.Lit []))
+#check_failure (Trace.Load (spills := spills) (Value.Lit 0) (of_decide_eq_true rfl) (.Lit []))
 #check_failure (loaded.concat (Trace.Lit (spills := ∅) [.Var ⟨0⟩, .Var ⟨37⟩]))
 
 end TraceTests

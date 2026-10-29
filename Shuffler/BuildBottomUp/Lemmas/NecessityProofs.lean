@@ -35,8 +35,10 @@ theorem CopiesSeen.reachable {state : State source target spills}
 theorem urgentScan_reachable_on_success (cursor : Nat) (state : State source target spills)
     (ha : ∀ j, state.isAvailable j) :
     ⦃True⦄ (do
+      let mut returned : Option (Result source target spills) := none
       let mut urgent := none
       for offset in [cursor : target.length] do
+        returned := none
         if (state.mapping.positionOf (← index target.length offset)).isSome then
           continue
         let slot ← slotAt target offset
@@ -44,15 +46,19 @@ theorem urgentScan_reachable_on_success (cursor : Nat) (state : State source tar
           continue
         if let some copy := state.stack.shallowestCopyPosition slot then
           if ¬ state.stack.isDupReachable copy then
-            throw (← state.blockDupUnreachable copy)
+            returned := some (← state.blockDupUnreachable copy)
+            break
           if (state.depthOf copy) = MAX_DUP_DEPTH ∧ copy.val ≠ cursor ∧ urgent.isNone then
             urgent := some offset
-      return urgent : Except ShuffleErr (Option ℕ))
-    ⦃fun _ => CopiesSeen state (List.range' cursor (target.length - cursor));
+      return (returned, urgent) : Except ShuffleErr (Option (Result source target spills) × Option ℕ))
+    ⦃fun result => result.1 = none → CopiesSeen state (List.range' cursor (target.length - cursor));
       (fun _ => True)⦄ := by
   simp only [Std.Legacy.Range.forIn_eq_forIn_range']
   vcgen [slotAt, index, State.depthOf, State.blockDupUnreachable, State.block, requires] invariants
-  · fun seen _ _ => CopiesSeen state seen
+  · fun seen remaining result => match result.1 with
+      | some _ => remaining = []
+      | none => CopiesSeen state seen
+  all_goals try casesm* Option (Result _ _ _)
   all_goals try simp_all [CopiesSeen]
   all_goals
     intro j hj hb
@@ -61,16 +67,16 @@ theorem urgentScan_reachable_on_success (cursor : Nat) (state : State source tar
     target[j.val].can_be_freely_generated ∨ SpillSet.is_spilled spills target[j.val] ∨
       Stack.hasCopy state.stack target[j.val]) j hj hb
   all_goals subst_vars
-  case vc3.inr => simp_all [Mapping.positionOf]
-  case vc4.inr =>
+  case vc3.none.inr => simp_all [Mapping.positionOf]
+  case vc4.none.inr =>
     rcases (by assumption : target[j].is_junk ∨ target[j].can_be_freely_generated ∨ SpillSet.is_spilled spills target[j]) with hjunk | hfree | hspill
     · exact Or.inl (Value.can_be_freely_generated_of_is_junk _ hjunk)
     · exact Or.inl hfree
     · exact Or.inr (Or.inl hspill)
-  case vc5.inr | vc6.inr =>
+  case vc5.none.inr | vc6.none.inr =>
     apply Or.inr ∘ Or.inr
     exact ⟨_, shallowestCopyPosition_value _ _ _ (by assumption), by assumption⟩
-  case vc7.inr =>
+  case vc7.none.inr =>
     have hav := ha j
     simp_all [State.isAvailable, Option.isSome_iff_exists]
 
@@ -91,7 +97,9 @@ theorem post_of_triple_ok {result : Except ShuffleErr α} {post : α → Prop} {
 theorem unbound_reachable_of_loop_success (cursor : Nat) (state : State source target spills)
     (inv : state.invariant cursor) (dest : Fin target.length)
     (hb : state.mapping.symm dest = none)
-    (hrun : Succeeds (buildBottomUp.loop cursor state) (fun _ => True)) :
+    (hrun : Succeeds (((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True)) :
     target[dest].can_be_freely_generated ∨ spills.is_spilled target[dest] ∨ Stack.hasCopy state.stack target[dest] := by
   have hc : cursor < target.length := lt_of_le_of_lt (inv.processed.unbound_ge dest hb) dest.isLt
   have hp : state.pending_generations ≠ 0 := by
@@ -100,6 +108,7 @@ theorem unbound_reachable_of_loop_success (cursor : Nat) (state : State source t
     have h := ht dest
     simp [hb] at h
   rw [buildBottomUp.loop.eq_def] at hrun
+  simp only [completedTrace_bind, completedTrace_ite] at hrun
   simp only [show ¬ cursor ≥ target.length by omega, ↓reduceIte] at hrun
   obtain hfinal | hnfinal := em (∃ h, state.isFinal ⟨cursor, h⟩)
   · rw [ite_eq_left hfinal.1, index_eq ⟨cursor, hfinal.1⟩, except_ok_bind,
@@ -107,21 +116,43 @@ theorem unbound_reachable_of_loop_success (cursor : Nat) (state : State source t
     exact unbound_reachable_of_loop_success (cursor + 1) state (inv.advance hfinal) dest hb hrun
   · rw [skip_unless_final (fun hlt hf => hnfinal ⟨hlt, hf⟩)] at hrun
     simp only [hp, ↓reduceIte] at hrun
-    obtain ⟨urgent, heq, _⟩ := hrun.bind_left
+    obtain ⟨⟨returned, urgent⟩, heq, _⟩ := hrun.bind_left
+    have hsafety := urgentScan_triple cursor state
+    simp only [Prod.mk.eta, bind_pure] at hsafety
+    have hblocked := (post_of_triple_ok hsafety heq).1
+    have hreturn : returned = none := by
+      cases returned with
+      | none => rfl
+      | some r =>
+        have hb := hblocked r rfl
+        rw [heq, except_ok_bind] at hrun
+        cases hr : r.blocked with
+        | none => simp [hr] at hb
+        | some blocked =>
+          change Succeeds (((((.ok r) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+            if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+            pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) at hrun
+          simp only [hr, pure, Except.pure, bind, Except.bind] at hrun
+          obtain ⟨_, hbad, _⟩ := hrun
+          cases hbad
     have hscan := urgentScan_reachable_on_success cursor state inv.available
-    simp only [bind_pure] at hscan
-    exact ((post_of_triple_ok hscan heq).reachable inv.processed) dest hb
+    simp only [Prod.mk.eta, bind_pure] at hscan
+    exact ((post_of_triple_ok hscan heq hreturn).reachable inv.processed) dest hb
 termination_by target.length - cursor
 
 theorem loop_success_requires_reachable (cursor : Nat) (state : State source target spills)
     (inv : state.invariant cursor)
-    (hrun : Succeeds (buildBottomUp.loop cursor state) (fun _ => True)) : state.reachable := by
+    (hrun : Succeeds (((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True)) : state.reachable := by
   intro dest hb
   exact unbound_reachable_of_loop_success cursor state inv dest hb hrun
 
 theorem loop_success_iff_reachable_within_width (cursor : Nat) (state : State source target spills)
     (inv : state.invariant cursor) (hw : state.stack.length - cursor ≤ MAX_SWAP_DEPTH) :
-    Succeeds (buildBottomUp.loop cursor state) (fun _ => True) ↔ state.reachable :=
+    Succeeds (((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) ↔ state.reachable :=
   ⟨loop_success_requires_reachable cursor state inv,
     fun hr => loop_success cursor state inv ⟨hw, hr⟩⟩
 

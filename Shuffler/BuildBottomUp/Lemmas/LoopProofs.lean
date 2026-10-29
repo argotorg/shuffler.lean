@@ -2,6 +2,7 @@ module
 
 public import Shuffler.BuildBottomUp.Defs
 public import Shuffler.Emission.Lemmas
+import Shuffler.BuildBottomUp.Lemmas.Completion
 import Shuffler.BuildBottomUp.Lemmas.HelperProofs
 import Shuffler.BuildBottomUp.Lemmas.Invariants
 import Shuffler.BuildBottomUp.Lemmas.ScanProofs
@@ -20,7 +21,11 @@ set_option maxRecDepth 16384
 set_option maxHeartbeats 2000000
 
 -- Inline join points and reduce binds on known results.
-macro "simp_loop" : tactic => `(tactic| simp only [bind_assoc, pure_bind, except_ok_bind, except_error_bind])
+macro "simp_loop" : tactic => `(tactic| ((try simp only [
+  completedTrace_bind,
+  completedTrace_ite, completedTrace_dite, completedTrace_ok, completedTrace_blocked,
+  completedTrace_error, completedTrace_guard, completedTrace_attach_guard]) <;>
+  (try simp only [pure_bind, except_ok_bind, except_error_bind])))
 
 -- Verify the common placement tail of the actual loop body.
 macro "finish_checked " c:term ", " st:term ", " hp:term ", " hn:term ", " expected:term ", " advance:term : tactic => `(tactic| (
@@ -38,13 +43,14 @@ macro "finish_checked " c:term ", " st:term ", " hp:term ", " hn:term ", " expec
       try simp_loop
       apply (($hp).swap_final hbelow hr $hn).bind
       rintro final ⟨hinv, he⟩
-      exact $advance _ hinv (he.trans $expected)
+      simpa only [bind_assoc] using $advance _ hinv (he.trans $expected)
     · rw [ite_eq_left hr]
       rw [blockSwapUnreachable_eq _ _ hr]
       exact True.intro
   · try dsimp +zetaDelta only at hnotTop
     simp +zetaDelta only [ne_eq, hnotTop, ↓reduceIte]
-    exact $advance _ (($hp).finish_at_top (not_not.mp hnotTop)) $expected))
+    simpa only [bind_assoc] using
+      $advance _ (($hp).finish_at_top (not_not.mp hnotTop)) $expected))
 
 theorem Spec.attach {x : Except ShuffleErr α} {post : α → Prop} (h : Spec x post) :
     Spec x.attach (fun a => post a.val) := by
@@ -76,7 +82,9 @@ theorem Spec.ite_index {A : Prop} [Decidable A] {B : Fin size → Prop} [Decidab
 -- The loop returns the expected stack of its input state.
 theorem loop_spec (cursor : ℕ) (state : State source target spills)
     (inv : state.invariant cursor) :
-    Spec (buildBottomUp.loop cursor state) (fun r => r.1 = state.expectedStack) := by
+    Spec (((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun r => r.1 = state.expectedStack) := by
   rw [buildBottomUp.loop.eq_def]
   simp_loop
   by_cases hdone : cursor ≥ target.length
@@ -85,12 +93,16 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
   have hc : cursor < target.length := Nat.lt_of_not_ge hdone
   have advance (next : State source target spills) (hi : next.invariant (cursor + 1))
       (he : next.expectedStack = state.expectedStack) :
-      Spec (buildBottomUp.loop (cursor + 1) next) (fun r => r.1 = state.expectedStack) :=
+      Spec (((((buildBottomUp.loop (cursor + 1) next) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+        if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+        pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun r => r.1 = state.expectedStack) :=
     (loop_spec (cursor + 1) next hi).mono (fun _ hr => hr.trans he)
   have retry (next : State source target spills) (hi : next.invariant cursor)
       (hlt : next.pending_generations < state.pending_generations)
       (he : next.expectedStack = state.expectedStack) :
-      Spec (buildBottomUp.loop cursor next) (fun r => r.1 = state.expectedStack) :=
+      Spec (((((buildBottomUp.loop cursor next) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+        if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+        pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun r => r.1 = state.expectedStack) :=
     (loop_spec cursor next hi).mono (fun _ hr => hr.trans he)
   simp only [hdone, ↓reduceIte]
   obtain hfinal | hnfinal := em (∃ h, state.isFinal ⟨cursor, h⟩)
@@ -106,21 +118,34 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
     have hp := state.mapping.complete_of_target_total (by omega) ht
     simp only [hz, ↓reduceIte, requires_of_true _ hp.1, except_ok_bind]
     rw [requires_of_true (∀ i, (state.mapping.destinationOf i).isSome) hp.2, except_ok_bind]
-    cases hperm : Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hp.1 hp.2) with
+    cases hperm : Shuffler.Permute.permute state (state.mapping.toPermutation hp.1 hp.2) with
     | error err =>
       cases err with
-      | Blocked blocked => simp [Spec]
+      | Blocked blocked => change True; trivial
       | assertion reason =>
         exact (Shuffler.Permute.permute_no_assertion _ _ _ reason hperm).elim
-    | ok result =>
-      simpa [Spec] using
-        (Shuffler.Permute.permute_applies_permutation_of_ok _ _ _ hperm).trans
-          (expectedStack_permutation state hp.1 hp.2)
+    | ok result => cases result with
+      | mk blocked next => cases blocked with
+        | some blocked => change True; trivial
+        | none =>
+          change next.stack = state.expectedStack
+          exact (Shuffler.Permute.permute_applies_permutation_of_ok _ _ _ hperm).trans
+              (expectedStack_permutation state hp.1 hp.2)
   simp only [hz, ↓reduceIte]
   have hscan := (spec_iff_triple _ _).mpr (urgentScan_triple cursor state)
-  simp only [bind_pure] at hscan
+  simp only [Prod.mk.eta, bind_pure] at hscan
   apply hscan.bind
-  intro urgent hu
+  rintro ⟨returned, urgent⟩ ⟨hblocked, hu⟩
+  cases returned
+  case some r =>
+    have hb := hblocked r rfl
+    cases he : r.blocked with
+    | none => simp [he] at hb
+    | some blocked =>
+      simp only [he, pure, Except.pure, bind, Except.bind]
+      change True
+      trivial
+  simp_loop
   by_cases hurg : urgent.isSome ∧ urgent ≠ some cursor ∧ state.stack.length - cursor < MAX_SWAP_DEPTH
   · rw [dite_eq_left hurg]
     obtain ⟨hlt, hnone⟩ := hu (urgent.get hurg.1) (Option.some_get hurg.1).symm
@@ -143,6 +168,7 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
   rcases Option.eq_none_or_eq_some (state.mapping.positionOf dest) with hpos | ⟨carrier, hpos⟩
   · simp only [hpos]
     have hb : state.mapping.symm dest = none := hpos
+    try simp_loop
     apply (generate_contract state dest hb (inv.available dest)).bind
     intro next hgen
     have hp := hgen.placement inv
@@ -181,6 +207,7 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
     have hscan := (spec_iff_triple _ _).mpr (copyScan_triple state carrier carrier.val
       ⟨carrier, rfl, rfl, state.boundNotFinal_of_not_final dest carrier hb hnfinal⟩)
     simp only [except_ok_bind, bind_pure, slotAt_index state.stack carrier] at hscan
+    try simp_loop
     apply hscan.bind
     intro selected hselected
     obtain ⟨pos, rfl, hequal, hmovable⟩ := hselected
@@ -225,7 +252,10 @@ decreasing_by
   · exact Prod.Lex.right _ hlt
 
 theorem buildBottomUp_spec (initial : State source target spills) (h : initial.Valid) :
-    Spec (buildBottomUp initial h) (fun result => result.1 = initial.expectedStack) := by
+    Spec (((((buildBottomUp initial h) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun result => result.1 = initial.expectedStack) := by
+  rw [buildBottomUp_completed]
   apply (loop_spec 0 initial (State.invariant.initial h)).bind
   intro ⟨res, trace⟩ he
   have hsize : res.length = target.length := by simp [show res = _ from he, State.expectedStack]

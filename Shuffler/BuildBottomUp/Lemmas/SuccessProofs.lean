@@ -1,6 +1,7 @@
 module
 
 public import Shuffler.BuildBottomUp.Lemmas.ReachActions
+import Shuffler.BuildBottomUp.Lemmas.Completion
 import Shuffler.BuildBottomUp.Lemmas.Invariants
 import Shuffler.BuildBottomUp.Lemmas.LoopProofs
 import Shuffler.BuildBottomUp.Lemmas.ReachScan
@@ -56,12 +57,14 @@ macro "finish_reachable " c:term ", " st:term ", " hp:term ", " hn:term ", " hr:
     rw [ite_eq_right (not_not_intro (show ($st).isSwapReachable pos from hreach))]
     try simp_loop
     have hbelow := Stack.belowOfNotTop ($st).stack pos hnotTop
+    try simp_loop
     apply (($hp).swap_final_success $hr hbelow $hn).bind
     rintro next ⟨hi, hreach⟩
-    exact $advance _ hi hreach
+    simpa only [bind_assoc] using $advance _ hi hreach
   · try dsimp +zetaDelta only at hnotTop
     simp +zetaDelta only [ne_eq, hnotTop, ↓reduceIte]
-    exact $advance _ (($hp).finish_at_top (not_not.mp hnotTop)) ($hr).advance))
+    simpa only [bind_assoc] using
+      $advance _ (($hp).finish_at_top (not_not.mp hnotTop)) ($hr).advance))
 
 theorem Succeeds.attach {x : Except ShuffleErr α} {post : α → Prop} (h : Succeeds x post) :
     Succeeds x.attach (fun a => post a.val) := by
@@ -96,7 +99,9 @@ theorem ite_index_eq_rest {A : Prop} [Decidable A] {B : Fin size → Prop} [Deci
 
 theorem loop_success (cursor : ℕ) (state : State source target spills)
     (inv : state.invariant cursor) (hr : state.withinReach cursor) :
-    Succeeds (buildBottomUp.loop cursor state) (fun _ => True) := by
+    Succeeds (((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) := by
   rw [buildBottomUp.loop.eq_def]
   simp_loop
   by_cases hdone : cursor ≥ target.length
@@ -105,11 +110,15 @@ theorem loop_success (cursor : ℕ) (state : State source target spills)
   have hc : cursor < target.length := Nat.lt_of_not_ge hdone
   have advance (next : State source target spills) (hi : next.invariant (cursor + 1))
       (hr : next.withinReach (cursor + 1)) :
-      Succeeds (buildBottomUp.loop (cursor + 1) next) (fun _ => True) :=
+      Succeeds (((((buildBottomUp.loop (cursor + 1) next) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+        if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+        pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) :=
     loop_success (cursor + 1) next hi hr
   have retry (next : State source target spills) (hi : next.invariant cursor)
       (hr : next.withinReach cursor) (hlt : next.pending_generations < state.pending_generations) :
-      Succeeds (buildBottomUp.loop cursor next) (fun _ => True) :=
+      Succeeds (((((buildBottomUp.loop cursor next) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+        if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+        pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) :=
     loop_success cursor next hi hr
   simp only [hdone, ↓reduceIte]
   obtain hfinal | hnfinal := em (∃ h, state.isFinal ⟨cursor, h⟩)
@@ -125,16 +134,17 @@ theorem loop_success (cursor : ℕ) (state : State source target spills)
     have hp := state.mapping.complete_of_target_total (by omega) ht
     simp only [hz, ↓reduceIte, requires_of_true _ hp.1, except_ok_bind]
     rw [requires_of_true (∀ i, (state.mapping.destinationOf i).isSome) hp.2, except_ok_bind]
-    obtain ⟨res, trace, heq, _⟩ := Shuffler.Permute.permute_applies_permutation_reachable
-      spills state.stack (state.mapping.toPermutation hp.1 hp.2)
+    obtain ⟨result, heq, _⟩ := Shuffler.Permute.permute_applies_permutation_reachable
+      spills state (state.mapping.toPermutation hp.1 hp.2)
       (inv.permutation_reachable hr hp.1 hp.2)
-    simp only [heq, except_ok_bind]
+    simp only [heq, completedTrace_ok]
     exact ⟨_, rfl, trivial⟩
   simp only [hz, ↓reduceIte]
   have hscan := Succeeds.of_triple _ _ (urgentScan_success cursor state hr.copies)
-  simp only [bind_pure] at hscan
+  simp only [Prod.mk.eta, bind_pure] at hscan
   apply hscan.bind
-  intro urgent hu
+  rintro ⟨returned, urgent⟩ ⟨rfl, hu⟩
+  simp_loop
   by_cases hurg : urgent.isSome ∧ urgent ≠ some cursor ∧ state.stack.length - cursor < MAX_SWAP_DEPTH
   · rw [dite_eq_left hurg]
     obtain ⟨hlt, hnone⟩ := hu.choice (urgent.get hurg.1) (Option.some_get hurg.1).symm
@@ -170,6 +180,7 @@ theorem loop_success (cursor : ℕ) (state : State source target spills)
   rcases Option.eq_none_or_eq_some (state.mapping.positionOf dest) with hpos | ⟨carrier, hpos⟩
   · simp only [hpos]
     have hb : state.mapping.symm dest = none := hpos
+    simp_loop
     apply (generate_reachable state dest hb (inv.available dest) hr le_rfl
       (hu.ready_cursor inv.processed hr hc hurg)).bind
     rintro next ⟨hg, hcopies, hf⟩
@@ -210,6 +221,7 @@ theorem loop_success (cursor : ℕ) (state : State source target spills)
     have hscan := Succeeds.of_triple _ _ (copyScan_success state carrier carrier.val
       ⟨carrier, rfl, rfl, state.boundNotFinal_of_not_final dest carrier hb hnfinal⟩)
     simp only [except_ok_bind, bind_pure, slotAt_index state.stack carrier] at hscan
+    try simp_loop
     apply hscan.bind
     intro selected hselected
     obtain ⟨pos, rfl, hequal, hmovable⟩ := hselected
@@ -251,19 +263,25 @@ decreasing_by
 
 -- The size check after the loop holds whenever the loop succeeds.
 theorem buildBottomUp_success_iff_loop (initial : State source target spills) (h : initial.Valid) :
-    Succeeds (buildBottomUp initial h) (fun _ => True) ↔
-      Succeeds (buildBottomUp.loop 0 initial) (fun _ => True) := by
+    Succeeds (((((buildBottomUp initial h) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) ↔
+      Succeeds (((((buildBottomUp.loop 0 initial) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+        if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+        pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) := by
   constructor
   · intro hs
-    unfold buildBottomUp at hs
-    cases hl : buildBottomUp.loop 0 initial with
+    rw [buildBottomUp_completed] at hs
+    cases hl : ((((buildBottomUp.loop 0 initial) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) with
     | error err =>
       rw [hl] at hs
       obtain ⟨_, he, _⟩ := hs
       cases he
     | ok value => exact ⟨value, rfl, trivial⟩
   · intro hs
-    unfold buildBottomUp
+    rw [buildBottomUp_completed]
     apply (hs.spec (loop_spec 0 initial (State.invariant.initial h))).bind
     intro ⟨res, trace⟩ he
     have hsize : res.length = target.length := by simp [show res = _ from he, State.expectedStack]
@@ -272,14 +290,20 @@ theorem buildBottomUp_success_iff_loop (initial : State source target spills) (h
 
 theorem buildBottomUp_success (initial : State source target spills) (h : initial.Valid)
     (hsmall : initial.stack.length ≤ MAX_DUP_DEPTH + 1) :
-    Succeeds (buildBottomUp initial h) (fun _ => True) :=
+    Succeeds (((((buildBottomUp initial h) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) :=
   (buildBottomUp_success_iff_loop initial h).mpr
     (loop_success 0 initial (State.invariant.initial h) (State.withinReach.initial h hsmall))
 
 -- The loop skips a final prefix without changing the state.
 theorem loop_zero_eq_of_processed (state : State source target spills)
     (hp : state.processed cursor) :
-    buildBottomUp.loop 0 state = buildBottomUp.loop cursor state := by
+    ((((buildBottomUp.loop 0 state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) = ((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+        if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+        pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) := by
   induction cursor with
   | zero => rfl
   | succ cursor ih =>
@@ -288,6 +312,7 @@ theorem loop_zero_eq_of_processed (state : State source target spills)
     · have hf := hp ⟨cursor, hc⟩ (by simp)
       have hs := hf.1
       rw [buildBottomUp.loop.eq_def]
+      simp_loop
       simp only [show ¬ cursor ≥ target.length by omega,
         ↓reduceIte]
       rw [ite_eq_left hs, index_eq ⟨cursor, hs⟩, except_ok_bind,
@@ -295,12 +320,15 @@ theorem loop_zero_eq_of_processed (state : State source target spills)
     · have hn : ¬cursor + 1 < target.length := by omega
       conv_lhs => rw [buildBottomUp.loop.eq_def]
       conv_rhs => rw [buildBottomUp.loop.eq_def]
+      simp_loop
       simp only [show cursor ≥ target.length by omega, show cursor + 1 ≥ target.length by omega,
         ↓reduceIte]
 
 theorem buildBottomUp_success_of_processed (initial : State source target spills)
     (h : initial.Valid) (hp : initial.processed cursor) (hr : initial.withinReach cursor) :
-    Succeeds (buildBottomUp initial h) (fun _ => True) := by
+    Succeeds (((((buildBottomUp initial h) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) := by
   rw [buildBottomUp_success_iff_loop, loop_zero_eq_of_processed initial hp]
   exact loop_success cursor initial ⟨h, hp⟩ hr
 

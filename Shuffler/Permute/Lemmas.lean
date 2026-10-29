@@ -16,6 +16,24 @@ variable {ι : Type*} [Fintype ι] [DecidableEq ι]
 def measure (perm : Equiv.Perm ι) (top : ι) : ℕ × ℕ :=
   ((perm.support.erase top).card, if perm top = top then 1 else 0)
 
+theorem measure_cast {n m : ℕ} (h : n = m) (perm : Equiv.Perm (Fin n)) (hne : 0 < n) :
+    measure (cast (congrArg (fun k => Equiv.Perm (Fin k)) h) perm) ⟨m - 1, by omega⟩ =
+      measure perm ⟨n - 1, by omega⟩ := by
+  subst m
+  rfl
+
+theorem mem_support_cast {n m : ℕ} (h : n = m) (perm : Equiv.Perm (Fin n)) (i : Fin m) :
+    i ∈ (cast (congrArg (fun k => Equiv.Perm (Fin k)) h) perm).support ↔
+      Fin.cast h.symm i ∈ perm.support := by
+  subst m
+  rfl
+
+theorem reachable_cast {n m : ℕ} (h : n = m) (perm : Equiv.Perm (Fin n)) (depth : ℕ) :
+    (∀ i ∈ (cast (congrArg (fun k => Equiv.Perm (Fin k)) h) perm).support, i.rev.val ≤ depth) ↔
+      (∀ i ∈ perm.support, i.rev.val ≤ depth) := by
+  subst m
+  rfl
+
 -- Placing the top fixes exactly one position below it.
 lemma measure_place_top (perm : Equiv.Perm ι)
     (top : ι) (ht : perm top ≠ top) :
@@ -103,6 +121,13 @@ variable {α : Type*}
 def apply_permutation' (current : List α) {n : ℕ} (perm : Equiv.Perm (Fin n))
     (hlen : current.length = n) : List α :=
   List.ofFn (fun k : Fin n => current[(perm.symm k).val]'(by have := (perm.symm k).isLt; omega))
+
+theorem apply_permutation'_cast (current : List α) {n m : ℕ} (h : n = m)
+    (perm : Equiv.Perm (Fin n)) (hlen : current.length = m) :
+    apply_permutation' current (cast (congrArg (fun k => Equiv.Perm (Fin k)) h) perm) hlen =
+      apply_permutation' current perm (hlen.trans h.symm) := by
+  subst m
+  rfl
 
 theorem apply_permutation'_one (current : List α) {n : ℕ} (hlen : current.length = n) :
     apply_permutation' current (1 : Equiv.Perm (Fin n)) hlen = current := by

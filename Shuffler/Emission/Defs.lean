@@ -32,6 +32,12 @@ structure State (source target : Stack) (spills : SpillSet) where
   -- Number of target offsets whose slot still has to be produced; decremented by `produce`
   pending_generations : ℕ
 
+-- The state after emission, including operations before a blocked result.
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:283-292.
+structure Result (source target : Stack) (spills : SpillSet) where
+  blocked : Option Blocked
+  state : State source target spills
+
 --- Utils ------------------------------------------------------------------------------------------
 
 
@@ -84,20 +90,20 @@ instance (state : State source target spills) (pos : Fin state.stack.length) :
 -- The slot at `pos` is out of reach by `excess` slots.
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:793-797.
 def State.block (state : State source target spills) (pos : Fin state.stack.length)
-    (excess : ℕ) : Except ShuffleErr ShuffleErr := do
+    (excess : ℕ) : Except ShuffleErr (Result source target spills) := do
   _ ← requires (excess > 0) "blocked excess must be positive"
-  return .Blocked ⟨pos.val, excess⟩
+  return ⟨some ⟨pos.val, excess⟩, state⟩
 
 -- A swap cannot reach the slot at `pos`: it is out of reach by `depth - MAX_SWAP_DEPTH` slots
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:800-803.
 def State.blockSwapUnreachable (state : State source target spills) (pos : Fin state.stack.length)
-    : Except ShuffleErr ShuffleErr :=
+    : Except ShuffleErr (Result source target spills) :=
   state.block pos ((state.depthOf pos).val - MAX_SWAP_DEPTH)
 
 -- A dup cannot reach the slot at `pos`: it is out of reach by `depth - MAX_DUP_DEPTH` slots
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:806-809.
 def State.blockDupUnreachable (state : State source target spills) (pos : Fin state.stack.length)
-    : Except ShuffleErr ShuffleErr :=
+    : Except ShuffleErr (Result source target spills) :=
   state.block pos ((state.depthOf pos).val - MAX_DUP_DEPTH)
 
 

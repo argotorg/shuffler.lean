@@ -41,10 +41,12 @@ macro "finish_deep_bound " c:term ", " st:term ", " hw:term : tactic => `(tactic
       omega
     rw [ite_eq_left (show ¬($st).isSwapReachable bottom from hreach)]
     rw [blockSwapUnreachable_eq $st bottom hreach]
+    simp_loop
     rintro ⟨_, h, _⟩
     cases h
   · have hf : ($st).isFinal bottom := (($st).isFinal_iff bottom).mpr (not_not.mp hnfinal)
     rw [requires, dite_eq_right (not_not_intro hf)]
+    simp_loop
     rintro ⟨_, h, _⟩
     cases h))
 
@@ -56,7 +58,9 @@ theorem loop_bound_mismatch_deep_noSuccess_of_reachable (cursor : Nat)
     (carrier : Fin state.stack.length)
     (hb : state.mapping.symm ⟨cursor, hc⟩ = some carrier)
     (hv : state.stack[current] ≠ state.stack[carrier]) :
-    ¬Succeeds (buildBottomUp.loop cursor state) (fun _ => True) := by
+    ¬Succeeds (((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) := by
   let dest : Fin target.length := ⟨cursor, hc⟩
   have hge := inv.processed.bound_ge dest carrier hb le_rfl
   have hnfinal : ¬ ∃ h, state.isFinal ⟨cursor, h⟩ := by
@@ -71,9 +75,10 @@ theorem loop_bound_mismatch_deep_noSuccess_of_reachable (cursor : Nat)
   rw [skip_unless_final (fun hlt => (state.isFinal_iff ⟨cursor, hlt⟩).not.mpr hnfinal)]
   simp only [hpending, ↓reduceIte]
   have hscan := Succeeds.of_triple _ _ (urgentScan_success cursor state hr)
-  simp only [bind_pure] at hscan
-  obtain ⟨urgent, heq, _⟩ := hscan
+  simp only [Prod.mk.eta, bind_pure] at hscan
+  obtain ⟨⟨_, urgent⟩, heq, rfl, _⟩ := hscan
   erw [heq, except_ok_bind]
+  simp_loop
   simp only [hnotearly, and_false, ↓reduceDIte]
   rw [ite_index_eq_rest (fun hA => hA.2.2) (fun _ hB => hB), index_eq dest, except_ok_bind]
   have hposition : state.mapping.positionOf dest = some carrier := hb
@@ -90,6 +95,7 @@ theorem loop_bound_mismatch_deep_noSuccess_of_reachable (cursor : Nat)
   obtain ⟨selected, heq, hselected⟩ := hcopies
   erw [heq, except_ok_bind]
   obtain ⟨pos, rfl, hequal, hmovable⟩ := hselected
+  simp only [except_ok_bind]
   rw [slotAt_index state.stack pos]
   simp only [except_ok_bind]
   rw [requires_of_true _ hequal]
@@ -121,6 +127,7 @@ theorem loop_bound_mismatch_deep_noSuccess_of_reachable (cursor : Nat)
       finish_deep_bound cursor, next, hwidth
     · rw [ite_eq_left (show ¬retag.isSwapReachable pos from hreach)]
       rw [blockSwapUnreachable_eq retag pos hreach]
+      simp_loop
       rintro ⟨_, h, _⟩
       cases h
   · dsimp +zetaDelta only at hnotTop
@@ -136,7 +143,9 @@ theorem loop_bound_mismatch_deep_noSuccess_of_pending (cursor : Nat)
     (carrier : Fin state.stack.length)
     (hb : state.mapping.symm ⟨cursor, hc⟩ = some carrier)
     (hv : state.stack[current] ≠ state.stack[carrier]) :
-    ¬Succeeds (buildBottomUp.loop cursor state) (fun _ => True) := by
+    ¬Succeeds (((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) := by
   intro hs
   have hr := loop_success_requires_reachable cursor state inv hs
   exact loop_bound_mismatch_deep_noSuccess_of_reachable cursor state inv hr hw hpending hc
@@ -150,7 +159,9 @@ theorem loop_bound_mismatch_deep_noSuccess (cursor : Nat)
     (carrier : Fin state.stack.length)
     (hb : state.mapping.symm ⟨cursor, hc⟩ = some carrier)
     (hv : state.stack[current] ≠ state.stack[carrier]) :
-    ¬Succeeds (buildBottomUp.loop cursor state) (fun _ => True) := by
+    ¬Succeeds (((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+      pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) := by
   by_cases hpending : state.pending_generations = 0
   · intro hs
     have ht : ∀ j, (state.mapping.symm j).isSome :=

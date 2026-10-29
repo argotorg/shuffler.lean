@@ -12,26 +12,27 @@ namespace Shuffler.Emission
 -- length.
 theorem buildBottomUp_succeeds_small (initial : State source target spills)
     (h : initial.Valid) (hsmall : initial.stack.length ≤ MAX_DUP_DEPTH + 1) :
-    ∃ (res : Stack) (trace : Trace spills source res),
-      buildBottomUp initial h = .ok ⟨res, trace⟩ := by
-  obtain ⟨⟨res, trace⟩, heq, _⟩ := buildBottomUp_success initial h hsmall
-  exact ⟨res, trace, heq⟩
+    ∃ result : State source target spills, buildBottomUp initial h = .ok ⟨none, result⟩ := by
+  obtain ⟨value, heq, _⟩ := buildBottomUp_success initial h hsmall
+  obtain ⟨result, hrun, _⟩ := completedTrace_ok_inversion heq
+  exact ⟨result, hrun⟩
 
 -- For an initial stack of at most 16 slots, if the mapping connects only slots of equal value,
 -- buildBottomUp always returns the target.
 theorem buildBottomUp_correct_within_dup_reach (initial : State source target spills)
     (h : initial.Valid) (hsmall : initial.stack.length ≤ MAX_DUP_DEPTH + 1)
     (hmapped : ∀ i j, initial.mapping i = some j → initial.stack[i] = target[j]) :
-    ∃ trace : Trace spills source target, buildBottomUp initial h = .ok ⟨target, trace⟩ := by
-  obtain ⟨res, trace, heq⟩ := buildBottomUp_succeeds_small initial h hsmall
-  obtain rfl := buildBottomUp_correct_of_ok initial h hmapped heq
-  exact ⟨trace, heq⟩
+    ∃ result : State source target spills,
+      buildBottomUp initial h = .ok ⟨none, result⟩ ∧ result.stack = target := by
+  obtain ⟨result, hrun⟩ := buildBottomUp_succeeds_small initial h hsmall
+  exact ⟨result, hrun, buildBottomUp_correct_of_ok initial h hmapped hrun⟩
 
 -- The same result for an initial stack of at most 14 slots.
 theorem buildBottomUp_correct_small (initial : State source target spills)
     (h : initial.Valid) (hsmall : initial.stack.length < MAX_DUP_DEPTH)
     (hmapped : ∀ i j, initial.mapping i = some j → initial.stack[i] = target[j]) :
-    ∃ trace : Trace spills source target, buildBottomUp initial h = .ok ⟨target, trace⟩ :=
+    ∃ result : State source target spills,
+      buildBottomUp initial h = .ok ⟨none, result⟩ ∧ result.stack = target :=
   buildBottomUp_correct_within_dup_reach initial h (by omega) hmapped
 
 end Shuffler.Emission

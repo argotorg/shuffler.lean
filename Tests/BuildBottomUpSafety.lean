@@ -4,7 +4,7 @@ open Shuffler.Emission
 
 -- The theorem applies to the production function and excludes each assertion reason.
 example (initial : State source target spills) (h : initial.Valid) (reason : String) :
-    buildBottomUp initial h ≠ .error (.assertion reason) :=
+    (buildBottomUp initial h) ≠ .error (.assertion reason) :=
   buildBottomUp_no_assertion initial h reason
 
 namespace BuildBottomUpSafetyTests
@@ -30,7 +30,7 @@ private theorem emptyState_valid (target : Stack) (spills : SpillSet)
 example (target : Stack) (spills : SpillSet)
     (h : ∀ i : Fin target.length,
       target[i].can_be_freely_generated ∨ spills.is_spilled target[i]) (reason : String) :
-    buildBottomUp (emptyState target spills) (emptyState_valid target spills h) ≠
+    (buildBottomUp (emptyState target spills) (emptyState_valid target spills h)) ≠
       .error (.assertion reason) :=
   buildBottomUp_no_assertion _ _ reason
 
@@ -56,10 +56,12 @@ private theorem deepCopy_valid : deepCopy.Valid := by
   refine ⟨by decide, by decide, ?_⟩
   decide
 
-example (reason : String) : buildBottomUp deepCopy deepCopy_valid ≠ .error (.assertion reason) :=
+example (reason : String) : (buildBottomUp deepCopy deepCopy_valid) ≠ .error (.assertion reason) :=
   buildBottomUp_no_assertion deepCopy deepCopy_valid reason
 
-example : (buildBottomUp deepCopy deepCopy_valid).map (fun result => result.1) = .error (.Blocked ⟨0, 1⟩) := by
+example : (((((buildBottomUp deepCopy deepCopy_valid) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1) = .error (.Blocked ⟨0, 1⟩) := by
   native_decide
 
 -- Each initial condition is needed: size, pending count, and availability.
@@ -76,7 +78,9 @@ example : ¬ surplus.Valid := by
   contradiction
 
 -- Without the size condition the loop returns a stack longer than the target.
-example : (buildBottomUp.loop 0 surplus).map (fun result => result.1.length) = .ok 1 := by
+example : (((((buildBottomUp.loop 0 surplus) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1.length) = .ok 1 := by
   native_decide
 
 private def unbound : State [.Lit 0] [.Lit 0] ∅ where
@@ -91,7 +95,9 @@ example : ¬ unbound.Valid := by
   have := h.pending
   contradiction
 
-example : (buildBottomUp.loop 0 unbound).map (fun result => result.1) =
+example : (((((buildBottomUp.loop 0 unbound) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1) =
     .error (.assertion "unmapped source slots") := by native_decide
 
 example : ¬ (emptyState [.Var ⟨1⟩] ∅).Valid := by
@@ -99,7 +105,9 @@ example : ¬ (emptyState [.Var ⟨1⟩] ∅).Valid := by
   have := h.available 0
   contradiction
 
-example : (buildBottomUp.loop 0 (emptyState [.Var ⟨1⟩] ∅)).map (fun result => result.1) =
+example : (((((buildBottomUp.loop 0 (emptyState [.Var ⟨1⟩] ∅)) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+  if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+  pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1) =
     .error (.assertion "generated slot has no copy on the stack and is not spilled") := by native_decide
 
 -- Function return labels also need a copy, since they cannot be generated.

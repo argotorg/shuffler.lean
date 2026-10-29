@@ -5,6 +5,7 @@ import Shuffler.BuildBottomUp.Lemmas.Invariants
 import Shuffler.BuildBottomUp.Lemmas.LoopProofs
 import Shuffler.BuildBottomUp.Lemmas.NecessityProofs
 import Std.WP.Triple.SpecLemmas
+import Shuffler.BuildBottomUp.Lemmas.Completion
 
 @[expose] public section
 
@@ -38,9 +39,10 @@ theorem producedMapping_append (state : State source target spills) (slot : Valu
   · simp [hj, Mapping.push_symm_apply_of_ne, Option.map_map, Function.comp_def]
 
 theorem produce_mapping (state : State source target spills) (dest : Fin target.length) :
-    ⦃True⦄ state.produce dest
+    ⦃True⦄ (((state.produce dest) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)
     ⦃fun next => ProducedMapping state next dest; (fun _ => True)⦄ := by
-  vcgen [State.produce, State.push, State.dup, State.blockDupUnreachable, State.block,
+  vcgen [-produce_spec, State.produce, State.push, State.dup, State.blockDupUnreachable, State.block,
     requires, index]
   all_goals try simp_all [Mapping.positionOf]
   all_goals
@@ -48,16 +50,19 @@ theorem produce_mapping (state : State source target spills) (dest : Fin target.
 
 theorem produce_noBlocked (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (h : state.reachable) :
-    NoBlocked (state.produce dest) := by
+    NoBlocked ((((state.produce dest) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) := by
   have hfilter := h.filtered dest hbound
   apply noBlocked_of_triple
-  vcgen [State.produce, State.push, State.dup, State.blockDupUnreachable, State.block,
+  vcgen [-produce_spec, State.produce, State.push, State.dup, State.blockDupUnreachable, State.block,
     requires, index]
   all_goals simp_all [noBlockedErrors]
+  all_goals contradiction
 
 theorem produce_success_exact (state : State source target spills) (dest : Fin target.length)
     (hb : state.mapping.symm dest = none) (ha : state.isAvailable dest) (hr : state.reachable) :
-    ∃ next, state.produce dest = .ok next ∧
+    ∃ next, (((state.produce dest) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) = .ok next ∧
       Growth state next dest (state.pending_generations - 1) ∧ ProducedMapping state next dest := by
   obtain ⟨next, he, hg⟩ := ((spec_iff_triple _ _).mpr (produce_spec state dest hb ha)).success
     (produce_noBlocked state dest hb hr)
@@ -66,18 +71,20 @@ theorem produce_success_exact (state : State source target spills) (dest : Fin t
 
 theorem generate_eq_after_produce_equal (state produced : State source target spills)
     (dest : Fin target.length)
-    (he : state.produce dest = .ok produced)
+    (he : (((state.produce dest) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) = .ok produced)
     (current top : Fin produced.stack.length)
     (hc : current.val = dest.val) (ht : top.val = produced.stack.length - 1)
     (hbelow : current.val + 1 < produced.stack.length)
     (hb : produced.mapping.symm dest = some top)
     (hv : produced.stack[current] = produced.stack[top]) :
-    state.generate dest.val =
+    (((state.generate dest.val) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) =
       .ok { produced with mapping := produced.mapping.swapDestinations current top } := by
   have hn : ¬ ∃ h, produced.isFinal ⟨current, h⟩ := by
     rw [hc, produced.isFinal_of_bound_iff dest top hb]
     omega
-  unfold State.generate
+  rw [generate_completed]
   simp_loop
   rw [index_eq dest, except_ok_bind, he, except_ok_bind, ite_eq_left (show dest.val + 1 < produced.stack.length by omega),
     ← hc, index_eq current, except_ok_bind, ite_eq_left ((produced.isFinal_iff current).not.mpr hn)]
@@ -88,18 +95,20 @@ theorem generate_eq_after_produce_equal (state produced : State source target sp
 
 theorem generate_eq_after_produce_unequal_deep (state produced : State source target spills)
     (dest : Fin target.length)
-    (he : state.produce dest = .ok produced)
+    (he : (((state.produce dest) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) = .ok produced)
     (current top : Fin produced.stack.length)
     (hc : current.val = dest.val) (ht : top.val = produced.stack.length - 1)
     (hbelow : current.val + 1 < produced.stack.length)
     (hb : produced.mapping.symm dest = some top)
     (hv : produced.stack[current] ≠ produced.stack[top])
     (hdeep : ¬produced.stack.isSwapReachable current) :
-    state.generate dest.val = .ok produced := by
+    (((state.generate dest.val) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) = .ok produced := by
   have hn : ¬ ∃ h, produced.isFinal ⟨current, h⟩ := by
     rw [hc, produced.isFinal_of_bound_iff dest top hb]
     omega
-  unfold State.generate
+  rw [generate_completed]
   simp_loop
   rw [index_eq dest, except_ok_bind, he, except_ok_bind, ite_eq_left (show dest.val + 1 < produced.stack.length by omega),
     ← hc, index_eq current, except_ok_bind, ite_eq_left ((produced.isFinal_iff current).not.mpr hn)]
