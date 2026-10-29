@@ -112,6 +112,35 @@ example (s : MachineData) (h : Mem.loadInt s.dmem (s.regs.get64 .rdi + 16#64) 8 
   kvcgen64
   finish
 
+example (s : MachineData) (h : Mem.loadInt s.dmem (s.regs.get64 .rbx + 16440#64) 8 = some 5) :
+    ⦃ fun t => t = s ⦄ parse("subq $1, 16440(%rbx)")
+    ⦃ (fun _ t => t.dmem = Mem.storeInt s.dmem (s.regs.get64 .rbx + 16440#64) 8 4 ∧ t.status.zf = false);
+      fun _ _ => False ⦄ := by
+  refine ⟨fun t ht => ?_⟩
+  subst ht
+  kvcgen64
+  finish
+
+-- the difference is 0
+example (s : MachineData) (h : Mem.loadInt s.dmem (s.regs.get64 .rbx + 16440#64) 8 = some 1) :
+    ⦃ fun t => t = s ⦄ parse("subq $1, 16440(%rbx)")
+    ⦃ (fun _ t => t.dmem = Mem.storeInt s.dmem (s.regs.get64 .rbx + 16440#64) 8 0 ∧ t.status.zf = true);
+      fun _ _ => False ⦄ := by
+  refine ⟨fun t ht => ?_⟩
+  subst ht
+  kvcgen64
+  finish
+
+-- 0 - 1 wraps to -1
+example (s : MachineData) (h : Mem.loadInt s.dmem (s.regs.get64 .rbx + 16440#64) 8 = some 0) :
+    ⦃ fun t => t = s ⦄ parse("subq $1, 16440(%rbx)")
+    ⦃ (fun _ t => t.dmem = Mem.storeInt s.dmem (s.regs.get64 .rbx + 16440#64) 8 (-1) ∧ t.status.cf = true);
+      fun _ _ => False ⦄ := by
+  refine ⟨fun t ht => ?_⟩
+  subst ht
+  kvcgen64
+  finish
+
 example (s : MachineData) :
     ⦃ fun t => t = s ⦄ parse("leaq 16(%rdi,%rsi,8), %rax")
     ⦃ (fun _ t => t.regs.get64 .rax = s.regs.get64 .rdi + s.regs.get64 .rsi * 8#64 + 16#64);
@@ -595,6 +624,115 @@ example (s : MachineData)
 example (s : MachineData) (h : Mem.loadInt s.dmem (s.regs.get64 .rcx + s.regs.get64 .rsi) 8 = some 7) :
     ⦃ fun t => t = s ⦄ parse("movq (%rcx,%rsi), %rcx")
     ⦃ (fun _ t => t.regs.get64 .rcx = 7#64); fun _ _ => False ⦄ := by
+  refine ⟨fun t ht => ?_⟩
+  subst ht
+  kvcgen64
+  finish
+
+/-! ## The forms of the C++ build -/
+
+-- `push`: the 32-bit `and` clears the upper half
+example (s : MachineData) (hc : s.regs.get64 .rcx = 0x100000003#64)
+    (hd : s.regs.get64 .rdx = 0xffffffff00000001#64) :
+    ⦃ fun t => t = s ⦄ parse("andl %ecx, %edx")
+    ⦃ (fun _ t => t.regs.get64 .rdx = 1#64); fun _ _ => False ⦄ := by
+  refine ⟨fun t ht => ?_⟩
+  subst ht
+  kvcgen64
+  finish
+
+-- `push`: the 32-bit sum wraps and clears the upper half
+example (s : MachineData) (hd : s.regs.get64 .rdx = 0x1ffffffff#64) :
+    ⦃ fun t => t = s ⦄ parse("addl $3, %edx")
+    ⦃ (fun _ t => t.regs.get64 .rdx = 2#64); fun _ _ => False ⦄ := by
+  refine ⟨fun t ht => ?_⟩
+  subst ht
+  kvcgen64
+  finish
+
+example (s : MachineData) (ha : s.regs.get64 .rax = 0x100000001#64) :
+    ⦃ fun t => t = s ⦄ parse("addl %eax, %eax")
+    ⦃ (fun _ t => t.regs.get64 .rax = 2#64); fun _ _ => False ⦄ := by
+  refine ⟨fun t ht => ?_⟩
+  subst ht
+  kvcgen64
+  finish
+
+-- `push`: only the low half is stored
+example (s : MachineData) (hr : s.regs.get64 .rsi = 0x100000005#64)
+    (h : (Mem.loadInt s.dmem (s.regs.get64 .rax + 4#64) 4).isSome) :
+    ⦃ fun t => t = s ⦄ parse("movl %esi, 4(%rax)")
+    ⦃ (fun _ t => t.dmem = Mem.storeInt s.dmem (s.regs.get64 .rax + 4#64) 4 5); fun _ _ => False ⦄ := by
+  refine ⟨fun t ht => ?_⟩
+  subst ht
+  kvcgen64
+  all_goals simp_all
+  exact congrArg _ (by decide)
+
+-- `produce`: the mask of a slot
+example (s : MachineData) (hb : s.regs.get64 .rbp = 0x0ff#64)
+    (h : Mem.loadInt s.dmem (s.regs.get64 .rdx) 8 = some 0xff0) :
+    ⦃ fun t => t = s ⦄ parse("andq (%rdx), %rbp")
+    ⦃ (fun _ t => t.regs.get64 .rbp = 0x0f0#64); fun _ _ => False ⦄ := by
+  refine ⟨fun t ht => ?_⟩
+  subst ht
+  kvcgen64
+  finish
+
+-- `buildBottomUp`: the byte `or` keeps the bits above the low byte
+example (s : MachineData) (ha : s.regs.get64 .rax = 0x1201#64) (hd : s.regs.get64 .rdx = 0x3402#64) :
+    ⦃ fun t => t = s ⦄ parse("orb %dl, %al")
+    ⦃ (fun _ t => t.regs.get64 .rax = 0x1203#64); fun _ _ => False ⦄ := by
+  refine ⟨fun t ht => ?_⟩
+  subst ht
+  kvcgen64
+  finish
+
+-- `produce`: the compare of the saved copy position with -1
+example (s : MachineData) (h : Mem.loadInt s.dmem (s.regs.get64 .rsp) 8 = some (-1)) :
+    ⦃ fun t => t = s ⦄ parse("cmpq $-1, (%rsp)
+      sete %cl") ⦃ (fun _ t => (t.regs.get64 .rcx).take 8 = 1#8); fun _ _ => False ⦄ := by
+  refine ⟨fun t ht => ?_⟩
+  subst ht
+  kvcgen64
+  finish
+
+example (s : MachineData) (h : Mem.loadInt s.dmem (s.regs.get64 .rsp) 8 = some 3) :
+    ⦃ fun t => t = s ⦄ parse("cmpq $-1, (%rsp)
+      sete %cl") ⦃ (fun _ t => (t.regs.get64 .rcx).take 8 = 0#8); fun _ _ => False ⦄ := by
+  refine ⟨fun t ht => ?_⟩
+  subst ht
+  kvcgen64
+  finish
+
+-- `build_bottom_up`: the clear of `m_positionOf`
+example (s : MachineData)
+    (h : (Mem.loadInt s.dmem (s.regs.get64 .rsp + s.regs.get64 .rax * 8#64 + 8248#64) 8).isSome) :
+    ⦃ fun t => t = s ⦄ parse("movq $-1, 8248(%rsp,%rax,8)")
+    ⦃ (fun _ t => t.dmem = Mem.storeInt s.dmem (s.regs.get64 .rsp + s.regs.get64 .rax * 8#64 + 8248#64)
+        8 (-1)); fun _ _ => False ⦄ := by
+  refine ⟨fun t ht => ?_⟩
+  subst ht
+  kvcgen64
+  finish
+
+-- `build_bottom_up`: the result from the status, `Done`
+example (s : MachineData) (ha : s.regs.get64 .rax = 0x100#64)
+    (h : Mem.loadInt s.dmem (s.regs.get64 .rsp + 48#64) 8 = some 7) :
+    ⦃ fun t => t = s ⦄ parse("cmpb $2, %al
+      movq $-2, %rax
+      cmovne 48(%rsp), %rax") ⦃ (fun _ t => t.regs.get64 .rax = 7#64); fun _ _ => False ⦄ := by
+  refine ⟨fun t ht => ?_⟩
+  subst ht
+  kvcgen64
+  finish
+
+-- `AssertionFailed`
+example (s : MachineData) (ha : s.regs.get64 .rax = 0x102#64)
+    (h : Mem.loadInt s.dmem (s.regs.get64 .rsp + 48#64) 8 = some 7) :
+    ⦃ fun t => t = s ⦄ parse("cmpb $2, %al
+      movq $-2, %rax
+      cmovne 48(%rsp), %rax") ⦃ (fun _ t => t.regs.get64 .rax = -2#64); fun _ _ => False ⦄ := by
   refine ⟨fun t ht => ?_⟩
   subst ht
   kvcgen64

@@ -197,6 +197,32 @@ local macro "run_step" : tactic =>
     AddrExpr.zeroExtend_interp_base_disp, Width.bytes, hload, Effects.All]
   exact hn _ (by rwa [hload, Option.get!_some] at hpre)
 
+/-- `subq $i, disp(%b)` -/
+@[spec] public theorem sub_mem_imm_spec (b : Reg64) (d i : Int64) :
+    ⦃ fun s =>
+        let addr := s.regs.get64 b + BitVec.ofInt 64 d.toInt
+        (Mem.loadInt s.dmem addr 8).isSome = true ∧
+          let a := BitVec.setWidth 64 i.toBitVec
+          let bv := BitVec.ofInt 64 (Mem.loadInt s.dmem addr 8).get!
+          let v := bv - a
+          Q () { s with
+            dmem := Mem.storeInt s.dmem addr 8 v.toInt
+            status := StatusFlags.from_result v
+              { cf := v.unsigned != bv.unsigned - a.unsigned,
+                af := (v.take 4).unsigned != (bv.take 4).unsigned - (a.take 4).unsigned,
+                of := v.signed != bv.signed - a.signed } } ⦄
+      (Directive.instr (.regular .W64 .W64
+          (.sub (.mem ⟨some (.reg b), none, .int64 d⟩) (.imm (.int64 i)))))
+    ⦃ Q; E ⦄ := by
+  refine ⟨fun s hpre => ?_⟩
+  obtain ⟨hmapped, hpre⟩ := hpre
+  obtain ⟨v, hload⟩ := Option.isSome_iff_exists.mp hmapped
+  refine Program.wp_single fun _ _ _ _ hn _ => ?_
+  simp only [Directive.interp, Instr.interp, Operation.interp, Operand.interp,
+    RegOrMem.interp, ConstExpr.interp, MachineData.load, MachineData.set, MachineData.store,
+    AddrExpr.zeroExtend_interp_base_disp, Width.bytes, hload, Effects.All]
+  exact hn _ (by rwa [hload, Option.get!_some] at hpre)
+
 /-! ## Compares with a memory operand -/
 
 /-- `cmpq %r, disp(%b)` -/
@@ -833,6 +859,140 @@ unknown. -/
     RegOrMem.interp, MachineData.load, MachineData.set, MachineData.setReg,
     Reg64s.set_low_W64, AddrExpr.zeroExtend_interp_base_idx, Width.bytes, hload,
     Effects.All]
+  exact hn _ (by rwa [hload, Option.get!_some] at hpre)
+
+/-! ## The forms of the C++ build -/
+
+/-- `addl $i, %r32`: the write clears the upper half. -/
+@[spec] public theorem add_reg32_imm_spec (asz : Width) (r : Reg64) (i : Int64) :
+    ⦃ fun s =>
+        let a := i.toBitVec.setWidth 32
+        let b := (s.regs.get64 r).take 32
+        let v := a + b
+        Q () { s with
+          regs := s.regs.set64 r (v.zeroExtend 64)
+          status := StatusFlags.from_result v
+            { cf := v.unsigned != a.unsigned + b.unsigned,
+              af := (v.take 4).unsigned != (a.take 4).unsigned + (b.take 4).unsigned,
+              of := v.signed != a.signed + b.signed } } ⦄
+      (Directive.instr (.regular asz .W32 (.add (.reg (.low r .W32)) (.imm (.int64 i)))))
+    ⦃ Q; E ⦄ :=
+  ⟨fun _ hq => Program.wp_single fun _ _ _ _ hn _ => by
+    run_step
+    simp only [Reg64s.get_low_W32, Reg64s.set_low_W32]
+    exact hn _ hq⟩
+
+/-- `addl %rs32, %rd32`: the write clears the upper half. -/
+@[spec] public theorem add_reg32_reg32_spec (asz : Width) (rd rs : Reg64) :
+    ⦃ fun s =>
+        let a := (s.regs.get64 rs).take 32
+        let b := (s.regs.get64 rd).take 32
+        let v := a + b
+        Q () { s with
+          regs := s.regs.set64 rd (v.zeroExtend 64)
+          status := StatusFlags.from_result v
+            { cf := v.unsigned != a.unsigned + b.unsigned,
+              af := (v.take 4).unsigned != (a.take 4).unsigned + (b.take 4).unsigned,
+              of := v.signed != a.signed + b.signed } } ⦄
+      (Directive.instr (.regular asz .W32
+          (.add (.reg (.low rd .W32)) (.regOrMem (.reg (.low rs .W32))))))
+    ⦃ Q; E ⦄ :=
+  ⟨fun _ hq => Program.wp_single fun _ _ _ _ hn _ => by
+    run_step
+    simp only [Reg64s.get_low_W32, Reg64s.set_low_W32]
+    exact hn _ hq⟩
+
+/-- `andl %rs32, %rd32`: the write clears the upper half. -/
+@[spec] public theorem and_reg32_reg32_spec (asz : Width) (rd rs : Reg64) :
+    ⦃ fun s =>
+        let v := (s.regs.get64 rd).take 32 &&& (s.regs.get64 rs).take 32
+        ∀ af : Bool, Q () { s with
+          regs := s.regs.set64 rd (v.zeroExtend 64)
+          status := StatusFlags.from_result v { cf := false, of := false, af } } ⦄
+      (Directive.instr (.regular asz .W32
+          (.and (.reg (.low rd .W32)) (.regOrMem (.reg (.low rs .W32))))))
+    ⦃ Q; E ⦄ := by
+  refine ⟨fun s hpre => ?_⟩
+  refine Program.wp_single fun _ _ _ _ hn _ => ?_
+  run_step
+  simp only [Reg64s.get_low_W32, Reg64s.set_low_W32]
+  intro af
+  exact hn _ (hpre af)
+
+/-- `andq disp(%b), %rd` -/
+@[spec] public theorem and_reg_mem_spec (rd b : Reg64) (d : Int64) :
+    ⦃ fun s =>
+        let addr := s.regs.get64 b + BitVec.ofInt 64 d.toInt
+        (Mem.loadInt s.dmem addr 8).isSome = true ∧
+          let v := s.regs.get64 rd &&& BitVec.ofInt 64 (Mem.loadInt s.dmem addr 8).get!
+          ∀ af : Bool, Q () { s with
+            regs := s.regs.set64 rd v
+            status := StatusFlags.from_result v { cf := false, of := false, af } } ⦄
+      (Directive.instr (.regular .W64 .W64
+          (.and (.reg (.low rd .W64)) (.regOrMem (.mem ⟨some (.reg b), none, .int64 d⟩)))))
+    ⦃ Q; E ⦄ := by
+  refine ⟨fun s hpre => ?_⟩
+  obtain ⟨hmapped, hpre⟩ := hpre
+  obtain ⟨v, hload⟩ := Option.isSome_iff_exists.mp hmapped
+  refine Program.wp_single fun _ _ _ _ hn _ => ?_
+  simp only [Directive.interp, Instr.interp, Operation.interp, Operand.interp,
+    RegOrMem.interp, MachineData.load, MachineData.set, MachineData.setReg, Reg64s.get_low_W64,
+    Reg64s.set_low_W64, AddrExpr.zeroExtend_interp_base_disp, Width.bytes, hload, Effects.All]
+  intro af
+  exact hn _ (by rw [hload, Option.get!_some] at hpre; exact hpre af)
+
+/-- `orb %rs8, %rd8`: the bits above the low byte of `rd` stay. -/
+@[spec] public theorem or_reg8_reg8_spec (asz : Width) (rd rs : Reg64) :
+    ⦃ fun s =>
+        let v := (s.regs.get64 rd).take 8 ||| (s.regs.get64 rs).take 8
+        ∀ af : Bool, Q () { s with
+          regs := s.regs.set64 rd ((s.regs.get64 rd).replaceLow v)
+          status := StatusFlags.from_result v { cf := false, of := false, af } } ⦄
+      (Directive.instr (.regular asz .W8
+          (.or (.reg (.low rd .W8)) (.regOrMem (.reg (.low rs .W8))))))
+    ⦃ Q; E ⦄ := by
+  refine ⟨fun s hpre => ?_⟩
+  refine Program.wp_single fun _ _ _ _ hn _ => ?_
+  run_step
+  simp only [Reg64s.get_low_W8, Reg64s.set_low_W8]
+  intro af
+  exact hn _ (hpre af)
+
+/-- `movq $i, disp(%b, %i, 8)` -/
+@[spec] public theorem mov_store_imm_idx8_spec (b x : Reg64) (d i : Int64) :
+    ⦃ fun s =>
+        let a := s.regs.get64 b + s.regs.get64 x * 8#64 + BitVec.ofInt 64 d.toInt
+        (Mem.loadInt s.dmem a 8).isSome = true
+        ∧ Q () { s with dmem := Mem.storeInt s.dmem a 8 (BitVec.setWidth 64 i.toBitVec).toInt } ⦄
+      (Directive.instr (.regular .W64 .W64
+          (.mov (.mem ⟨some (.reg b), some ⟨x, .W64⟩, .int64 d⟩) (.imm (.int64 i)))))
+    ⦃ Q; E ⦄ := by
+  refine ⟨fun s hpre => ?_⟩
+  obtain ⟨hmapped, hpre⟩ := hpre
+  obtain ⟨v, hload⟩ := Option.isSome_iff_exists.mp hmapped
+  refine Program.wp_single fun _ _ _ _ hn _ => ?_
+  simp only [Directive.interp, Instr.interp, Operation.interp, Operand.interp,
+    ConstExpr.interp, MachineData.set, MachineData.store,
+    AddrExpr.zeroExtend_interp_base_idx8, Width.bytes, hload, Effects.All]
+  exact hn _ hpre
+
+/-- `cmovcc disp(%b), %rd`: the load happens for both values of the condition. -/
+@[spec] public theorem cmov_load_spec (cc : CondCode) (rd b : Reg64) (d : Int64) :
+    ⦃ fun s =>
+        let a := s.regs.get64 b + BitVec.ofInt 64 d.toInt
+        (Mem.loadInt s.dmem a 8).isSome = true
+        ∧ Q () { s with regs := s.regs.set64 rd (if cc.interp s.status
+            then BitVec.ofInt 64 (Mem.loadInt s.dmem a 8).get! else s.regs.get64 rd) } ⦄
+      (Directive.instr (.regular .W64 .W64
+          (.cmovcc cc (.low rd .W64) (.mem ⟨some (.reg b), none, .int64 d⟩))))
+    ⦃ Q; E ⦄ := by
+  refine ⟨fun s hpre => ?_⟩
+  obtain ⟨hmapped, hpre⟩ := hpre
+  obtain ⟨v, hload⟩ := Option.isSome_iff_exists.mp hmapped
+  refine Program.wp_single fun _ _ _ _ hn _ => ?_
+  simp only [Directive.interp, Instr.interp, Operation.interp, RegOrMem.interp, MachineData.load,
+    MachineData.setReg, Reg64s.set_low_W64, Reg64s.get_low_W64, AddrExpr.zeroExtend_interp_base_disp,
+    Width.bytes, hload, Effects.All]
   exact hn _ (by rwa [hload, Option.get!_some] at hpre)
 
 end Program.WP

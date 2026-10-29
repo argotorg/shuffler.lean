@@ -12,7 +12,7 @@ open Shuffler Shuffler.Emission
 theorem initRel : InitRelStmt := by
   intro e source dests h
   have hl := h.length
-  refine ⟨?_, ?_, rfl, rfl, Bbu.Pos_init h.length.symm h.dests, ?_, h.canonTarget⟩
+  refine ⟨?_, ?_, ?_, rfl, Bbu.Pos_init h.length.symm h.dests, ?_, h.canonTarget⟩
   · show source.map decode = (List.zipWith Bbu.Slot.mk source dests).map fun s => decode s.val
     apply List.ext_getElem
     · simp [hl]
@@ -24,6 +24,8 @@ theorem initRel : InitRelStmt := by
       simpa using this
     refine Option.map_eq_some_iff.mpr ⟨_, rfl, ?_⟩
     simp [Bbu.init, Bbu.St.dest, hi, hl]
+  · show e.n - source.length = _
+    rw [Bbu.init_pending h.length.symm h.dests, h.length]
   · intro s hs
     obtain ⟨i, hi, rfl⟩ := List.getElem_of_mem hs
     simp only [Bbu.init, List.getElem_zipWith]

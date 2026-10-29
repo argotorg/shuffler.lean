@@ -23,7 +23,8 @@ theorem dup_corr : DupStmt := by
   have hl := h.len
   have hcl : c < state.stack.length := hl ▸ hc
   have hpos := h.positionOf ⟨d, hd⟩
-  unfold Bbu.add State.dup
+  rw [Bbu.add_eq]
+  unfold State.dup
   rw [show index state.stack.length c = .ok ⟨c, hcl⟩ from index_eq ⟨c, hcl⟩, except_ok_bind]
   have hreach : state.stack.isDupReachable ⟨c, hcl⟩ := by
     simp only [Stack.isDupReachable, Stack.offsetToDepth, MAX_DUP_DEPTH]

@@ -8,32 +8,34 @@ namespace Bbu
 set_option maxRecDepth 100000
 
 -- The function programs make up the linked file.
-example : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ swapWithAsm ++ pushAsm
-    ++ dupAsm ++ produceAsm ++ generateAsm ++ finishAsm ++ loopAsm ++ buildBottomUpAsm := by rfl
+example : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm ++ produceAsm
+    ++ finishAsm ++ swapWithAsm ++ generateAsm ++ loopAsm ++ buildBottomUpAsm := by rfl
 
 -- `bbuParseFile` reads `leaq disp(,%i,8), %r` as the operand with no base.
-example : swapWithAsm[6]? = some (.instr (.regular .W64 .W64
-    (.lea (.low .rdi .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩))) := by rfl
+example : swapWithAsm[7]? = some (.instr (.regular .W64 .W64
+    (.lea (.low .rdi .W64) ⟨none, some ⟨.rdx, .W64⟩, .int64 0⟩))) := by rfl
 
 -- The other lines are as `parse` reads them.
-example : swapWithAsm.take 6 = parse("swapWith:
-	movq	(%rdi), %r10
-	cmpq	%r10, %rsi
-	jnb	.LB12
+example : swapWithAsm.take 7 = parse("_ZN12_GLOBAL__N_18Emission8swapWithE11StackOffset:
 	movq	%rdi, %rax
-	movq	%rsi, %rdx") := by rfl
+	movq	%rsi, %rdx
+	movq	32(%rdi), %rsi
+	movl	$2, %ecx
+	cmpq	%rsi, %rdx
+	jnb	.LB46") := by rfl
 
 -- Each line with an operand with no base.
 example : (bbuAsm.filter fun
     | .instr (.regular _ _ (.lea _ a)) => a.base.isNone
     | _ => false) =
-    [.instr (.regular .W64 .W64 (.lea (.low .rdi .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .rsi .W64) ⟨none, some ⟨.r8, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .r14 .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .r10 .W64) ⟨none, some ⟨.r8, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .rsi .W64) ⟨none, some ⟨.r10, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .r8 .W64) ⟨none, some ⟨.rax, .W64⟩, .int64 0⟩))] := by
+    [.instr (.regular .W64 .W64 (.lea (.low .r14 .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdi .W64) ⟨none, some ⟨.rdx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rbx .W64) ⟨none, some ⟨.r14, .W64⟩, .int64 0⟩))] := by
   rfl
+
+-- `bbuParseFn` reads the file of the name.
+example : (isSpilledAsm.head? = some (.label Names.isSpilled)) := by rfl
+example : (buildBottomUpAsm.head? = some (.label Names.build_bottom_up)) := by rfl
 
 end Bbu
 
@@ -48,3 +50,21 @@ namespace Bbu
 #guard (parseLines "\tleaq\t0(,%rsi,8), %rdi" matches .ok _)
 
 end Bbu
+
+namespace Bbu.AsmTest
+
+def notLiteral : String := "a" ++ "b"
+def noFile : String := "noFile"
+
+-- `bbuParseFn` takes only a def with a string literal value, and the file must exist.
+/-- error: Bbu.AsmTest.notLiteral is not a def with a string literal as its value -/
+#guard_msgs in
+example : Program := bbuParseFn(notLiteral)
+/--
+error: no such file or directory (error code: 2)
+  file: c/bbu/noFile.S
+-/
+#guard_msgs in
+example : Program := bbuParseFn(noFile)
+
+end Bbu.AsmTest

@@ -1,7 +1,7 @@
 import BbuKraken.Kit
 
 /-!
-Lemmas for the body triples of `push` (`c/bbu/push.S`) and `dup` (`c/bbu/dup.S`).
+Lemmas for the body triples of `push` (`c/bbu/<Names.push>.S`) and `dup` (`c/bbu/<Names.dup>.S`).
 Both read `m_positionOf[_destination]`, write the destination, the position, one
 operation and the slot, and add 1 to `nops` and `len`. Neither has a frame or a call.
 -/
@@ -152,13 +152,13 @@ theorem ofNat_mul_toNat (x : Addr) (c : Nat) :
 theorem wordAt_toNat (B x : Addr) : wordAt B x.toNat = B + x * 8#64 := by
   simp only [wordAt, ofNat_mul_toNat]
 
-theorem wordAt_dest (S x : Addr) : wordAt S (DEST + x.toNat) = S + x * 8#64 + 72#64 := by
+theorem wordAt_dest (S x : Addr) : wordAt S (DEST + x.toNat) = S + x * 8#64 + 56#64 := by
   simp only [wordAt, DEST_eq, Nat.mul_add, BitVec.ofNat_add, ofNat_mul_toNat, BitVec.add_assoc,
-    BitVec.add_comm (BitVec.ofNat 64 (8 * 9))]
+    BitVec.add_comm (BitVec.ofNat 64 (8 * 7))]
 
-theorem wordAt_pos (S x : Addr) : wordAt S (POS + x.toNat) = S + x * 8#64 + 8264#64 := by
+theorem wordAt_pos (S x : Addr) : wordAt S (POS + x.toNat) = S + x * 8#64 + 8248#64 := by
   simp only [wordAt, POS_eq, Nat.mul_add, BitVec.ofNat_add, ofNat_mul_toNat, BitVec.add_assoc,
-    BitVec.add_comm (BitVec.ofNat 64 (8 * 1033))]
+    BitVec.add_comm (BitVec.ofNat 64 (8 * 1031))]
 
 /-! ## The slot of an operation -/
 
@@ -207,31 +207,31 @@ variable {s : MachineData} {A : MachineData → Prop}
 -- operations.
 theorem facts (hpre : Pre 8 A s) (hL : (st s).len < (env s).n) (hd : (rdx s).toNat < (env s).n)
     (hN : (st s).trace.length < cap s) :
-    (rd s.dmem s.regs.rdi.toBitVec).toNat < nOf s.dmem s.regs.rdi.toBitVec
+    (rd s.dmem (s.regs.rdi.toBitVec + 32#64)).toNat < nOf s.dmem s.regs.rdi.toBitVec
     ∧ s.regs.rdx.toBitVec.toNat < nOf s.dmem s.regs.rdi.toBitVec
-    ∧ (rd s.dmem (s.regs.rdi.toBitVec + 16#64)).toNat < 6 * nOf s.dmem s.regs.rdi.toBitVec
+    ∧ (rd s.dmem (s.regs.rdi.toBitVec + 48#64)).toNat < 6 * nOf s.dmem s.regs.rdi.toBitVec
     ∧ nOf s.dmem s.regs.rdi.toBitVec ≤ 1024
-    ∧ (16456 ≤ (s.regs.rsp.toBitVec - 8#64 - s.regs.rdi.toBitVec).toNat
+    ∧ (16464 ≤ (s.regs.rsp.toBitVec - 8#64 - s.regs.rdi.toBitVec).toNat
       ∧ 8 ≤ (s.regs.rdi.toBitVec - (s.regs.rsp.toBitVec - 8#64)).toNat)
     ∧ (8 * nOf s.dmem s.regs.rdi.toBitVec
-        ≤ (s.regs.rsp.toBitVec - 8#64 - rd s.dmem (s.regs.rdi.toBitVec + 64#64)).toNat
-      ∧ 8 ≤ (rd s.dmem (s.regs.rdi.toBitVec + 64#64) - (s.regs.rsp.toBitVec - 8#64)).toNat)
+        ≤ (s.regs.rsp.toBitVec - 8#64 - rd s.dmem (s.regs.rdi.toBitVec + 24#64)).toNat
+      ∧ 8 ≤ (rd s.dmem (s.regs.rdi.toBitVec + 24#64) - (s.regs.rsp.toBitVec - 8#64)).toNat)
     ∧ (72 * nOf s.dmem s.regs.rdi.toBitVec
-        ≤ (s.regs.rsp.toBitVec - 8#64 - rd s.dmem (s.regs.rdi.toBitVec + 48#64)).toNat
-      ∧ 8 ≤ (rd s.dmem (s.regs.rdi.toBitVec + 48#64) - (s.regs.rsp.toBitVec - 8#64)).toNat)
-    ∧ (16456 ≤ (rd s.dmem (s.regs.rdi.toBitVec + 64#64) - s.regs.rdi.toBitVec).toNat
+        ≤ (s.regs.rsp.toBitVec - 8#64 - rd s.dmem (s.regs.rdi.toBitVec + 40#64)).toNat
+      ∧ 8 ≤ (rd s.dmem (s.regs.rdi.toBitVec + 40#64) - (s.regs.rsp.toBitVec - 8#64)).toNat)
+    ∧ (16464 ≤ (rd s.dmem (s.regs.rdi.toBitVec + 24#64) - s.regs.rdi.toBitVec).toNat
       ∧ 8 * nOf s.dmem s.regs.rdi.toBitVec
-        ≤ (s.regs.rdi.toBitVec - rd s.dmem (s.regs.rdi.toBitVec + 64#64)).toNat)
-    ∧ (16456 ≤ (rd s.dmem (s.regs.rdi.toBitVec + 48#64) - s.regs.rdi.toBitVec).toNat
+        ≤ (s.regs.rdi.toBitVec - rd s.dmem (s.regs.rdi.toBitVec + 24#64)).toNat)
+    ∧ (16464 ≤ (rd s.dmem (s.regs.rdi.toBitVec + 40#64) - s.regs.rdi.toBitVec).toNat
       ∧ 72 * nOf s.dmem s.regs.rdi.toBitVec
-        ≤ (s.regs.rdi.toBitVec - rd s.dmem (s.regs.rdi.toBitVec + 48#64)).toNat)
+        ≤ (s.regs.rdi.toBitVec - rd s.dmem (s.regs.rdi.toBitVec + 40#64)).toNat)
     ∧ (8 * nOf s.dmem s.regs.rdi.toBitVec
-        ≤ (rd s.dmem (s.regs.rdi.toBitVec + 48#64) - rd s.dmem (s.regs.rdi.toBitVec + 64#64)).toNat
+        ≤ (rd s.dmem (s.regs.rdi.toBitVec + 40#64) - rd s.dmem (s.regs.rdi.toBitVec + 24#64)).toNat
       ∧ 72 * nOf s.dmem s.regs.rdi.toBitVec
-        ≤ (rd s.dmem (s.regs.rdi.toBitVec + 64#64) - rd s.dmem (s.regs.rdi.toBitVec + 48#64)).toNat)
-    ∧ s.regs.rdi.toBitVec.toNat + 16456 ≤ 2 ^ 64
-    ∧ (rd s.dmem (s.regs.rdi.toBitVec + 64#64)).toNat + 8 * nOf s.dmem s.regs.rdi.toBitVec ≤ 2 ^ 64
-    ∧ (rd s.dmem (s.regs.rdi.toBitVec + 48#64)).toNat + 72 * nOf s.dmem s.regs.rdi.toBitVec
+        ≤ (rd s.dmem (s.regs.rdi.toBitVec + 24#64) - rd s.dmem (s.regs.rdi.toBitVec + 40#64)).toNat)
+    ∧ s.regs.rdi.toBitVec.toNat + 16464 ≤ 2 ^ 64
+    ∧ (rd s.dmem (s.regs.rdi.toBitVec + 24#64)).toNat + 8 * nOf s.dmem s.regs.rdi.toBitVec ≤ 2 ^ 64
+    ∧ (rd s.dmem (s.regs.rdi.toBitVec + 40#64)).toNat + 72 * nOf s.dmem s.regs.rdi.toBitVec
       ≤ 2 ^ 64 := by
   have hw := hpre.1
   have hfr := hpre.2.1
@@ -255,11 +255,11 @@ theorem facts (hpre : Pre 8 A s) (hL : (st s).len < (env s).n) (hd : (rdx s).toN
     hol⟩ <;> bv_omega
 
 
--- The word that `cmpq $-1, 8264(%rdi,%rdx,8)` reads is `m_positionOf[d]`.
+-- The word that `cmpq $-1, 8248(%rdi,%rdx,8)` reads is `m_positionOf[d]`.
 theorem pos_word {ra : Int64} (hpre : Pre 8 A s) (hL : (st s).len < (env s).n)
     (hd : (rdx s).toNat < (env s).n) (hN : (st s).trace.length < cap s) :
     optOf (rd (Mem.storeInt s.dmem (s.regs.rsp.toBitVec - 8#64) 8 ra.toBitVec.toInt)
-      (s.regs.rdi.toBitVec + s.regs.rdx.toBitVec * 8#64 + 8264#64))
+      (s.regs.rdi.toBitVec + s.regs.rdx.toBitVec * 8#64 + 8248#64))
       = positionOf (st s) (rdx s).toNat := by
   obtain ⟨-, hd', -, hn, hs1, -⟩ := facts hpre hL hd hN
   clear hpre hL hd hN
@@ -268,13 +268,13 @@ theorem pos_word {ra : Int64} (hpre : Pre 8 A s) (hL : (st s).len < (env s).n)
   generalize nOf s.dmem s.regs.rdi.toBitVec = n at *
   pd_rd
 
--- The flag of `cmpq $-1, 8264(%rdi,%rdx,8)` tells if the destination has a slot.
+-- The flag of `cmpq $-1, 8248(%rdi,%rdx,8)` tells if the destination has a slot.
 theorem pos_flag {ra : Int64} (hpre : Pre 8 A s) (hL : (st s).len < (env s).n)
     (hd : (rdx s).toNat < (env s).n) (hN : (st s).trace.length < cap s)
     {r : StatusFlags.from_result.Remaining} {b : Bool}
     (h : CondCode.nz.interp (StatusFlags.from_result
       (rd (Mem.storeInt s.dmem (s.regs.rsp.toBitVec - 8#64) 8 ra.toBitVec.toInt)
-        (s.regs.rdi.toBitVec + s.regs.rdx.toBitVec * 8#64 + 8264#64) - 18446744073709551615#64)
+        (s.regs.rdi.toBitVec + s.regs.rdx.toBitVec * 8#64 + 8248#64) - 18446744073709551615#64)
       r) = b) :
     (positionOf (st s) (rdx s).toNat).isSome = b := by
   rw [← pos_word (ra := ra) hpre hL hd hN, ← h, nz_sub]
@@ -288,22 +288,22 @@ end
 -- The model state after `add`, from the words in memory.
 theorem st_add {m m' : Mem 64} {S : Addr} {slot : StackSlot} {d : Nat} {op : Op}
     (hnone : positionOf (stOf m S) d = none) (hn : nOf m' S = nOf m S)
-    (hlen : (rd m' (wordAt S 0)).toNat = (rd m (wordAt S 0)).toNat + 1)
-    (hpend : rd m' (wordAt S 1) = rd m (wordAt S 1))
-    (hnops : (rd m' (wordAt S 2)).toNat = (rd m (wordAt S 2)).toNat + 1)
+    (hlen : (rd m' (wordAt S 4)).toNat = (rd m (wordAt S 4)).toNat + 1)
+    (hpend : rd m' (wordAt S PEND) = rd m (wordAt S PEND))
+    (hnops : (rd m' (wordAt S 6)).toNat = (rd m (wordAt S 6)).toNat + 1)
     (hdata : dataOf m' S = dataOf m S)
-    (hval : ∀ i < (rd m (wordAt S 0)).toNat,
+    (hval : ∀ i < (rd m (wordAt S 4)).toNat,
       rd m' (wordAt (dataOf m S) i) = rd m (wordAt (dataOf m S) i))
-    (hvalL : StackSlot.ofWord (rd m' (wordAt (dataOf m S) (rd m (wordAt S 0)).toNat)) = slot)
-    (hdest : ∀ i < (rd m (wordAt S 0)).toNat,
+    (hvalL : StackSlot.ofWord (rd m' (wordAt (dataOf m S) (rd m (wordAt S 4)).toNat)) = slot)
+    (hdest : ∀ i < (rd m (wordAt S 4)).toNat,
       rd m' (wordAt S (DEST + i)) = rd m (wordAt S (DEST + i)))
-    (hdestL : (rd m' (wordAt S (DEST + (rd m (wordAt S 0)).toNat))).toNat = d)
+    (hdestL : (rd m' (wordAt S (DEST + (rd m (wordAt S 4)).toNat))).toNat = d)
     (hpos : ∀ e < nOf m S, e ≠ d → rd m' (wordAt S (POS + e)) = rd m (wordAt S (POS + e)))
-    (hposd : optOf (rd m' (wordAt S (POS + d))) = some (rd m (wordAt S 0)).toNat)
-    (hop : ∀ i < (rd m (wordAt S 2)).toNat, opOf m' S i = opOf m S i)
-    (hopN : opOf m' S (rd m (wordAt S 2)).toNat = op) :
+    (hposd : optOf (rd m' (wordAt S (POS + d))) = some (rd m (wordAt S 4)).toNat)
+    (hop : ∀ i < (rd m (wordAt S 6)).toNat, opOf m' S i = opOf m S i)
+    (hopN : opOf m' S (rd m (wordAt S 6)).toNat = op) :
     add (stOf m S) slot d op = .ok (stOf m' S) := by
-  unfold add
+  rw [add_eq]
   rw [hnone]
   simp only [Option.isSome_none, Bool.false_eq_true, ite_false, Except.ok.injEq]
   symm
@@ -315,10 +315,10 @@ theorem st_add {m m' : Mem 64} {S : Addr} {slot : StackSlot} {d : Nat} {op : Op}
     simp only [St.len, stOf, List.length_append, List.length_map, List.length_range,
       List.length_singleton] at hi
     simp only [stOf]
-    rcases Nat.lt_or_ge i (rd m (wordAt S 0)).toNat with h | h
+    rcases Nat.lt_or_ge i (rd m (wordAt S 4)).toNat with h | h
     · rw [List.getElem_append_left (by simpa using h)]
       simp only [List.getElem_map, List.getElem_range, slotOf, hdata, hval i h, hdest i h]
-    · have : i = (rd m (wordAt S 0)).toNat := by omega
+    · have : i = (rd m (wordAt S 4)).toNat := by omega
       subst this
       rw [List.getElem_append_right (by simp)]
       simp only [List.length_map, List.length_range, Nat.sub_self, List.getElem_singleton, slotOf,
@@ -334,10 +334,10 @@ theorem st_add {m m' : Mem 64} {S : Addr} {slot : StackSlot} {d : Nat} {op : Op}
     simp only [stOf, List.length_append, List.length_map, List.length_range,
       List.length_singleton] at hi
     simp only [stOf]
-    rcases Nat.lt_or_ge i (rd m (wordAt S 2)).toNat with h | h
+    rcases Nat.lt_or_ge i (rd m (wordAt S 6)).toNat with h | h
     · rw [List.getElem_append_left (by simpa using h)]
       simp only [List.getElem_map, List.getElem_range, hop i h]
-    · have : i = (rd m (wordAt S 2)).toNat := by omega
+    · have : i = (rd m (wordAt S 6)).toNat := by omega
       subst this
       rw [List.getElem_append_right (by simp)]
       simp only [List.length_map, List.length_range, Nat.sub_self, List.getElem_singleton, hopN]

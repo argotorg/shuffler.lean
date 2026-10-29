@@ -1,9 +1,11 @@
 import BbuKraken.Asm
 import PermuteKraken.Asm
+import BbuKraken.Names
 
 /-!
 The function declarations of the linked program: `c/build_bottom_up.S` and
-`c/permute.S` at the positions `k` and `j` of the host program. Each function
+`c/permute.S` at the positions `k` and `j` of the host program. The labels are the
+symbol names of `BbuKraken.Names`. Each function
 starts with its label and then an instruction that is not padding, so distinct
 function labels have distinct addresses, and `FunDecls.at (label f)` is the
 fragment of `f`.
@@ -15,24 +17,24 @@ open scoped Program.WP
 namespace Bbu
 
 set_option maxRecDepth 100000 in
-theorem bbuAsm_eq : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ swapWithAsm
-    ++ pushAsm ++ dupAsm ++ produceAsm ++ generateAsm ++ finishAsm ++ loopAsm
+theorem bbuAsm_eq : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm
+    ++ produceAsm ++ finishAsm ++ swapWithAsm ++ generateAsm ++ loopAsm
     ++ buildBottomUpAsm := by rfl
 
 section
 set_option maxRecDepth 100000
 
 theorem isSpilled_at : isSpilledAsm.IsInfixAt bbuAsm 0 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem shallowestCopy_at : shallowestCopyAsm.IsInfixAt bbuAsm 17 := by
+theorem shallowestCopy_at : shallowestCopyAsm.IsInfixAt bbuAsm 16 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem swapWith_at : swapWithAsm.IsInfixAt bbuAsm 34 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem push_at : pushAsm.IsInfixAt bbuAsm 98 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem dup_at : dupAsm.IsInfixAt bbuAsm 133 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem produce_at : produceAsm.IsInfixAt bbuAsm 161 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem generate_at : generateAsm.IsInfixAt bbuAsm 257 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem finish_at : finishAsm.IsInfixAt bbuAsm 304 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem loop_at : loopAsm.IsInfixAt bbuAsm 378 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem buildBottomUp_at : buildBottomUpAsm.IsInfixAt bbuAsm 672 := by
+theorem swapWith_at : swapWithAsm.IsInfixAt bbuAsm 278 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem push_at : pushAsm.IsInfixAt bbuAsm 33 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem dup_at : dupAsm.IsInfixAt bbuAsm 74 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem produce_at : produceAsm.IsInfixAt bbuAsm 105 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem generate_at : generateAsm.IsInfixAt bbuAsm 341 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem finish_at : finishAsm.IsInfixAt bbuAsm 198 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem loop_at : loopAsm.IsInfixAt bbuAsm 394 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem buildBottomUp_at : buildBottomUpAsm.IsInfixAt bbuAsm 675 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 end
 
@@ -126,15 +128,15 @@ def decls : FunDecls := ⟨[L.frag isSpilledAsm isSpilled_at,
 macro "head_tac" : tactic =>
   `(tactic| exact head_of_isInfixAt _ rfl (by rintro ⟨⟩))
 
-theorem heads : Head (L.frag isSpilledAsm isSpilled_at) "isSpilled"
-    ∧ Head (L.frag shallowestCopyAsm shallowestCopy_at) "shallowestCopyPosition"
-    ∧ Head (L.frag swapWithAsm swapWith_at) "swapWith"
-    ∧ Head (L.frag pushAsm push_at) "push"
-    ∧ Head (L.frag dupAsm dup_at) "dup"
-    ∧ Head (L.frag produceAsm produce_at) "produce"
-    ∧ Head (L.frag generateAsm generate_at) "generate"
-    ∧ Head (L.frag finishAsm finish_at) "permuteDestinations"
-    ∧ Head (L.frag loopAsm loop_at) "buildBottomUp"
+theorem heads : Head (L.frag isSpilledAsm isSpilled_at) Names.isSpilled
+    ∧ Head (L.frag shallowestCopyAsm shallowestCopy_at) Names.shallowestCopyPosition
+    ∧ Head (L.frag swapWithAsm swapWith_at) Names.swapWith
+    ∧ Head (L.frag pushAsm push_at) Names.push
+    ∧ Head (L.frag dupAsm dup_at) Names.dup
+    ∧ Head (L.frag produceAsm produce_at) Names.produce
+    ∧ Head (L.frag generateAsm generate_at) Names.generate
+    ∧ Head (L.frag finishAsm finish_at) Names.permuteDestinations
+    ∧ Head (L.frag loopAsm loop_at) Names.buildBottomUp
     ∧ Head L.permuteFrag "permute" := by
   refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> head_tac
 
@@ -172,21 +174,21 @@ macro "at_tac " h:ident : tactic => `(tactic| (
   all_goals exact find_hit $h))
 
 theorem isSpilled_decl :
-    L.decls.at (label "isSpilled") = some (L.frag isSpilledAsm isSpilled_at) := by at_tac h1
-theorem shallowestCopy_decl : L.decls.at (label "shallowestCopyPosition")
+    L.decls.at (label Names.isSpilled) = some (L.frag isSpilledAsm isSpilled_at) := by at_tac h1
+theorem shallowestCopy_decl : L.decls.at (label Names.shallowestCopyPosition)
     = some (L.frag shallowestCopyAsm shallowestCopy_at) := by at_tac h2
 theorem swapWith_decl :
-    L.decls.at (label "swapWith") = some (L.frag swapWithAsm swapWith_at) := by at_tac h3
-theorem push_decl : L.decls.at (label "push") = some (L.frag pushAsm push_at) := by at_tac h4
-theorem dup_decl : L.decls.at (label "dup") = some (L.frag dupAsm dup_at) := by at_tac h5
+    L.decls.at (label Names.swapWith) = some (L.frag swapWithAsm swapWith_at) := by at_tac h3
+theorem push_decl : L.decls.at (label Names.push) = some (L.frag pushAsm push_at) := by at_tac h4
+theorem dup_decl : L.decls.at (label Names.dup) = some (L.frag dupAsm dup_at) := by at_tac h5
 theorem produce_decl :
-    L.decls.at (label "produce") = some (L.frag produceAsm produce_at) := by at_tac h6
+    L.decls.at (label Names.produce) = some (L.frag produceAsm produce_at) := by at_tac h6
 theorem generate_decl :
-    L.decls.at (label "generate") = some (L.frag generateAsm generate_at) := by at_tac h7
-theorem finish_decl : L.decls.at (label "permuteDestinations")
+    L.decls.at (label Names.generate) = some (L.frag generateAsm generate_at) := by at_tac h7
+theorem finish_decl : L.decls.at (label Names.permuteDestinations)
     = some (L.frag finishAsm finish_at) := by at_tac h8
 theorem loop_decl :
-    L.decls.at (label "buildBottomUp") = some (L.frag loopAsm loop_at) := by at_tac h9
+    L.decls.at (label Names.buildBottomUp) = some (L.frag loopAsm loop_at) := by at_tac h9
 theorem permute_decl : L.decls.at (label "permute") = some L.permuteFrag := by at_tac h10
 
 end Linked

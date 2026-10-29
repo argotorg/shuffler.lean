@@ -50,15 +50,19 @@ theorem step_corr (hu : UrgentStmt) (h1 : RestUrgentStmt) (h2 : RestTopStmt)
       dsimp only [Except.bind]
       by_cases c4 : u ≠ e.n ∧ u ≠ t ∧ st.len < t + Bbu.MAX_SWAP_DEPTH
       · rw [ite_eq_left c4]
-        exact h1 e source st state t u uo h ht hc c4
+        exact h1 e source st state t u uo h (Nat.pos_of_ne_zero hp) ht hc c4
       rw [ite_eq_right c4]
       by_cases c5 : u = e.n ∧ t < st.len ∧ st.len < e.n ∧ Bbu.positionOf st st.len = none ∧
           st.len < t + Bbu.MAX_SWAP_DEPTH
       · rw [ite_eq_left c5]
-        exact h2 e source st state t u uo h ht hc c4 c5
+        exact h2 e source st state t u uo h (Nat.pos_of_ne_zero hp) ht hc c4 c5
       rw [ite_eq_right c5]
       cases hb : Bbu.positionOf st t with
-      | some b => exact h3 e source st state t u uo b h ht hc c4 c5 hb
-      | none => exact h4 e source st state t u uo h ht hc c4 c5 hb
+      | some b =>
+        simp only [hb, Option.isSome_some, ↓reduceIte]
+        exact h3 e source st state t u uo b h ht hc c4 c5 hb
+      | none =>
+        simp only [hb, Option.isSome_none, Bool.false_eq_true, ↓reduceIte]
+        exact h4 e source st state t u uo h (Nat.pos_of_ne_zero hp) ht hc c4 c5 hb
 
 end BbuBridge

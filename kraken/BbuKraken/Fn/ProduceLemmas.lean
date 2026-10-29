@@ -2,7 +2,7 @@ import BbuKraken.Contracts
 import BbuKraken.Kit
 
 /-!
-Lemmas for the body of `produce` (`c/bbu/produce.S`): the bytes of a word, the model
+Lemmas for the body of `produce` (`c/bbu/<Names.produce>.S`): the bytes of a word, the model
 facts of `emit`, and the local byte at `rsp s - 57`.
 -/
 
@@ -140,7 +140,7 @@ theorem emit_none (hj : isJunk e.target[d]! = false)
 -- The part of `produce` after `emit`.
 def tail (d : Nat) (st : St) : M St :=
   if positionOf st d ≠ some (st.len - 1) then .error .assertion
-  else .ok { st with pendingGenerations := st.pendingGenerations - 1 }
+  else .ok { st with pendingGenerations := sizeDec st.pendingGenerations }
 
 theorem produce_eq : produce e st d = (emit e st d).bind (tail d) := rfl
 
@@ -151,12 +151,8 @@ theorem tail_bad (h : positionOf st d ≠ some (st.len - 1)) : tail d st = .erro
   simp [tail, h]
 
 theorem tail_ok (h : positionOf st d = some (st.len - 1)) :
-    tail d st = .ok { st with pendingGenerations := st.pendingGenerations - 1 } := by
+    tail d st = .ok { st with pendingGenerations := sizeDec st.pendingGenerations } := by
   simp [tail, h]
-
-theorem pending_zero (h : st.pendingGenerations = 0) :
-    { st with pendingGenerations := st.pendingGenerations - 1 } = st := by
-  cases st; simp_all
 
 end
 -- The position that `shallowestCopyPosition` returns is on the stack.
@@ -254,48 +250,14 @@ theorem a64 (x : BitVec 64) :
 theorem a57 (x : BitVec 64) : x - 64#64 + 7#64 = x - 57#64 := by bv_omega
 theorem a72 (x : BitVec 64) : x - 64#64 - 8#64 = x - 72#64 := by bv_omega
 
--- The word that holds the address of `target`.
-theorem tg_isSome (hpre : Pre 72 produceA s) :
-    ((m0 s ra).loadInt (s.regs.rdi.toBitVec + 32#64) 8).isSome = true :=
-  Mem.Mapped.loadInt_isSome (fm0 hpre).wf.mapped (inside_append.mpr (Or.inr (Or.inl (by
-    simp only [wordAt, rdi, Reg64s.get64_rdi]; bv_omega))))
-
-theorem tw_eq : rd (m0 s ra) (s.regs.rdi.toBitVec + 32#64) + s.regs.rsi.toBitVec * 8#64 = tw s ra := by
-  simp only [tw, tgtOf, wordAt, dd, rsi, rdi, Reg64s.get64_rsi, Reg64s.get64_rdi]
-  congr 1
-  bv_omega
-
 theorem dd_lt (hpre : Pre 72 produceA s) : dd s < nOf (m0 s ra) (rdi s) := by
   rw [(fm0 hpre).n hpre, ← n_envOf]
   exact hpre.2.2.1
-
-theorem tw_isSome (hpre : Pre 72 produceA s) : ((m0 s ra).loadInt (tw s ra) 8).isSome = true := by
-  have hw := (fm0 (ra := ra) hpre).wf
-  have := hw.tgt_lt
-  have hd := dd_lt (ra := ra) hpre
-  refine Mem.Mapped.loadInt_isSome hw.mapped (inside_append.mpr (Or.inr (Or.inr (Or.inl ?_))))
-  simp only [tw, wordAt]; bv_omega
 
 theorem tw_slot (hpre : Pre 72 produceA s) : StackSlot.ofWord (rd (m0 s ra) (tw s ra)) = sl s := by
   have := target_get (dd_lt (ra := ra) hpre)
   rw [((fm0 hpre).keeps hpre).1] at this
   exact this.symm
-
-theorem kind_eq (hpre : Pre 72 produceA s) :
-    BitVec.ofInt 8 ((m0 s ra).loadInt (tw s ra + 4#64) 1).get! = (sl s).kind := by
-  rw [(load_byte (tw_isSome hpre) (k := 4) (by decide)).2, ← tw_slot hpre]; rfl
-
-theorem opc_eq (hpre : Pre 72 produceA s) :
-    BitVec.ofInt 8 ((m0 s ra).loadInt (tw s ra + 5#64) 1).get! = (sl s).valueOpcode := by
-  rw [(load_byte (tw_isSome hpre) (k := 5) (by decide)).2, ← tw_slot hpre]; rfl
-
-theorem kind_isSome (hpre : Pre 72 produceA s) :
-    ((m0 s ra).loadInt (tw s ra + 4#64) 1).isSome = true :=
-  (load_byte (tw_isSome hpre) (k := 4) (by decide)).1
-
-theorem opc_isSome (hpre : Pre 72 produceA s) :
-    ((m0 s ra).loadInt (tw s ra + 5#64) 1).isSome = true :=
-  (load_byte (tw_isSome hpre) (k := 5) (by decide)).1
 
 /-! ## The local byte -/
 
@@ -437,11 +399,6 @@ theorem junk_of {t : MachineData} {r : StatusFlags.from_result.Remaining} {b : B
     isJunk (sl s) = b := by
   rw [z_sub8, h.r15] at hz; exact hz
 
--- The word at `rbx` is `len`.
-theorem len_rd {t : MachineData} (h : Lp s ra t) :
-    rd t.dmem t.regs.rbx.toBitVec = BitVec.ofNat 64 (st s).len := by
-  rw [h.rbx, ← h.st, len_stOf]; simp [wordAt]
-
 -- `cmpq $-1, x`: there is no copy.
 theorem cp_isNone {x : Word} {r : StatusFlags.from_result.Remaining} {b : Bool}
     (hx : x = encOpt (cp s))
@@ -505,18 +462,6 @@ theorem ret_of {t : MachineData} {r : StatusFlags.from_result.Remaining} {b : Bo
   rw [nz_sub8, h.r15] at hz
   rw [← hz, Bool.not_not]
   rfl
--- `notq rax; addq (rbx), rax`: the distance `len - 1 - c` of the copy `c`.
-theorem dist {t : MachineData} {c : Nat} (h : Lp s ra t) (hax : rax t = encOpt (cp s))
-    (hc : cp s = some c) :
-    rd t.dmem t.regs.rbx.toBitVec + ~~~t.regs.rax.toBitVec = BitVec.ofNat 64 ((st s).len - 1 - c) := by
-  have h1 := copy_lt hc
-  have h2 : (st s).len < 2 ^ 64 := len_lt
-  simp only [rax, Reg64s.get64_rax, hc, encOpt] at hax
-  rw [len_rd h, hax]
-  apply BitVec.eq_of_toNat_eq
-  simp only [BitVec.toNat_add, BitVec.toNat_not, BitVec.toNat_ofNat]
-  omega
-
 end
 
 /-! ## The calls at `rsp s - 64` -/
@@ -588,7 +533,7 @@ theorem push_pre (hpre : Pre 72 produceA s) {t c : MachineData} (h : Lp s ra t)
   refine Kit.Fm.pre (k := 64) (by decide) hpre h.fm hc hrsp e1 ?_
   have hA := hpre.2.2
   simp only [pushA, produceA, st, e2, e3, e4, h.st, rdx, Reg64s.get64_rdx, hdx, h.rbp] at hA ⊢
-  exact hA
+  exact ⟨hA.1, hA.2.1, hA.2.2.1⟩
 
 -- The precondition of `dup` for the copy `c0`.
 theorem dup_pre (hpre : Pre 72 produceA s) {t c : MachineData} {c0 : Nat} (h : Lp s ra t)
@@ -605,40 +550,7 @@ theorem dup_pre (hpre : Pre 72 produceA s) {t c : MachineData} {c0 : Nat} (h : L
   have hA := hpre.2.2
   simp only [dupA, produceA, st, e2, e3, e4, h.st, rdx, Reg64s.get64_rdx, hdx, h.rbp, rsi,
     Reg64s.get64_rsi, hsi, BitVec.toNat_ofNat] at hA h1 h2 ⊢
-  exact ⟨by omega, hA⟩
-
--- The result of `push`.
-theorem push_res (hpre : Pre 72 produceA s) {t c t' : MachineData} (h : Lp s ra t)
-    (hp : pushR c t')
-    (hc : c.dmem = t.dmem) (hdi : c.regs.rdi.toBitVec = t.regs.rbx.toBitVec)
-    (hsi : c.regs.rsi.toBitVec = t.regs.r13.toBitVec)
-    (hdx : c.regs.rdx.toBitVec = t.regs.rbp.toBitVec) :
-    Res (rdi s) (add (st s) (sl s) (dd s) (.push (sl s)))
-      (fun st' => rax t' = 0#64 ∧ stOf t'.dmem (rdi s) = st') t' := by
-  obtain ⟨e1, -, e3, -⟩ := ctx hpre h.toHold hc hdi
-  have e5 : slot c = sl s := by simp only [slot, rsi, Reg64s.get64_rsi, hsi]; exact h.r13
-  have e6 : (rdx c).toNat = dd s := by simp only [rdx, Reg64s.get64_rdx, hdx, h.rbp]
-  simp only [pushR, e3, h.st, e5, e6] at hp
-  rw [← e1]
-  exact hp.imp fun a ha => by simpa only [Ok, st', e1, id] using ha
-
--- The result of `dup` for the copy `c0`.
-theorem dup_res (hpre : Pre 72 produceA s) {t c t' : MachineData} {c0 : Nat} (h : Lp s ra t)
-    (hp : dupR c t') (hc0 : cp s = some c0) (hc : c.dmem = t.dmem)
-    (hdi : c.regs.rdi.toBitVec = t.regs.rbx.toBitVec)
-    (hsi : c.regs.rsi.toBitVec = BitVec.ofNat 64 c0)
-    (hdx : c.regs.rdx.toBitVec = t.regs.rbp.toBitVec) :
-    Res (rdi s) (add (st s) (sl s) (dd s) (.dup ((st s).len - c0)))
-      (fun st' => rax t' = 0#64 ∧ stOf t'.dmem (rdi s) = st') t' := by
-  obtain ⟨e1, -, e3, -⟩ := ctx hpre h.toHold hc hdi
-  have h1 := copy_lt hc0
-  have h2 : (st s).len < 2 ^ 64 := len_lt
-  have e5 : (rsi c).toNat = c0 := by
-    simp only [rsi, Reg64s.get64_rsi, hsi, BitVec.toNat_ofNat]; omega
-  have e6 : (rdx c).toNat = dd s := by simp only [rdx, Reg64s.get64_rdx, hdx, h.rbp]
-  simp only [dupR, e3, h.st, e5, e6, val_of_copy hc0] at hp
-  rw [← e1]
-  exact hp.imp fun a ha => by simpa only [Ok, st', e1, id] using ha
+  exact ⟨by omega, hA.1, hA.2.1, hA.2.2.1⟩
 
 end
 /-! ## The result of `emit` -/
@@ -646,7 +558,7 @@ end
 -- `add` puts one slot on the stack.
 theorem add_len {st st' : St} {v : StackSlot} {d : Nat} {op : Op} (h : add st v d op = .ok st') :
     st'.len = st.len + 1 := by
-  unfold add at h
+  rw [add_eq] at h
   split at h
   · cases h
   · cases h; simp [St.len]
@@ -672,16 +584,6 @@ theorem Res.bind_err {r : M St} {f : St → M St} {Q Q' : St → Prop} (h : Res 
   | ok a => exact absurd (hQ a h) hx
   | error e => exact Res.err h
 
--- A zero `rax` is a result `ok`.
-theorem Res.ok_of {r : M St} {Q : St → Prop} (h : Res S r Q t) (hx : rax t = 0#64) :
-    ∃ a, r = .ok a ∧ Q a := by
-  cases r with
-  | ok a => exact ⟨a, rfl, h⟩
-  | error e =>
-    have := Res.msb h
-    rw [hx] at this
-    cases this
-
 end
 
 -- The flags of `test v, v`.
@@ -704,54 +606,6 @@ theorem pos_iff {w r : Word} {L : Nat} (hr : r.toNat = L) (hL : 1 ≤ L) :
 
 /-! ## The store of `pendingGenerations - 1` -/
 
--- A store to the word `m_pendingGenerations` sets `pendingGenerations`.
-theorem stOf_pend {m : Mem 64} {S : Addr} (hw : Wf m S) (x : Word) :
-    stOf (m.storeInt (wordAt S 1) 8 x.toInt) S = { stOf m S with pendingGenerations := x.toNat } := by
-  have hs := hw.struct_lt
-  have hn := hw.n_le
-  have hlen := hw.len_le
-  have hnops := hw.nops_le
-  have hop := hw.ops_lt
-  have hda := hw.data_lt
-  simp only [WORDS_eq, MAX_N] at hs hn
-  -- the words of the struct other than word 1
-  have hk : ∀ k, k < 2057 → k ≠ 1 →
-      rd (m.storeInt (wordAt S 1) 8 x.toInt) (wordAt S k) = rd m (wordAt S k) := fun k hk h1 =>
-    rd_storeInt_of_disjoint fun y hy ho => by
-      simp only [Mem.Blocks.Inside, or_false, wordAt] at hy ho; bv_omega
-  -- the bytes outside the struct
-  have hout : ∀ (a : Addr) (n : Nat), (∀ y, Mem.Blocks.Inside y 1 [(a, n)] → Mem.Blocks.Inside y 1
-      ((dataOf m S, 8 * nOf m S) :: (opsOf m S, 72 * nOf m S) :: (blkOf m S, 16)
-        :: (tgtOf m S, 8 * nOf m S) :: splBlocks m S)) →
-      Mem.Blocks.Disjoint [(wordAt S 1, 8)] [(a, n)] := fun a n ha y hy hy' =>
-    hw.disj_struct y (by simp only [Mem.Blocks.Inside, or_false, wordAt, WORDS_eq] at hy ⊢; bv_omega)
-      (ha y hy')
-  have e3 : nOf (m.storeInt (wordAt S 1) 8 x.toInt) S = nOf m S :=
-    congrArg BitVec.toNat (hk 3 (by omega) (by omega))
-  have e6 : opsOf (m.storeInt (wordAt S 1) 8 x.toInt) S = opsOf m S := hk 6 (by omega) (by omega)
-  have e8 : dataOf (m.storeInt (wordAt S 1) 8 x.toInt) S = dataOf m S := hk 8 (by omega) (by omega)
-  simp only [stOf, hk 0 (by omega) (by omega), hk 2 (by omega) (by omega), e3,
-    rd_store_same _ rfl, BitVec.ofInt_toInt]
-  congr 1
-  · refine List.map_congr_left fun i hi => ?_
-    have := List.mem_range.mp hi
-    simp only [slotOf, e8, hk (DEST + i) (by simp only [DEST]; omega) (by simp only [DEST]; omega)]
-    rw [rd_storeInt_of_disjoint (hout _ 8 fun y hy => Or.inl (by
-      simp only [Mem.Blocks.Inside, or_false, wordAt] at hy ⊢; bv_omega))]
-  · refine List.map_congr_left fun d hd => ?_
-    have := List.mem_range.mp hd
-    rw [hk (POS + d) (by simp only [POS_eq]; omega) (by simp only [POS_eq]; omega)]
-  · refine List.map_congr_left fun i hi => ?_
-    have := List.mem_range.mp hi
-    have hin : ∀ (a : Addr) (n : Nat), (a - opAt m S i).toNat + n ≤ 12 →
-        (a - opAt m S i).toNat < 12 → Mem.Blocks.Disjoint [(wordAt S 1, 8)] [(a, n)] :=
-      fun a n hc _ => hout a n fun y hy => Or.inr (Or.inl (by
-        simp only [Mem.Blocks.Inside, or_false] at hy ⊢; bv_omega))
-    simp only [opOf, opAt, e6]
-    rw [rdb_storeInt_of_disjoint (hin _ 1 (by simp) (by simp)),
-      rdb_storeInt_of_disjoint (hin _ 1 (by bv_omega) (by bv_omega)),
-      rd_storeInt_of_disjoint (hin _ 8 (by bv_omega) (by bv_omega))]
-
 theorem produce_of_emit {e : Env} {st st' : St} {d : Nat} (h : emit e st d = .ok st') :
     produce e st d = tail d st' := by
   rw [produce_eq, h]; rfl
@@ -759,45 +613,16 @@ theorem produce_of_emit {e : Env} {st st' : St} {d : Nat} (h : emit e st d = .ok
 section
 variable {s : MachineData} {ra : Int64}
 
--- The store of `pendingGenerations - 1` keeps the frame.
-theorem Fm.pend (hpre : Pre 72 produceA s) {m : Mem 64} (h : Fm s ra m) (x : Word) :
-    Fm s ra (m.storeInt (wordAt (rdi s) 1) 8 x.toInt) := by
-  have hwr := (h.keeps hpre).2.2
-  have hs := h.wf.struct_lt
-  simp only [WORDS_eq] at hs
-  have hk : ∀ k, k < 2057 → k ≠ 1 →
-      rd (m.storeInt (wordAt (rdi s) 1) 8 x.toInt) (wordAt (rdi s) k) = rd m (wordAt (rdi s) k) :=
-    fun k hk h1 => rd_storeInt_of_disjoint fun y hy ho => by
-      simp only [Mem.Blocks.Inside, or_false, wordAt] at hy ho; bv_omega
-  refine Kit.Fm.write (by decide) hpre h (.storeInt (fun _ _ => rfl) ?_ _) ?_ ?_ ?_
-  · rw [← hwr]; exact Or.inl (by simp only [wordAt]; bv_omega)
-  · exact fun y hy => (h.wf.mapped.storeInt _ _ _) y (inside_append.mpr (Or.inl (hwr ▸ hy)))
-  · rw [hk 0 (by omega) (by omega), ← h.n hpre]; exact h.wf.len_le
-  · rw [hk 2 (by omega) (by omega), ← h.n hpre]; exact h.wf.nops_le
-
 -- The address of `positionOf[d]`: `8264(rbx, r14)`.
 theorem pos_addr :
-    wordAt (rdi s) (POS + dd s) = rdi s + rsi s * 8#64 + 8264#64 := by
+    wordAt (rdi s) (POS + dd s) = rdi s + rsi s * 8#64 + 8248#64 := by
   simp only [wordAt, POS_eq, dd]
   bv_omega
-
--- The words that `.LB30` reads: `len`, `positionOf[d]` and `pendingGenerations`.
-theorem at30_rd (hpre : Pre 72 produceA s) {t : MachineData} (h : Hold s ra t) :
-    (rd t.dmem t.regs.rbx.toBitVec).toNat = (stOf t.dmem (rdi s)).len
-      ∧ optOf (rd t.dmem (t.regs.rbx.toBitVec + t.regs.r14.toBitVec + 8264#64))
-        = positionOf (stOf t.dmem (rdi s)) (dd s)
-      ∧ t.regs.rbx.toBitVec + 8#64 = wordAt (rdi s) 1 := by
-  have hd : dd s < nOf t.dmem (rdi s) := by
-    rw [h.fm.n hpre, ← (fm0 (ra := ra) hpre).n hpre]; exact dd_lt hpre
-  have hn := h.fm.wf.n_le
-  simp only [MAX_N] at hn
-  refine ⟨by simp [len_stOf, h.rbx, wordAt], ?_, by rw [h.rbx]⟩
-  rw [positionOf_stOf hd, h.rbx, h.r14, pos_addr]
 
 -- The loads of `.LB30`.
 theorem at30_isSome (hpre : Pre 72 produceA s) {t : MachineData} (h : Hold s ra t) :
     (t.dmem.loadInt t.regs.rbx.toBitVec 8).isSome = true
-      ∧ (t.dmem.loadInt (t.regs.rbx.toBitVec + t.regs.r14.toBitVec + 8264#64) 8).isSome = true
+      ∧ (t.dmem.loadInt (t.regs.rbx.toBitVec + t.regs.r14.toBitVec + 8248#64) 8).isSome = true
       ∧ (t.dmem.loadInt (t.regs.rbx.toBitVec + 8#64) 8).isSome = true := by
   have hd : dd s < nOf t.dmem (rdi s) := by
     rw [h.fm.n hpre, ← (fm0 (ra := ra) hpre).n hpre]; exact dd_lt hpre
@@ -823,16 +648,6 @@ theorem Fm.pops {m : Mem 64} (h : Fm s ra m) {a : Addr} (ha : a = 8#64 + (rsp s 
     hk 3 (by decide) _ (by bv_omega), hk 2 (by decide) _ (by bv_omega),
     hk 1 (by decide) _ (by bv_omega), hk 0 (by decide) _ (by bv_omega)⟩
 
--- The result of `produce` depends on `rax` and the memory.
-theorem res_out {r : M St} {t t' : MachineData} (hm : t'.dmem = t.dmem) (hax : rax t' = rax t)
-    (h : Res (rdi s) r (fun st' => rax t = 0#64 ∧ stOf t.dmem (rdi s) = st') t) :
-    Res (rdi s) r (Ok s t' (fun _ => 0#64) id) t' := by
-  unfold Res at *
-  rcases r with (⟨p, x⟩ | _) | a
-  · exact ⟨hax.trans h.1, hm ▸ h.2.1, hm ▸ h.2.2⟩
-  · exact hax.trans h
-  · exact ⟨hax.trans h.1, by simp only [st', hm]; exact h.2⟩
-
 end
 
 
@@ -853,28 +668,6 @@ theorem spill_pre (hpre : Pre 72 produceA s) {t c : MachineData} (h : Lp s ra t)
   · rw [e2]; exact hpre.2.2.1
   · rw [e2]; simp only [slot, rsi, Reg64s.get64_rsi, hsi]; exact h.r13.symm
 
--- After `isSpilled`: `Lp` holds, `rax` is the result and `r12` stays.
-theorem spill_res (hpre : Pre 72 produceA s) {t c t' : MachineData} (h : Lp s ra t)
-    (hp : Post isSpilledF isSpilledR c t') (hag : (mod isSpilledF c).Agree c t')
-    (hc : c.dmem = t.dmem) (hsp : c.regs.rsp = t.regs.rsp)
-    (hdi : c.regs.rdi.toBitVec = t.regs.rbx.toBitVec)
-    (hsi : c.regs.rsi.toBitVec = t.regs.r13.toBitVec)
-    (hbx : c.regs.rbx = t.regs.rbx) (hbp : c.regs.rbp = t.regs.rbp) (h12 : c.regs.r12 = t.regs.r12)
-    (h13 : c.regs.r13 = t.regs.r13) (h14 : c.regs.r14 = t.regs.r14)
-    (h15 : c.regs.r15 = t.regs.r15) :
-    Lp s ra t' ∧ rax t' = BitVec.ofNat 64 (isSpilled (env s) (sl s)).toNat
-      ∧ t'.regs.r12 = t.regs.r12 := by
-  obtain ⟨e1, e2, e3, -⟩ := ctx hpre h.toHold hc hdi
-  have hH := Hold.call (by decide) hpre h.toHold hp hag hc hsp hdi hbx hbp h14
-  obtain ⟨-, -, -, f12, f13, -, f15⟩ := call_regs hag
-  have e5 : slot c = sl s := by simp only [slot, rsi, Reg64s.get64_rsi, hsi]; exact h.r13
-  obtain ⟨hax, hst⟩ := hp.2.2
-  rw [e2, e5] at hax
-  refine ⟨⟨hH, (congrArg (stOf t'.dmem) e1).symm.trans (hst.trans (e3.trans h.st)), ?_, ?_⟩,
-    hax, f12.trans h12⟩
-  · rw [f13, h13]; exact h.r13
-  · rw [f15, h15]; exact h.r15
-
 -- `testl eax, eax` after `isSpilled`.
 theorem spill_of {t : MachineData} {b b' : Bool} {r : StatusFlags.from_result.Remaining}
     (hax : rax t = BitVec.ofNat 64 b.toNat)
@@ -891,39 +684,11 @@ theorem ptr_addr {t : MachineData} (h : Hold s ra t) :
     t.regs.rbx.toBitVec + 56#64 = wordAt (rdi s) 7 := by
   rw [h.rbx]
 
--- The first store to `blocked` keeps the pointer.
-theorem ptr_store {m : Mem 64} {S : Addr} (hw : Wf m S) (v : Int) :
-    blkOf (m.storeInt (blkOf m S) 8 v) S = blkOf m S := by
-  have e := hw.blkOf_store (k := 0) (by decide) v
-  simp only [wordAt, Nat.mul_zero, BitVec.add_zero] at e
-  exact e
-
--- The load of the second word of `blocked`.
-theorem blk1_isSome {t : MachineData} (h : Hold s ra t) (v : Int) :
-    ((t.dmem.storeInt (rd t.dmem (t.regs.rbx.toBitVec + 56#64)) 8 v).loadInt
-      (rd (t.dmem.storeInt (rd t.dmem (t.regs.rbx.toBitVec + 56#64)) 8 v)
-        (t.regs.rbx.toBitVec + 56#64) + 8#64) 8).isSome = true := by
-  have hw := h.fm.wf
-  rw [ptr_addr h]
-  simp only [blkOf_def]
-  rw [ptr_store hw]
-  have := hw.blk_isSome (m' := t.dmem.storeInt (blkOf t.dmem (rdi s)) 8 v)
-    (by apply Mem.Mapped.storeInt; exact hw.mapped) (k := 1) (by decide)
-  simpa [wordAt] using this
-
 -- `len - 16 - c`, in words.
 theorem far_nat {L c : Nat} (hf : 15 < L - 1 - c) :
     BitVec.ofNat 64 L + (18446744073709551600#64 - BitVec.ofNat 64 c)
       = BitVec.ofNat 64 (L - 1 - c - 15) := by
   bv_omega
-
--- `rdx = len - 16 - c` for the copy `c`.
-theorem far_val {t : MachineData} {c : Nat} (h : Lp s ra t)
-    (hf : MAX_DUP_DEPTH < (st s).len - 1 - c) (h12 : t.regs.r12.toBitVec = BitVec.ofNat 64 c) :
-    rd t.dmem t.regs.rbx.toBitVec + (18446744073709551600#64 - t.regs.r12.toBitVec)
-      = BitVec.ofNat 64 ((st s).len - 1 - c - MAX_DUP_DEPTH) := by
-  rw [len_rd h, h12]
-  exact far_nat hf
 
 -- The excess of a far copy is not zero.
 theorem far_nz {k : Nat} {r : StatusFlags.from_result.Remaining} (h0 : 0 < k) (hk : k < 2 ^ 64) :
@@ -931,36 +696,6 @@ theorem far_nz {k : Nat} {r : StatusFlags.from_result.Remaining} (h0 : 0 < k) (h
   rw [CondCode.interp_z, StatusFlags.zf_from_result, beq_eq_false_iff_ne, BitVec.zero_eq]
   intro h
   bv_omega
-
--- The two stores to `blocked` give `Res` of the blocked error, and keep `Fm`.
-theorem blocked_of (hpre : Pre 72 produceA s) {t u : MachineData} {c k : Nat} {r : M St}
-    {Q : St → Prop} (h : Lp s ra t) (hr : r = .error (.blocked c k))
-    (h12 : t.regs.r12.toBitVec = BitVec.ofNat 64 c)
-    (hk : rd t.dmem t.regs.rbx.toBitVec + (18446744073709551600#64 - t.regs.r12.toBitVec)
-      = BitVec.ofNat 64 k)
-    (hm : u.dmem = (t.dmem.storeInt (rd t.dmem (t.regs.rbx.toBitVec + 56#64)) 8
-        t.regs.r12.toBitVec.toInt).storeInt
-      (rd (t.dmem.storeInt (rd t.dmem (t.regs.rbx.toBitVec + 56#64)) 8 t.regs.r12.toBitVec.toInt)
-        (t.regs.rbx.toBitVec + 56#64) + 8#64)
-      8 (rd t.dmem t.regs.rbx.toBitVec + (18446744073709551600#64 - t.regs.r12.toBitVec)).toInt)
-    (hsp : u.regs.rsp = t.regs.rsp) (hax : rax u = -1#64) :
-    Base s ra u ∧ Res (rdi s) r Q u := by
-  have hw := h.fm.wf
-  have hb := hw.blk_lt
-  have e0 : wordAt (blkOf t.dmem (rdi s)) 0 = blkOf t.dmem (rdi s) := by simp [wordAt]
-  have e1 : wordAt (blkOf t.dmem (rdi s)) 1 = blkOf t.dmem (rdi s) + 8#64 := by simp [wordAt]
-  have hm' : u.dmem = (t.dmem.storeInt (wordAt (blkOf t.dmem (rdi s)) 0) 8
-      (BitVec.ofNat 64 c).toInt).storeInt (wordAt (blkOf t.dmem (rdi s)) 1) 8
-      (BitVec.ofNat 64 k).toInt := by
-    rw [hm, hk, h12, ptr_addr h.toHold]
-    simp only [blkOf_def]
-    rw [ptr_store hw, e0, e1]
-  refine ⟨⟨hm' ▸ h.fm.blk (by decide) hpre _ _, by rw [hsp]; exact h.rsp⟩, ?_⟩
-  subst hr
-  refine ⟨hax, ?_, ?_⟩
-  · rw [hm', blkOf_store2 hw, rd_store_other _ (by simp only [wordAt]; bv_omega),
-      rd_store_same _ (by simp only [wordAt]; bv_omega), BitVec.ofInt_toInt]
-  · rw [hm', blkOf_store2 hw, rd_store_same _ rfl, BitVec.ofInt_toInt]
 
 end
 end Produce

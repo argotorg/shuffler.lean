@@ -14,7 +14,7 @@ theorem restUrgent_attach_bind {ε α β : Type} (x : Except ε α) (f : α → 
   cases x <;> rfl
 
 theorem restUrgent_corr (hgen : GenerateStmt) : RestUrgentStmt := by
-  intro e source st state t u uo h ht hu ⟨hun, hut, hlen⟩
+  intro e source st state t u uo h hp0 ht hu ⟨hun, hut, hlen⟩
   cases uo with
   | none => exact absurd hu hun
   | some x =>
@@ -26,7 +26,7 @@ theorem restUrgent_corr (hgen : GenerateStmt) : RestUrgentStmt := by
     rw [dite_eq_left_of_eq_true (eq_true hc)]
     show StepCorr e _ state ((state.generate u).attach >>= fun a => buildBottomUp.loop t a.1)
     rw [restUrgent_attach_bind]
-    have hg := hgen e source st state u h
+    have hg := hgen e source st state u h hp0
     generalize Bbu.generate e st u = m at hg ⊢
     generalize state.generate u = r at hg ⊢
     cases m <;> cases r <;> simp only [Corr] at hg

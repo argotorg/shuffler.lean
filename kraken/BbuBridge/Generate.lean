@@ -16,7 +16,7 @@ theorem generate_corr_bind {α β γ δ : Type} {R : α → β → Prop} {S : γ
 
 theorem generate_corr (hprod : ProduceStmt) (hswap : SwapWithStmt) (hdest : SwapDestStmt) :
     GenerateStmt := by
-  intro e source st state d h
+  intro e source st state d h hp0
   unfold Bbu.generate State.generate
   dsimp only
   -- The offset is beyond the target.
@@ -28,7 +28,7 @@ theorem generate_corr (hprod : ProduceStmt) (hswap : SwapWithStmt) (hdest : Swap
   rw [ite_eq_right hn]
   have hd : d < (tgt e).length := by rw [tgt_length]; omega
   rw [show index (tgt e).length d = .ok ⟨d, hd⟩ from index_eq ⟨d, hd⟩, except_ok_bind]
-  refine generate_corr_bind (hprod e source st state d hd h) fun st' state' h' => ?_
+  refine generate_corr_bind (hprod e source st state d hd h hp0) fun st' state' h' => ?_
   have hl := h'.len
   -- The offset is the top or above.
   by_cases hlt : d + 1 < st'.len

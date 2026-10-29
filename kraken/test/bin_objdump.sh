@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Disassemble the code of build_bottom_up.S and permute.S in the binary $1, from the
-# symbol isSpilled to the end of the symbol permute. Print "start ADDR" and
-# "stop ADDR", then "ADDR SIZE KIND TEXT" for each instruction: ADDR in hex, SIZE in
-# bytes, KIND "pad" for an alignment nop and "instr" for all else, TEXT in AT&T
-# syntax with a width suffix on each mnemonic (objdump -M suffix).
+# first function of build_bottom_up.S (Emission::isSpilled, by its g++ name) to the end
+# of the symbol permute. Print "start ADDR" and "stop ADDR", then "ADDR SIZE KIND TEXT"
+# for each instruction: ADDR in hex, SIZE in bytes, KIND "pad" for an alignment nop and
+# "instr" for all else, TEXT in AT&T syntax with a width suffix on each mnemonic
+# (objdump -M suffix).
 set -euo pipefail
 bin=$1
 
@@ -13,7 +14,7 @@ if [ "$(readelf -h "$bin" | awk '$1 == "Type:" { print $2 }')" != EXEC ]; then
 	exit 1
 fi
 sym() { nm -S "$bin" | awk -v s="$1" '$4 == s { print $1, $2 }'; }
-read -r start _ < <(sym isSpilled)
+read -r start _ < <(sym _ZNK12_GLOBAL__N_18Emission9isSpilledE9StackSlot)
 read -r perm psize < <(sym permute)
 start=$(printf '%x' $((16#$start)))
 stop=$(printf '%x' $((16#$perm + 16#$psize)))

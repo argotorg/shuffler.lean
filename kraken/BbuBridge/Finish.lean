@@ -101,6 +101,7 @@ theorem finish_corr : FinishStmt := by
     rfl
   rw [hof]
   unfold Bbu.finish
+  simp only [Bbu.St.all_destinationOf, Bool.not_true, Bool.false_eq_true, ↓reduceIte]
   rw [dite_eq_left hperm]
   split
   · -- The swaps of the model: the original gives the same swaps after the loop ops.

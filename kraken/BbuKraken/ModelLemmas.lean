@@ -27,6 +27,42 @@ theorem St.dest_eq (st : St) (i : Nat) : st.dest i = st.dests[i]! := by
   simp [St.dest, St.dests, getElem!_def]
   cases st.slots[i]? <;> rfl
 
+theorem St.destinationOf_eq {st : St} {i : Nat} (h : i < st.len) :
+    st.destinationOf i = some (st.dest i) := by
+  simp [St.destinationOf, St.dest, List.getElem?_eq_getElem (show i < st.slots.length from h)]
+
+-- Each slot has a destination: the check of `permuteDestinations` holds.
+theorem St.all_destinationOf (st : St) :
+    (List.range st.len).all (fun pos => (st.destinationOf pos).isSome) = true := by
+  simp only [List.all_eq_true, List.mem_range]
+  intro i hi
+  rw [St.destinationOf_eq hi]
+  rfl
+
+theorem swapDest_len (st : St) (a b : Nat) : (swapDestinations st a b).len = st.len := by
+  simp [swapDestinations, St.len]
+
+-- For two slots of the stack, both checks of `swapDestinations` hold.
+theorem swapDest_positionOf {st : St} {a b : Nat} (ha : a < st.len) (hb : b < st.len) :
+    (swapDestinations st a b).positionOf = (st.positionOf.set
+      ((swapDestinations st a b).dest a) (some a)).set ((swapDestinations st a b).dest b) (some b) := by
+  have hl := swapDest_len st a b
+  show bindIf (bindIf st.positionOf ((swapDestinations st a b).destinationOf a) a)
+    ((swapDestinations st a b).destinationOf b) b = _
+  rw [St.destinationOf_eq (hl ▸ ha), St.destinationOf_eq (hl ▸ hb)]
+  rfl
+
+-- For two slots of the stack, `swapDestinations` without the checks.
+theorem swapDest_eq {st : St} {a b : Nat} (ha : a < st.len) (hb : b < st.len) :
+    swapDestinations st a b =
+      let st := { st with
+        slots := (st.slots.set a ⟨st.val a, st.dest b⟩).set b ⟨st.val b, st.dest a⟩ }
+      { st with positionOf := (st.positionOf.set (st.dest a) (some a)).set (st.dest b) (some b) } := by
+  have hp := swapDest_positionOf ha hb
+  rw [show swapDestinations st a b = { swapDestinations st a b with
+    positionOf := (swapDestinations st a b).positionOf } from rfl, hp]
+  rfl
+
 theorem swapDest_dests (st : St) (a b : Nat) :
     (swapDestinations st a b).dests = swapEntries st.dests a b := by
   simp [swapDestinations, St.dests, swapEntries, List.map_set, St.dest_eq]
@@ -165,14 +201,16 @@ theorem Pos.swapDest {n : Nat} {st : St} {a b : Nat} (hp : Pos n st) (ha : a < s
       rw [St.dest_eq, getElem!_pos _ b (by rw [swapDest_dests]; simpa [swapEntries] using hb), hd b hb]
       simp
     have hP : (swapDestinations st a b).positionOf = (st.positionOf.set
-        ((swapDestinations st a b).dest a) (some a)).set ((swapDestinations st a b).dest b) (some b) := rfl
+        ((swapDestinations st a b).dest a) (some a)).set ((swapDestinations st a b).dest b) (some b) :=
+      swapDest_positionOf (by simpa [St.length_dests] using ha) (by simpa [St.length_dests] using hb)
     intro d
     rw [positionOf, hP, hA, hB, positionOf]
     simp only [List.getElem?_set, List.length_set, hl, hda, hdb, ↓reduceIte]
     by_cases h1 : st.dests[a] = d <;> by_cases h2 : st.dests[b] = d <;> simp_all [eq_comm]
   have hl' : (swapDestinations st a b).dests.length = st.dests.length := by
     simp [swapDest_dests, swapEntries]
-  refine ⟨by simp [swapDestinations, hl], fun d i => ?_⟩
+  refine ⟨by rw [swapDest_positionOf (by simpa [St.length_dests] using ha)
+    (by simpa [St.length_dests] using hb)]; simp [hl], fun d i => ?_⟩
   rw [hq]
   have hi := hp.iff d i
   constructor
@@ -211,6 +249,15 @@ theorem Pos.dests {n : Nat} {st : St} (hp : Pos n st) : Dests n st.dests :=
 
 /-! ## Shape of the actions -/
 
+-- `add` with the check first: the check does not read the new slot.
+theorem add_eq (st : St) (slot : StackSlot) (d : Nat) (op : Op) :
+    add st slot d op = if (positionOf st d).isSome then .error .assertion else .ok { st with
+        slots := st.slots ++ [⟨slot, d⟩]
+        positionOf := st.positionOf.set d (some st.len)
+        trace := st.trace ++ [op] } := by
+  unfold add positionOf
+  split <;> simp_all [St.len]
+
 theorem add_ok {st st' : St} {slot : StackSlot} {d : Nat} {op : Op}
     (h : add st slot d op = .ok st') :
     positionOf st d = none
@@ -219,9 +266,11 @@ theorem add_ok {st st' : St} {slot : StackSlot} {d : Nat} {op : Op}
         positionOf := st.positionOf.set d (some st.len)
         trace := st.trace ++ [op] } := by
   unfold add at h
+  dsimp only at h
   split at h
   · cases h
-  · cases h; rename_i hp; exact ⟨Option.not_isSome_iff_eq_none.mp hp, rfl⟩
+  · cases h; rename_i hp
+    exact ⟨Option.not_isSome_iff_eq_none.mp hp, by simp [St.len]⟩
 
 theorem add_shape {st st' : St} {slot : StackSlot} {d : Nat} {op : Op}
     (h : add st slot d op = .ok st') :
@@ -295,8 +344,12 @@ theorem emit_shape {e : Env} {st st' : St} {d : Nat} (h : emit e st d = .ok st')
   obtain ⟨h1, h2, h3, -⟩ := add_shape h
   simp [h1, h2, h3]
 
+-- `sizeDec` does not wrap above 0.
+theorem sizeDec_pos {x : Nat} (h : 0 < x) : sizeDec x = x - 1 := by
+  simp [sizeDec, Nat.pos_iff_ne_zero.mp h]
+
 theorem produce_ok {e : Env} {st st' : St} {d : Nat} (h : produce e st d = .ok st') :
-    ∃ s, emit e st d = .ok s ∧ st' = { s with pendingGenerations := s.pendingGenerations - 1 } := by
+    ∃ s, emit e st d = .ok s ∧ st' = { s with pendingGenerations := sizeDec s.pendingGenerations } := by
   obtain ⟨s, hs, h⟩ := bind_ok h
   split at h
   · cases h
@@ -304,7 +357,7 @@ theorem produce_ok {e : Env} {st st' : St} {d : Nat} (h : produce e st d = .ok s
 
 theorem produce_shape {e : Env} {st st' : St} {d : Nat} (h : produce e st d = .ok st') :
     st'.len = st.len + 1 ∧ st'.trace.length = st.trace.length + 1
-      ∧ st'.pendingGenerations = st.pendingGenerations - 1 := by
+      ∧ st'.pendingGenerations = sizeDec st.pendingGenerations := by
   obtain ⟨s, hs, rfl⟩ := produce_ok h
   obtain ⟨h1, h2, h3⟩ := emit_shape hs
   simp [St.len] at h1 ⊢
@@ -337,7 +390,7 @@ theorem generate_ok {e : Env} {st st' : St} {d : Nat} (h : generate e st d = .ok
 
 theorem generate_shape {e : Env} {st st' : St} {d : Nat} (h : generate e st d = .ok st') :
     st'.len = st.len + 1 ∧ st'.trace.length ≤ st.trace.length + 2
-      ∧ st'.pendingGenerations = st.pendingGenerations - 1 := by
+      ∧ st'.pendingGenerations = sizeDec st.pendingGenerations := by
   obtain ⟨-, s, hs, h⟩ := generate_ok h
   obtain ⟨h1, h2, h3⟩ := produce_shape hs
   rcases h with rfl | ⟨-, rfl⟩ | h
@@ -362,14 +415,15 @@ theorem movableCopy_lt {st : St} {b c : Nat} (h : movableCopy st b = some c) : c
   simpa using List.mem_of_mem_take this
 
 theorem takeBound_ok {st : St} {t b : Nat} {r : St × Bool} (hb : b < st.len)
-    (h : takeBound st t b = .ok r) :
+    (hpb : positionOf st t = some b) (h : takeBound st t = .ok r) :
     ∃ pos, pos < st.len ∧ (r.1 = swapDestinations st pos b
       ∨ swapWith (swapDestinations st pos b) pos = .ok r.1) := by
   unfold takeBound at h
+  rw [hpb] at h
+  dsimp only at h
   split at h
   · cases h
   rename_i hbt
-  dsimp only at h
   have hpos : (if st.val t = st.val b then t else (movableCopy st b).getD b) < st.len := by
     split
     · omega
@@ -385,10 +439,10 @@ theorem takeBound_ok {st : St} {t b : Nat} {r : St × Bool} (hb : b < st.len)
     | (obtain ⟨s, hs, h⟩ := map_ok h; cases h; exact .inr hs)
 
 theorem takeBound_shape {st : St} {t b : Nat} {r : St × Bool} (hb : b < st.len)
-    (h : takeBound st t b = .ok r) :
+    (hpb : positionOf st t = some b) (h : takeBound st t = .ok r) :
     r.1.len = st.len ∧ r.1.trace.length ≤ st.trace.length + 1
       ∧ r.1.pendingGenerations = st.pendingGenerations := by
-  obtain ⟨pos, -, h | h⟩ := takeBound_ok hb h
+  obtain ⟨pos, -, h | h⟩ := takeBound_ok hb hpb h
   · rw [h]
     obtain ⟨h1, h2, h3⟩ := swapDest_shape st pos b
     rw [h2]; omega
@@ -397,8 +451,8 @@ theorem takeBound_shape {st : St} {t b : Nat} {r : St × Bool} (hb : b < st.len)
     rw [h2] at h5; omega
 
 theorem Pos.takeBound {n : Nat} {st : St} {t b : Nat} {r : St × Bool} (hp : Pos n st)
-    (hb : b < st.len) (h : takeBound st t b = .ok r) : Pos n r.1 := by
-  obtain ⟨pos, hpos, h | h⟩ := takeBound_ok hb h
+    (hb : b < st.len) (hpb : positionOf st t = some b) (h : takeBound st t = .ok r) : Pos n r.1 := by
+  obtain ⟨pos, hpos, h | h⟩ := takeBound_ok hb hpb h
   · rw [h]; exact hp.swapDest hpos hb
   · exact (hp.swapDest hpos hb).swapWith h
 
@@ -432,7 +486,7 @@ theorem Pos.placeTop {n : Nat} {st st' : St} {t : Nat} {nx : Next} (hp : Pos n s
 theorem step_next {e : Env} {st st' : St} {t t' : Nat} (h : step e st t = .ok (st', .next t')) :
     (t' = t + 1 ∧ st' = st)
     ∨ (t' = t ∧ 0 < st.pendingGenerations ∧ ∃ d, generate e st d = .ok st')
-    ∨ (t' = t + 1 ∧ ∃ b r, positionOf st t = some b ∧ takeBound st t b = .ok r ∧
+    ∨ (t' = t + 1 ∧ ∃ b r, positionOf st t = some b ∧ takeBound st t = .ok r ∧
         (st' = r.1 ∨ ∃ nx, placeTop r.1 t = .ok (st', nx)))
     ∨ (t' = t + 1 ∧ 0 < st.pendingGenerations ∧ ∃ s, generate e st t = .ok s ∧
         (st' = s ∨ ∃ nx, placeTop s t = .ok (st', nx))) := by
@@ -452,7 +506,8 @@ theorem step_next {e : Env} {st st' : St} {t t' : Nat} (h : step e st t = .ok (s
     cases h
     exact .inr (.inl ⟨rfl, by omega, _, hs⟩)
   split at h
-  · rename_i b hb
+  · rename_i hs
+    obtain ⟨b, hb⟩ := Option.isSome_iff_exists.mp hs
     obtain ⟨⟨s, done⟩, hs, h⟩ := bind_ok h
     cases done
     · cases placeTop_next h
@@ -496,13 +551,15 @@ theorem step_shape {n : Nat} {e : Env} {st st' : St} {t t' : Nat} (hp : Pos n st
   rcases step_next h with ⟨-, rfl⟩ | ⟨-, hp', d, h⟩ | ⟨-, b, r, hb, hr, h⟩ | ⟨-, hp', s, hs, h⟩
   · omega
   · obtain ⟨h1, h2, h3⟩ := generate_shape h
+    rw [sizeDec_pos hp'] at h3
     omega
-  · obtain ⟨h1, h2, h3⟩ := takeBound_shape (positionOf_some hp hb) hr
+  · obtain ⟨h1, h2, h3⟩ := takeBound_shape (positionOf_some hp hb) hb hr
     rcases h with rfl | ⟨nx, h⟩
     · omega
     · obtain ⟨h4, h5, h6⟩ := placeTop_shape h
       omega
   · obtain ⟨h1, h2, h3⟩ := generate_shape hs
+    rw [sizeDec_pos hp'] at h3
     rcases h with rfl | ⟨nx, h⟩
     · omega
     · obtain ⟨h4, h5, h6⟩ := placeTop_shape h
@@ -573,12 +630,51 @@ theorem Pos_init {e : Env} {source : List StackSlot} {dests : List Nat}
   simp only [positionOf, hds]
   exact h2 d i
 
+theorem Pos.isNone_iff {n : Nat} {st : St} (hp : Pos n st) (d : Nat) :
+    (positionOf st d).isNone = decide (d ∉ st.dests) := by
+  cases h : positionOf st d with
+  | none => simp [positionOf_none hp h]
+  | some i =>
+    obtain ⟨hi, hd⟩ := (hp.iff d i).1 h
+    simp only [Option.isNone_some, Bool.false_eq, decide_eq_false_iff_not, Decidable.not_not]
+    exact hd ▸ List.getElem_mem hi
+
+-- `n - length` offsets below `n` are not in a list of distinct offsets below `n`.
+theorem countP_not_mem {n : Nat} {l : List Nat} (hd : Dests n l) :
+    (List.range n).countP (fun d => decide (d ∉ l)) = n - l.length := by
+  have hnd : l.Nodup := by
+    rw [List.Nodup, List.pairwise_iff_getElem]
+    intro i j hi hj hij heq
+    exact absurd (hd.2 i hi j hj heq) (by omega)
+  have hp : ((List.range n).filter (fun d => decide (d ∈ l))).Perm l := by
+    rw [List.perm_ext_iff_of_nodup (List.nodup_range.filter _) hnd]
+    intro a
+    simp only [List.mem_filter, List.mem_range, decide_eq_true_eq, and_iff_right_iff_imp]
+    intro ha
+    obtain ⟨i, hi, rfl⟩ := List.getElem_of_mem ha
+    exact hd.1 i hi
+  have := List.length_eq_countP_add_countP (fun d => decide (d ∈ l)) (l := List.range n)
+  rw [List.countP_eq_length_filter (l := List.range n), hp.length_eq, List.length_range] at this
+  simp only [decide_eq_true_eq] at this
+  omega
+
+-- The count of the constructor is `n - m`.
+theorem init_pending {e : Env} {source : List StackSlot} {dests : List Nat}
+    (hl : source.length = dests.length) (hd : Dests e.n dests) :
+    (init e source dests).pendingGenerations = e.n - dests.length := by
+  have hp : Pos e.n (init e source dests) := Pos_init hl hd
+  have hds : (init e source dests).dests = dests := map_dest_zipWith source dests hl
+  show (List.range e.n).countP (fun d => (positionOf (init e source dests) d).isNone) = _
+  simp only [hp.isNone_iff, hds]
+  exact countP_not_mem hd
+
 theorem Inv_init {e : Env} {source : List StackSlot} {dests : List Nat}
     (hl : source.length = dests.length) (hm : dests.length ≤ e.n) (hn : e.n ≤ MAX_N)
     (hd : Dests e.n dests) : Inv e (init e source dests) 0 := by
+  have hp := init_pending hl hd
   refine ⟨?_, hn, Nat.zero_le _, Pos_init hl hd, ?_⟩
-  · simp only [init, St.len, List.length_zipWith]; omega
-  · simp only [init, List.length_nil]; omega
+  · rw [hp]; simp only [init, St.len, List.length_zipWith]; omega
+  · rw [hp]; simp only [init, List.length_nil]; omega
 
 theorem step_inv {e : Env} {st st' : St} {t t' : Nat} (hi : Inv e st t) (ht : t < e.n)
     (h : step e st t = .ok (st', .next t')) : Inv e st' t' := by
@@ -586,15 +682,17 @@ theorem step_inv {e : Env} {st st' : St} {t t' : Nat} (hi : Inv e st t) (ht : t 
   rcases step_next h with ⟨rfl, rfl⟩ | ⟨rfl, hp, d, h⟩ | ⟨rfl, b, r, hb, hr, h⟩ | ⟨rfl, hp, s, hs, h⟩
   · exact ⟨h1, h2, by omega, h4, by omega⟩
   · obtain ⟨g1, g2, g3⟩ := generate_shape h
+    rw [sizeDec_pos hp] at g3
     exact ⟨by omega, h2, h3, h4.generate h, by omega⟩
   · have hb' := positionOf_some h4 hb
-    obtain ⟨g1, g2, g3⟩ := takeBound_shape hb' hr
-    have gp := h4.takeBound hb' hr
+    obtain ⟨g1, g2, g3⟩ := takeBound_shape hb' hb hr
+    have gp := h4.takeBound hb' hb hr
     rcases h with rfl | ⟨nx, h⟩
     · exact ⟨by omega, h2, by omega, gp, by omega⟩
     · obtain ⟨k1, k2, k3⟩ := placeTop_shape h
       exact ⟨by omega, h2, by omega, gp.placeTop h, by omega⟩
   · obtain ⟨g1, g2, g3⟩ := generate_shape hs
+    rw [sizeDec_pos hp] at g3
     have gp := h4.generate hs
     rcases h with rfl | ⟨nx, h⟩
     · exact ⟨by omega, h2, by omega, gp, by omega⟩
@@ -628,6 +726,8 @@ theorem finish_ok {st st' : St} (h : finish st = .ok st') :
       PermuteKraken.permute ⟨_, hp.1, fun i j hi hj => hp.2 i hi j hj⟩ = .ok swaps
         ∧ st' = swaps.foldl swapTop st := by
   unfold finish at h
+  split at h
+  · cases h
   dsimp only at h
   split at h
   · rename_i hp
@@ -750,7 +850,6 @@ termination_by tg.length - d
 
 theorem step_congr (st : St) (t : Nat) : step ⟨tg, s⟩ st t = step ⟨tg, s'⟩ st t := by
   simp only [step, urgent, Env.n, urgentFrom_congr H, generate_congr H]
-  rfl
 
 theorem loop_congr (st : St) (t : Nat) : loop ⟨tg, s⟩ st t = loop ⟨tg, s'⟩ st t := by
   by_cases ht : t < tg.length

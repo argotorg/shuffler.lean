@@ -26,4 +26,4 @@ for impl in c model; do
 		exit 1
 	fi
 done
-echo "C, model and original agree on $(wc -l < "$tmp/states") states ($(grep -c '^ok' "$tmp/c") ok, $(grep -c '^blocked' "$tmp/c") blocked)"
+echo "C++, model and original agree on $(wc -l < "$tmp/states") states ($(grep -c '^ok' "$tmp/c") ok, $(grep -c '^blocked' "$tmp/c") blocked)"

@@ -41,11 +41,13 @@ def SwapDestStmt : Prop :=
 def ProduceStmt : Prop :=
   ∀ (e : Bbu.Env) (source : Stack) (st : Bbu.St) (state : OState e source) (d : Nat)
     (hd : d < (tgt e).length),
-    Rel e st state → Corr (Rel e) (Bbu.produce e st d) (state.produce ⟨d, hd⟩)
+    Rel e st state → 0 < st.pendingGenerations →
+    Corr (Rel e) (Bbu.produce e st d) (state.produce ⟨d, hd⟩)
 
 def GenerateStmt : Prop :=
   ∀ (e : Bbu.Env) (source : Stack) (st : Bbu.St) (state : OState e source) (d : Nat),
-    Rel e st state → Corr (Rel e) (Bbu.generate e st d) (state.generate d)
+    Rel e st state → 0 < st.pendingGenerations →
+    Corr (Rel e) (Bbu.generate e st d) (state.generate d)
 
 /-! ## Scans -/
 
@@ -77,7 +79,7 @@ def FinishStmt : Prop :=
 def RestUrgentStmt : Prop :=
   ∀ (e : Bbu.Env) (source : Stack) (st : Bbu.St) (state : OState e source) (t u : Nat)
     (uo : Option Nat),
-    Rel e st state → t < e.n → UrgentRel e.n u uo →
+    Rel e st state → 0 < st.pendingGenerations → t < e.n → UrgentRel e.n u uo →
     (u ≠ e.n ∧ u ≠ t ∧ st.len < t + Bbu.MAX_SWAP_DEPTH) →
     StepCorr e ((Bbu.generate e st u).map (·, .next t)) state (origRest t state uo)
 
@@ -85,7 +87,7 @@ def RestUrgentStmt : Prop :=
 def RestTopStmt : Prop :=
   ∀ (e : Bbu.Env) (source : Stack) (st : Bbu.St) (state : OState e source) (t u : Nat)
     (uo : Option Nat),
-    Rel e st state → t < e.n → UrgentRel e.n u uo →
+    Rel e st state → 0 < st.pendingGenerations → t < e.n → UrgentRel e.n u uo →
     ¬(u ≠ e.n ∧ u ≠ t ∧ st.len < t + Bbu.MAX_SWAP_DEPTH) →
     (u = e.n ∧ t < st.len ∧ st.len < e.n ∧ Bbu.positionOf st st.len = none ∧
       st.len < t + Bbu.MAX_SWAP_DEPTH) →
@@ -100,7 +102,7 @@ def RestBoundStmt : Prop :=
     ¬(u = e.n ∧ t < st.len ∧ st.len < e.n ∧ Bbu.positionOf st st.len = none ∧
       st.len < t + Bbu.MAX_SWAP_DEPTH) →
     Bbu.positionOf st t = some b →
-    StepCorr e ((Bbu.takeBound st t b).bind fun (st, done) =>
+    StepCorr e ((Bbu.takeBound st t).bind fun (st, done) =>
         if done then .ok (st, .next (t + 1)) else Bbu.placeTop st t)
       state (origRest t state uo)
 
@@ -108,7 +110,7 @@ def RestBoundStmt : Prop :=
 def RestUnboundStmt : Prop :=
   ∀ (e : Bbu.Env) (source : Stack) (st : Bbu.St) (state : OState e source) (t u : Nat)
     (uo : Option Nat),
-    Rel e st state → t < e.n → UrgentRel e.n u uo →
+    Rel e st state → 0 < st.pendingGenerations → t < e.n → UrgentRel e.n u uo →
     ¬(u ≠ e.n ∧ u ≠ t ∧ st.len < t + Bbu.MAX_SWAP_DEPTH) →
     ¬(u = e.n ∧ t < st.len ∧ st.len < e.n ∧ Bbu.positionOf st st.len = none ∧
       st.len < t + Bbu.MAX_SWAP_DEPTH) →

@@ -1,4 +1,5 @@
 import BbuKraken.Kit
+import BbuKraken.Names
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -103,13 +104,19 @@ end Leaf
 
 /-! ## Flags and addresses -/
 
--- `cmpb $0, b; setne %al; movzbl %al, %eax` gives `b != 0`.
-theorem setne_zero (b : BitVec 8) (cf af of : Bool) :
-    BitVec.setWidth 64 (BitVec.setWidth 32 (BitVec.ofNat 8
+-- `setne %al` writes only `al`.
+theorem setWidth_replaceLow (x : Word) (v : BitVec 8) : BitVec.setWidth 8 (x.replaceLow v) = v := by
+  conv => rhs; rw [← BitVec.take_replaceLow_8 x v]
+  ext i hi
+  simp [BitVec.take]
+
+-- `cmpb $0, b; setne %al` gives `b != 0` in `al`.
+theorem setne_zero (x : Word) (b : BitVec 8) (cf af of : Bool) :
+    BitVec.setWidth 8 (x.replaceLow (BitVec.ofNat 8
       (CondCode.nz.interp (StatusFlags.from_result (b - 0#8) { cf, af, of })).toNat))
-      = BitVec.ofNat 64 (b != 0#8).toNat := by
+      = BitVec.ofNat 8 (b != 0#8).toNat := by
+  rw [setWidth_replaceLow]
   simp only [CondCode.interp_nz, StatusFlags.zf_from_result, BitVec.sub_zero, BitVec.zero_eq, bne]
-  cases (b == 0#8) <;> rfl
 
 theorem Wf.load_readable {m : Mem 64} {S x : Addr} {n : Nat} (hw : Wf m S)
     (h : Mem.Blocks.Inside x n (readable m S)) : (m.loadInt x n).isSome = true :=
@@ -166,10 +173,10 @@ theorem isSpilled_envOf {m : Mem 64} {S : Addr} {d : Nat} (hd : d < nOf m S)
 
 -- The address of the spilled byte that `isSpilled` reads.
 theorem spl_addr {m : Mem 64} {S : Addr} {w : Word} :
-    BitVec.ofInt 64 (m.loadInt (S + BitVec.ofInt 64 (Int64.toInt 40)) 8).get!
+    BitVec.ofInt 64 (m.loadInt (S + BitVec.ofInt 64 (Int64.toInt 16)) 8).get!
         + BitVec.setWidth 64 (w.take 32) + BitVec.ofInt 64 (Int64.toInt 0)
       = splOf m S + BitVec.ofNat 64 (StackSlot.ofWord w).payload.toNat := by
-  have h40 : BitVec.ofInt 64 (Int64.toInt 40) = BitVec.ofNat 64 (8 * 5) := by decide
+  have h40 : BitVec.ofInt 64 (Int64.toInt 16) = BitVec.ofNat 64 (8 * 2) := by decide
   have h0 : BitVec.ofInt 64 (Int64.toInt 0) = 0#64 := by decide
   rw [payload_take, h40, h0, BitVec.add_zero]
   rfl
@@ -187,25 +194,37 @@ theorem var_of_flags {w : Word} {r r' : StatusFlags.from_result.Remaining}
   rw [z_opcode] at hz
   simpa [Value, Const, bne] using And.intro hnz hz
 
+-- The state at `.LB1`: `al` holds the result. The C++ build has no `movzbl`, so the
+-- upper bytes of `rax` are not fixed.
+def SpillDone (s : MachineData) (ra : Int64) (t : MachineData) : Prop :=
+  ∃ r : Word, Done s ra r t ∧ r.setWidth 8 = BitVec.ofNat 8 (isSpilled (env s) (slot s)).toNat
+
 theorem isSpilled_body [Host] [FunDecls] : Body isSpilledAsm isSpilledF isSpilledA isSpilledR := by
   intro s ra
   refine ⟨fun s₀ ⟨h₀, hpre⟩ => ?_⟩
   subst h₀
   refine Program.WP.cfg (fun
-      | .entry, t | .label "isSpilled", t => t = s.pushRa ra
-      | .label ".LB1", t => Done s ra (BitVec.ofNat 64 (isSpilled (env s) (slot s)).toNat) t
-      | _, _ => False)
+      | .entry, t => t = s.pushRa ra
+      | .label l, t =>
+        if l = Names.isSpilled then t = s.pushRa ra
+        else if l = ".LB1" then SpillDone s ra t
+        else False
+      | .exit, _ => False)
     (fun _ _ => 0) ?_ rfl
   cfg_cases
   case left t ht =>
     subst ht
     kvcgen64
+    all_goals simp only [Names.isSpilled, ↓reduceIte]
   case right.right t ht =>
+    simp only [Names.isSpilled, ↓reduceIte, String.reduceEq] at ht
+    obtain ⟨r, hd, hr⟩ := ht
     kvcgen64
-    · simp [ht.retAddr]
-    · exact Done.ret (R := isSpilledR) hpre ht fun t' hm hax => ⟨hax, by
+    · simp [hd.retAddr]
+    · exact Done.ret (R := isSpilledR) hpre hd fun t' hm hax => ⟨by show (rax t').setWidth 8 = _; rw [hax]; exact hr, by
         rw [st', hm]; exact (pushRa_keeps hpre).2.2.1⟩
   case right.left t ht =>
+    simp only [Names.isSpilled, ↓reduceIte] at ht
     subst ht
     obtain ⟨hw, -, -, henv⟩ := pushRa_keeps (ra := ra) hpre
     obtain ⟨d, hd, hv⟩ := hpre.2.2
@@ -213,7 +232,7 @@ theorem isSpilled_body [Host] [FunDecls] : Body isSpilledAsm isSpilledF isSpille
     rw [← henv, target_get hd] at hv
     change tgtSlot _ _ d = slot s at hv
     kvcgen64
-    all_goals simp only [pushRa_rbx, pushRa_rcx, pushRa_rsi, pushRa_rdi,
+    all_goals try simp only [pushRa_rbx, pushRa_rcx, pushRa_rsi, pushRa_rdi,
       pushRa_rbp, pushRa_r8, pushRa_r9, pushRa_r10, pushRa_r11, pushRa_r12, pushRa_r13, pushRa_r14,
       pushRa_r15] at *
     case vc1 => decide
@@ -223,8 +242,9 @@ theorem isSpilled_body [Host] [FunDecls] : Body isSpilledAsm isSpilledF isSpille
         simpa [Value, bne] using this
       cfg_goto
       · exact stack_pushRa rfl
-      · refine Done.intro rfl rfl ?_ rfl rfl rfl rfl rfl rfl
-        simp [isSpilled, beq_eq_false_iff_ne.mpr hk]
+      · simp only [Names.isSpilled, ↓reduceIte, String.reduceEq]
+        refine ⟨_, Done.intro rfl rfl rfl rfl rfl rfl rfl rfl rfl, ?_⟩
+        simp [isSpilled, beq_eq_false_iff_ne.mpr (show (slot s).kind ≠ Value from hk)]
       · simp
     case vc3 => decide
     case vc4 _ _ _ _ _ _ hz _ =>
@@ -233,22 +253,26 @@ theorem isSpilled_body [Host] [FunDecls] : Body isSpilledAsm isSpilledF isSpille
         simpa [Const] using this
       cfg_goto
       · exact stack_pushRa rfl
-      · refine Done.intro rfl rfl ?_ rfl rfl rfl rfl rfl rfl
-        simp [isSpilled, isLiteralValue, ho]
+      · simp only [Names.isSpilled, ↓reduceIte, String.reduceEq]
+        refine ⟨_, Done.intro rfl rfl rfl rfl rfl rfl rfl rfl rfl, ?_⟩
+        simp [isSpilled, isLiteralValue, show (slot s).valueOpcode = Const from ho]
       · simp
-    case vc5 => exact hw.word_isSome hw.mapped (k := 5) (by decide)
+    case vc5 => exact hw.word_isSome hw.mapped (k := 2) (by decide)
     case vc6 _ _ _ _ hnz _ _ _ _ hz _ =>
       obtain ⟨hk, ho⟩ := var_of_flags (w := s.regs.rsi.toBitVec) hnz hz
       have hi : spillId (tgtSlot (s.pushRa ra).dmem (rdi s) d) = some (slot s).payload.toNat := by
         rw [hv]; simp [spillId, hk, ho]; rfl
-      have h := hw.load_readable (inside_splBlocks hd hi).tail.tail
+      have h := hw.load_readable (inside_splBlocks hd hi).tail.tail.tail
       rw [← spl_addr] at h
       exact h
     case vc7 _ _ _ _ hnz _ _ _ _ hz _ =>
       obtain ⟨hk, ho⟩ := var_of_flags (w := rsi s) hnz hz
-      refine Done.intro rfl rfl ?_ rfl rfl rfl rfl rfl rfl
+      simp only [Names.isSpilled, ↓reduceIte, String.reduceEq]
+      refine ⟨_, Done.intro rfl rfl rfl rfl rfl rfl rfl rfl rfl, (setne_zero _ _ _ _ _).trans ?_⟩
+      change _ = BitVec.ofNat 8 (isSpilled (envOf s.dmem (s.regs.get64 Reg64.rdi))
+        (StackSlot.ofWord (s.regs.get64 Reg64.rsi))).toNat
       rw [← hv, ← henv, isSpilled_envOf hd (hv ▸ hk) (hv ▸ ho), rdb, hv, ← spl_addr]
-      exact setne_zero _ _ _ _
+      rfl
     case vc8 => simp
 
 end Bbu

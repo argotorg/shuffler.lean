@@ -124,7 +124,7 @@ theorem ru_placeTop (hswap : SwapWithStmt) {e : Bbu.Env} {src : Stack} (st : Bbu
 /-! ## The branch -/
 
 theorem restUnbound_corr (hgen : GenerateStmt) (hswap : SwapWithStmt) : RestUnboundStmt := by
-  intro e source st state t u uo h ht hu c4 c5 hpt
+  intro e source st state t u uo h hp0 ht hu c4 c5 hpt
   rw [restUnbound_skip st state t u uo h hu c4 c5]
   have htt : t < (tgt e).length := by rw [tgt_length]; exact ht
   have hpt' : state.positionOf ⟨t, htt⟩ = none := by
@@ -139,7 +139,7 @@ theorem restUnbound_corr (hgen : GenerateStmt) (hswap : SwapWithStmt) : RestUnbo
   simp only [Option.isNone_some, Bool.false_eq_true, false_and, ite_false, hidx, except_ok_bind, hpt']
   show StepCorr e _ state (state.generate t >>= fun s => index s.stack.length t >>= fun i =>
     if s.isFinal i then buildBottomUp.loop (t + 1) s else ruTail t s)
-  have hg := hgen e source st state t h
+  have hg := hgen e source st state t h hp0
   generalize Bbu.generate e st t = m at hg ⊢
   generalize state.generate t = r at hg ⊢
   cases m with

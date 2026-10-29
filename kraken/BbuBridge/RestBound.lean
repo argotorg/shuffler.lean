@@ -135,7 +135,9 @@ theorem rb_placeTop (hswap : SwapWithStmt) (st : Bbu.St) (state0 state : OState 
 
 -- The model after the copy at `pos` is chosen: `Bbu.takeBound` and `Bbu.placeTop`.
 def rbAfterM (st : Bbu.St) (t b pos : Nat) : Bbu.M (Bbu.St × Bbu.Next) :=
-  (let st := Bbu.swapDestinations st pos b
+  (if st.val pos ≠ st.val b then .error .assertion
+   else
+   let st := Bbu.swapDestinations st pos b
    if pos = t then .ok (st, true)
    else if pos ≠ st.len - 1 then
      let depth := st.len - 1 - pos
@@ -152,6 +154,7 @@ theorem rb_after (hdest : SwapDestStmt) (hswap : SwapWithStmt) (st : Bbu.St) (st
   have hp' : pos < state.stack.length := h.len ▸ hp
   unfold rbAfterM rbAfter
   dsimp only
+  rw [ite_eq_right (not_not_intro hv)]
   rw [show slotAt state.stack pos = .ok state.stack[pos] from slotAt_index _ ⟨pos, hp'⟩,
     show slotAt state.stack b = .ok state.stack[b] from slotAt_index _ ⟨b, hb'⟩, except_ok_bind,
     except_ok_bind, requires_of_true _ (by rw [show state.stack[pos] = _ from h.get ⟨pos, hp'⟩,
@@ -237,6 +240,8 @@ theorem restBound_corr (hcopy : CopyScanStmt) (hdest : SwapDestStmt) (hswap : Sw
       by simp only [MAX_SWAP_DEPTH, Bbu.MAX_SWAP_DEPTH] at hd ⊢; omega⟩
   rw [rb_origRest t state uo htn ⟨b, hbs⟩ h1 h2 hpos]
   unfold Bbu.takeBound rbBound
+  rw [hb]
+  dsimp only
   by_cases hbt : b < t
   · rw [ite_eq_left hbt, rb_requires_false (by simp only [ge_iff_le, not_le]; exact hbt)]
     exact ⟨_, rfl, rfl⟩
@@ -247,7 +252,6 @@ theorem restBound_corr (hcopy : CopyScanStmt) (hdest : SwapDestStmt) (hswap : Sw
     except_ok_bind]
   have hgt : state.stack[t] = decode (st.val t) := h.get ⟨t, htl⟩
   have hgb : state.stack[b] = decode (st.val b) := h.get ⟨b, hbs⟩
-  dsimp only
   by_cases hv : st.val t = st.val b
   · rw [ite_eq_left hv, ite_eq_left (show state.stack[t] = state.stack[b] by rw [hgt, hgb, hv])]
     exact rb_after hdest hswap st state t b t h hbl (by omega) hv

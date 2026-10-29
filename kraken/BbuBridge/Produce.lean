@@ -14,22 +14,32 @@ theorem produce_corr_bind {α β γ δ : Type} {R : α → β → Prop} {S : γ 
     (h : Corr R x y) (hf : ∀ a b, R a b → Corr S (f a) (g b)) : Corr S (x.bind f) (y >>= g) := by
   cases x <;> cases y <;> simp_all [Corr, Except.bind, bind]
 
+-- `add` keeps `pendingGenerations`.
+theorem produce_corr_add {β : Type} {R : Bbu.St → β → Prop} {st : Bbu.St} {v : Bbu.StackSlot}
+    {d : Nat} {op : Bbu.Op} {y : Except ShuffleErr β} (h : Corr R (Bbu.add st v d op) y)
+    (hp : 0 < st.pendingGenerations) :
+    Corr (fun a b => R a b ∧ 0 < a.pendingGenerations) (Bbu.add st v d op) y := by
+  cases hx : Bbu.add st v d op <;> cases y <;> rw [hx] at h <;> simp only [Corr] at h ⊢
+  · exact h
+  · exact ⟨h, by rw [Bbu.add_pending hx]; exact hp⟩
+
 theorem produce_corr (hpush : PushStmt) (hdup : DupStmt) : ProduceStmt := by
-  intro e source st state d hd h
+  intro e source st state d hd h hp0
   -- The check after the push or dup.
-  have hfin : ∀ (st' : Bbu.St) (state' : OState e source), Rel e st' state' →
+  have hfin : ∀ (st' : Bbu.St) (state' : OState e source),
+      Rel e st' state' ∧ 0 < st'.pendingGenerations →
       Corr (Rel e)
         (if Bbu.positionOf st' d ≠ some (st'.len - 1) then .error .assertion
-          else .ok { st' with pendingGenerations := st'.pendingGenerations - 1 })
+          else .ok { st' with pendingGenerations := Bbu.sizeDec st'.pendingGenerations })
         (do
           let _ ← requires ((state'.positionOf ⟨d, hd⟩).map Fin.val = some (state'.stack.length - 1))
             "generated slot is not bound to the top"
           pure { state' with pending_generations := state'.pending_generations - 1 }) := by
-    intro st' state' h'
+    intro st' state' ⟨h', hp'⟩
     rw [← h'.positionOf ⟨d, hd⟩, ← h'.len]
     by_cases hc : (state'.positionOf ⟨d, hd⟩).map Fin.val = some (state'.stack.length - 1)
     · rw [requires_of_true _ hc, ite_eq_right (not_not.mpr hc)]
-      exact ⟨h'.stack, h'.dest, by simp [h'.pendingGenerations], h'.trace,
+      exact ⟨h'.stack, h'.dest, by simp [h'.pendingGenerations, Bbu.sizeDec_pos hp'], h'.trace,
         h'.pos.congr rfl rfl, h'.canon, h'.target⟩
     · rw [ite_eq_left hc]
       simp only [requires, dite_eq_right hc]
@@ -38,8 +48,8 @@ theorem produce_corr (hpush : PushStmt) (hdup : DupStmt) : ProduceStmt := by
   have hpush' : ∀ v : Bbu.StackSlot, Canon v →
       (decode v).can_be_freely_generated ∨ (spillSet e).is_spilled (decode v) →
       Corr (Rel e) ((Bbu.add st v d (.push v)).bind _) (state.push (decode v) ⟨d, hd⟩ >>= _) :=
-    fun v hv hg => produce_corr_bind (hpush e source st state v d hd h hv
-      (by rwa [isFree_iff, isSpilled_iff])) hfin
+    fun v hv hg => produce_corr_bind (produce_corr_add (hpush e source st state v d hd h hv
+      (by rwa [isFree_iff, isSpilled_iff])) hp0) hfin
   unfold Bbu.produce Bbu.emit State.produce
   dsimp only
   rw [tgt_get e d hd]
@@ -85,7 +95,7 @@ theorem produce_corr (hpush : PushStmt) (hdup : DupStmt) : ProduceStmt := by
       simp only [Option.filter_some, decide_eq_true (hreach.mpr hr), decide_eq_true hr, ite_true]
       have := hdup e source st state pos.val d hd h hpl hr
       rw [hpv] at this
-      exact produce_corr_bind this hfin
+      exact produce_corr_bind (produce_corr_add this hp0) hfin
     simp only [Option.filter_some, decide_eq_false (mt hreach.mp hr), decide_eq_false hr,
       Bool.false_eq_true, ite_false]
     by_cases hg : (decode v).can_be_freely_generated ∨ (spillSet e).is_spilled (decode v)

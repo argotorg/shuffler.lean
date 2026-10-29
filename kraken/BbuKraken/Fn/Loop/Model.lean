@@ -25,8 +25,11 @@ theorem step_urgent (h : ¬ (t < st.len ∧ st.dest t = t)) (hp : st.pendingGene
   simp only [step, h, hp, ite_false]
   rfl
 
-theorem takeBound_ge {r : St × Bool} (h : takeBound st t b = .ok r) : t ≤ b := by
+theorem takeBound_ge {r : St × Bool} (hpb : positionOf st t = some b) (h : takeBound st t = .ok r) :
+    t ≤ b := by
   unfold takeBound at h
+  rw [hpb] at h
+  dsimp only at h
   split at h
   · cases h
   · omega
@@ -45,11 +48,12 @@ theorem step_le {n : Nat} (hp : Pos n st) (hle : t ≤ st.len)
   split at h
   · obtain ⟨s, hs, h⟩ := map_ok h; cases h; have := (generate_shape hs).1; omega
   split at h
-  · rename_i b hb
+  · rename_i hs0
+    obtain ⟨b, hb⟩ := Option.isSome_iff_exists.mp hs0
     obtain ⟨⟨s, done⟩, hs, h⟩ := bind_ok h
     have hb' := positionOf_some hp hb
-    have h1 := (takeBound_shape hb' hs).1
-    have h2 := takeBound_ge hs
+    have h1 := (takeBound_shape hb' hb hs).1
+    have h2 := takeBound_ge hb hs
     cases done
     · obtain ⟨h3, h4, -⟩ := placeTop_ok h
       cases h3
@@ -179,7 +183,7 @@ theorem au_bound (h1 : ¬ (u ≠ e.n ∧ u ≠ t ∧ st.len < t + MAX_SWAP_DEPTH
 
 theorem bound_none (h : positionOf st t = none) :
     bound e st t = (generate e st t).bind (afterGen t) := by
-  simp only [bound, h]
+  simp only [bound, h, Option.isSome_none, Bool.false_eq_true, ite_false]
 
 theorem bound_lt (h : positionOf st t = some b) (hb : b < t) : bound e st t = .error .assertion := by
   simp [bound, h, takeBound, hb, Except.bind]
@@ -190,8 +194,11 @@ theorem bound_eq (h : positionOf st t = some b) (hb : t ≤ b) (hv : st.val t = 
 
 theorem bound_pos (h : positionOf st t = some b) (hb : t ≤ b) (hv : st.val t ≠ st.val b) :
     bound e st t = afterPos st t b ((movableCopy st b).getD b) := by
-  simp only [bound, h, takeBound, Nat.not_lt.mpr hb, hv, ite_false, afterPos]
+  simp only [bound, h, Option.isSome_some, ite_true, takeBound, Nat.not_lt.mpr hb, hv, ite_false,
+    afterPos]
   generalize (movableCopy st b).getD b = p
+  split
+  · rfl
   split
   · rfl
   split
@@ -229,24 +236,34 @@ theorem movFrom_step {k : Nat} (hk : b < k) :
 
 /-! ## `afterPos` -/
 
-theorem ap_self (hp : p = t) : afterPos st t b p =
-    .ok (swapDestinations st p b, .next (t + 1)) := by
-  simp [afterPos, hp]
+theorem ap_bad (hv : st.val p ≠ st.val b) : afterPos st t b p = .error .assertion := by
+  unfold afterPos
+  rw [ite_eq_left hv]
 
-theorem ap_top (hp : p ≠ t) (hl : p = st.len - 1) :
+theorem ap_self (hv : st.val p = st.val b) (hp : p = t) : afterPos st t b p =
+    .ok (swapDestinations st p b, .next (t + 1)) := by
+  unfold afterPos; dsimp only
+  rw [ite_eq_right (not_not_intro hv), ite_eq_left hp, hp]
+
+theorem ap_top (hv : st.val p = st.val b) (hp : p ≠ t) (hl : p = st.len - 1) :
     afterPos st t b p = placeTop (swapDestinations st p b) t := by
   unfold afterPos; dsimp only
-  rw [(swapDest_shape st p b).1, ite_eq_right hp, ite_eq_right (by omega)]
+  rw [ite_eq_right (not_not_intro hv), (swapDest_shape st p b).1, ite_eq_right hp,
+    ite_eq_right (by omega)]
 
-theorem ap_far (hp : p ≠ t) (hl : p ≠ st.len - 1) (hf : MAX_SWAP_DEPTH < st.len - 1 - p) :
+theorem ap_far (hv : st.val p = st.val b) (hp : p ≠ t) (hl : p ≠ st.len - 1)
+    (hf : MAX_SWAP_DEPTH < st.len - 1 - p) :
     afterPos st t b p = .error (.blocked p (st.len - 1 - p - MAX_SWAP_DEPTH)) := by
   unfold afterPos; dsimp only
-  rw [(swapDest_shape st p b).1, ite_eq_right hp, ite_eq_left hl, ite_eq_left hf]
+  rw [ite_eq_right (not_not_intro hv), (swapDest_shape st p b).1, ite_eq_right hp, ite_eq_left hl,
+    ite_eq_left hf]
 
-theorem ap_swap (hp : p ≠ t) (hl : p ≠ st.len - 1) (hf : st.len - 1 - p ≤ MAX_SWAP_DEPTH) :
+theorem ap_swap (hv : st.val p = st.val b) (hp : p ≠ t) (hl : p ≠ st.len - 1)
+    (hf : st.len - 1 - p ≤ MAX_SWAP_DEPTH) :
     afterPos st t b p = (swapWith (swapDestinations st p b) p).bind (placeTop · t) := by
   unfold afterPos; dsimp only
-  rw [(swapDest_shape st p b).1, ite_eq_right hp, ite_eq_left hl, ite_eq_right (by omega)]
+  rw [ite_eq_right (not_not_intro hv), (swapDest_shape st p b).1, ite_eq_right hp, ite_eq_left hl,
+    ite_eq_right (by omega)]
 
 /-! ## `placeTop` -/
 

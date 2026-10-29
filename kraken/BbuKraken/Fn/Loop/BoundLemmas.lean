@@ -16,13 +16,10 @@ namespace Loop
 
 /-! ## Words and flags -/
 
-theorem addr_dest (S x : Word) : S + x * 8#64 + 72#64 = wordAt S (DEST + x.toNat) := by
+theorem addr_dest (S x : Word) : S + x * 8#64 + 56#64 = wordAt S (DEST + x.toNat) := by
   simp only [wordAt, DEST_eq]; bv_omega
 
-theorem addr_dest8 (S x : Word) : S + (x + 8#64) * 8#64 + 8#64 = wordAt S (DEST + x.toNat) := by
-  simp only [wordAt, DEST_eq]; bv_omega
-
-theorem addr_pos (S x : Word) : S + x * 8#64 + 8264#64 = wordAt S (POS + x.toNat) := by
+theorem addr_pos (S x : Word) : S + x * 8#64 + 8248#64 = wordAt S (POS + x.toNat) := by
   simp only [wordAt, POS_eq]; bv_omega
 
 theorem addr_data (D x : Word) : D + x * 8#64 = wordAt D x.toNat := by
@@ -89,12 +86,8 @@ theorem Base.word_isSome (hb : Base s ra t) {a : Addr} {k : Nat} (ha : a = wordA
 
 -- The pointer to `m_data`.
 theorem Base.data (hb : Base s ra t) :
-    rd t.dmem (t.regs.rbp.toBitVec + 64#64) = dataOf t.dmem (rdi s) := by
+    rd t.dmem (t.regs.rbp.toBitVec + 24#64) = dataOf t.dmem (rdi s) := by
   rw [hb.rbp]; rfl
-
-theorem Base.data_isSome (hb : Base s ra t) :
-    (t.dmem.loadInt (t.regs.rbp.toBitVec + 64#64) 8).isSome = true :=
-  hb.word_isSome (k := 8) (by rw [hb.rbp]) (by simp only [WORDS_eq]; omega)
 
 -- A load of the word of the slot `x`.
 theorem Base.slot_isSome (hb : Base s ra t) {D x : Word} (hD : D = dataOf t.dmem (rdi s))
@@ -118,13 +111,13 @@ theorem slot_val {D x : Word} (hD : D = dataOf t.dmem (rdi s))
 
 -- The dest word of the slot `x`.
 theorem Base.dest (hb : Base s ra t) {x : Word} (hx : x.toNat < (st' s t).len) :
-    (rd t.dmem (t.regs.rbp.toBitVec + x * 8#64 + 72#64)).toNat = (st' s t).dest x.toNat := by
+    (rd t.dmem (t.regs.rbp.toBitVec + x * 8#64 + 56#64)).toNat = (st' s t).dest x.toNat := by
   rw [st', len_stOf] at hx
   rw [hb.rbp, addr_dest, st', dest_stOf hx]
 
 -- The `m_positionOf` word of `x`.
 theorem Base.pos (hb : Base s ra t) {x : Word} (hx : x.toNat < nOf t.dmem (rdi s)) :
-    optOf (rd t.dmem (t.regs.rbp.toBitVec + x * 8#64 + 8264#64)) = positionOf (st' s t) x.toNat := by
+    optOf (rd t.dmem (t.regs.rbp.toBitVec + x * 8#64 + 8248#64)) = positionOf (st' s t) x.toNat := by
   rw [hb.rbp, addr_pos, st', positionOf_stOf hx]
 
 -- The equal slots of `(a ^ b) << 16 == 0`.
@@ -205,7 +198,7 @@ theorem outer_mk {a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 : UInt64
 
 -- A load of the dest word of the slot `x`.
 theorem Base.dest_isSome (hb : Base s ra t) {x : Word} (hx : x.toNat < 1024) :
-    (t.dmem.loadInt (t.regs.rbp.toBitVec + x * 8#64 + 72#64) 8).isSome = true :=
+    (t.dmem.loadInt (t.regs.rbp.toBitVec + x * 8#64 + 56#64) 8).isSome = true :=
   hb.word_isSome (by rw [hb.rbp, addr_dest]) (by simp only [DEST_eq, WORDS_eq]; omega)
 
 -- The equal slots of `(src ^ a) << 16 == 0`, with the word of the slot `b` in `src`.
@@ -236,93 +229,10 @@ theorem base_mk {a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 : UInt64}
 
 -- A load of the `m_positionOf` word of `x`.
 theorem Base.pos_isSome (hb : Base s ra t) {x : Word} (hx : x.toNat < 1024) :
-    (t.dmem.loadInt (t.regs.rbp.toBitVec + x * 8#64 + 8264#64) 8).isSome = true :=
+    (t.dmem.loadInt (t.regs.rbp.toBitVec + x * 8#64 + 8248#64) 8).isSome = true :=
   hb.word_isSome (by rw [hb.rbp, addr_pos]) (by simp only [POS_eq, WORDS_eq]; omega)
 
--- A load of the dest word of `x` at its second address.
-theorem Base.dest8_isSome (hb : Base s ra t) {x : Word} (hx : x.toNat < 1024) :
-    (t.dmem.loadInt (t.regs.rbp.toBitVec + (x + 8#64) * 8#64 + 8#64) 8).isSome = true :=
-  hb.word_isSome (by rw [hb.rbp, addr_dest8]) (by simp only [DEST_eq, WORDS_eq]; omega)
-
--- The memory after the inline swap of the dests of `x` and `y`.
-theorem swapMem_eq (m : Mem 64) (S x y : Word) :
-    (((m.storeInt (S + (x + 8#64) * 8#64 + 8#64) 8 (rd m (S + y * 8#64 + 72#64)).toInt).storeInt
-        (S + y * 8#64 + 72#64) 8 (rd m (S + x * 8#64 + 72#64)).toInt).storeInt
-      (S + rd ((m.storeInt (S + (x + 8#64) * 8#64 + 8#64) 8 (rd m (S + y * 8#64 + 72#64)).toInt).storeInt
-          (S + y * 8#64 + 72#64) 8 (rd m (S + x * 8#64 + 72#64)).toInt)
-        (S + (x + 8#64) * 8#64 + 8#64) * 8#64 + 8264#64) 8 x.toInt).storeInt
-      (S + rd m (S + x * 8#64 + 72#64) * 8#64 + 8264#64) 8 y.toInt
-    = swapMem m S x.toNat y.toNat := by
-  simp only [swapMem, addr_dest8, addr_dest, addr_pos, BitVec.ofNat_toNat, BitVec.setWidth_eq]
-
 variable {a b : Nat}
-
--- The dest of `x` after the two dest stores of the inline swap.
-theorem Base.m2_lt (hpre : Pre loopF loopA s) (hb : Base s ra t) (hp : Pos (env s).n (st' s t)) {x y : Word}
-    (hx : x.toNat < (st' s t).len) (hy : y.toNat < (st' s t).len) :
-    (rd ((t.dmem.storeInt (t.regs.rbp.toBitVec + (x + 8#64) * 8#64 + 8#64) 8
-        (rd t.dmem (t.regs.rbp.toBitVec + y * 8#64 + 72#64)).toInt).storeInt
-        (t.regs.rbp.toBitVec + y * 8#64 + 72#64) 8
-        (rd t.dmem (t.regs.rbp.toBitVec + x * 8#64 + 72#64)).toInt)
-      (t.regs.rbp.toBitVec + (x + 8#64) * 8#64 + 8#64)).toNat < 1024 := by
-  have hn := hb.n_le
-  have hw := hb.fm.wf
-  have hdx := Pos.dest_lt hp hx
-  have hdy := Pos.dest_lt hp hy
-  rw [hb.n_env hpre] at hdx hdy
-  have hl := hb.len_le
-  have hs := hw.struct_lt
-  rw [st', len_stOf] at hx hy hl
-  rw [st', dest_stOf hx] at hdx
-  rw [st', dest_stOf hy] at hdy
-  rw [hb.rbp, addr_dest8, addr_dest, addr_dest]
-  by_cases hxy : x.toNat = y.toNat
-  · rw [hxy, rd_store_same _ rfl, BitVec.ofInt_toInt]
-    omega
-  · rw [rd_storeInt_of_disjoint (disjoint_wordAt (K := WORDS) (by omega)
-      (by simp only [DEST_eq, WORDS_eq]; omega) (by simp only [DEST_eq, WORDS_eq]; omega) hs),
-      rd_store_same _ rfl, BitVec.ofInt_toInt]
-    omega
-
--- The inline swap of the dests of `a` and `b`.
-theorem Base.swap (hpre : Pre loopF loopA s) (hb : Base s ra t) (hp : Pos (env s).n (st' s t))
-    (ha : a < (st' s t).len) (hb' : b < (st' s t).len) :
-    Fm s ra (swapMem t.dmem (rdi s) a b)
-      ∧ stOf (swapMem t.dmem (rdi s) a b) (rdi s) = swapDestinations (st' s t) a b := by
-  have hda := Pos.dest_lt hp ha
-  have hdb := Pos.dest_lt hp hb'
-  rw [hb.n_env hpre] at hda hdb
-  obtain ⟨h1, h2, -⟩ := hb.fm.swap hpre ha hb' hda hdb
-  exact ⟨h1, h2⟩
-
--- The variant after the inline swap: the part of the loop is the same.
-theorem outer_swap {a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 : UInt64} {z f d}
-    (hpre : Pre loopF loopA s) (hb : Base s ra t) (hp : Pos (env s).n (st' s t))
-    (ha : a < (st' s t).len) (hb' : b < (st' s t).len) (hm : d = swapMem t.dmem (rdi s) a b)
-    (k : Nat) :
-    outer s ⟨⟨a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15⟩, z, f, d⟩ k
-      = outer s t k := by
-  obtain ⟨-, hst⟩ := hb.swap hpre hp ha hb'
-  subst hm
-  change _ * 2048 + (stOf (swapMem t.dmem (rdi s) a b) (rdi s)).pendingGenerations = _
-  rw [hst, (swapDest_shape _ _ _).2.2]
-  rfl
-
-theorem at64_mk {a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 : UInt64} {z f d}
-    (hpre : Pre loopF loopA s) (hb : Base s ra t) (hp : Pos (env s).n (st' s t))
-    (ha : a < (st' s t).len) (hb' : b < (st' s t).len) (hm : d = swapMem t.dmem (rdi s) a b)
-    (h6 : a6 = t.regs.rsp) (h7 : a7 = t.regs.rbp) (h14 : a14.toBitVec = BitVec.ofNat 64 T)
-    (hi : Iter s T (.ok (swapDestinations (st' s t) a b, .next (T + 1)))) :
-    At64 s ra ⟨⟨a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15⟩, z, f, d⟩ := by
-  obtain ⟨hfm, hst⟩ := hb.swap hpre hp ha hb'
-  obtain ⟨h1, h2⟩ := iter_next hi
-  subst hm h6 h7
-  refine ⟨⟨hfm, hb.rsp, hb.rbp⟩, T + 1, ?_, ?_, ?_⟩
-  · rw [h14]; bv_omega
-  · change InvL _ (stOf (swapMem t.dmem (rdi s) a b) (rdi s)) _
-    rw [hst]; exact h1
-  · change loop _ (stOf (swapMem t.dmem (rdi s) a b) (rdi s)) _ = _
-    rw [hst]; exact h2
 
 theorem at75_mk {a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 : UInt64} {z f}
     (hb : Base s ra t) (h6 : a6 = t.regs.rsp) (h7 : a7 = t.regs.rbp)
@@ -336,9 +246,9 @@ theorem at105_mk {a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 : UInt64
     (hb : Base s ra t) (h6 : a6 = t.regs.rsp) (h7 : a7 = t.regs.rbp) (h14 : a14 = t.regs.r14)
     (h15 : a15 = t.regs.r15) (hl : t.regs.r15.toBitVec = BitVec.ofNat 64 (st' s t).len)
     (hT : t.regs.r14.toBitVec = BitVec.ofNat 64 T) (hctx : Ctx s T (st' s t)) {y : Word}
-    (h0 : a0.toBitVec = y) (h2 : a2.toBitVec = rd t.dmem (t.regs.rbp.toBitVec + 64#64))
+    (h0 : a0.toBitVec = y) (h2 : a2.toBitVec = rd t.dmem (t.regs.rbp.toBitVec + 24#64))
     (h8 : a8.toBitVec = y * 8#64)
-    (h5 : a5.toBitVec = rd t.dmem (rd t.dmem (t.regs.rbp.toBitVec + 64#64) + y * 8#64))
+    (h5 : a5.toBitVec = rd t.dmem (rd t.dmem (t.regs.rbp.toBitVec + 24#64) + y * 8#64))
     (hy : y.toNat < (st' s t).len)
     (hst : step (env s) (st' s t) T
       = afterPos (st' s t) T y.toNat ((movableCopy (st' s t) y.toNat).getD y.toNat)) :
@@ -372,106 +282,6 @@ theorem bound_y {n T : Nat} {st : St} {x y : Word} {r : StatusFlags.from_result.
   rw [Kit.cf_sub', hx] at hc
   have hsome := pos_some hpY hz
   exact ⟨hsome, positionOf_some hp hsome, hc⟩
-
--- `Base` and the model state of a state literal with the memory of the inline swap.
-theorem base_swap {a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 : UInt64} {z f d}
-    (hpre : Pre loopF loopA s) (hb : Base s ra t) (hp : Pos (env s).n (st' s t))
-    (ha : a < (st' s t).len) (hb' : b < (st' s t).len) (hm : d = swapMem t.dmem (rdi s) a b)
-    (h6 : a6 = t.regs.rsp) (h7 : a7 = t.regs.rbp) :
-    Base s ra ⟨⟨a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15⟩, z, f, d⟩
-      ∧ st' s ⟨⟨a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15⟩, z, f, d⟩
-        = swapDestinations (st' s t) a b := by
-  obtain ⟨hfm, hst⟩ := hb.swap hpre hp ha hb'
-  subst hm h6 h7
-  exact ⟨⟨hfm, hb.rsp, hb.rbp⟩, hst⟩
-
-theorem at92_mk {a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 : UInt64} {z f d}
-    (hpre : Pre loopF loopA s) (hb : Base s ra t) (hp : Pos (env s).n (st' s t))
-    (ha : a < (st' s t).len) (hb' : b < (st' s t).len) (hm : d = swapMem t.dmem (rdi s) a b)
-    (h6 : a6 = t.regs.rsp) (h7 : a7 = t.regs.rbp) (h4 : a4.toBitVec = BitVec.ofNat 64 T)
-    (hi : Iter s T (.ok (swapDestinations (st' s t) a b, .next (T + 1)))) :
-    At92 s ra ⟨⟨a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15⟩, z, f, d⟩ := by
-  obtain ⟨hB, hst⟩ := base_swap hpre hb hp ha hb' hm h6 h7
-  obtain ⟨h1, h2⟩ := iter_next hi
-  refine ⟨hB, T + 1, ?_, ?_, ?_⟩
-  · rw [h4]; bv_omega
-  · rw [hst]; exact h1
-  · rw [hst]; exact h2
-
--- `.LB81` after the inline swap.
-theorem at81_mk {a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 : UInt64} {z f d}
-    (hpre : Pre loopF loopA s) (hb : Base s ra t) (hp : Pos (env s).n (st' s t))
-    (ha : a < (st' s t).len) (hb' : b < (st' s t).len) (hm : d = swapMem t.dmem (rdi s) a b)
-    (h6 : a6 = t.regs.rsp) (h7 : a7 = t.regs.rbp) (h14 : a14.toBitVec = BitVec.ofNat 64 T)
-    (hi : Iter s T (placeTop (swapDestinations (st' s t) a b) T))
-    (hops : (st' s t).trace.length < cap s) :
-    At81 s ra ⟨⟨a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15⟩, z, f, d⟩ := by
-  obtain ⟨hB, hst⟩ := base_swap hpre hb hp ha hb' hm h6 h7
-  refine ⟨hB, T, h14, ?_, ?_, ?_⟩
-  · rw [hst]; exact hi
-  · rw [hst, (swapDest_shape _ _ _).2.1]; exact hops
-  · rw [hst]; exact Pos.swapDest hp ha hb'
-
--- The precondition of the call of `swapWith` after the inline swap.
-theorem swap_pre_mk {r : Reg64s} {z f d}
-    (hpre : Pre loopF loopA s) (hb : Base s ra t) (hp : Pos (env s).n (st' s t))
-    (ha : a < (st' s t).len) (hb' : b < (st' s t).len) (hm : d = swapMem t.dmem (rdi s) a b)
-    (hsp : r.rsp = t.regs.rsp) (hdi : r.rdi.toBitVec = t.regs.rbp.toBitVec)
-    (hops : (st' s t).trace.length < cap s) :
-    Pre swapWithF swapWithA (MachineData.mk r z f d) := by
-  obtain ⟨hfm, hst⟩ := hb.swap hpre hp ha hb'
-  subst hm
-  have hd : rdi (MachineData.mk r z f (swapMem t.dmem (rdi s) a b)) = rdi s := by
-    simp only [rdi, Reg64s.get64_rdi]
-    rw [hdi]
-    exact hb.rbp
-  refine Kit.Fm.pre (k := 80) (by decide) hpre hfm rfl ?_ hd ?_
-  · simp only [rsp, Reg64s.get64_rsp]
-    rw [hsp]
-    exact hb.rsp
-  · have he : env (MachineData.mk r z f (swapMem t.dmem (rdi s) a b)) = env s := by
-      show envOf _ (rdi _) = _
-      rw [hd]
-      exact (hfm.keeps hpre).1
-    have hs : st (MachineData.mk r z f (swapMem t.dmem (rdi s) a b))
-        = swapDestinations (st' s t) a b := by
-      show stOf _ (rdi _) = _
-      rw [hd]
-      exact hst
-    have hc : cap (MachineData.mk r z f (swapMem t.dmem (rdi s) a b)) = cap s := by
-      show 6 * nOf _ (rdi _) = _
-      rw [hd, hfm.n hpre]
-    unfold swapWithA
-    rw [he, hs, hc, (swapDest_shape _ _ _).2.1]
-    exact ⟨Pos.swapDest hp ha hb', hops⟩
-
--- The call of `swapWith` after the inline swap.
-theorem swap_call_mk {r : Reg64s} {z f d} {t' : MachineData}
-    (hpre : Pre loopF loopA s) (hb : Base s ra t) (hp : Pos (env s).n (st' s t))
-    (ha : a < (st' s t).len) (hb' : b < (st' s t).len)
-    (hP : Post swapWithF swapWithR (MachineData.mk r z f d) t')
-    (hag : (mod swapWithF (MachineData.mk r z f d)).Agree (MachineData.mk r z f d) t')
-    (hm : d = swapMem t.dmem (rdi s) a b) (hsp : r.rsp = t.regs.rsp) (hbp : r.rbp = t.regs.rbp)
-    (hdi : r.rdi.toBitVec = t.regs.rbp.toBitVec) (h14 : r.r14 = t.regs.r14)
-    (hsi : r.rsi = t.regs.rsi) :
-    Base s ra t' ∧ t'.regs.r14 = t.regs.r14
-      ∧ Res (rdi s) (swapWith (swapDestinations (st' s t) a b) t.regs.rsi.toBitVec.toNat)
-          (fun q => rax t' = 0#64 ∧ st' s t' = q) t' := by
-  obtain ⟨hfm, hst⟩ := hb.swap hpre hp ha hb'
-  subst hm
-  have hd : rdi (MachineData.mk r z f (swapMem t.dmem (rdi s) a b)) = rdi s := by
-    simp only [rdi, Reg64s.get64_rdi]
-    rw [hdi]
-    exact hb.rbp
-  have hc : Base s ra (MachineData.mk r z f (swapMem t.dmem (rdi s) a b)) :=
-    ⟨hfm, by rw [hsp]; exact hb.rsp, by rw [hbp]; exact hb.rbp⟩
-  refine ⟨Base.call (by decide) hpre hc hP hag rfl rfl hd rfl, (call_regs hag).2.2.2.1.trans h14, ?_⟩
-  have h := swapWith_post hP rfl hd
-  rw [← hst]
-  have e : rsi (MachineData.mk r z f (swapMem t.dmem (rdi s) a b)) = t.regs.rsi.toBitVec := by
-    simp only [rsi, Reg64s.get64_rsi, hsi]
-  rw [e] at h
-  exact h
 
 -- `.LB81` after the call of `swapWith`.
 theorem at81_call {t' : MachineData} {z f} {q : St} (hB : Base s ra t')

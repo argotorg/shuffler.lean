@@ -1,7 +1,7 @@
 import BbuKraken.Kit
 
 /-!
-The definitions of the proof of `loop_body` (`c/bbu/buildBottomUp.S`): the model
+The definitions of the proof of `loop_body` (`c/bbu/<Names.buildBottomUp>.S`): the model
 steps between the cut labels, the invariant at each label, the variant, and the
 obligation of one block of the cfg as a standalone `Prop`.
 
@@ -38,10 +38,9 @@ def afterGen (targetOffset : Nat) (st : St) : M (St × Next) :=
 
 -- The branch of `step` on `positionOf st targetOffset`.
 def bound (e : Env) (st : St) (targetOffset : Nat) : M (St × Next) :=
-  match positionOf st targetOffset with
-  | some sourceForTargetOffset =>
-    (takeBound st targetOffset sourceForTargetOffset).bind (afterTake targetOffset)
-  | none => (generate e st targetOffset).bind (afterGen targetOffset)
+  if (positionOf st targetOffset).isSome then
+    (takeBound st targetOffset).bind (afterTake targetOffset)
+  else (generate e st targetOffset).bind (afterGen targetOffset)
 
 -- The branch of `step` on the result `urgentToDup` of `urgent`.
 def afterUrgent (e : Env) (st : St) (targetOffset urgentToDup : Nat) : M (St × Next) :=
@@ -53,10 +52,13 @@ def afterUrgent (e : Env) (st : St) (targetOffset urgentToDup : Nat) : M (St × 
     (generate e st st.len).map (·, .next targetOffset)
   else bound e st targetOffset
 
--- `takeBound st targetOffset sourceForTargetOffset` and `afterTake targetOffset`
--- for `targetOffset < sourceForTargetOffset`, when the slot at `pos` goes to
+-- `takeBound st targetOffset` and `afterTake targetOffset` for
+-- `positionOf st targetOffset = some sourceForTargetOffset` and
+-- `targetOffset ≤ sourceForTargetOffset`, when the slot at `pos` goes to
 -- `sourceForTargetOffset`.
 def afterPos (st : St) (targetOffset sourceForTargetOffset pos : Nat) : M (St × Next) :=
+  if st.val pos ≠ st.val sourceForTargetOffset then .error .assertion
+  else
   let st := swapDestinations st pos sourceForTargetOffset
   if pos = targetOffset then .ok (st, .next (targetOffset + 1))
   else if pos ≠ st.len - 1 then

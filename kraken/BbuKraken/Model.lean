@@ -2,14 +2,13 @@ import PermuteKraken.Model
 
 /-!
 A model of `Shuffler.Emission.buildBottomUp` without Mathlib. Each definition
-mirrors a function of `c/build_bottom_up.c`, and so the parts of the Lean
+mirrors a function of `c/build_bottom_up.cpp`, and so the parts of the Lean
 original.
 
-A `StackSlot` and an `Op` have the fields of `StackSlot` and `struct op` in the
-C, which have the layout of the C++ `StackSlot` and `ShuffleOp`. The padding is
-not part of the model; `BbuKraken.Layout` gives the bytes of the fields. A slot
-of the working stack (`Slot`) is a `StackSlot` and the target offset that it is
-bound for: the C keeps these in `m_data` and `m_destinationOf`. The original
+A `StackSlot` and an `Op` have the fields of `StackSlot` and `ShuffleOp` in the C++.
+The padding is not part of the model; `BbuKraken.Layout` gives the bytes of the
+fields. A slot of the working stack (`Slot`) is a `StackSlot` and the target offset that it is
+bound for: the C++ keeps these in `m_data` and `m_destinationOf`. The original
 allows slots that are bound for no offset; `buildBottomUp` starts with every
 slot bound, so the model does not represent them. `St.positionOf` is
 `m_positionOf`: the position of the slot bound for each target offset.
@@ -21,7 +20,7 @@ abbrev Word := BitVec 64
 
 def MAX_SWAP_DEPTH : Nat := 16
 def MAX_DUP_DEPTH : Nat := 15
--- The bound on `n` in `c/build_bottom_up.c`: the EVM stack limit.
+-- `maxStackSize` in `c/build_bottom_up.cpp`: the EVM stack limit.
 def MAX_N : Nat := 1024
 
 -- `StackSlot::Kind`
@@ -129,21 +128,31 @@ def shallowestCopyPosition (st : St) (slot : StackSlot) : Option Nat :=
 
 /-! ## Actions -/
 
+-- `Mapping.destinationOf`: the destination of the slot at `pos`, or none above the top.
+def St.destinationOf (st : St) (pos : Nat) : Option Nat := st.slots[pos]?.map Slot.dest
+
+-- `if (destination) m_positionOf[*destination] = pos`
+def bindIf (positionOf : List (Option Nat)) (destination : Option Nat) (pos : Nat) :
+    List (Option Nat) :=
+  match destination with
+  | some destination => positionOf.set destination (some pos)
+  | none => positionOf
+
 -- `Mapping.swapDestinations`: the slots at `a` and `b` exchange their
 -- destinations, and `m_positionOf` follows.
 def swapDestinations (st : St) (a b : Nat) : St :=
   let st := { st with
     slots := (st.slots.set a ⟨st.val a, st.dest b⟩).set b ⟨st.val b, st.dest a⟩ }
-  { st with positionOf := (st.positionOf.set (st.dest a) (some a)).set (st.dest b) (some b) }
+  { st with positionOf :=
+      bindIf (bindIf st.positionOf (st.destinationOf a) a) (st.destinationOf b) b }
 
--- `push` and `dup`: `m_mapping.push(destination)` binds a new top slot
--- `slot`, with the operation `op`.
+-- `push` and `dup`: the stack operation `op` adds the slot `slot`, then
+-- `m_mapping.bind` binds the new top for `destination`. The model has no unbound
+-- slot, so the new slot holds `destination` from the start.
 def add (st : St) (slot : StackSlot) (destination : Nat) (op : Op) : M St :=
+  let st := { st with slots := st.slots ++ [⟨slot, destination⟩], trace := st.trace ++ [op] }
   if (positionOf st destination).isSome then .error .assertion
-  else .ok { st with
-    slots := st.slots ++ [⟨slot, destination⟩]
-    positionOf := st.positionOf.set destination (some st.len)
-    trace := st.trace ++ [op] }
+  else .ok { st with positionOf := st.positionOf.set destination (some (st.len - 1)) }
 
 -- `swapWith`: the slots at `pos` and the top exchange, then their destinations,
 -- so that the destinations travel along.
@@ -170,11 +179,14 @@ def emit (e : Env) (st : St) (targetOffset : Nat) : M St :=
         | some copy => .error (.blocked copy (st.len - 1 - copy - MAX_DUP_DEPTH))
         | none => .error .assertion
 
+-- `--` on a `std::size_t`: it wraps at 0.
+def sizeDec (x : Nat) : Nat := if x = 0 then 2 ^ 64 - 1 else x - 1
+
 -- `produce`, for `targetOffset < n`
 def produce (e : Env) (st : St) (targetOffset : Nat) : M St :=
   (emit e st targetOffset).bind fun st =>
   if positionOf st targetOffset ≠ some (st.len - 1) then .error .assertion
-  else .ok { st with pendingGenerations := st.pendingGenerations - 1 }
+  else .ok { st with pendingGenerations := sizeDec st.pendingGenerations }
 
 -- `generate`
 def generate (e : Env) (st : St) (targetOffset : Nat) : M St :=
@@ -220,20 +232,25 @@ def movableCopy (st : St) (sourceForTargetOffset : Nat) : Option Nat :=
     (fun candidate => st.val candidate == st.val sourceForTargetOffset
       && st.dest candidate != candidate)
 
--- The branch of `buildBottomUp` for the slot at `sourceForTargetOffset` that is
--- bound for `targetOffset`: the new state, and whether `targetOffset` is done.
-def takeBound (st : St) (targetOffset sourceForTargetOffset : Nat) : M (St × Bool) :=
-  if sourceForTargetOffset < targetOffset then .error .assertion
-  else
-    let pos := if st.val targetOffset = st.val sourceForTargetOffset then targetOffset
-      else (movableCopy st sourceForTargetOffset).getD sourceForTargetOffset
-    let st := swapDestinations st pos sourceForTargetOffset
-    if pos = targetOffset then .ok (st, true)
-    else if pos ≠ st.len - 1 then
-      let depth := st.len - 1 - pos
-      if MAX_SWAP_DEPTH < depth then .error (.blocked pos (depth - MAX_SWAP_DEPTH))
-      else (swapWith st pos).map (·, false)
-    else .ok (st, false)
+-- The branch of `buildBottomUp` for a slot that is bound for `targetOffset`:
+-- the new state, and whether `targetOffset` is done.
+def takeBound (st : St) (targetOffset : Nat) : M (St × Bool) :=
+  match positionOf st targetOffset with
+  | none => .error .assertion
+  | some sourceForTargetOffset =>
+    if sourceForTargetOffset < targetOffset then .error .assertion
+    else
+      let pos := if st.val targetOffset = st.val sourceForTargetOffset then targetOffset
+        else (movableCopy st sourceForTargetOffset).getD sourceForTargetOffset
+      if st.val pos ≠ st.val sourceForTargetOffset then .error .assertion
+      else
+        let st := swapDestinations st pos sourceForTargetOffset
+        if pos = targetOffset then .ok (st, true)
+        else if pos ≠ st.len - 1 then
+          let depth := st.len - 1 - pos
+          if MAX_SWAP_DEPTH < depth then .error (.blocked pos (depth - MAX_SWAP_DEPTH))
+          else (swapWith st pos).map (·, false)
+        else .ok (st, false)
 
 -- The end of an iteration of `buildBottomUp`: swap the top down into `targetOffset`.
 def placeTop (st : St) (targetOffset : Nat) : M (St × Next) :=
@@ -256,14 +273,13 @@ def step (e : Env) (st : St) (targetOffset : Nat) : M (St × Next) :=
     else if urgentToDup = e.n ∧ targetOffset < st.len ∧ st.len < e.n ∧
         positionOf st st.len = none ∧ st.len < targetOffset + MAX_SWAP_DEPTH then
       (generate e st st.len).map (·, .next targetOffset)
-    else match positionOf st targetOffset with
-      | some sourceForTargetOffset =>
-        (takeBound st targetOffset sourceForTargetOffset).bind fun (st, done) =>
+    else if (positionOf st targetOffset).isSome then
+      (takeBound st targetOffset).bind fun (st, done) =>
         if done then .ok (st, .next (targetOffset + 1)) else placeTop st targetOffset
-      | none => (generate e st targetOffset).bind fun st =>
-        if targetOffset < st.len ∧ st.dest targetOffset = targetOffset then
-          .ok (st, .next (targetOffset + 1))
-        else placeTop st targetOffset
+    else (generate e st targetOffset).bind fun st =>
+      if targetOffset < st.len ∧ st.dest targetOffset = targetOffset then
+        .ok (st, .next (targetOffset + 1))
+      else placeTop st targetOffset
 
 -- The destinations form a permutation.
 def IsPerm (l : List Nat) : Prop :=
@@ -281,16 +297,18 @@ def swapTop (st : St) (depth : Nat) : St :=
       ⟨st.val (top - depth), st.dest top⟩
     trace := st.trace ++ [.swap depth] }
 
--- `permuteDestinations`: the final permutation. `buildBottomUp` keeps the
--- destinations a permutation, so the assertion does not occur; the C code has
--- no such check.
+-- `permuteDestinations`: the final permutation. Each slot must have a
+-- destination. `IsPerm` is the precondition of `PermuteKraken.permute`; the C
+-- `permute` does not check it, and `buildBottomUp` keeps it (`Inv.finish`).
 def finish (st : St) : M St :=
-  let ds := st.slots.map Slot.dest
-  if h : IsPerm ds then
-    match PermuteKraken.permute ⟨ds, h.1, fun i j hi hj => h.2 i hi j hj⟩ with
-    | .ok swaps => .ok (swaps.foldl swapTop st)
-    | .error b => .error (.blocked b.offset b.excess)
-  else .error .assertion
+  if !(List.range st.len).all fun pos => (st.destinationOf pos).isSome then .error .assertion
+  else
+    let ds := st.slots.map Slot.dest
+    if h : IsPerm ds then
+      match PermuteKraken.permute ⟨ds, h.1, fun i j hi hj => h.2 i hi j hj⟩ with
+      | .ok swaps => .ok (swaps.foldl swapTop st)
+      | .error b => .error (.blocked b.offset b.excess)
+    else .error .assertion
 
 /-! ## Termination -/
 
@@ -306,6 +324,7 @@ theorem add_pending {st st' : St} {slot : StackSlot} {destination : Nat} {op : O
     (h : add st slot destination op = .ok st') :
     st'.pendingGenerations = st.pendingGenerations := by
   unfold add at h
+  dsimp only at h
   split at h <;> cases h; rfl
 
 theorem swapWith_pending {st st' : St} {pos : Nat} (h : swapWith st pos = .ok st') :
@@ -323,17 +342,17 @@ theorem emit_pending {e : Env} {st st' : St} {targetOffset : Nat}
   repeat' split at h
   all_goals first | exact add_pending h | cases h
 
--- Generating a slot lowers `pendingGenerations` by one.
+-- Generating a slot decrements `pendingGenerations`.
 theorem produce_pending {e : Env} {st st' : St} {targetOffset : Nat}
     (h : produce e st targetOffset = .ok st') :
-    st'.pendingGenerations = st.pendingGenerations - 1 := by
+    st'.pendingGenerations = sizeDec st.pendingGenerations := by
   obtain ⟨s, hs, h⟩ := bind_ok h
   split at h <;> cases h
   simp [emit_pending hs]
 
 theorem generate_pending {e : Env} {st st' : St} {targetOffset : Nat}
     (h : generate e st targetOffset = .ok st') :
-    st'.pendingGenerations = st.pendingGenerations - 1 := by
+    st'.pendingGenerations = sizeDec st.pendingGenerations := by
   unfold generate at h
   split at h
   · cases h
@@ -368,11 +387,11 @@ theorem step_progress {e : Env} {st st' : St} {targetOffset targetOffset' : Nat}
   split at h
   · obtain ⟨s, hs, h⟩ := map_ok h
     cases h
-    exact .inr ⟨rfl, by rw [generate_pending hs]; omega⟩
+    exact .inr ⟨rfl, by rw [generate_pending hs, sizeDec, ite_eq_right hp]; omega⟩
   split at h
   · obtain ⟨s, hs, h⟩ := map_ok h
     cases h
-    exact .inr ⟨rfl, by rw [generate_pending hs]; omega⟩
+    exact .inr ⟨rfl, by rw [generate_pending hs, sizeDec, ite_eq_right hp]; omega⟩
   split at h
   · obtain ⟨⟨s, done⟩, _, h⟩ := bind_ok h
     cases done
@@ -402,8 +421,11 @@ def initPositionOf (n : Nat) (dests : List Nat) : List (Option Nat) :=
   (List.range dests.length).foldl (fun p i => p.set dests[i]! (some i)) (List.replicate n none)
 
 -- The initial state for the source stack with the destination of each slot.
+-- `pendingGenerations` counts the target offsets that no slot is bound for.
 def init (e : Env) (source : List StackSlot) (dests : List Nat) : St :=
-  ⟨List.zipWith Slot.mk source dests, initPositionOf e.n dests, e.n - source.length, []⟩
+  let st : St := ⟨List.zipWith Slot.mk source dests, initPositionOf e.n dests, 0, []⟩
+  { st with pendingGenerations :=
+      (List.range e.n).countP fun offset => (positionOf st offset).isNone }
 
 -- `buildBottomUp` from the source stack with the destination of each slot: the
 -- final state, whose slots are the result stack and whose trace is the operations.

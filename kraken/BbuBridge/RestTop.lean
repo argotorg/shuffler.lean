@@ -15,7 +15,7 @@ theorem restTop_attach_bind {ε α β : Type} (x : Except ε α) (f : α → Exc
 
 -- The offset `st.len` is unbound and near: generate it.
 theorem restTop_corr (hgen : GenerateStmt) : RestTopStmt := by
-  intro e source st state t u uo h ht hu _ ⟨hue, htl, hln, hpos, hlen⟩
+  intro e source st state t u uo h hp0 ht hu _ ⟨hue, htl, hln, hpos, hlen⟩
   cases uo with
   | some x => exact absurd hu.2 (by have := hu.1; omega)
   | none =>
@@ -35,7 +35,7 @@ theorem restTop_corr (hgen : GenerateStmt) : RestTopStmt := by
     simp only [Option.isSome_none, Bool.false_eq_true, false_and, dite_false]
     rw [ite_eq_left hc1, index_eq ⟨_, hlt⟩, except_ok_bind, ite_eq_left hc2,
       restTop_attach_bind, hl]
-    have hg := hgen e source st state st.len h
+    have hg := hgen e source st state st.len h hp0
     generalize Bbu.generate e st st.len = m at hg ⊢
     generalize state.generate st.len = r at hg ⊢
     cases m <;> cases r <;> simp only [Corr] at hg

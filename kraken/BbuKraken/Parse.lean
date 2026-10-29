@@ -36,11 +36,22 @@ public meta def parseLines (s : String) : Except String Program := do
     | .error e => throw s!"line {k}: {e}") ((1 : Nat), ([] : List Program))
   pure ps.reverse.flatten
 
-/-- `parseFile`, with `leaq disp(,%i,s), %r`. -/
-elab "bbuParseFile(" path:str ")" : term => do
-  let content ← IO.FS.readFile path.getString
+-- The program of the file `path`. An error points at `ref`.
+meta def elabFile (ref : Syntax) (path : String) : TermElabM Expr := do
+  let content ← IO.FS.readFile path
   match parseLines (stripDirectives content) with
   | .ok p => return Lean.toExpr p
-  | .error e => throwErrorAt path e
+  | .error e => throwErrorAt ref e
+
+/-- `parseFile`, with `leaq disp(,%i,s), %r`. -/
+elab "bbuParseFile(" path:str ")" : term => elabFile path path.getString
+
+/-- `bbuParseFile` of `c/bbu/NAME.S`, for the def `n : String := "NAME"` of
+`BbuKraken.Names`. The def must have a string literal as its value. -/
+elab "bbuParseFn(" n:ident ")" : term => do
+  let c ← realizeGlobalConstNoOverloadWithInfo n
+  match (← getConstInfo c).value? with
+  | some (.lit (.strVal s)) => elabFile n s!"c/bbu/{s}.S"
+  | _ => throwErrorAt n m!"{c} is not a def with a string literal as its value"
 
 end Bbu

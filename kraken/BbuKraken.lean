@@ -8,7 +8,10 @@ import BbuKraken.Kit
 import BbuKraken.Layout
 import BbuKraken.Link
 import BbuKraken.Model
+import BbuKraken.Names
 import BbuKraken.ModelLemmas
+import BbuKraken.ModelTest
 import BbuKraken.Specs
 import BbuKraken.SpecsTest
+import BbuKraken.StructLayout
 import BbuKraken.Top

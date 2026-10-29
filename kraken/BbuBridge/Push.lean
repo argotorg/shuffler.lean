@@ -20,7 +20,8 @@ theorem push_corr : PushStmt := by
     · exact .inl ((isFree_iff v).mp hv)
     · exact .inr ((isSpilled_iff e v).mp hv)
   have hpos := h.positionOf ⟨d, hd⟩
-  unfold Bbu.add State.push
+  rw [Bbu.add_eq]
+  unfold State.push
   -- The destination is free: both add the slot. Else both fail.
   by_cases hp : state.positionOf ⟨d, hd⟩ = none
   · rw [hp] at hpos

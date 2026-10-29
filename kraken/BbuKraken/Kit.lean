@@ -18,10 +18,10 @@ Goals of `kvcgen64`:
   `pushRa`), then `Wf.isSome_struct` or `hw.mapped.loadInt_isSome`.
 
 Facts for `bv_omega` (`Bbu`):
-* `Wf.sep_ops`, `Wf.sep_blk`: the ops buffer and `blocked` do not overlap the struct.
+* `Wf.sep_data`, `Wf.sep_ops`: the working stack and the ops buffer do not overlap the struct.
 * `FrameOk.sep_struct`: the frame does not overlap the struct.
 * `sep_of_disjoint`: `Disjoint` of two blocks as `Nat` inequalities.
-* `Wf.struct_lt`, `Wf.ops_lt`, `Wf.blk_lt`, `FrameOk.le`: the blocks do not wrap.
+* `Wf.struct_lt`, `Wf.ops_lt`, `FrameOk.le`: the blocks do not wrap.
 
 The model state (`Bbu`):
 * `stOf_eq`: the model state is `st` if `len`, `pending`, `nops`, each slot and each
@@ -42,7 +42,7 @@ and has frame size `F` uses `abbrev Fm := Kit.Fm F [r_0, .., r_k]`.
 * `pushes s ra rs`: the memory after the call and the pushes (the `kvcgen64` form).
 * `Fm.init`: `Fm` holds for `pushes s ra rs`.
 * `Fm.call`, `Fm.pre`: a call at `rsp s - k`, with `8 * rs.length + 8 ≤ k`.
-* `Fm.write`: a change to `writable` only. `Fm.blk`: the two stores to `blocked`.
+* `Fm.write`: a change to `writable` only. `Fm.blk`: the two stores to `m_blocked`.
 * `h.saved i _`: the word at `rsp s - (8 * i + 16)` is the register `rs[i]`.
 * `Fm.ret`: `ret` gives the postcondition of `Body`, after the pops.
 * `st_pushes`: the pushes do not change the model state.
@@ -50,11 +50,10 @@ and has frame size `F` uses `abbrev Fm := Kit.Fm F [r_0, .., r_k]`.
 Flags (`Bbu.Kit`): `cf_sub`, `cf_sub'`, `z_sub`, `nz_sub` (for `cmp`), `a_sub_imm`,
 `be_sub_imm` (for `cmp $k`), `z_test`, `sf_test`, `ns_test` (for `test v, v`).
 
-Words of the struct (`Bbu`): `Wf.word_isSome`, `Wf.blk_isSome`, `Wf.blk_disj`,
-`Wf.blkOf_store`, `blkOf_store2`, `n_envOf`, `target_get`.
+Words of the struct (`Bbu`): `Wf.word_isSome`, `n_envOf`, `target_get`.
 
 Other normal forms (`Bbu`): `pushRa_<reg>`, `pushRa_rsp`, `disp<k>`, `shl4`. Results:
-`Res.imp`, `Res.msb`, `Res.err`.
+`Res.imp`, `Res.not_done`, `Res.err`.
 -/
 
 open Std.WP Lean.Order
@@ -222,31 +221,34 @@ theorem sep_of_disjoint {a b : Addr} {n k : Nat} (h : Mem.Blocks.Disjoint [(a, n
   · exact h a (by simp only [Mem.Blocks.Inside, or_false]; bv_omega)
       (by simp only [Mem.Blocks.Inside, or_false]; bv_omega)
 
--- The struct is the union of three blocks of `writable` and `readable`.
+-- The struct is the union of four blocks of `writable` and `readable`.
 theorem inside_struct {x : Addr} (h : Mem.Blocks.Inside x 1 [(S, 8 * WORDS)]) :
     Mem.Blocks.Inside x 1 (writable m S ++ readable m S) := by
-  simp only [Mem.Blocks.Inside, or_false, WORDS, POS, DEST, MAX_N] at h
+  simp only [Mem.Blocks.Inside, or_false, WORDS, BLK, PEND, POS, DEST, MAX_N] at h
   rw [inside_append]
-  by_cases h1 : (x - S).toNat < 24
-  · exact Or.inl (Or.inl (by omega))
-  by_cases h2 : (x - S).toNat < 72
-  · exact Or.inr (Or.inl (by simp only [wordAt]; bv_omega))
-  · exact Or.inl (Or.inr (Or.inl (by simp only [wordAt, DEST, MAX_N]; bv_omega)))
+  by_cases h1 : (x - S).toNat < 32
+  · exact Or.inr (Or.inl (by omega))
+  by_cases h2 : (x - S).toNat < 40
+  · exact Or.inl (Or.inl (by simp only [wordAt]; bv_omega))
+  by_cases h3 : (x - S).toNat < 48
+  · exact Or.inr (Or.inr (Or.inl (by simp only [wordAt]; bv_omega)))
+  · exact Or.inl (Or.inr (Or.inl (by simp only [wordAt, WORDS, BLK, PEND, POS, DEST, MAX_N]; bv_omega)))
 
--- A change outside the header words 3 to 8 keeps `writable`.
+-- A change outside the struct words 0 to 3 and 5 keeps `writable`.
 theorem writable_congr {m' : Mem 64} {l : List (Addr × Nat)} (h : Mem.UnchangedOutside l m m')
     (hd : Mem.Blocks.Disjoint (readable m S) l) : writable m' S = writable m S := by
-  obtain ⟨hn, -, -, ho, hb, hda⟩ := hdr_congr' h hd
-  simp only [writable, hn, ho, hb, hda]
+  obtain ⟨hn, -, -, ho, hda⟩ := hdr_congr' h hd
+  simp only [writable, hn, ho, hda]
 
--- The blocks of `writable`: the words 0 to 2 of the header, `m_destinationOf` and
--- `m_positionOf`, the working stack, the ops buffer and `blocked`.
+-- The blocks of `writable`: `m_size`, the words from `m_traceSize` to `m_blocked`,
+-- the working stack and the ops buffer.
 theorem inside_writable {a : Addr} {n : Nat}
-    (h : (a - S).toNat + n ≤ 24 ∨ (8 * DEST ≤ (a - S).toNat ∧ (a - S).toNat + n ≤ 8 * WORDS)
+    (h : (32 ≤ (a - S).toNat ∧ (a - S).toNat + n ≤ 40)
+      ∨ (48 ≤ (a - S).toNat ∧ (a - S).toNat + n ≤ 8 * WORDS)
       ∨ (a - dataOf m S).toNat + n ≤ 8 * nOf m S
-      ∨ (a - opsOf m S).toNat + n ≤ 72 * nOf m S ∨ (a - blkOf m S).toNat + n ≤ 16) :
+      ∨ (a - opsOf m S).toNat + n ≤ 72 * nOf m S) :
     Mem.Blocks.Inside a n (writable m S) := by
-  simp only [writable, Mem.Blocks.Inside, wordAt, POS, DEST, WORDS, MAX_N, or_false] at h ⊢
+  simp only [writable, Mem.Blocks.Inside, wordAt, BLK, PEND, POS, DEST, WORDS, MAX_N, or_false] at h ⊢
   bv_omega
 
 -- A load from the struct succeeds.
@@ -259,7 +261,7 @@ theorem disjoint_head {a b : Addr} {n k : Nat} {l : List (Addr × Nat)}
     (h : Mem.Blocks.Disjoint [(a, n)] ((b, k) :: l)) : Mem.Blocks.Disjoint [(a, n)] [(b, k)] :=
   fun x hx hy => h x hx (hy.elim Or.inl False.elim)
 
--- The working stack, the ops buffer, `blocked` and the struct do not overlap.
+-- The working stack, the ops buffer and the struct do not overlap.
 theorem Wf.sep_data (hw : Wf m S) (hn : 0 < nOf m S) :
     (dataOf m S).toNat + 8 * nOf m S ≤ S.toNat ∨ S.toNat + 8 * WORDS ≤ (dataOf m S).toNat :=
   (sep_of_disjoint (disjoint_head hw.disj_struct) (by decide) (by omega)).symm
@@ -269,21 +271,10 @@ theorem Wf.sep_ops (hw : Wf m S) (hn : 0 < nOf m S) :
   (sep_of_disjoint (disjoint_head (fun x hx hy => hw.disj_struct x hx (Or.inr hy)))
     (by decide) (by omega)).symm
 
-theorem Wf.sep_blk (hw : Wf m S) :
-    (blkOf m S).toNat + 16 ≤ S.toNat ∨ S.toNat + 8 * WORDS ≤ (blkOf m S).toNat :=
-  (sep_of_disjoint (disjoint_head (fun x hx hy => hw.disj_struct x hx (Or.inr (Or.inr hy))))
-    (by decide) (by decide)).symm
-
 theorem Wf.sep_data_ops (hw : Wf m S) (hn : 0 < nOf m S) :
     (dataOf m S).toNat + 8 * nOf m S ≤ (opsOf m S).toNat
       ∨ (opsOf m S).toNat + 72 * nOf m S ≤ (dataOf m S).toNat :=
   sep_of_disjoint (disjoint_head hw.disj_data) (by omega) (by omega)
-
-theorem Wf.sep_data_blk (hw : Wf m S) (hn : 0 < nOf m S) :
-    (dataOf m S).toNat + 8 * nOf m S ≤ (blkOf m S).toNat
-      ∨ (blkOf m S).toNat + 16 ≤ (dataOf m S).toNat :=
-  sep_of_disjoint (disjoint_head (fun x hx hy => hw.disj_data x hx (Or.inr hy))) (by omega)
-    (by decide)
 
 -- The frame of a call does not overlap the struct.
 theorem FrameOk.sep_struct {F : Nat} {s : MachineData} (hf : FrameOk F s) (hF : 0 < F) :
@@ -322,17 +313,17 @@ end
 section
 variable {m : Mem 64} {S : Addr}
 
-theorem len_stOf : (stOf m S).len = (rd m (wordAt S 0)).toNat := by
+theorem len_stOf : (stOf m S).len = (rd m (wordAt S 4)).toNat := by
   simp [St.len, stOf]
 
-theorem nops_stOf : (stOf m S).trace.length = (rd m (wordAt S 2)).toNat := by
+theorem nops_stOf : (stOf m S).trace.length = (rd m (wordAt S 6)).toNat := by
   simp [stOf]
 
-theorem val_stOf {i : Nat} (hi : i < (rd m (wordAt S 0)).toNat) :
+theorem val_stOf {i : Nat} (hi : i < (rd m (wordAt S 4)).toNat) :
     (stOf m S).val i = StackSlot.ofWord (rd m (wordAt (dataOf m S) i)) := by
   simp [St.val, stOf, hi, slotOf]
 
-theorem dest_stOf {i : Nat} (hi : i < (rd m (wordAt S 0)).toNat) :
+theorem dest_stOf {i : Nat} (hi : i < (rd m (wordAt S 4)).toNat) :
     (stOf m S).dest i = (rd m (wordAt S (DEST + i))).toNat := by
   simp [St.dest, stOf, hi, slotOf]
 
@@ -341,9 +332,9 @@ theorem positionOf_stOf {d : Nat} (hd : d < nOf m S) :
   simp [positionOf, stOf, hd]
 
 -- The model state is `st` if the words in memory agree with `st`.
-theorem stOf_eq {st : St} (hlen : (rd m (wordAt S 0)).toNat = st.len)
-    (hpend : (rd m (wordAt S 1)).toNat = st.pendingGenerations)
-    (hnops : (rd m (wordAt S 2)).toNat = st.trace.length)
+theorem stOf_eq {st : St} (hlen : (rd m (wordAt S 4)).toNat = st.len)
+    (hpend : (rd m (wordAt S PEND)).toNat = st.pendingGenerations)
+    (hnops : (rd m (wordAt S 6)).toNat = st.trace.length)
     (hslot : ∀ i (hi : i < st.len), slotOf m S i = st.slots[i])
     (hplen : st.positionOf.length = nOf m S)
     (hpos : ∀ d (hd : d < st.positionOf.length), optOf (rd m (wordAt S (POS + d))) = st.positionOf[d])
@@ -421,47 +412,6 @@ theorem Wf.word_isSome (hw : Wf m S) (hm : Mem.Mapped (writable m S ++ readable 
     (Or.inl ?_)
   simp only [wordAt, WORDS_eq]; bv_omega
 
--- A word of the struct does not overlap `blocked`.
-theorem Wf.blk_disj (hw : Wf m S) {k : Nat} (hk : k < WORDS) :
-    Mem.Blocks.Disjoint [(wordAt S k, 8)] [(blkOf m S, 16)] := by
-  intro x hx hb
-  have hs := hw.struct_lt
-  simp only [WORDS_eq] at hs hk
-  refine hw.disj_struct x ?_ (inside_of_mem (by simp) hb)
-  simp only [Mem.Blocks.Inside, or_false, WORDS_eq] at hx ⊢
-  bv_omega
-
--- A store to `blocked` keeps the pointer to it.
-theorem Wf.blkOf_store (hw : Wf m S) {k : Nat} (hk : k < 2) (v : Int) :
-    blkOf (m.storeInt (wordAt (blkOf m S) k) 8 v) S = blkOf m S := by
-  have hb := hw.blk_lt
-  refine rd_storeInt_of_disjoint fun x hx hy => hw.blk_disj (k := 7) (by decide) x hy ?_
-  simp only [Mem.Blocks.Inside, or_false] at hx ⊢
-  bv_omega
-
--- A load of a word of `blocked` succeeds in a memory `m'` that keeps the struct mapped.
-theorem Wf.blk_isSome (hw : Wf m S) (hm : Mem.Mapped (writable m S ++ readable m S) m') {k : Nat}
-    (hk : k < 2) : (m'.loadInt (wordAt (blkOf m S) k) 8).isSome = true := by
-  have hb := hw.blk_lt
-  refine Mem.Mapped.loadInt_isSome hm (inside_append.mpr (Or.inl
-    (inside_of_mem (p := (blkOf m S, 16)) (by simp [writable]) (Or.inl ?_))))
-  simp only [wordAt]; bv_omega
-
-theorem blkOf_def : rd m (wordAt S 7) = blkOf m S := rfl
-
--- The two stores to `blocked` keep the pointer to it.
-theorem blkOf_store2 {v w : Int} (hw : Wf m S) :
-    blkOf ((m.storeInt (wordAt (blkOf m S) 0) 8 v).storeInt (wordAt (blkOf m S) 1) 8 w) S =
-      blkOf m S := by
-  have hb := hw.blk_lt
-  unfold blkOf
-  rw [rd_storeInt_of_disjoint, rd_storeInt_of_disjoint]
-  all_goals
-    intro x hx hy
-    refine hw.blk_disj (k := 7) (by decide) x hy ?_
-    simp only [Mem.Blocks.Inside, or_false, blkOf] at hx ⊢
-    bv_omega
-
 end
 
 /-! ## Results -/
@@ -475,11 +425,11 @@ theorem Res.imp {r : M α} {Q' : α → Prop} (h : Res S r Q t) (hq : ∀ a, Q a
   | error e => cases e <;> exact h
   | ok a => exact hq a h
 
--- An error returns a negative `rax`.
-theorem Res.msb {e : Err} (h : Res S (.error e : M α) Q t) : (rax t).msb = true := by
+-- An error returns a `Status` that is not `Done`.
+theorem Res.not_done {e : Err} (h : Res S (.error e : M α) Q t) : al t ≠ DONE := by
   cases e with
-  | blocked p x => rw [show rax t = -1#64 from h.1]; decide
-  | assertion => rw [show rax t = -2#64 from h]; decide
+  | blocked p x => rw [h.1]; decide
+  | assertion => rw [h]; decide
 
 theorem Res.err {β : Type} {e : Err} {Q' : β → Prop} (h : Res S (.error e : M α) Q t) :
     Res S (.error e : M β) Q' t := by
@@ -561,8 +511,8 @@ theorem Mid.n (hpre : Pre F A s) (h : Mid F s ra m) : nOf m (rdi s) = nOf s.dmem
 
 -- The struct stays well formed if `len` and `nops` stay in bounds.
 theorem Mid.wf (hpre : Pre F A s) (h : Mid F s ra m)
-    (hlen : (rd m (wordAt (rdi s) 0)).toNat ≤ nOf s.dmem (rdi s))
-    (hnops : (rd m (wordAt (rdi s) 2)).toNat ≤ 6 * nOf s.dmem (rdi s)) : Wf m (rdi s) :=
+    (hlen : (rd m (wordAt (rdi s) 4)).toNat ≤ nOf s.dmem (rdi s))
+    (hnops : (rd m (wordAt (rdi s) 6)).toNat ≤ 6 * nOf s.dmem (rdi s)) : Wf m (rdi s) :=
   Wf.congr h.un hpre.1 hpre.disj (fun x hx => h.map x (Or.inr hx)) hlen hnops
 
 -- The memory after a call to a callee with frame size `G` at `k` bytes below `rsp s`.
@@ -798,8 +748,8 @@ theorem Fm.pre {G k : Nat} {c : MachineData} {A' : MachineData → Prop} (hG : k
 theorem Fm.write (hF : 8 * rs.length + 8 ≤ F) (hpre : Pre F A s) (h : Fm F rs s ra m)
     {m' : Mem 64} (hu : Mem.UnchangedOutside (writable s.dmem (rdi s)) m m')
     (hm : Mem.Mapped (writable s.dmem (rdi s)) m')
-    (hlen : (rd m' (wordAt (rdi s) 0)).toNat ≤ nOf s.dmem (rdi s))
-    (hnops : (rd m' (wordAt (rdi s) 2)).toNat ≤ 6 * nOf s.dmem (rdi s)) : Fm F rs s ra m' := by
+    (hlen : (rd m' (wordAt (rdi s) 4)).toNat ≤ nOf s.dmem (rdi s))
+    (hnops : (rd m' (wordAt (rdi s) 6)).toNat ≤ 6 * nOf s.dmem (rdi s)) : Fm F rs s ra m' := by
   have hle := hpre.2.1.le
   -- the words of the frame are not in `writable`
   have hfr : ∀ {j}, 8 ≤ j → j ≤ F →
@@ -815,28 +765,28 @@ theorem Fm.write (hF : 8 * rs.length + 8 ≤ F) (hpre : Pre F A s) (h : Fm F rs 
   exact ⟨hmid, hmid.wf hpre hlen hnops, fun i hi =>
     (hfr (by omega) (by omega)).trans (h.saved i hi)⟩
 
--- The two stores to `blocked` keep `Fm`.
+-- The two stores to `m_blocked` keep `Fm`.
 theorem Fm.blk (hF : 8 * rs.length + 8 ≤ F) (hpre : Pre F A s) (h : Fm F rs s ra m) (p x : Word) :
-    Fm F rs s ra ((m.storeInt (wordAt (blkOf m (rdi s)) 0) 8 p.toInt).storeInt
-      (wordAt (blkOf m (rdi s)) 1) 8 x.toInt) := by
-  have hbl := h.wf.blk_lt
+    Fm F rs s ra ((m.storeInt (wordAt (rdi s) BLK) 8 p.toInt).storeInt
+      (wordAt (rdi s) (BLK + 1)) 8 x.toInt) := by
+  have hs := h.wf.struct_lt
   have hwr := (h.keeps hpre).2.2
-  have hbd : ∀ {k}, k < WORDS → Mem.Blocks.Disjoint [(wordAt (rdi s) k, 8)] [(blkOf m (rdi s), 16)] :=
-    fun hk => h.wf.blk_disj hk
-  -- `blocked` lies in `writable`
-  have hw : ∀ y, Mem.Blocks.Inside y 1 [(blkOf m (rdi s), 16)] →
-      Mem.Blocks.Inside y 1 (writable s.dmem (rdi s)) := fun y hy => by
-    rw [← hwr]; exact inside_of_mem (by simp [writable]) hy
-  generalize blkOf m (rdi s) = B at hbl hbd hw ⊢
-  have hu : Mem.UnchangedOutside [(B, 16)] m
-      ((m.storeInt (wordAt B 0) 8 p.toInt).storeInt (wordAt B 1) 8 x.toInt) := by
-    have hin : ∀ a : Addr, (a - B).toNat + 8 ≤ 16 → Mem.Blocks.Inside a 8 [(B, 16)] :=
-      fun a h => Or.inl h
+  simp only [WORDS_eq] at hs
+  -- `m_blocked` lies in `writable`
+  have hw : ∀ y, Mem.Blocks.Inside y 1 [(wordAt (rdi s) BLK, 16)] →
+      Mem.Blocks.Inside y 1 (writable s.dmem (rdi s)) := fun y hy => Or.inr (Or.inl (by
+    simp only [Mem.Blocks.Inside, or_false, wordAt, BLK_eq, WORDS_eq] at hy ⊢; bv_omega))
+  have hu : Mem.UnchangedOutside [(wordAt (rdi s) BLK, 16)] m
+      ((m.storeInt (wordAt (rdi s) BLK) 8 p.toInt).storeInt (wordAt (rdi s) (BLK + 1)) 8 x.toInt) := by
+    have hin : ∀ a : Addr, (a - wordAt (rdi s) BLK).toNat + 8 ≤ 16 →
+        Mem.Blocks.Inside a 8 [(wordAt (rdi s) BLK, 16)] := fun a h => Or.inl h
     refine .storeInt (.storeInt (fun _ _ => rfl) (hin _ ?_) _) (hin _ ?_) _
-    all_goals (simp only [wordAt]; bv_omega)
-  have hst : ∀ {k}, k < WORDS →
-      rd ((m.storeInt (wordAt B 0) 8 p.toInt).storeInt (wordAt B 1) 8 x.toInt)
-        (wordAt (rdi s) k) = rd m (wordAt (rdi s) k) := fun hk => rd_congr hu (hbd hk)
+    all_goals (simp only [wordAt, BLK_eq]; bv_omega)
+  -- `m_size` and `m_traceSize` are not in `m_blocked`
+  have hst : ∀ {k}, k ≤ 6 →
+      rd ((m.storeInt (wordAt (rdi s) BLK) 8 p.toInt).storeInt (wordAt (rdi s) (BLK + 1)) 8 x.toInt)
+        (wordAt (rdi s) k) = rd m (wordAt (rdi s) k) := fun hk => rd_congr hu fun y hy hb => by
+    simp only [Mem.Blocks.Inside, or_false, wordAt, BLK_eq] at hy hb; bv_omega
   refine h.write hF hpre (fun y hy => hu y fun hb => hy (hw y hb)) ?_ ?_ ?_
   · exact fun y hy =>
       (h.wf.mapped.storeInt _ _ _ |>.storeInt _ _ _) y (inside_append.mpr (Or.inl (hwr ▸ hy)))

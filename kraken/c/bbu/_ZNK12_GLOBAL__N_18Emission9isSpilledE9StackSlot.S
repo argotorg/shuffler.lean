@@ -1,4 +1,4 @@
-isSpilled:
+_ZNK12_GLOBAL__N_18Emission9isSpilledE9StackSlot:
 	movq	%rsi, %rdx
 	shrq	$32, %rdx
 	movl	$0, %eax
@@ -9,10 +9,9 @@ isSpilled:
 	testb	%dl, %dl
 	je	.LB1
 	movl	%esi, %esi
-	movq	40(%rdi), %rax
+	movq	16(%rdi), %rax
 	cmpb	$0, (%rax,%rsi)
 	setne	%al
-	movzbl	%al, %eax
 .LB1:
 	ret
-	.size	isSpilled, .-isSpilled
+	.size	_ZNK12_GLOBAL__N_18Emission9isSpilledE9StackSlot, .-_ZNK12_GLOBAL__N_18Emission9isSpilledE9StackSlot
