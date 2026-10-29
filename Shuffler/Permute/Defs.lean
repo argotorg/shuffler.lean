@@ -90,8 +90,8 @@ def permute
             stack := stack'
             trace := trace'
             mapping := List.length_swap.symm ▸ state.mapping
-          } (cast (congrArg (fun n => Equiv.Perm (Fin n)) List.length_swap.symm) perm')
-            (by simpa [stack'] using hne)
+          } (by simpa [Permutation, stack'] using perm')
+            (List.length_swap.symm ▸ hne)
 
       -- search for the shallowest out of place element
       else
@@ -127,16 +127,18 @@ def permute
               stack := stack'
               trace := trace'
               mapping := List.length_swap.symm ▸ state.mapping
-            } (cast (congrArg (fun n => Equiv.Perm (Fin n)) List.length_swap.symm) perm')
-              (by simpa [stack'] using hne)
+            } (by simpa [Permutation, stack'] using perm')
+              (List.length_swap.symm ▸ hne)
 
         -- we're done
         | none => .ok ⟨none, state⟩
     termination_by Permutation.measure perm ⟨state.stack.length - 1, by omega⟩
     decreasing_by
-      · rw [Permutation.measure_cast List.length_swap.symm _ hne]
+      · simp only [eq_mpr_eq_cast]
+        rw [Permutation.measure_cast List.length_swap.symm _ hne]
         exact Prod.Lex.left _ _ (Permutation.measure_place_top_lt perm _ ht)
       · obtain ⟨heq, hlt⟩ := Permutation.measure_swap_pos_lt perm _ pos (not_not.mp ht) hpos
+        simp only [eq_mpr_eq_cast]
         rw [Permutation.measure_cast List.length_swap.symm _ hne]
         exact Prod.Lex.right' _ heq.le hlt
 

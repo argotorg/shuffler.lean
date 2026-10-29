@@ -50,6 +50,7 @@ theorem permute_blocks_unreachable
       simpa only [depthOf_eq_rev] using blockSwapUnreachable_eq state (perm top)
         (by simpa only [State.isSwapReachable, depthOf_eq_rev, not_le] using hdepth)
     case swap_top ih hnreach | swap_pos ih hnreach =>
+      simp only [eq_mpr_eq_cast] at ih
       obtain ⟨i, excess, state, hresult, hpos, hi, hdepth⟩ := ih (fun hreach =>
         hnreach ((all_swaps_reachable_swap_iff _ _ _
           (by dsimp [Fin.rev]; omega) (by omega)).mp
@@ -95,8 +96,10 @@ theorem permute_applies_permutation_reachable
     case blocked_top ht idx hdepth hreach =>
       exact (not_le_of_gt hdepth (hreach (perm top) (by simpa using ht))).elim
     case swap_top ih hreach | swap_pos ih hreach =>
+      simp only [eq_mpr_eq_cast] at ih
       rw [apply_permutation'_cast _ List.length_swap.symm] at ih
-      simpa +zetaDelta only [apply_permutation'_swap_top state.stack perm rfl top htop _] using ih
+      simpa +zetaDelta only [eq_mpr_eq_cast,
+        apply_permutation'_swap_top state.stack perm rfl top htop _] using ih
         ((Permutation.reachable_cast List.length_swap.symm _ _).mpr
           ((all_swaps_reachable_swap_iff _ _ _
             (by dsimp [Fin.rev]; omega) (by omega)).mpr hreach))
@@ -166,6 +169,7 @@ theorem permute_swapCount
       result hresult
     rw [permute.go.eq_1, dite_eq_left ht, dite_eq_right hdepth] at hresult
     have hcount := ih hresult
+    simp only [eq_mpr_eq_cast] at hcount
     rw [swapCount_cast List.length_swap.symm _ hne] at hcount
     have hstep := Permutation.swapCount_place_top perm top ht
     change result.trace.swapCount = (state.trace.swapCount + 1) +
@@ -186,6 +190,7 @@ theorem permute_swapCount
     rw [permute.go.eq_1, dite_eq_right ht] at hresult
     simp only [hsearch, dite_eq_right hdepth] at hresult
     have hcount := ih hresult
+    simp only [eq_mpr_eq_cast] at hcount
     rw [swapCount_cast List.length_swap.symm _ hne] at hcount
     have hstep := Permutation.swapCount_swap_pos perm top pos (not_not.mp ht) hpos
     change result.trace.swapCount = (state.trace.swapCount + 1) +
