@@ -1,13 +1,17 @@
 module
 
 public import Shuffler.Resolve.Lemmas.PreservationHelpers
+public import Std.WP.Monad.Instances
+public import Std.WP.Triple.Basic
 import Mathlib.Data.Fintype.Card
 import Shuffler.Resolve.Lemmas
+import Std.WP.Triple.SpecLemmas
 
 @[expose] public section
 
-open Std.Do
-set_option mvcgen.warning false
+open Std.WP
+
+set_option experimental.vcgen true
 
 namespace Shuffler.Planner
 
@@ -60,40 +64,43 @@ private theorem progress_none {ret : Option (Bool × State source target)}
 @[local spec] theorem progress_classify_spec (state : State source target)
     (mapping : Mapping source.length target.length) (droppedNow : Vector Byte source.length)
     (offset : Fin source.length) :
-    ⦃⌜True⌝⦄ classify state mapping droppedNow offset ⦃post⟨fun _ => ⌜True⌝, fun _ => ⌜True⌝⟩⦄ := by
-  cases classify state mapping droppedNow offset <;> mvcgen
+    ⦃True⦄ classify state mapping droppedNow offset ⦃fun _ => True; fun _ => True⦄ :=
+  ⟨fun _ => by cases classify state mapping droppedNow offset <;> trivial⟩
 
 @[local spec] theorem progress_spill_spec (spills : SpillSet) (value : Value) :
-    ⦃⌜True⌝⦄ spills.add value ⦃post⟨fun _ => ⌜True⌝, fun _ => ⌜True⌝⟩⦄ := by
-  cases spills.add value <;> mvcgen
+    ⦃True⦄ spills.add value ⦃fun _ => True; fun _ => True⦄ :=
+  ⟨fun _ => by cases spills.add value <;> trivial⟩
 
 @[local spec] theorem progress_requires_spec (p : Prop) [Decidable p] (reason : String) :
-    ⦃⌜True⌝⦄ requires p reason ⦃post⟨fun _ => ⌜True⌝, fun _ => ⌜True⌝⟩⦄ := by
-  cases requires p reason <;> mvcgen
+    ⦃True⦄ requires p reason ⦃fun _ => True; fun _ => True⦄ :=
+  ⟨fun _ => by cases requires p reason <;> trivial⟩
 
 theorem resolve_progress_triple (initial : State source target)
     (mapping : Mapping source.length target.length) (blocked : Blocked)
     {currentSize : ℕ} (current : Mapping currentSize target.length) :
-    ⦃⌜initial.RetainedUndropped mapping⌝⦄ resolve initial mapping blocked current
-    ⦃post⟨fun res => ⌜res.1 = true → res.2.droppedCount = initial.droppedCount + blocked.excess⌝,
-      fun _ => ⌜True⌝⟩⦄ := by
-  mvcgen [resolve]
-  case inv1 => exact post⟨fun _ => ⌜True⌝, fun _ => ⌜True⌝⟩
+    ⦃initial.RetainedUndropped mapping⦄ resolve initial mapping blocked current
+    ⦃fun res => res.1 = true → res.2.droppedCount = initial.droppedCount + blocked.excess;
+      fun _ => True⦄ := by
+  refine ⟨fun hretained => ?_⟩
+  unfold resolve
+  dsimp only
+  refine (Triple.bind _ _ _ (resolve_candidates_triple mapping blocked current)
+    fun candidates => ?_).le_wp trivial
+  vcgen
+  case inv1 =>
+    exact fun pref suff b => DropCompatible b.2.1 mapping b.2.2 ∧
+      (b.1 = none → b.2.1.droppedCount = initial.droppedCount + pref.length) ∧
+      (∀ ret, b.1 = some ret → suff = [] ∧ ret.1 = false)
   case inv2 =>
-    exact post⟨fun (xs, b) => ⌜DropCompatible b.2.1 mapping b.2.2 ∧
-      (b.1 = none → b.2.1.droppedCount = initial.droppedCount + xs.prefix.length) ∧
-      (∀ ret, b.1 = some ret → xs.suffix = [] ∧ ret.1 = false)⌝,
-      fun _ => ⌜True⌝⟩
-  case inv3 =>
-    rename_i _ _ _ _ _ _ _ _ _ _ _ _ droppedNow _ _
-    exact post⟨fun (_, found) => ⌜∀ i, found.1 = some i →
-      (mapping.destinationOf i).isSome ∧ droppedNow[i] = 0⌝, fun _ => ⌜True⌝⟩
+    rename_i _ droppedNow _
+    exact fun _ _ found => ∀ i, found.1 = some i →
+      (Mapping.destinationOf mapping i).isSome ∧ droppedNow[i] = 0
   all_goals dsimp +zetaDelta at *
   all_goals simp_all
   all_goals try exact (show PLift _ from by assumption).down
   all_goals try exact dropCompatible_start _ _ (by assumption)
   all_goals
-    rename_i hloop hbest hselected hclass
+    rename_i hloop hselected _ _
     apply progress_commit
     · exact hloop.1
     · exact (hselected _ (Option.some_get _).symm).1

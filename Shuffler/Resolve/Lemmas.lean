@@ -1,11 +1,15 @@
 module
 
 public import Shuffler.Resolve.Defs
+public import Std.WP.Monad.Instances
+public import Std.WP.Triple.Basic
+import Std.WP.Triple.SpecLemmas
 
 @[expose] public section
 
-open Std.Do
-set_option mvcgen.warning false
+open Std.WP
+
+set_option experimental.vcgen true
 
 namespace Shuffler.Planner
 
@@ -22,10 +26,9 @@ theorem retained_of_positionOf {mapping : Mapping n m} {destination : Fin m} {of
 @[local spec] theorem classify_spec (state : State source target)
     (mapping : Mapping source.length target.length) (droppedNow : Vector Byte source.length)
     (offset : Fin source.length) :
-    ⦃⌜(mapping.destinationOf offset).isSome = true⌝⦄ classify state mapping droppedNow offset
-    ⦃⇓ cls => ⌜classify state mapping droppedNow offset = .ok cls⌝⦄ := by
-  change (mapping.destinationOf offset).isSome = true → _
-  intro h
+    ⦃(mapping.destinationOf offset).isSome = true⦄ classify state mapping droppedNow offset
+    ⦃fun cls => classify state mapping droppedNow offset = .ok cls⦄ := by
+  refine ⟨fun h => ?_⟩
   simp only [classify, requires_of_true _ h, except_ok_bind]
   split_ifs <;> rfl
 
@@ -42,10 +45,9 @@ theorem classify_four (state : State source target)
 
 -- A fresh variable can be inserted without an assertion error.
 @[local spec] theorem spill_add_spec (spills : SpillSet) (slot : Value) :
-    ⦃⌜∃ id, slot = .Var id ∧ id ∉ spills⌝⦄ spills.add slot
-    ⦃⇓ added => ⌜∃ id, slot = .Var id ∧ added = insert id spills⌝⦄ := by
-  change (∃ id, slot = .Var id ∧ id ∉ spills) → _
-  intro h
+    ⦃∃ id, slot = .Var id ∧ id ∉ spills⦄ spills.add slot
+    ⦃fun added => ∃ id, slot = .Var id ∧ added = insert id spills⦄ := by
+  refine ⟨fun h => ?_⟩
   obtain ⟨id, rfl, hfresh⟩ := h
   simp only [SpillSet.add, requires_of_true _ hfresh, except_ok_bind]
   exact ⟨id, rfl, rfl⟩
@@ -111,32 +113,50 @@ theorem Selected.four {state : State source target}
   classify_four state mapping droppedNow _ (by simpa only [hfour] using (h.get hsome).2.2)
 
 @[local spec] theorem resolve_requires_spec (condition : Prop) [Decidable condition] (reason : String) :
-    ⦃⌜condition⌝⦄ requires condition reason ⦃⇓ _ => ⌜True⌝⦄ := by
-  change condition → _
-  intro h
+    ⦃condition⦄ requires condition reason ⦃fun _ => True⦄ := by
+  refine ⟨fun h => ?_⟩
   rw [requires_of_true _ h]
   trivial
 
--- Keep the first loop proof shared so later proofs reuse Lean's generated matcher lemmas.
+-- The first loop of `resolve` only collects retained source positions.
+-- It is proved by hand: its two `if let`s share the matcher `resolve.match_1` at `target` and at
+-- `source`, and vcgen reuses the split rule of the first match for the second.
+theorem resolve_candidates_triple {epost : ShuffleErr → Prop} (mapping : Mapping source.length target.length)
+    (blocked : Blocked) {currentSize : ℕ} (current : Mapping currentSize target.length) :
+    ⦃True⦄ (forIn (m := Except ShuffleErr) ((List.finRange currentSize).drop (blocked.offset + 1))
+      (∅ : List (Fin source.length)) fun pos candidates =>
+        match current.destinationOf pos with
+        | some destination =>
+          match mapping.positionOf destination with
+          | some source => pure (ForInStep.yield (candidates ++ [source]))
+          | _ => pure (ForInStep.yield candidates)
+        | _ => pure (ForInStep.yield candidates))
+    ⦃RetainedCandidates mapping; epost⦄ := by
+  refine ⟨fun _ => ?_⟩
+  refine (Spec.forIn_list (fun _ _ candidates => RetainedCandidates mapping candidates) ?_).le_wp
+    (RetainedCandidates.start _)
+  intro _ _ _ _ _
+  split <;> try split
+  all_goals refine Triple.pure _ fun h => ?_
+  exacts [RetainedCandidates.append h (by assumption), h, h]
+
 theorem resolve_success_triple (init : State source target)
     (mapping : Mapping source.length target.length) (blocked : Blocked)
     {currentSize : ℕ} (current : Mapping currentSize target.length) :
-    ⦃⌜True⌝⦄ resolve init mapping blocked current ⦃⇓ _ => ⌜True⌝⦄ := by
-  mvcgen [resolve]
-  case inv1 => exact PostCond.noThrow (fun (_, candidates) => ⌜RetainedCandidates mapping candidates⌝)
-  case inv2 => exact PostCond.noThrow (fun _ => ⌜True⌝)
-  case inv3 =>
-    rename_i candidates _ _ _ _ _ _ _ state droppedNow _ _
-    exact PostCond.noThrow (fun (_, found) => ⌜Selected state mapping droppedNow candidates found⌝)
+    ⦃True⦄ resolve init mapping blocked current ⦃fun _ => True⦄ := by
+  unfold resolve
+  dsimp only
+  refine Triple.bind _ _ _ (resolve_candidates_triple mapping blocked current) fun candidates => ?_
+  vcgen
+  case inv1 => exact fun _ _ _ => True
+  case inv2 =>
+    rename_i state droppedNow _
+    exact fun _ _ found => Selected state mapping droppedNow candidates found
   all_goals try simp_all only [not_not]
-  all_goals try first
-    | trivial
-    | assumption
-    | exact RetainedCandidates.start _
-    | exact RetainedCandidates.append (by assumption) (by assumption)
-    | exact Selected.start _ _ _ _
+  all_goals first
     | exact RetainedCandidates.current (by assumption)
+    | exact Selected.start _ _ _ _
     | exact Selected.select _ _ _ _ _ (by simp) (by assumption) (by assumption) _
-    | exact Selected.four (by assumption) _ (by assumption)
+    | exact Selected.four (by assumption) _ rfl
 
 end Shuffler.Planner
