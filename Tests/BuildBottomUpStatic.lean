@@ -104,29 +104,29 @@ example : checked hiddenCopy false := by native_decide
 example : decide (Success.Ready hiddenCopy 0) = true ∧
     decide (Success.Ready hiddenCopy 1) = false := by native_decide
 
--- Equal values do not remove a deep nontrivial assignment cycle in Permute.
+-- Equal values remove a deep assignment cycle without a SWAP.
 private def deepPermutation := stateFor (List.replicate 18 (.Lit 0))
   (List.replicate 18 (.Lit 0)) ([17] ++ (List.range 16).map (· + 1) ++ [0])
 
-example : checked deepPermutation false := by native_decide
+example : checked deepPermutation true := by native_decide
 example : deepPermutation.pending_generations = 0 := by decide
 example : (((((buildBottomUp deepPermutation (by native_decide)) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
   if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
   pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1) =
-    .error (.Blocked ⟨0, 1⟩) := by native_decide
+    .ok (List.replicate 18 (.Lit 0)) := by native_decide
 
 private def deepIdentity := stateFor (List.replicate 24 (.Lit 0))
   (List.replicate 24 (.Lit 0)) (List.range 24)
 example : checked deepIdentity true := by native_decide
 
--- Both runs finish generation before the seventeen-slot boundary. Only one
--- original cycle relation permits the remaining deep position to be fixed.
+-- Both runs finish generation before the seventeen-slot boundary.
+-- The equal values at deep positions allow both final permutations to complete.
 private def cycleAfterGeneration := stateFor (List.replicate 18 (.Lit 0))
   (List.replicate 19 (.Lit 0)) ((List.range 18).map (· + 1))
 private def fixedAfterGeneration := stateFor (List.replicate 18 (.Lit 0))
   (List.replicate 19 (.Lit 0)) ([18] ++ (List.range 17).map (· + 1))
 
-example : checked cycleAfterGeneration false := by native_decide
+example : checked cycleAfterGeneration true := by native_decide
 example : checked fixedAfterGeneration true := by native_decide
 
 -- Success uses the assigned values. A wildcard target need not equal its result.
@@ -191,6 +191,6 @@ private def sampleReport : Nat × Nat × Nat × Nat :=
       errors + if actual then 0 else 1, mismatches + if predicted == actual then 0 else 1))
     (0,0,0,0)
 
-example : sampleReport = (644,408,236,0) := by native_decide
+example : sampleReport = (644,414,230,0) := by native_decide
 
 end BuildBottomUpStaticTests

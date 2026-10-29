@@ -30,25 +30,47 @@ def arbitrarySwapCount (perm : Equiv.Perm ι) : ℕ :=
 
 end Permutation
 
--- permute applies a permutation to the working stack and updates its trace.
+-- permute applies a permutation to the working stack and updates its mapping and trace.
 -- A blocked run returns the state after all preceding swaps.
--- TODO: Match C++ by reassigning destinations among equal values before processing
--- cycles. Keep positions already at a destination needed by their group, then
--- pair the remaining positions and destinations in ascending order.
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:629-675.
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:629-715.
 def permute
   {source target : Stack} {spills : SpillSet}
   (initial : State source target spills)
   (perm : Permutation initial.stack)
   : Except ShuffleErr (Result source target spills)
-  := if hne : 0 < initial.stack.length
-  then go initial perm hne
-  else .ok ⟨none, initial⟩
+  := do
+    let mut perm := perm
+
+    -- Equal slots are interchangeable: among them, those already at one of their desired offsets stay, the
+    -- others take the remaining offsets. Otherwise equal slots would pass each other in cycles.
+    let positions := List.finRange initial.stack.length
+    -- Each group is in ascending position order. The groups can be processed in any order.
+    for slot in initial.stack.dedup do
+      let group := positions.filter (fun pos => initial.stack[pos] = slot)
+      -- the group is empty or contains only a single element (ie no second, equal slot exists)
+      if group.length < 2 then continue
+      -- the group's desired offsets
+      let desired := (group.map perm).mergeSort (· ≤ ·)
+      -- slots already standing on one of the group's desired offsets stay put
+      -- stayers = group ∩ desired => _permutation[pos] = pos
+      let stayers := group.filter (· ∈ desired)
+      for pos in stayers do
+        perm := perm.setValue pos pos
+      -- the others take the vacant offsets, both sides ascending, so nothing crosses
+      -- movers = group ∖ desired
+      let movers := group.filter (· ∉ desired)
+      -- vacant = desired ∖ group => _permutation[movers[i]] = vacant[i]
+      let vacant := desired.filter (· ∉ group)
+
+      -- desired is built with exactly one entry per group member, so |G| = |D|, i.e.,
+      -- |movers| = |G ∖ D| = |G| − |G ∩ D| and |vacant| = |D ∖ G| = |D| − |D ∩ G|
+      let ⟨hsz⟩ ← requires (movers.length = vacant.length) "movers and vacant must have the same size"
+      for i in List.finRange movers.length do
+        perm := perm.setValue movers[i] vacant[i]
+
+    if hne : 0 < initial.stack.length then go initial perm hne
+    else return ⟨none, initial⟩
   where
-    -- TODO: In both exchange branches, compare the selected value with the top
-    -- before checking SWAP reach. For equal values, exchange their permutation
-    -- destinations without changing the stack or emitting a swap, as C++ does.
-    -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:677-687.
     go (state : State source target spills) (perm : Permutation state.stack)
         (hne : state.stack.length > 0) :
         Except ShuffleErr (Result source target spills) :=
@@ -57,6 +79,11 @@ def permute
       -- if the top is out of place, we swap it into position
       if ht : perm top ≠ top
       then
+        let perm' := perm * Equiv.swap top (perm top)
+        -- an equal slot standing at the desired offset serves the top's destination just as well
+        if state.stack[perm top] = state.stack[top] then
+          go { state with mapping := state.mapping.swapDestinations (perm top) top } perm' hne
+        else
         let idx : ℕ := (perm top).rev.val
         if hdepth : idx > MAX_SWAP_DEPTH then
           state.blockSwapUnreachable (perm top)
@@ -74,7 +101,6 @@ def permute
           --       (len-1) - idx = perm[top]  ⟹  idx = (len-1) - perm[top] = top - perm[top]
 
           let stack' := state.stack.swap (state.stack.length - 1) (state.stack.length - 1 - idx)
-          let perm' := perm * Equiv.swap top (perm top)
 
           have h1 : idx < state.stack.length := (perm top).rev.isLt
           have h2 : 1 ≤ idx := by
@@ -89,7 +115,7 @@ def permute
             state with
             stack := stack'
             trace := trace'
-            mapping := List.length_swap.symm ▸ state.mapping
+            mapping := List.length_swap.symm ▸ state.mapping.swapDestinations (perm top) top
           } (by simpa [Permutation, stack'] using perm')
             (List.length_swap.symm ▸ hne)
 
@@ -106,6 +132,12 @@ def permute
 
         -- swap top with pos
         | some ⟨pos, hpos⟩ =>
+          let perm' := perm * Equiv.swap top pos
+          -- a misplaced slot equal to the top takes over the top's destination, making the top the misplaced
+          -- one; it then travels to its destination directly instead of dislodging an in-place slot
+          if state.stack[pos] = state.stack[top] then
+            go { state with mapping := state.mapping.swapDestinations pos top } perm' hne
+          else
           let idx : ℕ := pos.rev.val
           if hdepth : idx > MAX_SWAP_DEPTH then
             state.blockSwapUnreachable pos
@@ -116,7 +148,6 @@ def permute
             have hlt : (pos : ℕ) < top := by
               have := pos.isLt; have := Fin.val_ne_of_ne hpos_ne; omega
             let stack' := state.stack.swap (state.stack.length - 1) (state.stack.length - 1 - idx)
-            let perm' := perm * Equiv.swap top pos
 
             have h1 : idx < state.stack.length := pos.rev.isLt
             have h2 : 1 ≤ idx := by dsimp [idx, Fin.rev]; omega
@@ -126,7 +157,7 @@ def permute
               state with
               stack := stack'
               trace := trace'
-              mapping := List.length_swap.symm ▸ state.mapping
+              mapping := List.length_swap.symm ▸ state.mapping.swapDestinations pos top
             } (by simpa [Permutation, stack'] using perm')
               (List.length_swap.symm ▸ hne)
 
@@ -134,9 +165,12 @@ def permute
         | none => .ok ⟨none, state⟩
     termination_by Permutation.measure perm ⟨state.stack.length - 1, by omega⟩
     decreasing_by
+      · exact Prod.Lex.left _ _ (Permutation.measure_place_top_lt perm _ ht)
       · simp only [eq_mpr_eq_cast]
         rw [Permutation.measure_cast List.length_swap.symm _ hne]
         exact Prod.Lex.left _ _ (Permutation.measure_place_top_lt perm _ ht)
+      · obtain ⟨heq, hlt⟩ := Permutation.measure_swap_pos_lt perm _ pos (not_not.mp ht) hpos
+        exact Prod.Lex.right' _ heq.le hlt
       · obtain ⟨heq, hlt⟩ := Permutation.measure_swap_pos_lt perm _ pos (not_not.mp ht) hpos
         simp only [eq_mpr_eq_cast]
         rw [Permutation.measure_cast List.length_swap.symm _ hne]
@@ -149,5 +183,10 @@ def apply_permutation (source : Stack) (perm : Permutation source) : Stack :=
 
 def all_swaps_reachable (perm : Permutation source) : Prop
   := ∀ i ∈ perm.support, i.rev.val ≤ MAX_SWAP_DEPTH
+
+-- Every position whose value must change is within SWAP reach.
+def values_reachable {source : Stack} (perm : Permutation source) : Prop :=
+  ∀ i : Fin source.length,
+    source[i] ≠ source[perm.symm i] → i.rev.val ≤ MAX_SWAP_DEPTH
 
 end Shuffler.Permute

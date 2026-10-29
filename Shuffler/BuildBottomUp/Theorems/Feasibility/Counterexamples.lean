@@ -7,13 +7,13 @@ import Shuffler.BuildBottomUp.Theorems.Feasibility.Defs
 @[expose] public section
 
 /-!
-Examples where the current BBU fails although a trace exists
+Examples of traces and BBU results
 
 Stacks below are written bottom first. `0×n` means n literal zeros. Indices
 are zero-based, and the spill set is empty. These are constructed valid
 occurrence mappings; no claim is made that the mapping builder selects them.
-All four exact problems satisfy Reserve. The checks follow below: BBU blocks,
-Reserve holds, and the stated trace reaches the exact target without POP.
+All four exact problems satisfy Reserve. BBU blocks in cases 1, 2, and 4.
+It completes case 3. Each stated trace reaches the exact target without POP.
 
 1. Fix an existing value before growth.
    Source: [0×16, 1]. Target: [1, 0×16, 1]. Missing: [1].
@@ -35,9 +35,9 @@ Reserve holds, and the stated trace reaches the exact target without POP.
 3. Avoid moving equal values only to satisfy occurrence assignments.
    Source and target: [0×18]. Missing: [].
    Map source 0 to target 17 and source 17 to target 0; leave other indices
-   fixed. BBU returns `.Blocked ⟨0, 1⟩` while trying to realize that permutation.
-   The bottom occurrence is outside SWAP reach. The empty trace already
-   reaches the exact target because every value is zero.
+   fixed. BBU completes without a SWAP. The bottom occurrence is outside SWAP
+   reach, but it already has the required value. The empty trace reaches the
+   exact target because every value is zero.
 
 4. Keep an initially reachable source available during growth.
    Source: [0, x, 0×15]. Target: [0, x, 0, x, 0×15]. Missing: [0, x].
@@ -144,7 +144,7 @@ private def equalState : State equalSource equalSource ∅ where
 
 private theorem equalState_valid : equalState.Valid := ⟨by decide, by decide, by decide⟩
 #guard decide ((buildBottomUp equalState equalState_valid).map (fun result => result.blocked) =
-    .ok (some ⟨0, 1⟩))
+    .ok none)
 example : Reserve ∅ equalSource equalSource 0 := by decide
 
 private def equalTrace : Trace ∅ equalSource equalSource := .Lit equalSource
