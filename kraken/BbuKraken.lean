@@ -4,6 +4,7 @@ import BbuKraken.Bin
 import BbuKraken.BinLayout
 import BbuKraken.Contracts
 import BbuKraken.Final
+import BbuKraken.FlatModel
 import BbuKraken.Kit
 import BbuKraken.Layout
 import BbuKraken.Link
