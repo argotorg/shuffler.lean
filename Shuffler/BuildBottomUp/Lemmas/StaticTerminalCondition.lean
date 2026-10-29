@@ -6,7 +6,6 @@ public import Shuffler.BuildBottomUp.Lemmas.StaticInvariant
 import Shuffler.BuildBottomUp.Lemmas.Invariants
 import Shuffler.BuildBottomUp.Lemmas.StaticCopyBridge
 import Shuffler.BuildBottomUp.Lemmas.StaticCounts
-import Shuffler.BuildBottomUp.Lemmas.StaticCycleBridge
 import Shuffler.BuildBottomUp.Lemmas.StaticData
 import Shuffler.BuildBottomUp.Lemmas.StaticNoGeneration
 
@@ -42,9 +41,25 @@ theorem terminal_success_iff (initial : State source target spills) (hvalid : in
     have hterminal : Succeeds (((((buildBottomUp.loop (generationEnd initial) state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
       if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
       pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) ↔
-        CyclesReady initial (generationEnd initial) := by
-      rw [loop_success_iff_completedFixed _ state hp'.invariant hp'.invariant.valid hpending,
-        hp'.cycles.fixed_below_iff, cyclesReady_iff initial hvalid]
+        ValuesReady initial (generationEnd initial) := by
+      rw [loop_success_iff_expected_below _ state hp'.invariant hp'.invariant.valid hpending]
+      have hstack : state.stack = augmentedStack initial := by
+        rw [hp'.stack_eq, prefixLength_generationEnd initial hvalid,
+          List.take_of_length_le (by rw [augmentedStack_length initial hvalid])]
+      constructor
+      · intro hs i _ hi
+        rw [← hstack, ← hp'.expected]
+        exact hs i hi
+      · intro hs i hi
+        by_cases hbefore : i < generationEnd initial
+        · have hit : i < target.length := by omega
+          obtain ⟨his, hf⟩ := hp'.invariant.processed ⟨i, hit⟩ hbefore
+          have hfinal : ∃ h : i < state.stack.length, state.isFinal ⟨i, h⟩ := ⟨his, hf⟩
+          have hb : state.mapping.symm ⟨i, hit⟩ = some ⟨i, his⟩ :=
+            state.boundOfVal _ _ (by simpa [State.exists_isFinal_iff, hit] using hfinal)
+          simp [State.expectedStack, hb, his, hit]
+        · rw [hstack, hp'.expected]
+          exact hs i (by omega) hi
     simpa only [hcut, Terminal, ite_eq_left hfirst, hr, true_and] using hterminal
   · have hlt : boundary initial < generationEnd initial := by omega
     have hcut : cutoff initial = boundary initial := Nat.min_eq_left hlt.le

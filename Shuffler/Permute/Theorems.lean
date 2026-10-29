@@ -2,6 +2,7 @@ module
 
 public import Shuffler.Permute.Defs
 import Shuffler.Emission.Lemmas
+import Shuffler.Permute.Execution
 import Shuffler.Permute.Cycles
 import Shuffler.Permute.Optimality
 
@@ -10,14 +11,6 @@ import Shuffler.Permute.Optimality
 namespace Shuffler.Permute
 
 open Emission
-
-private theorem swapCount_cast {n m : ℕ} (h : n = m) (perm : Equiv.Perm (Fin n))
-    (hne : 0 < n) :
-    Permutation.swapCount (cast (congrArg (fun k => Equiv.Perm (Fin k)) h) perm)
-        ⟨m - 1, by omega⟩ =
-      Permutation.swapCount perm ⟨n - 1, by omega⟩ := by
-  subst m
-  rfl
 
 -- `hnreachable` says that a position below SWAP reach has the wrong value.
 -- The run returns a blocked result and the state, where `excess` is positive.
@@ -32,45 +25,24 @@ theorem permute_blocks_unreachable
         ∧ excess > 0
         ∧ i ∈ perm.support
         ∧ i.rev.val = excess + MAX_SWAP_DEPTH := by
-  rw [permute]
-  split
-  · rename_i hne
-    refine permute.go.induct_unfolding
-      (motive := fun state remaining _ result =>
-        ¬all_swaps_reachable remaining →
-          ∃ (i : Fin state.stack.length) (excess : ℕ) (final : State source target spills),
-            result = .ok ⟨some ⟨i.val, excess⟩, final⟩
-              ∧ excess > 0
-              ∧ i ∈ remaining.support
-              ∧ i.rev.val = excess + MAX_SWAP_DEPTH)
-      ?blocked_top ?swap_top ?blocked_pos ?swap_pos ?done initial perm hne hnreachable
-      <;> intro state perm hne top htop <;> intros
-    case blocked_top ht idx hdepth _ =>
-      refine ⟨perm top, idx - MAX_SWAP_DEPTH, state, ?_, by omega, by simpa using ht, by omega⟩
-      simpa only [depthOf_eq_rev] using blockSwapUnreachable_eq state (perm top)
-        (by simpa only [State.isSwapReachable, depthOf_eq_rev, not_le] using hdepth)
-    case swap_top ih hnreach | swap_pos ih hnreach =>
-      simp only [eq_mpr_eq_cast] at ih
-      obtain ⟨i, excess, state, hresult, hpos, hi, hdepth⟩ := ih (fun hreach =>
-        hnreach ((all_swaps_reachable_swap_iff _ _ _
-          (by dsimp [Fin.rev]; omega) (by omega)).mp
-            ((Permutation.reachable_cast List.length_swap.symm _ _).mp hreach)))
-      exact ⟨Fin.cast List.length_swap i, excess, state, hresult, hpos,
-        (unreachable_mem_support_swap _ _ _ _
-          (by dsimp [Fin.rev]; omega) (by omega) (by
-            simpa +zetaDelta [Fin.rev] using (show MAX_SWAP_DEPTH < i.rev.val by omega))).mp
-              ((Permutation.mem_support_cast List.length_swap.symm _ _).mp hi),
-        by simpa +zetaDelta [Fin.rev] using hdepth⟩
-    case blocked_pos pos hpos _ idx hdepth _ =>
-      refine ⟨pos, idx - MAX_SWAP_DEPTH, state, ?_, by omega, by simpa using hpos, by omega⟩
-      simpa only [depthOf_eq_rev] using blockSwapUnreachable_eq state pos
-        (by simpa only [State.isSwapReachable, depthOf_eq_rev, not_le] using hdepth)
-    case done hsearch hnreach =>
-      exact False.elim (hnreach (by
-        simp [all_swaps_reachable, foldl_find_out_of_place_eq_one perm hsearch]))
-  · rename_i hne
-    have hz : initial.stack.length = 0 := Nat.eq_zero_of_not_pos hne
-    exact False.elim (hnreachable (fun i => by have := i.isLt; omega))
+  obtain ⟨q, hq, happly, hsub, _⟩ := normalize_spec initial.stack perm
+  rw [permute_eq_normalize, hq, except_ok_bind]
+  by_cases hne : 0 < initial.stack.length
+  · rw [dite_eq_left hne]
+    obtain ⟨result, hrun, hs⟩ := go_spec initial q hne
+    cases hb : result.blocked with
+    | none =>
+      exact (hnreachable ((values_reachable_congr q perm happly).mp
+        (hs.values_of_success hb))).elim
+    | some blocked =>
+      obtain ⟨i, hi, hp, him, hd⟩ := hs.blocked blocked hb
+      refine ⟨i, blocked.excess, result.state, ?_, hp, hsub him, hd⟩
+      have he : result = ⟨some ⟨i.val, blocked.excess⟩, result.state⟩ := by
+        cases result
+        cases blocked
+        simp_all
+      exact hrun.trans (congrArg Except.ok he)
+  · exact (hnreachable (fun i => by have := i.isLt; omega)).elim
 
 -- `hreachable` says that every position with the wrong value is within SWAP reach.
 -- There is then a result stack and a trace that `permute` successfully returns.
@@ -83,33 +55,16 @@ theorem permute_applies_permutation_reachable
     (hreachable : values_reachable perm) :
     ∃ result : State source target spills,
       permute initial perm = .ok ⟨none, result⟩ ∧ result.stack = apply_permutation initial.stack perm := by
-  rw [permute]
-  split
-  · rename_i hne
-    refine permute.go.induct_unfolding
-      (motive := fun state remaining _ result =>
-        all_swaps_reachable remaining →
-          ∃ final : State source target spills, result = .ok ⟨none, final⟩
-            ∧ final.stack = apply_permutation' state.stack remaining rfl)
-      ?blocked_top ?swap_top ?blocked_pos ?swap_pos ?done initial perm hne hreachable
-      <;> intro state perm hne top htop <;> intros
-    case blocked_top ht idx hdepth hreach =>
-      exact (not_le_of_gt hdepth (hreach (perm top) (by simpa using ht))).elim
-    case swap_top ih hreach | swap_pos ih hreach =>
-      simp only [eq_mpr_eq_cast] at ih
-      rw [apply_permutation'_cast _ List.length_swap.symm] at ih
-      simpa +zetaDelta only [eq_mpr_eq_cast,
-        apply_permutation'_swap_top state.stack perm rfl top htop _] using ih
-        ((Permutation.reachable_cast List.length_swap.symm _ _).mpr
-          ((all_swaps_reachable_swap_iff _ _ _
-            (by dsimp [Fin.rev]; omega) (by omega)).mpr hreach))
-    case blocked_pos pos hpos _ idx hdepth hreach =>
-      exact (not_le_of_gt hdepth (hreach pos (by simpa using hpos))).elim
-    case done hsearch _ =>
-      exact ⟨_, rfl, by
-        simpa [foldl_find_out_of_place_eq_one perm hsearch] using
-          (apply_permutation'_one state.stack rfl).symm⟩
-  · rename_i hne
+  obtain ⟨q, hq, happly, _, hreach⟩ := normalize_spec initial.stack perm
+  rw [permute_eq_normalize, hq, except_ok_bind]
+  by_cases hne : 0 < initial.stack.length
+  · rw [dite_eq_left hne]
+    obtain ⟨result, hrun, hs⟩ := go_spec initial q hne
+    have hb := hs.success_of_reachable (hreach.mpr hreachable)
+    refine ⟨result.state, ?_, (hs.applies hb).trans happly⟩
+    have he : result = ⟨none, result.state⟩ := by cases result; simp_all
+    exact hrun.trans (congrArg Except.ok he)
+  · rw [dite_eq_right hne]
     have hz : initial.stack = [] := by simpa using Nat.eq_zero_of_not_pos hne
     exact ⟨initial, rfl, by simp [apply_permutation, hz]⟩
 
@@ -117,7 +72,7 @@ theorem permute_applies_permutation_reachable
 theorem permute_no_assertion
     (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack) (reason : String) :
     permute initial perm ≠ .error (.assertion reason) := by
-  by_cases hreachable : all_swaps_reachable perm
+  by_cases hreachable : values_reachable perm
   · obtain ⟨result, heq, _⟩ := permute_applies_permutation_reachable spills initial perm hreachable
     simp [heq]
   · obtain ⟨_, _, _, heq, _⟩ := permute_blocks_unreachable spills initial perm hreachable
@@ -128,7 +83,7 @@ theorem permute_applies_permutation_of_ok
     {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
     result.stack = apply_permutation initial.stack perm := by
-  have hreachable : all_swaps_reachable perm := by
+  have hreachable : values_reachable perm := by
     by_contra hn
     obtain ⟨_, _, _, he, _⟩ := permute_blocks_unreachable spills initial perm hn
     rw [hresult] at he
@@ -152,58 +107,10 @@ theorem permute_swapCount
     {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
     (result.trace.swapCount - initial.trace.swapCount) = Permutation.swapCount perm ⟨initial.stack.length - 1, by omega⟩ := by
-  rw [permute, dite_eq_left hne] at hresult
-  have hgo := permute.go.induct
-    (motive := fun state remaining hne =>
-      ∀ {result : State source target spills},
-        permute.go state remaining hne = .ok ⟨none, result⟩ →
-          result.trace.swapCount = state.trace.swapCount +
-            Permutation.swapCount remaining ⟨state.stack.length - 1, by omega⟩)
-    ?_ ?_ ?_ ?_ ?_ initial perm hne hresult
-  · omega
-  · intro state perm hne top htop ht idx hdepth result hresult
-    rw [permute.go.eq_1, dite_eq_left ht, dite_eq_left hdepth] at hresult
-    rw [blockSwapUnreachable_eq state (perm top)
-      (by simpa only [State.isSwapReachable, depthOf_eq_rev, not_le] using hdepth)] at hresult
-    cases hresult
-  · intro state perm hne top htop ht idx hdepth stack' perm' h1 h2 h3 trace' ih
-      result hresult
-    rw [permute.go.eq_1, dite_eq_left ht, dite_eq_right hdepth] at hresult
-    have hcount := ih hresult
-    simp only [eq_mpr_eq_cast] at hcount
-    rw [swapCount_cast List.length_swap.symm _ hne] at hcount
-    have hstep := Permutation.swapCount_place_top perm top ht
-    change result.trace.swapCount = (state.trace.swapCount + 1) +
-      Permutation.swapCount (perm * Equiv.swap top (perm top)) top at hcount
-    change result.trace.swapCount = state.trace.swapCount + Permutation.swapCount perm top
-    omega
-  · intro state perm hne top htop ht search pos hpos hsearch idx hdepth
-      result hresult
-    dsimp only [search, idx] at hsearch hdepth
-    rw [permute.go.eq_1, dite_eq_right ht] at hresult
-    simp only [hsearch, dite_eq_left hdepth] at hresult
-    rw [blockSwapUnreachable_eq state pos
-      (by simpa only [State.isSwapReachable, depthOf_eq_rev, not_le] using hdepth)] at hresult
-    cases hresult
-  · intro state perm hne top htop ht search pos hpos hsearch idx hdepth hpos_ne hlt
-      stack' perm' h1 h2 h3 trace' ih result hresult
-    dsimp only [search, idx] at hsearch hdepth
-    rw [permute.go.eq_1, dite_eq_right ht] at hresult
-    simp only [hsearch, dite_eq_right hdepth] at hresult
-    have hcount := ih hresult
-    simp only [eq_mpr_eq_cast] at hcount
-    rw [swapCount_cast List.length_swap.symm _ hne] at hcount
-    have hstep := Permutation.swapCount_swap_pos perm top pos (not_not.mp ht) hpos
-    change result.trace.swapCount = (state.trace.swapCount + 1) +
-      Permutation.swapCount (perm * Equiv.swap top pos) top at hcount
-    change result.trace.swapCount = state.trace.swapCount + Permutation.swapCount perm top
-    omega
-  · intro state perm hne top htop ht search hsearch result hresult
-    dsimp only [search] at hsearch
-    rw [permute.go.eq_1, dite_eq_right ht, hsearch] at hresult
-    have hperm := foldl_find_out_of_place_eq_one perm hsearch
-    cases hresult
-    simp [hperm]
+  rw [permute_eq_normalize, normalize_of_nodup _ _ hnodup, except_ok_bind,
+    dite_eq_left hne] at hresult
+  have hc := (go_count initial perm hne hresult).2 hnodup
+  omega
 
 -- Given a successful return in `hresult`, bound the number of emitted swaps by
 -- the number of moved positions plus the number of cycles of length at least two.
@@ -217,9 +124,10 @@ theorem permute_swapCount_le
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
     (result.trace.swapCount - initial.trace.swapCount) ≤ perm.support.card + perm.cycleFactorsFinset.card := by
   by_cases hne : 0 < initial.stack.length
-  · rw [permute_swapCount spills initial perm hne hresult]
+  · rw [permute_swapCount spills initial perm hne hnodup hresult]
     exact Permutation.swapCount_le perm _
-  · rw [permute, dite_eq_right hne] at hresult
+  · rw [permute_eq_normalize, normalize_of_nodup _ _ hnodup, except_ok_bind,
+      dite_eq_right hne] at hresult
     cases hresult
     simp at *
 
@@ -236,7 +144,7 @@ theorem permute_swapCount_optimal
     IsLeast {n | ∃ swaps : List (Fin initial.stack.length),
       (swaps.map (Equiv.swap ⟨initial.stack.length - 1, by omega⟩)).prod = perm ∧ swaps.length = n}
       (result.trace.swapCount - initial.trace.swapCount) := by
-  rw [permute_swapCount spills initial perm hne hresult]
+  rw [permute_swapCount spills initial perm hne hnodup hresult]
   exact Permutation.swapCount_isLeast perm _
 
 -- For a successful run on a nonempty stack, compare the emitted count with
@@ -250,7 +158,7 @@ theorem permute_swapCount_eq_arbitrarySwapCount_add
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
     (result.trace.swapCount - initial.trace.swapCount) = Permutation.arbitrarySwapCount perm +
       2 * (Permutation.cyclesAwayFromTop perm ⟨initial.stack.length - 1, by omega⟩).card := by
-  rw [permute_swapCount spills initial perm hne hresult]
+  rw [permute_swapCount spills initial perm hne hnodup hresult]
   exact Permutation.swapCount_eq_arbitrarySwapCount_add perm _
 
 -- `hresult` identifies the trace returned by a successful run of `permute`.
@@ -262,12 +170,20 @@ theorem permute_swapCount_le_three_mul_arbitrarySwapCount
     {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
     (result.trace.swapCount - initial.trace.swapCount) ≤ 3 * Permutation.arbitrarySwapCount perm := by
+  obtain ⟨q, hq, _, hsub, _⟩ := normalize_spec initial.stack perm
+  rw [permute_eq_normalize, hq, except_ok_bind] at hresult
   by_cases hne : 0 < initial.stack.length
-  · rw [permute_swapCount spills initial perm hne hresult]
-    exact Permutation.swapCount_le_three_mul_arbitrarySwapCount perm _
-  · rw [permute, dite_eq_right hne] at hresult
+  · rw [dite_eq_left hne] at hresult
+    have hc := (go_count initial q hne hresult).1
+    have hs := Finset.card_le_card hsub
+    have hqcycles := Permutation.two_mul_card_cycles_le_support q
+    have hpcycles := Permutation.two_mul_card_cycles_le_support perm
+    have hbound := Permutation.swapCount_le q ⟨initial.stack.length - 1, by omega⟩
+    unfold Permutation.arbitrarySwapCount
+    omega
+  · rw [dite_eq_right hne] at hresult
     cases hresult
-    simp at *
+    simp
 
 -- Each pair in `swaps` names the endpoints of a swap; `hprod` says their composition is `perm`.
 -- `hresult` identifies the trace returned by a successful run of `permute`.
@@ -287,25 +203,7 @@ theorem permute_swapCount_le_three_mul_length_swaps
 theorem permute_length (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack)
     {result : State source target spills}
     (h : permute initial perm = .ok ⟨none, result⟩) : result.stack.length = initial.stack.length := by
-  rw [permute] at h
-  split at h
-  · rename_i hne
-    revert h
-    refine permute.go.induct_unfolding
-      (motive := fun state _ _ run =>
-        run = .ok ⟨none, result⟩ → result.stack.length = state.stack.length)
-      ?blocked_top ?swap_top ?blocked_pos ?swap_pos ?done initial perm hne
-      <;> intro state perm hne top htop <;> intros
-    case blocked_top ht idx hdepth h =>
-      rw [blockSwapUnreachable_eq state (perm top)
-        (by simpa only [State.isSwapReachable, depthOf_eq_rev, not_le] using hdepth)] at h
-      cases h
-    case blocked_pos pos hpos hsearch idx hdepth h =>
-      rw [blockSwapUnreachable_eq state pos
-        (by simpa only [State.isSwapReachable, depthOf_eq_rev, not_le] using hdepth)] at h
-      cases h
-    case swap_top ih h | swap_pos ih h => simpa +zetaDelta only [List.length_swap] using ih h
-    case done h => cases h; rfl
-  · cases h; rfl
+  rw [permute_applies_permutation_of_ok spills initial perm h]
+  simp [apply_permutation]
 
 end Shuffler.Permute

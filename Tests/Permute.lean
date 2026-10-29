@@ -81,7 +81,7 @@ example {result : State source source ∅}
     (hresult : permute (stateOf ∅ source) belowTop = .ok ⟨none, result⟩) :
     IsLeast {n | ∃ swaps : List (Fin 3),
       (swaps.map (Equiv.swap 2)).prod = belowTop ∧ swaps.length = n} result.trace.swapCount :=
-  permute_swapCount_optimal ∅ (stateOf ∅ source) belowTop (by decide) hresult
+  permute_swapCount_optimal ∅ (stateOf ∅ source) belowTop (by decide) (by decide) hresult
 
 example {result : State source source ∅}
     (hresult : permute (stateOf ∅ source) belowTop = .ok ⟨none, result⟩) :
@@ -92,16 +92,28 @@ example {result : State source source ∅}
 
 -- A duplicate value can make the final stack unchanged despite a position permutation.
 example : runSummary [.Var ⟨0⟩, .Var ⟨0⟩, .Var ⟨0⟩] belowTop =
-    some ([.Var ⟨0⟩, .Var ⟨0⟩, .Var ⟨0⟩], 3) := by native_decide
+    some ([.Var ⟨0⟩, .Var ⟨0⟩, .Var ⟨0⟩], 0) := by native_decide
 
 -- The upper bound also applies to a successful run on the empty stack.
 example : (Trace.Lit (spills := ∅) []).swapCount ≤
     3 * Permutation.arbitrarySwapCount (1 : Permutation []) :=
   permute_swapCount_le_three_mul_arbitrarySwapCount ∅ (stateOf ∅ []) 1 rfl
 
--- A permutation that moves an unreachable position remains blocked.
-example : (match permute (stateOf ∅ (List.replicate 18 (.Var ⟨0⟩))) (Equiv.swap (0 : Fin 18) (17 : Fin 18)) with
+-- A wrong value below SWAP reach remains blocked.
+example : (match permute (stateOf ∅ ((List.range 18).map (fun i => .Var ⟨i⟩))) (Equiv.swap (0 : Fin 18) (17 : Fin 18)) with
     | .ok ⟨some blocked, _⟩ => blocked.offset == 0 && blocked.excess == 1
     | _ => false) = true := by native_decide
+
+-- Equal values below SWAP reach can retain their positions without a SWAP.
+example : runSummary (List.replicate 18 (.Var ⟨0⟩))
+    (Equiv.swap (0 : Fin 18) (17 : Fin 18)) = some (List.replicate 18 (.Var ⟨0⟩), 0) := by native_decide
+
+-- Reassignment can split one cycle into two, so the original exact count is unavailable.
+private abbrev splitStack : Stack := [.Var ⟨0⟩, .Var ⟨0⟩, .Var ⟨1⟩, .Var ⟨2⟩, .Var ⟨3⟩]
+private def splitPermutation : Permutation splitStack :=
+  Equiv.swap 0 2 * Equiv.swap 1 3 * Equiv.swap 0 1
+example : runSummary splitStack splitPermutation =
+    some ([.Var ⟨1⟩, .Var ⟨2⟩, .Var ⟨0⟩, .Var ⟨0⟩, .Var ⟨3⟩], 6) := by native_decide
+example : Permutation.swapCount splitPermutation 4 = 5 := by decide
 
 end PermuteTests

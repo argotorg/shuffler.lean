@@ -16,20 +16,18 @@ instance (initial : State source target spills) (cursor : Nat) :
   unfold Ready
   infer_instance
 
--- The two natural-number quantifiers range over finite sets of indices.
+-- The natural-number index ranges over the finite set of deep positions.
 instance (initial : State source target spills) (cursor : Nat) :
-    Decidable (CyclesReady initial cursor) :=
+    Decidable (ValuesReady initial cursor) :=
   decidable_of_iff
     (∀ i : Fin (target.length - (MAX_SWAP_DEPTH + 1)), cursor ≤ i.val →
-      ∀ k : Fin target.length,
-        (completedNext initial)^[k.val] i.val < cursor ∨
-          (completedNext initial)^[k.val] i.val = i.val)
+      (augmentedStack initial)[i.val]? = initial.expectedStack[i.val]?)
     (by
       constructor
-      · intro hs i hi hid k hk
-        exact hs ⟨i, hid⟩ hi ⟨k, hk⟩
-      · intro hs i hi k
-        exact hs i.val hi i.isLt k.val k.isLt)
+      · intro hs i hi hid
+        exact hs ⟨i, hid⟩ hi
+      · intro hs i hi
+        exact hs i.val hi i.isLt)
 
 -- Only the value returned by this option can satisfy the premise of BoundarySafe.
 instance (initial : State source target spills) : Decidable (BoundarySafe initial) := by
