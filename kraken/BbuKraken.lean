@@ -11,6 +11,8 @@ import BbuKraken.Model
 import BbuKraken.Names
 import BbuKraken.Sep.Atoms
 import BbuKraken.Sep.AtomsTest
+import BbuKraken.Sep.Contract
+import BbuKraken.Sep.ContractTest
 import BbuKraken.Sep.Fields
 import BbuKraken.Sep.Stores
 import BbuKraken.Sep.View
