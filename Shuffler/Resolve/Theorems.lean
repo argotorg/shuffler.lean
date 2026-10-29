@@ -11,7 +11,7 @@ import Shuffler.Resolve.Lemmas.Progress
 
 @[expose] public section
 
-open Std.Do
+open Std.WP
 
 namespace Shuffler.Planner
 
@@ -22,9 +22,12 @@ theorem resolve_ok (init : State source target)
     (mapping : Mapping source.length target.length) (blocked : Blocked)
     {currentSize : ℕ} (current : Mapping currentSize target.length) :
     ∃ result, resolve init mapping blocked current = .ok result := by
-  have h := resolve_success_triple init mapping blocked current
-  apply Except.of_wp_eq rfl (fun result => ∃ value, result = .ok value)
-  simpa [PostCond.noThrow, Triple, ExceptConds.false, ExceptConds.const] using h
+  have h := (resolve_success_triple init mapping blocked current).le_wp trivial
+  cases hresolve : resolve init mapping blocked current with
+  | ok result => exact ⟨result, rfl⟩
+  | error err =>
+    rw [hresolve] at h
+    simp [wp, WP.wpTrans] at h
 
 -- Each required target value remains available, including after an attempt that returns false.
 theorem resolve_preserves_target_available (init result : State source target)
@@ -33,11 +36,10 @@ theorem resolve_preserves_target_available (init result : State source target)
     (havailable : init.TargetAvailable) (hretained : init.RetainedUndropped mapping)
     (hresolve : resolve init mapping blocked current = .ok (success, result)) :
     result.TargetAvailable := by
-  have hs := resolve_targetAvailable_triple init mapping blocked current
-  change init.TargetAvailable ∧ init.RetainedUndropped mapping → _ at hs
-  have hr := hs ⟨havailable, hretained⟩
-  rw [hresolve] at hr
-  exact hr
+  have h := (resolve_targetAvailable_triple init mapping blocked current).le_wp
+    ⟨havailable, hretained⟩
+  rw [hresolve] at h
+  exact h
 
 -- A successful call drops exactly the requested number of additional source positions.
 -- Retained positions must be undropped when the call starts.
@@ -47,9 +49,9 @@ theorem resolve_droppedCount_of_success (initial result : State source target)
     (hretained : initial.RetainedUndropped mapping)
     (hresolve : resolve initial mapping blocked current = .ok (true, result)) :
     result.droppedCount = initial.droppedCount + blocked.excess := by
-  have h := resolve_progress_triple initial mapping blocked current
+  have h := (resolve_progress_triple initial mapping blocked current).le_wp hretained
   rw [hresolve] at h
-  exact h hretained rfl
+  exact h rfl
 
 -- Positive excess gives strict progress on each successful call.
 theorem resolve_droppedCount_strict (initial result : State source target)

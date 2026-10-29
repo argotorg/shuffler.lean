@@ -2,14 +2,17 @@ module
 
 public import Shuffler.Resolve.Defs
 public import Shuffler.Resolve.Properties
+public import Std.WP.Monad.Instances
+public import Std.WP.Triple.Basic
 import Shuffler.Resolve.Lemmas
 import Shuffler.Resolve.Lemmas.PreservationHelpers
+import Std.WP.Triple.SpecLemmas
 
 @[expose] public section
 
-open Std.Do
+open Std.WP
 
-set_option mvcgen.warning false
+set_option experimental.vcgen true
 
 namespace Shuffler.Planner
 
@@ -55,44 +58,35 @@ private theorem selected_spill_drop_preserves (state : State source target)
 theorem resolve_targetAvailable_triple (init : State source target)
     (mapping : Mapping source.length target.length) (blocked : Blocked)
     {currentSize : ℕ} (current : Mapping currentSize target.length) :
-    ⦃⌜init.TargetAvailable ∧ init.RetainedUndropped mapping⌝⦄ resolve init mapping blocked current
-    ⦃post⟨fun result => ⌜result.2.TargetAvailable⌝, fun _ => ⌜True⌝⟩⦄ := by
+    ⦃init.TargetAvailable ∧ init.RetainedUndropped mapping⦄ resolve init mapping blocked current
+    ⦃fun result => result.2.TargetAvailable; fun _ => True⦄ := by
+  refine ⟨fun hinit => ?_⟩
   unfold resolve
-  mvcgen
+  dsimp only
+  refine (Triple.bind _ _ _ (resolve_candidates_triple mapping blocked current)
+    fun candidates => ?_).le_wp trivial
+  vcgen
   case inv1 =>
-    exact post⟨fun (_, candidates) => ⌜RetainedCandidates mapping candidates⌝, fun _ => ⌜True⌝⟩
-  case inv2 =>
     -- Keep the property for both the current state and an early return after partial progress.
-    exact post⟨fun (_, s) => ⌜s.2.1.TargetAvailable ∧ DropCompatible s.2.1 mapping s.2.2 ∧
-      ∀ r, s.1 = some r → r.2.TargetAvailable⌝, fun _ => ⌜True⌝⟩
-  case inv3 =>
-    rename_i candidates _ _ _ _ _ s _ state droppedNow _ _
-    exact post⟨fun (_, found) => ⌜Selected state mapping droppedNow candidates found⌝,
-      fun _ => ⌜True⌝⟩
+    exact fun _ _ s => s.2.1.TargetAvailable ∧ DropCompatible s.2.1 mapping s.2.2 ∧
+      ∀ r, s.1 = some r → r.2.TargetAvailable
+  case inv2 =>
+    rename_i state droppedNow _
+    exact fun _ _ found => Selected state mapping droppedNow candidates found
   all_goals dsimp at *
   all_goals try simp_all
-  all_goals first
-    | assumption
-    | exact RetainedCandidates.append (by assumption) (by assumption)
-    | exact RetainedCandidates.start _
+  all_goals try first
+    | exact dropCompatible_start _ _ hinit.2
     | exact Selected.start _ _ _ _
     | exact Selected.select _ _ _ _ _ (by simp) (by assumption) (by assumption) _
+    | exact Selected.four (by assumption) _ rfl
     | exact Option.isSome_iff_ne_none.mpr (by assumption)
-    | (apply_assumption; simp)
-    | exact dropCompatible_start _ _ (by tauto)
-    | tauto
-    | skip
-  case vc15.step.post.success.isFalse.post.success.isTrue.pre =>
-    rename_i hinv hne hselected hfour
-    apply classify_four
-    have hclass := (hselected.get (Option.isSome_iff_ne_none.mpr hne)).2.2
-    convert hclass using 2
-    exact congrArg some hfour.symm
-  case vc16.step.post.success.isFalse.post.success.isTrue.post.success =>
-    rename_i hinv hne hselected hfour hadded
+    | exact RetainedCandidates.current (by assumption)
+  case vc8 =>
+    rename_i hinv hselected _ _ hadded
     exact selected_spill_drop_preserves _ _ _ _ _ hselected _ hinv.1 hinv.2.1 _ hadded
-  case vc17.step.post.success.isFalse.post.success.isFalse =>
-    rename_i hinv hne hselected hfour
+  case vc9 =>
+    rename_i hinv hselected _ hfour
     exact selected_drop_preserves _ _ _ _ _ hselected _ hinv.1 hinv.2.1 hfour
 
 end Shuffler.Planner
