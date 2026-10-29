@@ -20,7 +20,7 @@ theorem Stack.isSwapReachable_iff_length (stack : Stack) (pos : Fin stack.length
   have := pos.isLt
   omega
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 theorem shallowestCopyPosition_ge (stack : Stack) (slot : Value)
     (copy pos : Fin stack.length) (hcopy : stack.shallowestCopyPosition slot = some copy)
@@ -90,7 +90,7 @@ theorem State.withinReach.retag {state : State source target spills}
   refine ⟨h.width, ?_⟩
   intro dest hd
   apply h.copies dest
-  simpa [State.positionOf] using hd
+  simpa [Mapping.positionOf] using hd
 
 theorem State.withinReach.swap {state next : State source target spills}
     (h : state.withinReach cursor) (pos : Fin state.stack.length)
@@ -240,4 +240,4 @@ theorem Generation.reachable {state next : State source target spills} {dest : F
     · rw [hstack]
       exact hasCopy_append_swap_old _ _ _ copy _ hv hd
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

@@ -6,7 +6,7 @@ open Std.WP
 
 set_option experimental.vcgen true
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 set_option maxRecDepth 16384
 set_option maxHeartbeats 2000000
@@ -32,19 +32,20 @@ macro "finish_checked " c:term ", " st:term ", " hp:term ", " hn:term ", " expec
       rintro final ⟨hinv, he⟩
       exact $advance _ hinv (he.trans $expected)
     · rw [ite_eq_left hr]
+      rw [blockSwapUnreachable_eq _ _ hr]
       exact True.intro
   · try dsimp +zetaDelta only at hnotTop
     simp +zetaDelta only [ne_eq, hnotTop, ↓reduceIte]
     exact $advance _ (($hp).finish_at_top (not_not.mp hnotTop)) $expected))
 
-theorem Spec.attach {x : Except Error α} {post : α → Prop} (h : Spec x post) :
+theorem Spec.attach {x : Except ShuffleErr α} {post : α → Prop} (h : Spec x post) :
     Spec x.attach (fun a => post a.val) := by
   cases x with
   | ok value => exact h
   | error err => cases err <;> exact h
 
 -- The loop skips a final cursor only when the cursor is on the stack.
-theorem skip_unless_final {final : Fin size → Prop} [DecidablePred final] {skip rest : Except Error α}
+theorem skip_unless_final {final : Fin size → Prop} [DecidablePred final] {skip rest : Except ShuffleErr α}
     (h : (hlt : offset < size) → ¬ final ⟨offset, hlt⟩) :
     (if offset < size then index size offset >>= (fun i => if final i then skip else rest)
       else rest) = rest := by
@@ -54,7 +55,7 @@ theorem skip_unless_final {final : Fin size → Prop} [DecidablePred final] {ski
 
 -- The loop generates at `offset` only when both checks hold. Otherwise it continues with `rest`.
 theorem Spec.ite_index {A : Prop} [Decidable A] {B : Fin size → Prop} [DecidablePred B]
-    {gen rest : Except Error α} {post : α → Prop} (hlt : A → offset < size)
+    {gen rest : Except ShuffleErr α} {post : α → Prop} (hlt : A → offset < size)
     (hgen : (hA : A) → B ⟨offset, hlt hA⟩ → Spec gen post) (hrest : Spec rest post) :
     Spec (if A then index size offset >>= (fun i => if B i then gen else rest) else rest) post := by
   by_cases hA : A
@@ -96,13 +97,15 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
     have hs := inv.size
     have hp := state.mapping.complete_of_target_total (by omega) ht
     simp only [hz, ↓reduceIte, requires_of_true _ hp.1, except_ok_bind]
-    rw [requires_of_true (∀ i, (state.destinationOf i).isSome) hp.2, except_ok_bind]
+    rw [requires_of_true (∀ i, (state.mapping.destinationOf i).isSome) hp.2, except_ok_bind]
     cases hperm : Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hp.1 hp.2) with
     | error err =>
-      cases err
-      simp [Except.mapError, Spec]
+      cases err with
+      | Blocked blocked => simp [Spec]
+      | assertion reason =>
+        exact (Shuffler.Permute.permute_no_assertion _ _ _ reason hperm).elim
     | ok result =>
-      simpa [Except.mapError, Spec] using
+      simpa [Spec] using
         (Shuffler.Permute.permute_applies_permutation_of_ok _ _ _ hperm).trans
           (expectedStack_permutation state hp.1 hp.2)
   simp only [hz, ↓reduceIte]
@@ -115,7 +118,7 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
     obtain ⟨hlt, hnone⟩ := hu (urgent.get hurg.1) (Option.some_get hurg.1).symm
     let u : Fin target.length := ⟨urgent.get hurg.1, hlt⟩
     have hb : state.mapping.symm u = none := by
-      simpa [State.positionOf, hlt, u] using hnone
+      simpa [Mapping.positionOf, hlt, u] using hnone
     apply (generate_contract state u hb (inv.available u)).attach.bind
     intro next hgen
     exact retry _ (hgen.invariant inv) (hgen.decreases inv) hgen.expected
@@ -124,12 +127,12 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
   · intro _ hB
     let top : Fin target.length := ⟨state.stack.length, by omega⟩
     have hb : state.mapping.symm top = none := by
-      simpa [State.positionOf, top] using hB.1
+      simpa [Mapping.positionOf, top] using hB.1
     apply (generate_contract state top hb (inv.available top)).attach.bind
     intro next hgen
     exact retry _ (hgen.invariant inv) (hgen.decreases inv) hgen.expected
   rw [index_eq dest, except_ok_bind]
-  rcases Option.eq_none_or_eq_some (state.positionOf dest) with hpos | ⟨carrier, hpos⟩
+  rcases Option.eq_none_or_eq_some (state.mapping.positionOf dest) with hpos | ⟨carrier, hpos⟩
   · simp only [hpos]
     have hb : state.mapping.symm dest = none := hpos
     apply (generate_contract state dest hb (inv.available dest)).bind
@@ -202,6 +205,7 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
         rintro next ⟨hp, he'⟩
         finish_checked cursor, next, hp.1, hp.2, he'.trans he, advance
       · rw [ite_eq_left hr]
+        rw [blockSwapUnreachable_eq _ _ hr]
         exact True.intro
     · dsimp +zetaDelta only at hnotTop
       simp only [ne_eq, hnotTop, ↓reduceIte]
@@ -220,4 +224,4 @@ theorem buildBottomUp_spec (initial : State source target spills) (h : initial.V
   simp only [requires_of_true _ hsize, except_ok_bind]
   exact he
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

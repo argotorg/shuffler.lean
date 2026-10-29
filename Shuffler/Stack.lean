@@ -30,6 +30,13 @@ def Value.is_junk : Value → Prop
 instance (v : Value) : Decidable v.is_junk := by
   cases v <;> unfold Value.is_junk <;> infer_instance
 
+def Value.isVariable : Value → Prop
+| Var _ => True
+| _ => False
+
+instance (v : Value) : Decidable v.isVariable := by
+  cases v <;> unfold Value.isVariable <;> infer_instance
+
 def Value.can_be_freely_generated : Value → Prop
 | Lit _ => True
 | Wildcard => True
@@ -101,6 +108,10 @@ lemma top_lt_length (stack : Stack) (pos : Fin stack.length) :
 
 lemma stack_push_len (stack : Stack) (slot : Value) :
   stack.length + 1 = (stack ++ [slot]).length := by simp
+
+lemma stack_pop_len (stack : Stack) (h : 0 < stack.length) :
+    stack.length = stack.dropLast.length + 1 := by
+  simp; omega
 
 
 --- Matching ---------------------------------------------------------------------------------------

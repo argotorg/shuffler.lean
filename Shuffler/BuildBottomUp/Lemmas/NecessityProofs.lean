@@ -6,7 +6,7 @@ set_option experimental.vcgen true
 set_option maxRecDepth 16384
 set_option maxHeartbeats 4000000
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 -- A successful scan has checked each unbound target in the visited prefix.
 def CopiesSeen (state : State source target spills) (seen : List Nat) : Prop :=
@@ -27,21 +27,21 @@ theorem urgentScan_reachable_on_success (cursor : Nat) (state : State source tar
     ⦃True⦄ (do
       let mut urgent := none
       for offset in [cursor : target.length] do
-        if (state.positionOf (← index target.length offset)).isSome then
+        if (state.mapping.positionOf (← index target.length offset)).isSome then
           continue
         let slot ← slotAt target offset
         if slot.is_junk ∨ slot.can_be_freely_generated ∨ spills.is_spilled slot then
           continue
         if let some copy := state.stack.shallowestCopyPosition slot then
           if ¬ state.stack.isDupReachable copy then
-            throw (.blocked ((state.depthOf copy) - MAX_DUP_DEPTH))
+            throw (← state.blockDupUnreachable copy)
           if (state.depthOf copy) = MAX_DUP_DEPTH ∧ copy.val ≠ cursor ∧ urgent.isNone then
             urgent := some offset
-      return urgent : Except Error (Option ℕ))
+      return urgent : Except ShuffleErr (Option ℕ))
     ⦃fun _ => CopiesSeen state (List.range' cursor (target.length - cursor));
       (fun _ => True)⦄ := by
   simp only [Std.Legacy.Range.forIn_eq_forIn_range']
-  vcgen [slotAt, index, State.depthOf] invariants
+  vcgen [slotAt, index, State.depthOf, State.blockDupUnreachable, State.block, requires] invariants
   · fun seen _ _ => CopiesSeen state seen
   all_goals try simp_all [CopiesSeen]
   all_goals
@@ -51,7 +51,7 @@ theorem urgentScan_reachable_on_success (cursor : Nat) (state : State source tar
     target[j.val].can_be_freely_generated ∨ SpillSet.is_spilled spills target[j.val] ∨
       Stack.hasCopy state.stack target[j.val]) j hj hb
   all_goals subst_vars
-  case vc3.inr => simp_all [State.positionOf]
+  case vc3.inr => simp_all [Mapping.positionOf]
   case vc4.inr =>
     rcases (by assumption : target[j].is_junk ∨ target[j].can_be_freely_generated ∨ SpillSet.is_spilled spills target[j]) with hjunk | hfree | hspill
     · exact Or.inl (Value.can_be_freely_generated_of_is_junk _ hjunk)
@@ -64,7 +64,7 @@ theorem urgentScan_reachable_on_success (cursor : Nat) (state : State source tar
     have hav := ha j
     simp_all [State.isAvailable, Option.isSome_iff_exists]
 
-theorem Succeeds.bind_left {result : Except Error α} {next : α → Except Error β}
+theorem Succeeds.bind_left {result : Except ShuffleErr α} {next : α → Except ShuffleErr β}
     {post : β → Prop} (h : Succeeds (result >>= next) post) :
     Succeeds result (fun _ => True) := by
   cases result with
@@ -72,7 +72,7 @@ theorem Succeeds.bind_left {result : Except Error α} {next : α → Except Erro
   | ok value => exact ⟨value, rfl, trivial⟩
 
 -- A triple gives its postcondition on every ok result.
-theorem post_of_triple_ok {result : Except Error α} {post : α → Prop} {errors : Error → Prop}
+theorem post_of_triple_ok {result : Except ShuffleErr α} {post : α → Prop} {errors : ShuffleErr → Prop}
     (h : ⦃True⦄ result ⦃post; errors⦄) (heq : result = .ok value) : post value := by
   subst heq
   exact h.le_wp trivial
@@ -115,4 +115,4 @@ theorem loop_success_iff_reachable_within_width (cursor : Nat) (state : State so
   ⟨loop_success_requires_reachable cursor state inv,
     fun hr => loop_success cursor state inv ⟨hw, hr⟩⟩
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

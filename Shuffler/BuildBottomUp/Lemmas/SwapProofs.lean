@@ -5,7 +5,7 @@ open Std.WP
 
 set_option experimental.vcgen true
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 structure Swapped (state next : State source target spills) (pos : Fin state.stack.length) : Prop where
   stack_eq : next.stack = state.stack.swap pos (state.stack.length - 1)
@@ -29,7 +29,7 @@ theorem swap_triple (state : State source target spills) (pos : Fin state.stack.
     simp only [Stack.isSwapReachable, Stack.offsetToDepth] at *; omega
   vcgen [State.swapWith, index] until (requires _ _)
   all_goals simp_all [requires]
-  apply WPMonad.pure_le_wp_pure (m := Except Error) _ _ _
+  apply WPMonad.pure_le_wp_pure (m := Except ShuffleErr) _ _ _
   change Swapped _ _ _
   refine { stack_eq := rfl, size := ?_, pending := rfl, count := ?_, subset := ?_, expected := ?_, mapping := ?_ }
   · simp
@@ -87,4 +87,4 @@ theorem Swapped.unbound {state next : State source target spills}
   have he := congrArg Option.isNone (h.mapping dest)
   cases hstate : state.mapping.symm dest <;> cases hnext : next.mapping.symm dest <;> simp_all
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

@@ -6,10 +6,21 @@ import Batteries.Data.List.Basic
 def MAX_SWAP_DEPTH := 16
 def MAX_DUP_DEPTH := 15
 
+-- The slot at `offset` of the working stack is out of reach by `excess` slots.
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:277-281.
+structure Blocked where
+  offset : ℕ
+  excess : ℕ
+  deriving DecidableEq, Repr
+
 inductive ShuffleErr : Type where
-  | Blocked : ℕ → ShuffleErr
+  | Blocked (blocked : Blocked)
+  | assertion (reason : String)
+  deriving DecidableEq, Repr
 
 abbrev Word := Fin (2 ^ 256)
+
+abbrev Byte := Fin (2 ^ 8)
 
 structure VarId where
   val : ℕ

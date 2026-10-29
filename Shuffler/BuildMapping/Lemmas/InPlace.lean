@@ -16,7 +16,7 @@ private theorem bind_preserves {a b : ℕ} (mapping : Mapping a b) (p : Fin a) (
 
 -- A loop establishes `post` when it visits `wanted` and keeps it in later iterations.
 private theorem succeeds_forIn_at (inv post : β → Prop) (wanted : α) (l : List α) (init : β)
-    (f : α → β → Except Error (ForInStep β)) (hinv : inv init) (hmem : wanted ∈ l)
+    (f : α → β → Except ShuffleErr (ForInStep β)) (hinv : inv init) (hmem : wanted ∈ l)
     (step : ∀ a b, inv b → Succeeds (f a b) fun r =>
       r = .yield r.value ∧ inv r.value ∧ (post b → post r.value) ∧
         (a = wanted → post r.value)) :

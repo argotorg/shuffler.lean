@@ -5,7 +5,7 @@ open Std.WP
 
 set_option experimental.vcgen true
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 set_option maxRecDepth 16384
 set_option maxHeartbeats 2000000
@@ -56,20 +56,20 @@ macro "finish_reachable " c:term ", " st:term ", " hp:term ", " hn:term ", " hr:
     simp +zetaDelta only [ne_eq, hnotTop, ↓reduceIte]
     exact $advance _ (($hp).finish_at_top (not_not.mp hnotTop)) ($hr).advance))
 
-theorem Succeeds.attach {x : Except Error α} {post : α → Prop} (h : Succeeds x post) :
+theorem Succeeds.attach {x : Except ShuffleErr α} {post : α → Prop} (h : Succeeds x post) :
     Succeeds x.attach (fun a => post a.val) := by
   obtain ⟨value, rfl, hv⟩ := h
   exact ⟨⟨value, rfl⟩, rfl, hv⟩
 
 -- A successful result also satisfies every spec of its computation.
-theorem Succeeds.spec {x : Except Error α} {pre post : α → Prop} (h : Succeeds x pre)
+theorem Succeeds.spec {x : Except ShuffleErr α} {pre post : α → Prop} (h : Succeeds x pre)
     (hs : Spec x post) : Succeeds x post := by
   obtain ⟨value, rfl, _⟩ := h
   exact ⟨value, rfl, hs⟩
 
 -- The loop generates at `offset` only when both checks hold. Otherwise it continues with `rest`.
 theorem Succeeds.ite_index {A : Prop} [Decidable A] {B : Fin size → Prop} [DecidablePred B]
-    {gen rest : Except Error α} {post : α → Prop} (hlt : A → offset < size)
+    {gen rest : Except ShuffleErr α} {post : α → Prop} (hlt : A → offset < size)
     (hgen : (hA : A) → B ⟨offset, hlt hA⟩ → Succeeds gen post) (hrest : Succeeds rest post) :
     Succeeds (if A then index size offset >>= (fun i => if B i then gen else rest) else rest) post := by
   by_cases hA : A
@@ -81,7 +81,7 @@ theorem Succeeds.ite_index {A : Prop} [Decidable A] {B : Fin size → Prop} [Dec
 
 -- The generate-at-top branch falls through when its inner check fails at every index.
 theorem ite_index_eq_rest {A : Prop} [Decidable A] {B : Fin size → Prop} [DecidablePred B]
-    {gen rest : Except Error α} (hlt : A → offset < size) (h : ∀ i, ¬ B i) :
+    {gen rest : Except ShuffleErr α} (hlt : A → offset < size) (h : ∀ i, ¬ B i) :
     (if A then index size offset >>= (fun i => if B i then gen else rest) else rest) = rest := by
   by_cases hA : A
   · rw [ite_eq_left hA, index_eq ⟨offset, hlt hA⟩, except_ok_bind, ite_eq_right (h _)]
@@ -117,11 +117,11 @@ theorem loop_success (cursor : ℕ) (state : State source target spills)
     have hs := inv.size
     have hp := state.mapping.complete_of_target_total (by omega) ht
     simp only [hz, ↓reduceIte, requires_of_true _ hp.1, except_ok_bind]
-    rw [requires_of_true (∀ i, (state.destinationOf i).isSome) hp.2, except_ok_bind]
+    rw [requires_of_true (∀ i, (state.mapping.destinationOf i).isSome) hp.2, except_ok_bind]
     obtain ⟨res, trace, heq, _⟩ := Shuffler.Permute.permute_applies_permutation_reachable
       spills state.stack (state.mapping.toPermutation hp.1 hp.2)
       (inv.permutation_reachable hr hp.1 hp.2)
-    simp only [heq, Except.mapError, except_ok_bind]
+    simp only [heq, except_ok_bind]
     exact ⟨_, rfl, trivial⟩
   simp only [hz, ↓reduceIte]
   have hscan := Succeeds.of_triple _ _ (urgentScan_success cursor state hr.copies)
@@ -133,7 +133,7 @@ theorem loop_success (cursor : ℕ) (state : State source target spills)
     obtain ⟨hlt, hnone⟩ := hu.choice (urgent.get hurg.1) (Option.some_get hurg.1).symm
     let u : Fin target.length := ⟨urgent.get hurg.1, hlt⟩
     have hb : state.mapping.symm u = none := by
-      simpa [State.positionOf, hlt, u] using hnone
+      simpa [Mapping.positionOf, hlt, u] using hnone
     have hready : Ready state u := (hu.selected u.val (Option.some_get hurg.1).symm).ready
     apply (generate_reachable state u hb (inv.available u) hr
       (inv.processed.unbound_ge u hb) hready).attach.bind
@@ -148,7 +148,7 @@ theorem loop_success (cursor : ℕ) (state : State source target spills)
   · intro hA hB
     let top : Fin target.length := ⟨state.stack.length, hA.2.2⟩
     have hb : state.mapping.symm top = none := by
-      simpa [State.positionOf, top] using hB.1
+      simpa [Mapping.positionOf, top] using hB.1
     have hn : urgent = none := Option.isNone_iff_eq_none.mp hA.1
     have hready : Ready state top := (hn ▸ hu).ready_none inv.processed hB.2 top
     apply (generate_reachable state top hb (inv.available top) hr
@@ -160,7 +160,7 @@ theorem loop_success (cursor : ℕ) (state : State source target spills)
     have := inv.cursor_le_length hc
     omega
   rw [index_eq dest, except_ok_bind]
-  rcases Option.eq_none_or_eq_some (state.positionOf dest) with hpos | ⟨carrier, hpos⟩
+  rcases Option.eq_none_or_eq_some (state.mapping.positionOf dest) with hpos | ⟨carrier, hpos⟩
   · simp only [hpos]
     have hb : state.mapping.symm dest = none := hpos
     apply (generate_reachable state dest hb (inv.available dest) hr le_rfl
@@ -297,4 +297,4 @@ theorem buildBottomUp_success_of_processed (initial : State source target spills
   rw [buildBottomUp_success_iff_loop, loop_zero_eq_of_processed initial hp]
   exact loop_success cursor initial ⟨h, hp⟩ hr
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

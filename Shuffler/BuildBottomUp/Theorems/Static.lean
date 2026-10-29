@@ -2,7 +2,7 @@ import Shuffler.BuildBottomUp.Theorems.Correctness
 import Shuffler.BuildBottomUp.Lemmas.StaticProof
 import Shuffler.BuildBottomUp.Lemmas.StaticDecision
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 -- buildBottomUp succeeds if and only if StaticSuccess holds. StaticSuccess uses only data from the
 -- initial state, and there is no bound on the stack or target length.
@@ -32,4 +32,4 @@ theorem buildBottomUp_correct_iff_static (initial : State source target spills)
     obtain rfl := buildBottomUp_correct_of_ok initial h hmapped hrun
     exact ⟨trace, hrun⟩
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

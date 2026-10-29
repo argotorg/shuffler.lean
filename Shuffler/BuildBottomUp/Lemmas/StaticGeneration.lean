@@ -6,7 +6,7 @@ set_option experimental.vcgen true
 set_option maxRecDepth 16384
 set_option maxHeartbeats 4000000
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 -- Exact inverse assignments after one production, before any placement.
 def ProducedMapping (state next : State source target spills) (dest : Fin target.length) : Prop :=
@@ -32,8 +32,9 @@ theorem producedMapping_append (state : State source target spills) (slot : Valu
 theorem produce_mapping (state : State source target spills) (dest : Fin target.length) :
     ⦃True⦄ state.produce dest
     ⦃fun next => ProducedMapping state next dest; (fun _ => True)⦄ := by
-  vcgen [State.produce, State.push, State.dup, requires, index]
-  all_goals try simp_all [State.positionOf]
+  vcgen [State.produce, State.push, State.dup, State.blockDupUnreachable, State.block,
+    requires, index]
+  all_goals try simp_all [Mapping.positionOf]
   all_goals
     simpa only [eqRec_eq_cast] using producedMapping_append _ _ dest (by assumption) _ _
 
@@ -42,7 +43,8 @@ theorem produce_noBlocked (state : State source target spills) (dest : Fin targe
     NoBlocked (state.produce dest) := by
   have hfilter := h.filtered dest hbound
   apply noBlocked_of_triple
-  vcgen [State.produce, State.push, State.dup, requires, index]
+  vcgen [State.produce, State.push, State.dup, State.blockDupUnreachable, State.block,
+    requires, index]
   all_goals simp_all [noBlockedErrors]
 
 theorem produce_success_exact (state : State source target spills) (dest : Fin target.length)
@@ -99,4 +101,4 @@ theorem generate_eq_after_produce_unequal_deep (state produced : State source ta
   rw [ite_eq_right (show ¬ produced.isSwapReachable current from hdeep)]
   rfl
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

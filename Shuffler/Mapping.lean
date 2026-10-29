@@ -10,6 +10,15 @@ namespace Mapping
 
 variable {source_len target_len : ℕ}
 
+-- The destination of the slot at `offset`: the target offset it is bound for, or none for a surplus slot.
+-- Whether absence is expected is the caller's business - after `removeSurplus` every slot has one.
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:729-732.
+def destinationOf (mapping : Mapping source_len target_len) (offset : Fin source_len) : Option (Fin target_len) := mapping offset
+
+-- The position of the slot bound for `offset`, or none if no slot is bound for it
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:84-87.
+def positionOf (mapping : Mapping source_len target_len) (offset : Fin target_len) : Option (Fin source_len) := mapping.symm offset
+
 -- pop removes the top source position and its binding, if any; all other bindings stay unchanged.
 def pop : (mapping : Mapping (source_len + 1) target_len) → Mapping source_len target_len
 | ⟨toFun, invFun, hinv⟩ => by
@@ -418,6 +427,33 @@ end Mapping
     (mapping : Mapping source_len target_len) (a b : Fin source_len) :
     (mapping.swapDestinations a b).unmapped_target_slots = mapping.unmapped_target_slots := by
   simp [Mapping.unmapped_target_slots]
+
+@[simp] theorem Mapping.cast_symm (mapping : Mapping m t) (h : m = n) (dest : Fin t) :
+    (h ▸ mapping).symm dest = (mapping.symm dest).map (Fin.cast h) := by
+  subst n
+  simp
+
+@[simp] theorem Mapping.cast_apply (mapping : Mapping m t) (h : m = n) (pos : Fin n) :
+    (h ▸ mapping) pos = mapping (Fin.cast h.symm pos) := by
+  subst n
+  simp
+
+-- Popping an unbound top keeps every binding: each target keeps the position it is bound to.
+theorem Mapping.pop_symm_of_top_none (mapping : Mapping (n + 1) t)
+    (htop : mapping (Fin.last n) = none) (dest : Fin t) :
+    (mapping.pop.symm dest).map Fin.castSucc = mapping.symm dest := by
+  change ((mapping.symm dest).bind _).map Fin.castSucc = _
+  cases h : mapping.symm dest with
+  | none => rfl
+  | some i =>
+    have hi : i.val < n := by
+      have hne : i ≠ Fin.last n := by
+        rintro rfl
+        rw [mapping.eq_some_iff.mp h] at htop
+        cases htop
+      have := i.isLt
+      exact lt_of_le_of_ne (Nat.lt_succ_iff.mp this) (fun heq => hne (Fin.ext heq))
+    simp [hi]
 
 @[simp] theorem Mapping.cast_symm_val (mapping : Mapping n target_len) (h : n = m)
     (i : Fin target_len) :

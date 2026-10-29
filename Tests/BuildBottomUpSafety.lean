@@ -1,6 +1,6 @@
 import Shuffler
 
-open Shuffler.BuildBottomUp
+open Shuffler.Emission
 
 -- The theorem applies to the production function and excludes each assertion reason.
 example (initial : State source target spills) (h : initial.Valid) (reason : String) :
@@ -59,7 +59,7 @@ private theorem deepCopy_valid : deepCopy.Valid := by
 example (reason : String) : buildBottomUp deepCopy deepCopy_valid ≠ .error (.assertion reason) :=
   buildBottomUp_no_assertion deepCopy deepCopy_valid reason
 
-example : (buildBottomUp deepCopy deepCopy_valid).map (fun result => result.1) = .error (.blocked 1) := by
+example : (buildBottomUp deepCopy deepCopy_valid).map (fun result => result.1) = .error (.Blocked ⟨0, 1⟩) := by
   native_decide
 
 -- Each initial condition is needed: size, pending count, and availability.

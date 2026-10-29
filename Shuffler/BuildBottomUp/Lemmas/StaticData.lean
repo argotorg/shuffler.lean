@@ -1,7 +1,7 @@
 import Shuffler.BuildBottomUp.Lemmas.NecessityProofs
 import Mathlib.Data.Finset.Sort
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 namespace Success
 
@@ -54,7 +54,7 @@ theorem copies_zero_pos_iff (initial : State source target spills) (value : Valu
 
 theorem ready_zero_iff (initial : State source target spills) :
     Ready initial 0 ↔ initial.reachable := by
-  simp [Ready, State.reachable, State.isReachable, State.positionOf, copies_zero_pos_iff]
+  simp [Ready, State.reachable, State.isReachable, Mapping.positionOf, copies_zero_pos_iff]
 
 end Success
 
@@ -64,4 +64,4 @@ theorem staticSuccess_iff_reachable_of_small (initial : State source target spil
     StaticSuccess initial ↔ initial.reachable := by
   simp only [StaticSuccess, hsmall, ↓reduceIte, Success.ready_zero_iff]
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

@@ -1,6 +1,6 @@
 import Shuffler.BuildBottomUp.Lemmas.LoopProofs
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 -- On success, each bound target slot holds the value of its bound stack slot, and each unbound
 -- target slot holds its target value.
@@ -19,4 +19,4 @@ theorem buildBottomUp_correct_of_ok (initial : State source target spills)
     (hrun : buildBottomUp initial h = .ok ⟨res, trace⟩) : res = target :=
   (buildBottomUp_expected_of_ok initial h hrun).trans (expectedStack_eq_target initial hmapped)
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

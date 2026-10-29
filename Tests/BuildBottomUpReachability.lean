@@ -1,6 +1,6 @@
 import Shuffler
 
-open Shuffler.BuildBottomUp
+open Shuffler.Emission
 
 set_option maxRecDepth 16384
 
@@ -89,7 +89,7 @@ example : ¬State.reachable (finalPrefix buried) := by
   unfold State.reachable State.isReachable Stack.hasCopy
   decide
 example : (buildBottomUp (finalPrefix buried) buried_valid).map (fun result => result.1) =
-    .error (.blocked 17) := by native_decide
+    .error (.Blocked ⟨0, 17⟩) := by native_decide
 
 example : ¬∃ (res : Stack) (trace : Trace ∅ buried res),
     buildBottomUp (finalPrefix buried) buried_valid = .ok ⟨res, trace⟩ := by

@@ -1,6 +1,6 @@
 import Shuffler.BuildBottomUp.Lemmas.StaticInvariant
 
-namespace Shuffler.BuildBottomUp.Success
+namespace Shuffler.Emission.Success
 
 theorem PrefixState.bound_value_iff {initial state : State source target spills} {h : initial.Valid}
     (hp : PrefixState initial h cursor state) (hc : cursor < target.length)
@@ -59,4 +59,4 @@ theorem PrefixState.before_cutoff {initial state : State source target spills} {
   rw [← hp.length] at hw
   exact ⟨by omega, by omega, hp.pending_ne_zero hch, hw⟩
 
-end Shuffler.BuildBottomUp.Success
+end Shuffler.Emission.Success

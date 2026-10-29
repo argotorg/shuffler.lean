@@ -7,7 +7,7 @@ set_option experimental.vcgen true
 set_option maxRecDepth 16384
 set_option maxHeartbeats 4000000
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 macro "finish_deep_bound " c:term ", " st:term ", " hw:term : tactic => `(tactic| (
   let bottom : Fin ($st).stack.length := ⟨$c, by
@@ -31,6 +31,7 @@ macro "finish_deep_bound " c:term ", " st:term ", " hw:term : tactic => `(tactic
       have hwidth := $hw
       omega
     rw [ite_eq_left (show ¬($st).isSwapReachable bottom from hreach)]
+    rw [blockSwapUnreachable_eq $st bottom hreach]
     rintro ⟨_, h, _⟩
     cases h
   · have hf : ($st).isFinal bottom := (($st).isFinal_iff bottom).mpr (not_not.mp hnfinal)
@@ -66,7 +67,7 @@ theorem loop_bound_mismatch_deep_noSuccess_of_reachable (cursor : Nat)
   erw [heq, except_ok_bind]
   simp only [hnotearly, and_false, ↓reduceDIte]
   rw [ite_index_eq_rest (fun hA => hA.2.2) (fun _ hB => hB), index_eq dest, except_ok_bind]
-  have hposition : state.positionOf dest = some carrier := hb
+  have hposition : state.mapping.positionOf dest = some carrier := hb
   simp only [hposition]
   have hslot : slotAt state.stack cursor = .ok state.stack[current] :=
     hcurrent ▸ slotAt_index state.stack current
@@ -110,6 +111,7 @@ theorem loop_bound_mismatch_deep_noSuccess_of_reachable (cursor : Nat)
         rw [hs.size]; exact hw
       finish_deep_bound cursor, next, hwidth
     · rw [ite_eq_left (show ¬retag.isSwapReachable pos from hreach)]
+      rw [blockSwapUnreachable_eq retag pos hreach]
       rintro ⟨_, h, _⟩
       cases h
   · dsimp +zetaDelta only at hnotTop
@@ -164,4 +166,4 @@ theorem loop_bound_mismatch_deep_noSuccess (cursor : Nat)
   · exact loop_bound_mismatch_deep_noSuccess_of_pending cursor state inv hw hpending hc
       current hcurrent carrier hb hv
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

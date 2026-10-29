@@ -1,5 +1,6 @@
 import Mathlib.Data.Finset.Sort
 import Shuffler.Contracts
+import Shuffler.Emission.Defs
 import Shuffler.Mapping
 import Shuffler.Permute.Defs
 import Shuffler.Stack
@@ -8,86 +9,12 @@ import Shuffler.Util
 import Std.WP
 import Std.Tactic.Do
 
--- TODO: make numeric types here match the c++ types
--- TODO: make the Error.blocked args match the c++
--- TODO: add a Depth / Offset type
--- TODO: Dup should not accept a FunctionReturnLabel
-
-
-namespace Shuffler.BuildBottomUp
-
--- `Error` and `requires` are shared with BuildMapping; re-export them for `open Shuffler.BuildBottomUp`.
-export Shuffler (Error requires)
+namespace Shuffler.Emission
 
 variable {source target : Stack} {spills : SpillSet}
 
---- Types ------------------------------------------------------------------------------------------
-
-
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:811-824.
-structure State (source target : Stack) (spills : SpillSet) where
-  -- The mapping as planned, before any operation
-  planned_mapping : Mapping source.length target.length
-
-  -- The working stack and its (in sync) mapping
-  stack : Stack
-  trace : Trace spills source stack
-  mapping : Mapping stack.length target.length
-
-  -- Number of target offsets whose slot still has to be produced; decremented by `produce`
-  pending_generations : ℕ
-
---- Utils ------------------------------------------------------------------------------------------
-
-
--- convert offset to a `Fin size` if offset < size. throw an assertion error otherwise.
-def index (size offset : ℕ) : Except Error (Fin size) := do
-  if h : offset < size then return ⟨offset, h⟩
-  else throw (.assertion "offset is out of bounds")
-
--- return the slot at offset if offset < stack.length. throw an assertion error otherwise.
-def slotAt (stack : Stack) (offset : ℕ) : Except Error Value := do
-  return stack[← index stack.length offset]
-
-
---- Conversions ------------------------------------------------------------------------------------
-
-
--- Depth of the slot at `offset` below the top of the working stack
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:741-744.
-def State.depthOf (state : State source target spills) (offset : Fin state.stack.length) : Fin state.stack.length :=
-  state.stack.offsetToDepth offset
-
-
 --- Queries ----------------------------------------------------------------------------------------
 
-
--- The destination of the slot at `offset`: the target offset it is bound for, or none for a surplus slot.
--- Whether absence is expected is the caller's business - after `removeSurplus` every slot has one.
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:729-732.
-def State.destinationOf (state : State source target spills) (offset : Fin state.stack.length) : Option (Fin target.length) :=
-  state.mapping offset
-
--- The position of the slot bound for `offset`, or none if no slot is bound for it
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:84-87.
-def State.positionOf (state : State source target spills) (offset : Fin target.length) : Option (Fin state.stack.length) :=
-  state.mapping.symm offset
-
--- Whether a swap can reach the slot at `offset`; trivially true for the top itself
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:747-750.
-def State.isSwapReachable (state : State source target spills) (offset : Fin state.stack.length) : Prop :=
-  (state.depthOf offset).val ≤ MAX_SWAP_DEPTH
-
-instance (state : State source target spills) (offset : Fin state.stack.length) :
-    Decidable (state.isSwapReachable offset) := by unfold State.isSwapReachable; infer_instance
-
--- Whether the slot at `pos` is bound for `pos` itself, i.e., already is at its final target offset
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:735-738.
-def State.isFinal (state : State source target spills) (pos : Fin state.stack.length) : Prop :=
-  (state.destinationOf pos).map Fin.val = some pos.val
-
-instance (state : State source target spills) (pos : Fin state.stack.length) :
-    Decidable (state.isFinal pos) := by unfold State.isFinal; infer_instance
 
 -- can the slot at target[target_offset] be generated?
 def State.isAvailable (state : State source target spills) (target_offset : Fin target.length) : Prop :=
@@ -131,7 +58,7 @@ structure State.invariant (targetOffset : ℕ) (state : State source target spil
 
 -- Every target offset that no slot is bound to is reachable.
 def State.reachable (state : State source target spills) : Prop :=
-  ∀ dest, state.positionOf dest = none → state.isReachable dest
+  ∀ dest, state.mapping.positionOf dest = none → state.isReachable dest
 
 -- The slots from `cursor` up are within SWAP reach, and the state is reachable.
 structure State.withinReach (cursor : ℕ) (state : State source target spills) : Prop where
@@ -150,77 +77,10 @@ def State.expectedStack (state : State source target spills) : Stack :=
 --- Actions ----------------------------------------------------------------------------------------
 
 
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:780-784.
-def State.push (state : State source target spills)
-    (slot : Value) (dest : Fin target.length) : Except Error (State source target spills) := do
-
-  let ⟨hbound⟩ ← requires (state.positionOf dest = none) "destination already bound to a slot"
-  let ⟨hgen⟩ ← requires (slot.can_be_freely_generated ∨ spills.is_spilled slot) "pushed slot cannot be generated or loaded"
-
-  return {
-    state with
-    stack := state.stack ++ [slot]
-    trace := match slot, hgen with
-      | .Var id  , h => .Load id (by simpa [Value.can_be_freely_generated, SpillSet.is_spilled] using h) state.trace
-      | .Lit word, _ => .Push (.Lit word) (by simp [Value.can_be_freely_generated]) state.trace
-      | .Wildcard, _ => .Push .Wildcard (by decide) state.trace
-    mapping := by simpa [stack_push_len] using
-      state.mapping.push dest hbound
-  }
-
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:786-790.
-def State.dup (state : State source target spills)
-    (offset : ℕ) (dest : Fin target.length) : Except Error (State source target spills) := do
-
-  let copy ← index state.stack.length offset
-  let depth := state.stack.offsetToDepth copy
-
-  let ⟨hbound⟩ ← requires (state.positionOf dest = none) "destination already bound to a slot"
-  let ⟨hdup⟩ ← requires (state.stack.isDupReachable copy) "Stack too deep"
-
-  return {
-    state with
-    stack := state.stack ++ [state.stack[copy]]
-    trace :=
-      dup_stack_eq state.stack copy ▸
-        Trace.Dup (depth.val + 1) (Nat.succ_le_of_lt depth.isLt) (Nat.succ_pos _) (Nat.add_le_add_right hdup 1) state.trace
-    mapping := by simpa [stack_push_len] using
-      state.mapping.push dest hbound
-  }
-
--- Exchanges the destinations of the slots at `a` and `b`
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:100-107.
-def State.swapDestinations (state : State source target spills) (a b : ℕ)
-    : Except Error (State source target spills) := do
-
-  let a ← index state.stack.length a
-  let b ← index state.stack.length b
-  return { state with mapping := state.mapping.swapDestinations a b }
-
--- Swaps the top with the slot at `offset`, the destinations traveling along
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:767-772.
-def State.swapWith (state : State source target spills)
-    (offset : ℕ) : Except Error (State source target spills) := do
-
-  let pos ← index state.stack.length offset
-  let depth := state.stack.offsetToDepth pos
-
-  _ ← requires (¬ state.isFinal pos) "swap target is already final"
-  let ⟨hdepth⟩ ← requires (1 ≤ depth.val ∧ depth ≤ MAX_SWAP_DEPTH) "invalid swap target"
-
-  return {
-    state with
-    stack := state.stack.swap pos (state.stack.length - 1)
-    mapping := List.length_swap.symm ▸
-      state.mapping.swapDestinations pos ⟨state.stack.length - 1, top_lt_length state.stack pos⟩
-    trace := swap_stack_eq state.stack pos ▸
-      Trace.Swap depth.val depth.isLt hdepth.1 hdepth.2 state.trace
-  }
-
 -- Produces the slot for `targetOffset`
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:388-405.
 def State.produce (current : State source target spills)
-    (targetOffset : Fin target.length) : Except Error (State source target spills) := do
+    (targetOffset : Fin target.length) : Except ShuffleErr (State source target spills) := do
 
   let mut state := current
 
@@ -234,11 +94,11 @@ def State.produce (current : State source target spills)
   else if slot.can_be_freely_generated ∨ spills.is_spilled slot then
     state ← state.push slot targetOffset
   else if h : copy.isSome then
-    throw (.blocked (state.stack.offsetToDepth (copy.get h) - MAX_DUP_DEPTH))
+    throw (← state.blockDupUnreachable (copy.get h))
   else
     throw (.assertion "generated slot has no copy on the stack and is not spilled")
 
-  _ ← requires ((state.positionOf targetOffset).map Fin.val = some (state.stack.length - 1)) "generated slot is not bound to the top"
+  _ ← requires ((state.mapping.positionOf targetOffset).map Fin.val = some (state.stack.length - 1)) "generated slot is not bound to the top"
   return { state with pending_generations := state.pending_generations - 1 }
 
 -- Produces the slot for `targetOffset` and moves it toward its place right away: if the offset exists
@@ -246,7 +106,7 @@ def State.produce (current : State source target spills)
 -- one, which may be its own placement. An equal slot there just takes over the destination.
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:410-426.
 def State.generate (current : State source target spills)
-    (targetOffset : ℕ) : Except Error (State source target spills) := do
+    (targetOffset : ℕ) : Except ShuffleErr (State source target spills) := do
 
   let mut state := current
   state ← state.produce (← index target.length targetOffset)
@@ -275,7 +135,8 @@ private theorem generate_pending_generations (state next : State source target s
       state.generate offset
       ⦃fun s => s.pending_generations = state.pending_generations - 1; (fun _ => True)⦄ := by
     vcgen [State.generate, State.produce, State.push, State.dup, State.swapDestinations, State.swapWith,
-      requires, index, slotAt, State.isSwapReachable, State.depthOf]
+      State.blockDupUnreachable, State.block, requires, index, slotAt,
+      State.isSwapReachable, State.depthOf]
     all_goals simp_all
   have hp := hs.le_wp trivial
   rw [h] at hp
@@ -290,14 +151,14 @@ private theorem generate_pending_generations (state next : State source target s
 def buildBottomUp
   (initial : State source target spills)
   (_hvalid : initial.Valid)
-    : Except Error ((res : Stack) × Trace spills source res) := do
+    : Except ShuffleErr ((res : Stack) × Trace spills source res) := do
   let ⟨res, trace⟩ ← loop 0 initial
   _ ← requires (res.length = target.length) "stack and target sizes differ"
   return ⟨res, trace⟩
 where
   -- Reads before a retry use `state` directly, so the termination proof can relate it to `_hgen`.
   loop (targetOffset : ℕ) (current : State source target spills) :
-      Except Error ((res : Stack) × Trace spills source res) := do
+      Except ShuffleErr ((res : Stack) × Trace spills source res) := do
     let mut state := current
     if targetOffset ≥ target.length then
       return ⟨state.stack, state.trace⟩
@@ -309,12 +170,11 @@ where
     -- all is generated, the final permutation
     if state.pending_generations = 0 then do
       let ⟨hlen⟩ ← requires (state.stack.length = target.length) "working stack does not match target size"
-      let ⟨hbound⟩ ← requires (∀ i, (state.destinationOf i).isSome) "unmapped source slots"
+      let ⟨hbound⟩ ← requires (∀ i, (state.mapping.destinationOf i).isSome) "unmapped source slots"
 
       -- every slot goes to the offset it is bound for
       let ⟨res, trace⟩ ←
-        (Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hlen hbound)).mapError
-          (ε' := Error) fun (.Blocked excess) => .blocked excess
+        Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hlen hbound)
       return ⟨res, state.trace.concat trace⟩
 
     -- a target offset that needs something DUPed urgently before it goes out of dup reach
@@ -322,7 +182,7 @@ where
     for offset in [targetOffset : target.length] do -- going bottom-up so we can start from targetOffset
 
       -- only offsets no slot is bound for yet (ie that need to be duped) can be urgent
-      if (state.positionOf (← index target.length offset)).isSome then
+      if (state.mapping.positionOf (← index target.length offset)).isSome then
         continue
 
       let slot ← slotAt target offset
@@ -331,7 +191,7 @@ where
 
       if let some sourceCopy := state.stack.shallowestCopyPosition slot then
         if ¬ state.stack.isDupReachable sourceCopy then
-          throw (.blocked ((state.depthOf sourceCopy) - MAX_DUP_DEPTH))
+          throw (← state.blockDupUnreachable sourceCopy)
         -- a copy sitting at the offset being filled floats to the top when it is, so no hurry
         if (state.depthOf sourceCopy) = MAX_DUP_DEPTH ∧ sourceCopy.val ≠ targetOffset ∧ urgentToDup.isNone then
           urgentToDup := some offset
@@ -352,7 +212,7 @@ where
        sourceTop > targetOffset ∧ -- the new top sits above the current targetOffset
        sourceTop < target.length -- the new top is in the target offset range
       then
-      if (state.positionOf (← index target.length sourceTop)).isNone ∧ -- no slot is bound for the offset at the source top yet
+      if (state.mapping.positionOf (← index target.length sourceTop)).isNone ∧ -- no slot is bound for the offset at the source top yet
          sourceTop - targetOffset < MAX_SWAP_DEPTH -- targetOffset stays in swap reach
       then
         -- we generate the slot demanded at source top
@@ -361,7 +221,7 @@ where
         return ← loop targetOffset next
 
     -- a slot is bound for the target: retained or generated already
-    if let some boundForTarget := state.positionOf (← index target.length targetOffset) then
+    if let some boundForTarget := state.mapping.positionOf (← index target.length targetOffset) then
 
       -- We go bottom-up, so the slot that should go into targetOffset is somewhere above
       -- Any equal slot that is not in place will do the trick: the one at `targetOffset` itself, else the shallowest one
@@ -397,7 +257,7 @@ where
       -- if `pos` is not already at the top of the stack, swap it up
       if pos ≠ state.stack.length - 1 then
         if ¬ (state.isSwapReachable (← index state.stack.length pos)) then
-          throw (.blocked (state.depthOf (← index state.stack.length pos) - MAX_SWAP_DEPTH)) -- bail
+          throw (← state.blockSwapUnreachable (← index state.stack.length pos)) -- bail
         state ← state.swapWith pos
     else
       -- the slot needs to be DUPed
@@ -411,7 +271,7 @@ where
     _ ← requires (¬ state.isFinal (← index state.stack.length targetOffset)) "target slot is already final"
     if targetOffset ≠ state.stack.length - 1 then
       if ¬ (state.isSwapReachable (← index state.stack.length targetOffset)) then
-        throw (.blocked ((state.depthOf (← index state.stack.length targetOffset)) - MAX_SWAP_DEPTH))
+        throw (← state.blockSwapUnreachable (← index state.stack.length targetOffset))
       state ← state.swapWith targetOffset
 
     return ← loop (targetOffset + 1) state
@@ -519,4 +379,4 @@ def StaticSuccess (initial : State source target spills) : Prop :=
       Success.CyclesReady initial (Success.generationEnd initial)
     else Success.BoundarySafe initial)
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

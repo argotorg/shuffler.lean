@@ -3,3 +3,5 @@ import Shuffler.Mapping
 import Shuffler.BuildBottomUp.Theorems
 import Shuffler.BuildMapping.Theorems
 import Shuffler.CostModel
+import Shuffler.RemoveSurplus.Theorems
+import Shuffler.Resolve.Theorems

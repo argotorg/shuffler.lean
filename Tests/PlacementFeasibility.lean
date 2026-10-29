@@ -133,7 +133,7 @@ private def assignment : Mapping 17 18 where
     · simp only [false_iff, Option.some.injEq, Fin.ext_iff]
       omega
 
-private def literalState : Shuffler.BuildBottomUp.State literalSource literalTarget ∅ where
+private def literalState : Shuffler.Emission.State literalSource literalTarget ∅ where
   planned_mapping := by simpa [literalSource, literalTarget] using assignment
   stack := literalSource
   trace := .Lit literalSource
@@ -154,7 +154,7 @@ private def finishLiteral : Trace ∅ literalSource literalTarget :=
 example : CanPlace ∅ literalSource literalTarget {.Lit 1} :=
   ⟨finishLiteral, True.intro, rfl⟩
 
-example : (Shuffler.BuildBottomUp.buildBottomUp literalState literalState_valid).map
-    (fun result => result.1) = .error (.blocked 1) := by native_decide
+example : (Shuffler.Emission.buildBottomUp literalState literalState_valid).map
+    (fun result => result.1) = .error (.Blocked ⟨0, 1⟩) := by native_decide
 
 end PlacementFeasibilityTests

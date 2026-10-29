@@ -51,7 +51,7 @@ def permute
       if ht : perm top ≠ top
       then
         let idx : ℕ := (perm top).rev.val
-        if hdepth : idx > MAX_SWAP_DEPTH then .error (.Blocked (idx - MAX_SWAP_DEPTH))
+        if hdepth : idx > MAX_SWAP_DEPTH then .error (.Blocked ⟨(perm top).val, idx - MAX_SWAP_DEPTH⟩)
         else
           -- We want to swap the top element into position `perm[top]`. But `Trace.Swap`
           -- is parameterised by depth below the top, not an absolute index: it swaps
@@ -93,7 +93,7 @@ def permute
         -- swap top with pos
         | some ⟨pos, hpos⟩ =>
           let idx : ℕ := pos.rev.val
-          if hdepth : idx > MAX_SWAP_DEPTH then .error (.Blocked (idx - MAX_SWAP_DEPTH))
+          if hdepth : idx > MAX_SWAP_DEPTH then .error (.Blocked ⟨pos.val, idx - MAX_SWAP_DEPTH⟩)
           else
 
             -- `top` is a fixed point, so the out-of-place `pos` is strictly below it

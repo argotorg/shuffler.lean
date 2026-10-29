@@ -2,7 +2,7 @@ import Shuffler.BuildBottomUp.Defs
 import Tests.BuildBottomUpObservations
 
 namespace BuildBottomUpCheckedTests
-open Shuffler.BuildBottomUp BuildBottomUpTestSupport
+open Shuffler.Emission BuildBottomUpTestSupport
 
 set_option maxRecDepth 16384
 
@@ -80,7 +80,7 @@ example : { boundState with mapping := ⊥ }.swapWith 0 =
 example : boundState.isFinal ⟨0, by decide⟩ := by decide
 example : ¬ { boundState with mapping := ⊥ }.isFinal ⟨0, by decide⟩ := by decide
 
-private def observeState (result : Except Error (State source target spills)) :=
+private def observeState (result : Except ShuffleErr (State source target spills)) :=
   observe (result.map fun state => ⟨state.stack, state.trace⟩)
 
 example : observeState ((emptyState [.Lit 1] ∅).push (.Lit 1) 0) =
@@ -125,23 +125,23 @@ example : (copyState 16).dup 0 0 =
     .error (.assertion "Stack too deep") := rfl
 example : boundState.dup 0 0 =
     .error (.assertion "destination already bound to a slot") := rfl
-example : (copyState 16).produce 0 = .error (.blocked 1) := rfl
+example : (copyState 16).produce 0 = .error (.Blocked ⟨0, 1⟩) := rfl
 
 -- A reachable copy takes priority over a spill load, including at DUP16.
 example : observeState ((copyState 15 {⟨37⟩}).produce 0) =
     .ok ((copyState 15).stack ++ [.Var ⟨37⟩], [.dup 16]) := rfl
 example : ((copyState 15 {⟨37⟩}).produce 0).map
-    (fun next => ((next.positionOf ⟨0, by simp⟩).map Fin.val, next.pending_generations)) = .ok (some 16, 16) := rfl
+    (fun next => ((next.mapping.positionOf ⟨0, by simp⟩).map Fin.val, next.pending_generations)) = .ok (some 16, 16) := rfl
 -- Beyond DUP reach, a spill load succeeds and binds the new top.
 example : observeState ((copyState 16 {⟨37⟩}).produce 0) =
     .ok ((copyState 16).stack ++ [.Var ⟨37⟩], [.load ⟨37⟩]) := rfl
 example : ((copyState 16 {⟨37⟩}).produce 0).map
-    (fun next => ((next.positionOf ⟨0, by simp⟩).map Fin.val, next.pending_generations)) = .ok (some 17, 17) := rfl
+    (fun next => ((next.mapping.positionOf ⟨0, by simp⟩).map Fin.val, next.pending_generations)) = .ok (some 17, 17) := rfl
 -- Literal and junk production also bind the top and decrement exactly once.
 example : ((emptyState [.Lit 1] ∅).produce 0).map
-    (fun next => ((next.positionOf ⟨0, by simp⟩).map Fin.val, next.pending_generations)) = .ok (some 0, 0) := rfl
+    (fun next => ((next.mapping.positionOf ⟨0, by simp⟩).map Fin.val, next.pending_generations)) = .ok (some 0, 0) := rfl
 example : ((emptyState [.Wildcard] ∅).produce 0).map
-    (fun next => ((next.positionOf ⟨0, by simp⟩).map Fin.val, next.pending_generations)) = .ok (some 0, 0) := rfl
+    (fun next => ((next.mapping.positionOf ⟨0, by simp⟩).map Fin.val, next.pending_generations)) = .ok (some 0, 0) := rfl
 
 -- DUP checks offsets against the current stack, including an empty stack.
 example : (emptyState [.Lit 1] ∅).dup 0 0 =
@@ -154,14 +154,14 @@ example : boundState.dup 2 0 =
 -- The second action sees the first action's stack, mapping, and pending count.
 example : (((State.generate · 0) >=> (State.generate · 1)) (emptyState [.Lit 1, .Lit 1] ∅)).map
       (fun (next : State [] [.Lit 1, .Lit 1] ∅) => (next.stack, operations next.trace,
-        (next.positionOf ⟨0, by decide⟩).map Fin.val,
-        (next.positionOf ⟨1, by decide⟩).map Fin.val, next.pending_generations)) =
+        (next.mapping.positionOf ⟨0, by decide⟩).map Fin.val,
+        (next.mapping.positionOf ⟨1, by decide⟩).map Fin.val, next.pending_generations)) =
     .ok ([.Lit 1, .Lit 1], [.push (.Lit 1), .dup 1], some 0, some 1, 0) := rfl
 
 -- A failed action stops the sequence and returns no state.
 example : ((·.generate 0) >=> (·.generate 0) >=> (·.generate 2)) (emptyState [.Lit 1, .Lit 1] ∅) =
     .error (.assertion "destination already bound to a slot") := rfl
-example : ((·.produce 0) >=> (·.generate 100)) (copyState 16) = .error (.blocked 1) := rfl
+example : ((·.produce 0) >=> (·.generate 100)) (copyState 16) = .error (.Blocked ⟨0, 1⟩) := rfl
 
 -- A blocked source found later in the scan must override an earlier urgent copy.
 -- This guards against changing the urgent search to an early-return find.
@@ -182,7 +182,7 @@ private def urgentThenBlocked : State
   mapping := by simpa using shiftTwo 17
   pending_generations := 2
 
-example : observe (buildBottomUp urgentThenBlocked ⟨by decide, by decide, by decide⟩) = .error (.blocked 1) := by
+example : observe (buildBottomUp urgentThenBlocked ⟨by decide, by decide, by decide⟩) = .error (.Blocked ⟨0, 1⟩) := by
   native_decide
 
 example : observe (buildBottomUp boundState ⟨by decide, by decide, by decide⟩) =

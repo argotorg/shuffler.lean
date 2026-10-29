@@ -4,20 +4,20 @@ open Std.WP
 
 set_option experimental.vcgen true
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
-def NoBlocked (result : Except Error α) : Prop :=
+def NoBlocked (result : Except ShuffleErr α) : Prop :=
   match result with
-  | .error (.blocked _) => False
+  | .error (.Blocked _) => False
   | _ => True
 
-def noBlockedErrors : Error → Prop :=
-  fun | .blocked _ => False | .assertion _ => True
+def noBlockedErrors : ShuffleErr → Prop :=
+  fun | .Blocked _ => False | .assertion _ => True
 
-def Succeeds (result : Except Error α) (post : α → Prop) : Prop :=
+def Succeeds (result : Except ShuffleErr α) (post : α → Prop) : Prop :=
   ∃ value, result = .ok value ∧ post value
 
-theorem Succeeds.of_triple (result : Except Error α) (post : α → Prop)
+theorem Succeeds.of_triple (result : Except ShuffleErr α) (post : α → Prop)
     (h : ⦃True⦄ result ⦃post⦄) : Succeeds result post := by
   have hp := h.le_wp trivial
   cases result with
@@ -25,29 +25,29 @@ theorem Succeeds.of_triple (result : Except Error α) (post : α → Prop)
   | error err => simp [wp, WP.wpTrans] at hp
 
 -- A triple under `noBlockedErrors` excludes blocked errors.
-theorem noBlocked_of_triple {result : Except Error α}
+theorem noBlocked_of_triple {result : Except ShuffleErr α}
     (h : ⦃True⦄ result ⦃fun _ => True; noBlockedErrors⦄) : NoBlocked result := by
   have hp := h.le_wp trivial
   cases result with
   | ok value => trivial
   | error err => cases err with
-    | blocked excess => exact False.elim hp
+    | Blocked blocked => exact False.elim hp
     | assertion reason => trivial
 
-theorem Spec.success {result : Except Error α} {post : α → Prop}
+theorem Spec.success {result : Except ShuffleErr α} {post : α → Prop}
     (h : Spec result post) (hn : NoBlocked result) : Succeeds result post := by
   cases result with
   | ok value => exact ⟨value, rfl, h⟩
   | error err => cases err <;> contradiction
 
-theorem Succeeds.bind {result : Except Error α} {pre : α → Prop} {next : α → Except Error β}
+theorem Succeeds.bind {result : Except ShuffleErr α} {pre : α → Prop} {next : α → Except ShuffleErr β}
     {post : β → Prop} (h : Succeeds result pre)
     (step : ∀ value, pre value → Succeeds (next value) post) :
     Succeeds (result >>= next) post := by
   obtain ⟨value, rfl, hv⟩ := h
   exact step value hv
 
-theorem Succeeds.mono {result : Except Error α} {pre post : α → Prop}
+theorem Succeeds.mono {result : Except ShuffleErr α} {pre post : α → Prop}
     (h : Succeeds result pre) (step : ∀ value, pre value → post value) : Succeeds result post := by
   obtain ⟨value, heq, hv⟩ := h
   exact ⟨value, heq, step value hv⟩
@@ -71,7 +71,8 @@ theorem generate_noBlocked (state : State source target spills) (dest : Fin targ
   have hfilter := h.filtered dest
   apply noBlocked_of_triple
   vcgen [State.generate, State.produce, State.push, State.dup, State.swapDestinations,
-    State.swapWith, requires, index, slotAt, State.isSwapReachable, State.depthOf]
+    State.swapWith, State.blockDupUnreachable, State.block, requires, index, slotAt,
+    State.isSwapReachable, State.depthOf]
   all_goals simp_all [noBlockedErrors]
 
 theorem generate_success (state : State source target spills) (dest : Fin target.length)
@@ -181,4 +182,4 @@ theorem State.invariant.swap_bound_success {state : State source target spills} 
   apply (next.isFinal_of_bound_val_iff dest _ htop).not.mpr
   omega
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

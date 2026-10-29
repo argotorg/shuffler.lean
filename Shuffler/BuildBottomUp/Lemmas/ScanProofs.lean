@@ -1,10 +1,11 @@
-import Shuffler.BuildBottomUp.Lemmas.Contracts
+import Shuffler.BuildBottomUp.Defs
+import Shuffler.Emission.Lemmas
 
 open Std.WP
 
 set_option experimental.vcgen true
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 theorem range_offset_lt
     (h : List.range' start (stop - start) = pref ++ offset :: suff) : offset < stop := by
@@ -18,23 +19,23 @@ theorem copy_offset_lt
   exact List.mem_range.mp (List.mem_reverse.mp (List.mem_of_mem_take hmem))
 
 def UrgentChoice (state : State source target spills) (choice : Option ℕ) : Prop :=
-  ∀ offset, choice = some offset → ∃ h : offset < target.length, state.positionOf ⟨offset, h⟩ = none
+  ∀ offset, choice = some offset → ∃ h : offset < target.length, state.mapping.positionOf ⟨offset, h⟩ = none
 
 @[spec] theorem urgentScan_triple (cursor : ℕ) (state : State source target spills) :
     ⦃True⦄ (do
       let mut urgent := none
       for offset in [cursor : target.length] do
-        if (state.positionOf (← index target.length offset)).isSome then
+        if (state.mapping.positionOf (← index target.length offset)).isSome then
           continue
         let slot ← slotAt target offset
         if slot.is_junk ∨ slot.can_be_freely_generated ∨ spills.is_spilled slot then
           continue
         if let some copy := state.stack.shallowestCopyPosition slot then
           if ¬ state.stack.isDupReachable copy then
-            throw (.blocked ((state.depthOf copy) - MAX_DUP_DEPTH))
+            throw (← state.blockDupUnreachable copy)
           if (state.depthOf copy) = MAX_DUP_DEPTH ∧ copy.val ≠ cursor ∧ urgent.isNone then
             urgent := some offset
-      return urgent : Except Error (Option ℕ))
+      return urgent : Except ShuffleErr (Option ℕ))
     ⦃fun urgent => UrgentChoice state urgent; allowedErrors⦄ := by
   simp only [Std.Legacy.Range.forIn_eq_forIn_range']
   vcgen invariants
@@ -56,7 +57,7 @@ def Chosen (state : State source target spills) (copy : Fin state.stack.length) 
         if (← slotAt state.stack candidate) = (← slotAt state.stack copy) ∧ ¬ state.isFinal (← index state.stack.length candidate) then
           pos := candidate
           break
-      return pos : Except Error ℕ)
+      return pos : Except ShuffleErr ℕ)
     ⦃fun pos => Chosen state copy pos; allowedErrors⦄ := by
   vcgen invariants
   · fun _ _ pos => Chosen state copy pos
@@ -65,4 +66,4 @@ def Chosen (state : State source target spills) (copy : Fin state.stack.length) 
     | exact copy_offset_lt (by assumption)
     | exact ⟨⟨_, copy_offset_lt (by assumption)⟩, rfl, (by symm; assumption), (by subst_vars; tauto)⟩
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

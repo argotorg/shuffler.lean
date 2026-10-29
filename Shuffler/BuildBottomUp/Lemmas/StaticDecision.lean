@@ -1,6 +1,6 @@
 import Shuffler.BuildBottomUp.Lemmas.StaticData
 
-namespace Shuffler.BuildBottomUp.Success
+namespace Shuffler.Emission.Success
 
 instance (initial : State source target spills) (cursor : Nat) (value : Value) :
     Decidable (NeedsCopy initial cursor value) := by
@@ -39,12 +39,12 @@ instance (initial : State source target spills) : Decidable (BoundarySafe initia
         ¬NeedsCopy initial (boundary initial) value ∨ 2 ≤ copies initial (boundary initial) value)
       ⟨fun hs v he => he ▸ hs, fun hs => hs value rfl⟩
 
-end Shuffler.BuildBottomUp.Success
+end Shuffler.Emission.Success
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 instance (initial : State source target spills) : Decidable (StaticSuccess initial) := by
   unfold StaticSuccess
   infer_instance
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

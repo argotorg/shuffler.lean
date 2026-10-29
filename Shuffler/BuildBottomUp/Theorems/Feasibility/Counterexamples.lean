@@ -13,7 +13,7 @@ Reserve holds, and the stated trace reaches the exact target without POP.
 1. Fix an existing value before growth.
    Source: [0×16, 1]. Target: [1, 0×16, 1]. Missing: [1].
    Map source i to target i+1, leaving target 0 unbound.
-   BBU returns `.blocked 1`: it first uses DUP1 for the unbound target 0.
+   BBU returns `.Blocked ⟨0, 1⟩`: it first uses DUP1 for the unbound target 0.
    Growth puts the bottom zero beyond SWAP reach, so that position cannot
    then become 1. A valid trace is `SWAP16; PUSH 1`. It assigns the existing
    1 to target 0 and the new 1 to the top instead.
@@ -23,14 +23,14 @@ Reserve holds, and the stated trace reaches the exact target without POP.
    Source: [x, 0×16]. Target: [0×16, x, x]. Missing: [x].
    Map source 0 to target 16, source 16 to target 0, and each source i to
    target i for 1≤i≤15. Target 17 is unbound.
-   BBU returns `.blocked 1`: its initial scan rejects the sole x at depth
+   BBU returns `.Blocked ⟨0, 1⟩`: its initial scan rejects the sole x at depth
    16 before trying a swap. A valid trace is `SWAP16; DUP1`. This trace also
    respects the original occurrence assignments.
 
 3. Avoid moving equal values only to satisfy occurrence assignments.
    Source and target: [0×18]. Missing: [].
    Map source 0 to target 17 and source 17 to target 0; leave other indices
-   fixed. BBU returns `.blocked 1` while trying to realize that permutation.
+   fixed. BBU returns `.Blocked ⟨0, 1⟩` while trying to realize that permutation.
    The bottom occurrence is outside SWAP reach. The empty trace already
    reaches the exact target because every value is zero.
 
@@ -38,11 +38,11 @@ Reserve holds, and the stated trace reaches the exact target without POP.
    Source: [0, x, 0×15]. Target: [0, x, 0, x, 0×15]. Missing: [0, x].
    Map source i to target i+2, leaving targets 0 and 1 unbound.
    The sole x starts at depth 15, within DUP reach. BBU fills the earlier
-   free hole first, then returns `.blocked 1` after x leaves DUP reach.
+   free hole first, then returns `.Blocked ⟨1, 1⟩` after x leaves DUP reach.
    A valid trace is `DUP16; PUSH 0; SWAP1; SWAP15`.
 -/
 
-open Shuffler.Placement Shuffler.BuildBottomUp
+open Shuffler.Placement Shuffler.Emission
 
 set_option maxRecDepth 16384
 
@@ -93,7 +93,7 @@ private def literalState : State literalSource literalTarget ∅ where
 private theorem literalState_valid : literalState.Valid := ⟨by decide, by decide, by decide⟩
 example : ∀ i j, literalState.mapping i = some j → literalState.stack[i] = literalTarget[j] := by decide
 #guard decide ((buildBottomUp literalState literalState_valid).map (fun result => result.1) =
-    .error (.blocked 1))
+    .error (.Blocked ⟨0, 1⟩))
 example : Reserve ∅ literalSource literalTarget {one} := by decide
 
 private def literalSwapped : Trace ∅ literalSource ([one] ++ List.replicate 16 zero) :=
@@ -117,7 +117,7 @@ private def seedState : State seedSource seedTarget ∅ where
 private theorem seedState_valid : seedState.Valid := ⟨by decide, by decide, by decide⟩
 example : ∀ i j, seedState.mapping i = some j → seedState.stack[i] = seedTarget[j] := by decide
 #guard decide ((buildBottomUp seedState seedState_valid).map (fun result => result.1) =
-    .error (.blocked 1))
+    .error (.Blocked ⟨0, 1⟩))
 example : Reserve ∅ seedSource seedTarget {a} := by decide
 
 private def seedSwapped : Trace ∅ seedSource (List.replicate 16 zero ++ [a]) :=
@@ -139,7 +139,7 @@ private def equalState : State equalSource equalSource ∅ where
 
 private theorem equalState_valid : equalState.Valid := ⟨by decide, by decide, by decide⟩
 #guard decide ((buildBottomUp equalState equalState_valid).map (fun result => result.1) =
-    .error (.blocked 1))
+    .error (.Blocked ⟨0, 1⟩))
 example : Reserve ∅ equalSource equalSource 0 := by decide
 
 private def equalTrace : Trace ∅ equalSource equalSource := .Lit equalSource
@@ -160,7 +160,7 @@ private theorem hiddenState_valid : hiddenState.Valid := ⟨by decide, by decide
 example : ∀ i j, hiddenState.mapping i = some j → hiddenState.stack[i] = hiddenTarget[j] := by decide
 example : Shuffler.Generate.Ready ∅ hiddenSource [zero, a] := by decide
 #guard decide ((buildBottomUp hiddenState hiddenState_valid).map (fun result => result.1) =
-    .error (.blocked 1))
+    .error (.Blocked ⟨1, 1⟩))
 example : Reserve ∅ hiddenSource hiddenTarget ({zero} + {a}) := by decide
 
 private def hiddenDuped : Trace ∅ hiddenSource (hiddenSource ++ [a]) :=

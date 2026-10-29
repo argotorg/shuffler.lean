@@ -1,6 +1,6 @@
 import Shuffler.BuildBottomUp.Lemmas.StaticPermutation
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 private theorem permute_success_iff (spills : SpillSet) (stack : Stack)
     (perm : Shuffler.Permute.Permutation stack) :
@@ -9,7 +9,7 @@ private theorem permute_success_iff (spills : SpillSet) (stack : Stack)
   constructor
   · rintro ⟨result, hs⟩
     by_contra hn
-    obtain ⟨_, he, _⟩ := Shuffler.Permute.permute_blocks_unreachable spills stack perm hn
+    obtain ⟨_, _, he, _⟩ := Shuffler.Permute.permute_blocks_unreachable spills stack perm hn
     rw [hs] at he
     contradiction
   · intro hr
@@ -31,7 +31,7 @@ theorem loop_success_iff_permutation (cursor : Nat) (state : State source target
     have hr : state.reachable := by
       intro j hb
       have ht := (Mapping.unmapped_target_slots_eq_zero state.mapping).mp (inv.pending.trans hp)
-      simp only [State.positionOf] at hb
+      simp only [Mapping.positionOf] at hb
       simpa [hb] using ht j
     have hw : state.stack.length - cursor ≤ MAX_SWAP_DEPTH := by omega
     have hperm := inv.permutation_reachable ⟨hw, hr⟩ hlen hsource
@@ -43,13 +43,13 @@ theorem loop_success_iff_permutation (cursor : Nat) (state : State source target
     exact loop_success_iff_permutation (cursor + 1) state (inv.advance hfinal) hp hlen hsource
   rw [skip_unless_final (fun hlt hf => hnfinal ⟨hlt, hf⟩)]
   simp only [hp, ↓reduceIte, requires_of_true _ hlen, except_ok_bind]
-  rw [requires_of_true (∀ i, (state.destinationOf i).isSome) hsource, except_ok_bind]
+  rw [requires_of_true (∀ i, (state.mapping.destinationOf i).isSome) hsource, except_ok_bind]
   rw [← permute_success_iff spills state.stack (state.mapping.toPermutation hlen hsource)]
   cases heq : Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hlen hsource) with
-  | error err => simp [Except.mapError, Succeeds]
+  | error err => simp [Succeeds]
   | ok result =>
     obtain ⟨res, trace⟩ := result
-    simp [Except.mapError, Succeeds]
+    simp [Succeeds]
 termination_by target.length - cursor
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

@@ -17,8 +17,6 @@ inductive CopyLocation : Type where
   | InWildcardSlots
   deriving DecidableEq, Repr
 
-abbrev Byte := Fin (2 ^ 8)
-
 -- source and target never change while the mapping is built, so they are parameters.
 structure MappingBuilder (source target : Stack) where
   dropped : List Byte
@@ -36,7 +34,7 @@ namespace MappingBuilder
 
 -- decides whether a source slot can be mapped to sth, ie. it is not dropped and not already mapped
 def mappable (self : MappingBuilder source target) {n : ℕ} (sourceOffset : Fin n)
-    (h : n ≤ source.length := by omega) : Except Error Bool := do
+    (h : n ≤ source.length := by omega) : Except ShuffleErr Bool := do
   let sourceOffset := sourceOffset.castLE h
   let ⟨_⟩ ← requires (sourceOffset.val < self.dropped.length) "dropped has no entry for the source slot"
   return decide (self.dropped[sourceOffset.val] = 0 ∧ self.mapping sourceOffset = none)
@@ -64,7 +62,7 @@ def absDiff (_self : MappingBuilder source target) (sourceOffset : Fin source.le
 
 -- returns the mappable source slot closest to targetOffset (that is in a wildcardslot location), if any; on ties the shallower one wins
 def closestCopy (self : MappingBuilder source target) (targetOffset : Fin target.length)
-    (location : CopyLocation) : Except Error (Option (Fin source.length)) := do
+    (location : CopyLocation) : Except ShuffleErr (Option (Fin source.length)) := do
   let inWildcardSlots : Bool := location = .InWildcardSlots
   let mut best : Option (Fin source.length) := none
   for i in List.finRange source.length do
@@ -76,7 +74,7 @@ def closestCopy (self : MappingBuilder source target) (targetOffset : Fin target
 -- binds a source slot to a target slot, returning a new mapping builder with the updated mapping
 def map (self : MappingBuilder source target) {n m : ℕ} (sourceOffset : Fin n)
     (targetOffset : Fin m) (hs : n ≤ source.length := by omega)
-    (ht : m ≤ target.length := by omega) : Except Error (MappingBuilder source target) := do
+    (ht : m ≤ target.length := by omega) : Except ShuffleErr (MappingBuilder source target) := do
   let sourceOffset := sourceOffset.castLE hs
   let targetOffset := targetOffset.castLE ht
   _ ← requires (← self.mappable sourceOffset) "source slot is not mappable"
@@ -91,7 +89,7 @@ end MappingBuilder
 ------------------------ buildMapping (in the constructor in shuffler.cpp) ----------------------------------
 
 def buildMapping (source target : Stack) (dropped : List Byte)
-    (wildcardSlotStrategy : WildcardSlotsStrategy) : Except Error (BuildMappingResult source target) := do
+    (wildcardSlotStrategy : WildcardSlotsStrategy) : Except ShuffleErr (BuildMappingResult source target) := do
   let mut mb : MappingBuilder source target := { dropped, mapping := ⊥ }
 
   _ ← requires (dropped.length = source.length) "dropped needs one entry per source slot"

@@ -5,11 +5,11 @@ open Std.WP
 
 set_option experimental.vcgen true
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 def Urgent (cursor : ℕ) (state : State source target spills) (offset : ℕ) : Prop :=
   ∃ h : offset < target.length,
-    state.positionOf ⟨offset, h⟩ = none ∧
+    state.mapping.positionOf ⟨offset, h⟩ = none ∧
     ¬target[offset].can_be_freely_generated ∧ ¬spills.is_spilled target[offset] ∧
     ∃ copy, state.stack.shallowestCopyPosition target[offset] = some copy ∧
       (state.stack.offsetToDepth copy).val = MAX_DUP_DEPTH ∧ copy.val ≠ cursor
@@ -74,7 +74,7 @@ theorem ScanProgress.no_urgent {state : State source target spills}
     have := j.isLt
     exact ⟨j.val - cursor, by omega, by omega⟩
   have hu : Urgent cursor state j.val :=
-    ⟨j.isLt, by simp [State.positionOf, hb], hfree, hspill, copy, hcopy, hdepth, hn⟩
+    ⟨j.isLt, by simp [Mapping.positionOf, hb], hfree, hspill, copy, hcopy, hdepth, hn⟩
   exact Bool.noConfusion (h.covered j.val hm hu)
 
 theorem ScanProgress.ready_none {state : State source target spills}
@@ -120,17 +120,17 @@ theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
     ⦃True⦄ (do
       let mut urgent := none
       for offset in [cursor : target.length] do
-        if (state.positionOf (← index target.length offset)).isSome then
+        if (state.mapping.positionOf (← index target.length offset)).isSome then
           continue
         let slot ← slotAt target offset
         if slot.is_junk ∨ slot.can_be_freely_generated ∨ spills.is_spilled slot then
           continue
         if let some copy := state.stack.shallowestCopyPosition slot then
           if ¬ state.stack.isDupReachable copy then
-            throw (.blocked ((state.depthOf copy) - MAX_DUP_DEPTH))
+            throw (← state.blockDupUnreachable copy)
           if (state.depthOf copy) = MAX_DUP_DEPTH ∧ copy.val ≠ cursor ∧ urgent.isNone then
             urgent := some offset
-      return urgent : Except Error (Option ℕ))
+      return urgent : Except ShuffleErr (Option ℕ))
     ⦃fun urgent =>
       ScanProgress cursor state (List.range' cursor (target.length - cursor)) urgent⦄ := by
   simp only [Std.Legacy.Range.forIn_eq_forIn_range']
@@ -138,7 +138,7 @@ theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
   · fun seen _ urgent => ScanProgress cursor state seen urgent
   all_goals try simp_all
   case vc1 => exact ⟨by simp, by simp⟩
-  case vc10 => exact (not_lt_of_ge (by assumption)) (range_offset_lt (by assumption))
+  case vc12 => exact (not_lt_of_ge (by assumption)) (range_offset_lt (by assumption))
   case vc3 =>
     rename_i hprog hsome
     exact hprog.skip (Or.inl fun ⟨_, hnone, _⟩ => by simp_all)
@@ -149,15 +149,15 @@ theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
     · exact hfree (Value.can_be_freely_generated_of_is_junk _ hjunk)
     · exact hfree hgen
     · exact hspill hgen
-  case vc5 =>
-    rename_i hlt _ copy _ _ hnone hgen hcopy hnreach
+  case vc6 | vc7 =>
+    rename_i hlt _ copy _ _ _ hnone hgen hcopy hnreach _
     obtain ⟨p, hp⟩ := hr.filtered ⟨_, hlt⟩ hnone (by tauto)
     simp [hcopy] at hp
     exact hnreach (hp.1 ▸ hp.2)
-  case vc6 =>
+  case vc8 =>
     rename_i hlt _ copy _ _ hnone hgen hcopy _ hdepth
     exact ScanProgress.select ⟨hlt, hnone, hgen.2.1, hgen.2.2, copy, hcopy, hdepth.1, hdepth.2.1⟩
-  case vc7 =>
+  case vc9 =>
     rename_i choice _ _ copy _ hprog _ _ hcopy _ hnot
     apply hprog.skip
     cases choice with
@@ -168,7 +168,7 @@ theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
       simp only [hcopy, Option.some.injEq] at hc
       subst hc
       exact hnot hd hne rfl
-  case vc8 =>
+  case vc10 =>
     rename_i hprog _ _ hall heq
     exact hprog.skip (Or.inl fun ⟨_, _, _, _, c, hc, _⟩ => hall c (heq.symm.trans hc))
 
@@ -180,7 +180,7 @@ theorem copyScan_success (state : State source target spills) (copy : Fin state.
         if (← slotAt state.stack candidate) = (← slotAt state.stack copy) ∧ ¬ state.isFinal (← index state.stack.length candidate) then
           pos := candidate
           break
-      return pos : Except Error ℕ)
+      return pos : Except ShuffleErr ℕ)
     ⦃fun pos => Chosen state copy pos⦄ := by
   vcgen [slotAt, index] invariants
   · fun _ _ pos => Chosen state copy pos
@@ -189,4 +189,4 @@ theorem copyScan_success (state : State source target spills) (copy : Fin state.
     | exact ⟨⟨_, by assumption⟩, rfl, (by tauto), (by tauto)⟩
     | exact (not_lt_of_ge (by assumption)) (copy_offset_lt (by assumption))
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

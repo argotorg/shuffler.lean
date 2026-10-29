@@ -4,7 +4,7 @@ import Shuffler.BuildBottomUp.Lemmas.StaticGrowth
 import Shuffler.BuildBottomUp.Lemmas.StaticPrefix
 import Shuffler.BuildBottomUp.Lemmas.StaticDeepBound
 
-namespace Shuffler.BuildBottomUp.Success
+namespace Shuffler.Emission.Success
 
 -- One position before the fixed cutoff either advances by equal-value retagging,
 -- or fails because the required value cannot be placed at that depth.
@@ -88,4 +88,4 @@ theorem PrefixState.step {initial state : State source target spills} {h : initi
       exact loop_hole_blocks_of_generate_deep cursor state produced hr hsmall hpending hct hb
         hgenerate hnf current' rfl hbelow hdeep
 
-end Shuffler.BuildBottomUp.Success
+end Shuffler.Emission.Success

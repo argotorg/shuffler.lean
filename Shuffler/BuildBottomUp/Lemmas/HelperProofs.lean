@@ -4,7 +4,7 @@ open Std.WP
 
 set_option experimental.vcgen true
 
-namespace Shuffler.BuildBottomUp
+namespace Shuffler.Emission
 
 -- Effects of adding one bound stack slot.
 structure Growth (state next : State source target spills) (dest : Fin target.length)
@@ -21,8 +21,8 @@ structure Growth (state next : State source target spills) (dest : Fin target.le
 
 theorem Growth.top {state next : State source target spills} {dest : Fin target.length}
     (h : Growth state next dest pending) :
-    (next.positionOf dest).map Fin.val = some (next.stack.length - 1) := by
-  rw [State.positionOf, h.bound, h.size]; simp
+    (next.mapping.positionOf dest).map Fin.val = some (next.stack.length - 1) := by
+  rw [Mapping.positionOf, h.bound, h.size]; simp
 
 theorem Growth.decrement {state next : State source target spills} {dest : Fin target.length}
     (h : Growth state next dest pending) :
@@ -68,7 +68,7 @@ private theorem growth_append (state : State source target spills) (slot : Value
     (hfree : state.mapping.symm dest = none) (hslot : slot = target[dest]) :
     ⦃True⦄ state.push slot dest
     ⦃fun next => Growth state next dest state.pending_generations; allowedErrors⦄ := by
-  vcgen [State.push] <;> simp_all [State.positionOf]
+  vcgen [State.push] <;> simp_all [Mapping.positionOf]
   simpa only [eqRec_eq_cast] using growth_append _ slot dest hfree hslot _
 
 @[spec] theorem dup_spec (state : State source target spills) (copy : Fin state.stack.length)
@@ -76,7 +76,7 @@ private theorem growth_append (state : State source target spills) (slot : Value
     (hfree : state.mapping.symm dest = none) (hslot : state.stack[copy] = target[dest]) :
     ⦃True⦄ state.dup copy.val dest
     ⦃fun next => Growth state next dest state.pending_generations; allowedErrors⦄ := by
-  vcgen [State.dup, index] <;> simp_all [State.positionOf]
+  vcgen [State.dup, index] <;> simp_all [Mapping.positionOf]
   simpa only [eqRec_eq_cast] using growth_append _ _ dest hfree hslot _
 
 @[spec] theorem produce_spec (state : State source target spills) (dest : Fin target.length)
@@ -89,9 +89,14 @@ private theorem growth_append (state : State source target spills) (slot : Value
     | exact Growth.decrement (by assumption)
     | exact Or.inl (Value.can_be_freely_generated_of_is_junk _ (by assumption))
     | simp_all [allowedErrors, State.isAvailable, Option.isSome_iff_exists]
-  all_goals
+  case vc10 =>
     rename_i hcopy
     exact shallowestCopyPosition_value state.stack target[dest.val] _ hcopy.1
+  case vc16 =>
+    rename_i filtered hsome hnone hfilter _
+    intro hreach
+    exact hnone _ (hfilter.symm.trans (Option.filter_eq_some_iff.mpr
+      ⟨(Option.some_get hsome).symm, by simpa using hreach⟩))
 
 structure Generation (state next : State source target spills) (dest : Fin target.length) : Prop where
   stack_eq : next.stack = state.stack ++ [target[dest]] ∨
@@ -109,14 +114,14 @@ structure Generation (state next : State source target spills) (dest : Fin targe
 theorem Growth.generation {state next : State source target spills} {dest : Fin target.length}
     (h : Growth state next dest (state.pending_generations - 1)) : Generation state next dest :=
   ⟨Or.inl h.stack_eq, h.unbound, h.size, h.count, h.pending_eq, h.preserved, h.subset, h.expected,
-    Or.inr (by simpa [State.positionOf, dest.isLt] using h.top)⟩
+    Or.inr (by simpa [Mapping.positionOf, dest.isLt] using h.top)⟩
 
 theorem Growth.generation_swapped {state produced next : State source target spills}
     {dest : Fin target.length} (h : Growth state produced dest (state.pending_generations - 1))
     (hbound : state.mapping.symm dest = none) (pos : Fin produced.stack.length)
     (hpos : pos.val = dest.val) (hs : Swapped produced next pos) : Generation state next dest := by
   have htop : (produced.mapping.symm dest).map Fin.val = some (produced.stack.length - 1) := by
-    simpa [State.positionOf, dest.isLt] using h.top
+    simpa [Mapping.positionOf, dest.isLt] using h.top
   refine ⟨Or.inr ?_, fun j => (hs.unbound j).trans (h.unbound j),
     hs.size.trans h.size, by rw [hs.count]; exact h.count,
     hs.pending.trans h.pending_eq, ?_, (fun _ hi => hs.subset (h.subset hi)), hs.expected.trans h.expected,
@@ -248,4 +253,4 @@ theorem State.invariant.swap_bound {state : State source target spills} {dest : 
   apply (next.isFinal_of_bound_val_iff dest _ htop).not.mpr
   omega
 
-end Shuffler.BuildBottomUp
+end Shuffler.Emission

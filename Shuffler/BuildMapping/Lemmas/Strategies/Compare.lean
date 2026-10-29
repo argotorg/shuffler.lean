@@ -5,11 +5,11 @@ namespace Shuffler.BuildMapping.Strategies
 variable {source target : Stack}
 
 -- Both calls succeed and their results satisfy the relation.
-def Both (left : Except Error α) (right : Except Error β) (post : α → β → Prop) : Prop :=
+def Both (left : Except ShuffleErr α) (right : Except ShuffleErr β) (post : α → β → Prop) : Prop :=
   Succeeds left fun a => Succeeds right (post a)
 
-theorem Both.bind {left : Except Error α} {right : Except Error β} {pre : α → β → Prop}
-    {nextLeft : α → Except Error γ} {nextRight : β → Except Error δ} {post : γ → δ → Prop}
+theorem Both.bind {left : Except ShuffleErr α} {right : Except ShuffleErr β} {pre : α → β → Prop}
+    {nextLeft : α → Except ShuffleErr γ} {nextRight : β → Except ShuffleErr δ} {post : γ → δ → Prop}
     (h : Both left right pre)
     (step : ∀ a b, pre a b → Both (nextLeft a) (nextRight b) post) :
     Both (left >>= nextLeft) (right >>= nextRight) post := by
@@ -19,7 +19,7 @@ theorem Both.bind {left : Except Error α} {right : Except Error β} {pre : α �
   exact step a b hab
 
 theorem Both.forIn (inv : β → γ → Prop) (l : List α) (left : β) (right : γ)
-    (f : α → β → Except Error (ForInStep β)) (g : α → γ → Except Error (ForInStep γ))
+    (f : α → β → Except ShuffleErr (ForInStep β)) (g : α → γ → Except ShuffleErr (ForInStep γ))
     (h : inv left right)
     (step : ∀ a b c, inv b c → Both (f a b) (g a c) fun x y =>
       x = .yield x.value ∧ y = .yield y.value ∧ inv x.value y.value) :
