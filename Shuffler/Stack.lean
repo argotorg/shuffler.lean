@@ -52,7 +52,6 @@ def Value.can_be_freely_generated : Value → Prop
 instance (v : Value) : Decidable v.can_be_freely_generated := by
   cases v <;> unfold Value.can_be_freely_generated <;> infer_instance
 
--- Function return labels are not modelled yet
 def Value.isFunctionReturnLabel : Value → Prop
 | FunctionReturnLabel => True
 | _ => False
@@ -93,12 +92,16 @@ def Stack.isSwapReachable (stack : Stack) (pos : Fin stack.length) : Prop :=
 instance (stack : Stack) (pos : Fin stack.length) : Decidable (stack.isSwapReachable pos) :=
   by unfold Stack.isSwapReachable; infer_instance
 
-lemma dup_stack_eq (stack : Stack) (copy : Fin stack.length) :
-    stack ++ [stack[stack.length - ((stack.offsetToDepth copy).val + 1)]] =
-      stack ++ [stack[copy]] := by
+lemma dup_slot_eq (stack : Stack) (copy : Fin stack.length) :
+    stack[stack.length - ((stack.offsetToDepth copy).val + 1)] = stack[copy] := by
   have hcopy : stack.length - ((stack.offsetToDepth copy).val + 1) = copy.val := by
     dsimp [Stack.offsetToDepth]; omega
-  exact congrArg (fun slot => stack ++ [slot]) (getElem_congr_idx hcopy)
+  exact getElem_congr_idx hcopy
+
+lemma dup_stack_eq (stack : Stack) (copy : Fin stack.length) :
+    stack ++ [stack[stack.length - ((stack.offsetToDepth copy).val + 1)]] =
+      stack ++ [stack[copy]] :=
+  congrArg (fun slot => stack ++ [slot]) (dup_slot_eq stack copy)
 
 lemma swap_stack_eq (stack : Stack) (pos : Fin stack.length) :
     stack.swap (stack.length - 1) (stack.length - 1 - (stack.offsetToDepth pos).val) =

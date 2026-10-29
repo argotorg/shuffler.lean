@@ -34,6 +34,9 @@ def run (source target : Stack) (mapping : Mapping source.length target.length)
   let ⟨hpending⟩ ← requires (state.mapping.unmapped_target_slots = state.pending_generations)
     "pending generations must count unmapped target slots"
   let ⟨havailable⟩ ← requires (∀ i, state.isAvailable i) "target slot is unavailable"
-  buildBottomUp state ⟨hsize, hpending, havailable⟩
+  let ⟨hlabels⟩ ← requires (∀ j : Fin target.length,
+    (target[j.val]'j.isLt).isFunctionReturnLabel → (state.mapping.symm j).isSome)
+    "function return label has no bound source"
+  buildBottomUp state ⟨hsize, hpending, havailable, hlabels⟩
 
 end Shuffler.Emission

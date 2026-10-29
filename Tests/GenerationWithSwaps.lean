@@ -1,3 +1,6 @@
+module
+
+public meta import Shuffler.BuildBottomUp.Theorems.Feasibility
 import Shuffler.BuildBottomUp.Theorems.Feasibility
 
 open Shuffler.Generate.WithSwaps
@@ -34,7 +37,7 @@ private def moveSeed : Trace ∅ atDepth16 moved :=
   .Swap 16 (by decide) (by decide) (by decide) (.Lit atDepth16)
 
 private def copySeed : Trace ∅ atDepth16 copied :=
-  .Dup 1 (by decide) (by decide) (by decide) moveSeed
+  .Dup 1 (by decide) (by decide) (by decide) (by decide) moveSeed
 
 -- This witness executes the production SWAP16 and DUP1 constructors.
 example : CanGenerate ∅ atDepth16 {a} :=
@@ -68,3 +71,9 @@ example : CanGenerate ∅ atDepth16 (List.replicate 40 a : Multiset Value) :=
   (canGenerate_iff_ready _ _ _).mpr (by decide)
 
 end GenerationWithSwapsTests
+
+-- SWAP cannot make a return label available for an additional copy.
+example : ¬Shuffler.Generate.WithSwaps.Ready ∅ [.FunctionReturnLabel] {.FunctionReturnLabel} := by decide
+example : ¬Shuffler.Generate.WithSwaps.CanGenerate ∅ [.FunctionReturnLabel] {.FunctionReturnLabel} := by
+  rw [Shuffler.Generate.WithSwaps.canGenerate_iff_ready]
+  decide

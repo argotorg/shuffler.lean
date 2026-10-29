@@ -15,7 +15,7 @@ private def newTopState : State [.Lit 10, .Lit 20] [.Lit 20, .Lit 10, .Lit 7] �
   pending_generations := 1
 
 example :
-    (((((buildBottomUp newTopState ⟨by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+    (((((buildBottomUp newTopState ⟨by decide, by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
       if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
       pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).toOption.map
         (fun result => result.1) = some [.Lit 20, .Lit 10, .Lit 7] := by
@@ -49,7 +49,7 @@ example : (List.ofFn fun i => decide (urgentState.isFinal i)).take 3 = [true, tr
   decide
 
 example :
-    (((((buildBottomUp urgentState ⟨by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+    (((((buildBottomUp urgentState ⟨by decide, by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
       if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
       pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).toOption.map
         (fun result => result.1) = some urgentTarget := by

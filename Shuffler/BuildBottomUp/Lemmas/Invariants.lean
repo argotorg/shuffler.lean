@@ -105,11 +105,28 @@ theorem State.invariant.pending {state : State source target spills} (h : state.
 theorem State.invariant.available {state : State source target spills} (h : state.invariant cursor) :
     ∀ i, state.isAvailable i := h.valid.available
 
+theorem State.Valid.not_label_of_unbound {state : State source target spills}
+    (h : state.Valid) (dest : Fin target.length) (hb : state.mapping.symm dest = none) :
+    ¬ target[dest].isFunctionReturnLabel := by
+  intro hl
+  have hs := h.labels_bound dest hl
+  simp [hb] at hs
+
+theorem State.invariant.labels_bound {state : State source target spills}
+    (h : state.invariant cursor) :
+    ∀ j, target[j].isFunctionReturnLabel → (state.mapping.symm j).isSome := h.valid.labels_bound
+
+theorem State.invariant.not_label_of_unbound {state : State source target spills}
+    (h : state.invariant cursor) (dest : Fin target.length) (hb : state.mapping.symm dest = none) :
+    ¬ target[dest].isFunctionReturnLabel := h.valid.not_label_of_unbound dest hb
+
 theorem State.invariant.of {state : State source target spills} (processed : state.processed cursor)
     (size : state.stack.length + state.pending_generations = target.length)
     (pending : state.mapping.unmapped_target_slots = state.pending_generations)
-    (available : ∀ i, state.isAvailable i) : state.invariant cursor :=
-  ⟨⟨size, pending, available⟩, processed⟩
+    (available : ∀ i, state.isAvailable i)
+    (labels_bound : ∀ j, target[j].isFunctionReturnLabel → (state.mapping.symm j).isSome) :
+    state.invariant cursor :=
+  ⟨⟨size, pending, available, labels_bound⟩, processed⟩
 
 theorem State.invariant.initial {state : State source target spills} (h : state.Valid) :
     state.invariant 0 :=
@@ -139,7 +156,7 @@ theorem State.processed.bound_ge {state : State source target spills}
 theorem State.invariant.advance {state : State source target spills}
     (h : state.invariant cursor) (hfinal : ∃ h, state.isFinal ⟨cursor, h⟩) :
     state.invariant (cursor + 1) :=
-  .of (h.processed.advance hfinal) h.size h.pending h.available
+  .of (h.processed.advance hfinal) h.size h.pending h.available h.labels_bound
 
 theorem State.invariant.cursor_le_length {state : State source target spills}
     (h : state.invariant cursor) (hlt : cursor < target.length) :
@@ -162,12 +179,14 @@ theorem State.invariant.retag {state : State source target spills}
     (ha : cursor ≤ a.val) (hb : cursor ≤ b.val) :
     State.invariant cursor
       { state with mapping := state.mapping.swapDestinations a b } := by
-  refine .of ?_ h.size ?_ h.available
+  refine .of ?_ h.size ?_ h.available ?_
   · intro i hi
     exact (State.exists_isFinal_iff _ _).mpr (by
       simpa only [i.isLt, dite_true, Fin.eta] using
         state.swapDestinations_isFinal a b i (h.processed i hi) (by omega) (by omega))
   · simpa using h.pending
+  · intro j hj
+    simpa [Mapping.swapDestinations_symm_apply] using h.labels_bound j hj
 
 
 theorem State.invariant.complete_size {state : State source target spills}

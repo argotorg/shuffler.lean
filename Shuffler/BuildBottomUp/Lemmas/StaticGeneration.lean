@@ -60,11 +60,12 @@ theorem produce_noBlocked (state : State source target spills) (dest : Fin targe
   all_goals contradiction
 
 theorem produce_success_exact (state : State source target spills) (dest : Fin target.length)
-    (hb : state.mapping.symm dest = none) (ha : state.isAvailable dest) (hr : state.reachable) :
+    (hb : state.mapping.symm dest = none) (ha : state.isAvailable dest) (hr : state.reachable)
+    (hlabel : ¬ target[dest].isFunctionReturnLabel) :
     ∃ next, (((state.produce dest) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
       if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) = .ok next ∧
       Growth state next dest (state.pending_generations - 1) ∧ ProducedMapping state next dest := by
-  obtain ⟨next, he, hg⟩ := ((spec_iff_triple _ _).mpr (produce_spec state dest hb ha)).success
+  obtain ⟨next, he, hg⟩ := ((spec_iff_triple _ _).mpr (produce_spec state dest hb ha hlabel)).success
     (produce_noBlocked state dest hb hr)
   have hm := post_of_triple_ok (produce_mapping state dest) he
   exact ⟨next, he, hg, hm⟩

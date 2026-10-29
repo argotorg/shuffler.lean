@@ -14,8 +14,10 @@ abbrev retagged (state : State source target spills) (a b : Fin state.stack.leng
 
 theorem retagged_valid (state : State source target spills) (h : state.Valid)
     (a b : Fin state.stack.length) : (retagged state a b).Valid := by
-  refine ⟨h.size, ?_, h.available⟩
-  simpa [retagged] using h.pending
+  refine ⟨h.size, ?_, h.available, ?_⟩
+  · simpa [retagged] using h.pending
+  · intro j hj
+    simpa [retagged, Mapping.swapDestinations_symm_apply] using h.labels_bound j hj
 
 @[simp] theorem holes_retagged (state : State source target spills)
     (a b : Fin state.stack.length) : holes (retagged state a b) = holes state := by

@@ -87,10 +87,10 @@ theorem generate_noBlocked (state : State source target spills) (dest : Fin targ
 
 theorem generate_success (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest)
-    (h : state.reachable) :
+    (h : state.reachable) (hlabel : ¬ target[dest].isFunctionReturnLabel) :
     Succeeds ((((state.generate dest.val) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
       if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) (fun next => Generation state next dest) :=
-  (generate_contract state dest hbound havailable).success (generate_noBlocked state dest hbound h)
+  (generate_contract state dest hbound havailable hlabel).success (generate_noBlocked state dest hbound h)
 
 theorem Growth.final_swapped {state produced next : State source target spills}
     {dest : Fin target.length} (h : Growth state produced dest pending)
@@ -122,7 +122,8 @@ theorem Growth.swap_reachable {state produced : State source target spills}
 theorem generate_final (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest)
     (hle : dest.val ≤ state.stack.length)
-    (hreach : state.stack.length - dest.val ≤ MAX_SWAP_DEPTH) :
+    (hreach : state.stack.length - dest.val ≤ MAX_SWAP_DEPTH)
+    (hlabel : ¬ target[dest].isFunctionReturnLabel) :
     Spec ((((state.generate dest.val) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
       if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) (fun next => ∃ h, next.isFinal ⟨dest, h⟩) := by
   apply (spec_iff_triple _ _).mpr
@@ -145,15 +146,16 @@ theorem generate_final (state : State source target spills) (dest : Fin target.l
 
 theorem generate_reachable (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest)
-    (hr : state.withinReach cursor) (hcursor : cursor ≤ dest.val) (hready : Ready state dest) :
+    (hr : state.withinReach cursor) (hcursor : cursor ≤ dest.val) (hready : Ready state dest)
+    (hlabel : ¬ target[dest].isFunctionReturnLabel) :
     Succeeds ((((state.generate dest.val) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
       if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) (fun next =>
       Generation state next dest ∧ next.reachable ∧
       (dest.val ≤ state.stack.length → ∃ h, next.isFinal ⟨dest, h⟩)) := by
-  obtain ⟨next, heq, hg⟩ := generate_success state dest hbound havailable hr.copies
+  obtain ⟨next, heq, hg⟩ := generate_success state dest hbound havailable hr.copies hlabel
   have hf (hle : dest.val ≤ state.stack.length) : ∃ h, next.isFinal ⟨dest, h⟩ := by
     have hreach : state.stack.length - dest.val ≤ MAX_SWAP_DEPTH := by have := hr.width; omega
-    have hs := generate_final state dest hbound havailable hle hreach
+    have hs := generate_final state dest hbound havailable hle hreach hlabel
     simpa [heq, Spec] using hs
   exact ⟨next, heq, hg, hg.reachable hr hcursor hready hbound hf, hf⟩
 

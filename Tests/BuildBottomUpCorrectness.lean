@@ -35,7 +35,7 @@ private def emptyState : State [] [] ∅ where
   mapping := ⊥
   pending_generations := 0
 
-private theorem emptyState_valid : emptyState.Valid := ⟨rfl, by decide, by decide⟩
+private theorem emptyState_valid : emptyState.Valid := ⟨rfl, by decide, by decide, by decide⟩
 
 example : ∃ result : State _ _ _,
       (buildBottomUp emptyState emptyState_valid) = .ok ⟨none, result⟩ ∧ result.stack = [] :=
@@ -65,7 +65,7 @@ private def copyState (padding extra : ℕ) : State
     simpa [Nat.add_assoc, Nat.add_left_comm, Nat.add_comm] using retained (padding + 1) (extra + 1)
   pending_generations := extra + 1
 
-private theorem copyState_0_40_valid : (copyState 0 40).Valid := ⟨by decide, by decide, by decide⟩
+private theorem copyState_0_40_valid : (copyState 0 40).Valid := ⟨by decide, by decide, by decide, by decide⟩
 
 -- The copy must be duplicated before later pushes put it beyond DUP reach.
 example : (((((buildBottomUp (copyState 0 40) copyState_0_40_valid) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
@@ -80,13 +80,13 @@ example : ∃ result : State _ _ _,
   · decide
 
 -- Sixteen initial slots succeed. A seventeenth can make the needed copy unreachable.
-example : (((((buildBottomUp (copyState 15 0) ⟨by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+example : (((((buildBottomUp (copyState 15 0) ⟨by decide, by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
   if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
   pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map
     (fun result => result.1) =
     .ok ((.Var ⟨37⟩ :: List.replicate 15 (.Lit 0)) ++ [.Var ⟨37⟩]) := by native_decide
 
-private theorem copyState_16_0_valid : (copyState 16 0).Valid := ⟨by decide, by decide, by decide⟩
+private theorem copyState_16_0_valid : (copyState 16 0).Valid := ⟨by decide, by decide, by decide, by decide⟩
 
 example : ∀ i j, (copyState 16 0).mapping i = some j →
     (copyState 16 0).stack[i] =
@@ -105,7 +105,7 @@ private def mismatched : State [.Lit 1] [.Lit 2] ∅ where
   mapping := (⊥ : Mapping 1 1).bind 0 0 rfl rfl
   pending_generations := 0
 
-private theorem mismatched_valid : mismatched.Valid := ⟨by decide, by decide, by decide⟩
+private theorem mismatched_valid : mismatched.Valid := ⟨by decide, by decide, by decide, by decide⟩
 example : mismatched.stack.length < MAX_DUP_DEPTH := by decide
 example : ¬(∀ i j, mismatched.mapping i = some j → mismatched.stack[i] = ([.Lit 2] : Stack)[j]) := by
   decide

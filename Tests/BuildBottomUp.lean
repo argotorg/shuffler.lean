@@ -13,9 +13,11 @@ example (state : State source target spills) (slot : Value) (dest : Fin target.l
 
 example (state : State source target spills) (copy : Fin state.stack.length)
     (dest : Fin target.length) (hdup : state.stack.isDupReachable copy)
+    (hlabel : ¬state.stack[copy].isFunctionReturnLabel)
     (hdest : state.mapping.symm dest = none) :
     (state.dup copy.val dest).map (·.pending_generations) = .ok state.pending_generations := by
-  simp [State.dup, Mapping.positionOf, index, copy.isLt, requires, hdest, hdup]
+  simp [State.dup, Mapping.positionOf, index, copy.isLt, requires, hdest, hdup,
+    ← Fin.getElem_fin, hlabel]
   rfl
 
 -- Pushing a spilled variable records a load and keeps the previous trace.

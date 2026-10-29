@@ -45,6 +45,22 @@ private def summary (source target : Stack) (spills : SpillSet := ∅)
 #guard succeeds [a, b] [b, a]
 #guard succeeds [a, b] [a, a, b, b]
 #guard succeeds [.FunctionReturnLabel, b] [b, .FunctionReturnLabel]
+#guard succeeds [.FunctionReturnLabel, .FunctionReturnLabel, a]
+  [.FunctionReturnLabel, a, .FunctionReturnLabel]
+#guard succeeds [.FunctionReturnLabel, .FunctionReturnLabel]
+  [.Wildcard, .FunctionReturnLabel, .FunctionReturnLabel] ∅ false .Leave
+#guard succeeds [.FunctionReturnLabel, .FunctionReturnLabel]
+  [.Wildcard, .FunctionReturnLabel, .FunctionReturnLabel] ∅ false .Take
+
+-- A target cannot request an additional copy of a return label.
+#guard match Planner.run [.FunctionReturnLabel] [.FunctionReturnLabel, .FunctionReturnLabel]
+    ∅ false .Leave with
+  | .error (.assertion "function return label has no bound source") => true
+  | _ => false
+#guard match Planner.run [.FunctionReturnLabel] [.FunctionReturnLabel, .FunctionReturnLabel]
+    ∅ false .Take with
+  | .error (.assertion "function return label has no bound source") => true
+  | _ => false
 
 -- Unavailable variables and return labels fail the initial availability check.
 #guard match Planner.run [] [a] ∅ true .Leave with
@@ -132,14 +148,15 @@ private def sampleStacks : ℕ → List Stack
   | n + 1 => [] :: (sampleStacks n).flatMap (fun tail =>
       [a, b, .Lit 0, .Wildcard, .FunctionReturnLabel].map (· :: tail))
 
--- Check all available source/target pairs of length at most two, both wildcard policies,
+-- Check available source/target pairs with no additional return labels, both wildcard policies,
 -- both spill settings, and both choices of whether new spills are permitted.
 example : (sampleStacks 2).all (fun source => (sampleStacks 2).all (fun target =>
     ([∅, {⟨0⟩}] : List SpillSet).all (fun spills =>
       [false, true].all (fun allowed =>
         ([BuildMapping.WildcardSlotsStrategy.Leave, .Take]).all (fun strategy =>
           if target.all (fun slot => decide
-              (slot.can_be_freely_generated ∨ slot ∈ source ∨ spills.is_spilled slot)) then
+              (slot.can_be_freely_generated ∨ slot ∈ source ∨ spills.is_spilled slot)) &&
+              decide (target.count .FunctionReturnLabel ≤ source.count .FunctionReturnLabel) then
             succeeds source target spills allowed strategy
           else true))))) = true := by native_decide
 

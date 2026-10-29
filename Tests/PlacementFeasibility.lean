@@ -1,4 +1,10 @@
+module
+
+public meta import Shuffler.BuildBottomUp.Theorems.Feasibility
 import Shuffler.BuildBottomUp.Theorems.Feasibility
+import Shuffler.BuildBottomUp.Lemmas.Placement.Permute
+import all Batteries.Data.List.Basic
+public meta import Shuffler.BuildBottomUp.Theorems.Wildcard
 import Shuffler.BuildBottomUp.Theorems.Wildcard
 
 open Shuffler.Placement
@@ -55,7 +61,7 @@ private def twoTarget : Stack := [a] ++ others 15 ++ [a, a]
 example : Reserve ∅ twoSource twoTarget {a} := by decide
 
 private def duplicateSecond : Trace ∅ twoSource twoTarget :=
-  .Dup 1 (by decide) (by decide) (by decide) (.Lit twoSource)
+  .Dup 1 (by decide) (by decide) (by decide) (by decide) (.Lit twoSource)
 
 example : CanPlace ∅ twoSource twoTarget {a} :=
   ⟨duplicateSecond, True.intro, rfl⟩
@@ -64,7 +70,7 @@ example : CanPlace ∅ twoSource twoTarget {a} :=
 example : Reserve ∅ [a] [a, a] {a} := by decide
 example : boundary [a] [a, a] {a} = 0 := by decide
 example : CanPlace ∅ [a] [a, a] {a} := by
-  refine ⟨.Dup 1 (by decide) (by decide) (by decide) (.Lit [a]), ?_, ?_⟩
+  refine ⟨.Dup 1 (by decide) (by decide) (by decide) (by decide) (.Lit [a]), ?_, ?_⟩
   · exact True.intro
   · rfl
 
@@ -140,7 +146,7 @@ private def literalState : Shuffler.Emission.State literalSource literalTarget �
   mapping := by simpa [literalSource, literalTarget] using assignment
   pending_generations := 1
 
-private theorem literalState_valid : literalState.Valid := ⟨by decide, by decide, by decide⟩
+private theorem literalState_valid : literalState.Valid := ⟨by decide, by decide, by decide, by decide⟩
 example : ∀ i j, literalState.mapping i = some j → literalState.stack[i] = literalTarget[j] := by
   decide
 example : Reserve ∅ literalSource literalTarget {.Lit 1} := by decide
@@ -160,3 +166,12 @@ example :
   native_decide
 
 end PlacementFeasibilityTests
+
+-- Existing return labels can stay or move, but exact placement cannot add one.
+example : Shuffler.Placement.Reserve ∅ [.FunctionReturnLabel] [.FunctionReturnLabel] 0 := by decide
+example : ¬Shuffler.Placement.Reserve ∅ [.FunctionReturnLabel]
+    [.FunctionReturnLabel, .FunctionReturnLabel] {.FunctionReturnLabel} := by decide
+example : ¬Shuffler.Placement.CanPlace ∅ [.FunctionReturnLabel]
+    [.FunctionReturnLabel, .FunctionReturnLabel] {.FunctionReturnLabel} := by
+  rw [Shuffler.Placement.canPlace_iff_reserve]
+  decide

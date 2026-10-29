@@ -30,9 +30,9 @@ theorem Reserve.canPlace (h : Reserve spills source target missing) :
       unfold MAX_SWAP_DEPTH MAX_DUP_DEPTH at *
       omega
     have hseeds : seeds spills missing ≤ (source : Multiset Value) := by
-      simpa [boundary, window, hf, hl] using h.2.2
+      simpa [boundary, window, hf, hl] using h.2.2.1
     simpa only [List.nil_append] using
-      canPlace_complete spills [] source target missing hs h.1 hseeds
+      canPlace_complete spills [] source target missing hs h.1 hseeds h.2.2.2
   · have hl : MAX_SWAP_DEPTH + 1 ≤ source.length := by
       unfold MAX_SWAP_DEPTH MAX_DUP_DEPTH at *
       omega
@@ -40,6 +40,6 @@ theorem Reserve.canPlace (h : Reserve spills source target missing) :
       h.prepare hz hl
     rw [htarget]
     simpa only [zero_add] using hfirst.trans
-      (canPlace_complete spills fixed working tail missing hsmall hbalance hseeds)
+      (canPlace_complete spills fixed working tail missing hsmall hbalance hseeds h.2.2.2)
 
 end Shuffler.Placement

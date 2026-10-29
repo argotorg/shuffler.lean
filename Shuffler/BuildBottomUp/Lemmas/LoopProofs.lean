@@ -152,7 +152,7 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
     let u : Fin target.length := ⟨urgent.get hurg.1, hlt⟩
     have hb : state.mapping.symm u = none := by
       simpa [Mapping.positionOf, hlt, u] using hnone
-    apply (generate_contract state u hb (inv.available u)).attach.bind
+    apply (generate_contract state u hb (inv.available u) (inv.not_label_of_unbound u hb)).attach.bind
     intro next hgen
     exact retry _ (hgen.invariant inv) (hgen.decreases inv) hgen.expected
   rw [dite_eq_right hurg]
@@ -161,7 +161,7 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
     let top : Fin target.length := ⟨state.stack.length, by omega⟩
     have hb : state.mapping.symm top = none := by
       simpa [Mapping.positionOf, top] using hB.1
-    apply (generate_contract state top hb (inv.available top)).attach.bind
+    apply (generate_contract state top hb (inv.available top) (inv.not_label_of_unbound top hb)).attach.bind
     intro next hgen
     exact retry _ (hgen.invariant inv) (hgen.decreases inv) hgen.expected
   rw [index_eq dest, except_ok_bind]
@@ -169,7 +169,7 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
   · simp only [hpos]
     have hb : state.mapping.symm dest = none := hpos
     try simp_loop
-    apply (generate_contract state dest hb (inv.available dest)).bind
+    apply (generate_contract state dest hb (inv.available dest) (inv.not_label_of_unbound dest hb)).bind
     intro next hgen
     have hp := hgen.placement inv
     let current : Fin next.stack.length := ⟨cursor, hp.in_bounds⟩
