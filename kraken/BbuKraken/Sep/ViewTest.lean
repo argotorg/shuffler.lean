@@ -69,6 +69,20 @@ example (h : (View S g ∗ F).get m) {i : Nat} (hi : i < 6 * g.h.n.toNat) (x y :
   have _ := OpM.isSome_depth h2
   exact ⟨_, View.unfocus h2 hi⟩
 
+-- `view_load` finds the record hypothesis and the lemma of the byte.
+example (h : (View S g ∗ F).get m) {i : Nat} (hi : i < 6 * g.h.n.toNat) :
+    (m.loadInt (opAt g.h.ops i + 9#64) 1).isSome = true := by
+  have _h1 := View.focus h hi
+  view_load
+
+-- Negative: `view_load` does not close a load at a byte that no lemma gives (byte 2 is padding).
+/-- error: sep_load: no sep hyp gives this load -/
+#guard_msgs in
+example (h : (View S g ∗ F).get m) {i : Nat} (hi : i < 6 * g.h.n.toNat) :
+    (m.loadInt (opAt g.h.ops i + 2#64) 1).isSome = true := by
+  have _h1 := View.focus h hi
+  view_load
+
 /-! ## Folds of the asm addresses -/
 
 example (n : Word) : S + n * 8#64 + 8248#64 = Fld.mapping_positionOf S n.toNat :=
@@ -76,7 +90,8 @@ example (n : Word) : S + n * 8#64 + 8248#64 = Fld.mapping_positionOf S n.toNat :
 example (o n : Word) : o + (n + n * 2#64).shiftLeft 2 = opAt o n.toNat := fold_op o n
 example (d n : Word) : d + n * 8#64 = slotAt d n.toNat := fold_slot d n
 
--- Real VCs: two loads and a store. After `symexec_norm`, the folds give the field names.
+-- Real VCs: two loads and a store. After `symexec_norm`, the folds give the field names, and
+-- `view_load` closes the load VCs.
 example (s : MachineData) (hm : (View S g ∗ F).get s.dmem) (hS : rdi s = S) {i : Nat}
     (hi : i < MAX_N) (hx : (s.regs.get64 .rsi).toNat = i) :
     ⦃ fun t => t = s ⦄ parse("
@@ -90,9 +105,9 @@ example (s : MachineData) (hm : (View S g ∗ F).get s.dmem) (hS : rdi s = S) {i
   subst ht
   kvcgen64
   all_goals symexec_norm
-  case vc1 => rw [hS, Fld.fold_stack_size]; exact View.isSome_len hm
-  case vc2 => rw [hS, Fld.fold_mapping_positionOf, hx]; exact View.isSome_pos hm hi
-  case vc3 => rw [hS, Fld.fold_stack_traceSize]; exact View.isSome_nops hm
+  case vc1 => rw [hS, Fld.fold_stack_size]; view_load
+  case vc2 => rw [hS, Fld.fold_mapping_positionOf, hx]; view_load
+  case vc3 => rw [hS, Fld.fold_stack_traceSize]; view_load
   case vc4 => rw [hS, Fld.fold_stack_size]; exact View.rd_len hm
   case vc5 =>
     rw [hS, Fld.fold_stack_traceSize, Fld.fold_mapping_positionOf, hx]

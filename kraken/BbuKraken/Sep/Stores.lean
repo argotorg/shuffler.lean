@@ -1,4 +1,5 @@
 import BbuKraken.Sep.View
+import ProofKit.SepLoad
 
 /-!
 # Load and store lemmas of the struct
@@ -204,5 +205,10 @@ theorem OpM.isSome_payload (h : (OpM a r ∗ F).get m) : (m.loadInt (a + 4#64) 4
   exact B32.isSome (e ▸ h)
 
 end
+
+/-- `view_load` closes a load VC from a `View` or `OpM` hypothesis. -/
+macro "view_load" : tactic => `(tactic| sep_load [View.isSome_data, View.isSome_len,
+  View.isSome_ops, View.isSome_nops, View.isSome_slot, View.isSome_pos, View.isSome_dest,
+  OpM.isSome_kind, OpM.isSome_depth, OpM.isSome_payload, OpM.isSome_skind, OpM.isSome_sop])
 
 end Bbu.Sep
