@@ -19,14 +19,14 @@ private theorem swapCount_cast {n m : ℕ} (h : n = m) (perm : Equiv.Perm (Fin n
   subst m
   rfl
 
--- `hnreachable` says that `perm` moves a position deeper than `MAX_SWAP_DEPTH`.
+-- `hnreachable` says that a position below SWAP reach has the wrong value.
 -- The run returns a blocked result and the state, where `excess` is positive.
 -- The reported position `i` is in the input permutation's support.
 -- Its depth, `i.rev.val`, exceeds the limit by exactly `excess`.
 theorem permute_blocks_unreachable
     (spills : SpillSet)
     (initial : Emission.State source target spills) (perm : Permutation initial.stack)
-    (hnreachable : ¬all_swaps_reachable perm) :
+    (hnreachable : ¬values_reachable perm) :
     ∃ (i : Fin initial.stack.length) (excess : ℕ) (state : State source target spills),
       permute initial perm = .ok ⟨some ⟨i.val, excess⟩, state⟩
         ∧ excess > 0
@@ -72,7 +72,7 @@ theorem permute_blocks_unreachable
     have hz : initial.stack.length = 0 := Nat.eq_zero_of_not_pos hne
     exact False.elim (hnreachable (fun i => by have := i.isLt; omega))
 
--- `hreachable` says that every position moved by `perm` is within the swap depth limit.
+-- `hreachable` says that every position with the wrong value is within SWAP reach.
 -- There is then a result stack and a trace that `permute` successfully returns.
 -- The equality after `∧` says that the result is the requested permutation of `source`:
 -- the value at each source position `i` goes to target position `perm i`.
@@ -80,7 +80,7 @@ theorem permute_blocks_unreachable
 theorem permute_applies_permutation_reachable
     (spills : SpillSet)
     (initial : Emission.State source target spills) (perm : Permutation initial.stack)
-    (hreachable : all_swaps_reachable perm) :
+    (hreachable : values_reachable perm) :
     ∃ result : State source target spills,
       permute initial perm = .ok ⟨none, result⟩ ∧ result.stack = apply_permutation initial.stack perm := by
   rw [permute]
@@ -144,10 +144,11 @@ theorem permute_applies_permutation_of_ok
 -- `hresult` says that `permute` successfully returned this stack and trace.
 -- The emitted swap count equals the count computed from the input permutation:
 -- moved positions below the top, plus cycles of length at least two that exclude the top.
--- This is an exact count for the returned trace.
+-- This is an exact count for the returned trace when the stack values are distinct.
 theorem permute_swapCount
     (spills : SpillSet)
     (initial : Emission.State source target spills) (perm : Permutation initial.stack) (hne : 0 < initial.stack.length)
+    (hnodup : initial.stack.Nodup)
     {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
     (result.trace.swapCount - initial.trace.swapCount) = Permutation.swapCount perm ⟨initial.stack.length - 1, by omega⟩ := by
@@ -207,10 +208,11 @@ theorem permute_swapCount
 -- Given a successful return in `hresult`, bound the number of emitted swaps by
 -- the number of moved positions plus the number of cycles of length at least two.
 -- `perm.support` contains the moved positions; `cycleFactorsFinset` contains those cycles.
--- This upper bound also covers the empty stack, without requiring a top position.
+-- For distinct stack values, this also covers the empty stack without requiring a top position.
 theorem permute_swapCount_le
     (spills : SpillSet)
     (initial : Emission.State source target spills) (perm : Permutation initial.stack)
+    (hnodup : initial.stack.Nodup)
     {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
     (result.trace.swapCount - initial.trace.swapCount) ≤ perm.support.card + perm.cycleFactorsFinset.card := by
@@ -224,11 +226,12 @@ theorem permute_swapCount_le
 -- For a successful run on a nonempty stack, the set contains all lengths of lists
 -- of top swaps whose composition equals `perm`.
 -- `IsLeast` says that the emitted count belongs to this set and no smaller length does.
--- Thus `permute` attains the minimum for the given position permutation, including equal values.
+-- For distinct stack values, `permute` attains the minimum for the given position permutation.
 -- The comparison allows every swap depth, so it also covers all permitted top swaps.
 theorem permute_swapCount_optimal
     (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack)
-    (hne : 0 < initial.stack.length) {result : State source target spills}
+    (hne : 0 < initial.stack.length)
+    (hnodup : initial.stack.Nodup) {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
     IsLeast {n | ∃ swaps : List (Fin initial.stack.length),
       (swaps.map (Equiv.swap ⟨initial.stack.length - 1, by omega⟩)).prod = perm ∧ swaps.length = n}
@@ -238,11 +241,12 @@ theorem permute_swapCount_optimal
 
 -- For a successful run on a nonempty stack, compare the emitted count with
 -- `arbitrarySwapCount perm`, the minimum when swaps may use any two positions.
--- Each cycle of length at least two that excludes the top adds exactly two swaps.
+-- For distinct stack values, each cycle of length at least two that excludes the top adds two swaps.
 -- If there are no such cycles, `permute` also attains the arbitrary-swap minimum.
 theorem permute_swapCount_eq_arbitrarySwapCount_add
     (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack)
-    (hne : 0 < initial.stack.length) {result : State source target spills}
+    (hne : 0 < initial.stack.length)
+    (hnodup : initial.stack.Nodup) {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
     (result.trace.swapCount - initial.trace.swapCount) = Permutation.arbitrarySwapCount perm +
       2 * (Permutation.cyclesAwayFromTop perm ⟨initial.stack.length - 1, by omega⟩).card := by

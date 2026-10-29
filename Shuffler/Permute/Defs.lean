@@ -184,4 +184,9 @@ def apply_permutation (source : Stack) (perm : Permutation source) : Stack :=
 def all_swaps_reachable (perm : Permutation source) : Prop
   := ∀ i ∈ perm.support, i.rev.val ≤ MAX_SWAP_DEPTH
 
+-- Every position whose value must change is within SWAP reach.
+def values_reachable {source : Stack} (perm : Permutation source) : Prop :=
+  ∀ i : Fin source.length,
+    source[i] ≠ source[perm.symm i] → i.rev.val ≤ MAX_SWAP_DEPTH
+
 end Shuffler.Permute

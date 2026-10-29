@@ -349,11 +349,10 @@ def completedNext (initial : State source target spills) (i : Nat) : Nat :=
     ((initial.mapping ⟨i, hi⟩).map Fin.val).getD i
   else ((holeList initial)[i - initial.stack.length]?.map Fin.val).getD i
 
--- The cycle of each deep offset at or above `cursor` has no other offset at or above `cursor`.
-def CyclesReady (initial : State source target spills) (cursor : Nat) : Prop :=
+-- Each deep offset at or above `cursor` already has its expected value.
+def ValuesReady (initial : State source target spills) (cursor : Nat) : Prop :=
   ∀ i, cursor ≤ i → i < target.length - (MAX_SWAP_DEPTH + 1) →
-    ∀ k < target.length,
-      (completedNext initial)^[k] i < cursor ∨ (completedNext initial)^[k] i = i
+    (augmentedStack initial)[i]? = initial.expectedStack[i]?
 
 -- The bound target offset with 16 bound offsets above it, or `target.length` if none.
 def boundary (initial : State source target spills) : Nat :=
@@ -383,7 +382,7 @@ def StaticSuccess (initial : State source target spills) : Prop :=
       (Success.augmentedStack initial)[c]? = initial.expectedStack[c]?) ∧
     (∀ c ≤ Success.cutoff initial, Success.Ready initial c) ∧
     (if Success.generationEnd initial ≤ Success.boundary initial then
-      Success.CyclesReady initial (Success.generationEnd initial)
+      Success.ValuesReady initial (Success.generationEnd initial)
     else Success.BoundarySafe initial)
 
 end Shuffler.Emission
