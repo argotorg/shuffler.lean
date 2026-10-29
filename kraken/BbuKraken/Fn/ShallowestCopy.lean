@@ -1,4 +1,5 @@
 import BbuKraken.Fn.IsSpilled
+import BbuKraken.Kit
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -7,14 +8,7 @@ set_option experimental.vcgen true
 
 namespace Bbu
 
-/-! ## `shallowest_copy` -/
-
-theorem stOf_len_rd {m : Mem 64} {S : Addr} : (stOf m S).len = (rd m (wordAt S 0)).toNat := by
-  simp [St.len, stOf]
-
-theorem stOf_val_rd {m : Mem 64} {S : Addr} {j : Nat} (hj : j < (rd m (wordAt S 0)).toNat) :
-    (stOf m S).val j = rd m (wordAt S (STACK + j)) := by
-  simp [St.val, stOf, hj, slotOf]
+/-! ## `shallowestCopyPosition` -/
 
 theorem find?_range_reverse_none {p : Nat → Bool} {n : Nat} (h : ∀ j < n, p j = false) :
     (List.range n).reverse.find? p = none := by
@@ -36,21 +30,21 @@ theorem find?_range_reverse_some {p : Nat → Bool} {n i : Nat} (hi : i < n) (hp
 
 theorem shallowestCopy_none {m : Mem 64} {S : Addr} {v : Word}
     (h : ∀ j < (rd m (wordAt S 0)).toNat, rd m (wordAt S (STACK + j)) ≠ v) :
-    shallowestCopy (stOf m S) v = none := by
+    shallowestCopyPosition (stOf m S) v = none := by
   refine find?_range_reverse_none fun j hj => ?_
-  rw [stOf_len_rd] at hj
-  simpa [stOf_val_rd hj] using h j hj
+  rw [len_stOf] at hj
+  simpa [val_stOf hj] using h j hj
 
 theorem shallowestCopy_some {m : Mem 64} {S : Addr} {v : Word} {i : Nat}
     (hi : i < (rd m (wordAt S 0)).toNat) (hv : rd m (wordAt S (STACK + i)) = v)
     (h : ∀ j, i < j → j < (rd m (wordAt S 0)).toNat → rd m (wordAt S (STACK + j)) ≠ v) :
-    shallowestCopy (stOf m S) v = some i := by
-  refine find?_range_reverse_some (by rwa [stOf_len_rd]) (by simp [stOf_val_rd hi, hv])
+    shallowestCopyPosition (stOf m S) v = some i := by
+  refine find?_range_reverse_some (by rwa [len_stOf]) (by simp [val_stOf hi, hv])
     fun j h1 h2 => ?_
-  rw [stOf_len_rd] at h2
-  simpa [stOf_val_rd h2] using h j h1 h2
+  rw [len_stOf] at h2
+  simpa [val_stOf h2] using h j h1 h2
 
--- The state at `.LB12` after the slots from `i` up that do not hold `rsi`.
+-- The state at `.LB11` after the slots from `i` up that do not hold `rsi`.
 def CopyLoop (s : MachineData) (ra : Int64) (t : MachineData) : Prop :=
   Keep s ra t ∧ rdi t = rdi s ∧ rsi t = rsi s
     ∧ ∃ i, rax t = BitVec.ofNat 64 i ∧ i ≤ (rd (s.pushRa ra).dmem (wordAt (rdi s) 0)).toNat
@@ -64,19 +58,19 @@ theorem shallowestCopy_body [Host] [FunDecls] :
   subst h₀
   obtain ⟨hw, -, hst, -⟩ := pushRa_keeps (ra := ra) hpre
   refine Program.WP.cfg (fun
-      | .entry, t | .label "shallowest_copy", t => t = s.pushRa ra
-      | .label ".LB12", t => CopyLoop s ra t
-      | .label ".LB16", t => Keep s ra t ∧ shallowestCopy (st s) (rsi s) = none
-      | .label ".LB11", t => Done s ra (encOpt (shallowestCopy (st s) (rsi s))) t
+      | .entry, t | .label "shallowestCopyPosition", t => t = s.pushRa ra
+      | .label ".LB11", t => CopyLoop s ra t
+      | .label ".LB14", t => Keep s ra t ∧ shallowestCopyPosition (st s) (rsi s) = none
+      | .label ".LB10", t => Done s ra (encOpt (shallowestCopyPosition (st s) (rsi s))) t
       | _, _ => False)
-    (fun l t => if l = ".LB12" then (rax t).toNat + 1 else if l = "shallowest_copy" then 2 ^ 64 + 1 else 0)
+    (fun l t => if l = ".LB11" then (rax t).toNat + 1 else if l = "shallowestCopyPosition" then 2 ^ 64 + 1 else 0)
     ?_ rfl
   cfg_cases
   case left t ht => subst ht; kvcgen64
   case right.left t ht =>
     subst ht
     kvcgen64
-    case vc1 => exact hw.load_writable (inside_hdr0 (k := 0) (by decide))
+    case vc1 => exact hw.word_isSome hw.mapped (k := 0) (by decide)
     case vc2 =>
       refine ⟨Keep.init.next rfl rfl rfl rfl rfl rfl rfl rfl, rfl, rfl,
         (rd (s.pushRa ra).dmem (wordAt (rdi s) 0)).toNat, ?_, Nat.le_refl _, fun j h1 h2 => ?_⟩
@@ -108,7 +102,7 @@ theorem shallowestCopy_body [Host] [FunDecls] :
       · rw [beq_iff_eq.mp h]; rfl
     kvcgen64
     case vc1 _ hz =>
-      have h0 : i = 0 := beq_iff_eq.mp (hz0 ▸ (z_and_self _ _).symm.trans hz)
+      have h0 : i = 0 := beq_iff_eq.mp (hz0 ▸ (Kit.z_test _ _).symm.trans hz)
       subst h0
       cfg_goto
       · exact stack_pushRa hk.sp
@@ -117,20 +111,19 @@ theorem shallowestCopy_body [Host] [FunDecls] :
         exact shallowestCopy_none fun j hj => hb j (Nat.zero_le j) hj
       · simp
     case vc2 _ hz =>
-      have h0 : i ≠ 0 := by simpa using hz0.symm.trans ((z_and_self _ _).symm.trans hz)
+      have h0 : i ≠ 0 := by simpa using hz0.symm.trans ((Kit.z_test _ _).symm.trans hz)
       show (Mem.loadInt t.dmem (t.regs.get64 .rdi + (t.regs.get64 .rax - 1#64) * 8#64
         + BitVec.ofInt 64 (Int64.toInt 64)) 8).isSome = true
       rw [hk.mem, haddr h0]
-      exact hw.load_writable (inside_arr (by simp only [STACK]; omega)
-        (by simp only [STACK, WORDS_eq]; omega))
+      exact hw.word_isSome hw.mapped (by simp only [STACK, WORDS_eq]; omega)
     case vc3 _ hz hnz =>
-      have h0 : i ≠ 0 := by simpa using hz0.symm.trans ((z_and_self _ _).symm.trans hz)
+      have h0 : i ≠ 0 := by simpa using hz0.symm.trans ((Kit.z_test _ _).symm.trans hz)
       have hne : rd (s.pushRa ra).dmem (wordAt (rdi s) (STACK + (i - 1))) ≠ rsi s := by
         intro h
         have h' : rd t.dmem (t.regs.get64 .rdi + (t.regs.get64 .rax - 1#64) * 8#64
             + BitVec.ofInt 64 (Int64.toInt 64)) = t.regs.get64 .rsi := by
           rw [hk.mem, haddr h0, hsi]; exact h
-        have := (nz_sub _ _ _ _ _).symm.trans hnz
+        have := (Kit.nz_sub _ _ _).symm.trans hnz
         simp only [Bool.not_eq_true', beq_eq_false_iff_ne] at this
         exact this h'
       have hax' : t.regs.get64 .rax - 1#64 = BitVec.ofNat 64 (i - 1) := by
@@ -153,16 +146,16 @@ theorem shallowestCopy_body [Host] [FunDecls] :
     case vc4 =>
       exact Option.isSome_iff_exists.mpr ⟨ra, (hk.next rfl rfl rfl rfl rfl rfl rfl rfl).retAddr⟩
     case vc5 _ hz hnz =>
-      have h0 : i ≠ 0 := by simpa using hz0.symm.trans ((z_and_self _ _).symm.trans hz)
+      have h0 : i ≠ 0 := by simpa using hz0.symm.trans ((Kit.z_test _ _).symm.trans hz)
       have heq : rd t.dmem (t.regs.get64 .rdi + (t.regs.get64 .rax - 1#64) * 8#64
           + BitVec.ofInt 64 (Int64.toInt 64)) = t.regs.get64 .rsi := by
-        have := (nz_sub _ _ _ _ _).symm.trans hnz
+        have := (Kit.nz_sub _ _ _).symm.trans hnz
         exact beq_iff_eq.mp (cast (Bool.not_eq_false' _) this)
       rw [hk.mem, haddr h0, hsi] at heq
       refine Done.ret (R := shallowestCopyR) hpre
         (Keep.done (hk.next rfl rfl rfl rfl rfl rfl rfl rfl) ?_)
         fun t' hm hax => ⟨hax, by rw [st', hm]; exact hst⟩
-      show _ = encOpt (shallowestCopy (stOf s.dmem (rdi s)) (rsi s))
+      show _ = encOpt (shallowestCopyPosition (stOf s.dmem (rdi s)) (rsi s))
       rw [← hst, shallowestCopy_some (Nat.lt_of_lt_of_le (Nat.sub_lt (Nat.pos_of_ne_zero h0) Nat.one_pos) hi)
         heq fun j h1 h2 => hb j (by omega) h2]
       exact (show t.regs.get64 .rax - 1#64 = BitVec.ofNat 64 (i - 1) by rw [hax]; bv_omega)

@@ -1,4 +1,5 @@
 import BbuKraken.Fn.IsSpilled
+import BbuKraken.Kit
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -7,7 +8,7 @@ set_option experimental.vcgen true
 
 namespace Bbu
 
-/-! ## `position_of` -/
+/-! ## `positionOf` -/
 
 theorem asm_positionOf_some {m : Mem 64} {S : Addr} {d : Word} {i : Nat}
     (hi : i < (rd m (wordAt S 0)).toNat) (h : rd m (wordAt S (DEST + i)) = d)
@@ -27,7 +28,7 @@ theorem asm_positionOf_none {m : Mem 64} {S : Addr} {d : Word}
   rintro _ j hj rfl
   simpa [slotOf, BitVec.toNat_inj] using hb j hj
 
--- The state at `.LB8` after `i` slots that are not bound for `rsi`.
+-- The state at `.LB7` after `i` slots that are not bound for `rsi`.
 def PosLoop (s : MachineData) (ra : Int64) (t : MachineData) : Prop :=
   Keep s ra t ∧ rdi t = rdi s ∧ rsi t = rsi s
     ∧ rdx t = rd (s.pushRa ra).dmem (wordAt (rdi s) 0)
@@ -40,12 +41,12 @@ theorem positionOf_body [Host] [FunDecls] : Body positionOfAsm positionOfF posit
   subst h₀
   obtain ⟨hw, -, hst, -⟩ := pushRa_keeps (ra := ra) hpre
   refine Program.WP.cfg (fun
-      | .entry, t | .label "position_of", t => t = s.pushRa ra
-      | .label ".LB8", t => PosLoop s ra t
-      | .label ".LB9", t => Keep s ra t ∧ positionOf (st s) (rsi s).toNat = none
+      | .entry, t | .label "positionOf", t => t = s.pushRa ra
+      | .label ".LB7", t => PosLoop s ra t
+      | .label ".LB8", t => Keep s ra t ∧ positionOf (st s) (rsi s).toNat = none
       | .label ".LB5", t => Done s ra (encOpt (positionOf (st s) (rsi s).toNat)) t
       | _, _ => False)
-    (fun l t => if l = ".LB8" then 2 ^ 64 - (rax t).toNat else if l = "position_of" then 2 ^ 64 else 0)
+    (fun l t => if l = ".LB7" then 2 ^ 64 - (rax t).toNat else if l = "positionOf" then 2 ^ 64 else 0)
     ?_ rfl
   cfg_cases
   case left t ht =>
@@ -54,9 +55,9 @@ theorem positionOf_body [Host] [FunDecls] : Body positionOfAsm positionOfF posit
   case right.left t ht =>
     subst ht
     kvcgen64
-    case vc1 => exact hw.load_writable (inside_hdr0 (k := 0) (by decide))
+    case vc1 => exact hw.word_isSome hw.mapped (k := 0) (by decide)
     case vc2 _ hz =>
-      have h0 := beq_iff_eq.mp ((z_and_self _ _).symm.trans hz)
+      have h0 := beq_iff_eq.mp ((Kit.z_test _ _).symm.trans hz)
       cfg_goto
       · exact stack_pushRa rfl
       · refine ⟨Keep.init.next rfl rfl rfl rfl rfl rfl rfl rfl, ?_⟩
@@ -67,7 +68,7 @@ theorem positionOf_body [Host] [FunDecls] : Body positionOfAsm positionOfF posit
         exact absurd (Nat.lt_of_lt_of_eq hj this) (Nat.not_lt_zero j)
       · simp
     case vc3 _ hz =>
-      have h0 := (beq_eq_false_iff_ne).mp ((z_and_self _ _).symm.trans hz)
+      have h0 := (beq_eq_false_iff_ne).mp ((Kit.z_test _ _).symm.trans hz)
       refine ⟨Keep.init.next rfl rfl rfl rfl rfl rfl rfl rfl, rfl, rfl, rfl, 0, rfl, ?_, by simp⟩
       have : rd (s.pushRa ra).dmem (wordAt (rdi s) 0) ≠ 0#64 := h0
       have := BitVec.toNat_ne.mp this
@@ -87,12 +88,11 @@ theorem positionOf_body [Host] [FunDecls] : Body positionOfAsm positionOfF posit
     kvcgen64
     case vc1 =>
       rw [hk.mem, haddr]
-      exact hw.load_writable (inside_arr (by simp only [STACK, DEST_eq]; omega)
-        (by simp only [DEST_eq, WORDS_eq]; omega))
+      exact hw.word_isSome hw.mapped (by simp only [DEST_eq, WORDS_eq]; omega)
     case vc2 hz =>
       have heq : rd t.dmem (t.regs.get64 .rdi + t.regs.get64 .rax * 8#64
           + BitVec.ofInt 64 (Int64.toInt 8256)) = t.regs.get64 .rsi :=
-        beq_iff_eq.mp ((z_sub _ _ _ _ _).symm.trans hz)
+        beq_iff_eq.mp ((Kit.z_sub _ _ _).symm.trans hz)
       rw [hk.mem, haddr, hsi] at heq
       cfg_goto
       · exact stack_pushRa hk.sp
@@ -108,10 +108,10 @@ theorem positionOf_body [Host] [FunDecls] : Body positionOfAsm positionOfF posit
         have h' : rd t.dmem (t.regs.get64 .rdi + t.regs.get64 .rax * 8#64
             + BitVec.ofInt 64 (Int64.toInt 8256)) = t.regs.get64 .rsi := by
           rw [hk.mem, haddr, hsi]; exact h
-        have := (z_sub _ _ _ _ _).symm.trans hz
+        have := (Kit.z_sub _ _ _).symm.trans hz
         exact (beq_eq_false_iff_ne.mp this) h'
       have hnx : (1#64 + t.regs.get64 .rax == t.regs.get64 .rdx) = false := by
-        simpa using (nz_sub _ _ _ _ _).symm.trans hnz
+        simpa using (Kit.nz_sub _ _ _).symm.trans hnz
       rw [hax, hdx] at hnx
       have hi1 : i + 1 < (rd (s.pushRa ra).dmem (wordAt (rdi s) 0)).toNat := by
         refine Nat.lt_of_le_of_ne hi fun hc => ?_
@@ -146,10 +146,10 @@ theorem positionOf_body [Host] [FunDecls] : Body positionOfAsm positionOfF posit
         have h' : rd t.dmem (t.regs.get64 .rdi + t.regs.get64 .rax * 8#64
             + BitVec.ofInt 64 (Int64.toInt 8256)) = t.regs.get64 .rsi := by
           rw [hk.mem, haddr, hsi]; exact h
-        have := (z_sub _ _ _ _ _).symm.trans hz
+        have := (Kit.z_sub _ _ _).symm.trans hz
         exact (beq_eq_false_iff_ne.mp this) h'
       have hnx : (1#64 + t.regs.get64 .rax == t.regs.get64 .rdx) = true := by
-        simpa using (nz_sub _ _ _ _ _).symm.trans hnz
+        simpa using (Kit.nz_sub _ _ _).symm.trans hnz
       rw [hax, hdx, beq_iff_eq] at hnx
       have hl : (rd (s.pushRa ra).dmem (wordAt (rdi s) 0)).toNat = i + 1 := by
         rw [← hnx]; simp only [BitVec.toNat_add, BitVec.toNat_ofNat]; omega

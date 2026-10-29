@@ -1,7 +1,7 @@
 import BbuBridge.Statements
 
 /-!
-`Bbu.swapDest` is `State.swapDestinations`.
+`Bbu.swapDestinations` is `State.swapDestinations`.
 -/
 
 namespace BbuBridge
@@ -19,13 +19,13 @@ theorem swapDest_corr : SwapDestStmt := by
     rw [show index state.stack.length a = .ok ⟨a, hla⟩ from index_eq ⟨a, hla⟩,
       show index state.stack.length b = .ok ⟨b, hlb⟩ from index_eq ⟨b, hlb⟩]
     rfl
-  refine ⟨?_, ?_, h.pending, h.ops⟩
+  refine ⟨?_, ?_, h.pendingGenerations, h.trace⟩
   · show state.stack = _
     rw [h.stack]
     apply List.ext_getElem
-    · simp [Bbu.swapDest]
+    · simp [Bbu.swapDestinations]
     · intro i h1 h2
-      simp only [Bbu.swapDest, List.getElem_map, List.getElem_set]
+      simp only [Bbu.swapDestinations, List.getElem_map, List.getElem_set]
       split_ifs with hib hia
       · subst hib; simp [Bbu.St.val, List.getElem?_eq_getElem hsb]
       · subst hia; simp [Bbu.St.val, List.getElem?_eq_getElem hsa]
@@ -34,7 +34,7 @@ theorem swapDest_corr : SwapDestStmt := by
     show (state.mapping.swapDestinations ⟨a, hla⟩ ⟨b, hlb⟩ i).map Fin.val = _
     rw [Mapping.swapDestinations_apply, h.dest]
     have hi : i.val < st.slots.length := h.slot_lt i
-    simp only [Bbu.swapDest, Bbu.St.dest, List.getElem?_set, Equiv.swap_apply_def]
+    simp only [Bbu.swapDestinations, Bbu.St.dest, List.getElem?_set, Equiv.swap_apply_def]
     by_cases hib : i.val = b
     · have : i = ⟨b, hlb⟩ := Fin.ext hib
       subst this

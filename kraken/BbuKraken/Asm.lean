@@ -7,19 +7,21 @@ open Kraken.X64.Parser
 
 namespace Bbu
 
-/-! The output of `gcc -O1` for `c/build_bottom_up.c`, one program for each function. -/
+/-!
+The output of `gcc -O1` for `c/build_bottom_up.c`, one program for each function.
+Each name is that of the model function that the C function implements.
+-/
 
-public def isSpilledAsm : Program := parseFile("c/bbu/is_spilled.S")
-public def positionOfAsm : Program := parseFile("c/bbu/position_of.S")
-public def shallowestCopyAsm : Program := parseFile("c/bbu/shallowest_copy.S")
-public def addAsm : Program := parseFile("c/bbu/add.S")
-public def swapWithAsm : Program := parseFile("c/bbu/swap_with.S")
+public def isSpilledAsm : Program := parseFile("c/bbu/isSpilled.S")
+public def positionOfAsm : Program := parseFile("c/bbu/positionOf.S")
+public def shallowestCopyAsm : Program := parseFile("c/bbu/shallowestCopyPosition.S")
+public def swapWithAsm : Program := parseFile("c/bbu/swapWith.S")
+public def pushAsm : Program := parseFile("c/bbu/push.S")
+public def dupAsm : Program := parseFile("c/bbu/dup.S")
 public def produceAsm : Program := parseFile("c/bbu/produce.S")
 public def generateAsm : Program := parseFile("c/bbu/generate.S")
-public def finishAsm : Program := parseFile("c/bbu/finish.S")
-public def takeBoundAsm : Program := parseFile("c/bbu/take_bound.S")
-public def urgentAsm : Program := parseFile("c/bbu/urgent.S")
-public def stepAsm : Program := parseFile("c/bbu/step.S")
+public def finishAsm : Program := parseFile("c/bbu/permuteDestinations.S")
+public def loopAsm : Program := parseFile("c/bbu/buildBottomUp.S")
 public def buildBottomUpAsm : Program := parseFile("c/bbu/build_bottom_up.S")
 
 /-- `c/build_bottom_up.S`, the file that `bbu_harness` links. -/

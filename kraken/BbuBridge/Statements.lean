@@ -34,7 +34,7 @@ def SwapWithStmt : Prop :=
 def SwapDestStmt : Prop :=
   ∀ (e : Bbu.Env) (source : Stack) (st : Bbu.St) (state : OState e source) (a b : Nat),
     Rel e st state → a < st.len → b < st.len →
-    ∃ state', state.swapDestinations a b = .ok state' ∧ Rel e (Bbu.swapDest st a b) state'
+    ∃ state', state.swapDestinations a b = .ok state' ∧ Rel e (Bbu.swapDestinations st a b) state'
 
 /-! ## Generation -/
 

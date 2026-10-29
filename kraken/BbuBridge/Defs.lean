@@ -54,7 +54,7 @@ theorem decode_injective : Function.Injective decode := fun a b h => by
 
 -- The spilled variables: the ids of all words (below 2 ^ 63) with a nonzero byte.
 def spillSet (e : Bbu.Env) : SpillSet :=
-  ((Finset.range (2 ^ 63)).filter (fun i => e.spilled i ≠ 0)).image VarId.mk
+  ((Finset.range (2 ^ 63)).filter (fun i => e.spills i ≠ 0)).image VarId.mk
 
 -- The original target.
 abbrev tgt (e : Bbu.Env) : Stack := e.target.map decode
@@ -164,8 +164,8 @@ def Mapped (e : Bbu.Env) (source : List Bbu.Word) (dests : List Nat) : Prop :=
 structure Rel {source : Stack} (e : Bbu.Env) (st : Bbu.St) (state : OState e source) : Prop where
   stack : state.stack = st.slots.map fun s => decode s.val
   dest : ∀ i : Fin state.stack.length, (state.mapping i).map Fin.val = some (st.dest i)
-  pending : state.pending_generations = st.pending
-  ops : (traceOps state.trace).map encodeOp = st.ops
+  pendingGenerations : state.pending_generations = st.pendingGenerations
+  trace : (traceOps state.trace).map encodeOp = st.trace
 
 /-! ## Parts of the original loop -/
 

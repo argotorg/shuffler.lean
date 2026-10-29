@@ -4,15 +4,16 @@ import BbuKraken.Specs
 import PermuteKraken.Proof
 
 /-!
-The memory layout of `struct st` in `c/build_bottom_up.c`, and the shape of the
+The memory layout of `struct Emission` in `c/build_bottom_up.c`, and the shape of the
 function specs.
 
 The model state and environment are functions of the memory and the address `S`
 of the struct (`stOf`, `envOf`), so a spec needs no ghost state. The struct is
-`WORDS` words: 8 header words (len, pending, nops, n, target, spilled, ops,
-blocked), then `stack[MAX_N]` from word `STACK` and `dest[MAX_N]` from word
-`DEST`. Operation `i` is the words `2i` and `2i + 1` from `ops`. The ops buffer
-holds `6n` operations.
+`WORDS` words: 8 header words (`m_dataSize`, `m_pendingGenerations`,
+`m_traceSize`, `m_targetSize`, `m_target`, `m_spills`, `m_trace`, `m_blocked`),
+then `m_data[MAX_N]` from word `STACK` and `m_destinationOf[MAX_N]` from word
+`DEST`. Operation `i` is the words `2i` and `2i + 1` from `m_trace`. The ops
+buffer (`m_trace`) holds `6n` operations.
 -/
 
 open Std.WP Lean.Order
@@ -56,10 +57,10 @@ def opOf (i : Nat) : Op := ⟨rd m (wordAt (opsOf m S) (2 * i)), rd m (wordAt (o
 -- The model state in memory.
 def stOf : St where
   slots := (List.range (rd m (wordAt S 0)).toNat).map (slotOf m S)
-  pending := (rd m (wordAt S 1)).toNat
-  ops := (List.range (rd m (wordAt S 2)).toNat).map (opOf m S)
+  pendingGenerations := (rd m (wordAt S 1)).toNat
+  trace := (List.range (rd m (wordAt S 2)).toNat).map (opOf m S)
 
--- The variable id `i` is in the target: `is_spilled` reads only these bytes.
+-- The variable id `i` is in the target: `isSpilled` reads only these bytes.
 def tgtVar (i : Nat) : Bool :=
   (List.range (nOf m S)).any fun d =>
     let v := (rd m (wordAt (tgtOf m S) d)).toNat
@@ -68,17 +69,17 @@ def tgtVar (i : Nat) : Bool :=
 -- The environment in memory. Spilled bytes of ids that are not in the target are 0.
 def envOf : Env where
   target := (List.range (nOf m S)).map fun i => rd m (wordAt (tgtOf m S) i)
-  spilled := fun i =>
+  spills := fun i =>
     if tgtVar m S i then UInt8.ofBitVec (rdb m (splOf m S + BitVec.ofNat 64 i)) else 0
 
--- The spilled bytes that `is_spilled` reads: one for each variable in the target.
+-- The spilled bytes that `isSpilled` reads: one for each variable in the target.
 def splBlocks : List (Addr × Nat) :=
   (List.range (nOf m S)).filterMap fun d =>
     let v := (rd m (wordAt (tgtOf m S) d)).toNat
     if 2 ≤ v ∧ v % 2 = 0 then some (splOf m S + BitVec.ofNat 64 ((v - 2) / 2), 1) else none
 
--- The memory that the functions write: len, pending and nops, the stack and
--- dest arrays, the ops buffer and `blocked`.
+-- The memory that the functions write: `m_dataSize`, `m_pendingGenerations`,
+-- `m_traceSize`, `m_data`, `m_destinationOf`, the ops buffer and `blocked`.
 def writable : List (Addr × Nat) :=
   [(S, 24), (wordAt S STACK, 8 * (2 * MAX_N)), (opsOf m S, 96 * nOf m S), (blkOf m S, 16)]
 
@@ -225,12 +226,12 @@ theorem rdb_congr {a : Addr} (h : Mem.UnchangedOutside l m m')
   intro i hi
   exact h _ (ha _ ((Mem.Blocks.Inside.base (bs := []) (Nat.le_refl 1)).add_ofNat hi))
 
-private theorem filterMap_congr' {α β} {f g : α → Option β} :
+theorem filterMap_congr {α β} {f g : α → Option β} :
     ∀ {l : List α}, (∀ a ∈ l, f a = g a) → l.filterMap f = l.filterMap g
   | [], _ => rfl
   | a :: l, h => by
     simp only [List.filterMap_cons, h a List.mem_cons_self,
-      filterMap_congr' (fun b hb => h b (List.mem_cons_of_mem _ hb))]
+      filterMap_congr (fun b hb => h b (List.mem_cons_of_mem _ hb))]
 
 -- The header words 3 to 7 lie in `readable`.
 theorem hdr_congr (h : Mem.UnchangedOutside l m m') (hd : Mem.Blocks.Disjoint (readable m S) l)
@@ -265,7 +266,7 @@ theorem envOf_congr (h : Mem.UnchangedOutside l m m') (hw : Wf m S)
     · rwa [tgt_congr h hw hd hdn]
   have hspl : splBlocks m' S = splBlocks m S := by
     simp only [splBlocks, hn, ht, hs]
-    exact filterMap_congr' fun d hdn => by rw [tgt_congr h hw hd (List.mem_range.mp hdn)]
+    exact filterMap_congr fun d hdn => by rw [tgt_congr h hw hd (List.mem_range.mp hdn)]
   refine ⟨?_, ?_, ?_⟩
   · simp only [envOf, hn, ht, hs, htv]
     congr 1
@@ -345,7 +346,7 @@ theorem stOf_congr (h : Mem.UnchangedOutside l m m') (hw : Wf m S)
 theorem Wf.congr_of_disjoint (h : Mem.UnchangedOutside l m m') (hw : Wf m S)
     (hd : Mem.Blocks.Disjoint (writable m S ++ readable m S) l) : Wf m' S := by
   have hst := congrArg St.slots (stOf_congr h hw hd)
-  have hops := congrArg St.ops (stOf_congr h hw hd)
+  have hops := congrArg St.trace (stOf_congr h hw hd)
   simp only [stOf] at hst hops
   refine Wf.congr h hw (disjoint_mono (fun x hx => inside_append.mpr (Or.inr hx)) hd)
     (fun x hx => ?_) ?_ ?_

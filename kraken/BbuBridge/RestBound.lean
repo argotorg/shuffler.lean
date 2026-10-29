@@ -135,7 +135,7 @@ theorem rb_placeTop (hswap : SwapWithStmt) (st : Bbu.St) (state0 state : OState 
 
 -- The model after the copy at `pos` is chosen: `Bbu.takeBound` and `Bbu.placeTop`.
 def rbAfterM (st : Bbu.St) (t b pos : Nat) : Bbu.M (Bbu.St × Bbu.Next) :=
-  (let st := Bbu.swapDest st pos b
+  (let st := Bbu.swapDestinations st pos b
    if pos = t then .ok (st, true)
    else if pos ≠ st.len - 1 then
      let depth := st.len - 1 - pos
@@ -159,7 +159,7 @@ theorem rb_after (hdest : SwapDestStmt) (hswap : SwapWithStmt) (st : Bbu.St) (st
     except_ok_bind]
   obtain ⟨state', hs, hr⟩ := hdest e src st state pos b h hp hb
   rw [hs, except_ok_bind]
-  have hl : (Bbu.swapDest st pos b).len = st.len := (Bbu.swapDest_shape st pos b).1
+  have hl : (Bbu.swapDestinations st pos b).len = st.len := (Bbu.swapDest_shape st pos b).1
   have hl2 : state'.stack.length = st.len := hr.len.trans hl
   have hp2 : pos < state'.stack.length := by omega
   by_cases hpt : pos = t
@@ -167,13 +167,13 @@ theorem rb_after (hdest : SwapDestStmt) (hswap : SwapWithStmt) (st : Bbu.St) (st
     exact ⟨state', hr, rfl⟩
   rw [ite_eq_right hpt, ite_eq_right hpt]
   by_cases htop : pos = st.len - 1
-  · rw [ite_eq_right (show ¬ pos ≠ (Bbu.swapDest st pos b).len - 1 by omega),
+  · rw [ite_eq_right (show ¬ pos ≠ (Bbu.swapDestinations st pos b).len - 1 by omega),
       ite_eq_right (show ¬ pos ≠ state'.stack.length - 1 by omega)]
     exact rb_placeTop hswap _ state _ t hr
-  rw [ite_eq_left (show pos ≠ (Bbu.swapDest st pos b).len - 1 by omega),
+  rw [ite_eq_left (show pos ≠ (Bbu.swapDestinations st pos b).len - 1 by omega),
     ite_eq_left (show pos ≠ state'.stack.length - 1 by omega),
     show index state'.stack.length pos = .ok ⟨pos, hp2⟩ from index_eq ⟨pos, hp2⟩, except_ok_bind]
-  by_cases hd : Bbu.MAX_SWAP_DEPTH < (Bbu.swapDest st pos b).len - 1 - pos
+  by_cases hd : Bbu.MAX_SWAP_DEPTH < (Bbu.swapDestinations st pos b).len - 1 - pos
   · rw [ite_eq_left hd]
     have hd' : ¬ state'.isSwapReachable ⟨pos, hp2⟩ := by
       simp only [State.isSwapReachable, State.depthOf, Stack.offsetToDepth, MAX_SWAP_DEPTH]
@@ -189,7 +189,7 @@ theorem rb_after (hdest : SwapDestStmt) (hswap : SwapWithStmt) (st : Bbu.St) (st
     omega
   rw [ite_eq_right (not_not_intro hd')]
   have hc := hswap e src _ state' pos hr
-  cases hm : Bbu.swapWith (Bbu.swapDest st pos b) pos <;> cases ho : state'.swapWith pos <;>
+  cases hm : Bbu.swapWith (Bbu.swapDestinations st pos b) pos <;> cases ho : state'.swapWith pos <;>
     rw [hm, ho] at hc <;> simp only [Corr] at hc
   · exact ⟨_, rfl, hc⟩
   · exact rb_placeTop hswap _ state _ t hc

@@ -1,4 +1,4 @@
-is_spilled:
+isSpilled:
 	movl	$0, %eax
 	cmpq	$1, %rsi
 	jbe	.LB1
@@ -12,4 +12,4 @@ is_spilled:
 	movzbl	%al, %eax
 .LB1:
 	ret
-	.size	is_spilled, .-is_spilled
+	.size	isSpilled, .-isSpilled

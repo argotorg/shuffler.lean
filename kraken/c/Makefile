@@ -15,7 +15,7 @@ permute.S: permute.c
 build_bottom_up.S: build_bottom_up.c
 	$(CC) $(CFLAGS_ASM) -S $< -o - | sed 's/^\.L\([0-9]\)/.LB\1/; s/\(	j[a-z]*	\)\.L\([0-9]\)/\1.LB\2/' > $@
 	rm -rf bbu && mkdir bbu
-	awk '/^[a-z_]*:$$/ { f = "bbu/" substr($$0, 1, length($$0) - 1) ".S" } f { print > f } /^\t\.size/ { f = "" }' $@
+	awk '/^[a-zA-Z_]*:$$/ { f = "bbu/" substr($$0, 1, length($$0) - 1) ".S" } f { print > f } /^\t\.size/ { f = "" }' $@
 
 harness: harness.c permute.S
 	$(CC) -O1 -o $@ harness.c permute.S

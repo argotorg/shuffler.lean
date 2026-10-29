@@ -1,47 +1,44 @@
 generate:
 	cmpq	24(%rdi), %rsi
-	jnb	.LB44
+	jnb	.LB47
 	pushq	%rbp
 	pushq	%rbx
 	movq	%rdi, %rbp
 	movq	%rsi, %rbx
 	call	produce
 	testq	%rax, %rax
-	js	.LB41
+	jne	.LB44
 	movq	0(%rbp), %rdx
 	leaq	1(%rbx), %rcx
-	movl	$0, %eax
 	cmpq	%rdx, %rcx
-	jnb	.LB41
+	jnb	.LB44
 	leaq	0(%rbp,%rbx,8), %rcx
 	movq	8256(%rcx), %rsi
-	cmpq	%rbx, %rsi
-	je	.LB41
-	leaq	0(%rbp,%rdx,8), %rax
-	movq	56(%rax), %rdi
-	cmpq	%rdi, 64(%rcx)
+	cmpq	%rsi, %rbx
+	je	.LB44
+	leaq	0(%rbp,%rdx,8), %rdi
+	movq	56(%rdi), %r8
+	cmpq	%r8, 64(%rcx)
 	je	.LB52
-	subq	$1, %rdx
 	subq	%rbx, %rdx
-	movl	$0, %eax
+	subq	$1, %rdx
 	cmpq	$16, %rdx
 	jbe	.LB53
-.LB41:
+.LB44:
 	popq	%rbx
 	popq	%rbp
 	ret
 .LB52:
-	movq	8248(%rax), %rdx
+	movq	8248(%rdi), %rdx
 	movq	%rdx, 8256(%rcx)
-	movq	%rsi, 8248(%rax)
-	movl	$0, %eax
-	jmp	.LB41
+	movq	%rsi, 8248(%rdi)
+	jmp	.LB44
 .LB53:
 	movq	%rbx, %rsi
 	movq	%rbp, %rdi
-	call	swap_with
-	jmp	.LB41
-.LB44:
+	call	swapWith
+	jmp	.LB44
+.LB47:
 	movq	$-2, %rax
 	ret
 	.size	generate, .-generate

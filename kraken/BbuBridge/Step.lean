@@ -24,10 +24,10 @@ theorem step_corr (hu : UrgentStmt) (h1 : RestUrgentStmt) (h2 : RestTopStmt)
     rintro ⟨hl, hf⟩
     exact hfin ⟨h.len ▸ hl, (h.isFinal ⟨t, hl⟩).mp hf⟩
   -- All is generated.
-  by_cases hp : st.pending = 0
+  by_cases hp : st.pendingGenerations = 0
   · rw [ite_eq_left hp]
-    exact ⟨h, loop_finish t state htn hnf (h.pending.trans hp)⟩
-  rw [ite_eq_right hp, loop_rest t state htn hnf (h.pending ▸ hp)]
+    exact ⟨h, loop_finish t state htn hnf (h.pendingGenerations.trans hp)⟩
+  rw [ite_eq_right hp, loop_rest t state htn hnf (h.pendingGenerations ▸ hp)]
   -- The urgent scan.
   have hc := hu e source st state t h
   cases hut : Bbu.urgent e st t with

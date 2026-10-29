@@ -20,7 +20,7 @@ theorem produce_corr (hpush : PushStmt) (hdup : DupStmt) : ProduceStmt := by
   have hfin : ∀ (st' : Bbu.St) (state' : OState e source), Rel e st' state' →
       Corr (Rel e)
         (if Bbu.positionOf st' d ≠ some (st'.len - 1) then .error .assertion
-          else .ok { st' with pending := st'.pending - 1 })
+          else .ok { st' with pendingGenerations := st'.pendingGenerations - 1 })
         (do
           let _ ← requires ((state'.positionOf ⟨d, hd⟩).map Fin.val = some (state'.stack.length - 1))
             "generated slot is not bound to the top"
@@ -29,7 +29,7 @@ theorem produce_corr (hpush : PushStmt) (hdup : DupStmt) : ProduceStmt := by
     rw [← h'.positionOf ⟨d, hd⟩, ← h'.len]
     by_cases hc : (state'.positionOf ⟨d, hd⟩).map Fin.val = some (state'.stack.length - 1)
     · rw [requires_of_true _ hc, ite_eq_right (not_not.mpr hc)]
-      exact ⟨h'.stack, h'.dest, by simp [h'.pending], h'.ops⟩
+      exact ⟨h'.stack, h'.dest, by simp [h'.pendingGenerations], h'.trace⟩
     · rw [ite_eq_left hc]
       simp only [requires, dite_eq_right hc]
       rfl
@@ -51,7 +51,7 @@ theorem produce_corr (hpush : PushStmt) (hdup : DupStmt) : ProduceStmt := by
   have hfree : (decode v).can_be_freely_generated ∨ (spillSet e).is_spilled (decode v) ↔
       (Bbu.isFree v || Bbu.isSpilled e v) = true := by
     rw [Bool.or_eq_true, isFree_iff, isSpilled_iff]
-  have hc := h.shallowestCopy v
+  have hc := h.shallowestCopyPosition v
   cases hco : state.stack.shallowestCopyPosition (decode v) with
   | none =>
     -- No copy: a push, or an assertion.

@@ -38,7 +38,7 @@ theorem swapWith_corr : SwapWithStmt := by
       by_cases hdepth : 1 ≤ st.len - 1 - pos ∧ st.len - 1 - pos ≤ MAX_SWAP_DEPTH
       · rw [ite_eq_right (by simp only [Bbu.MAX_SWAP_DEPTH, MAX_SWAP_DEPTH] at *; omega)]
         simp only [hdd, hdepth, and_self, dite_true]
-        refine ⟨?_, ?_, h.pending, ?_⟩
+        refine ⟨?_, ?_, h.pendingGenerations, ?_⟩
         · show state.stack.swap pos (state.stack.length - 1) = _
           rw [List.swap_eq_of_lt hp (by omega)]
           apply List.ext_getElem
@@ -65,7 +65,7 @@ theorem swapWith_corr : SwapWithStmt := by
           · simp [Bbu.St.dest, hi', Ne.symm h3, Ne.symm h4]
         · dsimp only
           rw [traceOps_cast]
-          simp [traceOps, encodeOp, h.ops, hdd]
+          simp [traceOps, encodeOp, h.trace, hdd]
       · rw [ite_eq_left (by simp only [Bbu.MAX_SWAP_DEPTH, MAX_SWAP_DEPTH] at *; omega)]
         simp only [hdd, hdepth, dite_false]
         exact rfl

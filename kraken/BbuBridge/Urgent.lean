@@ -72,7 +72,7 @@ private theorem urgent_scan (h : Rel e st state) (t : Nat) :
     · simp only [hg, (urgent_gen_iff e _).mpr hg, ↓reduceIte]
       exact ih u acc (by omega) hu
     simp only [hg, mt (urgent_gen_iff e _).mp hg, Bool.false_eq_true, ↓reduceIte]
-    have hc := h.shallowestCopy e.target[d]!
+    have hc := h.shallowestCopyPosition e.target[d]!
     cases hsc : state.stack.shallowestCopyPosition (decode e.target[d]!) with
     | none =>
       rw [hsc, Option.map_none] at hc

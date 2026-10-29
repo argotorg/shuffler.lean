@@ -20,7 +20,7 @@ struct state {
 	int dest[1024], spills[1024];
 };
 
-/* Not is_spilled: test/bin_objdump.sh finds the code by that name. */
+/* Not isSpilled: test/bin_objdump.sh finds the code by that name. */
 static int in_spills(const struct state *s, uint32_t v)
 {
 	if (v < 2 || v % 2)

@@ -35,7 +35,7 @@ theorem dup_corr : DupStmt := by
     rw [← hpos]
     simp only [requires, hp, hreach, ↓reduceDIte, pure, Except.pure, bind, Except.bind,
       Option.map_none, Option.isSome_none, Bool.false_eq_true, ↓reduceIte]
-    refine ⟨?_, ?_, h.pending, ?_⟩
+    refine ⟨?_, ?_, h.pendingGenerations, ?_⟩
     · show state.stack ++ [state.stack[(⟨c, hcl⟩ : Fin _)]] = _
       rw [h.get ⟨c, hcl⟩]
       simp [h.stack]
@@ -54,7 +54,7 @@ theorem dup_corr : DupStmt := by
         simp [Bbu.St.dest, hl]
     · dsimp only
       rw [traceOps_cast]
-      simp only [traceOps, encodeOp, List.map_append, h.ops, Stack.offsetToDepth, List.map_cons,
+      simp only [traceOps, encodeOp, List.map_append, h.trace, Stack.offsetToDepth, List.map_cons,
         List.map_nil]
       congr 3
       omega

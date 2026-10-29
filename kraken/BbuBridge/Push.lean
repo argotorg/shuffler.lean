@@ -27,7 +27,7 @@ theorem push_corr : PushStmt := by
     rw [← hpos]
     simp only [requires, hp, hgen, ↓reduceDIte, pure, Except.pure, bind, Except.bind,
       Option.map_none, Option.isSome_none, Bool.false_eq_true, ↓reduceIte]
-    refine ⟨?_, ?_, h.pending, ?_⟩
+    refine ⟨?_, ?_, h.pendingGenerations, ?_⟩
     · show state.stack ++ [decode v] = _
       simp [h.stack]
     · intro i
@@ -51,7 +51,7 @@ theorem push_corr : PushStmt := by
       intro hgen
       cases x
       all_goals first
-        | simp [traceOps, encodeOp, h.ops]
+        | simp [traceOps, encodeOp, h.trace]
         | simp [Value.can_be_freely_generated, SpillSet.is_spilled] at hgen
   · obtain ⟨k, hk⟩ := Option.ne_none_iff_exists'.mp hp
     rw [hk] at hpos

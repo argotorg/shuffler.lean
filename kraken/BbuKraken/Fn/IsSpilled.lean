@@ -1,4 +1,4 @@
-import BbuKraken.Contracts
+import BbuKraken.Kit
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -29,22 +29,6 @@ theorem pushRa_keeps (hpre : Pre 8 A s) :
   have hd := disjoint_symm hf.disj
   exact ⟨Wf.congr_of_disjoint hu hw hd, hf.mapped.storeInt _ _ _, stOf_congr hu hw hd,
     (envOf_congr hu hw (disjoint_mono (fun x hx => inside_append.mpr (Or.inr hx)) hd)).1⟩
-
-@[simp] theorem pushRa_rax : (s.pushRa ra).regs.rax = s.regs.rax := rfl
-@[simp] theorem pushRa_rbx : (s.pushRa ra).regs.rbx = s.regs.rbx := rfl
-@[simp] theorem pushRa_rcx : (s.pushRa ra).regs.rcx = s.regs.rcx := rfl
-@[simp] theorem pushRa_rdx : (s.pushRa ra).regs.rdx = s.regs.rdx := rfl
-@[simp] theorem pushRa_rsi : (s.pushRa ra).regs.rsi = s.regs.rsi := rfl
-@[simp] theorem pushRa_rdi : (s.pushRa ra).regs.rdi = s.regs.rdi := rfl
-@[simp] theorem pushRa_rbp : (s.pushRa ra).regs.rbp = s.regs.rbp := rfl
-@[simp] theorem pushRa_r8 : (s.pushRa ra).regs.r8 = s.regs.r8 := rfl
-@[simp] theorem pushRa_r9 : (s.pushRa ra).regs.r9 = s.regs.r9 := rfl
-@[simp] theorem pushRa_r10 : (s.pushRa ra).regs.r10 = s.regs.r10 := rfl
-@[simp] theorem pushRa_r11 : (s.pushRa ra).regs.r11 = s.regs.r11 := rfl
-@[simp] theorem pushRa_r12 : (s.pushRa ra).regs.r12 = s.regs.r12 := rfl
-@[simp] theorem pushRa_r13 : (s.pushRa ra).regs.r13 = s.regs.r13 := rfl
-@[simp] theorem pushRa_r14 : (s.pushRa ra).regs.r14 = s.regs.r14 := rfl
-@[simp] theorem pushRa_r15 : (s.pushRa ra).regs.r15 = s.regs.r15 := rfl
 
 -- The state at `ret` of a leaf function that returns `r`.
 def Done (s : MachineData) (ra : Int64) (r : Word) (t : MachineData) : Prop :=
@@ -110,39 +94,14 @@ theorem Done.ret [Host] {r : Word} {R : MachineData → MachineData → Prop} {l
     Program.Intercept ls (s.pushRa ra) I'
       (fun a t => a = ra ∧ Post 8 R s t ∧ (mod 8 s).Agree s t) t.retAddr.get!
       { regs := t.regs.set64 Reg64.rsp (t.regs.get64 Reg64.rsp + 8#64), zmms := t.zmms,
-        status := t.status, dmem := t.dmem } := by
-  have hra := h.retAddr
-  obtain ⟨hm, hsp, hax, hr⟩ := h
-  replace hsp : t.regs.get64 .rsp = s.regs.get64 .rsp - 8#64 := hsp
-  obtain ⟨hw, hmap, -⟩ := pushRa_keeps (ra := ra) hpre
-  refine Or.inr ⟨⟨by simp [hra], ⟨hm ▸ hw, hm ▸ hmap, hR _ hm (by simpa using hax)⟩,
-    fun q hq => ?_, ?_⟩, fun _ _ _ => ?_⟩
-  · simp only [Reg64s.get64_set64]
-    split
-    · subst_vars; rw [hsp]; bv_omega
-    · exact hr q (by simp_all [mod])
-  · simp only [hm]
-    exact fun b hb => unchanged_pushRa b fun h => hb (h.imp id fun h => h.elim)
-  · apply MachineData.stackBelow_of_add_eight
-    simp [MachineData.pushRa, hsp]
-    bv_omega
+        status := t.status, dmem := t.dmem } :=
+  Kit.Fm.ret (rs := []) (by decide) hpre
+    ⟨h.1 ▸ Kit.Mid.init (by decide) hpre, h.1 ▸ Kit.wf_pushRa (by decide) hpre, nofun⟩
+    h.2.1 h.2.2.2 fun t' hm hax => hR t' (hm.trans h.1) (hax.trans h.2.2.1)
 
 end Leaf
 
 /-! ## Flags and addresses -/
-
--- `cmpq $1, v; jbe` jumps iff `v < 2`.
-theorem be_sub_one (v : BitVec 64) (af of : Bool) :
-    CondCode.be.interp (StatusFlags.from_result (v - 1#64)
-      { cf := (((v - 1#64).toNat : Int) != (v.toNat : Int) - 1), af, of })
-      = decide (v.toNat < 2) := by
-  simp only [CondCode.interp_be, StatusFlags.cf_from_result, StatusFlags.zf_from_result]
-  rw [Bool.eq_iff_iff]
-  simp only [Bool.or_eq_true, bne_iff_ne, ne_eq, beq_iff_eq, ← BitVec.toNat_inj, BitVec.toNat_sub,
-    BitVec.zero_eq, BitVec.toNat_ofNat, decide_eq_true_eq, Nat.reducePow, Nat.reduceMod,
-    Nat.reduceSub]
-  have := v.isLt
-  omega
 
 -- `testb $1, v; jne` jumps iff `v` is odd.
 theorem nz_and_one (v : BitVec 64) (af : Bool) :
@@ -174,40 +133,6 @@ theorem sub_two_shr {v : BitVec 64} (h2 : 2 ≤ v.toNat) :
   have := v.isLt
   omega
 
--- The header words 3 to 7 are readable.
-theorem inside_hdr {m : Mem 64} {S : Addr} {k : Nat} (h3 : 3 ≤ k) (h8 : k < 8) :
-    Mem.Blocks.Inside (wordAt S k) 8 (readable m S) := by
-  have : wordAt S k = wordAt S 3 + BitVec.ofNat 64 (8 * (k - 3)) := by bv_omega
-  rw [this]
-  exact Mem.Blocks.Inside.base_add (by simp only [BitVec.toNat_ofNat]; omega)
-
--- `testq w, w; je` jumps iff `w = 0`.
-theorem z_and_self (w : BitVec 64) (af : Bool) :
-    CondCode.z.interp (StatusFlags.from_result (w &&& w) { cf := false, af, of := false })
-      = (w == 0#64) := by
-  simp [CondCode.interp_z, StatusFlags.zf_from_result]
-
--- `cmpq b, a; je` jumps iff `a = b`.
-theorem z_sub (a b : BitVec 64) (cf af of : Bool) :
-    CondCode.z.interp (StatusFlags.from_result (a - b) { cf, af, of }) = (a == b) := by
-  simp only [CondCode.interp_z, StatusFlags.zf_from_result]
-  rw [Bool.eq_iff_iff]
-  simp only [beq_iff_eq, BitVec.zero_eq]
-  constructor
-  · intro h; rw [← BitVec.sub_add_cancel a b, h, BitVec.zero_add]
-  · rintro rfl; exact BitVec.sub_self a
-
--- `cmpq b, a; jne` jumps iff `a ≠ b`.
-theorem nz_sub (a b : BitVec 64) (cf af of : Bool) :
-    CondCode.nz.interp (StatusFlags.from_result (a - b) { cf, af, of }) = !(a == b) := by
-  rw [← z_sub a b cf af of]
-  simp [CondCode.interp_z, CondCode.interp_nz]
-
--- The words 0 to 2 of the header are writable.
-theorem inside_hdr0 {m : Mem 64} {S : Addr} {k : Nat} (hk : k < 3) :
-    Mem.Blocks.Inside (wordAt S k) 8 (writable m S) :=
-  Mem.Blocks.Inside.base_add (by simp only [BitVec.toNat_ofNat]; omega)
-
 -- The words of the stack and dest arrays are writable.
 theorem inside_arr {m : Mem 64} {S : Addr} {k : Nat} (h1 : STACK ≤ k) (h2 : k < WORDS) :
     Mem.Blocks.Inside (wordAt S k) 8 (writable m S) := by
@@ -221,11 +146,7 @@ theorem Wf.load_readable {m : Mem 64} {S x : Addr} {n : Nat} (hw : Wf m S)
     (h : Mem.Blocks.Inside x n (readable m S)) : (m.loadInt x n).isSome = true :=
   hw.mapped.loadInt_isSome (inside_append.mpr (Or.inr h))
 
-theorem Wf.load_writable {m : Mem 64} {S x : Addr} {n : Nat} (hw : Wf m S)
-    (h : Mem.Blocks.Inside x n (writable m S)) : (m.loadInt x n).isSome = true :=
-  hw.mapped.loadInt_isSome (inside_append.mpr (Or.inl h))
-
-/-! ## `is_spilled` -/
+/-! ## `isSpilled` -/
 
 -- A target value `v` that is a variable selects its spilled byte.
 theorem isSpilled_envOf {m : Mem 64} {S : Addr} {v : Word} {d : Nat} (hd : d < nOf m S)
@@ -244,7 +165,7 @@ theorem inside_splBlocks {m : Mem 64} {S : Addr} {v : Word} {d : Nat} (hd : d < 
   inside_of_mem (p := (splOf m S + BitVec.ofNat 64 ((v.toNat - 2) / 2), 1)) (List.mem_filterMap.mpr ⟨d, List.mem_range.mpr hd, by simp [hv, h2, he]⟩)
     (Mem.Blocks.Inside.base (Nat.le_refl 1))
 
--- The address of the spilled byte that `is_spilled` reads.
+-- The address of the spilled byte that `isSpilled` reads.
 theorem spl_addr {m : Mem 64} {S v : Addr} (h2 : 2 ≤ v.toNat) :
     BitVec.ofInt 64 (m.loadInt (S + BitVec.ofInt 64 (Int64.toInt 40)) 8).get!
         + (v - 2#64).ushiftRight (((1#64).take 8).toNat &&& 63) + BitVec.ofInt 64 (Int64.toInt 0)
@@ -259,7 +180,7 @@ theorem isSpilled_body [Host] [FunDecls] : Body isSpilledAsm isSpilledF isSpille
   refine ⟨fun s₀ ⟨h₀, hpre⟩ => ?_⟩
   subst h₀
   refine Program.WP.cfg (fun
-      | .entry, t | .label "is_spilled", t => t = s.pushRa ra
+      | .entry, t | .label "isSpilled", t => t = s.pushRa ra
       | .label ".LB1", t => Done s ra (BitVec.ofNat 64 (isSpilled (env s) (rsi s)).toNat) t
       | _, _ => False)
     (fun _ _ => 0) ?_ rfl
@@ -287,7 +208,8 @@ theorem isSpilled_body [Host] [FunDecls] : Body isSpilledAsm isSpilledF isSpille
       pushRa_rbp, pushRa_r8, pushRa_r9, pushRa_r10, pushRa_r11, pushRa_r12, pushRa_r13, pushRa_r14,
       pushRa_r15] at *
     case vc1 hbe _ =>
-      have h1 : s.regs.rsi.toNat < 2 := of_decide_eq_true ((be_sub_one _ _ _).symm.trans hbe)
+      have h1 : s.regs.rsi.toNat < 2 :=
+        Nat.lt_succ_of_le (of_decide_eq_true ((Kit.be_sub_imm _ 1 (by decide) _ _).symm.trans hbe))
       cfg_goto
       · exact stack_pushRa rfl
       · refine Done.intro rfl rfl ?_ rfl rfl rfl rfl rfl rfl
@@ -301,10 +223,10 @@ theorem isSpilled_body [Host] [FunDecls] : Body isSpilledAsm isSpilledF isSpille
         simp [isSpilled, h1]
       · simp
     case vc3 => decide
-    case vc4 =>
-      exact hw.load_readable (inside_hdr (k := 5) (by decide) (by decide))
+    case vc4 => exact hw.word_isSome hw.mapped (k := 5) (by decide)
     case vc5 hbe _ hnz _ _ _ _ =>
-      have h2 : 2 ≤ (rsi s).toNat := Nat.not_lt.mp (of_decide_eq_false ((be_sub_one _ _ _).symm.trans hbe))
+      have h2 : 2 ≤ (rsi s).toNat :=
+        Nat.not_le.mp (of_decide_eq_false ((Kit.be_sub_imm _ 1 (by decide) _ _).symm.trans hbe))
       have he : (rsi s).toNat % 2 = 0 := by
         have : ¬ (rsi s).toNat % 2 = 1 := of_decide_eq_false ((nz_and_one _ _).symm.trans hnz)
         omega
@@ -312,7 +234,8 @@ theorem isSpilled_body [Host] [FunDecls] : Body isSpilledAsm isSpilledF isSpille
       rw [← spl_addr h2] at h
       exact h
     case vc6 hbe _ hnz _ _ _ _ =>
-      have h2 : 2 ≤ (rsi s).toNat := Nat.not_lt.mp (of_decide_eq_false ((be_sub_one _ _ _).symm.trans hbe))
+      have h2 : 2 ≤ (rsi s).toNat :=
+        Nat.not_le.mp (of_decide_eq_false ((Kit.be_sub_imm _ 1 (by decide) _ _).symm.trans hbe))
       have he : (rsi s).toNat % 2 = 0 := by
         have : ¬ (rsi s).toNat % 2 = 1 := of_decide_eq_false ((nz_and_one _ _).symm.trans hnz)
         omega

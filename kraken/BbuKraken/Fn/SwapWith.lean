@@ -7,7 +7,7 @@ set_option maxHeartbeats 1000000
 
 namespace SwapWithFn
 
--- The state at `.LB23`, `.LB24` and `.LB25`: the memory and the registers of the
+-- The state at `.LB17`, `.LB18` and `.LB19`: the memory and the registers of the
 -- call, and an assertion error in the model.
 def Fail (s : MachineData) (ra : Int64) (t : MachineData) : Prop :=
   t.dmem = (s.pushRa ra).dmem ∧ rsp t = rsp s - 8#64
@@ -30,26 +30,23 @@ theorem slot_addr (S r : BitVec 64) (k : Nat) :
   simp only [wordAt]; bv_omega
 
 theorem depth_big (L r : BitVec 64) (hlt : r.toNat < L.toNat)
-    (h : ((L + -1#64 - r + -1#64 - 15#64).toNat : Int) = ((L + -1#64 - r + -1#64).toNat : Int) - 15
-      ∧ ¬ L + -1#64 - r + -1#64 - 15#64 = 0#64) :
+    (h : ((L - r + -2#64 - 15#64).toNat : Int) = ((L - r + -2#64).toNat : Int) - 15
+      ∧ ¬ L - r + -2#64 - 15#64 = 0#64) :
     L.toNat - 1 - r.toNat < 1 ∨ 16 < L.toNat - 1 - r.toNat := by
   bv_omega
 
 theorem depth_ok (L r : BitVec 64) (hlt : r.toNat < L.toNat)
-    (h : ¬ ((L + -1#64 - r + -1#64 - 15#64).toNat : Int) = ((L + -1#64 - r + -1#64).toNat : Int) - 15
-      ∨ L + -1#64 - r + -1#64 - 15#64 = 0#64) :
+    (h : ¬ ((L - r + -2#64 - 15#64).toNat : Int) = ((L - r + -2#64).toNat : Int) - 15
+      ∨ L - r + -2#64 - 15#64 = 0#64) :
     1 ≤ L.toNat - 1 - r.toNat ∧ L.toNat - 1 - r.toNat ≤ 16 := by
   bv_omega
-
-theorem shl4 (x : BitVec 64) : x <<< 4 = x * 16#64 := by
-  rw [BitVec.shiftLeft_eq_mul_twoPow]; rfl
 
 theorem swapWith_eq {st : St} {pos : Nat} (h1 : pos < st.len) (h2 : st.dest pos ≠ pos)
     (h3 : 1 ≤ st.len - 1 - pos) (h4 : st.len - 1 - pos ≤ MAX_SWAP_DEPTH) :
     swapWith st pos = .ok { st with
       slots := (st.slots.set pos ⟨st.val (st.len - 1), st.dest (st.len - 1)⟩).set (st.len - 1)
         ⟨st.val pos, st.dest pos⟩
-      ops := st.ops ++ [.swap (st.len - 1 - pos)] } := by
+      trace := st.trace ++ [.swap (st.len - 1 - pos)] } := by
   unfold swapWith
   rw [ite_eq_right (by omega)]
   dsimp only
@@ -60,13 +57,13 @@ open Kit
 -- Two reads at equal addresses.
 theorem rd_addr {m : Mem 64} {a b : Addr} (h : a = b) : rd m a = rd m b := h ▸ rfl
 
--- The last step of a read after the stores of `swap_with`.
+-- The last step of a read after the stores of `swapWith`.
 local macro "swap_fin" : tactic => `(tactic| first
   | exact True.intro
   | exact rd_addr (by bv_omega)
   | exact congrArg BitVec.toNat (rd_addr (by bv_omega)))
 
--- `Mid` after the stores of `swap_with`.
+-- `Mid` after the stores of `swapWith`.
 local macro "swap_mid" : tactic => `(tactic| (
   iterate 7 (refine Mid.store_w (by decide) (by assumption) ?_ ?_ _)
   exact Mid.init (by decide) (by assumption)
@@ -84,14 +81,14 @@ local macro "swap_mid" : tactic => `(tactic| (
 section
 variable {s : MachineData} {ra : Int64}
 
--- The memory after the stores of `swap_with`, in the form of the `kvcgen64` goals.
+-- The memory after the stores of `swapWith`, in the form of the `kvcgen64` goals.
 def fin (s : MachineData) (ra : Int64) : Mem 64 :=
   let S := s.regs.rdi.toBitVec
   let r := s.regs.rsi.toBitVec
   let L := rd s.dmem S
   let m0 := Mem.storeInt s.dmem (s.regs.rsp.toBitVec - 8#64) 8 ra.toBitVec.toInt
   let m1 := m0.storeInt (rd m0 (S + 48#64) + rd m0 (S + 16#64) <<< 4) 8 0
-  let m2 := m1.storeInt (rd m1 (S + 48#64) + rd m1 (S + 16#64) <<< 4 + 8#64) 8 (L + -1#64 - r).toInt
+  let m2 := m1.storeInt (rd m1 (S + 48#64) + rd m1 (S + 16#64) <<< 4 + 8#64) 8 (L - r - 1#64).toInt
   let m3 := m2.storeInt (S + 16#64) 8 (1#64 + rd m2 (S + 16#64)).toInt
   let m4 := m3.storeInt (S + r * 8#64 + 64#64) 8 (rd m3 (S + L * 8#64 + 56#64)).toInt
   let m5 := m4.storeInt (S + L * 8#64 + 56#64) 8 (rd m3 (S + r * 8#64 + 64#64)).toInt
@@ -121,7 +118,7 @@ theorem facts (hpre : Pre swapWithF swapWithA s) :
   have hle := hfr.le
   have hlen : _ ≤ 1024 := hw.len_le
   have hn : _ ≤ 1024 := hw.n_le
-  have hnlt : (st s).ops.length < cap s := hpre.2.2
+  have hnlt : (st s).trace.length < cap s := hpre.2.2
   simp only [cap, st, nops_stOf] at hnlt
   have hso := hw.sep_ops (by omega)
   have hol := hw.ops_lt
@@ -130,7 +127,7 @@ theorem facts (hpre : Pre swapWithF swapWithA s) :
   bbu_norm at hsep hst hle hlen hn hnlt hso hol hfo
   exact ⟨hsep, hst, hle, hlen, hnlt, hn, hso, hol, hfo⟩
 
--- The stores of `swap_with` stay in the frame and `writable`.
+-- The stores of `swapWith` stay in the frame and `writable`.
 theorem mid_fin (hpre : Pre swapWithF swapWithA s)
     (hpos : s.regs.rsi.toBitVec.toNat < (rd s.dmem s.regs.rdi.toBitVec).toNat)
     (_hdep : 1 ≤ (rd s.dmem s.regs.rdi.toBitVec).toNat - 1 - s.regs.rsi.toBitVec.toNat) :
@@ -156,7 +153,7 @@ theorem rd_fin_pend (hpre : Pre swapWithF swapWithA s)
   obtain ⟨_, _, _, _, _, _, _, _, _⟩ := facts hpre
   simp only [fin, shl4]; bbu_rd
 
--- A slot after the stores of `swap_with`.
+-- A slot after the stores of `swapWith`.
 local macro "slot_tac" : tactic => `(tactic| (
   simp only [slotOf, Slot.mk.injEq, fin, shl4, STACK, DEST_eq]; bbu_norm; bbu_rd
   refine ⟨?_, ?_⟩ <;> swap_fin))
@@ -218,14 +215,14 @@ theorem st_slot' {j : Nat} (hj : j < (rd s.dmem s.regs.rdi.toBitVec).toNat) :
     dest_stOf (m := s.dmem) (S := rdi s) (by bbu_norm; exact hj)]
   rfl
 
-theorem st_op {j : Nat} (hj : j < (st s).ops.length) :
-    (st s).ops[j] = opOf s.dmem (rdi s) j := by
+theorem st_op {j : Nat} (hj : j < (st s).trace.length) :
+    (st s).trace[j] = opOf s.dmem (rdi s) j := by
   simp [st, stOf]
 
 theorem len_st : (st s).len = (rd s.dmem s.regs.rdi.toBitVec).toNat := by
   rw [len_stOf]; bbu_norm
 
-theorem nops_st : (st s).ops.length = (rd s.dmem (s.regs.rdi.toBitVec + 16#64)).toNat := by
+theorem nops_st : (st s).trace.length = (rd s.dmem (s.regs.rdi.toBitVec + 16#64)).toNat := by
   rw [nops_stOf]; bbu_norm
 
 -- The slots of the model after `swapWith`.
@@ -256,12 +253,12 @@ theorem ops_fin (hpre : Pre swapWithF swapWithA s)
     (hdep : 1 ≤ (rd s.dmem s.regs.rdi.toBitVec).toNat - 1 - s.regs.rsi.toBitVec.toNat)
     {i : Nat} (h) :
     opOf (fin s ra) (rdi s) i =
-      ((st s).ops ++ [Op.swap ((st s).len - 1 - (rsi s).toNat)])[i]'h := by
+      ((st s).trace ++ [Op.swap ((st s).len - 1 - (rsi s).toNat)])[i]'h := by
   rw [List.getElem_append]
   split
   · rw [st_op]
     exact op_fin hpre hpos hdep (by rw [← nops_st]; assumption)
-  · have hi : i = (st s).ops.length := by simp only [List.length_append, List.length_singleton] at h; omega
+  · have hi : i = (st s).trace.length := by simp only [List.length_append, List.length_singleton] at h; omega
     simp only [List.getElem_singleton, len_st]
     rw [hi, nops_st]
     exact op_fin_last hpre hpos hdep
@@ -271,8 +268,8 @@ theorem R_fin {t : MachineData} (hpre : Pre swapWithF swapWithA s)
     (hpos : s.regs.rsi.toBitVec.toNat < (rd s.dmem s.regs.rdi.toBitVec).toNat)
     (hdep : 1 ≤ (rd s.dmem s.regs.rdi.toBitVec).toNat - 1 - s.regs.rsi.toBitVec.toNat ∧
       (rd s.dmem s.regs.rdi.toBitVec).toNat - 1 - s.regs.rsi.toBitVec.toNat ≤ 16)
-    (hdz : ¬rd s.dmem (s.regs.rdi.toBitVec + s.regs.rsi.toBitVec * 8#64 + 8256#64)
-      - s.regs.rsi.toBitVec = 0#64)
+    (hdz : ¬s.regs.rsi.toBitVec - rd s.dmem (s.regs.rdi.toBitVec + s.regs.rsi.toBitVec * 8#64 + 8256#64)
+      = 0#64)
     (hm : t.dmem = fin s ra) (hax : t.regs.rax.toBitVec = 0#64) : swapWithR s t := by
   obtain ⟨_, _, _, _, hnlt, _, _, _, _⟩ := facts hpre
   have hd : (st s).dest (rsi s).toNat ≠ (rsi s).toNat := by
@@ -310,8 +307,8 @@ theorem swapWith_body [Host] [FunDecls] : Body swapWithAsm swapWithF swapWithA s
   refine ⟨fun s₀ ⟨h₀, hpre⟩ => ?_⟩
   subst h₀
   refine Program.WP.cfg (fun
-      | .entry, t | .label "swap_with", t => t = s.pushRa ra
-      | .label ".LB23", t | .label ".LB24", t | .label ".LB25", t => Fail s ra t
+      | .entry, t | .label "swapWith", t => t = s.pushRa ra
+      | .label ".LB17", t | .label ".LB18", t | .label ".LB19", t => Fail s ra t
       | _, _ => False)
     (fun _ _ => 0) ?_ rfl
   have hF : 8 ≤ swapWithF := by decide

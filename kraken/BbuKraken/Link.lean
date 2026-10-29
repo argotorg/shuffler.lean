@@ -15,9 +15,9 @@ open scoped Program.WP
 namespace Bbu
 
 set_option maxRecDepth 100000 in
-theorem bbuAsm_eq : bbuAsm = isSpilledAsm ++ positionOfAsm ++ shallowestCopyAsm ++ addAsm
-    ++ swapWithAsm ++ produceAsm ++ generateAsm ++ finishAsm ++ takeBoundAsm ++ urgentAsm
-    ++ stepAsm ++ buildBottomUpAsm := by rfl
+theorem bbuAsm_eq : bbuAsm = isSpilledAsm ++ positionOfAsm ++ shallowestCopyAsm ++ swapWithAsm
+    ++ pushAsm ++ dupAsm ++ produceAsm ++ generateAsm ++ finishAsm ++ loopAsm
+    ++ buildBottomUpAsm := by rfl
 
 section
 set_option maxRecDepth 100000
@@ -26,15 +26,14 @@ theorem isSpilled_at : isSpilledAsm.IsInfixAt bbuAsm 0 := by rw [bbuAsm_eq]; exa
 theorem positionOf_at : positionOfAsm.IsInfixAt bbuAsm 14 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 theorem shallowestCopy_at : shallowestCopyAsm.IsInfixAt bbuAsm 31 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem add_at : addAsm.IsInfixAt bbuAsm 44 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem swapWith_at : swapWithAsm.IsInfixAt bbuAsm 84 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem produce_at : produceAsm.IsInfixAt bbuAsm 125 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem generate_at : generateAsm.IsInfixAt bbuAsm 219 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem finish_at : finishAsm.IsInfixAt bbuAsm 265 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem takeBound_at : takeBoundAsm.IsInfixAt bbuAsm 318 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem urgent_at : urgentAsm.IsInfixAt bbuAsm 387 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem step_at : stepAsm.IsInfixAt bbuAsm 461 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem buildBottomUp_at : buildBottomUpAsm.IsInfixAt bbuAsm 591 := by
+theorem swapWith_at : swapWithAsm.IsInfixAt bbuAsm 44 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem push_at : pushAsm.IsInfixAt bbuAsm 86 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem dup_at : dupAsm.IsInfixAt bbuAsm 121 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem produce_at : produceAsm.IsInfixAt bbuAsm 158 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem generate_at : generateAsm.IsInfixAt bbuAsm 253 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem finish_at : finishAsm.IsInfixAt bbuAsm 296 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem loop_at : loopAsm.IsInfixAt bbuAsm 349 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem buildBottomUp_at : buildBottomUpAsm.IsInfixAt bbuAsm 623 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 end
 
@@ -120,27 +119,26 @@ def permuteFrag : Fragment := @Fragment.mk _ State.permuteAsm ⟨⟨L.j, L.hp⟩
 
 -- The functions that are called.
 def decls : FunDecls := ⟨[L.frag isSpilledAsm isSpilled_at, L.frag positionOfAsm positionOf_at,
-  L.frag shallowestCopyAsm shallowestCopy_at, L.frag addAsm add_at,
-  L.frag swapWithAsm swapWith_at, L.frag produceAsm produce_at, L.frag generateAsm generate_at,
-  L.frag finishAsm finish_at, L.frag takeBoundAsm takeBound_at, L.frag urgentAsm urgent_at,
-  L.frag stepAsm step_at, L.permuteFrag]⟩
+  L.frag shallowestCopyAsm shallowestCopy_at, L.frag swapWithAsm swapWith_at,
+  L.frag pushAsm push_at, L.frag dupAsm dup_at, L.frag produceAsm produce_at,
+  L.frag generateAsm generate_at, L.frag finishAsm finish_at, L.frag loopAsm loop_at,
+  L.permuteFrag]⟩
 
 macro "head_tac" : tactic =>
   `(tactic| exact head_of_isInfixAt _ rfl (by rintro ⟨⟩))
 
-theorem heads : Head (L.frag isSpilledAsm isSpilled_at) "is_spilled"
-    ∧ Head (L.frag positionOfAsm positionOf_at) "position_of"
-    ∧ Head (L.frag shallowestCopyAsm shallowestCopy_at) "shallowest_copy"
-    ∧ Head (L.frag addAsm add_at) "add"
-    ∧ Head (L.frag swapWithAsm swapWith_at) "swap_with"
+theorem heads : Head (L.frag isSpilledAsm isSpilled_at) "isSpilled"
+    ∧ Head (L.frag positionOfAsm positionOf_at) "positionOf"
+    ∧ Head (L.frag shallowestCopyAsm shallowestCopy_at) "shallowestCopyPosition"
+    ∧ Head (L.frag swapWithAsm swapWith_at) "swapWith"
+    ∧ Head (L.frag pushAsm push_at) "push"
+    ∧ Head (L.frag dupAsm dup_at) "dup"
     ∧ Head (L.frag produceAsm produce_at) "produce"
     ∧ Head (L.frag generateAsm generate_at) "generate"
-    ∧ Head (L.frag finishAsm finish_at) "finish"
-    ∧ Head (L.frag takeBoundAsm takeBound_at) "take_bound"
-    ∧ Head (L.frag urgentAsm urgent_at) "urgent"
-    ∧ Head (L.frag stepAsm step_at) "step"
+    ∧ Head (L.frag finishAsm finish_at) "permuteDestinations"
+    ∧ Head (L.frag loopAsm loop_at) "buildBottomUp"
     ∧ Head L.permuteFrag "permute" := by
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> head_tac
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> head_tac
 
 theorem at_label {fs : List Fragment} {f : Fragment} {l : Label} (hf : f ∈ fs) (hx : Head f l)
     (hall : ∀ g ∈ fs, ∃ l', Head g l' ∧ (l' = l → g = f)) :
@@ -162,8 +160,8 @@ theorem find_hit {f : Fragment} {gs : List Fragment} {l : Label} (hx : Head f l)
 
 set_option hygiene false in
 macro "at_tac " h:ident : tactic => `(tactic| (
-  obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11, h12⟩ := heads _
-  show List.find? _ [_, _, _, _, _, _, _, _, _, _, _, _] = _
+  obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10, h11⟩ := heads _
+  show List.find? _ [_, _, _, _, _, _, _, _, _, _, _] = _
   all_goals first | rewrite [find_skip h1 $h (by decide)] | exact find_hit $h
   all_goals first | rewrite [find_skip h2 $h (by decide)] | exact find_hit $h
   all_goals first | rewrite [find_skip h3 $h (by decide)] | exact find_hit $h
@@ -174,30 +172,27 @@ macro "at_tac " h:ident : tactic => `(tactic| (
   all_goals first | rewrite [find_skip h8 $h (by decide)] | exact find_hit $h
   all_goals first | rewrite [find_skip h9 $h (by decide)] | exact find_hit $h
   all_goals first | rewrite [find_skip h10 $h (by decide)] | exact find_hit $h
-  all_goals first | rewrite [find_skip h11 $h (by decide)] | exact find_hit $h
   all_goals exact find_hit $h))
 
 theorem isSpilled_decl :
-    L.decls.at (label "is_spilled") = some (L.frag isSpilledAsm isSpilled_at) := by at_tac h1
+    L.decls.at (label "isSpilled") = some (L.frag isSpilledAsm isSpilled_at) := by at_tac h1
 theorem positionOf_decl :
-    L.decls.at (label "position_of") = some (L.frag positionOfAsm positionOf_at) := by at_tac h2
-theorem shallowestCopy_decl : L.decls.at (label "shallowest_copy")
+    L.decls.at (label "positionOf") = some (L.frag positionOfAsm positionOf_at) := by at_tac h2
+theorem shallowestCopy_decl : L.decls.at (label "shallowestCopyPosition")
     = some (L.frag shallowestCopyAsm shallowestCopy_at) := by at_tac h3
-theorem add_decl : L.decls.at (label "add") = some (L.frag addAsm add_at) := by at_tac h4
 theorem swapWith_decl :
-    L.decls.at (label "swap_with") = some (L.frag swapWithAsm swapWith_at) := by at_tac h5
+    L.decls.at (label "swapWith") = some (L.frag swapWithAsm swapWith_at) := by at_tac h4
+theorem push_decl : L.decls.at (label "push") = some (L.frag pushAsm push_at) := by at_tac h5
+theorem dup_decl : L.decls.at (label "dup") = some (L.frag dupAsm dup_at) := by at_tac h6
 theorem produce_decl :
-    L.decls.at (label "produce") = some (L.frag produceAsm produce_at) := by at_tac h6
+    L.decls.at (label "produce") = some (L.frag produceAsm produce_at) := by at_tac h7
 theorem generate_decl :
-    L.decls.at (label "generate") = some (L.frag generateAsm generate_at) := by at_tac h7
-theorem finish_decl :
-    L.decls.at (label "finish") = some (L.frag finishAsm finish_at) := by at_tac h8
-theorem takeBound_decl :
-    L.decls.at (label "take_bound") = some (L.frag takeBoundAsm takeBound_at) := by at_tac h9
-theorem urgent_decl :
-    L.decls.at (label "urgent") = some (L.frag urgentAsm urgent_at) := by at_tac h10
-theorem step_decl : L.decls.at (label "step") = some (L.frag stepAsm step_at) := by at_tac h11
-theorem permute_decl : L.decls.at (label "permute") = some L.permuteFrag := by at_tac h12
+    L.decls.at (label "generate") = some (L.frag generateAsm generate_at) := by at_tac h8
+theorem finish_decl : L.decls.at (label "permuteDestinations")
+    = some (L.frag finishAsm finish_at) := by at_tac h9
+theorem loop_decl :
+    L.decls.at (label "buildBottomUp") = some (L.frag loopAsm loop_at) := by at_tac h10
+theorem permute_decl : L.decls.at (label "permute") = some L.permuteFrag := by at_tac h11
 
 end Linked
 

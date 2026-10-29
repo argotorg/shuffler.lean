@@ -32,9 +32,29 @@ memory of a body for the call `s` with frame size `F`.
 * `Mid.init`: the memory after the call.
 * `Mid.store`, `Mid.store_w`: a store to `mod F s`, a store to `writable`.
 * `Mid.call`, `Mid.pre`: a call to a callee with frame size `G`.
-* `Mid.keeps`, `Mid.wf`: the environment and the regions stay; the struct stays
+* `Mid.call_isSome`: the return address slot of a callee is mapped.
+* `Mid.keeps`, `Mid.wf`, `Mid.n`: the environment and the regions stay; the struct stays
   well formed if `len` and `nops` stay in bounds.
 * `Mid.ret`: `ret` gives the postcondition of `Body`.
+
+The saved registers (`Bbu.Kit`). A body that starts with `push r_0; ..; push r_k`
+and has frame size `F` uses `abbrev Fm := Kit.Fm F [r_0, .., r_k]`.
+* `pushes s ra rs`: the memory after the call and the pushes (the `kvcgen64` form).
+* `Fm.init`: `Fm` holds for `pushes s ra rs`.
+* `Fm.call`, `Fm.pre`: a call at `rsp s - k`, with `8 * rs.length + 8 ≤ k`.
+* `Fm.write`: a change to `writable` only. `Fm.blk`: the two stores to `blocked`.
+* `h.saved i _`: the word at `rsp s - (8 * i + 16)` is the register `rs[i]`.
+* `Fm.ret`: `ret` gives the postcondition of `Body`, after the pops.
+* `st_pushes`: the pushes do not change the model state.
+
+Flags (`Bbu.Kit`): `cf_sub`, `cf_sub'`, `z_sub`, `nz_sub` (for `cmp`), `a_sub_imm`,
+`be_sub_imm` (for `cmp $k`), `z_test`, `sf_test`, `ns_test` (for `test v, v`).
+
+Words of the struct (`Bbu`): `Wf.word_isSome`, `Wf.blk_isSome`, `Wf.blk_disj`,
+`Wf.blkOf_store`, `blkOf_store2`, `n_envOf`, `target_get`.
+
+Other normal forms (`Bbu`): `pushRa_<reg>`, `pushRa_rsp`, `disp<k>`, `shl4`. Results:
+`Res.imp`, `Res.msb`, `Res.err`.
 -/
 
 open Std.WP Lean.Order
@@ -63,6 +83,40 @@ theorem ushiftRight_imm (x k : BitVec 64) :
     simp only [BitVec.take, BitVec.extractLsb'_toNat, Nat.shiftRight_zero]
     omega
   rw [this, BitVec.ushiftRight_eq]
+
+theorem shl4 (x : BitVec 64) : x <<< 4 = x * 16#64 := by
+  rw [BitVec.shiftLeft_eq_mul_twoPow]; rfl
+
+-- The registers after the push of the return address.
+section
+variable {s : MachineData} {ra : Int64}
+theorem pushRa_rax : (s.pushRa ra).regs.rax = s.regs.rax := rfl
+theorem pushRa_rbx : (s.pushRa ra).regs.rbx = s.regs.rbx := rfl
+theorem pushRa_rcx : (s.pushRa ra).regs.rcx = s.regs.rcx := rfl
+theorem pushRa_rdx : (s.pushRa ra).regs.rdx = s.regs.rdx := rfl
+theorem pushRa_rsi : (s.pushRa ra).regs.rsi = s.regs.rsi := rfl
+theorem pushRa_rdi : (s.pushRa ra).regs.rdi = s.regs.rdi := rfl
+theorem pushRa_rbp : (s.pushRa ra).regs.rbp = s.regs.rbp := rfl
+theorem pushRa_r8 : (s.pushRa ra).regs.r8 = s.regs.r8 := rfl
+theorem pushRa_r9 : (s.pushRa ra).regs.r9 = s.regs.r9 := rfl
+theorem pushRa_r10 : (s.pushRa ra).regs.r10 = s.regs.r10 := rfl
+theorem pushRa_r11 : (s.pushRa ra).regs.r11 = s.regs.r11 := rfl
+theorem pushRa_r12 : (s.pushRa ra).regs.r12 = s.regs.r12 := rfl
+theorem pushRa_r13 : (s.pushRa ra).regs.r13 = s.regs.r13 := rfl
+theorem pushRa_r14 : (s.pushRa ra).regs.r14 = s.regs.r14 := rfl
+theorem pushRa_r15 : (s.pushRa ra).regs.r15 = s.regs.r15 := rfl
+theorem pushRa_rsp : (s.pushRa ra).regs.rsp.toBitVec = rsp s - 8#64 := by simp [MachineData.pushRa]
+end
+
+-- The displacement `8 * k` of a word in a struct.
+theorem disp (a : Addr) (k : Nat) (i : Int64) (h : i.toInt = 8 * k := by decide) :
+    a + BitVec.ofInt 64 i.toInt = wordAt a k := by
+  rw [h, show (8 * (k : Int)) = ((8 * k : Nat) : Int) by omega, BitVec.ofInt_natCast]
+theorem disp0 (a : Addr) : a + BitVec.ofInt 64 (Int64.toInt 0) = wordAt a 0 := disp a 0 0
+theorem disp1 (a : Addr) : a + BitVec.ofInt 64 (Int64.toInt 8) = wordAt a 1 := disp a 1 8
+theorem disp3 (a : Addr) : a + BitVec.ofInt 64 (Int64.toInt 24) = wordAt a 3 := disp a 3 24
+theorem disp4 (a : Addr) : a + BitVec.ofInt 64 (Int64.toInt 32) = wordAt a 4 := disp a 4 32
+theorem disp7 (a : Addr) : a + BitVec.ofInt 64 (Int64.toInt 56) = wordAt a 7 := disp a 7 56
 
 /-- The normal form of the `kvcgen64` goals. -/
 macro "bbu_norm" loc:(Lean.Parser.Tactic.location)? : tactic => `(tactic| simp only [rd_def,
@@ -246,7 +300,7 @@ variable {m : Mem 64} {S : Addr}
 theorem len_stOf : (stOf m S).len = (rd m (wordAt S 0)).toNat := by
   simp [St.len, stOf]
 
-theorem nops_stOf : (stOf m S).ops.length = (rd m (wordAt S 2)).toNat := by
+theorem nops_stOf : (stOf m S).trace.length = (rd m (wordAt S 2)).toNat := by
   simp [stOf]
 
 theorem val_stOf {i : Nat} (hi : i < (rd m (wordAt S 0)).toNat) :
@@ -259,16 +313,103 @@ theorem dest_stOf {i : Nat} (hi : i < (rd m (wordAt S 0)).toNat) :
 
 -- The model state is `st` if the words in memory agree with `st`.
 theorem stOf_eq {st : St} (hlen : (rd m (wordAt S 0)).toNat = st.len)
-    (hpend : (rd m (wordAt S 1)).toNat = st.pending)
-    (hnops : (rd m (wordAt S 2)).toNat = st.ops.length)
+    (hpend : (rd m (wordAt S 1)).toNat = st.pendingGenerations)
+    (hnops : (rd m (wordAt S 2)).toNat = st.trace.length)
     (hslot : ∀ i (hi : i < st.len), slotOf m S i = st.slots[i])
-    (hop : ∀ i (hi : i < st.ops.length), opOf m S i = st.ops[i]) : stOf m S = st := by
+    (hop : ∀ i (hi : i < st.trace.length), opOf m S i = st.trace[i]) : stOf m S = st := by
   obtain ⟨slots, pending, ops⟩ := st
   simp only [St.len] at hlen hslot
   simp only [stOf, hlen, hpend, hnops, St.mk.injEq, true_and]
   constructor
   · exact List.ext_getElem (by simp) fun i h1 h2 => by simpa using hslot i h2
   · exact List.ext_getElem (by simp) fun i h1 h2 => by simpa using hop i h2
+
+theorem target_get {d : Nat} (hd : d < nOf m S) :
+    (envOf m S).target[d]! = rd m (wordAt (tgtOf m S) d) := by
+  simp [envOf, hd]
+
+theorem n_envOf : (envOf m S).n = nOf m S := by
+  simp [Env.n, envOf]
+
+end
+
+/-! ## Words of the struct -/
+
+section
+variable {m m' : Mem 64} {S : Addr}
+
+-- A load of a word of the struct succeeds in a memory `m'` that keeps the struct mapped.
+theorem Wf.word_isSome (hw : Wf m S) (hm : Mem.Mapped (writable m S ++ readable m S) m') {k : Nat}
+    (hk : k < WORDS) : (m'.loadInt (wordAt S k) 8).isSome = true := by
+  have hs := hw.struct_lt
+  simp only [WORDS_eq] at hs hk
+  refine Mem.Mapped.loadInt_isSome (bs := [(S, 8 * WORDS)]) (fun x hx => hm x (inside_struct hx))
+    (Or.inl ?_)
+  simp only [wordAt, WORDS_eq]; bv_omega
+
+-- A word of the struct does not overlap `blocked`.
+theorem Wf.blk_disj (hw : Wf m S) {k : Nat} (hk : k < WORDS) :
+    Mem.Blocks.Disjoint [(wordAt S k, 8)] [(blkOf m S, 16)] := by
+  intro x hx hb
+  have hs := hw.struct_lt
+  simp only [WORDS_eq] at hs hk
+  refine hw.disj_struct x ?_ (inside_of_mem (by simp) hb)
+  simp only [Mem.Blocks.Inside, or_false, WORDS_eq] at hx ⊢
+  bv_omega
+
+-- A store to `blocked` keeps the pointer to it.
+theorem Wf.blkOf_store (hw : Wf m S) {k : Nat} (hk : k < 2) (v : Int) :
+    blkOf (m.storeInt (wordAt (blkOf m S) k) 8 v) S = blkOf m S := by
+  have hb := hw.blk_lt
+  refine rd_storeInt_of_disjoint fun x hx hy => hw.blk_disj (k := 7) (by decide) x hy ?_
+  simp only [Mem.Blocks.Inside, or_false] at hx ⊢
+  bv_omega
+
+-- A load of a word of `blocked` succeeds in a memory `m'` that keeps the struct mapped.
+theorem Wf.blk_isSome (hw : Wf m S) (hm : Mem.Mapped (writable m S ++ readable m S) m') {k : Nat}
+    (hk : k < 2) : (m'.loadInt (wordAt (blkOf m S) k) 8).isSome = true := by
+  have hb := hw.blk_lt
+  refine Mem.Mapped.loadInt_isSome hm (inside_append.mpr (Or.inl
+    (inside_of_mem (p := (blkOf m S, 16)) (by simp [writable]) (Or.inl ?_))))
+  simp only [wordAt]; bv_omega
+
+theorem blkOf_def : rd m (wordAt S 7) = blkOf m S := rfl
+
+-- The two stores to `blocked` keep the pointer to it.
+theorem blkOf_store2 {v w : Int} (hw : Wf m S) :
+    blkOf ((m.storeInt (wordAt (blkOf m S) 0) 8 v).storeInt (wordAt (blkOf m S) 1) 8 w) S =
+      blkOf m S := by
+  have hb := hw.blk_lt
+  unfold blkOf
+  rw [rd_storeInt_of_disjoint, rd_storeInt_of_disjoint]
+  all_goals
+    intro x hx hy
+    refine hw.blk_disj (k := 7) (by decide) x hy ?_
+    simp only [Mem.Blocks.Inside, or_false, blkOf] at hx ⊢
+    bv_omega
+
+end
+
+/-! ## Results -/
+
+section
+variable {α : Type} {S : Addr} {Q : α → Prop} {t : MachineData}
+
+theorem Res.imp {r : M α} {Q' : α → Prop} (h : Res S r Q t) (hq : ∀ a, Q a → Q' a) :
+    Res S r Q' t := by
+  cases r with
+  | error e => cases e <;> exact h
+  | ok a => exact hq a h
+
+-- An error returns a negative `rax`.
+theorem Res.msb {e : Err} (h : Res S (.error e : M α) Q t) : (rax t).msb = true := by
+  cases e with
+  | blocked p x => rw [show rax t = -1#64 from h.1]; decide
+  | assertion => rw [show rax t = -2#64 from h]; decide
+
+theorem Res.err {β : Type} {e : Err} {Q' : β → Prop} (h : Res S (.error e : M α) Q t) :
+    Res S (.error e : M β) Q' t := by
+  cases e <;> exact h
 
 end
 
@@ -340,6 +481,10 @@ theorem Mid.keeps (hpre : Pre F A s) (h : Mid F s ra m) :
       ∧ writable m (rdi s) = writable s.dmem (rdi s) :=
   Post.env (t := { s with dmem := m }) hpre ⟨fun _ _ => rfl, h.un⟩
 
+theorem Mid.n (hpre : Pre F A s) (h : Mid F s ra m) : nOf m (rdi s) = nOf s.dmem (rdi s) := by
+  have := congrArg Env.n (h.keeps hpre).1
+  rwa [n_envOf, n_envOf] at this
+
 -- The struct stays well formed if `len` and `nops` stay in bounds.
 theorem Mid.wf (hpre : Pre F A s) (h : Mid F s ra m)
     (hlen : (rd m (wordAt (rdi s) 0)).toNat ≤ MAX_N)
@@ -389,6 +534,13 @@ theorem Mid.call {G k : Nat} {c t : MachineData} {R : MachineData → MachineDat
       (fun hl => hx (Or.inr hl))]
     exact h.un x hx
 
+-- The return address slot of a callee at `k` bytes below `rsp s` is mapped.
+theorem Mid.call_isSome {k : Nat} (hk : k + 8 ≤ F) (hpre : Pre F A s) (h : Mid F s ra m) :
+    (m.loadInt (rsp s - BitVec.ofNat 64 k - 8#64) 8).isSome = true := by
+  have hle := hpre.2.1.le
+  refine Mem.Mapped.loadInt_isSome h.map (Or.inl ?_)
+  bv_omega
+
 -- The precondition of a callee with frame size `G` at `k` bytes below `rsp s`.
 theorem Mid.pre {G k : Nat} {c : MachineData} {A' : MachineData → Prop}
     (hG : k + G ≤ F) (hpre : Pre F A s) (h : Mid F s ra m) (hw : Wf m (rdi s)) (hc : c.dmem = m)
@@ -409,6 +561,13 @@ theorem Mid.retAddr (hF : 8 ≤ F) (hpre : Pre F A s) {t : MachineData} (h : Mid
   rw [MachineData.retAddr, show t.regs.get64 .rsp = rsp s - 8#64 from hsp, hv, Option.map_some, hra,
     Int64.ofBitVec_toBitVec]
 
+-- The stack at the call is below the stack after `ret`.
+theorem stackBelow_pushRa {u : MachineData} (h : rsp u = rsp s) : (s.pushRa ra).StackBelow u := by
+  apply MachineData.stackBelow_of_add_eight
+  simp only [MachineData.pushRa, Reg64s.get64_set64, reduceIte]
+  rw [show u.regs.get64 .rsp = rsp s from h]
+  exact BitVec.sub_add_cancel _ _
+
 /-- `ret` from `t` to `u`, with the memory `Mid`, a well formed struct and the registers
 of the call, gives the postcondition of `Body`. -/
 theorem Mid.ret [Host] {R : MachineData → MachineData → Prop} {ls : List Label}
@@ -426,12 +585,278 @@ theorem Mid.ret [Host] {R : MachineData → MachineData → Prop} {ls : List Lab
   · by_cases hq' : q = .rsp
     · subst hq'; exact husp
     · exact hr q (by simp_all [mod])
-  · apply MachineData.stackBelow_of_add_eight
-    simp only [MachineData.pushRa, Reg64s.get64_set64, reduceIte]
-    rw [show u.regs.get64 .rsp = rsp s from husp]
-    exact BitVec.sub_add_cancel _ _
+  · exact stackBelow_pushRa husp
 
 end
+
+/-! ## The saved registers -/
+
+-- The memory after pushes of the registers `rs` of `s` below `a`, as `kvcgen64` gives it.
+def pushAt (s : MachineData) : Addr → List Reg64 → Mem 64 → Mem 64
+  | _, [], m => m
+  | a, r :: rs, m => pushAt s (a - 8#64) rs (m.storeInt (a - 8#64) 8 (s.regs.get64 r).toInt)
+
+-- The memory after the call `s` with the return address `ra` and the pushes of `rs`.
+def pushes (s : MachineData) (ra : Int64) (rs : List Reg64) : Mem 64 :=
+  pushAt s (rsp s - 8#64) rs (s.pushRa ra).dmem
+
+section
+variable {s : MachineData} {l : List (Addr × Nat)} {m0 m : Mem 64} {a : Addr} {rs : List Reg64}
+
+-- The pushes change only words in `l`.
+theorem pushAt_un (h : Mem.UnchangedOutside l m0 m)
+    (hl : ∀ i, i < rs.length → Mem.Blocks.Inside (a - BitVec.ofNat 64 (8 * i + 8)) 8 l) :
+    Mem.UnchangedOutside l m0 (pushAt s a rs m) := by
+  induction rs generalizing a m with
+  | nil => exact h
+  | cons r rs ih =>
+    refine ih (h.storeInt (hl 0 (by simp)) _) fun i hi => ?_
+    rw [show a - 8#64 - BitVec.ofNat 64 (8 * i + 8) = a - BitVec.ofNat 64 (8 * (i + 1) + 8) by
+      bv_omega]
+    exact hl (i + 1) (by simp; omega)
+
+theorem pushAt_mapped (h : Mem.Mapped l m) : Mem.Mapped l (pushAt s a rs m) := by
+  induction rs generalizing a m with
+  | nil => exact h
+  | cons r rs ih => exact ih (h.storeInt _ _ _)
+
+-- The pushes do not change a word that they do not overlap.
+theorem rd_pushAt_other {b : Addr}
+    (h : ∀ i, i < rs.length → 8 ≤ (b - (a - BitVec.ofNat 64 (8 * i + 8))).toNat
+      ∧ 8 ≤ (a - BitVec.ofNat 64 (8 * i + 8) - b).toNat) :
+    rd (pushAt s a rs m) b = rd m b := by
+  induction rs generalizing a m with
+  | nil => rfl
+  | cons r rs ih =>
+    refine (ih fun i hi => ?_).trans (rd_store_other _ (h 0 (by simp)))
+    rw [show a - 8#64 - BitVec.ofNat 64 (8 * i + 8) = a - BitVec.ofNat 64 (8 * (i + 1) + 8) by
+      bv_omega]
+    exact h (i + 1) (by simp; omega)
+
+-- The word of the push `i`.
+theorem rd_pushAt_self (hn : 8 * rs.length ≤ 2 ^ 64) (i : Nat) (hi : i < rs.length) :
+    rd (pushAt s a rs m) (a - BitVec.ofNat 64 (8 * i + 8)) = s.regs.get64 rs[i] := by
+  induction rs generalizing a m i with
+  | nil => cases hi
+  | cons r rs ih =>
+    have hl : (r :: rs).length = rs.length + 1 := rfl
+    show rd (pushAt s (a - 8#64) rs (m.storeInt (a - 8#64) 8 (s.regs.get64 r).toInt)) _ = _
+    cases i with
+    | zero =>
+      refine (rd_pushAt_other fun j hj => ?_).trans ?_
+      · constructor <;> bv_omega
+      · exact (rd_store_same _ (by bv_omega)).trans BitVec.ofInt_toInt
+    | succ i =>
+      rw [show a - BitVec.ofNat 64 (8 * (i + 1) + 8) = a - 8#64 - BitVec.ofNat 64 (8 * i + 8) by
+        bv_omega]
+      exact ih (by omega) i (by omega)
+
+end
+
+section
+variable {F : Nat} {rs : List Reg64} {s : MachineData} {ra : Int64} {A : MachineData → Prop}
+  {m : Mem 64}
+
+/-- The memory `m` of a body that pushes the registers `rs` after the call: `Mid`, the
+struct is well formed, and the word `8 * i + 16` bytes below `rsp s` is the register `rs[i]`
+of `s`. -/
+structure Fm (F : Nat) (rs : List Reg64) (s : MachineData) (ra : Int64) (m : Mem 64) : Prop
+    extends Mid F s ra m where
+  wf : Wf m (rdi s)
+  saved : ∀ i (hi : i < rs.length), rd m (rsp s - BitVec.ofNat 64 (8 * i + 16)) = s.regs.get64 rs[i]
+
+-- The pushes change only the frame.
+theorem unchanged_pushes (hF : 8 * rs.length + 8 ≤ F) (hpre : Pre F A s) :
+    Mem.UnchangedOutside [frame F s] s.dmem (pushes s ra rs) := by
+  have hle := hpre.2.1.le
+  have hu : Mem.UnchangedOutside [frame F s] s.dmem (s.pushRa ra).dmem :=
+    Mem.UnchangedOutside.storeInt (fun _ _ => rfl)
+      (show Mem.Blocks.Inside (rsp s - 8#64) 8 [frame F s] from Or.inl (by bv_omega)) _
+  exact pushAt_un hu fun i hi => Or.inl (by simp only [rsp] at *; bv_omega)
+
+theorem st_pushes (hF : 8 * rs.length + 8 ≤ F) (hpre : Pre F A s) :
+    stOf (pushes s ra rs) (rdi s) = st s :=
+  stOf_congr (unchanged_pushes hF hpre) hpre.1 (disjoint_symm hpre.2.1.disj)
+
+-- The memory after the pushes.
+theorem Fm.init (hF : 8 * rs.length + 8 ≤ F) (hpre : Pre F A s) : Fm F rs s ra (pushes s ra rs) := by
+  have hle := hpre.2.1.le
+  have hu := unchanged_pushes (ra := ra) hF hpre
+  have hm : Mem.Mapped (mod F s).mem s.dmem := fun x hx =>
+    hx.elim (fun h => hpre.2.1.mapped x (Or.inl h))
+      (fun h => hpre.1.mapped x (inside_append.mpr (Or.inl h)))
+  refine ⟨⟨?_, pushAt_mapped (hm.storeInt _ _ _), fun x hx => hu x fun h => hx (Or.inl
+    (h.elim id False.elim))⟩, Wf.congr_of_disjoint hu hpre.1 (disjoint_symm hpre.2.1.disj),
+    fun i hi => ?_⟩
+  · refine (rd_pushAt_other fun j hj => ?_).trans ((rd_store_same _ rfl).trans BitVec.ofInt_toInt)
+    constructor <;> bv_omega
+  · rw [show rsp s - BitVec.ofNat 64 (8 * i + 16) = rsp s - 8#64 - BitVec.ofNat 64 (8 * i + 8) by
+      bv_omega]
+    exact rd_pushAt_self (by omega) i hi
+
+-- The memory after a call to a callee with frame size `G` at `k` bytes below `rsp s`.
+theorem Fm.call {G k : Nat} {c t : MachineData} {R : MachineData → MachineData → Prop}
+    (hk : 8 * rs.length + 8 ≤ k) (hG : k + G ≤ F) (hpre : Pre F A s) (h : Fm F rs s ra m)
+    (hc : c.dmem = m) (hrsp : rsp c = rsp s - BitVec.ofNat 64 k) (hrdi : rdi c = rdi s)
+    (hp : Post G R c t) (hag : (mod G c).Agree c t) : Fm F rs s ra t.dmem := by
+  have hle := hpre.2.1.le
+  have hu : Mem.UnchangedOutside (frame G c :: writable s.dmem (rdi s)) m t.dmem := by
+    have := hag.2
+    simp only [mod, hc, hrdi, (h.keeps hpre).2.2] at this
+    exact this
+  refine ⟨h.toMid.call (by omega) hG hpre hc hrsp hrdi hp hag, hrdi ▸ hp.1, fun i hi => ?_⟩
+  rw [rd_congr hu fun x hx hl => ?_]
+  · exact h.saved i hi
+  · rcases hl with hl | hl
+    · simp only [Mem.Blocks.Inside, or_false, hrsp] at hx hl
+      bv_omega
+    · refine hpre.2.1.disj x ?_ (inside_append.mpr (Or.inl hl))
+      simp only [Mem.Blocks.Inside, or_false] at hx ⊢
+      bv_omega
+
+-- The precondition of a callee with frame size `G` at `k` bytes below `rsp s`.
+theorem Fm.pre {G k : Nat} {c : MachineData} {A' : MachineData → Prop} (hG : k + G ≤ F)
+    (hpre : Pre F A s) (h : Fm F rs s ra m) (hc : c.dmem = m)
+    (hrsp : rsp c = rsp s - BitVec.ofNat 64 k) (hrdi : rdi c = rdi s) (hA : A' c) : Pre G A' c :=
+  h.toMid.pre hG hpre h.wf hc hrsp hrdi hA
+
+-- Stores to `writable` that keep it mapped and keep `len` and `nops` in bounds.
+theorem Fm.write (hF : 8 * rs.length + 8 ≤ F) (hpre : Pre F A s) (h : Fm F rs s ra m)
+    {m' : Mem 64} (hu : Mem.UnchangedOutside (writable s.dmem (rdi s)) m m')
+    (hm : Mem.Mapped (writable s.dmem (rdi s)) m')
+    (hlen : (rd m' (wordAt (rdi s) 0)).toNat ≤ MAX_N)
+    (hnops : (rd m' (wordAt (rdi s) 2)).toNat ≤ 6 * nOf s.dmem (rdi s)) : Fm F rs s ra m' := by
+  have hle := hpre.2.1.le
+  -- the words of the frame are not in `writable`
+  have hfr : ∀ {j}, 8 ≤ j → j ≤ F →
+      rd m' (rsp s - BitVec.ofNat 64 j) = rd m (rsp s - BitVec.ofNat 64 j) := fun hj hj' =>
+    rd_congr hu fun x hx hw => hpre.2.1.disj x
+      (by simp only [Mem.Blocks.Inside, or_false] at hx ⊢; bv_omega) (inside_append.mpr (Or.inl hw))
+  have hmid : Mid F s ra m' := by
+    refine ⟨(hfr (j := 8) (by omega) (by omega)).trans h.ra, fun x hx => ?_, fun x hx => ?_⟩
+    · by_cases hw : Mem.Blocks.Inside x 1 (writable s.dmem (rdi s))
+      · exact hm x hw
+      · rw [hu x hw]; exact h.map x hx
+    · rw [hu x fun hw => hx (Or.inr hw)]; exact h.un x hx
+  exact ⟨hmid, hmid.wf hpre hlen hnops, fun i hi =>
+    (hfr (by omega) (by omega)).trans (h.saved i hi)⟩
+
+-- The two stores to `blocked` keep `Fm`.
+theorem Fm.blk (hF : 8 * rs.length + 8 ≤ F) (hpre : Pre F A s) (h : Fm F rs s ra m) (p x : Word) :
+    Fm F rs s ra ((m.storeInt (wordAt (blkOf m (rdi s)) 0) 8 p.toInt).storeInt
+      (wordAt (blkOf m (rdi s)) 1) 8 x.toInt) := by
+  have hbl := h.wf.blk_lt
+  have hwr := (h.keeps hpre).2.2
+  have hbd : ∀ {k}, k < WORDS → Mem.Blocks.Disjoint [(wordAt (rdi s) k, 8)] [(blkOf m (rdi s), 16)] :=
+    fun hk => h.wf.blk_disj hk
+  -- `blocked` lies in `writable`
+  have hw : ∀ y, Mem.Blocks.Inside y 1 [(blkOf m (rdi s), 16)] →
+      Mem.Blocks.Inside y 1 (writable s.dmem (rdi s)) := fun y hy => by
+    rw [← hwr]; exact inside_of_mem (by simp [writable]) hy
+  generalize blkOf m (rdi s) = B at hbl hbd hw ⊢
+  have hu : Mem.UnchangedOutside [(B, 16)] m
+      ((m.storeInt (wordAt B 0) 8 p.toInt).storeInt (wordAt B 1) 8 x.toInt) := by
+    have hin : ∀ a : Addr, (a - B).toNat + 8 ≤ 16 → Mem.Blocks.Inside a 8 [(B, 16)] :=
+      fun a h => Or.inl h
+    refine .storeInt (.storeInt (fun _ _ => rfl) (hin _ ?_) _) (hin _ ?_) _
+    all_goals (simp only [wordAt]; bv_omega)
+  have hst : ∀ {k}, k < WORDS →
+      rd ((m.storeInt (wordAt B 0) 8 p.toInt).storeInt (wordAt B 1) 8 x.toInt)
+        (wordAt (rdi s) k) = rd m (wordAt (rdi s) k) := fun hk => rd_congr hu (hbd hk)
+  refine h.write hF hpre (fun y hy => hu y fun hb => hy (hw y hb)) ?_ ?_ ?_
+  · exact fun y hy =>
+      (h.wf.mapped.storeInt _ _ _ |>.storeInt _ _ _) y (inside_append.mpr (Or.inl (hwr ▸ hy)))
+  · rw [hst (by decide)]; exact h.wf.len_le
+  · rw [hst (by decide), ← h.n hpre]; exact h.wf.nops_le
+
+/-- `ret` from `u` with the memory `Fm` and the registers of the call gives the
+postcondition of `Body`. -/
+theorem Fm.ret [Host] {R : MachineData → MachineData → Prop} {ls : List Label}
+    {I' : CfgLabel → Nat → Unit → MachineData → Prop} {u : MachineData} (hF : 8 ≤ F)
+    (hpre : Pre F A s) (h : Fm F rs s ra u.dmem) (hsp : rsp u = rsp s - 8#64)
+    (hr : ∀ q, q ∉ [Reg64.rax, .rcx, .rdx, .rsi, .rdi, .r8, .r9, .r10, .r11, .rsp] →
+      u.regs.get64 q = s.regs.get64 q)
+    (hR : ∀ t, t.dmem = u.dmem → rax t = rax u → R s t) :
+    Program.Intercept ls (s.pushRa ra) I'
+      (fun a t => a = ra ∧ Post F R s t ∧ (mod F s).Agree s t) u.retAddr.get!
+      { regs := u.regs.set64 Reg64.rsp (u.regs.get64 Reg64.rsp + 8#64), zmms := u.zmms,
+        status := u.status, dmem := u.dmem } :=
+  h.toMid.ret hF hpre hsp rfl
+    (by simp only [rsp, Reg64s.get64_set64, reduceIte, hsp, BitVec.sub_add_cancel])
+    (fun q hq => by
+      simp only [Reg64s.get64_set64]
+      split
+      · simp_all
+      · exact hr q hq)
+    h.wf (hR _ rfl (by simp [rax]))
+
+end
+
+/-! ## Flags -/
+
+-- The carry flag of `cmp b, a`.
+theorem cf_sub (a b : Word) :
+    ((((a - b).toNat : Int) != (a.toNat : Int) - (b.toNat : Int)) = true) ↔ a.toNat < b.toNat := by
+  rw [bne_iff_ne, ne_eq, BitVec.toNat_sub]
+  have := a.isLt; have := b.isLt
+  constructor <;> intro h <;> omega
+
+theorem cf_sub' (a b : Word) :
+    ((((a - b).toNat : Int) != (a.toNat : Int) - (b.toNat : Int)) = false) ↔ b.toNat ≤ a.toNat := by
+  rw [← Bool.not_eq_true, cf_sub]; omega
+
+-- The zero flag of `cmp b, a`.
+theorem z_sub (a b : Word) (r : StatusFlags.from_result.Remaining) :
+    CondCode.z.interp (StatusFlags.from_result (a - b) r) = (a == b) := by
+  rw [CondCode.interp_z, StatusFlags.zf_from_result, Bool.eq_iff_iff, beq_iff_eq, beq_iff_eq,
+    BitVec.zero_eq]
+  constructor <;> intro h <;> bv_omega
+
+theorem nz_sub (a b : Word) (r : StatusFlags.from_result.Remaining) :
+    CondCode.nz.interp (StatusFlags.from_result (a - b) r) = !(a == b) := by
+  rw [CondCode.interp_nz, ← CondCode.interp_z, z_sub]
+
+-- `cmp $k, x; ja` jumps iff `k < x`.
+theorem a_sub_imm (x : Word) (k : Nat) (hk : k < 2 ^ 64) (af of : Bool) :
+    CondCode.a.interp (StatusFlags.from_result (x - BitVec.ofNat 64 k)
+      { cf := (((x - BitVec.ofNat 64 k).toNat : Int) != (x.toNat : Int) - (OfNat.ofNat k : Int)),
+        af, of }) = decide (k < x.toNat) := by
+  rw [CondCode.interp_a, StatusFlags.cf_from_result, StatusFlags.zf_from_result, Bool.eq_iff_iff]
+  simp only [Bool.and_eq_true, Bool.not_eq_true', bne_eq_false_iff_eq, beq_eq_false_iff_ne,
+    decide_eq_true_eq, ne_eq, BitVec.zero_eq]
+  rw [BitVec.toNat_sub, show (OfNat.ofNat k : Int) = (k : Int) from rfl]
+  have := x.isLt
+  constructor
+  · intro ⟨h1, h2⟩; bv_omega
+  · intro h; constructor <;> bv_omega
+
+-- `cmp $k, x; jbe` jumps iff `x ≤ k`.
+theorem be_sub_imm (x : Word) (k : Nat) (hk : k < 2 ^ 64) (af of : Bool) :
+    CondCode.be.interp (StatusFlags.from_result (x - BitVec.ofNat 64 k)
+      { cf := (((x - BitVec.ofNat 64 k).toNat : Int) != (x.toNat : Int) - (OfNat.ofNat k : Int)),
+        af, of }) = decide (x.toNat ≤ k) := by
+  rw [CondCode.interp_be, StatusFlags.cf_from_result, StatusFlags.zf_from_result, Bool.eq_iff_iff]
+  simp only [Bool.or_eq_true, bne_iff_ne, beq_iff_eq, ne_eq, BitVec.zero_eq, decide_eq_true_eq]
+  rw [BitVec.toNat_sub, show (OfNat.ofNat k : Int) = (k : Int) from rfl]
+  have := x.isLt
+  constructor
+  · rintro (h | h) <;> bv_omega
+  · intro h; by_cases h' : x.toNat < k
+    · left; bv_omega
+    · right; bv_omega
+
+-- The flags of `test v, v`.
+theorem z_test (v : Word) (r : StatusFlags.from_result.Remaining) :
+    CondCode.z.interp (StatusFlags.from_result (v &&& v) r) = (v == 0) := by
+  simp [CondCode.interp, StatusFlags.from_result]
+
+theorem sf_test (v : Word) (r : StatusFlags.from_result.Remaining) :
+    CondCode.s.interp (StatusFlags.from_result (v &&& v) r) = v.msb := by
+  simp [CondCode.interp, StatusFlags.from_result]
+
+theorem ns_test (v : Word) (r : StatusFlags.from_result.Remaining) :
+    CondCode.ns.interp (StatusFlags.from_result (v &&& v) r) = !v.msb := by
+  simp [CondCode.interp, StatusFlags.from_result]
 
 end Kit
 

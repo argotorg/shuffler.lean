@@ -38,12 +38,12 @@ theorem loop_corr_aux (hs : StepStmt) (hf : FinishStmt) (e : Bbu.Env) (source : 
     · have hl' : state.stack.length = (tgt e).length := by rw [h.len, tgt_length, hl]
       rw [ite_eq_left hl]
       simp only [post, except_ok_bind, requires_of_true _ hl']
-      rw [← h.ops]; rfl
+      rw [← h.trace]; rfl
     · have hl' : ¬ state.stack.length = (tgt e).length := by rw [h.len, tgt_length]; exact hl
       rw [ite_eq_right hl]
       simp only [post, except_ok_bind, requires, hl']
       rfl
-termination_by (e.n - t, st.pending)
+termination_by (e.n - t, st.pendingGenerations)
 decreasing_by
   rcases Bbu.step_progress hstep with h' | ⟨h', hp⟩
   · exact Prod.Lex.left _ _ (by omega)

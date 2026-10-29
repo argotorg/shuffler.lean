@@ -71,8 +71,8 @@ theorem St.dest_eq (st : St) (i : Nat) : st.dest i = st.dests[i]! := by
   cases st.slots[i]? <;> rfl
 
 theorem swapDest_dests (st : St) (a b : Nat) :
-    (swapDest st a b).dests = swapEntries st.dests a b := by
-  simp [swapDest, St.dests, swapEntries, List.map_set, St.dest_eq]
+    (swapDestinations st a b).dests = swapEntries st.dests a b := by
+  simp [swapDestinations, St.dests, swapEntries, List.map_set, St.dest_eq]
 
 theorem positionOf_none {st : St} {d : Nat} (h : positionOf st d = none) : d ∉ st.dests := by
   simp only [positionOf, List.findIdx?_eq_none_iff] at h
@@ -86,17 +86,24 @@ theorem positionOf_some {st : St} {d b : Nat} (h : positionOf st d = some b) : b
   obtain ⟨hb, -⟩ := h
   exact hb
 
+theorem shallowestCopy_lt {st : St} {v : Word} {c : Nat}
+    (h : shallowestCopyPosition st v = some c) :
+    c < st.len := by
+  simpa using List.mem_reverse.mp (List.mem_of_find?_eq_some h)
+
 /-! ## Shape of the actions -/
 
 theorem add_ok {st st' : St} {v : Word} {d : Nat} {op : Op} (h : add st v d op = .ok st') :
-    positionOf st d = none ∧ st' = { st with slots := st.slots ++ [⟨v, d⟩], ops := st.ops ++ [op] } := by
+    positionOf st d = none
+      ∧ st' = { st with slots := st.slots ++ [⟨v, d⟩], trace := st.trace ++ [op] } := by
   unfold add at h
   split at h
   · cases h
   · cases h; rename_i hp; exact ⟨Option.not_isSome_iff_eq_none.mp hp, rfl⟩
 
 theorem add_shape {st st' : St} {v : Word} {d : Nat} {op : Op} (h : add st v d op = .ok st') :
-    st'.len = st.len + 1 ∧ st'.ops = st.ops ++ [op] ∧ st'.pending = st.pending
+    st'.len = st.len + 1 ∧ st'.trace = st.trace ++ [op]
+      ∧ st'.pendingGenerations = st.pendingGenerations
       ∧ st'.slots = st.slots ++ [⟨v, d⟩] := by
   obtain ⟨-, rfl⟩ := add_ok h
   simp [St.len]
@@ -111,7 +118,7 @@ theorem swapWith_ok {st st' : St} {pos : Nat} (h : swapWith st pos = .ok st') :
       st' = { st with
         slots := (st.slots.set pos ⟨st.val (st.len - 1), st.dest (st.len - 1)⟩).set (st.len - 1)
           ⟨st.val pos, st.dest pos⟩
-        ops := st.ops ++ [.swap (st.len - 1 - pos)] } := by
+        trace := st.trace ++ [.swap (st.len - 1 - pos)] } := by
   unfold swapWith at h
   split at h
   · cases h
@@ -121,7 +128,8 @@ theorem swapWith_ok {st st' : St} {pos : Nat} (h : swapWith st pos = .ok st') :
     · cases h; rename_i h1 h2; exact ⟨by omega, by omega, by omega, rfl⟩
 
 theorem swapWith_shape {st st' : St} {pos : Nat} (h : swapWith st pos = .ok st') :
-    st'.len = st.len ∧ st'.ops.length = st.ops.length + 1 ∧ st'.pending = st.pending := by
+    st'.len = st.len ∧ st'.trace.length = st.trace.length + 1
+      ∧ st'.pendingGenerations = st.pendingGenerations := by
   obtain ⟨-, -, -, rfl⟩ := swapWith_ok h
   simp [St.len]
 
@@ -131,9 +139,9 @@ theorem swapWith_dests {st st' : St} {pos : Nat} (h : swapWith st pos = .ok st')
   exact ⟨hp, by simp [St.dests, swapEntries, List.map_set, St.dest_eq]⟩
 
 theorem swapDest_shape (st : St) (a b : Nat) :
-    (swapDest st a b).len = st.len ∧ (swapDest st a b).ops = st.ops
-      ∧ (swapDest st a b).pending = st.pending := by
-  simp [swapDest, St.len]
+    (swapDestinations st a b).len = st.len ∧ (swapDestinations st a b).trace = st.trace
+      ∧ (swapDestinations st a b).pendingGenerations = st.pendingGenerations := by
+  simp [swapDestinations, St.len]
 
 theorem emit_add {e : Env} {st st' : St} {d : Nat} (h : emit e st d = .ok st') :
     ∃ v op, add st v d op = .ok st' := by
@@ -143,20 +151,22 @@ theorem emit_add {e : Env} {st st' : St} {d : Nat} (h : emit e st d = .ok st') :
   all_goals first | exact ⟨_, _, h⟩ | cases h
 
 theorem emit_shape {e : Env} {st st' : St} {d : Nat} (h : emit e st d = .ok st') :
-    st'.len = st.len + 1 ∧ st'.ops.length = st.ops.length + 1 ∧ st'.pending = st.pending := by
+    st'.len = st.len + 1 ∧ st'.trace.length = st.trace.length + 1
+      ∧ st'.pendingGenerations = st.pendingGenerations := by
   obtain ⟨v, op, h⟩ := emit_add h
   obtain ⟨h1, h2, h3, -⟩ := add_shape h
   simp [h1, h2, h3]
 
 theorem produce_ok {e : Env} {st st' : St} {d : Nat} (h : produce e st d = .ok st') :
-    ∃ s, emit e st d = .ok s ∧ st' = { s with pending := s.pending - 1 } := by
+    ∃ s, emit e st d = .ok s ∧ st' = { s with pendingGenerations := s.pendingGenerations - 1 } := by
   obtain ⟨s, hs, h⟩ := bind_ok h
   split at h
   · cases h
   · cases h; exact ⟨s, hs, rfl⟩
 
 theorem produce_shape {e : Env} {st st' : St} {d : Nat} (h : produce e st d = .ok st') :
-    st'.len = st.len + 1 ∧ st'.ops.length = st.ops.length + 1 ∧ st'.pending = st.pending - 1 := by
+    st'.len = st.len + 1 ∧ st'.trace.length = st.trace.length + 1
+      ∧ st'.pendingGenerations = st.pendingGenerations - 1 := by
   obtain ⟨s, hs, rfl⟩ := produce_ok h
   obtain ⟨h1, h2, h3⟩ := emit_shape hs
   simp [St.len] at h1 ⊢
@@ -170,7 +180,8 @@ theorem produce_dests {e : Env} {st st' : St} {d : Nat} (h : produce e st d = .o
 
 theorem generate_ok {e : Env} {st st' : St} {d : Nat} (h : generate e st d = .ok st') :
     d < e.n ∧ ∃ s, produce e st d = .ok s ∧
-      (st' = s ∨ (d + 1 < s.len ∧ st' = swapDest s d (s.len - 1)) ∨ swapWith s d = .ok st') := by
+      (st' = s ∨ (d + 1 < s.len ∧ st' = swapDestinations s d (s.len - 1))
+         ∨ swapWith s d = .ok st') := by
   unfold generate at h
   split at h
   · cases h
@@ -187,7 +198,8 @@ theorem generate_ok {e : Env} {st st' : St} {d : Nat} (h : generate e st d = .ok
     · cases h; exact .inl rfl
 
 theorem generate_shape {e : Env} {st st' : St} {d : Nat} (h : generate e st d = .ok st') :
-    st'.len = st.len + 1 ∧ st'.ops.length ≤ st.ops.length + 2 ∧ st'.pending = st.pending - 1 := by
+    st'.len = st.len + 1 ∧ st'.trace.length ≤ st.trace.length + 2
+      ∧ st'.pendingGenerations = st.pendingGenerations - 1 := by
   obtain ⟨-, s, hs, h⟩ := generate_ok h
   obtain ⟨h1, h2, h3⟩ := produce_shape hs
   rcases h with rfl | ⟨-, rfl⟩ | h
@@ -216,7 +228,8 @@ theorem movableCopy_lt {st : St} {b c : Nat} (h : movableCopy st b = some c) : c
 
 theorem takeBound_ok {st : St} {t b : Nat} {r : St × Bool} (hb : b < st.len)
     (h : takeBound st t b = .ok r) :
-    ∃ pos, pos < st.len ∧ (r.1 = swapDest st pos b ∨ swapWith (swapDest st pos b) pos = .ok r.1) := by
+    ∃ pos, pos < st.len ∧ (r.1 = swapDestinations st pos b
+      ∨ swapWith (swapDestinations st pos b) pos = .ok r.1) := by
   unfold takeBound at h
   split at h
   · cases h
@@ -238,7 +251,8 @@ theorem takeBound_ok {st : St} {t b : Nat} {r : St × Bool} (hb : b < st.len)
 
 theorem takeBound_shape {st : St} {t b : Nat} {r : St × Bool} (hb : b < st.len)
     (h : takeBound st t b = .ok r) :
-    r.1.len = st.len ∧ r.1.ops.length ≤ st.ops.length + 1 ∧ r.1.pending = st.pending := by
+    r.1.len = st.len ∧ r.1.trace.length ≤ st.trace.length + 1
+      ∧ r.1.pendingGenerations = st.pendingGenerations := by
   obtain ⟨pos, -, h | h⟩ := takeBound_ok hb h
   · rw [h]
     obtain ⟨h1, h2, h3⟩ := swapDest_shape st pos b
@@ -251,12 +265,12 @@ theorem takeBound_dests {n : Nat} {st : St} {t b : Nat} {r : St × Bool} (hb : b
     (h : takeBound st t b = .ok r) (hd : Dests n st.dests) : Dests n r.1.dests := by
   obtain ⟨pos, hpos, h⟩ := takeBound_ok hb h
   have hl := st.length_dests
-  have h1 : Dests n (swapDest st pos b).dests := by
+  have h1 : Dests n (swapDestinations st pos b).dests := by
     rw [swapDest_dests]; exact hd.swap (by omega) (by omega)
   rcases h with h | h
   · rw [h]; exact h1
   · obtain ⟨hp, h⟩ := swapWith_dests h
-    have := (swapDest st pos b).length_dests
+    have := (swapDestinations st pos b).length_dests
     rw [h]; exact h1.swap (by omega) (by omega)
 
 theorem placeTop_ok {st st' : St} {t : Nat} {nx : Next} (h : placeTop st t = .ok (st', nx)) :
@@ -272,7 +286,8 @@ theorem placeTop_ok {st st' : St} {t : Nat} {nx : Next} (h : placeTop st t = .ok
     | (obtain ⟨s, hs, h⟩ := map_ok h; cases h; exact ⟨(swapWith_ok hs).1, .inr hs⟩)
 
 theorem placeTop_shape {st st' : St} {t : Nat} {nx : Next} (h : placeTop st t = .ok (st', nx)) :
-    st'.len = st.len ∧ st'.ops.length ≤ st.ops.length + 1 ∧ st'.pending = st.pending := by
+    st'.len = st.len ∧ st'.trace.length ≤ st.trace.length + 1
+      ∧ st'.pendingGenerations = st.pendingGenerations := by
   obtain ⟨-, -, rfl | h⟩ := placeTop_ok h
   · omega
   · obtain ⟨h1, h2, h3⟩ := swapWith_shape h
@@ -289,10 +304,10 @@ theorem placeTop_dests {n : Nat} {st st' : St} {t : Nat} {nx : Next}
 -- The four ways of an iteration that continues.
 theorem step_next {e : Env} {st st' : St} {t t' : Nat} (h : step e st t = .ok (st', .next t')) :
     (t' = t + 1 ∧ st' = st)
-    ∨ (t' = t ∧ 0 < st.pending ∧ ∃ d, generate e st d = .ok st')
+    ∨ (t' = t ∧ 0 < st.pendingGenerations ∧ ∃ d, generate e st d = .ok st')
     ∨ (t' = t + 1 ∧ ∃ b r, positionOf st t = some b ∧ takeBound st t b = .ok r ∧
         (st' = r.1 ∨ ∃ nx, placeTop r.1 t = .ok (st', nx)))
-    ∨ (t' = t + 1 ∧ 0 < st.pending ∧ ∃ s, generate e st t = .ok s ∧
+    ∨ (t' = t + 1 ∧ 0 < st.pendingGenerations ∧ ∃ s, generate e st t = .ok s ∧
         (st' = s ∨ ∃ nx, placeTop s t = .ok (st', nx))) := by
   unfold step at h
   split at h
@@ -325,7 +340,7 @@ theorem step_next {e : Env} {st st' : St} {t t' : Nat} (h : step e st t = .ok (s
       exact .inr (.inr (.inr ⟨rfl, by omega, s, hs, .inr ⟨_, h⟩⟩))
 
 theorem step_finish {e : Env} {st st' : St} {t : Nat} (h : step e st t = .ok (st', .finish)) :
-    st' = st ∧ st.pending = 0 := by
+    st' = st ∧ st.pendingGenerations = 0 := by
   unfold step at h
   split at h
   · cases h
@@ -347,8 +362,8 @@ theorem step_finish {e : Env} {st st' : St} {t : Nat} (h : step e st t = .ok (st
     · cases placeTop_next h
 
 theorem step_shape {e : Env} {st st' : St} {t t' : Nat} (h : step e st t = .ok (st', .next t')) :
-    st'.ops.length ≤ st.ops.length + 3 ∧ st'.len ≤ st.len + 1
-      ∧ st'.len + st'.pending = st.len + st.pending := by
+    st'.trace.length ≤ st.trace.length + 3 ∧ st'.len ≤ st.len + 1
+      ∧ st'.len + st'.pendingGenerations = st.len + st.pendingGenerations := by
   rcases step_next h with ⟨-, rfl⟩ | ⟨-, hp, d, h⟩ | ⟨-, b, r, hb, hr, h⟩ | ⟨-, hp, s, hs, h⟩
   · omega
   · obtain ⟨h1, h2, h3⟩ := generate_shape h
@@ -366,14 +381,14 @@ theorem step_shape {e : Env} {st st' : St} {t t' : Nat} (h : step e st t = .ok (
 
 /-! ## The loop invariant -/
 
--- The invariant of `loop` at offset `t`. Each iteration lowers
--- `2 * pending + 2 * (n - t)` by at least the number of operations it adds.
-structure Inv (e : Env) (st : St) (t : Nat) : Prop where
-  len_pending : st.len + st.pending = e.n
+-- The invariant of `loop` at `targetOffset`. Each iteration lowers
+-- `2 * pending + 2 * (n - targetOffset)` by at least the number of operations it adds.
+structure Inv (e : Env) (st : St) (targetOffset : Nat) : Prop where
+  len_pending : st.len + st.pendingGenerations = e.n
   n_le : e.n ≤ MAX_N
-  t_le : t ≤ e.n
+  t_le : targetOffset ≤ e.n
   dests : Dests e.n st.dests
-  ops_le : st.ops.length + 2 * st.pending + 2 * (e.n - t) ≤ 4 * e.n
+  ops_le : st.trace.length + 2 * st.pendingGenerations + 2 * (e.n - targetOffset) ≤ 4 * e.n
 
 theorem map_dest_zipWith (source : List Word) (dests : List Nat)
     (h : source.length = dests.length) : (List.zipWith Slot.mk source dests).map Slot.dest = dests := by
@@ -414,7 +429,7 @@ theorem step_inv {e : Env} {st st' : St} {t t' : Nat} (hi : Inv e st t) (ht : t 
 
 -- The precondition of `step`.
 theorem Inv.lt {e : Env} {st : St} {t : Nat} (hi : Inv e st t) (ht : t < e.n) :
-    st.len + st.pending ≤ e.n ∧ st.ops.length + 3 ≤ 6 * e.n := by
+    st.len + st.pendingGenerations ≤ e.n ∧ st.trace.length + 3 ≤ 6 * e.n := by
   have := hi.len_pending
   have := hi.ops_le
   omega
@@ -422,8 +437,9 @@ theorem Inv.lt {e : Env} {st : St} {t : Nat} (hi : Inv e st t) (ht : t < e.n) :
 /-! ## Finish -/
 
 -- The precondition of `finish`.
-theorem Inv.finish {e : Env} {st : St} {t : Nat} (hi : Inv e st t) (hp : st.pending = 0) :
-    IsPerm (st.slots.map Slot.dest) ∧ st.ops.length + 2 * st.len ≤ 6 * e.n := by
+theorem Inv.finish {e : Env} {st : St} {t : Nat} (hi : Inv e st t)
+    (hp : st.pendingGenerations = 0) :
+    IsPerm (st.slots.map Slot.dest) ∧ st.trace.length + 2 * st.len ≤ 6 * e.n := by
   have h1 := hi.len_pending
   have h2 := hi.ops_le
   have hl := st.length_dests
@@ -480,7 +496,7 @@ theorem loop_error {e : Env} {st : St} {t : Nat} {err : Err} (ht : t < e.n)
   split <;> simp_all
 
 theorem loop_ge {e : Env} {st : St} {t : Nat} (ht : ¬t < e.n) :
-    loop e st t = if st.len = e.n then .ok st.ops else .error .assertion := by
+    loop e st t = if st.len = e.n then .ok st.trace else .error .assertion := by
   rw [loop, ite_eq_right ht]
 
 /-! ## Spilled congruence -/
@@ -544,7 +560,7 @@ theorem loop_congr (st : St) (t : Nat) : loop ⟨tg, s⟩ st t = loop ⟨tg, s'�
         exact loop_congr st' t'
   · rw [loop_ge ht, loop_ge ht]
     rfl
-termination_by (tg.length - t, st.pending)
+termination_by (tg.length - t, st.pendingGenerations)
 decreasing_by
   rcases this with h' | ⟨h', hp⟩
   · exact Prod.Lex.left _ _ (by omega)
@@ -555,7 +571,7 @@ end Congr
 -- `buildBottomUp` reads `spilled` only at the ids of the variables in the target.
 theorem buildBottomUp_congr {e e' : Env} (ht : e.target = e'.target)
     (hs : ∀ v ∈ e.target, 2 ≤ v.toNat → v.toNat % 2 = 0 →
-      e.spilled ((v.toNat - 2) / 2) = e'.spilled ((v.toNat - 2) / 2))
+      e.spills ((v.toNat - 2) / 2) = e'.spills ((v.toNat - 2) / 2))
     (source : List Word) (dests : List Nat) :
     buildBottomUp e source dests = buildBottomUp e' source dests := by
   obtain ⟨tg, s⟩ := e

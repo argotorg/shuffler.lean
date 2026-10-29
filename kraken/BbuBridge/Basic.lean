@@ -165,9 +165,10 @@ theorem Rel.positionOf_ge (h : Rel e st state) {d : Nat} (hd : e.n ≤ d) :
   omega
 
 -- The shallowest copy of a value.
-theorem Rel.shallowestCopy (h : Rel e st state) (v : Bbu.Word) :
-    (state.stack.shallowestCopyPosition (decode v)).map Fin.val = Bbu.shallowestCopy st v := by
-  unfold Stack.shallowestCopyPosition Bbu.shallowestCopy
+theorem Rel.shallowestCopyPosition (h : Rel e st state) (v : Bbu.Word) :
+    (state.stack.shallowestCopyPosition (decode v)).map Fin.val
+      = Bbu.shallowestCopyPosition st v := by
+  unfold Stack.shallowestCopyPosition Bbu.shallowestCopyPosition
   rw [← h.len, ← List.map_coe_finRange_eq_range, ← List.map_reverse, List.find?_map]
   congr 1
   congr 1

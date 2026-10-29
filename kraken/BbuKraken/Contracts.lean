@@ -1,4 +1,5 @@
 import BbuKraken.Layout
+import BbuKraken.ModelLemmas
 
 /-!
 The spec of each function of `c/build_bottom_up.c` but `build_bottom_up`: the
@@ -25,88 +26,78 @@ abbrev Ok {α : Type} (s t : MachineData) (enc : α → Word) (f : α → St) (a
 
 /-! ## Contracts -/
 
--- `is_spilled(s, v)`, for `v` in the target.
+-- `isSpilled(e, _slot)`, for `_slot` in the target.
 def isSpilledF : Nat := 8
-def isSpilledA (s : MachineData) : Prop := ∃ d < (env s).n, (env s).target[d]! = rsi s
+def isSpilledA (s : MachineData) : Prop :=
+  ∃ offset < (env s).n, (env s).target[offset]! = rsi s
 def isSpilledR (s t : MachineData) : Prop :=
   rax t = BitVec.ofNat 64 (isSpilled (env s) (rsi s)).toNat ∧ st' s t = st s
 
--- `position_of(s, d)`
+-- `positionOf(e, _destination)`
 def positionOfF : Nat := 8
 def positionOfA (_ : MachineData) : Prop := True
 def positionOfR (s t : MachineData) : Prop :=
   rax t = encOpt (positionOf (st s) (rsi s).toNat) ∧ st' s t = st s
 
--- `shallowest_copy(s, v)`
+-- `shallowestCopyPosition(e, _slot)`
 def shallowestCopyF : Nat := 8
 def shallowestCopyA (_ : MachineData) : Prop := True
 def shallowestCopyR (s t : MachineData) : Prop :=
-  rax t = encOpt (shallowestCopy (st s) (rsi s)) ∧ st' s t = st s
+  rax t = encOpt (shallowestCopyPosition (st s) (rsi s)) ∧ st' s t = st s
 
--- `swap_with(s, pos)`
+-- `swapWith(e, _pos)`
 def swapWithF : Nat := 8
-def swapWithA (s : MachineData) : Prop := (st s).ops.length < cap s
+def swapWithA (s : MachineData) : Prop := (st s).trace.length < cap s
 def swapWithR (s t : MachineData) : Prop :=
   Res (rdi s) (swapWith (st s) (rsi s).toNat) (Ok s t (fun _ => 0#64) id) t
 
--- `add(s, v, d, kind, arg)`
-def addF : Nat := 56
-def addA (s : MachineData) : Prop := (st s).len < MAX_N ∧ (st s).ops.length < cap s
-def addR (s t : MachineData) : Prop :=
-  Res (rdi s) (add (st s) (rsi s) (rdx s).toNat ⟨rcx s, r8 s⟩) (Ok s t (fun _ => 0#64) id) t
+-- `push(e, _slot, _destination)`
+def pushF : Nat := 40
+def pushA (s : MachineData) : Prop := (st s).len < MAX_N ∧ (st s).trace.length < cap s
+def pushR (s t : MachineData) : Prop :=
+  Res (rdi s) (add (st s) (rsi s) (rdx s).toNat (.push (rsi s))) (Ok s t (fun _ => 0#64) id) t
 
--- `produce(s, d)`
-def produceF : Nat := 96
+-- `dup(e, _copy, _destination)`
+def dupF : Nat := 40
+def dupA (s : MachineData) : Prop :=
+  (rsi s).toNat < (st s).len ∧ (st s).len < MAX_N ∧ (st s).trace.length < cap s
+def dupR (s t : MachineData) : Prop :=
+  Res (rdi s) (add (st s) ((st s).val (rsi s).toNat) (rdx s).toNat
+    (.dup ((st s).len - (rsi s).toNat))) (Ok s t (fun _ => 0#64) id) t
+
+-- `produce(e, _targetOffset)`
+def produceF : Nat := 80
 def produceA (s : MachineData) : Prop :=
-  (rsi s).toNat < (env s).n ∧ (st s).len < MAX_N ∧ (st s).ops.length < cap s
+  (rsi s).toNat < (env s).n ∧ (st s).len < MAX_N ∧ (st s).trace.length < cap s
 def produceR (s t : MachineData) : Prop :=
   Res (rdi s) (produce (env s) (st s) (rsi s).toNat) (Ok s t (fun _ => 0#64) id) t
 
--- `generate(s, d)`
-def generateF : Nat := 120
-def generateA (s : MachineData) : Prop := (st s).len < MAX_N ∧ (st s).ops.length + 2 ≤ cap s
+-- `generate(e, _targetOffset)`
+def generateF : Nat := 104
+def generateA (s : MachineData) : Prop := (st s).len < MAX_N ∧ (st s).trace.length + 2 ≤ cap s
 def generateR (s t : MachineData) : Prop :=
   Res (rdi s) (generate (env s) (st s) (rsi s).toNat) (Ok s t (fun _ => 0#64) id) t
 
--- `urgent(s, t)`
-def urgentF : Nat := 64
-def urgentA (_ : MachineData) : Prop := True
-def urgentR (s t : MachineData) : Prop :=
-  Res (rdi s) (urgent (env s) (st s) (rsi s).toNat)
-    (Ok s t (fun u => BitVec.ofNat 64 u) (fun _ => st s)) t
-
--- `take_bound(s, t, b)`, for the slot `b` bound for `t`
-def takeBoundF : Nat := 16
-def takeBoundA (s : MachineData) : Prop :=
-  (rdx s).toNat < (st s).len ∧ (st s).ops.length < cap s
-def takeBoundR (s t : MachineData) : Prop :=
-  Res (rdi s) (takeBound (st s) (rsi s).toNat (rdx s).toNat)
-    (Ok s t (fun r => if r.2 then 0#64 else 1#64) Prod.fst) t
-
-def encNext : Next → Word
-  | .next t => BitVec.ofNat 64 t
-  | .finish => -3#64
-
--- `step(s, t)`
-def stepF : Nat := 152
-def stepA (s : MachineData) : Prop :=
-  (rsi s).toNat < (env s).n ∧ (st s).len + (st s).pending ≤ (env s).n
-    ∧ (st s).ops.length + 3 ≤ cap s
-def stepR (s t : MachineData) : Prop :=
-  Res (rdi s) (step (env s) (st s) (rsi s).toNat) (Ok s t (fun r => encNext r.2) Prod.fst) t
-
--- `finish(s)`, for a permutation of the destinations
--- The locals of `finish` from `rsp` after `subq`: `blocked` at 12, `trace` at 16,
--- then `perm` at `finishPerm`.
+-- `permuteDestinations(e)`, for a permutation of the destinations
+-- The locals of `permuteDestinations` from `rsp` after `subq`: `blocked` at 12,
+-- `swaps` at 16, then `permutation` at `finishPerm`.
 def finishPerm : Nat := 16 + 2 * MAX_N
 def finishLocals : Nat := finishPerm + 2 * MAX_N
 -- The return address, `pushq %rbx`, the locals and the frame of `permute`.
 def finishF : Nat := 8 + 8 + finishLocals + 16
 theorem finishF_eq : finishF = 4144 := rfl
 def finishA (s : MachineData) : Prop :=
-  IsPerm ((st s).slots.map Slot.dest) ∧ (st s).ops.length + 2 * (st s).len ≤ cap s
+  IsPerm ((st s).slots.map Slot.dest) ∧ (st s).trace.length + 2 * (st s).len ≤ cap s
 def finishR (s t : MachineData) : Prop :=
-  Res (rdi s) (finish (st s)) (fun ops => rax t = BitVec.ofNat 64 ops.length ∧ (st' s t).ops = ops) t
+  Res (rdi s) (finish (st s)) (fun ops => rax t = 0#64 ∧ (st' s t).trace = ops) t
+
+-- `buildBottomUp(e)`: `loop` from offset 0
+-- The return address, six `pushq`, `subq $24` and the frame of `permuteDestinations`.
+def loopF : Nat := 8 + 48 + 24 + finishF
+theorem loopF_eq : loopF = 4224 := rfl
+def loopA (s : MachineData) : Prop := Inv (env s) (st s) 0
+def loopR (s t : MachineData) : Prop :=
+  Res (rdi s) (loop (env s) (st s) 0) (fun ops => rax t = 0#64 ∧ (st' s t).trace = ops) t
 
 /-! ## Specs -/
 

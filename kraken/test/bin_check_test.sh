@@ -28,7 +28,7 @@ hex() { printf '%x' $((0x$1 + $2)); }
 first=$(awk 'NR == 2 { print $1 }' "$tmp/host")
 lb1=$(awk '$3 == ".LB1:" { print $1; exit }' "$tmp/host")
 jbe=$(grep -m1 -o 'jbe  *[0-9a-f]*' "$tmp/dis" | awk '{ print $2 }')
-pos=$(grep -m1 -o '[0-9a-f]* <position_of>' "$tmp/dis" | cut -d' ' -f1)
+pos=$(grep -m1 -o '[0-9a-f]* <positionOf>' "$tmp/dis" | cut -d' ' -f1)
 disp=$(grep -m1 -o '0x[0-9a-f]*(' "$tmp/dis" | sed 's/^0x//; s/($//')
 start=$(awk '$1 == "start" { print $2 }' "$tmp/dis")
 stop=$(awk '$1 == "stop" { print $2 }' "$tmp/dis")
@@ -39,7 +39,7 @@ expect_fail register dis '0,/%rdx,%rsi/s//%rdx,%rdi/'
 expect_fail displacement dis "0,/0x$disp(/s//0x$(hex "$disp" 8)(/"
 expect_fail mnemonic dis '0,/movl /s//movw /'
 expect_fail target dis "0,/jbe  *$jbe/s//jbe    $(hex "$jbe" -1)/"
-expect_fail call dis "0,/$pos <position_of>/s//$(hex "$pos" -1) <position_of>/"
+expect_fail call dis "0,/$pos <positionOf>/s//$(hex "$pos" -1) <positionOf>/"
 expect_fail movzx dis '0,/movzbl %al,%eax/s//movzwl %ax,%eax/'
 expect_fail cmov dis '0,/cmovneq/s//cmoveq/'
 expect_fail kind dis '0,/ pad /s// instr /'

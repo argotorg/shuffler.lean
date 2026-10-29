@@ -1,15 +1,15 @@
-swap_with:
+swapWith:
 	movq	(%rdi), %r8
 	cmpq	%r8, %rsi
-	jnb	.LB23
+	jnb	.LB17
 	leaq	(%rdi,%rsi,8), %rax
-	cmpq	%rsi, 8256(%rax)
-	je	.LB24
-	leaq	-1(%r8), %rcx
+	cmpq	8256(%rax), %rsi
+	je	.LB18
+	movq	%r8, %rcx
 	subq	%rsi, %rcx
-	leaq	-1(%rcx), %rdx
+	leaq	-2(%rcx), %rdx
 	cmpq	$15, %rdx
-	ja	.LB25
+	ja	.LB19
 	movq	16(%rdi), %rdx
 	salq	$4, %rdx
 	addq	48(%rdi), %rdx
@@ -17,6 +17,7 @@ swap_with:
 	movq	16(%rdi), %rdx
 	salq	$4, %rdx
 	addq	48(%rdi), %rdx
+	subq	$1, %rcx
 	movq	%rcx, 8(%rdx)
 	addq	$1, 16(%rdi)
 	movq	64(%rax), %rcx
@@ -30,13 +31,13 @@ swap_with:
 	movq	%rcx, 8248(%rdx)
 	movl	$0, %eax
 	ret
-.LB23:
+.LB17:
 	movq	$-2, %rax
 	ret
-.LB24:
+.LB18:
 	movq	$-2, %rax
 	ret
-.LB25:
+.LB19:
 	movq	$-2, %rax
 	ret
-	.size	swap_with, .-swap_with
+	.size	swapWith, .-swapWith

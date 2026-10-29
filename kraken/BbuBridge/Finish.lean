@@ -65,7 +65,7 @@ theorem finish_corr : FinishStmt := by
     rw [ho]
     show _ = encodeRes (post (tgt e) (.ok ⟨res, state.trace.concat trace⟩))
     rw [hpost]
-    simp [encodeRes, encodeM, traceOps_concat, ← h.ops, hops, encodeOp]
+    simp [encodeRes, encodeM, traceOps_concat, ← h.trace, hops, encodeOp]
   · -- Blocked: the original is blocked at the same offset.
     rename_i b hp
     rw [permute_blocked_of_model _ _ _ _ hds hp]
