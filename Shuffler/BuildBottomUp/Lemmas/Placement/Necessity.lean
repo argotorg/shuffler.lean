@@ -23,17 +23,17 @@ private theorem firstGrowth (trace : Trace spills source target)
   | @Swap prev idx hlen hlo hhi trace ih =>
     obtain ⟨middle, value, before, tail, hp, hz, hv, ht, he⟩ := ih h hne
     exact ⟨middle, value, before, .Swap idx hlen hlo hhi tail, hp, hz, hv, ht, he⟩
-  | @Dup prev idx hlen hlo hhi trace ih =>
+  | @Dup prev idx hlen hlo hhi hvalue trace ih =>
     by_cases hz : trace.additions = 0
     · refine ⟨prev, prev[prev.length - idx]'(by omega), trace,
-        .Lit _, h, hz, Or.inr (Or.inr ?_), by trivial, ?_⟩
+        .Lit _, h, hz, Or.inr (Or.inr ⟨hvalue, ?_⟩), by trivial, ?_⟩
       · refine ⟨⟨prev.length - idx, by omega⟩, rfl, ?_⟩
         rw [Stack.isDupReachable_iff_length]
         change prev.length ≤ prev.length - idx + (MAX_DUP_DEPTH + 1)
         omega
       · simp [Trace.additions, hz]
     · obtain ⟨middle, value, before, tail, hp, hzero, hv, ht, he⟩ := ih h hz
-      refine ⟨middle, value, before, .Dup idx hlen hlo hhi tail,
+      refine ⟨middle, value, before, .Dup idx hlen hlo hhi hvalue tail,
         hp, hzero, hv, ht, ?_⟩
       simp only [Trace.additions, he, add_assoc]
   | Push value hfree trace ih =>
@@ -62,7 +62,7 @@ theorem seeds_le_window (trace : Trace spills source target) (h : trace.noPop) :
 private theorem available_nonfree_mem_drop {stack : Stack} {value : Value}
     (h : Shuffler.Generate.Available spills stack value) (hf : ¬Free spills value) :
     value ∈ stack.drop (stack.length - (MAX_DUP_DEPTH + 1)) := by
-  rcases h with hfree | hspill | ⟨pos, he, hr⟩
+  rcases h with hfree | hspill | ⟨_, pos, he, hr⟩
   · exact False.elim (hf (Or.inl hfree))
   · exact False.elim (hf (Or.inr hspill))
   · rw [← he]
@@ -82,7 +82,7 @@ private theorem window_append (stack : Stack) (value : Value) :
 theorem CanPlace.reserve (h : CanPlace spills source target missing) :
     Reserve spills source target missing := by
   obtain ⟨trace, ht, rfl⟩ := h
-  refine ⟨trace.noPop_balance ht, trace.noPop_frozen ht, ?_⟩
+  refine ⟨trace.noPop_balance ht, trace.noPop_frozen ht, ?_, trace.additions_not_returnLabel⟩
   by_cases hg : trace.additions ≠ 0 ∧ MAX_SWAP_DEPTH + 1 ≤ source.length
   · obtain ⟨middle, value, before, tail, hb, hz, hv, htail, he⟩ :=
       firstGrowth trace ht hg.1

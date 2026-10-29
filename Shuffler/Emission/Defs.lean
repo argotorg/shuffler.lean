@@ -7,7 +7,6 @@ public import Shuffler.Trace
 
 -- TODO: make numeric types here match the c++ types
 -- TODO: add a Depth / Offset type
--- TODO: Dup should not accept a FunctionReturnLabel
 
 -- The state and the shared helpers of the C++ `Emission` class. Its algorithms (removeSurplus,
 -- buildBottomUp) live in their own folders and extend this namespace.
@@ -129,6 +128,7 @@ def State.push (state : State source target spills)
   }
 
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:786-790.
+-- DUP rejects function return labels; see solidity/libyul/backends/evm/ssa/Stack.h:88-97.
 def State.dup (state : State source target spills)
     (offset : ℕ) (dest : Fin target.length) : Except ShuffleErr (State source target spills) := do
 
@@ -137,13 +137,16 @@ def State.dup (state : State source target spills)
 
   let ⟨hbound⟩ ← requires (state.mapping.positionOf dest = none) "destination already bound to a slot"
   let ⟨hdup⟩ ← requires (state.stack.isDupReachable copy) "Stack too deep"
+  let ⟨hlabel⟩ ← requires (¬ (state.stack[copy.val]'copy.isLt).isFunctionReturnLabel)
+    "Cannot dup function return label"
 
   return {
     state with
     stack := state.stack ++ [state.stack[copy]]
     trace :=
       dup_stack_eq state.stack copy ▸
-        Trace.Dup (depth.val + 1) (Nat.succ_le_of_lt depth.isLt) (Nat.succ_pos _) (Nat.add_le_add_right hdup 1) state.trace
+        Trace.Dup (depth.val + 1) (Nat.succ_le_of_lt depth.isLt) (Nat.succ_pos _)
+          (Nat.add_le_add_right hdup 1) (by simpa [depth, dup_slot_eq] using hlabel) state.trace
     mapping := by simpa [stack_push_len] using
       state.mapping.push dest hbound
   }

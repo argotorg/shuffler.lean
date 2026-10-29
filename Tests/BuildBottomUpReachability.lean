@@ -64,7 +64,7 @@ private def finalPrefix (stack : Stack) : State stack (stack ++ [.Var ⟨37⟩])
 private def shallow : Stack := List.replicate 32 (.Lit 0) ++ [.Var ⟨37⟩]
 private def buried : Stack := [.Var ⟨37⟩] ++ List.replicate 32 (.Lit 0)
 
-private theorem shallow_valid : (finalPrefix shallow).Valid := ⟨by decide, by decide, by decide⟩
+private theorem shallow_valid : (finalPrefix shallow).Valid := ⟨by decide, by decide, by decide, by decide⟩
 
 -- A 33-slot final prefix succeeds when the requested variable is at the top.
 example : ∃ result : State _ _ _,
@@ -84,7 +84,7 @@ example : (((((buildBottomUp (finalPrefix shallow) shallow_valid) : Except Shuff
     .ok (shallow ++ [.Var ⟨37⟩]) := by native_decide
 
 -- A final prefix alone does not make a buried variable available to DUP.
-private theorem buried_valid : (finalPrefix buried).Valid := ⟨by decide, by decide, by decide⟩
+private theorem buried_valid : (finalPrefix buried).Valid := ⟨by decide, by decide, by decide, by decide⟩
 example : State.processed 33 (finalPrefix buried) := by unfold State.processed; decide
 example : (finalPrefix buried).stack.length - 33 ≤ MAX_SWAP_DEPTH := by decide
 example : ¬State.reachable (finalPrefix buried) := by
@@ -112,7 +112,7 @@ private def swapState : State swapSource swapTarget ∅ where
   pending_generations := 0
 
 -- SWAP16 can succeed with 17 active slots and no final bottom prefix.
-private theorem swapState_valid : swapState.Valid := ⟨by decide, by decide, by decide⟩
+private theorem swapState_valid : swapState.Valid := ⟨by decide, by decide, by decide, by decide⟩
 example : (((((buildBottomUp swapState swapState_valid) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
   if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
   pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1) =

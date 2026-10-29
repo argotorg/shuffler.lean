@@ -52,6 +52,7 @@ theorem PrefixState.step {initial state : State source target spills} {h : initi
   | none =>
     obtain ⟨produced, hproduce, hg, hm⟩ :=
       produce_success_exact state dest hb (hp.invariant.available dest) hr
+        (hp.invariant.not_label_of_unbound dest hb)
     have hgsize := hg.size
     have hcproduced : cursor < produced.stack.length := by omega
     let current' : Fin produced.stack.length := ⟨cursor,hcproduced⟩
