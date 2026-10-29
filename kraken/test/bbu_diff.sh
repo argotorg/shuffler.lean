@@ -7,13 +7,13 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 make -C "$root/kraken/c" -s
-(cd "$root" && lake build Shuffler.BuildBottomUp.Defs >/dev/null)
+(cd "$root" && lake build bbu_original >/dev/null)
 (cd "$root/kraken" && lake build bbu_model >/dev/null)
 
 "$root/kraken/c/bbu_harness" gen > "$tmp/states"
 "$root/kraken/c/bbu_harness" run < "$tmp/states" > "$tmp/c"
 "$root/kraken/.lake/build/bin/bbu_model" < "$tmp/states" > "$tmp/model"
-(cd "$root" && lake env lean --run kraken/test/BuildBottomUpMain.lean) < "$tmp/states" > "$tmp/orig"
+"$root/.lake/build/bin/bbu_original" < "$tmp/states" > "$tmp/orig"
 
 if grep -n -m 5 -e '^assertion' -e '^invalid' "$tmp/orig"; then
 	echo "the original fails on generated states" >&2

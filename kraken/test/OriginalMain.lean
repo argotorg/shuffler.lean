@@ -2,10 +2,10 @@ import Shuffler.Permute.Defs
 
 /-!
 Run the original `Shuffler.Permute.permute` on lines "n p0 .. p(n-1)" and print
-the swap depths as "ok d1 .. dk" or "blocked offset excess". This file belongs to
-the root project, not to `PermuteKraken`:
+the swap depths as "ok d1 .. dk" or "blocked offset excess". The root project, not
+`PermuteKraken`, builds it as `original`:
 
-  lake env lean --run kraken/test/OriginalMain.lean < perms.txt
+  lake exe original < perms.txt
 -/
 
 open Shuffler Shuffler.Permute

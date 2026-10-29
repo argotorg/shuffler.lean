@@ -7,9 +7,9 @@ Run the original `Shuffler.Emission.buildBottomUp` on lines
 the source and target values, `d` the destination of each source slot and `v`
 the spilled variable ids. A value is a number: 0 is a wildcard, 1 a function
 return label, 2 + 2 id a variable and 3 + 2 id a literal. An operation is
-"s depth", "d depth" or "p value". This file belongs to the root project:
+"s depth", "d depth" or "p value". The root project builds it as `bbu_original`:
 
-  lake env lean --run kraken/test/BuildBottomUpMain.lean < states.txt
+  lake exe bbu_original < states.txt
 -/
 
 open Shuffler Shuffler.Emission
