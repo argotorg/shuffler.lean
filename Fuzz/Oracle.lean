@@ -1,6 +1,9 @@
 import Shuffler.BuildMapping.Defs
 import Shuffler.RemoveSurplus.Defs
+import Shuffler.PermuteAtLowestHeight.Defs
 import Shuffler.BuildBottomUp.Defs
+import Shuffler.Emission.Run.Defs
+import Shuffler.Planner.Run.Defs
 
 /-
 The Lean side of the differential fuzzer in Fuzz/fuzz.cpp. A case and its result are each one line of
@@ -8,17 +11,25 @@ text, so that both implementations parse the same input and print the same outpu
 
   case   := "map;" strategy ";" stack ";" stack ";" bytes      buildMapping of source, target, dropped
           | "surplus;" state                                   removeSurplus
+          | "lowest;" state                                    permuteAtLowestHeight
           | "bottomup;" state                                  buildBottomUp
+          | "emit;" state                                      Emission.run
           | "permute;" stack ";" offsets                       permute, with the destination of each offset
+          | "plan;" strategy ";" bit ";" stack ";" stack ";" vars
+                                                               Planner.run of spillingAllowed, source, target, spills
   state  := stack ";" stack ";" dests ";" vars                 stack, target, mapping and spilled variables
   dests  := per stack offset a target offset or "-"
   slot   := "v" n | "l" n | "_" | "R"                          Var, Lit, Wildcard, FunctionReturnLabel
 
-  result := "ok " saw ";" sources                              buildMapping: per target offset a source offset or "-"
-          | "ok " stack ";" ops                                buildBottomUp and permute
-          | "ok " stack ";" ops ";" dests                      removeSurplus
-          | "blocked " offset " " excess | "err"
+  result := "ok " bit ";" sources                              buildMapping: sawWildcardCopy, per target offset a
+                                                               source offset or "-"
+          | status ";" stack ";" ops ";" dests                 the state steps, also when blocked
+          | "ok " bit ";" bit ";" vars ";" bytes [";" stack ";" ops ";" sources]
+                                                               Planner.run: success, sawWildcardCopy, spills, dropped,
+                                                               and on success the emitted stack and the plan
+          | "err"
           | "invalid"                                          the buildBottomUp state is not `Valid`
+  status := "ok" | "blocked " offset " " excess
   op     := "SWAP" n | "DUP" n | "POP" | "PUSH:" slot | "LOAD:" slot
 -/
 
@@ -85,10 +96,12 @@ def showOffset : Option (Fin n) → String
   | some i => toString i.val
   | none => "-"
 
+def showBit (b : Bool) : String := if b then "1" else "0"
+
 def ops : Trace spills source result → List String
   | .Lit _ => []
   | .Swap idx _ _ _ trace => ops trace ++ [s!"SWAP{idx}"]
-  | .Dup idx _ _ _ trace => ops trace ++ [s!"DUP{idx}"]
+  | .Dup idx _ _ _ _ trace => ops trace ++ [s!"DUP{idx}"]
   | .Pop _ trace => ops trace ++ ["POP"]
   | .Push value _ trace => ops trace ++ [s!"PUSH:{showSlot value}"]
   | .Load id _ trace => ops trace ++ [s!"LOAD:{showSlot (.Var id)}"]
@@ -97,8 +110,13 @@ def showErr : ShuffleErr → String
   | .Blocked b => s!"blocked {b.offset} {b.excess}"
   | .assertion _ => "err"
 
-def showTrace : Except ShuffleErr ((result : Stack) × Trace spills source result) → String
-  | .ok ⟨result, trace⟩ => s!"ok {showStack result};{" ".intercalate (ops trace)}"
+def showResult : Except ShuffleErr (Result source target spills) → String
+  | .ok ⟨blocked, s⟩ =>
+    let status := match blocked with
+      | none => "ok"
+      | some b => s!"blocked {b.offset} {b.excess}"
+    let dests := (List.finRange s.stack.length).map fun i => showOffset (s.mapping.destinationOf i)
+    s!"{status};{showStack s.stack};{" ".intercalate (ops s.trace)};{" ".intercalate dests}"
   | .error e => showErr e
 
 --- Runners ----------------------------------------------------------------------------------------
@@ -115,8 +133,13 @@ instance (state : State source target spills) : Decidable state.Valid :=
   decidable_of_iff
     (state.stack.length + state.pending_generations = target.length ∧
       state.mapping.unmapped_target_slots = state.pending_generations ∧
-      ∀ j, state.isAvailable j)
-    ⟨fun ⟨hs, hp, ha⟩ => ⟨hs, hp, ha⟩, fun h => ⟨h.size, h.pending, h.available⟩⟩
+      (∀ j, state.isAvailable j) ∧
+      ∀ j, target[j].isFunctionReturnLabel → (state.mapping.symm j).isSome)
+    ⟨fun ⟨hs, hp, ha, hl⟩ => ⟨hs, hp, ha, hl⟩,
+      fun h => ⟨h.size, h.pending, h.available, h.labels_bound⟩⟩
+
+def parseSpills (s : String) : Except String SpillSet := do
+  return ((← (words s).mapM parseNat).map VarId.mk).toFinset
 
 def runBuildMapping : List String → Except String String
   | [strategy, source, target, dropped] => do
@@ -127,19 +150,12 @@ def runBuildMapping : List String → Except String String
     return match result with
       | .ok r =>
         let sources := (List.finRange target.length).map fun j => showOffset (r.mapping.symm j)
-        s!"ok {if r.sawWildcardCopy then 1 else 0};{" ".intercalate sources}"
+        s!"ok {showBit r.sawWildcardCopy};{" ".intercalate sources}"
       | .error _ => "err"
   | _ => .error "not a buildMapping case"
 
-def runRemoveSurplus (state : State source target spills) : String :=
-  match removeSurplus state with
-  | .ok s =>
-    let dests := (List.finRange s.stack.length).map fun i => showOffset (s.mapping.destinationOf i)
-    s!"ok {showStack s.stack};{" ".intercalate (ops s.trace)};{" ".intercalate dests}"
-  | .error e => showErr e
-
 def runBuildBottomUp (state : State source target spills) : String :=
-  if h : state.Valid then showTrace (buildBottomUp state h) else "invalid"
+  if h : state.Valid then showResult (buildBottomUp state h) else "invalid"
 
 def runOnState (run : ∀ {source target : Stack} {spills : SpillSet}, State source target spills → String) :
     List String → Except String String
@@ -147,8 +163,7 @@ def runOnState (run : ∀ {source target : Stack} {spills : SpillSet}, State sou
     let stack ← parseStack stack
     let target ← parseStack target
     let mapping ← parseMapping stack.length target.length dests
-    let spills : SpillSet := ((← (words vars).mapM parseNat).map VarId.mk).toFinset
-    return run (initial stack target spills mapping)
+    return run (initial stack target (← parseSpills vars) mapping)
   | _ => .error "not a state"
 
 def runPermute : List String → Except String String
@@ -156,16 +171,53 @@ def runPermute : List String → Except String String
     let stack ← parseStack stack
     let mapping ← parseMapping stack.length stack.length dests
     if h : ∀ i, (mapping i).isSome then
-      return showTrace (Permute.permute ∅ stack (mapping.toPermutation rfl h))
+      let perm := mapping.toPermutation rfl h
+      -- the target is the permuted stack, so that the mapping binds every slot to its destination
+      let target := Permute.apply_permutation stack perm
+      let state := initial stack target ∅ (by simpa [target, Permute.apply_permutation] using mapping)
+      return showResult (Permute.permute state perm)
     else .error s!"not a permutation: {dests}"
   | _ => .error "not a permute case"
+
+def runPlanner : List String → Except String String
+  | [strategy, allowed, source, target, vars] => do
+    let source ← parseStack source
+    let target ← parseStack target
+    let inputSpills ← (words vars).mapM parseNat
+    let allowed ← match allowed with
+      | "0" => pure false
+      | "1" => pure true
+      | s => throw s!"not a bit: {s}"
+    let result := Planner.run source target ((inputSpills.map VarId.mk).toFinset) allowed
+      (← parseStrategy strategy)
+    return match result with
+      | .ok r =>
+        -- the planner only spills source values, so every spilled id is in the case
+        let ids := (source ++ target).filterMap (fun | .Var id => some id.val | _ => none) ++ inputSpills
+        let spilled := (ids.dedup.mergeSort (· ≤ ·)).filter (VarId.mk · ∈ r.state.spills)
+        let dropped := r.state.dropped.toList.map (toString ·.val)
+        let head := s!"ok {showBit r.result.isSome};{showBit r.sawWildcardCopy};" ++
+          s!"{" ".intercalate (spilled.map toString)};{" ".intercalate dropped}"
+        match r.result with
+        | none => head
+        | some s =>
+          let sources := (List.finRange target.length).map fun j => showOffset (s.planned_mapping.symm j)
+          s!"{head};{showStack s.stack};{" ".intercalate (ops s.trace)};{" ".intercalate sources}"
+      | .error _ => "err"
+  | _ => .error "not a planner case"
 
 def run (line : String) : Except String String :=
   match line.splitOn ";" with
   | "map" :: fields => runBuildMapping fields
-  | "surplus" :: fields => runOnState runRemoveSurplus fields
+  | "surplus" :: fields => runOnState (showResult <| removeSurplus ·) fields
+  | "lowest" :: fields =>
+    runOnState (showResult <| Shuffler.PermuteAtLowestHeight.permuteAtLowestHeight ·) fields
   | "bottomup" :: fields => runOnState runBuildBottomUp fields
+  | "emit" :: fields =>
+    runOnState (fun {source target spills} (s : State source target spills) =>
+      showResult (Emission.run source target s.planned_mapping spills)) fields
   | "permute" :: fields => runPermute fields
+  | "plan" :: fields => runPlanner fields
   | _ => .error s!"not a case: {line}"
 
 end Oracle
