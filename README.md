@@ -12,10 +12,14 @@ Run `lake test` to run the property tests.
 
 ## Differential fuzzing
 
-`Fuzz/fuzz.cpp` is a fuzz target that runs `buildMapping`, `removeSurplus`, `permute` and
-`buildBottomUp` of the C++ shuffler from the `solidity` submodule and of the Lean model on the same
-case, and aborts when the results differ. It calls the Lean model through the Lean C FFI. Every input
-decodes to a valid case. The case language is described in `Fuzz/Oracle.lean`.
+`Fuzz/fuzz.cpp` is a fuzz target that runs `buildMapping`, `removeSurplus`, `permute`,
+`permuteAtLowestHeight`, `buildBottomUp`, `Emission.run` and `Planner.run` of the C++ shuffler from
+the `solidity` submodule and of the Lean model on the same case, and aborts when the results differ.
+It calls the Lean model through the Lean C FFI. Every input decodes to a case. Except for
+`Planner.run`, every case satisfies the preconditions of the function under test. A `Planner.run`
+case can have a target variable that is not on the source stack and not spilled, or more function
+return labels in the target than in the source. For these cases the results must also be the same.
+The case language is described in `Fuzz/Oracle.lean`.
 
 Build and run with libFuzzer:
 
@@ -43,12 +47,3 @@ Both builds replay an input file and print `case <tab> c++ <tab> lean` for a dif
 ```
 build/fuzz/fuzz build/afl-out/default/crashes/<file>
 ```
-
-Known differences. Every difference found so far has equal values on the stack or a function return
-label `R`:
-
-- On stacks with equal values, Lean `permute` and `buildBottomUp` emit swaps that C++ does not emit,
-  report a different blocked slot, or are blocked where C++ is not. Lean `permute` does not regroup
-  equal values. `permute;v0 v0;1 0` gives `ok v0 v0;` in C++ and `ok v0 v0;SWAP1` in Lean.
-- Lean `Dup` accepts `R`, C++ `Stack::dup` asserts. `bottomup;R;R R;0;` gives `err` in C++ and
-  `ok R R;DUP1` in Lean.
