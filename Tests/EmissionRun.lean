@@ -26,6 +26,12 @@ private def succeeds (source target : Stack)
 #guard succeeds [a, b] [.Wildcard, a] .Leave
 #guard succeeds [a, b] [.Wildcard, a] .Take
 #guard succeeds [.FunctionReturnLabel, b] [b, .FunctionReturnLabel]
+#guard succeeds [.FunctionReturnLabel, .FunctionReturnLabel] [.FunctionReturnLabel, .FunctionReturnLabel]
+
+-- Each target return label needs its own retained source.
+#guard match attempt [.FunctionReturnLabel] [.FunctionReturnLabel, .FunctionReturnLabel] with
+  | .error (.assertion "function return label has no bound source") => true
+  | _ => false
 
 -- A target value that cannot be generated and has no copy is rejected.
 #guard match attempt [] [a] with

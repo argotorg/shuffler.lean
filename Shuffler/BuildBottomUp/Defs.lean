@@ -42,6 +42,8 @@ structure State.Valid (state : State source target spills) : Prop where
   size : state.stack.length + state.pending_generations = target.length
   pending : state.mapping.unmapped_target_slots = state.pending_generations
   available : ∀ i, state.isAvailable i
+  -- Function return labels must be retained; they cannot be produced by DUP.
+  labels_bound : ∀ j, target[j].isFunctionReturnLabel → (state.mapping.symm j).isSome
 
 -- Every target offset below `cursor` is final.
 def State.processed (cursor : ℕ) (state : State source target spills) : Prop :=

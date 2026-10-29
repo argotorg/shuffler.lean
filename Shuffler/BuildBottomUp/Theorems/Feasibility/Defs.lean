@@ -38,10 +38,12 @@ def boundary (source target : Stack) (missing : Multiset Value) : Multiset Value
 -- for the next fixed output and all required sources. All data are initial.
 -- If the boundary value also occurs in seeds, their sum requires two copies:
 -- one for that output position and another to supply later DUP operations.
+-- Function return labels can stay or move, but cannot be added.
 def Reserve (spills : SpillSet) (source target : Stack) (missing : Multiset Value) : Prop :=
   (target : Multiset Value) = (source : Multiset Value) + missing ∧
     target.take (frozen source) = source.take (frozen source) ∧
-    boundary source target missing + seeds spills missing ≤ (window source : Multiset Value)
+    boundary source target missing + seeds spills missing ≤ (window source : Multiset Value) ∧
+    ∀ value ∈ missing, ¬value.isFunctionReturnLabel
 
 -- The witness is a production trace with exactly the requested additions.
 def CanPlace (spills : SpillSet) (source target : Stack) (missing : Multiset Value) : Prop :=
@@ -58,7 +60,8 @@ namespace Shuffler.Generate
 
 def Available (spills : SpillSet) (source : Stack) (value : Value) : Prop :=
   value.can_be_freely_generated ∨ spills.is_spilled value ∨
-    ∃ pos : Fin source.length, source[pos] = value ∧ source.isDupReachable pos
+    ¬value.isFunctionReturnLabel ∧
+      ∃ pos : Fin source.length, source[pos] = value ∧ source.isDupReachable pos
 
 instance (spills : SpillSet) (source : Stack) (value : Value) :
     Decidable (Available spills source value) := by
@@ -88,9 +91,11 @@ def CanGenerate (spills : SpillSet) (source : Stack) (missing : Multiset Value) 
   ∃ target, CanPlace spills source target missing
 
 -- Required kinds have initial top-17 sources and need at most 16 slots.
+-- Function return labels cannot be added.
 def Ready (spills : SpillSet) (source : Stack) (missing : Multiset Value) : Prop :=
   seeds spills missing ≤ (window source : Multiset Value) ∧
-    (seeds spills missing).card ≤ MAX_DUP_DEPTH + 1
+    (seeds spills missing).card ≤ MAX_DUP_DEPTH + 1 ∧
+    ∀ value ∈ missing, ¬value.isFunctionReturnLabel
 
 instance (spills : SpillSet) (source : Stack) (missing : Multiset Value) :
     Decidable (Ready spills source missing) := by

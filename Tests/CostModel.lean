@@ -1,4 +1,8 @@
+module
+
+public meta import Shuffler.CostModel
 import Shuffler.CostModel
+public meta import Shuffler.BuildBottomUp.Theorems.Feasibility.Defs
 import Shuffler.BuildBottomUp.Theorems.Feasibility.Defs
 
 open Shuffler
@@ -48,7 +52,7 @@ private def appendZeros (spills : SpillSet) (source : Stack) : (n : Nat) →
 private def shortSource : Stack := [wide] ++ List.replicate 15 zero
 private def shortTarget : Stack := [wide] ++ List.replicate 16 zero ++ [wide]
 private def shortCopy : Trace ∅ shortSource (shortSource ++ [wide]) :=
-  .Dup 16 (by decide) (by decide) (by decide) (.Lit _)
+  .Dup 16 (by decide) (by decide) (by decide) (by decide) (.Lit _)
 private def shortZero : Trace ∅ shortSource (shortSource ++ [wide, zero]) :=
   .Push zero (by decide) shortCopy
 private def shortBytes : Trace ∅ shortSource shortTarget :=
@@ -108,9 +112,9 @@ example : longBytes.additions = longGas.additions := by decide
 private def loadSource : Stack := [a, b] ++ List.replicate 14 zero
 private def loadTarget : Stack := [a, a] ++ List.replicate 14 zero ++ [c, b, a]
 private def firstCopy : Trace spills loadSource (loadSource ++ [a]) :=
-  .Dup 16 (by decide) (by decide) (by decide) (.Lit _)
+  .Dup 16 (by decide) (by decide) (by decide) (by decide) (.Lit _)
 private def secondCopy : Trace spills loadSource (loadSource ++ [a, a]) :=
-  .Dup 1 (by decide) (by decide) (by decide) firstCopy
+  .Dup 1 (by decide) (by decide) (by decide) (by decide) firstCopy
 private def copiesPlaced : Trace spills loadSource
     ([a, a] ++ List.replicate 14 zero ++ [a, b]) :=
   .Swap 16 (by decide) (by decide) (by decide) secondCopy

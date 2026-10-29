@@ -19,7 +19,7 @@ theorem appended_valid (state : State source target spills) (h : state.Valid)
     apply Finset.card_pos.mpr
     exact ⟨d, by simp [hd]⟩
   have hcount := Mapping.unmapped_target_slots_push state.mapping d hd
-  refine ⟨?_, ?_, ?_⟩
+  refine ⟨?_, ?_, ?_, ?_⟩
   · change (state.stack ++ [v]).length + (state.pending_generations - 1) = target.length
     simp only [List.length_append, List.length_singleton]
     have := h.size
@@ -30,6 +30,11 @@ theorem appended_valid (state : State source target spills) (h : state.Valid)
   · intro j
     exact state.isAvailable_of_subset (appended state d hd v trace)
       (List.subset_append_left _ _) j (h.available j)
+  · intro j hj
+    have hjd : j ≠ d := by
+      intro he; subst j
+      simpa [hd] using h.labels_bound d hj
+    simpa [appended, Mapping.push_symm_apply_of_ne, hjd] using h.labels_bound j hj
 
 theorem completedPermutation_produced {state produced : State source target spills}
     (hstate : state.Valid) (hproduced : produced.Valid) (dest : Fin target.length)

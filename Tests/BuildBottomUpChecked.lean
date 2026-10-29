@@ -66,12 +66,12 @@ example : (((((buildBottomUp.loop 0 surplusAtExit) : Except ShuffleErr (Result _
   native_decide
 
 -- An empty input and target need no operations.
-example : observe (((((buildBottomUp (emptyState [] ∅) ⟨by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+example : observe (((((buildBottomUp (emptyState [] ∅) ⟨by decide, by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
   if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
   pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) = .ok ([], []) := by native_decide
 
 -- Start at target offset zero and generate every target position.
-example : observe (((((buildBottomUp (emptyState [.Lit 1, .Lit 2] ∅) ⟨by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+example : observe (((((buildBottomUp (emptyState [.Lit 1, .Lit 2] ∅) ⟨by decide, by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
   if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
   pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) =
     .ok ([.Lit 1, .Lit 2], [.push (.Lit 1), .push (.Lit 2)]) := by native_decide
@@ -215,12 +215,12 @@ private def urgentThenBlocked : State
   mapping := by simpa using shiftTwo 17
   pending_generations := 2
 
-example : observe (((((buildBottomUp urgentThenBlocked ⟨by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+example : observe (((((buildBottomUp urgentThenBlocked ⟨by decide, by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
   if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
   pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) = .error (.Blocked ⟨0, 1⟩) := by
   native_decide
 
-example : observe (((((buildBottomUp boundState ⟨by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+example : observe (((((buildBottomUp boundState ⟨by decide, by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
   if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
   pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) =
     .ok ([.Lit 1], []) := by native_decide
