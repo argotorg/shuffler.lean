@@ -24,7 +24,7 @@ tactics of this repo.
 - Do not kill a `lean` or `lake` process that you did not start. Do not use `pkill lean` or
   `pkill lake`.
 - One target: `nice lake build BbuKraken` (or `PermuteKraken`, `ProofKit`, `ProofKitTest`).
-- One file, without a build of its dependents: `nice lake env lean BbuKraken/Fn/Push.lean`.
+- One file, without a build of its dependents: `nice lake env lean BbuKraken/Unit/Push.lean`.
 - Find the slow declarations:
   ```
   nice lake env lean -Dtrace.profiler=true -Dtrace.profiler.threshold=200 -DElab.async=false FILE

@@ -1,7 +1,7 @@
 import BbuKraken.Fn.Loop.Defs
 
 /-!
-Model lemmas of the proof of `loop_body`: `step` split at the cut labels, and the
+Model lemmas of the old proof of `loop_body` (the C build, git 6f580e5): `step` split at the cut labels, and the
 facts that `Ctx` and `Iter` give.
 -/
 
