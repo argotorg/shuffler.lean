@@ -51,6 +51,8 @@ import BbuKraken.Unit.IsSpilled
 import BbuKraken.Unit.Loop
 import BbuKraken.Unit.Permute
 import BbuKraken.Unit.Permute.A
+import BbuKraken.Unit.Permute.Assemble
+import BbuKraken.Unit.Permute.AssembleTest
 import BbuKraken.Unit.Permute.C1
 import BbuKraken.Unit.Permute.C2
 import BbuKraken.Unit.Permute.Cfg
@@ -64,6 +66,7 @@ import BbuKraken.Unit.Permute.LemmaTest
 import BbuKraken.Unit.Permute.MD
 import BbuKraken.Unit.Permute.ML
 import BbuKraken.Unit.Permute.Util
+import BbuKraken.Unit.Permute.UtilTest
 import BbuKraken.Unit.PermuteModel
 import BbuKraken.Unit.PermuteModelTest
 import BbuKraken.Unit.PermuteSpecs
