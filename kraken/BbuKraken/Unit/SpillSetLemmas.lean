@@ -410,9 +410,11 @@ theorem Sb.isSome_res (h : Sb s ra adds queries r F f res y o x2 t) {x : Word}
 -- `movb %dl, (%rcx,%rax)`: the byte `x` of `results`.
 theorem Sb.st_res {P : MachineData} (h : Sb s ra adds queries r F f res y o x2 t) {x : Word}
     (hx : x.toNat < res.length) (z : Int) (hm : P.dmem = t.dmem.storeInt (r + x) 1 z)
+    {res' : List (BitVec 8)} (e : res.set x.toNat (BitVec.ofInt 8 z) = res')
     (hsp : P.regs.rsp = t.regs.rsp) (hbp : P.regs.rbp = t.regs.rbp)
     (h12 : P.regs.r12 = t.regs.r12) (h13 : P.regs.r13 = t.regs.r13) :
-    Sb s ra adds queries r F f (res.set x.toNat (BitVec.ofInt 8 z)) y o x2 P := by
+    Sb s ra adds queries r F f res' y o x2 P := by
+  subst e
   refine h.step ?_ hsp hbp h12 h13
   rw [hm]
   exact get_eq (Bs.store (get_eq h.mem (by unfold Mb Fr; ecancel)) hx z) (by unfold Mb Fr; ecancel)
@@ -426,23 +428,26 @@ theorem Sb.rdb_spl (h : Sb s ra adds queries r F f res y o x2 t) {i : Nat}
     (hi : i < Flat.ids (rdi s)) : rdb t.dmem (rsi s + BitVec.ofNat 64 i) = f (BitVec.ofNat 32 i) :=
   Spl.rdb (get_eq h.mem (by unfold Mb; ecancel)) (List.mem_range.mpr hi)
 
--- `call SpillSet::add` in a state `c` with the object in `rdi`: the callee gets the object,
--- the bytes and the frame `Fr`, and keeps `rsp`, `rbp`, `r12` and `r13`.
-theorem Sb.call {c : MachineData} {K : Unit → MachineData → Prop}
+-- `call SpillSet::add` in a state `c` with the object in `rdi` and the slot `w` in `rsi`: the
+-- callee gets the object, the bytes and the frame `Fr`, and keeps `rsp`, `rbp`, `r12` and `r13`.
+theorem Sb.call {c : MachineData} {K : Unit → MachineData → Prop} {w : Word}
     (h : Sb s ra adds queries r F f res y (rsi s) x2 c) (hdi : rdi c = rsp s - 64#64)
-    (hlt : Flat.isVariable (StackSlot.ofWord (rsi c)) = true →
-      (StackSlot.ofWord (rsi c)).payload.toNat < Flat.ids (rdi s))
-    (hK : ∀ t v, Sb s ra adds queries r F (Flat.spillAdd f (StackSlot.ofWord (rsi c))).2 res v
-        (rsi s) x2 t → al t = code (Flat.spillAdd f (StackSlot.ofWord (rsi c))).1 → K () t) :
+    (hw : rsi c = w)
+    (hlt : Flat.isVariable (StackSlot.ofWord w) = true →
+      (StackSlot.ofWord w).payload.toNat < Flat.ids (rdi s))
+    (hK : ∀ t v, Sb s ra adds queries r F (Flat.spillAdd f (StackSlot.ofWord w)).2 res v
+        (rsi s) x2 t → al t = code (Flat.spillAdd f (StackSlot.ofWord w)).1
+        → Sep.mod.Agree c t → K () t) :
     ∃ p S f' n F', AddPre p S f' n F' c
       ∧ ∀ s', AddPost p S f' n F' c s' → Sep.mod.Agree c s' → K () s' := by
+  subst hw
   refine ⟨rsp s - 64#64, rsi s, f, Flat.ids (rdi s), Fr s ra x2 adds queries r F res,
     ⟨hdi, Nat.min_le_right _ _, hlt, ⟨y, ?_⟩⟩, fun s' hpost hag => ?_⟩
   · have hm := h.mem
     unfold Mb at hm
     simpa only [rsp, Reg64s.get64_rsp, h.sp] using hm
   · obtain ⟨hal, v, hm⟩ := hpost
-    refine hK s' v ⟨?_, ?_, ?_, ?_, ?_⟩ hal
+    refine hK s' v ⟨?_, ?_, ?_, ?_, ?_⟩ hal hag
     · unfold Mb
       simpa only [rsp, Reg64s.get64_rsp, h.sp] using hm
     · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rsp]; exact h.sp
@@ -658,5 +663,57 @@ theorem res_end {f : BitVec 32 → BitVec 8} {Q : List StackSlot} {res : List (B
     (Q.take i).map (g f) ++ res.drop i = Q.map (g f) := by
   subst hi
   rw [List.take_length, hr, List.drop_length, List.append_nil]
+
+/-! ## The flags and the bytes -/
+
+-- `testq %r, %r; jne` taken.
+theorem nz_true {r : Word} (h : (!(r &&& r == BitVec.zero 64)) = true) : r ≠ 0#64 :=
+  ShallowestCopy.zf_false (by simpa only [Bool.not_eq_true'] using h)
+
+-- `testq %r, %r; jne` not taken.
+theorem nz_false {r : Word} (h : (!(r &&& r == BitVec.zero 64)) = false) : r = 0#64 :=
+  ShallowestCopy.zf_true (by simpa only [Bool.not_eq_false'] using h)
+
+-- `setne %dl` and `andb %cl, %dl` write the low byte of `rdx`.
+theorem setWidth_replaceLow (x : Word) (v : BitVec 8) :
+    BitVec.setWidth 8 (x.replaceLow v) = v := by
+  conv => rhs; rw [← BitVec.take_replaceLow_8 x v]
+  ext i hi
+  simp [BitVec.take]
+
+-- `movb %dl, m`: the byte that the store writes.
+theorem ofInt_extract8 (x : Word) :
+    BitVec.ofInt 8 (BitVec.extractLsb' 0 8 x).toInt = x.setWidth 8 := by
+  rw [BitVec.ofInt_toInt, BitVec.setWidth_eq_extractLsb' (by decide)]
+
+-- `cmpb $0, op; setne %dl; cmpb $0, kind; sete %cl; andb %cl, %dl`.
+theorem andb_byte (a b : BitVec 8) :
+    (BitVec.ofNat 8 (!(a - 0#8 == BitVec.zero 8)).toNat
+        &&& BitVec.ofNat 8 (b - 0#8 == BitVec.zero 8).toNat)
+      = Flat.boolByte (b == 0#8 && !(a == 0#8)) := by
+  rw [BitVec.sub_zero, BitVec.sub_zero, show BitVec.zero 8 = 0#8 from rfl]
+  cases a == 0#8 <;> cases b == 0#8 <;> rfl
+
+-- `cmpb $0, b; setne %dl`.
+theorem setne_byte (b : BitVec 8) :
+    BitVec.ofNat 8 (!(b - 0#8 == BitVec.zero 8)).toNat = Flat.boolByte (b != 0#8) := by
+  rw [BitVec.sub_zero, show BitVec.zero 8 = 0#8 from rfl]
+  unfold bne
+  cases b == 0#8 <;> rfl
+
+-- `je` after `andb`: the byte is zero.
+theorem boolByte_beq (b : Bool) : (Flat.boolByte b == BitVec.zero 8) = !b := by
+  cases b <;> rfl
+
+theorem g_not_var {f : BitVec 32 → BitVec 8} {q : StackSlot} (h : Flat.isVariable q = false) :
+    g f q = Flat.boolByte (Flat.isVariable q) := by
+  unfold g Flat.spillIsSpilled
+  rw [h, Bool.false_and]
+
+theorem g_var {f : BitVec 32 → BitVec 8} {q : StackSlot} (h : Flat.isVariable q = true) :
+    g f q = Flat.boolByte (f q.payload != 0#8) := by
+  unfold g Flat.spillIsSpilled
+  rw [h, Bool.true_and]
+  all_goals rfl
 
 end Bbu.Unit.SpillSetProof
