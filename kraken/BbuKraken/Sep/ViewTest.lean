@@ -58,6 +58,40 @@ example (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
   have h1 := View.store_stk h hi w
   exact (View.isSome_slot h1 hi :)
 
+-- A store to slot `i`, then a load of slot `i` and of a different slot `j`.
+example (h : (View S g ∗ F).get m) {i j : Nat} (hi : i < g.h.n.toNat) (hj : j < g.h.n.toNat)
+    (hij : i ≠ j) :
+    rd (m.storeInt (slotAt g.h.data i) 8 w.toInt) (slotAt g.h.data i) = w
+    ∧ rd (m.storeInt (slotAt g.h.data i) 8 w.toInt) (slotAt g.h.data j) = g.stk[j] := by
+  have h1 := View.store_stk h hi w
+  exact ⟨(View.rd_slot h1 hi).trans (by simp),
+    (View.rd_slot h1 hj).trans (by simp [hij])⟩
+
+-- Byte 4 of a slot (the kind) in the form of `cmpb $3, 4(%rdx,%rsi,8)` (`4#64`), after a store
+-- of the slot: the byte of the stored word.
+example (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat) :
+    rdb (m.storeInt (slotAt g.h.data k) 8 w.toInt) (slotAt g.h.data k + 4#64) = w.extractLsb' 32 8
+    ∧ ((m.storeInt (slotAt g.h.data k) 8 w.toInt).loadInt (slotAt g.h.data k + 4#64) 1).isSome
+      = true := by
+  have h1 := View.store_stk h hk w
+  exact ⟨(View.rdb_slot h1 hk (j := 4) (by decide)).trans (by simp),
+    View.isSome_slot_byte h1 hk (j := 4) (by decide)⟩
+
+-- Byte 0 and byte 7 of a slot.
+example (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat) :
+    rdb m (slotAt g.h.data k + BitVec.ofNat 64 0) = g.stk[k].extractLsb' 0 8
+    ∧ rdb m (slotAt g.h.data k + BitVec.ofNat 64 7) = g.stk[k].extractLsb' 56 8 :=
+  ⟨View.rdb_slot h hk (j := 0) (by decide), View.rdb_slot h hk (j := 7) (by decide)⟩
+
+-- Negative: byte 8 is not a byte of the slot. The same steps with byte 7 close the goal.
+example (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat) :
+    (m.loadInt (slotAt g.h.data k + BitVec.ofNat 64 7) 1).isSome = true := by
+  apply View.isSome_slot_byte h hk; decide
+example (_h : (View S g ∗ F).get m) {k : Nat} (_hk : k < g.h.n.toNat) :
+    (m.loadInt (slotAt g.h.data k + BitVec.ofNat 64 8) 1).isSome = true ∨ True := by
+  fail_if_success (left; apply View.isSome_slot_byte _h _hk; decide; done)
+  exact Or.inr trivial
+
 /-! ## Op records -/
 
 -- Take record `i` out, store its kind and payload, load its depth, and put it back.

@@ -40,6 +40,29 @@ example (hb : (bs.AtM a ∗ F).get m) (_hl : bs.length = 8) : (m.loadInt a 8).is
 example (hb : (bs.AtM a ∗ F).get m) (_hl : bs.length = 8) : (m.loadInt a 8).isSome = true := by
   sep_load [isSomeR, isSome8]
 
+-- A memory that is equal to `m` only after a reducible unfold.
+abbrev same (m : Mem 64) : Mem 64 := m
+
+-- The order: a hypothesis at the memory term of the goal comes before all other hypotheses.
+-- Both hypotheses fit. `_ha` is first in the context, but `_hb` is at the term `m` of the goal.
+/-- info: Try this:
+  [apply] exact isSome8 _hb _hl -/
+#guard_msgs in
+example (_ha : (bs.AtM a ∗ F).get (same m)) (_hb : (bs.AtM a ∗ F).get m) (_hl : bs.length = 8) :
+    (m.loadInt a 8).isSome = true := by
+  show_term sep_load [isSome8]
+
+-- The hypotheses at other memory terms stay: a hypothesis at `same m` fits after a reducible
+-- unfold.
+example (_hb : (bs.AtM a ∗ F).get (same m)) (_hl : bs.length = 8) :
+    (m.loadInt a 8).isSome = true := by
+  sep_load [isSome8]
+
+-- A hypothesis at the goal memory that does not fit does not stop the search.
+example {m' : Mem 64} (_hc : (cs.AtM b ∗ F).get m) (_hb : (bs.AtM a ∗ F).get (same m))
+    (_hd : (cs.AtM b ∗ F).get m') (_hl : bs.length = 8) : (m.loadInt a 8).isSome = true := by
+  sep_load [isSome8]
+
 -- Negative: the hypothesis is at another memory.
 /-- error: sep_load: no sep hyp gives this load -/
 #guard_msgs in
