@@ -1,7 +1,8 @@
-// Emission::buildBottomUp, Emission::removeSurplus, Emission::permuteAtLowestHeight, Emission::permute and
-// Emission::pop of solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp, freestanding, with the behavior of the Lean
-// model, Shuffler/BuildBottomUp/Defs.lean, Shuffler/RemoveSurplus/Defs.lean, Shuffler/PermuteAtLowestHeight/Defs.lean,
-// Shuffler/Permute/Defs.lean and State.pop of Shuffler/Emission/Defs.lean.
+// Emission::buildBottomUp, Emission::removeSurplus, Emission::permuteAtLowestHeight, Emission::permute,
+// Emission::pop and Emission::run (with emit) of solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp, freestanding,
+// with the behavior of the Lean model, Shuffler/BuildBottomUp/Defs.lean, Shuffler/RemoveSurplus/Defs.lean,
+// Shuffler/PermuteAtLowestHeight/Defs.lean, Shuffler/Permute/Defs.lean, State.pop of Shuffler/Emission/Defs.lean and
+// Shuffler/Emission/Run/Defs.lean.
 // The differences from Shuffler.cpp:
 //
 // - There are no exceptions, so a failed yulAssert returns Status::AssertionFailed.
@@ -534,6 +535,12 @@ public:
 	/// into a hole: an offset whose target slot the planned mapping does not bind. Defined after permute.
 	Status permuteAtLowestHeight();
 
+	/// Shuffler.cpp's run and emit: removes the surplus, permutes at the lowest height, then builds the target
+	/// bottom-up. The Result of run stays in the Emission and in the caller's buffers: blocked(), the trace, the
+	/// working stack and mapping(). Before buildBottomUp, the checks marked `Lean` are State.Valid of the Lean model,
+	/// the precondition of buildBottomUp. Defined after permute_at_lowest_height.
+	Status run();
+
 private:
 	/// Produces the slot for `_targetOffset`
 	UNIT Status produce(StackOffset const _targetOffset)
@@ -690,6 +697,11 @@ private:
 				return pos;
 		return std::nullopt;
 	}
+
+	/// State.isAvailable of the Lean model: the slot of the target offset `_offset` can be generated, loaded, or DUPed
+	/// from a copy on the stack, which can be out of reach. Shuffler.cpp does not have it. Defined after
+	/// permute_at_lowest_height.
+	bool isAvailable(StackOffset _offset) const;
 
 	/// Swaps the top with the slot at `_pos`, the destinations traveling along
 	UNIT Status swapWith(StackOffset const _pos)
@@ -1126,6 +1138,112 @@ extern "C" std::int64_t permute_at_lowest_height(
 		return -2;
 	}
 	for (StackOffset pos{0}; pos < m; ++pos.value)
+		dest[pos.value] = emission.mapping().destinationOf(pos);
+	return static_cast<std::int64_t>(emission.traceSize());
+}
+
+namespace
+{
+
+// `used` and this place make g++ emit isAvailable and run after permute_at_lowest_height, so the asm of the units above
+// and their labels stay
+[[gnu::used]] UNIT bool Emission::isAvailable(StackOffset const _offset) const
+{
+	StackSlot const slot = m_target[_offset.value];
+	return canBeFreelyGenerated(slot) || isSpilled(slot) || shallowestCopyPosition(slot).has_value();
+}
+
+[[gnu::used]] UNIT Status Emission::run()
+{
+	// removes all surplus (slots that have no destination in the target)
+	if (Status const status = removeSurplus(); status != Status::Done)
+		return status;
+	if (Status const status = permuteAtLowestHeight(); status != Status::Done)
+		return status;
+	// State.Valid, in the order of the model
+	yulAssert(
+		m_stack.size() + m_pendingGenerations == m_targetSize,
+		"stack height and pending generations must match the target size"
+	);  // Lean
+	std::size_t unmapped = 0;
+	for (StackOffset offset{0}; offset < m_targetSize; ++offset.value)
+		if (!m_mapping.positionOf(offset))
+			++unmapped;
+	yulAssert(unmapped == m_pendingGenerations, "pending generations must count unmapped target slots");  // Lean
+	for (StackOffset offset{0}; offset < m_targetSize; ++offset.value)
+		yulAssert(isAvailable(offset), "target slot is unavailable");  // Lean
+	for (StackOffset offset{0}; offset < m_targetSize; ++offset.value)
+		yulAssert(
+			!m_target[offset.value].isFunctionReturnLabel() || m_mapping.positionOf(offset).has_value(),
+			"function return label has no bound source"
+		);  // Lean
+	return buildBottomUp();
+}
+
+}
+
+/// Emission::run, Shuffler.cpp's Emission::run and emit, for a source stack of m slots and a target of n slots: data
+/// holds the source slots and dest[i] is the target offset of source slot i, or none (SIZE_MAX); the planned mapping is
+/// this mapping. Writes the operations to ops and returns their number, also when a slot is out of reach. Then blocked
+/// gets its offset and its excess, which is positive, else 0 and 0. Returns -2 for a failed assertion, also of a check
+/// of State.Valid before buildBottomUp; then data and ops can hold the operations before it, and blocked, height and
+/// dest are not written. If the result is not -2, height gets the height of the working stack, data holds its slots,
+/// and the first height entries of dest hold their destinations; the other entries of dest are not written.
+///
+/// dest holds distinct offsets below n, spilled has idCount bytes, and every variable id of target is below idCount.
+/// m, n <= 1024; else, or if a variable id of target is not below idCount, the result is -2 and nothing is written.
+/// data and dest have room for max(m, n) entries: removeSurplus lowers the height from m to h, permuteAtLowestHeight
+/// keeps h, and buildBottomUp raises it only while pendingGenerations is not 0, and height + pendingGenerations = n.
+///
+/// ops has room for 4m + 6n entries. The count is at most 2m + 6n - 2h, with h the height after removeSurplus:
+/// - removeSurplus: each pass pops a slot, after at most one swap: at most 2(m - h);
+/// - permuteAtLowestHeight: permute makes at most 2h - 1 passes, each with at most one swap: at most 2h;
+/// - buildBottomUp starts with pendingGenerations = n - h (the first check). Each iteration of its loop lowers
+///   2 pendingGenerations + 2(n - targetOffset), first 4n - 2h, by at least the number of operations it adds
+///   (Inv.ops_le, kraken/BbuKraken/ModelLemmas.lean), and the final permute of n slots adds at most 2n - 1: at most
+///   6n - 2h.
+///
+/// Stack use: STACK_USE bytes.
+extern "C" std::int64_t emit(
+	std::uint64_t const m,
+	std::uint64_t const n,
+	StackSlot* const data,
+	StackSlot const* const target,
+	Optional<StackOffset>* const dest,
+	std::uint8_t const* const spilled,
+	std::uint64_t const idCount,
+	ShuffleOp* const ops,
+	std::uint64_t* const blocked,
+	std::uint64_t* const height
+)
+{
+	// the mapping has room for maxStackSize offsets
+	if (m > maxStackSize || n > maxStackSize)
+		return -2;
+	// buildBottomUp reads the spill byte of each variable of the target
+	for (std::uint64_t i = 0; i < n; ++i)
+		if (isVariable(target[i]) && target[i].payload >= idCount)
+			return -2;
+	Mapping planned{m, n};
+	for (StackOffset pos{0}; pos < m; ++pos.value)
+		if (Optional<StackOffset> const destination = dest[pos.value])
+			planned.bind(pos, *destination);
+	Emission emission{Stack{data, m, ops}, target, n, planned, spilled};
+	switch (emission.run())
+	{
+	case Status::Done:
+		blocked[0] = 0;
+		blocked[1] = 0;
+		break;
+	case Status::Blocked:
+		blocked[0] = emission.blocked().offset.value;
+		blocked[1] = emission.blocked().excess;
+		break;
+	case Status::AssertionFailed:
+		return -2;
+	}
+	*height = emission.stackSize();
+	for (StackOffset pos{0}; pos < emission.stackSize(); ++pos.value)
 		dest[pos.value] = emission.mapping().destinationOf(pos);
 	return static_cast<std::int64_t>(emission.traceSize());
 }

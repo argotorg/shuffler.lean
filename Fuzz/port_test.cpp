@@ -77,7 +77,7 @@ std::string times(std::string const& _word, int const _count)
 int main()
 {
 	// the kinds without a port unit
-	for (std::string const line: {"map;L;v0;v0;0", "emit;;;;", "plan;L;0;;;"})
+	for (std::string const line: {"map;L;v0;v0;0", "plan;L;0;;;"})
 		expect(!port::check(line, "ok;;;").has_value(), "no port unit for: " + line);
 
 	// buildBottomUp: each slot kind, each operation kind, equal slots, blocked with and without operations
@@ -496,6 +496,187 @@ int main()
 	throws("lowest;v0 v1;v0 v1;0 0;");
 	throws("lowest;" + times("_", 1025) + ";;" + times("-", 1025) + ";");
 	throws("lowest;;" + times("_", 1025) + ";;");
+
+	// run (emit): an empty stack and target, all slots final, operations of removeSurplus, permuteAtLowestHeight and
+	// buildBottomUp, each alone and in sequence, each slot kind, equal slots, the spilled variables
+	agrees("emit;;;;", "ok;;;", "ok;;;");
+	agrees("emit;v0 v1;v0 v1;0 1;", "ok;v0 v1;;0 1", "ok;v0 v1;;0 1");
+	agrees("emit;v0;v0;0;0", "ok;v0;;0", "ok;v0;;0");
+	agrees("emit;R v0;R v0;0 1;", "ok;R v0;;0 1", "ok;R v0;;0 1");
+	agrees("emit;R;R;0;", "ok;R;;0", "ok;R;;0");
+	agrees("emit;v0 v0;v0 v0;1 0;", "ok;v0 v0;;1 0", "ok;v0 v0;;1 0");
+	agrees("emit;v0 v0;v0;0 -;", "ok;v0;POP;0", "ok;v0;POP;0");
+	agrees("emit;v0 v0 v0;v0;- 0 -;", "ok;v0;POP POP;0", "ok;v0;POP POP;0");
+	agrees("emit;v1 v0;v0 v1;1 0;", "ok;v0 v1;SWAP1;0 1", "ok;v0 v1;SWAP1;0 1");
+	agrees("emit;v0 R;R v0;1 0;", "ok;R v0;SWAP1;0 1", "ok;R v0;SWAP1;0 1");
+	agrees("emit;;l3 _;;", "ok;l3 _;PUSH:l3 PUSH:_;0 1", "ok;l3 _;PUSH:l3 PUSH:_;0 1");
+	agrees("emit;;v3;;3", "ok;v3;LOAD:v3;0", "ok;v3;LOAD:v3;0");
+	agrees("emit;v0;v0 v0;0;", "ok;v0 v0;DUP1;0 1", "ok;v0 v0;DUP1;0 1");
+	agrees("emit;R;_ R;1;", "ok;_ R;PUSH:_ SWAP1;0 1", "ok;_ R;PUSH:_ SWAP1;0 1");
+	agrees("emit;v7;l1 v7;1;", "ok;l1 v7;PUSH:l1 SWAP1;0 1", "ok;l1 v7;PUSH:l1 SWAP1;0 1");
+	agrees("emit;v0;v0;-;0", "ok;v0;POP LOAD:v0;0", "ok;v0;POP LOAD:v0;0");
+	agrees("emit;v0 l1;v0 v0;0 -;", "ok;v0 v0;POP DUP1;0 1", "ok;v0 v0;POP DUP1;0 1");
+	agrees("emit;v1 l2;v1 v1 l2 v3;0 -;3", "ok;v1 v1 l2 v3;POP DUP1 PUSH:l2 LOAD:v3;0 1 2 3",
+		"ok;v1 v1 l2 v3;POP DUP1 PUSH:l2 LOAD:v3;0 1 2 3");
+	agrees("emit;l9 v1 v0;v0 v1 v2;- 1 0;2", "ok;v0 v1 v2;SWAP2 POP LOAD:v2;0 1 2",
+		"ok;v0 v1 v2;SWAP2 POP LOAD:v2;0 1 2");
+	agrees("emit;l5 v0 v0;v0 v0 v0;- 2 0;", "ok;v0 v0 v0;SWAP2 POP DUP1;0 1 2", "ok;v0 v0 v0;SWAP2 POP DUP1;0 1 2");
+	agrees("emit;v0 v0 v0;v0 v0 v0 v0;- 0 -;", "ok;v0 v0 v0 v0;POP POP DUP1 DUP1 DUP1;0 1 2 3",
+		"ok;v0 v0 v0 v0;POP POP DUP1 DUP1 DUP1;0 1 2 3");
+	agrees("emit;R _ l2 v5;v5 l2 _ R;3 2 1 0;", "ok;v5 l2 _ R;SWAP3 SWAP1 SWAP2 SWAP1;0 1 2 3",
+		"ok;v5 l2 _ R;SWAP3 SWAP1 SWAP2 SWAP1;0 1 2 3");
+	agrees("emit;v0 v1;v1 v0 v2;1 0;2", "ok;v1 v0 v2;SWAP1 LOAD:v2;0 1 2", "ok;v1 v0 v2;SWAP1 LOAD:v2;0 1 2");
+	agrees("emit;v2 v0;v0 v1 v2;2 0;1", "ok;v0 v1 v2;SWAP1 LOAD:v1 SWAP1;0 1 2", "ok;v0 v1 v2;SWAP1 LOAD:v1 SWAP1;0 1 2");
+	agrees("emit;v3;v0 v1 v2 v3;3;0 1 2", "ok;v0 v1 v2 v3;LOAD:v1 LOAD:v2 LOAD:v0 SWAP3;0 1 2 3",
+		"ok;v0 v1 v2 v3;LOAD:v1 LOAD:v2 LOAD:v0 SWAP3;0 1 2 3");
+	agrees("emit;v1 R l3;R v1 _ l3;1 0 -;", "ok;R v1 _ l3;POP SWAP1 PUSH:_ PUSH:l3;0 1 2 3",
+		"ok;R v1 _ l3;POP SWAP1 PUSH:_ PUSH:l3;0 1 2 3");
+	agrees("emit;l9 v2 v0 l8;v0 v1 v2;- 2 0 -;1", "ok;v0 v1 v2;POP SWAP2 POP LOAD:v1 SWAP1;0 1 2",
+		"ok;v0 v1 v2;POP SWAP2 POP LOAD:v1 SWAP1;0 1 2");
+	agrees("emit;v4 v5 v0 v1;v0 v1 v2 v3 v4 v5;4 5 0 1;2 3",
+		"ok;v0 v1 v2 v3 v4 v5;SWAP2 SWAP1 SWAP3 SWAP1 LOAD:v2 SWAP2 LOAD:v3 SWAP2;0 1 2 3 4 5",
+		"ok;v0 v1 v2 v3 v4 v5;SWAP2 SWAP1 SWAP3 SWAP1 LOAD:v2 SWAP2 LOAD:v3 SWAP2;0 1 2 3 4 5");
+	agrees("emit;v4 v5 v0 v1;v0 v1 v0 v1 v4 v5;4 5 0 1;",
+		"ok;v0 v1 v0 v1 v4 v5;SWAP2 SWAP1 SWAP3 SWAP1 DUP4 SWAP2 DUP4 SWAP2;0 1 2 3 4 5",
+		"ok;v0 v1 v0 v1 v4 v5;SWAP2 SWAP1 SWAP3 SWAP1 DUP4 SWAP2 DUP4 SWAP2;0 1 2 3 4 5");
+	// the third check of State.Valid fails (err): a target slot that is not on the stack after removeSurplus, not
+	// spilled and not a literal or junk: a variable, also when other variables are spilled, a variable that
+	// removeSurplus pops, a return label that a variable is bound for, a return label that removeSurplus pops, and a
+	// return label that is not on the stack (the third check comes before the fourth)
+	agrees("emit;;v0;;", "err", "err");
+	agrees("emit;l9;v0;-;", "err", "err");
+	agrees("emit;v0;v0;-;", "err", "err");
+	agrees("emit;v0 l1;v0 v0;- -;", "err", "err");
+	agrees("emit;v0 v1;v1 v0 v2;1 0;", "err", "err");
+	agrees("emit;v2 v0;v0 v1 v2;2 0;", "err", "err");
+	agrees("emit;v4 v5 v0 v1;v0 v1 v2 v3 v4 v5;4 5 0 1;", "err", "err");
+	agrees("emit;v0 l9;v0 l9 v1;0 -;", "err", "err");
+	agrees("emit;v0 l9;v0 l9 v1;0 -;9", "err", "err");
+	agrees("emit;v0;R;0;", "err", "err");
+	agrees("emit;v0;v0 R;0;", "err", "err");
+	agrees("emit;;R;;", "err", "err");
+	agrees("emit;R;R;-;", "err", "err");
+	agrees("emit;v1 R l3;R v1 _ l3;1 - -;", "err", "err");
+	agrees("emit;l9 v0;v0 v1 R;- 0;1", "err", "err");
+	// the fourth check of State.Valid fails (err): a return label of the target that is on the stack, but that no
+	// stack slot is bound for
+	agrees("emit;R;R R;0;", "err", "err");
+	agrees("emit;R v0;R v0 R;0 1;", "err", "err");
+	agrees("emit;v0 R;R v0 R;1 0;", "err", "err");
+	agrees("emit;R l1;R R;0 -;", "err", "err");
+	// the third and the fourth check decide the result: without them, buildBottomUp blocks at the DUP of depth 17 of
+	// v0 or R (the model result without v99 is "blocked 0 1")
+	agrees("emit;" + vars(0, 16) + ";" + vars(0, 16) + " v99 v0;" + nats(0, 16) + ";", "err", "err");
+	agrees("emit;R " + vars(1, 16) + ";R " + vars(1, 16) + " R;" + nats(0, 16) + ";", "err", "err");
+	// blocked in removeSurplus: a surplus slot at depth 17, also with a return label in the target that is not on the
+	// stack, so that the third check would fail
+	{
+		std::string const result = "blocked 0 1;l0 " + vars(1, 17) + ";;- " + nats(0, 16);
+		agrees("emit;l0 " + vars(1, 17) + ";" + vars(1, 17) + ";- " + nats(0, 16) + ";", result, result);
+		agrees("emit;l0 " + vars(1, 17) + ";" + vars(1, 17) + " R;- " + nats(0, 16) + ";", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1;l0 " + vars(0, 16) + ";;- " + nats(0, 16);
+		agrees("emit;l0 " + vars(0, 16) + ";" + vars(0, 16) + " v0;- " + nats(0, 16) + ";", result, result);
+	}
+	// a surplus slot at depth 16: removeSurplus, then permuteAtLowestHeight moves the 15 slots above it down
+	{
+		std::string const result = "ok;" + vars(1, 16) + ";SWAP16 POP SWAP1 SWAP2 SWAP3 SWAP4 SWAP5 SWAP6 SWAP7 SWAP8 "
+			"SWAP9 SWAP10 SWAP11 SWAP12 SWAP13 SWAP14 SWAP15;" + nats(0, 15);
+		agrees("emit;l0 " + vars(1, 16) + ";" + vars(1, 16) + ";- " + nats(0, 15) + ";", result, result);
+	}
+	// blocked in permuteAtLowestHeight: a swap of depth 17 or 18, also with a target that fails the third check, and
+	// with a spilled variable that buildBottomUp would load
+	{
+		std::string const result = "blocked 0 1;v18 " + vars(1, 16) + " v0;;18 " + nats(1, 16) + " 0";
+		std::string const stack = "emit;v18 " + vars(1, 16) + " v0;";
+		std::string const dests = ";18 " + nats(1, 16) + " 0;";
+		agrees(stack + vars(0, 18) + dests, result, result);
+		agrees(stack + vars(0, 18) + " v99" + dests, result, result);
+		agrees(stack + vars(0, 18) + dests + "17", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1;v17 " + vars(1, 16) + " v0;;17 " + nats(1, 16) + " 0";
+		agrees("emit;v17 " + vars(1, 16) + " v0;" + vars(0, 17) + " v0;17 " + nats(1, 16) + " 0;", result, result);
+	}
+	// blocked in buildBottomUp: a DUP of depth 17, after a POP of removeSurplus, a SWAP of depth 17; a DUP of depth 16
+	{
+		std::string const result = "blocked 0 1;" + vars(0, 16) + ";;" + nats(0, 16);
+		agrees("emit;" + vars(0, 16) + ";" + vars(0, 16) + " v0;" + nats(0, 16) + ";", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1;" + vars(0, 16) + ";POP;" + nats(0, 16);
+		agrees("emit;" + vars(0, 16) + " l0;" + vars(0, 16) + " v0;" + nats(0, 16) + " -;", result, result);
+	}
+	{
+		std::string const result = "blocked 1 1;" + vars(0, 17) + ";;" + nats(0, 17);
+		agrees("emit;" + vars(0, 17) + ";" + vars(0, 17) + " v1 v0;" + nats(0, 17) + ";", result, result);
+	}
+	{
+		std::string const result = "ok;" + vars(0, 15) + " v0;DUP16;" + nats(0, 16);
+		agrees("emit;" + vars(0, 15) + ";" + vars(0, 15) + " v0;" + nats(0, 15) + ";", result, result);
+	}
+	// the stack limit: 1024 final slots, 1024 surplus slots, 1024 generated slots, 1024 surplus slots then 16 generated
+	// slots, 16 surplus slots then 1024 generated slots, a DUP blocked under 1023 slots, a surplus slot blocked under
+	// 1023 slots
+	{
+		std::string const result = "ok;" + vars(0, 1023) + ";;" + nats(0, 1023);
+		agrees("emit;" + vars(0, 1023) + ";" + vars(0, 1023) + ";" + nats(0, 1023) + ";", result, result);
+	}
+	{
+		std::string const result = "ok;;" + times("POP", 1024) + ";";
+		agrees("emit;" + times("l0", 1024) + ";;" + times("-", 1024) + ";", result, result);
+	}
+	{
+		std::string const result =
+			"ok;" + times("l0", 1024) + ";PUSH:l0 " + times("DUP1", 1023) + ";" + nats(0, 1023);
+		agrees("emit;;" + times("l0", 1024) + ";;", result, result);
+	}
+	{
+		std::string const result =
+			"ok;" + times("l0", 16) + ";" + times("POP", 1024) + " PUSH:l0 " + times("DUP1", 15) + ";" + nats(0, 15);
+		agrees("emit;" + times("l1", 1024) + ";" + times("l0", 16) + ";" + times("-", 1024) + ";", result, result);
+	}
+	{
+		std::string const result = "ok;" + times("l0", 1024) + ";" + times("POP", 16) + " PUSH:l0 " +
+			times("DUP1", 1023) + ";" + nats(0, 1023);
+		agrees("emit;" + times("l1", 16) + ";" + times("l0", 1024) + ";" + times("-", 16) + ";", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1007;" + vars(0, 1022) + ";;" + nats(0, 1022);
+		agrees("emit;" + vars(0, 1022) + ";" + vars(0, 1022) + " v0;" + nats(0, 1022) + ";", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1007;l0 " + vars(1, 1023) + ";;- " + nats(0, 1022);
+		agrees("emit;l0 " + vars(1, 1023) + ";" + vars(1, 1023) + ";- " + nats(0, 1022) + ";", result, result);
+	}
+	// a wrong model result is not equal to the port result: an operation, a slot, a destination, the status
+	for (std::string const wrong: {"ok;v0 v1 v2;SWAP1 LOAD:v2;0 1 2", "ok;v0 v1 v2;SWAP2 POP LOAD:v1;0 1 2",
+			 "ok;v0 v2 v1;SWAP2 POP LOAD:v2;0 1 2", "ok;v0 v1 v2;SWAP2 POP LOAD:v2;0 2 1",
+			 "ok;v0 v1;SWAP2 POP LOAD:v2;0 1", "blocked 0 1;v0 v1 v2;SWAP2 POP LOAD:v2;0 1 2", "err"})
+	{
+		std::optional<port::Check> const check = port::check("emit;l9 v1 v0;v0 v1 v2;- 1 0;2", wrong);
+		expect(check && check->port != check->model, "a wrong emit model result differs: " + wrong);
+	}
+	{
+		std::optional<port::Check> const check = port::check("emit;v0;R;0;", "ok;R;;0");
+		expect(check && check->port != check->model, "a wrong emit model result differs: ok;R;;0");
+	}
+
+	// not in the domain of the emit unit: too few fields, too many fields, a bad slot, a bad destination, not one
+	// destination per slot, a destination out of the target, a destination bound twice, a bad spilled id, more stack
+	// slots or target slots than the stack limit
+	throws("emit;v0;v0;0");
+	throws("emit;v0;v0;0;;");
+	throws("emit;x;v0;0;");
+	throws("emit;v0;y;0;");
+	throws("emit;v0;v0;a;");
+	throws("emit;;;;x");
+	throws("emit;v0;v0;0 -;");
+	throws("emit;v0;v0;1;");
+	throws("emit;v0 v1;v0 v1;0 0;");
+	throws("emit;" + times("_", 1025) + ";;" + times("-", 1025) + ";");
+	throws("emit;;" + times("_", 1025) + ";;");
 
 	if (failures > 0)
 	{

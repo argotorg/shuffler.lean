@@ -11,7 +11,8 @@ set_option maxRecDepth 100000
 example : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm ++ produceAsm
     ++ swapWithAsm ++ generateAsm ++ finishAsm ++ loopAsm ++ popAsm ++ buildBottomUpAsm
     ++ emissionPopAsm ++ spillSetAddAsm ++ spillSetAsm ++ removeSurplusAsm ++ removeSurplusEntryAsm
-    ++ permuteEntryAsm ++ permuteAtLowestHeightAsm ++ permuteAtLowestHeightEntryAsm := by
+    ++ permuteEntryAsm ++ permuteAtLowestHeightAsm ++ permuteAtLowestHeightEntryAsm ++ isAvailableAsm
+    ++ runAsm ++ emitAsm := by
   rfl
 
 -- `bbuParseFile` reads `leaq disp(,%i,8), %r` as the operand with no base.
@@ -55,6 +56,9 @@ example : (removeSurplusEntryAsm.head? = some (.label Names.remove_surplus)) := 
 example : (finishAsm.head? = some (.label Names.permute)) := by rfl
 example : (permuteEntryAsm.head? = some (.label Names.permuteEntry)) := by rfl
 example : (permuteAtLowestHeightAsm.head? = some (.label Names.permuteAtLowestHeight)) := by rfl
+example : (isAvailableAsm.head? = some (.label Names.isAvailable)) := by rfl
+example : (runAsm.head? = some (.label Names.run)) := by rfl
+example : (emitAsm.head? = some (.label Names.emit)) := by rfl
 example : (permuteAtLowestHeightEntryAsm.head? = some (.label Names.permute_at_lowest_height)) := by
   rfl
 

@@ -18,7 +18,7 @@ theorem bbuAsm_eq : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dup
     ++ produceAsm ++ swapWithAsm ++ generateAsm ++ finishAsm ++ loopAsm
     ++ popAsm ++ buildBottomUpAsm ++ emissionPopAsm ++ spillSetAddAsm ++ spillSetAsm
     ++ removeSurplusAsm ++ removeSurplusEntryAsm ++ permuteEntryAsm ++ permuteAtLowestHeightAsm
-    ++ permuteAtLowestHeightEntryAsm := by rfl
+    ++ permuteAtLowestHeightEntryAsm ++ isAvailableAsm ++ runAsm ++ emitAsm := by rfl
 
 section
 set_option maxRecDepth 100000
