@@ -4,7 +4,8 @@ import BbuKraken.Unit.Permute.Inv
 # `permute`: facts of the model for the blocks
 
 * The destinations of `PermOk` are below the size and not `NONE`.
-* `start`: the model vectors at `.LB.Emission.permute.14`, from the locals at the end of phase B.
+* `start`: the model vectors at `.LB.Emission.permute.12`, from the locals at the end of the
+  loop `.LB.Emission.permute.0`.
 -/
 
 namespace Bbu.Unit
@@ -60,7 +61,7 @@ theorem rd_some (st : Flat.St) (hne : ∀ i < st.size, Flat.get st.dest i ≠ Fl
   | case2 pos v hlt d hd ih => exact ih
   | case3 pos v hge => exact ⟨_, rfl⟩
 
--- `.LB.Emission.permute.14` at the start: `permutation` agrees with `destinationOf` and `desiredBy` is `NONE`.
+-- `.LB.Emission.permute.12` at the start: `permutation` agrees with `destinationOf` and `desiredBy` is `NONE`.
 theorem start {g : G} (hok : g.Ok) (hp : PermOk (flat g)) {P D : Vector Word MAX_N}
     (hP : AgB g.h.len P g.h.dest) (hD : ∀ i < g.h.len, Flat.get D i = Flat.NONE) :
     ∃ p0, RG (flat g) (Flat.regroup (flat g) 0 p0 (Flat.clearDesired (flat g) 0 Flat.initial))
@@ -226,9 +227,9 @@ theorem GC.step {S : Addr} {g : G} {F : MProp 64} {s : MachineData} {ra : Int64}
     (h12 : P.regs.r12 = t.regs.r12) (h13 : P.regs.r13 = t.regs.r13)
     (h14 : P.regs.r14 = t.regs.r14) (h15 : P.regs.r15 = t.regs.r15)
     (hbx : P.regs.rbx = t.regs.rbx) : GC S g F s ra L' l P :=
-  ⟨⟨hF, hG.cc.lt, by rw [hbp]; exact hG.cc.bp, by rw [h0]; exact hG.cc.c0,
-    by rw [h1]; exact hG.cc.c1, by rw [h12]; exact hG.cc.r12, by rw [h15]; exact hG.cc.r15,
-    by rw [hbx]; exact hG.cc.bx⟩, by rw [h13]; exact hG.r13, by rw [h14]; exact hG.r14⟩
+  ⟨⟨hF, hG.cc.lt, by rw [hbx]; exact hG.cc.bx, by rw [h15]; exact hG.cc.r15,
+    by rw [h0]; exact hG.cc.c0, by rw [hbp]; exact hG.cc.bp, by rw [h13]; exact hG.cc.r13,
+    by rw [h14]; exact hG.cc.r14⟩, by rw [h1]; exact hG.c1, by rw [h12]; exact hG.r12⟩
 
 end Permute
 end Bbu.Unit

@@ -94,6 +94,44 @@ theorem spec_of_body [Host] [FunDecls] {f : Label} {g₀ : Fragment} (hg : FunDe
   refine ⟨fun s ⟨S, g, F, hp, hk⟩ => ?_⟩
   exact (Program.WP.callSpec_of_triple hg (hb S g F) asz osz K E).1 s ⟨hp.isSome, hp, hk⟩
 
+/-! ## A callee that owns a part of the frame -/
+
+-- `n` words from `a` with any values: an array argument that the callee can write.
+def ExArr (a : Addr) (n : Nat) : MProp 64 :=
+  MProp.mk fun m => ∃ vs : List Word, vs.length = n ∧ (Arr a vs).get m
+
+theorem ExArr.intro {a : Addr} {vs : List Word} {n : Nat} {P : MProp 64} {m : Mem 64}
+    (hn : vs.length = n) (h : (Arr a vs ∗ P).get m) : (ExArr a n ∗ P).get m := by
+  rw [MProp.sep_comm] at h ⊢
+  exact (MProp.le_def _ _).mp (MProp.sep_mono_right P (MProp.le_mk_of fun _ h' => ⟨vs, hn, h'⟩)) m h
+
+theorem ExArr.elim {a : Addr} {n : Nat} {P : MProp 64} {m : Mem 64}
+    (h : (ExArr a n ∗ P).get m) : ∃ vs : List Word, vs.length = n ∧ (Arr a vs ∗ P).get m := by
+  obtain ⟨m₁, m₂, hu, hi, h₁, h₂⟩ := (MProp.get_sep_apply_iff _ _ _).mp h
+  obtain ⟨vs, hn, h₁⟩ : ∃ vs : List Word, vs.length = n ∧ (Arr a vs).get m₁ := by
+    unfold ExArr at h₁; simpa using h₁
+  exact ⟨vs, hn, (MProp.get_sep_apply_iff _ _ _).mpr ⟨m₁, m₂, hu, hi, h₁, h₂⟩⟩
+
+-- The call rule of a callee that owns `W s ∗ F` (`W s` is a part that the callee reads or
+-- writes, for example an array at an argument register).
+abbrev SpecW [Host] [FunDecls] (f : Label) (W : MachineData → MProp 64)
+    (A : G → MachineData → Prop) (d : Nat) (Q : G → G → MachineData → MachineData → Prop) : Prop :=
+  ∀ asz osz (K : Unit → MachineData → Prop) (E : Int64 → MachineData → Prop),
+    ⦃ fun s => ∃ S g F, Pre S g (W s ∗ F) A d s
+        ∧ ∀ s', Post S (W s ∗ F) d (fun g' t => Q g g' s t) s s' → mod.Agree s s' → K () s' ⦄
+      (Directive.instr (.regular asz osz (.call (.rel (.sub (.label f) .after_current_instruction)))))
+    ⦃ K; E ⦄
+
+theorem spec_of_bodyW [Host] [FunDecls] {f : Label} {g₀ : Fragment}
+    (hg : FunDecls.at (label f) = some g₀) {W : MachineData → MProp 64}
+    {A : G → MachineData → Prop} {d : Nat} {Q : G → G → MachineData → MachineData → Prop}
+    (hb : ∀ S g F, Body g₀.prog (fun s => Pre S g (W s ∗ F) A d s)
+      (fun s t => Post S (W s ∗ F) d (fun g' t => Q g g' s t) s t)) :
+    SpecW f W A d Q := by
+  intro asz osz K E
+  refine ⟨fun s ⟨S, g, F, hp, hk⟩ => ?_⟩
+  exact (Program.WP.callSpec_of_triple hg (hb S g F) asz osz K E).1 s ⟨hp.isSome, hp, hk⟩
+
 /-! ## A body state -/
 
 -- A state inside a body: the memory holds `g`, the free words `fr`, the return
@@ -182,6 +220,15 @@ theorem Kp.agree {g' : G} {c : MachineData} {fr' : List Word} (h : Kp S g F s ra
     (mod_keep hag (by simp [mod]) Reg64s.get64_r13).trans h.r13,
     (mod_keep hag (by simp [mod]) Reg64s.get64_r14).trans h.r14,
     (mod_keep hag (by simp [mod]) Reg64s.get64_r15).trans h.r15⟩
+
+-- Forget the values of an array in the frame.
+theorem Kp.exArr {a : Addr} {vs : List Word} {n : Nat} (h : Kp S g (Arr a vs ∗ F) s ra fr t)
+    (hn : vs.length = n) : Kp S g (ExArr a n ∗ F) s ra fr t := by
+  have e : ∀ X : MProp 64, View S g ∗ Stk (rsp s) fr ra.toBitVec ∗ (X ∗ F)
+      = X ∗ (View S g ∗ Stk (rsp s) fr ra.toBitVec ∗ F) := fun X => by ac_rfl
+  have hm := h.mem
+  rw [e] at hm
+  exact ⟨by rw [e]; exact ExArr.intro hn hm, h.sp, h.bx, h.bp, h.r12, h.r13, h.r14, h.r15⟩
 
 end
 

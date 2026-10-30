@@ -131,4 +131,30 @@ theorem cal_body [Host] [FunDecls] (hrbx : Spec "rbx_t" (fun _ _ => True) 1 rbxQ
     · simp [hk.retAddr]
     · exact Kp.ret hk rfl hok fun t' _ hr => ⟨rfl, hr.trans hax⟩
 
+/-! ## `ExArr` -/
+
+-- A store into an owned array keeps the ownership.
+example {a : Addr} {n i : Nat} {P : MProp 64} {m : Mem 64} (h : (ExArr a n ∗ P).get m)
+    (hi : i < n) (w : Word) :
+    (ExArr a n ∗ P).get (m.storeInt (a + BitVec.ofNat 64 (8 * i)) 8 w.toInt) := by
+  obtain ⟨vs, hn, h⟩ := ExArr.elim h
+  exact ExArr.intro (by simpa using hn) (Arr.store h (hn ▸ hi) w)
+
+-- Every word below `n` is loadable.
+example {a : Addr} {n i : Nat} {P : MProp 64} {m : Mem 64} (h : (ExArr a n ∗ P).get m)
+    (hi : i < n) : (m.loadInt (a + BitVec.ofNat 64 (8 * i)) 8).isSome = true := by
+  obtain ⟨vs, hn, h⟩ := ExArr.elim h
+  exact Arr.isSome h (hn ▸ hi)
+
+-- `elim` after `intro` gives an array of the same length, with the same values below it.
+example {a : Addr} {vs : List Word} {P : MProp 64} {m : Mem 64} (h : (Arr a vs ∗ P).get m)
+    {i : Nat} (hi : i < vs.length) :
+    ∃ ws : List Word, ws.length = vs.length ∧ ∃ hw : i < ws.length, ws[i] = vs[i] := by
+  obtain ⟨ws, hn, h'⟩ := ExArr.elim (ExArr.intro rfl h)
+  exact ⟨ws, hn, hn ▸ hi, by rw [← Arr.rd h' (hn ▸ hi), Arr.rd h hi]⟩
+
+-- The empty array owns no word.
+example {a : Addr} {P : MProp 64} {m : Mem 64} (h : P.get m) : (ExArr a 0 ∗ P).get m :=
+  ExArr.intro (vs := []) rfl (by simpa [Arr, MProp.emp_sep] using h)
+
 end Bbu.Sep.ContractTest

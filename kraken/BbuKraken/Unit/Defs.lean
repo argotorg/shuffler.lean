@@ -98,6 +98,12 @@ abbrev UnitThm [Host] [FunDecls] (prog : Program) (A : G → MachineData → Pro
     (Q : G → G → MachineData → MachineData → Prop) : Prop :=
   ∀ S g F, Sep.Body prog (Sep.Pre S g F A d) (fun s t => Sep.Post S F d (fun g' t => Q g g' s t) s t)
 
+-- A unit theorem of a function that also owns `W s` (see `Sep.SpecW`).
+abbrev UnitThmW [Host] [FunDecls] (prog : Program) (W : MachineData → MProp 64)
+    (A : G → MachineData → Prop) (d : Nat) (Q : G → G → MachineData → MachineData → Prop) : Prop :=
+  ∀ S g F, Sep.Body prog (fun s => Sep.Pre S g (W s ∗ F) A d s)
+    (fun s t => Sep.Post S (W s ∗ F) d (fun g' t => Q g g' s t) s t)
+
 /-! ## The preconditions and the results
 
 `rsi` and `rdx` are the arguments after `this`. A slot argument is the word of the slot. -/
@@ -140,9 +146,13 @@ def generateA (g : G) (_s : MachineData) : Prop :=
   g.h.len.toNat < g.h.n.toNat ∧ g.h.nops.toNat + 2 ≤ 6 * g.h.n.toNat ∧ DestOk (flat g)
 def generateQ (g g' : G) (s t : MachineData) : Prop := Res (Flat.generate · (rsi s)) g g' t
 
--- `permute()`: room for `2 * size` swaps.
-def permuteA (g : G) (_s : MachineData) : Prop :=
+-- `permute(permutation)`: room for `2 * size` swaps, and `permutation` (the array at `rsi`, in
+-- the frame `permW`) holds the destinations below the size.
+def permuteA (g : G) (s : MachineData) : Prop :=
   g.h.nops.toNat + 2 * g.h.len.toNat ≤ 6 * g.h.n.toNat ∧ PermOk (flat g)
+    ∧ ∀ i < g.h.len.toNat,
+      rd s.dmem (rsi s + BitVec.ofNat 64 (8 * i)) = Flat.get g.h.dest (BitVec.ofNat 64 i)
+def permW (s : MachineData) : MProp 64 := Sep.ExArr (rsi s) MAX_N
 def permuteQ (g g' : G) (_s t : MachineData) : Prop := Res Flat.permute g g' t
 
 -- `buildBottomUp()`: the state of the constructor, for distinct destinations below `n`.
