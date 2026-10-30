@@ -10,7 +10,9 @@ set_option maxRecDepth 100000
 -- The function programs make up the linked file.
 example : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm ++ produceAsm
     ++ swapWithAsm ++ generateAsm ++ finishAsm ++ loopAsm ++ popAsm ++ buildBottomUpAsm
-    ++ emissionPopAsm ++ spillSetAddAsm ++ spillSetAsm ++ removeSurplusAsm ++ removeSurplusEntryAsm := by
+    ++ emissionPopAsm ++ spillSetAddAsm ++ spillSetAsm ++ removeSurplusAsm ++ removeSurplusEntryAsm
+    ++ mapAsm ++ closestCopyAsm ++ mapInPlaceAsm ++ mapClosestCopiesAsm ++ mapWildcardSlotCopiesAsm
+    ++ keepWildcardSlotsAsm ++ absorbSurplusAsm ++ buildMappingAsm := by
   rfl
 
 -- `bbuParseFile` reads `leaq disp(,%i,8), %r` as the operand with no base.
@@ -36,7 +38,12 @@ example : (bbuAsm.filter fun
      .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.r12, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .r8 .W64) ⟨none, some ⟨.rdi, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩))] := by
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩))] := by
   rfl
 
 -- `bbuParseFn` reads the file of the name.
@@ -48,6 +55,14 @@ example : (spillSetAddAsm.head? = some (.label Names.spillSetAdd)) := by rfl
 example : (spillSetAsm.head? = some (.label Names.spill_set)) := by rfl
 example : (removeSurplusAsm.head? = some (.label Names.removeSurplus)) := by rfl
 example : (removeSurplusEntryAsm.head? = some (.label Names.remove_surplus)) := by rfl
+example : (mapAsm.head? = some (.label Names.map)) := by rfl
+example : (closestCopyAsm.head? = some (.label Names.closestCopy)) := by rfl
+example : (mapInPlaceAsm.head? = some (.label Names.mapInPlace)) := by rfl
+example : (mapClosestCopiesAsm.head? = some (.label Names.mapClosestCopies)) := by rfl
+example : (mapWildcardSlotCopiesAsm.head? = some (.label Names.mapWildcardSlotCopies)) := by rfl
+example : (keepWildcardSlotsAsm.head? = some (.label Names.keepWildcardSlots)) := by rfl
+example : (absorbSurplusAsm.head? = some (.label Names.absorbSurplus)) := by rfl
+example : (buildMappingAsm.head? = some (.label Names.build_mapping)) := by rfl
 
 end Bbu
 

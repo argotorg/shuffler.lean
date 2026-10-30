@@ -1607,4 +1607,508 @@ remove_surplus:
 	movq	%rdx, %rax
 	ret
 	.size	remove_surplus, .-remove_surplus
+	.align 2
+	.type	_ZN12_GLOBAL__N_114MappingBuilder3mapE11StackOffsetS1_, @function
+_ZN12_GLOBAL__N_114MappingBuilder3mapE11StackOffsetS1_:
+	movq	32(%rdi), %rax
+	movzbl	(%rax,%rsi), %eax
+	testb	%al, %al
+	jne	.LB341
+	movq	48(%rdi), %rcx
+	cmpq	$-1, (%rcx,%rsi,8)
+	jne	.LB342
+	cmpq	$-1, 8192(%rcx,%rdx,8)
+	jne	.LB343
+	movq	%rdx, (%rcx,%rsi,8)
+	movq	%rsi, 8192(%rcx,%rdx,8)
+	ret
+.LB341:
+	movl	$2, %eax
+	ret
+.LB342:
+	movl	$2, %eax
+	ret
+.LB343:
+	movl	$2, %eax
+	ret
+	.size	_ZN12_GLOBAL__N_114MappingBuilder3mapE11StackOffsetS1_, .-_ZN12_GLOBAL__N_114MappingBuilder3mapE11StackOffsetS1_
+	.align 2
+	.type	_ZNK12_GLOBAL__N_114MappingBuilder11closestCopyE11StackOffsetNS0_12CopyLocationE, @function
+_ZNK12_GLOBAL__N_114MappingBuilder11closestCopyE11StackOffsetNS0_12CopyLocationE:
+	movq	%rsi, %r10
+	movq	8(%rdi), %rsi
+	testq	%rsi, %rsi
+	je	.LB352
+	pushq	%r15
+	pushq	%r14
+	pushq	%rbp
+	pushq	%rbx
+	cmpb	$1, %dl
+	sete	%bpl
+	movq	16(%rdi), %rbx
+	movq	(%rdi), %r9
+	movq	(%rbx,%r10,8), %r8
+	movq	%r10, %rcx
+	negq	%rcx
+	movl	$0, %eax
+	movq	$-1, %r11
+	jmp	.LB351
+.LB347:
+	cmpb	%dl, %bpl
+	je	.LB361
+	.p2align 5
+.LB346:
+	addq	$1, %rax
+	addq	$1, %rcx
+	cmpq	%rsi, %rax
+	je	.LB362
+.LB351:
+	movq	%r8, %rdx
+	xorq	(%r9,%rax,8), %rdx
+	salq	$16, %rdx
+	jne	.LB346
+	movq	32(%rdi), %rdx
+	cmpb	$0, (%rdx,%rax)
+	jne	.LB346
+	movq	48(%rdi), %rdx
+	cmpq	$-1, (%rdx,%rax,8)
+	jne	.LB346
+	movl	$0, %edx
+	cmpq	24(%rdi), %rax
+	jnb	.LB347
+	cmpb	$1, 4(%rbx,%rax,8)
+	sete	%dl
+	jmp	.LB347
+.LB361:
+	cmpq	$-1, %r11
+	je	.LB354
+	movq	%r10, %rdx
+	subq	%rax, %rdx
+	cmpq	%rax, %r10
+	cmovb	%rcx, %rdx
+	movq	%r11, %r14
+	subq	%r10, %r14
+	movq	%r10, %r15
+	subq	%r11, %r15
+	cmpq	%r11, %r10
+	cmovnb	%r15, %r14
+	cmpq	%rdx, %r14
+	cmovnb	%rax, %r11
+	jmp	.LB346
+.LB354:
+	movq	%rax, %r11
+	jmp	.LB346
+.LB352:
+	movq	$-1, %r11
+	movq	%r11, %rax
+	ret
+.LB362:
+	movq	%r11, %rax
+	popq	%rbx
+	popq	%rbp
+	popq	%r14
+	popq	%r15
+	ret
+	.size	_ZNK12_GLOBAL__N_114MappingBuilder11closestCopyE11StackOffsetNS0_12CopyLocationE, .-_ZNK12_GLOBAL__N_114MappingBuilder11closestCopyE11StackOffsetNS0_12CopyLocationE
+	.align 2
+	.type	_ZN12_GLOBAL__N_114MappingBuilder10mapInPlaceEv, @function
+_ZN12_GLOBAL__N_114MappingBuilder10mapInPlaceEv:
+	movq	8(%rdi), %rax
+	movq	24(%rdi), %rdx
+	cmpq	%rdx, %rax
+	cmova	%rdx, %rax
+	testq	%rax, %rax
+	je	.LB367
+	pushq	%rbp
+	pushq	%rbx
+	movq	%rdi, %rbp
+	movl	$0, %ebx
+	jmp	.LB366
+	.p2align 6
+.LB365:
+	addq	$1, %rbx
+	movq	8(%rbp), %rax
+	movq	24(%rbp), %rdx
+	cmpq	%rdx, %rax
+	cmova	%rdx, %rax
+	cmpq	%rax, %rbx
+	jnb	.LB373
+.LB366:
+	movq	16(%rbp), %rax
+	movq	0(%rbp), %rdx
+	movq	(%rax,%rbx,8), %rax
+	xorq	(%rdx,%rbx,8), %rax
+	salq	$16, %rax
+	jne	.LB365
+	movq	32(%rbp), %rax
+	cmpb	$0, (%rax,%rbx)
+	jne	.LB365
+	movq	48(%rbp), %rax
+	cmpq	$-1, (%rax,%rbx,8)
+	jne	.LB365
+	movq	%rbx, %rdx
+	movq	%rbx, %rsi
+	movq	%rbp, %rdi
+	call	_ZN12_GLOBAL__N_114MappingBuilder3mapE11StackOffsetS1_
+	testb	%al, %al
+	je	.LB365
+	jmp	.LB363
+.LB373:
+	movl	$0, %eax
+.LB363:
+	popq	%rbx
+	popq	%rbp
+	ret
+.LB367:
+	movl	$0, %eax
+	ret
+	.size	_ZN12_GLOBAL__N_114MappingBuilder10mapInPlaceEv, .-_ZN12_GLOBAL__N_114MappingBuilder10mapInPlaceEv
+	.align 2
+	.type	_ZN12_GLOBAL__N_114MappingBuilder16mapClosestCopiesEv, @function
+_ZN12_GLOBAL__N_114MappingBuilder16mapClosestCopiesEv:
+	cmpq	$0, 24(%rdi)
+	je	.LB379
+	pushq	%rbp
+	pushq	%rbx
+	movq	%rdi, %rbp
+	movl	$0, %ebx
+	jmp	.LB378
+	.p2align 6
+.LB376:
+	addq	$1, %rbx
+	cmpq	24(%rbp), %rbx
+	jnb	.LB385
+.LB378:
+	leaq	0(,%rbx,8), %rdx
+	movq	48(%rbp), %rax
+	cmpq	$-1, 8192(%rax,%rbx,8)
+	jne	.LB376
+	movq	16(%rbp), %rax
+	cmpb	$1, 4(%rax,%rdx)
+	je	.LB376
+	movl	$0, %edx
+	movq	%rbx, %rsi
+	movq	%rbp, %rdi
+	call	_ZNK12_GLOBAL__N_114MappingBuilder11closestCopyE11StackOffsetNS0_12CopyLocationE
+	cmpq	$-1, %rax
+	je	.LB376
+	movq	%rbx, %rdx
+	movq	%rax, %rsi
+	movq	%rbp, %rdi
+	call	_ZN12_GLOBAL__N_114MappingBuilder3mapE11StackOffsetS1_
+	testb	%al, %al
+	je	.LB376
+	jmp	.LB374
+.LB385:
+	movl	$0, %eax
+.LB374:
+	popq	%rbx
+	popq	%rbp
+	ret
+.LB379:
+	movl	$0, %eax
+	ret
+	.size	_ZN12_GLOBAL__N_114MappingBuilder16mapClosestCopiesEv, .-_ZN12_GLOBAL__N_114MappingBuilder16mapClosestCopiesEv
+	.align 2
+	.type	_ZN12_GLOBAL__N_114MappingBuilder21mapWildcardSlotCopiesEv, @function
+_ZN12_GLOBAL__N_114MappingBuilder21mapWildcardSlotCopiesEv:
+	cmpq	$0, 24(%rdi)
+	je	.LB393
+	pushq	%r13
+	pushq	%r12
+	pushq	%rbp
+	pushq	%rbx
+	movq	%rdi, %rbp
+	movl	$0, %ebx
+	jmp	.LB392
+.LB400:
+	movq	%rbx, %rdx
+	movq	%rax, %rsi
+	movq	%rbp, %rdi
+	call	_ZN12_GLOBAL__N_114MappingBuilder3mapE11StackOffsetS1_
+	testb	%al, %al
+	jne	.LB386
+	.p2align 6
+.LB388:
+	addq	$1, %rbx
+	cmpq	24(%rbp), %rbx
+	jnb	.LB399
+.LB392:
+	leaq	0(,%rbx,8), %rdx
+	movq	48(%rbp), %rax
+	cmpq	$-1, 8192(%rax,%rbx,8)
+	jne	.LB388
+	movq	16(%rbp), %rax
+	movzbl	4(%rax,%rdx), %r12d
+	cmpb	$1, %r12b
+	je	.LB388
+	movl	$1, %edx
+	movq	%rbx, %rsi
+	movq	%rbp, %rdi
+	call	_ZNK12_GLOBAL__N_114MappingBuilder11closestCopyE11StackOffsetNS0_12CopyLocationE
+	cmpq	$-1, %rax
+	je	.LB388
+	cmpb	$3, %r12b
+	je	.LB400
+	movb	$1, 56(%rbp)
+	cmpb	$1, 40(%rbp)
+	jne	.LB388
+	movq	%rbx, %rdx
+	movq	%rax, %rsi
+	movq	%rbp, %rdi
+	call	_ZN12_GLOBAL__N_114MappingBuilder3mapE11StackOffsetS1_
+	testb	%al, %al
+	je	.LB388
+	jmp	.LB386
+.LB399:
+	movl	$0, %eax
+.LB386:
+	popq	%rbx
+	popq	%rbp
+	popq	%r12
+	popq	%r13
+	ret
+.LB393:
+	movl	$0, %eax
+	ret
+	.size	_ZN12_GLOBAL__N_114MappingBuilder21mapWildcardSlotCopiesEv, .-_ZN12_GLOBAL__N_114MappingBuilder21mapWildcardSlotCopiesEv
+	.align 2
+	.type	_ZN12_GLOBAL__N_114MappingBuilder17keepWildcardSlotsEv, @function
+_ZN12_GLOBAL__N_114MappingBuilder17keepWildcardSlotsEv:
+	movq	8(%rdi), %rax
+	movq	24(%rdi), %rdx
+	cmpq	%rdx, %rax
+	cmova	%rdx, %rax
+	testq	%rax, %rax
+	je	.LB405
+	pushq	%rbp
+	pushq	%rbx
+	movq	%rdi, %rbp
+	movl	$0, %ebx
+	jmp	.LB404
+	.p2align 6
+.LB403:
+	addq	$1, %rbx
+	movq	8(%rbp), %rax
+	movq	24(%rbp), %rdx
+	cmpq	%rdx, %rax
+	cmova	%rdx, %rax
+	cmpq	%rax, %rbx
+	jnb	.LB411
+.LB404:
+	leaq	0(,%rbx,8), %rdx
+	movq	16(%rbp), %rax
+	cmpb	$1, 4(%rax,%rbx,8)
+	jne	.LB403
+	movq	48(%rbp), %rax
+	cmpq	$-1, 8192(%rax,%rdx)
+	jne	.LB403
+	movq	32(%rbp), %rdx
+	cmpb	$0, (%rdx,%rbx)
+	jne	.LB403
+	cmpq	$-1, (%rax,%rbx,8)
+	jne	.LB403
+	movq	%rbx, %rdx
+	movq	%rbx, %rsi
+	movq	%rbp, %rdi
+	call	_ZN12_GLOBAL__N_114MappingBuilder3mapE11StackOffsetS1_
+	testb	%al, %al
+	je	.LB403
+	jmp	.LB401
+.LB411:
+	movl	$0, %eax
+.LB401:
+	popq	%rbx
+	popq	%rbp
+	ret
+.LB405:
+	movl	$0, %eax
+	ret
+	.size	_ZN12_GLOBAL__N_114MappingBuilder17keepWildcardSlotsEv, .-_ZN12_GLOBAL__N_114MappingBuilder17keepWildcardSlotsEv
+	.align 2
+	.type	_ZN12_GLOBAL__N_114MappingBuilder13absorbSurplusEv, @function
+_ZN12_GLOBAL__N_114MappingBuilder13absorbSurplusEv:
+	cmpq	$0, 24(%rdi)
+	je	.LB421
+	pushq	%rbp
+	pushq	%rbx
+	movq	%rdi, %rbp
+	movl	$0, %ebx
+	jmp	.LB420
+.LB422:
+	movq	%rax, %rsi
+	.p2align 5
+.LB415:
+	addq	$1, %rax
+	addq	$1, %rdx
+	cmpq	%rcx, %rax
+	je	.LB431
+.LB419:
+	cmpb	$0, (%rdi,%rax)
+	jne	.LB415
+	cmpq	$-1, (%r8,%rax,8)
+	jne	.LB415
+	cmpq	$-1, %rsi
+	je	.LB422
+	movq	%rbx, %r10
+	subq	%rax, %r10
+	cmpq	%rax, %rbx
+	cmovb	%rdx, %r10
+	movq	%rsi, %r11
+	subq	%rbx, %r11
+	movq	%rbx, %r9
+	subq	%rsi, %r9
+	cmpq	%rsi, %rbx
+	cmovb	%r11, %r9
+	cmpq	%r9, %r10
+	cmovb	%rax, %rsi
+	jmp	.LB415
+.LB431:
+	cmpq	$-1, %rsi
+	je	.LB414
+	movq	%rbx, %rdx
+	movq	%rbp, %rdi
+	call	_ZN12_GLOBAL__N_114MappingBuilder3mapE11StackOffsetS1_
+	testb	%al, %al
+	jne	.LB412
+	.p2align 5
+.LB414:
+	addq	$1, %rbx
+	cmpq	24(%rbp), %rbx
+	jnb	.LB432
+.LB420:
+	leaq	0(,%rbx,8), %rdx
+	movq	16(%rbp), %rax
+	cmpb	$1, 4(%rax,%rbx,8)
+	jne	.LB414
+	movq	48(%rbp), %r8
+	movq	8192(%r8,%rdx), %rsi
+	cmpq	$-1, %rsi
+	jne	.LB414
+	movq	8(%rbp), %rcx
+	testq	%rcx, %rcx
+	je	.LB414
+	movq	32(%rbp), %rdi
+	movq	%rbx, %rdx
+	negq	%rdx
+	movl	$0, %eax
+	jmp	.LB419
+.LB432:
+	movl	$0, %eax
+.LB412:
+	popq	%rbx
+	popq	%rbp
+	ret
+.LB421:
+	movl	$0, %eax
+	ret
+	.size	_ZN12_GLOBAL__N_114MappingBuilder13absorbSurplusEv, .-_ZN12_GLOBAL__N_114MappingBuilder13absorbSurplusEv
+	.globl	build_mapping
+	.type	build_mapping, @function
+build_mapping:
+	pushq	%rbp
+	pushq	%rbx
+	subq	$16456, %rsp
+	movq	%rsi, %rbx
+	movq	%rdx, %rsi
+	movq	16480(%rsp), %rbp
+	cmpq	$1024, %rbx
+	seta	%al
+	cmpb	$1, %r9b
+	seta	%dl
+	orb	%dl, %al
+	jne	.LB441
+	cmpq	$1024, %rdi
+	ja	.LB441
+	testq	%rdi, %rdi
+	je	.LB435
+	movl	$0, %eax
+	.p2align 5
+.LB436:
+	movq	$-1, 64(%rsp,%rax,8)
+	addq	$1, %rax
+	cmpq	%rax, %rdi
+	jne	.LB436
+.LB435:
+	testq	%rbx, %rbx
+	je	.LB437
+	leaq	64(%rsp), %rax
+	leaq	(%rax,%rbx,8), %rdx
+	.p2align 5
+.LB438:
+	movq	$-1, 8192(%rax)
+	addq	$8, %rax
+	cmpq	%rdx, %rax
+	jne	.LB438
+.LB437:
+	movq	%rsi, (%rsp)
+	movq	%rdi, 8(%rsp)
+	movq	%rcx, 16(%rsp)
+	movq	%rbx, 24(%rsp)
+	movq	%r8, 32(%rsp)
+	movb	%r9b, 40(%rsp)
+	leaq	64(%rsp), %rax
+	movq	%rax, 48(%rsp)
+	movb	$0, 56(%rsp)
+	movq	%rsp, %rdi
+	call	_ZN12_GLOBAL__N_114MappingBuilder10mapInPlaceEv
+	testb	%al, %al
+	jne	.LB442
+	movq	%rsp, %rdi
+	call	_ZN12_GLOBAL__N_114MappingBuilder16mapClosestCopiesEv
+	testb	%al, %al
+	jne	.LB443
+	movq	%rsp, %rdi
+	call	_ZN12_GLOBAL__N_114MappingBuilder21mapWildcardSlotCopiesEv
+	testb	%al, %al
+	jne	.LB444
+	movq	%rsp, %rdi
+	call	_ZN12_GLOBAL__N_114MappingBuilder17keepWildcardSlotsEv
+	testb	%al, %al
+	jne	.LB445
+	movq	%rsp, %rdi
+	call	_ZN12_GLOBAL__N_114MappingBuilder13absorbSurplusEv
+	testb	%al, %al
+	jne	.LB446
+	testq	%rbx, %rbx
+	je	.LB439
+	leaq	0(,%rbx,8), %rdx
+	movl	$0, %eax
+	leaq	8256(%rsp), %rsi
+	.p2align 5
+.LB440:
+	movq	(%rsi,%rax), %rcx
+	movq	%rcx, 0(%rbp,%rax)
+	addq	$8, %rax
+	cmpq	%rax, %rdx
+	jne	.LB440
+.LB439:
+	movq	16488(%rsp), %rax
+	movzbl	56(%rsp), %edx
+	movb	%dl, (%rax)
+	movl	$0, %eax
+.LB433:
+	addq	$16456, %rsp
+	popq	%rbx
+	popq	%rbp
+	ret
+.LB441:
+	movq	$-2, %rax
+	jmp	.LB433
+.LB442:
+	movq	$-2, %rax
+	jmp	.LB433
+.LB443:
+	movq	$-2, %rax
+	jmp	.LB433
+.LB444:
+	movq	$-2, %rax
+	jmp	.LB433
+.LB445:
+	movq	$-2, %rax
+	jmp	.LB433
+.LB446:
+	movq	$-2, %rax
+	jmp	.LB433
+	.size	build_mapping, .-build_mapping
 	.section	.note.GNU-stack,"",@progbits
