@@ -16,7 +16,7 @@ namespace Bbu
 set_option maxRecDepth 100000 in
 theorem bbuAsm_eq : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm
     ++ produceAsm ++ swapWithAsm ++ generateAsm ++ finishAsm ++ loopAsm
-    ++ buildBottomUpAsm := by rfl
+    ++ popAsm ++ buildBottomUpAsm ++ emissionPopAsm := by rfl
 
 section
 set_option maxRecDepth 100000
@@ -31,7 +31,7 @@ theorem produce_at : produceAsm.IsInfixAt bbuAsm 110 := by rw [bbuAsm_eq]; exact
 theorem generate_at : generateAsm.IsInfixAt bbuAsm 266 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 theorem finish_at : finishAsm.IsInfixAt bbuAsm 319 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 theorem loop_at : loopAsm.IsInfixAt bbuAsm 534 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem buildBottomUp_at : buildBottomUpAsm.IsInfixAt bbuAsm 815 := by
+theorem buildBottomUp_at : buildBottomUpAsm.IsInfixAt bbuAsm 842 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 end
 

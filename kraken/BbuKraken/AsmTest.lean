@@ -9,7 +9,8 @@ set_option maxRecDepth 100000
 
 -- The function programs make up the linked file.
 example : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm ++ produceAsm
-    ++ swapWithAsm ++ generateAsm ++ finishAsm ++ loopAsm ++ buildBottomUpAsm := by rfl
+    ++ swapWithAsm ++ generateAsm ++ finishAsm ++ loopAsm ++ popAsm ++ buildBottomUpAsm
+    ++ emissionPopAsm := by rfl
 
 -- `bbuParseFile` reads `leaq disp(,%i,8), %r` as the operand with no base.
 example : swapWithAsm[7]? = some (.instr (.regular .W64 .W64
@@ -30,12 +31,16 @@ example : (bbuAsm.filter fun
     | _ => false) =
     [.instr (.regular .W64 .W64 (.lea (.low .r14 .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rdi .W64) ⟨none, some ⟨.rdx, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .rbx .W64) ⟨none, some ⟨.r14, .W64⟩, .int64 0⟩))] := by
+     .instr (.regular .W64 .W64 (.lea (.low .rbx .W64) ⟨none, some ⟨.r14, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.r12, .W64⟩, .int64 0⟩))] := by
   rfl
 
 -- `bbuParseFn` reads the file of the name.
 example : (isSpilledAsm.head? = some (.label Names.isSpilled)) := by rfl
 example : (buildBottomUpAsm.head? = some (.label Names.build_bottom_up)) := by rfl
+example : (popAsm.head? = some (.label Names.pop)) := by rfl
+example : (emissionPopAsm.head? = some (.label Names.emission_pop)) := by rfl
 
 end Bbu
 

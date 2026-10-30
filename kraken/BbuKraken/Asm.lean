@@ -22,7 +22,9 @@ public def swapWithAsm : Program := bbuParseFn(Names.swapWith)
 public def generateAsm : Program := bbuParseFn(Names.generate)
 public def finishAsm : Program := bbuParseFn(Names.permute)
 public def loopAsm : Program := bbuParseFn(Names.buildBottomUp)
+public def popAsm : Program := bbuParseFn(Names.pop)
 public def buildBottomUpAsm : Program := bbuParseFn(Names.build_bottom_up)
+public def emissionPopAsm : Program := bbuParseFn(Names.emission_pop)
 
 /-- `c/build_bottom_up.S`, the file that `bbu_harness` links. -/
 public def bbuAsm : Program := bbuParseFile("c/build_bottom_up.S")

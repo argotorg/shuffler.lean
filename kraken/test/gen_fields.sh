@@ -19,21 +19,27 @@ cat > "$tmp/probe.cpp" <<'CPP'
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
+#include <type_traits>
 #include <utility>
 #define private public
 #include "build_bottom_up.cpp"
 #define M(f) std::declval<Emission&>().f
 #define P(f) std::printf("%s %zu %zu %zu\n", #f, offsetof(Emission, f), sizeof(M(f)), sizeof(M(f)))
 #define A(f) std::printf("%s %zu %zu %zu\n", #f, offsetof(Emission, f), sizeof(M(f)), sizeof(M(f).m_elements[0]))
+// A reference member has the size of a pointer: sizeof gives the size of the type that it refers to.
+#define R(f) static_assert(std::is_reference_v<decltype(Emission::f)>); \
+	std::printf("%s %zu %zu %zu\n", #f, offsetof(Emission, f), sizeof(void*), sizeof(void*))
 int main()
 {
 	P(m_target); P(m_targetSize); P(m_spills); P(m_stack.m_data); P(m_stack.m_size); P(m_stack.m_trace);
 	P(m_stack.m_traceSize); A(m_mapping.m_destinationOf); A(m_mapping.m_positionOf);
-	P(m_pendingGenerations); P(m_blocked.offset); P(m_blocked.excess);
+	P(m_pendingGenerations); P(m_blocked.offset); P(m_blocked.excess); R(m_plannedMapping);
 	std::printf("size %zu 0 0\n", sizeof(Emission));
 }
 CPP
-${CXX:-g++} -std=c++20 -I "$src" -o "$tmp/probe" "$tmp/probe.cpp"
+# The reference member m_plannedMapping makes Emission a class without standard layout; g++ gives offsetof
+# for such a class without a virtual base, but warns.
+${CXX:-g++} -std=c++20 -Wno-invalid-offsetof -I "$src" -o "$tmp/probe" "$tmp/probe.cpp"
 "$tmp/probe" > "$tmp/offsets"
 
 awk '

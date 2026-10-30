@@ -9,12 +9,13 @@ The memory layout of `class Emission` in `c/build_bottom_up.cpp`, and the shape 
 the function specs.
 
 The model state and environment are functions of the memory and the address `S`
-of the struct (`stOf`, `envOf`), so a spec needs no ghost state. The struct is
-`WORDS` words, in the order of the members: `m_target` (word 0), `m_targetSize`
+of the struct (`stOf`, `envOf`), so a spec needs no ghost state. The units read and write
+the first `WORDS` words of the struct, in the order of the members: `m_target` (word 0), `m_targetSize`
 (1), `m_spills` (2), the `Stack` `m_stack` (`m_data` 3, `m_size` 4, `m_trace` 5,
 `m_traceSize` 6), the `Mapping` (`m_destinationOf[MAX_N]` from word `DEST`,
 `m_positionOf[MAX_N]` from word `POS`), `m_pendingGenerations` (word `PEND`) and
-`m_blocked` (words `BLK` and `BLK + 1`). An element of `m_destinationOf` or
+`m_blocked` (words `BLK` and `BLK + 1`). The last word, `WORDS`, is the reference
+`m_plannedMapping`; only the constructor writes it. An element of `m_destinationOf` or
 `m_positionOf` is an `Optional<StackOffset>`, with `-1` (`SIZE_MAX`) for none (`optOf`).
 `slotOf` reads a destination as a `Nat`; with `Pos`, each destination is below `n`, so
 no slot of the stack has none. `layout_probe` checks these offsets
@@ -203,7 +204,8 @@ theorem layout_probe : StructLayout.offsets =
       ("m_stack.m_size", 8 * 4), ("m_stack.m_trace", 8 * 5), ("m_stack.m_traceSize", 8 * 6),
       ("m_mapping.m_destinationOf", 8 * DEST), ("m_mapping.m_positionOf", 8 * POS),
       ("m_pendingGenerations", 8 * PEND), ("m_blocked.offset", 8 * BLK),
-      ("m_blocked.excess", 8 * (BLK + 1)), ("size", 8 * WORDS)] := by decide
+      ("m_blocked.excess", 8 * (BLK + 1)), ("m_plannedMapping", 8 * WORDS),
+      ("size", 8 * (WORDS + 1))] := by decide
 /-! ## Memory lemmas -/
 
 section

@@ -16,6 +16,7 @@ def offsets : List (String × Nat) := [
   ("m_pendingGenerations", 16440),
   ("m_blocked.offset", 16448),
   ("m_blocked.excess", 16456),
-  ("size", 16464)]
+  ("m_plannedMapping", 16464),
+  ("size", 16472)]
 
 end Bbu.StructLayout

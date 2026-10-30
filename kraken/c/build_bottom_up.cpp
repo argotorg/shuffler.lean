@@ -1,8 +1,9 @@
-// Emission::buildBottomUp of solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp, freestanding, with the
-// behavior of the Lean model, Shuffler/BuildBottomUp/Defs.lean. The differences from Shuffler.cpp:
+// Emission::buildBottomUp and Emission::pop of solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp, freestanding,
+// with the behavior of the Lean model, Shuffler/BuildBottomUp/Defs.lean and State.pop of
+// Shuffler/Emission/Defs.lean. The differences from Shuffler.cpp:
 //
 // - There are no exceptions, so a failed yulAssert returns Status::AssertionFailed.
-// - The source stack has no surplus, so every slot has a destination.
+// - The source stack of build_bottom_up has no surplus, so every slot has a destination.
 // - The checks marked `Lean` come from the Lean model; Shuffler.cpp does not have them.
 #include <bit>
 #include <compare>
@@ -89,6 +90,7 @@ struct ShuffleOp
 	{
 		return {Kind::Dup, static_cast<std::uint8_t>(_depth.value), StackSlot::makeJunk()};
 	}
+	static constexpr ShuffleOp pop() { return {Kind::Pop, 0, StackSlot::makeJunk()}; }
 	static constexpr ShuffleOp push(StackSlot const _slot) { return {Kind::Push, 0, _slot}; }
 	static constexpr ShuffleOp load(StackSlot const _slot) { return {Kind::Load, 0, _slot}; }
 };
@@ -204,6 +206,14 @@ public:
 		m_size++;
 	}
 
+	Status pop()
+	{
+		yulAssert(m_size != 0);
+		--m_size;
+		record(ShuffleOp::pop());
+		return Status::Done;
+	}
+
 private:
 	void record(ShuffleOp const _op) { m_trace[m_traceSize++] = _op; }
 
@@ -218,14 +228,28 @@ private:
 class Mapping
 {
 public:
-	/// `_destinations[i]` is the target offset of the source slot at offset i
-	Mapping(std::size_t const _sourceSize, std::size_t const _targetSize, std::uint64_t const* const _destinations)
+	/// The mapping without bindings, Mapping.lean's ⊥: no slot of a stack of `_sourceSize` slots has a
+	/// destination, and no slot is bound for a target offset below `_targetSize`
+	Mapping(std::size_t const _sourceSize, std::size_t const _targetSize)
 	{
+		for (StackOffset pos{0}; pos < _sourceSize; ++pos.value)
+			m_destinationOf[pos] = std::nullopt;
 		for (StackOffset destination{0}; destination < _targetSize; ++destination.value)
 			m_positionOf[destination] = std::nullopt;
-		for (StackOffset pos{0}; pos < _sourceSize; ++pos.value)
-			bind(pos, StackOffset{_destinations[pos.value]});
 	}
+
+	/// A copy of the entries of `_other` for a stack of `_sourceSize` slots and `_targetSize` target offsets.
+	/// The loops copy only these entries; a copy of the whole object would copy 16 KiB with memcpy or rep movs.
+	Mapping(Mapping const& _other, std::size_t const _sourceSize, std::size_t const _targetSize)
+	{
+		for (StackOffset pos{0}; pos < _sourceSize; ++pos.value)
+			m_destinationOf[pos] = _other.m_destinationOf[pos];
+		for (StackOffset destination{0}; destination < _targetSize; ++destination.value)
+			m_positionOf[destination] = _other.m_positionOf[destination];
+	}
+
+	Mapping(Mapping const&) = delete;
+	Mapping& operator=(Mapping const&) = delete;
 
 	/// The destination of the slot at `_pos`, or none for a surplus slot
 	Optional<StackOffset> destinationOf(StackOffset const _pos) const { return m_destinationOf[_pos]; }
@@ -248,6 +272,14 @@ public:
 			m_positionOf[*destination] = _b;
 	}
 
+	/// Removes the slot at `_top`, the top of the stack, with its binding. The entry of `_top` in
+	/// m_destinationOf stays: it is above the stack, and the next push or dup binds it again.
+	void pop(StackOffset const _top)
+	{
+		if (Optional<StackOffset> const destination = m_destinationOf[_top])
+			m_positionOf[*destination] = std::nullopt;
+	}
+
 private:
 	OffsetArray<Optional<StackOffset>> m_destinationOf;
 	OffsetArray<Optional<StackOffset>> m_positionOf;
@@ -263,20 +295,22 @@ public:
 		std::size_t excess;
 	};
 
-	/// The source stack is `_stack`, and the slot at offset i is bound for `_destinations[i]`
+	/// The source stack is `_stack`, and `_plannedMapping` maps it to the target. The working mapping starts as
+	/// a copy of it; `_plannedMapping` must outlive the Emission.
 	Emission(
 		Stack const _stack,
 		StackSlot const* const _target,
 		std::size_t const _targetSize,
-		std::uint64_t const* const _destinations,
+		Mapping const& _plannedMapping,
 		std::uint8_t const* const _spills
 	):
 		m_target(_target),
 		m_targetSize(_targetSize),
 		m_spills(_spills),
 		m_stack(_stack),
-		m_mapping(_stack.size(), _targetSize, _destinations),
-		m_pendingGenerations(0)
+		m_mapping(_plannedMapping, _stack.size(), _targetSize),
+		m_pendingGenerations(0),
+		m_plannedMapping(_plannedMapping)
 	{
 		for (StackOffset offset{0}; offset < _targetSize; ++offset.value)
 			if (!m_mapping.positionOf(offset))
@@ -286,6 +320,23 @@ public:
 	std::size_t traceSize() const { return m_stack.traceSize(); }
 	/// Only after Status::Blocked
 	Blocked blocked() const { return m_blocked; }
+	/// The working mapping
+	Mapping const& mapping() const { return m_mapping; }
+	std::size_t pendingGenerations() const { return m_pendingGenerations; }
+
+	/// Removes the top slot with its destination, if any. Shuffler.cpp pops the stack first, then the mapping;
+	/// so does the Lean model, State.pop.
+	///
+	/// `used` makes it a root of the g++ call graph order, so g++ emits it after Emission::buildBottomUp: the asm
+	/// and the .LB labels of the units before it stay as they are, and the Kraken proofs name those labels.
+	[[gnu::used]] UNIT Status pop()
+	{
+		StackOffset const top = m_stack.topOffset();
+		if (Status const status = m_stack.pop(); status != Status::Done)
+			return status;
+		m_mapping.pop(top);
+		return Status::Done;
+	}
 
 	/// Builds the target bottom-up. Every offset either holds its slot already, gets a retained slot that is
 	/// floating above it, or gets a freshly generated slot.
@@ -653,24 +704,28 @@ private:
 	/// Number of target offsets whose slot still has to be produced; decremented by `produce`
 	std::size_t m_pendingGenerations;
 	Blocked m_blocked;
+	/// The mapping of the source stack to the target, State.planned_mapping. After the other members, so that
+	/// their offsets stay.
+	Mapping const& m_plannedMapping;
 };
 
 }
 
-/// The Emission constructor and Emission::run for a source stack of m slots without surplus: data holds the
-/// source slots and dest[i] is the target offset of source slot i. Writes the operations to ops and returns their
+/// The Emission constructor and Emission::buildBottomUp for a source stack of m slots without surplus: data holds
+/// the source slots and dest[i] is the target offset of source slot i. Writes the operations to ops and returns their
 /// number, also when a slot is out of reach. Then blocked gets its offset and its excess, which is positive, else
 /// 0 and 0. Returns -2 for a failed assertion. If the result is not -2, data holds the slots of the working stack
 /// after the operations: the n slots of the target if blocked[1] is 0.
 ///
-/// dest holds distinct offsets below n, every variable id in target is an index of spilled, data has room for
-/// n slots and ops for 6n entries. m <= n <= 1024, else the result is -2.
+/// dest holds distinct offsets below n (none, SIZE_MAX, is a slot without a destination), every variable id in
+/// target is an index of spilled, data has room for n slots and ops for 6n entries. m <= n <= 1024, else the result
+/// is -2.
 extern "C" std::int64_t build_bottom_up(
 	std::uint64_t const m,
 	std::uint64_t const n,
 	StackSlot* const data,
 	StackSlot const* const target,
-	std::uint64_t const* const dest,
+	Optional<StackOffset> const* const dest,
 	std::uint8_t const* const spilled,
 	ShuffleOp* const ops,
 	std::uint64_t* const blocked
@@ -679,7 +734,11 @@ extern "C" std::int64_t build_bottom_up(
 	// the mapping has room for maxStackSize offsets
 	if (m > n || n > maxStackSize)
 		return -2;
-	Emission emission{Stack{data, m, ops}, target, n, dest, spilled};
+	Mapping planned{m, n};
+	for (StackOffset pos{0}; pos < m; ++pos.value)
+		if (Optional<StackOffset> const destination = dest[pos.value])
+			planned.bind(pos, *destination);
+	Emission emission{Stack{data, m, ops}, target, n, planned, spilled};
 	switch (emission.buildBottomUp())
 	{
 	case Status::Done:
@@ -694,4 +753,46 @@ extern "C" std::int64_t build_bottom_up(
 		return -2;
 	}
 	__builtin_unreachable();
+}
+
+/// The Emission constructor and `count` calls of Emission::pop, for a source stack of m slots and a target of n
+/// slots: data holds the source slots and dest[i] is the target offset of source slot i, or none (SIZE_MAX).
+/// Writes the operations to ops and returns their number, count. Writes the destination of each of the m - count
+/// slots that stay to destinationOf, the position of the slot bound for each of the n target offsets, or none, to
+/// positionOf, and the number of target offsets that no slot of the source stack is bound for to pending. Returns
+/// -2 for a failed assertion: a pop of an empty stack.
+///
+/// dest holds distinct offsets below n, and ops has room for count entries. m, n <= 1024, else the result is -2.
+extern "C" std::int64_t emission_pop(
+	std::uint64_t const m,
+	std::uint64_t const n,
+	StackSlot* const data,
+	StackSlot const* const target,
+	Optional<StackOffset> const* const dest,
+	std::uint8_t const* const spilled,
+	std::uint64_t const count,
+	ShuffleOp* const ops,
+	Optional<StackOffset>* const destinationOf,
+	Optional<StackOffset>* const positionOf,
+	std::uint64_t* const pending
+)
+{
+	// the mapping has room for maxStackSize offsets
+	if (m > maxStackSize || n > maxStackSize)
+		return -2;
+	Mapping planned{m, n};
+	for (StackOffset pos{0}; pos < m; ++pos.value)
+		if (Optional<StackOffset> const destination = dest[pos.value])
+			planned.bind(pos, *destination);
+	Emission emission{Stack{data, m, ops}, target, n, planned, spilled};
+	// a pop of an empty stack fails, so the loop ends after at most m + 1 pops
+	for (std::uint64_t i = 0; i < count; ++i)
+		if (emission.pop() != Status::Done)
+			return -2;
+	for (StackOffset pos{0}; pos < m - count; ++pos.value)
+		destinationOf[pos.value] = emission.mapping().destinationOf(pos);
+	for (StackOffset destination{0}; destination < n; ++destination.value)
+		positionOf[destination.value] = emission.mapping().positionOf(destination);
+	*pending = emission.pendingGenerations();
+	return static_cast<std::int64_t>(emission.traceSize());
 }
