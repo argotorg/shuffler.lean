@@ -1,49 +1,49 @@
 build_bottom_up:
 	cmpq	%rdi, %rsi
-	jb	.LB186
+	jb	.LB192
 	movq	%rdx, %r10
 	cmpq	$1024, %rsi
-	ja	.LB186
+	ja	.LB192
 	subq	$32872, %rsp
 	testq	%rdi, %rdi
-	je	.LB169
+	je	.LB175
 	movl	$0, %eax
 	.p2align 5
-.LB170:
+.LB176:
 	movq	$-1, 16480(%rsp,%rax,8)
 	addq	$1, %rax
 	cmpq	%rax, %rdi
-	jne	.LB170
+	jne	.LB176
 	testq	%rsi, %rsi
-	je	.LB185
-.LB184:
+	je	.LB191
+.LB190:
 	leaq	16480(%rsp), %rax
 	leaq	(%rax,%rsi,8), %rdx
 	.p2align 5
-.LB172:
+.LB178:
 	movq	$-1, 8192(%rax)
 	addq	$8, %rax
 	cmpq	%rdx, %rax
-	jne	.LB172
+	jne	.LB178
 	testq	%rdi, %rdi
-	je	.LB173
-.LB185:
+	je	.LB179
+.LB191:
 	movl	$0, %eax
-	jmp	.LB175
+	jmp	.LB181
 	.p2align 5
-.LB174:
+.LB180:
 	leaq	1(%rax), %rdx
 	cmpq	%rdx, %rdi
-	je	.LB199
+	je	.LB205
 	movq	%rdx, %rax
-.LB175:
+.LB181:
 	movq	(%r8,%rax,8), %rdx
 	cmpq	$-1, %rdx
-	je	.LB174
+	je	.LB180
 	movq	%rdx, 16480(%rsp,%rax,8)
 	movq	%rax, 24672(%rsp,%rdx,8)
-	jmp	.LB174
-.LB199:
+	jmp	.LB180
+.LB205:
 	movq	%rcx, (%rsp)
 	movq	%rsi, 8(%rsp)
 	movq	%r9, 16(%rsp)
@@ -55,80 +55,80 @@ build_bottom_up:
 	movl	$0, %edx
 	addq	$1, %rax
 	.p2align 5
-.LB176:
+.LB182:
 	movq	16480(%rsp,%rdx,8), %rcx
 	movq	%rcx, 56(%rsp,%rdx,8)
 	addq	$1, %rdx
 	cmpq	%rax, %rdx
-	jne	.LB176
-.LB183:
+	jne	.LB182
+.LB189:
 	testq	%rsi, %rsi
-	je	.LB177
+	je	.LB183
 	leaq	0(,%rsi,8), %rdx
 	movl	$0, %eax
 	leaq	8248(%rsp), %rdi
 	leaq	24672(%rsp), %rsi
 	.p2align 5
-.LB178:
+.LB184:
 	movq	(%rsi,%rax), %rcx
 	movq	%rcx, (%rdi,%rax)
 	addq	$8, %rax
 	cmpq	%rdx, %rax
-	jne	.LB178
+	jne	.LB184
 	movq	$0, 16440(%rsp)
 	leaq	16480(%rsp), %rax
 	movq	%rax, 16464(%rsp)
 	movq	%rsp, %rax
 	addq	%rsp, %rdx
-	jmp	.LB180
+	jmp	.LB186
 	.p2align 5
-.LB179:
+.LB185:
 	addq	$8, %rax
 	cmpq	%rdx, %rax
-	je	.LB182
-.LB180:
+	je	.LB188
+.LB186:
 	cmpq	$-1, 8248(%rax)
-	jne	.LB179
+	jne	.LB185
 	addq	$1, 16440(%rsp)
-	jmp	.LB179
-.LB200:
+	jmp	.LB185
+.LB206:
 	movq	32888(%rsp), %rax
 	movq	$0, (%rax)
 	movq	$0, 8(%rax)
 	movq	48(%rsp), %rdx
-	jmp	.LB167
-.LB181:
+	jmp	.LB173
+.LB187:
 	movq	16448(%rsp), %rax
 	movq	32888(%rsp), %rsi
 	movq	%rax, (%rsi)
 	movq	16456(%rsp), %rax
 	movq	%rax, 8(%rsi)
 	movq	48(%rsp), %rdx
-	jmp	.LB167
-.LB186:
+	jmp	.LB173
+.LB192:
 	movq	$-2, %rdx
 	movq	%rdx, %rax
 	ret
-.LB177:
+.LB183:
 	movq	$0, 16440(%rsp)
 	leaq	16480(%rsp), %rax
 	movq	%rax, 16464(%rsp)
-.LB182:
+.LB188:
 	movq	%rsp, %rdi
 	call	_ZN12_GLOBAL__N_18Emission13buildBottomUpEv
 	cmpb	$1, %al
-	je	.LB181
+	je	.LB187
 	movq	$-2, %rdx
 	cmpb	$2, %al
-	jne	.LB200
-.LB167:
+	jne	.LB206
+.LB173:
 	movq	%rdx, %rax
 	addq	$32872, %rsp
 	ret
-.LB169:
+.LB175:
 	testq	%rsi, %rsi
-	jne	.LB184
-.LB173:
+	jne	.LB190
+.LB179:
 	movq	%rcx, (%rsp)
 	movq	%rsi, 8(%rsp)
 	movq	%r9, 16(%rsp)
@@ -137,5 +137,5 @@ build_bottom_up:
 	movq	32880(%rsp), %rax
 	movq	%rax, 40(%rsp)
 	movq	$0, 48(%rsp)
-	jmp	.LB183
+	jmp	.LB189
 	.size	build_bottom_up, .-build_bottom_up

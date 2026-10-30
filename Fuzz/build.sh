@@ -1,9 +1,10 @@
 #!/bin/sh
 # Usage: Fuzz/build.sh <build-dir> [jobs]
 # Builds <build-dir>/fuzz, <build-dir>/lines and <build-dir>/port_test, and runs port_test, lines on all small "pop"
-# cases (pop_cases.sh), "spill" cases (spill_cases.sh) and "surplus" cases (surplus_cases.sh), and ci_test.sh. Run it
-# from the repository root inside `nix develop`, and again after a change to the Lean model, to solidity or to the
-# kraken/c asm.
+# cases (pop_cases.sh), "spill" cases (spill_cases.sh), "surplus" cases (surplus_cases.sh), "permute" cases
+# (permute_cases.sh), "lowest" cases (lowest_cases.sh), "map" cases (map_cases.sh), "resolve" cases
+# (resolve_cases.sh) and "plan" cases (plan_cases.sh), and ci_test.sh. Run it from the repository root inside
+# `nix develop`, and again after a change to the Lean model, to solidity or to the kraken/c asm.
 # [jobs] is the number of parallel ninja jobs (default: the ninja default).
 set -eu
 build=$1
@@ -24,4 +25,9 @@ ninja -C "$build" ${jobs:+-j "$jobs"} fuzz lines port_test
 sh "$(dirname "$0")/pop_cases.sh" 5 | "$build/lines"
 sh "$(dirname "$0")/spill_cases.sh" 4 | "$build/lines"
 sh "$(dirname "$0")/surplus_cases.sh" 4 2 | "$build/lines"
+sh "$(dirname "$0")/permute_cases.sh" 4 | "$build/lines"
+sh "$(dirname "$0")/lowest_cases.sh" 4 | "$build/lines"
+sh "$(dirname "$0")/map_cases.sh" 3 | "$build/lines"
+sh "$(dirname "$0")/resolve_cases.sh" | "$build/lines"
+sh "$(dirname "$0")/plan_cases.sh" 2 | "$build/lines"
 sh "$(dirname "$0")/ci_test.sh"

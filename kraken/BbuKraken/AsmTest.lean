@@ -10,7 +10,12 @@ set_option maxRecDepth 100000
 -- The function programs make up the linked file.
 example : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm ++ produceAsm
     ++ swapWithAsm ++ generateAsm ++ finishAsm ++ loopAsm ++ popAsm ++ buildBottomUpAsm
-    ++ emissionPopAsm ++ spillSetAddAsm ++ spillSetAsm ++ removeSurplusAsm ++ removeSurplusEntryAsm := by
+    ++ emissionPopAsm ++ spillSetAddAsm ++ spillSetAsm ++ removeSurplusAsm ++ removeSurplusEntryAsm
+    ++ permuteEntryAsm ++ permuteAtLowestHeightAsm ++ permuteAtLowestHeightEntryAsm
+    ++ mapAsm ++ closestCopyAsm ++ mapInPlaceAsm ++ mapClosestCopiesAsm ++ mapWildcardSlotCopiesAsm
+    ++ keepWildcardSlotsAsm ++ absorbSurplusAsm ++ buildMappingAsm ++ isRetainedAsm
+    ++ hasOtherRetainedCopyAsm ++ isDemandedAsm ++ classifyAsm ++ resolveAsm ++ resolveEntryAsm
+    ++ isAvailableAsm ++ runAsm ++ emitAsm ++ plannerRunAsm ++ planAsm := by
   rfl
 
 -- `bbuParseFile` reads `leaq disp(,%i,8), %r` as the operand with no base.
@@ -36,7 +41,17 @@ example : (bbuAsm.filter fun
      .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.r12, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .r8 .W64) ⟨none, some ⟨.rdi, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩))] := by
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rcx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rsi .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .r14 .W64) ⟨none, some ⟨.rcx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rcx, .W64⟩, .int64 0⟩))] := by
   rfl
 
 -- `bbuParseFn` reads the file of the name.
@@ -48,6 +63,30 @@ example : (spillSetAddAsm.head? = some (.label Names.spillSetAdd)) := by rfl
 example : (spillSetAsm.head? = some (.label Names.spill_set)) := by rfl
 example : (removeSurplusAsm.head? = some (.label Names.removeSurplus)) := by rfl
 example : (removeSurplusEntryAsm.head? = some (.label Names.remove_surplus)) := by rfl
+example : (finishAsm.head? = some (.label Names.permute)) := by rfl
+example : (permuteEntryAsm.head? = some (.label Names.permuteEntry)) := by rfl
+example : (permuteAtLowestHeightAsm.head? = some (.label Names.permuteAtLowestHeight)) := by rfl
+example : (isAvailableAsm.head? = some (.label Names.isAvailable)) := by rfl
+example : (runAsm.head? = some (.label Names.run)) := by rfl
+example : (emitAsm.head? = some (.label Names.emit)) := by rfl
+example : (plannerRunAsm.head? = some (.label Names.plannerRun)) := by rfl
+example : (planAsm.head? = some (.label Names.plan)) := by rfl
+example : (permuteAtLowestHeightEntryAsm.head? = some (.label Names.permute_at_lowest_height)) := by
+  rfl
+example : (mapAsm.head? = some (.label Names.map)) := by rfl
+example : (closestCopyAsm.head? = some (.label Names.closestCopy)) := by rfl
+example : (mapInPlaceAsm.head? = some (.label Names.mapInPlace)) := by rfl
+example : (mapClosestCopiesAsm.head? = some (.label Names.mapClosestCopies)) := by rfl
+example : (mapWildcardSlotCopiesAsm.head? = some (.label Names.mapWildcardSlotCopies)) := by rfl
+example : (keepWildcardSlotsAsm.head? = some (.label Names.keepWildcardSlots)) := by rfl
+example : (absorbSurplusAsm.head? = some (.label Names.absorbSurplus)) := by rfl
+example : (buildMappingAsm.head? = some (.label Names.build_mapping)) := by rfl
+example : (isRetainedAsm.head? = some (.label Names.isRetained)) := by rfl
+example : (hasOtherRetainedCopyAsm.head? = some (.label Names.hasOtherRetainedCopy)) := by rfl
+example : (isDemandedAsm.head? = some (.label Names.isDemanded)) := by rfl
+example : (classifyAsm.head? = some (.label Names.classify)) := by rfl
+example : (resolveAsm.head? = some (.label Names.resolve)) := by rfl
+example : (resolveEntryAsm.head? = some (.label Names.resolveEntry)) := by rfl
 
 end Bbu
 

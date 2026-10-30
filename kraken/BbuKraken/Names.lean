@@ -1,13 +1,14 @@
 module
 
 /-!
-The symbol names of the functions of `c/build_bottom_up.cpp`. The members of `Emission`
-and `SpillSet` have the names that g++ gives them (the Itanium C++ ABI mangling); the
-entries `build_bottom_up`, `emission_pop`, `spill_set` and `remove_surplus` are
+The symbol names of the functions of `c/build_bottom_up.cpp`. The members of `Emission`,
+`SpillSet`, `MappingBuilder` and `Planner` have the names that g++ gives them (the Itanium C++ ABI
+mangling); the entries `build_bottom_up`, `emission_pop`, `spill_set`, `remove_surplus`,
+`permute`, `permute_at_lowest_height`, `build_mapping`, `resolve`, `emit` and `plan` are
 `extern "C"`. These are the names in `c/build_bottom_up.S`, in the binary, and in
-`c/bbu/NAME.S`. We do not rename them in the asm: each change to the compiler output is
-one more step between the proved program and the program that runs. Each name is here
-once; `BbuKraken.Asm`, `BbuKraken.Link` and the specs use these defs.
+`c/bbu/NAME.S`. We do not rename them in the asm: each change to the compiler output is one more
+step between the proved program and the program that runs. Each name is here once;
+`BbuKraken.Asm`, `BbuKraken.Link` and the specs use these defs.
 -/
 
 namespace Bbu.Names
@@ -27,8 +28,9 @@ namespace Bbu.Names
 @[expose] public def swapWith : String := "_ZN12_GLOBAL__N_18Emission8swapWithE11StackOffset"
 /-- `Emission::generate(StackOffset)` -/
 @[expose] public def generate : String := "_ZN12_GLOBAL__N_18Emission8generateE11StackOffset"
-/-- `Emission::permute()` -/
-@[expose] public def permute : String := "_ZN12_GLOBAL__N_18Emission7permuteEv"
+/-- `Emission::permute(OffsetArray<StackOffset>&)` -/
+@[expose] public def permute : String :=
+  "_ZN12_GLOBAL__N_18Emission7permuteERNS_11OffsetArrayI11StackOffsetEE"
 /-- `Emission::buildBottomUp()` -/
 @[expose] public def buildBottomUp : String := "_ZN12_GLOBAL__N_18Emission13buildBottomUpEv"
 /-- `Emission::pop()` -/
@@ -45,5 +47,64 @@ namespace Bbu.Names
 @[expose] public def removeSurplus : String := "_ZN12_GLOBAL__N_18Emission13removeSurplusEv"
 /-- `remove_surplus`, `extern "C"` -/
 @[expose] public def remove_surplus : String := "remove_surplus"
+/-- `MappingBuilder::map(StackOffset, StackOffset)` -/
+@[expose] public def map : String := "_ZN12_GLOBAL__N_114MappingBuilder3mapE11StackOffsetS1_"
+/-- `MappingBuilder::closestCopy(StackOffset, CopyLocation) const` -/
+@[expose] public def closestCopy : String :=
+  "_ZNK12_GLOBAL__N_114MappingBuilder11closestCopyE11StackOffsetNS0_12CopyLocationE"
+/-- `MappingBuilder::mapInPlace()` -/
+@[expose] public def mapInPlace : String := "_ZN12_GLOBAL__N_114MappingBuilder10mapInPlaceEv"
+/-- `MappingBuilder::mapClosestCopies()` -/
+@[expose] public def mapClosestCopies : String :=
+  "_ZN12_GLOBAL__N_114MappingBuilder16mapClosestCopiesEv"
+/-- `MappingBuilder::mapWildcardSlotCopies()` -/
+@[expose] public def mapWildcardSlotCopies : String :=
+  "_ZN12_GLOBAL__N_114MappingBuilder21mapWildcardSlotCopiesEv"
+/-- `MappingBuilder::keepWildcardSlots()` -/
+@[expose] public def keepWildcardSlots : String :=
+  "_ZN12_GLOBAL__N_114MappingBuilder17keepWildcardSlotsEv"
+/-- `MappingBuilder::absorbSurplus()` -/
+@[expose] public def absorbSurplus : String := "_ZN12_GLOBAL__N_114MappingBuilder13absorbSurplusEv"
+/-- `build_mapping`, `extern "C"` -/
+@[expose] public def build_mapping : String := "build_mapping"
+
+/-- `permute`, `extern "C"`. `Names.permute` is the member `Emission::permute`. -/
+@[expose] public def permuteEntry : String := "permute"
+/-- `Emission::permuteAtLowestHeight()` -/
+@[expose] public def permuteAtLowestHeight : String :=
+  "_ZN12_GLOBAL__N_18Emission21permuteAtLowestHeightEv"
+/-- `permute_at_lowest_height`, `extern "C"` -/
+@[expose] public def permute_at_lowest_height : String := "permute_at_lowest_height"
+
+/-- `Planner::isRetained(Mapping const&, StackOffset)`, static -/
+@[expose] public def isRetained : String :=
+  "_ZN12_GLOBAL__N_17Planner10isRetainedERKNS_7MappingE11StackOffset"
+/-- `Planner::hasOtherRetainedCopy(Mapping const&, OffsetArray<uint8_t> const&, StackOffset) const` -/
+@[expose] public def hasOtherRetainedCopy : String :=
+  "_ZNK12_GLOBAL__N_17Planner20hasOtherRetainedCopyERKNS_7MappingERKNS_11OffsetArrayIhEE11StackOffset"
+/-- `Planner::isDemanded(StackSlot) const` -/
+@[expose] public def isDemanded : String := "_ZNK12_GLOBAL__N_17Planner10isDemandedE9StackSlot"
+/-- `Planner::classify(Mapping const&, OffsetArray<uint8_t> const&, StackOffset) const` -/
+@[expose] public def classify : String :=
+  "_ZNK12_GLOBAL__N_17Planner8classifyERKNS_7MappingERKNS_11OffsetArrayIhEE11StackOffset"
+/-- `Planner::resolve(Mapping const&, Emission::Blocked, Mapping const&, size_t)` -/
+@[expose] public def resolve : String :=
+  "_ZN12_GLOBAL__N_17Planner7resolveERKNS_7MappingENS_8Emission7BlockedES3_m"
+/-- `resolve`, `extern "C"`. `Names.resolve` is the member `Planner::resolve`. -/
+@[expose] public def resolveEntry : String := "resolve"
+
+/-- `Emission::isAvailable(StackOffset) const` -/
+@[expose] public def isAvailable : String :=
+  "_ZNK12_GLOBAL__N_18Emission11isAvailableE11StackOffset"
+/-- `Emission::run()` -/
+@[expose] public def run : String := "_ZN12_GLOBAL__N_18Emission3runEv"
+/-- `emit`, `extern "C"` -/
+@[expose] public def emit : String := "emit"
+/-- `Planner::run(MappingBuilder::WildcardSlotsStrategy, StackSlot*, ShuffleOp*,
+  Optional<StackOffset>*, size_t&)` -/
+@[expose] public def plannerRun : String :=
+  "_ZN12_GLOBAL__N_17Planner3runENS_14MappingBuilder21WildcardSlotsStrategyEP9StackSlotP9ShuffleOpPNS_8OptionalI11StackOffsetEERm"
+/-- `plan`, `extern "C"` -/
+@[expose] public def plan : String := "plan"
 
 end Bbu.Names
