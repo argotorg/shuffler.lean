@@ -31,7 +31,157 @@ theorem isPerm_destList {n : Nat} (perm : Equiv.Perm (Fin n)) : Bbu.IsPerm (dest
     have := perm.injective (Fin.ext hij)
     simpa using this
 
+theorem getElem!_destList {n : Nat} (perm : Equiv.Perm (Fin n)) (i : Fin n) :
+    (destList perm)[i.val]! = (perm i).val := by
+  rw [getElem!_pos (destList perm) i.val (by simp [length_destList]), getElem_destList]
+
+theorem nodup_destList {n : Nat} (f : Equiv.Perm (Fin n)) : (destList f).Nodup :=
+  List.nodup_ofFn.mpr (Fin.val_injective.comp f.injective)
+
+-- The entry `b` of `destList f` is at `f.symm b`.
+theorem idxOf_destList {n : Nat} (f : Equiv.Perm (Fin n)) (b : Fin n) :
+    (destList f).idxOf b.val = (f.symm b).val := by
+  have h : (f.symm b).val < (destList f).length := by simp [length_destList]
+  have he : (destList f)[(f.symm b).val] = b.val := by
+    rw [getElem_destList]; simp
+  rw [← he]
+  exact (nodup_destList f).idxOf_getElem _ h
+
+theorem destList_setValue {n : Nat} (f : Equiv.Perm (Fin n)) (a b : Fin n) :
+    destList (f.setValue a b) = Bbu.setValue (destList f) a.val b.val := by
+  apply List.ext_getElem
+  · simp [Bbu.setValue, length_destList]
+  · intro k h1 h2
+    have hk : k < n := by simpa [length_destList] using h1
+    simp only [Bbu.setValue, List.getElem_set, idxOf_destList, getElem!_destList, getElem_destList]
+    simp only [Equiv.setValue, Equiv.trans_apply]
+    by_cases hak : a.val = k
+    · have : (⟨k, hk⟩ : Fin n) = a := Fin.ext hak.symm
+      rw [ite_eq_left hak, this, Equiv.swap_apply_left, Equiv.apply_symm_apply]
+    · rw [ite_eq_right hak]
+      by_cases hbk : (f.symm b).val = k
+      · have : (⟨k, hk⟩ : Fin n) = f.symm b := Fin.ext hbk.symm
+        rw [ite_eq_left hbk, this, Equiv.swap_apply_right]
+      · rw [ite_eq_right hbk, Equiv.swap_apply_of_ne_of_ne (fun h => hak (by rw [← h]))
+          (fun h => hbk (by rw [← h]))]
+
 /-! ## `normalize` -/
+
+theorem map_val_finRange (n : Nat) : (List.finRange n).map Fin.val = List.range n := by
+  apply List.ext_getElem <;> simp
+
+theorem getElem!_map_val {n : Nat} (l : List (Fin n)) (i : Nat) (h : i < l.length) :
+    (l.map Fin.val)[i]! = l[i].val := by
+  rw [getElem!_pos (l.map Fin.val) i (by simpa using h), List.getElem_map]
+
+theorem map_filter_mem {n : Nat} (l s : List (Fin n)) :
+    (l.filter (· ∈ s)).map Fin.val = (l.map Fin.val).filter (· ∈ s.map Fin.val) := by
+  rw [List.filter_map]
+  congr 1
+  apply List.filter_congr
+  intro x _
+  simp only [Function.comp_apply, List.mem_map_of_injective Fin.val_injective]
+
+theorem map_filter_not_mem {n : Nat} (l s : List (Fin n)) :
+    (l.filter (· ∉ s)).map Fin.val = (l.map Fin.val).filter (· ∉ s.map Fin.val) := by
+  rw [List.filter_map]
+  congr 1
+  apply List.filter_congr
+  intro x _
+  simp only [Function.comp_apply, List.mem_map_of_injective Fin.val_injective]
+
+theorem dedup_eq {α : Type} [DecidableEq α] (l : List α) : Bbu.dedup l = l.dedup := by
+  induction l with
+  | nil => rfl
+  | cons a l ih =>
+    show (if a ∈ Bbu.dedup l then Bbu.dedup l else a :: Bbu.dedup l) = _
+    rw [ih]
+    by_cases ha : a ∈ l
+    · rw [ite_eq_left (List.mem_dedup.mpr ha), List.dedup_cons_of_mem ha]
+    · rw [ite_eq_right (mt List.mem_dedup.mp ha), List.dedup_cons_of_notMem ha]
+
+-- `decode` is injective on canonical slots, so it keeps `dedup`.
+theorem dedup_map_decode (vals : List Bbu.StackSlot) (hc : ∀ v ∈ vals, Canon v) :
+    (vals.map decode).dedup = vals.dedup.map decode := by
+  induction vals with
+  | nil => rfl
+  | cons a l ih =>
+    have ha : Canon a := hc a (by simp)
+    have hl : ∀ v ∈ l, Canon v := fun v hv => hc v (List.mem_cons_of_mem a hv)
+    have hmem : decode a ∈ l.map decode ↔ a ∈ l := by
+      constructor
+      · intro h
+        obtain ⟨b, hb, he⟩ := List.mem_map.mp h
+        rwa [(decode_eq_iff (hl b hb) ha).mp he] at hb
+      · exact List.mem_map_of_mem
+    rw [List.map_cons]
+    by_cases hal : a ∈ l
+    · rw [List.dedup_cons_of_mem hal, List.dedup_cons_of_mem (hmem.mpr hal), ih hl]
+    · rw [List.dedup_cons_of_notMem hal, List.dedup_cons_of_notMem (mt hmem.mp hal), ih hl,
+        List.map_cons]
+
+-- `Bbu.regroup` is `Permute.reassignGroup`. Each list of the model is the list
+-- of the original, mapped by `Fin.val`.
+theorem regroup_corr (vals : List Bbu.StackSlot) (hc : ∀ v ∈ vals, Canon v) (slot : Bbu.StackSlot)
+    (hslot : Canon slot) (perm : Permute.Permutation (vals.map decode)) :
+    Corr (fun p s => ∃ q, s = .yield q ∧ p = destList q)
+      (Bbu.regroup vals (destList perm) slot)
+      (Permute.reassignGroup (vals.map decode) (decode slot) perm) := by
+  unfold Bbu.regroup Permute.reassignGroup
+  extract_lets Gm Dm Pm Mm Vm G D S P M V
+  have hL : (vals.map decode).length = vals.length := List.length_map ..
+  have hG : G.map Fin.val = Gm := by
+    simp only [G, Gm]
+    rw [show List.range vals.length = (List.finRange (vals.map decode).length).map Fin.val by
+      rw [map_val_finRange, hL], List.filter_map]
+    congr 1
+    apply List.filter_congr
+    intro pos _
+    have hp : pos.val < vals.length := hL ▸ pos.isLt
+    have hv := hc _ (List.getElem_mem hp)
+    simp only [Function.comp_apply, Fin.getElem_fin, List.getElem_map, getElem!_pos vals pos.val hp]
+    rw [Bool.eq_iff_iff, beq_iff_eq, decide_eq_true_iff, decode_eq_iff hv hslot]
+  have hD : D.map Fin.val = Dm := by
+    simp only [D, Dm]
+    rw [List.map_mergeSort (s := fun a b => decide (a ≤ b)) (fun a _ b _ => by simp only [Fin.le_def]),
+      ← hG, List.map_map, List.map_map]
+    congr 1
+    apply List.map_congr_left
+    intro x _
+    exact (getElem!_destList perm x).symm
+  have hP : Pm = destList P := by
+    simp only [Pm, P, S]
+    rw [← hG, ← hD, ← map_filter_mem, List.foldl_map]
+    exact List.foldl_hom destList fun x y => (destList_setValue x y y).symm
+  have hM : M.map Fin.val = Mm := by
+    simp only [M, Mm]
+    rw [map_filter_not_mem, hG, hD]
+  have hV : V.map Fin.val = Vm := by
+    simp only [V, Vm]
+    rw [map_filter_not_mem, hD, hG]
+  have hlenM : Mm.length = M.length := by rw [← hM, List.length_map]
+  have hlenV : Vm.length = V.length := by rw [← hV, List.length_map]
+  by_cases hsmall : G.length < 2
+  · have hsm : Gm.length < 2 := by rw [← hG, List.length_map]; exact hsmall
+    rw [ite_eq_left hsm, ite_eq_left hsmall]
+    exact ⟨perm, rfl, rfl⟩
+  have hsm : ¬ Gm.length < 2 := by rw [← hG, List.length_map]; exact hsmall
+  rw [ite_eq_right hsm, ite_eq_right hsmall]
+  by_cases hsz : M.length = V.length
+  · have hne : ¬ Mm.length ≠ Vm.length := by rw [hlenM, hlenV]; exact not_not.mpr hsz
+    rw [ite_eq_right hne, requires_of_true _ hsz]
+    refine ⟨_, rfl, ?_⟩
+    rw [hP, show List.range Mm.length = (List.finRange M.length).map Fin.val by
+      rw [map_val_finRange, hlenM], List.foldl_map]
+    apply List.foldl_hom destList
+    intro x i
+    rw [destList_setValue, ← hM, ← hV, getElem!_map_val M i i.isLt,
+      getElem!_map_val V i (hsz ▸ i.isLt)]
+    rfl
+  · -- The sizes differ: both fail with an assertion.
+    have hne : Mm.length ≠ Vm.length := by rw [hlenM, hlenV]; exact hsz
+    rw [ite_eq_left hne, requires, dite_eq_right hsz]
+    exact trivial
 
 -- `Bbu.normalize` is `Permute.normalize`. The slots are canonical, so equal
 -- values are equal slots.
@@ -39,16 +189,28 @@ theorem normalize_corr (vals : List Bbu.StackSlot) (hc : ∀ v ∈ vals, Canon v
     (hs : stack = vals.map decode) (perm : Permute.Permutation stack) :
     Corr (fun p r => p = destList r) (Bbu.normalize vals (destList perm))
       (Permute.normalize stack perm) := by
-  sorry -- wf:todo
+  subst hs
+  unfold Bbu.normalize Permute.normalize
+  rw [dedup_eq, dedup_map_decode vals hc]
+  have hsub : ∀ v ∈ vals.dedup, Canon v := fun v hv => hc v (List.mem_dedup.mp hv)
+  generalize vals.dedup = xs at hsub ⊢
+  induction xs generalizing perm with
+  | nil => exact rfl
+  | cons x xs ih =>
+    rw [List.foldlM_cons, List.map_cons, List.forIn_cons]
+    have hr := regroup_corr vals hc x (hsub x (by simp)) perm
+    generalize Bbu.regroup vals (destList perm) x = a at hr ⊢
+    generalize Permute.reassignGroup (vals.map decode) (decode x) perm = b at hr ⊢
+    rcases a with (_ | _) | p <;> rcases b with (_ | _) | s <;> simp only [Corr] at hr
+    · exact trivial
+    · obtain ⟨q, rfl, rfl⟩ := hr
+      rw [except_ok_bind, except_ok_bind]
+      exact ih q fun v hv => hsub v (List.mem_cons_of_mem _ hv)
 
 /-! ## `permute.go` -/
 
 theorem swapPos_len (st : Bbu.St) (pos : Nat) : (Bbu.swapPos st pos).len = st.len := by
   simp [Bbu.swapPos, Bbu.swapDestinations, Bbu.St.len]
-
-theorem getElem!_destList {n : Nat} (perm : Equiv.Perm (Fin n)) (i : Fin n) :
-    (destList perm)[i.val]! = (perm i).val := by
-  rw [getElem!_pos (destList perm) i.val (by simp [length_destList]), getElem_destList]
 
 -- `destList` does not see a cast of the length.
 theorem destList_heq {a b : Nat} {x : Equiv.Perm (Fin a)} {y : Equiv.Perm (Fin b)} (hab : a = b)
@@ -101,9 +263,6 @@ theorem foldl_misplaced {n : Nat} (perm : Equiv.Perm (Fin n)) (xs : List (Fin n)
     · simp [hx]
     · have : (perm x).val ≠ x.val := fun h => hx (Fin.ext h)
       simp [hx, this]
-
-theorem map_val_finRange (n : Nat) : (List.finRange n).map Fin.val = List.range n := by
-  apply List.ext_getElem <;> simp
 
 -- If the top is in place, `target` is the last out-of-place position.
 theorem target_fixed {n : Nat} (perm : Equiv.Perm (Fin n)) (top : Fin n) (htop : top.val = n - 1)
