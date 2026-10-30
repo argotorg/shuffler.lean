@@ -3,8 +3,9 @@ import BbuKraken.Unit.Defs
 /-!
 # `buildBottomUp`
 
-`c/bbu/<Names.buildBottomUp>.S`: 6 `pushq` and `subq $24`, so 2068 free words (9, and 2059 for
-the call of `permute`). The loop over the target offsets calls `generate`, `swapWith`,
+`c/bbu/<Names.buildBottomUp>.S`: 6 `pushq` and `subq $8216`, so 2068 free words (1033, and 1035
+for the call of `permute`). The local array at `16(%rsp)` is the argument `permutation` of
+`permute` (`permW`). The loop over the target offsets calls `generate`, `swapWith`,
 `isSpilled`, `shallowestCopyPosition`, and at the end `permute`.
 
 `loopA` is the state of the constructor for destinations that are distinct and below `n`. The
@@ -16,7 +17,7 @@ the preconditions of the callees (see the callee files). The caller is `build_bo
 namespace Bbu.Unit
 
 theorem loop_unit [Host] [FunDecls]
-    (hperm : Sep.Spec Names.permute permuteA 2058 permuteQ)
+    (hperm : Sep.SpecW Names.permute permW permuteA 1034 permuteQ)
     (hspill : Sep.Spec Names.isSpilled isSpilledA 0 isSpilledQ)
     (hcopy : Sep.Spec Names.shallowestCopyPosition shallowestCopyA 0 shallowestCopyQ)
     (hgen : Sep.Spec Names.generate generateA 11 generateQ)
