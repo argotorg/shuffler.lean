@@ -14,6 +14,7 @@ import BbuKraken.FlatList.PermLoop
 import BbuKraken.FlatList.Permute
 import BbuKraken.FlatList.Produce
 import BbuKraken.FlatList.Regroup
+import BbuKraken.FlatList.RegroupTest
 import BbuKraken.FlatList.Step
 import BbuKraken.FlatModel
 import BbuKraken.FlatModelTest
