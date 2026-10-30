@@ -170,5 +170,49 @@ theorem b_72 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
         rw [hdx]; bv_omega
       pd_dec
 
+theorem b_97 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F permuteA 2058 s) :
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB97" →
+      Obl S g F s ra blk := by
+  pm_block [Obl]
+  intro t ht
+  simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
+  obtain ⟨g', L, hF, hok, hk, hp⟩ := ht
+  kvcgen64
+  all_goals try symexec_norm
+  case vc1 =>
+    cfg_goto
+    · exact Fm.stack (hF.next rfl rfl)
+    · simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
+      refine ⟨g', L, hF.next rfl rfl, hok, hk, ?_, ?_⟩
+      · rw [hp]
+      · rw [hp]; rfl
+    · pm_dec
+
+theorem b_74 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F permuteA 2058 s) :
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB74" →
+      Obl S g F s ra blk := by
+  pm_block [Obl]
+  intro t ht
+  simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
+  obtain ⟨g', L, p, f, c, hD, hperm, hmu, hnops, hpt, hdx, hc, hc0, hax, hne, hmb⟩ := ht
+  have hbx := hD.bx
+  have h0 := hD.pos
+  kvcgen64
+  all_goals try symexec_norm
+  case vc1 =>
+    rw [step_eq hpt, hmb, ite_eq_right (by bv_omega : ¬(c - 1#64 = g.h.len - 1#64))] at hperm
+    cfg_goto
+    · exact Fm.stack (hD.fm.next rfl rfl)
+    · simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
+      exact ⟨g', L, p, f, _, hD.next rfl rfl rfl rfl rfl rfl, hax,
+        ⟨by bv_omega, by bv_omega, Or.inr ⟨hpt, hne⟩⟩, hperm, hmu, hnops⟩
+    · pd_dec
+  case vc2 =>
+    rename_i hz
+    rw [Bool.not_eq_false', hbx, hdx] at hz
+    have := eq_of_z hz
+    exfalso
+    bv_omega
+
 end Permute
 end Bbu.Unit
