@@ -15,74 +15,74 @@ _ZN12_GLOBAL__N_17Planner3runENS_14MappingBuilder21WildcardSlotsStrategyEP9Stack
 	movb	$0, 56(%rdi)
 	movq	24(%rdi), %r11
 	testq	%r11, %r11
-	je	.LB710
+	je	.LB.Planner.run.4
 	movq	16(%rdi), %r10
 	movl	$0, %ecx
-	jmp	.LB715
+	jmp	.LB.Planner.run.1
 	.p2align 5
-.LB711:
+.LB.Planner.run.0:
 	addq	$1, %rcx
 	cmpq	%r11, %rcx
-	je	.LB710
-.LB715:
+	je	.LB.Planner.run.4
+.LB.Planner.run.1:
 	movzbl	4(%r10,%rcx,8), %esi
 	cmpb	$1, %sil
-	je	.LB711
+	je	.LB.Planner.run.0
 	cmpb	$0, 5(%r10,%rcx,8)
-	je	.LB711
+	je	.LB.Planner.run.0
 	cmpb	$2, %sil
-	je	.LB711
+	je	.LB.Planner.run.0
 	movq	8(%rbx), %rdi
 	testq	%rdi, %rdi
-	je	.LB712
+	je	.LB.Planner.run.3
 	movq	(%rbx), %r9
 	movq	(%r10,%rcx,8), %r8
 	movl	$0, %eax
 	.p2align 5
-.LB713:
+.LB.Planner.run.2:
 	movq	%r8, %rdx
 	xorq	(%r9,%rax,8), %rdx
 	salq	$16, %rdx
-	je	.LB711
+	je	.LB.Planner.run.0
 	addq	$1, %rax
 	cmpq	%rax, %rdi
-	jne	.LB713
-.LB712:
+	jne	.LB.Planner.run.2
+.LB.Planner.run.3:
 	testb	%sil, %sil
-	jne	.LB739
+	jne	.LB.Planner.run.25
 	movl	(%r10,%rcx,8), %eax
 	movq	32(%rbx), %rdx
 	cmpb	$0, (%rdx,%rax)
-	jne	.LB711
+	jne	.LB.Planner.run.0
 	movl	$2, %eax
-	jmp	.LB709
-.LB710:
+	jmp	.LB.Planner.run.26
+.LB.Planner.run.4:
 	leaq	32(%rsp), %r13
 	movq	%rbp, 24(%rsp)
-.LB737:
+.LB.Planner.run.5:
 	movq	8(%rbx), %rdx
 	movq	24(%rbx), %rsi
 	testq	%rdx, %rdx
-	je	.LB716
+	je	.LB.Planner.run.7
 	movl	$0, %eax
 	.p2align 5
-.LB717:
+.LB.Planner.run.6:
 	movq	$-1, 96(%rsp,%rax,8)
 	addq	$1, %rax
 	cmpq	%rax, %rdx
-	jne	.LB717
-.LB716:
+	jne	.LB.Planner.run.6
+.LB.Planner.run.7:
 	testq	%rsi, %rsi
-	je	.LB718
+	je	.LB.Planner.run.9
 	leaq	96(%rsp), %rax
 	leaq	(%rax,%rsi,8), %rcx
 	.p2align 5
-.LB719:
+.LB.Planner.run.8:
 	movq	$-1, 8192(%rax)
 	addq	$8, %rax
 	cmpq	%rcx, %rax
-	jne	.LB719
-.LB718:
+	jne	.LB.Planner.run.8
+.LB.Planner.run.9:
 	movq	(%rbx), %rdi
 	movq	16(%rbx), %rcx
 	movq	48(%rbx), %rax
@@ -98,40 +98,40 @@ _ZN12_GLOBAL__N_17Planner3runENS_14MappingBuilder21WildcardSlotsStrategyEP9Stack
 	movq	%r13, %rdi
 	call	_ZN12_GLOBAL__N_114MappingBuilder10mapInPlaceEv
 	testb	%al, %al
-	jne	.LB741
+	jne	.LB.Planner.run.19
 	movq	%r13, %rdi
 	call	_ZN12_GLOBAL__N_114MappingBuilder16mapClosestCopiesEv
 	testb	%al, %al
-	jne	.LB742
+	jne	.LB.Planner.run.20
 	movq	%r13, %rdi
 	call	_ZN12_GLOBAL__N_114MappingBuilder21mapWildcardSlotCopiesEv
 	testb	%al, %al
-	jne	.LB743
+	jne	.LB.Planner.run.21
 	movq	%r13, %rdi
 	call	_ZN12_GLOBAL__N_114MappingBuilder17keepWildcardSlotsEv
 	testb	%al, %al
-	jne	.LB744
+	jne	.LB.Planner.run.22
 	movq	%r13, %rdi
 	call	_ZN12_GLOBAL__N_114MappingBuilder13absorbSurplusEv
 	testb	%al, %al
-	jne	.LB745
+	jne	.LB.Planner.run.23
 	movzbl	56(%rbx), %eax
 	testb	%al, %al
 	movzbl	88(%rsp), %edx
 	cmove	%edx, %eax
 	movb	%al, 56(%rbx)
 	cmpq	$0, 8(%rbx)
-	je	.LB722
+	je	.LB.Planner.run.32
 	movl	$0, %eax
 	.p2align 5
-.LB723:
+.LB.Planner.run.10:
 	movq	(%rbx), %rdx
 	movq	(%rdx,%rax,8), %rdx
 	movq	%rdx, (%r12,%rax,8)
 	addq	$1, %rax
 	movq	8(%rbx), %rdx
 	cmpq	%rdx, %rax
-	jb	.LB723
+	jb	.LB.Planner.run.10
 	movq	16(%rbx), %rsi
 	movq	24(%rbx), %rcx
 	movq	32(%rbx), %rax
@@ -143,84 +143,84 @@ _ZN12_GLOBAL__N_17Planner3runENS_14MappingBuilder21WildcardSlotsStrategyEP9Stack
 	movq	%r15, 16520(%rsp)
 	movq	$0, 16528(%rsp)
 	testq	%rdx, %rdx
-	je	.LB724
+	je	.LB.Planner.run.12
 	movl	$0, %eax
 	.p2align 5
-.LB725:
+.LB.Planner.run.11:
 	movq	96(%rsp,%rax,8), %rsi
 	movq	%rsi, 16536(%rsp,%rax,8)
 	addq	$1, %rax
 	cmpq	%rax, %rdx
-	jne	.LB725
-.LB724:
+	jne	.LB.Planner.run.11
+.LB.Planner.run.12:
 	testq	%rcx, %rcx
-	je	.LB726
+	je	.LB.Planner.run.27
 	leaq	0(,%rcx,8), %rdx
 	movl	$0, %eax
 	leaq	24728(%rsp), %rdi
 	leaq	8288(%rsp), %rsi
 	.p2align 5
-.LB727:
+.LB.Planner.run.13:
 	movq	(%rsi,%rax), %rcx
 	movq	%rcx, (%rdi,%rax)
 	addq	$8, %rax
 	cmpq	%rdx, %rax
-	jne	.LB727
+	jne	.LB.Planner.run.13
 	movq	$0, 32920(%rsp)
 	leaq	96(%rsp), %rax
 	movq	%rax, 32944(%rsp)
 	leaq	16480(%rsp), %rax
 	addq	%rax, %rdx
-	jmp	.LB729
+	jmp	.LB.Planner.run.15
 	.p2align 5
-.LB728:
+.LB.Planner.run.14:
 	addq	$8, %rax
 	cmpq	%rax, %rdx
-	je	.LB738
-.LB729:
+	je	.LB.Planner.run.28
+.LB.Planner.run.15:
 	cmpq	$-1, 8248(%rax)
-	jne	.LB728
+	jne	.LB.Planner.run.14
 	addq	$1, 32920(%rsp)
-	jmp	.LB728
-.LB730:
+	jmp	.LB.Planner.run.14
+.LB.Planner.run.16:
 	movq	24(%rsp), %rbp
 	testb	%al, %al
-	jne	.LB709
+	jne	.LB.Planner.run.26
 	cmpq	$0, 24(%rbx)
-	je	.LB733
+	je	.LB.Planner.run.18
 	movl	$0, %edx
-.LB734:
+.LB.Planner.run.17:
 	movq	8288(%rsp,%rdx,8), %rcx
 	movq	16(%rsp), %rdi
 	movq	%rcx, (%rdi,%rdx,8)
 	addq	$1, %rdx
 	cmpq	24(%rbx), %rdx
-	jb	.LB734
-.LB733:
+	jb	.LB.Planner.run.17
+.LB.Planner.run.18:
 	movq	16528(%rsp), %rdx
 	movq	%rdx, 0(%rbp)
-	jmp	.LB709
-.LB741:
+	jmp	.LB.Planner.run.26
+.LB.Planner.run.19:
 	movl	$2, %eax
-	jmp	.LB709
-.LB742:
+	jmp	.LB.Planner.run.26
+.LB.Planner.run.20:
 	movl	$2, %eax
-	jmp	.LB709
-.LB743:
+	jmp	.LB.Planner.run.26
+.LB.Planner.run.21:
 	movl	$2, %eax
-	jmp	.LB709
-.LB744:
+	jmp	.LB.Planner.run.26
+.LB.Planner.run.22:
 	movl	$2, %eax
-	jmp	.LB709
-.LB745:
+	jmp	.LB.Planner.run.26
+.LB.Planner.run.23:
 	movl	$2, %eax
-	jmp	.LB709
-.LB746:
+	jmp	.LB.Planner.run.26
+.LB.Planner.run.24:
 	movl	$2, %eax
-	jmp	.LB709
-.LB739:
+	jmp	.LB.Planner.run.26
+.LB.Planner.run.25:
 	movl	$2, %eax
-.LB709:
+.LB.Planner.run.26:
 	addq	$32968, %rsp
 	popq	%rbx
 	popq	%rbp
@@ -229,29 +229,29 @@ _ZN12_GLOBAL__N_17Planner3runENS_14MappingBuilder21WildcardSlotsStrategyEP9Stack
 	popq	%r14
 	popq	%r15
 	ret
-.LB726:
+.LB.Planner.run.27:
 	movq	$0, 32920(%rsp)
 	leaq	96(%rsp), %rax
 	movq	%rax, 32944(%rsp)
-.LB738:
+.LB.Planner.run.28:
 	leaq	16480(%rsp), %rdi
 	call	_ZN12_GLOBAL__N_18Emission3runEv
 	cmpb	$1, %al
-	jne	.LB730
+	jne	.LB.Planner.run.16
 	movq	8(%rbx), %rbp
 	testq	%rbp, %rbp
-	je	.LB732
+	je	.LB.Planner.run.30
 	movq	48(%rbx), %rax
 	leaq	(%rax,%rbp), %rdx
 	movl	$0, %ebp
 	.p2align 4
-.LB735:
+.LB.Planner.run.29:
 	cmpb	$1, (%rax)
 	sbbq	$-1, %rbp
 	addq	$1, %rax
 	cmpq	%rax, %rdx
-	jne	.LB735
-.LB732:
+	jne	.LB.Planner.run.29
+.LB.Planner.run.30:
 	movq	32928(%rsp), %rdi
 	movq	%rdi, (%rsp)
 	movq	(%rsp), %rsi
@@ -267,27 +267,27 @@ _ZN12_GLOBAL__N_17Planner3runENS_14MappingBuilder21WildcardSlotsStrategyEP9Stack
 	movq	%rbx, %rdi
 	call	_ZN12_GLOBAL__N_17Planner7resolveERKNS_7MappingENS_8Emission7BlockedES3_m
 	cmpb	$1, %al
-	je	.LB709
+	je	.LB.Planner.run.26
 	cmpb	$2, %al
-	je	.LB709
+	je	.LB.Planner.run.26
 	movq	8(%rbx), %rcx
 	testq	%rcx, %rcx
-	je	.LB746
+	je	.LB.Planner.run.24
 	movq	48(%rbx), %rax
 	addq	%rax, %rcx
 	movl	$0, %edx
 	.p2align 4
-.LB736:
+.LB.Planner.run.31:
 	cmpb	$1, (%rax)
 	sbbq	$-1, %rdx
 	addq	$1, %rax
 	cmpq	%rax, %rcx
-	jne	.LB736
+	jne	.LB.Planner.run.31
 	cmpq	%rdx, %rbp
-	jb	.LB737
+	jb	.LB.Planner.run.5
 	movl	$2, %eax
-	jmp	.LB709
-.LB722:
+	jmp	.LB.Planner.run.26
+.LB.Planner.run.32:
 	movq	16(%rbx), %rdx
 	movq	24(%rbx), %rcx
 	movq	32(%rbx), %rax
@@ -298,5 +298,5 @@ _ZN12_GLOBAL__N_17Planner3runENS_14MappingBuilder21WildcardSlotsStrategyEP9Stack
 	movq	$0, 16512(%rsp)
 	movq	%r15, 16520(%rsp)
 	movq	$0, 16528(%rsp)
-	jmp	.LB724
+	jmp	.LB.Planner.run.12
 	.size	_ZN12_GLOBAL__N_17Planner3runENS_14MappingBuilder21WildcardSlotsStrategyEP9StackSlotP9ShuffleOpPNS_8OptionalI11StackOffsetEERm, .-_ZN12_GLOBAL__N_17Planner3runENS_14MappingBuilder21WildcardSlotsStrategyEP9StackSlotP9ShuffleOpPNS_8OptionalI11StackOffsetEERm

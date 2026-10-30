@@ -30,13 +30,13 @@ _ZN12_GLOBAL__N_18Emission4pushE9StackSlot11StackOffset:
 	movb	%r8b, 9(%rdx)
 	movl	$2, %edx
 	cmpq	$-1, 8248(%rax,%rdi,8)
-	jne	.LB11
+	jne	.LB.Emission.push.0
 	movq	32(%rax), %rcx
 	leaq	-1(%rcx), %rdx
 	movq	%rdi, 56(%rax,%rdx,8)
 	movq	%rdx, 8248(%rax,%rdi,8)
 	movl	$0, %edx
-.LB11:
+.LB.Emission.push.0:
 	movl	%edx, %eax
 	ret
 	.size	_ZN12_GLOBAL__N_18Emission4pushE9StackSlot11StackOffset, .-_ZN12_GLOBAL__N_18Emission4pushE9StackSlot11StackOffset

@@ -4,7 +4,7 @@ import BbuKraken.Unit.Permute.Inv
 # `permute`: facts of the model for the blocks
 
 * The destinations of `PermOk` are below the size and not `NONE`.
-* `start`: the model vectors at `.LB71`, from the locals at the end of phase B.
+* `start`: the model vectors at `.LB.Emission.permute.14`, from the locals at the end of phase B.
 -/
 
 namespace Bbu.Unit
@@ -60,7 +60,7 @@ theorem rd_some (st : Flat.St) (hne : ∀ i < st.size, Flat.get st.dest i ≠ Fl
   | case2 pos v hlt d hd ih => exact ih
   | case3 pos v hge => exact ⟨_, rfl⟩
 
--- `.LB71` at the start: `permutation` agrees with `destinationOf` and `desiredBy` is `NONE`.
+-- `.LB.Emission.permute.14` at the start: `permutation` agrees with `destinationOf` and `desiredBy` is `NONE`.
 theorem start {g : G} (hok : g.Ok) (hp : PermOk (flat g)) {P D : Vector Word MAX_N}
     (hP : AgB g.h.len P g.h.dest) (hD : ∀ i < g.h.len, Flat.get D i = Flat.NONE) :
     ∃ p0, RG (flat g) (Flat.regroup (flat g) 0 p0 (Flat.clearDesired (flat g) 0 Flat.initial))

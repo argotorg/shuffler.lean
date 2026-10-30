@@ -11,21 +11,21 @@ _ZNK12_GLOBAL__N_18Emission11isAvailableE11StackOffset:
 	cmpb	$0, 5(%rdx)
 	sete	%dl
 	orb	%dl, %al
-	je	.LB647
-.LB644:
+	je	.LB.Emission.isAvailable.1
+.LB.Emission.isAvailable.0:
 	popq	%rbx
 	popq	%rbp
 	ret
-.LB647:
+.LB.Emission.isAvailable.1:
 	movq	%rdi, %rbx
 	movq	%rbp, %rsi
 	call	_ZNK12_GLOBAL__N_18Emission9isSpilledE9StackSlot
 	testb	%al, %al
-	jne	.LB644
+	jne	.LB.Emission.isAvailable.0
 	movq	%rbp, %rsi
 	movq	%rbx, %rdi
 	call	_ZNK12_GLOBAL__N_18Emission22shallowestCopyPositionE9StackSlot
 	cmpq	$-1, %rax
 	setne	%al
-	jmp	.LB644
+	jmp	.LB.Emission.isAvailable.0
 	.size	_ZNK12_GLOBAL__N_18Emission11isAvailableE11StackOffset, .-_ZNK12_GLOBAL__N_18Emission11isAvailableE11StackOffset

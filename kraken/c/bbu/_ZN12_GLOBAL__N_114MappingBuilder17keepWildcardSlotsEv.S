@@ -4,48 +4,48 @@ _ZN12_GLOBAL__N_114MappingBuilder17keepWildcardSlotsEv:
 	cmpq	%rdx, %rax
 	cmova	%rdx, %rax
 	testq	%rax, %rax
-	je	.LB495
+	je	.LB.MappingBuilder.keepWildcardSlots.4
 	pushq	%rbp
 	pushq	%rbx
 	movq	%rdi, %rbp
 	movl	$0, %ebx
-	jmp	.LB494
+	jmp	.LB.MappingBuilder.keepWildcardSlots.1
 	.p2align 6
-.LB493:
+.LB.MappingBuilder.keepWildcardSlots.0:
 	addq	$1, %rbx
 	movq	8(%rbp), %rax
 	movq	24(%rbp), %rdx
 	cmpq	%rdx, %rax
 	cmova	%rdx, %rax
 	cmpq	%rax, %rbx
-	jnb	.LB501
-.LB494:
+	jnb	.LB.MappingBuilder.keepWildcardSlots.2
+.LB.MappingBuilder.keepWildcardSlots.1:
 	leaq	0(,%rbx,8), %rdx
 	movq	16(%rbp), %rax
 	cmpb	$1, 4(%rax,%rbx,8)
-	jne	.LB493
+	jne	.LB.MappingBuilder.keepWildcardSlots.0
 	movq	48(%rbp), %rax
 	cmpq	$-1, 8192(%rax,%rdx)
-	jne	.LB493
+	jne	.LB.MappingBuilder.keepWildcardSlots.0
 	movq	32(%rbp), %rdx
 	cmpb	$0, (%rdx,%rbx)
-	jne	.LB493
+	jne	.LB.MappingBuilder.keepWildcardSlots.0
 	cmpq	$-1, (%rax,%rbx,8)
-	jne	.LB493
+	jne	.LB.MappingBuilder.keepWildcardSlots.0
 	movq	%rbx, %rdx
 	movq	%rbx, %rsi
 	movq	%rbp, %rdi
 	call	_ZN12_GLOBAL__N_114MappingBuilder3mapE11StackOffsetS1_
 	testb	%al, %al
-	je	.LB493
-	jmp	.LB491
-.LB501:
+	je	.LB.MappingBuilder.keepWildcardSlots.0
+	jmp	.LB.MappingBuilder.keepWildcardSlots.3
+.LB.MappingBuilder.keepWildcardSlots.2:
 	movl	$0, %eax
-.LB491:
+.LB.MappingBuilder.keepWildcardSlots.3:
 	popq	%rbx
 	popq	%rbp
 	ret
-.LB495:
+.LB.MappingBuilder.keepWildcardSlots.4:
 	movl	$0, %eax
 	ret
 	.size	_ZN12_GLOBAL__N_114MappingBuilder17keepWildcardSlotsEv, .-_ZN12_GLOBAL__N_114MappingBuilder17keepWildcardSlotsEv

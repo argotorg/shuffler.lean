@@ -153,7 +153,7 @@ checks the result.
 
 | Tactic | Use |
 |---|---|
-| `cfg_blocks` | `cfg_cases`, then each block goal has the tag of its block (`entry` or the label). Select a block with ``case «.LB11» t ht => …``. |
+| `cfg_blocks` | `cfg_cases`, then each block goal has the tag of its block (`entry` or the label). Select a block with ``case «.LB.Emission.push.0» t ht => …``. |
 | `cfg_goto` | A jump to a label of the cfg. It leaves three goals: the stack, the invariant of the label, the variant. |
 | `cfg_stk` | The stack goal of `cfg_goto` when `rsp` is below the `rsp` at entry. |
 | `vc_by_shape \| kind => tac …` | Runs `tac` on each goal of that kind. The kinds are `load`, `retAddr`, `goto "L"`, `ret`, `jumpOut`, `fall`, `closed`, `other`. The first arm that matches is used. A goal that no arm matches stays. A tactic failure is an error that gives the kind and the tag. |

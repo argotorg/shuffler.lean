@@ -3,7 +3,7 @@ import BbuKraken.Unit.Generate
 /-!
 Tests of the model lemmas of `Unit/Generate.lean`: the swap of two destinations (`dsw`, `posAt`,
 `swapDestinations_eq`), the depth bound of `isSwapReachable` (`reach_iff`), the flag lemmas at
-their edges, `get` and `put` at the bound `MAX_N`, and the facts of `.LB52` (`lb52_facts`).
+their edges, `get` and `put` at the bound `MAX_N`, and the facts of `.LB.Emission.generate.1` (`lb52_facts`).
 The negative cases show that each hypothesis is necessary.
 -/
 
@@ -53,7 +53,7 @@ def ws : List Word := [N, 0, 1, 2, 3]
 
 #guard ws.all fun x => ws.all fun y =>
   model (st 3 [x, 1, y] []) 0 2 == split (st 3 [x, 1, y] []) 0 2
--- The two slots next to each other: the case `a = len - 2`, `b = len - 1` of `.LB52`.
+-- The two slots next to each other: the case `a = len - 2`, `b = len - 1` of `.LB.Emission.generate.1`.
 #guard ws.all fun x => ws.all fun y =>
   model (st 2 [x, y] []) 0 1 == split (st 2 [x, y] []) 0 1
 

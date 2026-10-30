@@ -3,8 +3,8 @@ import Kraken.X64.Parser
 
 /-!
 Tests of `xor_reg_mem_idx_spec` and `xor_reg_mem_disp_spec`: `kvcgen64` over the compare of
-`.LB62` of `permute` (`xorq 0(%r13,%rax), %rdx`, an index with scale 1), over the `xorq (%r9),
-%rdx` of `.LB73`, and a `sete`. The postconditions state the result and the zero flag on concrete
+`.LB.Emission.permute.5` of `permute` (`xorq 0(%r13,%rax), %rdx`, an index with scale 1), over the `xorq (%r9),
+%rdx` of `.LB.Emission.permute.24`, and a `sete`. The postconditions state the result and the zero flag on concrete
 values: equal values, values that are not equal, and a displacement that is not zero.
 -/
 
@@ -76,7 +76,7 @@ example (s : MachineData) (hd : s.regs.get64 .rdx = 5#64) (ha : s.regs.get64 .ra
   kvcgen64
   finish
 
-/-! `xor_reg_mem_disp_spec`: `xorq (%r9), %rdx` of `.LB73` (a base and no index). -/
+/-! `xor_reg_mem_disp_spec`: `xorq (%r9), %rdx` of `.LB.Emission.permute.24` (a base and no index). -/
 
 -- equal values: the result is 0 and `sete` gives 1
 example (s : MachineData) (hd : s.regs.get64 .rdx = 5#64)

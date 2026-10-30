@@ -268,7 +268,7 @@ theorem pos_some {o : Option Nat} {y : Word} (h : optOf y = o)
   simp only [optOf]
   exact ite_eq_right hne
 
--- The flags of `.LB74` when the jumps to `.LB75` and `.LB89` are not taken: the word
+-- The flags of `.LB.Emission.buildBottomUp.5` when the jumps to `.LB.Emission.buildBottomUp.22` and `.LB.Emission.buildBottomUp.27` are not taken: the word
 -- `y` of `m_positionOf` for `T` is a slot at or above `T`.
 theorem bound_y {n T : Nat} {st : St} {x y : Word} {r : StatusFlags.from_result.Remaining} {af of : Bool}
     (hpY : optOf y = positionOf st T) (hp : Pos n st)
@@ -283,7 +283,7 @@ theorem bound_y {n T : Nat} {st : St} {x y : Word} {r : StatusFlags.from_result.
   have hsome := pos_some hpY hz
   exact ⟨hsome, positionOf_some hp hsome, hc⟩
 
--- `.LB81` after the call of `swapWith`.
+-- `.LB.Emission.buildBottomUp.18` after the call of `swapWith`.
 theorem at81_call {t' : MachineData} {z f} {q : St} (hB : Base s ra t')
     (h14 : t'.regs.r14.toBitVec = BitVec.ofNat 64 T) (hq : st' s t' = q)
     (hi : Iter s T (placeTop q T)) (hops : q.trace.length < cap s) (hp : Pos (env s).n q) :
@@ -291,7 +291,7 @@ theorem at81_call {t' : MachineData} {z f} {q : St} (hB : Base s ra t')
   subst hq
   exact ⟨⟨hB.fm, hB.rsp, hB.rbp⟩, T, h14, hi, hops, hp⟩
 
--- `.LB108` with explicit fields, so that the kernel does not compare the new
+-- `.LB.Emission.buildBottomUp.21` with explicit fields, so that the kernel does not compare the new
 -- state with `t`.
 theorem at108_far {a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 : UInt64} {z f d}
     {pos excess : Nat}
@@ -301,21 +301,21 @@ theorem at108_far {a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 : UInt6
     At108 s ra ⟨⟨a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15⟩, z, f, d⟩ :=
   ⟨hB, pos, excess, bst, h4, h15, hR⟩
 
--- The variant from `.LB77` to `.LB81`. The fields are explicit, so that the
+-- The variant from `.LB.Emission.buildBottomUp.17` to `.LB.Emission.buildBottomUp.18`. The fields are explicit, so that the
 -- kernel does not compare the new state with `t`.
 theorem v81_swap {a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a15 : UInt64} {z f d}
     (h : outer s ⟨⟨a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, t.regs.r14, a15⟩,
       z, f, d⟩ t.regs.r14.toBitVec.toNat = outer s t t.regs.r14.toBitVec.toNat) :
-    V s ".LB81" ⟨⟨a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, t.regs.r14, a15⟩,
-      z, f, d⟩ < V s ".LB77" t := by
+    V s ".LB.Emission.buildBottomUp.18" ⟨⟨a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, t.regs.r14, a15⟩,
+      z, f, d⟩ < V s ".LB.Emission.buildBottomUp.17" t := by
   simp only [V, h]
   omega
 
--- The variant from `.LB77` to `.LB81` after the call of `swapWith`.
+-- The variant from `.LB.Emission.buildBottomUp.17` to `.LB.Emission.buildBottomUp.18` after the call of `swapWith`.
 theorem v81_call {r : Reg64s} {z f d}
     (h : outer s ⟨r, z, f, d⟩ t.regs.r14.toBitVec.toNat = outer s t t.regs.r14.toBitVec.toNat)
     (h14 : r.r14 = t.regs.r14) :
-    V s ".LB81" ⟨r, z, f, d⟩ < V s ".LB77" t := by
+    V s ".LB.Emission.buildBottomUp.18" ⟨r, z, f, d⟩ < V s ".LB.Emission.buildBottomUp.17" t := by
   simp only [V, h14, h]
   omega
 
@@ -327,9 +327,9 @@ theorem outer_call {t' : MachineData} {z f}
   rw [hpd]
   rfl
 
-theorem v61 (u : MachineData) : V s ".LB61" u = 0 := rfl
+theorem v61 (u : MachineData) : V s ".LB.Emission.buildBottomUp.11" u = 0 := rfl
 
--- An error of `swapWith` gives `.LB61`.
+-- An error of `swapWith` gives `.LB.Emission.buildBottomUp.11`.
 theorem at61_err {α : Type} {r : M α} {Q : α → Prop} {t' : MachineData} {z f}
     (hB : Base s ra t') (hR : ∀ e, r = .error e → R0 s = .error e) (h : Res (rdi s) r Q t')
     (hok : ∀ a, Q a → rax t' = 0#64) (hne : rax t' ≠ 0#64) :

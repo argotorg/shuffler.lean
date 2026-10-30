@@ -26,7 +26,7 @@ awk -f "$dir/test/bin_check.awk" "$tmp/host" "$tmp/dis" >/dev/null
 # binary changes with the code.
 hex() { printf '%x' $((0x$1 + $2)); }
 read -r first size _ < <(sed -n 2p "$tmp/host")
-lb1=$(awk '$3 == ".LB1:" { print $1; exit }' "$tmp/host")
+lb1=$(awk '$3 == ".LB.Emission.isSpilled.0:" { print $1; exit }' "$tmp/host")
 jbe=$(grep -m1 -o 'jbe  *[0-9a-f]*' "$tmp/dis" | awk '{ print $2 }')
 push=_ZN12_GLOBAL__N_18Emission4pushE9StackSlot11StackOffset
 call=$(grep -m1 -o "[0-9a-f]* <$push>" "$tmp/dis" | cut -d' ' -f1)
@@ -54,10 +54,10 @@ expect_fail start dis "s/^start .*/start $(hex "$start" 1)/"
 expect_fail stop dis "s/^stop .*/stop $(hex "$stop" 1)/"
 expect_fail size host "2s/^\([0-9a-f]*\) $size /\1 $((size + 1)) /"
 expect_fail address host "2s/^$first /$(hex "$first" 1) /"
-expect_fail label host "s/^$lb1 0 \.LB1:/$(hex "$lb1" -1) 0 .LB1:/"
+expect_fail label host "s/^$lb1 0 \\.LB\\.Emission\\.isSpilled\\.0:/$(hex "$lb1" -1) 0 .LB.Emission.isSpilled.0:/"
 expect_fail text host '0,/cmpb \$1, %dl/s//cmpb $1, %bl/'
 expect_fail width host '0,/movq \$-1, %rax/s//movl $-1, %eax/'
-expect_fail unknown-label host '0,/jbe \.LB[0-9]*/s//jbe .LBX/'
+expect_fail unknown-label host '0,/jbe \.LB[A-Za-z0-9_.]*/s//jbe .LBX/'
 
 if [ "$fails" -ne 0 ]; then exit 1; fi
 echo "bin_check_test: all changes are rejected"

@@ -3,9 +3,9 @@ import BbuKraken.ModelLemmas
 
 /-!
 The body triple of `generate` (`c/bbu/<Names.generate>.S`). The body pushes `rbp` and
-`rbx` and calls `produce`. It exits with `-2` (`.LB45`) when the target is out of
+`rbx` and calls `produce`. It exits with `-2` (`.LB.Emission.generate.2`) when the target is out of
 range. When the two slot values are equal, it swaps the two dests inline; else it
-calls `swapWith` (`.LB44`) when the depth is at most 16. The other paths end at `.LB42`.
+calls `swapWith` (`.LB.Emission.generate.1`) when the depth is at most 16. The other paths end at `.LB.Emission.generate.0`.
 -/
 
 open Std.WP Lean.Order
@@ -272,17 +272,17 @@ end
 section
 variable (s : MachineData) (ra : Int64)
 
--- `.LB45`: `d` is out of range.
+-- `.LB.Emission.generate.2`: `d` is out of range.
 def At45 (t : MachineData) : Prop :=
   t.regs = (s.pushRa ra).regs ∧ t.dmem = (s.pushRa ra).dmem ∧ (env s).n ≤ (rsi s).toNat
 
--- `.LB42`: the result is in `rax` and memory.
+-- `.LB.Emission.generate.0`: the result is in `rax` and memory.
 def At42 (t : MachineData) : Prop := Fm s ra t.dmem ∧ Rg s t ∧ generateR s t
 
--- The variant: the back edges from `.LB44` go to `.LB42`.
+-- The variant: the back edges from `.LB.Emission.generate.1` go to `.LB.Emission.generate.0`.
 def V : Label → MachineData → Nat
   | "generate", _ => 2
-  | ".LB44", _ => 1
+  | ".LB.Emission.generate.1", _ => 1
   | _, _ => 0
 
 end
@@ -314,7 +314,7 @@ structure Ap (s : MachineData) (ra : Int64) (t : MachineData) (st1 : St) : Prop 
   hst : st' s t = st1
   ax : t.regs.rax.toBitVec = 0#64
 
--- `.LB44`: `produce` returns `ok st1`, slot `d` lies below the top slot, its dest is not
+-- `.LB.Emission.generate.1`: `produce` returns `ok st1`, slot `d` lies below the top slot, its dest is not
 -- `d`, and the values of slot `d` and of the top slot differ. `rdx` holds `len`.
 def At44 (s : MachineData) (ra : Int64) (t : MachineData) : Prop :=
   ∃ st1, Ap s ra t st1 ∧ (rsi s).toNat + 1 < st1.len ∧ st1.dest (rsi s).toNat ≠ (rsi s).toNat
@@ -404,7 +404,7 @@ theorem Ap.pre (hpre : Pre 96 generateA s) (h : Ap s ra t st1) {c : MachineData}
 
 end
 
-/-! ## The blocks `.LB42` and `.LB45` -/
+/-! ## The blocks `.LB.Emission.generate.0` and `.LB.Emission.generate.2` -/
 
 section
 variable {s : MachineData} {ra : Int64} {t u : MachineData} {A : MachineData → Prop}

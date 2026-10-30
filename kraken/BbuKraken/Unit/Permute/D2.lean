@@ -3,7 +3,7 @@ import BbuKraken.Unit.Permute.MD
 /-!
 # `permute`: the blocks of phase D after `exchange`
 
-`.LB98`, `.LB78`, `.LB82`, `.LB80` and `.LB99`.
+`.LB.Emission.permute.20`, `.LB.Emission.permute.21`, `.LB.Emission.permute.25`, `.LB.Emission.permute.22` and `.LB.Emission.permute.26`.
 -/
 
 open Std.WP Lean.Order
@@ -31,7 +31,7 @@ theorem isSome_blkExc (h : (View S g ∗ R).get m) :
 end
 
 theorem b_99 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB99" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.26" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -58,11 +58,11 @@ theorem b_99 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F permuteA 2058
       · rw [hp, hr]; rfl
     · pm_dec
 
--- The variant of the edge `.LB80` to `.LB84`.
+-- The variant of the edge `.LB.Emission.permute.22` to `.LB.Emission.permute.23`.
 theorem lt80 {a b : Nat} (h : a < b) : 2048 * a + 1101 < 2048 * b := by omega
 
 theorem b_80 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB80" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.22" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -118,7 +118,7 @@ theorem b_80 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
     exact Or.inl (lt80 hlt)
 
 theorem b_78 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB78" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.21" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -168,7 +168,7 @@ theorem b_78 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
     exact Or.inl (Nat.lt_succ_self _)
 
 theorem b_82 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB82" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.25" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -228,7 +228,7 @@ theorem sd_eq {st : Flat.St} {a b : Word} (h : Flat.get (swapD st.dest a b) a �
   rw [swapDestinations_eq, posAt_some (st := { st with dest := swapD st.dest a b }) h]
 
 theorem b_98 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB98" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.20" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht

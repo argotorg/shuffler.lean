@@ -413,7 +413,7 @@ elab "mem_load " "[" ls:term,* "]" : tactic => withMainContext do
 
 /-! ## The invariants of the labels -/
 
-/-- `.LB37`: the stores before the `m_positionOf` store of the top slot `b` are done. -/
+/-- `.LB.Emission.swapWith.0`: the stores before the `m_positionOf` store of the top slot `b` are done. -/
 def inv37 (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (t : MachineData) :
     Prop :=
   ∃ g' b, Kp S g' F s ra [] t ∧ g'.Ok ∧ Keep g g' ∧ t.regs.rax.toBitVec = S
@@ -421,13 +421,13 @@ def inv37 (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (t : 
     ∧ (Flat.get g'.h.dest b = Flat.NONE ∨ (Flat.get g'.h.dest b).toNat < MAX_N)
     ∧ Flat.swapWith (flat g) (rsi s) = (.done, posFix (flat g') b)
 
-/-- `.LB38`: all the stores are done, and the status is `done`. -/
+/-- `.LB.Emission.swapWith.1`: all the stores are done, and the status is `done`. -/
 def inv38 (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (t : MachineData) :
     Prop :=
   ∃ g', Kp S g' F s ra [] t ∧ g'.Ok ∧ Keep g g'
     ∧ flat g' = (Flat.swapWith (flat g) (rsi s)).2 ∧ (Flat.swapWith (flat g) (rsi s)).1 = .done
 
-/-- `.LB35`: `ecx` holds the status. -/
+/-- `.LB.Emission.swapWith.2`: `ecx` holds the status. -/
 def inv35 (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (t : MachineData) :
     Prop :=
   ∃ g', Kp S g' F s ra [] t ∧ g'.Ok ∧ Keep g g'
@@ -447,9 +447,9 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
   refine Program.WP.cfg (fun
       | .entry, t => t = s.pushRa ra
       | .label "_ZN12_GLOBAL__N_18Emission8swapWithE11StackOffset", t => t = s.pushRa ra
-      | .label ".LB37", t => inv37 S g F s ra t
-      | .label ".LB38", t => inv38 S g F s ra t
-      | .label ".LB35", t => inv35 S g F s ra t
+      | .label ".LB.Emission.swapWith.0", t => inv37 S g F s ra t
+      | .label ".LB.Emission.swapWith.1", t => inv38 S g F s ra t
+      | .label ".LB.Emission.swapWith.2", t => inv35 S g F s ra t
       | _, _ => False)
     (fun | _, _ => 0) ?_ rfl
   cfg_blocks
@@ -534,7 +534,7 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
             OpM.isSome_depth, OpM.isSome_payload, OpM.isSome_skind, OpM.isSome_sop,
             isSome32_slot, isSome4_slot, isSome5_slot, isSome4_411, isSome5_411]
         | skip
-      | goto ".LB35" =>
+      | goto ".LB.Emission.swapWith.2" =>
         -- The paths of a failed assert: the branch hypothesis contradicts `c`. The big
         -- hypotheses go first, else `simp at *` runs out of heartbeats.
         clear hres h10 h9 h8 hr5 hr4 hr3 hr2 hr1 hf h3 h2 h1
@@ -558,8 +558,8 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
           Vector.getElem_set_ne htM hpM' (Nat.ne_of_lt hpt).symm, beq_iff_eq,
           beq_eq_false_iff_ne] at hc
       vc_by_shape
-      | goto ".LB37" =>
-        -- `je .LB37`: the new `dest[pos]` is `NONE`, no store.
+      | goto ".LB.Emission.swapWith.0" =>
+        -- `je .LB.Emission.swapWith.0`: the new `dest[pos]` is `NONE`, no store.
         cfg_goto
         · exact Kp.stack (fr := []) ⟨h10, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
         · refine ⟨_, _, ⟨h10, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩,
@@ -581,7 +581,7 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
           Nat.lt_of_lt_of_le (hdt.resolve_left hc) hN
         exact View.isSome_pos h10 hdtM
       | other =>
-        -- The store `pos[dest[pos]] := pos`, then `.LB37`.
+        -- The store `pos[dest[pos]] := pos`, then `.LB.Emission.swapWith.0`.
         have hdtM : g.h.dest[(g.h.len - 1#64).toNat].toNat < MAX_N :=
           Nat.lt_of_lt_of_le (hdt.resolve_left hc) hN
         have h11 := View.store_pos h10 hdtM (s.pushRa ra).regs.rsi.toBitVec
@@ -616,7 +616,7 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
         | -- `m_destinationOf[pos]`, after `pos < size`.
           have := hpM (x := (s.pushRa ra).regs.rsi.toBitVec) (by with_reducible assumption)
           view_load
-      | goto ".LB35" =>
+      | goto ".LB.Emission.swapWith.2" =>
         -- `jnb`, `je` or `ja`: `c` gives the result. (`symexec_norm at *` unfolds `rsi s`, so `e`
         -- comes after it.)
         have e : Flat.swapWith (flat g) (rsi s) = (.assertionFailed, flat g) := sw_err _ _ c
@@ -625,8 +625,8 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
         · exact ⟨g, ⟨hm0, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, hok,
             ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, by rw [e], by rw [e]; rfl⟩
         · simp
-  case «.LB37» t ht =>
-    -- `movq dest[b], %rdx; cmpq $-1, %rdx; je .LB38; movq %rcx, pos[dest[b]]`.
+  case «.LB.Emission.swapWith.0» t ht =>
+    -- `movq dest[b], %rdx; cmpq $-1, %rdx; je .LB.Emission.swapWith.1; movq %rcx, pos[dest[b]]`.
     obtain ⟨g', b, hk, hok, hkeep, hax, hcx, hb, hdb, hres⟩ := ht
     have hm := hk.mem
     rw [get_eq _ _ hb] at hdb
@@ -645,8 +645,8 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
       simp only [hax, hcx, rd_eq, ↓Fld.fold_mapping_destinationOf, rd_dest hm hb, cmp_none,
         beq_iff_eq, beq_eq_false_iff_ne] at hc
     vc_by_shape
-    | goto ".LB38" =>
-      -- `je .LB38`: `dest[b] = -1`, no store.
+    | goto ".LB.Emission.swapWith.1" =>
+      -- `je .LB.Emission.swapWith.1`: `dest[b] = -1`, no store.
       cfg_goto
       · exact Kp.stack (hk.next rfl rfl rfl rfl rfl rfl rfl rfl)
       · exact ⟨g', hk.next rfl rfl rfl rfl rfl rfl rfl rfl, hok, hkeep,
@@ -665,15 +665,15 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
         ⟨hkeep.tgtp, hkeep.n, hkeep.splp, hkeep.data, hkeep.ops, hkeep.tgt, hkeep.spl⟩, ?_, ?_⟩
       · rw [rsi_eq, hres, posFix_some _ _ hb hdM]
       · rw [rsi_eq, hres]
-  case «.LB38» t ht =>
-    -- `movl $0, %ecx`, then `.LB35`.
+  case «.LB.Emission.swapWith.1» t ht =>
+    -- `movl $0, %ecx`, then `.LB.Emission.swapWith.2`.
     obtain ⟨g', hk, hok, hkeep, hflat, hdone⟩ := ht
     kvcgen64
     vc_by_shape
     | other =>
       exact ⟨g', hk.next rfl rfl rfl rfl rfl rfl rfl rfl, hok, hkeep, hflat, by rw [hdone]; rfl⟩
     | closed => simp
-  case «.LB35» t ht =>
+  case «.LB.Emission.swapWith.2» t ht =>
     obtain ⟨g', hk, hok, hkeep, hflat, hcode⟩ := ht
     kvcgen64
     vc_by_shape

@@ -2,22 +2,22 @@ _ZN12_GLOBAL__N_114MappingBuilder3mapE11StackOffsetS1_:
 	movq	32(%rdi), %rax
 	movzbl	(%rax,%rsi), %eax
 	testb	%al, %al
-	jne	.LB431
+	jne	.LB.MappingBuilder.map.0
 	movq	48(%rdi), %rcx
 	cmpq	$-1, (%rcx,%rsi,8)
-	jne	.LB432
+	jne	.LB.MappingBuilder.map.1
 	cmpq	$-1, 8192(%rcx,%rdx,8)
-	jne	.LB433
+	jne	.LB.MappingBuilder.map.2
 	movq	%rdx, (%rcx,%rsi,8)
 	movq	%rsi, 8192(%rcx,%rdx,8)
 	ret
-.LB431:
+.LB.MappingBuilder.map.0:
 	movl	$2, %eax
 	ret
-.LB432:
+.LB.MappingBuilder.map.1:
 	movl	$2, %eax
 	ret
-.LB433:
+.LB.MappingBuilder.map.2:
 	movl	$2, %eax
 	ret
 	.size	_ZN12_GLOBAL__N_114MappingBuilder3mapE11StackOffsetS1_, .-_ZN12_GLOBAL__N_114MappingBuilder3mapE11StackOffsetS1_

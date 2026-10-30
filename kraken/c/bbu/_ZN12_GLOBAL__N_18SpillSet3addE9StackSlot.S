@@ -3,20 +3,20 @@ _ZN12_GLOBAL__N_18SpillSet3addE9StackSlot:
 	shrq	$32, %rdx
 	movl	$2, %eax
 	testb	%dl, %dl
-	jne	.LB245
+	jne	.LB.SpillSet.add.1
 	movq	%rsi, %rdx
 	shrq	$40, %rdx
 	testb	%dl, %dl
-	je	.LB245
+	je	.LB.SpillSet.add.1
 	movl	%esi, %esi
 	addq	(%rdi), %rsi
 	movzbl	(%rsi), %eax
 	testb	%al, %al
-	jne	.LB249
+	jne	.LB.SpillSet.add.0
 	movb	$1, (%rsi)
 	ret
-.LB249:
+.LB.SpillSet.add.0:
 	movl	$2, %eax
-.LB245:
+.LB.SpillSet.add.1:
 	ret
 	.size	_ZN12_GLOBAL__N_18SpillSet3addE9StackSlot, .-_ZN12_GLOBAL__N_18SpillSet3addE9StackSlot

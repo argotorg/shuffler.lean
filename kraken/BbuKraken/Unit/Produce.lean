@@ -64,32 +64,32 @@ theorem produce_unit [Host] [FunDecls]
       | .entry, t => t = s.pushRa ra
       | .label l, t =>
         if l = Names.produce then t = s.pushRa ra
-        else if l = ".LB21" then ∃ y, Bd S g F s ra w y cp t
+        else if l = ".LB.Emission.produce.0" then ∃ y, Bd S g F s ra w y cp t
           ∧ isJunk (StackSlot.ofWord w) = false
           ∧ act (flat g) (StackSlot.ofWord w) cp s.regs.rsi.toBitVec
             = tail (flat g) (StackSlot.ofWord w) cp s.regs.rsi.toBitVec
-        else if l = ".LB23" ∨ l = ".LB33" then ∃ y, Bd S g F s ra w y cp t
+        else if l = ".LB.Emission.produce.1" ∨ l = ".LB.Emission.produce.4" then ∃ y, Bd S g F s ra w y cp t
           ∧ act (flat g) (StackSlot.ofWord w) cp s.regs.rsi.toBitVec
             = Flat.push (flat g) (StackSlot.ofWord w) s.regs.rsi.toBitVec
-        else if l = ".LB20" then ∃ g1 y r, Bd S g1 F s ra w y cp t ∧ g1.Ok ∧ Keep g g1
+        else if l = ".LB.Emission.produce.2" then ∃ g1 y r, Bd S g1 F s ra w y cp t ∧ g1.Ok ∧ Keep g g1
           ∧ Flat.produce (flat g) s.regs.rsi.toBitVec = fin r s.regs.rsi.toBitVec
           ∧ flat g1 = r.2 ∧ al t = code r.1
-        else if l = ".LB18" then ∃ g1 y, Bd S g1 F s ra w y cp t ∧ g1.Ok ∧ produceQ g g1 s t
-        else if l = ".LB22" then ∃ y, Bd S g F s ra w y cp t ∧ cp.toNat < g.h.len.toNat
+        else if l = ".LB.Emission.produce.3" then ∃ g1 y, Bd S g1 F s ra w y cp t ∧ g1.Ok ∧ produceQ g g1 s t
+        else if l = ".LB.Emission.produce.5" then ∃ y, Bd S g F s ra w y cp t ∧ cp.toNat < g.h.len.toNat
           ∧ act (flat g) (StackSlot.ofWord w) cp s.regs.rsi.toBitVec
             = Flat.dup (flat g) cp s.regs.rsi.toBitVec
-        else if l = ".LB34" then ∃ y, Bd S g F s ra w y cp t
+        else if l = ".LB.Emission.produce.6" then ∃ y, Bd S g F s ra w y cp t
           ∧ canBeFreelyGenerated (StackSlot.ofWord w) = false
           ∧ act (flat g) (StackSlot.ofWord w) cp s.regs.rsi.toBitVec
             = tail (flat g) (StackSlot.ofWord w) cp s.regs.rsi.toBitVec
-        else if l = ".LB29" then ∃ g1 y, Bd S g1 F s ra w y cp t ∧ g1.Ok ∧ Keep g g1
+        else if l = ".LB.Emission.produce.7" then ∃ g1 y, Bd S g1 F s ra w y cp t ∧ g1.Ok ∧ Keep g g1
           ∧ Flat.produce (flat g) s.regs.rsi.toBitVec = (.assertionFailed, flat g1)
         else False
       | .exit, _ => False)
-    (fun l _ => if l = ".LB18" then 0 else if l = ".LB20" ∨ l = ".LB29" ∨ l = ".LB23" then 1 else 2)
+    (fun l _ => if l = ".LB.Emission.produce.3" then 0 else if l = ".LB.Emission.produce.2" ∨ l = ".LB.Emission.produce.7" ∨ l = ".LB.Emission.produce.1" then 1 else 2)
     ?_ rfl
   cfg_blocks
-  case «.LB18» t ht =>
+  case «.LB.Emission.produce.3» t ht =>
     simp only [Names.produce, String.reduceEq, ↓reduceIte, or_self] at ht
     obtain ⟨g1, y, hbd, hok1, hQ⟩ := ht
     obtain ⟨p1, p2, p3, p4, p5, p6⟩ := hbd.isSome_pops
@@ -107,19 +107,19 @@ theorem produce_unit [Host] [FunDecls]
       refine Kp.ret (hbd.pop ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_) rfl hok1 fun t' _ hax =>
         ⟨hQ.1, hQ.2.1, by show (rax t').setWidth 8 = _; rw [hax]; exact hQ.2.2⟩
       all_goals rfl
-  case «.LB29» t ht =>
+  case «.LB.Emission.produce.7» t ht =>
     simp only [Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or] at ht
     obtain ⟨g1, y, hbd, hok1, hK1, hP⟩ := ht
     kvcgen64
     all_goals try symexec_norm
     vc_by_shape
-    | goto ".LB18" =>
+    | goto ".LB.Emission.produce.3" =>
       cfg_goto
       · exact (bd_next% hbd).stack
       · simp only [Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or]
         exact ⟨g1, y, bd_next% hbd, hok1, prodQ hK1 hP rfl rfl⟩
       · simp
-  case «.LB20» t ht =>
+  case «.LB.Emission.produce.2» t ht =>
     simp only [Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or] at ht
     obtain ⟨g1, y, r, hbd, hok1, hK1, hP, hf, hal⟩ := ht
     have hTm : s.regs.rsi.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hTn hpre.ok.n
@@ -135,7 +135,7 @@ theorem produce_unit [Host] [FunDecls]
       | with_reducible exact isSome_len' hm1
       | with_reducible exact isSome_pos' hm1 hTm
       | with_reducible exact isSome_pend' hm1
-    | goto ".LB18" =>
+    | goto ".LB.Emission.produce.3" =>
       have hne : al t ≠ 0#8 := al_ne (by with_reducible assumption)
       have hr : r.1 ≠ .done := fun e => hne (hal.trans (by rw [e]; rfl))
       cfg_goto
@@ -144,7 +144,7 @@ theorem produce_unit [Host] [FunDecls]
         exact ⟨g1, y, bd_next% hbd, hok1,
           prodQ hK1 (hP.trans (fin_ne hr)) hf ((al_eq (by with_reducible rfl)).trans hal)⟩
       · simp
-    | goto ".LB29" =>
+    | goto ".LB.Emission.produce.7" =>
       have hal0 : al t = 0#8 := al_zero (by with_reducible assumption)
       have hd : r.1 = .done := code_eq_zero (hal.symm.trans hal0)
       have hne : g1.h.pos[s.regs.rsi.toBitVec.toNat] ≠ g1.h.len - 1#64 :=
@@ -173,7 +173,7 @@ theorem produce_unit [Host] [FunDecls]
       exact ⟨withPend g1 (g1.h.pend - 1#64), y, bd_step% hbd hm2, Ok.withPend hok1 _,
         prodQ (Keep.trans hK1 (Keep.withPend _)) hF (by rw [flat_withPend, ← hf]; rfl)
           ((al_eq (by with_reducible rfl)).trans hal0)⟩
-  case «.LB23» t ht =>
+  case «.LB.Emission.produce.1» t ht =>
     simp only [Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or, or_true] at ht
     obtain ⟨y, hbd, hact⟩ := ht
     kvcgen64 [hpush]
@@ -187,7 +187,7 @@ theorem produce_unit [Host] [FunDecls]
     all_goals try symexec_norm
     vc_by_shape
     | closed => simp
-    | goto ".LB20" =>
+    | goto ".LB.Emission.produce.2" =>
       cfg_goto
       · exact (bd_next% hbd2).stack
       · simp only [Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or]
@@ -198,7 +198,7 @@ theorem produce_unit [Host] [FunDecls]
       simp only [Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or]
       exact ⟨g2, y2, _, bd_next% hbd2, hok2, hK2, hprod.trans (by rw [hact]), hf2,
         (al_eq (by with_reducible rfl)).trans hal2⟩
-  case «.LB33» t ht =>
+  case «.LB.Emission.produce.4» t ht =>
     simp only [Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or, or_true] at ht
     obtain ⟨y, hbd, hact⟩ := ht
     kvcgen64 [hpush]
@@ -211,7 +211,7 @@ theorem produce_unit [Host] [FunDecls]
     kvcgen64
     all_goals try symexec_norm
     vc_by_shape
-    | goto ".LB20" =>
+    | goto ".LB.Emission.produce.2" =>
       cfg_goto
       · exact (bd_next% hbd2).stack
       · simp only [Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or]
@@ -222,7 +222,7 @@ theorem produce_unit [Host] [FunDecls]
       simp only [Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or]
       exact ⟨g2, y2, _, bd_next% hbd2, hok2, hK2, hprod.trans (by rw [hact]), hf2,
         (al_eq (by with_reducible rfl)).trans hal2⟩
-  case «.LB22» t ht =>
+  case «.LB.Emission.produce.5» t ht =>
     simp only [Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or, or_true] at ht
     obtain ⟨y, hbd, hlt, hact⟩ := ht
     have hk := hbd.rd_k
@@ -242,14 +242,14 @@ theorem produce_unit [Host] [FunDecls]
       kvcgen64
       all_goals try symexec_norm
       vc_by_shape
-      | goto ".LB20" =>
+      | goto ".LB.Emission.produce.2" =>
         cfg_goto
         · exact (bd_next% hbd2).stack
         · simp only [Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or]
           exact ⟨g2, y2, _, bd_next% hbd2, hok2, hK2, hprod.trans (by rw [hact]), hf2,
             (al_eq (by with_reducible rfl)).trans hal2⟩
         · simp
-  case «.LB21» t ht =>
+  case «.LB.Emission.produce.0» t ht =>
     simp only [Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or] at ht
     obtain ⟨y, hbd, hj, hact⟩ := ht
     have h13 := hbd.r13
@@ -257,7 +257,7 @@ theorem produce_unit [Host] [FunDecls]
     kvcgen64
     all_goals try symexec_norm
     vc_by_shape
-    | goto ".LB23" =>
+    | goto ".LB.Emission.produce.1" =>
       rename_i _ hl
       rw [sub_beq8, h13, beq_iff_eq] at hl
       cfg_goto
@@ -266,7 +266,7 @@ theorem produce_unit [Host] [FunDecls]
           true_or]
         exact ⟨y, bd_next% hbd, hact.trans (tail_push (by rw [free_of_label hl]; rfl))⟩
       · simp
-    | goto ".LB34" =>
+    | goto ".LB.Emission.produce.6" =>
       rename_i _ hc _ hl
       rw [sub_beq8, h13, beq_eq_false_iff_ne] at hl
       rw [test_beq8, h15, bne_iff_ne] at hc
@@ -282,7 +282,7 @@ theorem produce_unit [Host] [FunDecls]
       simp only [Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or, or_true,
         true_or]
       exact ⟨y, bd_next% hbd, hact.trans (tail_push (by rw [free_of_const hc]; rfl))⟩
-  case «.LB34» t ht =>
+  case «.LB.Emission.produce.6» t ht =>
     simp only [Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or] at ht
     obtain ⟨y, hbd, hfree, hact⟩ := ht
     kvcgen64 [hspill]
@@ -304,7 +304,7 @@ theorem produce_unit [Host] [FunDecls]
       | with_reducible exact isSome_len' hm2
       | with_reducible exact isSome_off' hm2
       | with_reducible exact isSome_exc' (store_off' hm2 cp)
-    | goto ".LB23" =>
+    | goto ".LB.Emission.produce.1" =>
       rename_i _ hz
       have hs := bit_true hal2 (al_ne hz)
       cfg_goto
@@ -313,7 +313,7 @@ theorem produce_unit [Host] [FunDecls]
           true_or]
         exact ⟨y2, bd_next% hbd2, hact.trans (tail_push (by rw [hs, Bool.or_true]))⟩
       · simp
-    | goto ".LB18" =>
+    | goto ".LB.Emission.produce.3" =>
       first
       | rename_i hz hn
         have hns : (canBeFreelyGenerated (StackSlot.ofWord w)
@@ -406,7 +406,7 @@ theorem produce_unit [Host] [FunDecls]
         first
         | with_reducible exact hbd1.isSome_k | with_reducible exact hbd1.isSome_st _
         | with_reducible exact isSome_len' hm1k
-      | goto ".LB33" =>
+      | goto ".LB.Emission.produce.4" =>
         rename_i hl
         rw [sub_beq8, h13, ← junk_iff] at hl
         cfg_goto
@@ -414,7 +414,7 @@ theorem produce_unit [Host] [FunDecls]
         · simp only [Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or, or_true]
           exact ⟨y1, bd_step% hbd1 hm1k, act_junk hl⟩
         · simp
-      | goto ".LB21" =>
+      | goto ".LB.Emission.produce.0" =>
         rename_i hl hn
         rw [sub_beq8, h13, ← junk_iff] at hl
         cfg_goto
@@ -422,7 +422,7 @@ theorem produce_unit [Host] [FunDecls]
         · simp only [Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or]
           exact ⟨y1, bd_step% hbd1 hm1k, hl, act_tail hl (Or.inl (eq_of_z hn))⟩
         · simp
-      | goto ".LB22" =>
+      | goto ".LB.Emission.produce.5" =>
         rename_i hl hn hb
         rw [sub_beq8, h13, ← junk_iff] at hl
         have hc : cp ≠ Flat.NONE := ne_of_z hn

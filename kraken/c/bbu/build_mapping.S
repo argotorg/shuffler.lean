@@ -10,30 +10,30 @@ build_mapping:
 	cmpb	$1, %r9b
 	seta	%dl
 	orb	%dl, %al
-	jne	.LB531
+	jne	.LB.build_mapping.7
 	cmpq	$1024, %rdi
-	ja	.LB531
+	ja	.LB.build_mapping.7
 	testq	%rdi, %rdi
-	je	.LB525
+	je	.LB.build_mapping.1
 	movl	$0, %eax
 	.p2align 5
-.LB526:
+.LB.build_mapping.0:
 	movq	$-1, 64(%rsp,%rax,8)
 	addq	$1, %rax
 	cmpq	%rax, %rdi
-	jne	.LB526
-.LB525:
+	jne	.LB.build_mapping.0
+.LB.build_mapping.1:
 	testq	%rbx, %rbx
-	je	.LB527
+	je	.LB.build_mapping.3
 	leaq	64(%rsp), %rax
 	leaq	(%rax,%rbx,8), %rdx
 	.p2align 5
-.LB528:
+.LB.build_mapping.2:
 	movq	$-1, 8192(%rax)
 	addq	$8, %rax
 	cmpq	%rdx, %rax
-	jne	.LB528
-.LB527:
+	jne	.LB.build_mapping.2
+.LB.build_mapping.3:
 	movq	%rsi, (%rsp)
 	movq	%rdi, 8(%rsp)
 	movq	%rcx, 16(%rsp)
@@ -46,61 +46,61 @@ build_mapping:
 	movq	%rsp, %rdi
 	call	_ZN12_GLOBAL__N_114MappingBuilder10mapInPlaceEv
 	testb	%al, %al
-	jne	.LB532
+	jne	.LB.build_mapping.8
 	movq	%rsp, %rdi
 	call	_ZN12_GLOBAL__N_114MappingBuilder16mapClosestCopiesEv
 	testb	%al, %al
-	jne	.LB533
+	jne	.LB.build_mapping.9
 	movq	%rsp, %rdi
 	call	_ZN12_GLOBAL__N_114MappingBuilder21mapWildcardSlotCopiesEv
 	testb	%al, %al
-	jne	.LB534
+	jne	.LB.build_mapping.10
 	movq	%rsp, %rdi
 	call	_ZN12_GLOBAL__N_114MappingBuilder17keepWildcardSlotsEv
 	testb	%al, %al
-	jne	.LB535
+	jne	.LB.build_mapping.11
 	movq	%rsp, %rdi
 	call	_ZN12_GLOBAL__N_114MappingBuilder13absorbSurplusEv
 	testb	%al, %al
-	jne	.LB536
+	jne	.LB.build_mapping.12
 	testq	%rbx, %rbx
-	je	.LB529
+	je	.LB.build_mapping.5
 	leaq	0(,%rbx,8), %rdx
 	movl	$0, %eax
 	leaq	8256(%rsp), %rsi
 	.p2align 5
-.LB530:
+.LB.build_mapping.4:
 	movq	(%rsi,%rax), %rcx
 	movq	%rcx, 0(%rbp,%rax)
 	addq	$8, %rax
 	cmpq	%rax, %rdx
-	jne	.LB530
-.LB529:
+	jne	.LB.build_mapping.4
+.LB.build_mapping.5:
 	movq	16488(%rsp), %rax
 	movzbl	56(%rsp), %edx
 	movb	%dl, (%rax)
 	movl	$0, %eax
-.LB523:
+.LB.build_mapping.6:
 	addq	$16456, %rsp
 	popq	%rbx
 	popq	%rbp
 	ret
-.LB531:
+.LB.build_mapping.7:
 	movq	$-2, %rax
-	jmp	.LB523
-.LB532:
+	jmp	.LB.build_mapping.6
+.LB.build_mapping.8:
 	movq	$-2, %rax
-	jmp	.LB523
-.LB533:
+	jmp	.LB.build_mapping.6
+.LB.build_mapping.9:
 	movq	$-2, %rax
-	jmp	.LB523
-.LB534:
+	jmp	.LB.build_mapping.6
+.LB.build_mapping.10:
 	movq	$-2, %rax
-	jmp	.LB523
-.LB535:
+	jmp	.LB.build_mapping.6
+.LB.build_mapping.11:
 	movq	$-2, %rax
-	jmp	.LB523
-.LB536:
+	jmp	.LB.build_mapping.6
+.LB.build_mapping.12:
 	movq	$-2, %rax
-	jmp	.LB523
+	jmp	.LB.build_mapping.6
 	.size	build_mapping, .-build_mapping

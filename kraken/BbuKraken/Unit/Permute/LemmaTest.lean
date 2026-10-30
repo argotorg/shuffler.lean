@@ -33,7 +33,7 @@ example : True := by
   fail_if_success have := not_le_of_a (d := 0#64) (by decide)
   trivial
 
-/-! ## The record of `.LB73` (`op_eq8`) -/
+/-! ## The record of `.LB.Emission.permute.24` (`op_eq8`) -/
 
 def rec8 (l p : Word) : Op :=
   { kind := 0#8, depth := (l + ~~~p).extractLsb' 0 8, slot := ⟨0#32, 1#8, 5#8⟩ }
@@ -52,9 +52,9 @@ def rec8 (l p : Word) : Op :=
 example (d x : Word) : d + x * 8#64 + BitVec.ofInt 64 (-8 : Int64).toInt = d + x * 8#64 - 8#64 := by
   rw [top_m8i]; bv_omega
 
-/-! ## The variant of `.LB80` (`lt80`) -/
+/-! ## The variant of `.LB.Emission.permute.22` (`lt80`) -/
 
--- `mu` one smaller is enough for the largest variant (`.LB96`) of the next iteration.
+-- `mu` one smaller is enough for the largest variant (`.LB.Emission.permute.15`) of the next iteration.
 example : 2048 * 4 + 1101 < 2048 * 5 := lt80 (by decide)
 -- Negative: the same `mu` is not enough.
 #guard !decide (2048 * 5 + 1101 < 2048 * 5)

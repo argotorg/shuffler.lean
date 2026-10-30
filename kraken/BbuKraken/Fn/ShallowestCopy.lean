@@ -61,7 +61,7 @@ theorem Wf.data_isSome {m : Mem 64} {S : Addr} (hw : Wf m S) {k : Nat} (hk : k <
   simp only [wordAt]
   bv_omega
 
--- The state at `.LB6` after the slots from `i` up that do not hold `rsi`.
+-- The state at `.LB.Emission.shallowestCopyPosition.0` after the slots from `i` up that do not hold `rsi`.
 def CopyLoop (s : MachineData) (ra : Int64) (t : MachineData) : Prop :=
   Keep s ra t ∧ rdi t = rdi s ∧ rsi t = rsi s
     ∧ ∃ i, rax t = BitVec.ofNat 64 i ∧ i ≤ (rd (s.pushRa ra).dmem (wordAt (rdi s) 4)).toNat
@@ -79,12 +79,12 @@ theorem shallowestCopy_body [Host] [FunDecls] :
       | .entry, t => t = s.pushRa ra
       | .label l, t =>
         if l = Names.shallowestCopyPosition then t = s.pushRa ra
-        else if l = ".LB6" then CopyLoop s ra t
-        else if l = ".LB10" then Keep s ra t ∧ shallowestCopyPosition (st s) (slot s) = none
-        else if l = ".LB7" then Done s ra (encOpt (shallowestCopyPosition (st s) (slot s))) t
+        else if l = ".LB.Emission.shallowestCopyPosition.0" then CopyLoop s ra t
+        else if l = ".LB.Emission.shallowestCopyPosition.1" then Keep s ra t ∧ shallowestCopyPosition (st s) (slot s) = none
+        else if l = ".LB.Emission.shallowestCopyPosition.2" then Done s ra (encOpt (shallowestCopyPosition (st s) (slot s))) t
         else False
       | .exit, _ => False)
-    (fun l t => if l = ".LB6" then (rax t).toNat + 1 else if l = Names.shallowestCopyPosition then 2 ^ 64 + 1 else 0)
+    (fun l t => if l = ".LB.Emission.shallowestCopyPosition.0" then (rax t).toNat + 1 else if l = Names.shallowestCopyPosition then 2 ^ 64 + 1 else 0)
     ?_ rfl
   cfg_cases
   case left t ht =>

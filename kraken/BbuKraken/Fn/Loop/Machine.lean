@@ -67,7 +67,7 @@ theorem stack_mk {r : Reg64s} {z f d} (h : r.rsp.toBitVec = rsp s - 80#64) :
     (MachineData.mk r z f d).StackAtOrBelow (s.pushRa ra) :=
   stack_of h
 
--- The pops of `.LB65` read the saved words.
+-- The pops of `.LB.Emission.buildBottomUp.0` read the saved words.
 theorem Fm.pops {m : Mem 64} (h : Fm s ra m) :
     rd m (rsp s - 56#64) = s.regs.rbx.toBitVec ∧ rd m (rsp s - 48#64) = s.regs.rbp.toBitVec
       ∧ rd m (rsp s - 40#64) = s.regs.r12.toBitVec ∧ rd m (rsp s - 32#64) = s.regs.r13.toBitVec
@@ -234,7 +234,7 @@ end
 
 /-! ## The inline swap -/
 
--- The memory after the inline `swapDestinations` of `.LB74` and `.LB77`: the dest words
+-- The memory after the inline `swapDestinations` of `.LB.Emission.buildBottomUp.5` and `.LB.Emission.buildBottomUp.17`: the dest words
 -- of `a` and `b` change places, then the `m_positionOf` words of the two dests follow.
 def swapMem (m : Mem 64) (S : Addr) (a b : Nat) : Mem 64 :=
   let va := rd m (wordAt S (DEST + a))

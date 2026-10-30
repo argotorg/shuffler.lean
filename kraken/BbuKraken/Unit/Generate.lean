@@ -753,7 +753,7 @@ end
 
 /-! ## The invariants of the swap of the destinations -/
 
--- `.LB52`: the slot `t` and the top slot are equal.
+-- `.LB.Emission.generate.1`: the slot `t` and the top slot are equal.
 def At52 (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (t : MachineData) :
     Prop :=
   ∃ g1 fr w, Mid S g1 F s ra fr w t ∧ g1.Ok ∧ Keep g g1 ∧ al t = 0#8
@@ -762,7 +762,7 @@ def At52 (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (t : M
     ∧ Flat.generate (flat g) (rsi s)
       = (.done, Flat.swapDestinations (flat g1) (rsi s) (g1.h.len - 1#64))
 
--- `.LB45`: the destinations are swapped, and `positionOf` is written for `t`.
+-- `.LB.Emission.generate.2`: the destinations are swapped, and `positionOf` is written for `t`.
 def At45 (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (t : MachineData) :
     Prop :=
   ∃ g2 fr w, Mid S g2 F s ra fr w t ∧ g2.Ok ∧ Keep g g2 ∧ al t = 0#8
@@ -772,11 +772,11 @@ def At45 (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (t : M
     ∧ Flat.generate (flat g) (rsi s) = (.done, posAt (flat g2) t.regs.rsi.toBitVec)
 
 
-/-! ## The block `.LB52` -/
+/-! ## The block `.LB.Emission.generate.1` -/
 
 theorem withDest_dest (g : G) (d : Vector Word MAX_N) : (withDest g d).h.dest = d := rfl
 
--- The facts of `.LB52`: `a` is the slot of `generate`, `b` is the top slot.
+-- The facts of `.LB.Emission.generate.1`: `a` is the slot of `generate`, `b` is the top slot.
 theorem lb52_facts {g1 : G} {a b : Word} (hok : g1.Ok) (ha : a.toNat < MAX_N)
     (h1 : a + 1#64 < g1.h.len) (hb : b = g1.h.len - 1#64) (hd : DestOk (flat g1)) :
     b.toNat < MAX_N ∧ a ≠ b
@@ -817,7 +817,7 @@ theorem gen52_some {r : Flat.Status × Flat.St} {g1 : G} {a b : Word}
       (Flat.put g1.h.pos (Flat.get (dsw (flat g1) a b).dest a) a))) b) := by
   rw [hgen, swapDestinations_eq, posAt_some hz]; rfl
 
--- The state at `.LB45`. `X` keeps `rax` and `rsi` of `t`.
+-- The state at `.LB.Emission.generate.2`. `X` keeps `rax` and `rsi` of `t`.
 theorem at45_of {S : Addr} {g g2 : G} {F : MProp 64} {s : MachineData} {ra : Int64}
     {fr : List Word} {w : Word} {t X : MachineData}
     (hmid : Mid S g2 F s ra fr w X) (hok : g2.Ok) (hK : Keep g g2)
@@ -860,15 +860,15 @@ theorem generate_unit [Host] [FunDecls]
       | .entry, t => t = s.pushRa ra
       | .label l, t =>
         if l = Names.generate then t = s.pushRa ra
-        else if l = ".LB49" then Kp S g F s ra fr t ∧ generateQ g g s t
-        else if l = ".LB42" then ∃ g' fr8 w, Mid S g' F s ra fr8 w t ∧ generateQ g g' s t ∧ g'.Ok
-        else if l = ".LB53" then ∃ g1 fr8 w, Mid S g1 F s ra fr8 w t ∧ g1.Ok ∧ Keep g g1
+        else if l = ".LB.Emission.generate.4" then Kp S g F s ra fr t ∧ generateQ g g s t
+        else if l = ".LB.Emission.generate.0" then ∃ g' fr8 w, Mid S g' F s ra fr8 w t ∧ generateQ g g' s t ∧ g'.Ok
+        else if l = ".LB.Emission.generate.3" then ∃ g1 fr8 w, Mid S g1 F s ra fr8 w t ∧ g1.Ok ∧ Keep g g1
           ∧ swapWithA g1 t ∧ Flat.generate (flat g) (rsi s) = Flat.swapWith (flat g1) (rsi s)
-        else if l = ".LB52" then At52 S g F s ra t
-        else if l = ".LB45" then At45 S g F s ra t
+        else if l = ".LB.Emission.generate.1" then At52 S g F s ra t
+        else if l = ".LB.Emission.generate.2" then At45 S g F s ra t
         else False
       | .exit, _ => False)
-    (fun l _ => if l = ".LB42" then 0 else 1) ?_ rfl
+    (fun l _ => if l = ".LB.Emission.generate.0" then 0 else 1) ?_ rfl
   cfg_blocks
   case entry t ht =>
     subst ht
@@ -891,7 +891,7 @@ theorem generate_unit [Host] [FunDecls]
       | (rw [hS]; exact isSome_n hk0.mem)
       | with_reducible exact push_isSome2 hk0.mem hsp _
       | exact push_isSome1 hk0.mem hsp
-    | goto ".LB49" =>
+    | goto ".LB.Emission.generate.4" =>
       rename_i hj _
       have hlt : ¬rsi s < (flat g).targetSize := by
         have := not_lt_of_cf hj
@@ -1013,7 +1013,7 @@ theorem generate_unit [Host] [FunDecls]
         have hG := gen_far hlt hp hf1 (cond_of hTm h1 hfin) he hr
         simp only [Names.generate, String.reduceEq, ↓reduceIte]
         exact ⟨g1, fr1, w1, mid_next% hmid1, genQ hK1 hG rfl ((al_eq (by with_reducible rfl)).trans hal0), hok1⟩
-  case «.LB49» t ht =>
+  case «.LB.Emission.generate.4» t ht =>
     simp only [Names.generate, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨hk, hQ⟩ := ht
     kvcgen64
@@ -1021,7 +1021,7 @@ theorem generate_unit [Host] [FunDecls]
     | retAddr => simp [hk.retAddr]
     | ret => exact Kp.ret hk hfr hpre.ok fun t' _ hax =>
         ⟨hQ.1, hQ.2.1, by show (rax t').setWidth 8 = _; rw [hax]; exact hQ.2.2⟩
-  case «.LB42» t ht =>
+  case «.LB.Emission.generate.0» t ht =>
     simp only [Names.generate, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨g', fr8, w, hmid, hQ, hok'⟩ := ht
     kvcgen64
@@ -1034,7 +1034,7 @@ theorem generate_unit [Host] [FunDecls]
       refine Kp.ret (hmid.pop ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_) (by simp [hmid.len]) hok' fun t' _ hax =>
         ⟨hQ.1, hQ.2.1, by show (rax t').setWidth 8 = _; rw [hax]; exact hQ.2.2⟩
       all_goals rfl
-  case «.LB53» t ht =>
+  case «.LB.Emission.generate.3» t ht =>
     simp only [Names.generate, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨g1, fr1, w1, hmid1, hok1, hK1, hA1, hgen⟩ := ht
     have hbp1 : t.regs.rbp.toBitVec = S := hmid1.bp
@@ -1046,13 +1046,13 @@ theorem generate_unit [Host] [FunDecls]
       swapQ_of hQ2 (show t.regs.rbx.toBitVec = s.regs.rsi.toBitVec by rw [hmid1.bx])
     kvcgen64
     vc_by_shape
-    | goto ".LB42" =>
+    | goto ".LB.Emission.generate.0" =>
       cfg_goto
       · exact hmid2.stack
       · simp only [Names.generate, String.reduceEq, ↓reduceIte]
         exact ⟨g2, fr1, w2, hmid2, genQ (Keep.trans hK1 hK2) hgen hf2 hal2, hok2⟩
       · simp
-  case «.LB52» t ht =>
+  case «.LB.Emission.generate.1» t ht =>
     simp only [Names.generate, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨g1, fr1, w1, hmid1, hok1, hK1, hal0, hrsi, ha, h1, hdok, hgen⟩ := ht
     rw [← hrsi] at hgen
@@ -1075,7 +1075,7 @@ theorem generate_unit [Host] [FunDecls]
       | with_reducible exact isSome_dest' h1' hb
       | with_reducible exact isSome_dest' h2' ha
       | with_reducible exact isSome_pos' h2' (hda.resolve_left (ne_none_of_z (by with_reducible assumption)))
-    | goto ".LB45" =>
+    | goto ".LB.Emission.generate.2" =>
       have hz := none_of_z (by with_reducible assumption)
       cfg_goto
       · exact (mid_step% hmid1 h2').stack
@@ -1091,7 +1091,7 @@ theorem generate_unit [Host] [FunDecls]
         store_pos_put h2' (hda.resolve_left hz) s.regs.rsi.toBitVec
       simp only [Names.generate, String.reduceEq, ↓reduceIte]
       exact at45_of (t := t) (mid_step% hmid1 h3') (Ok.withPos (Ok.withDest hok1 _) _) (Keep.trans hK1 (Keep.trans (Keep.withDest _) (Keep.withPos _))) (by with_reducible rfl) hal0 (by with_reducible rfl) hb hdb (gen52_some hgen hz)
-  case «.LB45» t ht =>
+  case «.LB.Emission.generate.2» t ht =>
     simp only [Names.generate, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨g2, fr2, w2, hmid2, hok2, hK2, hal0, hi, hd, hgen⟩ := ht
     have hbp2 : t.regs.rbp.toBitVec = S := hmid2.bp
@@ -1104,7 +1104,7 @@ theorem generate_unit [Host] [FunDecls]
       first
       | with_reducible exact isSome_dest' hm2 hi
       | with_reducible exact isSome_pos' hm2 (hd.resolve_left (ne_none_of_z (by with_reducible assumption)))
-    | goto ".LB42" =>
+    | goto ".LB.Emission.generate.0" =>
       first
       | have hz := none_of_z (by with_reducible assumption)
         cfg_goto

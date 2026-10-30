@@ -29,7 +29,7 @@ example : swapWithAsm.take 7 = parse("_ZN12_GLOBAL__N_18Emission8swapWithE11Stac
 	movq	32(%rdi), %rsi
 	movl	$2, %ecx
 	cmpq	%rsi, %rdx
-	jnb	.LB35") := by rfl
+	jnb	.LB.Emission.swapWith.2") := by rfl
 
 -- Each line with an operand with no base.
 example : (bbuAsm.filter fun

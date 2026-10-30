@@ -262,7 +262,7 @@ theorem Sb.pop {y o x2 : Word} {t P : MachineData} (h : Sb s ra adds queries r F
   · apply UInt64.toBitVec_inj.mp; rw [h15]; exact rd_of_eq hmem (by unfold Fr; ecancel)
 
 
--- The post at `ret`: `rax` and the memory of a state `t` at `.LB244` with the result `hres`.
+-- The post at `ret`: `rax` and the memory of a state `t` at `.LB.spill_set.12` with the result `hres`.
 theorem Sb.post {f₀ : BitVec 32 → BitVec 8} {res₀ : List (BitVec 8)} {y o x2 : Word}
     {t t' : MachineData} (h : Sb s ra adds queries r F f res y o x2 t)
     (hres : setRes s f₀ adds queries res₀ = (rax t, f, res)) (hm : t'.dmem = t.dmem)
@@ -520,19 +520,19 @@ end
 -- run in order, so each loop has a band of `4 * 2 ^ 64` above the bands of the loops after it.
 def var (na nq : Nat) (l : String) (t : MachineData) : Nat :=
   if l = "spill_set" then 7 * (4 * 2 ^ 64)
-  else if l = ".LB245" then 6 * (4 * 2 ^ 64)
-  else if l = ".LB248" then 5 * (4 * 2 ^ 64) + 2 * (na - (rax t).toNat) + 1
-  else if l = ".LB246" then 5 * (4 * 2 ^ 64) + 2 * (na - (rax t).toNat)
-  else if l = ".LB272" then 5 * (4 * 2 ^ 64) - 1
-  else if l = ".LB251" then 4 * (4 * 2 ^ 64) + 2 * (nq - (rax t).toNat) + 1
-  else if l = ".LB250" then 4 * (4 * 2 ^ 64) + 2 * (nq - (rax t).toNat)
-  else if l = ".LB273" then 4 * (4 * 2 ^ 64) - 1
-  else if l = ".LB257" then 3 * (4 * 2 ^ 64) + 2 ^ 64 + 1
-  else if l = ".LB253" then 3 * (4 * 2 ^ 64) + (na - t.regs.r14.toBitVec.toNat)
-  else if l = ".LB252" then 2 * (4 * 2 ^ 64) + 2 * 2 ^ 64 + 2
-  else if l = ".LB255" then 2 * (4 * 2 ^ 64) + 2 * (nq - (rax t).toNat) + 1
-  else if l = ".LB254" then 2 * (4 * 2 ^ 64) + 2 * (nq - (rax t).toNat)
-  else if l = ".LB274" ∨ l = ".LB262" ∨ l = ".LB261" then 1
+  else if l = ".LB.spill_set.14" then 6 * (4 * 2 ^ 64)
+  else if l = ".LB.spill_set.1" then 5 * (4 * 2 ^ 64) + 2 * (na - (rax t).toNat) + 1
+  else if l = ".LB.spill_set.0" then 5 * (4 * 2 ^ 64) + 2 * (na - (rax t).toNat)
+  else if l = ".LB.spill_set.15" then 5 * (4 * 2 ^ 64) - 1
+  else if l = ".LB.spill_set.3" then 4 * (4 * 2 ^ 64) + 2 * (nq - (rax t).toNat) + 1
+  else if l = ".LB.spill_set.2" then 4 * (4 * 2 ^ 64) + 2 * (nq - (rax t).toNat)
+  else if l = ".LB.spill_set.4" then 4 * (4 * 2 ^ 64) - 1
+  else if l = ".LB.spill_set.5" then 3 * (4 * 2 ^ 64) + 2 ^ 64 + 1
+  else if l = ".LB.spill_set.6" then 3 * (4 * 2 ^ 64) + (na - t.regs.r14.toBitVec.toNat)
+  else if l = ".LB.spill_set.7" then 2 * (4 * 2 ^ 64) + 2 * 2 ^ 64 + 2
+  else if l = ".LB.spill_set.9" then 2 * (4 * 2 ^ 64) + 2 * (nq - (rax t).toNat) + 1
+  else if l = ".LB.spill_set.8" then 2 * (4 * 2 ^ 64) + 2 * (nq - (rax t).toNat)
+  else if l = ".LB.spill_set.10" ∨ l = ".LB.spill_set.13" ∨ l = ".LB.spill_set.11" then 1
   else 0
 
 /-! ## The model -/

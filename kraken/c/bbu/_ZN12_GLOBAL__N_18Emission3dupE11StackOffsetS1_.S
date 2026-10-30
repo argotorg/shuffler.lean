@@ -4,7 +4,7 @@ _ZN12_GLOBAL__N_18Emission3dupE11StackOffsetS1_:
 	movq	24(%rdi), %rdi
 	movl	$2, %edx
 	cmpb	$3, 4(%rdi,%rsi,8)
-	je	.LB14
+	je	.LB.Emission.dup.0
 	movq	32(%rax), %rdi
 	subq	%rsi, %rdi
 	movq	48(%rax), %rdx
@@ -27,11 +27,11 @@ _ZN12_GLOBAL__N_18Emission3dupE11StackOffsetS1_:
 	movq	%rdx, 32(%rax)
 	movl	$2, %edx
 	cmpq	$-1, 8248(%rax,%rcx,8)
-	jne	.LB14
+	jne	.LB.Emission.dup.0
 	movq	%rcx, 56(%rax,%rsi,8)
 	movq	%rsi, 8248(%rax,%rcx,8)
 	movl	$0, %edx
-.LB14:
+.LB.Emission.dup.0:
 	movl	%edx, %eax
 	ret
 	.size	_ZN12_GLOBAL__N_18Emission3dupE11StackOffsetS1_, .-_ZN12_GLOBAL__N_18Emission3dupE11StackOffsetS1_

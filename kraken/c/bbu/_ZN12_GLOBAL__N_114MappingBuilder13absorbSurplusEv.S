@@ -1,26 +1,26 @@
 _ZN12_GLOBAL__N_114MappingBuilder13absorbSurplusEv:
 	cmpq	$0, 24(%rdi)
-	je	.LB511
+	je	.LB.MappingBuilder.absorbSurplus.8
 	pushq	%rbp
 	pushq	%rbx
 	movq	%rdi, %rbp
 	movl	$0, %ebx
-	jmp	.LB510
-.LB512:
+	jmp	.LB.MappingBuilder.absorbSurplus.5
+.LB.MappingBuilder.absorbSurplus.0:
 	movq	%rax, %rsi
 	.p2align 5
-.LB505:
+.LB.MappingBuilder.absorbSurplus.1:
 	addq	$1, %rax
 	addq	$1, %rdx
 	cmpq	%rcx, %rax
-	je	.LB521
-.LB509:
+	je	.LB.MappingBuilder.absorbSurplus.3
+.LB.MappingBuilder.absorbSurplus.2:
 	cmpb	$0, (%rdi,%rax)
-	jne	.LB505
+	jne	.LB.MappingBuilder.absorbSurplus.1
 	cmpq	$-1, (%r8,%rax,8)
-	jne	.LB505
+	jne	.LB.MappingBuilder.absorbSurplus.1
 	cmpq	$-1, %rsi
-	je	.LB512
+	je	.LB.MappingBuilder.absorbSurplus.0
 	movq	%rbx, %r10
 	subq	%rax, %r10
 	cmpq	%rax, %rbx
@@ -33,44 +33,44 @@ _ZN12_GLOBAL__N_114MappingBuilder13absorbSurplusEv:
 	cmovb	%r11, %r9
 	cmpq	%r9, %r10
 	cmovb	%rax, %rsi
-	jmp	.LB505
-.LB521:
+	jmp	.LB.MappingBuilder.absorbSurplus.1
+.LB.MappingBuilder.absorbSurplus.3:
 	cmpq	$-1, %rsi
-	je	.LB504
+	je	.LB.MappingBuilder.absorbSurplus.4
 	movq	%rbx, %rdx
 	movq	%rbp, %rdi
 	call	_ZN12_GLOBAL__N_114MappingBuilder3mapE11StackOffsetS1_
 	testb	%al, %al
-	jne	.LB502
+	jne	.LB.MappingBuilder.absorbSurplus.7
 	.p2align 5
-.LB504:
+.LB.MappingBuilder.absorbSurplus.4:
 	addq	$1, %rbx
 	cmpq	24(%rbp), %rbx
-	jnb	.LB522
-.LB510:
+	jnb	.LB.MappingBuilder.absorbSurplus.6
+.LB.MappingBuilder.absorbSurplus.5:
 	leaq	0(,%rbx,8), %rdx
 	movq	16(%rbp), %rax
 	cmpb	$1, 4(%rax,%rbx,8)
-	jne	.LB504
+	jne	.LB.MappingBuilder.absorbSurplus.4
 	movq	48(%rbp), %r8
 	movq	8192(%r8,%rdx), %rsi
 	cmpq	$-1, %rsi
-	jne	.LB504
+	jne	.LB.MappingBuilder.absorbSurplus.4
 	movq	8(%rbp), %rcx
 	testq	%rcx, %rcx
-	je	.LB504
+	je	.LB.MappingBuilder.absorbSurplus.4
 	movq	32(%rbp), %rdi
 	movq	%rbx, %rdx
 	negq	%rdx
 	movl	$0, %eax
-	jmp	.LB509
-.LB522:
+	jmp	.LB.MappingBuilder.absorbSurplus.2
+.LB.MappingBuilder.absorbSurplus.6:
 	movl	$0, %eax
-.LB502:
+.LB.MappingBuilder.absorbSurplus.7:
 	popq	%rbx
 	popq	%rbp
 	ret
-.LB511:
+.LB.MappingBuilder.absorbSurplus.8:
 	movl	$0, %eax
 	ret
 	.size	_ZN12_GLOBAL__N_114MappingBuilder13absorbSurplusEv, .-_ZN12_GLOBAL__N_114MappingBuilder13absorbSurplusEv

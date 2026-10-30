@@ -10,12 +10,12 @@ import BbuKraken.Unit.Permute.Util
 `n` is the size `g.h.len` of the entry ghost `g`, `top` is `n - 1` and `st` is `flat g`.
 The invariant of a block is a predicate `I…` on the state at its label (`LInv`).
 
-* Phase A (`.LB57`, `.LB56`): `permutation[i] = destinationOf[i]` below `rax`.
-* Phase B (`.LB58`): `desiredBy[i] = NONE` below the index of `rax`.
-* Phase C (`.LB71` to `.LB65`): the loops of `regroup`. The model vectors `p`, `dB` and `pc`
+* Phase A (`.LB.Emission.permute.0`, `.LB.Emission.permute.2`): `permutation[i] = destinationOf[i]` below `rax`.
+* Phase B (`.LB.Emission.permute.3`): `desiredBy[i] = NONE` below the index of `rax`.
+* Phase C (`.LB.Emission.permute.14` to `.LB.Emission.permute.8`): the loops of `regroup`. The model vectors `p`, `dB` and `pc`
   are existential; the locals `L.P` and `L.D` agree with them below `n` (`AgB`). `RG st X`: the
   `regroup` of `permute` gives `X`.
-* Phase D (`.LB96` to `.LB99`): the loop of `permute`, with the fuel `f` of `permuteLoop`.
+* Phase D (`.LB.Emission.permute.15` to `.LB.Emission.permute.26`): the loop of `permute`, with the fuel `f` of `permuteLoop`.
 
 The variant `V` decreases on each back edge. Phase D uses `mu` of the permutation in the stack
 (`memVec`): each iteration of the loop makes it smaller (`swapP_mu`).
@@ -71,22 +71,22 @@ def memVec (s t : MachineData) : Vector Word MAX_N :=
 section
 variable (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
 
--- `.LB54`: the result.
+-- `.LB.Emission.permute.1`: the result.
 def I54 (t : MachineData) : Prop :=
   ∃ g' L, Fm S g' F s ra L t ∧ g'.Ok ∧ permuteQ g g' s t
 
--- `.LB57`: `permutation[i] = destinationOf[i]` below `rax`.
+-- `.LB.Emission.permute.0`: `permutation[i] = destinationOf[i]` below `rax`.
 def I57 (t : MachineData) : Prop :=
   ∃ L, Fm S g F s ra L t ∧ t.regs.r15.toBitVec = S ∧ t.regs.rbx.toBitVec = g.h.len
     ∧ t.regs.rax.toBitVec < g.h.len ∧ AgB t.regs.rax.toBitVec L.P g.h.dest
 
--- `.LB56`: and `rdx = destinationOf[rax]`.
+-- `.LB.Emission.permute.2`: and `rdx = destinationOf[rax]`.
 def I56 (t : MachineData) : Prop :=
   ∃ L, Fm S g F s ra L t ∧ t.regs.r15.toBitVec = S ∧ t.regs.rbx.toBitVec = g.h.len
     ∧ t.regs.rax.toBitVec < g.h.len ∧ AgB t.regs.rax.toBitVec L.P g.h.dest
     ∧ t.regs.rdx.toBitVec = Flat.get g.h.dest t.regs.rax.toBitVec
 
--- `.LB58`: `desiredBy[i] = NONE` below `k`; `rax` is the address of `desiredBy[k]`.
+-- `.LB.Emission.permute.3`: `desiredBy[i] = NONE` below `k`; `rax` is the address of `desiredBy[k]`.
 def I58 (t : MachineData) : Prop :=
   ∃ L, ∃ k : Nat, Fm S g F s ra L t ∧ t.regs.r15.toBitVec = S
     ∧ t.regs.rbx.toBitVec = g.h.len ∧ k < g.h.len.toNat
@@ -111,17 +111,17 @@ structure GC (L : Lc) (l : Word) (t : MachineData) : Prop where
   r13 : t.regs.r13.toBitVec = g.h.data
   r14 : StackSlot.ofWord t.regs.r14.toBitVec = Flat.get (flat g).data l
 
--- `.LB71`: `regroup` from the leader `l`.
+-- `.LB.Emission.permute.14`: `regroup` from the leader `l`.
 def I71 (t : MachineData) : Prop :=
   ∃ L l p dB, CC S g F s ra L l t ∧ RG (flat g) (Flat.regroup (flat g) l p dB)
     ∧ AgB g.h.len L.P p ∧ AgB g.h.len L.D dB ∧ LtB g.h.len p
 
--- `.LB60`: `regroup` from the leader `l + 1`.
+-- `.LB.Emission.permute.13`: `regroup` from the leader `l + 1`.
 def I60 (t : MachineData) : Prop :=
   ∃ L l p dB, CC S g F s ra L l t ∧ RG (flat g) (Flat.regroup (flat g) (l + 1) p dB)
     ∧ AgB g.h.len L.P p ∧ AgB g.h.len L.D dB ∧ LtB g.h.len p
 
--- `.LB62`: `markDesired` from `j`; `rax` is `8 * j`.
+-- `.LB.Emission.permute.5`: `markDesired` from `j`; `rax` is `8 * j`.
 def I62 (t : MachineData) : Prop :=
   ∃ L l, ∃ hl : l < (flat g).size, ∃ p dB j, GC S g F s ra L l t ∧ j ≤ l
     ∧ t.regs.rax.toBitVec = j * 8#64
@@ -129,7 +129,7 @@ def I62 (t : MachineData) : Prop :=
         (Flat.markDesired (flat g) l hl (Flat.get (flat g).data l) p j dB) 0 0 p)
     ∧ AgB g.h.len L.P p ∧ AgB g.h.len L.D dB ∧ LtB g.h.len p
 
--- `.LB61`: `markDesired` from `j + 1`; `rax` is `8 * j`.
+-- `.LB.Emission.permute.4`: `markDesired` from `j + 1`; `rax` is `8 * j`.
 def I61 (t : MachineData) : Prop :=
   ∃ L l, ∃ hl : l < (flat g).size, ∃ p dB j, GC S g F s ra L l t ∧ j ≤ l
     ∧ t.regs.rax.toBitVec = j * 8#64
@@ -137,52 +137,52 @@ def I61 (t : MachineData) : Prop :=
         (Flat.markDesired (flat g) l hl (Flat.get (flat g).data l) p (j + 1) dB) 0 0 p)
     ∧ AgB g.h.len L.P p ∧ AgB g.h.len L.D dB ∧ LtB g.h.len p
 
--- `.LB95`: `placeGroup` from the start.
+-- `.LB.Emission.permute.6`: `placeGroup` from the start.
 def I95 (t : MachineData) : Prop :=
   ∃ L l, ∃ hl : l < (flat g).size, ∃ p dB, GC S g F s ra L l t
     ∧ RG (flat g) (pg (flat g) l hl (Flat.get (flat g).data l) dB 0 0 p)
     ∧ AgB g.h.len L.P p ∧ AgB g.h.len L.D dB ∧ LtB g.h.len p
 
--- `.LB70`: `placeGroup` from `pos` (`rcx`) with `vacant` in `rax`.
+-- `.LB.Emission.permute.12`: `placeGroup` from `pos` (`rcx`) with `vacant` in `rax`.
 def I70 (t : MachineData) : Prop :=
   ∃ L l, ∃ hl : l < (flat g).size, ∃ dB pos vac pc, GC S g F s ra L l t ∧ pos ≤ l
     ∧ vac ≤ g.h.len ∧ t.regs.rcx.toBitVec = pos ∧ t.regs.rax.toBitVec = vac
     ∧ RG (flat g) (pg (flat g) l hl (Flat.get (flat g).data l) dB pos vac pc)
     ∧ AgB g.h.len L.P pc ∧ AgB g.h.len L.D dB ∧ LtB g.h.len pc
 
--- `.LB63`: `placeGroup` from `pos + 1`.
+-- `.LB.Emission.permute.11`: `placeGroup` from `pos + 1`.
 def I63 (t : MachineData) : Prop :=
   ∃ L l, ∃ hl : l < (flat g).size, ∃ dB pos vac pc, GC S g F s ra L l t ∧ pos ≤ l
     ∧ vac ≤ g.h.len ∧ t.regs.rcx.toBitVec = pos ∧ t.regs.rax.toBitVec = vac
     ∧ RG (flat g) (pg (flat g) l hl (Flat.get (flat g).data l) dB (pos + 1) vac pc)
     ∧ AgB g.h.len L.P pc ∧ AgB g.h.len L.D dB ∧ LtB g.h.len pc
 
--- `.LB64`: the `vacant` loop from `x` (`rax`) for the slot `pos`.
+-- `.LB.Emission.permute.7`: the `vacant` loop from `x` (`rax`) for the slot `pos`.
 def I64 (t : MachineData) : Prop :=
   ∃ L l, ∃ hl : l < (flat g).size, ∃ dB pos x pc, GC S g F s ra L l t ∧ pos ≤ l
     ∧ x ≤ g.h.len ∧ t.regs.rcx.toBitVec = pos ∧ t.regs.rax.toBitVec = x
     ∧ RG (flat g) (nv (flat g) l hl (Flat.get (flat g).data l) dB pos x pc)
     ∧ AgB g.h.len L.P pc ∧ AgB g.h.len L.D dB ∧ LtB g.h.len pc
 
--- `.LB68`: and `x < n`.
+-- `.LB.Emission.permute.10`: and `x < n`.
 def I68 (t : MachineData) : Prop :=
   ∃ L l, ∃ hl : l < (flat g).size, ∃ dB pos x pc, GC S g F s ra L l t ∧ pos ≤ l
     ∧ x < g.h.len ∧ t.regs.rcx.toBitVec = pos ∧ t.regs.rax.toBitVec = x
     ∧ RG (flat g) (nv (flat g) l hl (Flat.get (flat g).data l) dB pos x pc)
     ∧ AgB g.h.len L.P pc ∧ AgB g.h.len L.D dB ∧ LtB g.h.len pc
 
--- `.LB66`: `x` is not vacant; the loop goes on from `x + 1`.
+-- `.LB.Emission.permute.9`: `x` is not vacant; the loop goes on from `x + 1`.
 def I66 (t : MachineData) : Prop :=
   ∃ L l, ∃ hl : l < (flat g).size, ∃ dB pos x pc, GC S g F s ra L l t ∧ pos ≤ l
     ∧ x < g.h.len ∧ t.regs.rcx.toBitVec = pos ∧ t.regs.rax.toBitVec = x
     ∧ RG (flat g) (nv (flat g) l hl (Flat.get (flat g).data l) dB pos (x + 1) pc)
     ∧ AgB g.h.len L.P pc ∧ AgB g.h.len L.D dB ∧ LtB g.h.len pc
 
--- `.LB65`: `regroup` fails.
+-- `.LB.Emission.permute.8`: `regroup` fails.
 def I65 (t : MachineData) : Prop :=
   ∃ L, Fm S g F s ra L t ∧ Flat.permute (flat g) = (.assertionFailed, flat g)
 
--- `.LB96`: `regroup` gives `p`.
+-- `.LB.Emission.permute.15`: `regroup` gives `p`.
 def I96 (t : MachineData) : Prop :=
   ∃ L p, Fm S g F s ra L t ∧ t.regs.r15.toBitVec = S ∧ t.regs.rbx.toBitVec = g.h.len
     ∧ 0 < g.h.len
@@ -203,20 +203,20 @@ structure DC (g' : G) (L : Lc) (p : Vector Word MAX_N) (t : MachineData) : Prop 
   agP : AgB g.h.len L.P p
   bij : Bij g.h.len p
 
--- `.LB84`: the head of the loop, with the fuel `f`.
+-- `.LB.Emission.permute.23`: the head of the loop, with the fuel `f`.
 def I84 (t : MachineData) : Prop :=
   ∃ g' L p f, DC S g F s ra g' L p t
     ∧ Flat.permute (flat g) = Flat.permuteLoop f (flat g') (g.h.len - 1) p
     ∧ mu (g.h.len - 1) p ≤ f ∧ g'.h.nops.toNat + f ≤ 6 * g.h.n.toNat
 
--- `.LB86`: `permutation[top] = top`.
+-- `.LB.Emission.permute.16`: `permutation[top] = top`.
 def I86 (t : MachineData) : Prop :=
   ∃ g' L p f, DC S g F s ra g' L p t
     ∧ Flat.permute (flat g) = after f (g.h.len - 1) (Flat.permuteStep (flat g') (g.h.len - 1) p)
     ∧ mu (g.h.len - 1) p ≤ f + 1 ∧ g'.h.nops.toNat + f + 1 ≤ 6 * g.h.n.toNat
     ∧ Flat.get p (g.h.len - 1) = g.h.len - 1
 
--- `.LB72`: the `candidate` loop at `c` (`rdx`).
+-- `.LB.Emission.permute.17`: the `candidate` loop at `c` (`rdx`).
 def I72 (t : MachineData) : Prop :=
   ∃ g' L p f c, DC S g F s ra g' L p t
     ∧ Flat.permute (flat g) = after f (g.h.len - 1) (Flat.permuteStep (flat g') (g.h.len - 1) p)
@@ -226,7 +226,7 @@ def I72 (t : MachineData) : Prop :=
     ∧ Flat.misplacedBelow p (g.h.len - 1) (g.h.len - 1)
       = Flat.misplacedBelow p (g.h.len - 1) c
 
--- `.LB74`: `pos = c - 1` is misplaced.
+-- `.LB.Emission.permute.19`: `pos = c - 1` is misplaced.
 def I74 (t : MachineData) : Prop :=
   ∃ g' L p f c, DC S g F s ra g' L p t
     ∧ Flat.permute (flat g) = after f (g.h.len - 1) (Flat.permuteStep (flat g') (g.h.len - 1) p)
@@ -241,13 +241,13 @@ def Mis (n pos : Word) (p : Vector Word MAX_N) : Prop :=
   pos < n ∧ pos ≠ n - 1
     ∧ (Flat.get p (n - 1) = pos ∨ (Flat.get p (n - 1) = n - 1 ∧ Flat.get p pos ≠ pos))
 
--- `.LB73`: `exchange` of `pos` (`rax`).
+-- `.LB.Emission.permute.24`: `exchange` of `pos` (`rax`).
 def I73 (t : MachineData) : Prop :=
   ∃ g' L p f pos, DC S g F s ra g' L p t ∧ t.regs.rax.toBitVec = pos ∧ Mis g.h.len pos p
     ∧ Flat.permute (flat g) = after f (g.h.len - 1) (Flat.exchange (flat g') (g.h.len - 1) p pos)
     ∧ mu (g.h.len - 1) p ≤ f + 1 ∧ g'.h.nops.toNat + f + 1 ≤ 6 * g.h.n.toNat
 
--- `.LB98`: equal slots: `swapDestinations` of `pos` and `top`.
+-- `.LB.Emission.permute.20`: equal slots: `swapDestinations` of `pos` and `top`.
 def I98 (t : MachineData) : Prop :=
   ∃ g' L p f pos, DC S g F s ra g' L p t ∧ t.regs.rax.toBitVec = pos ∧ Mis g.h.len pos p
     ∧ Flat.permute (flat g) = Flat.permuteLoop f
@@ -255,25 +255,25 @@ def I98 (t : MachineData) : Prop :=
         (swapP p (g.h.len - 1) pos)
     ∧ mu (g.h.len - 1) p ≤ f + 1 ∧ g'.h.nops.toNat + f ≤ 6 * g.h.n.toNat
 
--- `.LB78` and `.LB82`: `positionOf[destinationOf[top]] = top` is left.
+-- `.LB.Emission.permute.21` and `.LB.Emission.permute.25`: `positionOf[destinationOf[top]] = top` is left.
 def I78 (t : MachineData) : Prop :=
   ∃ g' L p f pos, DC S g F s ra g' L p t ∧ t.regs.rax.toBitVec = pos ∧ Mis g.h.len pos p
     ∧ Flat.permute (flat g) = Flat.permuteLoop f
         (posAt (flat g') (g.h.len - 1)) (g.h.len - 1) (swapP p (g.h.len - 1) pos)
     ∧ mu (g.h.len - 1) p ≤ f + 1 ∧ g'.h.nops.toNat + f ≤ 6 * g.h.n.toNat
 
--- `.LB80`: the swap of `permutation[pos]` and `permutation[top]` is left.
+-- `.LB.Emission.permute.22`: the swap of `permutation[pos]` and `permutation[top]` is left.
 def I80 (t : MachineData) : Prop :=
   ∃ g' L p f pos, DC S g F s ra g' L p t ∧ t.regs.rax.toBitVec = pos ∧ Mis g.h.len pos p
     ∧ Flat.permute (flat g) = Flat.permuteLoop f (flat g') (g.h.len - 1)
         (swapP p (g.h.len - 1) pos)
     ∧ mu (g.h.len - 1) p ≤ f + 1 ∧ g'.h.nops.toNat + f ≤ 6 * g.h.n.toNat
 
--- `.LB97`: done.
+-- `.LB.Emission.permute.18`: done.
 def I97 (t : MachineData) : Prop :=
   ∃ g' L, Fm S g' F s ra L t ∧ g'.Ok ∧ Keep g g' ∧ Flat.permute (flat g) = (.done, flat g')
 
--- `.LB99`: the slot `pos` is too deep; `rdi = size - pos`.
+-- `.LB.Emission.permute.26`: the slot `pos` is too deep; `rdi = size - pos`.
 def I99 (t : MachineData) : Prop :=
   ∃ g' L pos, Fm S g' F s ra L t ∧ g'.Ok ∧ Keep g g' ∧ t.regs.r15.toBitVec = S
     ∧ t.regs.rax.toBitVec = pos ∧ t.regs.rdi.toBitVec = (g'.h.len - pos : Word)
@@ -286,33 +286,33 @@ def LInv : CfgLabel → MachineData → Prop
   | .exit, _ => False
   | .label l, t =>
     if l = Names.permute then t = s.pushRa ra
-    else if l = ".LB57" then I57 S g F s ra t
-    else if l = ".LB54" then I54 S g F s ra t
-    else if l = ".LB56" then I56 S g F s ra t
-    else if l = ".LB58" then I58 S g F s ra t
-    else if l = ".LB61" then I61 S g F s ra t
-    else if l = ".LB62" then I62 S g F s ra t
-    else if l = ".LB95" then I95 S g F s ra t
-    else if l = ".LB64" then I64 S g F s ra t
-    else if l = ".LB65" then I65 S g F s ra t
-    else if l = ".LB66" then I66 S g F s ra t
-    else if l = ".LB68" then I68 S g F s ra t
-    else if l = ".LB63" then I63 S g F s ra t
-    else if l = ".LB70" then I70 S g F s ra t
-    else if l = ".LB60" then I60 S g F s ra t
-    else if l = ".LB71" then I71 S g F s ra t
-    else if l = ".LB96" then I96 S g F s ra t
-    else if l = ".LB86" then I86 S g F s ra t
-    else if l = ".LB72" then I72 S g F s ra t
-    else if l = ".LB97" then I97 S g F s ra t
-    else if l = ".LB74" then I74 S g F s ra t
-    else if l = ".LB98" then I98 S g F s ra t
-    else if l = ".LB78" then I78 S g F s ra t
-    else if l = ".LB80" then I80 S g F s ra t
-    else if l = ".LB84" then I84 S g F s ra t
-    else if l = ".LB73" then I73 S g F s ra t
-    else if l = ".LB82" then I78 S g F s ra t
-    else if l = ".LB99" then I99 S g F s ra t
+    else if l = ".LB.Emission.permute.0" then I57 S g F s ra t
+    else if l = ".LB.Emission.permute.1" then I54 S g F s ra t
+    else if l = ".LB.Emission.permute.2" then I56 S g F s ra t
+    else if l = ".LB.Emission.permute.3" then I58 S g F s ra t
+    else if l = ".LB.Emission.permute.4" then I61 S g F s ra t
+    else if l = ".LB.Emission.permute.5" then I62 S g F s ra t
+    else if l = ".LB.Emission.permute.6" then I95 S g F s ra t
+    else if l = ".LB.Emission.permute.7" then I64 S g F s ra t
+    else if l = ".LB.Emission.permute.8" then I65 S g F s ra t
+    else if l = ".LB.Emission.permute.9" then I66 S g F s ra t
+    else if l = ".LB.Emission.permute.10" then I68 S g F s ra t
+    else if l = ".LB.Emission.permute.11" then I63 S g F s ra t
+    else if l = ".LB.Emission.permute.12" then I70 S g F s ra t
+    else if l = ".LB.Emission.permute.13" then I60 S g F s ra t
+    else if l = ".LB.Emission.permute.14" then I71 S g F s ra t
+    else if l = ".LB.Emission.permute.15" then I96 S g F s ra t
+    else if l = ".LB.Emission.permute.16" then I86 S g F s ra t
+    else if l = ".LB.Emission.permute.17" then I72 S g F s ra t
+    else if l = ".LB.Emission.permute.18" then I97 S g F s ra t
+    else if l = ".LB.Emission.permute.19" then I74 S g F s ra t
+    else if l = ".LB.Emission.permute.20" then I98 S g F s ra t
+    else if l = ".LB.Emission.permute.21" then I78 S g F s ra t
+    else if l = ".LB.Emission.permute.22" then I80 S g F s ra t
+    else if l = ".LB.Emission.permute.23" then I84 S g F s ra t
+    else if l = ".LB.Emission.permute.24" then I73 S g F s ra t
+    else if l = ".LB.Emission.permute.25" then I78 S g F s ra t
+    else if l = ".LB.Emission.permute.26" then I99 S g F s ra t
     else False
 
 end
@@ -327,28 +327,28 @@ def mD (s : MachineData) (g : G) (t : MachineData) : Nat := mu (g.h.len - 1) (me
 
 def V (s : MachineData) (g : G) (l : Label) (t : MachineData) : Nat :=
   if l = Names.permute then 2 ^ 35
-  else if l = ".LB57" then 2 ^ 34 + 2 * (1024 - t.regs.rax.toBitVec.toNat) + 1
-  else if l = ".LB56" then 2 ^ 34 + 2 * (1024 - t.regs.rax.toBitVec.toNat)
-  else if l = ".LB58" then 2 ^ 33 + (t.regs.rdx.toBitVec - t.regs.rax.toBitVec).toNat
-  else if l = ".LB71" then wC t + 2 ^ 22 - 1
-  else if l = ".LB60" then wC t
-  else if l = ".LB62" then wC t + 2051 * 1025 + (8192 - t.regs.rax.toBitVec.toNat) + 1
-  else if l = ".LB61" then wC t + 2051 * 1025 + (8192 - t.regs.rax.toBitVec.toNat)
-  else if l = ".LB95" then wC t + 2051 * 1025
-  else if l = ".LB70" then wC t + 2051 * (1025 - t.regs.rcx.toBitVec.toNat)
-  else if l = ".LB63" then wC t + 2051 * (1024 - t.regs.rcx.toBitVec.toNat)
-  else if l = ".LB64" ∨ l = ".LB68" then
+  else if l = ".LB.Emission.permute.0" then 2 ^ 34 + 2 * (1024 - t.regs.rax.toBitVec.toNat) + 1
+  else if l = ".LB.Emission.permute.2" then 2 ^ 34 + 2 * (1024 - t.regs.rax.toBitVec.toNat)
+  else if l = ".LB.Emission.permute.3" then 2 ^ 33 + (t.regs.rdx.toBitVec - t.regs.rax.toBitVec).toNat
+  else if l = ".LB.Emission.permute.14" then wC t + 2 ^ 22 - 1
+  else if l = ".LB.Emission.permute.13" then wC t
+  else if l = ".LB.Emission.permute.5" then wC t + 2051 * 1025 + (8192 - t.regs.rax.toBitVec.toNat) + 1
+  else if l = ".LB.Emission.permute.4" then wC t + 2051 * 1025 + (8192 - t.regs.rax.toBitVec.toNat)
+  else if l = ".LB.Emission.permute.6" then wC t + 2051 * 1025
+  else if l = ".LB.Emission.permute.12" then wC t + 2051 * (1025 - t.regs.rcx.toBitVec.toNat)
+  else if l = ".LB.Emission.permute.11" then wC t + 2051 * (1024 - t.regs.rcx.toBitVec.toNat)
+  else if l = ".LB.Emission.permute.7" ∨ l = ".LB.Emission.permute.10" then
     wC t + 2051 * (1024 - t.regs.rcx.toBitVec.toNat) + 2 * (1024 - t.regs.rax.toBitVec.toNat) + 1
-  else if l = ".LB66" then
+  else if l = ".LB.Emission.permute.9" then
     wC t + 2051 * (1024 - t.regs.rcx.toBitVec.toNat) + 2 * (1024 - t.regs.rax.toBitVec.toNat)
-  else if l = ".LB65" then 1
-  else if l = ".LB84" ∨ l = ".LB96" then 2048 * mD s g t + 1101
-  else if l = ".LB86" then 2048 * mD s g t + 1100
-  else if l = ".LB72" then 2048 * mD s g t + 1 + t.regs.rdx.toBitVec.toNat
-  else if l = ".LB74" ∨ l = ".LB73" then 2048 * mD s g t + 2
-  else if l = ".LB98" ∨ l = ".LB78" ∨ l = ".LB82" then 2048 * mD s g t + 1
-  else if l = ".LB80" then 2048 * mD s g t
-  else if l = ".LB97" ∨ l = ".LB99" then 1
+  else if l = ".LB.Emission.permute.8" then 1
+  else if l = ".LB.Emission.permute.23" ∨ l = ".LB.Emission.permute.15" then 2048 * mD s g t + 1101
+  else if l = ".LB.Emission.permute.16" then 2048 * mD s g t + 1100
+  else if l = ".LB.Emission.permute.17" then 2048 * mD s g t + 1 + t.regs.rdx.toBitVec.toNat
+  else if l = ".LB.Emission.permute.19" ∨ l = ".LB.Emission.permute.24" then 2048 * mD s g t + 2
+  else if l = ".LB.Emission.permute.20" ∨ l = ".LB.Emission.permute.21" ∨ l = ".LB.Emission.permute.25" then 2048 * mD s g t + 1
+  else if l = ".LB.Emission.permute.22" then 2048 * mD s g t
+  else if l = ".LB.Emission.permute.18" ∨ l = ".LB.Emission.permute.26" then 1
   else 0
 
 /-! ## The obligation of a block -/
@@ -369,12 +369,12 @@ def Obl [Host] [FunDecls] (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (r
 
 -- The labels of `finishAsm`, in the order of the blocks.
 def labels : List CfgLabel :=
-  [.entry, .label "_ZN12_GLOBAL__N_18Emission7permuteEv", .label ".LB57", .label ".LB54",
-    .label ".LB56", .label ".LB58", .label ".LB61", .label ".LB62", .label ".LB95",
-    .label ".LB64", .label ".LB65", .label ".LB66", .label ".LB68", .label ".LB63",
-    .label ".LB70", .label ".LB60", .label ".LB71", .label ".LB96", .label ".LB86",
-    .label ".LB72", .label ".LB97", .label ".LB74", .label ".LB98", .label ".LB78",
-    .label ".LB80", .label ".LB84", .label ".LB73", .label ".LB82", .label ".LB99"]
+  [.entry, .label "_ZN12_GLOBAL__N_18Emission7permuteEv", .label ".LB.Emission.permute.0", .label ".LB.Emission.permute.1",
+    .label ".LB.Emission.permute.2", .label ".LB.Emission.permute.3", .label ".LB.Emission.permute.4", .label ".LB.Emission.permute.5", .label ".LB.Emission.permute.6",
+    .label ".LB.Emission.permute.7", .label ".LB.Emission.permute.8", .label ".LB.Emission.permute.9", .label ".LB.Emission.permute.10", .label ".LB.Emission.permute.11",
+    .label ".LB.Emission.permute.12", .label ".LB.Emission.permute.13", .label ".LB.Emission.permute.14", .label ".LB.Emission.permute.15", .label ".LB.Emission.permute.16",
+    .label ".LB.Emission.permute.17", .label ".LB.Emission.permute.18", .label ".LB.Emission.permute.19", .label ".LB.Emission.permute.20", .label ".LB.Emission.permute.21",
+    .label ".LB.Emission.permute.22", .label ".LB.Emission.permute.23", .label ".LB.Emission.permute.24", .label ".LB.Emission.permute.25", .label ".LB.Emission.permute.26"]
 
 end Permute
 end Bbu.Unit

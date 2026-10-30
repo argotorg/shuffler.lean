@@ -13,11 +13,13 @@ all: permute.S harness build_bottom_up.S bbu_harness unit_test
 permute.S: permute.c
 	$(CC) $(CFLAGS_ASM) -S $< -o $@
 
-# The labels get the prefix .LB: the proofs use the .LB names. bbu/NAME.S holds the
+# The labels get the prefix .LB (sed), then the names .LB.NAME.K (labels.awk): K counts the labels
+# of the function NAME, so a label name depends only on its own function. bbu/NAME.S holds the
 # function NAME. NAME is the g++ (Itanium) name, for example
 # _ZN12_GLOBAL__N_18Emission7produceE11StackOffset, or build_bottom_up, which is extern "C".
-build_bottom_up.S: build_bottom_up.cpp
-	$(CXX) $(CXXFLAGS_ASM) -S $< -o - | sed 's/^\.L\([0-9]\)/.LB\1/; s/\(	j[a-z]*	\)\.L\([0-9]\)/\1.LB\2/' > $@
+build_bottom_up.S: build_bottom_up.cpp labels.awk
+	$(CXX) $(CXXFLAGS_ASM) -S $< -o - | sed 's/^\.L\([0-9]\)/.LB\1/; s/\(	j[a-z]*	\)\.L\([0-9]\)/\1.LB\2/' \
+		| awk -f labels.awk > $@
 	rm -rf bbu && mkdir bbu
 	awk '/^[a-zA-Z_][a-zA-Z0-9_]*:$$/ { f = "bbu/" substr($$0, 1, length($$0) - 1) ".S" } f { print > f } /^\t\.size/ { f = "" }' $@
 
@@ -34,5 +36,7 @@ unit_test: unit_test.cpp build_bottom_up.cpp
 
 clean:
 	rm -f harness bbu_harness unit_test
+
+.DELETE_ON_ERROR:
 
 .PHONY: all clean

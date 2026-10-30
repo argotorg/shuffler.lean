@@ -13,7 +13,7 @@ is equal.
 It reads only the slots below `m_size`, and `m_size ≤ n` (`G.Ok`), so it needs no precondition.
 The callers (`produce`, `permute`, `buildBottomUp`) use `g' = g` and the result in `rax`.
 
-The loop invariant at `.LB6` is `copyBelow (flat g) x rax = shallowestCopyPosition (flat g) x`:
+The loop invariant at `.LB.Emission.shallowestCopyPosition.0` is `copyBelow (flat g) x rax = shallowestCopyPosition (flat g) x`:
 at the entry `rax` is `m_size`, and each turn of the loop is one unfold of `copyBelow`.
 -/
 
@@ -68,20 +68,20 @@ theorem shl_xor_beq (a b : Word) :
 
 /-! ## The jumps -/
 
--- `je .LB10` taken.
+-- `je .LB.Emission.shallowestCopyPosition.1` taken.
 theorem zf_true {r : Word} (h : (r &&& r == BitVec.zero 64) = true) : r = 0#64 := by
   rwa [and_self_beq, decide_eq_true_eq] at h
 
--- `je .LB10` not taken.
+-- `je .LB.Emission.shallowestCopyPosition.1` not taken.
 theorem zf_false {r : Word} (h : (r &&& r == BitVec.zero 64) = false) : r ≠ 0#64 := by
   rwa [and_self_beq, decide_eq_false_iff_not] at h
 
--- `jne .LB6` taken: the slots differ.
+-- `jne .LB.Emission.shallowestCopyPosition.0` taken: the slots differ.
 theorem jne_true {a b : Word} (h : (!((a ^^^ b).shiftLeft 16 == BitVec.zero 64)) = true) :
     StackSlot.ofWord a ≠ StackSlot.ofWord b := by
   rwa [Bool.not_eq_true', shl_xor_beq, decide_eq_false_iff_not] at h
 
--- `jne .LB6` not taken: the slots are equal.
+-- `jne .LB.Emission.shallowestCopyPosition.0` not taken: the slots are equal.
 theorem jne_false {a b : Word} (h : (!((a ^^^ b).shiftLeft 16 == BitVec.zero 64)) = false) :
     StackSlot.ofWord a = StackSlot.ofWord b := by
   rwa [Bool.not_eq_false', shl_xor_beq, decide_eq_true_eq] at h
@@ -111,17 +111,17 @@ theorem shallowestCopy_unit [Host] [FunDecls] :
   refine Program.WP.cfg (fun
       | .entry, t => t = s.pushRa ra
       | .label "_ZNK12_GLOBAL__N_18Emission22shallowestCopyPositionE9StackSlot", t => t = s.pushRa ra
-      | .label ".LB6", t => Kp S g F s ra [] t ∧ rdi t = S ∧ rsi t = rsi s
+      | .label ".LB.Emission.shallowestCopyPosition.0", t => Kp S g F s ra [] t ∧ rdi t = S ∧ rsi t = rsi s
           ∧ (rax t).toNat ≤ g.h.len.toNat
           ∧ Flat.copyBelow (flat g) (StackSlot.ofWord (rsi s)) (rax t)
             = Flat.shallowestCopyPosition (flat g) (StackSlot.ofWord (rsi s))
-      | .label ".LB10", t => Kp S g F s ra [] t
+      | .label ".LB.Emission.shallowestCopyPosition.1", t => Kp S g F s ra [] t
           ∧ Flat.shallowestCopyPosition (flat g) (StackSlot.ofWord (rsi s)) = Flat.NONE
-      | .label ".LB7", t => Kp S g F s ra [] t
+      | .label ".LB.Emission.shallowestCopyPosition.2", t => Kp S g F s ra [] t
           ∧ rax t = Flat.shallowestCopyPosition (flat g) (StackSlot.ofWord (rsi s))
       | _, _ => False)
     (fun
-      | ".LB6", t => (rax t).toNat + 1
+      | ".LB.Emission.shallowestCopyPosition.0", t => (rax t).toNat + 1
       | "_ZNK12_GLOBAL__N_18Emission22shallowestCopyPositionE9StackSlot", _ => 2 ^ 64 + 1
       | _, _ => 0) ?_ rfl
   cfg_blocks
@@ -139,7 +139,7 @@ theorem shallowestCopy_unit [Host] [FunDecls] :
     all_goals try rw [hlen]
     vc_by_shape
     | load => rw [hdi, Fld.fold_stack_size]; view_load
-    -- The parts of the invariant of `.LB6` have the kind `other`. No alternative calls `omega`.
+    -- The parts of the invariant of `.LB.Emission.shallowestCopyPosition.0` have the kind `other`. No alternative calls `omega`.
     | other =>
       first
       | exact hk0.next rfl rfl rfl rfl rfl rfl rfl rfl
@@ -147,7 +147,7 @@ theorem shallowestCopy_unit [Host] [FunDecls] :
       | rfl
       | exact Nat.le_refl _
       | (left; exact Nat.add_lt_add_right (BitVec.isLt _) 1)
-  case «.LB6» t ht =>
+  case «.LB.Emission.shallowestCopyPosition.0» t ht =>
     obtain ⟨hk, hrdi', hrsi', hrax', hcb'⟩ := ht
     -- The invariant in the register form of the goals.
     have hrdi : t.regs.rdi.toBitVec = S := hrdi'
@@ -186,20 +186,20 @@ theorem shallowestCopy_unit [Host] [FunDecls] :
     kvcgen64
     all_goals try symexec_norm
     vc_by_shape
-    | goto ".LB10" =>
+    | goto ".LB.Emission.shallowestCopyPosition.1" =>
       have h0 := zf_true (by with_reducible assumption)
       cfg_goto
       · exact (hk.next rfl rfl rfl rfl rfl rfl rfl rfl).stack
       · exact ⟨hk.next rfl rfl rfl rfl rfl rfl rfl rfl, by rw [← hcb, h0, copyBelow_zero]⟩
       · simp
     | load =>
-      -- Both loads are after `je .LB10`, so `rax ≠ 0`.
+      -- Both loads are after `je .LB.Emission.shallowestCopyPosition.1`, so `rax ≠ 0`.
       have hih := hi (zf_false (by with_reducible assumption))
       simp only [hrdi, Fld.fold_stack_data, hd, fold_slot]
       view_load
     -- `salq $16`: the shift count is not 0.
     | closed => decide
-    | goto ".LB6" =>
+    | goto ".LB.Emission.shallowestCopyPosition.0" =>
       have h0 := zf_false (by with_reducible assumption)
       have hne := jne_true (by with_reducible assumption)
       rw [hrsi] at hne
@@ -217,18 +217,18 @@ theorem shallowestCopy_unit [Host] [FunDecls] :
       rw [hrsi] at heq
       exact Kp.ret (hk.next rfl rfl rfl rfl rfl rfl rfl rfl) rfl hok fun t' _ hax =>
         ⟨rfl, hax.trans ((hstep h0).trans (ite_eq_left heq.symm)).symm⟩
-  case «.LB10» t ht =>
+  case «.LB.Emission.shallowestCopyPosition.1» t ht =>
     obtain ⟨hk, hn⟩ := ht
     kvcgen64
     all_goals try symexec_norm
     vc_by_shape
-    -- The parts of the invariant of `.LB7`: `movq $-1, %rax` is `NONE`.
+    -- The parts of the invariant of `.LB.Emission.shallowestCopyPosition.2`: `movq $-1, %rax` is `NONE`.
     | other =>
       first
       | exact hk.next rfl rfl rfl rfl rfl rfl rfl rfl
       | exact hn.symm
       | simp
-  case «.LB7» t ht =>
+  case «.LB.Emission.shallowestCopyPosition.2» t ht =>
     obtain ⟨hk, hr⟩ := ht
     kvcgen64
     all_goals try symexec_norm

@@ -194,7 +194,7 @@ theorem var_of_flags {w : Word} {r r' : StatusFlags.from_result.Remaining}
   rw [z_opcode] at hz
   simpa [Value, Const, bne] using And.intro hnz hz
 
--- The state at `.LB1`: `al` holds the result. The C++ build has no `movzbl`, so the
+-- The state at `.LB.Emission.isSpilled.0`: `al` holds the result. The C++ build has no `movzbl`, so the
 -- upper bytes of `rax` are not fixed.
 def SpillDone (s : MachineData) (ra : Int64) (t : MachineData) : Prop :=
   ∃ r : Word, Done s ra r t ∧ r.setWidth 8 = BitVec.ofNat 8 (isSpilled (env s) (slot s)).toNat
@@ -207,7 +207,7 @@ theorem isSpilled_body [Host] [FunDecls] : Body isSpilledAsm isSpilledF isSpille
       | .entry, t => t = s.pushRa ra
       | .label l, t =>
         if l = Names.isSpilled then t = s.pushRa ra
-        else if l = ".LB1" then SpillDone s ra t
+        else if l = ".LB.Emission.isSpilled.0" then SpillDone s ra t
         else False
       | .exit, _ => False)
     (fun _ _ => 0) ?_ rfl

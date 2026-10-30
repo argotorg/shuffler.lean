@@ -15,8 +15,8 @@ the stores are in the view (`pushA`). `produce` uses the flat result (`pushQ`).
 
 The proof makes the chain of `View` hypotheses for the stores before `kvcgen64` (`h1` … `h10`),
 so each load VC and each loaded value has a hypothesis with the same memory term. The block
-ends at `.LB11` with the status in `edx`: `2` from the `jne` (the destination has a slot), `0`
-from the fall-through (the two `bind` stores). `.LB11` copies `edx` to `eax` and returns.
+ends at `.LB.Emission.push.0` with the status in `edx`: `2` from the `jne` (the destination has a slot), `0`
+from the fall-through (the two `bind` stores). `.LB.Emission.push.0` copies `edx` to `eax` and returns.
 -/
 
 open Std.WP Lean.Order
@@ -162,7 +162,7 @@ theorem al_movl (x : Word) : (BitVec.setWidth 64 (x.take 32)).setWidth 8 = x.set
   simp only [BitVec.toNat_setWidth, BitVec.take, BitVec.extractLsb'_toNat, Nat.shiftRight_zero]
   omega
 
-/-- The state at `.LB11`: the stores of `push` are done, and `edx` holds the status. -/
+/-- The state at `.LB.Emission.push.0`: the stores of `push` are done, and `edx` holds the status. -/
 def lbInv (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (t : MachineData) :
     Prop :=
   ∃ g', Kp S g' F s ra [] t ∧ g'.Ok ∧ Keep g g'
@@ -182,7 +182,7 @@ theorem push_unit [Host] [FunDecls] : UnitThm pushAsm pushA 0 pushQ := by
   refine Program.WP.cfg (fun
       | .entry, t => t = s.pushRa ra
       | .label "_ZN12_GLOBAL__N_18Emission4pushE9StackSlot11StackOffset", t => t = s.pushRa ra
-      | .label ".LB11", t => lbInv S g F s ra t
+      | .label ".LB.Emission.push.0", t => lbInv S g F s ra t
       | _, _ => False)
     (fun | _, _ => 0) ?_ rfl
   cfg_blocks
@@ -225,7 +225,7 @@ theorem push_unit [Host] [FunDecls] : UnitThm pushAsm pushA 0 pushQ := by
     vc_by_shape
     | closed => decide
     | load => view_load
-    | goto ".LB11" =>
+    | goto ".LB.Emission.push.0" =>
       -- `jne`: `m_positionOf[d] ≠ -1`, `edx = 2`, the view `h8` (no `bind`).
       rename_i hc
       simp only [hS, rd_eq, ext_ushr, ↓Fld.fold_mapping_positionOf,
@@ -248,7 +248,7 @@ theorem push_unit [Host] [FunDecls] : UnitThm pushAsm pushA 0 pushQ := by
         · rw [push_fail _ _ _ hne]; rfl
       · simp
     | other =>
-      -- The fall-through to `.LB11`: `m_positionOf[d] = -1`, `edx = 0`, the view `h10`.
+      -- The fall-through to `.LB.Emission.push.0`: `m_positionOf[d] = -1`, `edx = 0`, the view `h10`.
       rename_i hc
       simp only [hS, rd_eq, ext_ushr, ↓Fld.fold_mapping_positionOf,
         Fld.fold_stack_size, Fld.fold_stack_data,
@@ -267,7 +267,7 @@ theorem push_unit [Host] [FunDecls] : UnitThm pushAsm pushA 0 pushQ := by
       · rw [push_ok _ _ _ heq]
         exact flat_push_bind g hok hl hn _ _ (by rfl) _ hlN hd'
       · rw [push_ok _ _ _ heq]; rfl
-  case «.LB11» t ht =>
+  case «.LB.Emission.push.0» t ht =>
     -- `movl %edx, %eax; ret`.
     obtain ⟨g', hk, hok, hkeep, hflat, hcode⟩ := ht
     kvcgen64

@@ -17,7 +17,7 @@ ends after at most `2 * size - 1` steps with at most one swap each, so the trace
 The proof is `Program.WP.cfg` with the invariant `Permute.LInv` and the variant `Permute.V`
 (`Permute/Inv.lean`), and one lemma for each block (`Permute/A.lean` to `Permute/D3.lean`).
 `Permute.permute_of_b73` (`Permute/Assemble.lean`) does the assembly; `Permute.b_73`
-(`Permute/D3.lean`) is the lemma of `.LB73`.
+(`Permute/D3.lean`) is the lemma of `.LB.Emission.permute.24`.
 -/
 
 namespace Bbu.Unit

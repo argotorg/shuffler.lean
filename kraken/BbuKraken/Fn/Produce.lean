@@ -32,40 +32,40 @@ namespace Produce
 section
 
 variable (s : MachineData) (ra : Int64)
--- `.LB32` and `.LB39`: `emit` pushes the slot.
+-- `.LB.Emission.produce.1` and `.LB.Emission.produce.4`: `emit` pushes the slot.
 def At32 (t : MachineData) : Prop :=
   Lp s ra t ∧ emit (env s) (st s) (dd s) = add (st s) (sl s) (dd s) (.push (sl s))
--- `.LB40`: `emit` dups the copy `c` in `r12`.
+-- `.LB.Emission.produce.5`: `emit` dups the copy `c` in `r12`.
 def At40 (t : MachineData) : Prop :=
   Lp s ra t ∧ isJunk (sl s) = false ∧ ∃ c, cp s = some c ∧ (st s).len - 1 - c ≤ MAX_DUP_DEPTH
     ∧ t.regs.r12.toBitVec = BitVec.ofNat 64 c
--- `.LB31`: no copy is in reach; the opcode is in the local byte.
+-- `.LB.Emission.produce.0`: no copy is in reach; the opcode is in the local byte.
 def At31 (t : MachineData) : Prop :=
   Lp s ra t ∧ isJunk (sl s) = false ∧ Far (st s) (sl s) ∧ t.regs.r12.toBitVec = encOpt (cp s)
     ∧ rdb t.dmem (rsp s - 57#64) = (sl s).valueOpcode
--- `.LB41`: the slot is not free.
+-- `.LB.Emission.produce.6`: the slot is not free.
 def At41 (t : MachineData) : Prop :=
   Lp s ra t ∧ isJunk (sl s) = false ∧ Far (st s) (sl s) ∧ t.regs.r12.toBitVec = encOpt (cp s)
     ∧ canBeFreelyGenerated (sl s) = false
--- `.LB30`: the result of `emit`.
+-- `.LB.Emission.produce.2`: the result of `emit`.
 def At30 (t : MachineData) : Prop :=
   Hold s ra t ∧ Res (rdi s) (emit (env s) (st s) (dd s))
     (fun st' => rax t = 0#64 ∧ stOf t.dmem (rdi s) = st') t
--- `.LB35` and `.LB37`: `produce` fails an assertion.
+-- `.LB.Emission.produce.7` and `.LB.Emission.produce.8`: `produce` fails an assertion.
 def Asrt (t : MachineData) : Prop :=
   Base s ra t ∧ produce (env s) (st s) (dd s) = .error .assertion
--- `.LB28`: the result of `produce`.
+-- `.LB.Emission.produce.3`: the result of `produce`.
 def At28 (t : MachineData) : Prop :=
   Base s ra t ∧ Res (rdi s) (produce (env s) (st s) (dd s))
     (fun st' => rax t = 0#64 ∧ stOf t.dmem (rdi s) = st') t
 
 def V : Label → MachineData → Nat
-  | ".LB28", _ => 0
-  | ".LB35", _ | ".LB37", _ => 1
-  | ".LB30", _ => 2
-  | ".LB32", _ | ".LB39", _ | ".LB40", _ => 3
-  | ".LB41", _ => 4
-  | ".LB31", _ => 5
+  | ".LB.Emission.produce.3", _ => 0
+  | ".LB.Emission.produce.7", _ | ".LB.Emission.produce.8", _ => 1
+  | ".LB.Emission.produce.2", _ => 2
+  | ".LB.Emission.produce.1", _ | ".LB.Emission.produce.4", _ | ".LB.Emission.produce.5", _ => 3
+  | ".LB.Emission.produce.6", _ => 4
+  | ".LB.Emission.produce.0", _ => 5
   | _, _ => 6
 
 end

@@ -3,8 +3,8 @@ import BbuKraken.Unit.Permute.ML
 /-!
 # `permute`: the blocks of phase A and B, and the epilogue
 
-`entry`, the prologue, `.LB57`, `.LB54`, `.LB56` and `.LB58`. The fall of `.LB58` makes the
-model vectors of `.LB71` (`start`).
+`entry`, the prologue, `.LB.Emission.permute.0`, `.LB.Emission.permute.1`, `.LB.Emission.permute.2` and `.LB.Emission.permute.3`. The fall of `.LB.Emission.permute.3` makes the
+model vectors of `.LB.Emission.permute.14` (`start`).
 -/
 
 open Std.WP Lean.Order
@@ -134,7 +134,7 @@ theorem b_fn [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
     left; simp [V, Names.permute]
 
 theorem b_57 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB57" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.0" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -173,7 +173,7 @@ theorem Fm.isSome_pops {S : Addr} {g : G} {F : MProp 64} {s : MachineData} {ra :
     e 4 _ (by bv_omega) (by decide), e 5 _ (by bv_omega) (by decide)⟩
 
 theorem b_54 [Host] [FunDecls] (S g F s ra) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB54" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.1" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -196,7 +196,7 @@ theorem b_54 [Host] [FunDecls] (S g F s ra) :
     all_goals rfl
 
 theorem b_56 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB56" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.2" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -244,7 +244,7 @@ theorem b_56 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
     pm_dec
 
 theorem b_58 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB58" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.3" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
