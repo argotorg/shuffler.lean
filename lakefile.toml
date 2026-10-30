@@ -46,3 +46,10 @@ root = "BuildBottomUpMain"
 name = "bbu_pr31"
 srcDir = "kraken/test"
 root = "BbuPr31Main"
+
+# The flat model of the spill set, and the proofs that it equals SpillSet.add and
+# SpillSet.is_spilled of PR31. Not a default target.
+[[lean_lib]]
+name = "SpillBridge"
+srcDir = "kraken"
+globs = ["BbuKraken.FlatModel", "BbuKraken.FlatSpill", "SpillBridge.+"]
