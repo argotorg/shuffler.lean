@@ -39,10 +39,11 @@ theorem loop_corr' : LoopStmt :=
 
 variable {e : Bbu.Env} {source : List Bbu.StackSlot} {dests : List Nat}
 
--- The model is the original on the decoded inputs: the same stack and
--- operations, or the same error.
+-- The model is the original on the decoded inputs: both are done or both are
+-- blocked at the same slot by the same excess, with the same stack,
+-- destinations, pending count and operations; or both fail an assertion.
 theorem buildBottomUp_eq (h : ModelValid e source dests) :
-    Corr ResRel (Bbu.buildBottomUp e source dests)
+    ResCorr (Rel e) (Bbu.buildBottomUp e source dests)
       (buildBottomUp (initState e source dests h) (initValid e source dests h)) := by
   rw [buildBottomUp_eq_post]
   exact loop_corr' e _ _ _ 0 (initRel e source dests h)
@@ -75,6 +76,26 @@ theorem canon_expected (h : ModelValid e source dests) : ∀ v ∈ expected e so
   · exact canon_getElem! h.canonSource _
   · exact canon_getElem! h.canonTarget _
 
+theorem canon_vals {st : Bbu.St} (hc : ∀ s ∈ st.slots, Canon s.val) :
+    ∀ v ∈ st.slots.map Bbu.Slot.val, Canon v := by
+  intro v hv
+  obtain ⟨s, hs, rfl⟩ := List.mem_map.mp hv
+  exact hc s hs
+
+-- A done model run is a done original run with a related state.
+theorem orig_of_ok (h : ModelValid e source dests) {st : Bbu.St}
+    (hok : Bbu.buildBottomUp e source dests = .ok st) :
+    ∃ r, buildBottomUp (initState e source dests h) (initValid e source dests h) = .ok ⟨none, r⟩ ∧
+      Rel e st r := by
+  have hc := buildBottomUp_eq h
+  rw [hok] at hc
+  revert hc
+  rcases buildBottomUp (initState e source dests h) (initValid e source dests h) with _ | ⟨_ | b, r⟩
+  · exact False.elim
+  · exact fun hc => ⟨r, rfl, hc.2⟩
+  · rintro ⟨hb, -⟩
+    cases hb
+
 -- The model does not fail an assertion.
 theorem model_no_assertion (h : ModelValid e source dests) :
     Bbu.buildBottomUp e source dests ≠ .error .assertion := by
@@ -86,7 +107,7 @@ theorem model_no_assertion (h : ModelValid e source dests) :
   | error err =>
     rw [hr] at hc
     cases err with
-    | Blocked b => cases hc
+    | Blocked b => exact hc
     | assertion reason => exact buildBottomUp_no_assertion _ _ reason hr
 
 -- The model builds the expected stack, and its operations are a trace from the
@@ -96,20 +117,15 @@ theorem model_ok (h : ModelValid e source dests) {st : Bbu.St}
     st.slots.map Bbu.Slot.val = expected e source dests ∧
       ∃ trace : Trace (spillSet e) (source.map decode) ((expected e source dests).map decode),
         (traceOps trace).map encodeOp = st.trace := by
-  have hc := buildBottomUp_eq h
-  rw [hok] at hc
-  cases hr : buildBottomUp (initState e source dests h) (initValid e source dests h) with
-  | error err => rw [hr] at hc; exact hc.elim
-  | ok r =>
-    obtain ⟨res, trace⟩ := r
-    rw [hr] at hc
-    obtain ⟨hs, ht, hcs⟩ := hc
-    have hres := buildBottomUp_expected_of_ok _ _ hr
-    rw [expected_eq e source dests h] at hres
-    subst hres
-    refine ⟨map_decode_inj (by simpa using hcs) (canon_expected h) ?_, trace, ht⟩
-    rw [List.map_map]
-    exact hs.symm
+  obtain ⟨r, hr, hrel⟩ := orig_of_ok h hok
+  have hres := buildBottomUp_expected_of_ok _ _ hr
+  rw [expected_eq e source dests h] at hres
+  obtain ⟨_, stack, trace, _, _⟩ := r
+  simp only at hres
+  subst hres
+  refine ⟨map_decode_inj (canon_vals hrel.canon) (canon_expected h) ?_, trace, hrel.trace⟩
+  rw [List.map_map]
+  exact hrel.stack.symm
 
 -- If the destinations connect equal values, the model builds the target, and
 -- its operations are a trace from the source to the target.
@@ -118,45 +134,39 @@ theorem model_ok_target (h : ModelValid e source dests) (hm : Mapped e source de
     st.slots.map Bbu.Slot.val = e.target ∧
       ∃ trace : Trace (spillSet e) (source.map decode) (tgt e),
         (traceOps trace).map encodeOp = st.trace := by
-  have hc := buildBottomUp_eq h
-  rw [hok] at hc
-  cases hr : buildBottomUp (initState e source dests h) (initValid e source dests h) with
-  | error err => rw [hr] at hc; exact hc.elim
-  | ok r =>
-    obtain ⟨res, trace⟩ := r
-    rw [hr] at hc
-    obtain ⟨hs, ht, hcs⟩ := hc
-    have hres := buildBottomUp_correct_of_ok _ _ (mapped e source dests h hm) hr
-    subst hres
-    refine ⟨map_decode_inj (by simpa using hcs) h.canonTarget ?_, trace, ht⟩
-    rw [List.map_map]
-    exact hs.symm
+  obtain ⟨r, hr, hrel⟩ := orig_of_ok h hok
+  have hres := buildBottomUp_correct_of_ok _ _ (mapped e source dests h hm) hr
+  obtain ⟨_, stack, trace, _, _⟩ := r
+  simp only at hres
+  subst hres
+  refine ⟨map_decode_inj (canon_vals hrel.canon) h.canonTarget ?_, trace, hrel.trace⟩
+  rw [List.map_map]
+  exact hrel.stack.symm
 
--- The model succeeds if and only if the static success condition holds.
+-- The model is done if and only if the static success condition holds.
 theorem model_ok_iff_static (h : ModelValid e source dests) :
     (∃ st, Bbu.buildBottomUp e source dests = .ok st) ↔
       StaticSuccess (initState e source dests h) := by
   rw [← buildBottomUp_succeeds_iff_static _ (initValid e source dests h)]
-  have hc := buildBottomUp_eq h
-  revert hc
-  cases Bbu.buildBottomUp e source dests <;>
-    cases buildBottomUp (initState e source dests h) (initValid e source dests h) <;>
-    intro hc
-  · simp
-  · exact hc.elim
-  · exact hc.elim
-  · exact iff_of_true ⟨_, rfl⟩ ⟨_, _, rfl⟩
+  constructor
+  · rintro ⟨st, hok⟩
+    obtain ⟨r, hr, -⟩ := orig_of_ok h hok
+    exact ⟨r, hr⟩
+  · rintro ⟨r, hr⟩
+    have hc := buildBottomUp_eq h
+    rw [hr] at hc
+    revert hc
+    rcases Bbu.buildBottomUp e source dests with (⟨pos, ex, a⟩ | _) | st
+    · rintro ⟨hb, -⟩
+      cases hb
+    · exact False.elim
+    · exact fun _ => ⟨st, rfl⟩
 
--- The model succeeds for a source of at most 16 values.
+-- The model is done for a source of at most 16 values.
 theorem model_ok_small (h : ModelValid e source dests) (hs : source.length ≤ 16) :
     ∃ st, Bbu.buildBottomUp e source dests = .ok st := by
-  obtain ⟨res, trace, hr⟩ :=
+  obtain ⟨r, hr⟩ :=
     buildBottomUp_succeeds_small _ (initValid e source dests h) (by simpa [initState, MAX_DUP_DEPTH] using hs)
-  have hc := buildBottomUp_eq h
-  rw [hr] at hc
-  revert hc
-  cases Bbu.buildBottomUp e source dests with
-  | ok st => exact fun _ => ⟨st, rfl⟩
-  | error err => exact False.elim
+  exact (model_ok_iff_static h).mpr ((buildBottomUp_succeeds_iff_static _ _).mp ⟨r, hr⟩)
 
 end BbuBridge

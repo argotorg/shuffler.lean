@@ -36,7 +36,7 @@ private theorem initValid_unmapped {m n : Nat} (f : Mapping m n) (h : ∀ i, (f 
 theorem initValid : InitValidStmt := by
   intro e source dests h
   have hle := h.le
-  refine ⟨?_, ?_, ?_⟩
+  refine ⟨?_, ?_, ?_, ?_⟩
   · simp only [initState, List.length_map, Bbu.Env.n] at hle ⊢
     omega
   · simp only [initState]
@@ -51,5 +51,15 @@ theorem initValid : InitValidStmt := by
     · exact Or.inl h1
     · exact Or.inr (Or.inl h1)
     · exact Or.inr (Or.inr (List.mem_map_of_mem h1))
+  · -- A slot is bound for each function return label of the target.
+    intro j hj
+    have hjl : j.val < e.target.length := by simpa using j.isLt
+    have ht : (tgt e)[j] = decode e.target[j.val] := by simp [tgt]
+    rw [ht, isFRL_iff (h.canonTarget _ (List.getElem_mem hjl))] at hj
+    obtain ⟨i, hi, hid⟩ := List.getElem_of_mem (h.labels j.val hjl hj)
+    have hil : i < (source.map decode).length := by simpa [← h.length] using hi
+    refine Option.isSome_iff_exists.mpr ⟨⟨i, hil⟩, (PEquiv.eq_some_iff _).mpr ?_⟩
+    simp only [initState, ofDests]
+    exact congrArg some (Fin.ext hid)
 
 end BbuBridge

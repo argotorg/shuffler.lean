@@ -63,7 +63,7 @@ def afterPos (st : St) (targetOffset sourceForTargetOffset pos : Nat) : M (St ×
   if pos = targetOffset then .ok (st, .next (targetOffset + 1))
   else if pos ≠ st.len - 1 then
     let depth := st.len - 1 - pos
-    if MAX_SWAP_DEPTH < depth then .error (.blocked pos (depth - MAX_SWAP_DEPTH))
+    if MAX_SWAP_DEPTH < depth then .error (.blocked pos (depth - MAX_SWAP_DEPTH) st)
     else (swapWith st pos).bind (placeTop · targetOffset)
   else placeTop st targetOffset
 
@@ -88,7 +88,7 @@ section
 variable (s : MachineData) (ra : Int64)
 
 -- The result of the loop at the call.
-abbrev R0 : M St := loop (env s) (st s) 0
+abbrev R0 : M St := loop finishC (env s) (st s) 0
 
 -- The local `urgentToDup` in `t`.
 abbrev urgentToDupWord (t : MachineData) : Word := rd t.dmem (rsp s - 72#64)
@@ -100,7 +100,7 @@ def InvL (e : Env) (st0 : St) (targetOffset : Nat) : Prop :=
 -- The loop head at `targetOffset < n` with the state `st0` gives the result of the loop.
 def Ctx (targetOffset : Nat) (st0 : St) : Prop :=
   targetOffset < (env s).n ∧ InvL (env s) st0 targetOffset
-    ∧ loop (env s) st0 targetOffset = R0 s
+    ∧ loop finishC (env s) st0 targetOffset = R0 s
 
 -- An iteration at `targetOffset` from a loop head gives `r`.
 def Iter (targetOffset : Nat) (r : M (St × Next)) : Prop :=
@@ -121,17 +121,17 @@ def At85 (t : MachineData) : Prop :=
 -- `.LB64`: the end of an iteration; `targetOffset'` is the next offset.
 def At64 (t : MachineData) : Prop :=
   Base s ra t ∧ ∃ targetOffset', t.regs.r14.toBitVec + 1#64 = BitVec.ofNat 64 targetOffset'
-    ∧ InvL (env s) (st' s t) targetOffset' ∧ loop (env s) (st' s t) targetOffset' = R0 s
+    ∧ InvL (env s) (st' s t) targetOffset' ∧ loop finishC (env s) (st' s t) targetOffset' = R0 s
 
 -- `.LB92`: as `.LB64`, with the offset in `rsi`.
 def At92 (t : MachineData) : Prop :=
   Base s ra t ∧ ∃ targetOffset', t.regs.rsi.toBitVec + 1#64 = BitVec.ofNat 64 targetOffset'
-    ∧ InvL (env s) (st' s t) targetOffset' ∧ loop (env s) (st' s t) targetOffset' = R0 s
+    ∧ InvL (env s) (st' s t) targetOffset' ∧ loop finishC (env s) (st' s t) targetOffset' = R0 s
 
 -- `.LB106`: as `.LB64`, with the offset in `r14`.
 def At106 (t : MachineData) : Prop :=
   Base s ra t ∧ ∃ targetOffset', t.regs.r14.toBitVec = BitVec.ofNat 64 targetOffset'
-    ∧ InvL (env s) (st' s t) targetOffset' ∧ loop (env s) (st' s t) targetOffset' = R0 s
+    ∧ InvL (env s) (st' s t) targetOffset' ∧ loop finishC (env s) (st' s t) targetOffset' = R0 s
 
 -- `.LB63`: the slot at `targetOffset` is not final.
 def At63 (t : MachineData) : Prop :=
@@ -160,18 +160,18 @@ def AtErr (t : MachineData) : Prop :=
 
 -- `.LB103`: a copy is out of reach for a dup.
 def At103 (t : MachineData) : Prop :=
-  Base s ra t ∧ ∃ pos excess, t.regs.rax.toBitVec = BitVec.ofNat 64 pos
-    ∧ t.regs.rcx.toBitVec - 16#64 = BitVec.ofNat 64 excess ∧ R0 s = .error (.blocked pos excess)
+  Base s ra t ∧ ∃ pos excess bst, t.regs.rax.toBitVec = BitVec.ofNat 64 pos
+    ∧ t.regs.rcx.toBitVec - 16#64 = BitVec.ofNat 64 excess ∧ R0 s = .error (.blocked pos excess bst)
 
 -- `.LB108`: the slot at `rsi` is out of reach for a swap.
 def At108 (t : MachineData) : Prop :=
-  Base s ra t ∧ ∃ pos excess, t.regs.rsi.toBitVec = BitVec.ofNat 64 pos
-    ∧ t.regs.r15.toBitVec - 17#64 = BitVec.ofNat 64 excess ∧ R0 s = .error (.blocked pos excess)
+  Base s ra t ∧ ∃ pos excess bst, t.regs.rsi.toBitVec = BitVec.ofNat 64 pos
+    ∧ t.regs.r15.toBitVec - 17#64 = BitVec.ofNat 64 excess ∧ R0 s = .error (.blocked pos excess bst)
 
 -- `.LB109`: the slot at `r14` is out of reach for a swap.
 def At109 (t : MachineData) : Prop :=
-  Base s ra t ∧ ∃ pos excess, t.regs.r14.toBitVec = BitVec.ofNat 64 pos
-    ∧ t.regs.rax.toBitVec - 17#64 = BitVec.ofNat 64 excess ∧ R0 s = .error (.blocked pos excess)
+  Base s ra t ∧ ∃ pos excess bst, t.regs.r14.toBitVec = BitVec.ofNat 64 pos
+    ∧ t.regs.rax.toBitVec - 17#64 = BitVec.ofNat 64 excess ∧ R0 s = .error (.blocked pos excess bst)
 
 -- `.LB61`: the result is in `rax` and memory.
 def At61 (t : MachineData) : Prop :=

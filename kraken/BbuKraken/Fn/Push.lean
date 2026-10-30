@@ -20,6 +20,6 @@ open Kit PushDup
 -- Model.lean `add`). On
 -- `AssertionFailed` the stack has one more slot; `pushR` allows it.
 theorem push_body [Host] [FunDecls] : Body pushAsm pushF pushA pushR := by
-  sorry
+  sorry -- wf:todo
 
 end Bbu

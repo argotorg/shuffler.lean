@@ -5,7 +5,8 @@ Run the original `Shuffler.Emission.buildBottomUp` on lines
 "m n s1 .. sm t1 .. tn d1 .. dm k v1 .. vk" and print the operations as
 "ok op1 .. opj", "blocked offset excess", "assertion" or "invalid". `s`, `t` are
 the source and target values, `d` the destination of each source slot and `v`
-the spilled variable ids. A value is a number: 0 is a wildcard, 1 a function
+the spilled variable ids. A function return label in the target must be bound
+(`State.Valid.labels_bound`); else the line is "invalid". A value is a number: 0 is a wildcard, 1 a function
 return label, 2 + 2 id a variable and 3 + 2 id a literal. An operation is
 "s depth", "d depth" or "p value". The root project builds it as `bbu_original`:
 
@@ -29,7 +30,7 @@ def number : Value → Nat
 def ops {spills : SpillSet} {s r : Stack} : Trace spills s r → List String
   | .Lit _ => []
   | .Swap idx _ _ _ t => ops t ++ [s!"s {idx}"]
-  | .Dup idx _ _ _ t => ops t ++ [s!"d {idx}"]
+  | .Dup idx _ _ _ _ t => ops t ++ [s!"d {idx}"]
   | .Push v _ t => ops t ++ [s!"p {number v}"]
   | .Load id _ t => ops t ++ [s!"p {number (.Var id)}"]
   | .Pop _ t => ops t ++ ["pop"]
@@ -45,9 +46,10 @@ def mapping? (m n : Nat) (dests : List Nat) : Option (Mapping m n) :=
       else none
     else none) ⊥
 
-def render {spills : SpillSet} {source : Stack} :
-    Except ShuffleErr ((result : Stack) × Trace spills source result) → String
-  | .ok ⟨_, t⟩ => " ".intercalate ("ok" :: ops t)
+def render {source target : Stack} {spills : SpillSet} :
+    Except ShuffleErr (Result source target spills) → String
+  | .ok ⟨none, state⟩ => " ".intercalate ("ok" :: ops state.trace)
+  | .ok ⟨some b, _⟩ => s!"blocked {b.offset} {b.excess}"
   | .error (.Blocked b) => s!"blocked {b.offset} {b.excess}"
   | .error (.assertion _) => "assertion"
 
@@ -71,7 +73,9 @@ def run (m n : Nat) (rest : List Nat) : String :=
         if hsize : state.stack.length + state.pending_generations = target.length then
           if hpending : state.mapping.unmapped_target_slots = state.pending_generations then
             if havailable : ∀ i, state.isAvailable i then
-              render (buildBottomUp state ⟨hsize, hpending, havailable⟩)
+              if hlabels : ∀ j, target[j].isFunctionReturnLabel → (state.mapping.symm j).isSome then
+                render (buildBottomUp state ⟨hsize, hpending, havailable, hlabels⟩)
+              else "invalid"
             else "invalid"
           else "invalid"
         else "invalid"

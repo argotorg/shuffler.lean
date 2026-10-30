@@ -9,17 +9,17 @@ namespace BbuBridge
 open Shuffler Shuffler.Emission
 
 -- A cast of the result stack does not change the operations of a trace.
-private theorem traceOps_cast {spills : SpillSet} {source a b : Stack} (hab : a = b)
+theorem traceOps_cast {spills : SpillSet} {source a b : Stack} (hab : a = b)
     (t : Trace spills source a) : traceOps (hab ▸ t) = traceOps t := by
   subst hab; rfl
 
 -- A mapping after a cast of its source length.
-private theorem cast_apply {m n k : Nat} (hmn : m = n) (M : Mapping m k) (i : Fin n) :
+theorem mapping_cast_apply {m n k : Nat} (hmn : m = n) (M : Mapping m k) (i : Fin n) :
     (hmn ▸ M) i = M (i.cast hmn.symm) := by
   subst hmn; rfl
 
 -- The model state after `swapWith`: the slots at `pos` and the top exchange.
-private theorem swapWith_slots (st : Bbu.St) (pos : Nat) (tr : List Bbu.Op) (hp : pos < st.len) :
+theorem swapWith_slots (st : Bbu.St) (pos : Nat) (tr : List Bbu.Op) (hp : pos < st.len) :
     (Bbu.swapDestinations { st with
       slots := (st.slots.set pos ⟨st.val (st.len - 1), st.dest pos⟩).set (st.len - 1)
         ⟨st.val pos, st.dest (st.len - 1)⟩
@@ -35,7 +35,8 @@ private theorem swapWith_slots (st : Bbu.St) (pos : Nat) (tr : List Bbu.Op) (hp 
       List.length_set, ht, hp']
     split_ifs <;> simp_all
 
-private theorem swapDest_eq (st : Bbu.St) (a b : Nat) :
+-- `Bbu.swapDestinations` changes only the slots and `positionOf`.
+theorem swapDestinations_eta (st : Bbu.St) (a b : Nat) :
     Bbu.swapDestinations st a b = { st with
       slots := (Bbu.swapDestinations st a b).slots
       positionOf := (Bbu.swapDestinations st a b).positionOf } := rfl
@@ -51,7 +52,7 @@ theorem swapWith_corr : SwapWithStmt := by
     by_cases hf : st.dest pos = pos
     · rw [ite_eq_left (.inr hf)]
       simp only [requires, hfin, hf, not_true_eq_false, dite_false]
-      exact rfl
+      exact trivial
     · rw [ite_eq_right (by omega)]
       simp only [requires, hfin, hf, not_false_eq_true, dite_true, pure, Except.pure, bind,
         Except.bind]
@@ -61,7 +62,7 @@ theorem swapWith_corr : SwapWithStmt := by
       · rw [ite_eq_right (by simp only [Bbu.MAX_SWAP_DEPTH, MAX_SWAP_DEPTH] at *; omega)]
         simp only [hdd, hdepth, and_self, dite_true]
         have hpl : pos < st.len := by omega
-        rw [swapDest_eq, swapWith_slots st pos _ hpl]
+        rw [swapDestinations_eta, swapWith_slots st pos _ hpl]
         refine ⟨?_, ?_, h.pendingGenerations, ?_, ?_,
           canon_set (canon_set h.canon (h.canonVal _)) (h.canonVal _), h.target⟩
         · show state.stack.swap pos (state.stack.length - 1) = _
@@ -76,7 +77,7 @@ theorem swapWith_corr : SwapWithStmt := by
             split_ifs <;> simp [hg, Bbu.St.val, hi]
         · intro i
           obtain ⟨i, hi⟩ := i
-          rw [cast_apply, Mapping.swapDestinations_apply, Equiv.swap_apply_def]
+          rw [mapping_cast_apply, Mapping.swapDestinations_apply, Equiv.swap_apply_def]
           have hn : st.len = st.slots.length := rfl
           have hi' : i < st.slots.length := by simp at hi; omega
           have hps : pos < st.slots.length := by omega
@@ -98,9 +99,9 @@ theorem swapWith_corr : SwapWithStmt := by
           · unfold Bbu.St.dests; rw [swapWith_slots st pos _ hpl]
       · rw [ite_eq_left (by simp only [Bbu.MAX_SWAP_DEPTH, MAX_SWAP_DEPTH] at *; omega)]
         simp only [hdd, hdepth, dite_false]
-        exact rfl
+        exact trivial
   · rw [ite_eq_left (.inl (by omega))]
     simp only [index, hp, dite_false]
-    exact rfl
+    exact trivial
 
 end BbuBridge

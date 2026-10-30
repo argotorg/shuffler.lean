@@ -94,6 +94,6 @@ open SwapWithFn Kit
 -- Model.lean `swapDestinations` (`bindIf`);
 -- `Pos` in `swapWithA` gives that both destinations are below `n`.
 theorem swapWith_body [Host] [FunDecls] : Body swapWithAsm swapWithF swapWithA swapWithR := by
-  sorry
+  sorry -- wf:todo
 
 end Bbu

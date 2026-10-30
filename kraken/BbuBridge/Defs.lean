@@ -1,6 +1,5 @@
 import Shuffler.BuildBottomUp.Theorems
 import BbuKraken.ModelLemmas
-import BbuBridge.Permute
 
 /-!
 The link between the model `Bbu.buildBottomUp` and the original
@@ -12,6 +11,11 @@ The original target is `e.target.map decode`, and the original spill set is
 `spillSet e`. A model state `st` and an original state are related (`Rel`) if
 they have the same stack (after `decode`), the same destination for each slot,
 the same `pending` and the same operations (after `encodeOp`).
+
+A model result and an original `Result` are related (`ResCorr`) if both are
+done with related states, both are blocked at the same slot by the same excess
+with related states, or both fail an assertion. The model returns a block as the
+error `Err.blocked` with the state at the block.
 -/
 
 namespace BbuBridge
@@ -37,34 +41,41 @@ theorem ofNumber_number (s : Bbu.StackSlot) : ofNumber (number s) = s := by
   simp only [ofNumber, number, Bbu.StackSlot.mk.injEq]
   refine ⟨?_, ?_, ?_⟩ <;> apply BitVec.eq_of_toNat_eq <;> simp only [BitVec.toNat_ofNat] <;> omega
 
+-- The function return label slot of the harness.
+def frl : Bbu.StackSlot := ⟨0, Bbu.FunctionReturnLabel, Bbu.Unreachable⟩
+
 -- The value of a slot: a junk slot is a wildcard, a literal or a function call
--- return label is a literal, and each other slot is a variable. The number of
--- the slot is the literal or the variable id.
+-- return label is a literal, a function return label is a function return
+-- label, and each other slot is a variable. The number of the slot is the
+-- literal or the variable id.
 def decode (s : Bbu.StackSlot) : Value :=
   if s.kind = Bbu.Junk then .Wildcard
   else if s.valueOpcode = Bbu.Const ∨ s.kind = Bbu.FunctionCallReturnLabel then
     .Lit (Fin.ofNat _ (number s))
+  else if s.kind = Bbu.FunctionReturnLabel then .FunctionReturnLabel
   else .Var ⟨number s⟩
 
 def encode : Value → Bbu.StackSlot
   | .Wildcard => .junk
-  | .FunctionReturnLabel => ⟨0, Bbu.FunctionReturnLabel, Bbu.Unreachable⟩
+  | .FunctionReturnLabel => frl
   | .Var id => ofNumber id.val
   | .Lit w => ofNumber w.val
 
 -- The model compares slots and the original compares values, so a junk slot
--- must be `StackSlot.junk`.
-def Canon (s : Bbu.StackSlot) : Prop := s.kind = Bbu.Junk → s = .junk
+-- must be `StackSlot.junk`, and a function return label must be `frl`.
+def Canon (s : Bbu.StackSlot) : Prop :=
+  (s.kind = Bbu.Junk → s = .junk) ∧ (s.kind = Bbu.FunctionReturnLabel → s = frl)
 
 theorem canon_default : Canon default := by
-  intro h; cases h
+  constructor <;> intro h <;> cases h
 
 theorem encode_decode {s : Bbu.StackSlot} (h : Canon s) : encode (decode s) = s := by
   unfold decode
-  split_ifs with h0 h1
-  · exact (h h0).symm
+  split_ifs with h0 h1 h2
+  · exact (h.1 h0).symm
   · simp only [encode, Fin.val_ofNat]
     rw [Nat.mod_eq_of_lt (by have := number_lt s; omega), ofNumber_number]
+  · exact (h.2 h2).symm
   · exact ofNumber_number s
 
 theorem decode_inj {a b : Bbu.StackSlot} (ha : Canon a) (hb : Canon b)
@@ -81,7 +92,31 @@ abbrev tgt (e : Bbu.Env) : Stack := e.target.map decode
 -- An original state for the model environment `e`.
 abbrev OState (e : Bbu.Env) (source : Stack) := State source (tgt e) (spillSet e)
 
-/-! ## Operations and results -/
+-- An original result for the model environment `e`.
+abbrev OResult (e : Bbu.Env) (source : Stack) := Result source (tgt e) (spillSet e)
+
+/-! ## Operations -/
+
+-- One op of a trace.
+inductive TraceOp where
+  | swap (depth : Nat)
+  | dup (depth : Nat)
+  | pop
+  | push (v : Value)
+  | load (id : VarId)
+
+-- The ops of a trace, in order of application.
+def traceOps {spills : SpillSet} {source result : Stack} : Trace spills source result → List TraceOp
+  | .Lit _ => []
+  | .Swap idx _ _ _ t => traceOps t ++ [.swap idx]
+  | .Dup idx _ _ _ _ t => traceOps t ++ [.dup idx]
+  | .Pop _ t => traceOps t ++ [.pop]
+  | .Push v _ t => traceOps t ++ [.push v]
+  | .Load id _ t => traceOps t ++ [.load id]
+
+theorem traceOps_concat {spills : SpillSet} {a b c : Stack} (t1 : Trace spills a b)
+    (t2 : Trace spills b c) : traceOps (t1.concat t2) = traceOps t1 ++ traceOps t2 := by
+  induction t2 <;> simp_all [Trace.concat, traceOps]
 
 -- The model operation of a trace operation. A load is a push of the variable.
 -- `buildBottomUp` never pops; a pop has an unused kind.
@@ -92,22 +127,24 @@ def encodeOp : TraceOp → Bbu.Op
   | .load id => .push (encode (.Var id))
   | .pop => ⟨2, 0, .junk⟩
 
-def encodeErr : ShuffleErr → Bbu.Err
-  | .Blocked b => .blocked b.offset b.excess
-  | .assertion _ => .assertion
+/-! ## Results -/
 
--- A final model state and a result of `buildBottomUp` agree: the same stack
--- (after `decode`) and the same operations (after `encodeOp`). The slots are
--- canonical.
-def ResRel {spills : SpillSet} {source : Stack} (st : Bbu.St)
-    (r : (res : Stack) × Trace spills source res) : Prop :=
-  r.1 = st.slots.map (fun s => decode s.val) ∧ (traceOps r.2).map encodeOp = st.trace
-    ∧ ∀ s ∈ st.slots, Canon s.val
-
--- A model result and an original result agree: related values, or the same error.
+-- A model result and an original result agree: related values, or both fail an
+-- assertion. The original actions never block.
 def Corr {α β : Type} (R : α → β → Prop) : Bbu.M α → Except ShuffleErr β → Prop
   | .ok a, .ok b => R a b
-  | .error err, .error err' => err = encodeErr err'
+  | .error .assertion, .error (.assertion _) => True
+  | _, _ => False
+
+-- A model result and an original `Result` agree: both are done with related
+-- states, both are blocked at the same slot by the same excess with related
+-- states, or both fail an assertion.
+def ResCorr {source target : Stack} {spills : SpillSet}
+    (R : Bbu.St → State source target spills → Prop) :
+    Bbu.M Bbu.St → Except ShuffleErr (Result source target spills) → Prop
+  | .ok st, .ok r => r.blocked = none ∧ R st r.state
+  | .error (.blocked pos excess st), .ok r => r.blocked = some ⟨pos, excess⟩ ∧ R st r.state
+  | .error .assertion, .error (.assertion _) => True
   | _, _ => False
 
 /-! ## The precondition -/
@@ -117,11 +154,13 @@ def Available (e : Bbu.Env) (source : List Bbu.StackSlot) (v : Bbu.StackSlot) : 
   Bbu.canBeFreelyGenerated v = true ∨ Bbu.isSpilled e v = true ∨ v ∈ source
 
 -- The precondition of the model. `TopPre` gives the first three fields; the
--- original also needs that each target value is available (`State.Valid`). The
--- junk slots of the inputs are `StackSlot.junk`.
+-- original also needs that each target value is available and that a slot is
+-- bound for each function return label of the target (`State.Valid`). The junk
+-- slots and the function return labels of the inputs are canonical.
 structure ModelValid (e : Bbu.Env) (source : List Bbu.StackSlot) (dests : List Nat) : Prop where
   length : dests.length = source.length
   le : source.length ≤ e.n
+  labels : ∀ d (hd : d < e.target.length), e.target[d].kind = Bbu.FunctionReturnLabel → d ∈ dests
   dests : Bbu.Dests e.n dests
   available : ∀ v ∈ e.target, Available e source v
   canonSource : ∀ v ∈ source, Canon v
@@ -178,6 +217,8 @@ def Mapped (e : Bbu.Env) (source : List Bbu.StackSlot) (dests : List Nat) : Prop
 
 -- The model state `st` and the original state agree. Also, `st.positionOf` is
 -- the position of each destination, and the slots and the target are canonical.
+-- `planned_mapping` does not change in `buildBottomUp`, and the model does not
+-- keep it.
 structure Rel {source : Stack} (e : Bbu.Env) (st : Bbu.St) (state : OState e source) : Prop where
   stack : state.stack = st.slots.map fun s => decode s.val
   dest : ∀ i : Fin state.stack.length, (state.mapping i).map Fin.val = some (st.dest i)
@@ -189,22 +230,24 @@ structure Rel {source : Stack} (e : Bbu.Env) (st : Bbu.St) (state : OState e sou
 
 /-! ## Parts of the original loop -/
 
--- The `urgentToDup` scan of `buildBottomUp.loop`.
-def origUrgent {source target : Stack} {spills : SpillSet}
-    (state : State source target spills) (targetOffset : Nat) : Except ShuffleErr (Option Nat) := do
+-- The `urgentToDup` scan of `buildBottomUp.loop`, followed by `rest`.
+def origScan {source target : Stack} {spills : SpillSet}
+    (state : State source target spills) (targetOffset : Nat)
+    (rest : Option Nat → Except ShuffleErr (Result source target spills)) :
+    Except ShuffleErr (Result source target spills) := do
   let mut urgentToDup := none
   for offset in [targetOffset : target.length] do
-    if (state.positionOf (← index target.length offset)).isSome then
+    if (state.mapping.positionOf (← index target.length offset)).isSome then
       continue
     let slot ← slotAt target offset
     if slot.is_junk ∨ slot.can_be_freely_generated ∨ spills.is_spilled slot then
       continue
     if let some sourceCopy := state.stack.shallowestCopyPosition slot then
       if ¬ state.stack.isDupReachable sourceCopy then
-        throw (← state.blockDupUnreachable sourceCopy)
+        return ← state.blockDupUnreachable sourceCopy
       if (state.depthOf sourceCopy) = MAX_DUP_DEPTH ∧ sourceCopy.val ≠ targetOffset ∧ urgentToDup.isNone then
         urgentToDup := some offset
-  return urgentToDup
+  rest urgentToDup
 
 -- The search of `buildBottomUp.loop` for a movable copy of the slot at `bound`.
 def origCopyScan {source target : Stack} {spills : SpillSet}
@@ -219,33 +262,34 @@ def origCopyScan {source target : Stack} {spills : SpillSet}
 
 -- The final permutation of `buildBottomUp.loop`.
 def origFinish {source target : Stack} {spills : SpillSet} (state : State source target spills) :
-    Except ShuffleErr ((res : Stack) × Trace spills source res) := do
+    Except ShuffleErr (Result source target spills) := do
   let ⟨hlen⟩ ← requires (state.stack.length = target.length) "working stack does not match target size"
-  let ⟨hbound⟩ ← requires (∀ i, (state.destinationOf i).isSome) "unmapped source slots"
-  let ⟨res, trace⟩ ←
-    Shuffler.Permute.permute spills state.stack (state.mapping.toPermutation hlen hbound)
-  return ⟨res, state.trace.concat trace⟩
+  let ⟨hbound⟩ ← requires (∀ i, (state.mapping.destinationOf i).isSome) "unmapped source slots"
+  Shuffler.Permute.permute state (state.mapping.toPermutation hlen hbound)
 
 -- The check of `buildBottomUp` after the loop.
-def post {spills : SpillSet} {source : Stack} (target : Stack)
-    (x : Except ShuffleErr ((res : Stack) × Trace spills source res)) :
-    Except ShuffleErr ((res : Stack) × Trace spills source res) := do
-  let ⟨res, trace⟩ ← x
-  _ ← requires (res.length = target.length) "stack and target sizes differ"
-  return ⟨res, trace⟩
+def post {source target : Stack} {spills : SpillSet}
+    (x : Except ShuffleErr (Result source target spills)) :
+    Except ShuffleErr (Result source target spills) := do
+  let result ← x
+  if result.blocked.isSome then return result
+  _ ← requires (result.state.stack.length = target.length) "stack and target sizes differ"
+  return result
 
 theorem buildBottomUp_eq_post {source target : Stack} {spills : SpillSet}
     (initial : State source target spills) (h : initial.Valid) :
-    buildBottomUp initial h = post target (buildBottomUp.loop 0 initial) := rfl
+    buildBottomUp initial h = post (buildBottomUp.loop 0 initial) := rfl
 
 -- The original computation `x` continues as the model step `r` says: with the
--- loop at the next offset and a related state, with the final permutation, or
--- with the same error.
+-- loop at the next offset and a related state, with the final permutation,
+-- blocked with a related state, or with an assertion.
 def StepCorr {source : Stack} (e : Bbu.Env) (r : Bbu.M (Bbu.St × Bbu.Next)) (state : OState e source)
-    (x : Except ShuffleErr ((res : Stack) × Trace (spillSet e) source res)) : Prop :=
+    (x : Except ShuffleErr (OResult e source)) : Prop :=
   match r with
   | .ok (st', .next t') => ∃ state' : OState e source, Rel e st' state' ∧ x = buildBottomUp.loop t' state'
   | .ok (st', .finish) => Rel e st' state ∧ x = origFinish state
-  | .error err => ∃ err', x = .error err' ∧ err = encodeErr err'
+  | .error (.blocked pos excess st') =>
+    ∃ state' : OState e source, Rel e st' state' ∧ x = .ok ⟨some ⟨pos, excess⟩, state'⟩
+  | .error .assertion => ∃ reason, x = .error (.assertion reason)
 
 end BbuBridge

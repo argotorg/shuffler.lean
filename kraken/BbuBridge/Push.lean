@@ -23,7 +23,7 @@ theorem push_corr : PushStmt := by
   rw [Bbu.add_eq]
   unfold State.push
   -- The destination is free: both add the slot. Else both fail.
-  by_cases hp : state.positionOf ⟨d, hd⟩ = none
+  by_cases hp : state.mapping.positionOf ⟨d, hd⟩ = none
   · rw [hp] at hpos
     rw [← hpos]
     simp only [requires, hp, hgen, ↓reduceDIte, pure, Except.pure, bind, Except.bind,
@@ -63,6 +63,6 @@ theorem push_corr : PushStmt := by
     rw [hk] at hpos
     rw [← hpos]
     simp [requires, hp]
-    rfl
+    trivial
 
 end BbuBridge

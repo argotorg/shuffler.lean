@@ -121,6 +121,32 @@ theorem step_done {l : List Nat} (h : step l = .done) : ∀ i < l.length, l[i]! 
     · exact lastMisplaced_none l l.length hpos
   · split at h <;> simp at h
 
+-- `target` gives the destination of an out-of-place top, or an out-of-place
+-- position if the top is in place.
+theorem target_spec {l : List Nat} {pos : Nat} (h : target l = some pos) :
+    (l[l.length - 1]! ≠ l.length - 1 ∧ pos = l[l.length - 1]!)
+      ∨ (l[l.length - 1]! = l.length - 1 ∧ pos < l.length ∧ l[pos]! ≠ pos) := by
+  simp only [target] at h
+  split at h
+  · grind
+  · have := lastMisplaced_spec l l.length _ h
+    grind
+
+theorem step_target {l : List Nat} {idx pos : Nat} (h : step l = .swap idx pos) :
+    target l = some pos := by
+  unfold step at h
+  split at h
+  · simp at h
+  dsimp only at h
+  split at h
+  · simp at h
+  · rename_i pos' hpos
+    split at h
+    · simp at h
+    · simp only [Step.swap.injEq] at h
+      obtain ⟨-, rfl⟩ := h
+      exact hpos
+
 namespace Perm
 
 theorem getElem!_lt (p : Perm) {i : Nat} (hi : i < p.toList.length) :
@@ -133,23 +159,28 @@ theorem getElem!_inj (p : Perm) {i j : Nat} (hi : i < p.toList.length) (hj : j <
   rw [getElem!_pos p.toList i hi, getElem!_pos p.toList j hj] at h
   exact p.inj i j hi hj h
 
--- In a permutation, the destination of an out-of-place top is out of place too.
-theorem step_swap (p : Perm) {idx pos : Nat} (h : step p.toList = .swap idx pos) :
-    idx = p.toList.length - 1 - pos ∧ 1 ≤ idx ∧ idx ≤ MAX_SWAP_DEPTH
-      ∧ pos < p.toList.length - 1 ∧ p.toList[pos]! ≠ pos := by
-  obtain ⟨hidx, hmax, h1 | h2⟩ := PermuteKraken.step_swap h
-  · obtain ⟨htop, rfl⟩ := h1
-    have hne : 0 < p.toList.length := by
+-- In a permutation, the destination of an out-of-place top is out of place too:
+-- `target` gives an out-of-place position below the top.
+theorem target_lt (p : Perm) {pos : Nat} (h : target p.toList = some pos) :
+    pos < p.toList.length - 1 ∧ p.toList[pos]! ≠ pos := by
+  rcases target_spec h with ⟨htop, rfl⟩ | ⟨htop, hlt, hmis⟩
+  · have hne : 0 < p.toList.length := by
       cases hl : p.toList with
       | nil => simp [hl] at htop
       | cons _ _ => simp
     have hlt := p.getElem!_lt (i := p.toList.length - 1) (by omega)
-    refine ⟨hidx, by omega, hmax, by omega, fun hfix => htop ?_⟩
+    refine ⟨by omega, fun hfix => htop ?_⟩
     have := p.getElem!_inj (by omega) (by omega : p.toList.length - 1 < p.toList.length) hfix
     omega
-  · obtain ⟨htop, hlt, hmis⟩ := h2
-    have hpos : pos ≠ p.toList.length - 1 := fun h => hmis (h ▸ htop)
-    exact ⟨hidx, by omega, hmax, by omega, hmis⟩
+  · have hpos : pos ≠ p.toList.length - 1 := fun h => hmis (h ▸ htop)
+    exact ⟨by omega, hmis⟩
+
+theorem step_swap (p : Perm) {idx pos : Nat} (h : step p.toList = .swap idx pos) :
+    idx = p.toList.length - 1 - pos ∧ 1 ≤ idx ∧ idx ≤ MAX_SWAP_DEPTH
+      ∧ pos < p.toList.length - 1 ∧ p.toList[pos]! ≠ pos := by
+  obtain ⟨hidx, hmax, -⟩ := PermuteKraken.step_swap h
+  obtain ⟨hlt, hmis⟩ := p.target_lt (step_target h)
+  exact ⟨hidx, by omega, hmax, hlt, hmis⟩
 
 def swap (p : Perm) (i j : Nat) (hi : i < p.toList.length) (hj : j < p.toList.length) : Perm where
   toList := swapEntries p.toList i j
@@ -206,9 +237,9 @@ theorem countP_congr {n : Nat} {f g : Nat → Bool} (h : ∀ i < n, f i = g i) :
     (List.range n).countP f = (List.range n).countP g :=
   List.countP_congr (fun i hi => by rw [h i (List.mem_range.mp hi)])
 
-theorem measure_swap_lt (p : Perm) {idx pos : Nat} (h : step p.toList = .swap idx pos) (hi hj) :
+theorem measure_target_lt (p : Perm) {pos : Nat} (h : target p.toList = some pos) (hi hj) :
     measure (p.swap (p.toList.length - 1) pos hi hj).toList < measure p.toList := by
-  obtain ⟨-, -, -, hpos, hmis⟩ := p.step_swap h
+  obtain ⟨hpos, hmis⟩ := p.target_lt h
   have hgs := p.getElem!_swap (p.toList.length - 1) pos hi hj
   unfold measure
   rw [p.length_swap]
@@ -223,7 +254,7 @@ theorem measure_swap_lt (p : Perm) {idx pos : Nat} (h : step p.toList = .swap id
     simp only [hgs, ht]
     grind
   · -- the top is out of place: `pos` is its destination, and the swap puts `pos` in place
-    obtain ⟨-, -, h1 | h2⟩ := PermuteKraken.step_swap h
+    rcases target_spec h with h1 | h2
     · obtain ⟨-, hp⟩ := h1
       rw [htop] at hp
       have hlt := countP_lt (n := top)
@@ -231,6 +262,10 @@ theorem measure_swap_lt (p : Perm) {idx pos : Nat} (h : step p.toList = .swap id
         (fun i hi' => by rw [hgs i]; grind) ⟨pos, hpos, by rw [hgs pos]; grind, by simpa using hmis⟩
       grind
     · grind
+
+theorem measure_swap_lt (p : Perm) {idx pos : Nat} (h : step p.toList = .swap idx pos) (hi hj) :
+    measure (p.swap (p.toList.length - 1) pos hi hj).toList < measure p.toList :=
+  p.measure_target_lt (step_target h) hi hj
 
 -- The permutation after one swap, or `p` if `step` gives no swap.
 def advance (p : Perm) : Perm :=

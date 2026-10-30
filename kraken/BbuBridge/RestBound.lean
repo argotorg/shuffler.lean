@@ -14,18 +14,18 @@ open Shuffler Shuffler.Emission
 variable {source target : Stack} {spills : SpillSet}
 -- The end of the loop body: swap the top down into `t`.
 def rbTail (targetOffset : Nat) (state : State source target spills) :
-    Except ShuffleErr ((res : Stack) × Trace spills source res) := do
+    Except ShuffleErr (Result source target spills) := do
   let mut state := state
   _ ← requires (¬ state.isFinal (← index state.stack.length targetOffset)) "target slot is already final"
   if targetOffset ≠ state.stack.length - 1 then
     if ¬ (state.isSwapReachable (← index state.stack.length targetOffset)) then
-      throw (← state.blockSwapUnreachable (← index state.stack.length targetOffset))
+      return ← state.blockSwapUnreachable (← index state.stack.length targetOffset)
     state ← state.swapWith targetOffset
   return ← buildBottomUp.loop (targetOffset + 1) state
 
 -- The rest of the bound branch, once the copy at `pos` is chosen.
 def rbAfter (targetOffset : Nat) (state : State source target spills) (b pos : Nat) :
-    Except ShuffleErr ((res : Stack) × Trace spills source res) := do
+    Except ShuffleErr (Result source target spills) := do
   _ ← requires ((← slotAt state.stack pos) = (← slotAt state.stack b))
     "selected copy differs from the bound slot"
   let state ← state.swapDestinations pos b
@@ -33,7 +33,7 @@ def rbAfter (targetOffset : Nat) (state : State source target spills) (b pos : N
     return ← buildBottomUp.loop (targetOffset + 1) state
   if pos ≠ state.stack.length - 1 then
     if ¬ (state.isSwapReachable (← index state.stack.length pos)) then
-      throw (← state.blockSwapUnreachable (← index state.stack.length pos))
+      return ← state.blockSwapUnreachable (← index state.stack.length pos)
     let state ← state.swapWith pos
     return ← rbTail targetOffset state
   rbTail targetOffset state
@@ -41,7 +41,7 @@ def rbAfter (targetOffset : Nat) (state : State source target spills) (b pos : N
 -- The branch for the slot at `bound` bound for `targetOffset`.
 def rbBound (targetOffset : Nat) (state : State source target spills)
     (bound : Fin state.stack.length) :
-    Except ShuffleErr ((res : Stack) × Trace spills source res) := do
+    Except ShuffleErr (Result source target spills) := do
   _ ← requires (bound ≥ targetOffset) "slot bound for the offset being filled is missing or already below it"
   if (← slotAt state.stack targetOffset) = (← slotAt state.stack bound) then
     rbAfter targetOffset state bound targetOffset
@@ -53,9 +53,9 @@ theorem rb_origRest (t : Nat) (state : State source target spills) (uo : Option 
     (htn : t < target.length) (bb : Fin state.stack.length)
     (h1 : ¬ (uo.isSome ∧ uo ≠ some t ∧ state.stack.length - t < MAX_SWAP_DEPTH))
     (h2 : ¬ (uo.isNone ∧ state.stack.length > t ∧ state.stack.length < target.length ∧
-      (∃ hl : state.stack.length < target.length, (state.positionOf ⟨_, hl⟩).isNone) ∧
+      (∃ hl : state.stack.length < target.length, (state.mapping.positionOf ⟨_, hl⟩).isNone) ∧
       state.stack.length - t < MAX_SWAP_DEPTH))
-    (hpos : state.positionOf ⟨t, htn⟩ = some bb) :
+    (hpos : state.mapping.positionOf ⟨t, htn⟩ = some bb) :
     origRest t state uo = rbBound t state bb := by
   unfold origRest
   dsimp only
@@ -83,7 +83,7 @@ theorem rb_requires_false {c : Prop} [Decidable c] (h : ¬ c) (r : String) :
 -- The error of a swap that does not reach `p`.
 theorem rb_blockSwap (state : State source target spills)
     (p : Fin state.stack.length) (hr : MAX_SWAP_DEPTH < state.stack.length - 1 - p) :
-    state.blockSwapUnreachable p = .ok (.Blocked ⟨p, state.stack.length - 1 - p - MAX_SWAP_DEPTH⟩) := by
+    state.blockSwapUnreachable p = .ok ⟨some ⟨p, state.stack.length - 1 - p - MAX_SWAP_DEPTH⟩, state⟩ := by
   unfold State.blockSwapUnreachable State.block
   rw [requires_of_true _ (by simp only [State.depthOf, Stack.offsetToDepth]; omega)]
   rfl
@@ -99,7 +99,7 @@ theorem rb_placeTop (hswap : SwapWithStmt) (st : Bbu.St) (state0 state : OState 
     by_cases hf : st.dest t = t
     · rw [ite_eq_left (Or.inr hf)]
       have hf' : state.isFinal ⟨t, hl'⟩ := (h.isFinal ⟨t, hl'⟩).mpr hf
-      exact ⟨_, by rw [rb_requires_false (not_not_intro hf')]; rfl, rfl⟩
+      exact ⟨_, by rw [rb_requires_false (not_not_intro hf')]; rfl⟩
     have hf' : ¬ state.isFinal ⟨t, hl'⟩ := fun h' => hf ((h.isFinal ⟨t, hl'⟩).mp h')
     rw [ite_eq_right (by omega), requires_of_true _ hf', except_ok_bind]
     have hl2 : state.stack.length = st.len := h.len
@@ -115,23 +115,19 @@ theorem rb_placeTop (hswap : SwapWithStmt) (st : Bbu.St) (state0 state : OState 
         simp only [Bbu.MAX_SWAP_DEPTH] at hr
         omega
       rw [ite_eq_left hr']
-      rw [except_ok_bind, rb_blockSwap _ _ (by simp only [MAX_SWAP_DEPTH, Bbu.MAX_SWAP_DEPTH] at hr ⊢; omega),
-        except_ok_bind]
-      exact ⟨_, rfl, by simp [encodeErr, hl2]; rfl⟩
+      rw [except_ok_bind, rb_blockSwap _ _ (by simp only [MAX_SWAP_DEPTH, Bbu.MAX_SWAP_DEPTH] at hr ⊢; omega)]
+      refine ⟨state, h, ?_⟩
+      simp [hl2]; rfl
     rw [ite_eq_right hr]
     have hr' : state.isSwapReachable ⟨t, hl'⟩ := by
       simp only [State.isSwapReachable, State.depthOf, Stack.offsetToDepth, MAX_SWAP_DEPTH]
       simp only [Bbu.MAX_SWAP_DEPTH] at hr
       omega
     rw [ite_eq_right (not_not_intro hr')]
-    have hc := hswap e src st state t h
-    cases hm : Bbu.swapWith st t <;> cases ho : state.swapWith t <;> rw [hm, ho] at hc <;>
-      simp only [Corr] at hc
-    · exact ⟨_, rfl, hc⟩
-    · exact ⟨_, hc, rfl⟩
+    exact stepcorr_next (t + 1) (hswap e src st state t h)
   · rw [ite_eq_left (Or.inl (by omega))]
     have hl' : ¬ t < state.stack.length := by rw [h.len]; exact hl
-    exact ⟨_, by simp [index, hl']; rfl, rfl⟩
+    exact ⟨_, by simp [index, hl']; rfl⟩
 
 -- The model after the copy at `pos` is chosen: `Bbu.takeBound` and `Bbu.placeTop`.
 def rbAfterM (st : Bbu.St) (t b pos : Nat) : Bbu.M (Bbu.St × Bbu.Next) :=
@@ -141,7 +137,7 @@ def rbAfterM (st : Bbu.St) (t b pos : Nat) : Bbu.M (Bbu.St × Bbu.Next) :=
    if pos = t then .ok (st, true)
    else if pos ≠ st.len - 1 then
      let depth := st.len - 1 - pos
-     if Bbu.MAX_SWAP_DEPTH < depth then .error (.blocked pos (depth - Bbu.MAX_SWAP_DEPTH))
+     if Bbu.MAX_SWAP_DEPTH < depth then .error (.blocked pos (depth - Bbu.MAX_SWAP_DEPTH) st)
      else (Bbu.swapWith st pos).map (·, false)
    else .ok (st, false)).bind fun (st, done) =>
     if done then .ok (st, .next (t + 1)) else Bbu.placeTop st t
@@ -183,8 +179,9 @@ theorem rb_after (hdest : SwapDestStmt) (hswap : SwapWithStmt) (st : Bbu.St) (st
       simp only [Bbu.MAX_SWAP_DEPTH] at hd
       omega
     rw [ite_eq_left hd', except_ok_bind,
-      rb_blockSwap _ _ (by simp only [MAX_SWAP_DEPTH, Bbu.MAX_SWAP_DEPTH] at hd ⊢; omega), except_ok_bind]
-    exact ⟨_, rfl, by simp [encodeErr, hl, hl2]; rfl⟩
+      rb_blockSwap _ _ (by simp only [MAX_SWAP_DEPTH, Bbu.MAX_SWAP_DEPTH] at hd ⊢; omega)]
+    refine ⟨state', hr, ?_⟩
+    simp [hl, hl2]; rfl
   rw [ite_eq_right hd]
   have hd' : state'.isSwapReachable ⟨pos, hp2⟩ := by
     simp only [State.isSwapReachable, State.depthOf, Stack.offsetToDepth, MAX_SWAP_DEPTH]
@@ -192,9 +189,10 @@ theorem rb_after (hdest : SwapDestStmt) (hswap : SwapWithStmt) (st : Bbu.St) (st
     omega
   rw [ite_eq_right (not_not_intro hd')]
   have hc := hswap e src _ state' pos hr
-  cases hm : Bbu.swapWith (Bbu.swapDestinations st pos b) pos <;> cases ho : state'.swapWith pos <;>
-    rw [hm, ho] at hc <;> simp only [Corr] at hc
-  · exact ⟨_, rfl, hc⟩
+  generalize Bbu.swapWith (Bbu.swapDestinations st pos b) pos = m at hc ⊢
+  generalize state'.swapWith pos = r at hc ⊢
+  rcases m with (⟨_, _, _⟩ | _) | st2 <;> rcases r with (_ | _) | s2 <;> simp only [Corr] at hc
+  · exact ⟨_, rfl⟩
   · exact rb_placeTop hswap _ state _ t hc
 
 -- The copy that `Bbu.movableCopy` finds holds the same value.
@@ -215,7 +213,7 @@ theorem restBound_corr (hcopy : CopyScanStmt) (hdest : SwapDestStmt) (hswap : Sw
   have hl := h.len
   have hbl : b < st.len := Bbu.positionOf_some h.pos hb
   have hbs : b < state.stack.length := by omega
-  have hpos : state.positionOf ⟨t, htn⟩ = some ⟨b, hbs⟩ := by
+  have hpos : state.mapping.positionOf ⟨t, htn⟩ = some ⟨b, hbs⟩ := by
     have := h.positionOf ⟨t, htn⟩
     rw [hb] at this
     obtain ⟨k, hk, hkb⟩ := Option.map_eq_some_iff.mp this
@@ -228,7 +226,7 @@ theorem restBound_corr (hcopy : CopyScanStmt) (hdest : SwapDestStmt) (hswap : Sw
     exact c4 ⟨by omega, fun hxt => hne (by rw [hxt]),
       by simp only [MAX_SWAP_DEPTH, Bbu.MAX_SWAP_DEPTH] at hlt ⊢; omega⟩
   have h2 : ¬ (uo.isNone ∧ state.stack.length > t ∧ state.stack.length < (tgt e).length ∧
-      (∃ hl : state.stack.length < (tgt e).length, (state.positionOf ⟨_, hl⟩).isNone) ∧
+      (∃ hl : state.stack.length < (tgt e).length, (state.mapping.positionOf ⟨_, hl⟩).isNone) ∧
       state.stack.length - t < MAX_SWAP_DEPTH) := by
     rintro ⟨hn, hgt, hlt, ⟨hl', hp⟩, hd⟩
     rw [Option.isNone_iff_eq_none] at hn hp
@@ -244,7 +242,7 @@ theorem restBound_corr (hcopy : CopyScanStmt) (hdest : SwapDestStmt) (hswap : Sw
   dsimp only
   by_cases hbt : b < t
   · rw [ite_eq_left hbt, rb_requires_false (by simp only [ge_iff_le, not_le]; exact hbt)]
-    exact ⟨_, rfl, rfl⟩
+    exact ⟨_, rfl⟩
   have htl : t < state.stack.length := by omega
   rw [ite_eq_right hbt, requires_of_true _ (by simp only [ge_iff_le, not_lt] at hbt ⊢; exact hbt),
     except_ok_bind, show slotAt state.stack t = .ok state.stack[t] from slotAt_index _ ⟨t, htl⟩,

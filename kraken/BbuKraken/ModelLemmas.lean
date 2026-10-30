@@ -721,11 +721,11 @@ theorem Inv.finish {e : Env} {st : St} {t : Nat} (hi : Inv e st t)
   unfold St.dests at hl this
   omega
 
-theorem finish_ok {st st' : St} (h : finish st = .ok st') :
+theorem finishC_ok {st st' : St} (h : finishC st = .ok st') :
     ∃ (hp : IsPerm (st.slots.map Slot.dest)) (swaps : List Nat),
       PermuteKraken.permute ⟨_, hp.1, fun i j hi hj => hp.2 i hi j hj⟩ = .ok swaps
         ∧ st' = swaps.foldl swapTop st := by
-  unfold finish at h
+  unfold finishC at h
   split at h
   · cases h
   dsimp only at h
@@ -738,7 +738,7 @@ theorem finish_ok {st st' : St} (h : finish st = .ok st') :
     · cases h
   · cases h
 
--- The swaps of `finish` keep the length, the mapping and `pendingGenerations`, and
+-- The swaps of `finishC` keep the length, the mapping and `pendingGenerations`, and
 -- add a swap each to the trace.
 theorem foldl_swapTop (swaps : List Nat) (st : St) :
     (swaps.foldl swapTop st).len = st.len
@@ -782,24 +782,24 @@ theorem permute_ok {p : PermuteKraken.Perm} {ds : List Nat} (h : PermuteKraken.p
 
 /-! ## Unfolding of `loop` -/
 
-theorem loop_next {e : Env} {st st' : St} {t t' : Nat} (ht : t < e.n)
-    (h : step e st t = .ok (st', .next t')) : loop e st t = loop e st' t' := by
+theorem loop_next {fin : St → M St} {e : Env} {st st' : St} {t t' : Nat} (ht : t < e.n)
+    (h : step e st t = .ok (st', .next t')) : loop fin e st t = loop fin e st' t' := by
   rw [loop, ite_eq_left ht]
   split <;> simp_all
 
-theorem loop_finish {e : Env} {st st' : St} {t : Nat} (ht : t < e.n)
+theorem loop_finish {fin : St → M St} {e : Env} {st st' : St} {t : Nat} (ht : t < e.n)
     (h : step e st t = .ok (st', .finish)) :
-    loop e st t = if st'.len = e.n then finish st' else .error .assertion := by
+    loop fin e st t = if st'.len = e.n then fin st' else .error .assertion := by
   rw [loop, ite_eq_left ht]
   split <;> simp_all
 
-theorem loop_error {e : Env} {st : St} {t : Nat} {err : Err} (ht : t < e.n)
-    (h : step e st t = .error err) : loop e st t = .error err := by
+theorem loop_error {fin : St → M St} {e : Env} {st : St} {t : Nat} {err : Err} (ht : t < e.n)
+    (h : step e st t = .error err) : loop fin e st t = .error err := by
   rw [loop, ite_eq_left ht]
   split <;> simp_all
 
-theorem loop_ge {e : Env} {st : St} {t : Nat} (ht : ¬t < e.n) :
-    loop e st t = if st.len = e.n then .ok st else .error .assertion := by
+theorem loop_ge {fin : St → M St} {e : Env} {st : St} {t : Nat} (ht : ¬t < e.n) :
+    loop fin e st t = if st.len = e.n then .ok st else .error .assertion := by
   rw [loop, ite_eq_right ht]
 
 /-! ## Spilled congruence -/
@@ -851,7 +851,8 @@ termination_by tg.length - d
 theorem step_congr (st : St) (t : Nat) : step ⟨tg, s⟩ st t = step ⟨tg, s'⟩ st t := by
   simp only [step, urgent, Env.n, urgentFrom_congr H, generate_congr H]
 
-theorem loop_congr (st : St) (t : Nat) : loop ⟨tg, s⟩ st t = loop ⟨tg, s'⟩ st t := by
+theorem loop_congr (fin : St → M St) (st : St) (t : Nat) :
+    loop fin ⟨tg, s⟩ st t = loop fin ⟨tg, s'⟩ st t := by
   by_cases ht : t < tg.length
   · have hs := step_congr H st t
     cases h : step ⟨tg, s⟩ st t with
@@ -863,7 +864,7 @@ theorem loop_congr (st : St) (t : Nat) : loop ⟨tg, s⟩ st t = loop ⟨tg, s'�
       | next t' =>
         have := step_progress h
         rw [loop_next ht h, loop_next ht (hs ▸ h :)]
-        exact loop_congr st' t'
+        exact loop_congr fin st' t'
   · rw [loop_ge ht, loop_ge ht]
     rfl
 termination_by (tg.length - t, st.pendingGenerations)
@@ -884,6 +885,6 @@ theorem buildBottomUp_congr {e e' : Env} (ht : e.target = e'.target)
   obtain ⟨tg', s'⟩ := e'
   dsimp only at ht hs
   subst ht
-  exact loop_congr hs _ _
+  exact loop_congr hs finish _ _
 
 end Bbu

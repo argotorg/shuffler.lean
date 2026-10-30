@@ -77,7 +77,7 @@ variable {s : MachineData} {T T' : Nat} {st0 : St} {err : Err}
 theorem ctx_iter (h : Ctx s T st0) : Iter s T (step (env s) st0 T) := ⟨st0, h, rfl⟩
 
 theorem iter_next (h : Iter s T (.ok (st', .next T'))) :
-    InvL (env s) st' T' ∧ loop (env s) st' T' = R0 s := by
+    InvL (env s) st' T' ∧ loop finishC (env s) st' T' = R0 s := by
   obtain ⟨st0, ⟨hT, ⟨hi, hle⟩, hl⟩, hs⟩ := h
   exact ⟨⟨step_inv hi hT hs, step_le hi.pos hle hs⟩, (loop_next hT hs).symm.trans hl⟩
 
@@ -86,14 +86,14 @@ theorem iter_err (h : Iter s T (.error err)) : R0 s = .error err := by
   exact hl.symm.trans (loop_error hT hs)
 
 -- The loop at an offset `T ≥ n`.
-theorem loop_end (hT : ¬ T < (env s).n) (hl : loop (env s) st0 T = R0 s) :
+theorem loop_end (hT : ¬ T < (env s).n) (hl : loop finishC (env s) st0 T = R0 s) :
     R0 s = if st0.len = (env s).n then .ok st0 else .error .assertion :=
   hl.symm.trans (loop_ge hT)
 
 -- No slot is pending: the result is the final permutation.
 theorem ctx_fin (h : Ctx s T st0) (ho : ¬ (T < st0.len ∧ st0.dest T = T))
     (hp : st0.pendingGenerations = 0) :
-    R0 s = (if st0.len = (env s).n then finish st0 else .error .assertion)
+    R0 s = (if st0.len = (env s).n then finishC st0 else .error .assertion)
       ∧ IsPerm (st0.slots.map Slot.dest) ∧ st0.trace.length + 2 * st0.len ≤ 6 * (env s).n := by
   obtain ⟨hT, ⟨hi, -⟩, hl⟩ := h
   exact ⟨hl.symm.trans (loop_finish hT (step_fin ho hp)), hi.finish hp⟩
@@ -147,7 +147,7 @@ theorem uf_far (hd : d < e.n) (hp : positionOf st d = none)
     (hf : (isJunk e.target[d]! || canBeFreelyGenerated e.target[d]! || isSpilled e e.target[d]!)
       = false)
     (hc : shallowestCopyPosition st e.target[d]! = some c) (hfar : MAX_DUP_DEPTH < st.len - 1 - c) :
-    urgentFrom e st t d u = .error (.blocked c (st.len - 1 - c - MAX_DUP_DEPTH)) := by
+    urgentFrom e st t d u = .error (.blocked c (st.len - 1 - c - MAX_DUP_DEPTH) st) := by
   rw [urgentFrom, ite_eq_left hd]
   simp only [hp, Option.isSome_none, Bool.false_eq_true, ite_false, hf, hc, hfar, ite_true]
 
@@ -253,7 +253,8 @@ theorem ap_top (hv : st.val p = st.val b) (hp : p ≠ t) (hl : p = st.len - 1) :
 
 theorem ap_far (hv : st.val p = st.val b) (hp : p ≠ t) (hl : p ≠ st.len - 1)
     (hf : MAX_SWAP_DEPTH < st.len - 1 - p) :
-    afterPos st t b p = .error (.blocked p (st.len - 1 - p - MAX_SWAP_DEPTH)) := by
+    afterPos st t b p =
+      .error (.blocked p (st.len - 1 - p - MAX_SWAP_DEPTH) (swapDestinations st p b)) := by
   unfold afterPos; dsimp only
   rw [ite_eq_right (not_not_intro hv), (swapDest_shape st p b).1, ite_eq_right hp, ite_eq_left hl,
     ite_eq_left hf]
@@ -280,7 +281,7 @@ theorem pt_last (hlt : t < st.len) (hd : st.dest t ≠ t) (h : t = st.len - 1) :
 
 theorem pt_far (hlt : t < st.len) (hd : st.dest t ≠ t) (h : t ≠ st.len - 1)
     (hf : MAX_SWAP_DEPTH < st.len - 1 - t) :
-    placeTop st t = .error (.blocked t (st.len - 1 - t - MAX_SWAP_DEPTH)) := by
+    placeTop st t = .error (.blocked t (st.len - 1 - t - MAX_SWAP_DEPTH) st) := by
   unfold placeTop
   rw [ite_eq_right (by omega), ite_eq_left h]
   simp [hf]
