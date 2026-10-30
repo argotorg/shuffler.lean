@@ -181,6 +181,18 @@ extern "C" std::int64_t permute(
 	std::uint64_t* dest
 );
 
+extern "C" std::int64_t permute_at_lowest_height(
+	std::uint64_t m,
+	std::uint64_t n,
+	Slot* data,
+	Slot const* target,
+	std::uint64_t* dest,
+	std::uint8_t const* spilled,
+	std::uint64_t idCount,
+	Op* ops,
+	std::uint64_t* blocked
+);
+
 namespace
 {
 
@@ -515,6 +527,55 @@ std::string runSpill(std::vector<std::string> const& _fields)
 	return "ok;" + join(ids) + ";" + join(bits);
 }
 
+/// A case "lowest;" stack ";" target ";" dests ";" vars, in the domain of permute_at_lowest_height: the destinations
+/// are distinct and below the target size, or "-", and the stack and the target have at most maxStackSize slots.
+/// The result is "ok" or "blocked OFFSET EXCESS", the final stack, the operations and the destinations; or "err".
+std::string runLowest(std::vector<std::string> const& _fields)
+{
+	if (_fields.size() != 4)
+		throw std::invalid_argument("not a state");
+	std::vector<Slot> const source = parseStack(_fields[0]);
+	std::vector<Slot> const target = parseStack(_fields[1]);
+	std::size_t const m = source.size();
+	std::size_t const n = target.size();
+	if (m > maxStackSize || n > maxStackSize)
+		throw std::invalid_argument("more slots than the stack limit");
+	std::vector<std::uint64_t> const dest = parseDests(_fields[2], m, n);
+	std::vector<std::uint8_t> const spilled = parseSpilled(_fields[3], source, target);
+
+	// permute_at_lowest_height writes at most m slots, 2 m operations and m destinations. A guard area after each
+	// buffer must stay as it is.
+	std::vector<Slot> data(m + guard, guardSlot);
+	std::copy(source.begin(), source.end(), data.begin());
+	std::vector<Op> ops(2 * m + guard, guardOp);
+	std::vector<std::uint64_t> destinationOf(m + guard, guardWord);
+	std::copy(dest.begin(), dest.end(), destinationOf.begin());
+	std::uint64_t blocked[2] = {0xeeee, 0xeeee};
+	std::int64_t const count = permute_at_lowest_height(
+		m,
+		n,
+		data.data(),
+		target.data(),
+		destinationOf.data(),
+		spilled.data(),
+		spilled.size(),
+		ops.data(),
+		blocked
+	);
+	if (!intact(data, m, guardSlot) || !intact(ops, 2 * m, guardOp) || !intact(destinationOf, m, guardWord))
+		return "<port wrote past a buffer>";
+	if (count == -2)
+		return "err";
+	if (count < 0 || static_cast<std::uint64_t>(count) > 2 * m)
+		return "<port result " + std::to_string(count) + ">";
+	data.resize(m);
+	ops.resize(static_cast<std::size_t>(count));
+	std::vector<std::string> dests;
+	for (std::size_t i = 0; i < m; ++i)
+		dests.push_back(showOffset(destinationOf[i]));
+	return showStatus(blocked) + ";" + showStack(data) + ";" + showOps(ops) + ";" + join(dests);
+}
+
 std::string identity(std::string const& _model)
 {
 	return _model;
@@ -539,6 +600,7 @@ Unit constexpr units[] = {
 	{"spill", runSpill, identity},
 	{"surplus", runSurplus, identity},
 	{"permute", runPermute, identity},
+	{"lowest", runLowest, identity},
 };
 
 }

@@ -416,6 +416,87 @@ int main()
 	throws("permute;v0 v1;0 -");
 	throws("permute;" + vars(0, 1024) + ";" + nats(0, 1024));
 
+	// permuteAtLowestHeight: an empty stack, all slots final, a swap, a parked slot (its destination is above the
+	// stack) in a hole (an offset that no slot is bound for) stays, a parked slot that is not in a hole moves to the
+	// hole, two parked slots keep their order (not the order of their destinations), a parked slot in a hole and one
+	// that moves, each slot kind, equal slots (no swap, and the destinations stay), the spilled variables, an unbound
+	// slot (err)
+	agrees("lowest;;;;", "ok;;;", "ok;;;");
+	agrees("lowest;;v0;;", "ok;;;", "ok;;;");
+	agrees("lowest;v0 v1;v0 v1;0 1;", "ok;v0 v1;;0 1", "ok;v0 v1;;0 1");
+	agrees("lowest;v1 v0;v0 v1;1 0;", "ok;v0 v1;SWAP1;0 1", "ok;v0 v1;SWAP1;0 1");
+	agrees("lowest;v1;v0 v1;1;", "ok;v1;;1", "ok;v1;;1");
+	agrees("lowest;v2 v0;v0 v1 v2;2 0;", "ok;v0 v2;SWAP1;0 2", "ok;v0 v2;SWAP1;0 2");
+	agrees("lowest;v5 v4 v0 v1;v0 v1 v2 v3 v4 v5;5 4 0 1;", "ok;v0 v1 v5 v4;SWAP2 SWAP1 SWAP3 SWAP1;0 1 5 4",
+		"ok;v0 v1 v5 v4;SWAP2 SWAP1 SWAP3 SWAP1;0 1 5 4");
+	agrees("lowest;v4 v5 v0 v1;v0 v1 v2 v3 v4 v5;4 5 0 1;", "ok;v0 v1 v4 v5;SWAP2 SWAP1 SWAP3 SWAP1;0 1 4 5",
+		"ok;v0 v1 v4 v5;SWAP2 SWAP1 SWAP3 SWAP1;0 1 4 5");
+	agrees("lowest;v3 v1 v0;v0 v1 v2 v3;3 1 0;", "ok;v0 v1 v3;SWAP2;0 1 3", "ok;v0 v1 v3;SWAP2;0 1 3");
+	agrees("lowest;v3 v4 v0;v0 v1 v2 v3 v4;3 4 0;", "ok;v0 v4 v3;SWAP2;0 4 3", "ok;v0 v4 v3;SWAP2;0 4 3");
+	agrees("lowest;R _ l2 v5;v5 l2 _ R;3 2 1 0;", "ok;v5 l2 _ R;SWAP3 SWAP1 SWAP2 SWAP1;0 1 2 3",
+		"ok;v5 l2 _ R;SWAP3 SWAP1 SWAP2 SWAP1;0 1 2 3");
+	agrees("lowest;v0 v0;v0 v0;1 0;", "ok;v0 v0;;1 0", "ok;v0 v0;;1 0");
+	agrees("lowest;v0 v0 v1;v1 v0 v0;1 2 0;", "ok;v1 v0 v0;SWAP2;0 2 1", "ok;v1 v0 v0;SWAP2;0 2 1");
+	agrees("lowest;v0;v0;0;0", "ok;v0;;0", "ok;v0;;0");
+	agrees("lowest;v3 v0;v0 v1 v2 v3;3 0;7 9", "ok;v0 v3;SWAP1;0 3", "ok;v0 v3;SWAP1;0 3");
+	agrees("lowest;v0 l1;v0;0 -;", "err", "err");
+	agrees("lowest;l1 v0;v0;- 0;", "err", "err");
+	agrees("lowest;v0 v1;v0 v1 v2;0 -;", "err", "err");
+	// the swap reach: a swap with a slot at depth 16; at depth 17 it blocks, with a parked slot in the way and without
+	{
+		std::string const result = "ok;" + vars(0, 15) + " v17;SWAP16;" + nats(0, 15) + " 17";
+		agrees("lowest;v17 " + vars(1, 15) + " v0;" + vars(0, 17) + ";17 " + nats(1, 15) + " 0;", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1;v18 " + vars(1, 16) + " v0;;18 " + nats(1, 16) + " 0";
+		agrees("lowest;v18 " + vars(1, 16) + " v0;" + vars(0, 18) + ";18 " + nats(1, 16) + " 0;", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1;v17 " + vars(1, 16) + " v0;;17 " + nats(1, 16) + " 0";
+		agrees("lowest;v17 " + vars(1, 16) + " v0;" + vars(0, 17) + ";17 " + nats(1, 16) + " 0;", result, result);
+	}
+	// the stack limit: 1024 final slots, a parked bottom in a hole under 1022 slots, a parked slot that moves to the
+	// top, and a rotation of 1024 slots that blocks
+	{
+		std::string const result = "ok;" + vars(0, 1023) + ";;" + nats(0, 1023);
+		agrees("lowest;" + vars(0, 1023) + ";" + vars(0, 1023) + ";" + nats(0, 1023) + ";", result, result);
+	}
+	{
+		std::string const result = "ok;v1023 " + vars(1, 1022) + ";;1023 " + nats(1, 1022);
+		agrees("lowest;v1023 " + vars(1, 1022) + ";" + vars(0, 1023) + ";1023 " + nats(1, 1022) + ";", result, result);
+	}
+	{
+		std::string const result = "ok;" + vars(0, 1021) + " v1023;SWAP1;" + nats(0, 1021) + " 1023";
+		agrees("lowest;" + vars(0, 1020) + " v1023 v1021;" + vars(0, 1023) + ";" + nats(0, 1020) + " 1023 1021;", result,
+			result);
+	}
+	{
+		std::string const result = "blocked 0 1007;" + vars(1, 1023) + " v0;;" + nats(1, 1023) + " 0";
+		agrees("lowest;" + vars(1, 1023) + " v0;" + vars(0, 1023) + ";" + nats(1, 1023) + " 0;", result, result);
+	}
+	// a wrong model result is not equal to the port result: an operation, a slot, a destination, the status
+	for (std::string const wrong: {"ok;v0 v2;SWAP2;0 2", "ok;v2 v0;SWAP1;0 2", "ok;v0 v2;SWAP1;2 0",
+			 "ok;v0 v2;SWAP1;0 -", "blocked 0 1;v0 v2;SWAP1;0 2", "ok;v0 v2;;0 2", "err"})
+	{
+		std::optional<port::Check> const check = port::check("lowest;v2 v0;v0 v1 v2;2 0;", wrong);
+		expect(check && check->port != check->model, "a wrong lowest model result differs: " + wrong);
+	}
+
+	// not in the domain of the lowest unit: too few fields, too many fields, a bad slot, a bad destination, not one
+	// destination per slot, a destination out of the target, a destination bound twice, a bad spilled id, more stack
+	// slots or target slots than the stack limit
+	throws("lowest;v0;v0;0");
+	throws("lowest;v0;v0;0;;");
+	throws("lowest;x;v0;0;");
+	throws("lowest;v0;y;0;");
+	throws("lowest;v0;v0;a;");
+	throws("lowest;;;;x");
+	throws("lowest;v0;v0;0 -;");
+	throws("lowest;v0;v0;1;");
+	throws("lowest;v0 v1;v0 v1;0 0;");
+	throws("lowest;" + times("_", 1025) + ";;" + times("-", 1025) + ";");
+	throws("lowest;;" + times("_", 1025) + ";;");
+
 	if (failures > 0)
 	{
 		std::cerr << failures << " failures\n";
