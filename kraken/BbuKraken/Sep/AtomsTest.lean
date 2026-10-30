@@ -78,6 +78,50 @@ example (h : (Wd a v ∗ F).get m) (x : BitVec 32) (y z : BitVec 8) :
     rd (((m.storeInt a 4 x.toInt).storeInt (a + 4#64) 1 y.toInt).storeInt (a + 5#64) 1 z.toInt) a
       = v.extractLsb' 48 16 ++ z ++ y ++ x := Wd.rd (Wd.store411 h x y z)
 
+/-! ## A byte of a word -/
+
+-- The bytes 0 and 7 (the edges) of a word, and a byte after a store of 1 byte.
+example (h : (Wd a v ∗ F).get m) : rdb m (a + BitVec.ofNat 64 0) = v.extractLsb' 0 8 :=
+  Wd.rdb_byte h (by decide)
+example (h : (Wd a v ∗ F).get m) : rdb m (a + BitVec.ofNat 64 7) = v.extractLsb' 56 8 :=
+  Wd.rdb_byte h (by decide)
+example (h : (Wd a v ∗ F).get m) : (m.loadInt (a + BitVec.ofNat 64 7) 1).isSome = true :=
+  Wd.isSome_byte h (by decide)
+example {x : BitVec 8} (h : (B8 a x ∗ F).get m) (y : Int) : rdb (m.storeInt a 1 y) a = BitVec.ofInt 8 y :=
+  B8.rdb (B8.store h y)
+
+-- Negative: byte 8 is not a byte of the word. The same steps with byte 7 close the goal.
+example (h : (Wd a v ∗ F).get m) : rdb m (a + BitVec.ofNat 64 7) = v.extractLsb' (8 * 7) 8 := by
+  apply Wd.rdb_byte h; decide
+example (_h : (Wd a v ∗ F).get m) :
+    rdb m (a + BitVec.ofNat 64 8) = v.extractLsb' (8 * 8) 8 ∨ True := by
+  fail_if_success (left; apply Wd.rdb_byte _h; decide; done)
+  exact Or.inr trivial
+
+-- Negative: two atoms with one byte at one address do not hold together. Thus a view with an atom
+-- for each target word and an atom for each spilled byte does not hold when a spilled byte is in
+-- the target (`Sep.splOut`).
+theorem not_b8_b8 {x y : BitVec 8} : ¬ (B8 a x ∗ B8 a y ∗ F).get m := by
+  intro h
+  obtain ⟨m1, m2, -, hd, h1, h2⟩ := (MProp.get_sep_apply_iff _ _ _).mp h
+  obtain ⟨m3, m4, hu, -, h3, -⟩ := (MProp.get_sep_apply_iff _ _ _).mp h2
+  unfold B8 at h1 h3
+  rw [List.get_AtM] at h1 h3
+  have ha : ∀ bs : List UInt8, bs.length = 1 → a ∈ bs.At a := fun bs hl =>
+    (mem_At_iff bs a a).mpr ⟨0, by omega, by simp⟩
+  have hin : a ∈ m1.inter m2 := by
+    rw [Std.ExtHashMap.inter_eq, Std.ExtHashMap.mem_inter_iff]
+    refine ⟨h1 ▸ ha _ (Int.toBytes_length _ _), ?_⟩
+    rw [← hu, Std.ExtHashMap.union_eq, Std.ExtHashMap.mem_union_iff]
+    exact Or.inl (h3 ▸ ha _ (Int.toBytes_length _ _))
+  rw [hd] at hin
+  simp at hin
+
+example {x : BitVec 8} : ¬ (Wd a v ∗ B8 (a + BitVec.ofNat 64 3) x ∗ F).get m := by
+  obtain ⟨R, e⟩ := Wd.focus_byte a v (j := 3) (by decide)
+  rw [e, MProp.sep_assoc, sep_lc R]
+  exact not_b8_b8
+
 /-! ## `ecancel` on nested `∗` (the forms of `Stk.call`) -/
 
 example (A B C F : MProp 64) : ((A ∗ B) ∗ C) ∗ F = (A ∗ B) ∗ C ∗ F := by ecancel

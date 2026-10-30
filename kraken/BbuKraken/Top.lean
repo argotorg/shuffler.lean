@@ -87,12 +87,15 @@ def topRd : List (Addr × Nat) := (tgtArg s, 8 * nArg s) :: topSpl s
 def topIn : List (Addr × Nat) := (rsp s, 16) :: (dstArg s, 8 * mArg s) :: topRd s
 
 -- The memory facts for the call of `buildBottomUp`, when the guard holds.
--- The struct view of the callees (`Sep.View`) holds the working stack, the ops buffer, the
--- target and the spilled bytes, so these are disjoint (`disj_data`, `disj_ops`, `disj_tgt`).
--- `build_bottom_up` reads `dest` and the word `ops` at `rsp` before the call, and the word
--- `blocked` at `rsp + 8` after the call, so the two words at `rsp` are disjoint from the view
--- (`disj_args`). It writes `blocked` after the call, and the result is the content of `data`
--- and of the ops buffer after that, so `blocked` is disjoint from them (`disj_blk`).
+-- The callees write the working stack and the ops buffer, and read the target and the spilled
+-- bytes. The frame holds the struct. These regions are disjoint, but the target and the spilled
+-- bytes can overlap (`disj_frame`, `disj_data`, `disj_ops`; `Sep.splOut`).
+-- `build_bottom_up` reads `dest` and the word `ops` at `rsp` before the call: no store before
+-- these reads goes out of the frame. It reads the word `blocked` at `rsp + 8` after the call, so
+-- this word is disjoint from the regions that the call writes (`disj_blkp`). It writes `blocked`
+-- after the call, and the result is the content of `data` and of the ops buffer after that, so
+-- `blocked` is disjoint from them (`disj_blk`).
+-- `TopMem` is the `TopMem` of 12cb0e8 with `disj_blk` and `disj_blkp` (`TopTest.lean`).
 -- `(topDests s).length = (topSource s).length` follows (`length_topDests_eq`).
 structure TopMem : Prop where
   dests : Dests (nArg s) (topDests s)
@@ -104,10 +107,8 @@ structure TopMem : Prop where
   disj_frame : Mem.Blocks.Disjoint [frame topF s] (topOut s ++ (dstArg s, 8 * mArg s) :: topRd s)
   disj_data : Mem.Blocks.Disjoint [(dataArg s, 8 * nArg s)] ((opsArg s, 72 * nArg s) :: topRd s)
   disj_ops : Mem.Blocks.Disjoint [(opsArg s, 72 * nArg s)] (topRd s)
-  disj_tgt : Mem.Blocks.Disjoint [(tgtArg s, 8 * nArg s)] (topSpl s)
   disj_blk : Mem.Blocks.Disjoint [(blkArg s, 16)] [(dataArg s, 8 * nArg s), (opsArg s, 72 * nArg s)]
-  disj_args : Mem.Blocks.Disjoint [(rsp s, 16)]
-    ((dataArg s, 8 * nArg s) :: (opsArg s, 72 * nArg s) :: topRd s)
+  disj_blkp : Mem.Blocks.Disjoint [(rsp s + 8#64, 8)] [(dataArg s, 8 * nArg s), (opsArg s, 72 * nArg s)]
 
 -- The frame holds the return address, so it is mapped also when the guard fails.
 structure TopPre : Prop where

@@ -54,6 +54,21 @@ structure Keep (g g' : G) : Prop where
   tgt : g'.tgt.toList = g.tgt.toList
   spl : g'.spl = g.spl
 
+-- `G.Ok` of `g'`: `G.Ok.n` and `G.Ok.spl` read only the members that `Keep` keeps.
+theorem Keep.ok {g g' : G} (hk : Keep g g') (h : g.Ok) (hl : g'.h.len.toNat ≤ g'.h.n.toNat)
+    (hn : g'.h.nops.toNat ≤ 6 * g'.h.n.toNat) : g'.Ok where
+  len := hl
+  n := by rw [hk.n]; exact h.n
+  nops := hn
+  spl i hi k hk' j hj ha := by
+    have hkn : k < g.h.n.toNat := by rw [← hk.n]; exact hk'
+    have e : g'.tgt[k] = g.tgt[k] := by
+      rw [← Vector.getElem_toList (by simpa using hk'),
+        ← Vector.getElem_toList (by simpa using hkn)]
+      exact List.getElem_of_eq hk.tgt _
+    rw [hk.spl, e]
+    exact h.spl i (hk.tgt ▸ hi) k hkn j hj (hk.splp ▸ hk.tgtp ▸ ha)
+
 -- The byte `al` of a `Status`.
 def code : Flat.Status → BitVec 8
   | .done => DONE

@@ -9,8 +9,9 @@ then `push`, `dup` or `isSpilled` and `push`, or writes `m_blocked`. Then it ass
 `m_positionOf[t] = size - 1` and decrements `m_pendingGenerations`.
 
 The preconditions of the callees: the target word is in the view (`t < n`); its id is in
-`splIds` (`isSpilledA`); the copy for `dup` is below `size ≤ n`; `len < n` and `nops < 6n`
-(`pushA`, `dupA`). The caller is `generate`, after its check `t < n`.
+`splIds` (`isSpilledA`), and `Pre.ok` gives `G.Ok.spl` to `isSpilled`; the copy for `dup` is
+below `size ≤ n`; `len < n` and `nops < 6n` (`pushA`, `dupA`). The caller is `generate`, after
+its check `t < n`.
 -/
 
 namespace Bbu.Unit

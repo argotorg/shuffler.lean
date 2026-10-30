@@ -56,4 +56,18 @@ def ghost (len nops : Word) (w : Word) : G :=
 -- A function that writes nothing keeps the members.
 example (g : G) : Keep g g := ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
+/-! ## `G.Ok` after a function that keeps the members -/
+
+-- A function that changes `len` and `nops` and keeps the other members: `Keep.ok` gives `G.Ok`
+-- (with `G.Ok.spl`) from the two bounds.
+example (g : G) (h : g.Ok) (len nops : Word) (hl : len.toNat ≤ g.h.n.toNat)
+    (hn : nops.toNat ≤ 6 * g.h.n.toNat) :
+    G.Ok { g with h := { g.h with len := len, nops := nops } } :=
+  Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ h hl hn
+
+-- Negative: `Keep` does not give the bound of `len`. `ghost 3 1` keeps the members of
+-- `ghost 1 1`, but `len = 3 > n = 2`.
+example : Keep (ghost 1 1 w7) (ghost 3 1 w7) ∧ ¬ (ghost 3 1 w7).Ok :=
+  ⟨⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, fun h => absurd h.len (by decide)⟩
+
 end Bbu.Unit.DefsTest

@@ -42,6 +42,7 @@ import BbuKraken.Specs
 import BbuKraken.SpecsTest
 import BbuKraken.StructLayout
 import BbuKraken.Top
+import BbuKraken.TopTest
 import BbuKraken.Unit.Defs
 import BbuKraken.Unit.DefsTest
 import BbuKraken.Unit.Dup
