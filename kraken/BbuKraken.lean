@@ -20,6 +20,8 @@ import BbuKraken.FlatModel
 import BbuKraken.FlatModelTest
 import BbuKraken.FlatRel
 import BbuKraken.FlatRelTest
+import BbuKraken.FlatSpill
+import BbuKraken.FlatSpillTest
 import BbuKraken.Fn.Finish
 import BbuKraken.Fn.FinishMem
 import BbuKraken.Fn.Generate
@@ -51,6 +53,7 @@ import BbuKraken.ModelLemmas
 import BbuKraken.ModelTest
 import BbuKraken.Specs
 import BbuKraken.SpecsTest
+import BbuKraken.SpillFinal
 import BbuKraken.StructLayout
 import BbuKraken.Top
 import BbuKraken.TopTest
@@ -71,6 +74,9 @@ import BbuKraken.Unit.Push
 import BbuKraken.Unit.PushTest
 import BbuKraken.Unit.ShallowestCopy
 import BbuKraken.Unit.ShallowestCopyTest
+import BbuKraken.Unit.SpillAdd
+import BbuKraken.Unit.SpillDefs
+import BbuKraken.Unit.SpillSet
 import BbuKraken.Unit.SwapWith
 import BbuKraken.Unit.SwapWithTest
 import BbuKraken.Unit.Top
