@@ -77,7 +77,7 @@ std::string times(std::string const& _word, int const _count)
 int main()
 {
 	// the kinds without a port unit
-	for (std::string const line: {"map;L;v0;v0;0", "permute;v0;0", "emit;;;;", "plan;L;0;;;"})
+	for (std::string const line: {"map;L;v0;v0;0", "emit;;;;", "plan;L;0;;;"})
 		expect(!port::check(line, "ok;;;").has_value(), "no port unit for: " + line);
 
 	// buildBottomUp: each slot kind, each operation kind, equal slots, blocked with and without operations
@@ -324,6 +324,97 @@ int main()
 	throws("surplus;v0 v1;v0 v1;0 0;");
 	throws("surplus;" + times("_", 1025) + ";;" + times("-", 1025) + ";");
 	throws("surplus;;" + times("_", 1025) + ";;");
+
+	// permute: an empty stack, one slot, the identity (no operation), a swap with the top, a 3-cycle away from the
+	// top (the top is in place), each slot kind. The regroup of equal slots: two equal slots that only exchange
+	// their destinations need no operation, and the mapping keeps the destinations. A misplaced slot equal to the
+	// top takes over its destination with no operation (a retag): two swaps for a 3-cycle, three for two 2-cycles.
+	agrees("permute;;", "ok;;;", "ok;;;");
+	agrees("permute;v0;0", "ok;v0;;0", "ok;v0;;0");
+	agrees("permute;v0 v1 v2;0 1 2", "ok;v0 v1 v2;;0 1 2", "ok;v0 v1 v2;;0 1 2");
+	agrees("permute;v0 v1 v2;2 1 0", "ok;v2 v1 v0;SWAP2;0 1 2", "ok;v2 v1 v0;SWAP2;0 1 2");
+	agrees("permute;v0 v1;1 0", "ok;v1 v0;SWAP1;0 1", "ok;v1 v0;SWAP1;0 1");
+	agrees("permute;v0 v1 v2 v3;1 2 0 3", "ok;v2 v0 v1 v3;SWAP1 SWAP3 SWAP2 SWAP1;0 1 2 3",
+		"ok;v2 v0 v1 v3;SWAP1 SWAP3 SWAP2 SWAP1;0 1 2 3");
+	agrees("permute;v0 v1 v2 v3;2 0 1 3", "ok;v1 v2 v0 v3;SWAP1 SWAP2 SWAP3 SWAP1;0 1 2 3",
+		"ok;v1 v2 v0 v3;SWAP1 SWAP2 SWAP3 SWAP1;0 1 2 3");
+	agrees("permute;R _ l2 v5;3 2 1 0", "ok;v5 l2 _ R;SWAP3 SWAP1 SWAP2 SWAP1;0 1 2 3",
+		"ok;v5 l2 _ R;SWAP3 SWAP1 SWAP2 SWAP1;0 1 2 3");
+	agrees("permute;v0 l0;1 0", "ok;l0 v0;SWAP1;0 1", "ok;l0 v0;SWAP1;0 1");
+	agrees("permute;v0 v0;1 0", "ok;v0 v0;;1 0", "ok;v0 v0;;1 0");
+	agrees("permute;v0 v1 v0;2 1 0", "ok;v0 v1 v0;;2 1 0", "ok;v0 v1 v0;;2 1 0");
+	agrees("permute;_ _ l0 l0;3 2 1 0", "ok;l0 l0 _ _;SWAP2 SWAP1 SWAP3;1 0 3 2",
+		"ok;l0 l0 _ _;SWAP2 SWAP1 SWAP3;1 0 3 2");
+	agrees("permute;v0 v1 v0;1 0 2", "ok;v1 v0 v0;SWAP1 SWAP2;0 1 2", "ok;v1 v0 v0;SWAP1 SWAP2;0 1 2");
+	agrees("permute;v0 v1 v0 v1;1 0 3 2", "ok;v1 v0 v1 v0;SWAP1 SWAP2 SWAP3;0 1 2 3",
+		"ok;v1 v0 v1 v0;SWAP1 SWAP2 SWAP3;0 1 2 3");
+	// the swap reach: on 18 slots the top goes to offset 0 at depth 17 and blocks; a slot at depth 17 blocks after a
+	// SWAP16; a SWAP16 on 17 slots; two equal slots at depth 16 and 17 need no swap; a 2-cycle in reach on 18
+	// slots; the excess of depth 19
+	{
+		std::string const result = "blocked 0 1;" + vars(0, 17) + ";;17 " + nats(1, 16) + " 0";
+		agrees("permute;" + vars(0, 17) + ";17 " + nats(1, 16) + " 0", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1;l0 " + vars(1, 17) + ";;" + nats(1, 17) + " 0";
+		agrees("permute;l0 " + vars(1, 17) + ";" + nats(1, 17) + " 0", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1;v0 v17 " + vars(2, 16) + " v1;SWAP16;1 17 " + nats(2, 16) + " 0";
+		agrees("permute;" + vars(0, 17) + ";1 0 " + nats(2, 17), result, result);
+	}
+	{
+		std::string const result = "ok;v16 " + vars(1, 15) + " v0;SWAP16;" + nats(0, 16);
+		agrees("permute;" + vars(0, 16) + ";16 " + nats(1, 15) + " 0", result, result);
+	}
+	{
+		std::string const result = "ok;v0 " + vars(0, 16) + ";;1 0 " + nats(2, 17);
+		agrees("permute;v0 " + vars(0, 16) + ";1 0 " + nats(2, 17), result, result);
+	}
+	{
+		std::string const result = "ok;v0 v2 v1 " + vars(3, 17) + ";SWAP15 SWAP16 SWAP15;" + nats(0, 17);
+		agrees("permute;" + vars(0, 17) + ";0 2 1 " + nats(3, 17), result, result);
+	}
+	{
+		std::string const result = "blocked 0 3;" + vars(0, 19) + ";;19 " + nats(1, 18) + " 0";
+		agrees("permute;" + vars(0, 19) + ";19 " + nats(1, 18) + " 0", result, result);
+	}
+	// the stack limit: the identity, the reversal (it blocks at depth 1023), and a SWAP16 on 1024 slots
+	{
+		std::string const result = "ok;" + vars(0, 1023) + ";;" + nats(0, 1023);
+		agrees("permute;" + vars(0, 1023) + ";" + nats(0, 1023), result, result);
+	}
+	{
+		std::string const result = "blocked 0 1007;" + vars(0, 1023) + ";;" + nats(1023, 0, -1);
+		agrees("permute;" + vars(0, 1023) + ";" + nats(1023, 0, -1), result, result);
+	}
+	{
+		std::string const result = "ok;" + vars(0, 1006) + " v1023 " + vars(1008, 1022) + " v1007;SWAP16;" +
+			nats(0, 1023);
+		agrees("permute;" + vars(0, 1023) + ";" + nats(0, 1006) + " 1023 " + nats(1008, 1022) + " 1007", result,
+			result);
+	}
+	// a wrong model result is not equal to the port result: an operation, a slot, a destination, the status
+	for (std::string const wrong: {"ok;v1 v0 v0;SWAP2 SWAP1;0 1 2", "ok;v0 v1 v0;SWAP1 SWAP2;0 1 2",
+			 "ok;v1 v0 v0;SWAP1 SWAP2;1 0 2", "ok;v1 v0 v0;SWAP1;0 1 2", "blocked 0 1;v1 v0 v0;SWAP1 SWAP2;0 1 2", "err"})
+	{
+		std::optional<port::Check> const check = port::check("permute;v0 v1 v0;1 0 2", wrong);
+		expect(check && check->port != check->model, "a wrong permute model result differs: " + wrong);
+	}
+
+	// not in the domain of the permute unit: too few fields, too many fields, a bad slot, a bad destination, not one
+	// destination per slot, a destination out of the stack, a destination bound twice, a slot without a destination
+	// (not a permutation), more slots than the stack limit
+	throws("permute;v0");
+	throws("permute;v0;0;");
+	throws("permute;x;0");
+	throws("permute;v0;a");
+	throws("permute;v0 v1;0");
+	throws("permute;v0;0 1");
+	throws("permute;v0;1");
+	throws("permute;v0 v1;0 0");
+	throws("permute;v0 v1;0 -");
+	throws("permute;" + vars(0, 1024) + ";" + nats(0, 1024));
 
 	if (failures > 0)
 	{
