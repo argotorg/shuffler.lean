@@ -121,5 +121,107 @@ theorem b_80 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
     rw [mD_eq hF h0 hD.agP, mD_dmem t, mD_eq hF2 h0 hag]
     exact Or.inl (lt80 hlt)
 
+theorem b_78 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB78" →
+      Obl S g F s ra blk := by
+  pm_block [Obl]
+  intro t ht
+  simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
+  obtain ⟨g', L, p, f, pos, hD, hax, hmis, hperm, hmu, hnops⟩ := ht
+  have hF := hD.fm
+  have hm := hF.mem
+  have hok := hpre.ok
+  have h0 := hD.pos
+  have h15 := hD.r15
+  have hcx : t.regs.rcx.toBitVec = g.h.len - 1#64 := hD.cx
+  have htl : g.h.len - 1#64 < g.h.len := by bv_omega
+  have htM := lt_max hok htl
+  have hdl := hD.dl _ htl
+  have hdM := lt_max hok hdl
+  have hne : Flat.get g'.h.dest (g.h.len - 1#64) ≠ Flat.NONE := fun e => by
+    rw [e, BitVec.lt_def, none_toNat] at hdl; have := g.h.len.isLt; omega
+  have hne' : Flat.get (flat g').dest (g.h.len - 1) ≠ Flat.NONE := hne
+  have e : BitVec.ofInt 64 (Mem.loadInt t.dmem (S + (g.h.len - 1#64) * 8#64 + 56#64) 8).get!
+      = Flat.get g'.h.dest (g.h.len - 1#64) := rd_dest_get hm htM
+  have hF1 : Fm S (withPos g' (Flat.put g'.h.pos (Flat.get g'.h.dest (g.h.len - 1#64))
+      (g.h.len - 1#64))) F s ra L { t with dmem := (Mem.storeInt t.dmem
+        (S + Flat.get g'.h.dest (g.h.len - 1#64) * 8#64 + 8248#64) 8 (g.h.len - 1#64).toInt) } :=
+    hF.step (store_pos_put hm hdM _) rfl
+  have hp : Flat.permute (flat g) = Flat.permuteLoop f (flat (withPos g' (Flat.put g'.h.pos
+      (Flat.get g'.h.dest (g.h.len - 1#64)) (g.h.len - 1#64)))) (g.h.len - 1)
+      (swapP p (g.h.len - 1) pos) := by
+    rw [hperm, posAt_some hne'] <;> rfl
+  kvcgen64
+  all_goals try symexec_norm
+  all_goals try rw [h15]
+  all_goals try rw [hcx]
+  all_goals try rw [e]
+  case vc1 => exact isSome_dest' hm htM
+  case vc2 =>
+    rename_i hz
+    rw [h15, hcx, e] at hz
+    exact absurd (eq_of_z hz) hne
+  case vc3 => exact isSome_pos' hm hdM
+  case vc4 =>
+    simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
+    exact ⟨_, L, p, f, pos, ⟨hF1.next rfl rfl, Ok.withPos hD.ok _, Keep.trans hD.keep (Keep.withPos _),
+      hD.len, h0, hD.dl, hD.r15, hD.bx, hD.cx, hD.si, hD.agP, hD.bij⟩, hax, hmis, hp, hmu, hnops⟩
+  case vc5 =>
+    pd_dec
+    rw [mD_eq hF h0 hD.agP, mD_dmem t, mD_eq hF1 h0 hD.agP]
+    exact Or.inl (Nat.lt_succ_self _)
+
+theorem b_82 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB82" →
+      Obl S g F s ra blk := by
+  pm_block [Obl]
+  intro t ht
+  simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
+  obtain ⟨g', L, p, f, pos, hD, hax, hmis, hperm, hmu, hnops⟩ := ht
+  have hF := hD.fm
+  have hm := hF.mem
+  have hok := hpre.ok
+  have h0 := hD.pos
+  have h15 := hD.r15
+  have hcx : t.regs.rcx.toBitVec = g.h.len - 1#64 := hD.cx
+  have htl : g.h.len - 1#64 < g.h.len := by bv_omega
+  have htM := lt_max hok htl
+  have hdl := hD.dl _ htl
+  have hdM := lt_max hok hdl
+  have hne : Flat.get g'.h.dest (g.h.len - 1#64) ≠ Flat.NONE := fun e => by
+    rw [e, BitVec.lt_def, none_toNat] at hdl; have := g.h.len.isLt; omega
+  have hne' : Flat.get (flat g').dest (g.h.len - 1) ≠ Flat.NONE := hne
+  have e : BitVec.ofInt 64 (Mem.loadInt t.dmem (S + (g.h.len - 1#64) * 8#64 + 56#64) 8).get!
+      = Flat.get g'.h.dest (g.h.len - 1#64) := rd_dest_get hm htM
+  have hF1 : Fm S (withPos g' (Flat.put g'.h.pos (Flat.get g'.h.dest (g.h.len - 1#64))
+      (g.h.len - 1#64))) F s ra L { t with dmem := (Mem.storeInt t.dmem
+        (S + Flat.get g'.h.dest (g.h.len - 1#64) * 8#64 + 8248#64) 8 (g.h.len - 1#64).toInt) } :=
+    hF.step (store_pos_put hm hdM _) rfl
+  have hp : Flat.permute (flat g) = Flat.permuteLoop f (flat (withPos g' (Flat.put g'.h.pos
+      (Flat.get g'.h.dest (g.h.len - 1#64)) (g.h.len - 1#64)))) (g.h.len - 1)
+      (swapP p (g.h.len - 1) pos) := by
+    rw [hperm, posAt_some hne'] <;> rfl
+  kvcgen64
+  all_goals try symexec_norm
+  all_goals try rw [h15]
+  all_goals try rw [hcx]
+  all_goals try rw [e]
+  case vc1 => exact isSome_dest' hm htM
+  case vc2 =>
+    rename_i hz
+    rw [h15, hcx, e] at hz
+    exact absurd (eq_of_z hz) hne
+  case vc3 => exact isSome_pos' hm hdM
+  case vc4 =>
+    cfg_goto
+    · exact Fm.stack (hF1.next rfl rfl)
+    · simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
+      exact ⟨_, L, p, f, pos, ⟨hF1.next rfl rfl, Ok.withPos hD.ok _,
+        Keep.trans hD.keep (Keep.withPos _), hD.len, h0, hD.dl, hD.r15, hD.bx, hD.cx, hD.si, hD.agP,
+        hD.bij⟩, hax, hmis, hp, hmu, hnops⟩
+    · pd_dec
+      rw [mD_eq hF h0 hD.agP, mD_dmem t, mD_eq hF1 h0 hD.agP]
+      exact Or.inl (Nat.lt_succ_self _)
+
 end Permute
 end Bbu.Unit
