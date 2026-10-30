@@ -5,6 +5,17 @@ import BbuKraken.BinLayout
 import BbuKraken.Contracts
 import BbuKraken.Final
 import BbuKraken.FlatBridge
+import BbuKraken.FlatList.Basic
+import BbuKraken.FlatList.Ctor
+import BbuKraken.FlatList.Leaf
+import BbuKraken.FlatList.Loop
+import BbuKraken.FlatList.PermList
+import BbuKraken.FlatList.PermLoop
+import BbuKraken.FlatList.Permute
+import BbuKraken.FlatList.Produce
+import BbuKraken.FlatList.Regroup
+import BbuKraken.FlatList.RegroupTest
+import BbuKraken.FlatList.Step
 import BbuKraken.FlatModel
 import BbuKraken.FlatModelTest
 import BbuKraken.FlatRel
