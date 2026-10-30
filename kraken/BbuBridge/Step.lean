@@ -28,41 +28,24 @@ theorem step_corr (hu : UrgentStmt) (h1 : RestUrgentStmt) (h2 : RestTopStmt)
   · rw [ite_eq_left hp]
     exact ⟨h, loop_finish t state htn hnf (h.pendingGenerations.trans hp)⟩
   rw [ite_eq_right hp, loop_rest t state htn hnf (h.pendingGenerations ▸ hp)]
-  -- The urgent scan.
-  have hc := hu e source st state t h
-  cases hut : Bbu.urgent e st t with
-  | error err =>
-    cases hot : origUrgent state t with
-    | error err' =>
-      rw [hut, hot] at hc
-      exact ⟨err', rfl, hc⟩
-    | ok _ =>
-      rw [hut, hot] at hc
-      exact hc.elim
-  | ok u =>
-    cases hot : origUrgent state t with
-    | error _ =>
-      rw [hut, hot] at hc
-      exact hc.elim
-    | ok uo =>
-      rw [hut, hot] at hc
-      rw [except_ok_bind]
-      dsimp only [Except.bind]
-      by_cases c4 : u ≠ e.n ∧ u ≠ t ∧ st.len < t + Bbu.MAX_SWAP_DEPTH
-      · rw [ite_eq_left c4]
-        exact h1 e source st state t u uo h (Nat.pos_of_ne_zero hp) ht hc c4
-      rw [ite_eq_right c4]
-      by_cases c5 : u = e.n ∧ t < st.len ∧ st.len < e.n ∧ Bbu.positionOf st st.len = none ∧
-          st.len < t + Bbu.MAX_SWAP_DEPTH
-      · rw [ite_eq_left c5]
-        exact h2 e source st state t u uo h (Nat.pos_of_ne_zero hp) ht hc c4 c5
-      rw [ite_eq_right c5]
-      cases hb : Bbu.positionOf st t with
-      | some b =>
-        simp only [hb, Option.isSome_some, ↓reduceIte]
-        exact h3 e source st state t u uo b h ht hc c4 c5 hb
-      | none =>
-        simp only [hb, Option.isSome_none, Bool.false_eq_true, ↓reduceIte]
-        exact h4 e source st state t u uo h (Nat.pos_of_ne_zero hp) ht hc c4 c5 hb
+  -- The urgent scan, then one of four branches.
+  refine hu e source st state t _ (origRest t state) h fun u uo hc => ?_
+  beta_reduce
+  by_cases c4 : u ≠ e.n ∧ u ≠ t ∧ st.len < t + Bbu.MAX_SWAP_DEPTH
+  · rw [ite_eq_left c4]
+    exact h1 e source st state t u uo h (Nat.pos_of_ne_zero hp) ht hc c4
+  rw [ite_eq_right c4]
+  by_cases c5 : u = e.n ∧ t < st.len ∧ st.len < e.n ∧ Bbu.positionOf st st.len = none ∧
+      st.len < t + Bbu.MAX_SWAP_DEPTH
+  · rw [ite_eq_left c5]
+    exact h2 e source st state t u uo h (Nat.pos_of_ne_zero hp) ht hc c4 c5
+  rw [ite_eq_right c5]
+  cases hb : Bbu.positionOf st t with
+  | some b =>
+    simp only [hb, Option.isSome_some, ↓reduceIte]
+    exact h3 e source st state t u uo b h ht hc c4 c5 hb
+  | none =>
+    simp only [hb, Option.isSome_none, Bool.false_eq_true, ↓reduceIte]
+    exact h4 e source st state t u uo h (Nat.pos_of_ne_zero hp) ht hc c4 c5 hb
 
 end BbuBridge

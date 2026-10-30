@@ -12,6 +12,10 @@ bound for: the C++ keeps these in `m_data` and `m_destinationOf`. The original
 allows slots that are bound for no offset; `buildBottomUp` starts with every
 slot bound, so the model does not represent them. `St.positionOf` is
 `m_positionOf`: the position of the slot bound for each target offset.
+
+`finish` is the final permutation of the original (`Shuffler.Permute.permute`),
+which groups equal slots. `finishC` is the final permutation of the C++
+(`permuteDestinations`). `loop` takes the final permutation as an argument.
 -/
 
 namespace Bbu
@@ -84,9 +88,12 @@ def St.len (st : St) : Nat := st.slots.length
 def St.val (st : St) (i : Nat) : StackSlot := (st.slots[i]?.map Slot.val).getD default
 def St.dest (st : St) (i : Nat) : Nat := (st.slots[i]?.map Slot.dest).getD 0
 
+-- A block is a result of the original (`Emission.Result`) with the state at the
+-- block. The model returns it as an error, so that a bind returns it at once, as
+-- `return` does in the original.
 inductive Err where
-  -- The slot at `pos` is out of reach by `excess` slots.
-  | blocked (pos excess : Nat)
+  -- The slot at `pos` is out of reach by `excess` slots. `st` is the state at the block.
+  | blocked (pos excess : Nat) (st : St)
   | assertion
   deriving DecidableEq, Repr
 
@@ -172,11 +179,14 @@ def emit (e : Env) (st : St) (targetOffset : Nat) : M St :=
   let copy := shallowestCopyPosition st slot
   if isJunk slot then add st slot targetOffset (.push slot)
   else match copy.filter (fun copy => st.len - 1 - copy ≤ MAX_DUP_DEPTH) with
-    | some copy => add st slot targetOffset (.dup (st.len - copy))
+    | some copy =>
+      -- `State.dup`: a function return label cannot be copied.
+      if slot.kind == FunctionReturnLabel then .error .assertion
+      else add st slot targetOffset (.dup (st.len - copy))
     | none =>
       if canBeFreelyGenerated slot || isSpilled e slot then add st slot targetOffset (.push slot)
       else match copy with
-        | some copy => .error (.blocked copy (st.len - 1 - copy - MAX_DUP_DEPTH))
+        | some copy => .error (.blocked copy (st.len - 1 - copy - MAX_DUP_DEPTH) st)
         | none => .error .assertion
 
 -- `--` on a `std::size_t`: it wraps at 0.
@@ -213,7 +223,7 @@ def urgentFrom (e : Env) (st : St) (targetOffset offset urgentToDup : Nat) : M N
         | none => urgentFrom e st targetOffset (offset + 1) urgentToDup
         | some sourceCopy =>
           let depth := st.len - 1 - sourceCopy
-          if MAX_DUP_DEPTH < depth then .error (.blocked sourceCopy (depth - MAX_DUP_DEPTH))
+          if MAX_DUP_DEPTH < depth then .error (.blocked sourceCopy (depth - MAX_DUP_DEPTH) st)
           else urgentFrom e st targetOffset (offset + 1)
             (if depth = MAX_DUP_DEPTH ∧ sourceCopy ≠ targetOffset ∧ urgentToDup = e.n
               then offset
@@ -248,7 +258,7 @@ def takeBound (st : St) (targetOffset : Nat) : M (St × Bool) :=
         if pos = targetOffset then .ok (st, true)
         else if pos ≠ st.len - 1 then
           let depth := st.len - 1 - pos
-          if MAX_SWAP_DEPTH < depth then .error (.blocked pos (depth - MAX_SWAP_DEPTH))
+          if MAX_SWAP_DEPTH < depth then .error (.blocked pos (depth - MAX_SWAP_DEPTH) st)
           else (swapWith st pos).map (·, false)
         else .ok (st, false)
 
@@ -257,7 +267,7 @@ def placeTop (st : St) (targetOffset : Nat) : M (St × Next) :=
   if st.len ≤ targetOffset ∨ st.dest targetOffset = targetOffset then .error .assertion
   else if targetOffset ≠ st.len - 1 then
     let depth := st.len - 1 - targetOffset
-    if MAX_SWAP_DEPTH < depth then .error (.blocked targetOffset (depth - MAX_SWAP_DEPTH))
+    if MAX_SWAP_DEPTH < depth then .error (.blocked targetOffset (depth - MAX_SWAP_DEPTH) st)
     else (swapWith st targetOffset).map (·, .next (targetOffset + 1))
   else .ok (st, .next (targetOffset + 1))
 
@@ -297,17 +307,79 @@ def swapTop (st : St) (depth : Nat) : St :=
       ⟨st.val (top - depth), st.dest top⟩
     trace := st.trace ++ [.swap depth] }
 
--- `permuteDestinations`: the final permutation. Each slot must have a
--- destination. `IsPerm` is the precondition of `PermuteKraken.permute`; the C
--- `permute` does not check it, and `buildBottomUp` keeps it (`Inv.finish`).
-def finish (st : St) : M St :=
+-- `permuteDestinations` of the C++: the final permutation with `permute`, which
+-- does not group equal slots. Each slot must have a destination. `IsPerm` is the
+-- precondition of `PermuteKraken.permute`; the C `permute` does not check it, and
+-- `buildBottomUp` keeps it (`Inv.finish`). A block keeps the state before the swaps.
+def finishC (st : St) : M St :=
   if !(List.range st.len).all fun pos => (st.destinationOf pos).isSome then .error .assertion
   else
     let ds := st.slots.map Slot.dest
     if h : IsPerm ds then
       match PermuteKraken.permute ⟨ds, h.1, fun i j hi hj => h.2 i hi j hj⟩ with
       | .ok swaps => .ok (swaps.foldl swapTop st)
-      | .error b => .error (.blocked b.offset b.excess)
+      | .error b => .error (.blocked b.offset b.excess st)
+    else .error .assertion
+
+/-! ## The final permutation of the original (`Shuffler.Permute.permute`) -/
+
+-- `List.dedup`: the last copy of each element, in order.
+def dedup {α : Type} [DecidableEq α] (l : List α) : List α :=
+  l.foldr (fun a acc => if a ∈ acc then acc else a :: acc) []
+
+-- `Equiv.setValue`: `a` goes to `b`, and the position that went to `b` goes
+-- where `a` went.
+def setValue (p : List Nat) (a b : Nat) : List Nat :=
+  (p.set (p.idxOf b) p[a]!).set a b
+
+-- `reassignGroup`: the positions that hold `slot` keep the destinations of the
+-- group; those already at one of them stay, the others take the rest in order.
+def regroup (vals : List StackSlot) (p : List Nat) (slot : StackSlot) : M (List Nat) :=
+  let group := (List.range vals.length).filter (vals[·]! == slot)
+  if group.length < 2 then .ok p
+  else
+    let desired := (group.map (p[·]!)).mergeSort
+    let p := (group.filter (· ∈ desired)).foldl (fun p pos => setValue p pos pos) p
+    let movers := group.filter (· ∉ desired)
+    let vacant := desired.filter (· ∉ group)
+    if movers.length ≠ vacant.length then .error .assertion
+    else .ok ((List.range movers.length).foldl (fun p i => setValue p movers[i]! vacant[i]!) p)
+
+-- `normalize`: `reassignGroup` for each value of the stack.
+def normalize (vals : List StackSlot) (p : List Nat) : M (List Nat) :=
+  (dedup vals).foldlM (regroup vals) p
+
+-- The swap of `permute.go`: the slots at `pos` and the top exchange with their
+-- destinations.
+def swapPos (st : St) (pos : Nat) : St :=
+  let top := st.len - 1
+  swapDestinations { st with
+    slots := (st.slots.set pos ⟨st.val top, st.dest pos⟩).set top ⟨st.val pos, st.dest top⟩
+    trace := st.trace ++ [.swap (top - pos)] } pos top
+
+-- `permute.go`: `p` is the permutation that is left. An equal slot at the
+-- position takes the destination of the top, with no swap.
+def go (st : St) (p : PermuteKraken.Perm) : M St :=
+  match h : PermuteKraken.target p.toList with
+  | none => .ok st
+  | some pos =>
+    have hp := p.target_lt h
+    let top := st.len - 1
+    let p' := p.swap (p.toList.length - 1) pos (by omega) (by omega)
+    if st.val pos = st.val top then go (swapDestinations st pos top) p'
+    else if MAX_SWAP_DEPTH < top - pos then .error (.blocked pos (top - pos - MAX_SWAP_DEPTH) st)
+    else go (swapPos st pos) p'
+termination_by PermuteKraken.measure p.toList
+decreasing_by all_goals exact p.measure_target_lt h _ _
+
+-- `Permute.permute` with the permutation of the mapping: the final permutation
+-- of the original. Each slot must have a destination. As in the original, an
+-- empty stack does not go to `go`.
+def finish (st : St) : M St :=
+  if !(List.range st.len).all fun pos => (st.destinationOf pos).isSome then .error .assertion
+  else (normalize (st.slots.map Slot.val) (st.slots.map Slot.dest)).bind fun p =>
+    if h : IsPerm p then
+      if st.len = 0 then .ok st else go st ⟨p, h.1, fun i j hi hj => h.2 i hi j hj⟩
     else .error .assertion
 
 /-! ## Termination -/
@@ -402,12 +474,13 @@ theorem step_progress {e : Env} {st st' : St} {targetOffset targetOffset' : Nat}
     · cases h; exact .inl rfl
     · cases placeTop_next h; exact .inl rfl
 
--- The loop of `buildBottomUp` from `targetOffset`: the final state.
-def loop (e : Env) (st : St) (targetOffset : Nat) : M St :=
+-- The loop of `buildBottomUp` from `targetOffset`, with the final permutation
+-- `fin`: the final state. `buildBottomUp` uses `finish`; the C++ uses `finishC`.
+def loop (fin : St → M St) (e : Env) (st : St) (targetOffset : Nat) : M St :=
   if targetOffset < e.n then
     match _h : step e st targetOffset with
-    | .ok (st', .next targetOffset') => loop e st' targetOffset'
-    | .ok (st', .finish) => if st'.len = e.n then finish st' else .error .assertion
+    | .ok (st', .next targetOffset') => loop fin e st' targetOffset'
+    | .ok (st', .finish) => if st'.len = e.n then fin st' else .error .assertion
     | .error err => .error err
   else if st.len = e.n then .ok st else .error .assertion
 termination_by (e.n - targetOffset, st.pendingGenerations)
@@ -430,6 +503,10 @@ def init (e : Env) (source : List StackSlot) (dests : List Nat) : St :=
 -- `buildBottomUp` from the source stack with the destination of each slot: the
 -- final state, whose slots are the result stack and whose trace is the operations.
 def buildBottomUp (e : Env) (source : List StackSlot) (dests : List Nat) : M St :=
-  loop e (init e source dests) 0
+  loop finish e (init e source dests) 0
+
+-- `build_bottom_up` of the C++: `buildBottomUp` with the final permutation `finishC`.
+def buildBottomUpC (e : Env) (source : List StackSlot) (dests : List Nat) : M St :=
+  loop finishC e (init e source dests) 0
 
 end Bbu

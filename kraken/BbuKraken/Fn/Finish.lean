@@ -295,15 +295,15 @@ def lb60Mem (m : Mem 64) (x sp : Addr) : Mem 64 :=
     (lb60V (lb60M1 m x sp) sp 14).toInt
 
 
--- `finish` in terms of `permute p0`.
+-- `finishC` in terms of `permute p0`.
 theorem finish_eq {p0 : Perm} {st0 : St} (hp0 : p0.toList = st0.slots.map Slot.dest) :
-    finish st0 = (match permute p0 with
+    finishC st0 = (match permute p0 with
       | .ok L => .ok (L.foldl swapTop st0)
-      | .error b => .error (.blocked b.offset b.excess)) := by
+      | .error b => .error (.blocked b.offset b.excess st0)) := by
   obtain ⟨l, lt, inj⟩ := p0
   simp only at hp0
   subst hp0
-  unfold finish
+  unfold finishC
   simp only [St.all_destinationOf, Bool.not_true, Bool.false_eq_true, ↓reduceIte]
   rw [dite_eq_left_of_eq_true (eq_true ⟨lt, fun i hi j hj => inj i j hi hj⟩)]
   rfl
@@ -340,6 +340,6 @@ end FinishProof
 theorem finish_body [Host] [FunDecls]
     (hcopy : Spec Names.shallowestCopyPosition shallowestCopyF shallowestCopyA shallowestCopyR) :
     Body finishAsm finishF finishA finishR := by
-  sorry
+  sorry -- wf:todo
 
 end Bbu

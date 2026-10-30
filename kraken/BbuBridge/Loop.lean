@@ -11,15 +11,22 @@ open Shuffler Shuffler.Emission
 
 theorem loop_corr_aux (hs : StepStmt) (hf : FinishStmt) (e : Bbu.Env) (source : Stack)
     (st : Bbu.St) (state : OState e source) (t : Nat) (h : Rel e st state) :
-    Corr ResRel (Bbu.loop e st t) (post (tgt e) (buildBottomUp.loop t state)) := by
+    ResCorr (Rel e) (Bbu.loop Bbu.finish e st t) (post (buildBottomUp.loop t state)) := by
   by_cases ht : t < e.n
   · have hc := hs e source st state t h ht
     cases hstep : Bbu.step e st t with
     | error err =>
       rw [hstep] at hc
-      obtain ⟨err', heq, rfl⟩ := hc
-      rw [Bbu.loop_error ht hstep, heq]
-      rfl
+      rw [Bbu.loop_error ht hstep]
+      cases err with
+      | blocked pos ex st' =>
+        obtain ⟨state', h', heq⟩ := hc
+        rw [heq, post_blocked]
+        exact ⟨rfl, h'⟩
+      | assertion =>
+        obtain ⟨reason, heq⟩ := hc
+        rw [heq, post_error]
+        trivial
     | ok r =>
       obtain ⟨st', nx⟩ := r
       cases nx with
@@ -37,12 +44,14 @@ theorem loop_corr_aux (hs : StepStmt) (hf : FinishStmt) (e : Bbu.Env) (source : 
     by_cases hl : st.len = e.n
     · have hl' : state.stack.length = (tgt e).length := by rw [h.len, tgt_length, hl]
       rw [ite_eq_left hl]
-      simp only [post, except_ok_bind, requires_of_true _ hl']
-      exact ⟨h.stack, h.trace, h.canon⟩
+      simp only [post, except_ok_bind, Option.isSome_none, Bool.false_eq_true, ↓reduceIte,
+        requires_of_true _ hl']
+      exact ⟨rfl, h⟩
     · have hl' : ¬ state.stack.length = (tgt e).length := by rw [h.len, tgt_length]; exact hl
       rw [ite_eq_right hl]
-      simp only [post, except_ok_bind, requires, hl']
-      rfl
+      simp only [post, except_ok_bind, Option.isSome_none, Bool.false_eq_true, ↓reduceIte,
+        requires, hl']
+      trivial
 termination_by (e.n - t, st.pendingGenerations)
 decreasing_by
   rcases Bbu.step_progress hstep with h' | ⟨h', hp⟩

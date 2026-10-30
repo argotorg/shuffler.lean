@@ -20,12 +20,16 @@ def PushStmt : Prop :=
     Rel e st state → Canon v → (Bbu.canBeFreelyGenerated v = true ∨ Bbu.isSpilled e v = true) →
     Corr (Rel e) (Bbu.add st v d (.push v)) (state.push (decode v) ⟨d, hd⟩)
 
--- `add` with a dup of the slot at `c` is `State.dup`.
+-- `add` with a dup of the slot at `c` is `State.dup`. As `emit`, the model
+-- first rejects a function return label.
 def DupStmt : Prop :=
   ∀ (e : Bbu.Env) (source : Stack) (st : Bbu.St) (state : OState e source) (c d : Nat)
     (hd : d < (tgt e).length),
     Rel e st state → c < st.len → st.len - 1 - c ≤ Bbu.MAX_DUP_DEPTH →
-    Corr (Rel e) (Bbu.add st (st.val c) d (.dup (st.len - c))) (state.dup c ⟨d, hd⟩)
+    Corr (Rel e)
+      (if (st.val c).kind == Bbu.FunctionReturnLabel then .error .assertion
+        else Bbu.add st (st.val c) d (.dup (st.len - c)))
+      (state.dup c ⟨d, hd⟩)
 
 def SwapWithStmt : Prop :=
   ∀ (e : Bbu.Env) (source : Stack) (st : Bbu.St) (state : OState e source) (pos : Nat),
@@ -42,12 +46,12 @@ def ProduceStmt : Prop :=
   ∀ (e : Bbu.Env) (source : Stack) (st : Bbu.St) (state : OState e source) (d : Nat)
     (hd : d < (tgt e).length),
     Rel e st state → 0 < st.pendingGenerations →
-    Corr (Rel e) (Bbu.produce e st d) (state.produce ⟨d, hd⟩)
+    ResCorr (Rel e) (Bbu.produce e st d) (state.produce ⟨d, hd⟩)
 
 def GenerateStmt : Prop :=
   ∀ (e : Bbu.Env) (source : Stack) (st : Bbu.St) (state : OState e source) (d : Nat),
     Rel e st state → 0 < st.pendingGenerations →
-    Corr (Rel e) (Bbu.generate e st d) (state.generate d)
+    ResCorr (Rel e) (Bbu.generate e st d) (state.generate d)
 
 /-! ## Scans -/
 
@@ -56,9 +60,15 @@ def UrgentRel (n u : Nat) : Option Nat → Prop
   | none => u = n
   | some x => x < n ∧ u = x
 
+-- The scan of the original returns a block at once, so the statement takes the
+-- rest of the iteration as the continuations `restM` and `restO`.
 def UrgentStmt : Prop :=
-  ∀ (e : Bbu.Env) (source : Stack) (st : Bbu.St) (state : OState e source) (t : Nat),
-    Rel e st state → Corr (UrgentRel e.n) (Bbu.urgent e st t) (origUrgent state t)
+  ∀ (e : Bbu.Env) (source : Stack) (st : Bbu.St) (state : OState e source) (t : Nat)
+    (restM : Nat → Bbu.M (Bbu.St × Bbu.Next))
+    (restO : Option Nat → Except ShuffleErr (OResult e source)),
+    Rel e st state →
+    (∀ u uo, UrgentRel e.n u uo → StepCorr e (restM u) state (restO uo)) →
+    StepCorr e ((Bbu.urgent e st t).bind restM) state (origScan state t restO)
 
 def CopyScanStmt : Prop :=
   ∀ (e : Bbu.Env) (source : Stack) (st : Bbu.St) (state : OState e source)
@@ -70,8 +80,8 @@ def CopyScanStmt : Prop :=
 def FinishStmt : Prop :=
   ∀ (e : Bbu.Env) (source : Stack) (st : Bbu.St) (state : OState e source),
     Rel e st state →
-    Corr ResRel (if st.len = e.n then Bbu.finish st else .error .assertion)
-      (post (tgt e) (origFinish state))
+    ResCorr (Rel e) (if st.len = e.n then Bbu.finish st else .error .assertion)
+      (post (origFinish state))
 
 /-! ## The branches of `step` after the urgent scan -/
 
@@ -127,7 +137,8 @@ def StepStmt : Prop :=
 
 def LoopStmt : Prop :=
   ∀ (e : Bbu.Env) (source : Stack) (st : Bbu.St) (state : OState e source) (t : Nat),
-    Rel e st state → Corr ResRel (Bbu.loop e st t) (post (tgt e) (buildBottomUp.loop t state))
+    Rel e st state →
+    ResCorr (Rel e) (Bbu.loop Bbu.finish e st t) (post (buildBottomUp.loop t state))
 
 /-! ## The initial state -/
 

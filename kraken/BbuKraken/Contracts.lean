@@ -96,7 +96,7 @@ theorem finishF_eq : finishF = 16472 := rfl
 def finishA (s : MachineData) : Prop :=
   IsPerm ((st s).slots.map Slot.dest) ∧ (st s).trace.length + 2 * (st s).len ≤ cap s
 def finishR (s t : MachineData) : Prop :=
-  Res (rdi s) (finish (st s)) (Ok s t id) t
+  Res (rdi s) (finishC (st s)) (Ok s t id) t
 
 -- `buildBottomUp(e)`: `loop` from offset 0
 -- The return address, six `pushq`, `subq $24` and the frame of `permute`.
@@ -104,7 +104,7 @@ def loopF : Nat := 8 + 48 + 24 + finishF
 theorem loopF_eq : loopF = 16552 := rfl
 def loopA (s : MachineData) : Prop := Inv (env s) (st s) 0
 def loopR (s t : MachineData) : Prop :=
-  Res (rdi s) (loop (env s) (st s) 0) (Ok s t id) t
+  Res (rdi s) (loop finishC (env s) (st s) 0) (Ok s t id) t
 
 /-! ## Specs -/
 

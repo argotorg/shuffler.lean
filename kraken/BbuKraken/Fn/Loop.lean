@@ -24,6 +24,6 @@ theorem loop_body [Host] [FunDecls]
     (hgen : Spec Names.generate generateF generateA generateR)
     (hswap : Spec Names.swapWith swapWithF swapWithA swapWithR) :
     Body loopAsm loopF loopA loopR := by
-  sorry
+  sorry -- wf:todo
 
 end Bbu
