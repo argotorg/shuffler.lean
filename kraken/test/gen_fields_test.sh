@@ -27,7 +27,7 @@ fails() { # expected-message sed-script
 }
 
 # A member that is not in the probe makes a hole.
-fails 'm_stack.m_data: offset 32, not 24' 's|^\tstd::uint8_t const\* m_spills;$|&\n\tstd::uint32_t m_pad;|'
+fails 'm_stack.m_data: offset 32, not 24' 's|^\tSpillSet const m_spills;$|&\n\tstd::uint32_t m_pad;|'
 echo "ok: a hole fails"
 
 # A member after the last member of the probe.

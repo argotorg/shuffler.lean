@@ -2,8 +2,9 @@ module
 
 /-!
 The symbol names of the functions of `c/build_bottom_up.cpp`. The members of `Emission`
-have the names that g++ gives them (the Itanium C++ ABI mangling); `build_bottom_up` is
-`extern "C"`. These are the names in `c/build_bottom_up.S`, in the binary, and in
+and `SpillSet` have the names that g++ gives them (the Itanium C++ ABI mangling); the
+entries `build_bottom_up`, `emission_pop` and `spill_set` are `extern "C"`. These are the
+names in `c/build_bottom_up.S`, in the binary, and in
 `c/bbu/NAME.S`. We do not rename them in the asm: each change to the compiler output is
 one more step between the proved program and the program that runs. Each name is here
 once; `BbuKraken.Asm`, `BbuKraken.Link` and the specs use these defs.
@@ -36,5 +37,9 @@ namespace Bbu.Names
 @[expose] public def build_bottom_up : String := "build_bottom_up"
 /-- `emission_pop`, `extern "C"` -/
 @[expose] public def emission_pop : String := "emission_pop"
+/-- `SpillSet::add(StackSlot)` -/
+@[expose] public def spillSetAdd : String := "_ZN12_GLOBAL__N_18SpillSet3addE9StackSlot"
+/-- `spill_set`, `extern "C"` -/
+@[expose] public def spill_set : String := "spill_set"
 
 end Bbu.Names

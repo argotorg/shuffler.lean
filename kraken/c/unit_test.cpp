@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <optional>
 #include <random>
+#include <set>
 #include <vector>
 
 namespace
@@ -283,6 +284,141 @@ void emission()
 	expect(Emission{Stack{data, 3, ops}, target, 3, all, spills}.pendingGenerations() == 0, "pending: none");
 }
 
+/// The slots that are not a variable, with the payload `_payload`: a literal, junk, a function call return label and
+/// a function return label
+std::vector<StackSlot> nonVariables(std::uint32_t const _payload)
+{
+	return {
+		{_payload, StackSlot::Kind::Value, InstOpcode::Const},
+		{_payload, StackSlot::Kind::Junk, InstOpcode::Unreachable},
+		{_payload, StackSlot::Kind::FunctionCallReturnLabel, InstOpcode::Unreachable},
+		{_payload, StackSlot::Kind::FunctionReturnLabel, InstOpcode::Unreachable},
+	};
+}
+
+/// SpillSet::add, SpillSet::isSpilled and the free isSpilled: the cases of Shuffler.SpillSet.add and
+/// SpillSet.is_spilled
+void spillSet()
+{
+	std::uint8_t spilled[4] = {};
+	SpillSet spills{spilled};
+	auto const bytes = [&](std::vector<std::uint8_t> const& _expected) {
+		return std::equal(_expected.begin(), _expected.end(), spilled, spilled + 4);
+	};
+
+	expect(!spills.isSpilled(variable(2)), "a variable is not spilled before its add");
+	expect(spills.add(variable(2)) == Status::Done, "add of a new variable");
+	expect(bytes({0, 0, 1, 0}), "add sets the byte of the variable");
+	expect(spills.isSpilled(variable(2)) && isSpilled(variable(2), spills), "isSpilled after add");
+	expect(spills.add(variable(2)) == Status::AssertionFailed, "add of a spilled variable fails");
+	expect(bytes({0, 0, 1, 0}), "a failed add changes nothing");
+
+	// a slot that is not a variable, with the payload of a variable that is not spilled (1) and of one that is (2)
+	for (std::uint32_t const payload: {1u, 2u})
+		for (StackSlot const slot: nonVariables(payload))
+		{
+			expect(spills.add(slot) == Status::AssertionFailed, "add of a slot that is not a variable fails", payload);
+			expect(bytes({0, 0, 1, 0}), "a failed add of a slot that is not a variable changes nothing", payload);
+			expect(!spills.isSpilled(slot) && !isSpilled(slot, spills), "a slot that is not a variable is not spilled",
+				payload);
+		}
+
+	// each opcode but Const makes a variable
+	StackSlot const unreachable{3, StackSlot::Kind::Value, InstOpcode::Unreachable};
+	expect(spills.add(unreachable) == Status::Done && bytes({0, 0, 1, 1}), "add of a variable with opcode Unreachable");
+	expect(spills.isSpilled(unreachable) && spills.isSpilled(variable(3)),
+		"isSpilled does not read the opcode of a variable");
+
+	// each byte that is not 0 is a spill
+	spilled[0] = 0xff;
+	expect(spills.isSpilled(variable(0)), "a byte 0xff is a spill");
+	expect(spills.add(variable(0)) == Status::AssertionFailed && bytes({0xff, 0, 1, 1}), "add on a byte 0xff fails");
+	expect(spills.add(variable(1)) == Status::Done && bytes({0xff, 1, 1, 1}), "add of the last free variable");
+}
+
+/// Random sequences of SpillSet::add on random slots, against the std::set of SpillSet.h: an add of a variable that
+/// is not in the set inserts it and changes only its byte; each other add fails and changes nothing. After each add,
+/// isSpilled of each slot is the set membership of a variable.
+void spillSetOperations()
+{
+	std::mt19937_64 random{20261030};
+	auto const below = [&](std::size_t const _bound) {
+		return std::uniform_int_distribution<std::size_t>{0, _bound - 1}(random);
+	};
+	for (unsigned long run = 0; run < 2000; ++run)
+	{
+		std::size_t const idCount = 1 + below(run % 50 == 0 ? 300 : 9);
+		std::vector<std::uint8_t> spilled(idCount);
+		SpillSet spills{spilled.data()};
+		std::set<std::uint32_t> model;
+		for (std::size_t step = 0; step < 3 * idCount; ++step)
+		{
+			auto const id = static_cast<std::uint32_t>(below(idCount));
+			StackSlot const slot = below(3) == 0 ? nonVariables(id)[below(4)] : variable(id);
+			bool const isVariable = slot.isValue() && !slot.isLiteralValue();
+			std::vector<std::uint8_t> const before = spilled;
+			bool const inserted = isVariable && model.insert(id).second;
+			expect(spills.add(slot) == (inserted ? Status::Done : Status::AssertionFailed), "add result", run);
+			for (std::size_t other = 0; other < idCount; ++other)
+				expect(spilled[other] == (inserted && other == id ? 1 : before[other]), "add changes only its byte", run);
+			for (std::uint32_t other = 0; other < idCount; ++other)
+			{
+				expect(spills.isSpilled(variable(other)) == model.contains(other), "isSpilled is membership", run);
+				expect(isSpilled(variable(other), spills) == model.contains(other), "free isSpilled is membership", run);
+				for (StackSlot const nonVariable: nonVariables(other))
+					expect(!spills.isSpilled(nonVariable), "a slot that is not a variable is not spilled", run);
+			}
+		}
+	}
+}
+
+/// spill_set: the bounds of the ids, a failed add, and the results
+void spillSetEntry()
+{
+	StackSlot const literal{9, StackSlot::Kind::Value, InstOpcode::Const};
+	StackSlot const adds[3] = {variable(2), literal, variable(0)};
+	StackSlot const queries[5] = {variable(0), variable(1), variable(2), literal, StackSlot::makeJunk()};
+	std::uint8_t results[6] = {7, 7, 7, 7, 7, 7};
+	auto const unwritten = [&] {
+		return std::all_of(results, results + 6, [](std::uint8_t const _r) { return _r == 7; });
+	};
+
+	// the add of the literal fails, after the add of variable 2
+	std::uint8_t spilled[3] = {};
+	expect(spill_set(3, spilled, adds, 3, queries, 5, results) == -2, "spill_set: add of a literal fails");
+	expect(spilled[0] == 0 && spilled[1] == 0 && spilled[2] == 1, "spill_set: the adds before the failed add");
+	expect(unwritten(), "spill_set: no result after a failed add");
+
+	// each variable id of adds and queries must be below idCount; the payload of the other slots is not an id
+	std::uint8_t bound[3] = {};
+	StackSlot const good[2] = {variable(2), variable(0)};
+	StackSlot const high[1] = {variable(3)};
+	expect(spill_set(3, bound, high, 1, queries, 0, results) == -2, "spill_set: an add of id idCount");
+	expect(spill_set(3, bound, good, 2, high, 1, results) == -2, "spill_set: a query of id idCount");
+	expect(bound[0] == 0 && bound[1] == 0 && bound[2] == 0 && unwritten(),
+		"spill_set: an id out of bounds writes nothing");
+	StackSlot const top[1] = {variable(UINT32_MAX)};
+	expect(spill_set(UINT32_MAX, bound, top, 0, top, 1, results) == -2 && unwritten(),
+		"spill_set: id UINT32_MAX of UINT32_MAX ids");
+
+	std::uint8_t fresh[3] = {};
+	expect(spill_set(3, fresh, good, 2, queries, 5, results) == 0, "spill_set: two adds");
+	expect(fresh[0] == 1 && fresh[1] == 0 && fresh[2] == 1, "spill_set: the bytes");
+	expect(results[0] == 1 && results[1] == 0 && results[2] == 1 && results[3] == 0 && results[4] == 0 &&
+		results[5] == 7, "spill_set: the query results");
+	expect(spill_set(3, fresh, good + 1, 1, queries, 0, results) == -2, "spill_set: add of a spilled variable fails");
+	expect(spill_set(3, fresh, good, 0, queries, 0, results) == 0, "spill_set: nothing");
+
+	std::uint8_t none[1] = {7};
+	StackSlot const highLiteral[1] = {{UINT32_MAX, StackSlot::Kind::Value, InstOpcode::Const}};
+	expect(spill_set(0, none, highLiteral, 0, highLiteral, 1, results) == 0 && results[0] == 0,
+		"spill_set: no ids, the payload of a literal is not an id");
+	expect(spill_set(0, none, queries + 4, 0, queries + 3, 2, results) == 0 && results[0] == 0 && results[1] == 0,
+		"spill_set: no ids, a literal and junk");
+	expect(spill_set(0, none, queries + 3, 1, queries, 0, results) == -2 && none[0] == 7,
+		"spill_set: no ids, add of a literal fails");
+}
+
 /// An offset of an entry
 Optional<StackOffset> offset(std::size_t const _value)
 {
@@ -357,6 +493,9 @@ int main()
 	mappingOperations();
 	emission();
 	emissionPopEntry();
+	spillSet();
+	spillSetOperations();
+	spillSetEntry();
 	if (failures > 0)
 	{
 		std::fprintf(stderr, "%d failures\n", failures);
