@@ -198,7 +198,7 @@ structure DC (g' : G) (L : Lc) (p : Vector Word MAX_N) (t : MachineData) : Prop 
   dl : LtB g.h.len g'.h.dest
   r15 : t.regs.r15.toBitVec = S
   bx : t.regs.rbx.toBitVec = g.h.len
-  cx : t.regs.rcx.toBitVec = g.h.len - 1
+  cx : t.regs.rcx.toBitVec = (g.h.len - 1 : Word)
   si : t.regs.rsi.toBitVec = base s + 8208#64
   agP : AgB g.h.len L.P p
   bij : Bij g.h.len p
@@ -233,7 +233,7 @@ def I74 (t : MachineData) : Prop :=
     ∧ mu (g.h.len - 1) p ≤ f + 1 ∧ g'.h.nops.toNat + f + 1 ≤ 6 * g.h.n.toNat
     ∧ Flat.get p (g.h.len - 1) = g.h.len - 1
     ∧ t.regs.rdx.toBitVec = c ∧ c ≤ g.h.len - 1 ∧ c ≠ 0
-    ∧ t.regs.rax.toBitVec = c - 1 ∧ Flat.get p (c - 1) ≠ c - 1
+    ∧ t.regs.rax.toBitVec = (c - 1 : Word) ∧ Flat.get p (c - 1) ≠ c - 1
     ∧ Flat.misplacedBelow p (g.h.len - 1) (g.h.len - 1) = c - 1
 
 -- The condition of `swapP_mu` for `pos`.
@@ -276,7 +276,7 @@ def I97 (t : MachineData) : Prop :=
 -- `.LB99`: the slot `pos` is too deep; `rdi = size - pos`.
 def I99 (t : MachineData) : Prop :=
   ∃ g' L pos, Fm S g' F s ra L t ∧ g'.Ok ∧ Keep g g' ∧ t.regs.r15.toBitVec = S
-    ∧ t.regs.rax.toBitVec = pos ∧ t.regs.rdi.toBitVec = g'.h.len - pos
+    ∧ t.regs.rax.toBitVec = pos ∧ t.regs.rdi.toBitVec = (g'.h.len - pos : Word)
     ∧ ¬(g'.h.len - pos - 1 ≤ 16#64)
     ∧ Flat.permute (flat g) = Flat.blockSwapUnreachable (flat g') pos
 

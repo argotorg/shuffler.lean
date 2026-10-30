@@ -39,6 +39,22 @@ theorem mD_eq {S : Addr} {g g' : G} {F : MProp 64} {s : MachineData} {ra : Int64
     (hag : AgB g.h.len L.P p) : mD s g t = mu (g.h.len - 1) p := by
   rw [mD, memVec_eq h, mu_agB h0 hag]
 
+-- `mD` reads the memory only: a state with the memory of `t`.
+theorem mD_mk {s : MachineData} {g : G} {t : MachineData} {r z st} :
+    mD s g { regs := r, zmms := z, status := st, dmem := t.dmem } = mD s g t := rfl
+
+-- The variant goal of an edge of phase D without stores (`mD_mk`).
+macro "pd_dec" : tactic => `(tactic| (
+  simp only [V, wC, mD_mk, Names.permute, String.reduceEq, ↓reduceIte, Nat.reducePow,
+    Nat.reduceAdd, Nat.reduceMul, Nat.reduceLT, true_or, or_true, or_false, false_or, true_and,
+    and_true]
+  try omega))
+
+-- `leaq -1(%r)` as `kvcgen64` gives it. Rewrite it before `symexec_norm`:
+-- the kernel check of the proof of `symexec_norm` on this form uses more than 12 GB.
+theorem add_m1i (x : Word) : x + BitVec.ofInt 64 (-1 : Int64).toInt = x - 1#64 := by
+  rw [show (-1 : Int64).toInt = -1 from rfl]; bv_omega
+
 /-! ## The loop of `permute` -/
 
 theorem loop_succ (f : Nat) (st : Flat.St) (top : Word) (p : Vector Word MAX_N) :
@@ -127,6 +143,18 @@ theorem agB_swap {n top pos : Word} {P p : Vector Word MAX_N} (h : AgB n P p) (h
 theorem ltB_swapD {n a b : Word} {d : Vector Word MAX_N} (h : LtB n d) (ha : a < n) (hb : b < n) :
     LtB n (swapD d a b) :=
   ltB_put (ltB_put h a (h b hb)) b (h a ha)
+
+
+/-! ## The registers of phase D -/
+
+-- `DC` for a state with the same memory, `rsp`, `r15`, `rbx`, `rcx` and `rsi`.
+theorem DC.next {S : Addr} {g g' : G} {F : MProp 64} {s : MachineData} {ra : Int64} {L : Lc}
+    {p : Vector Word MAX_N} {t P : MachineData} (h : DC S g F s ra g' L p t)
+    (hm : P.dmem = t.dmem) (hsp : P.regs.rsp = t.regs.rsp) (h15 : P.regs.r15 = t.regs.r15)
+    (hbx : P.regs.rbx = t.regs.rbx) (hcx : P.regs.rcx = t.regs.rcx)
+    (hsi : P.regs.rsi = t.regs.rsi) : DC S g F s ra g' L p P :=
+  ⟨h.fm.next hm hsp, h.ok, h.keep, h.len, h.pos, h.dl, by rw [h15]; exact h.r15,
+    by rw [hbx]; exact h.bx, by rw [hcx]; exact h.cx, by rw [hsi]; exact h.si, h.agP, h.bij⟩
 
 end Permute
 end Bbu.Unit
