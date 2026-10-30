@@ -88,5 +88,134 @@ theorem none_step {D : Vector Word MAX_N} {k : Nat} (hk : k < MAX_N)
   · rw [Vector.getElem_set_ne _ _ (fun e => h e.symm), ← get_eq _ _ hix]
     exact hD i (by omega)
 
+/-! ## The local arrays and the model vectors -/
+
+-- A store into a local array and a `put` into its model vector.
+theorem agB_set {n : Word} {u w : Vector Word MAX_N} (h : AgB n u w) {k : Word}
+    (hk : k.toNat < MAX_N) (x : Word) : AgB n (u.set k.toNat x hk) (Flat.put w k x) := by
+  intro i hi
+  rw [← put_eq_set _ _ _ hk, get_put _ hk, get_put _ hk]
+  split
+  · rfl
+  · exact h i hi
+
+theorem ltB_put {n : Word} {p : Vector Word MAX_N} (h : LtB n p) (k : Word) {x : Word}
+    (hx : x < n) : LtB n (Flat.put p k x) := by
+  intro i hi
+  by_cases hk : k.toNat < MAX_N
+  · rw [get_put _ hk]
+    split
+    · exact hx
+    · exact h i hi
+  · have e : Flat.put p k x = p := by
+      apply Vector.ext; intro j hj
+      simp only [Flat.put, Vector.getElem_setIfInBounds]
+      split
+      · next e => omega
+      · rfl
+    rw [e]; exact h i hi
+
+/-! ## Phase C: the steps of `regroup` -/
+
+section
+variable {st : Flat.St}
+
+theorem regroup_ge {l : Word} (h : ¬l < st.size) (p dB : Vector Word MAX_N) :
+    Flat.regroup st l p dB = some p := by
+  rw [Flat.regroup, dite_eq_right h]
+
+theorem regroup_skip {l : Word} (h : l < st.size)
+    (hne : Flat.shallowestCopyPosition st (Flat.get st.data l) ≠ l) (p dB : Vector Word MAX_N) :
+    Flat.regroup st l p dB = Flat.regroup st (l + 1) p dB := by
+  rw [Flat.regroup, dite_eq_left h, ite_eq_left hne]
+
+theorem regroup_lead {l : Word} (h : l < st.size)
+    (he : Flat.shallowestCopyPosition st (Flat.get st.data l) = l) (p dB : Vector Word MAX_N) :
+    Flat.regroup st l p dB = pg st l h (Flat.get st.data l)
+      (Flat.markDesired st l h (Flat.get st.data l) p 0 dB) 0 0 p := by
+  rw [Flat.regroup, dite_eq_left h, ite_eq_right (fun h => h he)]
+  rfl
+
+variable {l : Word} {hl : l < st.size} {σ : StackSlot}
+
+theorem md_eq {p dB : Vector Word MAX_N} {j : Word} (hj : j ≤ l) (hd : Flat.get st.data j = σ) :
+    Flat.markDesired st l hl σ p j dB
+      = Flat.markDesired st l hl σ p (j + 1) (Flat.put dB (Flat.get p j) l) := by
+  rw [Flat.markDesired, dite_eq_left hj, ite_eq_left hd]
+
+theorem md_ne {p dB : Vector Word MAX_N} {j : Word} (hj : j ≤ l) (hd : Flat.get st.data j ≠ σ) :
+    Flat.markDesired st l hl σ p j dB = Flat.markDesired st l hl σ p (j + 1) dB := by
+  rw [Flat.markDesired, dite_eq_left hj, ite_eq_right hd]
+
+theorem md_end {p dB : Vector Word MAX_N} {j : Word} (hj : ¬j ≤ l) :
+    Flat.markDesired st l hl σ p j dB = dB := by
+  rw [Flat.markDesired, dite_eq_right hj]
+
+variable {dB : Vector Word MAX_N}
+
+theorem pg_end {pos vac : Word} {pc : Vector Word MAX_N} (hpos : ¬pos ≤ l) :
+    pg st l hl σ dB pos vac pc = Flat.regroup st (l + 1) pc dB := by
+  unfold pg; rw [Flat.placeGroup, dite_eq_right hpos]
+
+theorem pg_skip {pos vac : Word} {pc : Vector Word MAX_N} (hpos : pos ≤ l)
+    (hd : Flat.get st.data pos ≠ σ) :
+    pg st l hl σ dB pos vac pc = pg st l hl σ dB (pos + 1) vac pc := by
+  unfold pg; rw [Flat.placeGroup, dite_eq_left hpos, ite_eq_left hd]
+
+theorem pg_self {pos vac : Word} {pc : Vector Word MAX_N} (hpos : pos ≤ l)
+    (hd : Flat.get st.data pos = σ) (hb : Flat.get dB pos = l) :
+    pg st l hl σ dB pos vac pc = pg st l hl σ dB (pos + 1) vac (Flat.put pc pos pos) := by
+  unfold pg; rw [Flat.placeGroup, dite_eq_left hpos, ite_eq_right (fun h => h hd), ite_eq_left hb]
+
+theorem pg_nv {pos vac : Word} {pc : Vector Word MAX_N} (hpos : pos ≤ l)
+    (hd : Flat.get st.data pos = σ) (hb : Flat.get dB pos ≠ l) :
+    pg st l hl σ dB pos vac pc = nv st l hl σ dB pos vac pc := by
+  unfold pg nv
+  rw [Flat.placeGroup, dite_eq_left hpos, ite_eq_right (fun h => h hd), ite_eq_right hb]
+  by_cases hv : Flat.nextVacant st l σ dB vac < st.size
+  · simp only [hv, not_true_eq_false, ↓reduceIte]; rfl
+  · simp only [hv, not_false_eq_true, ↓reduceIte]
+
+theorem nv_next {pos x : Word} {pc : Vector Word MAX_N} (hx : x < st.size)
+    (hc : ¬(Flat.get dB x = l ∧ ¬Flat.get st.data x = σ)) :
+    nv st l hl σ dB pos x pc = nv st l hl σ dB pos (x + 1) pc := by
+  have e : Flat.nextVacant st l σ dB x = Flat.nextVacant st l σ dB (x + 1) := by
+    rw [Flat.nextVacant, dite_eq_left ⟨hx, hc⟩]
+  unfold nv; rw [e]
+
+theorem nv_found {pos x : Word} {pc : Vector Word MAX_N} (hx : x < st.size)
+    (hb : Flat.get dB x = l) (hd : Flat.get st.data x ≠ σ) :
+    nv st l hl σ dB pos x pc = pg st l hl σ dB (pos + 1) (x + 1) (Flat.put pc pos x) := by
+  have e : Flat.nextVacant st l σ dB x = x := by
+    rw [Flat.nextVacant, dite_eq_right (fun h => h.2 ⟨hb, hd⟩)]
+  unfold nv; rw [e, ite_eq_left hx]
+
+theorem nv_ge {pos x : Word} {pc : Vector Word MAX_N} (hx : ¬x < st.size) :
+    nv st l hl σ dB pos x pc = none := by
+  have e : Flat.nextVacant st l σ dB x = x := by
+    rw [Flat.nextVacant, dite_eq_right (fun h => hx h.1)]
+  unfold nv; rw [e, ite_eq_right hx]
+
+end
+
+/-! ## The end of phase C -/
+
+-- `regroup` fails: `permute` fails.
+theorem rg_none {st : Flat.St} (h : RG st none) (h0 : st.size ≠ 0) :
+    Flat.permute st = (.assertionFailed, st) := by
+  obtain ⟨p0, h1, h2⟩ := h
+  rw [Flat.permute, ite_eq_right h0]
+  simp only [h1, h2]
+
+-- `regroup` gives `p`: the loop of `permute` starts with `p`, a bijection.
+theorem rg_some {st : Flat.St} {p : Vector Word MAX_N} (h : RG st (some p)) (h0 : st.size ≠ 0)
+    (hn : st.size.toNat ≤ MAX_N) (hp : PermOk st) :
+    Flat.permute st = Flat.permuteLoop (2 * st.size.toNat) st (st.size - 1) p
+      ∧ Bij st.size p := by
+  obtain ⟨p0, h1, h2⟩ := h
+  refine ⟨?_, regroup_bij hn hp h1 h2⟩
+  rw [Flat.permute, ite_eq_right h0]
+  simp only [h1, h2]
+
 end Permute
 end Bbu.Unit
