@@ -322,6 +322,135 @@ theorem Sb.queriesArr (h : Sb s ra adds queries r F f res y o x2 t) :
   ⟨_, get_eq h.mem (by unfold Mb Fr; ecancel)⟩
 end
 
+/-! ## The bytes of `results` -/
+
+-- The byte `i`, and the bytes after a store to it, with the same rest.
+theorem Bs.focus (a : Addr) (bs : List (BitVec 8)) {i : Nat} (hi : i < bs.length)
+    (v : BitVec 8) :
+    ∃ R, Bs a bs = B8 (a + BitVec.ofNat 64 i) bs[i] ∗ R
+      ∧ Bs a (bs.set i v) = B8 (a + BitVec.ofNat 64 i) v ∗ R := by
+  induction bs generalizing a i with
+  | nil => exact absurd hi (Nat.not_lt_zero _)
+  | cons b bs ih =>
+    cases i with
+    | zero => exact ⟨Bs (a + 1#64) bs, by simp [Bs], by simp [Bs]⟩
+    | succ i =>
+      obtain ⟨R, e1, e2⟩ := ih (a + 1#64) (i := i) (by simpa using hi)
+      have ha : a + 1#64 + BitVec.ofNat 64 i = a + BitVec.ofNat 64 (i + 1) := by bv_omega
+      refine ⟨B8 a b ∗ R, ?_, ?_⟩
+      · simp only [Bs, List.getElem_cons_succ]; rw [e1, ha, sep_lc]
+      · simp only [Bs, List.set_cons_succ]; rw [e2, ha, sep_lc]
+
+section
+variable {a : Addr} {bs : List (BitVec 8)} {F : MProp 64} {m : Mem 64} {x : Word}
+
+theorem Bs.isSome (h : (Bs a bs ∗ F).get m) (hx : x.toNat < bs.length) :
+    (m.loadInt (a + x) 1).isSome = true := by
+  obtain ⟨R, e1, -⟩ := Bs.focus a bs hx 0#8
+  rw [e1, MProp.sep_assoc, BitVec.ofNat_toNat, BitVec.setWidth_eq] at h
+  exact B8.isSome h
+
+theorem Bs.store (h : (Bs a bs ∗ F).get m) (hx : x.toNat < bs.length) (z : Int) :
+    (Bs a (bs.set x.toNat (BitVec.ofInt 8 z)) ∗ F).get (m.storeInt (a + x) 1 z) := by
+  obtain ⟨R, e1, e2⟩ := Bs.focus a bs hx (BitVec.ofInt 8 z)
+  rw [e1, MProp.sep_assoc, BitVec.ofNat_toNat, BitVec.setWidth_eq] at h
+  rw [e2, MProp.sep_assoc, BitVec.ofNat_toNat, BitVec.setWidth_eq]
+  exact B8.store h z
+end
+
+/-! ## The stack words, the stores and the call -/
+
+section
+variable {s : MachineData} {ra : Int64} {adds queries : List Word} {r : Addr} {F : MProp 64}
+  {f : BitVec 32 → BitVec 8} {res : List (BitVec 8)} {y o x2 : Word} {t : MachineData}
+
+-- `movq (%rsp), %r`: the word `spilled`.
+theorem Sb.ld_sp (h : Sb s ra adds queries r F f res y o x2 t) :
+    (t.dmem.loadInt t.regs.rsp.toBitVec 8).isSome = true
+      ∧ rd t.dmem t.regs.rsp.toBitVec = rsi s := by
+  have hm := h.mem
+  unfold Mb at hm
+  rw [h.sp]
+  exact ⟨isSome_of_eq _ hm (by unfold Fr; ecancel), rd_of_eq hm (by unfold Fr; ecancel)⟩
+
+-- `movq 80(%rsp), %r`: the word `results`.
+theorem Sb.ld_res (h : Sb s ra adds queries r F f res y o x2 t) :
+    (t.dmem.loadInt (t.regs.rsp.toBitVec + 80#64) 8).isSome = true
+      ∧ rd t.dmem (t.regs.rsp.toBitVec + 80#64) = r := by
+  have hm := h.mem
+  unfold Mb at hm
+  rw [h.sp, show rsp s - 80#64 + 80#64 = rsp s by bv_omega]
+  exact ⟨isSome_of_eq _ hm (by unfold Fr; ecancel), rd_of_eq hm (by unfold Fr; ecancel)⟩
+
+theorem Sb.isSome_o (h : Sb s ra adds queries r F f res y o x2 t) :
+    (t.dmem.loadInt (t.regs.rsp.toBitVec + 16#64) 8).isSome = true := by
+  have hm := h.mem
+  unfold Mb at hm
+  rw [h.sp, show rsp s - 80#64 + 16#64 = rsp s - 64#64 by bv_omega]
+  exact Wd.isSome hm
+
+-- `movq (%rsp), %rax; movq %rax, 16(%rsp)`: the object holds `spilled`.
+theorem Sb.st_o {P : MachineData} (h : Sb s ra adds queries r F f res y o x2 t)
+    (hm : P.dmem
+      = t.dmem.storeInt (t.regs.rsp.toBitVec + 16#64) 8 (rd t.dmem t.regs.rsp.toBitVec).toInt)
+    (hsp : P.regs.rsp = t.regs.rsp) (hbp : P.regs.rbp = t.regs.rbp)
+    (h12 : P.regs.r12 = t.regs.r12) (h13 : P.regs.r13 = t.regs.r13) :
+    Sb s ra adds queries r F f res y (rsi s) x2 P := by
+  have hmem := h.mem
+  unfold Mb at hmem
+  refine h.step ?_ hsp hbp h12 h13
+  rw [hm, h.ld_sp.2, h.sp, show rsp s - 80#64 + 16#64 = rsp s - 64#64 by bv_omega]
+  unfold Mb
+  exact Wd.store hmem (rsi s)
+
+theorem Sb.isSome_res (h : Sb s ra adds queries r F f res y o x2 t) {x : Word}
+    (hx : x.toNat < res.length) : (t.dmem.loadInt (r + x) 1).isSome = true :=
+  Bs.isSome (get_eq h.mem (by unfold Mb Fr; ecancel)) hx
+
+-- `movb %dl, (%rcx,%rax)`: the byte `x` of `results`.
+theorem Sb.st_res {P : MachineData} (h : Sb s ra adds queries r F f res y o x2 t) {x : Word}
+    (hx : x.toNat < res.length) (z : Int) (hm : P.dmem = t.dmem.storeInt (r + x) 1 z)
+    (hsp : P.regs.rsp = t.regs.rsp) (hbp : P.regs.rbp = t.regs.rbp)
+    (h12 : P.regs.r12 = t.regs.r12) (h13 : P.regs.r13 = t.regs.r13) :
+    Sb s ra adds queries r F f (res.set x.toNat (BitVec.ofInt 8 z)) y o x2 P := by
+  refine h.step ?_ hsp hbp h12 h13
+  rw [hm]
+  exact get_eq (Bs.store (get_eq h.mem (by unfold Mb Fr; ecancel)) hx z) (by unfold Mb Fr; ecancel)
+
+-- The byte of the id `i` of `spilled`.
+theorem Sb.isSome_spl (h : Sb s ra adds queries r F f res y o x2 t) {i : Nat}
+    (hi : i < Flat.ids (rdi s)) : (t.dmem.loadInt (rsi s + BitVec.ofNat 64 i) 1).isSome = true :=
+  Spl.isSome (get_eq h.mem (by unfold Mb; ecancel)) (List.mem_range.mpr hi)
+
+theorem Sb.rdb_spl (h : Sb s ra adds queries r F f res y o x2 t) {i : Nat}
+    (hi : i < Flat.ids (rdi s)) : rdb t.dmem (rsi s + BitVec.ofNat 64 i) = f (BitVec.ofNat 32 i) :=
+  Spl.rdb (get_eq h.mem (by unfold Mb; ecancel)) (List.mem_range.mpr hi)
+
+-- `call SpillSet::add` in a state `c` with the object in `rdi`: the callee gets the object,
+-- the bytes and the frame `Fr`, and keeps `rsp`, `rbp`, `r12` and `r13`.
+theorem Sb.call {c : MachineData} {K : Unit → MachineData → Prop}
+    (h : Sb s ra adds queries r F f res y (rsi s) x2 c) (hdi : rdi c = rsp s - 64#64)
+    (hlt : Flat.isVariable (StackSlot.ofWord (rsi c)) = true →
+      (StackSlot.ofWord (rsi c)).payload.toNat < Flat.ids (rdi s))
+    (hK : ∀ t v, Sb s ra adds queries r F (Flat.spillAdd f (StackSlot.ofWord (rsi c))).2 res v
+        (rsi s) x2 t → al t = code (Flat.spillAdd f (StackSlot.ofWord (rsi c))).1 → K () t) :
+    ∃ p S f' n F', AddPre p S f' n F' c
+      ∧ ∀ s', AddPost p S f' n F' c s' → Sep.mod.Agree c s' → K () s' := by
+  refine ⟨rsp s - 64#64, rsi s, f, Flat.ids (rdi s), Fr s ra x2 adds queries r F res,
+    ⟨hdi, Nat.min_le_right _ _, hlt, ⟨y, ?_⟩⟩, fun s' hpost hag => ?_⟩
+  · have hm := h.mem
+    unfold Mb at hm
+    simpa only [rsp, Reg64s.get64_rsp, h.sp] using hm
+  · obtain ⟨hal, v, hm⟩ := hpost
+    refine hK s' v ⟨?_, ?_, ?_, ?_, ?_⟩ hal
+    · unfold Mb
+      simpa only [rsp, Reg64s.get64_rsp, h.sp] using hm
+    · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rsp]; exact h.sp
+    · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rbp]; exact h.bp
+    · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r12]; exact h.r12
+    · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r13]; exact h.r13
+end
+
 /-! ## Specs for two instruction forms
 
 `kvcgen64` has no spec for `movl disp(%b, %i, 8), %r32` and for `andb %r8, %r8`. The proofs are
@@ -436,4 +565,98 @@ theorem setRes_bad {s : MachineData} {f : BitVec 32 → BitVec 8} {adds queries 
     setRes s f adds queries res = (-2#64, f, res) := by
   simp only [setRes, Flat.spill_set, h, Bool.not_false, ↓reduceIte]
   rfl
+
+-- The id of a variable slot that passes the check is a byte of `spilled`.
+theorem lt_ids {n : Word} {x : StackSlot} (hok : Flat.idOk n x = true)
+    (hv : Flat.isVariable x = true) : x.payload.toNat < Flat.ids n := by
+  simp only [Flat.idOk, hv, Bool.true_and, Bool.not_eq_true', decide_eq_false_iff_not,
+    Nat.not_le] at hok
+  have := x.payload.isLt
+  unfold Flat.ids
+  omega
+
+theorem idOk_of_all {n : Word} {l : List StackSlot} {i : Nat} (hi : i < l.length)
+    (h : l.all (Flat.idOk n) = true) : Flat.idOk n l[i] = true :=
+  List.all_eq_true.mp h _ (List.getElem_mem hi)
+
+theorem isVariable_eq (x : StackSlot) :
+    Flat.isVariable x = (x.kind == 0#8 && !(x.valueOpcode == 0#8)) := rfl
+
+/-! ## The loop of the adds -/
+
+section
+variable {f f' : BitVec 32 → BitVec 8}
+
+theorem spillAddAll_append (f : BitVec 32 → BitVec 8) (xs ys : List StackSlot) :
+    Flat.spillAddAll f (xs ++ ys)
+      = if (Flat.spillAddAll f xs).1 = .done then Flat.spillAddAll (Flat.spillAddAll f xs).2 ys
+        else Flat.spillAddAll f xs := by
+  induction xs generalizing f with
+  | nil => simp [Flat.spillAddAll]
+  | cons x xs ih =>
+    by_cases hd : (Flat.spillAdd f x).1 = .done
+    · simp only [List.cons_append, Flat.spillAddAll, hd, ↓reduceIte]; exact ih _
+    · simp only [List.cons_append, Flat.spillAddAll, hd, ↓reduceIte]
+
+theorem addAll_step {l : List StackSlot} {i : Nat} (hi : i < l.length)
+    (h : Flat.spillAddAll f (l.take i) = (.done, f')) :
+    Flat.spillAddAll f (l.take (i + 1)) = Flat.spillAdd f' l[i] := by
+  rw [List.take_succ_eq_append_getElem hi, spillAddAll_append, h]
+  simp only [↓reduceIte, Flat.spillAddAll]
+  by_cases hd : (Flat.spillAdd f' l[i]).1 = .done
+  · simp only [hd, ↓reduceIte]; exact Prod.ext hd.symm rfl
+  · simp only [hd, ↓reduceIte]
+
+-- An add that fails ends the loop.
+theorem addAll_fail {l : List StackSlot} {i : Nat}
+    (h : (Flat.spillAddAll f (l.take i)).1 ≠ .done) :
+    Flat.spillAddAll f l = Flat.spillAddAll f (l.take i) := by
+  rw [← congrArg (Flat.spillAddAll f) (List.take_append_drop i l), spillAddAll_append, if_neg h]
+
+theorem addAll_all {l : List StackSlot} {i : Nat} (hi : l.length ≤ i) :
+    Flat.spillAddAll f (l.take i) = Flat.spillAddAll f l := by
+  rw [List.take_of_length_le hi]
+end
+
+section
+variable {s : MachineData} {f f' : BitVec 32 → BitVec 8} {adds queries : List Word}
+  {res : List (BitVec 8)}
+
+theorem setRes_done (hok : (adds.map StackSlot.ofWord).all (Flat.idOk (rdi s)) = true)
+    (hq : (queries.map StackSlot.ofWord).all (Flat.idOk (rdi s)) = true)
+    (h : Flat.spillAddAll f (adds.map StackSlot.ofWord) = (.done, f')) :
+    setRes s f adds queries res = (0#64, f', (queries.map StackSlot.ofWord).map (g f')) := by
+  simp only [setRes, Flat.spill_set, hok, hq, h, Bool.and_self, Bool.not_true,
+    Bool.false_eq_true, ↓reduceIte]
+  all_goals rfl
+
+theorem setRes_fail {st : Flat.Status}
+    (hok : (adds.map StackSlot.ofWord).all (Flat.idOk (rdi s)) = true)
+    (hq : (queries.map StackSlot.ofWord).all (Flat.idOk (rdi s)) = true)
+    (h : Flat.spillAddAll f (adds.map StackSlot.ofWord) = (st, f')) (hst : st ≠ .done) :
+    setRes s f adds queries res = (-2#64, f', res) := by
+  simp only [setRes, Flat.spill_set, hok, hq, h, hst, Bool.and_self, Bool.not_true,
+    Bool.false_eq_true, ↓reduceIte]
+  all_goals rfl
+end
+
+/-! ## The loop of the queries -/
+
+-- The results after `i` queries: the bytes of the first `i` queries, then the old bytes.
+theorem res_step {f : BitVec 32 → BitVec 8} {Q : List StackSlot} {res : List (BitVec 8)}
+    {i : Nat} (hi : i < Q.length) (hr : Q.length = res.length) :
+    ((Q.take i).map (g f) ++ res.drop i).set i (g f Q[i])
+      = (Q.take (i + 1)).map (g f) ++ res.drop (i + 1) := by
+  have hri : i < res.length := hr ▸ hi
+  rw [List.drop_eq_getElem_cons hri, List.set_append_right _ _ (by simp; omega),
+    List.take_succ_eq_append_getElem hi, List.map_append, List.append_assoc]
+  simp only [List.length_map, List.length_take, Nat.min_eq_left (Nat.le_of_lt hi), Nat.sub_self,
+    List.set_cons_zero, List.map_cons, List.map_nil, List.cons_append, List.nil_append]
+
+theorem res_end {f : BitVec 32 → BitVec 8} {Q : List StackSlot} {res : List (BitVec 8)}
+    {i : Nat} (hi : i = Q.length) (hr : Q.length = res.length) :
+    (Q.take i).map (g f) ++ res.drop i = Q.map (g f) := by
+  subst hi
+  rw [List.take_length, hr, List.drop_length, List.append_nil]
+
 end Bbu.Unit.SpillSetProof
