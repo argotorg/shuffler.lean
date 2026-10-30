@@ -3,9 +3,9 @@ module
 /-!
 The symbol names of the functions of `c/build_bottom_up.cpp`. The members of `Emission`
 and `SpillSet` have the names that g++ gives them (the Itanium C++ ABI mangling); the
-entries `build_bottom_up`, `emission_pop`, `spill_set`, `remove_surplus` and `permute`
-are `extern "C"`. These are the names in `c/build_bottom_up.S`, in the binary, and in
-`c/bbu/NAME.S`. We do not rename them in the asm: each change to the compiler output is
+entries `build_bottom_up`, `emission_pop`, `spill_set`, `remove_surplus`, `permute` and
+`permute_at_lowest_height` are `extern "C"`. These are the names in `c/build_bottom_up.S`,
+in the binary, and in `c/bbu/NAME.S`. We do not rename them in the asm: each change to the compiler output is
 one more step between the proved program and the program that runs. Each name is here
 once; `BbuKraken.Asm`, `BbuKraken.Link` and the specs use these defs.
 -/
@@ -49,5 +49,10 @@ namespace Bbu.Names
 
 /-- `permute`, `extern "C"`. `Names.permute` is the member `Emission::permute`. -/
 @[expose] public def permuteEntry : String := "permute"
+/-- `Emission::permuteAtLowestHeight()` -/
+@[expose] public def permuteAtLowestHeight : String :=
+  "_ZN12_GLOBAL__N_18Emission21permuteAtLowestHeightEv"
+/-- `permute_at_lowest_height`, `extern "C"` -/
+@[expose] public def permute_at_lowest_height : String := "permute_at_lowest_height"
 
 end Bbu.Names

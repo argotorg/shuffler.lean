@@ -11,7 +11,7 @@ set_option maxRecDepth 100000
 example : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm ++ produceAsm
     ++ swapWithAsm ++ generateAsm ++ finishAsm ++ loopAsm ++ popAsm ++ buildBottomUpAsm
     ++ emissionPopAsm ++ spillSetAddAsm ++ spillSetAsm ++ removeSurplusAsm ++ removeSurplusEntryAsm
-    ++ permuteEntryAsm := by
+    ++ permuteEntryAsm ++ permuteAtLowestHeightAsm ++ permuteAtLowestHeightEntryAsm := by
   rfl
 
 -- `bbuParseFile` reads `leaq disp(,%i,8), %r` as the operand with no base.
@@ -38,7 +38,9 @@ example : (bbuAsm.filter fun
      .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.r12, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .r8 .W64) ⟨none, some ⟨.rdi, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .rcx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩))] := by
+     .instr (.regular .W64 .W64 (.lea (.low .rcx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rsi .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩))] := by
   rfl
 
 -- `bbuParseFn` reads the file of the name.
@@ -52,6 +54,9 @@ example : (removeSurplusAsm.head? = some (.label Names.removeSurplus)) := by rfl
 example : (removeSurplusEntryAsm.head? = some (.label Names.remove_surplus)) := by rfl
 example : (finishAsm.head? = some (.label Names.permute)) := by rfl
 example : (permuteEntryAsm.head? = some (.label Names.permuteEntry)) := by rfl
+example : (permuteAtLowestHeightAsm.head? = some (.label Names.permuteAtLowestHeight)) := by rfl
+example : (permuteAtLowestHeightEntryAsm.head? = some (.label Names.permute_at_lowest_height)) := by
+  rfl
 
 end Bbu
 

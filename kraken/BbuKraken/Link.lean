@@ -17,7 +17,8 @@ set_option maxRecDepth 100000 in
 theorem bbuAsm_eq : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm
     ++ produceAsm ++ swapWithAsm ++ generateAsm ++ finishAsm ++ loopAsm
     ++ popAsm ++ buildBottomUpAsm ++ emissionPopAsm ++ spillSetAddAsm ++ spillSetAsm
-    ++ removeSurplusAsm ++ removeSurplusEntryAsm ++ permuteEntryAsm := by rfl
+    ++ removeSurplusAsm ++ removeSurplusEntryAsm ++ permuteEntryAsm ++ permuteAtLowestHeightAsm
+    ++ permuteAtLowestHeightEntryAsm := by rfl
 
 section
 set_option maxRecDepth 100000

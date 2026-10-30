@@ -971,6 +971,354 @@ void permuteProperties()
 	expect(keptRuns > 100, "permute: done runs with a destination that is not the offset of its slot", keptRuns);
 }
 
+/// The buffers of permute_at_lowest_height after a call
+struct Lowest
+{
+	std::int64_t count;
+	std::vector<StackSlot> data;
+	std::vector<Optional<StackOffset>> dest;
+	/// 2m entries, so that AddressSanitizer finds a write past the bound of the contract
+	std::vector<ShuffleOp> ops;
+	std::uint64_t blocked[2];
+};
+
+/// permute_at_lowest_height on the stack `_stack` with the destinations `_dest`, for a target of `_n` slots
+Lowest atLowestHeight(std::vector<StackSlot> const& _stack, std::vector<Optional<StackOffset>> const& _dest,
+	std::size_t const _n)
+{
+	Lowest result{0, _stack, _dest, std::vector<ShuffleOp>(2 * _stack.size()), {7, 7}};
+	std::vector<StackSlot> const target(_n, variable(0));
+	std::uint8_t const spills[1] = {};
+	result.count = permute_at_lowest_height(_stack.size(), _n, result.data.data(), target.data(), result.dest.data(),
+		spills, 1, result.ops.data(), result.blocked);
+	return result;
+}
+
+/// The operations of `_result` are the swaps of the depths `_depths`
+bool swapsAre(Lowest const& _result, std::vector<std::size_t> const& _depths)
+{
+	if (_result.count != static_cast<std::int64_t>(_depths.size()))
+		return false;
+	for (std::size_t i = 0; i < _depths.size(); ++i)
+		if (!isSwap(_result.ops[i], _depths[i]))
+			return false;
+	return true;
+}
+
+/// The result of a call that fails: -2, and nothing is written
+bool failed(Lowest const& _result, std::vector<StackSlot> const& _stack, std::vector<Optional<StackOffset>> const& _dest)
+{
+	return _result.count == -2 && sameSlots(_result.data, _stack) && _result.dest == _dest && _result.blocked[0] == 7 &&
+		_result.blocked[1] == 7;
+}
+
+/// permute_at_lowest_height: the bounds, the outputs, parked slots and holes, and the blocked cases. The cases of
+/// Fuzz/port_test.cpp, with the model results of Fuzz/Oracle.lean. Also Emission::permuteAtLowestHeight with a
+/// mapping that the entry can not make.
+void permuteAtLowestHeightEntry()
+{
+	StackSlot const literal{1, StackSlot::Kind::Value, InstOpcode::Const};
+
+	Lowest const empty = atLowestHeight({}, {}, 0);
+	expect(empty.count == 0 && empty.blocked[0] == 0 && empty.blocked[1] == 0,
+		"permute_at_lowest_height: an empty stack");
+
+	// all slots final: no operation
+	Lowest const inPlace = atLowestHeight(variables(0, 2), offsets({0, 1}), 2);
+	expect(inPlace.count == 0 && sameSlots(inPlace.data, variables(0, 2)) && inPlace.dest == offsets({0, 1}) &&
+		inPlace.blocked[0] == 0 && inPlace.blocked[1] == 0, "permute_at_lowest_height: all slots final");
+
+	// a slot parked in a hole stays
+	Lowest const stays = atLowestHeight({variable(1)}, offsets({1}), 2);
+	expect(stays.count == 0 && sameSlots(stays.data, {variable(1)}) && stays.dest == offsets({1}) &&
+		stays.blocked[0] == 0 && stays.blocked[1] == 0, "permute_at_lowest_height: a parked slot in a hole");
+
+	// a parked slot that is not in a hole goes to the hole
+	Lowest const moves = atLowestHeight({variable(3), variable(1), variable(0)}, offsets({3, 1, 0}), 4);
+	expect(swapsAre(moves, {2}) && sameSlots(moves.data, {variable(0), variable(1), variable(3)}) &&
+		moves.dest == offsets({0, 1, 3}) && moves.blocked[1] == 0, "permute_at_lowest_height: a parked slot moves");
+
+	// two parked slots take the holes in the order of their offsets, not of their destinations
+	Lowest const order = atLowestHeight({variable(5), variable(4), variable(0), variable(1)}, offsets({5, 4, 0, 1}), 6);
+	expect(swapsAre(order, {2, 1, 3, 1}) &&
+		sameSlots(order.data, {variable(0), variable(1), variable(5), variable(4)}) &&
+		order.dest == offsets({0, 1, 5, 4}), "permute_at_lowest_height: two parked slots keep their order");
+	Lowest const ascending = atLowestHeight({variable(4), variable(5), variable(0), variable(1)},
+		offsets({4, 5, 0, 1}), 6);
+	expect(swapsAre(ascending, {2, 1, 3, 1}) &&
+		sameSlots(ascending.data, {variable(0), variable(1), variable(4), variable(5)}) &&
+		ascending.dest == offsets({0, 1, 4, 5}), "permute_at_lowest_height: two parked slots, ascending");
+
+	// a parked slot that goes into a hole, next to one that stays in a hole
+	Lowest const both = atLowestHeight({variable(3), variable(4), variable(0)}, offsets({3, 4, 0}), 5);
+	expect(swapsAre(both, {2}) && sameSlots(both.data, {variable(0), variable(4), variable(3)}) &&
+		both.dest == offsets({0, 4, 3}), "permute_at_lowest_height: a parked slot moves, one stays");
+
+	// equal slots: permute moves the destinations with them
+	Lowest const equal = atLowestHeight({variable(0), variable(0), variable(1)}, offsets({1, 2, 0}), 3);
+	expect(swapsAre(equal, {2}) && sameSlots(equal.data, {variable(1), variable(0), variable(0)}) &&
+		equal.dest == offsets({0, 2, 1}), "permute_at_lowest_height: equal slots");
+
+	// a slot without a destination: the assertion fails, also for the bottom slot and below a parked slot
+	expect(failed(atLowestHeight({variable(0), literal}, {offset(0), none}, 1), {variable(0), literal},
+		{offset(0), none}), "permute_at_lowest_height: an unbound top");
+	expect(failed(atLowestHeight({literal, variable(0)}, {none, offset(0)}, 1), {literal, variable(0)},
+		{none, offset(0)}), "permute_at_lowest_height: an unbound bottom");
+	expect(failed(atLowestHeight({variable(2), literal}, {offset(2), none}, 3), {variable(2), literal},
+		{offset(2), none}), "permute_at_lowest_height: an unbound slot above a parked slot");
+
+	// 17 slots: a swap at depth 16 is in reach. 18 slots: the swap at depth 17 blocks, and nothing changes.
+	std::vector<StackSlot> reach = variables(1, 15);
+	reach.insert(reach.begin(), variable(17));
+	reach.push_back(variable(0));
+	std::vector<std::uint64_t> reachDest = naturals(1, 15);
+	reachDest.insert(reachDest.begin(), 17);
+	reachDest.push_back(0);
+	Lowest const reached = atLowestHeight(reach, offsets(reachDest), 18);
+	std::vector<StackSlot> reachedData = variables(0, 16);
+	reachedData.push_back(variable(17));
+	std::vector<std::uint64_t> reachedDest = naturals(0, 15);
+	reachedDest.push_back(17);
+	expect(swapsAre(reached, {16}) && sameSlots(reached.data, reachedData) && reached.dest == offsets(reachedDest) &&
+		reached.blocked[0] == 0 && reached.blocked[1] == 0, "permute_at_lowest_height: a swap at depth 16");
+	std::vector<StackSlot> deep = variables(1, 16);
+	deep.insert(deep.begin(), variable(18));
+	deep.push_back(variable(0));
+	std::vector<std::uint64_t> deepDest = naturals(1, 16);
+	deepDest.insert(deepDest.begin(), 18);
+	deepDest.push_back(0);
+	Lowest const blocked = atLowestHeight(deep, offsets(deepDest), 19);
+	expect(blocked.count == 0 && blocked.blocked[0] == 0 && blocked.blocked[1] == 1 && sameSlots(blocked.data, deep) &&
+		blocked.dest == offsets(deepDest), "permute_at_lowest_height: blocked");
+
+	// the bounds of the mapping: 1024 slots, and 1025 slots or target offsets. Then nothing is written.
+	Lowest const all = atLowestHeight(variables(0, 1024), offsets(naturals(0, 1023)), 1024);
+	expect(all.count == 0 && all.blocked[0] == 0 && all.blocked[1] == 0 && all.dest == offsets(naturals(0, 1023)),
+		"permute_at_lowest_height: 1024 slots");
+	std::vector<StackSlot> parkedHigh = variables(1, 1022);
+	parkedHigh.insert(parkedHigh.begin(), variable(1023));
+	std::vector<std::uint64_t> parkedHighDest = naturals(1, 1022);
+	parkedHighDest.insert(parkedHighDest.begin(), 1023);
+	Lowest const high = atLowestHeight(parkedHigh, offsets(parkedHighDest), 1024);
+	expect(high.count == 0 && high.blocked[1] == 0 && high.dest == offsets(parkedHighDest),
+		"permute_at_lowest_height: a slot parked at offset 1023");
+	std::vector<std::uint64_t> rotation = naturals(1, 1023);
+	rotation.push_back(0);
+	Lowest const rotated = atLowestHeight(variables(0, 1024), offsets(rotation), 1024);
+	expect(rotated.count == 0 && rotated.blocked[0] == 0 && rotated.blocked[1] == 1007,
+		"permute_at_lowest_height: the rotation of 1024 slots");
+	expect(failed(atLowestHeight(variables(0, 1025), offsets(naturals(0, 1024)), 1025), variables(0, 1025),
+		offsets(naturals(0, 1024))), "permute_at_lowest_height: 1025 slots");
+	expect(failed(atLowestHeight({variable(0)}, {offset(0)}, 1025), {variable(0)}, {offset(0)}),
+		"permute_at_lowest_height: 1025 offsets");
+
+	// A mapping that binds both slots for offset 0, and a target of 1 slot: the slot at offset 1 is above the target,
+	// and the check of the Lean model fails before the planned mapping is read there. The planned mapping has an
+	// entry for offset 1, so that without the check the permutation is {0, 0}, which is not a permutation. The entry
+	// can not make this mapping.
+	{
+		StackSlot data[2] = {variable(0), variable(1)};
+		ShuffleOp ops[4];
+		StackSlot const target[1] = {variable(0)};
+		std::uint8_t const spills[1] = {};
+		Mapping planned{2, 2};
+		planned.bind(StackOffset{1}, StackOffset{1});
+		planned.bind(StackOffset{1}, StackOffset{0});
+		planned.bind(StackOffset{0}, StackOffset{0});
+		expect(opt(planned.destinationOf(StackOffset{1})) == 0 && opt(planned.positionOf(StackOffset{1})) == 1,
+			"permuteAtLowestHeight: a slot above the target, the planned mapping");
+		Emission emission{Stack{data, 2, ops}, target, 1, planned, spills};
+		expect(emission.permuteAtLowestHeight() == Status::AssertionFailed && emission.traceSize() == 0,
+			"permuteAtLowestHeight: a slot above the target");
+	}
+
+	// A planned mapping that is not the working mapping: the emission keeps a reference to the planned mapping, so a
+	// change after the constructor changes the holes. Then the numbers of parked slots and holes differ, and the
+	// assertion fails before any operation. The same emissions with no change are done.
+	for (bool const change: {false, true})
+	{
+		StackSlot data[1] = {variable(0)};
+		ShuffleOp ops[2];
+		StackSlot const target[2] = {variable(0), variable(0)};
+		std::uint8_t const spills[1] = {};
+		Status const expected = change ? Status::AssertionFailed : Status::Done;
+
+		// the slot is parked; the change makes offset 0 planned, so the slot is not in a hole, and there is no hole
+		Mapping parked{1, 2};
+		parked.bind(StackOffset{0}, StackOffset{1});
+		Emission parkedEmission{Stack{data, 1, ops}, target, 2, parked, spills};
+		if (change)
+			parked.bind(StackOffset{0}, StackOffset{0});
+		expect(parkedEmission.permuteAtLowestHeight() == expected && parkedEmission.traceSize() == 0,
+			"permuteAtLowestHeight: more parked slots than holes", change);
+
+		// the slot is final; the change unbinds offset 0, so it is a hole, and no slot is parked
+		Mapping hole{1, 1};
+		hole.bind(StackOffset{0}, StackOffset{0});
+		Emission holeEmission{Stack{data, 1, ops}, target, 1, hole, spills};
+		if (change)
+			hole.pop(StackOffset{0});
+		expect(holeEmission.permuteAtLowestHeight() == expected && holeEmission.traceSize() == 0,
+			"permuteAtLowestHeight: more holes than parked slots", change);
+	}
+}
+
+/// permute_at_lowest_height on random states, against Shuffler.cpp's permuteAtLowestHeight: the permutation of
+/// Shuffler.cpp, made here with std::vector and std::sort, is a permutation of the offsets, and the permute entry
+/// with it gives the same operations, stack and blocked slot, and the destinations of the same slots. If it is done,
+/// the slot at offset pos is the slot that the permutation sends there: a slot with a destination below the height is
+/// at it (or an equal slot is), and a parked slot is in a hole. Each destination stays with an equal slot. A slot
+/// without a destination fails the assertion, and then nothing is written.
+void permuteAtLowestHeightProperties()
+{
+	std::mt19937_64 random{20261030};
+	auto const below = [&](std::size_t const _bound) {
+		return std::uniform_int_distribution<std::size_t>{0, _bound - 1}(random);
+	};
+	// the runs that fail, that block, that are done with a swap, in which a parked slot moves to a hole, and in
+	// which a parked slot stays in its hole: the generator has to reach each case
+	unsigned long failedRuns = 0;
+	unsigned long blockedRuns = 0;
+	unsigned long swapRuns = 0;
+	unsigned long moveRuns = 0;
+	unsigned long stayRuns = 0;
+	for (unsigned long run = 0; run < 20000; ++run)
+	{
+		std::size_t const h = below(run % 100 == 0 ? 1025 : 41);
+		std::size_t const n = h + below(run % 100 == 0 ? 1025 - h : 6);
+		// few distinct slots, so that some slots are equal
+		std::vector<StackSlot> stack;
+		for (std::size_t i = 0; i < h; ++i)
+			stack.push_back(below(3) == 0 ? nonVariables(static_cast<std::uint32_t>(below(2)))[below(4)] :
+				variable(static_cast<std::uint32_t>(below(4 + below(2) * h))));
+		// distinct offsets below n: a sample, or the identity with a few exchanges of near offsets and a few slots
+		// parked above the height, so that some deep stacks are in reach
+		std::vector<std::uint64_t> values = firstOffsets(n);
+		if (below(2) == 0)
+		{
+			std::shuffle(values.begin(), values.end(), random);
+			values.resize(h);
+		}
+		else
+		{
+			std::shuffle(values.begin() + static_cast<std::ptrdiff_t>(h), values.end(), random);
+			if (h > 0)
+				for (std::size_t k = std::min(below(4), n - h); k > 0; --k)
+					std::swap(values[below(h)], values[h + k - 1]);
+			values.resize(h);
+			if (h > 0)
+				for (std::size_t k = below(5); k > 0; --k)
+				{
+					std::size_t const i = below(h);
+					std::swap(values[i], values[std::min(h - 1, i + below(18))]);
+				}
+		}
+		std::vector<Optional<StackOffset>> dest = offsets(values);
+		bool const unbound = h > 0 && below(20) == 0;
+		if (unbound)
+			dest[below(h)] = none;
+
+		Lowest const result = atLowestHeight(stack, dest, n);
+		if (unbound)
+		{
+			expect(failed(result, stack, dest), "permuteAtLowestHeight: an unbound slot fails", run);
+			++failedRuns;
+			continue;
+		}
+		expect(result.count >= 0 && static_cast<std::size_t>(result.count) <= std::max<std::size_t>(2 * h, 1) - 1,
+			"permuteAtLowestHeight: count", run);
+		if (result.count < 0)
+			continue;
+
+		// the permutation of Shuffler.cpp: a hole is an offset that no slot is bound for
+		std::vector<bool> planned(n, false);
+		for (std::uint64_t const value: values)
+			planned[value] = true;
+		std::vector<std::uint64_t> permutation(h);
+		std::vector<std::size_t> holes;
+		std::vector<std::size_t> parked;
+		bool stays = false;
+		for (std::size_t pos = 0; pos < h; ++pos)
+		{
+			bool const isHole = !planned[pos];
+			bool const isParked = values[pos] >= h;
+			if (!isParked)
+				permutation[pos] = values[pos];
+			if (isParked && isHole)
+				permutation[pos] = pos;
+			if (isParked && !isHole)
+				parked.push_back(pos);
+			if (!isParked && isHole)
+				holes.push_back(pos);
+			stays = stays || (isParked && isHole);
+		}
+		expect(parked.size() == holes.size(), "permuteAtLowestHeight: parked slots and holes", run);
+		if (parked.size() != holes.size())
+			continue;
+		std::sort(parked.begin(), parked.end());
+		for (std::size_t i = 0; i < parked.size(); ++i)
+			permutation[parked[i]] = holes[i];
+		std::vector<std::size_t> origin(h, h);
+		for (std::size_t pos = 0; pos < h; ++pos)
+			origin[permutation[pos]] = pos;
+		expect(std::find(origin.begin(), origin.end(), h) == origin.end(), "permuteAtLowestHeight: a permutation", run);
+
+		// permute with this permutation: the same result. Its destinations are the permutation's, so the slot at
+		// offset pos has the destination of the slot that permute's destination at pos comes from.
+		Permuted const reference = permuted(stack, permutation);
+		bool const sameOps = reference.count == result.count && std::equal(result.ops.begin(),
+			result.ops.begin() + result.count, reference.ops.begin(), [](ShuffleOp const _a, ShuffleOp const _b) {
+				return _a.kind == _b.kind && _a.depth == _b.depth && sameSlot(_a.slot, _b.slot);
+			});
+		expect(sameOps && sameSlots(result.data, reference.data) && result.blocked[0] == reference.blocked[0] &&
+			result.blocked[1] == reference.blocked[1], "permuteAtLowestHeight: permute gives the same result", run);
+		for (std::size_t pos = 0; pos < h; ++pos)
+		{
+			Optional<StackOffset> const d = reference.dest[pos];
+			expect(d && d->value < h && result.dest[pos] == dest[origin[d->value]],
+				"permuteAtLowestHeight: permute gives the same destinations", run);
+		}
+
+		// each destination stays with an equal slot, and no destination is lost or doubled
+		std::vector<Optional<StackOffset>> before = dest;
+		std::vector<Optional<StackOffset>> after = result.dest;
+		auto const byValue = [](Optional<StackOffset> const _a, Optional<StackOffset> const _b) {
+			return opt(_a) < opt(_b);
+		};
+		std::sort(before.begin(), before.end(), byValue);
+		std::sort(after.begin(), after.end(), byValue);
+		expect(before == after, "permuteAtLowestHeight: no destination is lost or doubled", run);
+		for (std::size_t pos = 0; pos < h; ++pos)
+		{
+			auto const source = std::find(dest.begin(), dest.end(), result.dest[pos]);
+			expect(source != dest.end() && sameSlot(stack[static_cast<std::size_t>(source - dest.begin())],
+				result.data[pos]), "permuteAtLowestHeight: a destination stays with an equal slot", run);
+		}
+
+		if (result.blocked[1] == 0)
+		{
+			expect(result.blocked[0] == 0, "permuteAtLowestHeight: done", run);
+			for (std::size_t pos = 0; pos < h; ++pos)
+				expect(sameSlot(result.data[permutation[pos]], stack[pos]), "permuteAtLowestHeight: done, the slots",
+					run);
+		}
+		else
+		{
+			std::size_t const pos = result.blocked[0];
+			expect(pos < h && h - 1 - pos == 16 + result.blocked[1], "permuteAtLowestHeight: blocked, the excess", run);
+		}
+		blockedRuns += result.blocked[1] != 0;
+		swapRuns += result.blocked[1] == 0 && result.count > 0;
+		moveRuns += !parked.empty();
+		stayRuns += stays;
+	}
+	expect(failedRuns > 100, "permuteAtLowestHeight: failed runs", failedRuns);
+	expect(blockedRuns > 100, "permuteAtLowestHeight: blocked runs", blockedRuns);
+	expect(swapRuns > 100, "permuteAtLowestHeight: done runs with a swap", swapRuns);
+	expect(moveRuns > 100, "permuteAtLowestHeight: runs in which a parked slot moves", moveRuns);
+	expect(stayRuns > 100, "permuteAtLowestHeight: runs in which a parked slot stays", stayRuns);
+}
+
 }
 
 int main()
@@ -988,6 +1336,8 @@ int main()
 	removeSurplusProperties();
 	permuteEntry();
 	permuteProperties();
+	permuteAtLowestHeightEntry();
+	permuteAtLowestHeightProperties();
 	if (failures > 0)
 	{
 		std::fprintf(stderr, "%d failures\n", failures);

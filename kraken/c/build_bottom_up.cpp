@@ -1,7 +1,7 @@
-// Emission::buildBottomUp, Emission::removeSurplus, Emission::permute and Emission::pop of
-// solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp, freestanding, with the behavior of the Lean model,
-// Shuffler/BuildBottomUp/Defs.lean, Shuffler/RemoveSurplus/Defs.lean, Shuffler/Permute/Defs.lean and State.pop of
-// Shuffler/Emission/Defs.lean.
+// Emission::buildBottomUp, Emission::removeSurplus, Emission::permuteAtLowestHeight, Emission::permute and
+// Emission::pop of solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp, freestanding, with the behavior of the Lean
+// model, Shuffler/BuildBottomUp/Defs.lean, Shuffler/RemoveSurplus/Defs.lean, Shuffler/PermuteAtLowestHeight/Defs.lean,
+// Shuffler/Permute/Defs.lean and State.pop of Shuffler/Emission/Defs.lean.
 // The differences from Shuffler.cpp:
 //
 // - There are no exceptions, so a failed yulAssert returns Status::AssertionFailed.
@@ -530,6 +530,10 @@ public:
 	/// spill_set.
 	Status removeSurplus();
 
+	/// At the lowest height, permutes every slot to its destination, or, if the destination is above the stack,
+	/// into a hole: an offset whose target slot the planned mapping does not bind. Defined after permute.
+	Status permuteAtLowestHeight();
+
 private:
 	/// Produces the slot for `_targetOffset`
 	UNIT Status produce(StackOffset const _targetOffset)
@@ -1032,6 +1036,96 @@ extern "C" std::int64_t permute(
 		return -2;
 	}
 	for (StackOffset pos{0}; pos < h; ++pos.value)
+		dest[pos.value] = emission.mapping().destinationOf(pos);
+	return static_cast<std::int64_t>(emission.traceSize());
+}
+
+namespace
+{
+
+// `used` and this place make g++ emit permuteAtLowestHeight after permute, so the asm of the units above and their
+// labels stay
+[[gnu::used]] UNIT Status Emission::permuteAtLowestHeight()
+{
+	OffsetArray<StackOffset> permutation;
+	// offsets whose target slots will be generated later, and the slots that wait for one of them
+	OffsetArray<StackOffset> holes;
+	OffsetArray<StackOffset> parked;
+	std::size_t holeCount = 0;
+	std::size_t parkedCount = 0;
+	// each offset below the height gets one entry of permutation, so permutation needs no initial value
+	for (StackOffset pos{0}; pos < m_stack.size(); ++pos.value)
+	{
+		// all surplus is gone, so every slot has a destination
+		Optional<StackOffset> const destination = m_mapping.destinationOf(pos);
+		yulAssert(destination.has_value(), "every source slot must be bound");
+		yulAssert(pos < m_targetSize);  // Lean
+		// no slot is planned for the target offset pos, so its slot has to be generated
+		bool const isHole = !m_plannedMapping.positionOf(pos).has_value();
+		// the destination can not be served yet
+		bool const isParked = *destination >= m_stack.size();
+		if (!isParked)
+			permutation[pos] = *destination;
+		if (isParked && isHole)
+			permutation[pos] = pos;
+		if (isParked && !isHole)
+			parked[StackOffset{parkedCount++}] = pos;
+		if (!isParked && isHole)
+			holes[StackOffset{holeCount++}] = pos;
+	}
+	yulAssert(parkedCount == holeCount, "parked and holes must have the same size");
+	// parked is in ascending order, so the sort of Shuffler.cpp does not change it
+	for (StackOffset i{0}; i < parkedCount; ++i.value)
+		permutation[parked[i]] = holes[i];
+	return permute(permutation);
+}
+
+}
+
+/// The Emission constructor and Emission::permuteAtLowestHeight for a stack of m slots and a target of n slots: data
+/// holds the slots and dest[i] is the target offset of slot i, or none (SIZE_MAX); the planned mapping is this
+/// mapping. Writes the operations to ops and returns their number, also when a slot is out of reach. Then blocked gets
+/// its offset and its excess, which is positive, else 0 and 0. Returns -2 for a failed assertion. If the result is not
+/// -2, data holds the slots of the working stack, and dest the destination of each of its m slots: a permutation does
+/// not change the height.
+///
+/// dest holds distinct offsets below n, and ops has room for 2m entries: permute makes at most 2m - 1 passes, each
+/// with at most one swap. m, n <= 1024, else the result is -2 and nothing is written. spilled has idCount bytes, the
+/// spill set of the state; permuteAtLowestHeight does not read it, nor target.
+extern "C" std::int64_t permute_at_lowest_height(
+	std::uint64_t const m,
+	std::uint64_t const n,
+	StackSlot* const data,
+	StackSlot const* const target,
+	Optional<StackOffset>* const dest,
+	std::uint8_t const* const spilled,
+	[[maybe_unused]] std::uint64_t const idCount,
+	ShuffleOp* const ops,
+	std::uint64_t* const blocked
+)
+{
+	// the mapping has room for maxStackSize offsets
+	if (m > maxStackSize || n > maxStackSize)
+		return -2;
+	Mapping planned{m, n};
+	for (StackOffset pos{0}; pos < m; ++pos.value)
+		if (Optional<StackOffset> const destination = dest[pos.value])
+			planned.bind(pos, *destination);
+	Emission emission{Stack{data, m, ops}, target, n, planned, spilled};
+	switch (emission.permuteAtLowestHeight())
+	{
+	case Status::Done:
+		blocked[0] = 0;
+		blocked[1] = 0;
+		break;
+	case Status::Blocked:
+		blocked[0] = emission.blocked().offset.value;
+		blocked[1] = emission.blocked().excess;
+		break;
+	case Status::AssertionFailed:
+		return -2;
+	}
+	for (StackOffset pos{0}; pos < m; ++pos.value)
 		dest[pos.value] = emission.mapping().destinationOf(pos);
 	return static_cast<std::int64_t>(emission.traceSize());
 }
