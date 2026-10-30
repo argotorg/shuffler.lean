@@ -77,7 +77,7 @@ std::string times(std::string const& _word, int const _count)
 int main()
 {
 	// the kinds without a port unit
-	for (std::string const line: {"map;L;v0;v0;0", "surplus;v0;v0;0;", "permute;v0;0", "emit;;;;", "plan;L;0;;;"})
+	for (std::string const line: {"map;L;v0;v0;0", "permute;v0;0", "emit;;;;", "plan;L;0;;;"})
 		expect(!port::check(line, "ok;;;").has_value(), "no port unit for: " + line);
 
 	// buildBottomUp: each slot kind, each operation kind, equal slots, blocked with and without operations
@@ -230,6 +230,100 @@ int main()
 	throws("spill;v0;v0;");
 	throws("spill;x;");
 	throws("spill;;y");
+
+	// removeSurplus: an empty stack, no surplus, a surplus top, a deep surplus (SWAP, then POP), two of them, a
+	// surplus slot equal to the top takes over its destination (no operation), also below a surplus slot that is not
+	// equal, each slot kind (junk and a return label are not equal to a variable), all slots surplus, more slots
+	// than target slots, fewer slots than target slots
+	agrees("surplus;;;;", "ok;;;", "ok;;;");
+	agrees("surplus;v0 v1;v0 v1;0 1;", "ok;v0 v1;;0 1", "ok;v0 v1;;0 1");
+	agrees("surplus;v1 v0;v0 v1;1 0;", "ok;v1 v0;;1 0", "ok;v1 v0;;1 0");
+	agrees("surplus;v0 l1;v0;0 -;", "ok;v0;POP;0", "ok;v0;POP;0");
+	agrees("surplus;v0 v0;v0;0 -;", "ok;v0;POP;0", "ok;v0;POP;0");
+	agrees("surplus;l9 v0 v1;v0 v1;- 0 1;", "ok;v1 v0;SWAP2 POP;1 0", "ok;v1 v0;SWAP2 POP;1 0");
+	agrees("surplus;l9 l8 v0 v1;v0 v1;- - 0 1;", "ok;v1 v0;SWAP3 POP SWAP1 POP;1 0",
+		"ok;v1 v0;SWAP3 POP SWAP1 POP;1 0");
+	agrees("surplus;v0 v0;v0;- 0;", "ok;v0;POP;0", "ok;v0;POP;0");
+	agrees("surplus;l5 v0 v0;v0;- - 0;", "ok;v0;POP SWAP1 POP;0", "ok;v0;POP SWAP1 POP;0");
+	agrees("surplus;v0 l5 v0;v0;- - 0;", "ok;v0;POP POP;0", "ok;v0;POP POP;0");
+	// of two equal surplus slots the shallower one takes the destination; with the deeper one, SWAP1 instead of SWAP2
+	agrees("surplus;v0 v0 v1 l1 v0;v0 v1;- - 1 - 0;", "ok;v1 v0;POP POP SWAP2 POP;1 0",
+		"ok;v1 v0;POP POP SWAP2 POP;1 0");
+	// two retags
+	agrees("surplus;v0 l1 v0 l2 v0;v0;- - - - 0;", "ok;v0;POP POP POP POP;0", "ok;v0;POP POP POP POP;0");
+	agrees("surplus;R _ v0;v0;- - 0;", "ok;v0;SWAP2 POP POP;0", "ok;v0;SWAP2 POP POP;0");
+	agrees("surplus;_ l0 v0 R v0;v0;- - - - 0;", "ok;v0;POP POP SWAP2 POP POP;0", "ok;v0;POP POP SWAP2 POP POP;0");
+	agrees("surplus;l0 l1 l2;;- - -;", "ok;;POP POP POP;", "ok;;POP POP POP;");
+	agrees("surplus;R _ l2 v5;;- - - -;", "ok;;POP POP POP POP;", "ok;;POP POP POP POP;");
+	agrees("surplus;v0 v1 l0 _ R;v0 v1;0 1 - - -;", "ok;v0 v1;POP POP POP;0 1", "ok;v0 v1;POP POP POP;0 1");
+	agrees("surplus;v0;v0;-;", "ok;;POP;", "ok;;POP;");
+	agrees("surplus;v0;v0 v1;1;", "ok;v0;;1", "ok;v0;;1");
+	// the swap reach: a surplus slot at depth 16 is swapped, one at depth 17 blocks, also after a pop; the block is at
+	// the shallowest surplus slot; the excess of depth 20; a surplus slot at depth 16 and one below it; a surplus slot
+	// at depth 18 that is equal to the top takes over its destination
+	{
+		std::string const result = "ok;v16 " + vars(1, 15) + ";SWAP16 POP;15 " + nats(0, 14);
+		agrees("surplus;l0 " + vars(1, 16) + ";" + vars(1, 16) + ";- " + nats(0, 15) + ";", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1;l0 " + vars(1, 17) + ";;- " + nats(0, 16);
+		agrees("surplus;l0 " + vars(1, 17) + ";" + vars(1, 17) + ";- " + nats(0, 16) + ";", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1;l0 " + vars(1, 17) + ";POP;- " + nats(0, 16);
+		agrees("surplus;l0 " + vars(1, 17) + " l1;" + vars(1, 17) + ";- " + nats(0, 16) + " -;", result, result);
+	}
+	{
+		std::string const result = "blocked 1 1;l0 l1 " + vars(1, 17) + ";;- - " + nats(0, 16);
+		agrees("surplus;l0 l1 " + vars(1, 17) + ";" + vars(1, 17) + ";- - " + nats(0, 16) + ";", result, result);
+	}
+	{
+		std::string const result = "blocked 0 4;l0 " + vars(1, 20) + ";;- " + nats(0, 19);
+		agrees("surplus;l0 " + vars(1, 20) + ";" + vars(1, 20) + ";- " + nats(0, 19) + ";", result, result);
+	}
+	{
+		std::string const result = "ok;v15 v16 " + vars(1, 14) + ";SWAP16 POP SWAP16 POP;14 15 " + nats(0, 13);
+		agrees("surplus;l0 l1 " + vars(1, 16) + ";" + vars(1, 16) + ";- - " + nats(0, 15) + ";", result, result);
+	}
+	{
+		std::string const result = "ok;v16 " + vars(1, 15) + ";POP SWAP16 POP;15 " + nats(0, 14);
+		agrees("surplus;l0 " + vars(1, 16) + " l1;" + vars(1, 16) + ";- " + nats(0, 15) + " -;", result, result);
+	}
+	{
+		std::string const result = "ok;" + vars(0, 16) + ";POP POP;" + nats(0, 16);
+		agrees("surplus;" + vars(0, 16) + " l0 v0;" + vars(0, 16) + ";- " + nats(1, 16) + " - 0;", result, result);
+	}
+	// the stack limit: 1024 surplus slots, and a surplus bottom under 1023 slots
+	{
+		std::string const result = "ok;;" + times("POP", 1024) + ";";
+		agrees("surplus;" + times("l0", 1024) + ";;" + times("-", 1024) + ";", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1007;l0 " + vars(1, 1023) + ";;- " + nats(0, 1022);
+		agrees("surplus;l0 " + vars(1, 1023) + ";" + vars(1, 1023) + ";- " + nats(0, 1022) + ";", result, result);
+	}
+	// a wrong model result is not equal to the port result: an operation, a slot, a destination, the status
+	for (std::string const wrong: {"ok;v1 v0;SWAP1 POP;1 0", "ok;v0 v1;SWAP2 POP;1 0", "ok;v1 v0;SWAP2 POP;0 1",
+			 "ok;v1 v0;SWAP2 POP;1 -", "blocked 0 1;v1 v0;SWAP2 POP;1 0", "err"})
+	{
+		std::optional<port::Check> const check = port::check("surplus;l9 v0 v1;v0 v1;- 0 1;", wrong);
+		expect(check && check->port != check->model, "a wrong surplus model result differs: " + wrong);
+	}
+
+	// not in the domain of the surplus unit: too few fields, too many fields, a bad slot, a bad destination, not one
+	// destination per slot, a destination out of the target, a destination bound twice, a bad spilled id, more stack
+	// slots or target slots than the stack limit
+	throws("surplus;v0;v0;0");
+	throws("surplus;v0;v0;0;;");
+	throws("surplus;x;v0;0;");
+	throws("surplus;v0;y;0;");
+	throws("surplus;v0;v0;a;");
+	throws("surplus;;;;x");
+	throws("surplus;v0;v0;0 -;");
+	throws("surplus;v0;v0;1;");
+	throws("surplus;v0 v1;v0 v1;0 0;");
+	throws("surplus;" + times("_", 1025) + ";;" + times("-", 1025) + ";");
+	throws("surplus;;" + times("_", 1025) + ";;");
 
 	if (failures > 0)
 	{

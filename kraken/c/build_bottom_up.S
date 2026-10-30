@@ -1349,4 +1349,262 @@ spill_set:
 	movq	%rax, 16(%rsp)
 	jmp	.LB257
 	.size	spill_set, .-spill_set
+	.align 2
+	.type	_ZN12_GLOBAL__N_18Emission13removeSurplusEv, @function
+_ZN12_GLOBAL__N_18Emission13removeSurplusEv:
+	pushq	%rbx
+	movq	%rdi, %rbx
+.LB276:
+	movq	32(%rbx), %r8
+	testq	%r8, %r8
+	je	.LB295
+	leaq	-1(%r8), %rdi
+	movq	%rdi, %rax
+	movq	$-1, %rdx
+	movq	$-1, %rsi
+	jmp	.LB279
+	.p2align 5
+.LB277:
+	subq	$1, %rax
+	cmpq	$-1, %rax
+	je	.LB300
+.LB279:
+	cmpq	$-1, 56(%rbx,%rax,8)
+	jne	.LB277
+	cmpq	$-1, %rdx
+	cmove	%rax, %rdx
+	movq	%rdi, %rcx
+	subq	%rax, %rcx
+	cmpq	$16, %rcx
+	cmovbe	%rax, %rsi
+	jmp	.LB277
+.LB300:
+	cmpq	$-1, %rdx
+	je	.LB293
+	cmpq	$-1, %rsi
+	je	.LB281
+	cmpq	%rdx, %rdi
+	je	.LB282
+	leaq	0(,%rdi,8), %r8
+	movq	%rdi, %rax
+	.p2align 5
+.LB283:
+	testq	%rax, %rax
+	je	.LB301
+	subq	$1, %rax
+	cmpq	$-1, 56(%rbx,%rax,8)
+	jne	.LB283
+	movq	24(%rbx), %rcx
+	movq	(%rcx,%rax,8), %rdx
+	xorq	(%rcx,%r8), %rdx
+	salq	$16, %rdx
+	jne	.LB283
+	movq	56(%rbx,%rax,8), %rdx
+	movq	56(%rbx,%rdi,8), %rcx
+	movq	%rcx, 56(%rbx,%rax,8)
+	movq	%rdx, 56(%rbx,%rdi,8)
+	movq	56(%rbx,%rax,8), %rdx
+	cmpq	$-1, %rdx
+	je	.LB289
+	movq	%rax, 8248(%rbx,%rdx,8)
+.LB289:
+	movq	56(%rbx,%rdi,8), %rax
+	cmpq	$-1, %rax
+	je	.LB282
+	movq	%rdi, 8248(%rbx,%rax,8)
+	jmp	.LB282
+.LB281:
+	subq	$17, %r8
+	movl	$2, %eax
+	subq	%rdx, %r8
+	je	.LB275
+	movq	%rdx, 16448(%rbx)
+	movq	%r8, 16456(%rbx)
+	movl	$1, %eax
+	jmp	.LB275
+.LB293:
+	movl	$0, %eax
+.LB275:
+	popq	%rbx
+	ret
+.LB295:
+	movl	$0, %eax
+	jmp	.LB275
+.LB301:
+	movq	%rbx, %rdi
+	call	_ZN12_GLOBAL__N_18Emission8swapWithE11StackOffset
+	testb	%al, %al
+	jne	.LB275
+.LB282:
+	movq	%rbx, %rdi
+	call	_ZN12_GLOBAL__N_18Emission3popEv
+	testb	%al, %al
+	je	.LB276
+	jmp	.LB275
+	.size	_ZN12_GLOBAL__N_18Emission13removeSurplusEv, .-_ZN12_GLOBAL__N_18Emission13removeSurplusEv
+	.globl	remove_surplus
+	.type	remove_surplus, @function
+remove_surplus:
+	cmpq	$1024, %rdi
+	ja	.LB335
+	pushq	%rbx
+	subq	$32864, %rsp
+	movq	%rdx, %r10
+	movq	%r8, %rbx
+	cmpq	$1024, %rsi
+	ja	.LB324
+	testq	%rdi, %rdi
+	je	.LB304
+	movl	$0, %eax
+	.p2align 5
+.LB305:
+	movq	$-1, 16480(%rsp,%rax,8)
+	addq	$1, %rax
+	cmpq	%rax, %rdi
+	jne	.LB305
+	testq	%rsi, %rsi
+	je	.LB323
+.LB322:
+	leaq	16480(%rsp), %rax
+	leaq	(%rax,%rsi,8), %rdx
+	.p2align 5
+.LB307:
+	movq	$-1, 8192(%rax)
+	addq	$8, %rax
+	cmpq	%rdx, %rax
+	jne	.LB307
+	testq	%rdi, %rdi
+	je	.LB308
+.LB323:
+	movl	$0, %eax
+	jmp	.LB310
+	.p2align 5
+.LB309:
+	leaq	1(%rax), %rdx
+	cmpq	%rdx, %rdi
+	je	.LB338
+	movq	%rdx, %rax
+.LB310:
+	movq	(%rbx,%rax,8), %rdx
+	cmpq	$-1, %rdx
+	je	.LB309
+	movq	%rdx, 16480(%rsp,%rax,8)
+	movq	%rax, 24672(%rsp,%rdx,8)
+	jmp	.LB309
+.LB338:
+	movq	%rcx, (%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%r9, 16(%rsp)
+	movq	%r10, 24(%rsp)
+	movq	%rdx, 32(%rsp)
+	movq	32888(%rsp), %rdi
+	movq	%rdi, 40(%rsp)
+	movq	$0, 48(%rsp)
+	movl	$0, %edx
+	addq	$1, %rax
+	.p2align 5
+.LB311:
+	movq	16480(%rsp,%rdx,8), %rcx
+	movq	%rcx, 56(%rsp,%rdx,8)
+	addq	$1, %rdx
+	cmpq	%rax, %rdx
+	jne	.LB311
+.LB321:
+	testq	%rsi, %rsi
+	je	.LB312
+	leaq	0(,%rsi,8), %rdx
+	movl	$0, %eax
+	leaq	8248(%rsp), %rdi
+	leaq	24672(%rsp), %rsi
+	.p2align 5
+.LB313:
+	movq	(%rsi,%rax), %rcx
+	movq	%rcx, (%rdi,%rax)
+	addq	$8, %rax
+	cmpq	%rdx, %rax
+	jne	.LB313
+	movq	$0, 16440(%rsp)
+	leaq	16480(%rsp), %rax
+	movq	%rax, 16464(%rsp)
+	movq	%rsp, %rax
+	addq	%rsp, %rdx
+	jmp	.LB315
+	.p2align 5
+.LB314:
+	addq	$8, %rax
+	cmpq	%rdx, %rax
+	je	.LB320
+.LB315:
+	cmpq	$-1, 8248(%rax)
+	jne	.LB314
+	addq	$1, 16440(%rsp)
+	jmp	.LB314
+.LB316:
+	movq	16448(%rsp), %rax
+	movq	32896(%rsp), %rsi
+	movq	%rax, (%rsi)
+	movq	16456(%rsp), %rax
+	movq	%rax, 8(%rsi)
+	jmp	.LB317
+.LB324:
+	movq	$-2, %rdx
+	jmp	.LB302
+.LB312:
+	movq	$0, 16440(%rsp)
+	leaq	16480(%rsp), %rax
+	movq	%rax, 16464(%rsp)
+.LB320:
+	movq	%rsp, %rdi
+	call	_ZN12_GLOBAL__N_18Emission13removeSurplusEv
+	cmpb	$1, %al
+	je	.LB316
+	movq	$-2, %rdx
+	cmpb	$2, %al
+	je	.LB302
+	testb	%al, %al
+	jne	.LB317
+	movq	32896(%rsp), %rax
+	movq	$0, (%rax)
+	movq	$0, 8(%rax)
+.LB317:
+	movq	32(%rsp), %rcx
+	movq	32904(%rsp), %rax
+	movq	%rcx, (%rax)
+	testq	%rcx, %rcx
+	je	.LB318
+	salq	$3, %rcx
+	movl	$0, %eax
+	leaq	56(%rsp), %rsi
+	.p2align 5
+.LB319:
+	movq	(%rsi,%rax), %rdx
+	movq	%rdx, (%rbx,%rax)
+	addq	$8, %rax
+	cmpq	%rax, %rcx
+	jne	.LB319
+.LB318:
+	movq	48(%rsp), %rdx
+.LB302:
+	movq	%rdx, %rax
+	addq	$32864, %rsp
+	popq	%rbx
+	ret
+.LB304:
+	testq	%rsi, %rsi
+	jne	.LB322
+.LB308:
+	movq	%rcx, (%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%r9, 16(%rsp)
+	movq	%r10, 24(%rsp)
+	movq	$0, 32(%rsp)
+	movq	32888(%rsp), %rax
+	movq	%rax, 40(%rsp)
+	movq	$0, 48(%rsp)
+	jmp	.LB321
+.LB335:
+	movq	$-2, %rdx
+	movq	%rdx, %rax
+	ret
+	.size	remove_surplus, .-remove_surplus
 	.section	.note.GNU-stack,"",@progbits

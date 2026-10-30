@@ -16,7 +16,8 @@ namespace Bbu
 set_option maxRecDepth 100000 in
 theorem bbuAsm_eq : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm
     ++ produceAsm ++ swapWithAsm ++ generateAsm ++ finishAsm ++ loopAsm
-    ++ popAsm ++ buildBottomUpAsm ++ emissionPopAsm ++ spillSetAddAsm ++ spillSetAsm := by rfl
+    ++ popAsm ++ buildBottomUpAsm ++ emissionPopAsm ++ spillSetAddAsm ++ spillSetAsm
+    ++ removeSurplusAsm ++ removeSurplusEntryAsm := by rfl
 
 section
 set_option maxRecDepth 100000

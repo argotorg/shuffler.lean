@@ -1,6 +1,7 @@
-// Emission::buildBottomUp and Emission::pop of solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp, freestanding,
-// with the behavior of the Lean model, Shuffler/BuildBottomUp/Defs.lean and State.pop of
-// Shuffler/Emission/Defs.lean. The differences from Shuffler.cpp:
+// Emission::buildBottomUp, Emission::removeSurplus and Emission::pop of
+// solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp, freestanding, with the behavior of the Lean model,
+// Shuffler/BuildBottomUp/Defs.lean, Shuffler/RemoveSurplus/Defs.lean and State.pop of Shuffler/Emission/Defs.lean.
+// The differences from Shuffler.cpp:
 //
 // - There are no exceptions, so a failed yulAssert returns Status::AssertionFailed.
 // - The source stack of build_bottom_up has no surplus, so every slot has a destination.
@@ -348,6 +349,8 @@ public:
 	}
 
 	std::size_t traceSize() const { return m_stack.traceSize(); }
+	/// The height of the working stack
+	std::size_t stackSize() const { return m_stack.size(); }
 	/// Only after Status::Blocked
 	Blocked blocked() const { return m_blocked; }
 	/// The working mapping
@@ -514,6 +517,10 @@ public:
 		return Status::Done;
 	}
 
+	/// Pops all surplus slots, or blocks if a surplus slot that has to be popped is out of swap reach. Defined after
+	/// spill_set.
+	Status removeSurplus();
+
 private:
 	/// Produces the slot for `_targetOffset`
 	UNIT Status produce(StackOffset const _targetOffset)
@@ -649,6 +656,9 @@ private:
 	}
 
 	UNIT bool isSpilled(StackSlot const _slot) const { return m_spills.isSpilled(_slot); }
+
+	/// Whether the slot at `_pos` has no target offset to go to and is to be popped
+	bool isSurplus(StackOffset const _pos) const { return !m_mapping.destinationOf(_pos).has_value(); }
 
 	/// Whether the slot at `_pos` is bound for `_pos` itself, i.e., already is at its final target offset
 	bool isFinal(StackOffset const _pos) const { return m_mapping.destinationOf(_pos) == _pos; }
@@ -868,4 +878,103 @@ extern "C" std::int64_t spill_set(
 	for (std::uint64_t i = 0; i < queryCount; ++i)
 		results[i] = isSpilled(queries[i], spills);
 	return 0;
+}
+
+namespace
+{
+
+// `used` and this place make g++ emit removeSurplus after spill_set, so the asm of the units above and their labels
+// stay
+[[gnu::used]] UNIT Status Emission::removeSurplus()
+{
+	while (m_stack.size() != 0)
+	{
+		// scan from the top down: the first surplus slot is the shallowest, the last reachable one the deepest
+		Optional<StackOffset> shallowestSurplus = std::nullopt;
+		Optional<StackOffset> deepestReachableSurplus = std::nullopt;
+		for (StackOffset pos{m_stack.size()}; pos.value-- > 0;)
+			if (isSurplus(pos))
+			{
+				if (!shallowestSurplus)
+					shallowestSurplus = pos;
+				if (isSwapReachable(pos))
+					deepestReachableSurplus = pos;
+			}
+		if (!shallowestSurplus)
+			break;
+		// there is a surplus but we can't reach it
+		if (!deepestReachableSurplus)
+			return blockSwapUnreachable(*shallowestSurplus);
+
+		if (StackOffset const stackTopOffset = m_stack.topOffset(); *shallowestSurplus != stackTopOffset)
+		{
+			// a surplus slot equal to the top takes over the top's destination, so the top itself can be popped
+			Optional<StackOffset> equalSurplus = std::nullopt;
+			for (StackOffset pos = stackTopOffset; pos.value-- > 0;)
+				if (isSurplus(pos) && m_stack[pos] == m_stack.top())
+				{
+					equalSurplus = pos;
+					break;
+				}
+			if (equalSurplus)
+				m_mapping.swapDestinations(*equalSurplus, stackTopOffset);
+			else if (Status const status = swapWith(*deepestReachableSurplus); status != Status::Done)
+				return status;
+		}
+		if (Status const status = pop(); status != Status::Done)
+			return status;
+	}
+	return Status::Done;
+}
+
+}
+
+/// The Emission constructor and Emission::removeSurplus for a stack of m slots and a target of n slots: data holds the
+/// slots and dest[i] is the target offset of slot i, or none (SIZE_MAX) for a surplus slot. Writes the operations to
+/// ops and returns their number, also when a surplus slot is out of reach. Then blocked gets its offset and its
+/// excess, which is positive, else 0 and 0. Returns -2 for a failed assertion. If the result is not -2, height gets
+/// the height of the working stack, data holds its slots, and the first height entries of dest hold their
+/// destinations; the other entries of dest are not written.
+///
+/// dest holds distinct offsets below n, and ops has room for 2m entries: each pass of removeSurplus pops a slot,
+/// after at most one swap. m, n <= 1024, else the result is -2. spilled has idCount bytes, the spill set of the
+/// state; removeSurplus does not read it.
+extern "C" std::int64_t remove_surplus(
+	std::uint64_t const m,
+	std::uint64_t const n,
+	StackSlot* const data,
+	StackSlot const* const target,
+	Optional<StackOffset>* const dest,
+	std::uint8_t const* const spilled,
+	[[maybe_unused]] std::uint64_t const idCount,
+	ShuffleOp* const ops,
+	std::uint64_t* const blocked,
+	std::uint64_t* const height
+)
+{
+	// the mapping has room for maxStackSize offsets
+	if (m > maxStackSize || n > maxStackSize)
+		return -2;
+	Mapping planned{m, n};
+	for (StackOffset pos{0}; pos < m; ++pos.value)
+		if (Optional<StackOffset> const destination = dest[pos.value])
+			planned.bind(pos, *destination);
+	Emission emission{Stack{data, m, ops}, target, n, planned, spilled};
+	switch (emission.removeSurplus())
+	{
+	case Status::Done:
+		blocked[0] = 0;
+		blocked[1] = 0;
+		break;
+	case Status::Blocked:
+		blocked[0] = emission.blocked().offset.value;
+		blocked[1] = emission.blocked().excess;
+		break;
+	case Status::AssertionFailed:
+		return -2;
+	}
+	*height = emission.stackSize();
+	for (StackOffset pos{0}; pos < emission.stackSize(); ++pos.value)
+		dest[pos.value] = emission.mapping().destinationOf(pos);
+	return static_cast<std::int64_t>(emission.traceSize());
 }
