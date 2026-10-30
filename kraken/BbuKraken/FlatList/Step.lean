@@ -257,6 +257,275 @@ theorem sim_placeTop (hs : Sim e fs st) {t : Word} (ht : t.toNat < e.n) :
       ite_eq_right h5]
     exact NR.map (sim_swapWith hs t) h1
 
+/-! ## `bound` -/
+
+theorem map_bind' {α β γ : Type} (m : M α) (g : α → β) (K : β → M γ) :
+    (m.map g).bind K = m.bind (fun a => K (g a)) := by
+  cases m <;> rfl
+
+theorem sim_bound (hs : Sim e fs st) {t : Word} (ht : t.toNat < e.n) {b : Nat}
+    (hb : positionOf st t.toNat = some b) :
+    NR e (bound fs t) ((takeBound st t.toNat).bind fun (st, done) =>
+      if done then .ok (st, .next (t.toNat + 1)) else Bbu.placeTop st t.toNat) := by
+  have hsz := hs.size
+  have hl := hs.len_lt
+  have hn := hs.n
+  have hle : e.n ≤ MAX_N := hs.n ▸ hs.n_le
+  have h1 := succ_eq hle ht
+  unfold MAX_N at hl hle
+  have hbl : b < st.len := positionOf_some hs.hpos hb
+  have hbw : (BitVec.ofNat 64 b).toNat = b := toNat_ofNat_of_lt (by omega)
+  have hpos : get fs.pos t = BitVec.ofNat 64 b := by rw [hs.pos t (hn ▸ ht), hb]; rfl
+  unfold bound takeBound
+  rw [hpos, hb]
+  dsimp only
+  by_cases h2 : b < t.toNat
+  · rw [ite_eq_left (c := ¬(BitVec.ofNat 64 b ≠ NONE ∧ BitVec.ofNat 64 b ≥ t))
+        (fun h => by have := h.2; bv_omega),
+      ite_eq_left h2]
+    exact rfl
+  rw [ite_eq_right (c := ¬(BitVec.ofNat 64 b ≠ NONE ∧ BitVec.ofNat 64 b ≥ t))
+      (fun h => h ⟨lt_NONE (by rw [hbw]; unfold MAX_N; omega), by bv_omega⟩),
+    ite_eq_right h2]
+  have htl : t.toNat < st.len := by omega
+  rw [hs.data (BitVec.ofNat 64 b) (by rw [hbw]; exact hbl), hbw, hs.data t htl, movable_eq hs hbl]
+  have hP : (if st.val t.toNat = st.val b then t
+      else BitVec.ofNat 64 ((movableCopy st b).getD b)) =
+      BitVec.ofNat 64 (if st.val t.toNat = st.val b then t.toNat
+        else (movableCopy st b).getD b) := by
+    split
+    · exact eq_of_toNat (toNat_ofNat_of_lt t.isLt).symm
+    · rfl
+  have hPl : (if st.val t.toNat = st.val b then t.toNat else (movableCopy st b).getD b) <
+      st.len := by
+    split
+    · exact htl
+    · cases hc : movableCopy st b
+      · exact hbl
+      · exact movableCopy_lt hc
+  rw [hP]
+  generalize (if st.val t.toNat = st.val b then t.toNat else (movableCopy st b).getD b) = P
+    at hPl ⊢
+  have hPw : (BitVec.ofNat 64 P).toNat = P := toNat_ofNat_of_lt (by omega)
+  rw [hs.data (BitVec.ofNat 64 P) (by rw [hPw]; exact hPl), hPw]
+  by_cases h3 : st.val P ≠ st.val b
+  · rw [ite_eq_left h3, ite_eq_left h3]
+    exact rfl
+  rw [ite_eq_right h3, ite_eq_right h3]
+  have hs' := hs.swapDest' (a := BitVec.ofNat 64 P) (b := BitVec.ofNat 64 b)
+    (by rw [hPw]; exact hPl) hbw hbl
+  rw [hPw] at hs'
+  have hlen' : (Bbu.swapDestinations st P b).len = st.len := swapDest_len st P b
+  generalize swapDestinations fs (BitVec.ofNat 64 P) (BitVec.ofNat 64 b) = fs' at hs' ⊢
+  generalize Bbu.swapDestinations st P b = st' at hs' hlen' ⊢
+  have hsz' := hs'.size
+  by_cases h4 : P = t.toNat
+  · rw [ite_eq_left (c := BitVec.ofNat 64 P = t) (eq_of_toNat (by rw [hPw]; exact h4)),
+      ite_eq_left h4]
+    exact ⟨h1, hs'⟩
+  rw [ite_eq_right (c := BitVec.ofNat 64 P = t) (fun h => h4 (by rw [← hPw, h])),
+    ite_eq_right h4]
+  by_cases h5 : P = st'.len - 1
+  · rw [ite_eq_right (c := BitVec.ofNat 64 P ≠ fs'.size - 1)
+        (fun h => h (eq_of_toNat (by rw [hPw]; bv_omega))),
+      ite_eq_right (c := P ≠ st'.len - 1) (fun h => h h5)]
+    exact sim_placeTop hs' ht
+  rw [ite_eq_left (c := BitVec.ofNat 64 P ≠ fs'.size - 1) (fun h => h5 (by rw [← hPw, h]; bv_omega)),
+    ite_eq_left (c := P ≠ st'.len - 1) h5]
+  have hr : isSwapReachable fs' (BitVec.ofNat 64 P) = true ↔
+      st'.len - 1 - P ≤ MAX_SWAP_DEPTH := by
+    unfold isSwapReachable depthOf maxSwapDepth MAX_SWAP_DEPTH
+    rw [decide_eq_true_iff]
+    constructor <;> intro h <;> bv_omega
+  by_cases h6 : MAX_SWAP_DEPTH < st'.len - 1 - P
+  · rw [ite_eq_left (c := (!isSwapReachable fs' (BitVec.ofNat 64 P)) = true)
+        (by rw [Bool.not_eq_true', Bool.eq_false_iff]; exact fun h => absurd (hr.mp h) (by omega)),
+      ite_eq_left h6]
+    have := sim_blockSwap hs' (c := BitVec.ofNat 64 P) (by rw [hPw]; omega) (by rw [hPw]; exact h6)
+    rw [hPw] at this
+    exact this
+  · rw [ite_eq_right (c := (!isSwapReachable fs' (BitVec.ofNat 64 P)) = true)
+        (fun h => by rw [hr.mpr (by omega)] at h; exact absurd h (by decide)),
+      ite_eq_right h6, map_bind']
+    have := sim_swapWith hs' (BitVec.ofNat 64 P)
+    rw [hPw] at this
+    exact NR.bind (g := fun fs => placeTop fs t) this (fun fs'' st'' hs'' _ => sim_placeTop hs'' ht)
+
+/-! ## `body` -/
+
+theorem sim_body (hs : Sim e fs st) {t : Word} (hi : Inv e st t.toNat) (ht : t.toNat < e.n)
+    (htl : t.toNat ≤ st.len) : NR e (body fs t) (step e st t.toNat) := by
+  have hsz := hs.size
+  have hl := hs.len_lt
+  have hn := hs.n
+  have hpd := hs.pend
+  have hle : e.n ≤ MAX_N := hs.n ▸ hs.n_le
+  have h1 := succ_eq hle ht
+  have hlp := hi.len_pending
+  unfold MAX_N at hl hle
+  have hdec : t - 1 + 1 = BitVec.ofNat 64 t.toNat := eq_of_toNat (by rw [toNat_ofNat_of_lt t.isLt]; bv_omega)
+  unfold body step
+  dsimp only
+  have hF : (t < fs.size ∧ isFinal fs t = true) ↔
+      (t.toNat < st.len ∧ st.dest t.toNat = t.toNat) := by
+    constructor
+    · intro h
+      have h3 : t.toNat < st.len := by have := h.1; bv_omega
+      exact ⟨h3, (isFinal_iff hs h3).mp h.2⟩
+    · intro h
+      exact ⟨by have := h.1; bv_omega, (isFinal_iff hs h.1).mpr h.2⟩
+  by_cases h2 : t.toNat < st.len ∧ st.dest t.toNat = t.toNat
+  · rw [ite_eq_left (hF.mpr h2), ite_eq_left h2]
+    exact ⟨h1, hs⟩
+  rw [ite_eq_right (fun h => h2 (hF.mp h)), ite_eq_right h2]
+  have hpend : fs.pend = 0 ↔ st.pendingGenerations = 0 := by
+    constructor <;> intro h <;> bv_omega
+  by_cases h3 : st.pendingGenerations = 0
+  · rw [ite_eq_left (c := fs.pend = 0) (hpend.mpr h3), ite_eq_left h3]
+    by_cases h4 : fs.size ≠ fs.targetSize
+    · rw [ite_eq_left h4]
+      exact ⟨fs, hs, fun _ => rfl, fun h => absurd h h4⟩
+    · rw [ite_eq_right h4]
+      exact ⟨fs, hs, fun h => absurd h h4, fun _ => rfl⟩
+  rw [ite_eq_right (c := fs.pend = 0) (fun h => h3 (hpend.mp h)), ite_eq_right h3]
+  have hlt : st.len < e.n := by omega
+  have hu := sim_urgentFrom hs t ht t (by omega) e.n (Nat.le_refl _)
+  rw [urgW_n] at hu
+  unfold urgent
+  generalize urgentFrom fs t t NONE = R at hu ⊢
+  generalize Bbu.urgentFrom e st t.toNat t.toNat e.n = U at hu ⊢
+  match R, U, hu with
+  | .error r, .error err, h => exact h
+  | .ok u, .ok k, ⟨hk, hu⟩ =>
+    subst hu
+    dsimp only [Except.bind]
+    have hU : urgW e.n k = NONE ↔ k = e.n := urgW_eq_NONE (by unfold MAX_N; omega) hk
+    have hA : (urgW e.n k ≠ NONE ∧ urgW e.n k ≠ t ∧ fs.size - t < maxSwapDepth) ↔
+        (k ≠ e.n ∧ k ≠ t.toNat ∧ st.len < t.toNat + MAX_SWAP_DEPTH) := by
+      unfold maxSwapDepth MAX_SWAP_DEPTH
+      constructor
+      · rintro ⟨a, b, c⟩
+        have hk' : k < e.n := by have := mt hU.mpr a; omega
+        rw [urgW_of_lt hk'] at b
+        exact ⟨by omega, fun h => b (eq_of_toNat (by rw [toNat_ofNat_of_lt (by omega)]; exact h)),
+          by bv_omega⟩
+      · rintro ⟨a, b, c⟩
+        have hk' : k < e.n := by omega
+        refine ⟨mt hU.mp a, ?_, by bv_omega⟩
+        rw [urgW_of_lt hk']
+        exact fun h => b (by rw [← h, toNat_ofNat_of_lt (by omega)])
+    by_cases hA' : k ≠ e.n ∧ k ≠ t.toNat ∧ st.len < t.toNat + MAX_SWAP_DEPTH
+    · rw [ite_eq_left (hA.mpr hA'), ite_eq_left hA']
+      have hkw : (urgW e.n k).toNat = k := by
+        rw [urgW_of_lt (by omega), toNat_ofNat_of_lt (by omega)]
+      have := sim_generate hs (urgW e.n k) hlt
+      rw [hkw] at this
+      exact NR.map this hdec
+    rw [ite_eq_right (fun h => hA' (hA.mp h)), ite_eq_right hA']
+    have hB : (urgW e.n k = NONE ∧ fs.size > t ∧ fs.size < fs.targetSize ∧
+          get fs.pos fs.size = NONE ∧ fs.size - t < maxSwapDepth) ↔
+        (k = e.n ∧ t.toNat < st.len ∧ st.len < e.n ∧ positionOf st st.len = none ∧
+          st.len < t.toNat + MAX_SWAP_DEPTH) := by
+      unfold maxSwapDepth MAX_SWAP_DEPTH
+      constructor
+      · rintro ⟨a, b, c, d, f⟩
+        have hsl : fs.size.toNat < e.n := by bv_omega
+        refine ⟨hU.mp a, by bv_omega, by omega, ?_, by bv_omega⟩
+        cases hx : positionOf st st.len with
+        | none => rfl
+        | some _ => exact absurd d ((hs.pos_ne_NONE hsl).mpr (by rw [hsz, hx]; rfl))
+      · rintro ⟨a, b, c, d, f⟩
+        have hsl : fs.size.toNat < e.n := by omega
+        refine ⟨hU.mpr a, by bv_omega, by bv_omega, ?_, by bv_omega⟩
+        exact Decidable.byContradiction fun h => by
+          have := (hs.pos_ne_NONE hsl).mp h
+          rw [hsz, d] at this
+          simp at this
+    by_cases hB' : k = e.n ∧ t.toNat < st.len ∧ st.len < e.n ∧ positionOf st st.len = none ∧
+        st.len < t.toNat + MAX_SWAP_DEPTH
+    · rw [ite_eq_left (hB.mpr hB'), ite_eq_left hB']
+      have := sim_generate hs fs.size hlt
+      rw [hsz] at this
+      exact NR.map this hdec
+    rw [ite_eq_right (fun h => hB' (hB.mp h)), ite_eq_right hB']
+    by_cases hC : (positionOf st t.toNat).isSome
+    · rw [ite_eq_left ((hs.pos_ne_NONE ht).mpr hC), ite_eq_left hC]
+      obtain ⟨b, hb⟩ := Option.isSome_iff_exists.mp hC
+      exact sim_bound hs ht hb
+    rw [ite_eq_right (fun h => hC ((hs.pos_ne_NONE ht).mp h)), ite_eq_right hC]
+    refine NR.bind (g := fun fs' => if ¬t < fs'.size then .ret (.assertionFailed, fs')
+      else if isFinal fs' t then .cont fs' t else placeTop fs' t) (sim_generate hs t hlt) ?_
+    intro fs' st' hs' _
+    have hsz' := hs'.size
+    by_cases h5 : t.toNat < st'.len
+    · rw [ite_eq_right (c := ¬t < fs'.size) (fun h => h (by bv_omega))]
+      by_cases h6 : st'.dest t.toNat = t.toNat
+      · rw [ite_eq_left (c := isFinal fs' t = true) ((isFinal_iff hs' h5).mpr h6),
+          ite_eq_left (c := t.toNat < st'.len ∧ st'.dest t.toNat = t.toNat) ⟨h5, h6⟩]
+        exact ⟨h1, hs'⟩
+      · rw [ite_eq_right (c := isFinal fs' t = true) (fun h => h6 ((isFinal_iff hs' h5).mp h)),
+          ite_eq_right (c := t.toNat < st'.len ∧ st'.dest t.toNat = t.toNat) (fun h => h6 h.2)]
+        exact sim_placeTop hs' ht
+    · rw [ite_eq_left (c := ¬t < fs'.size) (fun h => h5 (by bv_omega)),
+        ite_eq_right (c := t.toNat < st'.len ∧ st'.dest t.toNat = t.toNat) (fun h => h5 h.1)]
+      unfold Bbu.placeTop
+      rw [ite_eq_left (c := st'.len ≤ t.toNat ∨ st'.dest t.toNat = t.toNat) (.inl (by omega))]
+      exact rfl
+
 end
+
+/-! ## `targetOffset ≤ sourceTop` -/
+
+theorem takeBound_le {st : Bbu.St} {t b : Nat} {r : Bbu.St × Bool}
+    (hpb : positionOf st t = some b) (h : takeBound st t = .ok r) : t ≤ b := by
+  unfold takeBound at h
+  rw [hpb] at h
+  dsimp only at h
+  split at h
+  · cases h
+  · omega
+
+-- An iteration that continues keeps `targetOffset ≤ sourceTop`.
+theorem step_le_len {e : Env} {st st' : Bbu.St} {t t' : Nat} (hp : Pos e.n st)
+    (h : step e st t = .ok (st', .next t')) (ht : t ≤ st.len) : t' ≤ st'.len := by
+  unfold step at h
+  split at h
+  · cases h; rename_i h1; omega
+  split at h
+  · cases h
+  obtain ⟨u, _, h⟩ := bind_ok h
+  split at h
+  · obtain ⟨s, hs, h⟩ := map_ok h
+    cases h
+    have := (generate_shape hs).1
+    omega
+  split at h
+  · obtain ⟨s, hs, h⟩ := map_ok h
+    cases h
+    have := (generate_shape hs).1
+    omega
+  split at h
+  · rename_i hsome
+    obtain ⟨b, hb⟩ := Option.isSome_iff_exists.mp hsome
+    obtain ⟨⟨s, done⟩, hs, h⟩ := bind_ok h
+    have hbl := positionOf_some hp hb
+    have htb := takeBound_le hb hs
+    have hsl := (takeBound_shape hbl hb hs).1
+    cases done
+    · obtain ⟨h1, h2, -⟩ := placeTop_ok h
+      have := (placeTop_shape h).1
+      cases h1
+      omega
+    · cases h
+      simp only at hsl ⊢
+      omega
+  · obtain ⟨s, hs, h⟩ := bind_ok h
+    have hsl := (generate_shape hs).1
+    split at h
+    · cases h; rename_i h1; omega
+    · obtain ⟨h1, h2, -⟩ := placeTop_ok h
+      have := (placeTop_shape h).1
+      cases h1
+      omega
 
 end Bbu.Flat
