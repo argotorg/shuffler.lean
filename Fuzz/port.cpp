@@ -172,6 +172,17 @@ extern "C" std::int64_t remove_surplus(
 	std::uint64_t* height
 );
 
+extern "C" std::int64_t build_mapping(
+	std::uint64_t m,
+	std::uint64_t n,
+	Slot const* source,
+	Slot const* target,
+	std::uint8_t const* dropped,
+	std::uint8_t strategy,
+	std::uint64_t* sources,
+	std::uint8_t* saw
+);
+
 namespace
 {
 
@@ -464,6 +475,62 @@ std::string runSpill(std::vector<std::string> const& _fields)
 	return "ok;" + join(ids) + ";" + join(bits);
 }
 
+/// A case "map;" strategy ";" source ";" target ";" dropped, in the domain of build_mapping: the strategy is "L"
+/// (Leave) or "T" (Take), dropped has one byte (at most 255) for each source slot, and the source and the target have
+/// at most maxStackSize slots.
+/// The result is "ok", sawWildcardCopy (0 or 1) and per target offset the position of the source slot bound for it;
+/// or "err".
+std::string runMap(std::vector<std::string> const& _fields)
+{
+	if (_fields.size() != 4)
+		throw std::invalid_argument("not a map case");
+	if (_fields[0] != "L" && _fields[0] != "T")
+		throw std::invalid_argument("not a strategy: " + _fields[0]);
+	std::uint8_t const strategy = _fields[0] == "T";
+	std::vector<Slot> const source = parseStack(_fields[1]);
+	std::vector<Slot> const target = parseStack(_fields[2]);
+	std::size_t const m = source.size();
+	std::size_t const n = target.size();
+	if (m > maxStackSize || n > maxStackSize)
+		throw std::invalid_argument("more slots than the stack limit");
+	std::vector<std::uint8_t> dropped;
+	for (std::string const& word: words(_fields[3]))
+	{
+		// the length bound keeps parseNat from overflowing
+		if (word.size() > 3 || parseNat(word) > 255)
+			throw std::invalid_argument("not a byte: " + word);
+		dropped.push_back(static_cast<std::uint8_t>(parseNat(word)));
+	}
+	if (dropped.size() != m)
+		throw std::invalid_argument("not one dropped byte per source slot: " + _fields[3]);
+
+	// build_mapping writes at most n positions and one byte. A guard area after each buffer must stay as it is.
+	std::vector<std::uint64_t> sources(n + guard, guardWord);
+	std::vector<std::uint8_t> saw(1 + guard, guardByte);
+	std::int64_t const result = build_mapping(
+		m,
+		n,
+		source.data(),
+		target.data(),
+		dropped.data(),
+		strategy,
+		sources.data(),
+		saw.data()
+	);
+	if (!intact(sources, n, guardWord) || !intact(saw, 1, guardByte))
+		return "<port wrote past a buffer>";
+	if (result == -2)
+		return "err";
+	if (result != 0)
+		return "<port result " + std::to_string(result) + ">";
+	if (saw[0] > 1)
+		return "<port saw " + std::to_string(saw[0]) + ">";
+	std::vector<std::string> positions;
+	for (std::size_t j = 0; j < n; ++j)
+		positions.push_back(showOffset(sources[j]));
+	return "ok " + std::to_string(saw[0]) + ";" + join(positions);
+}
+
 std::string identity(std::string const& _model)
 {
 	return _model;
@@ -487,6 +554,7 @@ Unit constexpr units[] = {
 	{"pop", runPop, identity},
 	{"spill", runSpill, identity},
 	{"surplus", runSurplus, identity},
+	{"map", runMap, identity},
 };
 
 }
