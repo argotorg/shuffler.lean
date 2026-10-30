@@ -172,6 +172,15 @@ extern "C" std::int64_t remove_surplus(
 	std::uint64_t* height
 );
 
+extern "C" std::int64_t permute(
+	std::uint64_t h,
+	Slot* data,
+	std::uint64_t const* perm,
+	Op* ops,
+	std::uint64_t* blocked,
+	std::uint64_t* dest
+);
+
 namespace
 {
 
@@ -424,6 +433,48 @@ std::string runSurplus(std::vector<std::string> const& _fields)
 	return showStatus(blocked) + ";" + showStack(data) + ";" + showOps(ops) + ";" + join(dests);
 }
 
+/// A case "permute;" stack ";" dests, in the domain of permute: the destinations are a permutation of the stack
+/// offsets, and the stack has at most maxStackSize slots.
+/// The result is "ok" or "blocked OFFSET EXCESS", the final stack, the operations and the destinations; or "err".
+std::string runPermute(std::vector<std::string> const& _fields)
+{
+	if (_fields.size() != 2)
+		throw std::invalid_argument("not a permute case");
+	std::vector<Slot> const source = parseStack(_fields[0]);
+	std::size_t const h = source.size();
+	if (h > maxStackSize)
+		throw std::invalid_argument("more slots than the stack limit");
+	std::vector<std::uint64_t> const perm = parseDests(_fields[1], h, h);
+	if (std::find(perm.begin(), perm.end(), none) != perm.end())
+		throw std::invalid_argument("not a permutation: " + _fields[1]);
+
+	// permute does not write perm, and writes at most h slots, 2 h operations and h destinations. A guard area after
+	// each buffer must stay as it is.
+	std::vector<Slot> data(h + guard, guardSlot);
+	std::copy(source.begin(), source.end(), data.begin());
+	std::vector<std::uint64_t> permutation(h + guard, guardWord);
+	std::copy(perm.begin(), perm.end(), permutation.begin());
+	std::vector<std::uint64_t> const before = permutation;
+	std::vector<Op> ops(2 * h + guard, guardOp);
+	std::vector<std::uint64_t> dest(h + guard, guardWord);
+	std::uint64_t blocked[2] = {0xeeee, 0xeeee};
+	std::int64_t const count = permute(h, data.data(), permutation.data(), ops.data(), blocked, dest.data());
+	if (permutation != before)
+		return "<port wrote perm>";
+	if (!intact(data, h, guardSlot) || !intact(ops, 2 * h, guardOp) || !intact(dest, h, guardWord))
+		return "<port wrote past a buffer>";
+	if (count == -2)
+		return "err";
+	if (count < 0 || static_cast<std::uint64_t>(count) > 2 * h)
+		return "<port result " + std::to_string(count) + ">";
+	data.resize(h);
+	ops.resize(static_cast<std::size_t>(count));
+	std::vector<std::string> dests;
+	for (std::size_t i = 0; i < h; ++i)
+		dests.push_back(showOffset(dest[i]));
+	return showStatus(blocked) + ";" + showStack(data) + ";" + showOps(ops) + ";" + join(dests);
+}
+
 /// A case "spill;" adds ";" queries. The spill set has one byte for each variable id up to the largest id of the
 /// case, and starts empty.
 /// The result is "ok", the spilled ids in ascending order and per query 1 if it is spilled, else 0; or "err".
@@ -487,6 +538,7 @@ Unit constexpr units[] = {
 	{"pop", runPop, identity},
 	{"spill", runSpill, identity},
 	{"surplus", runSurplus, identity},
+	{"permute", runPermute, identity},
 };
 
 }
