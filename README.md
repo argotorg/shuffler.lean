@@ -21,6 +21,13 @@ case can have a target variable that is not on the source stack and not spilled,
 return labels in the target than in the source. For these cases the results must also be the same.
 The case language is described in `Fuzz/Oracle.lean`.
 
+The fuzz target also runs the port in `kraken/c` on each case that it has a unit for, and aborts
+when the port result differs from the Lean model result. It links the asm
+`kraken/c/build_bottom_up.S`, not a new compilation of the C++. `Fuzz/port.cpp` converts a case to
+the C interface of the port, and has one entry in `units` for each unit of the port (now:
+`buildBottomUp`, without the final destinations, which the C interface does not give). The other
+kinds are checked against solc only.
+
 Build and run with libFuzzer:
 
 ```
@@ -42,11 +49,18 @@ mkdir -p build/afl-in && printf '\0' > build/afl-in/seed
 AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES=1 nix develop -c afl-fuzz -i build/afl-in -o build/afl-out -- build/afl/fuzz
 ```
 
-Both builds replay an input file and print `case <tab> c++ <tab> lean` for a difference:
+Both builds replay an input file and print `port <tab> case <tab> port <tab> lean` for a difference
+of the port and the model, and `solc <tab> case <tab> c++ <tab> lean` for a difference of solc and
+the model:
 
 ```
 build/fuzz/fuzz build/afl-out/default/crashes/<file>
 ```
+
+`Fuzz/build.sh` also runs `port_test` (the port against fixed model results) and `Fuzz/ci_test.sh`.
+`Fuzz/ci.sh <build-dir> <seconds> [jobs]` fuzzes on `jobs` cores (default: all) and prints the
+difference of each crash. It exits with 1 if there is a port difference or a crash without a
+difference line, with 2 if each crash is a solc difference, and with 0 if there is no crash.
 
 CI (`.github/workflows/fuzz.yml`) runs `Fuzz/ci.sh`: 30 minutes for each push to `main` and 2 minutes
 for other pushes and pull requests, with the corpus kept in the Actions cache. A difference fails the
