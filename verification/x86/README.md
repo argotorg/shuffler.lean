@@ -5,6 +5,9 @@ System V AMD64 calling convention. Its 438 code bytes contain 136 instructions.
 The instruction set is MOV, XOR, CMP, ADD, SUB, PUSH, POP, RET, JNE, JNS, and JMP.
 The assembly retains the LLVM block names where the blocks correspond.
 
+For compiler-generated alternatives and the measured Sail decoder coverage,
+see [CODEGEN.md](CODEGEN.md).
+
 The first six arguments are `n`, `data`, `permutation`, `target`, `used`, and
 `trace`, in EDI, RSI, RDX, RCX, R8, and R9. The output pointer is the seventh
 argument, at entry RSP + 8. The routine saves RBX and R12–R15 in 40 stack bytes.

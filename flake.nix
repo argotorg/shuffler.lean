@@ -79,6 +79,11 @@
         llvmCall = llvm-call;
         inherit clightSource;
       };
+      x86-codegen-probe = pkgs.callPackage ./verification/x86/codegen.nix {
+        inherit llvm;
+        archsemX86 = archsem-x86;
+        llvmCall = llvm-call;
+      };
     in
     {
       packages.vellvm = vellvm;
@@ -86,6 +91,7 @@
       packages.verified-permute-llvm = llvm-call;
       packages.archsem-x86 = archsem-x86;
       packages.x86-proofs = x86-proofs;
+      packages.x86-codegen-probe = x86-codegen-probe;
       checks.verified-llvm = verified-llvm;
       checks.llvm-memory = llvm-memory;
       checks.llvm-prefix = llvm-prefix;
@@ -97,6 +103,7 @@
       checks.llvm-call = llvm-call;
       checks.archsem-x86 = archsem-x86;
       checks.x86-proofs = x86-proofs;
+      checks.x86-codegen-probe = x86-codegen-probe;
       devShells.verified-llvm = pkgs.mkShell {
         inputsFrom = [ verified-llvm ];
       };
