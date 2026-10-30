@@ -121,7 +121,7 @@ theorem b_60 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
     cfg_goto
     · exact Fm.stack (hF2.next rfl rfl)
     · simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
-      exact ⟨_, p, hF2.next rfl rfl, hC.r15, hC.bx,
+      exact ⟨_, p, hF2.next rfl rfl, hC.r15, hC.bx, by have := hC.lt; bv_omega,
         by rw [← regroup_ge hge p dB]; exact hrg, hP⟩
     · pm_dec
       exact Or.inl (Nat.lt_of_lt_of_le (hmu _) (by omega))

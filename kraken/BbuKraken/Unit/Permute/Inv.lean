@@ -185,6 +185,7 @@ def I65 (t : MachineData) : Prop :=
 -- `.LB96`: `regroup` gives `p`.
 def I96 (t : MachineData) : Prop :=
   ∃ L p, Fm S g F s ra L t ∧ t.regs.r15.toBitVec = S ∧ t.regs.rbx.toBitVec = g.h.len
+    ∧ 0 < g.h.len
     ∧ RG (flat g) (some p) ∧ AgB g.h.len L.P p
 
 -- Phase D: the struct `g'`, the locals `L` and the permutation `p`.
