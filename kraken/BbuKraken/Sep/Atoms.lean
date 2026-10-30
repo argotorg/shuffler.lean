@@ -66,6 +66,11 @@ theorem B8.isSome {v : BitVec 8} (h : (B8 a v ∗ F).get m) : (m.loadInt a 1).is
   unfold B8 at h
   simp only [Mem.loadInt_eq_of_AtM h (Int.toBytes_length _ _) (by decide), Option.isSome_some]
 
+theorem B8.rdb {v : BitVec 8} (h : (B8 a v ∗ F).get m) : rdb m a = v := by
+  unfold B8 at h
+  simp only [Bbu.rdb, Mem.loadInt_eq_of_AtM h (Int.toBytes_length _ _) (by decide), Option.get!_some,
+    BitVec.ofInt_ofBytes_toBytes 8 1 rfl]
+
 theorem B8.store {v : BitVec 8} (h : (B8 a v ∗ F).get m) (x : Int) :
     (B8 a (BitVec.ofInt 8 x) ∗ F).get (m.storeInt a 1 x) := by
   unfold B8 at h ⊢; rw [toBytes_ofInt 1 8 rfl]
@@ -149,6 +154,20 @@ theorem Arr.append (a : Addr) (xs ys : List Word) :
     congr 3
     rw [BitVec.add_assoc]; congr 1; apply BitVec.eq_of_toNat_eq; simp; omega
 
+-- Word `i` of an array, and the rest.
+theorem Arr.focus (a : Addr) (vs : List Word) {i : Nat} (hi : i < vs.length) :
+    ∃ R, Arr a vs = Wd (a + BitVec.ofNat 64 (8 * i)) vs[i] ∗ R := by
+  induction vs generalizing a i with
+  | nil => simp at hi
+  | cons v vs ih =>
+    cases i with
+    | zero => exact ⟨Arr (a + 8#64) vs, by simp [Arr]⟩
+    | succ i =>
+      obtain ⟨R, e⟩ := ih (a + 8#64) (Nat.lt_of_succ_lt_succ hi)
+      exact ⟨Wd a v ∗ R, by
+        rw [Arr, e, addr_succ, List.getElem_cons_succ, ← MProp.sep_assoc, MProp.sep_comm (Wd a v),
+          MProp.sep_assoc]⟩
+
 /-! ## A word as bytes (the slot store of `swapWith`: 4 + 1 + 1 bytes) -/
 
 theorem toBytes_add (n k : Nat) (v : Int) :
@@ -191,6 +210,39 @@ theorem Wd.split (a : Addr) (v : Word) :
 
 theorem sep_lc (P Q R : MProp 64) : P ∗ Q ∗ R = Q ∗ P ∗ R := by
   rw [← MProp.sep_assoc, MProp.sep_comm P, MProp.sep_assoc]
+
+/-! ## A byte of a word (`isSpilled` reads a byte of a target word) -/
+
+private theorem byte_sshiftRight (v : Word) {j : Nat} (hj : j < 8) :
+    (v.sshiftRight (8 * j)).signExtend (8 * 1) = v.extractLsb' (8 * j) 8 := by
+  apply BitVec.eq_of_getLsbD_eq
+  intro i hi
+  simp only [BitVec.getLsbD_signExtend, BitVec.getLsbD_sshiftRight, BitVec.getLsbD_extractLsb',
+    show i < 8 by omega, show 8 * j + i < 64 by omega, show i < 64 by omega,
+    show ¬ 64 ≤ i by omega, decide_true, decide_false, Bool.not_false, Bool.true_and, ite_true]
+
+-- Byte `j` of a word, and the rest.
+theorem Wd.focus_byte (a : Addr) (v : Word) {j : Nat} (hj : j < 8) :
+    ∃ R, Wd a v = B8 (a + BitVec.ofNat 64 j) (v.extractLsb' (8 * j) 8) ∗ R := by
+  unfold Wd B8
+  rw [show Int.toBytes 8 v.toInt = Int.toBytes (j + (1 + (7 - j))) v.toInt by congr 1; omega,
+    toBytes_add, toBytes_add, AtM_append _ _ _ (by simp [Int.toBytes_length]; omega),
+    AtM_append _ _ _ (by simp [Int.toBytes_length]; omega)]
+  simp only [Int.toBytes_length, ← BitVec.toInt_sshiftRight]
+  rw [toBytes_sext 1, byte_sshiftRight v hj]
+  exact ⟨_, sep_lc _ _ _⟩
+
+theorem Wd.rdb_byte {a : Addr} {v : Word} {F : MProp 64} {m : Mem 64} (h : (Wd a v ∗ F).get m)
+    {j : Nat} (hj : j < 8) : rdb m (a + BitVec.ofNat 64 j) = v.extractLsb' (8 * j) 8 := by
+  obtain ⟨R, e⟩ := Wd.focus_byte a v hj
+  rw [e, MProp.sep_assoc] at h
+  exact B8.rdb h
+
+theorem Wd.isSome_byte {a : Addr} {v : Word} {F : MProp 64} {m : Mem 64} (h : (Wd a v ∗ F).get m)
+    {j : Nat} (hj : j < 8) : (m.loadInt (a + BitVec.ofNat 64 j) 1).isSome = true := by
+  obtain ⟨R, e⟩ := Wd.focus_byte a v hj
+  rw [e, MProp.sep_assoc] at h
+  exact B8.isSome h
 
 -- `movl` to `a`, `movb` to `a + 4` and `a + 5`. Bytes 6 and 7 do not change.
 theorem Wd.store411 {a : Addr} {v : Word} {F : MProp 64} {m : Mem 64} (h : (Wd a v ∗ F).get m)

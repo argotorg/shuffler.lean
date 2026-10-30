@@ -444,17 +444,4 @@ theorem nz_res (v : Word) (r : StatusFlags.from_result.Remaining) :
 
 end Generate
 
-open Generate
-
--- The asm of `generate` changed with the C++ build (`c/build_bottom_up.cpp`): the struct
--- layout, the `Status` result in `al` and the code. The proof for the C build is in git at 6f580e5.
--- The inline `swapDestinations` writes `m_positionOf` only for a destination that is not
--- none, as Model.lean `swapDestinations` (`bindIf`);
--- `Pos` in `generateA` gives that both destinations are below `n`.
-theorem generate_body [Host] [FunDecls]
-    (hprod : Spec Names.produce produceF produceA produceR)
-    (hswap : Spec Names.swapWith swapWithF swapWithA swapWithR) :
-    Body generateAsm generateF generateA generateR := by
-  sorry -- wf:todo
-
 end Bbu

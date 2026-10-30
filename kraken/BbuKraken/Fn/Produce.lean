@@ -72,16 +72,4 @@ end
 
 end Produce
 
--- The asm of `produce` changed with the C++ build (`c/build_bottom_up.cpp`): the struct
--- layout, the `Status` result in `al` and the code. The proof for the C build is in git at 6f580e5.
--- `produce` decrements `m_pendingGenerations` with `subq $1` and no check. `produceA`
--- requires a positive count. Model.lean `produce` uses `sizeDec` (the size_t wrap).
-theorem produce_body [Host] [FunDecls]
-    (hcopy : Spec Names.shallowestCopyPosition shallowestCopyF shallowestCopyA shallowestCopyR)
-    (hspill : Spec Names.isSpilled isSpilledF isSpilledA isSpilledR)
-    (hpush : Spec Names.push pushF pushA pushR)
-    (hdup : Spec Names.dup dupF dupA dupR) :
-    Body produceAsm produceF produceA produceR := by
-  sorry -- wf:todo
-
 end Bbu

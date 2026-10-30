@@ -1,7 +1,7 @@
 import BbuKraken.Fn.Loop.Defs
 
 /-!
-Machine lemmas of the proof of `loop_body`: the frame, the calls, the stores to the
+Machine lemmas of the old proof of `loop_body` (the C build, git 6f580e5): the frame, the calls, the stores to the
 struct and to the local `urgentToDup`, and some word arithmetic.
 -/
 

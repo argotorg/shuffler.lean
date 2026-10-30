@@ -24,7 +24,7 @@ tactics of this repo.
 - Do not kill a `lean` or `lake` process that you did not start. Do not use `pkill lean` or
   `pkill lake`.
 - One target: `nice lake build BbuKraken` (or `PermuteKraken`, `ProofKit`, `ProofKitTest`).
-- One file, without a build of its dependents: `nice lake env lean BbuKraken/Fn/Push.lean`.
+- One file, without a build of its dependents: `nice lake env lean BbuKraken/Unit/Push.lean`.
 - Find the slow declarations:
   ```
   nice lake env lean -Dtrace.profiler=true -Dtrace.profiler.threshold=200 -DElab.async=false FILE
@@ -198,9 +198,9 @@ Notes:
 | File | Content |
 |---|---|
 | `Sep/Fields.lean` | The address of each member of `Emission` (`Fld.stack_size S`, `Fld.mapping_positionOf S i`, …) and the `fold_*` lemmas from the asm address forms. It is generated. Do not edit it. `Sep/Off.lean` has the offset lemmas that it uses. |
-| `Sep/Atoms.lean` | The atoms `Wd`, `B8`, `B16`, `B32` (8, 1, 2, 4 bytes) and `Arr` (words), with their load and store lemmas. `Wd.split` and `Wd.store411` for the 4+1+1-byte slot store. |
-| `Sep/View.lean` | `View S g`: the struct, the working stack and the trace buffer. The ghost `G` has `Vector` fields, so an array of the wrong length does not typecheck. `OpM` is one 12-byte record. |
-| `Sep/Stores.lean` | One load and one store lemma for each field, `View.focus`/`unfocus` for a record, and `view_load`. |
+| `Sep/Atoms.lean` | The atoms `Wd`, `B8`, `B16`, `B32` (8, 1, 2, 4 bytes) and `Arr` (words), with their load and store lemmas. `Wd.split` and `Wd.store411` for the 4+1+1-byte slot store. `Wd.rdb_byte` for one byte of a word. |
+| `Sep/View.lean` | `View S g`: the struct, the working stack, the trace buffer, the target, and the spilled bytes that are not in the target (`splOut`). `G.Ok.spl` gives the value of a spilled byte in the target. The ghost `G` has `Vector` fields, so an array of the wrong length does not typecheck. `OpM` is one 12-byte record. |
+| `Sep/Stores.lean` | One load and one store lemma for each field, `View.focus`/`unfocus` for a record, `View.rdb_spl` for a spilled byte (with `G.Ok`), and `view_load`. |
 | `Sep/Contract.lean` | `Stk`, `Pre`, `Post`, `Body`, `Spec`, `spec_of_body`, and the body state `Kp` (`init`, `next`, `retAddr`, `ret`, `agree`). |
 | `Sep/*Test.lean` | Tests. `ContractTest` has a body with `pushq`/`popq` and a call through a `Spec`. |
 

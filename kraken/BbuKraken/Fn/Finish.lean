@@ -333,13 +333,4 @@ theorem inside_dest {k : Nat} (hk : DEST ≤ k) (hk2 : k < WORDS) :
 end
 end FinishProof
 
--- wf: asm changed. The C++ `permute` replaces `permuteDestinations` and the call of the C
--- `permute`: it has 6 `pushq`, `subq $16408, %rsp` and a call of `shallowestCopyPosition`,
--- and it regroups equal slots. `finishF`, `finishA`, `finishR` and the definitions above are of
--- the old asm and of the old model `finish`. The proof for the C build is in git at 6f580e5.
-theorem finish_body [Host] [FunDecls]
-    (hcopy : Spec Names.shallowestCopyPosition shallowestCopyF shallowestCopyA shallowestCopyR) :
-    Body finishAsm finishF finishA finishR := by
-  sorry -- wf:todo
-
 end Bbu

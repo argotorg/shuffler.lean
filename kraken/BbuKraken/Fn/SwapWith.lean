@@ -86,14 +86,4 @@ theorem optOf_some {w : Word} (h : w ≠ -1#64) : optOf w = some w.toNat := by
 
 end SwapWithFn
 
-open SwapWithFn Kit
-
--- The asm of `swapWith` changed with the C++ build (`c/build_bottom_up.cpp`): the struct
--- layout, the `Status` result in `al` and the code. The proof for the C build is in git at 6f580e5.
--- `swapDestinations` writes `m_positionOf` only for a destination that is not none, as
--- Model.lean `swapDestinations` (`bindIf`);
--- `Pos` in `swapWithA` gives that both destinations are below `n`.
-theorem swapWith_body [Host] [FunDecls] : Body swapWithAsm swapWithF swapWithA swapWithR := by
-  sorry -- wf:todo
-
 end Bbu

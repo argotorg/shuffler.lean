@@ -120,7 +120,8 @@ example (s : MachineData) (hm : (View S g ∗ F).get s.dmem) (hS : rdi s = S) {i
 def hdr4 : Hdr := ⟨0, 4#64, 0, 0, 0, 0, 0, Vector.replicate MAX_N 0, Vector.replicate MAX_N 0, 0, 0, 0⟩
 
 -- A stack of `n = 4` slots and `6n = 24` records.
-example : G := ⟨hdr4, Vector.replicate 4 (0 : Word), Vector.replicate 24 ⟨⟨0, 0, ⟨0, 0, 0⟩⟩, 0, 0⟩⟩
+example : G := ⟨hdr4, Vector.replicate 4 (0 : Word), Vector.replicate 24 ⟨⟨0, 0, ⟨0, 0, 0⟩⟩, 0, 0⟩,
+  Vector.replicate 4 (0 : Word), fun _ => 0⟩
 
 -- Negative: a stack of 3 slots for `n = 4` does not typecheck.
 /--
@@ -134,6 +135,104 @@ in the application
   G.mk hdr4 (Vector.replicate 3 0)
 -/
 #guard_msgs in
-example : G := ⟨hdr4, Vector.replicate 3 (0 : Word), Vector.replicate 24 ⟨⟨0, 0, ⟨0, 0, 0⟩⟩, 0, 0⟩⟩
+example : G := ⟨hdr4, Vector.replicate 3 (0 : Word), Vector.replicate 24 ⟨⟨0, 0, ⟨0, 0, 0⟩⟩, 0, 0⟩,
+  Vector.replicate 4 (0 : Word), fun _ => 0⟩
+
+-- Negative: a target of 5 words for `n = 4` does not typecheck.
+/--
+error: Application type mismatch: The argument
+  Vector.replicate 5 0
+has type
+  Vector Word 5
+but is expected to have type
+  Vector Word (BitVec.toNat hdr4.n)
+in the application
+  G.mk hdr4 (Vector.replicate 4 0)
+    (Vector.replicate 24
+      { op := { kind := 0, depth := 0, slot := { payload := 0, kind := 0, valueOpcode := 0 } }, pad2 := 0, pad10 := 0 })
+    (Vector.replicate 5 0)
+-/
+#guard_msgs in
+example : G := ⟨hdr4, Vector.replicate 4 (0 : Word), Vector.replicate 24 ⟨⟨0, 0, ⟨0, 0, 0⟩⟩, 0, 0⟩,
+  Vector.replicate 5 (0 : Word), fun _ => 0⟩
+
+/-! ## The target and the spilled bytes -/
+
+-- A variable (kind 0, opcode 1) with the id 7, a literal (opcode 0) with the payload 9, and a
+-- label (kind 3) with the payload 5.
+def var7 : Word := 7#64 + (1#64 <<< 40)
+def lit9 : Word := 9#64
+def lbl5 : Word := 5#64 + (3#64 <<< 32)
+
+-- Each id is in the list once; a literal and a label give no id.
+example : splIds [var7, lit9, var7, lbl5] = [7] := by decide
+example : splIds [] = [] := by decide
+example : splIds [lit9, lbl5] = [] := by decide
+example : splIds [var7 + 1#64, var7] = [8, 7] := by decide
+-- The bytes 6 and 7 of a word are not part of the slot.
+example : splIds [var7 + (1#64 <<< 56), var7] = [7] := by decide
+
+-- A load of a target word and of the spilled byte of an id of the target.
+example (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+    rd m (slotAt g.h.tgt i) = g.tgt[i] ∧ (m.loadInt (slotAt g.h.tgt i) 8).isSome = true :=
+  ⟨View.rd_tgt h hi, View.isSome_tgt h hi⟩
+
+example (h : (View S g ∗ F).get m) (hok : g.Ok) (hv : var7 ∈ g.tgt.toList) :
+    (m.loadInt (g.h.spl + BitVec.ofNat 64 7) 1).isSome = true
+    ∧ rdb m (g.h.spl + BitVec.ofNat 64 7) = g.spl 7 :=
+  have hi := List.mem_eraseDups.mpr (List.mem_filterMap.mpr ⟨var7, hv, by decide⟩)
+  ⟨View.isSome_spl h hok hi, View.rdb_spl h hok hi⟩
+
+-- Negative: the view gives no byte for an id that is not in the target.
+example (_h : (View S g ∗ F).get m) (_hok : g.Ok) (_hv : g.tgt.toList = [lit9]) :
+    (m.loadInt (g.h.spl + BitVec.ofNat 64 9) 1).isSome = true ∨ True := by
+  fail_if_success (left; exact View.isSome_spl _h _hok (by rw [_hv]; decide))
+  exact Or.inr trivial
+
+/-! ## A spilled byte in the target -/
+
+-- The target of `n = 2` words at `0x1000` holds the bytes `0x1000 ..< 0x1010`. `splOut` keeps the
+-- ids whose byte is not in the target.
+example : splOut 0x1000#64 0x1000#64 2 [0, 15, 16, 17] = [16, 17] := by decide
+example : splOut 0x1000#64 0x0ff0#64 2 [15, 16, 31, 32] = [15, 32] := by decide
+example : splOut 0x1000#64 0x1000#64 2 [] = [] := by decide
+-- With `n = 0` the target holds no byte.
+example : splOut 0x1000#64 0x1000#64 0 [0, 1] = [0, 1] := by decide
+-- The address `spilled + i` wraps to the target.
+example : splOut 0#64 (-4#64) 1 [3, 4, 11, 12] = [3, 12] := by decide
+
+-- The byte of the id 7 at `0xffc + 7` is byte 3 of the target word at `0x1000`. The atoms of the
+-- target and of the spilled bytes hold on the 8 bytes of the word.
+example (w : Word) (f : BitVec 32 → BitVec 8) :
+    (Arr 0x1000#64 [w] ∗ Spl 0x0ffc#64 f (splOut 0x1000#64 0x0ffc#64 1 [7])).get
+      ((Int.toBytes 8 w.toInt).At 0x1000#64) := by
+  rw [show splOut 0x1000#64 0x0ffc#64 1 [7] = [] by decide]
+  simp only [Arr, Spl, MProp.sep_emp]
+  unfold Wd
+  rw [List.get_AtM]
+
+-- A byte of a target word, at the last byte.
+example (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat) :
+    rdb m (slotAt g.h.tgt k + BitVec.ofNat 64 7) = g.tgt[k].extractLsb' 56 8 :=
+  View.rdb_tgt_byte h hk (by decide)
+
+-- Negative: byte 8 is not a byte of the word. The same steps with byte 7 close the goal.
+example (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat) :
+    rdb m (slotAt g.h.tgt k + BitVec.ofNat 64 7) = g.tgt[k].extractLsb' (8 * 7) 8 := by
+  apply View.rdb_tgt_byte h hk; decide
+example (_h : (View S g ∗ F).get m) {k : Nat} (_hk : k < g.h.n.toNat) :
+    rdb m (slotAt g.h.tgt k + BitVec.ofNat 64 8) = g.tgt[k].extractLsb' (8 * 8) 8 ∨ True := by
+  fail_if_success (left; apply View.rdb_tgt_byte _h _hk; decide; done)
+  exact Or.inr trivial
+
+-- The byte of the id 7 is byte 3 of target word 0. The load gives the byte of the word, and
+-- `G.Ok` gives that this byte is `g.spl 7`.
+example (h : (View S g ∗ F).get m) (hok : g.Ok) (hv : var7 ∈ g.tgt.toList) (hn : 0 < g.h.n.toNat)
+    (ha : g.h.spl + BitVec.ofNat 64 7 = slotAt g.h.tgt 0 + BitVec.ofNat 64 3) :
+    rdb m (g.h.spl + BitVec.ofNat 64 7) = g.tgt[0].extractLsb' 24 8
+    ∧ rdb m (g.h.spl + BitVec.ofNat 64 7) = g.spl 7 :=
+  have hi : 7 ∈ splIds g.tgt.toList :=
+    List.mem_eraseDups.mpr (List.mem_filterMap.mpr ⟨var7, hv, by decide⟩)
+  ⟨ha ▸ View.rdb_tgt_byte h hn (j := 3) (by decide), View.rdb_spl h hok hi⟩
 
 end Bbu.Sep.ViewTest

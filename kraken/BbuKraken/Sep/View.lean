@@ -4,10 +4,15 @@ import BbuKraken.Sep.Fields
 /-!
 # The struct as separation atoms
 
-`View S g` is the memory of `struct Emission` at `S`, of its working stack `m_stack.m_data` and of
-its trace buffer `m_stack.m_trace`, with the values of the ghost `g`. The ghost has one field for
+`View S g` is the memory of `struct Emission` at `S`, of its working stack `m_stack.m_data`, of
+its trace buffer `m_stack.m_trace`, of its target `m_target` and of the bytes of `m_spills` that
+`isSpilled` can read, with the values of the ghost `g`. The ghost has one field for
 each word of the struct (`Hdr`), and `Vector`s for the arrays, so a ghost with an array of the wrong
 length does not typecheck. The struct atoms use the addresses of `Fields.lean`.
+
+The callees do not write the target and the spilled bytes, so these can overlap. A spilled byte
+in the target has no atom of its own (`splOut`): it is a byte of a target word, and `G.Ok.spl`
+gives that `g.spl` agrees with that byte.
 -/
 
 namespace Bbu.Sep
@@ -57,6 +62,37 @@ theorem Ops.focus_self (o : Addr) (rs : List OpR) {i : Nat} (hi : i < rs.length)
   conv => lhs; rw [← List.set_getElem_self hi]
   exact Ops.focus o rs hi _
 
+/-! ## The spilled bytes -/
+
+-- The byte `f i` of `m_spills` at `a + i`, for each id `i` in `is`.
+def Spl (a : Addr) (f : BitVec 32 → BitVec 8) : List Nat → MProp 64
+  | [] => MProp.emp
+  | i :: is => B8 (a + BitVec.ofNat 64 i) (f (BitVec.ofNat 32 i)) ∗ Spl a f is
+
+-- The ids of the spilled bytes that `isSpilled` can read: the variables of the target words.
+-- An id is in the list once, because two atoms at one address do not hold together.
+def splIds (tgt : List Word) : List Nat :=
+  (tgt.filterMap fun w => spillId (StackSlot.ofWord w)).eraseDups
+
+-- The ids of `is` whose byte `a + i` is not in the `n` words of the target at `t`. The view
+-- holds the byte of such an id as a `Spl` atom. The byte of another id is a byte of a target
+-- word; the view holds it in the atom of that word, and `G.Ok.spl` gives its value. Thus the
+-- view also holds when the target and the spilled bytes overlap.
+def splOut (t a : Addr) (n : Nat) (is : List Nat) : List Nat :=
+  is.filter fun i => 8 * n ≤ (a + BitVec.ofNat 64 i - t).toNat
+
+-- The atom of the id `i`, and the rest.
+theorem Spl.focus (a : Addr) (f : BitVec 32 → BitVec 8) {is : List Nat} {i : Nat} (hi : i ∈ is) :
+    ∃ R, Spl a f is = B8 (a + BitVec.ofNat 64 i) (f (BitVec.ofNat 32 i)) ∗ R := by
+  induction is with
+  | nil => cases hi
+  | cons j js ih =>
+    rcases List.mem_cons.mp hi with rfl | h
+    · exact ⟨_, rfl⟩
+    · obtain ⟨R, e⟩ := ih h
+      refine ⟨B8 (a + BitVec.ofNat 64 j) (f (BitVec.ofNat 32 j)) ∗ R, ?_⟩
+      rw [Spl, e, ← MProp.sep_assoc, MProp.sep_comm (B8 _ _) (B8 _ _), MProp.sep_assoc]
+
 /-! ## The struct -/
 
 -- The words of `struct Emission`, in the order of the members.
@@ -84,20 +120,30 @@ def Em (S : Addr) (h : Hdr) : MProp 64 :=
     ∗ Wd (Fld.pendingGenerations S) h.pend ∗ Wd (Fld.blocked_offset S) h.blkOff
     ∗ Wd (Fld.blocked_excess S) h.blkExc
 
--- The ghost: the struct, the working stack (`n` slots) and the trace buffer (`6n` records).
+-- The ghost: the struct, the working stack (`n` slots), the trace buffer (`6n` records), the
+-- target (`n` words) and the spilled bytes (`m_spills[i]` is `spl i`).
 structure G where
   h : Hdr
   stk : Vector Word h.n.toNat
   ops : Vector OpR (6 * h.n.toNat)
+  tgt : Vector Word h.n.toNat
+  spl : BitVec 32 → BitVec 8
 
--- The struct at `S`, the working stack and the trace buffer.
+-- The struct at `S`, the working stack, the trace buffer, the target, and the spilled bytes of
+-- the variables of the target that are not in the target (`splOut`).
 def View (S : Addr) (g : G) : MProp 64 :=
   Em S g.h ∗ Arr g.h.data g.stk.toList ∗ Ops g.h.ops 0 g.ops.toList
+    ∗ Arr g.h.tgt g.tgt.toList
+    ∗ Spl g.h.spl g.spl (splOut g.h.tgt g.h.spl g.h.n.toNat (splIds g.tgt.toList))
 
 -- The ghost invariant that the contracts keep.
 structure G.Ok (g : G) : Prop where
   len : g.h.len.toNat ≤ g.h.n.toNat
   n : g.h.n.toNat ≤ MAX_N
   nops : g.h.nops.toNat ≤ 6 * g.h.n.toNat
+  -- A spilled byte in target word `k` is byte `j` of that word (see `splOut`).
+  spl : ∀ i ∈ splIds g.tgt.toList, ∀ k (hk : k < g.h.n.toNat), ∀ j < 8,
+    g.h.spl + BitVec.ofNat 64 i = slotAt g.h.tgt k + BitVec.ofNat 64 j →
+      g.spl (BitVec.ofNat 32 i) = g.tgt[k].extractLsb' (8 * j) 8
 
 end Bbu.Sep

@@ -86,6 +86,67 @@ theorem View.isSome_pos (h : (View S g ∗ F).get m) {e : Nat} (he : e < MAX_N) 
   obtain ⟨R, h'⟩ := View.arr_pos h
   exact Arr.isSome h' (by simpa using he)
 
+theorem View.arr_tgt (h : (View S g ∗ F).get m) : ∃ R, (Arr g.h.tgt g.tgt.toList ∗ R).get m := by
+  obtain ⟨R, e⟩ : ∃ R, View S g ∗ F = Arr g.h.tgt g.tgt.toList ∗ R := ⟨_, by unfold View; ecancel⟩
+  exact ⟨R, e ▸ h⟩
+
+theorem View.isSome_tgt (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+    (m.loadInt (slotAt g.h.tgt i) 8).isSome = true :=
+  let ⟨_, h⟩ := View.arr_tgt h; Arr.isSome h (by simpa using hi)
+
+theorem View.rd_tgt (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+    rd m (slotAt g.h.tgt i) = g.tgt[i] :=
+  let ⟨_, h⟩ := View.arr_tgt h; (Arr.rd h (by simpa using hi)).trans (by simp)
+
+-- Byte `j` of target word `k`.
+theorem View.b8_tgt (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat) {j : Nat}
+    (hj : j < 8) :
+    ∃ R, (B8 (slotAt g.h.tgt k + BitVec.ofNat 64 j) (g.tgt[k].extractLsb' (8 * j) 8) ∗ R).get m := by
+  obtain ⟨R, h⟩ := View.arr_tgt h
+  obtain ⟨Q, e⟩ := Arr.focus g.h.tgt g.tgt.toList (i := k) (by simpa using hk)
+  obtain ⟨P, e'⟩ := Wd.focus_byte (slotAt g.h.tgt k) g.tgt[k] hj
+  rw [e, Vector.getElem_toList] at h
+  change ((Wd (slotAt g.h.tgt k) g.tgt[k] ∗ Q) ∗ R).get m at h
+  rw [e', MProp.sep_assoc, MProp.sep_assoc] at h
+  exact ⟨_, h⟩
+
+theorem View.rdb_tgt_byte (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat) {j : Nat}
+    (hj : j < 8) : rdb m (slotAt g.h.tgt k + BitVec.ofNat 64 j) = g.tgt[k].extractLsb' (8 * j) 8 :=
+  let ⟨_, h⟩ := View.b8_tgt h hk hj; B8.rdb h
+
+-- The spilled byte of an id whose byte is not in the target: a `Spl` atom.
+theorem View.b8_splOut (h : (View S g ∗ F).get m) {i : Nat}
+    (hi : i ∈ splOut g.h.tgt g.h.spl g.h.n.toNat (splIds g.tgt.toList)) :
+    ∃ R, (B8 (g.h.spl + BitVec.ofNat 64 i) (g.spl (BitVec.ofNat 32 i)) ∗ R).get m := by
+  obtain ⟨Q, eq⟩ := Spl.focus g.h.spl g.spl hi
+  obtain ⟨R, e⟩ : ∃ R, View S g ∗ F
+      = B8 (g.h.spl + BitVec.ofNat 64 i) (g.spl (BitVec.ofNat 32 i)) ∗ R :=
+    ⟨_, by unfold View; rw [eq]; ecancel⟩
+  exact ⟨R, e ▸ h⟩
+
+-- The spilled byte of an id of the target: a `Spl` atom, or a byte of a target word with the value
+-- of `G.Ok.spl`.
+theorem View.b8_spl (h : (View S g ∗ F).get m) (hok : g.Ok) {i : Nat}
+    (hi : i ∈ splIds g.tgt.toList) :
+    ∃ R, (B8 (g.h.spl + BitVec.ofNat 64 i) (g.spl (BitVec.ofNat 32 i)) ∗ R).get m := by
+  by_cases ho : 8 * g.h.n.toNat ≤ (g.h.spl + BitVec.ofNat 64 i - g.h.tgt).toNat
+  · exact View.b8_splOut h (List.mem_filter.mpr ⟨hi, decide_eq_true ho⟩)
+  · generalize hd : (g.h.spl + BitVec.ofNat 64 i - g.h.tgt).toNat = d at ho
+    have hk : d / 8 < g.h.n.toNat := by omega
+    have hj : d % 8 < 8 := Nat.mod_lt _ (by decide)
+    have ha : g.h.spl + BitVec.ofNat 64 i = slotAt g.h.tgt (d / 8) + BitVec.ofNat 64 (d % 8) := by
+      unfold slotAt; subst hd; bv_omega
+    rw [ha, hok.spl i hi _ hk _ hj ha]
+    exact View.b8_tgt h hk hj
+
+theorem View.isSome_spl (h : (View S g ∗ F).get m) (hok : g.Ok) {i : Nat}
+    (hi : i ∈ splIds g.tgt.toList) : (m.loadInt (g.h.spl + BitVec.ofNat 64 i) 1).isSome = true :=
+  let ⟨_, h⟩ := View.b8_spl h hok hi; B8.isSome h
+
+theorem View.rdb_spl (h : (View S g ∗ F).get m) (hok : g.Ok) {i : Nat}
+    (hi : i ∈ splIds g.tgt.toList) : rdb m (g.h.spl + BitVec.ofNat 64 i) = g.spl (BitVec.ofNat 32 i) :=
+  let ⟨_, h⟩ := View.b8_spl h hok hi; B8.rdb h
+
 theorem View.store_stk (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) (w : Word) :
     (View S { g with stk := g.stk.set i w } ∗ F).get (m.storeInt (slotAt g.h.data i) 8 w.toInt) :=
   swap_of_eq h (A := Arr g.h.data g.stk.toList) (A' := Arr g.h.data (g.stk.set i w).toList)
@@ -112,6 +173,8 @@ theorem View.store_pos (h : (View S g ∗ F).get m) {i : Nat} (hi : i < MAX_N) (
 def View.rest (S : Addr) (g : G) (i : Nat) : MProp 64 :=
   Em S g.h ∗ Arr g.h.data g.stk.toList ∗ Ops g.h.ops 0 (g.ops.toList.take i)
     ∗ Ops g.h.ops (i + 1) (g.ops.toList.drop (i + 1))
+    ∗ Arr g.h.tgt g.tgt.toList
+    ∗ Spl g.h.spl g.spl (splOut g.h.tgt g.h.spl g.h.n.toNat (splIds g.tgt.toList))
 
 theorem View.focus (h : (View S g ∗ F).get m) {i : Nat} (hi : i < 6 * g.h.n.toNat) :
     (OpM (opAt g.h.ops i) g.ops[i] ∗ (View.rest S g i ∗ F)).get m := by
