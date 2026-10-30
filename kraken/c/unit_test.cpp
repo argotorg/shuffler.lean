@@ -2078,6 +2078,458 @@ void resolveProperties()
 	expect(multiRuns > 1000, "resolve: runs with more than one victim", multiRuns);
 	expect(reorderRuns > 1000, "resolve: runs with another order", reorderRuns);
 }
+
+/// The buffers of emit after a call
+struct Emitted
+{
+	std::int64_t count;
+	/// max(m, n) entries: the slots of the stack, then unwrittenSlot
+	std::vector<StackSlot> data;
+	/// max(m, n) entries: the destinations of the stack, then unwritten
+	std::vector<Optional<StackOffset>> dest;
+	/// 4m + 6n entries, so that AddressSanitizer finds a write past the bound of the contract
+	std::vector<ShuffleOp> ops;
+	std::uint64_t blocked[2];
+	std::uint64_t height;
+};
+
+/// The values of the entries of data and dest above the stack before a call of emit
+StackSlot const unwrittenSlot = variable(7777);
+Optional<StackOffset> const unwritten = offset(7777);
+
+/// `_values`, then `_fill` up to `_room` entries. The capacity is `_room`, so that AddressSanitizer finds a write past
+/// the room.
+template<class T>
+std::vector<T> filled(std::vector<T> const& _values, std::size_t const _room, T const _fill)
+{
+	std::vector<T> result(_room, _fill);
+	std::copy(_values.begin(), _values.end(), result.begin());
+	return result;
+}
+
+/// emit on the stack `_stack` with the destinations `_dest`, for the target `_target` and the spill set `_spilled` of
+/// `_spilled.size()` variable ids
+Emitted emitted(std::vector<StackSlot> const& _stack, std::vector<Optional<StackOffset>> const& _dest,
+	std::vector<StackSlot> const& _target, std::vector<std::uint8_t> const& _spilled)
+{
+	std::size_t const m = _stack.size();
+	std::size_t const n = _target.size();
+	std::size_t const room = std::max(m, n);
+	Emitted result{0, filled(_stack, room, unwrittenSlot), filled(_dest, room, unwritten),
+		std::vector<ShuffleOp>(4 * m + 6 * n), {7, 7}, 7};
+	result.count = emit(m, n, result.data.data(), _target.data(), result.dest.data(), _spilled.data(), _spilled.size(),
+		result.ops.data(), result.blocked, &result.height);
+	return result;
+}
+
+ShuffleOp op(ShuffleOp::Kind const _kind, std::size_t const _depth, StackSlot const _slot = StackSlot::makeJunk())
+{
+	return {_kind, static_cast<std::uint8_t>(_depth), _slot};
+}
+
+bool sameOp(ShuffleOp const _a, ShuffleOp const _b)
+{
+	return _a.kind == _b.kind && _a.depth == _b.depth && sameSlot(_a.slot, _b.slot);
+}
+
+/// The result of emit is the operations `_ops`, the status `_offset` `_excess`, and the stack `_stack` with the
+/// destinations `_dest`. The entries of dest above the stack keep their values before the call: `_before`, then
+/// unwritten.
+bool emits(Emitted const& _result, std::vector<ShuffleOp> const& _ops, std::uint64_t const _offset,
+	std::uint64_t const _excess, std::vector<StackSlot> const& _stack, std::vector<Optional<StackOffset>> const& _dest,
+	std::vector<Optional<StackOffset>> const& _before)
+{
+	auto const height = static_cast<std::ptrdiff_t>(_stack.size());
+	std::vector<Optional<StackOffset>> const before = filled(_before, _result.dest.size(), unwritten);
+	return _result.count == static_cast<std::int64_t>(_ops.size()) &&
+		std::equal(_ops.begin(), _ops.end(), _result.ops.begin(), sameOp) && _result.blocked[0] == _offset &&
+		_result.blocked[1] == _excess && _result.height == _stack.size() &&
+		std::equal(_stack.begin(), _stack.end(), _result.data.begin(), sameSlot) &&
+		std::equal(_dest.begin(), _dest.end(), _result.dest.begin()) &&
+		std::equal(_result.dest.begin() + height, _result.dest.end(), before.begin() + height);
+}
+
+/// The result of a call that fails: -2, and blocked, height and dest (`_dest`, then unwritten) are not written
+bool emitFailed(Emitted const& _result, std::vector<Optional<StackOffset>> const& _dest)
+{
+	return _result.count == -2 && _result.blocked[0] == 7 && _result.blocked[1] == 7 && _result.height == 7 &&
+		_result.dest == filled(_dest, _result.dest.size(), unwritten);
+}
+
+/// emit: the bounds, each phase alone and in sequence, the checks of State.Valid, and the blocked cases. The cases of
+/// Fuzz/port_test.cpp, with the model results of Fuzz/Oracle.lean. Also Emission::run with planned mappings that the
+/// entry can not make, so that the first and the second check fail.
+void emitEntry()
+{
+	StackSlot const junk = StackSlot::makeJunk();
+	StackSlot const label{0, StackSlot::Kind::FunctionReturnLabel, InstOpcode::Unreachable};
+	auto const literal = [](std::uint32_t const _value) {
+		return StackSlot{_value, StackSlot::Kind::Value, InstOpcode::Const};
+	};
+	ShuffleOp const pop = op(ShuffleOp::Kind::Pop, 0);
+	auto const swap = [](std::size_t const _depth) { return op(ShuffleOp::Kind::Swap, _depth); };
+	auto const dup = [](std::size_t const _depth) { return op(ShuffleOp::Kind::Dup, _depth); };
+	auto const push = [](StackSlot const _slot) { return op(ShuffleOp::Kind::Push, 0, _slot); };
+	auto const load = [](StackSlot const _slot) { return op(ShuffleOp::Kind::Load, 0, _slot); };
+
+	expect(emits(emitted({}, {}, {}, {}), {}, 0, 0, {}, {}, {}), "emit: an empty stack");
+	std::vector<Optional<StackOffset>> const identity2 = offsets(firstOffsets(2));
+	expect(emits(emitted(variables(0, 2), identity2, variables(0, 2), {0, 0}), {}, 0, 0, variables(0, 2), identity2,
+		identity2), "emit: all slots final");
+
+	// removeSurplus (POP), permuteAtLowestHeight (SWAP1), buildBottomUp (PUSH, PUSH)
+	std::vector<Optional<StackOffset>> const phasesDest{offset(1), offset(0), none};
+	std::vector<StackSlot> const phasesTarget{label, variable(1), junk, literal(3)};
+	expect(emits(emitted({variable(1), label, literal(3)}, phasesDest, phasesTarget, {0, 0}),
+		{pop, swap(1), push(junk), push(literal(3))}, 0, 0, phasesTarget, offsets(firstOffsets(4)), phasesDest),
+		"emit: the three phases");
+	// two pops of removeSurplus, a load and a swap of buildBottomUp; the entry of dest above the height keeps its value
+	std::vector<Optional<StackOffset>> const loadDest{none, offset(2), offset(0), none};
+	expect(emits(emitted({literal(9), variable(2), variable(0), literal(8)}, loadDest, variables(0, 3), {0, 1, 0}),
+		{pop, swap(2), pop, load(variable(1)), swap(1)}, 0, 0, variables(0, 3), offsets(firstOffsets(3)), loadDest),
+		"emit: pops, a load and a swap");
+
+	// the third check fails: a return label of the target that is not on the stack; a variable that is not spilled
+	// and not on the stack, after the swap of permuteAtLowestHeight
+	expect(emitFailed(emitted({variable(0)}, {offset(0)}, {label}, {0}), {offset(0)}), "emit: the third check fails");
+	std::vector<Optional<StackOffset>> const swapped{offset(1), offset(0)};
+	expect(emitFailed(emitted(variables(0, 2), swapped, {variable(1), variable(0), variable(2)}, {0, 0, 0}), swapped),
+		"emit: the third check fails after a swap");
+	// the fourth check fails: a return label of the target on the stack that no slot is bound for
+	expect(emitFailed(emitted({label}, {offset(0)}, {label, label}, {}), {offset(0)}), "emit: the fourth check fails");
+	// the third and the fourth check decide the result: without them, buildBottomUp blocks at the DUP of depth 17 of
+	// v0 or R
+	std::vector<Optional<StackOffset>> const identity17 = offsets(firstOffsets(17));
+	std::vector<StackSlot> lacking = variables(0, 17);
+	lacking.push_back(variable(99));
+	lacking.push_back(variable(0));
+	expect(emitFailed(emitted(variables(0, 17), identity17, lacking, std::vector<std::uint8_t>(100)), identity17),
+		"emit: the third check decides");
+	std::vector<StackSlot> labelled = variables(1, 16);
+	labelled.insert(labelled.begin(), label);
+	std::vector<StackSlot> labelTarget = labelled;
+	labelTarget.push_back(label);
+	expect(emitFailed(emitted(labelled, identity17, labelTarget, std::vector<std::uint8_t>(17)), identity17),
+		"emit: the fourth check decides");
+
+	// blocked in removeSurplus: a surplus slot at depth 17
+	std::vector<StackSlot> deep = variables(1, 17);
+	deep.insert(deep.begin(), literal(0));
+	expect(emits(emitted(deep, surplusBottom(17), variables(1, 17), std::vector<std::uint8_t>(18)), {}, 0, 1, deep,
+		surplusBottom(17), surplusBottom(17)), "emit: blocked in removeSurplus");
+	// blocked in permuteAtLowestHeight: a swap of depth 17
+	std::vector<StackSlot> parked = variables(1, 16);
+	parked.insert(parked.begin(), variable(18));
+	parked.push_back(variable(0));
+	std::vector<Optional<StackOffset>> parkedDest = offsets(naturals(1, 16));
+	parkedDest.insert(parkedDest.begin(), offset(18));
+	parkedDest.push_back(offset(0));
+	expect(emits(emitted(parked, parkedDest, variables(0, 19), std::vector<std::uint8_t>(19)), {}, 0, 1, parked,
+		parkedDest, parkedDest), "emit: blocked in permuteAtLowestHeight");
+	// blocked in buildBottomUp: a DUP of depth 17, after a POP of removeSurplus; dest[17] keeps its value
+	std::vector<StackSlot> surplusTop = variables(0, 17);
+	surplusTop.push_back(literal(0));
+	std::vector<Optional<StackOffset>> surplusTopDest = offsets(firstOffsets(17));
+	surplusTopDest.push_back(none);
+	std::vector<StackSlot> dupTarget = variables(0, 17);
+	dupTarget.push_back(variable(0));
+	expect(emits(emitted(surplusTop, surplusTopDest, dupTarget, std::vector<std::uint8_t>(17)), {pop}, 0, 1,
+		variables(0, 17), offsets(firstOffsets(17)), surplusTopDest), "emit: blocked in buildBottomUp");
+
+	// the bounds of the mapping: 1025 slots or target slots. Then nothing is written.
+	std::vector<StackSlot> const tooMany(1025, literal(0));
+	std::vector<Optional<StackOffset>> const tooManyDest(1025, none);
+	Emitted const tooHigh = emitted(tooMany, tooManyDest, {}, {});
+	expect(emitFailed(tooHigh, tooManyDest) && sameSlots(tooHigh.data, tooMany), "emit: 1025 slots");
+	Emitted const tooWide = emitted({}, {}, tooMany, {});
+	expect(emitFailed(tooWide, {}) && sameSlots(tooWide.data, std::vector<StackSlot>(1025, unwrittenSlot)),
+		"emit: 1025 target slots");
+
+	// idCount: a variable of the target needs an id below it, also if it is not read; a stack variable does not
+	std::vector<std::uint8_t> spilledFive(6, 0);
+	spilledFive[5] = 1;
+	Emitted const unknown = emitted({}, {}, {variable(5)}, std::vector<std::uint8_t>(5, 1));
+	expect(emitFailed(unknown, {}) && sameSlot(unknown.data[0], unwrittenSlot), "emit: a target id not below idCount");
+	expect(emits(emitted({}, {}, {variable(5)}, spilledFive), {load(variable(5))}, 0, 0, {variable(5)}, {offset(0)}, {}),
+		"emit: a spilled variable");
+	expect(emitFailed(emitted({}, {}, {variable(5)}, std::vector<std::uint8_t>(6)), {}),
+		"emit: a variable that is not spilled");
+	expect(emits(emitted({variable(9)}, {none}, {literal(1)}, {}), {pop, push(literal(1))}, 0, 0, {literal(1)},
+		{offset(0)}, {none}), "emit: a stack id not below idCount");
+
+	// the stack limit: 1024 final slots; 1024 surplus slots, then 1024 generated slots, 2048 operations
+	std::vector<Optional<StackOffset>> const identity1024 = offsets(firstOffsets(1024));
+	expect(emits(emitted(variables(0, 1024), identity1024, variables(0, 1024), std::vector<std::uint8_t>(1024)), {}, 0,
+		0, variables(0, 1024), identity1024, identity1024), "emit: 1024 final slots");
+	std::vector<ShuffleOp> regenerated(1024, pop);
+	regenerated.push_back(push(literal(0)));
+	regenerated.insert(regenerated.end(), 1023, dup(1));
+	std::vector<Optional<StackOffset>> const surplus1024(1024, none);
+	expect(emits(emitted(std::vector<StackSlot>(1024, literal(1)), surplus1024, std::vector<StackSlot>(1024, literal(0)),
+		{}), regenerated, 0, 0, std::vector<StackSlot>(1024, literal(0)), identity1024, surplus1024),
+		"emit: 1024 surplus slots, then 1024 generated slots");
+
+	// Emission::run with planned mappings that the entry can not make. Without the check that fails, buildBottomUp
+	// blocks at the DUP of depth 17 or 18 of v0, for an offset that no slot is bound for.
+	// The first check fails: slot 16 is bound for offset 16, and offset 18 keeps the stale position 16, so only
+	// offset 17 is pending, but the height is 17 and the target has 19 slots. The other checks hold.
+	{
+		std::vector<StackSlot> data = filled(variables(0, 17), 19, unwrittenSlot);
+		std::vector<ShuffleOp> ops(4 * 17 + 6 * 19);
+		std::vector<StackSlot> target = variables(0, 17);
+		target.push_back(variable(0));
+		target.push_back(variable(16));
+		std::uint8_t const spills[17] = {};
+		Mapping planned{17, 19};
+		for (std::size_t pos = 0; pos < 16; ++pos)
+			planned.bind(StackOffset{pos}, StackOffset{pos});
+		planned.bind(StackOffset{16}, StackOffset{18});
+		planned.bind(StackOffset{16}, StackOffset{16});
+		Emission emission{Stack{data.data(), 17, ops.data()}, target.data(), 19, planned, spills};
+		expect(emission.pendingGenerations() == 1, "run: one offset is pending");
+		expect(emission.run() == Status::AssertionFailed && emission.traceSize() == 0, "run: the first check fails");
+	}
+	// The second check fails: slots 0 to 15 are final. Slot 16 is bound for offset 18, with the stale position 16 of
+	// offset 19, then the binding of offset 18 is removed with Mapping::pop; slot 17 is bound for offset 16. Offsets
+	// 17 and 18 are pending. permuteAtLowestHeight moves slot 16 to the hole 17 (SWAP1), and binds offset 18 again:
+	// only offset 17 is unmapped. The other checks hold.
+	{
+		std::vector<StackSlot> data = filled(variables(0, 18), 20, unwrittenSlot);
+		std::vector<ShuffleOp> ops(4 * 18 + 6 * 20);
+		std::vector<StackSlot> target = variables(0, 16);
+		for (std::uint32_t const id: {17u, 0u, 16u, 0u})
+			target.push_back(variable(id));
+		std::uint8_t const spills[18] = {};
+		Mapping planned{18, 20};
+		for (std::size_t pos = 0; pos < 16; ++pos)
+			planned.bind(StackOffset{pos}, StackOffset{pos});
+		planned.bind(StackOffset{16}, StackOffset{19});
+		planned.bind(StackOffset{16}, StackOffset{18});
+		planned.pop(StackOffset{16});
+		planned.bind(StackOffset{17}, StackOffset{16});
+		Emission emission{Stack{data.data(), 18, ops.data()}, target.data(), 20, planned, spills};
+		expect(emission.pendingGenerations() == 2, "run: two offsets are pending");
+		expect(emission.run() == Status::AssertionFailed && emission.traceSize() == 1 && isSwap(ops[0], 1),
+			"run: the second check fails");
+	}
+}
+
+/// The height after the operations from `_begin` to `_end` on a stack of `_height` slots
+std::size_t heightAfter(std::size_t const _height, ShuffleOp const* const _begin, ShuffleOp const* const _end)
+{
+	std::size_t result = _height;
+	for (ShuffleOp const* op = _begin; op != _end; ++op)
+	{
+		if (op->kind == ShuffleOp::Kind::Pop)
+			--result;
+		if (op->kind == ShuffleOp::Kind::Dup || op->kind == ShuffleOp::Kind::Push || op->kind == ShuffleOp::Kind::Load)
+			++result;
+	}
+	return result;
+}
+
+/// emit on random states, against remove_surplus, permute_at_lowest_height and build_bottom_up in sequence, with
+/// the checks of State.Valid between them, computed here. Also the bounds of the contract: the count is at most
+/// 2m + 6n - 2h, with h the height after removeSurplus; the height is at most max(m, n); the entries of dest above
+/// the height are not written; and a done run ends with the target, each slot at its offset.
+void emitProperties()
+{
+	std::mt19937_64 random{20261030};
+	auto const below = [&](std::size_t const _bound) {
+		return std::uniform_int_distribution<std::size_t>{0, _bound - 1}(random);
+	};
+	auto const isVar = [](StackSlot const _slot) {
+		return _slot.kind == StackSlot::Kind::Value && _slot.valueOpcode != InstOpcode::Const;
+	};
+	auto const isFree = [](StackSlot const _slot) {
+		return (_slot.kind == StackSlot::Kind::Value && _slot.valueOpcode == InstOpcode::Const) ||
+			_slot.kind == StackSlot::Kind::Junk || _slot.kind == StackSlot::Kind::FunctionCallReturnLabel;
+	};
+	// the runs in which a check fails, that block in each phase, and that are done with operations of each phase:
+	// the generator has to reach each case
+	unsigned long failedRuns = 0;
+	unsigned long surplusRuns = 0;
+	unsigned long lowestRuns = 0;
+	unsigned long bottomUpRuns = 0;
+	unsigned long doneRuns = 0;
+	for (unsigned long run = 0; run < 20000; ++run)
+	{
+		bool const large = run % 100 == 0;
+		std::size_t const m = below(large ? 1025 : 41);
+		// few distinct slots, so that some slots are equal
+		auto const slot = [&] {
+			return below(3) == 0 ? nonVariables(static_cast<std::uint32_t>(below(2)))[below(4)] :
+				variable(static_cast<std::uint32_t>(below(4 + below(2) * m)));
+		};
+		std::vector<StackSlot> stack;
+		for (std::size_t i = 0; i < m; ++i)
+			stack.push_back(slot());
+		// a slot is surplus with the chance 1 / odds, or no slot is surplus
+		std::size_t const odds = below(4) == 0 ? 0 : 2 + below(14);
+		std::vector<bool> bound;
+		for (std::size_t i = 0; i < m; ++i)
+			bound.push_back(odds == 0 || below(odds) != 0);
+		std::size_t const h = static_cast<std::size_t>(std::count(bound.begin(), bound.end(), true));
+		std::size_t const n = h + below(std::min<std::size_t>(large ? 1025 : 6, 1025 - h));
+		// distinct offsets below n: a sample, or the identity with a few exchanges, so that some deep stacks are in
+		// reach
+		std::vector<std::uint64_t> values = firstOffsets(n);
+		if (below(2) == 0)
+			std::shuffle(values.begin(), values.end(), random);
+		else if (h > 0)
+			for (std::size_t k = below(3); k > 0; --k)
+			{
+				std::size_t const i = below(n);
+				std::swap(values[i], values[std::min(n - 1, i + below(18))]);
+			}
+		std::vector<Optional<StackOffset>> dest;
+		for (std::size_t i = 0, k = 0; i < m; ++i)
+			dest.push_back(bound[i] ? offset(values[k++]) : none);
+		// the target: mostly the slot that is bound for the offset, else a random slot; a slot that no slot is bound for
+		// is a copy of a stack slot or a random slot
+		std::vector<StackSlot> target(n);
+		std::vector<bool> taken(n, false);
+		for (std::size_t i = 0; i < m; ++i)
+			if (dest[i])
+			{
+				target[dest[i]->value] = below(10) != 0 ? stack[i] : slot();
+				taken[dest[i]->value] = true;
+			}
+		for (std::size_t d = 0; d < n; ++d)
+			if (!taken[d])
+				target[d] = m > 0 && below(4) != 0 ? stack[below(m)] : slot();
+		// idCount is above each variable id of the target, not always above those of the stack
+		std::uint32_t idCount = 0;
+		for (StackSlot const t: target)
+			if (isVar(t))
+				idCount = std::max(idCount, t.payload + 1);
+		idCount += static_cast<std::uint32_t>(below(2));
+		std::vector<std::uint8_t> spilled;
+		for (std::uint32_t id = 0; id < idCount; ++id)
+			spilled.push_back(below(3) == 0);
+
+		Emitted const result = emitted(stack, dest, target, spilled);
+
+		// the reference: the three entries in sequence on the same buffers
+		std::size_t const room = std::max(m, n);
+		std::vector<StackSlot> data = filled(stack, room, unwrittenSlot);
+		std::vector<Optional<StackOffset>> refDest = filled(dest, room, unwritten);
+		std::vector<ShuffleOp> ops(4 * m + 6 * n);
+		std::uint64_t blocked[2] = {7, 7};
+		std::uint64_t surplusHeight = 7;
+		std::int64_t const removed = remove_surplus(m, n, data.data(), target.data(), refDest.data(), spilled.data(),
+			spilled.size(), ops.data(), blocked, &surplusHeight);
+		expect(removed >= 0, "emit: remove_surplus does not fail", run);
+		if (removed < 0)
+			continue;
+		bool const surplusBlocked = blocked[1] != 0;
+		std::size_t count = static_cast<std::size_t>(removed);
+		std::size_t height = surplusHeight;
+		std::int64_t lowest = 0;
+		std::int64_t built = 0;
+		bool checked = false;
+		if (blocked[1] == 0)
+		{
+			lowest = permute_at_lowest_height(height, n, data.data(), target.data(), refDest.data(), spilled.data(),
+				spilled.size(), ops.data() + count, blocked);
+			expect(lowest >= 0, "emit: permute_at_lowest_height does not fail", run);
+			if (lowest < 0)
+				continue;
+			count += static_cast<std::size_t>(lowest);
+		}
+		if (blocked[1] == 0)
+		{
+			// State.Valid: pending is the number of offsets that no source slot is bound for
+			std::size_t pending = 0;
+			for (std::size_t d = 0; d < n; ++d)
+				pending += std::find(dest.begin(), dest.end(), offset(d)) == dest.end();
+			std::set<std::size_t> mapped;
+			for (std::size_t pos = 0; pos < height; ++pos)
+				if (refDest[pos])
+					mapped.insert(refDest[pos]->value);
+			bool const available = std::all_of(target.begin(), target.end(), [&](StackSlot const _t) {
+				return isFree(_t) || (isVar(_t) && spilled[_t.payload] != 0) ||
+					std::any_of(data.begin(), data.begin() + static_cast<std::ptrdiff_t>(height),
+						[&](StackSlot const _s) { return sameSlot(_s, _t); });
+			});
+			bool labelsBound = true;
+			for (std::size_t d = 0; d < n; ++d)
+				labelsBound = labelsBound && (target[d].kind != StackSlot::Kind::FunctionReturnLabel || mapped.count(d));
+			checked = height + pending == n && n - mapped.size() == pending && available && labelsBound;
+			if (checked)
+			{
+				built = build_bottom_up(height, n, data.data(), target.data(), refDest.data(), spilled.data(),
+					ops.data() + count, blocked);
+				if (built >= 0)
+				{
+					height = heightAfter(height, ops.data() + count, ops.data() + count + built);
+					count += static_cast<std::size_t>(built);
+				}
+			}
+		}
+		if ((blocked[1] == 0 && !checked) || built < 0)
+		{
+			expect(emitFailed(result, dest), "emit: a check fails", run);
+			expect(built == 0, "emit: buildBottomUp does not fail after the checks", run);
+			++failedRuns;
+			continue;
+		}
+
+		expect(result.count == static_cast<std::int64_t>(count) &&
+			std::equal(ops.begin(), ops.begin() + static_cast<std::ptrdiff_t>(count), result.ops.begin(), sameOp),
+			"emit: the operations", run);
+		expect(count <= 2 * m + 6 * n - 2 * surplusHeight, "emit: the bound of the count", run);
+		expect(result.blocked[0] == blocked[0] && result.blocked[1] == blocked[1], "emit: the status", run);
+		expect(result.height == height && height <= room, "emit: the height", run);
+		if (result.height != height || height > room)
+			continue;
+		auto const top = static_cast<std::ptrdiff_t>(height);
+		expect(std::equal(data.begin(), data.begin() + top, result.data.begin(), sameSlot), "emit: the stack", run);
+		std::vector<Optional<StackOffset>> const before = filled(dest, room, unwritten);
+		expect(std::equal(result.dest.begin() + top, result.dest.end(), before.begin() + top),
+			"emit: dest above the height is not written", run);
+		if (!checked)
+			expect(std::equal(result.dest.begin(), result.dest.begin() + top, refDest.begin()),
+				"emit: blocked before the checks, the destinations", run);
+		else if (blocked[1] == 0)
+		{
+			// each offset holds the source slot that is bound for it, else its target slot. The destinations are a
+			// permutation of the offsets that takes each slot to an equal slot: permute does not swap equal slots.
+			expect(height == n, "emit: done, the height", run);
+			std::vector<bool> seen(n, false);
+			for (std::size_t d = 0; d < n && d < height; ++d)
+			{
+				auto const source = std::find(dest.begin(), dest.end(), offset(d));
+				StackSlot const expected =
+					source == dest.end() ? target[d] : stack[static_cast<std::size_t>(source - dest.begin())];
+				expect(sameSlot(result.data[d], expected), "emit: done, the slots", run);
+				Optional<StackOffset> const to = result.dest[d];
+				bool const fresh = to && to->value < n && !seen[to->value];
+				expect(fresh && sameSlot(result.data[to->value], result.data[d]), "emit: done, the destinations", run);
+				if (fresh)
+					seen[to->value] = true;
+			}
+		}
+		else
+		{
+			std::set<std::size_t> destinations;
+			for (std::size_t pos = 0; pos < height; ++pos)
+				if (result.dest[pos] && result.dest[pos]->value < n)
+					destinations.insert(result.dest[pos]->value);
+			expect(destinations.size() == height, "emit: blocked in buildBottomUp, distinct destinations", run);
+		}
+		surplusRuns += surplusBlocked;
+		lowestRuns += !surplusBlocked && !checked;
+		bottomUpRuns += checked && blocked[1] != 0;
+		doneRuns += checked && blocked[1] == 0 && removed > 0 && lowest > 0 && built > 0;
+	}
+	expect(failedRuns > 100, "emit: runs in which a check fails", failedRuns);
+	expect(surplusRuns > 100, "emit: runs blocked in removeSurplus", surplusRuns);
+	expect(lowestRuns > 100, "emit: runs blocked in permuteAtLowestHeight", lowestRuns);
+	expect(bottomUpRuns > 100, "emit: runs blocked in buildBottomUp", bottomUpRuns);
+	expect(doneRuns > 100, "emit: done runs with operations of each phase", doneRuns);
+}
+
 }
 
 int main()
@@ -2104,6 +2556,8 @@ int main()
 	resolveSharedSpills();
 	resolveEntry();
 	resolveProperties();
+	emitEntry();
+	emitProperties();
 	if (failures > 0)
 	{
 		std::fprintf(stderr, "%d failures\n", failures);

@@ -14,7 +14,8 @@ example : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm ++ pro
     ++ permuteEntryAsm ++ permuteAtLowestHeightAsm ++ permuteAtLowestHeightEntryAsm
     ++ mapAsm ++ closestCopyAsm ++ mapInPlaceAsm ++ mapClosestCopiesAsm ++ mapWildcardSlotCopiesAsm
     ++ keepWildcardSlotsAsm ++ absorbSurplusAsm ++ buildMappingAsm ++ isRetainedAsm
-    ++ hasOtherRetainedCopyAsm ++ isDemandedAsm ++ classifyAsm ++ resolveAsm ++ resolveEntryAsm := by
+    ++ hasOtherRetainedCopyAsm ++ isDemandedAsm ++ classifyAsm ++ resolveAsm ++ resolveEntryAsm
+    ++ isAvailableAsm ++ runAsm ++ emitAsm := by
   rfl
 
 -- `bbuParseFile` reads `leaq disp(,%i,8), %r` as the operand with no base.
@@ -64,6 +65,9 @@ example : (removeSurplusEntryAsm.head? = some (.label Names.remove_surplus)) := 
 example : (finishAsm.head? = some (.label Names.permute)) := by rfl
 example : (permuteEntryAsm.head? = some (.label Names.permuteEntry)) := by rfl
 example : (permuteAtLowestHeightAsm.head? = some (.label Names.permuteAtLowestHeight)) := by rfl
+example : (isAvailableAsm.head? = some (.label Names.isAvailable)) := by rfl
+example : (runAsm.head? = some (.label Names.run)) := by rfl
+example : (emitAsm.head? = some (.label Names.emit)) := by rfl
 example : (permuteAtLowestHeightEntryAsm.head? = some (.label Names.permute_at_lowest_height)) := by
   rfl
 example : (mapAsm.head? = some (.label Names.map)) := by rfl

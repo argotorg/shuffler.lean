@@ -47,6 +47,9 @@ public def isDemandedAsm : Program := bbuParseFn(Names.isDemanded)
 public def classifyAsm : Program := bbuParseFn(Names.classify)
 public def resolveAsm : Program := bbuParseFn(Names.resolve)
 public def resolveEntryAsm : Program := bbuParseFn(Names.resolveEntry)
+public def isAvailableAsm : Program := bbuParseFn(Names.isAvailable)
+public def runAsm : Program := bbuParseFn(Names.run)
+public def emitAsm : Program := bbuParseFn(Names.emit)
 
 set_option maxRecDepth 100000 in
 /-- `c/build_bottom_up.S`, the file that `bbu_harness` links. -/

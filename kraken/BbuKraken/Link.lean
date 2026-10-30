@@ -21,7 +21,7 @@ theorem bbuAsm_eq : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dup
     ++ permuteAtLowestHeightEntryAsm ++ mapAsm ++ closestCopyAsm ++ mapInPlaceAsm
     ++ mapClosestCopiesAsm ++ mapWildcardSlotCopiesAsm ++ keepWildcardSlotsAsm ++ absorbSurplusAsm
     ++ buildMappingAsm ++ isRetainedAsm ++ hasOtherRetainedCopyAsm ++ isDemandedAsm ++ classifyAsm
-    ++ resolveAsm ++ resolveEntryAsm := by rfl
+    ++ resolveAsm ++ resolveEntryAsm ++ isAvailableAsm ++ runAsm ++ emitAsm := by rfl
 
 section
 set_option maxRecDepth 100000

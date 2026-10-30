@@ -4,8 +4,8 @@ module
 The symbol names of the functions of `c/build_bottom_up.cpp`. The members of `Emission`,
 `SpillSet`, `MappingBuilder` and `Planner` have the names that g++ gives them (the Itanium C++ ABI
 mangling); the entries `build_bottom_up`, `emission_pop`, `spill_set`, `remove_surplus`,
-`permute`, `permute_at_lowest_height`, `build_mapping` and `resolve` are `extern "C"`. These are the
-names in `c/build_bottom_up.S`, in the binary, and in `c/bbu/NAME.S`. We do not rename them
+`permute`, `permute_at_lowest_height`, `build_mapping`, `resolve` and `emit` are `extern "C"`. These
+are the names in `c/build_bottom_up.S`, in the binary, and in `c/bbu/NAME.S`. We do not rename them
 in the asm: each change to the compiler output is one more step between the proved program
 and the program that runs. Each name is here once; `BbuKraken.Asm`, `BbuKraken.Link` and the
 specs use these defs.
@@ -92,5 +92,13 @@ namespace Bbu.Names
   "_ZN12_GLOBAL__N_17Planner7resolveERKNS_7MappingENS_8Emission7BlockedES3_m"
 /-- `resolve`, `extern "C"`. `Names.resolve` is the member `Planner::resolve`. -/
 @[expose] public def resolveEntry : String := "resolve"
+
+/-- `Emission::isAvailable(StackOffset) const` -/
+@[expose] public def isAvailable : String :=
+  "_ZNK12_GLOBAL__N_18Emission11isAvailableE11StackOffset"
+/-- `Emission::run()` -/
+@[expose] public def run : String := "_ZN12_GLOBAL__N_18Emission3runEv"
+/-- `emit`, `extern "C"` -/
+@[expose] public def emit : String := "emit"
 
 end Bbu.Names
