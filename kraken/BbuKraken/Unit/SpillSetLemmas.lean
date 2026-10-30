@@ -132,6 +132,14 @@ theorem Sb.stack {t : MachineData} (h : Sb s ra adds queries r F f res y o x2 t)
     simp only [MachineData.pushRa, rsp, Reg64s.get64_rsp, Reg64s.set64_rsp]
     bv_omega)
 
+-- The stack goal of a jump from a state `P` with the `rsp` of `t`.
+theorem Sb.stack' {t P : MachineData} (h : Sb s ra adds queries r F f res y o x2 t)
+    (hsp : P.regs.rsp = t.regs.rsp) : P.StackAtOrBelow (s.pushRa ra) :=
+  MachineData.stackAtOrBelow_of_toNat_lt (by
+    rw [Reg64s.get64_rsp, Reg64s.get64_rsp, hsp, h.sp]
+    simp only [MachineData.pushRa, rsp, Reg64s.get64_rsp, Reg64s.set64_rsp]
+    bv_omega)
+
 end
 
 theorem setMem_eq (s : MachineData) (f : BitVec 32 → BitVec 8) (adds queries : List Word)
@@ -430,16 +438,16 @@ theorem Sb.rdb_spl (h : Sb s ra adds queries r F f res y o x2 t) {i : Nat}
 
 -- `call SpillSet::add` in a state `c` with the object in `rdi` and the slot `w` in `rsi`: the
 -- callee gets the object, the bytes and the frame `Fr`, and keeps `rsp`, `rbp`, `r12` and `r13`.
-theorem Sb.call {c : MachineData} {K : Unit → MachineData → Prop} {w : Word}
+theorem Sb.call {c : MachineData} {K : MachineData → Prop} {w : Word}
     (h : Sb s ra adds queries r F f res y (rsi s) x2 c) (hdi : rdi c = rsp s - 64#64)
     (hw : rsi c = w)
     (hlt : Flat.isVariable (StackSlot.ofWord w) = true →
       (StackSlot.ofWord w).payload.toNat < Flat.ids (rdi s))
     (hK : ∀ t v, Sb s ra adds queries r F (Flat.spillAdd f (StackSlot.ofWord w)).2 res v
         (rsi s) x2 t → al t = code (Flat.spillAdd f (StackSlot.ofWord w)).1
-        → Sep.mod.Agree c t → K () t) :
+        → Sep.mod.Agree c t → K t) :
     ∃ p S f' n F', AddPre p S f' n F' c
-      ∧ ∀ s', AddPost p S f' n F' c s' → Sep.mod.Agree c s' → K () s' := by
+      ∧ ∀ s', AddPost p S f' n F' c s' → Sep.mod.Agree c s' → K s' := by
   subst hw
   refine ⟨rsp s - 64#64, rsi s, f, Flat.ids (rdi s), Fr s ra x2 adds queries r F res,
     ⟨hdi, Nat.min_le_right _ _, hlt, ⟨y, ?_⟩⟩, fun s' hpost hag => ?_⟩
@@ -524,7 +532,7 @@ def var (na nq : Nat) (l : String) (t : MachineData) : Nat :=
   else if l = ".LB252" then 2 * (4 * 2 ^ 64) + 2 * 2 ^ 64 + 2
   else if l = ".LB255" then 2 * (4 * 2 ^ 64) + 2 * (nq - (rax t).toNat) + 1
   else if l = ".LB254" then 2 * (4 * 2 ^ 64) + 2 * (nq - (rax t).toNat)
-  else if l = ".LB274" ∨ l = ".LB262" then 1
+  else if l = ".LB274" ∨ l = ".LB262" ∨ l = ".LB261" then 1
   else 0
 
 /-! ## The model -/
@@ -616,7 +624,7 @@ theorem addAll_step {l : List StackSlot} {i : Nat} (hi : i < l.length)
 theorem addAll_fail {l : List StackSlot} {i : Nat}
     (h : (Flat.spillAddAll f (l.take i)).1 ≠ .done) :
     Flat.spillAddAll f l = Flat.spillAddAll f (l.take i) := by
-  rw [← congrArg (Flat.spillAddAll f) (List.take_append_drop i l), spillAddAll_append, if_neg h]
+  rw [← congrArg (Flat.spillAddAll f) (List.take_append_drop i l), spillAddAll_append, ite_eq_right h]
 
 theorem addAll_all {l : List StackSlot} {i : Nat} (hi : l.length ≤ i) :
     Flat.spillAddAll f (l.take i) = Flat.spillAddAll f l := by
@@ -715,5 +723,36 @@ theorem g_var {f : BitVec 32 → BitVec 8} {q : StackSlot} (h : Flat.isVariable 
   unfold g Flat.spillIsSpilled
   rw [h, Bool.true_and]
   all_goals rfl
+
+-- `cmpq %n, %a; jb` taken.
+theorem lt_of_cfb {a n : Word}
+    (h : ((((a - n).toNat : Int) != (a.toNat : Int) - (n.toNat : Int))) = true) :
+    a.toNat < n.toNat := by
+  rw [Idioms.cf_sub] at h
+  simpa using h
+
+-- `cmpq %n, %a; jb` not taken.
+theorem ge_of_cfb {a n : Word}
+    (h : ((((a - n).toNat : Int) != (a.toNat : Int) - (n.toNat : Int))) = false) :
+    n.toNat ≤ a.toNat := by
+  rw [Idioms.cf_sub] at h
+  simpa using h
+
+-- `andb %cl, %dl; je` not taken: the slot is a variable.
+theorem var_of_andb {a b : BitVec 8} {q : StackSlot} (ho : a = q.valueOpcode) (hk : b = q.kind)
+    (h : (BitVec.ofNat 8 (!(a - 0#8 == BitVec.zero 8)).toNat
+        &&& BitVec.ofNat 8 (b - 0#8 == BitVec.zero 8).toNat == BitVec.zero 8) = false) :
+    Flat.isVariable q = true := by
+  rw [andb_byte, boolByte_beq, ho, hk, ← isVariable_eq] at h
+  simpa using h
+
+-- `andb %cl, %dl; je` taken: the slot is not a variable.
+theorem notvar_of_andb {a b : BitVec 8} {q : StackSlot} (ho : a = q.valueOpcode)
+    (hk : b = q.kind)
+    (h : (BitVec.ofNat 8 (!(a - 0#8 == BitVec.zero 8)).toNat
+        &&& BitVec.ofNat 8 (b - 0#8 == BitVec.zero 8).toNat == BitVec.zero 8) = true) :
+    Flat.isVariable q = false := by
+  rw [andb_byte, boolByte_beq, ho, hk, ← isVariable_eq] at h
+  simpa using h
 
 end Bbu.Unit.SpillSetProof
