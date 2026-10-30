@@ -14,7 +14,7 @@ namespace Permute
 -- The variant goal of an edge.
 macro "pm_dec" : tactic => `(tactic| (
   simp only [V, wC, Names.permute, String.reduceEq, ↓reduceIte, Nat.reducePow, Nat.reduceAdd,
-    Nat.reduceMul, true_or, or_true]
+    Nat.reduceMul, Nat.reduceLT, true_or, or_true, or_false, false_or, true_and, and_true]
   try omega))
 
 theorem lt_max {g : G} (hok : g.Ok) {x : Word} (hx : x < g.h.len) : x.toNat < MAX_N :=
