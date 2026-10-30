@@ -65,6 +65,7 @@ import BbuKraken.Unit.Permute.Inv
 import BbuKraken.Unit.Permute.LemmaTest
 import BbuKraken.Unit.Permute.MD
 import BbuKraken.Unit.Permute.ML
+import BbuKraken.Unit.Permute.MLTest
 import BbuKraken.Unit.Permute.Util
 import BbuKraken.Unit.Permute.UtilTest
 import BbuKraken.Unit.PermuteModel
