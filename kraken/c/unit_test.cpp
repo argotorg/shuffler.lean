@@ -483,6 +483,235 @@ void emissionPopEntry()
 		bigOut.data(), bigOut.data(), &pending) == -2, "emission_pop: 1025 offsets");
 }
 
+/// The buffers of remove_surplus after a call
+struct Surplus
+{
+	std::int64_t count;
+	std::vector<StackSlot> data;
+	std::vector<Optional<StackOffset>> dest;
+	/// 2m entries, so that AddressSanitizer finds a write past the bound of the contract
+	std::vector<ShuffleOp> ops;
+	std::uint64_t blocked[2];
+	std::uint64_t height;
+};
+
+/// remove_surplus on the stack `_stack` with the destinations `_dest`, for a target of `_n` slots
+Surplus removeSurplus(std::vector<StackSlot> const& _stack, std::vector<Optional<StackOffset>> const& _dest,
+	std::size_t const _n)
+{
+	Surplus result{0, _stack, _dest, std::vector<ShuffleOp>(2 * _stack.size()), {7, 7}, 7};
+	std::vector<StackSlot> const target(_n, variable(0));
+	std::uint8_t const spills[1] = {};
+	result.count = remove_surplus(_stack.size(), _n, result.data.data(), target.data(), result.dest.data(), spills, 1,
+		result.ops.data(), result.blocked, &result.height);
+	return result;
+}
+
+bool isSwap(ShuffleOp const _op, std::size_t const _depth)
+{
+	return _op.kind == ShuffleOp::Kind::Swap && _op.depth == _depth && sameSlot(_op.slot, StackSlot::makeJunk());
+}
+
+/// `_count` slots from variable `_from` up
+std::vector<StackSlot> variables(std::uint32_t const _from, std::size_t const _count)
+{
+	std::vector<StackSlot> result;
+	for (std::size_t i = 0; i < _count; ++i)
+		result.push_back(variable(_from + static_cast<std::uint32_t>(i)));
+	return result;
+}
+
+/// none, then the offsets from 0 to `_count - 1`
+std::vector<Optional<StackOffset>> surplusBottom(std::size_t const _count)
+{
+	std::vector<Optional<StackOffset>> result{none};
+	for (std::size_t i = 0; i < _count; ++i)
+		result.push_back(offset(i));
+	return result;
+}
+
+/// remove_surplus: the bounds, the outputs, and the entries of dest above the height
+void removeSurplusEntry()
+{
+	StackSlot const literal{9, StackSlot::Kind::Value, InstOpcode::Const};
+
+	Surplus const empty = removeSurplus({}, {}, 0);
+	expect(empty.count == 0 && empty.height == 0 && empty.blocked[0] == 0 && empty.blocked[1] == 0,
+		"remove_surplus: an empty stack");
+
+	// no surplus: nothing changes
+	Surplus const kept = removeSurplus({variable(1), variable(0)}, {offset(1), offset(0)}, 2);
+	expect(kept.count == 0 && kept.height == 2 && kept.blocked[0] == 0 && kept.blocked[1] == 0,
+		"remove_surplus: no surplus");
+	expect(sameSlot(kept.data[0], variable(1)) && kept.dest[0] == offset(1) && kept.dest[1] == offset(0),
+		"remove_surplus: no surplus, the stack");
+
+	// a deep surplus: SWAP2, POP. The entry of dest above the height keeps its value.
+	Surplus const deep = removeSurplus({literal, variable(0), variable(1)}, {none, offset(0), offset(1)}, 2);
+	expect(deep.count == 2 && isSwap(deep.ops[0], 2) && isPop(deep.ops[1]), "remove_surplus: a deep surplus, ops");
+	expect(deep.height == 2 && sameSlot(deep.data[0], variable(1)) && sameSlot(deep.data[1], variable(0)),
+		"remove_surplus: a deep surplus, the stack");
+	expect(deep.dest[0] == offset(1) && deep.dest[1] == offset(0) && deep.dest[2] == offset(1),
+		"remove_surplus: a deep surplus, dest");
+	expect(deep.blocked[0] == 0 && deep.blocked[1] == 0, "remove_surplus: a deep surplus, not blocked");
+
+	// a surplus slot equal to the top takes over its destination: no swap
+	Surplus const equal = removeSurplus({variable(0), variable(0)}, {none, offset(0)}, 1);
+	expect(equal.count == 1 && isPop(equal.ops[0]) && equal.height == 1 && equal.dest[0] == offset(0) &&
+		equal.dest[1] == offset(0), "remove_surplus: an equal surplus slot");
+	// of two equal surplus slots the shallower one takes the destination: SWAP2. With the deeper one, SWAP1.
+	Surplus const shallower = removeSurplus({variable(0), variable(0), variable(1), literal, variable(0)},
+		{none, none, offset(1), none, offset(0)}, 2);
+	expect(shallower.count == 4 && isPop(shallower.ops[0]) && isPop(shallower.ops[1]) && isSwap(shallower.ops[2], 2) &&
+		isPop(shallower.ops[3]), "remove_surplus: the shallower equal surplus slot, ops");
+	expect(shallower.height == 2 && sameSlot(shallower.data[0], variable(1)) && shallower.dest[0] == offset(1) &&
+		shallower.dest[1] == offset(0), "remove_surplus: the shallower equal surplus slot");
+
+	// a surplus bottom at depth 17 blocks, also after the pop of a surplus top; dest stays
+	std::vector<StackSlot> stack = variables(1, 17);
+	stack.insert(stack.begin(), literal);
+	Surplus const blocked = removeSurplus(stack, surplusBottom(17), 17);
+	expect(blocked.count == 0 && blocked.blocked[0] == 0 && blocked.blocked[1] == 1 && blocked.height == 18,
+		"remove_surplus: blocked");
+	expect(blocked.dest == surplusBottom(17), "remove_surplus: blocked, dest");
+	stack.push_back(literal);
+	std::vector<Optional<StackOffset>> dest = surplusBottom(17);
+	dest.push_back(none);
+	Surplus const popped = removeSurplus(stack, dest, 17);
+	expect(popped.count == 1 && isPop(popped.ops[0]) && popped.blocked[0] == 0 && popped.blocked[1] == 1 &&
+		popped.height == 18, "remove_surplus: blocked after a pop");
+
+	// the bounds of the mapping: 1024 surplus slots, and 1025 slots or target offsets. Then nothing is written.
+	Surplus const all = removeSurplus(std::vector<StackSlot>(1024, literal),
+		std::vector<Optional<StackOffset>>(1024, none), 1024);
+	expect(all.count == 1024 && all.height == 0 && std::all_of(all.ops.begin(), all.ops.begin() + 1024, isPop),
+		"remove_surplus: 1024 surplus slots");
+	Surplus const tooHigh = removeSurplus(std::vector<StackSlot>(1025, literal),
+		std::vector<Optional<StackOffset>>(1025, none), 0);
+	expect(tooHigh.count == -2 && tooHigh.height == 7 && tooHigh.blocked[0] == 7 && tooHigh.blocked[1] == 7,
+		"remove_surplus: 1025 slots");
+	Surplus const tooWide = removeSurplus({literal}, {none}, 1025);
+	expect(tooWide.count == -2 && tooWide.height == 7 && tooWide.dest[0] == none, "remove_surplus: 1025 offsets");
+}
+
+/// remove_surplus on random states, against the properties of Shuffler.cpp's removeSurplus: it only swaps (SWAP1 to
+/// SWAP16) and pops, at most 2m operations; the operations take the stack to the result; each destination stays
+/// with a slot equal to the slot that it is bound for at the start, so a pop of a bound slot (a retag) leaves its
+/// destination to an equal slot; it ends with no surplus slot, or it blocks at the shallowest surplus slot, and no
+/// surplus slot is in swap reach. The order of the operations is the Lean model's, which the differential fuzzer
+/// checks.
+void removeSurplusProperties()
+{
+	std::mt19937_64 random{20261030};
+	auto const below = [&](std::size_t const _bound) {
+		return std::uniform_int_distribution<std::size_t>{0, _bound - 1}(random);
+	};
+	// the runs that block, that swap, and that retag: the generator has to reach each case
+	unsigned long blockedRuns = 0;
+	unsigned long swapRuns = 0;
+	unsigned long retagRuns = 0;
+	for (unsigned long run = 0; run < 20000; ++run)
+	{
+		std::size_t const m = below(run % 100 == 0 ? 1025 : 41);
+		std::size_t const n = below(m + 3);
+		// few distinct slots, so that some surplus slots are equal to the top
+		std::vector<StackSlot> stack;
+		for (std::size_t i = 0; i < m; ++i)
+			stack.push_back(below(3) == 0 ? nonVariables(static_cast<std::uint32_t>(below(2)))[below(4)] :
+				variable(static_cast<std::uint32_t>(below(4))));
+		std::vector<std::size_t> free(n);
+		for (std::size_t j = 0; j < n; ++j)
+			free[j] = j;
+		std::size_t const surplusOdds = 1 + below(4);
+		std::vector<Optional<StackOffset>> dest;
+		for (std::size_t i = 0; i < m; ++i)
+			if (free.empty() || below(surplusOdds) == 0)
+				dest.push_back(none);
+			else
+			{
+				std::size_t const k = below(free.size());
+				dest.push_back(offset(free[k]));
+				free.erase(free.begin() + static_cast<std::ptrdiff_t>(k));
+			}
+
+		Surplus const result = removeSurplus(stack, dest, n);
+		expect(result.count >= 0 && static_cast<std::size_t>(result.count) <= 2 * m, "removeSurplus: count", run);
+		if (result.count < 0)
+			continue;
+		std::size_t const height = result.height;
+		expect(height <= m, "removeSurplus: height", run);
+		if (height > m)
+			continue;
+
+		// the operations take the stack to the result; `origin` holds the start position of each slot
+		std::vector<std::size_t> origin(m);
+		for (std::size_t pos = 0; pos < m; ++pos)
+			origin[pos] = pos;
+		bool swapped = false;
+		bool retagged = false;
+		for (std::int64_t i = 0; i < result.count; ++i)
+		{
+			ShuffleOp const op = result.ops[static_cast<std::size_t>(i)];
+			if (isPop(op) && !origin.empty())
+			{
+				retagged = retagged || dest[origin.back()].has_value();
+				origin.pop_back();
+			}
+			else if (op.kind == ShuffleOp::Kind::Swap && 1 <= op.depth && op.depth <= 16 && op.depth < origin.size() &&
+				isSwap(op, op.depth))
+			{
+				std::swap(origin.back(), origin[origin.size() - 1 - op.depth]);
+				swapped = true;
+			}
+			else
+				expect(false, "removeSurplus: a SWAP1 to SWAP16 in the stack, or a POP", run);
+		}
+		expect(origin.size() == height, "removeSurplus: the pops", run);
+		for (std::size_t pos = 0; pos < std::min(height, origin.size()); ++pos)
+			expect(sameSlot(stack[origin[pos]], result.data[pos]), "removeSurplus: the stack", run);
+
+		// each destination stays with an equal slot; the surplus slots are popped or block
+		std::vector<std::size_t> before;
+		std::vector<std::size_t> after;
+		for (std::size_t pos = 0; pos < m; ++pos)
+			if (dest[pos])
+				before.push_back(dest[pos]->value);
+		std::vector<std::size_t> surplus;
+		for (std::size_t pos = 0; pos < height; ++pos)
+			if (Optional<StackOffset> const d = result.dest[pos])
+			{
+				after.push_back(d->value);
+				auto const source = std::find(dest.begin(), dest.end(), d);
+				expect(source != dest.end() && sameSlot(stack[static_cast<std::size_t>(source - dest.begin())],
+					result.data[pos]), "removeSurplus: a destination stays with an equal slot", run);
+			}
+			else
+				surplus.push_back(pos);
+		std::sort(before.begin(), before.end());
+		std::sort(after.begin(), after.end());
+		expect(before == after, "removeSurplus: no destination is lost or doubled", run);
+		for (std::size_t pos = height; pos < m; ++pos)
+			expect(result.dest[pos] == dest[pos], "removeSurplus: dest above the height is not written", run);
+
+		if (result.blocked[1] == 0)
+			expect(result.blocked[0] == 0 && surplus.empty(), "removeSurplus: done, no surplus", run);
+		else
+		{
+			expect(!surplus.empty() && result.blocked[0] == surplus.back(), "removeSurplus: blocked at the shallowest",
+				run);
+			expect(!surplus.empty() && height - 1 - surplus.back() == 16 + result.blocked[1],
+				"removeSurplus: the excess", run);
+			expect(!surplus.empty() && height - 1 - surplus.back() > 16, "removeSurplus: no surplus in reach", run);
+		}
+		blockedRuns += result.blocked[1] != 0;
+		swapRuns += swapped;
+		retagRuns += retagged;
+	}
+	expect(blockedRuns > 100, "removeSurplus: blocked runs", blockedRuns);
+	expect(swapRuns > 100, "removeSurplus: runs with a swap", swapRuns);
+	expect(retagRuns > 100, "removeSurplus: runs with a retag", retagRuns);
+}
+
 }
 
 int main()
@@ -496,6 +725,8 @@ int main()
 	spillSet();
 	spillSetOperations();
 	spillSetEntry();
+	removeSurplusEntry();
+	removeSurplusProperties();
 	if (failures > 0)
 	{
 		std::fprintf(stderr, "%d failures\n", failures);
