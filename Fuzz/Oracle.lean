@@ -18,7 +18,10 @@ text, so that both implementations parse the same input and print the same outpu
           | "pop;" state ";" n                                 n steps of State.pop
           | "plan;" strategy ";" bit ";" stack ";" stack ";" vars
                                                                Planner.run of spillingAllowed, source, target, spills
-  state  := stack ";" stack ";" dests ";" vars                 stack, target, mapping and spilled variables
+          | "spill;" stack ";" stack                           SpillSet.add of each slot of the first stack, in
+                                                               order, on the empty set, then SpillSet.is_spilled
+                                                               of each slot of the second stack
+  state  :=stack ";" stack ";" dests ";" vars                 stack, target, mapping and spilled variables
   dests  := per stack offset a target offset or "-"
   slot   := "v" n | "l" n | "_" | "R"                          Var, Lit, Wildcard, FunctionReturnLabel
 
@@ -32,6 +35,8 @@ text, so that both implementations parse the same input and print the same outpu
                                                                pop: the state steps, per target offset the position
                                                                of the slot bound for it or "-", and the pending
                                                                generations
+          | "ok;" vars ";" bits                                spill: the spilled variables, ascending, and per
+                                                               query 1 if it is spilled, else 0
           | "err"
           | "invalid"                                          the buildBottomUp state is not `Valid`
   status := "ok" | "blocked " offset " " excess
@@ -224,6 +229,22 @@ def runPlanner : List String → Except String String
       | .error _ => "err"
   | _ => .error "not a planner case"
 
+-- SpillSet.add of each slot of `adds`, in order, on the empty spill set, then SpillSet.is_spilled of each slot
+-- of `queries`
+def runSpill : List String → Except String String
+  | [adds, queries] => do
+    let adds ← parseStack adds
+    let queries ← parseStack queries
+    return match adds.foldlM SpillSet.add ∅ with
+      | .ok spills =>
+        -- add only spills a variable of `adds`
+        let ids := adds.filterMap fun | .Var id => some id.val | _ => none
+        let spilled := (ids.dedup.mergeSort (· ≤ ·)).filter (VarId.mk · ∈ spills)
+        let bits := queries.map fun q => showBit (decide (spills.is_spilled q))
+        s!"ok;{" ".intercalate (spilled.map toString)};{" ".intercalate bits}"
+      | .error _ => "err"
+  | _ => .error "not a spill case"
+
 def run (line : String) : Except String String :=
   match line.splitOn ";" with
   | "map" :: fields => runBuildMapping fields
@@ -237,6 +258,7 @@ def run (line : String) : Except String String :=
   | "permute" :: fields => runPermute fields
   | "pop" :: fields => runPop fields
   | "plan" :: fields => runPlanner fields
+  | "spill" :: fields => runSpill fields
   | _ => .error s!"not a case: {line}"
 
 end Oracle

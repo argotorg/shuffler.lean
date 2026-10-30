@@ -194,6 +194,43 @@ int main()
 	throws("pop;" + times("_", 1025) + ";;" + times("-", 1025) + ";;0");
 	throws("pop;;" + times("_", 1025) + ";;;0");
 
+	// SpillSet: no adds and no queries, an add and its query, the ids in ascending order, a literal, junk and a
+	// return label with the payload of a spilled id are not spilled, a query of an id that is not added, a large id
+	agrees("spill;;", "ok;;", "ok;;");
+	agrees("spill;v0;v0", "ok;0;1", "ok;0;1");
+	agrees("spill;v0;", "ok;0;", "ok;0;");
+	agrees("spill;;_ R", "ok;;0 0", "ok;;0 0");
+	agrees("spill;v2;v0 v1 v2 l2 _ R", "ok;2;0 0 1 0 0 0", "ok;2;0 0 1 0 0 0");
+	agrees("spill;v1 v0;v0 v1", "ok;0 1;1 1", "ok;0 1;1 1");
+	agrees("spill;v3 v1;l3 l1 v3 v1 v2", "ok;1 3;0 0 1 1 0", "ok;1 3;0 0 1 1 0");
+	agrees("spill;;v5 l0", "ok;;0 0", "ok;;0 0");
+	agrees("spill;v1000;v1000 v999 l1000", "ok;1000;1 0 0", "ok;1000;1 0 0");
+	// an add of a spilled variable, of a literal, of junk and of a return label fails, also after other adds
+	agrees("spill;v0 v0;v0", "err", "err");
+	agrees("spill;v0 v1 v0;", "err", "err");
+	agrees("spill;l0;v0", "err", "err");
+	agrees("spill;_;", "err", "err");
+	agrees("spill;R;", "err", "err");
+	agrees("spill;v0 l1;v0", "err", "err");
+	agrees("spill;v0 _ v0;v0", "err", "err");
+	// 1024 adds, and a query of one more id
+	{
+		std::string const result = "ok;" + nats(0, 1023) + ";" + times("1", 1024) + " 0";
+		agrees("spill;" + vars(0, 1023) + ";" + vars(0, 1024), result, result);
+	}
+	// a wrong model result is not equal to the port result: a query result, the spilled ids
+	for (std::string const wrong: {"ok;0;0", "ok;;1", "err"})
+	{
+		std::optional<port::Check> const check = port::check("spill;v0;v0", wrong);
+		expect(check && check->port != check->model, "a wrong spill model result differs: " + wrong);
+	}
+
+	// not in the domain of the spill unit: too few fields, too many fields, a bad slot
+	throws("spill;v0");
+	throws("spill;v0;v0;");
+	throws("spill;x;");
+	throws("spill;;y");
+
 	if (failures > 0)
 	{
 		std::cerr << failures << " failures\n";

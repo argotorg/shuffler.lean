@@ -149,6 +149,16 @@ extern "C" std::int64_t emission_pop(
 	std::uint64_t* pending
 );
 
+extern "C" std::int64_t spill_set(
+	std::uint64_t idCount,
+	std::uint8_t* spilled,
+	Slot const* adds,
+	std::uint64_t addCount,
+	Slot const* queries,
+	std::uint64_t queryCount,
+	std::uint8_t* results
+);
+
 namespace
 {
 
@@ -216,6 +226,7 @@ std::size_t constexpr guard = 16;
 Slot constexpr guardSlot{0xdeadbeef, 0xee, 0xee, {0xee, 0xee}};
 Op constexpr guardOp{0xee, 0xee, {0xee, 0xee}, guardSlot};
 std::uint64_t constexpr guardWord = 0xeeeeeeeeeeeeeeee;
+std::uint8_t constexpr guardByte = 0xee;
 
 /// Each element of `_buffer` from `_from` has the bytes of `_value`
 template <typename T>
@@ -340,6 +351,46 @@ std::string runPop(std::vector<std::string> const& _fields)
 		std::to_string(pending);
 }
 
+/// A case "spill;" adds ";" queries. The spill set has one byte for each variable id up to the largest id of the
+/// case, and starts empty.
+/// The result is "ok", the spilled ids in ascending order and per query 1 if it is spilled, else 0; or "err".
+std::string runSpill(std::vector<std::string> const& _fields)
+{
+	if (_fields.size() != 2)
+		throw std::invalid_argument("not a spill case");
+	std::vector<Slot> const adds = parseStack(_fields[0]);
+	std::vector<Slot> const queries = parseStack(_fields[1]);
+	std::size_t const idCount = parseSpilled("", adds, queries).size();
+
+	// spill_set writes at most idCount bytes of spilled and queryCount results. A guard area after each buffer must
+	// stay as it is.
+	std::vector<std::uint8_t> spilled(idCount + guard, guardByte);
+	std::fill_n(spilled.begin(), idCount, 0);
+	std::vector<std::uint8_t> results(queries.size() + guard, guardByte);
+	std::int64_t const result =
+		spill_set(idCount, spilled.data(), adds.data(), adds.size(), queries.data(), queries.size(), results.data());
+	if (!intact(spilled, idCount, guardByte) || !intact(results, queries.size(), guardByte))
+		return "<port wrote past a buffer>";
+	if (result == -2)
+		return "err";
+	if (result != 0)
+		return "<port result " + std::to_string(result) + ">";
+	// add writes 1, and isSpilled gives a bool
+	std::vector<std::string> ids;
+	for (std::size_t id = 0; id < idCount; ++id)
+		if (spilled[id] == 1)
+			ids.push_back(std::to_string(id));
+		else if (spilled[id] != 0)
+			return "<port spilled byte " + std::to_string(spilled[id]) + ">";
+	std::vector<std::string> bits;
+	for (std::size_t i = 0; i < queries.size(); ++i)
+		if (results[i] > 1)
+			return "<port query result " + std::to_string(results[i]) + ">";
+		else
+			bits.push_back(std::to_string(results[i]));
+	return "ok;" + join(ids) + ";" + join(bits);
+}
+
 std::string identity(std::string const& _model)
 {
 	return _model;
@@ -361,6 +412,7 @@ Unit constexpr units[] = {
 	// the C interface does not give the destinations
 	{"bottomup", runBuildBottomUp, withoutLastField},
 	{"pop", runPop, identity},
+	{"spill", runSpill, identity},
 };
 
 }
