@@ -159,6 +159,19 @@ extern "C" std::int64_t spill_set(
 	std::uint8_t* results
 );
 
+extern "C" std::int64_t remove_surplus(
+	std::uint64_t m,
+	std::uint64_t n,
+	Slot* data,
+	Slot const* target,
+	std::uint64_t* dest,
+	std::uint8_t const* spilled,
+	std::uint64_t idCount,
+	Op* ops,
+	std::uint64_t* blocked,
+	std::uint64_t* height
+);
+
 namespace
 {
 
@@ -237,6 +250,14 @@ bool intact(std::vector<T> const& _buffer, std::size_t const _from, T const& _va
 	});
 }
 
+/// The status of a state result from the blocked output of the port: "ok" is 0 and 0, a block has a positive excess
+std::string showStatus(std::uint64_t const (&_blocked)[2])
+{
+	return _blocked[1] != 0 ? "blocked " + std::to_string(_blocked[0]) + " " + std::to_string(_blocked[1]) :
+		_blocked[0] == 0 ? "ok" :
+		"<port blocked " + std::to_string(_blocked[0]) + " 0>";
+}
+
 /// A case "bottomup;" stack ";" target ";" dests ";" vars, in the domain of build_bottom_up: every slot has a
 /// destination, the destinations are distinct and below the target size, and the target has at most
 /// maxStackSize slots.
@@ -277,12 +298,7 @@ std::string runBuildBottomUp(std::vector<std::string> const& _fields)
 	if (size > n)
 		return "<port stack of " + std::to_string(size) + " slots>";
 	data.resize(size);
-	// "ok" is 0 and 0, a block has a positive excess
-	std::string const status =
-		blocked[1] != 0 ? "blocked " + std::to_string(blocked[0]) + " " + std::to_string(blocked[1]) :
-		blocked[0] == 0 ? "ok" :
-		"<port blocked " + std::to_string(blocked[0]) + " 0>";
-	return status + ";" + showStack(data) + ";" + showOps(ops);
+	return showStatus(blocked) + ";" + showStack(data) + ";" + showOps(ops);
 }
 
 /// A case "pop;" stack ";" target ";" dests ";" vars ";" count, in the domain of emission_pop: the destinations
@@ -351,6 +367,63 @@ std::string runPop(std::vector<std::string> const& _fields)
 		std::to_string(pending);
 }
 
+/// A case "surplus;" stack ";" target ";" dests ";" vars, in the domain of remove_surplus: the destinations are
+/// distinct and below the target size, or "-", and the stack and the target have at most maxStackSize slots.
+/// The result is "ok" or "blocked OFFSET EXCESS", the final stack, the operations and the destinations; or "err".
+std::string runSurplus(std::vector<std::string> const& _fields)
+{
+	if (_fields.size() != 4)
+		throw std::invalid_argument("not a state");
+	std::vector<Slot> const source = parseStack(_fields[0]);
+	std::vector<Slot> const target = parseStack(_fields[1]);
+	std::size_t const m = source.size();
+	std::size_t const n = target.size();
+	if (m > maxStackSize || n > maxStackSize)
+		throw std::invalid_argument("more slots than the stack limit");
+	std::vector<std::uint64_t> const dest = parseDests(_fields[2], m, n);
+	std::vector<std::uint8_t> const spilled = parseSpilled(_fields[3], source, target);
+
+	// remove_surplus writes at most m slots, 2 m operations and m destinations. A guard area after each buffer must
+	// stay as it is.
+	std::vector<Slot> data(m + guard, guardSlot);
+	std::copy(source.begin(), source.end(), data.begin());
+	std::vector<Op> ops(2 * m + guard, guardOp);
+	std::vector<std::uint64_t> destinationOf(m + guard, guardWord);
+	std::copy(dest.begin(), dest.end(), destinationOf.begin());
+	std::uint64_t blocked[2] = {0xeeee, 0xeeee};
+	std::uint64_t height = guardWord;
+	std::int64_t const count = remove_surplus(
+		m,
+		n,
+		data.data(),
+		target.data(),
+		destinationOf.data(),
+		spilled.data(),
+		spilled.size(),
+		ops.data(),
+		blocked,
+		&height
+	);
+	if (!intact(data, m, guardSlot) || !intact(ops, 2 * m, guardOp) || !intact(destinationOf, m, guardWord))
+		return "<port wrote past a buffer>";
+	if (count == -2)
+		return "err";
+	if (count < 0 || static_cast<std::uint64_t>(count) > 2 * m)
+		return "<port result " + std::to_string(count) + ">";
+	if (height > m)
+		return "<port height " + std::to_string(height) + ">";
+	auto const above = static_cast<std::ptrdiff_t>(height);
+	if (!std::equal(destinationOf.begin() + above, destinationOf.begin() + static_cast<std::ptrdiff_t>(m),
+			dest.begin() + above))
+		return "<port wrote a destination above the stack>";
+	data.resize(height);
+	ops.resize(static_cast<std::size_t>(count));
+	std::vector<std::string> dests;
+	for (std::size_t i = 0; i < height; ++i)
+		dests.push_back(showOffset(destinationOf[i]));
+	return showStatus(blocked) + ";" + showStack(data) + ";" + showOps(ops) + ";" + join(dests);
+}
+
 /// A case "spill;" adds ";" queries. The spill set has one byte for each variable id up to the largest id of the
 /// case, and starts empty.
 /// The result is "ok", the spilled ids in ascending order and per query 1 if it is spilled, else 0; or "err".
@@ -413,6 +486,7 @@ Unit constexpr units[] = {
 	{"bottomup", runBuildBottomUp, withoutLastField},
 	{"pop", runPop, identity},
 	{"spill", runSpill, identity},
+	{"surplus", runSurplus, identity},
 };
 
 }
