@@ -209,6 +209,8 @@ Notes:
   (`Stk.call`). See `cal_body` in `Sep/ContractTest.lean`.
 - `sep_load [l₁, …]` (ProofKit) closes a load VC. It tries `with_reducible apply l h` for each lemma
   `l` and each hypothesis `h : (P ∗ F).get m`, and closes the side goals with `assumption`.
+  It tries first the hypotheses at the memory term of the goal. In `dup_unit` (14 such
+  hypotheses, 20 load goals), this order decreases the heartbeats from 112260 to 83564.
   `view_load` is `sep_load` with the `View` and `OpM` lemmas.
   - The match is reducible: the memory and the address of the goal must be the same terms as in the
     hypothesis. Fold the address first (`rw [hS, Fld.fold_stack_size]`). In `rbx_body`, the stack

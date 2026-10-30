@@ -7,6 +7,12 @@ from a separation hypothesis `h : (P ∗ F).get m` of the local context. For eac
 each lemma `l`, it tries `with_reducible apply l h`, then closes all side goals with `assumption`.
 The first pair that closes the goal wins. Untrusted: it only selects a lemma.
 
+The order of the hypotheses: first the hypotheses at the memory term `m` of the first
+`Mem.loadInt m a n` in the goal, then all other hypotheses, each group in the order of the context.
+A hypothesis at another memory term can fit after a reducible unfold, so it stays in the search.
+In a chain of stores, each store gives one hypothesis. In `dup_unit` (14 such hypotheses, 20 load
+goals), this order decreases the heartbeats of the theorem from 112260 to 83564.
+
 Two traps that this tactic avoids:
 * In a tactic block, `apply l h` with an `h` that does not fit `l` logs an error, changes `l h` to
   `sorry` and closes the goal. A tactic that tries lemmas must not take this as a success.
@@ -33,12 +39,22 @@ private def trySepLoad (l : Term) (h : Expr) : TacticM Bool := do
     s.restore
     return false
 
+/-- The memory `m` of the first `Mem.loadInt m a n` in `e`. -/
+private def loadMem? (e : Expr) : Option Expr :=
+  (e.find? (·.isAppOfArity ``Mem.loadInt 4)).map (·.getArg! 1)
+
 elab "sep_load " "[" ls:term,* "]" : tactic => withMainContext do
+  let m? := loadMem? (← instantiateMVars (← getMainTarget))
+  let mut same := #[]
+  let mut rest := #[]
   for d in ← getLCtx do
     if d.isImplementationDetail then continue
-    unless (← instantiateMVars d.type).consumeMData.isAppOf ``MProp.get do continue
+    let t := (← instantiateMVars d.type).consumeMData
+    unless t.isAppOf ``MProp.get do continue
+    if m? == some t.appArg! then same := same.push d.toExpr else rest := rest.push d.toExpr
+  for h in same ++ rest do
     for l in ls.getElems do
-      if ← trySepLoad l d.toExpr then return
+      if ← trySepLoad l h then return
   throwError "sep_load: no sep hyp gives this load"
 
 end ProofKit

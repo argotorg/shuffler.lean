@@ -247,6 +247,30 @@ theorem View.isSome_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.
     (m.loadInt (slotAt g.h.data i) 8).isSome = true :=
   let ⟨_, h⟩ := View.arr_stk h; Arr.isSome h (by simpa using hi)
 
+theorem View.rd_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+    rd m (slotAt g.h.data i) = g.stk[i] :=
+  let ⟨_, h⟩ := View.arr_stk h; (Arr.rd h (by simpa using hi)).trans (by simp)
+
+-- Byte `j` of stack word `k`.
+theorem View.b8_slot (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat) {j : Nat}
+    (hj : j < 8) :
+    ∃ R, (B8 (slotAt g.h.data k + BitVec.ofNat 64 j) (g.stk[k].extractLsb' (8 * j) 8) ∗ R).get m := by
+  obtain ⟨R, h⟩ := View.arr_stk h
+  obtain ⟨Q, e⟩ := Arr.focus g.h.data g.stk.toList (i := k) (by simpa using hk)
+  obtain ⟨P, e'⟩ := Wd.focus_byte (slotAt g.h.data k) g.stk[k] hj
+  rw [e, Vector.getElem_toList] at h
+  change ((Wd (slotAt g.h.data k) g.stk[k] ∗ Q) ∗ R).get m at h
+  rw [e', MProp.sep_assoc, MProp.sep_assoc] at h
+  exact ⟨_, h⟩
+
+theorem View.isSome_slot_byte (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat) {j : Nat}
+    (hj : j < 8) : (m.loadInt (slotAt g.h.data k + BitVec.ofNat 64 j) 1).isSome = true :=
+  let ⟨_, h⟩ := View.b8_slot h hk hj; B8.isSome h
+
+theorem View.rdb_slot (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat) {j : Nat}
+    (hj : j < 8) : rdb m (slotAt g.h.data k + BitVec.ofNat 64 j) = g.stk[k].extractLsb' (8 * j) 8 :=
+  let ⟨_, h⟩ := View.b8_slot h hk hj; B8.rdb h
+
 theorem View.isSome_dest (h : (View S g ∗ F).get m) {i : Nat} (hi : i < MAX_N) :
     (m.loadInt (Fld.mapping_destinationOf S i) 8).isSome = true :=
   let ⟨_, h⟩ := View.arr_dest h; Arr.isSome h (by simpa using hi)

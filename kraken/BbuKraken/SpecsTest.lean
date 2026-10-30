@@ -295,6 +295,48 @@ example (s : MachineData) (h : Mem.loadInt s.dmem (s.regs.get64 .rax + s.regs.ge
   kvcgen64
   finish
 
+-- `cmpb $3, 4(%rdi,%rsi,8)` (dup): the byte is 3; the byte is 1; the byte is 0x83 (`-125`), that
+-- is not 3 in 8 bits.
+example (s : MachineData)
+    (h : Mem.loadInt s.dmem (s.regs.get64 .rdi + s.regs.get64 .rsi * 8#64 + 4#64) 1 = some 3) :
+    ⦃ fun t => t = s ⦄ parse("cmpb $3, 4(%rdi,%rsi,8)
+      sete %dl") ⦃ (fun _ t => (t.regs.get64 .rdx).take 8 = 1#8); fun _ _ => False ⦄ := by
+  refine ⟨fun t ht => ?_⟩
+  subst ht
+  kvcgen64
+  finish
+
+example (s : MachineData)
+    (h : Mem.loadInt s.dmem (s.regs.get64 .rdi + s.regs.get64 .rsi * 8#64 + 4#64) 1 = some 1) :
+    ⦃ fun t => t = s ⦄ parse("cmpb $3, 4(%rdi,%rsi,8)
+      sete %dl") ⦃ (fun _ t => (t.regs.get64 .rdx).take 8 = 0#8); fun _ _ => False ⦄ := by
+  refine ⟨fun t ht => ?_⟩
+  subst ht
+  kvcgen64
+  finish
+
+example (s : MachineData)
+    (h : Mem.loadInt s.dmem (s.regs.get64 .rdi + s.regs.get64 .rsi * 8#64 + 4#64) 1 = some (-125)) :
+    ⦃ fun t => t = s ⦄ parse("cmpb $3, 4(%rdi,%rsi,8)
+      sete %dl") ⦃ (fun _ t => (t.regs.get64 .rdx).take 8 = 0#8); fun _ _ => False ⦄ := by
+  refine ⟨fun t ht => ?_⟩
+  subst ht
+  kvcgen64
+  finish
+
+-- The scale is 8: a byte at `rdi + rsi + 4` does not give the flags.
+example (s : MachineData)
+    (_h : Mem.loadInt s.dmem (s.regs.get64 .rdi + s.regs.get64 .rsi + 4#64) 1 = some 3) : True := by
+  fail_if_success
+    (refine (fun (_ : ⦃ fun t => t = s ⦄ parse("cmpb $3, 4(%rdi,%rsi,8)
+        sete %dl") ⦃ (fun _ t => (t.regs.get64 .rdx).take 8 = 1#8); fun _ _ => False ⦄) => trivial) ?_
+     refine ⟨fun t ht => ?_⟩
+     subst ht
+     kvcgen64
+     finish
+     done)
+  trivial
+
 /-! ## Tests of 8-bit and 32-bit registers -/
 
 example (s : MachineData) (h : s.regs.get64 .rsi = 6#64) :

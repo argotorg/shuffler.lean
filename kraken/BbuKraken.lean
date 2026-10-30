@@ -46,6 +46,7 @@ import BbuKraken.TopTest
 import BbuKraken.Unit.Defs
 import BbuKraken.Unit.DefsTest
 import BbuKraken.Unit.Dup
+import BbuKraken.Unit.DupTest
 import BbuKraken.Unit.Generate
 import BbuKraken.Unit.IsSpilled
 import BbuKraken.Unit.IsSpilledTest
