@@ -217,5 +217,18 @@ theorem rg_some {st : Flat.St} {p : Vector Word MAX_N} (h : RG st (some p)) (h0 
   rw [Flat.permute, ite_eq_right h0]
   simp only [h1, h2]
 
+/-! ## The registers of phase C -/
+
+-- `GC` for a state with the same leader registers.
+theorem GC.step {S : Addr} {g : G} {F : MProp 64} {s : MachineData} {ra : Int64} {L L' : Lc}
+    {l : Word} {t P : MachineData} (hG : GC S g F s ra L l t) (hF : Fm S g F s ra L' P)
+    (h0 : L'.c0 = L.c0) (h1 : L'.c1 = L.c1) (hbp : P.regs.rbp = t.regs.rbp)
+    (h12 : P.regs.r12 = t.regs.r12) (h13 : P.regs.r13 = t.regs.r13)
+    (h14 : P.regs.r14 = t.regs.r14) (h15 : P.regs.r15 = t.regs.r15)
+    (hbx : P.regs.rbx = t.regs.rbx) : GC S g F s ra L' l P :=
+  ⟨⟨hF, hG.cc.lt, by rw [hbp]; exact hG.cc.bp, by rw [h0]; exact hG.cc.c0,
+    by rw [h1]; exact hG.cc.c1, by rw [h12]; exact hG.cc.r12, by rw [h15]; exact hG.cc.r15,
+    by rw [hbx]; exact hG.cc.bx⟩, by rw [h13]; exact hG.r13, by rw [h14]; exact hG.r14⟩
+
 end Permute
 end Bbu.Unit
