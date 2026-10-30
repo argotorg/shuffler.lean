@@ -311,4 +311,176 @@ theorem placeGroup_spec (fs : St) {leader : Word} (hl : leader < fs.size) (slot 
             ⟨by omega, hc1.2⟩]
         · rw [ite_eq_right hc1, ite_eq_right (fun h => hc1 ⟨by omega, h.2⟩)]
 
+/-! ## The `leader` loop -/
+
+theorem _root_.Bbu.St.val_eq (st : Bbu.St) (i : Nat) : st.val i = (st.slots.map Slot.val)[i]! := by
+  simp [Bbu.St.val, getElem!_def]
+  cases st.slots[i]? <;> rfl
+
+-- The word of an offset below `n` is `k` if and only if the offset is `k`.
+theorem optW_eq_iff {o : Option Nat} {k : Word} {n : Nat} (hn : n ≤ MAX_N) (hk : k.toNat < n)
+    (ho : ∀ p, o = some p → p < n) : optW o = k ↔ o = some k.toNat := by
+  cases o with
+  | none =>
+    refine ⟨fun h => ?_, fun h => by cases h⟩
+    simp only [optW] at h; rw [← h, toNat_NONE] at hk; rw [MAX_N_eq] at hn; omega
+  | some p =>
+    have hp := ho p rfl
+    refine ⟨fun h => ?_, fun h => ?_⟩
+    · rw [← h, optW, toNat_ofNat_small (by omega)]
+    · cases h; exact eq_of_toNat (toNat_ofNat_small (by omega))
+
+-- The slot at `k` has no copy above `k` if and only if `k` is its shallowest copy.
+theorem leader_iff {e : Env} {fs : St} {st : Bbu.St} (hs : Sim e fs st) {k : Word}
+    (hk : k.toNat < st.len) :
+    shallowestCopyPosition fs (get fs.data k) = k ↔
+      isLast (st.slots.map Slot.val) k.toNat = true := by
+  have hN := hs.len_lt
+  rw [sim_copy hs, hs.data k hk, Bbu.shallowestCopyPosition]
+  have ho : ∀ p, (List.range st.len).reverse.find? (st.val · == st.val k.toNat) = some p →
+      p < st.len :=
+    fun p h => List.mem_range.1 (List.mem_reverse.1 (List.mem_of_find?_eq_some h))
+  rw [optW_eq_iff hN hk ho, find?_last st.val st.len hk, isLast_iff]
+  simp only [List.length_map, ← Bbu.St.val_eq]
+  exact Iff.rfl
+
+theorem fregroup_skip {fs : St} {k : Word} {perm dB : Vector Word MAX_N} (hk : k < fs.size)
+    (h : shallowestCopyPosition fs (get fs.data k) ≠ k) :
+    regroup fs k perm dB = regroup fs (k + 1) perm dB := by
+  rw [regroup, dite_eq_left hk]
+  exact ite_eq_left h
+
+theorem fregroup_lead {fs : St} {k : Word} {perm dB out : Vector Word MAX_N} (hk : k < fs.size)
+    (h : shallowestCopyPosition fs (get fs.data k) = k)
+    (hp : placeGroup fs k hk (get fs.data k) (markDesired fs k hk (get fs.data k) perm 0 dB) 0 0
+      perm = some out) :
+    regroup fs k perm dB = regroup fs (k + 1) out (markDesired fs k hk (get fs.data k) perm 0 dB) := by
+  rw [regroup, dite_eq_left hk]
+  dsimp only
+  rw [ite_eq_right (fun h' => h' h), hp]
+
+-- The offsets below `n` that `desiredBy` marks: none, or a leader below `k`.
+def DInv (n : Nat) (k : Word) (dB : Vector Word MAX_N) : Prop :=
+  ∀ w : Word, w.toNat < n → get dB w = NONE ∨ (get dB w).toNat < k.toNat
+
+-- The `leader` loop from `k` is the fold of the list `regroup` over the last copies from `k`.
+theorem sim_regroup {e : Env} {fs : St} {st : Bbu.St} (hs : Sim e fs st) :
+    ∀ m (k : Word) (perm dB : Vector Word MAX_N) (q : List Nat), st.len - k.toNat = m →
+      k.toNat ≤ st.len → PermV st.len perm q → IsPerm q → DInv st.len k dB →
+      ∃ r, ((List.range' k.toNat m).filter (isLast (st.slots.map Slot.val))).foldlM
+          (fun q l => Bbu.regroup (st.slots.map Slot.val) q (st.slots.map Slot.val)[l]!) q =
+            .ok r ∧
+        ∃ out, regroup fs k perm dB = some out ∧ PermV st.len out r ∧ IsPerm r := by
+  have hN := hs.len_lt
+  have hsz := hs.size
+  have hn : fs.size.toNat ≤ MAX_N := by rw [hsz]; exact hN
+  have hvl : (st.slots.map Slot.val).length = st.len := by simp [Bbu.St.len]
+  intro m
+  induction m with
+  | zero =>
+    intro k perm dB q hm hk hpv hq _
+    have hc : ¬k < fs.size := by bv_omega
+    exact ⟨q, rfl, perm, by rw [regroup, dite_eq_right hc], hpv, hq⟩
+  | succ m ih =>
+    intro k perm dB q hm hk hpv hq hdi
+    have hkn : k.toNat < st.len := by omega
+    have hkw : k < fs.size := by bv_omega
+    have hk1 : (k + 1).toNat = k.toNat + 1 := toNat_succ (by omega)
+    by_cases hl : isLast (st.slots.map Slot.val) k.toNat = true
+    · have hsc : shallowestCopyPosition fs (get fs.data k) = k := (leader_iff hs hkn).2 hl
+      have hslot : get fs.data k = (st.slots.map Slot.val)[k.toNat]! := by
+        rw [hs.data k hkn, Bbu.St.val_eq]
+      -- the list side
+      obtain ⟨r1, hr1, hr1l, hr1p, hr1x⟩ :=
+        regroup_ok (st.slots.map Slot.val)[k.toNat]! (hpv.1.trans hvl.symm) hq
+      -- the flat side
+      have hpm : ∀ y : Word, y.toNat ≤ k.toNat → (get perm y).toNat < MAX_N := fun y hy => by
+        rw [hpv.2 y (by omega)]
+        have := hq.1 y.toNat (by rw [hpv.1]; omega)
+        rw [getElem!_pos q y.toNat (by rw [hpv.1]; omega)]
+        have := hpv.1
+        omega
+      have mk := markDesired_spec fs hkw (get fs.data k) perm hn hpm (k.toNat + 1) 0 dB
+        (by simp) (by simp)
+      have hg : ∀ w : Word, w.toNat < fs.size.toNat → (get fs.data w = get fs.data k ↔
+          ((st.slots.map Slot.val)[w.toNat]! == (st.slots.map Slot.val)[k.toNat]!) = true) :=
+        fun w hw => by rw [hs.data w (by omega), hslot, Bbu.St.val_eq, beq_iff_eq]
+      have hd : ∀ w : Word, w.toNat < fs.size.toNat →
+          (get (markDesired fs k hkw (get fs.data k) perm 0 dB) w = k ↔
+            decide (w.toNat ∈ grpDest (st.slots.map Slot.val) q
+              (st.slots.map Slot.val)[k.toNat]!) = true) := fun w hw => by
+        rw [(mk w).1, decide_eq_true_iff]
+        have hnk : get dB w ≠ k := fun h => by
+          rcases hdi w (by omega) with h' | h'
+          · rw [h'] at h; rw [← h, toNat_NONE] at hkn; rw [MAX_N_eq] at hN; omega
+          · rw [h] at h'; omega
+        rw [grpDest, List.mem_map]
+        constructor
+        · rintro (h | ⟨y, -, hy, hyd, hyp⟩)
+          · exact absurd h hnk
+          · refine ⟨y.toNat, mem_grp.2 ⟨by omega, ?_⟩, ?_⟩
+            · rw [← Bbu.St.val_eq, ← hs.data y (by omega), hyd, hslot]
+            · rw [← hpv.2 y (by omega), hyp]
+        · rintro ⟨y, hy, hyw⟩
+          obtain ⟨hyn, hyv⟩ := mem_grp.1 hy
+          have hyk : y ≤ k.toNat :=
+            Nat.le_of_not_lt fun hlt => (isLast_iff.1 hl) y hlt hyn hyv
+          have hy' : (BitVec.ofNat 64 y).toNat = y := toNat_ofNat_small (by omega)
+          refine Or.inr ⟨BitVec.ofNat 64 y, by simp, by rw [hy']; exact hyk, ?_, ?_⟩
+          · rw [hs.data _ (by rw [hy']; omega), hy', Bbu.St.val_eq, hyv, hslot]
+          · apply eq_of_toNat
+            rw [hpv.2 _ (by rw [hy']; omega), hy', hyw]
+      have hc := length_movers (st.slots.map Slot.val)[k.toNat]! (hpv.1.trans hvl.symm) hq
+      rw [← List.countP_eq_length_filter, ← List.countP_eq_length_filter, hvl] at hc
+      obtain ⟨out, hpg, hout⟩ := placeGroup_spec fs hkw (get fs.data k)
+        (markDesired fs k hkw (get fs.data k) perm 0 dB)
+        (g := fun w => (st.slots.map Slot.val)[w]! == (st.slots.map Slot.val)[k.toNat]!)
+        (d := fun w => decide (w ∈ grpDest (st.slots.map Slot.val) q
+          (st.slots.map Slot.val)[k.toNat]!))
+        hn hg hd (by rw [hsz]; exact Nat.le_of_eq hc) (k.toNat + 1) 0 0 perm
+        (by simp) (by simp) (by simp) (by simp)
+      have hpv' : PermV st.len out r1 := ⟨hr1l.trans hvl, fun i hi => by
+        rw [hout i, hr1x i.toNat (by omega), regroupAt]
+        by_cases hgi : ((st.slots.map Slot.val)[i.toNat]! ==
+            (st.slots.map Slot.val)[k.toNat]!) = true
+        · have hik : i.toNat ≤ k.toNat := Nat.le_of_not_lt fun hlt =>
+            (isLast_iff.1 hl) _ hlt (by omega) (beq_iff_eq.1 hgi)
+          rw [ite_eq_left (c := (0 : Word).toNat ≤ i.toNat ∧ i.toNat ≤ k.toNat ∧
+              ((st.slots.map Slot.val)[i.toNat]! == (st.slots.map Slot.val)[k.toNat]!) = true)
+            ⟨by simp, hik, hgi⟩, ite_eq_left (c := ((st.slots.map Slot.val)[i.toNat]! ==
+              (st.slots.map Slot.val)[k.toNat]!) = true) hgi, hsz, hvl]
+          by_cases hm : i.toNat ∈ grpDest (st.slots.map Slot.val) q
+              (st.slots.map Slot.val)[k.toNat]!
+          · rw [ite_eq_left (decide_eq_true hm), ite_eq_left hm]
+          · rw [ite_eq_right (c := decide (i.toNat ∈ grpDest (st.slots.map Slot.val) q
+              (st.slots.map Slot.val)[k.toNat]!) = true) (fun h => hm (of_decide_eq_true h)), ite_eq_right hm]
+        · rw [ite_eq_right (c := (0 : Word).toNat ≤ i.toNat ∧ i.toNat ≤ k.toNat ∧
+              ((st.slots.map Slot.val)[i.toNat]! == (st.slots.map Slot.val)[k.toNat]!) = true)
+            (fun h => hgi h.2.2), ite_eq_right hgi, hpv.2 i hi]⟩
+      have hdi' : DInv st.len (k + 1) (markDesired fs k hkw (get fs.data k) perm 0 dB) :=
+        fun w hw => by
+          rcases (mk w).2 with h | h
+          · right; rw [h, hk1]; omega
+          · rw [h]
+            rcases hdi w hw with h' | h'
+            · exact Or.inl h'
+            · right; rw [hk1]; omega
+      obtain ⟨r, h1, out', h2, h3, h4⟩ := ih (k + 1) out _ r1 (by omega) (by omega) hpv' hr1p hdi'
+      rw [hk1] at h1
+      rw [List.range'_succ, List.filter_cons,
+        ite_eq_left (c := isLast (st.slots.map Slot.val) k.toNat = true) hl, List.foldlM_cons,
+        hr1]
+      exact ⟨r, h1, out', by rw [fregroup_lead hkw hsc hpg]; exact h2, h3, h4⟩
+    · have hsc : shallowestCopyPosition fs (get fs.data k) ≠ k :=
+        fun h => hl ((leader_iff hs hkn).1 h)
+      obtain ⟨r, h1, out, h2, h3, h4⟩ := ih (k + 1) perm dB q (by omega) (by omega) hpv hq
+        (fun w hw => by
+          rcases hdi w hw with h | h
+          · exact Or.inl h
+          · right; omega)
+      rw [hk1] at h1
+      rw [List.range'_succ, List.filter_cons,
+        ite_eq_right (c := isLast (st.slots.map Slot.val) k.toNat = true) hl]
+      exact ⟨r, h1, out, by rw [fregroup_skip hkw hsc]; exact h2, h3, h4⟩
+
 end Bbu.Flat
