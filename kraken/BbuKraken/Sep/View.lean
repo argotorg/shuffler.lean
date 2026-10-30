@@ -4,8 +4,9 @@ import BbuKraken.Sep.Fields
 /-!
 # The struct as separation atoms
 
-`View S g` is the memory of `struct Emission` at `S`, of its working stack `m_stack.m_data` and of
-its trace buffer `m_stack.m_trace`, with the values of the ghost `g`. The ghost has one field for
+`View S g` is the memory of `struct Emission` at `S`, of its working stack `m_stack.m_data`, of
+its trace buffer `m_stack.m_trace`, of its target `m_target` and of the bytes of `m_spills` that
+`isSpilled` can read, with the values of the ghost `g`. The ghost has one field for
 each word of the struct (`Hdr`), and `Vector`s for the arrays, so a ghost with an array of the wrong
 length does not typecheck. The struct atoms use the addresses of `Fields.lean`.
 -/
@@ -57,6 +58,30 @@ theorem Ops.focus_self (o : Addr) (rs : List OpR) {i : Nat} (hi : i < rs.length)
   conv => lhs; rw [← List.set_getElem_self hi]
   exact Ops.focus o rs hi _
 
+/-! ## The spilled bytes -/
+
+-- The byte `f i` of `m_spills` at `a + i`, for each id `i` in `is`.
+def Spl (a : Addr) (f : BitVec 32 → BitVec 8) : List Nat → MProp 64
+  | [] => MProp.emp
+  | i :: is => B8 (a + BitVec.ofNat 64 i) (f (BitVec.ofNat 32 i)) ∗ Spl a f is
+
+-- The ids of the spilled bytes that `isSpilled` can read: the variables of the target words.
+-- An id is in the list once, because two atoms at one address do not hold together.
+def splIds (tgt : List Word) : List Nat :=
+  (tgt.filterMap fun w => spillId (StackSlot.ofWord w)).eraseDups
+
+-- The atom of the id `i`, and the rest.
+theorem Spl.focus (a : Addr) (f : BitVec 32 → BitVec 8) {is : List Nat} {i : Nat} (hi : i ∈ is) :
+    ∃ R, Spl a f is = B8 (a + BitVec.ofNat 64 i) (f (BitVec.ofNat 32 i)) ∗ R := by
+  induction is with
+  | nil => cases hi
+  | cons j js ih =>
+    rcases List.mem_cons.mp hi with rfl | h
+    · exact ⟨_, rfl⟩
+    · obtain ⟨R, e⟩ := ih h
+      refine ⟨B8 (a + BitVec.ofNat 64 j) (f (BitVec.ofNat 32 j)) ∗ R, ?_⟩
+      rw [Spl, e, ← MProp.sep_assoc, MProp.sep_comm (B8 _ _) (B8 _ _), MProp.sep_assoc]
+
 /-! ## The struct -/
 
 -- The words of `struct Emission`, in the order of the members.
@@ -84,15 +109,20 @@ def Em (S : Addr) (h : Hdr) : MProp 64 :=
     ∗ Wd (Fld.pendingGenerations S) h.pend ∗ Wd (Fld.blocked_offset S) h.blkOff
     ∗ Wd (Fld.blocked_excess S) h.blkExc
 
--- The ghost: the struct, the working stack (`n` slots) and the trace buffer (`6n` records).
+-- The ghost: the struct, the working stack (`n` slots), the trace buffer (`6n` records), the
+-- target (`n` words) and the spilled bytes (`m_spills[i]` is `spl i`).
 structure G where
   h : Hdr
   stk : Vector Word h.n.toNat
   ops : Vector OpR (6 * h.n.toNat)
+  tgt : Vector Word h.n.toNat
+  spl : BitVec 32 → BitVec 8
 
--- The struct at `S`, the working stack and the trace buffer.
+-- The struct at `S`, the working stack, the trace buffer, the target, and the spilled bytes of
+-- the variables of the target.
 def View (S : Addr) (g : G) : MProp 64 :=
   Em S g.h ∗ Arr g.h.data g.stk.toList ∗ Ops g.h.ops 0 g.ops.toList
+    ∗ Arr g.h.tgt g.tgt.toList ∗ Spl g.h.spl g.spl (splIds g.tgt.toList)
 
 -- The ghost invariant that the contracts keep.
 structure G.Ok (g : G) : Prop where
