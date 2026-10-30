@@ -47,6 +47,7 @@ import BbuKraken.Unit.Defs
 import BbuKraken.Unit.DefsTest
 import BbuKraken.Unit.Dup
 import BbuKraken.Unit.Generate
+import BbuKraken.Unit.GenerateTest
 import BbuKraken.Unit.IsSpilled
 import BbuKraken.Unit.Loop
 import BbuKraken.Unit.Permute
