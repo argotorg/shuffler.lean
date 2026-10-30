@@ -8,7 +8,7 @@ CFLAGS_ASM = -O1 -fno-ident -fno-asynchronous-unwind-tables -fcf-protection=none
 CXXFLAGS_ASM = $(CFLAGS_ASM) -std=c++20 -ffreestanding -fno-exceptions -fno-rtti \
 	-fno-threadsafe-statics -nostdlib++
 
-all: permute.S harness build_bottom_up.S bbu_harness
+all: permute.S harness build_bottom_up.S bbu_harness unit_test
 
 permute.S: permute.c
 	$(CC) $(CFLAGS_ASM) -S $< -o $@
@@ -27,7 +27,12 @@ harness: harness.c permute.S
 bbu_harness: bbu_harness.c build_bottom_up.S
 	$(CC) -O1 -no-pie -o $@ bbu_harness.c build_bottom_up.S
 
+# The unit tests, hosted and with the sanitizers. They include build_bottom_up.cpp. Run them with
+# ASAN_OPTIONS=detect_leaks=0 where LeakSanitizer cannot run (under ptrace).
+unit_test: unit_test.cpp build_bottom_up.cpp
+	$(CXX) -std=c++20 -O1 -g -Wall -Wextra -fsanitize=address,undefined -fno-sanitize-recover=all -o $@ unit_test.cpp
+
 clean:
-	rm -f harness bbu_harness
+	rm -f harness bbu_harness unit_test
 
 .PHONY: all clean

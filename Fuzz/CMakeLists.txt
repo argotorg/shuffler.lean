@@ -24,19 +24,24 @@ add_library(port STATIC port.cpp ${port_asm})
 add_executable(port_test port_test.cpp)
 target_link_libraries(port_test PRIVATE port)
 
-add_executable(fuzz fuzz.cpp ${lean_sources} ${lean_objects})
 set_source_files_properties(${lean_objects} PROPERTIES EXTERNAL_OBJECT TRUE GENERATED TRUE)
 # the flags Lake compiles Lean C files with
 set_source_files_properties(${lean_sources} PROPERTIES COMPILE_OPTIONS
 	"-fstack-clash-protection;-ffp-contract=off;-fvisibility=hidden;-O3;-DNDEBUG;-DLEAN_EXPORTING")
-# fuzz.cpp calls the private Emission steps
-set_source_files_properties(fuzz.cpp PROPERTIES COMPILE_OPTIONS "-fno-access-control")
+# fuzz.cpp calls the private Emission steps; lines.cpp includes fuzz.cpp
+set_source_files_properties(fuzz.cpp lines.cpp PROPERTIES COMPILE_OPTIONS "-fno-access-control")
+
+# fuzz: the fuzzer. lines: the checks of the fuzzer on the case lines of stdin.
+add_executable(fuzz fuzz.cpp ${lean_sources} ${lean_objects})
 target_compile_options(fuzz PRIVATE -fsanitize=fuzzer)
 target_link_options(fuzz PRIVATE -fsanitize=fuzzer)
-# libleanshared exports the _Unwind_* functions of its own libunwind. libgcc_s must come first in the
-# symbol lookup order, else C++ exceptions mix both unwinders and some reach std::terminate.
-target_link_options(fuzz PRIVATE "LINKER:--push-state,--no-as-needed,-lgcc_s,--pop-state")
-target_include_directories(fuzz SYSTEM PRIVATE "${LEAN_PREFIX}/include")
-target_link_directories(fuzz PRIVATE "${LEAN_PREFIX}/lib/lean")
-target_link_libraries(fuzz PRIVATE port yul Lake_shared leanshared)
-set_target_properties(fuzz PROPERTIES BUILD_RPATH "${LEAN_PREFIX}/lib/lean")
+add_executable(lines lines.cpp ${lean_sources} ${lean_objects})
+foreach(target fuzz lines)
+	# libleanshared exports the _Unwind_* functions of its own libunwind. libgcc_s must come first in the
+	# symbol lookup order, else C++ exceptions mix both unwinders and some reach std::terminate.
+	target_link_options(${target} PRIVATE "LINKER:--push-state,--no-as-needed,-lgcc_s,--pop-state")
+	target_include_directories(${target} SYSTEM PRIVATE "${LEAN_PREFIX}/include")
+	target_link_directories(${target} PRIVATE "${LEAN_PREFIX}/lib/lean")
+	target_link_libraries(${target} PRIVATE port yul Lake_shared leanshared)
+	set_target_properties(${target} PROPERTIES BUILD_RPATH "${LEAN_PREFIX}/lib/lean")
+endforeach()

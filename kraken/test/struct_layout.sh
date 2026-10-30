@@ -24,11 +24,13 @@ int main()
 {
 	P(m_target); P(m_targetSize); P(m_spills); P(m_stack.m_data); P(m_stack.m_size); P(m_stack.m_trace);
 	P(m_stack.m_traceSize); P(m_mapping.m_destinationOf); P(m_mapping.m_positionOf);
-	P(m_pendingGenerations); P(m_blocked.offset); P(m_blocked.excess);
+	P(m_pendingGenerations); P(m_blocked.offset); P(m_blocked.excess); P(m_plannedMapping);
 	std::printf("size %zu\n", sizeof(Emission));
 }
 CPP
-${CXX:-g++} -std=c++20 -I "$dir/c" -o "$tmp/probe" "$tmp/probe.cpp"
+# The reference member m_plannedMapping makes Emission a class without standard layout; g++ gives offsetof
+# for such a class without a virtual base, but warns.
+${CXX:-g++} -std=c++20 -Wno-invalid-offsetof -I "$dir/c" -o "$tmp/probe" "$tmp/probe.cpp"
 "$tmp/probe" > "$tmp/offsets"
 
 awk '

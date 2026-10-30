@@ -30,7 +30,11 @@ namespace Bbu.Names
 @[expose] public def permute : String := "_ZN12_GLOBAL__N_18Emission7permuteEv"
 /-- `Emission::buildBottomUp()` -/
 @[expose] public def buildBottomUp : String := "_ZN12_GLOBAL__N_18Emission13buildBottomUpEv"
+/-- `Emission::pop()` -/
+@[expose] public def pop : String := "_ZN12_GLOBAL__N_18Emission3popEv"
 /-- `build_bottom_up`, `extern "C"` -/
 @[expose] public def build_bottom_up : String := "build_bottom_up"
+/-- `emission_pop`, `extern "C"` -/
+@[expose] public def emission_pop : String := "emission_pop"
 
 end Bbu.Names

@@ -9,7 +9,7 @@ trap 'rm -rf "$tmp"' EXIT
 
 # The real layout: the checked-in file is current.
 "$gen" --check > /dev/null
-grep -q '^def SIZE : Nat := 16464$' "$out"
+grep -q '^def SIZE : Nat := 16472$' "$out"
 echo "ok: real layout"
 
 # A copy of the sources, with one change. The generator must fail and must not write the file.
@@ -31,8 +31,12 @@ fails 'm_stack.m_data: offset 32, not 24' 's|^\tstd::uint8_t const\* m_spills;$|
 echo "ok: a hole fails"
 
 # A member after the last member of the probe.
-fails 'the members end at 16464, sizeof is 16472' 's|^\tBlocked m_blocked;$|&\n\tstd::uint8_t m_pad;|'
+fails 'the members end at 16472, sizeof is 16480' 's|^\tMapping const& m_plannedMapping;$|&\n\tstd::uint8_t m_pad;|'
 echo "ok: a member at the end fails"
+
+# A member in the place of the reference: R accepts only a reference member.
+fails 'static assertion failed' 's|^\tMapping const& m_plannedMapping;$|\tMapping const* m_plannedMapping;|'
+echo "ok: R of a member that is not a reference fails"
 
 # Elements of 4 bytes: a `StackOffset` of 4 bytes.
 fails 'm_mapping.m_destinationOf: element size 4, not 8' \

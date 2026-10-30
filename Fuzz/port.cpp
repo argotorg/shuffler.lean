@@ -107,6 +107,7 @@ std::string showOps(std::vector<Op> const& _ops)
 		{
 		case Swap: result.push_back("SWAP" + std::to_string(op.depth)); break;
 		case Dup: result.push_back("DUP" + std::to_string(op.depth)); break;
+		case Pop: result.push_back("POP"); break;
 		case Push: result.push_back("PUSH:" + showSlot(op.slot)); break;
 		case Load: result.push_back("LOAD:" + showSlot(op.slot)); break;
 		default: result.push_back("<op " + std::to_string(op.kind) + ">"); break;
@@ -134,11 +135,96 @@ extern "C" std::int64_t build_bottom_up(
 	std::uint64_t* blocked
 );
 
+extern "C" std::int64_t emission_pop(
+	std::uint64_t m,
+	std::uint64_t n,
+	Slot* data,
+	Slot const* target,
+	std::uint64_t const* dest,
+	std::uint8_t const* spilled,
+	std::uint64_t count,
+	Op* ops,
+	std::uint64_t* destinationOf,
+	std::uint64_t* positionOf,
+	std::uint64_t* pending
+);
+
 namespace
 {
 
 /// The maximal stack size of build_bottom_up (the EVM stack limit)
 std::size_t constexpr maxStackSize = 1024;
+
+/// The none of an Optional<StackOffset> of kraken/c/build_bottom_up.cpp
+std::uint64_t constexpr none = SIZE_MAX;
+
+std::string showOffset(std::uint64_t const _offset)
+{
+	return _offset == none ? "-" : std::to_string(_offset);
+}
+
+/// The destinations of a case for a stack of `_m` slots and a target of `_n` slots: per slot a target offset, or
+/// "-" (none). Throws std::invalid_argument unless the offsets are distinct and below `_n`.
+std::vector<std::uint64_t> parseDests(std::string const& _s, std::size_t const _m, std::size_t const _n)
+{
+	std::vector<std::string> const destWords = words(_s);
+	if (destWords.size() != _m)
+		throw std::invalid_argument("not one destination per slot: " + _s);
+	std::vector<std::uint64_t> dest;
+	std::vector<bool> bound(_n);
+	for (std::string const& word: destWords)
+	{
+		if (word == "-")
+		{
+			dest.push_back(none);
+			continue;
+		}
+		std::uint32_t const d = parseNat(word);
+		if (d >= _n || bound[d])
+			throw std::invalid_argument("destination out of the target or bound twice: " + word);
+		bound[d] = true;
+		dest.push_back(d);
+	}
+	return dest;
+}
+
+/// spilled[id] for each variable id of the case: 1 for the ids of the field `_vars`, else 0
+std::vector<std::uint8_t> parseSpilled(
+	std::string const& _vars,
+	std::vector<Slot> const& _source,
+	std::vector<Slot> const& _target
+)
+{
+	std::vector<std::uint32_t> spills;
+	for (std::string const& word: words(_vars))
+		spills.push_back(parseNat(word));
+	std::uint32_t maxId = 0;
+	for (std::vector<Slot> const* slots: {&_source, &_target})
+		for (Slot const& slot: *slots)
+			if (slot.kind == Value && slot.valueOpcode == Phi)
+				maxId = std::max(maxId, slot.payload);
+	for (std::uint32_t const id: spills)
+		maxId = std::max(maxId, id);
+	std::vector<std::uint8_t> spilled(std::size_t{maxId} + 1);
+	for (std::uint32_t const id: spills)
+		spilled[id] = 1;
+	return spilled;
+}
+
+/// The length of the guard area after each output buffer of the port, and its contents
+std::size_t constexpr guard = 16;
+Slot constexpr guardSlot{0xdeadbeef, 0xee, 0xee, {0xee, 0xee}};
+Op constexpr guardOp{0xee, 0xee, {0xee, 0xee}, guardSlot};
+std::uint64_t constexpr guardWord = 0xeeeeeeeeeeeeeeee;
+
+/// Each element of `_buffer` from `_from` has the bytes of `_value`
+template <typename T>
+bool intact(std::vector<T> const& _buffer, std::size_t const _from, T const& _value)
+{
+	return std::all_of(_buffer.begin() + static_cast<std::ptrdiff_t>(_from), _buffer.end(), [&](T const& _x) {
+		return std::memcmp(&_x, &_value, sizeof _x) == 0;
+	});
+}
 
 /// A case "bottomup;" stack ";" target ";" dests ";" vars, in the domain of build_bottom_up: every slot has a
 /// destination, the destinations are distinct and below the target size, and the target has at most
@@ -154,49 +240,18 @@ std::string runBuildBottomUp(std::vector<std::string> const& _fields)
 	std::size_t const n = target.size();
 	if (n > maxStackSize)
 		throw std::invalid_argument("more target slots than the stack limit");
-	std::vector<std::string> const destWords = words(_fields[2]);
-	if (destWords.size() != m)
-		throw std::invalid_argument("not one destination per slot: " + _fields[2]);
-	std::vector<std::uint64_t> dest;
-	std::vector<bool> bound(n);
-	for (std::string const& word: destWords)
-	{
-		std::uint32_t const d = parseNat(word);
-		if (d >= n || bound[d])
-			throw std::invalid_argument("destination out of the target or bound twice: " + word);
-		bound[d] = true;
-		dest.push_back(d);
-	}
-	std::vector<std::uint32_t> spills;
-	for (std::string const& word: words(_fields[3]))
-		spills.push_back(parseNat(word));
-	// spilled[id] for each variable id of the case
-	std::uint32_t maxId = 0;
-	for (std::vector<Slot> const* slots: {&source, &target})
-		for (Slot const& slot: *slots)
-			if (slot.kind == Value && slot.valueOpcode == Phi)
-				maxId = std::max(maxId, slot.payload);
-	for (std::uint32_t const id: spills)
-		maxId = std::max(maxId, id);
-	std::vector<std::uint8_t> spilled(std::size_t{maxId} + 1);
-	for (std::uint32_t const id: spills)
-		spilled[id] = 1;
+	std::vector<std::uint64_t> const dest = parseDests(_fields[2], m, n);
+	if (std::find(dest.begin(), dest.end(), none) != dest.end())
+		throw std::invalid_argument("a slot without a destination: " + _fields[2]);
+	std::vector<std::uint8_t> const spilled = parseSpilled(_fields[3], source, target);
 
 	// build_bottom_up writes at most n slots and 6 n operations. A guard area after each buffer must stay as it is.
-	std::size_t constexpr guard = 16;
-	Slot const guardSlot{0xdeadbeef, 0xee, 0xee, {0xee, 0xee}};
-	Op const guardOp{0xee, 0xee, {0xee, 0xee}, guardSlot};
 	std::vector<Slot> data(n + guard, guardSlot);
 	std::copy(source.begin(), source.end(), data.begin());
 	std::vector<Op> ops(6 * n + guard, guardOp);
 	std::uint64_t blocked[2] = {0xeeee, 0xeeee};
 	std::int64_t const count =
 		build_bottom_up(m, n, data.data(), target.data(), dest.data(), spilled.data(), ops.data(), blocked);
-	auto const intact = [](auto const& _buffer, std::size_t const _from, auto const& _value) {
-		return std::all_of(_buffer.begin() + static_cast<std::ptrdiff_t>(_from), _buffer.end(), [&](auto const& _x) {
-			return std::memcmp(&_x, &_value, sizeof _x) == 0;
-		});
-	};
 	if (!intact(data, n, guardSlot) || !intact(ops, 6 * n, guardOp))
 		return "<port wrote past a buffer>";
 	if (count == -2)
@@ -219,6 +274,77 @@ std::string runBuildBottomUp(std::vector<std::string> const& _fields)
 	return status + ";" + showStack(data) + ";" + showOps(ops);
 }
 
+/// A case "pop;" stack ";" target ";" dests ";" vars ";" count, in the domain of emission_pop: the destinations
+/// are distinct and below the target size, or "-", the stack and the target have at most maxStackSize slots, and
+/// count is at most one more than the stack size.
+/// The result is "ok", the final stack, the operations, the destinations, per target offset the position of the
+/// slot bound for it, and the pending generations; or "err".
+std::string runPop(std::vector<std::string> const& _fields)
+{
+	if (_fields.size() != 5)
+		throw std::invalid_argument("not a pop case");
+	std::vector<Slot> const source = parseStack(_fields[0]);
+	std::vector<Slot> const target = parseStack(_fields[1]);
+	std::size_t const m = source.size();
+	std::size_t const n = target.size();
+	if (m > maxStackSize || n > maxStackSize)
+		throw std::invalid_argument("more slots than the stack limit");
+	std::vector<std::uint64_t> const dest = parseDests(_fields[2], m, n);
+	std::vector<std::uint8_t> const spilled = parseSpilled(_fields[3], source, target);
+	std::size_t const count = parseNat(_fields[4]);
+	if (count > m + 1)
+		throw std::invalid_argument("more pops than one more than the stack size: " + _fields[4]);
+
+	// emission_pop does not write data and writes at most count operations, m destinations and n positions. A guard
+	// area after each buffer must stay as it is.
+	std::vector<Slot> data(m + guard, guardSlot);
+	std::copy(source.begin(), source.end(), data.begin());
+	std::vector<Slot> const before = data;
+	std::vector<Op> ops(count + guard, guardOp);
+	std::vector<std::uint64_t> destinationOf(m + guard, guardWord);
+	std::vector<std::uint64_t> positionOf(n + guard, guardWord);
+	std::uint64_t pending = guardWord;
+	std::int64_t const result = emission_pop(
+		m,
+		n,
+		data.data(),
+		target.data(),
+		dest.data(),
+		spilled.data(),
+		count,
+		ops.data(),
+		destinationOf.data(),
+		positionOf.data(),
+		&pending
+	);
+	if (std::memcmp(data.data(), before.data(), data.size() * sizeof(Slot)) != 0)
+		return "<port wrote data>";
+	if (!intact(ops, count, guardOp) || !intact(destinationOf, m, guardWord) || !intact(positionOf, n, guardWord))
+		return "<port wrote past a buffer>";
+	if (result == -2)
+		return "err";
+	if (result != static_cast<std::int64_t>(count) || count > m)
+		return "<port result " + std::to_string(result) + ">";
+	std::size_t const size = m - count;
+	if (!intact(destinationOf, size, guardWord))
+		return "<port wrote a destination above the stack>";
+	data.resize(size);
+	ops.resize(count);
+	std::vector<std::string> dests;
+	for (std::size_t i = 0; i < size; ++i)
+		dests.push_back(showOffset(destinationOf[i]));
+	std::vector<std::string> sources;
+	for (std::size_t j = 0; j < n; ++j)
+		sources.push_back(showOffset(positionOf[j]));
+	return "ok;" + showStack(data) + ";" + showOps(ops) + ";" + join(dests) + ";" + join(sources) + ";" +
+		std::to_string(pending);
+}
+
+std::string identity(std::string const& _model)
+{
+	return _model;
+}
+
 /// A unit of the port
 struct Unit
 {
@@ -234,6 +360,7 @@ struct Unit
 Unit constexpr units[] = {
 	// the C interface does not give the destinations
 	{"bottomup", runBuildBottomUp, withoutLastField},
+	{"pop", runPop, identity},
 };
 
 }

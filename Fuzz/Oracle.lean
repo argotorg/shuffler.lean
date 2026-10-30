@@ -15,6 +15,7 @@ text, so that both implementations parse the same input and print the same outpu
           | "bottomup;" state                                  buildBottomUp
           | "emit;" state                                      Emission.run
           | "permute;" stack ";" offsets                       permute, with the destination of each offset
+          | "pop;" state ";" n                                 n steps of State.pop
           | "plan;" strategy ";" bit ";" stack ";" stack ";" vars
                                                                Planner.run of spillingAllowed, source, target, spills
   state  := stack ";" stack ";" dests ";" vars                 stack, target, mapping and spilled variables
@@ -27,6 +28,10 @@ text, so that both implementations parse the same input and print the same outpu
           | "ok " bit ";" bit ";" vars ";" bytes [";" stack ";" ops ";" sources]
                                                                Planner.run: success, sawWildcardCopy, spills, dropped,
                                                                and on success the emitted stack and the plan
+          | status ";" stack ";" ops ";" dests ";" sources ";" n
+                                                               pop: the state steps, per target offset the position
+                                                               of the slot bound for it or "-", and the pending
+                                                               generations
           | "err"
           | "invalid"                                          the buildBottomUp state is not `Valid`
   status := "ok" | "blocked " offset " " excess
@@ -179,6 +184,19 @@ def runPermute : List String → Except String String
     else .error s!"not a permutation: {dests}"
   | _ => .error "not a permute case"
 
+-- `count` steps of State.pop, with the position of the slot bound for each target offset and the pending
+-- generations
+def runPop : List String → Except String String
+  | [stack, target, dests, vars, count] => do
+    let count ← parseNat count
+    runOnState (fun {source target spills} (s : State source target spills) =>
+      match (List.range count).foldlM (fun s _ => s.pop) s with
+      | .ok s =>
+        let sources := (List.finRange target.length).map fun j => showOffset (s.mapping.symm j)
+        s!"{showResult (.ok ⟨none, s⟩)};{" ".intercalate sources};{s.pending_generations}"
+      | .error e => showErr e) [stack, target, dests, vars]
+  | _ => .error "not a pop case"
+
 def runPlanner : List String → Except String String
   | [strategy, allowed, source, target, vars] => do
     let source ← parseStack source
@@ -217,6 +235,7 @@ def run (line : String) : Except String String :=
     runOnState (fun {source target spills} (s : State source target spills) =>
       showResult (Emission.run source target s.planned_mapping spills)) fields
   | "permute" :: fields => runPermute fields
+  | "pop" :: fields => runPop fields
   | "plan" :: fields => runPlanner fields
   | _ => .error s!"not a case: {line}"
 
