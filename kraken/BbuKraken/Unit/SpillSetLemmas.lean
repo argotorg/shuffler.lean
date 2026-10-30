@@ -265,6 +265,113 @@ theorem Sb.post {f₀ : BitVec 32 → BitVec 8} {res₀ : List (BitVec 8)} {y o 
 end
 
 
+/-! ## The words of `adds` and `queries` -/
+
+-- A copy of `SwapWith.B32.rd32`: the `movl` load of a 4-byte atom.
+theorem rd32_b32 {m : Mem 64} {a : Addr} {v : BitVec 32} {F : MProp 64}
+    (h : (B32 a v ∗ F).get m) : BitVec.ofInt 32 (m.loadInt a 4).get! = v := by
+  unfold B32 at h
+  simp only [Mem.loadInt_eq_of_AtM h (Int.toBytes_length _ _) (by decide), Option.get!_some,
+    BitVec.ofInt_ofBytes_toBytes 32 4 rfl]
+
+section
+variable {m : Mem 64} {a : Addr} {vs : List Word} {P : MProp 64} {x : Word}
+
+theorem arr_wd (h : (Arr a vs ∗ P).get m) (hx : x.toNat < vs.length) :
+    ∃ R, (Wd (a + x * 8#64) vs[x.toNat] ∗ R).get m := by
+  obtain ⟨R, e⟩ := Arr.focus a vs hx
+  rw [e, MProp.sep_assoc] at h
+  exact ⟨_, by rw [fold_slot]; exact h⟩
+
+-- `cmpb $0, 5(%b,%x,8)`: byte 5 of word `x` is the opcode.
+theorem arr_op (h : (Arr a vs ∗ P).get m) (hx : x.toNat < vs.length) :
+    (m.loadInt (a + x * 8#64 + 5#64) 1).isSome = true
+      ∧ BitVec.ofInt 8 (m.loadInt (a + x * 8#64 + 5#64) 1).get!
+        = (StackSlot.ofWord vs[x.toNat]).valueOpcode := by
+  obtain ⟨R, h⟩ := arr_wd h hx
+  exact ⟨Wd.isSome_byte h (j := 5) (by omega), Wd.rdb_byte h (j := 5) (by omega)⟩
+
+-- `cmpb $0, 4(%b,%x,8)`: byte 4 of word `x` is the kind.
+theorem arr_kind (h : (Arr a vs ∗ P).get m) (hx : x.toNat < vs.length) :
+    (m.loadInt (a + x * 8#64 + 4#64) 1).isSome = true
+      ∧ BitVec.ofInt 8 (m.loadInt (a + x * 8#64 + 4#64) 1).get!
+        = (StackSlot.ofWord vs[x.toNat]).kind := by
+  obtain ⟨R, h⟩ := arr_wd h hx
+  exact ⟨Wd.isSome_byte h (j := 4) (by omega), Wd.rdb_byte h (j := 4) (by omega)⟩
+
+-- `movl (%b,%x,8), %r32`: the low 4 bytes of word `x` are the payload.
+theorem arr_pay (h : (Arr a vs ∗ P).get m) (hx : x.toNat < vs.length) :
+    (m.loadInt (a + x * 8#64) 4).isSome = true
+      ∧ BitVec.ofInt 32 (m.loadInt (a + x * 8#64) 4).get!
+        = (StackSlot.ofWord vs[x.toNat]).payload := by
+  obtain ⟨R, h⟩ := arr_wd h hx
+  rw [Wd.split, MProp.sep_assoc] at h
+  exact ⟨B32.isSome h, rd32_b32 h⟩
+end
+
+section
+variable {s : MachineData} {ra : Int64} {adds queries : List Word} {r : Addr} {F : MProp 64}
+  {f : BitVec 32 → BitVec 8} {res : List (BitVec 8)} {y o x2 : Word} {t : MachineData}
+
+theorem Sb.addsArr (h : Sb s ra adds queries r F f res y o x2 t) :
+    ∃ R, (Arr (rdx s) adds ∗ R).get t.dmem :=
+  ⟨_, get_eq h.mem (by unfold Mb Fr; ecancel)⟩
+
+theorem Sb.queriesArr (h : Sb s ra adds queries r F f res y o x2 t) :
+    ∃ R, (Arr (r8 s) queries ∗ R).get t.dmem :=
+  ⟨_, get_eq h.mem (by unfold Mb Fr; ecancel)⟩
+end
+
+/-! ## Specs for two instruction forms
+
+`kvcgen64` has no spec for `movl disp(%b, %i, 8), %r32` and for `andb %r8, %r8`. The proofs are
+the proofs of `mov_load_reg32_spec`/`mov_load_idx8_spec` and of `or_reg8_reg8_spec`. -/
+
+section
+open Std.WP Lean.Order
+open scoped Program.WP
+variable [Host] [FunDecls] {Q : PUnit → MachineData → Prop} {E : Int64 → MachineData → Prop}
+
+-- `movl disp(%b, %i, 8), %r32`: the write clears the upper half.
+theorem movl_idx8_spec (rd b i : Reg64) (d : Int64) :
+    ⦃ fun s =>
+        let a := s.regs.get64 b + s.regs.get64 i * 8#64 + BitVec.ofInt 64 d.toInt
+        (Mem.loadInt s.dmem a 4).isSome = true
+        ∧ Q () { s with
+            regs := s.regs.set64 rd ((BitVec.ofInt 32 (Mem.loadInt s.dmem a 4).get!).zeroExtend 64) } ⦄
+      (Directive.instr (.regular .W64 .W32
+          (.mov (.reg (.low rd .W32))
+            (.regOrMem (.mem ⟨some (.reg b), some ⟨i, .W64⟩, .int64 d⟩)))))
+    ⦃ Q; E ⦄ := by
+  refine ⟨fun s hpre => ?_⟩
+  obtain ⟨hmapped, hpre⟩ := hpre
+  obtain ⟨v, hload⟩ := Option.isSome_iff_exists.mp hmapped
+  refine Program.wp_single fun _ _ _ _ hn _ => ?_
+  simp only [Directive.interp, Instr.interp, Operation.interp, Operand.interp,
+    RegOrMem.interp, MachineData.load, MachineData.set, MachineData.setReg,
+    Reg64s.set_low_W32, AddrExpr.zeroExtend_interp_base_idx8, Width.bytes, hload, Effects.All]
+  exact hn _ (by rwa [hload, Option.get!_some] at hpre)
+
+-- `andb %rs8, %rd8`: the bits above the low byte of `rd` stay.
+theorem andb_spec (asz : Width) (rd rs : Reg64) :
+    ⦃ fun s =>
+        let v := (s.regs.get64 rd).take 8 &&& (s.regs.get64 rs).take 8
+        ∀ af : Bool, Q () { s with
+          regs := s.regs.set64 rd ((s.regs.get64 rd).replaceLow v)
+          status := StatusFlags.from_result v { cf := false, of := false, af } } ⦄
+      (Directive.instr (.regular asz .W8
+          (.and (.reg (.low rd .W8)) (.regOrMem (.reg (.low rs .W8))))))
+    ⦃ Q; E ⦄ := by
+  refine ⟨fun s hpre => ?_⟩
+  refine Program.wp_single fun _ _ _ _ hn _ => ?_
+  simp only [Directive.interp, Instr.interp, Operation.interp, Operand.interp,
+    RegOrMem.interp, MachineData.set, MachineData.setReg,
+    Effects.All]
+  simp only [Reg64s.get_low_W8, Reg64s.set_low_W8]
+  intro af
+  exact hn _ (hpre af)
+end
+
 /-! ## The variant -/
 
 -- The variant of the CFG proof: `na` and `nq` are `addCount` and `queryCount`. The four loops
@@ -291,4 +398,42 @@ def var (na nq : Nat) (l : String) (t : MachineData) : Nat :=
 -- The result byte of the query `q`.
 def g (f : BitVec 32 → BitVec 8) (q : StackSlot) : BitVec 8 :=
   Flat.boolByte (Flat.spillIsSpilled f q)
+
+-- The check of a slot: a literal, a slot that is not a value, and an id below `n` pass.
+theorem idOk_op {n : Word} {x : StackSlot} (h : x.valueOpcode = 0#8) : Flat.idOk n x = true := by
+  simp [Flat.idOk, Flat.isVariable, isLiteralValue, Const, h]
+
+theorem idOk_kind {n : Word} {x : StackSlot} (h : x.kind ≠ 0#8) : Flat.idOk n x = true := by
+  simp [Flat.idOk, Flat.isVariable, Value, h]
+
+theorem idOk_lt {n : Word} {x : StackSlot} (h : x.payload.toNat < n.toNat) :
+    Flat.idOk n x = true := by
+  simp only [Flat.idOk, Bool.not_eq_true', Bool.and_eq_false_iff, decide_eq_false_iff_not,
+    Nat.not_le]
+  exact Or.inr h
+
+theorem idOk_false {n : Word} {x : StackSlot} (hk : x.kind = 0#8) (ho : x.valueOpcode ≠ 0#8)
+    (h : n.toNat ≤ x.payload.toNat) : Flat.idOk n x = false := by
+  simp [Flat.idOk, Flat.isVariable, isLiteralValue, Value, Const, hk, ho, h]
+
+theorem all_take_succ {α : Type} {p : α → Bool} {l : List α} {i : Nat} (hi : i < l.length)
+    (h : (l.take i).all p = true) (hp : p l[i] = true) : (l.take (i + 1)).all p = true := by
+  rw [List.take_succ_eq_append_getElem hi, List.all_append, h, Bool.true_and]
+  simpa using hp
+
+theorem all_false {α : Type} {p : α → Bool} {l : List α} {i : Nat} (hi : i < l.length)
+    (hp : p l[i] = false) : l.all p = false := by
+  rw [Bool.eq_false_iff]
+  intro h
+  rw [List.all_eq_true] at h
+  simp [h _ (List.getElem_mem hi)] at hp
+
+-- A check that fails: `spill_set` returns `-2` and changes nothing.
+theorem setRes_bad {s : MachineData} {f : BitVec 32 → BitVec 8} {adds queries : List Word}
+    {res : List (BitVec 8)}
+    (h : ((adds.map StackSlot.ofWord).all (Flat.idOk (rdi s))
+      && (queries.map StackSlot.ofWord).all (Flat.idOk (rdi s))) = false) :
+    setRes s f adds queries res = (-2#64, f, res) := by
+  simp only [setRes, Flat.spill_set, h, Bool.not_false, ↓reduceIte]
+  rfl
 end Bbu.Unit.SpillSetProof
