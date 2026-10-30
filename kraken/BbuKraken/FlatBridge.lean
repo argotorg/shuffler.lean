@@ -1,5 +1,6 @@
 import BbuKraken.FlatList.Loop
 import BbuKraken.FlatList.Ctor
+import BbuKraken.FlatList.Permute
 
 /-!
 The bridge from the flat model to the list model: for each input that the guard of
@@ -11,7 +12,7 @@ The uninitialized members `u` and the slots of `data` from `m` on do not change 
 
 The proof: the state of the constructor holds the initial state of the list model
 (`FlatList/Ctor.lean`), each iteration of the loop keeps the relation (`FlatList/Step.lean`,
-`FlatList/Loop.lean`), and the final permutation keeps it (`PermR`).
+`FlatList/Loop.lean`), and the final permutation keeps it (`PermR`, `FlatList/Permute.lean`).
 -/
 
 namespace Bbu.Flat
@@ -47,6 +48,6 @@ theorem build_bottom_up_rel {m n : Word} {data target : Vector StackSlot MAX_N}
     Rel (build_bottom_up m n data target dest spilled u)
       (Bbu.buildBottomUp (listEnv n.toNat target spilled) (listSource m.toNat data)
         (listDests m.toNat dest)) :=
-  build_bottom_up_rel_of_perm u hm hn hd sorry
+  build_bottom_up_rel_of_perm u hm hn hd (permR _)
 
 end Bbu.Flat

@@ -9,7 +9,11 @@ import BbuKraken.FlatList.Basic
 import BbuKraken.FlatList.Ctor
 import BbuKraken.FlatList.Leaf
 import BbuKraken.FlatList.Loop
+import BbuKraken.FlatList.PermList
+import BbuKraken.FlatList.PermLoop
+import BbuKraken.FlatList.Permute
 import BbuKraken.FlatList.Produce
+import BbuKraken.FlatList.Regroup
 import BbuKraken.FlatList.Step
 import BbuKraken.FlatModel
 import BbuKraken.FlatModelTest
