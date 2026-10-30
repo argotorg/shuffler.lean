@@ -1,7 +1,9 @@
 // Differential fuzzer for buildMapping, removeSurplus, permute, permuteAtLowestHeight, buildBottomUp,
-// Emission.run and Planner.run: decodes each fuzzer input into one case, runs the C++ shuffler and the
-// Lean model (through the Lean C FFI) on it, and on the first difference prints "case <tab> c++ <tab> lean"
-// to stderr and aborts. The case and result format is documented in Fuzz/Oracle.lean.
+// Emission.run and Planner.run: decodes each fuzzer input into one case and runs the Lean model (through the
+// Lean C FFI), the C++ shuffler of solc and, for the units in Fuzz/port.cpp, the kraken/c port on it. The model
+// is the reference. On the first difference it prints "port <tab> case <tab> port <tab> model" or
+// "solc <tab> case <tab> c++ <tab> lean" to stderr and aborts. The port is checked first. The case and result
+// format is documented in Fuzz/Oracle.lean.
 //
 // The C++ shuffler lives in an anonymous namespace and the Emission steps are private, so this file
 // includes Shuffler.cpp and is compiled with -fno-access-control.
@@ -9,6 +11,9 @@
 #include <libyul/backends/evm/ssa/stack/Shuffler.cpp>
 
 #include <libyul/backends/evm/ssa/InstructionStore.h>
+
+#include "port.h"
+#include "text.h"
 
 #include <lean/lean.h>
 
@@ -62,40 +67,10 @@ std::string runLean(std::string const& _line)
 
 // --- the C++ original ---
 
-std::vector<std::string> split(std::string const& _s, char const _sep)
-{
-	std::vector<std::string> parts;
-	std::stringstream stream(_s);
-	for (std::string part; std::getline(stream, part, _sep);)
-		parts.push_back(part);
-	if (!_s.empty() && _s.back() == _sep)
-		parts.emplace_back();
-	return parts;
-}
-
-std::vector<std::string> words(std::string const& _s)
-{
-	std::vector<std::string> result;
-	std::stringstream stream(_s);
-	for (std::string word; stream >> word;)
-		result.push_back(word);
-	return result;
-}
-
-std::string join(std::vector<std::string> const& _words)
-{
-	std::string result;
-	for (std::size_t i = 0; i < _words.size(); ++i)
-		result += (i > 0 ? " " : "") + _words[i];
-	return result;
-}
-
-std::uint32_t parseNat(std::string const& _s)
-{
-	if (_s.empty() || _s.find_first_not_of("0123456789") != std::string::npos)
-		throw std::invalid_argument("not a number: " + _s);
-	return static_cast<std::uint32_t>(std::stoul(_s));
-}
+using fuzztext::join;
+using fuzztext::parseNat;
+using fuzztext::split;
+using fuzztext::words;
 
 std::string showOffset(std::optional<StackOffset> const& _offset)
 {
@@ -546,12 +521,17 @@ extern "C" int LLVMFuzzerTestOneInput(std::uint8_t const* _data, std::size_t con
 {
 	Input input(_data, _size);
 	std::string const line = makeCase(input);
+	std::string const lean = runLean(line);
+	if (std::optional<port::Check> const port = port::check(line, lean); port && port->port != port->model)
+	{
+		std::cerr << "port\t" << line << '\t' << port->port << '\t' << port->model << '\n';
+		std::abort();
+	}
 	Slots slots;
 	std::string const cpp = runCpp(slots, line);
-	std::string const lean = runLean(line);
 	if (cpp != lean)
 	{
-		std::cerr << line << '\t' << cpp << '\t' << lean << '\n';
+		std::cerr << "solc\t" << line << '\t' << cpp << '\t' << lean << '\n';
 		std::abort();
 	}
 	return 0;

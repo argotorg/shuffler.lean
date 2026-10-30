@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project(shuffler-fuzz C CXX)
+project(shuffler-fuzz C CXX ASM)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -12,6 +12,17 @@ file(STRINGS "${LEAN_SOURCES}" lean_sources)
 file(STRINGS "${LEAN_OBJECTS}" lean_objects)
 
 add_subdirectory(../solidity solidity EXCLUDE_FROM_ALL)
+
+# The kraken/c port: its units in port.cpp, and the asm that the Kraken proofs read. A new unit adds its
+# entry in port.cpp (and its .S file here, if it is not in build_bottom_up.S).
+set(port_asm ${CMAKE_CURRENT_SOURCE_DIR}/../kraken/c/build_bottom_up.S)
+# GNU as assembles the asm, as for kraken/c/bbu_harness
+set_source_files_properties(${port_asm} PROPERTIES COMPILE_OPTIONS "-fno-integrated-as")
+add_library(port STATIC port.cpp ${port_asm})
+
+# The tests of port.cpp against fixed model results. It needs no solc and no Lean.
+add_executable(port_test port_test.cpp)
+target_link_libraries(port_test PRIVATE port)
 
 add_executable(fuzz fuzz.cpp ${lean_sources} ${lean_objects})
 set_source_files_properties(${lean_objects} PROPERTIES EXTERNAL_OBJECT TRUE GENERATED TRUE)
@@ -27,5 +38,5 @@ target_link_options(fuzz PRIVATE -fsanitize=fuzzer)
 target_link_options(fuzz PRIVATE "LINKER:--push-state,--no-as-needed,-lgcc_s,--pop-state")
 target_include_directories(fuzz SYSTEM PRIVATE "${LEAN_PREFIX}/include")
 target_link_directories(fuzz PRIVATE "${LEAN_PREFIX}/lib/lean")
-target_link_libraries(fuzz PRIVATE yul Lake_shared leanshared)
+target_link_libraries(fuzz PRIVATE port yul Lake_shared leanshared)
 set_target_properties(fuzz PROPERTIES BUILD_RPATH "${LEAN_PREFIX}/lib/lean")
