@@ -1,9 +1,10 @@
-import BbuKraken.Unit.Permute.Inv
+import BbuKraken.Unit.Permute.ML
 
 /-!
 # `permute`: the blocks of phase A and B, and the epilogue
 
-`entry`, the prologue, `.LB57`, `.LB54`, `.LB56` and `.LB58`.
+`entry`, the prologue, `.LB57`, `.LB54`, `.LB56` and `.LB58`. The fall of `.LB58` makes the
+model vectors of `.LB71` (`start`).
 -/
 
 open Std.WP Lean.Order
@@ -132,31 +133,6 @@ theorem b_fn [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
   case vc10 =>
     left; simp [V, Names.permute]
 
-
-theorem lt_max {g : G} (hok : g.Ok) {x : Word} (hx : x < g.h.len) : x.toNat < MAX_N :=
-  Nat.lt_of_lt_of_le (BitVec.lt_def.mp hx) (Nat.le_trans hok.len hok.n)
-
--- The destination of a slot below `n` is below `n`.
-theorem dest_lt {g : G} (hp : PermOk (flat g)) {x : Word} (hx : x < g.h.len) :
-    Flat.get g.h.dest x < g.h.len := by
-  have h1 := hp.lt x.toNat (BitVec.lt_def.mp hx)
-  rw [BitVec.ofNat_toNat, BitVec.setWidth_eq] at h1
-  exact BitVec.lt_def.mpr h1
-
-theorem dest_ne_none {g : G} (hp : PermOk (flat g)) {x : Word} (hx : x < g.h.len) :
-    Flat.get g.h.dest x ≠ Flat.NONE := by
-  intro h
-  have h1 := BitVec.lt_def.mp (dest_lt hp hx)
-  rw [h, none_toNat] at h1
-  have := g.h.len.isLt
-  omega
-
--- The variant goal of an edge.
-macro "pm_dec" : tactic => `(tactic| (
-  simp only [V, Names.permute, String.reduceEq, ↓reduceIte, Nat.reducePow, Nat.reduceAdd,
-    Nat.reduceMul, true_or, or_true]
-  try omega))
-
 theorem b_57 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB57" →
       Obl S g F s ra blk := by
@@ -218,6 +194,114 @@ theorem b_54 [Host] [FunDecls] (S g F s ra) :
     refine Kp.ret (hF.pop ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_) (by simp [Lc.length_toList]) hok
       fun t' _ hax => ⟨hQ.1, hQ.2.1, by show (rax t').setWidth 8 = _; rw [hax]; exact hQ.2.2⟩
     all_goals rfl
+
+theorem b_56 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB56" →
+      Obl S g F s ra blk := by
+  pm_block [Obl]
+  intro t ht
+  simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
+  obtain ⟨L, hF, h15, hbx, hlt, hag, hdx⟩ := ht
+  have hx := lt_max hpre.ok hlt
+  have hn := Nat.le_trans hpre.ok.len hpre.ok.n
+  simp only [MAX_N] at hx hn
+  have ha : t.regs.rsp.toBitVec + t.regs.rax.toBitVec * 8#64 + 8208#64
+      = base s + 8208#64 + BitVec.ofNat 64 (8 * t.regs.rax.toBitVec.toNat) := by
+    rw [hF.sp, idx8d]
+  have hag' := agB_step hag hx
+  rw [← hdx, BitVec.add_comm] at hag'
+  have h1 : (1#64 + t.regs.rax.toBitVec).toNat = t.regs.rax.toBitVec.toNat + 1 := by bv_omega
+  kvcgen64
+  all_goals try symexec_norm
+  vc_by_shape
+  | load => exact hF.isSomeP hx ha
+  case vc2 _ hz =>
+    simp only [Bool.not_eq_true', beq_eq_false_iff_ne, hbx, BitVec.zero_eq] at hz
+    cfg_goto
+    · exact Fm.stack (hF.storeP hx ha _ rfl rfl)
+    · simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
+      exact ⟨_, hF.storeP hx ha _ rfl rfl, h15, hbx,
+        by show 1#64 + t.regs.rax.toBitVec < g.h.len; bv_omega, hag'⟩
+    · pm_dec
+  case vc3 _ hz =>
+    simp only [Bool.not_eq_false', beq_iff_eq, hbx, BitVec.zero_eq] at hz
+    have hl : g.h.len = 1#64 + t.regs.rax.toBitVec := by bv_omega
+    simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
+    refine ⟨_, 0, hF.storeP hx ha _ rfl rfl, h15, hbx, ?_, ?_, ?_,
+      fun i hi => absurd hi (Nat.not_lt_zero _), ?_⟩
+    · bv_omega
+    · show t.regs.rsp.toBitVec + 16#64 = _
+      rw [hF.sp]; bv_omega
+    · show t.regs.rsp.toBitVec + 16#64 + t.regs.rbx.toBitVec * 8#64 = _
+      rw [hF.sp, hbx, idx8]
+    · show AgB g.h.len _ g.h.dest
+      rw [hl]; exact hag'
+  case vc4 =>
+    left
+    have hd : (t.regs.rsp.toBitVec + 16#64 + t.regs.rbx.toBitVec * 8#64
+        - (t.regs.rsp.toBitVec + 16#64)).toNat ≤ 8192 := by
+      rw [hbx]; bv_omega
+    pm_dec
+
+theorem b_58 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB58" →
+      Obl S g F s ra blk := by
+  pm_block [Obl]
+  intro t ht
+  simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
+  obtain ⟨L, k, hF, h15, hbx, hk, hax, hdx, hD, hag⟩ := ht
+  have hn := Nat.le_trans hpre.ok.len hpre.ok.n
+  simp only [MAX_N] at hn
+  have hk' : k < MAX_N := by simp only [MAX_N]; omega
+  -- The three stores: `desiredBy[k]`, `c1` and `c0`.
+  have hF1 : Fm S g F s ra { L with D := L.D.set k Flat.NONE hk' }
+      { t with dmem := Mem.storeInt t.dmem t.regs.rax.toBitVec 8 (-1) } :=
+    hF.storeD hk' hax Flat.NONE (by rw [none_toInt]) rfl
+  have ha1 : t.regs.rsp.toBitVec + 8#64 = base s + 8#64 := by rw [hF.sp]
+  have h8 : (8#64).toInt = 8 := by decide
+  have h1 : (1#64).toInt = 1 := by decide
+  have hF2 : Fm S g F s ra { L with D := L.D.set k Flat.NONE hk', c1 := 8#64 }
+      { t with dmem := ((Mem.storeInt t.dmem t.regs.rax.toBitVec 8 (-1)).storeInt
+        (t.regs.rsp.toBitVec + 8#64) 8 8) } :=
+    hF1.storeC1 ha1 8#64 (by rw [h8]) rfl
+  kvcgen64
+  all_goals try symexec_norm
+  vc_by_shape
+  | load =>
+    first
+    | with_reducible exact hF.isSomeD hk' hax
+    | with_reducible exact hF1.isSomeC1 ha1
+    | with_reducible exact hF2.isSomeC0 hF.sp
+  case vc2 _ hz =>
+    simp only [Bool.not_eq_true', beq_eq_false_iff_ne, BitVec.zero_eq] at hz
+    have hd1 : (t.regs.rdx.toBitVec - (8#64 + t.regs.rax.toBitVec)).toNat
+        < (t.regs.rdx.toBitVec - t.regs.rax.toBitVec).toNat := by
+      rw [hax, hdx]; bv_omega
+    rw [hax, hdx] at hz
+    cfg_goto
+    · exact Fm.stack (hF1.next rfl rfl)
+    · simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
+      refine ⟨_, k + 1, hF1.next rfl rfl, h15, hbx, by bv_omega, ?_, hdx, none_step hk' hD, hag⟩
+      show 8#64 + t.regs.rax.toBitVec = _
+      rw [hax]; bv_omega
+    · pm_dec
+  case vc5 _ hz =>
+    simp only [Bool.not_eq_false', beq_iff_eq, BitVec.zero_eq] at hz
+    rw [hax, hdx] at hz
+    have hlen : g.h.len.toNat = k + 1 := by bv_omega
+    obtain ⟨p0, hrg, hP0, hD0, hlt0⟩ := start hpre.ok hpre.args.2 hag
+      (fun i hi => none_step hk' hD i (by rw [← hlen]; exact BitVec.lt_def.mp hi))
+    have hF3 : Fm S g F s ra { L with D := L.D.set k Flat.NONE hk', c1 := 8#64, c0 := 1#64 }
+        { t with dmem := (((Mem.storeInt t.dmem t.regs.rax.toBitVec 8 (-1)).storeInt
+          (t.regs.rsp.toBitVec + 8#64) 8 8).storeInt t.regs.rsp.toBitVec 8 1) } :=
+      hF2.storeC0 hF.sp 1#64 (by rw [h1]) rfl
+    cfg_goto
+    · exact Fm.stack (hF3.next rfl rfl)
+    · simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
+      refine ⟨_, 0, p0, _, ⟨hF3.next rfl rfl, by bv_omega, rfl,
+        by show (1#64 : Word) = 0 + 1; decide, by show (8#64 : Word) = (0 + 1) * 8#64; decide,
+        by show t.regs.rsp.toBitVec + 16#64 = _; rw [hF.sp], h15, hbx⟩, hrg, hP0, hD0, hlt0⟩
+    · pm_dec
 
 end Permute
 end Bbu.Unit
