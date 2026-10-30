@@ -54,4 +54,5 @@ import BbuKraken.Unit.Produce
 import BbuKraken.Unit.Push
 import BbuKraken.Unit.ShallowestCopy
 import BbuKraken.Unit.SwapWith
+import BbuKraken.Unit.SwapWithTest
 import BbuKraken.Unit.Top

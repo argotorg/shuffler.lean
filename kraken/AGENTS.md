@@ -178,7 +178,10 @@ Notes:
 - The printed text of `st` does not elaborate back to the same term (the flags print with `Nat`
   casts). Use the definitions, not the text.
 - `symexec_norm` is the default normal form: the `kvcgen64` register lemmas, literal evaluation and
-  `ofInt (toInt x) = x`, `at *`.
+  `ofInt (toInt x) = x`, `at *`. `symexec_norm at loc` normalizes only `loc`. With large
+  hypotheses in many goals, use `symexec_norm at ⊢` and normalize the branch hypotheses that a case
+  uses. In `Unit/SwapWith.lean` (35 goals, 15 sep hypotheses), this changes the proof from about
+  130k to about 90k heartbeats.
 
 ### ProofKit/Idioms.lean
 
@@ -266,6 +269,8 @@ step, move it to `Kit.lean` or `ProofKit/`, with a test.
 - `BbuKraken/Fn/Loop/Defs.lean`: `loop_case`, `loop_goto`.
 - `BbuKraken/Link.lean`: `head_tac`, `at_tac`.
 - `BbuKraken/Top.lean`: `top_nrm`.
+- `BbuKraken/Unit/SwapWith.lean`: `mem_load`, a `sep_load` that tries only the hypotheses on the
+  memory of the load. Tests in `Unit/SwapWithTest.lean`.
 
 ## Procedure for a new function proof
 

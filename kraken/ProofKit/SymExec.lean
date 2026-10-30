@@ -23,8 +23,12 @@ open Lean Meta Elab Term Command Tactic
 namespace ProofKit
 
 /-- The default normal form of a state: the `kvcgen64` rewrite set, literal
-`Int64`/`BitVec` evaluation, and `ofInt (toInt x) = x`. -/
-macro "symexec_norm" : tactic => `(tactic| simp only [
+`Int64`/`BitVec` evaluation, and `ofInt (toInt x) = x`, `at *` or at the given location. -/
+macro "symexec_norm" loc:(ppSpace Lean.Parser.Tactic.location)? : tactic => do
+  let loc ← match loc with
+    | some l => pure l
+    | none => `(Lean.Parser.Tactic.location| at *)
+  `(tactic| simp only [
   Reg64s.get64_rax, Reg64s.get64_rbx, Reg64s.get64_rcx, Reg64s.get64_rdx, Reg64s.get64_rsi,
   Reg64s.get64_rdi, Reg64s.get64_rsp, Reg64s.get64_rbp, Reg64s.get64_r8, Reg64s.get64_r9,
   Reg64s.get64_r10, Reg64s.get64_r11, Reg64s.get64_r12, Reg64s.get64_r13, Reg64s.get64_r14,
@@ -39,7 +43,7 @@ macro "symexec_norm" : tactic => `(tactic| simp only [
   CondCode.interp_z, CondCode.interp_nz, CondCode.interp_c, CondCode.interp_nc,
   CondCode.interp_a, CondCode.interp_be, StatusFlags.zf_from_result, StatusFlags.cf_from_result,
   StatusFlags.from_result.Remaining.cf_mk, UInt64.ofBitVec_toBitVec,
-  BitVec.reduceToNat] at *)
+  BitVec.reduceToNat] $loc)
 
 /-- The directive cells of a program literal. -/
 partial def directives (e : Expr) (acc : Array Expr := #[]) : MetaM (Array Expr) := do

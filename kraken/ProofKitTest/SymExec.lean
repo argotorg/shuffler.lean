@@ -171,4 +171,32 @@ example (s : MachineData) : (dead.f.x2.st s).regs.rbx.toBitVec = 3#64 := by
 #guard_msgs in
 #symexec sx from ".L9"
 
+/-! `symexec_norm at loc`: only the hypotheses and the goal of `loc`. With no location, `at *`. -/
+
+example (x y : BitVec 64) (h : x + 0#64 = y) (_h' : y + 0#64 = x) : x + 0#64 = y := by
+  symexec_norm
+  guard_hyp h :ₛ x = y
+  guard_hyp _h' :ₛ y = x
+  guard_target =ₛ x = y
+  exact h
+
+example (x y : BitVec 64) (h : x + 0#64 = y) (_h' : y + 0#64 = x) : x + 0#64 = y := by
+  symexec_norm at ⊢
+  guard_hyp h :ₛ x + 0#64 = y
+  guard_hyp _h' :ₛ y + 0#64 = x
+  guard_target =ₛ x = y
+  exact (BitVec.add_zero x).symm.trans h
+
+example (x y : BitVec 64) (h : x + 0#64 = y) (_h' : y + 0#64 = x) : x + 0#64 = y := by
+  symexec_norm at h
+  guard_hyp h :ₛ x = y
+  guard_hyp _h' :ₛ y + 0#64 = x
+  guard_target =ₛ x + 0#64 = y
+  rw [h]; exact BitVec.add_zero y
+
+-- Negative: `_h` is not in the location, and no other location changes, so `simp` fails.
+example (x y : BitVec 64) (_h : x + 0#64 = y) (h' : y = x) : x = y := by
+  fail_if_success symexec_norm at h' ⊢
+  exact h'.symm
+
 end ProofKitTest.SymExec
