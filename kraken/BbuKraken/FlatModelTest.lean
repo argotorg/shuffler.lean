@@ -4,10 +4,11 @@ import BbuKraken.FlatModel
 Tests of `FlatModel.lean`: each unit on small states, the paths that fail
 (`Status.assertionFailed` and `Status.blocked`), the size_t wraps, the bounds of
 `build_bottom_up` (`n = 0`, `m = n`, `n = MAX_N`, `m > n`, `n > MAX_N`), and the
-agreement with the list model `Bbu.buildBottomUp` (the PR31 semantics) on all inputs with
-`n ≤ 3` (32229) and on 15 deep stacks. The members that the constructor does not initialize
-get two contents (the second only for `n ≤ 2`, for time). `test/bbu_diff.sh` compares
-`build_bottom_up` with the PR31 model and the C++ on more states.
+agreement with the list model `Bbu.buildBottomUp` (the solc `permute`) on all inputs with
+`n ≤ 3` (32229) and on 15 deep stacks, with the stack and the operations at a block. The
+members that the constructor does not initialize get two contents, for `n ≤ 2`, and the
+results are the same. `test/bbu_diff.sh` compares `build_bottom_up` with the PR31 model and
+the C++ on more states.
 -/
 
 namespace Bbu.Flat.Test
@@ -262,9 +263,8 @@ def bbuOf (dests : List Nat) : Word × Option St :=
 
 /-! ## Agreement with the list model -/
 
--- The result of the list model, or of `build_bottom_up`: the final stack and the
--- operations, the blocked slot with the stack and the operations at the block, or an
--- assertion.
+-- The result of the list model `buildBottomUp`, or of `build_bottom_up`: the final stack and the operations, the
+-- blocked slot with the stack and the operations at the block, or an assertion.
 inductive Out where
   | ok (stack : List StackSlot) (trace : List Op)
   | blocked (pos excess : Nat) (stack : List StackSlot) (trace : List Op)
@@ -322,6 +322,9 @@ def cases : List (List StackSlot × List StackSlot × List Nat) :=
 -- The other content of the uninitialized members, for `n ≤ 2` only (time).
 #guard (cases.filter (·.2.1.length ≤ 2)).all fun (s, t, d) =>
   same (flatOut u2 (vec []) s t d [1]) (listOut s t d [1])
+-- The result does not depend on the other content, for `n ≤ 2` only (time).
+#guard (cases.filter (·.2.1.length ≤ 2)).all fun (s, t, d) =>
+  same (flatOut u2 (vec []) s t d [1]) (flatOut u1 junkSlots s t d [1])
 
 -- Deep stacks: the swap reach, the dup reach and the urgent copies.
 def deepCases : List (List StackSlot × List StackSlot × List Nat) :=
