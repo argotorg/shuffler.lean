@@ -13,7 +13,8 @@ example : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm ++ pro
     ++ emissionPopAsm ++ spillSetAddAsm ++ spillSetAsm ++ removeSurplusAsm ++ removeSurplusEntryAsm
     ++ permuteEntryAsm ++ permuteAtLowestHeightAsm ++ permuteAtLowestHeightEntryAsm
     ++ mapAsm ++ closestCopyAsm ++ mapInPlaceAsm ++ mapClosestCopiesAsm ++ mapWildcardSlotCopiesAsm
-    ++ keepWildcardSlotsAsm ++ absorbSurplusAsm ++ buildMappingAsm := by
+    ++ keepWildcardSlotsAsm ++ absorbSurplusAsm ++ buildMappingAsm ++ isRetainedAsm
+    ++ hasOtherRetainedCopyAsm ++ isDemandedAsm ++ classifyAsm ++ resolveAsm ++ resolveEntryAsm := by
   rfl
 
 -- `bbuParseFile` reads `leaq disp(,%i,8), %r` as the operand with no base.
@@ -47,7 +48,8 @@ example : (bbuAsm.filter fun
      .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩))] := by
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .r14 .W64) ⟨none, some ⟨.rcx, .W64⟩, .int64 0⟩))] := by
   rfl
 
 -- `bbuParseFn` reads the file of the name.
@@ -72,6 +74,12 @@ example : (mapWildcardSlotCopiesAsm.head? = some (.label Names.mapWildcardSlotCo
 example : (keepWildcardSlotsAsm.head? = some (.label Names.keepWildcardSlots)) := by rfl
 example : (absorbSurplusAsm.head? = some (.label Names.absorbSurplus)) := by rfl
 example : (buildMappingAsm.head? = some (.label Names.build_mapping)) := by rfl
+example : (isRetainedAsm.head? = some (.label Names.isRetained)) := by rfl
+example : (hasOtherRetainedCopyAsm.head? = some (.label Names.hasOtherRetainedCopy)) := by rfl
+example : (isDemandedAsm.head? = some (.label Names.isDemanded)) := by rfl
+example : (classifyAsm.head? = some (.label Names.classify)) := by rfl
+example : (resolveAsm.head? = some (.label Names.resolve)) := by rfl
+example : (resolveEntryAsm.head? = some (.label Names.resolveEntry)) := by rfl
 
 end Bbu
 

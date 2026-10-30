@@ -1365,3 +1365,259 @@ extern "C" std::int64_t build_mapping(
 	*saw = builder.sawWildcardCopy();
 	return 0;
 }
+
+namespace
+{
+
+/// How Planner::resolve ends: the excess is dropped; no candidate is left to drop (Shuffler.cpp's false); or a failed
+/// assertion. Not Status: its Blocked has another meaning.
+enum class [[nodiscard]] Resolution : std::uint8_t { Dropped, Stuck, AssertionFailed };
+
+/// How a slot can be regenerated after a drop, cheapest first: not needed or for free, pushed, reloaded from an
+/// existing spill, duplicated from another copy, reloaded after a planned spill. Shuffler.cpp's classes 0 to 4; the
+/// order of the values is the order of the classes.
+enum class Class : std::uint8_t { Free = 0, Push = 1, Reload = 2, Copy = 3, Spill = 4 };
+
+template<>
+struct Niche<Class>
+{
+	static constexpr Class value{0xff};
+};
+
+/// The part of Shuffler.cpp's Planner that resolve uses, the Lean model's Planner.State with the source and the
+/// target: the spill set, spillingAllowed and the dropped bytes are the caller's. The lambdas of Shuffler.cpp's
+/// resolve are units.
+class Planner
+{
+public:
+	Planner(
+		StackSlot const* const _source,
+		std::size_t const _sourceSize,
+		StackSlot const* const _target,
+		std::size_t const _targetSize,
+		SpillSet const _spills,
+		bool const _spillingAllowed,
+		std::uint8_t* const _dropped
+	):
+		m_source(_source),
+		m_sourceSize(_sourceSize),
+		m_target(_target),
+		m_targetSize(_targetSize),
+		m_spills(_spills),
+		m_spillingAllowed(_spillingAllowed),
+		m_dropped(_dropped)
+	{}
+
+	/// Drops slots above the blocked one until it is within reach, cheapest regeneration first: slots whose
+	/// target is a wildcard, freely generatable ones, spilled ones, values with another retained copy, and
+	/// finally values that get a planned spill. Function return labels cannot be regenerated and are never
+	/// dropped.
+	///
+	/// `_mapping` is the plan, and `_current` the working mapping of a stack of `_currentSize` slots, with
+	/// `_blocked.offset` below `_currentSize`. The drops and spills of the passes before a Stuck or a failed
+	/// assertion stay, as in the Lean model. Each pass classifies at most m candidates, and a classification costs
+	/// O(m + n), so resolve costs O(excess * m * (m + n)); it stops after at most m + 1 passes.
+	Resolution resolve(
+		Mapping const& _mapping,
+		Emission::Blocked _blocked,
+		Mapping const& _current,
+		std::size_t _currentSize
+	);
+
+private:
+	static bool isRetained(Mapping const& _mapping, StackOffset _sourceOffset);
+	bool hasOtherRetainedCopy(
+		Mapping const& _mapping,
+		OffsetArray<std::uint8_t> const& _droppedNow,
+		StackOffset _offset
+	) const;
+	/// this slot is needed somewhere in the target
+	bool isDemanded(StackSlot _slot) const;
+	/// The class of the slot at `_offset`, which has a destination, or none if it cannot be dropped
+	Optional<Class> classify(
+		Mapping const& _mapping,
+		OffsetArray<std::uint8_t> const& _droppedNow,
+		StackOffset _offset
+	) const;
+
+	StackSlot const* m_source;
+	std::size_t m_sourceSize;
+	StackSlot const* m_target;
+	std::size_t m_targetSize;
+	SpillSet m_spills;
+	bool m_spillingAllowed;
+	std::uint8_t* m_dropped;
+};
+
+// `used` and this place make g++ emit the units of Planner after build_mapping, so the asm of the units above and
+// their labels stay
+[[gnu::used]] UNIT bool Planner::isRetained(Mapping const& _mapping, StackOffset const _sourceOffset)
+{
+	return _mapping.destinationOf(_sourceOffset).has_value();
+}
+
+[[gnu::used]] UNIT bool Planner::hasOtherRetainedCopy(
+	Mapping const& _mapping,
+	OffsetArray<std::uint8_t> const& _droppedNow,
+	StackOffset const _offset
+) const
+{
+	for (StackOffset sourceOffset{0}; sourceOffset < m_sourceSize; ++sourceOffset.value)
+		if (
+			sourceOffset != _offset &&
+			m_source[sourceOffset.value] == m_source[_offset.value] &&  // same value
+			isRetained(_mapping, sourceOffset) &&
+			_droppedNow[sourceOffset] == 0  // not yet dropped
+		)
+			return true;
+	return false;
+}
+
+[[gnu::used]] UNIT bool Planner::isDemanded(StackSlot const _slot) const
+{
+	for (std::size_t j = 0; j < m_targetSize; ++j)
+		if (!m_target[j].isJunk() && m_target[j] == _slot)
+			return true;
+	return false;
+}
+
+[[gnu::used]] UNIT Optional<Class> Planner::classify(
+	Mapping const& _mapping,
+	OffsetArray<std::uint8_t> const& _droppedNow,
+	StackOffset const _offset
+) const
+{
+	StackSlot const slot = m_source[_offset.value];
+	if (slot.isFunctionReturnLabel())
+		return std::nullopt;
+	bool const regenerable = slot.isJunk() || canBeFreelyGenerated(slot) || isSpilled(slot, m_spills) ||
+		hasOtherRetainedCopy(_mapping, _droppedNow, _offset);
+	if (m_target[_mapping.destinationOf(_offset)->value].isJunk() && (regenerable || !isDemanded(slot)))
+		return Class::Free;
+	if (canBeFreelyGenerated(slot))
+		return Class::Push;
+	if (isSpilled(slot, m_spills))
+		return Class::Reload;
+	if (hasOtherRetainedCopy(_mapping, _droppedNow, _offset))
+		return Class::Copy;
+	if (m_spillingAllowed && isVariable(slot))
+		return Class::Spill;
+	return std::nullopt;
+}
+
+[[gnu::used]] UNIT Resolution Planner::resolve(
+	Mapping const& _mapping,
+	Emission::Blocked const _blocked,
+	Mapping const& _current,
+	std::size_t const _currentSize
+)
+{
+	OffsetArray<std::uint8_t> droppedNow;
+	for (StackOffset sourceOffset{0}; sourceOffset < m_sourceSize; ++sourceOffset.value)
+		droppedNow[sourceOffset] = 0;
+
+	// retained slots above the blocked one; the source offset of a retained slot is the one its destination
+	// maps back to, while generated and surplus slots have no source. The working mapping binds each destination
+	// once, so the candidates are distinct, and there are fewer than _currentSize.
+	OffsetArray<StackOffset> candidates;
+	std::size_t candidateCount = 0;
+	for (StackOffset pos{_blocked.offset.value + 1}; pos < _currentSize; ++pos.value)
+		if (Optional<StackOffset> const destination = _current.destinationOf(pos))
+			if (Optional<StackOffset> const source = _mapping.positionOf(*destination))
+			{
+				// the Lean model checks this in classify and in the loop below, where it holds for each candidate
+				if (!_mapping.destinationOf(*source))  // Lean
+					return Resolution::AssertionFailed;
+				candidates[StackOffset{candidateCount++}] = *source;
+			}
+
+	for (std::size_t dropped = 0; dropped < _blocked.excess; ++dropped)
+	{
+		// classes can shift as copies get dropped, so pick one victim at a time
+		Optional<StackOffset> best = std::nullopt;
+		Class bestClass = Class::Free;
+		for (StackOffset i{0}; i < candidateCount; ++i.value)
+		{
+			StackOffset const offset = candidates[i];
+			if (droppedNow[offset] != 0)
+				continue;
+			Optional<Class> const cls = classify(_mapping, droppedNow, offset);
+			if (!cls)
+				continue;
+			// within a class prefer the slot whose target is highest
+			if (
+				!best ||
+				*cls < bestClass ||
+				(*cls == bestClass && *_mapping.destinationOf(offset) > *_mapping.destinationOf(*best))
+			)
+			{
+				best = offset;
+				bestClass = *cls;
+			}
+		}
+		if (!best)
+			return Resolution::Stuck;  // couldn't drop anything
+		if (bestClass == Class::Spill && m_spills.add(m_source[best->value]) != Status::Done)
+			return Resolution::AssertionFailed;
+		droppedNow[*best] = 1;
+		m_dropped[best->value] = 1;
+	}
+	return Resolution::Dropped;
+}
+
+}
+
+/// Shuffler.cpp's Planner::resolve, the Lean model's Planner.resolve, for a source stack of m slots, a target of n
+/// slots and a working stack of h slots: plan[i] is the target offset of source slot i in the plan, or none (SIZE_MAX),
+/// and current[pos] the target offset of the slot at pos of the working stack in the working mapping, or none. The
+/// slot at offset is blocked by excess slots. The variable id is spilled if spilled[id] is not 0, allowed is
+/// spillingAllowed, 0 or 1, and dropped[i] is not 0 if source slot i is scheduled to be popped. Sets the dropped byte of
+/// each victim to 1, and the spill byte of each new spill to 1. Returns 0 when it dropped excess slots, -1 when no slot
+/// is left to drop, or -2 for a failed assertion. Then the drops and spills of the passes before stay.
+///
+/// plan holds m and current h distinct offsets below n, spilled has idCount bytes, and dropped has m bytes. m, n, h <=
+/// 1024, offset < h, allowed <= 1 and the id of each variable of the source is below idCount, else the result is -2 and
+/// nothing is written.
+extern "C" std::int64_t resolve(
+	std::uint64_t const m,
+	std::uint64_t const n,
+	StackSlot const* const source,
+	StackSlot const* const target,
+	Optional<StackOffset> const* const plan,
+	std::uint64_t const h,
+	Optional<StackOffset> const* const current,
+	std::uint64_t const offset,
+	std::uint64_t const excess,
+	std::uint8_t* const spilled,
+	std::uint64_t const idCount,
+	std::uint8_t const allowed,
+	std::uint8_t* const dropped
+)
+{
+	// the mappings have room for maxStackSize offsets, the blocked slot is on the working stack, and only the
+	// variables of the source are spilled
+	if (m > maxStackSize || n > maxStackSize || h > maxStackSize || offset >= h || allowed > 1)
+		return -2;
+	for (std::uint64_t i = 0; i < m; ++i)
+		if (isVariable(source[i]) && source[i].payload >= idCount)
+			return -2;
+	Mapping mapping{m, n};
+	for (StackOffset pos{0}; pos < m; ++pos.value)
+		if (Optional<StackOffset> const destination = plan[pos.value])
+			mapping.bind(pos, *destination);
+	Mapping working{h, n};
+	for (StackOffset pos{0}; pos < h; ++pos.value)
+		if (Optional<StackOffset> const destination = current[pos.value])
+			working.bind(pos, *destination);
+	Planner planner{source, m, target, n, SpillSet{spilled}, allowed == 1, dropped};
+	switch (planner.resolve(mapping, Emission::Blocked{StackOffset{offset}, excess}, working, h))
+	{
+	case Resolution::Dropped:
+		return 0;
+	case Resolution::Stuck:
+		return -1;
+	case Resolution::AssertionFailed:
+		return -2;
+	}
+	__builtin_unreachable();
+}

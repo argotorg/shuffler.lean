@@ -2,9 +2,9 @@ module
 
 /-!
 The symbol names of the functions of `c/build_bottom_up.cpp`. The members of `Emission`,
-`SpillSet` and `MappingBuilder` have the names that g++ gives them (the Itanium C++ ABI
+`SpillSet`, `MappingBuilder` and `Planner` have the names that g++ gives them (the Itanium C++ ABI
 mangling); the entries `build_bottom_up`, `emission_pop`, `spill_set`, `remove_surplus`,
-`permute`, `permute_at_lowest_height` and `build_mapping` are `extern "C"`. These are the
+`permute`, `permute_at_lowest_height`, `build_mapping` and `resolve` are `extern "C"`. These are the
 names in `c/build_bottom_up.S`, in the binary, and in `c/bbu/NAME.S`. We do not rename them
 in the asm: each change to the compiler output is one more step between the proved program
 and the program that runs. Each name is here once; `BbuKraken.Asm`, `BbuKraken.Link` and the
@@ -75,5 +75,22 @@ namespace Bbu.Names
   "_ZN12_GLOBAL__N_18Emission21permuteAtLowestHeightEv"
 /-- `permute_at_lowest_height`, `extern "C"` -/
 @[expose] public def permute_at_lowest_height : String := "permute_at_lowest_height"
+
+/-- `Planner::isRetained(Mapping const&, StackOffset)`, static -/
+@[expose] public def isRetained : String :=
+  "_ZN12_GLOBAL__N_17Planner10isRetainedERKNS_7MappingE11StackOffset"
+/-- `Planner::hasOtherRetainedCopy(Mapping const&, OffsetArray<uint8_t> const&, StackOffset) const` -/
+@[expose] public def hasOtherRetainedCopy : String :=
+  "_ZNK12_GLOBAL__N_17Planner20hasOtherRetainedCopyERKNS_7MappingERKNS_11OffsetArrayIhEE11StackOffset"
+/-- `Planner::isDemanded(StackSlot) const` -/
+@[expose] public def isDemanded : String := "_ZNK12_GLOBAL__N_17Planner10isDemandedE9StackSlot"
+/-- `Planner::classify(Mapping const&, OffsetArray<uint8_t> const&, StackOffset) const` -/
+@[expose] public def classify : String :=
+  "_ZNK12_GLOBAL__N_17Planner8classifyERKNS_7MappingERKNS_11OffsetArrayIhEE11StackOffset"
+/-- `Planner::resolve(Mapping const&, Emission::Blocked, Mapping const&, size_t)` -/
+@[expose] public def resolve : String :=
+  "_ZN12_GLOBAL__N_17Planner7resolveERKNS_7MappingENS_8Emission7BlockedES3_m"
+/-- `resolve`, `extern "C"`. `Names.resolve` is the member `Planner::resolve`. -/
+@[expose] public def resolveEntry : String := "resolve"
 
 end Bbu.Names

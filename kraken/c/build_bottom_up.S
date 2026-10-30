@@ -2502,4 +2502,535 @@ build_mapping:
 	movq	$-2, %rax
 	jmp	.LB523
 	.size	build_mapping, .-build_mapping
+	.align 2
+	.type	_ZN12_GLOBAL__N_17Planner10isRetainedERKNS_7MappingE11StackOffset, @function
+_ZN12_GLOBAL__N_17Planner10isRetainedERKNS_7MappingE11StackOffset:
+	cmpq	$-1, (%rdi,%rsi,8)
+	setne	%al
+	ret
+	.size	_ZN12_GLOBAL__N_17Planner10isRetainedERKNS_7MappingE11StackOffset, .-_ZN12_GLOBAL__N_17Planner10isRetainedERKNS_7MappingE11StackOffset
+	.align 2
+	.type	_ZNK12_GLOBAL__N_17Planner20hasOtherRetainedCopyERKNS_7MappingERKNS_11OffsetArrayIhEE11StackOffset, @function
+_ZNK12_GLOBAL__N_17Planner20hasOtherRetainedCopyERKNS_7MappingERKNS_11OffsetArrayIhEE11StackOffset:
+	pushq	%r15
+	pushq	%r14
+	pushq	%r13
+	pushq	%r12
+	pushq	%rbp
+	pushq	%rbx
+	subq	$8, %rsp
+	movq	%rdx, (%rsp)
+	movq	8(%rdi), %r12
+	testq	%r12, %r12
+	je	.LB546
+	movq	%rdi, %r13
+	movq	%rsi, %r15
+	movq	%rcx, %rbp
+	leaq	0(,%rcx,8), %r14
+	movl	$0, %ebx
+	jmp	.LB545
+	.p2align 4
+.LB544:
+	addq	$1, %rbx
+	cmpq	%r12, %rbx
+	je	.LB549
+.LB545:
+	cmpq	%rbp, %rbx
+	je	.LB544
+	movq	0(%r13), %rdx
+	movq	(%rdx,%rbx,8), %rax
+	xorq	(%rdx,%r14), %rax
+	salq	$16, %rax
+	jne	.LB544
+	movq	%rbx, %rsi
+	movq	%r15, %rdi
+	call	_ZN12_GLOBAL__N_17Planner10isRetainedERKNS_7MappingE11StackOffset
+	testb	%al, %al
+	je	.LB544
+	movq	(%rsp), %rcx
+	cmpb	$0, (%rcx,%rbx)
+	jne	.LB544
+	jmp	.LB542
+.LB549:
+	movl	$0, %eax
+.LB542:
+	addq	$8, %rsp
+	popq	%rbx
+	popq	%rbp
+	popq	%r12
+	popq	%r13
+	popq	%r14
+	popq	%r15
+	ret
+.LB546:
+	movl	$0, %eax
+	jmp	.LB542
+	.size	_ZNK12_GLOBAL__N_17Planner20hasOtherRetainedCopyERKNS_7MappingERKNS_11OffsetArrayIhEE11StackOffset, .-_ZNK12_GLOBAL__N_17Planner20hasOtherRetainedCopyERKNS_7MappingERKNS_11OffsetArrayIhEE11StackOffset
+	.align 2
+	.type	_ZNK12_GLOBAL__N_17Planner10isDemandedE9StackSlot, @function
+_ZNK12_GLOBAL__N_17Planner10isDemandedE9StackSlot:
+	movq	24(%rdi), %r8
+	testq	%r8, %r8
+	je	.LB554
+	movq	16(%rdi), %rcx
+	movl	$0, %eax
+	jmp	.LB553
+	.p2align 4
+.LB552:
+	addq	$1, %rax
+	cmpq	%r8, %rax
+	je	.LB557
+.LB553:
+	cmpb	$1, 4(%rcx,%rax,8)
+	je	.LB552
+	movq	%rsi, %rdx
+	xorq	(%rcx,%rax,8), %rdx
+	salq	$16, %rdx
+	jne	.LB552
+	movl	$1, %eax
+	ret
+.LB557:
+	movl	$0, %eax
+	ret
+.LB554:
+	movl	$0, %eax
+	ret
+	.size	_ZNK12_GLOBAL__N_17Planner10isDemandedE9StackSlot, .-_ZNK12_GLOBAL__N_17Planner10isDemandedE9StackSlot
+	.align 2
+	.type	_ZNK12_GLOBAL__N_17Planner8classifyERKNS_7MappingERKNS_11OffsetArrayIhEE11StackOffset, @function
+_ZNK12_GLOBAL__N_17Planner8classifyERKNS_7MappingERKNS_11OffsetArrayIhEE11StackOffset:
+	pushq	%r15
+	pushq	%r14
+	pushq	%r13
+	pushq	%r12
+	pushq	%rbp
+	pushq	%rbx
+	subq	$8, %rsp
+	movq	%rdi, %rbx
+	movq	%rdx, %r14
+	movq	(%rdi), %rax
+	leaq	(%rax,%rcx,8), %rax
+	movq	(%rax), %rdi
+	movzbl	4(%rax), %r13d
+	movl	$-1, %edx
+	cmpb	$3, %r13b
+	je	.LB577
+	movq	%rsi, %r12
+	movq	%rcx, %rbp
+	movq	%rdi, %r15
+	cmpb	$1, %r13b
+	je	.LB560
+	movl	(%rax), %ecx
+	movl	%ecx, 4(%rsp)
+	movzbl	5(%rax), %eax
+	movb	%al, 3(%rsp)
+	testb	%al, %al
+	je	.LB561
+	cmpb	$2, %r13b
+	jne	.LB580
+.LB561:
+	movq	(%r12,%rbp,8), %rdx
+	movq	16(%rbx), %rax
+	cmpb	$1, 4(%rax,%rdx,8)
+	je	.LB565
+.LB566:
+	leal	-1(%r13), %eax
+	cmpb	$1, %al
+	jbe	.LB567
+	cmpb	$0, 3(%rsp)
+	je	.LB567
+.LB570:
+	testb	%r13b, %r13b
+	jne	.LB569
+.LB568:
+	movl	4(%rsp), %eax
+	movq	32(%rbx), %rcx
+	movl	$2, %edx
+	cmpb	$0, (%rcx,%rax)
+	jne	.LB577
+	movq	%rbp, %rcx
+	movq	%r14, %rdx
+	movq	%r12, %rsi
+	movq	%rbx, %rdi
+	call	_ZNK12_GLOBAL__N_17Planner20hasOtherRetainedCopyERKNS_7MappingERKNS_11OffsetArrayIhEE11StackOffset
+	movl	$3, %edx
+	testb	%al, %al
+	jne	.LB577
+	cmpb	$1, 40(%rbx)
+	sbbl	%edx, %edx
+	orl	$4, %edx
+	jmp	.LB577
+.LB580:
+	testb	%r13b, %r13b
+	jne	.LB562
+	movl	%ecx, %eax
+	movq	32(%rbx), %rdx
+	cmpb	$0, (%rdx,%rax)
+	jne	.LB563
+	movq	(%rsi,%rbp,8), %rdx
+	movq	16(%rbx), %rax
+	cmpb	$1, 4(%rax,%rdx,8)
+	je	.LB571
+	jmp	.LB568
+.LB569:
+	movq	%rbp, %rcx
+	movq	%r14, %rdx
+	movq	%r12, %rsi
+	movq	%rbx, %rdi
+	call	_ZNK12_GLOBAL__N_17Planner20hasOtherRetainedCopyERKNS_7MappingERKNS_11OffsetArrayIhEE11StackOffset
+	cmpb	$1, %al
+	sbbl	%edx, %edx
+	orl	$3, %edx
+	jmp	.LB577
+.LB560:
+	movq	(%rsi,%rcx,8), %rdx
+	movq	16(%rbx), %rax
+	cmpb	$1, 4(%rax,%rdx,8)
+	je	.LB565
+.LB567:
+	movl	$1, %edx
+.LB577:
+	movl	%edx, %eax
+	addq	$8, %rsp
+	popq	%rbx
+	popq	%rbp
+	popq	%r12
+	popq	%r13
+	popq	%r14
+	popq	%r15
+	ret
+.LB563:
+	movq	(%rsi,%rbp,8), %rdx
+	movq	16(%rbx), %rax
+	cmpb	$1, 4(%rax,%rdx,8)
+	jne	.LB570
+	jmp	.LB565
+.LB562:
+	movq	(%rsi,%rbp,8), %rdx
+	movq	16(%rbx), %rax
+	cmpb	$1, 4(%rax,%rdx,8)
+	jne	.LB569
+.LB571:
+	movq	%rbp, %rcx
+	movq	%r14, %rdx
+	movq	%r12, %rsi
+	movq	%rbx, %rdi
+	call	_ZNK12_GLOBAL__N_17Planner20hasOtherRetainedCopyERKNS_7MappingERKNS_11OffsetArrayIhEE11StackOffset
+	testb	%al, %al
+	jne	.LB565
+	movl	4(%rsp), %eax
+	movabsq	$-4294967296, %rsi
+	andq	%r15, %rsi
+	orq	%rax, %rsi
+	movzbl	3(%rsp), %eax
+	salq	$40, %rax
+	movabsq	$-280375465082881, %rdx
+	andq	%rdx, %rsi
+	orq	%rax, %rsi
+	movq	%rbx, %rdi
+	call	_ZNK12_GLOBAL__N_17Planner10isDemandedE9StackSlot
+	testb	%al, %al
+	jne	.LB566
+.LB565:
+	movl	$0, %edx
+	jmp	.LB577
+	.size	_ZNK12_GLOBAL__N_17Planner8classifyERKNS_7MappingERKNS_11OffsetArrayIhEE11StackOffset, .-_ZNK12_GLOBAL__N_17Planner8classifyERKNS_7MappingERKNS_11OffsetArrayIhEE11StackOffset
+	.align 2
+	.type	_ZN12_GLOBAL__N_17Planner7resolveERKNS_7MappingENS_8Emission7BlockedES3_m, @function
+_ZN12_GLOBAL__N_17Planner7resolveERKNS_7MappingENS_8Emission7BlockedES3_m:
+	pushq	%r15
+	pushq	%r14
+	pushq	%r13
+	pushq	%r12
+	pushq	%rbp
+	pushq	%rbx
+	subq	$9272, %rsp
+	movq	%rdi, %r14
+	movq	%rsi, %r12
+	movq	%rcx, 24(%rsp)
+	movq	8(%rdi), %rcx
+	testq	%rcx, %rcx
+	je	.LB582
+	leaq	8240(%rsp), %rax
+	addq	%rax, %rcx
+	.p2align 4
+.LB583:
+	movb	$0, (%rax)
+	addq	$1, %rax
+	cmpq	%rcx, %rax
+	jne	.LB583
+.LB582:
+	addq	$1, %rdx
+	cmpq	%r9, %rdx
+	jnb	.LB596
+	movl	$0, %ebp
+	jmp	.LB589
+.LB587:
+	movl	$2, %eax
+.LB581:
+	addq	$9272, %rsp
+	popq	%rbx
+	popq	%rbp
+	popq	%r12
+	popq	%r13
+	popq	%r14
+	popq	%r15
+	ret
+	.p2align 5
+.LB585:
+	addq	$1, %rdx
+	cmpq	%r9, %rdx
+	jnb	.LB584
+.LB589:
+	movq	(%r8,%rdx,8), %rax
+	cmpq	$-1, %rax
+	je	.LB585
+	movq	8192(%r12,%rax,8), %rax
+	cmpq	$-1, %rax
+	je	.LB585
+	cmpq	$-1, (%r12,%rax,8)
+	je	.LB587
+	movq	%rax, 48(%rsp,%rbp,8)
+	leaq	1(%rbp), %rbp
+	jmp	.LB585
+.LB596:
+	movl	$0, %ebp
+.LB584:
+	cmpq	$0, 24(%rsp)
+	je	.LB597
+	leaq	48(%rsp,%rbp,8), %r13
+	movq	$0, 32(%rsp)
+	movq	%rbp, 40(%rsp)
+.LB590:
+	cmpq	$0, 40(%rsp)
+	je	.LB608
+	leaq	48(%rsp), %rbx
+	movq	$-1, %r15
+	movb	$0, 23(%rsp)
+	jmp	.LB594
+.LB610:
+	movq	(%r12,%rbp,8), %rax
+	cmpq	%rax, (%r12,%r15,8)
+	cmovb	%rbp, %r15
+	movq	%r15, 8(%rsp)
+	movl	%esi, %eax
+.LB592:
+	movq	8(%rsp), %r15
+	movb	%al, 23(%rsp)
+.LB593:
+	addq	$8, %rbx
+	cmpq	%r13, %rbx
+	je	.LB609
+.LB594:
+	movq	(%rbx), %rbp
+	movq	%rbp, 8(%rsp)
+	cmpb	$0, 8240(%rsp,%rbp)
+	jne	.LB593
+	movq	%rbp, %rcx
+	leaq	8240(%rsp), %rdx
+	movq	%r12, %rsi
+	movq	%r14, %rdi
+	call	_ZNK12_GLOBAL__N_17Planner8classifyERKNS_7MappingERKNS_11OffsetArrayIhEE11StackOffset
+	cmpb	$-1, %al
+	je	.LB593
+	movzbl	23(%rsp), %esi
+	cmpb	%sil, %al
+	jb	.LB592
+	cmpq	$-1, %r15
+	je	.LB592
+	cmpb	%sil, %al
+	je	.LB610
+	movq	%r15, 8(%rsp)
+	movzbl	23(%rsp), %eax
+	jmp	.LB592
+.LB609:
+	cmpq	$-1, %r15
+	je	.LB600
+	cmpb	$4, 23(%rsp)
+	je	.LB611
+.LB595:
+	movb	$1, 8240(%rsp,%r15)
+	movq	48(%r14), %rax
+	movb	$1, (%rax,%r15)
+	addq	$1, 32(%rsp)
+	movq	32(%rsp), %rax
+	movq	24(%rsp), %rdi
+	cmpq	%rdi, %rax
+	jne	.LB590
+	movl	$0, %eax
+	jmp	.LB581
+.LB611:
+	movq	(%r14), %rax
+	movq	(%rax,%r15,8), %rsi
+	leaq	32(%r14), %rdi
+	call	_ZN12_GLOBAL__N_18SpillSet3addE9StackSlot
+	testb	%al, %al
+	je	.LB595
+	movl	$2, %eax
+	jmp	.LB581
+.LB608:
+	movl	$1, %eax
+	jmp	.LB581
+.LB597:
+	movl	$0, %eax
+	jmp	.LB581
+.LB600:
+	movl	$1, %eax
+	jmp	.LB581
+	.size	_ZN12_GLOBAL__N_17Planner7resolveERKNS_7MappingENS_8Emission7BlockedES3_m, .-_ZN12_GLOBAL__N_17Planner7resolveERKNS_7MappingENS_8Emission7BlockedES3_m
+	.globl	resolve
+	.type	resolve, @function
+resolve:
+	pushq	%rbp
+	pushq	%rbx
+	subq	$32840, %rsp
+	movq	%r8, %rbx
+	movq	32864(%rsp), %r11
+	movq	32896(%rsp), %rbp
+	movl	32904(%rsp), %r8d
+	cmpq	$1024, %rdi
+	ja	.LB629
+	movq	%rsi, %r10
+	movq	%rdx, %rsi
+	cmpq	$1024, %r10
+	ja	.LB629
+	cmpq	$1024, %r9
+	seta	%al
+	cmpq	%r9, 32872(%rsp)
+	setnb	%dl
+	orb	%dl, %al
+	jne	.LB630
+	cmpb	$1, %r8b
+	ja	.LB630
+	testq	%rdi, %rdi
+	je	.LB614
+	movl	$0, %eax
+	jmp	.LB616
+	.p2align 5
+.LB615:
+	leaq	1(%rax), %rdx
+	cmpq	%rdx, %rdi
+	je	.LB642
+	movq	%rdx, %rax
+.LB616:
+	cmpb	$0, 5(%rsi,%rax,8)
+	je	.LB615
+	cmpb	$0, 4(%rsi,%rax,8)
+	jne	.LB615
+	movl	(%rsi,%rax,8), %edx
+	cmpq	%rbp, %rdx
+	jb	.LB615
+	movq	$-2, %rdx
+	jmp	.LB612
+.LB642:
+	movl	$0, %edx
+	addq	$1, %rax
+	.p2align 5
+.LB617:
+	movq	$-1, 16448(%rsp,%rdx,8)
+	addq	$1, %rdx
+	cmpq	%rax, %rdx
+	jne	.LB617
+	testq	%r10, %r10
+	je	.LB618
+.LB628:
+	movl	$0, %eax
+	.p2align 5
+.LB619:
+	movq	$-1, 24640(%rsp,%rax,8)
+	addq	$1, %rax
+	cmpq	%r10, %rax
+	jb	.LB619
+	testq	%rdi, %rdi
+	je	.LB620
+.LB618:
+	movl	$0, %eax
+	jmp	.LB622
+	.p2align 5
+.LB621:
+	addq	$1, %rax
+	cmpq	%rax, %rdi
+	je	.LB620
+.LB622:
+	movq	(%rbx,%rax,8), %rdx
+	cmpq	$-1, %rdx
+	je	.LB621
+	movq	%rdx, 16448(%rsp,%rax,8)
+	movq	%rax, 24640(%rsp,%rdx,8)
+	jmp	.LB621
+	.p2align 5
+.LB626:
+	addq	$1, %rax
+	cmpq	%r9, %rax
+	jnb	.LB643
+.LB627:
+	movq	(%r11,%rax,8), %rdx
+	cmpq	$-1, %rdx
+	je	.LB626
+	movq	%rdx, 64(%rsp,%rax,8)
+	movq	%rax, 8256(%rsp,%rdx,8)
+	jmp	.LB626
+.LB643:
+	movq	%rsi, (%rsp)
+	movq	%rdi, 8(%rsp)
+	movq	%rcx, 16(%rsp)
+	movq	%r10, 24(%rsp)
+	movq	32888(%rsp), %rax
+	movq	%rax, 32(%rsp)
+	cmpb	$1, %r8b
+	sete	40(%rsp)
+	movq	32912(%rsp), %rax
+	movq	%rax, 48(%rsp)
+	movq	32872(%rsp), %rax
+	movq	32880(%rsp), %rdx
+	leaq	16448(%rsp), %rsi
+	movq	%rsp, %rdi
+	leaq	64(%rsp), %r8
+	movq	%rdx, %rcx
+	movq	%rax, %rdx
+	call	_ZN12_GLOBAL__N_17Planner7resolveERKNS_7MappingENS_8Emission7BlockedES3_m
+	movq	$-1, %rdx
+	cmpb	$1, %al
+	je	.LB612
+	cmpb	$2, %al
+	setne	%dl
+	movzbl	%dl, %edx
+	leaq	-2(%rdx,%rdx), %rdx
+.LB612:
+	movq	%rdx, %rax
+	addq	$32840, %rsp
+	popq	%rbx
+	popq	%rbp
+	ret
+.LB629:
+	movq	$-2, %rdx
+	jmp	.LB612
+.LB630:
+	movq	$-2, %rdx
+	jmp	.LB612
+.LB614:
+	testq	%r10, %r10
+	jne	.LB628
+.LB620:
+	movl	$0, %eax
+	.p2align 5
+.LB623:
+	movq	$-1, 64(%rsp,%rax,8)
+	addq	$1, %rax
+	cmpq	%r9, %rax
+	jb	.LB623
+	testq	%r10, %r10
+	je	.LB624
+	leaq	64(%rsp), %rax
+	leaq	(%rax,%r10,8), %rdx
+	.p2align 5
+.LB625:
+	movq	$-1, 8192(%rax)
+	addq	$8, %rax
+	cmpq	%rax, %rdx
+	jne	.LB625
+.LB624:
+	movl	$0, %eax
+	jmp	.LB627
+	.size	resolve, .-resolve
 	.section	.note.GNU-stack,"",@progbits

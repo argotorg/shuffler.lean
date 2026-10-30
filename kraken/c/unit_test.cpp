@@ -1618,6 +1618,466 @@ void buildMappingProperties()
 	expect(keptRuns > 1000, "buildMapping: runs that keep a slot in a wildcard slot", keptRuns);
 }
 
+
+/// The inputs of resolve: the source and the target, the plan (a destination for each source slot), the working
+/// mapping (a destination for each slot of the working stack), the blocked offset and its excess, the spill set (a
+/// byte for each variable id), spillingAllowed and the dropped bytes
+struct Resolve
+{
+	std::vector<StackSlot> source;
+	std::vector<StackSlot> target;
+	std::vector<Optional<StackOffset>> plan;
+	std::vector<Optional<StackOffset>> current;
+	std::uint64_t offset;
+	std::uint64_t excess;
+	std::vector<std::uint8_t> spilled;
+	std::uint8_t allowed;
+	std::vector<std::uint8_t> dropped;
+};
+
+/// The outputs of resolve: its result, the spill set and the dropped bytes
+struct Resolved
+{
+	std::int64_t result;
+	std::vector<std::uint8_t> spilled;
+	std::vector<std::uint8_t> dropped;
+
+	bool operator==(Resolved const&) const = default;
+};
+
+/// The byte after the spill set and after the dropped bytes, which resolve must not write
+std::uint8_t constexpr guardResolve = 0xa5;
+
+Resolved resolveOn(Resolve const& _in)
+{
+	std::vector<std::uint8_t> spilled = _in.spilled;
+	spilled.push_back(guardResolve);
+	std::vector<std::uint8_t> dropped = _in.dropped;
+	dropped.push_back(guardResolve);
+	std::int64_t const result = resolve(_in.source.size(), _in.target.size(), _in.source.data(), _in.target.data(),
+		_in.plan.data(), _in.current.size(), _in.current.data(), _in.offset, _in.excess, spilled.data(),
+		_in.spilled.size(), _in.allowed, dropped.data());
+	expect(spilled.back() == guardResolve && dropped.back() == guardResolve, "resolve: writes past the buffers");
+	spilled.pop_back();
+	dropped.pop_back();
+	return {result, spilled, dropped};
+}
+
+/// The parts of `_s` between the separators: one more than the separators
+std::vector<std::string> fields(std::string const& _s, char const _separator)
+{
+	std::vector<std::string> result{""};
+	for (char const c: _s)
+		if (c == _separator)
+			result.emplace_back();
+		else
+			result.back() += c;
+	return result;
+}
+
+/// The words of `_s`: none for the empty string
+std::vector<std::string> wordsOf(std::string const& _s)
+{
+	return _s.empty() ? std::vector<std::string>{} : fields(_s, ' ');
+}
+
+/// The slot of a word of Fuzz/Oracle.lean: _ (junk), R (a function return label), vN (the variable N) or lN (the
+/// literal N)
+StackSlot slotOf(std::string const& _word)
+{
+	if (_word == "_")
+		return StackSlot::makeJunk();
+	if (_word == "R")
+		return nonVariables(0)[3];
+	std::uint32_t const payload = static_cast<std::uint32_t>(std::stoul(_word.substr(1)));
+	return _word[0] == 'v' ? variable(payload) : nonVariables(payload)[0];
+}
+
+/// The inputs of a "resolve" case of Fuzz/Oracle.lean. The spill set has a byte for each variable id up to the
+/// largest one of the case.
+Resolve parseResolve(std::string const& _line)
+{
+	std::vector<std::string> const f = fields(_line, ';');
+	Resolve in{};
+	in.allowed = f.at(1) == "1";
+	for (std::string const& word: wordsOf(f.at(2)))
+		in.source.push_back(slotOf(word));
+	for (std::string const& word: wordsOf(f.at(3)))
+		in.target.push_back(slotOf(word));
+	std::size_t idCount = 0;
+	for (std::vector<StackSlot> const* stack: {&in.source, &in.target})
+		for (StackSlot const slot: *stack)
+			if (isVariable(slot))
+				idCount = std::max<std::size_t>(idCount, slot.payload + 1);
+	for (std::string const& word: wordsOf(f.at(4)))
+		idCount = std::max<std::size_t>(idCount, std::stoul(word) + 1);
+	in.spilled.assign(idCount, 0);
+	for (std::string const& word: wordsOf(f.at(4)))
+		in.spilled[std::stoul(word)] = 1;
+	for (std::string const& word: wordsOf(f.at(5)))
+		in.dropped.push_back(static_cast<std::uint8_t>(std::stoul(word)));
+	auto const destinations = [](std::string const& _s) {
+		std::vector<Optional<StackOffset>> result;
+		for (std::string const& word: wordsOf(_s))
+			result.push_back(word == "-" ? none : offset(std::stoul(word)));
+		return result;
+	};
+	in.plan = destinations(f.at(6));
+	in.current = destinations(f.at(7));
+	std::vector<std::string> const blocked = wordsOf(f.at(8));
+	in.offset = std::stoull(blocked.at(0));
+	in.excess = std::stoull(blocked.at(1));
+	return in;
+}
+
+/// `_out` in the result format of Fuzz/Oracle.lean: "ok", success (1 for 0, 0 for -1), the spilled variable ids and
+/// the dropped bytes; or "err" for -2. An output outside the contract of resolve is in angle brackets.
+std::string show(Resolved const& _out)
+{
+	if (_out.result == -2)
+		return "err";
+	if (_out.result != 0 && _out.result != -1)
+		return "<result " + std::to_string(_out.result) + ">";
+	std::string ids;
+	for (std::size_t id = 0; id < _out.spilled.size(); ++id)
+		if (_out.spilled[id] > 1)
+			return "<spilled byte " + std::to_string(_out.spilled[id]) + ">";
+		else if (_out.spilled[id] == 1)
+			ids += (ids.empty() ? "" : " ") + std::to_string(id);
+	std::string bytes;
+	for (std::uint8_t const byte: _out.dropped)
+		bytes += (bytes.empty() ? "" : " ") + std::to_string(byte);
+	return std::string{"ok "} + (_out.result == 0 ? "1" : "0") + ";" + ids + ";" + bytes;
+}
+
+/// resolve on `_line` gives `_model`
+void resolves(std::string const& _line, std::string const& _model)
+{
+	std::string const port = show(resolveOn(parseResolve(_line)));
+	if (port != _model)
+		std::fprintf(stderr, "resolve: %.300s => %.300s, the model: %.300s\n", _line.c_str(), port.c_str(),
+			_model.c_str());
+	expect(port == _model, "resolve: the result of the model");
+}
+
+/// `_word` `_count` times, separated by spaces
+std::string repeated(std::string const& _word, std::size_t const _count)
+{
+	std::string result;
+	for (std::size_t i = 0; i < _count; ++i)
+		result += (i > 0 ? " " : "") + _word;
+	return result;
+}
+
+/// `_prefix` and the numbers from `_from` to `_to`, separated by spaces
+std::string numbered(std::string const& _prefix, std::size_t const _from, std::size_t const _to)
+{
+	std::string result;
+	for (std::size_t i = _from; i <= _to; ++i)
+		result += (i > _from ? " " : "") + _prefix + std::to_string(i);
+	return result;
+}
+
+/// resolve against the model: each model result is the output of Fuzz/Oracle.lean (runLine on Planner.resolve) on
+/// the case. The plans and the working mappings are made by hand: the port has no Emission.run yet.
+void resolveCases()
+{
+	// each class wins over the higher classes: v9 (0: its target is a wildcard, and the target does not demand it), l1
+	// (1), v2 (2: spilled), v3 (3: v3 at 0 is a retained copy) and v4 (4: a new spill). Each unit of excess drops one
+	// more; at excess 6 nothing is left to drop, and the drops and the spill of the passes before stay.
+	std::string const classes = "v3 v9 l1 v2 v3 v4;v3 _ l1 v2 v3 v4;2;0 0 0 0 0 0;0 1 2 3 4 5;0 1 2 3 4 5;0 ";
+	resolves("resolve;1;" + classes + "0", "ok 1;2;0 0 0 0 0 0");
+	resolves("resolve;1;" + classes + "1", "ok 1;2;0 1 0 0 0 0");
+	resolves("resolve;1;" + classes + "2", "ok 1;2;0 1 1 0 0 0");
+	resolves("resolve;1;" + classes + "3", "ok 1;2;0 1 1 1 0 0");
+	resolves("resolve;1;" + classes + "4", "ok 1;2;0 1 1 1 1 0");
+	resolves("resolve;1;" + classes + "5", "ok 1;2 4;0 1 1 1 1 1");
+	resolves("resolve;1;" + classes + "6", "ok 0;2 4;0 1 1 1 1 1");
+	resolves("resolve;1;" + classes + "1000", "ok 0;2 4;0 1 1 1 1 1");
+	// spillingAllowed 0: v4 has no class, so the fifth pass finds nothing
+	resolves("resolve;0;" + classes + "5", "ok 0;2;0 1 1 1 1 0");
+
+	// a tie goes to the higher destination, whatever the order on the working stack
+	resolves("resolve;0;v0 l1 l2;v0 l1 l2;;0 0 0;0 1 2;0 1 2;0 1", "ok 1;;0 0 1");
+	resolves("resolve;0;v0 l1 l2;v0 l1 l2;;0 0 0;0 1 2;0 2 1;0 1", "ok 1;;0 0 1");
+	resolves("resolve;0;v0 l1 l2;v0 l2 l1;;0 0 0;0 2 1;0 1 2;0 1", "ok 1;;0 1 0");
+	resolves("resolve;1;v0 v1 v2;v0 v1 v2;;0 0 0;0 1 2;0 1 2;0 1", "ok 1;2;0 0 1");
+	resolves("resolve;1;v0 v1 v2;v0 v1 v2;;0 0 0;0 1 2;2 1 0;0 1", "ok 1;1;0 1 0");
+	resolves("resolve;1;l0 l0;l0 l0;;0 0;0 1;0 1;0 1", "ok 1;;0 1");
+
+	// R is never dropped
+	resolves("resolve;1;v0 R;v0 R;;0 0;0 1;0 1;0 1", "ok 0;;0 0");
+	resolves("resolve;1;v0 v5 R;v0 v5 R;;0 0 0;0 1 2;0 1 2;0 1", "ok 1;5;0 1 0");
+	resolves("resolve;1;v0 v5 R;v0 v5 R;;0 0 0;0 1 2;0 1 2;0 2", "ok 0;5;0 1 0");
+
+	// class 4 only with spillingAllowed
+	resolves("resolve;0;v0 v4;v0 v4;;0 0;0 1;0 1;0 1", "ok 0;;0 0");
+	resolves("resolve;1;v0 v4;v0 v4;;0 0;0 1;0 1;0 1", "ok 1;4;0 1");
+	resolves("resolve;1;v1000 v7;v1000 v7;;0 0;0 1;0 1;0 1", "ok 1;7;0 1");
+	resolves("resolve;1;v1000 v7;v1000 v7;;0 0;0 1;0 1;0 2", "ok 0;7;0 1");
+	// a spilled variable is class 2, before a copy (3)
+	resolves("resolve;0;v3 v4 v3;v3 v4 v3;4;0 0 0;0 1 2;0 1 2;0 1", "ok 1;4;0 1 0");
+	resolves("resolve;0;v3 v4 v3;v3 v4 v3;;0 0 0;0 1 2;0 1 2;0 1", "ok 1;;0 0 1");
+	// two copies: the first pass drops one (3), then the other has no copy left and gets a spill (4)
+	resolves("resolve;1;v0 v4 v4;v0 v4 v4;;0 0 0;0 1 2;0 1 2;0 1", "ok 1;;0 0 1");
+	resolves("resolve;1;v0 v4 v4;v0 v4 v4;;0 0 0;0 1 2;0 1 2;0 2", "ok 1;4;0 1 1");
+	resolves("resolve;1;v0 _ v0;v0 _ v0;;0 0 0;0 1 2;0 1 2;0 2", "ok 1;;0 1 1");
+
+	// class 0: the target is a wildcard, and the slot is regenerable (a spill) or not demanded
+	resolves("resolve;1;v6 v0 l1;v6 _ l1 v0;0;0 0 0;0 1 2;0 1 2 3;0 1", "ok 1;0;0 1 0");
+	resolves("resolve;1;v6 v0 l1;v6 _ l1 v0;;0 0 0;0 1 2;0 1 2 3;0 1", "ok 1;;0 0 1");
+	resolves("resolve;0;v6 v0 l1;v6 _ l1 v0;;0 0 0;0 1 2;0 1 2 3;0 2", "ok 0;;0 0 1");
+	resolves("resolve;0;v6 v0 l1;v6 _ l1;;0 0 0;0 1 2;0 1 2;0 1", "ok 1;;0 1 0");
+	// a demanded variable in a wildcard slot with another retained copy (0); without a retained copy it has no class
+	resolves("resolve;0;v0 v0 l1;v0 _ l1;;0 0 0;0 1 2;0 1 2;0 1", "ok 1;;0 1 0");
+	resolves("resolve;0;v0 v0 l1;v0 _ l1;;0 0 0;- 1 2;0 1 2;0 1", "ok 1;;0 0 1");
+	resolves("resolve;0;v0 v0 l1;v1 _ l1;;0 0 0;- 1 2;0 1 2;0 1", "ok 1;;0 1 0");
+	resolves("resolve;1;v0 v0;_ _;;0 0;0 1;0 1;0 1", "ok 1;;0 1");
+	resolves("resolve;1;v0 _;v0 _;;0 0;0 1;0 1;0 1", "ok 1;;0 1");
+
+	// another copy counts only if it is retained and not dropped in this call: dropped from an earlier call does
+	// not count
+	resolves("resolve;1;v0 v4 v4;v0 v4;;0 0 0;0 1 -;0 1;0 1", "ok 1;4;0 1 0");
+	resolves("resolve;1;v4 v0 v4;v4 v0 v4;;0 0 0;0 1 2;0 1 2;1 1", "ok 1;;0 0 1");
+	resolves("resolve;1;v4 v0 v4;v4 v0 v4;;1 0 0;0 1 2;0 1 2;1 1", "ok 1;;1 0 1");
+
+	// the candidates: the retained slots above the blocked one; generated and surplus slots have no source
+	resolves("resolve;0;v0 l1 l2;v0 l1 l2 l3;;0 0 0;0 1 2;0 3 - 1;0 1", "ok 1;;0 1 0");
+	resolves("resolve;0;v0 l1 l2;v0 l1 l2 l3;;0 0 0;0 1 2;0 3 - 1;0 2", "ok 0;;0 1 0");
+	resolves("resolve;1;v0 l1 l2;v0 l1 l2;;0 0 0;0 1 2;0 1 2;2 1", "ok 0;;0 0 0");
+	resolves("resolve;1;v0 v1 v2;v0 v1 v2;;0 0 0;0 1 2;0 1 2;1 1", "ok 1;2;0 0 1");
+	resolves("resolve;1;v0 v1 v2;v0 v1 v2;;0 0 0;0 1 2;0 1 2;0 0", "ok 1;;0 0 0");
+	// a victim's byte becomes 1; the other bytes stay
+	resolves("resolve;0;v0 l1 l2;v0 l1 l2;;7 255 255;0 1 2;0 1 2;0 1", "ok 1;;7 255 1");
+
+	// the stack limit: 1024 distinct variables, all class 4; the two highest destinations go first
+	resolves("resolve;1;" + numbered("v", 0, 1023) + ";" + numbered("v", 0, 1023) + ";;" + repeated("0", 1024) + ";" +
+			numbered("", 0, 1023) + ";" + numbered("", 0, 1023) + ";0 2",
+		"ok 1;1022 1023;" + repeated("0", 1022) + " 1 1");
+}
+
+/// Two calls on one spill set: the first spills v4 (class 4); then a copy of v4 is class 2 for the second, so the
+/// second drops it before v3 (class 3)
+void resolveSharedSpills()
+{
+	Resolved const first = resolveOn(parseResolve("resolve;1;v0 v4;v0 v4;;0 0;0 1;0 1;0 1"));
+	expect(show(first) == "ok 1;4;0 1", "resolve: the first call spills v4");
+	Resolve second = parseResolve("resolve;0;v3 v4 v3;v3 v4 v3;;0 0 0;0 1 2;0 1 2;0 1");
+	expect(show(resolveOn(second)) == "ok 1;;0 0 1", "resolve: without the spill, v3 (class 3)");
+	second.spilled = first.spilled;
+	expect(show(resolveOn(second)) == "ok 1;4;0 1 0", "resolve: with the spill of the first call, v4 (class 2)");
+}
+
+/// The domain of the resolve entry: outside it the result is -2 and nothing is written
+void resolveEntry()
+{
+	Resolve const base = parseResolve("resolve;1;v0 v4;v0 v4;;0 0;0 1;0 1;0 1");
+	expect(show(resolveOn(base)) == "ok 1;4;0 1", "resolve: the base case");
+	auto const rejects = [](Resolve const& _in, char const* const _what) {
+		Resolved const out = resolveOn(_in);
+		expect(out.result == -2 && out.spilled == _in.spilled && out.dropped == _in.dropped, _what);
+	};
+	for (std::uint64_t const offset: {std::uint64_t{2}, std::uint64_t{3}, UINT64_MAX})
+	{
+		Resolve in = base;
+		in.offset = offset;
+		rejects(in, "resolve: an offset not below the working stack");
+	}
+	Resolve empty = base;
+	empty.current.clear();
+	empty.offset = 0;
+	rejects(empty, "resolve: an empty working stack");
+	for (std::uint8_t const allowed: {2, 255})
+	{
+		Resolve in = base;
+		in.allowed = allowed;
+		rejects(in, "resolve: spillingAllowed is not 0 or 1");
+	}
+	Resolve fewIds = base;
+	fewIds.spilled.resize(4);
+	rejects(fewIds, "resolve: a source variable id not below idCount");
+	Resolve noIds = base;
+	noIds.spilled.clear();
+	rejects(noIds, "resolve: no ids");
+	Resolve tallSource = base;
+	tallSource.source.assign(1025, variable(0));
+	tallSource.plan.assign(1025, none);
+	tallSource.dropped.assign(1025, 0);
+	rejects(tallSource, "resolve: 1025 source slots");
+	Resolve tallTarget = base;
+	tallTarget.target.assign(1025, variable(0));
+	rejects(tallTarget, "resolve: 1025 target slots");
+	Resolve tallStack = base;
+	tallStack.current.assign(1025, none);
+	rejects(tallStack, "resolve: 1025 slots on the working stack");
+
+	// in the domain: a variable id of the target, and the payload of a literal, above idCount
+	Resolve targetId = parseResolve("resolve;1;v0 v4;v0 v4 v9;;0 0;0 1;0 1;0 1");
+	targetId.spilled.resize(5);
+	expect(show(resolveOn(targetId)) == "ok 1;4;0 1", "resolve: a target variable id above idCount");
+	Resolve literal = parseResolve("resolve;1;R l1000;R l1000;;0 0;0 1;0 1;0 1");
+	expect(literal.spilled.empty() && show(resolveOn(literal)) == "ok 1;;0 1", "resolve: a literal above idCount");
+	// the largest excess: the passes stop when no candidate is left
+	Resolve largest = parseResolve(
+		"resolve;1;v3 v9 l1 v2 v3 v4;v3 _ l1 v2 v3 v4;2;0 0 0 0 0 0;0 1 2 3 4 5;0 1 2 3 4 5;0 1");
+	largest.excess = UINT64_MAX;
+	expect(show(resolveOn(largest)) == "ok 0;2 4;0 1 1 1 1 1", "resolve: the excess UINT64_MAX");
+}
+
+/// resolve on random cases: the result is 0 or -1; it drops only candidates (the retained slots above the blocked
+/// one), never R, one for each unit of excess, and spills only variables that it drops; more excess drops a superset;
+/// the order of the working stack above the blocked slot, and spillingAllowed when nothing is spilled, do not change
+/// the result; and when it stops, each candidate left is R, or a variable that is not spilled with spillingAllowed 0.
+/// The choice among the candidates is the Lean model's, which the differential test checks.
+void resolveProperties()
+{
+	std::mt19937_64 random{20261030};
+	auto const below = [&](std::size_t const _bound) {
+		return std::uniform_int_distribution<std::size_t>{0, _bound - 1}(random);
+	};
+	// few distinct slots, so that copies and equal slots are common
+	auto const slot = [&] {
+		return below(3) == 0 ? nonVariables(static_cast<std::uint32_t>(below(2)))[below(4)] :
+			variable(static_cast<std::uint32_t>(below(4)));
+	};
+	unsigned long stuckRuns = 0;
+	unsigned long spillRuns = 0;
+	unsigned long multiRuns = 0;
+	unsigned long reorderRuns = 0;
+	for (unsigned long run = 0; run < 20000; ++run)
+	{
+		std::size_t const m = below(run % 100 == 0 ? 65 : 9);
+		std::size_t const n = below(run % 100 == 0 ? 65 : 9);
+		Resolve in{};
+		for (std::size_t i = 0; i < m; ++i)
+			in.source.push_back(slot());
+		for (std::size_t j = 0; j < n; ++j)
+			in.target.push_back(slot());
+		// the plan: buildMapping's or an injective one at random
+		in.plan.assign(m, none);
+		std::vector<std::size_t> offsets;
+		for (std::size_t j = 0; j < n; ++j)
+			offsets.push_back(j);
+		std::shuffle(offsets.begin(), offsets.end(), random);
+		if (below(2) == 0)
+		{
+			Built const built = buildMapping(in.source, in.target, std::vector<std::uint8_t>(m), Strategy::Leave);
+			expect(built.result == 0, "resolve: buildMapping", run);
+			for (std::size_t j = 0; j < n; ++j)
+				if (Opt const o = built.sources[j])
+					in.plan[*o] = offset(j);
+		}
+		else
+		{
+			for (std::size_t i = 0; i < m && i < n; ++i)
+				if (below(4) != 0)
+					in.plan[i] = offset(offsets[i]);
+			std::shuffle(in.plan.begin(), in.plan.end(), random);
+		}
+		// the working stack: distinct destinations, and some slots without one
+		std::shuffle(offsets.begin(), offsets.end(), random);
+		std::size_t const h = 1 + below(m + n + 2);
+		for (std::size_t pos = 0, next = 0; pos < h; ++pos)
+			in.current.push_back(below(4) != 0 && next < n ? offset(offsets[next++]) : none);
+		in.offset = below(2) == 0 ? 0 : below(h);
+		in.excess = below(m + 3);
+		in.allowed = below(2) == 1;
+		in.spilled.assign(4 + below(3), 0);
+		for (std::uint8_t& byte: in.spilled)
+			byte = below(4) == 0;
+		// no input byte is 1, so that the victims show
+		for (std::size_t i = 0; i < m; ++i)
+			in.dropped.push_back(below(2) == 0 ? 0 : static_cast<std::uint8_t>(2 + below(254)));
+
+		Resolved const out = resolveOn(in);
+		expect(out.result == 0 || out.result == -1, "resolve: done or stuck", run);
+		if (out.result != 0 && out.result != -1)
+			continue;
+		std::vector<bool> candidate(m);
+		for (std::size_t pos = in.offset + 1; pos < h; ++pos)
+			if (in.current[pos])
+				for (std::size_t i = 0; i < m; ++i)
+					if (in.plan[i] == in.current[pos])
+						candidate[i] = true;
+		std::size_t victims = 0;
+		for (std::size_t i = 0; i < m; ++i)
+			if (out.dropped[i] == 1)
+			{
+				++victims;
+				expect(candidate[i], "resolve: a victim is a candidate", run);
+				expect(!in.source[i].isFunctionReturnLabel(), "resolve: R is never dropped", run);
+			}
+			else
+				expect(out.dropped[i] == in.dropped[i], "resolve: only a victim's byte changes", run);
+		expect(out.result == 0 ? victims == in.excess : victims < in.excess, "resolve: one victim for each unit", run);
+		std::size_t spills = 0;
+		for (std::size_t id = 0; id < in.spilled.size(); ++id)
+			if (out.spilled[id] != in.spilled[id])
+			{
+				++spills;
+				expect(in.spilled[id] == 0 && out.spilled[id] == 1 && in.allowed, "resolve: a new spill", run);
+				bool victim = false;
+				for (std::size_t i = 0; i < m; ++i)
+					victim = victim || (out.dropped[i] == 1 && in.source[i] == variable(static_cast<std::uint32_t>(id)));
+				expect(victim, "resolve: a new spill is of a victim", run);
+			}
+		spillRuns += spills > 0;
+		multiRuns += victims > 1;
+		if (out.result == -1)
+		{
+			++stuckRuns;
+			SpillSet const spilled{const_cast<std::uint8_t*>(out.spilled.data())};
+			for (std::size_t i = 0; i < m; ++i)
+				if (candidate[i] && out.dropped[i] != 1)
+					expect(in.source[i].isFunctionReturnLabel() ||
+							(isVariable(in.source[i]) && !spilled.isSpilled(in.source[i]) && !in.allowed),
+						"resolve: a candidate left has no class", run);
+		}
+
+		// one more unit of excess: the same victims and at most one more, and the same spills and at most one more
+		Resolve more = in;
+		++more.excess;
+		Resolved const moreOut = resolveOn(more);
+		if (out.result == -1)
+			expect(moreOut == out, "resolve: stuck stays stuck", run);
+		std::size_t moreVictims = 0;
+		for (std::size_t i = 0; i < m; ++i)
+		{
+			expect(out.dropped[i] != 1 || moreOut.dropped[i] == 1, "resolve: more excess keeps the victims", run);
+			moreVictims += moreOut.dropped[i] == 1;
+		}
+		expect(moreVictims <= victims + 1, "resolve: more excess drops at most one more", run);
+		for (std::size_t id = 0; id < in.spilled.size(); ++id)
+			expect(out.spilled[id] == 0 || moreOut.spilled[id] != 0, "resolve: more excess keeps the spills", run);
+
+		// the largest excess stops where the excess m + 1 stops
+		Resolve largest = in;
+		largest.excess = UINT64_MAX;
+		Resolve enough = in;
+		enough.excess = m + 1;
+		Resolved const enoughOut = resolveOn(enough);
+		expect(enoughOut.result == -1 && resolveOn(largest) == enoughOut, "resolve: the excess UINT64_MAX", run);
+
+		// another order above the blocked slot
+		Resolve reordered = in;
+		std::shuffle(reordered.current.begin() + static_cast<std::ptrdiff_t>(in.offset) + 1, reordered.current.end(),
+			random);
+		reorderRuns += reordered.current != in.current;
+		expect(resolveOn(reordered) == out, "resolve: the order above the blocked slot", run);
+
+		// spillingAllowed matters only for a spill
+		if (spills == 0 && in.allowed)
+		{
+			Resolve forbidden = in;
+			forbidden.allowed = 0;
+			expect(resolveOn(forbidden) == out, "resolve: spillingAllowed without a spill", run);
+		}
+	}
+	expect(stuckRuns > 1000, "resolve: stuck runs", stuckRuns);
+	expect(spillRuns > 1000, "resolve: runs with a new spill", spillRuns);
+	expect(multiRuns > 1000, "resolve: runs with more than one victim", multiRuns);
+	expect(reorderRuns > 1000, "resolve: runs with another order", reorderRuns);
+}
 }
 
 int main()
@@ -1640,6 +2100,10 @@ int main()
 	mappingBuilderPhases();
 	buildMappingEntry();
 	buildMappingProperties();
+	resolveCases();
+	resolveSharedSpills();
+	resolveEntry();
+	resolveProperties();
 	if (failures > 0)
 	{
 		std::fprintf(stderr, "%d failures\n", failures);

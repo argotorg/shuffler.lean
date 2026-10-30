@@ -204,6 +204,22 @@ extern "C" std::int64_t build_mapping(
 	std::uint8_t* saw
 );
 
+extern "C" std::int64_t resolve(
+	std::uint64_t m,
+	std::uint64_t n,
+	Slot const* source,
+	Slot const* target,
+	std::uint64_t const* plan,
+	std::uint64_t h,
+	std::uint64_t const* current,
+	std::uint64_t offset,
+	std::uint64_t excess,
+	std::uint8_t* spilled,
+	std::uint64_t idCount,
+	std::uint8_t allowed,
+	std::uint8_t* dropped
+);
+
 namespace
 {
 
@@ -643,6 +659,89 @@ std::string runMap(std::vector<std::string> const& _fields)
 	return "ok " + std::to_string(saw[0]) + ";" + join(positions);
 }
 
+/// A case "resolve;" bit ";" source ";" target ";" vars ";" dropped ";" plan ";" current ";" offset " " excess, in
+/// the domain of resolve: the bit is spillingAllowed, dropped has one byte (at most 255) for each source slot, plan
+/// has a destination for each source slot and current one for each slot of the working stack, the destinations of
+/// each are distinct and below the target size, or "-", the source, the target and the working stack have at most
+/// maxStackSize slots, and the offset is below the size of the working stack.
+/// The result is "ok", success (0 or 1), the spilled variables, ascending, and dropped; or "err".
+std::string runResolve(std::vector<std::string> const& _fields)
+{
+	if (_fields.size() != 8)
+		throw std::invalid_argument("not a resolve case");
+	if (_fields[0] != "0" && _fields[0] != "1")
+		throw std::invalid_argument("not a bit: " + _fields[0]);
+	std::uint8_t const allowed = _fields[0] == "1";
+	std::vector<Slot> const source = parseStack(_fields[1]);
+	std::vector<Slot> const target = parseStack(_fields[2]);
+	std::size_t const m = source.size();
+	std::size_t const n = target.size();
+	std::vector<std::string> const currentWords = words(_fields[6]);
+	std::size_t const h = currentWords.size();
+	if (m > maxStackSize || n > maxStackSize || h > maxStackSize)
+		throw std::invalid_argument("more slots than the stack limit");
+	std::vector<std::uint8_t> const spills = parseSpilled(_fields[3], source, target);
+	std::size_t const idCount = spills.size();
+	std::vector<std::uint8_t> bytes;
+	for (std::string const& word: words(_fields[4]))
+	{
+		// the length bound keeps parseNat from overflowing
+		if (word.size() > 3 || parseNat(word) > 255)
+			throw std::invalid_argument("not a byte: " + word);
+		bytes.push_back(static_cast<std::uint8_t>(parseNat(word)));
+	}
+	if (bytes.size() != m)
+		throw std::invalid_argument("not one dropped byte per source slot: " + _fields[4]);
+	std::vector<std::uint64_t> const plan = parseDests(_fields[5], m, n);
+	std::vector<std::uint64_t> const current = parseDests(_fields[6], h, n);
+	std::vector<std::string> const blocked = words(_fields[7]);
+	if (blocked.size() != 2)
+		throw std::invalid_argument("not an offset and an excess: " + _fields[7]);
+	std::size_t const offset = parseNat(blocked[0]);
+	std::size_t const excess = parseNat(blocked[1]);
+	if (offset >= h)
+		throw std::invalid_argument("the blocked offset is not below the working stack size: " + _fields[7]);
+
+	// resolve writes at most idCount bytes of spilled and m bytes of dropped. A guard area after each buffer must
+	// stay as it is.
+	std::vector<std::uint8_t> spilled(idCount + guard, guardByte);
+	std::copy(spills.begin(), spills.end(), spilled.begin());
+	std::vector<std::uint8_t> dropped(m + guard, guardByte);
+	std::copy(bytes.begin(), bytes.end(), dropped.begin());
+	std::int64_t const result = resolve(
+		m,
+		n,
+		source.data(),
+		target.data(),
+		plan.data(),
+		h,
+		current.data(),
+		offset,
+		excess,
+		spilled.data(),
+		idCount,
+		allowed,
+		dropped.data()
+	);
+	if (!intact(spilled, idCount, guardByte) || !intact(dropped, m, guardByte))
+		return "<port wrote past a buffer>";
+	if (result == -2)
+		return "err";
+	if (result != 0 && result != -1)
+		return "<port result " + std::to_string(result) + ">";
+	// add writes 1
+	std::vector<std::string> ids;
+	for (std::size_t id = 0; id < idCount; ++id)
+		if (spilled[id] == 1)
+			ids.push_back(std::to_string(id));
+		else if (spilled[id] != 0)
+			return "<port spilled byte " + std::to_string(spilled[id]) + ">";
+	std::vector<std::string> droppedWords;
+	for (std::size_t i = 0; i < m; ++i)
+		droppedWords.push_back(std::to_string(dropped[i]));
+	return std::string{"ok "} + (result == 0 ? "1" : "0") + ";" + join(ids) + ";" + join(droppedWords);
+}
+
 std::string identity(std::string const& _model)
 {
 	return _model;
@@ -669,6 +768,7 @@ Unit constexpr units[] = {
 	{"permute", runPermute, identity},
 	{"lowest", runLowest, identity},
 	{"map", runMap, identity},
+	{"resolve", runResolve, identity},
 };
 
 }

@@ -577,6 +577,79 @@ int main()
 	throws("map;L;" + times("_", 1025) + ";;" + times("0", 1025));
 	throws("map;L;;" + times("_", 1025) + ";");
 
+	// resolve: excess 0; no slot above the blocked one; each class: a wildcard target of a slot that is not demanded
+	// (0), a literal (1), a spilled variable (2), a variable with another retained copy (3), a variable with spilling
+	// allowed (4, spilled) or not (not dropped); a return label is not dropped; the lowest class first, at a lower and
+	// at a higher offset; in one class the highest target first; two drops; more excess than slots, with the drops
+	// kept; a copy is the other retained copy only until it is dropped; a dropped byte of 255 stays, and a drop writes
+	// 1; a slot of the working stack with no destination is not a candidate; a wildcard target of a demanded variable
+	// is class 4 or no class; a source slot that is bound to a wildcard target; a source wildcard
+	agrees("resolve;0;v0;v0;;0;0;0;0 0", "ok 1;;0", "ok 1;;0");
+	agrees("resolve;0;v0 v1;v0 v1;;0 0;0 1;0 1;1 1", "ok 0;;0 0", "ok 0;;0 0");
+	agrees("resolve;0;v0 v1;v0 _;;0 0;0 1;0 1;0 1", "ok 1;;0 1", "ok 1;;0 1");
+	agrees("resolve;0;v0 l1;v0 l1;;0 0;0 1;0 1;0 1", "ok 1;;0 1", "ok 1;;0 1");
+	agrees("resolve;0;v0 v1;v0 v1;1;0 0;0 1;0 1;0 1", "ok 1;1;0 1", "ok 1;1;0 1");
+	agrees("resolve;0;v1 v0 v1;v1 v0 v1;;0 0 0;0 1 2;0 1 2;1 1", "ok 1;;0 0 1", "ok 1;;0 0 1");
+	agrees("resolve;1;v0 v1;v0 v1;;0 0;0 1;0 1;0 1", "ok 1;1;0 1", "ok 1;1;0 1");
+	agrees("resolve;0;v0 v1;v0 v1;;0 0;0 1;0 1;0 1", "ok 0;;0 0", "ok 0;;0 0");
+	agrees("resolve;1;v0 R;v0 R;;0 0;0 1;0 1;0 1", "ok 0;;0 0", "ok 0;;0 0");
+	agrees("resolve;0;v1 v0 l2 v1;v1 v0 l2 v1;;0 0 0 0;0 1 2 3;0 1 2 3;1 1", "ok 1;;0 0 1 0", "ok 1;;0 0 1 0");
+	agrees("resolve;0;v1 v0 v1 l2;v1 v0 v1 l2;;0 0 0 0;0 1 2 3;0 1 2 3;1 1", "ok 1;;0 0 0 1", "ok 1;;0 0 0 1");
+	agrees("resolve;0;v0 l1 l2;v0 l2 l1;;0 0 0;0 2 1;0 1 2;0 1", "ok 1;;0 1 0", "ok 1;;0 1 0");
+	agrees("resolve;0;v0 l1 l2;v0 l1 l2;;0 0 0;0 1 2;0 1 2;0 2", "ok 1;;0 1 1", "ok 1;;0 1 1");
+	agrees("resolve;0;v0 l1 l2;v0 l1 l2;;0 0 0;0 1 2;0 1 2;0 3", "ok 0;;0 1 1", "ok 0;;0 1 1");
+	agrees("resolve;0;l5 v0 v0;l5 v0 v0;;0 0 0;0 1 2;0 1 2;0 2", "ok 0;;0 0 1", "ok 0;;0 0 1");
+	agrees("resolve;1;l5 v0 v0;l5 v0 v0;;0 0 0;0 1 2;0 1 2;0 2", "ok 1;0;0 1 1", "ok 1;0;0 1 1");
+	agrees("resolve;0;v0 l1;v0 l1;;255 255;0 1;0 1;0 1", "ok 1;;255 1", "ok 1;;255 1");
+	agrees("resolve;0;v0;v0 l1;;0;0;0 -;0 1", "ok 0;;0", "ok 0;;0");
+	agrees("resolve;0;l9 v0;v0 _;;0 0;- 1;- 1;0 1", "ok 0;;0 0", "ok 0;;0 0");
+	agrees("resolve;1;l9 v0;v0 _;;0 0;- 1;- 1;0 1", "ok 1;0;0 1", "ok 1;0;0 1");
+	agrees("resolve;0;v0 v1;v1 _;;0 0;1 0;0 1;0 1", "ok 1;;1 0", "ok 1;;1 0");
+	agrees("resolve;0;v0 _;v0 _;;0 0;0 1;0 1;0 1", "ok 1;;0 1", "ok 1;;0 1");
+	// the stack limit: 1024 literals in place, two drops
+	{
+		std::string const result = "ok 1;;" + times("0", 1022) + " 1 1";
+		agrees(
+			"resolve;0;" + times("l0", 1024) + ";" + times("l0", 1024) + ";;" + times("0", 1024) + ";" + nats(0, 1023)
+				+ ";" + nats(0, 1023) + ";0 2",
+			result,
+			result
+		);
+	}
+	// a wrong model result is not equal to the port result: success, a spill, a dropped byte, a missing byte
+	for (std::string const wrong: {"ok 0;1;0 1", "ok 1;;0 1", "ok 1;1;1 1", "ok 1;1;0", "err"})
+	{
+		std::optional<port::Check> const check = port::check("resolve;1;v0 v1;v0 v1;;0 0;0 1;0 1;0 1", wrong);
+		expect(check && check->port != check->model, "a wrong resolve model result differs: " + wrong);
+	}
+
+	// not in the domain of the resolve unit: too few fields, too many fields, a bad bit, a bad slot, a bad spilled
+	// id, not one dropped byte per source slot, a bad byte, a destination bound twice, a destination out of the
+	// target, not an offset and an excess, the blocked offset not below the working stack size, more source, target
+	// or working stack slots than the stack limit
+	throws("resolve;0;v0;v0;;0;0;0");
+	throws("resolve;0;v0;v0;;0;0;0;0 1;");
+	throws("resolve;2;v0;v0;;0;0;0;0 1");
+	throws("resolve;;v0;v0;;0;0;0;0 1");
+	throws("resolve;0;x;v0;;0;0;0;0 1");
+	throws("resolve;0;v0;y;;0;0;0;0 1");
+	throws("resolve;0;v0;v0;a;0;0;0;0 1");
+	throws("resolve;0;v0;v0;;;0;0;0 1");
+	throws("resolve;0;v0;v0;;0 0;0;0;0 1");
+	throws("resolve;0;v0;v0;;256;0;0;0 1");
+	throws("resolve;0;v0;v0;;1000;0;0;0 1");
+	throws("resolve;1;v0 v1 v2;v0 v1 v2;;0 0 0;0 1 2;2 1 0 0;0 1");
+	throws("resolve;0;v0 v1;v0 v1;;0 0;0 0;0 1;0 1");
+	throws("resolve;0;v0;v0;;0;1;0;0 1");
+	throws("resolve;0;v0;v0;;0;0;1;0 1");
+	throws("resolve;0;v0;v0;;0;0;0;0");
+	throws("resolve;0;v0;v0;;0;0;0;0 1 2");
+	throws("resolve;0;v0;v0;;0;0;0;1 1");
+	throws("resolve;0;v0;v0;;0;0;-;3 1");
+	throws("resolve;0;" + times("l0", 1025) + ";;;" + times("0", 1025) + ";" + times("-", 1025) + ";;0 1");
+	throws("resolve;0;;" + times("_", 1025) + ";;;;-;0 1");
+	throws("resolve;0;;;;;;" + times("-", 1025) + ";0 1");
+
 	if (failures > 0)
 	{
 		std::cerr << failures << " failures\n";

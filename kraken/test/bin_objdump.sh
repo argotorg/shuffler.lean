@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Disassemble the code of build_bottom_up.S in the binary $1, from its first function
 # (Emission::isSpilled, by its g++ name) to the end of its last function, the symbol
-# build_mapping. Print "start ADDR" and "stop ADDR", then "ADDR SIZE KIND TEXT"
+# resolve. Print "start ADDR" and "stop ADDR", then "ADDR SIZE KIND TEXT"
 # for each instruction: ADDR in hex, SIZE in bytes, KIND "pad" for an alignment nop and
 # "instr" for all else, TEXT in AT&T syntax with a width suffix on each mnemonic
 # (objdump -M suffix).
@@ -15,7 +15,7 @@ if [ "$(readelf -h "$bin" | awk '$1 == "Type:" { print $2 }')" != EXEC ]; then
 fi
 sym() { nm -S "$bin" | awk -v s="$1" '$4 == s { print $1, $2 }'; }
 read -r start _ < <(sym _ZNK12_GLOBAL__N_18Emission9isSpilledE9StackSlot)
-read -r last lsize < <(sym build_mapping)
+read -r last lsize < <(sym resolve)
 start=$(printf '%x' $((16#$start)))
 stop=$(printf '%x' $((16#$last + 16#$lsize)))
 echo "start $start"
