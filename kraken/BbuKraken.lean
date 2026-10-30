@@ -50,6 +50,7 @@ import BbuKraken.Unit.Generate
 import BbuKraken.Unit.IsSpilled
 import BbuKraken.Unit.Loop
 import BbuKraken.Unit.Permute
+import BbuKraken.Unit.Permute.Frame
 import BbuKraken.Unit.PermuteModel
 import BbuKraken.Unit.PermuteModelTest
 import BbuKraken.Unit.PermuteSpecs
