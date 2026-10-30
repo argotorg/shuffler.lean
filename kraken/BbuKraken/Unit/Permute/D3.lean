@@ -1,7 +1,7 @@
 import BbuKraken.Unit.Permute.MD
 
 /-!
-# `permute`: the block `.LB.Emission.permute.24` (`exchange`)
+# `permute`: the block `.LB.Emission.permute.22` (`exchange`)
 -/
 
 open Std.WP Lean.Order
@@ -20,7 +20,8 @@ theorem top_m8i (d x : Word) :
   rw [show (-8 : Int64).toInt = -8 from rfl]; bv_omega
 
 
--- The record of `.LB.Emission.permute.24` after `dsimp`: `movb $0`, `movb %sil` (`sil` is `size + ~pos`),
+-- The record of `.LB.Emission.permute.22` after `dsimp`: `movb $0`, `movb %dil`
+-- (`dil` is `size + ~pos`),
 -- `movl $0`, `movb $1`, `movb $5`.
 theorem op_eq8 (l p : Word) :
     ({ kind := 0#8, depth := (l + ~~~p).extractLsb' 0 8, slot := ⟨0#32, 1#8, 5#8⟩ } : Op)
@@ -41,7 +42,8 @@ theorem le_of_na {d : Word}
     d ≤ 16#64 :=
   le_of_be (by rw [← Bool.not_or, Bool.not_eq_false'] at h; exact h)
 
--- The stores of `.LB.Emission.permute.24`: `Flat.stackSwap`, the two stores of `m_destinationOf` and the store of
+-- The stores of `.LB.Emission.permute.22`: `Flat.stackSwap`, the two stores of
+-- `m_destinationOf` and the store of
 -- `m_positionOf` for `pos`.
 theorem flat_ex (g : G) (hok : g.Ok) (p top : Word) (htop : g.h.len - 1 = top)
     (hpt : top.toNat ≠ p.toNat) (hn : g.h.nops.toNat < 6 * g.h.n.toNat)
@@ -81,8 +83,8 @@ theorem flat_ex (g : G) (hok : g.Ok) (p top : Word) (htop : g.h.len - 1 = top)
     rw [take_set_succ _ _ _ b2, List.map_append, List.map_singleton, hr]
 
 
--- The rewrites of `b_73` after `symexec_norm`: the loads of the ghost and of the registers.
--- The names are the hypotheses of `b_73` (no hygiene).
+-- The rewrites of `b_22` after `symexec_norm`: the loads of the ghost and of the registers.
+-- The names are the hypotheses of `b_22` (no hygiene).
 set_option hygiene false in
 macro "d3s" : tactic => `(tactic| simp only [h15, hcx, hax, hlen, rd_eq, rdb_eq,
   Fld.fold_stack_size, Fld.fold_stack_data, Fld.fold_stack_trace, Fld.fold_stack_traceSize,
@@ -103,8 +105,8 @@ macro "d3s" " at " h:ident : tactic => `(tactic| simp only [h15, hcx, hax, hlen,
   rd_dest h8 hpM, rd_dest h8 htM, rd_dest h10 hpM, Vector.getElem_set_self,
   Vector.getElem_set_ne htM hpM htp] at $h:ident)
 
-theorem b_73 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.24" →
+theorem b_22 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) permuteA 1034 s) :
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.22" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -117,8 +119,8 @@ theorem b_73 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
   have hlen : g'.h.len = g.h.len := hD.len
   have hn' : g'.h.n = g.h.n := hD.keep.n
   have h0 := hD.pos
-  have h15 := hD.r15
-  have hcx : t.regs.rcx.toBitVec = g.h.len - 1#64 := hD.cx
+  have h15 := hD.r13
+  have hcx : t.regs.rsi.toBitVec = g.h.len - 1#64 := hD.si
   have hpl : pos < g.h.len := hmis.1
   have htl : g.h.len - 1#64 < g.h.len := by bv_omega
   have hpM := lt_max hok hpl
@@ -130,7 +132,8 @@ theorem b_73 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
   have hdt : g'.h.dest[(g.h.len - 1#64).toNat] < g.h.len := by
     rw [← get_eq _ _ htM]; exact hD.dl _ htl
   have hdtM := lt_max hok hdt
-  have htp : (g.h.len - 1#64).toNat ≠ pos.toNat := fun e => hmis.2.1 (BitVec.eq_of_toNat_eq e).symm
+  have htp : (g.h.len - 1#64).toNat ≠ pos.toNat := fun e =>
+    hmis.2.1 (BitVec.eq_of_toNat_eq e).symm
   -- The view after each store of the asm, in the order of the asm.
   have h1 := View.store_stk hm0 hpn g'.stk[(g.h.len - 1#64).toNat]
   have h2 := store411_slot h1 ht (g'.stk[pos.toNat].extractLsb' 0 32)
@@ -186,7 +189,7 @@ theorem b_73 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
     cfg_goto
     · exact Fm.stack (hF.next rfl rfl)
     · simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
-      exact ⟨g', L, pos, hF.next rfl rfl, hok', hD.keep, hD.r15, hax, by rw [hlen],
+      exact ⟨g', L, pos, hF.next rfl rfl, hok', hD.keep, hD.r13, hax, by rw [hlen],
         by rw [hlen]; exact hc, by rw [hperm, ex_unr hne hr, after_ret]⟩
     · pd_dec
   case vc33 =>
@@ -212,7 +215,7 @@ theorem b_73 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
     have hs : (g'.h.nops + 1#64).toNat = g'.h.nops.toNat + 1 := by
       rw [BitVec.toNat_add, BitVec.toNat_ofNat]; simp only [MAX_N] at hN; omega
     simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
-    refine ⟨_, L, p, f, pos, ⟨hF.step h11 rfl, ?_, ?_, hlen, h0, ?_, hD.r15, hD.bx, hD.cx,
+    refine ⟨_, L, p, f, pos, ⟨hF.step h11 rfl, ?_, ?_, hlen, h0, ?_, hD.r13, hD.r14, hD.cx,
       hD.si, hD.agP, hD.bij⟩, hax, hmis, ?_, hmu, ?_⟩
     · exact Keep.ok (g := g') ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok' hok'.len
         (by show (g'.h.nops + 1#64).toNat ≤ 6 * g'.h.n.toNat; rw [hs]; omega)
