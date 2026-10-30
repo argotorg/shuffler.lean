@@ -1,7 +1,7 @@
 // Differential fuzzer for buildMapping, removeSurplus, permute, permuteAtLowestHeight, buildBottomUp,
-// Emission.run and Planner.run: decodes each fuzzer input into one case and runs the Lean model (through the
-// Lean C FFI), the C++ shuffler of solc and, for the units in Fuzz/port.cpp, the kraken/c port on it. The model
-// is the reference. On the first difference it prints "port <tab> case <tab> port <tab> model" or
+// Emission.run, Planner.run and State.pop: decodes each fuzzer input into one case and runs the Lean model
+// (through the Lean C FFI), the C++ shuffler of solc and, for the units in Fuzz/port.cpp, the kraken/c port on it.
+// The model is the reference. On the first difference it prints "port <tab> case <tab> port <tab> model" or
 // "solc <tab> case <tab> c++ <tab> lean" to stderr and aborts. The port is checked first. The case and result
 // format is documented in Fuzz/Oracle.lean.
 //
@@ -239,6 +239,16 @@ std::string runOnState(Slots& _slots, std::vector<std::string> const& _fields)
 		Emission::Result const result = std::move(emission).run();
 		return showState(_slots, result.blocked, result.trace, result.data, result.mapping);
 	}
+	if (kind == "pop")
+	{
+		for (std::size_t count = parseNat(_fields.at(5)); count > 0; --count)
+			emission.pop();
+		std::vector<std::string> sources;
+		for (std::size_t j = 0; j < target.size(); ++j)
+			sources.push_back(showOffset(emission.m_mapping.positionOf(StackOffset{j})));
+		return showState(_slots, std::nullopt, emission) + ";" + join(sources) + ";" +
+			std::to_string(emission.m_pendingGenerations);
+	}
 	std::optional<Emission::Blocked> const blocked =
 		kind == "surplus" ? emission.removeSurplus() :
 		kind == "lowest" ? emission.permuteAtLowestHeight() :
@@ -303,6 +313,8 @@ std::string runCpp(Slots& _slots, std::string const& _line)
 		if (kind == "map" && fields.size() == 5)
 			return runBuildMapping(_slots, fields);
 		if ((kind == "surplus" || kind == "lowest" || kind == "bottomup" || kind == "emit") && fields.size() == 5)
+			return runOnState(_slots, fields);
+		if (kind == "pop" && fields.size() == 6)
 			return runOnState(_slots, fields);
 		if (kind == "permute" && fields.size() == 3)
 			return runPermute(_slots, fields);
@@ -430,12 +442,12 @@ std::string planCase(Input& _in)
 		join(vars);
 }
 
-/// A stack, target, mapping and spill set. For "surplus" and "emit" some slots have no destination. For
+/// A stack, target, mapping and spill set. For "surplus", "emit" and "pop" some slots have no destination. For
 /// "lowest" and "bottomup" every slot has one. The state is `Valid`, as buildBottomUp requires, for "emit" after
-/// removeSurplus.
+/// removeSurplus. A "pop" case also has the number of pops, at most one more than the stack size.
 std::string stateCase(Input& _in, std::string const& _kind)
 {
-	bool const surplus = _kind == "surplus" || _kind == "emit";
+	bool const surplus = _kind == "surplus" || _kind == "emit" || _kind == "pop";
 	std::size_t const numVars = varCount(_in);
 	std::vector<std::string> target = slots(_in, stackSize(_in), numVars);
 	std::vector<std::size_t> free;
@@ -480,7 +492,8 @@ std::string stateCase(Input& _in, std::string const& _kind)
 	for (std::size_t v = 0; v < numVars; ++v)
 		if (spilled[v])
 			vars.push_back(std::to_string(v));
-	return _kind + ";" + join(stack) + ";" + join(target) + ";" + join(dests) + ";" + join(vars);
+	std::string const state = _kind + ";" + join(stack) + ";" + join(target) + ";" + join(dests) + ";" + join(vars);
+	return _kind == "pop" ? state + ";" + std::to_string(_in.pick(0, stack.size() + 1)) : state;
 }
 
 std::string permuteCase(Input& _in)
@@ -497,7 +510,7 @@ std::string permuteCase(Input& _in)
 
 std::string makeCase(Input& _in)
 {
-	switch (_in.pick(0, 6))
+	switch (_in.pick(0, 7))
 	{
 	case 0: return mapCase(_in);
 	case 1: return stateCase(_in, "surplus");
@@ -505,8 +518,23 @@ std::string makeCase(Input& _in)
 	case 3: return stateCase(_in, "lowest");
 	case 4: return stateCase(_in, "emit");
 	case 5: return planCase(_in);
+	case 6: return stateCase(_in, "pop");
 	default: return stateCase(_in, "bottomup");
 	}
+}
+
+/// The first difference on the case `_line`, "port <tab> case <tab> port <tab> model" or
+/// "solc <tab> case <tab> c++ <tab> lean"; none if the port, solc and the model agree. The port is checked first.
+std::optional<std::string> difference(std::string const& _line)
+{
+	std::string const lean = runLean(_line);
+	if (std::optional<port::Check> const port = port::check(_line, lean); port && port->port != port->model)
+		return "port\t" + _line + "\t" + port->port + "\t" + port->model;
+	Slots slots;
+	std::string const cpp = runCpp(slots, _line);
+	if (cpp != lean)
+		return "solc\t" + _line + "\t" + cpp + "\t" + lean;
+	return std::nullopt;
 }
 
 }
@@ -520,18 +548,9 @@ extern "C" int LLVMFuzzerInitialize(int*, char***)
 extern "C" int LLVMFuzzerTestOneInput(std::uint8_t const* _data, std::size_t const _size)
 {
 	Input input(_data, _size);
-	std::string const line = makeCase(input);
-	std::string const lean = runLean(line);
-	if (std::optional<port::Check> const port = port::check(line, lean); port && port->port != port->model)
+	if (std::optional<std::string> const diff = difference(makeCase(input)))
 	{
-		std::cerr << "port\t" << line << '\t' << port->port << '\t' << port->model << '\n';
-		std::abort();
-	}
-	Slots slots;
-	std::string const cpp = runCpp(slots, line);
-	if (cpp != lean)
-	{
-		std::cerr << "solc\t" << line << '\t' << cpp << '\t' << lean << '\n';
+		std::cerr << *diff << '\n';
 		std::abort();
 	}
 	return 0;

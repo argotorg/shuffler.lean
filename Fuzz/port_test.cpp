@@ -63,6 +63,15 @@ std::string nats(int const _from, int const _to, int const _step = 1)
 	return result;
 }
 
+/// `_word` `_count` times, separated by spaces
+std::string times(std::string const& _word, int const _count)
+{
+	std::string result;
+	for (int i = 0; i < _count; ++i)
+		result += (i > 0 ? " " : "") + _word;
+	return result;
+}
+
 }
 
 int main()
@@ -123,9 +132,11 @@ int main()
 		expect(check && check->port != check->model, "a wrong model result differs");
 	}
 
-	// not in the domain of the port unit: a surplus slot, a bad slot, a bad destination, too few fields,
-	// a destination bound twice, a destination out of the target, more slots than the port's stack limit
+	// not in the domain of the port unit: a surplus slot, a slot without a destination, a bad slot, a bad
+	// destination, too few fields, a destination bound twice, a destination out of the target, more slots than the
+	// port's stack limit
 	throws("bottomup;v0 v1;v0;0 -;");
+	throws("bottomup;v0 v1;v0 v1;0 -;");
 	throws("bottomup;x;x;0;");
 	throws("bottomup;v0;v0;a;");
 	throws("bottomup;v0;v0;0 1;");
@@ -139,6 +150,49 @@ int main()
 			target += " _";
 		throws("bottomup;;" + target + ";;");
 	}
+
+	// State.pop: no pops, a pop of an empty stack, a bound top (its target offset gets no position), an unbound top
+	// (no position changes), the pending generations stay, slots without a destination, each slot kind, more slots
+	// than target slots, one pop more than the stack size
+	agrees("pop;;;;;0", "ok;;;;;0", "ok;;;;;0");
+	agrees("pop;;;;;1", "err", "err");
+	agrees("pop;;v0 v1;;0 1;0", "ok;;;;- -;2", "ok;;;;- -;2");
+	agrees("pop;v0;v0;0;0;1", "ok;;POP;;-;0", "ok;;POP;;-;0");
+	agrees("pop;l0;v0;-;0;1", "ok;;POP;;-;1", "ok;;POP;;-;1");
+	agrees("pop;v1 v0;v0 v1;1 0;0 1;1", "ok;v1;POP;1;- 0;0", "ok;v1;POP;1;- 0;0");
+	agrees("pop;v0 l1 v2;v0 v1 v2;0 - 2;0 1 2;2", "ok;v0;POP POP;0;0 - -;1", "ok;v0;POP POP;0;0 - -;1");
+	agrees("pop;v0 v1;v0 v1;0 1;0 1;2", "ok;;POP POP;;- -;0", "ok;;POP POP;;- -;0");
+	agrees("pop;v0 v1;v0 v1;0 1;0 1;3", "err", "err");
+	agrees("pop;l0 v1;v0 v1;- 1;0 1;0", "ok;l0 v1;;- 1;- 1;1", "ok;l0 v1;;- 1;- 1;1");
+	agrees("pop;R _ l2 v5;R _ l2 v5;0 1 2 3;5;2", "ok;R _;POP POP;0 1;0 1 - -;0", "ok;R _;POP POP;0 1;0 1 - -;0");
+	agrees("pop;l0 l1 l2;v0;- - -;0;2", "ok;l0;POP POP;-;-;1", "ok;l0;POP POP;-;-;1");
+	// the stack limit: 1024 slots, all popped, and one pop more
+	{
+		std::string const state = "pop;" + vars(0, 1023) + ";" + vars(0, 1023) + ";" + nats(0, 1023) + ";;";
+		std::string const result = "ok;;" + times("POP", 1024) + ";;" + times("-", 1024) + ";0";
+		agrees(state + "1024", result, result);
+		agrees(state + "1025", "err", "err");
+	}
+	// a wrong model result is not equal to the port result: the position of a popped slot
+	{
+		std::optional<port::Check> const check = port::check("pop;v0;v0;0;0;1", "ok;;POP;;0;0");
+		expect(check && check->port != check->model, "a wrong pop model result differs");
+	}
+
+	// not in the domain of the pop unit: too few fields, a bad slot, a bad destination, not one destination per
+	// slot, a destination out of the target, a destination bound twice, a bad number of pops, two pops more than
+	// the stack size, more stack slots or target slots than the stack limit
+	throws("pop;v0;v0;0;0");
+	throws("pop;x;v0;0;0;0");
+	throws("pop;v0;v0;a;0;0");
+	throws("pop;v0;v0;0 -;0;0");
+	throws("pop;v0;v0;1;0;0");
+	throws("pop;v0 v1;v0 v1;0 0;0 1;0");
+	throws("pop;v0;v0;0;0;-1");
+	throws("pop;v0;v0;0;0;3");
+	throws("pop;;;;;2");
+	throws("pop;" + times("_", 1025) + ";;" + times("-", 1025) + ";;0");
+	throws("pop;;" + times("_", 1025) + ";;;0");
 
 	if (failures > 0)
 	{

@@ -1,6 +1,7 @@
 #!/bin/sh
 # Usage: Fuzz/build.sh <build-dir> [jobs]
-# Builds <build-dir>/fuzz and <build-dir>/port_test, and runs port_test and ci_test.sh. Run it from the repository root
+# Builds <build-dir>/fuzz, <build-dir>/lines and <build-dir>/port_test, and runs port_test, lines on all small "pop"
+# cases (pop_cases.sh) and ci_test.sh. Run it from the repository root
 # inside `nix develop`, and again after a change to the Lean model, to solidity or to the kraken/c asm.
 # [jobs] is the number of parallel ninja jobs (default: the ninja default).
 set -eu
@@ -17,6 +18,7 @@ cmake -S Fuzz -B "$build" -G Ninja -DCMAKE_BUILD_TYPE=Release \
   -DLEAN_PREFIX="$(lean --print-prefix)" \
   -DLEAN_SOURCES="$build/lean-sources.txt" -DLEAN_OBJECTS="$build/lean-objects.txt" \
   -DIGNORE_VENDORED_DEPENDENCIES=ON -DBoost_USE_STATIC_LIBS=OFF -DTESTS=OFF -DTOOLS=OFF -DPEDANTIC=OFF
-ninja -C "$build" ${jobs:+-j "$jobs"} fuzz port_test
+ninja -C "$build" ${jobs:+-j "$jobs"} fuzz lines port_test
 "$build/port_test"
+sh "$(dirname "$0")/pop_cases.sh" 5 | "$build/lines"
 sh "$(dirname "$0")/ci_test.sh"
