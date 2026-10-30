@@ -29,6 +29,7 @@ public def spillSetAddAsm : Program := bbuParseFn(Names.spillSetAdd)
 public def spillSetAsm : Program := bbuParseFn(Names.spill_set)
 public def removeSurplusAsm : Program := bbuParseFn(Names.removeSurplus)
 public def removeSurplusEntryAsm : Program := bbuParseFn(Names.remove_surplus)
+public def permuteEntryAsm : Program := bbuParseFn(Names.permuteEntry)
 
 /-- `c/build_bottom_up.S`, the file that `bbu_harness` links. -/
 public def bbuAsm : Program := bbuParseFile("c/build_bottom_up.S")

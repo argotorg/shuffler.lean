@@ -2,7 +2,7 @@ _ZN12_GLOBAL__N_18Emission3popEv:
 	movq	32(%rdi), %rax
 	movl	$2, %edx
 	testq	%rax, %rax
-	je	.LB163
+	je	.LB169
 	leaq	-1(%rax), %rdx
 	movq	%rdx, 32(%rdi)
 	movq	48(%rdi), %rax
@@ -18,11 +18,11 @@ _ZN12_GLOBAL__N_18Emission3popEv:
 	movb	$5, 9(%rax)
 	movq	56(%rdi,%rdx,8), %rax
 	cmpq	$-1, %rax
-	je	.LB165
+	je	.LB171
 	movq	$-1, 8248(%rdi,%rax,8)
-.LB165:
+.LB171:
 	movl	$0, %edx
-.LB163:
+.LB169:
 	movl	%edx, %eax
 	ret
 	.size	_ZN12_GLOBAL__N_18Emission3popEv, .-_ZN12_GLOBAL__N_18Emission3popEv

@@ -1,6 +1,7 @@
-// Emission::buildBottomUp, Emission::removeSurplus and Emission::pop of
+// Emission::buildBottomUp, Emission::removeSurplus, Emission::permute and Emission::pop of
 // solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp, freestanding, with the behavior of the Lean model,
-// Shuffler/BuildBottomUp/Defs.lean, Shuffler/RemoveSurplus/Defs.lean and State.pop of Shuffler/Emission/Defs.lean.
+// Shuffler/BuildBottomUp/Defs.lean, Shuffler/RemoveSurplus/Defs.lean, Shuffler/Permute/Defs.lean and State.pop of
+// Shuffler/Emission/Defs.lean.
 // The differences from Shuffler.cpp:
 //
 // - There are no exceptions, so a failed yulAssert returns Status::AssertionFailed.
@@ -388,7 +389,15 @@ public:
 			if (m_pendingGenerations == 0)
 			{
 				yulAssert(m_stack.size() == m_targetSize);
-				return permute();
+				// every slot goes to the offset it is bound for
+				OffsetArray<StackOffset> permutation;
+				for (StackOffset pos{0}; pos < m_stack.size(); ++pos.value)
+				{
+					Optional<StackOffset> const destination = m_mapping.destinationOf(pos);
+					yulAssert(destination.has_value());
+					permutation[pos] = *destination;
+				}
+				return permute(permutation);
 			}
 
 			// a target offset that needs something DUPed urgently before it goes out of dup reach
@@ -567,20 +576,17 @@ private:
 		return Status::Done;
 	}
 
-	/// Shuffler.cpp's permute of the destinations: every slot goes to the offset it is bound for. The
-	/// differences from Shuffler.cpp, as in the Lean model: the groups of equal slots come from a mark per
-	/// offset, not from a sort; an empty stack is done; and a swap does not assert that the slot is not final.
-	UNIT Status permute()
+public:
+	/// Shuffler.cpp's permute: the slot at each offset `pos` goes to the offset `_permutation[pos]`, a permutation
+	/// of the offsets of the working stack. permute changes the array in place: the regroup and each pass write it.
+	/// Shuffler.cpp takes the permutation by value; here the caller owns the array (8 KiB), so that the frame of
+	/// permute does not hold a copy. The differences from Shuffler.cpp, as in the Lean model: the groups of equal
+	/// slots come from a mark per offset, not from a sort; an empty stack is done; and a swap does not assert that
+	/// the slot is not final.
+	UNIT Status permute(OffsetArray<StackOffset>& _permutation)
 	{
 		if (m_stack.size() == 0)  // Lean
 			return Status::Done;
-		OffsetArray<StackOffset> permutation;
-		for (StackOffset pos{0}; pos < m_stack.size(); ++pos.value)
-		{
-			Optional<StackOffset> const destination = m_mapping.destinationOf(pos);
-			yulAssert(destination.has_value());
-			permutation[pos] = *destination;
-		}
 
 		// Equal slots are interchangeable: among them, those already at one of their desired offsets stay, the
 		// others take the remaining offsets. Otherwise equal slots would pass each other in cycles.
@@ -597,7 +603,7 @@ private:
 			// the group's desired offsets
 			for (StackOffset pos{0}; pos <= leader; ++pos.value)
 				if (m_stack[pos] == slot)
-					desiredBy[permutation[pos]] = leader;
+					desiredBy[_permutation[pos]] = leader;
 			// slots already standing on one of the group's desired offsets stay put, the others take the vacant
 			// offsets (desired, but not in the group), both sides ascending, so nothing crosses
 			StackOffset vacant{0};
@@ -607,29 +613,29 @@ private:
 					continue;
 				if (desiredBy[pos] == leader)
 				{
-					permutation[pos] = pos;
+					_permutation[pos] = pos;
 					continue;
 				}
 				while (vacant < m_stack.size() && !(desiredBy[vacant] == leader && !(m_stack[vacant] == slot)))
 					++vacant.value;
 				yulAssert(vacant < m_stack.size(), "movers and vacant must have the same size");
-				permutation[pos] = vacant;
+				_permutation[pos] = vacant;
 				++vacant.value;
 			}
 		}
 
-		// permutation is a permutation of the offsets. Let m be the number of offsets i with permutation[i] != i,
-		// and t be 1 if permutation[top] == top, else 0. Then 3 <= 2 m + 3 t <= 2 size() + 1, and each iteration
+		// _permutation is a permutation of the offsets. Let m be the number of offsets i with _permutation[i] != i,
+		// and t be 1 if _permutation[top] == top, else 0. Then 3 <= 2 m + 3 t <= 2 size() + 1, and each iteration
 		// that does not return lowers 2 m + 3 t. Thus the loop ends after at most 2 size() - 1 iterations.
 		StackOffset const top = m_stack.topOffset();
 		while (true)
 		{
-			StackOffset pos = permutation[top];
+			StackOffset pos = _permutation[top];
 			if (pos == top)
 			{
 				// the top is in place: find the shallowest misplaced slot
 				for (StackOffset candidate = top; candidate.value-- > 0;)
-					if (permutation[candidate] != candidate)
+					if (_permutation[candidate] != candidate)
 					{
 						pos = candidate;
 						break;
@@ -649,12 +655,13 @@ private:
 				m_stack.swap(pos);
 				m_mapping.swapDestinations(pos, top);
 			}
-			StackOffset const desired = permutation[pos];
-			permutation[pos] = permutation[top];
-			permutation[top] = desired;
+			StackOffset const desired = _permutation[pos];
+			_permutation[pos] = _permutation[top];
+			_permutation[top] = desired;
 		}
 	}
 
+private:
 	UNIT bool isSpilled(StackSlot const _slot) const { return m_spills.isSpilled(_slot); }
 
 	/// Whether the slot at `_pos` has no target offset to go to and is to be popped
@@ -975,6 +982,56 @@ extern "C" std::int64_t remove_surplus(
 	}
 	*height = emission.stackSize();
 	for (StackOffset pos{0}; pos < emission.stackSize(); ++pos.value)
+		dest[pos.value] = emission.mapping().destinationOf(pos);
+	return static_cast<std::int64_t>(emission.traceSize());
+}
+
+/// The Emission constructor and Emission::permute for a stack of h slots: data holds the slots, and the slot i goes to
+/// the offset perm[i]. The state is the state of Fuzz/Oracle.lean's runPermute: the target is the permuted stack, the
+/// mapping binds slot i to perm[i], and the spill set is empty. permute reads neither the target nor the spill set,
+/// so spilled is null. Writes the operations to ops and returns their number, also when a slot is out of reach. Then
+/// blocked gets its offset and its excess, which is positive, else 0 and 0. Returns -2 for a failed assertion. If the
+/// result is not -2, data holds the slots of the working stack, and dest the destination of each of its h slots.
+/// permute does not write perm.
+///
+/// perm is a permutation of 0..h-1, and ops has room for 2h entries: permute makes at most 2h - 1 passes, each with
+/// at most one swap. h <= 1024, else the result is -2 and nothing is written.
+extern "C" std::int64_t permute(
+	std::uint64_t const h,
+	StackSlot* const data,
+	std::uint64_t const* const perm,
+	ShuffleOp* const ops,
+	std::uint64_t* const blocked,
+	Optional<StackOffset>* const dest
+)
+{
+	// the mapping has room for maxStackSize offsets
+	if (h > maxStackSize)
+		return -2;
+	OffsetArray<StackOffset> permutation;
+	OffsetArray<StackSlot> target;
+	Mapping planned{h, h};
+	for (StackOffset pos{0}; pos < h; ++pos.value)
+	{
+		permutation[pos] = StackOffset{perm[pos.value]};
+		target[permutation[pos]] = data[pos.value];
+		planned.bind(pos, permutation[pos]);
+	}
+	Emission emission{Stack{data, h, ops}, target.data(), h, planned, nullptr};
+	switch (emission.permute(permutation))
+	{
+	case Status::Done:
+		blocked[0] = 0;
+		blocked[1] = 0;
+		break;
+	case Status::Blocked:
+		blocked[0] = emission.blocked().offset.value;
+		blocked[1] = emission.blocked().excess;
+		break;
+	case Status::AssertionFailed:
+		return -2;
+	}
+	for (StackOffset pos{0}; pos < h; ++pos.value)
 		dest[pos.value] = emission.mapping().destinationOf(pos);
 	return static_cast<std::int64_t>(emission.traceSize());
 }

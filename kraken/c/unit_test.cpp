@@ -712,6 +712,265 @@ void removeSurplusProperties()
 	expect(retagRuns > 100, "removeSurplus: runs with a retag", retagRuns);
 }
 
+/// The buffers of permute after a call
+struct Permuted
+{
+	std::int64_t count;
+	std::vector<StackSlot> data;
+	std::vector<std::uint64_t> perm;
+	/// 2h entries, so that AddressSanitizer finds a write past the bound of the contract
+	std::vector<ShuffleOp> ops;
+	std::uint64_t blocked[2];
+	std::vector<Optional<StackOffset>> dest;
+};
+
+/// permute on the stack `_stack`, whose slot i goes to the offset `_perm[i]`
+Permuted permuted(std::vector<StackSlot> const& _stack, std::vector<std::uint64_t> const& _perm)
+{
+	Permuted result{0, _stack, _perm, std::vector<ShuffleOp>(2 * _stack.size()), {7, 7},
+		std::vector<Optional<StackOffset>>(_stack.size(), offset(7))};
+	result.count = permute(_stack.size(), result.data.data(), result.perm.data(), result.ops.data(), result.blocked,
+		result.dest.data());
+	return result;
+}
+
+/// The offsets from `_from` up to `_to`, with the step `_step`
+std::vector<std::uint64_t> naturals(std::uint64_t const _from, std::uint64_t const _to, std::int64_t const _step = 1)
+{
+	std::vector<std::uint64_t> result;
+	for (std::uint64_t i = _from;; i += static_cast<std::uint64_t>(_step))
+	{
+		result.push_back(i);
+		if (i == _to)
+			return result;
+	}
+}
+
+/// The offsets 0 to `_count - 1`
+std::vector<std::uint64_t> firstOffsets(std::size_t const _count)
+{
+	std::vector<std::uint64_t> result;
+	for (std::uint64_t i = 0; i < _count; ++i)
+		result.push_back(i);
+	return result;
+}
+
+std::vector<Optional<StackOffset>> offsets(std::vector<std::uint64_t> const& _values)
+{
+	std::vector<Optional<StackOffset>> result;
+	for (std::uint64_t const value: _values)
+		result.push_back(offset(value));
+	return result;
+}
+
+/// The operations `_ops` are the swaps of the depths `_depths`
+bool areSwaps(Permuted const& _result, std::vector<std::size_t> const& _depths)
+{
+	if (_result.count != static_cast<std::int64_t>(_depths.size()))
+		return false;
+	for (std::size_t i = 0; i < _depths.size(); ++i)
+		if (!isSwap(_result.ops[i], _depths[i]))
+			return false;
+	return true;
+}
+
+bool sameSlots(std::vector<StackSlot> const& _a, std::vector<StackSlot> const& _b)
+{
+	return std::equal(_a.begin(), _a.end(), _b.begin(), _b.end(), sameSlot);
+}
+
+/// permute: the bounds, the outputs, the regroup of equal slots, and the blocked cases. The cases of
+/// Fuzz/port_test.cpp, with the model results of Fuzz/Oracle.lean.
+void permuteEntry()
+{
+	StackSlot const literal{0, StackSlot::Kind::Value, InstOpcode::Const};
+	StackSlot const junk = StackSlot::makeJunk();
+
+	Permuted const empty = permuted({}, {});
+	expect(empty.count == 0 && empty.blocked[0] == 0 && empty.blocked[1] == 0, "permute: an empty stack");
+
+	// the identity: no operation, and each slot keeps its destination
+	Permuted const identity = permuted(variables(0, 3), {0, 1, 2});
+	expect(identity.count == 0 && sameSlots(identity.data, variables(0, 3)) && identity.dest == offsets({0, 1, 2}) &&
+		identity.blocked[0] == 0 && identity.blocked[1] == 0, "permute: the identity");
+
+	// a swap with the top
+	Permuted const top = permuted(variables(0, 3), {2, 1, 0});
+	expect(areSwaps(top, {2}) && sameSlots(top.data, {variable(2), variable(1), variable(0)}) &&
+		top.dest == offsets({0, 1, 2}) && top.blocked[0] == 0 && top.blocked[1] == 0, "permute: a swap with the top");
+	expect(top.perm == naturals(2, 0, -1), "permute: perm is not written");
+
+	// a 3-cycle away from the top: the top goes into the cycle and comes back
+	Permuted const cycle = permuted(variables(0, 4), {1, 2, 0, 3});
+	expect(areSwaps(cycle, {1, 3, 2, 1}) &&
+		sameSlots(cycle.data, {variable(2), variable(0), variable(1), variable(3)}) && cycle.dest == offsets({0, 1, 2, 3}),
+		"permute: a 3-cycle away from the top");
+
+	// equal slots that only exchange their destinations: no operation, and the destinations stay
+	Permuted const equal = permuted({variable(0), variable(1), variable(0)}, {2, 1, 0});
+	expect(equal.count == 0 && equal.dest == offsets({2, 1, 0}) && equal.blocked[1] == 0,
+		"permute: equal slots, no operation");
+	// the regroup keeps the destinations: equal slots that take each other's offsets keep them
+	Permuted const regroup = permuted({junk, junk, literal, literal}, {3, 2, 1, 0});
+	expect(areSwaps(regroup, {2, 1, 3}) && sameSlots(regroup.data, {literal, literal, junk, junk}) &&
+		regroup.dest == offsets({1, 0, 3, 2}), "permute: the regroup");
+	// a misplaced slot equal to the top takes over its destination (a retag): two swaps
+	Permuted const retag = permuted({variable(0), variable(1), variable(0)}, {1, 0, 2});
+	expect(areSwaps(retag, {1, 2}) && sameSlots(retag.data, {variable(1), variable(0), variable(0)}) &&
+		retag.dest == offsets({0, 1, 2}), "permute: a retag");
+
+	// on 18 slots the top goes to offset 0, at depth 17: blocked, nothing changes
+	std::vector<std::uint64_t> rotation = naturals(1, 16);
+	rotation.insert(rotation.begin(), 17);
+	rotation.push_back(0);
+	Permuted const blocked = permuted(variables(0, 18), rotation);
+	expect(blocked.count == 0 && blocked.blocked[0] == 0 && blocked.blocked[1] == 1 &&
+		sameSlots(blocked.data, variables(0, 18)) && blocked.dest == offsets(rotation), "permute: blocked");
+	// a SWAP16, then the slot at depth 17 blocks
+	std::vector<std::uint64_t> exchange = naturals(0, 17);
+	std::swap(exchange[0], exchange[1]);
+	Permuted const later = permuted(variables(0, 18), exchange);
+	std::vector<std::uint64_t> laterDest = naturals(2, 16);
+	laterDest.insert(laterDest.begin(), {1, 17});
+	laterDest.push_back(0);
+	std::vector<StackSlot> laterData = variables(2, 15);
+	laterData.insert(laterData.begin(), {variable(0), variable(17)});
+	laterData.push_back(variable(1));
+	expect(areSwaps(later, {16}) && later.blocked[0] == 0 && later.blocked[1] == 1, "permute: blocked after a swap");
+	expect(sameSlots(later.data, laterData) && later.dest == offsets(laterDest), "permute: blocked after a swap, dest");
+
+	// the bounds of the mapping: the identity and the reversal of 1024 slots, and 1025 slots. Then nothing is written.
+	Permuted const all = permuted(variables(0, 1024), naturals(0, 1023));
+	expect(all.count == 0 && all.blocked[1] == 0 && all.dest == offsets(naturals(0, 1023)), "permute: 1024 slots");
+	Permuted const reversal = permuted(variables(0, 1024), naturals(1023, 0, -1));
+	expect(reversal.count == 0 && reversal.blocked[0] == 0 && reversal.blocked[1] == 1007,
+		"permute: the reversal of 1024 slots");
+	Permuted const tooHigh = permuted(variables(0, 1025), naturals(0, 1024));
+	expect(tooHigh.count == -2 && tooHigh.blocked[0] == 7 && tooHigh.blocked[1] == 7 &&
+		sameSlots(tooHigh.data, variables(0, 1025)) && tooHigh.dest == std::vector(1025, offset(7)),
+		"permute: 1025 slots");
+}
+
+/// permute on random permutations, against the properties of Shuffler.cpp's permute: it only swaps (SWAP1 to
+/// SWAP16), at most 2h - 1 times; the swaps take the stack to the result; each destination stays with a slot equal to
+/// the slot that it is bound for at the start; it ends with the target, the permuted stack, or it blocks at a slot
+/// out of swap reach that is not equal to the top. buildBottomUp of the same state, with no slot to generate, gives
+/// the same operations. The order of the operations is the Lean model's, which the differential fuzzer checks.
+void permuteProperties()
+{
+	std::mt19937_64 random{20261030};
+	auto const below = [&](std::size_t const _bound) {
+		return std::uniform_int_distribution<std::size_t>{0, _bound - 1}(random);
+	};
+	// the runs that block, that swap, that move equal slots, and that end with a destination that is not the
+	// offset of its slot: the generator has to reach each case
+	unsigned long blockedRuns = 0;
+	unsigned long swapRuns = 0;
+	unsigned long equalRuns = 0;
+	unsigned long keptRuns = 0;
+	for (unsigned long run = 0; run < 20000; ++run)
+	{
+		std::size_t const h = below(run % 100 == 0 ? 1025 : 41);
+		// few distinct slots, so that some slots are equal
+		std::vector<StackSlot> stack;
+		for (std::size_t i = 0; i < h; ++i)
+			stack.push_back(below(3) == 0 ? nonVariables(static_cast<std::uint32_t>(below(2)))[below(4)] :
+				variable(static_cast<std::uint32_t>(below(4 + below(2) * h))));
+		// a shuffle, or a few exchanges of near offsets, so that some deep stacks are in reach
+		std::vector<std::uint64_t> perm = firstOffsets(h);
+		if (below(2) == 0)
+			std::shuffle(perm.begin(), perm.end(), random);
+		else if (h > 0)
+			for (std::size_t k = below(5); k > 0; --k)
+			{
+				std::size_t const i = below(h);
+				std::swap(perm[i], perm[std::min(h - 1, i + below(18))]);
+			}
+		std::vector<std::size_t> origin(h);
+		for (std::size_t i = 0; i < h; ++i)
+			origin[perm[i]] = i;
+		// the target: the slot bound for each offset
+		std::vector<StackSlot> target(h);
+		for (std::size_t i = 0; i < h; ++i)
+			target[perm[i]] = stack[i];
+
+		Permuted const result = permuted(stack, perm);
+		expect(result.count >= 0 && static_cast<std::size_t>(result.count) <= std::max<std::size_t>(2 * h, 1) - 1,
+			"permute: count", run);
+		if (result.count < 0)
+			continue;
+		expect(result.perm == perm, "permute: perm is not written", run);
+
+		// the swaps take the stack to the result; `at` holds the start position of each slot
+		std::vector<std::uint64_t> at = firstOffsets(h);
+		for (std::int64_t i = 0; i < result.count; ++i)
+		{
+			ShuffleOp const op = result.ops[static_cast<std::size_t>(i)];
+			if (op.kind == ShuffleOp::Kind::Swap && 1 <= op.depth && op.depth <= 16 && op.depth < h && isSwap(op, op.depth))
+				std::swap(at.back(), at[h - 1 - op.depth]);
+			else
+				expect(false, "permute: a SWAP1 to SWAP16 in the stack", run);
+		}
+		for (std::size_t pos = 0; pos < h; ++pos)
+			expect(sameSlot(stack[at[pos]], result.data[pos]), "permute: the stack", run);
+
+		// each destination stays with an equal slot, and no destination is lost or doubled
+		std::vector<bool> seen(h, false);
+		bool kept = false;
+		for (std::size_t pos = 0; pos < h; ++pos)
+		{
+			Optional<StackOffset> const d = result.dest[pos];
+			expect(d.has_value() && d->value < h && !seen[d->value], "permute: dest is a permutation", run);
+			if (!d || d->value >= h || seen[d->value])
+				continue;
+			seen[d->value] = true;
+			expect(sameSlot(stack[origin[d->value]], result.data[pos]), "permute: a destination stays with an equal slot",
+				run);
+			kept = kept || d->value != pos;
+		}
+
+		if (result.blocked[1] == 0)
+			expect(result.blocked[0] == 0 && sameSlots(result.data, target), "permute: done, the target", run);
+		else
+		{
+			std::size_t const pos = result.blocked[0];
+			expect(pos < h && h - 1 - pos == 16 + result.blocked[1], "permute: blocked, the excess", run);
+			expect(pos < h && !sameSlot(result.data[pos], result.data[h - 1]), "permute: blocked, not equal to the top",
+				run);
+		}
+
+		// buildBottomUp with no slot to generate: the same operations, the same stack, the same blocked slot
+		{
+			std::vector<StackSlot> data = stack;
+			std::vector<ShuffleOp> ops(6 * h);
+			std::uint64_t blocked[2] = {7, 7};
+			std::vector<std::uint8_t> const spilled(4 + h);
+			std::vector<Optional<StackOffset>> const dest = offsets(perm);
+			std::int64_t const count = build_bottom_up(h, h, data.data(), target.data(), dest.data(), spilled.data(),
+				ops.data(), blocked);
+			bool const sameOps = count == result.count && count >= 0 && std::equal(ops.begin(), ops.begin() + count,
+				result.ops.begin(), [](ShuffleOp const _a, ShuffleOp const _b) {
+					return _a.kind == _b.kind && _a.depth == _b.depth && sameSlot(_a.slot, _b.slot);
+				});
+			expect(sameOps && sameSlots(data, result.data) && blocked[0] == result.blocked[0] &&
+				blocked[1] == result.blocked[1], "permute: buildBottomUp gives the same result", run);
+		}
+
+		bool equalMoves = false;
+		for (std::size_t i = 0; i < h && !equalMoves; ++i)
+			for (std::size_t j = i + 1; j < h && !equalMoves; ++j)
+				equalMoves = sameSlot(stack[i], stack[j]) && (perm[i] != i || perm[j] != j);
+		blockedRuns += result.blocked[1] != 0;
+		swapRuns += result.count > 0;
+		equalRuns += equalMoves;
+		keptRuns += result.blocked[1] == 0 && kept;
+	}
+	expect(blockedRuns > 100, "permute: blocked runs", blockedRuns);
+	expect(swapRuns > 100, "permute: runs with a swap", swapRuns);
+	expect(equalRuns > 100, "permute: runs that move equal slots", equalRuns);
+	expect(keptRuns > 100, "permute: done runs with a destination that is not the offset of its slot", keptRuns);
+}
+
 }
 
 int main()
@@ -727,6 +986,8 @@ int main()
 	spillSetEntry();
 	removeSurplusEntry();
 	removeSurplusProperties();
+	permuteEntry();
+	permuteProperties();
 	if (failures > 0)
 	{
 		std::fprintf(stderr, "%d failures\n", failures);

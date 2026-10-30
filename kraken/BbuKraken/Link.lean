@@ -17,7 +17,7 @@ set_option maxRecDepth 100000 in
 theorem bbuAsm_eq : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm
     ++ produceAsm ++ swapWithAsm ++ generateAsm ++ finishAsm ++ loopAsm
     ++ popAsm ++ buildBottomUpAsm ++ emissionPopAsm ++ spillSetAddAsm ++ spillSetAsm
-    ++ removeSurplusAsm ++ removeSurplusEntryAsm := by rfl
+    ++ removeSurplusAsm ++ removeSurplusEntryAsm ++ permuteEntryAsm := by rfl
 
 section
 set_option maxRecDepth 100000
@@ -31,8 +31,8 @@ theorem dup_at : dupAsm.IsInfixAt bbuAsm 74 := by rw [bbuAsm_eq]; exact ⟨_, rf
 theorem produce_at : produceAsm.IsInfixAt bbuAsm 110 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 theorem generate_at : generateAsm.IsInfixAt bbuAsm 266 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 theorem finish_at : finishAsm.IsInfixAt bbuAsm 319 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem loop_at : loopAsm.IsInfixAt bbuAsm 534 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem buildBottomUp_at : buildBottomUpAsm.IsInfixAt bbuAsm 842 := by
+theorem loop_at : loopAsm.IsInfixAt bbuAsm 528 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem buildBottomUp_at : buildBottomUpAsm.IsInfixAt bbuAsm 849 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 end
 
