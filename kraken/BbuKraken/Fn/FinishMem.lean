@@ -2,7 +2,7 @@ import BbuKraken.Kit
 import PermuteKraken.Proof
 
 /-!
-Memory lemmas for `permuteDestinations`: stores of 1, 4 and 8 bytes, the low 6 bytes of
+Memory lemmas for the old `permuteDestinations`: stores of 1, 4 and 8 bytes, the low 6 bytes of
 a word, and one iteration of the swap loop `.LB55`.
 -/
 

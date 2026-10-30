@@ -13,65 +13,6 @@ namespace Bbu
 
 open FinishMem
 
-/-! ## The contract of `permute` -/
-
--- The hypotheses of `permute_spec` for the permutation `p0`.
-def PermHyp (s : MachineData) (p0 : Perm) : Prop :=
-  p0.toList.length = (State.N s).toNat ∧ (State.N s).toNat ≤ Bbu.MAX_N
-    ∧ Mem.Contains s.dmem (State.P s) (words p0.toList)
-    ∧ Mem.Mapped (State.blocks s) s.dmem
-    ∧ Mem.Blocks.Disjoint (State.heap s) [(State.S s - 16#64, 16)]
-    ∧ Mem.Blocks.Disjoint [(State.P s, 2 * (State.N s).toNat)]
-        [(State.T s, 2 * (State.N s).toNat), (State.B s, 4)]
-
-def PermPre (s : MachineData) : Prop := ∃ p0, PermHyp s p0
-def PermPost (s t : MachineData) : Prop :=
-  Mem.Mapped (State.blocks s) t.dmem ∧ ∀ p0, PermHyp s p0 → State.Result s p0 (rax t) t
-abbrev PermMod (s : MachineData) : Modifies := State.pmod s
-
--- The bytes in memory fix the permutation.
-theorem PermHyp.unique {s : MachineData} {p q : Perm} (hp : PermHyp s p) (hq : PermHyp s q) :
-    p = q := by
-  obtain ⟨hpl, hn, hpc, -⟩ := hp
-  obtain ⟨hql, -, hqc, -⟩ := hq
-  have hb : words p.toList = words q.toList := by
-    apply List.ext_getElem (by simp [length_words, hpl, hql])
-    intro i h1 h2
-    have e1 := hpc i h1
-    have e2 := hqc i h2
-    rw [e1] at e2
-    exact Option.some.inj e2
-  have hl : p.toList = q.toList := by
-    apply List.ext_getElem (by rw [hpl, hql])
-    intro i h1 h2
-    have e0 := congrArg (·[2 * i]?) hb
-    have e1 := congrArg (·[2 * i + 1]?) hb
-    simp only [getElem?_words, List.getElem?_eq_getElem h1, List.getElem?_eq_getElem h2,
-      show 2 * i / 2 = i by omega, show (2 * i + 1) / 2 = i by omega, show 2 * i % 2 = 0 by omega,
-      show (2 * i + 1) % 2 = 1 by omega, Option.map_some, Option.some.injEq, ite_true,
-      show ¬ (1 = 0) by omega, ite_false] at e0 e1
-    have a1 := p.lt i h1
-    have a2 := q.lt i h2
-    have hN : (State.N s).toNat ≤ 1024 := hn
-    have c0 := congrArg UInt8.toNat e0
-    have c1 := congrArg UInt8.toNat e1
-    simp only [Nat.toUInt8, UInt8.toNat_ofNat'] at c0 c1
-    omega
-  cases p; cases q
-  cases hl
-  rfl
-
-theorem permute_callSpec [Host] [FunDecls] [Embeds State.permuteAsm]
-    (hg : FunDecls.at (label "permute") = some ⟨State.permuteAsm⟩) :
-    Program.WP.CallSpec "permute" PermPre PermPost PermMod := by
-  refine Program.WP.callSpec_of_triple hg fun s ra => ⟨fun s₀ ⟨h₀, p0, hp⟩ => ?_⟩
-  have h := hp
-  obtain ⟨hlen, hn, hperm, hmap, hd1, hd2⟩ := h
-  refine Program.wp_mono (fun _ h => h) ?_
-    ((State.permute_spec p0 s ra hlen hn hperm hmap hd1 hd2).1 s₀ h₀)
-  rintro u ⟨ha, hr, hm, hag⟩
-  exact ⟨ha, ⟨hm, fun q hq => (hp.unique hq) ▸ hr⟩, hag⟩
-
 /-! ## Bounds of `permute` -/
 
 theorem target_lt (q : Perm) {pos : Nat} (h : PermuteKraken.target q.toList = some pos) : pos < q.toList.length := by
@@ -392,12 +333,12 @@ theorem inside_dest {k : Nat} (hk : DEST ≤ k) (hk2 : k < WORDS) :
 end
 end FinishProof
 
--- The asm of `permuteDestinations` changed with the C++ build (`c/build_bottom_up.cpp`): the struct
--- layout, the `Status` result in `al` and the code. The proof for the C build is in git at 6f580e5.
--- `permuteDestinations` returns `AssertionFailed` for a slot with no destination, as
--- Model.lean `finish`;
--- `IsPerm` in `finishA` excludes it.
-theorem finish_body [Host] [FunDecls] (hperm : Program.WP.CallSpec "permute" PermPre PermPost PermMod) :
+-- wf: asm changed. The C++ `permute` replaces `permuteDestinations` and the call of the C
+-- `permute`: it has 6 `pushq`, `subq $16408, %rsp` and a call of `shallowestCopyPosition`,
+-- and it regroups equal slots. `finishF`, `finishA`, `finishR` and the definitions above are of
+-- the old asm and of the old model `finish`. The proof for the C build is in git at 6f580e5.
+theorem finish_body [Host] [FunDecls]
+    (hcopy : Spec Names.shallowestCopyPosition shallowestCopyF shallowestCopyA shallowestCopyR) :
     Body finishAsm finishF finishA finishR := by
   sorry
 

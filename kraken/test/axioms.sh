@@ -17,9 +17,9 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 if [ $# -eq 0 ]; then
-	(cd "$dir" && lake build -q BbuKraken.Bin PermuteKraken.Proof >/dev/null)
-	printf 'import BbuKraken.Bin\nimport PermuteKraken.Proof\n' > "$tmp/final.lean"
-	set -- "$tmp/final.lean" Bbu.buildBottomUp_correct Bbu.bbu_harness_correct State.permute_spec
+	(cd "$dir" && lake build -q BbuKraken.Bin >/dev/null)
+	printf 'import BbuKraken.Bin\n' > "$tmp/final.lean"
+	set -- "$tmp/final.lean" Bbu.buildBottomUp_correct Bbu.bbu_harness_correct
 fi
 src=$1
 shift

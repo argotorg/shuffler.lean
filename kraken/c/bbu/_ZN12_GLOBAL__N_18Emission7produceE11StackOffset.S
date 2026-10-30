@@ -22,33 +22,33 @@ _ZN12_GLOBAL__N_18Emission7produceE11StackOffset:
 	call	_ZNK12_GLOBAL__N_18Emission22shallowestCopyPositionE9StackSlot
 	movq	%rax, (%rsp)
 	cmpb	$1, %r13b
-	je	.LB32
+	je	.LB33
 	movq	(%rsp), %rax
 	cmpq	$-1, %rax
-	je	.LB20
+	je	.LB21
 	notq	%rax
 	addq	32(%rbx), %rax
 	cmpq	$15, %rax
-	jbe	.LB21
-.LB20:
+	jbe	.LB22
+.LB21:
 	cmpb	$2, %r13b
-	je	.LB22
+	je	.LB23
 	testb	%r15b, %r15b
-	jne	.LB33
-.LB22:
+	jne	.LB34
+.LB23:
 	movq	%r12, %rdx
 	movq	%rbp, %rsi
 	movq	%rbx, %rdi
 	call	_ZN12_GLOBAL__N_18Emission4pushE9StackSlot11StackOffset
-.LB19:
+.LB20:
 	testb	%al, %al
-	jne	.LB17
+	jne	.LB18
 	movq	32(%rbx), %rcx
 	leaq	-1(%rcx), %rdx
 	cmpq	%rdx, 8248(%rbx,%r14)
-	jne	.LB28
+	jne	.LB29
 	subq	$1, 16440(%rbx)
-.LB17:
+.LB18:
 	addq	$8, %rsp
 	popq	%rbx
 	popq	%rbp
@@ -57,38 +57,38 @@ _ZN12_GLOBAL__N_18Emission7produceE11StackOffset:
 	popq	%r14
 	popq	%r15
 	ret
-.LB32:
+.LB33:
 	movq	%r12, %rdx
 	movq	%rbp, %rsi
 	movq	%rbx, %rdi
 	call	_ZN12_GLOBAL__N_18Emission4pushE9StackSlot11StackOffset
-	jmp	.LB19
-.LB21:
+	jmp	.LB20
+.LB22:
 	movq	%r12, %rdx
 	movq	(%rsp), %rsi
 	movq	%rbx, %rdi
 	call	_ZN12_GLOBAL__N_18Emission3dupE11StackOffsetS1_
-	jmp	.LB19
-.LB33:
+	jmp	.LB20
+.LB34:
 	movq	%rbp, %rsi
 	movq	%rbx, %rdi
 	call	_ZNK12_GLOBAL__N_18Emission9isSpilledE9StackSlot
 	testb	%al, %al
-	jne	.LB22
+	jne	.LB23
 	movl	$2, %eax
 	cmpq	$-1, (%rsp)
-	je	.LB17
+	je	.LB18
 	movq	$-16, %rdx
 	movq	(%rsp), %rcx
 	subq	%rcx, %rdx
 	movl	$2, %eax
 	addq	32(%rbx), %rdx
-	je	.LB17
+	je	.LB18
 	movq	%rcx, 16448(%rbx)
 	movq	%rdx, 16456(%rbx)
 	movl	$1, %eax
-	jmp	.LB17
-.LB28:
+	jmp	.LB18
+.LB29:
 	movl	$2, %eax
-	jmp	.LB17
+	jmp	.LB18
 	.size	_ZN12_GLOBAL__N_18Emission7produceE11StackOffset, .-_ZN12_GLOBAL__N_18Emission7produceE11StackOffset

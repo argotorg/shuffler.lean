@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Test axioms.sh: it must accept State.permute_spec and a bv_decide proof, and reject
 # sorry, native_decide, a user axiom, a forged bv_decide axiom and an unknown name.
-# With no arguments it must report the 3 final theorems. While a unit proof has a sorry,
+# With no arguments it must report the 2 final theorems. While a unit proof has a sorry,
 # that mode fails; then sorryAx must be the only axiom that it rejects.
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
@@ -54,10 +54,9 @@ else
 fi
 
 "$here/axioms.sh" > "$tmp/final" 2>&1 || true
-n=$(grep -c -e '^Bbu.buildBottomUp_correct:' -e '^Bbu.bbu_harness_correct:' \
-	-e '^State.permute_spec:' "$tmp/final" || true)
+n=$(grep -c -e '^Bbu.buildBottomUp_correct:' -e '^Bbu.bbu_harness_correct:' "$tmp/final" || true)
 other=$(grep -o 'not allowed: .*' "$tmp/final" | grep -o '([^()]*)' | grep -v ', sorryAx)$' || true)
-if [ "$n" -eq 3 ] && [ -z "$other" ]; then
+if [ "$n" -eq 2 ] && [ -z "$other" ]; then
 	echo "ok final: $n theorems; $(grep -o 'sorryAx)' "$tmp/final" | wc -l) use sorryAx"
 else
 	echo "FAIL final"; cat "$tmp/final"; fails=$((fails + 1))

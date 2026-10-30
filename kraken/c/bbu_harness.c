@@ -1,16 +1,17 @@
 /*
- * bbu_harness gen: print valid buildBottomUp states, one per line as
- * "m n s1 .. sm t1 .. tn d1 .. dm k v1 .. vk" (see test/BuildBottomUpMain.lean).
+ * bbu_harness gen: print buildBottomUp inputs, one per line as
+ * "m n s1 .. sm t1 .. tn d1 .. dm k v1 .. vk" (see test/BbuPr31Main.lean).
  * bbu_harness run: read such lines and print the result of build_bottom_up for
- * each, as "ok op1 .. opj", "blocked offset excess", "assertion" or "invalid ...".
- * An operation is "s depth", "d depth" or "p code" for a push or a load.
+ * each, as "ok OPS | STACK", "blocked offset excess OPS | STACK", "assertion" or
+ * "invalid ...". An operation is "s depth", "d depth" or "p code" for a push or a
+ * load. STACK is the codes of the slots of data after the operations.
  */
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-/* the StackSlot and struct op of build_bottom_up.c */
+/* the StackSlot and ShuffleOp of build_bottom_up.cpp */
 typedef struct {
 	uint32_t payload;
 	uint8_t kind;
@@ -141,6 +142,17 @@ static int valid(const struct state *s)
 	return 1;
 }
 
+/* State.Valid.labels_bound: replace each function return label that no source slot is bound for with junk */
+static void bind_labels(struct state *s)
+{
+	int bound[1024] = { 0 };
+	for (int i = 0; i < s->m; i++)
+		bound[s->dest[i]] = 1;
+	for (int j = 0; j < s->n; j++)
+		if (s->target[j] == 1 && !bound[j])
+			s->target[j] = 0;
+}
+
 static void print_state(const struct state *s)
 {
 	printf("%d %d", s->m, s->n);
@@ -192,6 +204,47 @@ static void exhaustive(int mmax, int nmax, const uint32_t *alpha, int na)
 		}
 }
 
+/*
+ * Give the values from position i on (the sources, then the targets) each value:
+ * junk, the return label, one of the `lits` literals so far or a new one, one of
+ * the `vars` variables so far or a new one, which is spilled or not. Thus the
+ * values are all values up to a renaming of the literals and the variables.
+ */
+static void all_values(struct state *s, int i, int lits, int vars)
+{
+	if (i == s->m + s->n) {
+		all_dests(s, 0, 0);
+		return;
+	}
+	uint32_t *v = i < s->m ? &s->source[i] : &s->target[i - s->m];
+	*v = 0;
+	all_values(s, i + 1, lits, vars);
+	*v = 1;
+	all_values(s, i + 1, lits, vars);
+	for (int l = 0; l <= lits; l++) {
+		*v = 3 + 2 * l;
+		all_values(s, i + 1, l < lits ? lits : lits + 1, vars);
+	}
+	for (int x = 0; x < vars; x++) {
+		*v = 2 + 2 * x;
+		all_values(s, i + 1, lits, vars);
+	}
+	*v = 2 + 2 * vars;
+	all_values(s, i + 1, lits, vars + 1);
+	s->spills[s->k++] = vars;
+	all_values(s, i + 1, lits, vars + 1);
+	s->k--;
+}
+
+/* every input with m <= n <= nmax: all_values with every injection as dest */
+static void all_small(int nmax)
+{
+	struct state s = { .k = 0 };
+	for (s.n = 0; s.n <= nmax; s.n++)
+		for (s.m = 0; s.m <= s.n; s.m++)
+			all_values(&s, 0, 0, 0);
+}
+
 static uint64_t rng = 0x9e3779b97f4a7c15u;
 
 static uint64_t next(void)
@@ -213,6 +266,19 @@ static uint32_t random_value(int vars, int lits)
 	return r - vars - lits;
 }
 
+/* a random permutation of 0 .. n - 1 */
+static void shuffle(int *p, int n)
+{
+	for (int j = 0; j < n; j++)
+		p[j] = j;
+	for (int j = n - 1; j > 0; j--) {
+		int r = next() % (j + 1), t = p[j];
+		p[j] = p[r];
+		p[r] = t;
+	}
+}
+
+/* In 7 of 8 states the function return labels are bound (State.Valid.labels_bound). */
 static void random_state(int mmax, int nmax)
 {
 	struct state s;
@@ -226,13 +292,7 @@ static void random_state(int mmax, int nmax)
 	for (int i = 0; i < s.m; i++)
 		s.source[i] = random_value(vars, lits);
 	int p[1024];
-	for (int j = 0; j < s.n; j++)
-		p[j] = j;
-	for (int j = s.n - 1; j > 0; j--) {
-		int r = next() % (j + 1), t = p[j];
-		p[j] = p[r];
-		p[r] = t;
-	}
+	shuffle(p, s.n);
 	for (int i = 0; i < s.m; i++)
 		s.dest[i] = p[i];
 	for (int j = 0; j < s.n; j++) {
@@ -244,6 +304,8 @@ static void random_state(int mmax, int nmax)
 	for (int i = 0; i < s.m; i++)
 		if (next() % 2)
 			s.target[s.dest[i]] = s.source[i];
+	if (next() % 8)
+		bind_labels(&s);
 	print_state(&s);
 }
 
@@ -261,13 +323,7 @@ static void deep_state(void)
 	for (int i = 0; i < s.m; i++)
 		s.source[i] = next() % 8 ? 2 + 2 * (next() % vars) : 3;
 	int p[1024];
-	for (int j = 0; j < s.n; j++)
-		p[j] = j;
-	for (int j = s.n - 1; j > 0; j--) {
-		int r = next() % (j + 1), t = p[j];
-		p[j] = p[r];
-		p[r] = t;
-	}
+	shuffle(p, s.n);
 	for (int i = 0; i < s.m; i++)
 		s.dest[i] = p[i];
 	for (int j = 0; j < s.n; j++)
@@ -328,33 +384,83 @@ static void big_state(void)
 	print_state(&s);
 }
 
+/*
+ * A state with m = n <= nmax, so that buildBottomUp starts the final permutation
+ * at the first offset that is not final. The values come from few variables and
+ * literals, so that many slots are equal. Each slot is bound for its own offset,
+ * except that the slots of a window of up to 20 offsets at the top get a random
+ * permutation, some pairs of equal slots exchange their destinations, and in 1 of
+ * 4 states one pair of any slots exchanges them.
+ */
+static void perm_state(int nmax)
+{
+	struct state s;
+	int vars = 1 + next() % 4, lits = next() % 3;
+	s.n = s.m = next() % (nmax + 1);
+	s.k = 0;
+	for (int i = 0; i < s.m; i++)
+		s.source[i] = random_value(vars, lits);
+	for (int i = 0; i < s.m; i++)
+		s.dest[i] = i;
+	int w = next() % 21, p[20];
+	if (w > s.n)
+		w = s.n;
+	shuffle(p, w);
+	for (int i = 0; i < w; i++)
+		s.dest[s.n - w + i] = s.n - w + p[i];
+	for (int r = next() % 8; s.n && r > 0; r--) {
+		int a = next() % s.n, b = next() % s.n, t = s.dest[a];
+		if (s.source[a] != s.source[b] && (r > 1 || next() % 4))
+			continue;
+		s.dest[a] = s.dest[b];
+		s.dest[b] = t;
+	}
+	for (int i = 0; i < s.m; i++)
+		s.target[s.dest[i]] = next() % 4 ? s.source[i] : 0;
+	print_state(&s);
+}
+
+/*
+ * Every input with n <= 3, the valid states with n <= 4 of two literals, and
+ * random states. All random states are valid, except that some do not bind each
+ * function return label. The PR31 model takes about 0.2 s for a random state of
+ * size 1024 and 4 s for a big state, so their counts are small.
+ */
 static int gen(void)
 {
 	const uint32_t lits[] = { 3, 5 };
-	const uint32_t mixed[] = { 0, 1, 2, 3 };
+	all_small(3);
 	exhaustive(3, 4, lits, 2);
-	exhaustive(2, 3, mixed, 4);
-	for (int r = 0; r < 3000; r++)
+	for (int r = 0; r < 40000; r++)
 		random_state(12, 16);
-	for (int r = 0; r < 3000; r++)
+	for (int r = 0; r < 30000; r++)
 		random_state(30, 40);
 	for (int r = 0; r < 200; r++)
 		random_state(256, 256);
-	for (int r = 0; r < 5000; r++)
+	for (int r = 0; r < 500; r++)
+		random_state(1024, 1024);
+	for (int r = 0; r < 20000; r++)
 		deep_state();
+	for (int r = 0; r < 10000; r++)
+		perm_state(40);
+	for (int r = 0; r < 300; r++)
+		perm_state(1024);
 	for (int r = 0; r < 40; r++)
 		big_state();
 	return 0;
 }
+
 /*
  * Run build_bottom_up on slots with padding 0 and on slots with random padding,
  * and print "invalid ..." if
  * - the results differ,
  * - build_bottom_up writes data[n],
- * - an operation breaks op_ok, or
- * - on ok, data does not hold the source after the ops, or, if each source
- *   slot is bound for junk or its own value, a slot of data differs from a
- *   target slot that is not junk.
+ * - an operation breaks op_ok,
+ * - the ops reach below the bottom or above n slots, or end with other than n
+ *   slots on ok,
+ * - data does not hold the source after the ops, or
+ * - on ok, if each source slot is bound for junk or its own value, a slot of
+ *   data differs from a target slot that is not junk.
  */
 static int run(void)
 {
@@ -392,6 +498,7 @@ static int run(void)
 			data[r][n] = guard;
 			for (uint64_t i = 0; i < n; i++)
 				targetSlots[r][i] = slot_of(target[i], r ? next() : 0);
+			memset(blocked[r], 0xa5, sizeof blocked[r]);
 			j[r] = build_bottom_up(m, n, data[r], targetSlots[r], dest, spilled, ops[r], blocked[r]);
 			overrun |= memcmp(&data[r][n], &guard, sizeof guard) != 0;
 		}
@@ -399,7 +506,7 @@ static int run(void)
 			printf("invalid: data[n] is written\n");
 			continue;
 		}
-		if (j[0] != j[1] || (j[0] == -1 && memcmp(blocked[0], blocked[1], sizeof blocked[0]))) {
+		if (j[0] != j[1] || (j[0] >= 0 && memcmp(blocked[0], blocked[1], sizeof blocked[0]))) {
 			printf("invalid: the padding changes the result\n");
 			continue;
 		}
@@ -407,8 +514,8 @@ static int run(void)
 			printf("assertion\n");
 			continue;
 		}
-		if (j[0] < 0) {
-			printf("blocked %lu %lu\n", blocked[0][0], blocked[0][1]);
+		if (j[0] < 0 || j[0] > (int64_t)(6 * n)) {
+			printf("invalid: the result is %ld\n", j[0]);
 			continue;
 		}
 		int64_t bad = -1;
@@ -422,15 +529,22 @@ static int run(void)
 		}
 		for (uint64_t i = 0; i < m; i++)
 			replayed[i] = slot_of(source[i], 0);
-		if (replay(replayed, m, n, ops[0], j[0]) != n) {
+		uint64_t const size = replay(replayed, m, n, ops[0], j[0]);
+		/* the excess of a block is positive, so 0 means not blocked */
+		int const isBlocked = blocked[0][1] != 0;
+		if (size == UINT64_MAX || (!isBlocked && size != n)) {
 			printf("invalid: the ops do not give n slots\n");
 			continue;
 		}
+		if (!isBlocked && blocked[0][0] != 0) {
+			printf("invalid: the offset of a result that is not blocked is %lu\n", blocked[0][0]);
+			continue;
+		}
 		/* as from MappingBuilder: each source slot is bound for junk or its own value */
-		int bound_equal = 1;
+		int bound_equal = !isBlocked;
 		for (uint64_t i = 0; i < m; i++)
 			bound_equal &= target[dest[i]] == 0 || target[dest[i]] == source[i];
-		for (uint64_t i = 0; i < n && bad < 0; i++)
+		for (uint64_t i = 0; i < size && bad < 0; i++)
 			if (!slot_eq(data[0][i], replayed[i]) || !slot_eq(data[1][i], replayed[i])
 			    || (bound_equal && target[i] != 0 && !slot_eq(data[0][i], targetSlots[0][i])))
 				bad = i;
@@ -438,7 +552,10 @@ static int run(void)
 			printf("invalid: data slot %ld\n", bad);
 			continue;
 		}
-		printf("ok");
+		if (isBlocked)
+			printf("blocked %lu %lu", blocked[0][0], blocked[0][1]);
+		else
+			printf("ok");
 		for (int64_t i = 0; i < j[0]; i++) {
 			struct op const o = ops[0][i];
 			if (o.kind == Push || o.kind == Load)
@@ -446,6 +563,9 @@ static int run(void)
 			else
 				printf(" %c %u", "sd"[o.kind], o.depth);
 		}
+		printf(" |");
+		for (uint64_t i = 0; i < size; i++)
+			printf(" %lu", code_of(data[0][i]));
 		printf("\n");
 	}
 	return 0;

@@ -9,7 +9,7 @@ set_option maxRecDepth 100000
 
 -- The function programs make up the linked file.
 example : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm ++ produceAsm
-    ++ finishAsm ++ swapWithAsm ++ generateAsm ++ loopAsm ++ buildBottomUpAsm := by rfl
+    ++ swapWithAsm ++ generateAsm ++ finishAsm ++ loopAsm ++ buildBottomUpAsm := by rfl
 
 -- `bbuParseFile` reads `leaq disp(,%i,8), %r` as the operand with no base.
 example : swapWithAsm[7]? = some (.instr (.regular .W64 .W64
@@ -22,7 +22,7 @@ example : swapWithAsm.take 7 = parse("_ZN12_GLOBAL__N_18Emission8swapWithE11Stac
 	movq	32(%rdi), %rsi
 	movl	$2, %ecx
 	cmpq	%rsi, %rdx
-	jnb	.LB46") := by rfl
+	jnb	.LB35") := by rfl
 
 -- Each line with an operand with no base.
 example : (bbuAsm.filter fun

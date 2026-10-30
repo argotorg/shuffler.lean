@@ -62,7 +62,7 @@ example (s : MachineData)
   kvcgen64
   finish
 
--- the store of `perm[i]` in `permuteDestinations`: 2 bytes, the low 16 bits of `%dx`
+-- the store of `perm[i]` in the old `permuteDestinations`: 2 bytes, the low 16 bits of `%dx`
 example (s : MachineData) (hd : s.regs.get64 .rdx = 0x12345#64)
     (h : (Mem.loadInt s.dmem (s.regs.get64 .rsp + s.regs.get64 .rax * 2#64 + 2064#64) 2).isSome) :
     ⦃ fun t => t = s ⦄ parse("movw %dx, 2064(%rsp,%rax,2)")
@@ -74,7 +74,7 @@ example (s : MachineData) (hd : s.regs.get64 .rdx = 0x12345#64)
   all_goals simp_all
   exact congrArg _ (by decide)
 
--- the load of `blocked[1]` in `permuteDestinations`: the upper bits are zero
+-- the load of `blocked[1]` in the old `permuteDestinations`: the upper bits are zero
 example (s : MachineData) (h : Mem.loadInt s.dmem (s.regs.get64 .rsp + 14#64) 2 = some (-1)) :
     ⦃ fun t => t = s ⦄ parse("movzwl 14(%rsp), %edx")
     ⦃ (fun _ t => t.regs.get64 .rdx = 0xffff#64); fun _ _ => False ⦄ := by

@@ -26,9 +26,8 @@ namespace Bbu.Names
 @[expose] public def swapWith : String := "_ZN12_GLOBAL__N_18Emission8swapWithE11StackOffset"
 /-- `Emission::generate(StackOffset)` -/
 @[expose] public def generate : String := "_ZN12_GLOBAL__N_18Emission8generateE11StackOffset"
-/-- `Emission::permuteDestinations()` -/
-@[expose] public def permuteDestinations : String :=
-  "_ZN12_GLOBAL__N_18Emission19permuteDestinationsEv"
+/-- `Emission::permute()` -/
+@[expose] public def permute : String := "_ZN12_GLOBAL__N_18Emission7permuteEv"
 /-- `Emission::buildBottomUp()` -/
 @[expose] public def buildBottomUp : String := "_ZN12_GLOBAL__N_18Emission13buildBottomUpEv"
 /-- `build_bottom_up`, `extern "C"` -/
