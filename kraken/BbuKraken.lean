@@ -50,6 +50,8 @@ import BbuKraken.Unit.Generate
 import BbuKraken.Unit.IsSpilled
 import BbuKraken.Unit.Loop
 import BbuKraken.Unit.Permute
+import BbuKraken.Unit.PermuteModel
+import BbuKraken.Unit.PermuteModelTest
 import BbuKraken.Unit.Produce
 import BbuKraken.Unit.Push
 import BbuKraken.Unit.ShallowestCopy

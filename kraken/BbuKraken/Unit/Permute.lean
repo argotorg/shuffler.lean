@@ -1,4 +1,5 @@
 import BbuKraken.Unit.Defs
+import BbuKraken.Unit.PermuteModel
 
 /-!
 # `permute`
