@@ -624,19 +624,21 @@ example := ltB_swapD (n := 3) (a := 0) (b := 2) (d := pR) (by decide +kernel) (b
 A concrete `MachineData` has a memory of `2 ^ 64` bytes, and `mD` reads `MAX_N` words of it. Thus
 these examples are symbolic: `pm_dec` (the tactic of the proofs) unfolds `V`. -/
 
-example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.22" t = 2048 * mD s g t := by pm_dec
-example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.23" t = 2048 * mD s g t + 1101 := by pm_dec
-example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.15" t = 2048 * mD s g t + 1101 := by pm_dec
+example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.22" t = 2048 * mD s g t + 2 := by pm_dec
+example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.23" t = 2048 * mD s g t + 1 := by pm_dec
+example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.13" t = 2048 * mD s g t + 1101 := by pm_dec
+example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.20" t = 2048 * mD s g t := by pm_dec
+example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.21" t = 2048 * mD s g t + 1101 := by pm_dec
 
--- The edge `.LB.Emission.permute.22` to `.LB.Emission.permute.23` (`lt80` of `D2.lean`): `V` gets smaller if and only if `mD` gets
--- smaller.
+-- The edge `.LB.Emission.permute.20` to `.LB.Emission.permute.21` (`lt20` of `D2.lean`): `V` gets
+-- smaller if and only if `mD` gets smaller.
 example (s t u : MachineData) (g : G) (h : mD s g u < mD s g t) :
-    V s g ".LB.Emission.permute.23" u < V s g ".LB.Emission.permute.22" t := by pm_dec
+    V s g ".LB.Emission.permute.21" u < V s g ".LB.Emission.permute.20" t := by pm_dec
 example (s t u : MachineData) (g : G) :
-    V s g ".LB.Emission.permute.23" u < V s g ".LB.Emission.permute.22" t ↔ mD s g u < mD s g t := by pm_dec
+    V s g ".LB.Emission.permute.21" u < V s g ".LB.Emission.permute.20" t ↔ mD s g u < mD s g t := by pm_dec
 -- Negative: `mD` does not change, and `V` does not get smaller.
 example (s t u : MachineData) (g : G) (h : mD s g u = mD s g t) :
-    ¬V s g ".LB.Emission.permute.23" u < V s g ".LB.Emission.permute.22" t := by pm_dec
+    ¬V s g ".LB.Emission.permute.21" u < V s g ".LB.Emission.permute.20" t := by pm_dec
 -- The arithmetic of the edge on small values.
 #guard (List.range 5).all fun a => (List.range 5).all fun b =>
   decide (2048 * a + 1101 < 2048 * b) == decide (a < b)
