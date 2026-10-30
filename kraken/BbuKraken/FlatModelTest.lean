@@ -4,7 +4,7 @@ import BbuKraken.FlatModel
 Tests of `FlatModel.lean`: each unit on small states, the paths that fail
 (`Status.assertionFailed` and `Status.blocked`), the size_t wraps, the bounds of
 `build_bottom_up` (`n = 0`, `m = n`, `n = MAX_N`, `m > n`, `n > MAX_N`), and the
-agreement with the list model `Bbu.buildBottomUp` on all inputs with `n ≤ 3` (32229)
+agreement with the list model `Bbu.buildBottomUpC` on all inputs with `n ≤ 3` (32229)
 and on 15 deep stacks. The members that the constructor does not initialize get
 two contents (the second only for `n ≤ 2`, for time).
 -/
@@ -221,33 +221,38 @@ def urgentSt : St :=
 
 /-! ## Agreement with the list model -/
 
--- The result of the list model, or of `build_bottom_up`: the final stack and the
--- operations, or the error.
-def listOut (source target : List StackSlot) (dests spilled : List Nat) :
-    Except Err (List StackSlot × List Op) :=
-  match Bbu.buildBottomUp ⟨target, fun i => if spilled.contains i then 1 else 0⟩ source dests with
-  | .ok st => .ok (st.slots.map Slot.val, st.trace)
-  | .error err => .error err
+-- The result of the list model with the final permutation of the C++
+-- (`finishC`), or of `build_bottom_up`: the final stack and the operations, the
+-- blocked slot with the stack and the operations at the block, or an assertion.
+inductive Out where
+  | ok (stack : List StackSlot) (trace : List Op)
+  | blocked (pos excess : Nat) (stack : List StackSlot) (trace : List Op)
+  | assertion
+  deriving DecidableEq, Repr
+
+def listOut (source target : List StackSlot) (dests spilled : List Nat) : Out :=
+  let e : Env := ⟨target, fun i => if spilled.contains i then 1 else 0⟩
+  match buildBottomUpC e source dests with
+  | .ok st => .ok (st.slots.map Slot.val) st.trace
+  | .error (.blocked pos excess st) => .blocked pos excess (st.slots.map Slot.val) st.trace
+  | .error .assertion => .assertion
 
 def flatOut (u : Uninit) (garbage : Vector StackSlot MAX_N) (source target : List StackSlot)
-    (dests spilled : List Nat) : Except Err (List StackSlot × List Op) :=
+    (dests spilled : List Nat) : Out :=
   let data := Vector.ofFn fun i => source[i.val]?.getD garbage[i]
   match build_bottom_up (.ofNat 64 source.length) (.ofNat 64 target.length) data (vec target)
       (vec (words dests)) (spillsOf spilled) u with
   | (r, some st) =>
-    if r = -1 then .error (.blocked st.blockedOffset.toNat st.blockedExcess.toNat)
-    else if r = -2 then .error .assertion
+    if r = -1 then
+      .blocked st.blockedOffset.toNat st.blockedExcess.toNat ((below st.size).map (get st.data))
+        st.trace
+    else if r = -2 then .assertion
     else if r = .ofNat 64 st.trace.length ∧ st.size = .ofNat 64 target.length then
-      .ok ((below st.size).map (get st.data), st.trace)
-    else .error (.blocked 9999 9999)
-  | (_, none) => .error .assertion
+      .ok ((below st.size).map (get st.data)) st.trace
+    else .blocked 9999 9999 [] []
+  | (_, none) => .assertion
 
--- `Except` has no `DecidableEq`.
-def same (a b : Except Err (List StackSlot × List Op)) : Bool :=
-  match a, b with
-  | .ok p, .ok q => decide (p = q)
-  | .error e, .error f => decide (e = f)
-  | _, _ => false
+def same (a b : Out) : Bool := decide (a = b)
 
 -- The injective maps of `m` sources into `n` offsets.
 def injections : Nat → Nat → List (List Nat)
@@ -269,8 +274,8 @@ def cases : List (List StackSlot × List StackSlot × List Nat) :=
 
 #guard cases.length = 32229
 -- The cases reach both results of the list model.
-#guard cases.any fun (s, t, d) => listOut s t d [1] matches .ok _
-#guard cases.any fun (s, t, d) => listOut s t d [1] matches .error .assertion
+#guard cases.any fun (s, t, d) => listOut s t d [1] matches .ok ..
+#guard cases.any fun (s, t, d) => listOut s t d [1] matches .assertion
 #guard cases.all fun (s, t, d) => same (flatOut u1 junkSlots s t d [1]) (listOut s t d [1])
 -- The other content of the uninitialized members, for `n ≤ 2` only (time).
 #guard (cases.filter (·.2.1.length ≤ 2)).all fun (s, t, d) =>
@@ -286,8 +291,8 @@ def deepCases : List (List StackSlot × List StackSlot × List Nat) :=
      (vs.drop 1, vs, (List.range (k - 1)).map (· + 1)),
      (vs, vs ++ [x, var 0], List.range k)]
 
-#guard deepCases.any fun (s, t, d) => listOut s t d [] matches .ok _
-#guard deepCases.any fun (s, t, d) => listOut s t d [] matches .error (.blocked _ _)
+#guard deepCases.any fun (s, t, d) => listOut s t d [] matches .ok ..
+#guard deepCases.any fun (s, t, d) => listOut s t d [] matches .blocked ..
 #guard deepCases.all fun (s, t, d) => same (flatOut u1 junkSlots s t d []) (listOut s t d [])
 
 end Bbu.Flat.Test

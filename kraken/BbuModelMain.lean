@@ -1,7 +1,8 @@
 import BbuKraken.Model
 
 /-!
-Run `Bbu.buildBottomUp` on the lines of `bbu_harness gen` and print the result
+Run `Bbu.buildBottomUpC` (or `Bbu.buildBottomUp` with the argument `pr31`) on the
+lines of `bbu_harness gen` and print the result
 in the format of `bbu_harness run`. As `bbu_harness run`, check that the final
 stack is the source after the operations.
 -/
@@ -40,24 +41,28 @@ def render (source : List StackSlot) : M St → String
         else if op.kind = Dup then ["d", toString op.depth.toNat]
         else ["p", toString (codeOf op.slot)])
     else "invalid: the final stack is not the source after the operations"
-  | .error (.blocked pos excess) => s!"blocked {pos} {excess}"
+  | .error (.blocked pos excess _) => s!"blocked {pos} {excess}"
   | .error .assertion => "assertion"
 
-def run (m n : Nat) (rest : List Nat) : String :=
+def run (bbu : Env → List StackSlot → List Nat → M St) (m n : Nat) (rest : List Nat) : String :=
   let source := (rest.take m).map slotOf
   let target := (rest.drop m |>.take n).map slotOf
   let dests := rest.drop (m + n) |>.take m
   let spills := (rest.drop (2 * m + n)).drop 1
   let spilled := fun i => if spills.contains i then (1 : UInt8) else 0
-  render source (buildBottomUp ⟨target, spilled⟩ source dests)
+  render source (bbu ⟨target, spilled⟩ source dests)
 
-partial def loop (stdin stdout : IO.FS.Stream) : IO Unit := do
+partial def loop (bbu : Env → List StackSlot → List Nat → M St) (stdin stdout : IO.FS.Stream) :
+    IO Unit := do
   let line ← stdin.getLine
   if line.isEmpty then return
   match (line.trimAscii.toString.splitOn " ").filterMap String.toNat? with
-  | m :: n :: rest => stdout.putStrLn (run m n rest)
+  | m :: n :: rest => stdout.putStrLn (run bbu m n rest)
   | _ => throw <| IO.userError s!"bad line: {line}"
-  loop stdin stdout
+  loop bbu stdin stdout
 
-def main : IO Unit := do
-  loop (← IO.getStdin) (← IO.getStdout)
+def main (args : List String) : IO UInt32 := do
+  match args with
+  | [] => loop buildBottomUpC (← IO.getStdin) (← IO.getStdout); return 0
+  | ["pr31"] => loop buildBottomUp (← IO.getStdin) (← IO.getStdout); return 0
+  | _ => IO.eprintln "usage: bbu_model [pr31]"; return 2

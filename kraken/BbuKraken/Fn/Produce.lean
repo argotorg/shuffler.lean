@@ -82,6 +82,6 @@ theorem produce_body [Host] [FunDecls]
     (hpush : Spec Names.push pushF pushA pushR)
     (hdup : Spec Names.dup dupF dupA dupR) :
     Body produceAsm produceF produceA produceR := by
-  sorry
+  sorry -- wf:todo
 
 end Bbu

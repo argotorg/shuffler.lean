@@ -455,6 +455,6 @@ theorem generate_body [Host] [FunDecls]
     (hprod : Spec Names.produce produceF produceA produceR)
     (hswap : Spec Names.swapWith swapWithF swapWithA swapWithR) :
     Body generateAsm generateF generateA generateR := by
-  sorry
+  sorry -- wf:todo
 
 end Bbu

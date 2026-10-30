@@ -51,7 +51,7 @@ theorem swapWith_corr : SwapWithStmt := by
     by_cases hf : st.dest pos = pos
     · rw [ite_eq_left (.inr hf)]
       simp only [requires, hfin, hf, not_true_eq_false, dite_false]
-      exact rfl
+      exact trivial
     · rw [ite_eq_right (by omega)]
       simp only [requires, hfin, hf, not_false_eq_true, dite_true, pure, Except.pure, bind,
         Except.bind]
@@ -98,9 +98,9 @@ theorem swapWith_corr : SwapWithStmt := by
           · unfold Bbu.St.dests; rw [swapWith_slots st pos _ hpl]
       · rw [ite_eq_left (by simp only [Bbu.MAX_SWAP_DEPTH, MAX_SWAP_DEPTH] at *; omega)]
         simp only [hdd, hdepth, dite_false]
-        exact rfl
+        exact trivial
   · rw [ite_eq_left (.inl (by omega))]
     simp only [index, hp, dite_false]
-    exact rfl
+    exact trivial
 
 end BbuBridge

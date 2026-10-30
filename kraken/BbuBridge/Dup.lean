@@ -23,19 +23,34 @@ theorem dup_corr : DupStmt := by
   have hl := h.len
   have hcl : c < state.stack.length := hl ▸ hc
   have hpos := h.positionOf ⟨d, hd⟩
-  rw [Bbu.add_eq]
+  have hlab : (state.stack[c]'hcl).isFunctionReturnLabel ↔ (st.val c).kind = Bbu.FunctionReturnLabel := by
+    rw [show state.stack[c]'hcl = state.stack[(⟨c, hcl⟩ : Fin _)] from rfl, h.get ⟨c, hcl⟩]
+    exact isFRL_iff (h.canonVal c)
   unfold State.dup
   rw [show index state.stack.length c = .ok ⟨c, hcl⟩ from index_eq ⟨c, hcl⟩, except_ok_bind]
   have hreach : state.stack.isDupReachable ⟨c, hcl⟩ := by
     simp only [Stack.isDupReachable, Stack.offsetToDepth, MAX_DUP_DEPTH]
     simp only [Bbu.MAX_DUP_DEPTH] at hdepth
     omega
+  by_cases hk : (st.val c).kind = Bbu.FunctionReturnLabel
+  · -- A function return label: both fail.
+    have hf := hlab.mpr hk
+    simp only [hk, beq_self_eq_true, ↓reduceIte]
+    by_cases hp : state.mapping.positionOf ⟨d, hd⟩ = none
+    · simp only [requires, hp, hreach, hf, not_true_eq_false, ↓reduceDIte, pure, bind,
+        Except.bind]
+      exact trivial
+    · simp only [requires, hp, ↓reduceDIte, bind, Except.bind]
+      exact trivial
+  have hf : ¬ (state.stack[c]'hcl).isFunctionReturnLabel := fun h' => hk (hlab.mp h')
+  rw [if_neg (show ¬((st.val c).kind == Bbu.FunctionReturnLabel) = true by simpa using hk),
+    Bbu.add_eq]
   -- The destination is free: both add the slot. Else both fail.
-  by_cases hp : state.positionOf ⟨d, hd⟩ = none
+  by_cases hp : state.mapping.positionOf ⟨d, hd⟩ = none
   · rw [hp] at hpos
     rw [← hpos]
-    simp only [requires, hp, hreach, ↓reduceDIte, pure, Except.pure, bind, Except.bind,
-      Option.map_none, Option.isSome_none, Bool.false_eq_true, ↓reduceIte]
+    simp only [requires, hp, hreach, hf, not_false_eq_true, ↓reduceDIte, pure, Except.pure, bind,
+      Except.bind, Option.map_none, Option.isSome_none, Bool.false_eq_true, ↓reduceIte]
     refine ⟨?_, ?_, h.pendingGenerations, ?_, ?_, ?_, h.target⟩
     · show state.stack ++ [state.stack[(⟨c, hcl⟩ : Fin _)]] = _
       rw [h.get ⟨c, hcl⟩]
@@ -68,6 +83,6 @@ theorem dup_corr : DupStmt := by
     rw [hk] at hpos
     rw [← hpos]
     simp [requires, hp]
-    rfl
+    trivial
 
 end BbuBridge

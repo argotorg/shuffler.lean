@@ -20,6 +20,6 @@ open Kit PushDup
 -- Model.lean `add`). On
 -- `AssertionFailed` the stack has one more slot; `dupR` allows it.
 theorem dup_body [Host] [FunDecls] : Body dupAsm dupF dupA dupR := by
-  sorry
+  sorry -- wf:todo
 
 end Bbu

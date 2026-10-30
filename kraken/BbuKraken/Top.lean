@@ -106,11 +106,11 @@ def topData (t : MachineData) (i : Nat) : StackSlot :=
 def TopPost (t : MachineData) : Prop :=
   Mem.Mapped [frame topF s] t.dmem ∧
   if TopGuard s then
-    match buildBottomUp (topEnv s) (topSource s) (topDests s) with
+    match buildBottomUpC (topEnv s) (topSource s) (topDests s) with
     | .ok st =>
       rax t = BitVec.ofNat 64 st.trace.length ∧ (List.range st.trace.length).map (topOp s t) = st.trace
         ∧ (List.range st.len).map (topData s t) = st.slots.map Slot.val
-    | .error (.blocked pos excess) =>
+    | .error (.blocked pos excess _) =>
       rax t = -1#64 ∧ rd t.dmem (blkArg s) = BitVec.ofNat 64 pos
         ∧ rd t.dmem (wordAt (blkArg s) 1) = BitVec.ofNat 64 excess
     | .error .assertion => rax t = -2#64
@@ -169,7 +169,7 @@ variable (s : MachineData)
 -- The struct: at the bottom of the locals (`8 + topLocals` bytes below `rsp`).
 abbrev bS : Addr := rsp s - 16480#64
 
-def topRes : M St := buildBottomUp (topEnv s) (topSource s) (topDests s)
+def topRes : M St := buildBottomUpC (topEnv s) (topSource s) (topDests s)
 
 def st0 : St := init (topEnv s) (topSource s) (topDests s)
 end
@@ -478,6 +478,6 @@ theorem buildBottomUp_body [Host] [FunDecls]
     (hloop : Spec Names.buildBottomUp loopF loopA loopR) :
     ∀ s ra, ⦃ fun t => t = s.pushRa ra ∧ TopPre s ⦄ buildBottomUpAsm
       ⦃ (fun _ _ => False); fun a t => a = ra ∧ TopPost s t ∧ (topMod s).Agree s t ⦄ := by
-  sorry
+  sorry -- wf:todo
 
 end Bbu

@@ -187,7 +187,7 @@ def Post (F : Nat) (R : MachineData → MachineData → Prop) (s t : MachineData
 def Res {α : Type} (S : Addr) (r : M α) (Q : α → Prop) (t : MachineData) : Prop :=
   match r with
   | .ok a => Q a
-  | .error (.blocked pos excess) =>
+  | .error (.blocked pos excess _) =>
     al t = BLOCKED ∧ rd t.dmem (wordAt S BLK) = BitVec.ofNat 64 pos
       ∧ rd t.dmem (wordAt S (BLK + 1)) = BitVec.ofNat 64 excess
   | .error .assertion => al t = ASSERTION_FAILED

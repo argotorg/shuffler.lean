@@ -109,12 +109,13 @@ theorem emit_junk (h : isJunk e.target[d]! = true) :
   simp only [emit, h, ↓reduceIte]
 
 theorem emit_dup (hj : isJunk e.target[d]! = false)
-    (hc : shallowestCopyPosition st e.target[d]! = some c) (hb : st.len - 1 - c ≤ MAX_DUP_DEPTH) :
+    (hc : shallowestCopyPosition st e.target[d]! = some c) (hb : st.len - 1 - c ≤ MAX_DUP_DEPTH)
+    (hl : (e.target[d]!.kind == FunctionReturnLabel) = false) :
     emit e st d = add st e.target[d]! d (.dup (st.len - c)) := by
   have hf : (shallowestCopyPosition st e.target[d]!).filter
       (fun c => st.len - 1 - c ≤ MAX_DUP_DEPTH) = some c := by
     simp only [hc, Option.filter_some, hb, decide_true, ↓reduceIte]
-  simp only [emit, hj, Bool.false_eq_true, ↓reduceIte, hf]
+  simp only [emit, hj, Bool.false_eq_true, ↓reduceIte, hf, hl]
 
 theorem emit_push (hj : isJunk e.target[d]! = false) (hf : Far st e.target[d]!)
     (hp : (canBeFreelyGenerated e.target[d]! || isSpilled e e.target[d]!) = true) :
@@ -124,7 +125,7 @@ theorem emit_push (hj : isJunk e.target[d]! = false) (hf : Far st e.target[d]!)
 theorem emit_blocked (hj : isJunk e.target[d]! = false) (hf : Far st e.target[d]!)
     (hp : (canBeFreelyGenerated e.target[d]! || isSpilled e e.target[d]!) = false)
     (hc : shallowestCopyPosition st e.target[d]! = some c) :
-    emit e st d = .error (.blocked c (st.len - 1 - c - MAX_DUP_DEPTH)) := by
+    emit e st d = .error (.blocked c (st.len - 1 - c - MAX_DUP_DEPTH) st) := by
   have h0 := filter_none hf
   rw [hc] at h0
   simp only [emit, hj, Bool.false_eq_true, ↓reduceIte, hp, hc, h0]
@@ -569,7 +570,9 @@ theorem emit_len {e : Env} {st st' : St} {d : Nat} (h : emit e st d = .ok st') :
   split at h
   · exact add_len h
   · split at h
-    · exact add_len h
+    · split at h
+      · cases h
+      · exact add_len h
     · split at h
       · exact add_len h
       · split at h <;> cases h

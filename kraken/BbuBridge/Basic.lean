@@ -27,16 +27,32 @@ theorem isFree_iff (v : Bbu.StackSlot) :
 theorem isSpilled_iff (e : Bbu.Env) (v : Bbu.StackSlot) :
     Bbu.isSpilled e v = true ↔ (spillSet e).is_spilled (decode v) := by
   unfold decode
-  split_ifs with h0 h1
+  split_ifs with h0 h1 h2
   · simp [SpillSet.is_spilled, Bbu.isSpilled, h0, Bbu.Junk, Bbu.Value]
   · rcases h1 with h1 | h1
     · simp [SpillSet.is_spilled, Bbu.isSpilled, Bbu.isLiteralValue, h1]
     · simp [SpillSet.is_spilled, Bbu.isSpilled, h1, Bbu.FunctionCallReturnLabel, Bbu.Value]
+  · simp [SpillSet.is_spilled, Bbu.isSpilled, h2, Bbu.FunctionReturnLabel, Bbu.Value]
   · simp only [SpillSet.is_spilled, spillSet, Finset.mem_image, Finset.mem_filter,
       Finset.mem_range, VarId.mk.injEq]
     constructor
     · intro h; exact ⟨number v, ⟨number_lt v, by rw [ofNumber_number]; exact h⟩, rfl⟩
     · rintro ⟨i, ⟨-, hi⟩, rfl⟩; rwa [ofNumber_number] at hi
+
+-- A canonical slot decodes to a function return label if and only if its kind
+-- is a function return label.
+theorem isFRL_iff {v : Bbu.StackSlot} (hv : Canon v) :
+    (decode v).isFunctionReturnLabel ↔ v.kind = Bbu.FunctionReturnLabel := by
+  unfold decode
+  split_ifs with h0 h1 h2
+  · simp only [Value.isFunctionReturnLabel, false_iff]
+    rw [h0]; decide
+  · simp only [Value.isFunctionReturnLabel, false_iff]
+    intro hk
+    rw [hv.2 hk] at h1
+    revert h1; decide
+  · simp [Value.isFunctionReturnLabel, h2]
+  · simp [Value.isFunctionReturnLabel, h2]
 
 theorem tgt_length (e : Bbu.Env) : (tgt e).length = e.n := by
   simp [tgt, Bbu.Env.n]
@@ -45,6 +61,69 @@ theorem tgt_get (e : Bbu.Env) (d : Nat) (hd : d < (tgt e).length) :
     (tgt e)[d] = decode e.target[d]! := by
   simp only [tgt, List.getElem_map]
   rw [getElem!_pos e.target d (by simpa using hd)]
+
+/-! ## Results -/
+
+-- `Corr` for a weaker relation.
+theorem corr_mono {α β : Type} {R S : α → β → Prop} {x : Bbu.M α} {y : Except ShuffleErr β}
+    (h : Corr R x y) (hs : ∀ a b, x = .ok a → R a b → S a b) : Corr S x y := by
+  rcases x with (_ | _) | a <;> rcases y with (_ | _) | b <;> simp_all [Corr]
+
+-- `ResCorr` goes through a bind that returns a block at once.
+theorem rescorr_bind {source target : Stack} {spills : SpillSet}
+    {R : Bbu.St → State source target spills → Prop}
+    {x : Bbu.M Bbu.St} {y : Except ShuffleErr (Result source target spills)}
+    {f : Bbu.St → Bbu.M Bbu.St}
+    {g : Result source target spills → Except ShuffleErr (Result source target spills)}
+    (h : ResCorr R x y) (hf : ∀ a r, R a r.state → ResCorr R (f a) (g r)) :
+    ResCorr R (x.bind f) (y >>= fun r => if r.blocked.isSome then pure r else g r) := by
+  rcases x with (_ | _) | a <;> rcases y with (_ | _) | ⟨_ | _, b⟩ <;>
+    simp_all [ResCorr, Except.bind, bind, pure, Except.pure]
+
+-- An action that does not block, then the end.
+theorem rescorr_pure {source target : Stack} {spills : SpillSet}
+    {R : Bbu.St → State source target spills → Prop}
+    {x : Bbu.M Bbu.St} {y : Except ShuffleErr (State source target spills)}
+    (h : Corr R x y) : ResCorr R x (y >>= fun s => pure ⟨none, s⟩) := by
+  rcases x with (_ | _) | a <;> rcases y with (_ | _) | b <;>
+    simp_all [Corr, ResCorr, Except.bind, bind, pure, Except.pure]
+
+-- `attach` does not change a bind.
+theorem attach_bind {ε α β : Type} (x : Except ε α) (f : α → Except ε β) :
+    (x.attach >>= fun a => f a.1) = x >>= f := by
+  cases x <;> rfl
+
+-- A generation that does not block continues with the loop at `t`.
+theorem stepcorr_generate {e : Bbu.Env} {source : Stack} {state : OState e source}
+    {x : Bbu.M Bbu.St} {y : Except ShuffleErr (OResult e source)} (t : Nat)
+    (h : ResCorr (Rel e) x y) :
+    StepCorr e (x.map (·, .next t)) state
+      (y >>= fun r => if r.blocked.isSome then pure r else buildBottomUp.loop t r.state) := by
+  rcases x with (_ | _) | a <;> rcases y with (_ | _) | ⟨_ | _, b⟩ <;>
+    simp_all [ResCorr, StepCorr, Except.map, Except.bind, bind, pure, Except.pure]
+  exact ⟨_, h, rfl⟩
+
+-- An action, then the loop at `t`.
+theorem stepcorr_next {e : Bbu.Env} {source : Stack} {state : OState e source}
+    {x : Bbu.M Bbu.St} {y : Except ShuffleErr (OState e source)} (t : Nat)
+    (h : Corr (Rel e) x y) :
+    StepCorr e (x.map (·, .next t)) state (y >>= buildBottomUp.loop t) := by
+  rcases x with (⟨_, _, _⟩ | _) | a <;> rcases y with (_ | _) | b <;> simp only [Corr] at h
+  · exact ⟨_, rfl⟩
+  · exact ⟨b, h, rfl⟩
+
+-- A generation, then a step that continues as `g`.
+theorem stepcorr_bind {e : Bbu.Env} {source : Stack} {state : OState e source}
+    {x : Bbu.M Bbu.St} {y : Except ShuffleErr (OResult e source)}
+    {f : Bbu.St → Bbu.M (Bbu.St × Bbu.Next)} {g : OResult e source → Except ShuffleErr (OResult e source)}
+    (h : ResCorr (Rel e) x y) (hf : ∀ a r, r.blocked = none → Rel e a r.state → StepCorr e (f a) state (g r)) :
+    StepCorr e (x.bind f) state (y >>= fun r => if r.blocked.isSome then pure r else g r) := by
+  rcases x with (⟨pos, ex, a⟩ | _) | a <;> rcases y with (_ | _) | ⟨_ | b, s⟩ <;>
+    simp only [ResCorr, reduceCtorEq, false_and, and_false] at h
+  · obtain ⟨hb, hr⟩ := h
+    exact ⟨s, hr, by rw [hb]; rfl⟩
+  · exact ⟨_, rfl⟩
+  · exact hf a ⟨none, s⟩ rfl h.2
 
 /-! ## Related states -/
 
@@ -71,7 +150,7 @@ theorem Rel.mapping (h : Rel e st state) (i : Fin state.stack.length) :
 
 theorem Rel.isFinal (h : Rel e st state) (i : Fin state.stack.length) :
     state.isFinal i ↔ st.dest i = i := by
-  unfold State.isFinal State.destinationOf
+  unfold State.isFinal Mapping.destinationOf
   rw [h.dest i]
   simp
 
@@ -90,10 +169,10 @@ theorem Rel.dest_iff (h : Rel e st state) (d : Fin (tgt e).length) (k : Fin stat
 
 -- The position of the slot bound for `d`.
 theorem Rel.positionOf (h : Rel e st state) (d : Fin (tgt e).length) :
-    (state.positionOf d).map Fin.val = Bbu.positionOf st d := by
+    (state.mapping.positionOf d).map Fin.val = Bbu.positionOf st d := by
   have hl := h.len
   rw [h.pos.findIdx]
-  unfold State.positionOf
+  unfold Mapping.positionOf
   cases hs : state.mapping.symm d with
   | some i =>
     symm

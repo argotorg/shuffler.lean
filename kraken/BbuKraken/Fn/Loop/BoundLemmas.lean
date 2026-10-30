@@ -297,9 +297,9 @@ theorem at108_far {a0 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 : UInt6
     {pos excess : Nat}
     (hB : Base s ra ⟨⟨a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15⟩, z, f, d⟩)
     (h4 : a4.toBitVec = BitVec.ofNat 64 pos) (h15 : a15.toBitVec - 17#64 = BitVec.ofNat 64 excess)
-    (hR : R0 s = .error (.blocked pos excess)) :
+    {bst : St} (hR : R0 s = .error (.blocked pos excess bst)) :
     At108 s ra ⟨⟨a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15⟩, z, f, d⟩ :=
-  ⟨hB, pos, excess, h4, h15, hR⟩
+  ⟨hB, pos, excess, bst, h4, h15, hR⟩
 
 -- The variant from `.LB77` to `.LB81`. The fields are explicit, so that the
 -- kernel does not compare the new state with `t`.
@@ -339,7 +339,7 @@ theorem at61_err {α : Type} {r : M α} {Q : α → Prop} {t' : MachineData} {z 
   | error e =>
     refine ⟨hB.fm, hB.rsp, ?_⟩
     unfold loopR
-    rw [show loop (env s) (st s) 0 = R0 s from rfl, hR e rfl]
+    rw [show loop finishC (env s) (st s) 0 = R0 s from rfl, hR e rfl]
     cases e <;> exact h
 
 end
