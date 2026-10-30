@@ -1,11 +1,17 @@
-// Emission::buildBottomUp, Emission::removeSurplus and Emission::pop of
+// Emission::buildBottomUp, Emission::removeSurplus, Emission::permuteAtLowestHeight, Emission::permute,
+// Emission::pop, the MappingBuilder, Planner::resolve, Emission::run (with emit) and Planner::run (with plan) of
 // solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp, freestanding, with the behavior of the Lean model,
-// Shuffler/BuildBottomUp/Defs.lean, Shuffler/RemoveSurplus/Defs.lean and State.pop of Shuffler/Emission/Defs.lean.
+// Shuffler/BuildBottomUp/Defs.lean, Shuffler/RemoveSurplus/Defs.lean, Shuffler/PermuteAtLowestHeight/Defs.lean,
+// Shuffler/Permute/Defs.lean, State.pop of Shuffler/Emission/Defs.lean, buildMapping of
+// Shuffler/BuildMapping/Defs.lean, Shuffler/Resolve/Defs.lean, Shuffler/Emission/Run/Defs.lean and
+// Shuffler/Planner/Run/Defs.lean.
 // The differences from Shuffler.cpp:
 //
 // - There are no exceptions, so a failed yulAssert returns Status::AssertionFailed.
 // - The source stack of build_bottom_up has no surplus, so every slot has a destination.
 // - The checks marked `Lean` come from the Lean model; Shuffler.cpp does not have them.
+// - The MappingBuilder constructor of Shuffler.cpp is five functions, one for each phase, and the mapping is the
+//   caller's.
 #include <bit>
 #include <compare>
 #include <cstddef>
@@ -388,7 +394,15 @@ public:
 			if (m_pendingGenerations == 0)
 			{
 				yulAssert(m_stack.size() == m_targetSize);
-				return permute();
+				// every slot goes to the offset it is bound for
+				OffsetArray<StackOffset> permutation;
+				for (StackOffset pos{0}; pos < m_stack.size(); ++pos.value)
+				{
+					Optional<StackOffset> const destination = m_mapping.destinationOf(pos);
+					yulAssert(destination.has_value());
+					permutation[pos] = *destination;
+				}
+				return permute(permutation);
 			}
 
 			// a target offset that needs something DUPed urgently before it goes out of dup reach
@@ -521,6 +535,16 @@ public:
 	/// spill_set.
 	Status removeSurplus();
 
+	/// At the lowest height, permutes every slot to its destination, or, if the destination is above the stack,
+	/// into a hole: an offset whose target slot the planned mapping does not bind. Defined after permute.
+	Status permuteAtLowestHeight();
+
+	/// Shuffler.cpp's run and emit: removes the surplus, permutes at the lowest height, then builds the target
+	/// bottom-up. The Result of run stays in the Emission and in the caller's buffers: blocked(), the trace, the
+	/// working stack and mapping(). Before buildBottomUp, the checks marked `Lean` are State.Valid of the Lean model,
+	/// the precondition of buildBottomUp. Defined after permute_at_lowest_height.
+	Status run();
+
 private:
 	/// Produces the slot for `_targetOffset`
 	UNIT Status produce(StackOffset const _targetOffset)
@@ -567,20 +591,17 @@ private:
 		return Status::Done;
 	}
 
-	/// Shuffler.cpp's permute of the destinations: every slot goes to the offset it is bound for. The
-	/// differences from Shuffler.cpp, as in the Lean model: the groups of equal slots come from a mark per
-	/// offset, not from a sort; an empty stack is done; and a swap does not assert that the slot is not final.
-	UNIT Status permute()
+public:
+	/// Shuffler.cpp's permute: the slot at each offset `pos` goes to the offset `_permutation[pos]`, a permutation
+	/// of the offsets of the working stack. permute changes the array in place: the regroup and each pass write it.
+	/// Shuffler.cpp takes the permutation by value; here the caller owns the array (8 KiB), so that the frame of
+	/// permute does not hold a copy. The differences from Shuffler.cpp, as in the Lean model: the groups of equal
+	/// slots come from a mark per offset, not from a sort; an empty stack is done; and a swap does not assert that
+	/// the slot is not final.
+	UNIT Status permute(OffsetArray<StackOffset>& _permutation)
 	{
 		if (m_stack.size() == 0)  // Lean
 			return Status::Done;
-		OffsetArray<StackOffset> permutation;
-		for (StackOffset pos{0}; pos < m_stack.size(); ++pos.value)
-		{
-			Optional<StackOffset> const destination = m_mapping.destinationOf(pos);
-			yulAssert(destination.has_value());
-			permutation[pos] = *destination;
-		}
 
 		// Equal slots are interchangeable: among them, those already at one of their desired offsets stay, the
 		// others take the remaining offsets. Otherwise equal slots would pass each other in cycles.
@@ -597,7 +618,7 @@ private:
 			// the group's desired offsets
 			for (StackOffset pos{0}; pos <= leader; ++pos.value)
 				if (m_stack[pos] == slot)
-					desiredBy[permutation[pos]] = leader;
+					desiredBy[_permutation[pos]] = leader;
 			// slots already standing on one of the group's desired offsets stay put, the others take the vacant
 			// offsets (desired, but not in the group), both sides ascending, so nothing crosses
 			StackOffset vacant{0};
@@ -607,29 +628,29 @@ private:
 					continue;
 				if (desiredBy[pos] == leader)
 				{
-					permutation[pos] = pos;
+					_permutation[pos] = pos;
 					continue;
 				}
 				while (vacant < m_stack.size() && !(desiredBy[vacant] == leader && !(m_stack[vacant] == slot)))
 					++vacant.value;
 				yulAssert(vacant < m_stack.size(), "movers and vacant must have the same size");
-				permutation[pos] = vacant;
+				_permutation[pos] = vacant;
 				++vacant.value;
 			}
 		}
 
-		// permutation is a permutation of the offsets. Let m be the number of offsets i with permutation[i] != i,
-		// and t be 1 if permutation[top] == top, else 0. Then 3 <= 2 m + 3 t <= 2 size() + 1, and each iteration
+		// _permutation is a permutation of the offsets. Let m be the number of offsets i with _permutation[i] != i,
+		// and t be 1 if _permutation[top] == top, else 0. Then 3 <= 2 m + 3 t <= 2 size() + 1, and each iteration
 		// that does not return lowers 2 m + 3 t. Thus the loop ends after at most 2 size() - 1 iterations.
 		StackOffset const top = m_stack.topOffset();
 		while (true)
 		{
-			StackOffset pos = permutation[top];
+			StackOffset pos = _permutation[top];
 			if (pos == top)
 			{
 				// the top is in place: find the shallowest misplaced slot
 				for (StackOffset candidate = top; candidate.value-- > 0;)
-					if (permutation[candidate] != candidate)
+					if (_permutation[candidate] != candidate)
 					{
 						pos = candidate;
 						break;
@@ -649,12 +670,13 @@ private:
 				m_stack.swap(pos);
 				m_mapping.swapDestinations(pos, top);
 			}
-			StackOffset const desired = permutation[pos];
-			permutation[pos] = permutation[top];
-			permutation[top] = desired;
+			StackOffset const desired = _permutation[pos];
+			_permutation[pos] = _permutation[top];
+			_permutation[top] = desired;
 		}
 	}
 
+private:
 	UNIT bool isSpilled(StackSlot const _slot) const { return m_spills.isSpilled(_slot); }
 
 	/// Whether the slot at `_pos` has no target offset to go to and is to be popped
@@ -679,6 +701,11 @@ private:
 				return pos;
 		return std::nullopt;
 	}
+
+	/// State.isAvailable of the Lean model: the slot of the target offset `_offset` can be generated, loaded, or DUPed
+	/// from a copy on the stack, which can be out of reach. Shuffler.cpp does not have it. Defined after
+	/// permute_at_lowest_height.
+	bool isAvailable(StackOffset _offset) const;
 
 	/// Swaps the top with the slot at `_pos`, the destinations traveling along
 	UNIT Status swapWith(StackOffset const _pos)
@@ -977,4 +1004,890 @@ extern "C" std::int64_t remove_surplus(
 	for (StackOffset pos{0}; pos < emission.stackSize(); ++pos.value)
 		dest[pos.value] = emission.mapping().destinationOf(pos);
 	return static_cast<std::int64_t>(emission.traceSize());
+}
+
+/// The Emission constructor and Emission::permute for a stack of h slots: data holds the slots, and the slot i goes to
+/// the offset perm[i]. The state is the state of Fuzz/Oracle.lean's runPermute: the target is the permuted stack, the
+/// mapping binds slot i to perm[i], and the spill set is empty. permute reads neither the target nor the spill set,
+/// so spilled is null. Writes the operations to ops and returns their number, also when a slot is out of reach. Then
+/// blocked gets its offset and its excess, which is positive, else 0 and 0. Returns -2 for a failed assertion. If the
+/// result is not -2, data holds the slots of the working stack, and dest the destination of each of its h slots.
+/// permute does not write perm.
+///
+/// perm is a permutation of 0..h-1, and ops has room for 2h entries: permute makes at most 2h - 1 passes, each with
+/// at most one swap. h <= 1024, else the result is -2 and nothing is written.
+extern "C" std::int64_t permute(
+	std::uint64_t const h,
+	StackSlot* const data,
+	std::uint64_t const* const perm,
+	ShuffleOp* const ops,
+	std::uint64_t* const blocked,
+	Optional<StackOffset>* const dest
+)
+{
+	// the mapping has room for maxStackSize offsets
+	if (h > maxStackSize)
+		return -2;
+	OffsetArray<StackOffset> permutation;
+	OffsetArray<StackSlot> target;
+	Mapping planned{h, h};
+	for (StackOffset pos{0}; pos < h; ++pos.value)
+	{
+		permutation[pos] = StackOffset{perm[pos.value]};
+		target[permutation[pos]] = data[pos.value];
+		planned.bind(pos, permutation[pos]);
+	}
+	Emission emission{Stack{data, h, ops}, target.data(), h, planned, nullptr};
+	switch (emission.permute(permutation))
+	{
+	case Status::Done:
+		blocked[0] = 0;
+		blocked[1] = 0;
+		break;
+	case Status::Blocked:
+		blocked[0] = emission.blocked().offset.value;
+		blocked[1] = emission.blocked().excess;
+		break;
+	case Status::AssertionFailed:
+		return -2;
+	}
+	for (StackOffset pos{0}; pos < h; ++pos.value)
+		dest[pos.value] = emission.mapping().destinationOf(pos);
+	return static_cast<std::int64_t>(emission.traceSize());
+}
+
+namespace
+{
+
+// `used` and this place make g++ emit permuteAtLowestHeight after permute, so the asm of the units above and their
+// labels stay
+[[gnu::used]] UNIT Status Emission::permuteAtLowestHeight()
+{
+	OffsetArray<StackOffset> permutation;
+	// offsets whose target slots will be generated later, and the slots that wait for one of them
+	OffsetArray<StackOffset> holes;
+	OffsetArray<StackOffset> parked;
+	std::size_t holeCount = 0;
+	std::size_t parkedCount = 0;
+	// each offset below the height gets one entry of permutation, so permutation needs no initial value
+	for (StackOffset pos{0}; pos < m_stack.size(); ++pos.value)
+	{
+		// all surplus is gone, so every slot has a destination
+		Optional<StackOffset> const destination = m_mapping.destinationOf(pos);
+		yulAssert(destination.has_value(), "every source slot must be bound");
+		yulAssert(pos < m_targetSize);  // Lean
+		// no slot is planned for the target offset pos, so its slot has to be generated
+		bool const isHole = !m_plannedMapping.positionOf(pos).has_value();
+		// the destination can not be served yet
+		bool const isParked = *destination >= m_stack.size();
+		if (!isParked)
+			permutation[pos] = *destination;
+		if (isParked && isHole)
+			permutation[pos] = pos;
+		if (isParked && !isHole)
+			parked[StackOffset{parkedCount++}] = pos;
+		if (!isParked && isHole)
+			holes[StackOffset{holeCount++}] = pos;
+	}
+	yulAssert(parkedCount == holeCount, "parked and holes must have the same size");
+	// parked is in ascending order, so the sort of Shuffler.cpp does not change it
+	for (StackOffset i{0}; i < parkedCount; ++i.value)
+		permutation[parked[i]] = holes[i];
+	return permute(permutation);
+}
+
+}
+
+/// The Emission constructor and Emission::permuteAtLowestHeight for a stack of m slots and a target of n slots: data
+/// holds the slots and dest[i] is the target offset of slot i, or none (SIZE_MAX); the planned mapping is this
+/// mapping. Writes the operations to ops and returns their number, also when a slot is out of reach. Then blocked gets
+/// its offset and its excess, which is positive, else 0 and 0. Returns -2 for a failed assertion. If the result is not
+/// -2, data holds the slots of the working stack, and dest the destination of each of its m slots: a permutation does
+/// not change the height.
+///
+/// dest holds distinct offsets below n, and ops has room for 2m entries: permute makes at most 2m - 1 passes, each
+/// with at most one swap. m, n <= 1024, else the result is -2 and nothing is written. spilled has idCount bytes, the
+/// spill set of the state; permuteAtLowestHeight does not read it, nor target.
+extern "C" std::int64_t permute_at_lowest_height(
+	std::uint64_t const m,
+	std::uint64_t const n,
+	StackSlot* const data,
+	StackSlot const* const target,
+	Optional<StackOffset>* const dest,
+	std::uint8_t const* const spilled,
+	[[maybe_unused]] std::uint64_t const idCount,
+	ShuffleOp* const ops,
+	std::uint64_t* const blocked
+)
+{
+	// the mapping has room for maxStackSize offsets
+	if (m > maxStackSize || n > maxStackSize)
+		return -2;
+	Mapping planned{m, n};
+	for (StackOffset pos{0}; pos < m; ++pos.value)
+		if (Optional<StackOffset> const destination = dest[pos.value])
+			planned.bind(pos, *destination);
+	Emission emission{Stack{data, m, ops}, target, n, planned, spilled};
+	switch (emission.permuteAtLowestHeight())
+	{
+	case Status::Done:
+		blocked[0] = 0;
+		blocked[1] = 0;
+		break;
+	case Status::Blocked:
+		blocked[0] = emission.blocked().offset.value;
+		blocked[1] = emission.blocked().excess;
+		break;
+	case Status::AssertionFailed:
+		return -2;
+	}
+	for (StackOffset pos{0}; pos < m; ++pos.value)
+		dest[pos.value] = emission.mapping().destinationOf(pos);
+	return static_cast<std::int64_t>(emission.traceSize());
+}
+
+namespace
+{
+
+/// Shuffler.cpp's MappingBuilder, the Lean model's MappingBuilder and buildMapping
+/// (Shuffler/BuildMapping/Defs.lean): builds the mapping of the source stack to the target. Every target offset is
+/// either served by a source slot (retained) or left empty (generated); source slots without a target offset are
+/// surplus. The constructor of Shuffler.cpp runs five phases; here each phase is a unit, and build_mapping runs them
+/// in order.
+///
+/// The mapping is the caller's, so that the builder does not copy its 16 KiB. dropped has a byte for each source slot:
+/// the slot is scheduled to be popped if its byte is not 0. Shuffler.cpp asserts that dropped has the size of the
+/// source; here both sizes are m, so the assertion has no counterpart.
+class MappingBuilder
+{
+public:
+	/// A copy that sits in a wildcard slot can either be moved to the target offset demanding it or left there,
+	/// serving the demand with a duplicate
+	enum class WildcardSlotsStrategy : std::uint8_t { Leave, Take };
+
+	/// `_mapping` has no bindings for `_sourceSize` source slots and `_targetSize` target offsets
+	MappingBuilder(
+		StackSlot const* const _source,
+		std::size_t const _sourceSize,
+		StackSlot const* const _target,
+		std::size_t const _targetSize,
+		std::uint8_t const* const _dropped,
+		WildcardSlotsStrategy const _wildcardSlotsStrategy,
+		Mapping& _mapping
+	):
+		m_source(_source),
+		m_sourceSize(_sourceSize),
+		m_target(_target),
+		m_targetSize(_targetSize),
+		m_dropped(_dropped),
+		m_wildcardSlotsStrategy(_wildcardSlotsStrategy),
+		m_mapping(_mapping)
+	{}
+
+	/// slots already in place get mapped directly
+	Status mapInPlace();
+	/// the remaining target offsets take the closest unused copy, deepest first: what is left over is generated on
+	/// top, where that is cheapest
+	Status mapClosestCopies();
+	/// copies sitting in wildcard slots are taken or left according to the strategy
+	Status mapWildcardSlotCopies();
+	/// wildcards keep whatever sits there
+	Status keepWildcardSlots();
+	/// the remaining wildcards absorb the closest surplus slot instead of having it popped
+	Status absorbSurplus();
+
+	/// Whether any target offset's demand was answered by a copy sitting in a wildcard slot, i.e. whether the
+	/// `WildcardSlotsStrategy` had anything to decide
+	bool sawWildcardCopy() const { return m_sawWildcardCopy; }
+
+private:
+	/// Which copies `closestCopy` considers: only those standing in wildcard slots or only those that do not
+	enum class CopyLocation : std::uint8_t { OutsideWildcardSlots, InWildcardSlots };
+
+	/// Whether the source slot is not scheduled to be dropped and also not yet pointing to a target
+	bool mappable(StackOffset const _sourceOffset) const
+	{
+		return m_dropped[_sourceOffset.value] == 0 && !m_mapping.destinationOf(_sourceOffset).has_value();
+	}
+
+	/// Whether a source slot already serves `_targetOffset`
+	bool hasSourceAssigned(StackOffset const _targetOffset) const
+	{
+		return m_mapping.positionOf(_targetOffset).has_value();
+	}
+
+	/// Whether the target at `_targetOffset` is junk, i.e. accepts whatever ends up there
+	bool isWildcardTarget(StackOffset const _targetOffset) const { return m_target[_targetOffset.value].isJunk(); }
+
+	/// Whether the source slot at `_sourceOffset` stands at an offset that exists in the target and is junk there,
+	/// i.e. a copy that may stay put
+	bool inWildcardSlot(StackOffset const _sourceOffset) const
+	{
+		return _sourceOffset < m_targetSize && isWildcardTarget(_sourceOffset);
+	}
+
+	/// The closest mappable copy of the slot demanded at `_targetOffset` among the copies at `_location`; ties go to
+	/// the shallower copy
+	Optional<StackOffset> closestCopy(StackOffset _targetOffset, CopyLocation _location) const;
+
+	static std::size_t absDiff(StackOffset const _a, StackOffset const _b)
+	{
+		return _a > _b ? _a.value - _b.value : _b.value - _a.value;
+	}
+
+	Status map(StackOffset _sourceOffset, StackOffset _targetOffset);
+
+	std::size_t commonSize() const { return m_sourceSize < m_targetSize ? m_sourceSize : m_targetSize; }
+
+	StackSlot const* m_source;
+	std::size_t m_sourceSize;
+	StackSlot const* m_target;
+	std::size_t m_targetSize;
+	std::uint8_t const* m_dropped;
+	WildcardSlotsStrategy m_wildcardSlotsStrategy;
+	Mapping& m_mapping;
+	bool m_sawWildcardCopy = false;
+};
+
+// `used` and this place make g++ emit the units of MappingBuilder after remove_surplus, so the asm of the units above
+// and their labels stay
+[[gnu::used]] UNIT Status MappingBuilder::map(StackOffset const _sourceOffset, StackOffset const _targetOffset)
+{
+	yulAssert(mappable(_sourceOffset));
+	// the assertions of Shuffler.cpp's Mapping::bind
+	yulAssert(!m_mapping.destinationOf(_sourceOffset).has_value(), "slot already has a destination");
+	yulAssert(!m_mapping.positionOf(_targetOffset).has_value(), "destination already bound to a slot");
+	m_mapping.bind(_sourceOffset, _targetOffset);
+	return Status::Done;
+}
+
+[[gnu::used]] UNIT Optional<StackOffset> MappingBuilder::closestCopy(
+	StackOffset const _targetOffset,
+	CopyLocation const _location
+) const
+{
+	bool const inWildcardSlots = _location == CopyLocation::InWildcardSlots;
+	Optional<StackOffset> best = std::nullopt;
+	for (StackOffset i{0}; i < m_sourceSize; ++i.value)
+		if (m_source[i.value] == m_target[_targetOffset.value] && mappable(i) && inWildcardSlot(i) == inWildcardSlots)
+			if (!best || absDiff(i, _targetOffset) <= absDiff(*best, _targetOffset))
+				best = i;
+	return best;
+}
+
+[[gnu::used]] UNIT Status MappingBuilder::mapInPlace()
+{
+	for (StackOffset j{0}; j < commonSize(); ++j.value)
+		if (m_source[j.value] == m_target[j.value] && mappable(j))
+			if (Status const status = map(j, j); status != Status::Done)
+				return status;
+	return Status::Done;
+}
+
+[[gnu::used]] UNIT Status MappingBuilder::mapClosestCopies()
+{
+	for (StackOffset j{0}; j < m_targetSize; ++j.value)
+		if (!hasSourceAssigned(j) && !isWildcardTarget(j))
+			if (Optional<StackOffset> const copy = closestCopy(j, CopyLocation::OutsideWildcardSlots))
+				if (Status const status = map(*copy, j); status != Status::Done)
+					return status;
+	return Status::Done;
+}
+
+[[gnu::used]] UNIT Status MappingBuilder::mapWildcardSlotCopies()
+{
+	for (StackOffset j{0}; j < m_targetSize; ++j.value)
+		if (!hasSourceAssigned(j) && !isWildcardTarget(j))
+			if (Optional<StackOffset> const copy = closestCopy(j, CopyLocation::InWildcardSlots))
+			{
+				// a function return label is always taken, can't be duped or pushed
+				if (m_target[j.value].isFunctionReturnLabel())
+				{
+					if (Status const status = map(*copy, j); status != Status::Done)
+						return status;
+				}
+				else
+				{
+					m_sawWildcardCopy = true;
+					if (m_wildcardSlotsStrategy == WildcardSlotsStrategy::Take)
+						if (Status const status = map(*copy, j); status != Status::Done)
+							return status;
+				}
+			}
+	return Status::Done;
+}
+
+[[gnu::used]] UNIT Status MappingBuilder::keepWildcardSlots()
+{
+	for (StackOffset j{0}; j < commonSize(); ++j.value)
+		if (isWildcardTarget(j) && !hasSourceAssigned(j) && mappable(j))
+			if (Status const status = map(j, j); status != Status::Done)
+				return status;
+	return Status::Done;
+}
+
+[[gnu::used]] UNIT Status MappingBuilder::absorbSurplus()
+{
+	for (StackOffset j{0}; j < m_targetSize; ++j.value)
+		if (isWildcardTarget(j) && !hasSourceAssigned(j))
+		{
+			// of two slots at the same distance the deeper one: the comparison is strict
+			Optional<StackOffset> best = std::nullopt;
+			for (StackOffset o{0}; o < m_sourceSize; ++o.value)
+				if (mappable(o) && (!best || absDiff(o, j) < absDiff(*best, j)))
+					best = o;
+			if (best)
+				if (Status const status = map(*best, j); status != Status::Done)
+					return status;
+		}
+	return Status::Done;
+}
+
+}
+
+/// Shuffler.cpp's MappingBuilder constructor, the Lean model's buildMapping, for a source stack of m slots and a target
+/// of n slots: dropped[i] is not 0 if source slot i is scheduled to be popped, and strategy is the
+/// WildcardSlotsStrategy, 0 (Leave) or 1 (Take). Writes the position of the source slot bound for each of the n target
+/// offsets, or none (SIZE_MAX), to sources, and sawWildcardCopy, 0 or 1, to saw. Returns 0, or -2 for a failed
+/// assertion; then nothing is written.
+///
+/// dropped has m bytes, and sources has room for n entries. m, n <= 1024 and strategy <= 1, else the result is -2 and
+/// nothing is written.
+extern "C" std::int64_t build_mapping(
+	std::uint64_t const m,
+	std::uint64_t const n,
+	StackSlot const* const source,
+	StackSlot const* const target,
+	std::uint8_t const* const dropped,
+	std::uint8_t const strategy,
+	Optional<StackOffset>* const sources,
+	std::uint8_t* const saw
+)
+{
+	// the mapping has room for maxStackSize offsets, and the strategy is Leave or Take
+	if (m > maxStackSize || n > maxStackSize || strategy > 1)
+		return -2;
+	Mapping mapping{m, n};
+	MappingBuilder builder{source, m, target, n, dropped, MappingBuilder::WildcardSlotsStrategy{strategy}, mapping};
+	if (builder.mapInPlace() != Status::Done || builder.mapClosestCopies() != Status::Done ||
+		builder.mapWildcardSlotCopies() != Status::Done || builder.keepWildcardSlots() != Status::Done ||
+		builder.absorbSurplus() != Status::Done)
+		return -2;
+	for (StackOffset j{0}; j < n; ++j.value)
+		sources[j.value] = mapping.positionOf(j);
+	*saw = builder.sawWildcardCopy();
+	return 0;
+}
+
+namespace
+{
+
+/// How Planner::resolve ends: the excess is dropped; no candidate is left to drop (Shuffler.cpp's false); or a failed
+/// assertion. Not Status: its Blocked has another meaning.
+enum class [[nodiscard]] Resolution : std::uint8_t { Dropped, Stuck, AssertionFailed };
+
+/// How a slot can be regenerated after a drop, cheapest first: not needed or for free, pushed, reloaded from an
+/// existing spill, duplicated from another copy, reloaded after a planned spill. Shuffler.cpp's classes 0 to 4; the
+/// order of the values is the order of the classes.
+enum class Class : std::uint8_t { Free = 0, Push = 1, Reload = 2, Copy = 3, Spill = 4 };
+
+template<>
+struct Niche<Class>
+{
+	static constexpr Class value{0xff};
+};
+
+/// Shuffler.cpp's Planner, the Lean model's Planner.State with the source and the target: the spill set,
+/// spillingAllowed and the dropped bytes are the caller's. The lambdas of Shuffler.cpp's resolve are units.
+class Planner
+{
+public:
+	Planner(
+		StackSlot const* const _source,
+		std::size_t const _sourceSize,
+		StackSlot const* const _target,
+		std::size_t const _targetSize,
+		SpillSet const _spills,
+		bool const _spillingAllowed,
+		std::uint8_t* const _dropped
+	):
+		m_source(_source),
+		m_sourceSize(_sourceSize),
+		m_target(_target),
+		m_targetSize(_targetSize),
+		m_spills(_spills),
+		m_spillingAllowed(_spillingAllowed),
+		m_dropped(_dropped)
+	{}
+
+	/// Drops slots above the blocked one until it is within reach, cheapest regeneration first: slots whose
+	/// target is a wildcard, freely generatable ones, spilled ones, values with another retained copy, and
+	/// finally values that get a planned spill. Function return labels cannot be regenerated and are never
+	/// dropped.
+	///
+	/// `_mapping` is the plan, and `_current` the working mapping of a stack of `_currentSize` slots, with
+	/// `_blocked.offset` below `_currentSize`. The drops and spills of the passes before a Stuck or a failed
+	/// assertion stay, as in the Lean model. Each pass classifies at most m candidates, and a classification costs
+	/// O(m + n), so resolve costs O(excess * m * (m + n)); it stops after at most m + 1 passes.
+	Resolution resolve(
+		Mapping const& _mapping,
+		Emission::Blocked _blocked,
+		Mapping const& _current,
+		std::size_t _currentSize
+	);
+
+	/// Builds the mapping and emits from the source, and after each block resolves it and tries again, with the
+	/// dropped bytes all 0 at the start. Done is a plan: `_data` holds its stack, `_ops` its `_traceSize` operations,
+	/// and `_sources[j]` the source offset bound for target offset j in the mapping of the plan, or none. Blocked is
+	/// Shuffler.cpp's false: resolve found nothing left to drop. Each attempt starts with a copy of the source in
+	/// `_data`, and writes `_data` and `_ops` as emit does.
+	Status run(
+		MappingBuilder::WildcardSlotsStrategy _strategy,
+		StackSlot* _data,
+		ShuffleOp* _ops,
+		Optional<StackOffset>* _sources,
+		std::size_t& _traceSize
+	);
+
+	/// Only after run: whether the mapping of any attempt answered a demand with a copy in a wildcard slot
+	bool sawWildcardCopy() const { return m_sawWildcardCopy; }
+
+private:
+	static bool isRetained(Mapping const& _mapping, StackOffset _sourceOffset);
+	bool hasOtherRetainedCopy(
+		Mapping const& _mapping,
+		OffsetArray<std::uint8_t> const& _droppedNow,
+		StackOffset _offset
+	) const;
+	/// this slot is needed somewhere in the target
+	bool isDemanded(StackSlot _slot) const;
+	/// The class of the slot at `_offset`, which has a destination, or none if it cannot be dropped
+	Optional<Class> classify(
+		Mapping const& _mapping,
+		OffsetArray<std::uint8_t> const& _droppedNow,
+		StackOffset _offset
+	) const;
+
+	StackSlot const* m_source;
+	std::size_t m_sourceSize;
+	StackSlot const* m_target;
+	std::size_t m_targetSize;
+	SpillSet m_spills;
+	bool m_spillingAllowed;
+	std::uint8_t* m_dropped;
+	/// set by run; no initializer, so that the asm of the resolve entry stays
+	bool m_sawWildcardCopy;
+};
+
+// `used` and this place make g++ emit the units of Planner after build_mapping, so the asm of the units above and
+// their labels stay
+[[gnu::used]] UNIT bool Planner::isRetained(Mapping const& _mapping, StackOffset const _sourceOffset)
+{
+	return _mapping.destinationOf(_sourceOffset).has_value();
+}
+
+[[gnu::used]] UNIT bool Planner::hasOtherRetainedCopy(
+	Mapping const& _mapping,
+	OffsetArray<std::uint8_t> const& _droppedNow,
+	StackOffset const _offset
+) const
+{
+	for (StackOffset sourceOffset{0}; sourceOffset < m_sourceSize; ++sourceOffset.value)
+		if (
+			sourceOffset != _offset &&
+			m_source[sourceOffset.value] == m_source[_offset.value] &&  // same value
+			isRetained(_mapping, sourceOffset) &&
+			_droppedNow[sourceOffset] == 0  // not yet dropped
+		)
+			return true;
+	return false;
+}
+
+[[gnu::used]] UNIT bool Planner::isDemanded(StackSlot const _slot) const
+{
+	for (std::size_t j = 0; j < m_targetSize; ++j)
+		if (!m_target[j].isJunk() && m_target[j] == _slot)
+			return true;
+	return false;
+}
+
+[[gnu::used]] UNIT Optional<Class> Planner::classify(
+	Mapping const& _mapping,
+	OffsetArray<std::uint8_t> const& _droppedNow,
+	StackOffset const _offset
+) const
+{
+	StackSlot const slot = m_source[_offset.value];
+	if (slot.isFunctionReturnLabel())
+		return std::nullopt;
+	bool const regenerable = slot.isJunk() || canBeFreelyGenerated(slot) || isSpilled(slot, m_spills) ||
+		hasOtherRetainedCopy(_mapping, _droppedNow, _offset);
+	if (m_target[_mapping.destinationOf(_offset)->value].isJunk() && (regenerable || !isDemanded(slot)))
+		return Class::Free;
+	if (canBeFreelyGenerated(slot))
+		return Class::Push;
+	if (isSpilled(slot, m_spills))
+		return Class::Reload;
+	if (hasOtherRetainedCopy(_mapping, _droppedNow, _offset))
+		return Class::Copy;
+	if (m_spillingAllowed && isVariable(slot))
+		return Class::Spill;
+	return std::nullopt;
+}
+
+[[gnu::used]] UNIT Resolution Planner::resolve(
+	Mapping const& _mapping,
+	Emission::Blocked const _blocked,
+	Mapping const& _current,
+	std::size_t const _currentSize
+)
+{
+	OffsetArray<std::uint8_t> droppedNow;
+	for (StackOffset sourceOffset{0}; sourceOffset < m_sourceSize; ++sourceOffset.value)
+		droppedNow[sourceOffset] = 0;
+
+	// retained slots above the blocked one; the source offset of a retained slot is the one its destination
+	// maps back to, while generated and surplus slots have no source. The working mapping binds each destination
+	// once, so the candidates are distinct, and there are fewer than _currentSize.
+	OffsetArray<StackOffset> candidates;
+	std::size_t candidateCount = 0;
+	for (StackOffset pos{_blocked.offset.value + 1}; pos < _currentSize; ++pos.value)
+		if (Optional<StackOffset> const destination = _current.destinationOf(pos))
+			if (Optional<StackOffset> const source = _mapping.positionOf(*destination))
+			{
+				// the Lean model checks this in classify and in the loop below, where it holds for each candidate
+				if (!_mapping.destinationOf(*source))  // Lean
+					return Resolution::AssertionFailed;
+				candidates[StackOffset{candidateCount++}] = *source;
+			}
+
+	for (std::size_t dropped = 0; dropped < _blocked.excess; ++dropped)
+	{
+		// classes can shift as copies get dropped, so pick one victim at a time
+		Optional<StackOffset> best = std::nullopt;
+		Class bestClass = Class::Free;
+		for (StackOffset i{0}; i < candidateCount; ++i.value)
+		{
+			StackOffset const offset = candidates[i];
+			if (droppedNow[offset] != 0)
+				continue;
+			Optional<Class> const cls = classify(_mapping, droppedNow, offset);
+			if (!cls)
+				continue;
+			// within a class prefer the slot whose target is highest
+			if (
+				!best ||
+				*cls < bestClass ||
+				(*cls == bestClass && *_mapping.destinationOf(offset) > *_mapping.destinationOf(*best))
+			)
+			{
+				best = offset;
+				bestClass = *cls;
+			}
+		}
+		if (!best)
+			return Resolution::Stuck;  // couldn't drop anything
+		if (bestClass == Class::Spill && m_spills.add(m_source[best->value]) != Status::Done)
+			return Resolution::AssertionFailed;
+		droppedNow[*best] = 1;
+		m_dropped[best->value] = 1;
+	}
+	return Resolution::Dropped;
+}
+
+}
+
+/// Shuffler.cpp's Planner::resolve, the Lean model's Planner.resolve, for a source stack of m slots, a target of n
+/// slots and a working stack of h slots: plan[i] is the target offset of source slot i in the plan, or none (SIZE_MAX),
+/// and current[pos] the target offset of the slot at pos of the working stack in the working mapping, or none. The
+/// slot at offset is blocked by excess slots. The variable id is spilled if spilled[id] is not 0, allowed is
+/// spillingAllowed, 0 or 1, and dropped[i] is not 0 if source slot i is scheduled to be popped. Sets the dropped byte of
+/// each victim to 1, and the spill byte of each new spill to 1. Returns 0 when it dropped excess slots, -1 when no slot
+/// is left to drop, or -2 for a failed assertion. Then the drops and spills of the passes before stay.
+///
+/// plan holds m and current h distinct offsets below n, spilled has idCount bytes, and dropped has m bytes. m, n, h <=
+/// 1024, offset < h, allowed <= 1 and the id of each variable of the source is below idCount, else the result is -2 and
+/// nothing is written.
+extern "C" std::int64_t resolve(
+	std::uint64_t const m,
+	std::uint64_t const n,
+	StackSlot const* const source,
+	StackSlot const* const target,
+	Optional<StackOffset> const* const plan,
+	std::uint64_t const h,
+	Optional<StackOffset> const* const current,
+	std::uint64_t const offset,
+	std::uint64_t const excess,
+	std::uint8_t* const spilled,
+	std::uint64_t const idCount,
+	std::uint8_t const allowed,
+	std::uint8_t* const dropped
+)
+{
+	// the mappings have room for maxStackSize offsets, the blocked slot is on the working stack, and only the
+	// variables of the source are spilled
+	if (m > maxStackSize || n > maxStackSize || h > maxStackSize || offset >= h || allowed > 1)
+		return -2;
+	for (std::uint64_t i = 0; i < m; ++i)
+		if (isVariable(source[i]) && source[i].payload >= idCount)
+			return -2;
+	Mapping mapping{m, n};
+	for (StackOffset pos{0}; pos < m; ++pos.value)
+		if (Optional<StackOffset> const destination = plan[pos.value])
+			mapping.bind(pos, *destination);
+	Mapping working{h, n};
+	for (StackOffset pos{0}; pos < h; ++pos.value)
+		if (Optional<StackOffset> const destination = current[pos.value])
+			working.bind(pos, *destination);
+	Planner planner{source, m, target, n, SpillSet{spilled}, allowed == 1, dropped};
+	switch (planner.resolve(mapping, Emission::Blocked{StackOffset{offset}, excess}, working, h))
+	{
+	case Resolution::Dropped:
+		return 0;
+	case Resolution::Stuck:
+		return -1;
+	case Resolution::AssertionFailed:
+		return -2;
+	}
+	__builtin_unreachable();
+}
+
+namespace
+{
+
+// `used` and this place make g++ emit isAvailable and run after resolve, so the asm of the units above and their
+// labels stay
+[[gnu::used]] UNIT bool Emission::isAvailable(StackOffset const _offset) const
+{
+	StackSlot const slot = m_target[_offset.value];
+	return canBeFreelyGenerated(slot) || isSpilled(slot) || shallowestCopyPosition(slot).has_value();
+}
+
+[[gnu::used]] UNIT Status Emission::run()
+{
+	// removes all surplus (slots that have no destination in the target)
+	if (Status const status = removeSurplus(); status != Status::Done)
+		return status;
+	if (Status const status = permuteAtLowestHeight(); status != Status::Done)
+		return status;
+	// State.Valid, in the order of the model
+	yulAssert(
+		m_stack.size() + m_pendingGenerations == m_targetSize,
+		"stack height and pending generations must match the target size"
+	);  // Lean
+	std::size_t unmapped = 0;
+	for (StackOffset offset{0}; offset < m_targetSize; ++offset.value)
+		if (!m_mapping.positionOf(offset))
+			++unmapped;
+	yulAssert(unmapped == m_pendingGenerations, "pending generations must count unmapped target slots");  // Lean
+	for (StackOffset offset{0}; offset < m_targetSize; ++offset.value)
+		yulAssert(isAvailable(offset), "target slot is unavailable");  // Lean
+	for (StackOffset offset{0}; offset < m_targetSize; ++offset.value)
+		yulAssert(
+			!m_target[offset.value].isFunctionReturnLabel() || m_mapping.positionOf(offset).has_value(),
+			"function return label has no bound source"
+		);  // Lean
+	return buildBottomUp();
+}
+
+}
+
+/// Emission::run, Shuffler.cpp's Emission::run and emit, for a source stack of m slots and a target of n slots: data
+/// holds the source slots and dest[i] is the target offset of source slot i, or none (SIZE_MAX); the planned mapping is
+/// this mapping. Writes the operations to ops and returns their number, also when a slot is out of reach. Then blocked
+/// gets its offset and its excess, which is positive, else 0 and 0. Returns -2 for a failed assertion, also of a check
+/// of State.Valid before buildBottomUp; then data and ops can hold the operations before it, and blocked, height and
+/// dest are not written. If the result is not -2, height gets the height of the working stack, data holds its slots,
+/// and the first height entries of dest hold their destinations; the other entries of dest are not written.
+///
+/// dest holds distinct offsets below n, spilled has idCount bytes, and every variable id of target is below idCount.
+/// m, n <= 1024; else, or if a variable id of target is not below idCount, the result is -2 and nothing is written.
+/// data and dest have room for max(m, n) entries: removeSurplus lowers the height from m to h, permuteAtLowestHeight
+/// keeps h, and buildBottomUp raises it only while pendingGenerations is not 0, and height + pendingGenerations = n.
+///
+/// ops has room for 4m + 6n entries. The count is at most 2m + 6n - 2h, with h the height after removeSurplus:
+/// - removeSurplus: each pass pops a slot, after at most one swap: at most 2(m - h);
+/// - permuteAtLowestHeight: permute makes at most 2h - 1 passes, each with at most one swap: at most 2h;
+/// - buildBottomUp starts with pendingGenerations = n - h (the first check). Each iteration of its loop lowers
+///   2 pendingGenerations + 2(n - targetOffset), first 4n - 2h, by at least the number of operations it adds
+///   (Inv.ops_le, kraken/BbuKraken/ModelLemmas.lean), and the final permute of n slots adds at most 2n - 1: at most
+///   6n - 2h.
+///
+/// Stack use in bbu/*.S: at most 65784 bytes below the stack pointer before the call, with the return address
+/// (emit, Emission::run, permuteAtLowestHeight, permute, shallowestCopyPosition).
+extern "C" std::int64_t emit(
+	std::uint64_t const m,
+	std::uint64_t const n,
+	StackSlot* const data,
+	StackSlot const* const target,
+	Optional<StackOffset>* const dest,
+	std::uint8_t const* const spilled,
+	std::uint64_t const idCount,
+	ShuffleOp* const ops,
+	std::uint64_t* const blocked,
+	std::uint64_t* const height
+)
+{
+	// the mapping has room for maxStackSize offsets
+	if (m > maxStackSize || n > maxStackSize)
+		return -2;
+	// buildBottomUp reads the spill byte of each variable of the target
+	for (std::uint64_t i = 0; i < n; ++i)
+		if (isVariable(target[i]) && target[i].payload >= idCount)
+			return -2;
+	Mapping planned{m, n};
+	for (StackOffset pos{0}; pos < m; ++pos.value)
+		if (Optional<StackOffset> const destination = dest[pos.value])
+			planned.bind(pos, *destination);
+	Emission emission{Stack{data, m, ops}, target, n, planned, spilled};
+	switch (emission.run())
+	{
+	case Status::Done:
+		blocked[0] = 0;
+		blocked[1] = 0;
+		break;
+	case Status::Blocked:
+		blocked[0] = emission.blocked().offset.value;
+		blocked[1] = emission.blocked().excess;
+		break;
+	case Status::AssertionFailed:
+		return -2;
+	}
+	*height = emission.stackSize();
+	for (StackOffset pos{0}; pos < emission.stackSize(); ++pos.value)
+		dest[pos.value] = emission.mapping().destinationOf(pos);
+	return static_cast<std::int64_t>(emission.traceSize());
+}
+
+namespace
+{
+
+/// ranges::contains on the `_size` slots of `_stack`
+constexpr bool contains(StackSlot const* const _stack, std::size_t const _size, StackSlot const _slot)
+{
+	for (std::size_t i = 0; i < _size; ++i)
+		if (_stack[i] == _slot)
+			return true;
+	return false;
+}
+
+// `used` and this place make g++ emit run after emit, so the asm of the units above and their labels stay
+[[gnu::used]] UNIT Status Planner::run(
+	MappingBuilder::WildcardSlotsStrategy const _strategy,
+	StackSlot* const _data,
+	ShuffleOp* const _ops,
+	Optional<StackOffset>* const _sources,
+	std::size_t& _traceSize
+)
+{
+	m_sawWildcardCopy = false;
+	for (std::size_t j = 0; j < m_targetSize; ++j)
+		yulAssert(
+			m_target[j].isJunk() ||
+			canBeFreelyGenerated(m_target[j]) ||
+			contains(m_source, m_sourceSize, m_target[j]) ||
+			isSpilled(m_target[j], m_spills),
+			"target slot neither on the stack nor generatable"
+		);
+
+	for (;;)
+	{
+		Mapping mapping{m_sourceSize, m_targetSize};
+		MappingBuilder builder{m_source, m_sourceSize, m_target, m_targetSize, m_dropped, _strategy, mapping};
+		if (builder.mapInPlace() != Status::Done || builder.mapClosestCopies() != Status::Done ||
+			builder.mapWildcardSlotCopies() != Status::Done || builder.keepWildcardSlots() != Status::Done ||
+			builder.absorbSurplus() != Status::Done)
+			return Status::AssertionFailed;
+		m_sawWildcardCopy = m_sawWildcardCopy || builder.sawWildcardCopy();
+		for (std::size_t i = 0; i < m_sourceSize; ++i)
+			_data[i] = m_source[i];
+		Emission emission{Stack{_data, m_sourceSize, _ops}, m_target, m_targetSize, mapping, m_spills.m_spilled};
+		if (Status const status = emission.run(); status != Status::Blocked)
+		{
+			if (status == Status::Done)
+			{
+				for (StackOffset j{0}; j < m_targetSize; ++j.value)
+					_sources[j.value] = mapping.positionOf(j);
+				_traceSize = emission.traceSize();
+			}
+			return status;
+		}
+		std::size_t droppedBefore = 0;
+		for (std::size_t i = 0; i < m_sourceSize; ++i)
+			droppedBefore += m_dropped[i] != 0;
+		switch (resolve(mapping, emission.blocked(), emission.mapping(), emission.stackSize()))
+		{
+		case Resolution::Dropped:
+			break;
+		case Resolution::Stuck:
+			return Status::Blocked;
+		case Resolution::AssertionFailed:
+			return Status::AssertionFailed;
+		}
+		std::size_t droppedAfter = 0;
+		for (std::size_t i = 0; i < m_sourceSize; ++i)
+			droppedAfter += m_dropped[i] != 0;
+		yulAssert(droppedAfter > droppedBefore, "resolution must decrease the number of undropped source slots");  // Lean
+	}
+}
+
+}
+
+/// Shuffler.cpp's Planner::run, the Lean model's Planner.run, for a source stack of m slots and a target of n slots:
+/// the variable id is spilled if spilled[id] is not 0, allowed is spillingAllowed, 0 or 1, and strategy the
+/// WildcardSlotsStrategy, 0 (Leave) or 1 (Take). Sets the dropped byte of each source slot to 0 or 1 (dropped) and the
+/// spill byte of each new spill to 1, and writes sawWildcardCopy, 0 or 1, to saw. Returns the number of operations of
+/// the plan, or -1 when resolve finds nothing left to drop. After a plan, data holds its n slots, ops its operations,
+/// and sources[j] the source offset bound for target offset j in its mapping, or none (SIZE_MAX). Returns -2 for a
+/// failed assertion, also of the check of each target slot; then saw and sources are not written, and spilled,
+/// dropped, data and ops can be.
+///
+/// spilled has idCount bytes and dropped m. m, n <= 1024, allowed <= 1, strategy <= 1 and the id of each variable of
+/// the source and the target is below idCount, else the result is -2 and nothing is written. data has room for
+/// max(m, n) entries, ops for 4m + 6n (see emit; each attempt starts again at ops[0]), and sources for n.
+///
+/// Stack use in bbu/*.S: at most 66024 bytes below the stack pointer before the call, with the return address
+/// (plan, Planner::run, then the chain of emit from Emission::run).
+extern "C" std::int64_t plan(
+	std::uint64_t const m,
+	std::uint64_t const n,
+	StackSlot const* const source,
+	StackSlot const* const target,
+	std::uint8_t* const spilled,
+	std::uint64_t const idCount,
+	std::uint8_t const allowed,
+	std::uint8_t const strategy,
+	std::uint8_t* const dropped,
+	std::uint8_t* const saw,
+	StackSlot* const data,
+	ShuffleOp* const ops,
+	Optional<StackOffset>* const sources
+)
+{
+	// the mappings have room for maxStackSize offsets; resolve spills only variables of the source, and the target
+	// check and emit read the spill byte of each variable of the target
+	if (m > maxStackSize || n > maxStackSize || allowed > 1 || strategy > 1)
+		return -2;
+	for (std::uint64_t i = 0; i < m; ++i)
+		if (isVariable(source[i]) && source[i].payload >= idCount)
+			return -2;
+	for (std::uint64_t j = 0; j < n; ++j)
+		if (isVariable(target[j]) && target[j].payload >= idCount)
+			return -2;
+	for (std::uint64_t i = 0; i < m; ++i)
+		dropped[i] = 0;
+	Planner planner{source, m, target, n, SpillSet{spilled}, allowed == 1, dropped};
+	std::size_t traceSize = 0;
+	switch (planner.run(MappingBuilder::WildcardSlotsStrategy{strategy}, data, ops, sources, traceSize))
+	{
+	case Status::Done:
+		*saw = planner.sawWildcardCopy();
+		return static_cast<std::int64_t>(traceSize);
+	case Status::Blocked:
+		*saw = planner.sawWildcardCopy();
+		return -1;
+	case Status::AssertionFailed:
+		return -2;
+	}
+	__builtin_unreachable();
 }

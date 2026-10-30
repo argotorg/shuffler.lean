@@ -323,6 +323,38 @@ std::string runSpill(Slots& _slots, std::vector<std::string> const& _fields)
 	return "ok;" + join(_slots.spilledVars(spills)) + ";" + join(bits);
 }
 
+/// Planner::resolve on a planner of the source, the target, the spills, spillingAllowed and dropped
+std::string runResolve(Slots& _slots, std::vector<std::string> const& _fields)
+{
+	StackData const source = _slots.parseStack(_fields.at(2));
+	StackData const target = _slots.parseStack(_fields.at(3));
+	// resolve does not read the strategy and the reachable depth
+	Planner planner(
+		source,
+		target,
+		parseSpills(_slots, _fields.at(4)),
+		_fields.at(1) == "1",
+		MappingBuilder::WildcardSlotsStrategy::Leave,
+		maxSwapDepth
+	);
+	std::vector<std::string> const bytes = words(_fields.at(5));
+	if (bytes.size() != source.size())
+		throw std::invalid_argument("not one dropped byte per source slot: " + _fields.at(5));
+	for (std::size_t i = 0; i < bytes.size(); ++i)
+		planner.m_dropped[i] = static_cast<std::uint8_t>(parseNat(bytes[i]));
+	Mapping const plan = parseMapping(_fields.at(6), source.size(), target.size());
+	Mapping const current = parseMapping(_fields.at(7), words(_fields.at(7)).size(), target.size());
+	std::vector<std::string> const blocked = words(_fields.at(8));
+	if (blocked.size() != 2)
+		throw std::invalid_argument("not an offset and an excess: " + _fields.at(8));
+	bool const success =
+		planner.resolve(plan, Emission::Blocked{StackOffset{parseNat(blocked[0])}, parseNat(blocked[1])}, current);
+	std::vector<std::string> dropped;
+	for (std::uint8_t const d: planner.m_dropped)
+		dropped.push_back(std::to_string(d));
+	return "ok " + showBit(success) + ";" + join(_slots.spilledVars(planner.m_spills)) + ";" + join(dropped);
+}
+
 std::string runCpp(Slots& _slots, std::string const& _line)
 {
 	std::vector<std::string> const fields = split(_line, ';');
@@ -341,6 +373,8 @@ std::string runCpp(Slots& _slots, std::string const& _line)
 			return runPlanner(_slots, fields);
 		if (kind == "spill" && fields.size() == 3)
 			return runSpill(_slots, fields);
+		if (kind == "resolve" && fields.size() == 9)
+			return runResolve(_slots, fields);
 	}
 	catch (yul::YulAssertion const&)
 	{

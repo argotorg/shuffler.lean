@@ -117,31 +117,31 @@ def SwInv (L : List Nat) (j : Nat) (t : MachineData) : Prop :=
 
 def FInv (p0 : Perm) : CfgLabel → MachineData → Prop
   | .entry, t | .label "permuteDestinations", t => t = s.pushRa ra
-  | .label ".LB52", t => Fr s ra t ∧ Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem
+  | .label ".LB.Emission.permute.0", t => Fr s ra t ∧ Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem
       ∧ rdi t = rd s.dmem (wordAt (rdi s) 0) ∧ (rax t).toNat < p0.toList.length
       ∧ Mem.Contains t.dmem (rsp s - 2064#64) (words (p0.toList.take (rax t).toNat))
-  | .label ".LB51", t => Fr s ra t ∧ Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem
+  | .label ".LB.Emission.permute.1", t => Fr s ra t ∧ Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem
       ∧ rdi t = rd s.dmem (wordAt (rdi s) 0)
       ∧ Mem.Contains t.dmem (rsp s - 2064#64) (words p0.toList)
-  | .label ".LB55", t => Fr s ra t ∧ ∃ L, permute p0 = .ok L ∧ ∃ j < L.length,
+  | .label ".LB.Emission.permute.2", t => Fr s ra t ∧ ∃ L, permute p0 = .ok L ∧ ∃ j < L.length,
       rdx t = rsp s - 4112#64 + BitVec.ofNat 64 j ∧ SwInv s L j t
-  | .label ".LB50", t => Fr s ra t ∧ Wf t.dmem (rdi s) ∧ finishR s t
+  | .label ".LB.Emission.permute.3", t => Fr s ra t ∧ Wf t.dmem (rdi s) ∧ finishR s t
       ∧ Mem.UnchangedOutside (frame finishF s :: writable s.dmem (rdi s)) s.dmem t.dmem
-  | .label ".LB60", t => Fr s ra t ∧ Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem
+  | .label ".LB.Emission.permute.4", t => Fr s ra t ∧ Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem
       ∧ ∃ b, permute p0 = .error b
         ∧ Mem.Contains t.dmem (rsp s - 4116#64) (words [b.offset, b.excess])
-  | .label ".LB56", t => Fr s ra t ∧ Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem
+  | .label ".LB.Emission.permute.5", t => Fr s ra t ∧ Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem
       ∧ permute p0 = .ok []
   | _, _ => False
 
 def FVar (l : Label) (t : MachineData) : Nat :=
   match l with
   | "permuteDestinations" => 5000
-  | ".LB52" => 3000 + (1024 - (rax t).toNat)
-  | ".LB51" => 3000
-  | ".LB55" => 2100 - (rdx t - (rsp s - 4112#64)).toNat
-  | ".LB60" => 1
-  | ".LB56" => 1
+  | ".LB.Emission.permute.0" => 3000 + (1024 - (rax t).toNat)
+  | ".LB.Emission.permute.1" => 3000
+  | ".LB.Emission.permute.2" => 2100 - (rdx t - (rsp s - 4112#64)).toNat
+  | ".LB.Emission.permute.4" => 1
+  | ".LB.Emission.permute.5" => 1
   | _ => 0
 
 end
@@ -280,7 +280,7 @@ theorem rd_of_contains {m : Mem 64} {a : Addr} {x : Word} (h : Mem.Contains m a 
   rw [rd, h.loadInt_eq (Int.toBytes_length _ _), Option.get!_some]
   exact BitVec.ofInt_ofBytes_toBytes 64 8 rfl x
 
--- The `kvcgen` form of the stores of `.LB60`.
+-- The `kvcgen` form of the stores of `.LB.Emission.permute.4`.
 def lb60A (m : Mem 64) (x : Addr) : Addr :=
   BitVec.ofInt 64 (m.loadInt (x + BitVec.ofInt 64 (Int64.toInt 56)) 8).get!
 

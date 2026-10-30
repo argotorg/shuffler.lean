@@ -36,14 +36,14 @@ theorem isVariable_of {x : StackSlot} (hk : (!(x.kind == Value)) = false)
     (ho : (x.valueOpcode == Const) = false) : Flat.isVariable x = true := by
   simp_all [Flat.isVariable, isLiteralValue]
 
--- The jumps of `jne` (not a value) or of `je` (a literal) to `.LB239`.
+-- The jumps of `jne` (not a value) or of `je` (a literal) to `.LB.SpillSet.add.1`.
 theorem add_not_var {f : BitVec 32 → BitVec 8} {x : StackSlot}
     (h : (!(x.kind == Value)) = true ∨ (x.valueOpcode == Const) = true) :
     Flat.spillAdd f x = (.assertionFailed, f) := by
   unfold Flat.spillAdd Flat.isVariable isLiteralValue
   rcases h with h | h <;> simp_all
 
--- `jne .LB243`: the byte is not 0.
+-- `jne .LB.SpillSet.add.0`: the byte is not 0.
 theorem add_spilled {f : BitVec 32 → BitVec 8} {x : StackSlot} (hk : (!(x.kind == Value)) = false)
     (ho : (x.valueOpcode == Const) = false)
     (hb : (!(f x.payload &&& f x.payload == BitVec.zero 8)) = true) :
@@ -162,9 +162,9 @@ theorem spillSetAdd_unit [Host] [FunDecls] :
       | .entry, t => t = s.pushRa ra
       | .label l, t =>
         if l = Names.spillSetAdd then t = s.pushRa ra
-        else if l = ".LB243" then Kg (Pm p S f n F) s ra [] t
+        else if l = ".LB.SpillSet.add.0" then Kg (Pm p S f n F) s ra [] t
           ∧ Flat.spillAdd f (StackSlot.ofWord (rsi s)) = (.assertionFailed, f)
-        else if l = ".LB239" then Kg (Pm p S f n F) s ra [] t
+        else if l = ".LB.SpillSet.add.1" then Kg (Pm p S f n F) s ra [] t
           ∧ al t = 2#8 ∧ Flat.spillAdd f (StackSlot.ofWord (rsi s)) = (.assertionFailed, f)
         else False
       | .exit, _ => False)
@@ -174,7 +174,7 @@ theorem spillSetAdd_unit [Host] [FunDecls] :
     subst ht
     kvcgen64
     simp only [Names.spillSetAdd, ↓reduceIte]
-  case «.LB243» t ht =>
+  case «.LB.SpillSet.add.0» t ht =>
     simp only [Names.spillSetAdd, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨hk, hf⟩ := ht
     kvcgen64
@@ -182,7 +182,7 @@ theorem spillSetAdd_unit [Host] [FunDecls] :
     · simp only [Names.spillSetAdd, String.reduceEq, ↓reduceIte]
       exact ⟨hk.next rfl rfl rfl rfl rfl rfl rfl rfl, trivial, hf⟩
     · decide
-  case «.LB239» t ht =>
+  case «.LB.SpillSet.add.1» t ht =>
     simp only [Names.spillSetAdd, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨hk, hal, hf⟩ := ht
     kvcgen64
@@ -203,7 +203,7 @@ theorem spillSetAdd_unit [Host] [FunDecls] :
       IsSpilled.payload_word, byte_zext] at *
     vc_by_shape
     | closed => decide
-    | goto ".LB239" =>
+    | goto ".LB.SpillSet.add.1" =>
       -- `jne` (not a value) or `je` (a literal): `al = 2`.
       have hf : Flat.spillAdd f (StackSlot.ofWord (rsi s)) = (.assertionFailed, f) :=
         add_not_var (by first | exact Or.inl ‹_› | exact Or.inr ‹_›)
@@ -212,8 +212,8 @@ theorem spillSetAdd_unit [Host] [FunDecls] :
       · simp only [Names.spillSetAdd, String.reduceEq, ↓reduceIte]
         exact ⟨hk0.next rfl rfl rfl rfl rfl rfl rfl rfl, rfl, hf⟩
       · simp
-    | goto ".LB243" =>
-      -- `jne .LB243`: the byte is not 0.
+    | goto ".LB.SpillSet.add.0" =>
+      -- `jne .LB.SpillSet.add.0`: the byte is not 0.
       have hk : (!((StackSlot.ofWord (rsi s)).kind == Value)) = false := ‹_›
       have ho : ((StackSlot.ofWord (rsi s)).valueOpcode == Const) = false := ‹_›
       have hb := rdb_byte hk0 hpre hk ho

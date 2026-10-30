@@ -8,7 +8,7 @@ import BbuKraken.Unit.Permute.D2
 # `permute`: the unit theorem from the block lemmas
 
 `permute_of_b73` gives `UnitThm finishAsm permuteA 2058 permuteQ` from `Program.WP.cfg` with
-`LInv` and `V`, and one block lemma for each label of `labels`. The obligation of `.LB73` is the
+`LInv` and `V`, and one block lemma for each label of `labels`. The obligation of `.LB.Emission.permute.24` is the
 hypothesis `h73` (it has the type of `b_73`). Thus `permute_unit` is
 `Permute.permute_of_b73 hcopy Permute.b_73`.
 -/
@@ -28,7 +28,7 @@ theorem labels_cover : finishAsm.ForallBlocks fun blk => blk.label ∈ labels :=
 theorem permute_of_b73 [Host] [FunDecls]
     (hcopy : Sep.Spec Names.shallowestCopyPosition shallowestCopyA 0 shallowestCopyQ)
     (h73 : ∀ S g F s ra, Sep.Pre S g F permuteA 2058 s →
-      Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB73" →
+      Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.24" →
         Obl S g F s ra blk) :
     UnitThm finishAsm permuteA 2058 permuteQ := by
   intro S g F s ra

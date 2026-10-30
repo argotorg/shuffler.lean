@@ -6,18 +6,18 @@ import BbuKraken.Unit.Permute.Cfg
 namespace Bbu.Unit.Permute.CfgTest
 
 def labels : List CfgLabel :=
-  [.entry, .label "_ZN12_GLOBAL__N_18Emission7permuteEv", .label ".LB57", .label ".LB54",
-    .label ".LB56", .label ".LB58", .label ".LB61", .label ".LB62", .label ".LB95",
-    .label ".LB64", .label ".LB65", .label ".LB66", .label ".LB68", .label ".LB63",
-    .label ".LB70", .label ".LB60", .label ".LB71", .label ".LB96", .label ".LB86",
-    .label ".LB72", .label ".LB97", .label ".LB74", .label ".LB98", .label ".LB78",
-    .label ".LB80", .label ".LB84", .label ".LB73", .label ".LB82", .label ".LB99"]
+  [.entry, .label "_ZN12_GLOBAL__N_18Emission7permuteEv", .label ".LB.Emission.permute.0", .label ".LB.Emission.permute.1",
+    .label ".LB.Emission.permute.2", .label ".LB.Emission.permute.3", .label ".LB.Emission.permute.4", .label ".LB.Emission.permute.5", .label ".LB.Emission.permute.6",
+    .label ".LB.Emission.permute.7", .label ".LB.Emission.permute.8", .label ".LB.Emission.permute.9", .label ".LB.Emission.permute.10", .label ".LB.Emission.permute.11",
+    .label ".LB.Emission.permute.12", .label ".LB.Emission.permute.13", .label ".LB.Emission.permute.14", .label ".LB.Emission.permute.15", .label ".LB.Emission.permute.16",
+    .label ".LB.Emission.permute.17", .label ".LB.Emission.permute.18", .label ".LB.Emission.permute.19", .label ".LB.Emission.permute.20", .label ".LB.Emission.permute.21",
+    .label ".LB.Emission.permute.22", .label ".LB.Emission.permute.23", .label ".LB.Emission.permute.24", .label ".LB.Emission.permute.25", .label ".LB.Emission.permute.26"]
 
 example : Program.ForallBlocks finishAsm fun blk => blk.label ∈ labels := by
   simp only [labels]
   pm_labels
 
--- A list without `.LB99` fails.
+-- A list without `.LB.Emission.permute.26` fails.
 example : True := by
   fail_if_success
     have : Program.ForallBlocks finishAsm fun blk => blk.label ∈ labels.dropLast := by
@@ -26,28 +26,28 @@ example : True := by
   trivial
 
 -- The index and the next label of some blocks.
-example : Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB57" →
-    blk.idx = 2 ∧ blk.next = .label ".LB54" := by
+example : Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.0" →
+    blk.idx = 2 ∧ blk.next = .label ".LB.Emission.permute.1" := by
   pm_block
 
-example : Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB73" →
-    blk.idx = 26 ∧ blk.next = .label ".LB82" := by
+example : Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.24" →
+    blk.idx = 26 ∧ blk.next = .label ".LB.Emission.permute.25" := by
   pm_block
 
-example : Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB99" →
+example : Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.26" →
     blk.idx = 28 ∧ blk.next = .exit := by
   pm_block
 
 -- A false index stays.
 example : True := by
   fail_if_success
-    have : Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB57" →
+    have : Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.0" →
         blk.idx = 3 := by
       pm_block
   trivial
 
 -- A label that is not in the program: no goal stays.
-example : Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB7" → False := by
+example : Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.shallowestCopyPosition.2" → False := by
   pm_block
 
 end Bbu.Unit.Permute.CfgTest

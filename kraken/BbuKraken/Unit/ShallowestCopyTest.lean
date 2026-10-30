@@ -121,7 +121,7 @@ example : (-1#64 : Word) ≠ 0#64 := zf_false (by decide)
 -- Negative: the flag of a word that is not zero is `false`.
 #guard (5#64 &&& 5#64 == BitVec.zero 64) == false
 
--- `jne .LB6` is not taken for the bytes 6 and 7, and is taken for the kind byte.
+-- `jne .LB.Emission.shallowestCopyPosition.0` is not taken for the bytes 6 and 7, and is taken for the kind byte.
 example : StackSlot.ofWord a = StackSlot.ofWord ahi := jne_false (by decide)
 example : StackSlot.ofWord a ≠ StackSlot.ofWord akind := jne_true (by decide)
 example : StackSlot.ofWord a ≠ StackSlot.ofWord b := jne_true (by decide)

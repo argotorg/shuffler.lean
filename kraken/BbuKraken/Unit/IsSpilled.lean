@@ -76,7 +76,7 @@ theorem isSpilled_flat (g : G) (x : StackSlot) :
     Flat.isSpilled (flat g) x
       = (x.kind == Value && !(x.valueOpcode == Const) && g.spl x.payload != 0) := rfl
 
--- The jump of `jne` (not a value) or of `je` (a literal) to `.LB1`: not spilled.
+-- The jump of `jne` (not a value) or of `je` (a literal) to `.LB.Emission.isSpilled.0`: not spilled.
 theorem not_spilled {fs : Flat.St} {x : StackSlot}
     (h : (!(x.kind == Value)) = true ∨ (x.valueOpcode == Const) = true) :
     Flat.isSpilled fs x = false := by
@@ -131,7 +131,7 @@ theorem isSpilled_unit [Host] [FunDecls] : UnitThm isSpilledAsm isSpilledA 0 isS
       | .entry, t => t = s.pushRa ra
       | .label l, t =>
         if l = Names.isSpilled then t = s.pushRa ra
-        else if l = ".LB1" then Kp S g F s ra [] t
+        else if l = ".LB.Emission.isSpilled.0" then Kp S g F s ra [] t
           ∧ al t = if Flat.isSpilled (flat g) (StackSlot.ofWord (rsi s)) then 1#8 else 0#8
         else False
       | .exit, _ => False)
@@ -141,7 +141,7 @@ theorem isSpilled_unit [Host] [FunDecls] : UnitThm isSpilledAsm isSpilledA 0 isS
     subst ht
     kvcgen64
     simp only [Names.isSpilled, ↓reduceIte]
-  case «.LB1» t ht =>
+  case «.LB.Emission.isSpilled.0» t ht =>
     simp only [Names.isSpilled, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨hk, hal⟩ := ht
     kvcgen64
@@ -159,7 +159,7 @@ theorem isSpilled_unit [Host] [FunDecls] : UnitThm isSpilledAsm isSpilledA 0 isS
     all_goals try simp only [hS]
     vc_by_shape
     | closed => decide
-    | goto ".LB1" =>
+    | goto ".LB.Emission.isSpilled.0" =>
       -- `jne` (not a value) or `je` (a literal): `al = 0`.
       have hn : Flat.isSpilled (flat g) (StackSlot.ofWord s.regs.rsi.toBitVec) = false :=
         not_spilled (by first | exact Or.inl ‹_› | exact Or.inr ‹_›)
@@ -177,7 +177,7 @@ theorem isSpilled_unit [Host] [FunDecls] : UnitThm isSpilledAsm isSpilledA 0 isS
         exact View.isSome_spl hk0.mem hpre.ok (hpre.args _ (spillId_eq ‹_› ‹_›))
       | exact isSome_spills hk0.mem
     | other =>
-      -- The fall-through to `.LB1`: `al` is the byte `m_spills[payload] != 0`.
+      -- The fall-through to `.LB.Emission.isSpilled.0`: `al` is the byte `m_spills[payload] != 0`.
       have hi := hpre.args _ (spillId_eq ‹_› ‹_›)
       simp only [Names.isSpilled, String.reduceEq, ↓reduceIte]
       refine ⟨hk0.next rfl rfl rfl rfl rfl rfl rfl rfl, ?_⟩

@@ -622,7 +622,7 @@ theorem pos_addr :
   simp only [wordAt, POS_eq, dd]
   bv_omega
 
--- The loads of `.LB30`.
+-- The loads of `.LB.Emission.produce.2`.
 theorem at30_isSome (hpre : Pre 72 produceA s) {t : MachineData} (h : Hold s ra t) :
     (t.dmem.loadInt t.regs.rbx.toBitVec 8).isSome = true
       ∧ (t.dmem.loadInt (t.regs.rbx.toBitVec + t.regs.r14.toBitVec + 8248#64) 8).isSome = true
@@ -637,7 +637,7 @@ theorem at30_isSome (hpre : Pre 72 produceA s) {t : MachineData} (h : Hold s ra 
   have := hw (POS + dd s) (by simp only [WORDS_eq, POS_eq]; omega)
   rwa [pos_addr] at this
 
--- The pops of `.LB28` read the saved registers.
+-- The pops of `.LB.Emission.produce.3` read the saved registers.
 theorem Fm.pops {m : Mem 64} (h : Fm s ra m) {a : Addr} (ha : a = 8#64 + (rsp s - 64#64)) :
     rd m a = s.regs.rbx.toBitVec ∧ rd m (a + 8#64) = s.regs.rbp.toBitVec
       ∧ rd m (a + 8#64 + 8#64) = s.regs.r12.toBitVec

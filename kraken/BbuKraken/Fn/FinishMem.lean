@@ -3,7 +3,7 @@ import PermuteKraken.Proof
 
 /-!
 Memory lemmas for the old `permuteDestinations`: stores of 1, 4 and 8 bytes, the low 6 bytes of
-a word, and one iteration of the swap loop `.LB55`.
+a word, and one iteration of the swap loop `.LB.Emission.permute.2`.
 -/
 
 open PermuteKraken
@@ -145,9 +145,9 @@ theorem disj_cons {a : Addr} {n : Nat} {p : Addr × Nat} {l : List (Addr × Nat)
 
 theorem disj_nil {a : Addr} {n : Nat} : Mem.Blocks.Disjoint [(a, n)] [] := fun _ _ h => h
 
-/-! ## One iteration of `.LB55` -/
+/-! ## One iteration of `.LB.Emission.permute.2` -/
 
--- The forms that `bbu_norm` gives for the stores of `.LB55`. `x` is `rbx`, `d`
+-- The forms that `bbu_norm` gives for the stores of `.LB.Emission.permute.2`. `x` is `rbx`, `d`
 -- the address of the depth.
 def swD (m : Mem 64) (a : Addr) : Word :=
   BitVec.setWidth 64 (BitVec.setWidth 32 (BitVec.ofInt 8 (Mem.loadInt m a 1).get!))

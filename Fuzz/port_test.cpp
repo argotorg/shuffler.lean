@@ -76,8 +76,8 @@ std::string times(std::string const& _word, int const _count)
 
 int main()
 {
-	// the kinds without a port unit
-	for (std::string const line: {"map;L;v0;v0;0", "permute;v0;0", "emit;;;;", "plan;L;0;;;"})
+	// each kind of the model has a port unit; a line of another kind has none
+	for (std::string const line: {"", "x;;", "plans;L;0;;;"})
 		expect(!port::check(line, "ok;;;").has_value(), "no port unit for: " + line);
 
 	// buildBottomUp: each slot kind, each operation kind, equal slots, blocked with and without operations
@@ -324,6 +324,569 @@ int main()
 	throws("surplus;v0 v1;v0 v1;0 0;");
 	throws("surplus;" + times("_", 1025) + ";;" + times("-", 1025) + ";");
 	throws("surplus;;" + times("_", 1025) + ";;");
+
+	// permute: an empty stack, one slot, the identity (no operation), a swap with the top, a 3-cycle away from the
+	// top (the top is in place), each slot kind. The regroup of equal slots: two equal slots that only exchange
+	// their destinations need no operation, and the mapping keeps the destinations. A misplaced slot equal to the
+	// top takes over its destination with no operation (a retag): two swaps for a 3-cycle, three for two 2-cycles.
+	agrees("permute;;", "ok;;;", "ok;;;");
+	agrees("permute;v0;0", "ok;v0;;0", "ok;v0;;0");
+	agrees("permute;v0 v1 v2;0 1 2", "ok;v0 v1 v2;;0 1 2", "ok;v0 v1 v2;;0 1 2");
+	agrees("permute;v0 v1 v2;2 1 0", "ok;v2 v1 v0;SWAP2;0 1 2", "ok;v2 v1 v0;SWAP2;0 1 2");
+	agrees("permute;v0 v1;1 0", "ok;v1 v0;SWAP1;0 1", "ok;v1 v0;SWAP1;0 1");
+	agrees("permute;v0 v1 v2 v3;1 2 0 3", "ok;v2 v0 v1 v3;SWAP1 SWAP3 SWAP2 SWAP1;0 1 2 3",
+		"ok;v2 v0 v1 v3;SWAP1 SWAP3 SWAP2 SWAP1;0 1 2 3");
+	agrees("permute;v0 v1 v2 v3;2 0 1 3", "ok;v1 v2 v0 v3;SWAP1 SWAP2 SWAP3 SWAP1;0 1 2 3",
+		"ok;v1 v2 v0 v3;SWAP1 SWAP2 SWAP3 SWAP1;0 1 2 3");
+	agrees("permute;R _ l2 v5;3 2 1 0", "ok;v5 l2 _ R;SWAP3 SWAP1 SWAP2 SWAP1;0 1 2 3",
+		"ok;v5 l2 _ R;SWAP3 SWAP1 SWAP2 SWAP1;0 1 2 3");
+	agrees("permute;v0 l0;1 0", "ok;l0 v0;SWAP1;0 1", "ok;l0 v0;SWAP1;0 1");
+	agrees("permute;v0 v0;1 0", "ok;v0 v0;;1 0", "ok;v0 v0;;1 0");
+	agrees("permute;v0 v1 v0;2 1 0", "ok;v0 v1 v0;;2 1 0", "ok;v0 v1 v0;;2 1 0");
+	agrees("permute;_ _ l0 l0;3 2 1 0", "ok;l0 l0 _ _;SWAP2 SWAP1 SWAP3;1 0 3 2",
+		"ok;l0 l0 _ _;SWAP2 SWAP1 SWAP3;1 0 3 2");
+	agrees("permute;v0 v1 v0;1 0 2", "ok;v1 v0 v0;SWAP1 SWAP2;0 1 2", "ok;v1 v0 v0;SWAP1 SWAP2;0 1 2");
+	agrees("permute;v0 v1 v0 v1;1 0 3 2", "ok;v1 v0 v1 v0;SWAP1 SWAP2 SWAP3;0 1 2 3",
+		"ok;v1 v0 v1 v0;SWAP1 SWAP2 SWAP3;0 1 2 3");
+	// the swap reach: on 18 slots the top goes to offset 0 at depth 17 and blocks; a slot at depth 17 blocks after a
+	// SWAP16; a SWAP16 on 17 slots; two equal slots at depth 16 and 17 need no swap; a 2-cycle in reach on 18
+	// slots; the excess of depth 19
+	{
+		std::string const result = "blocked 0 1;" + vars(0, 17) + ";;17 " + nats(1, 16) + " 0";
+		agrees("permute;" + vars(0, 17) + ";17 " + nats(1, 16) + " 0", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1;l0 " + vars(1, 17) + ";;" + nats(1, 17) + " 0";
+		agrees("permute;l0 " + vars(1, 17) + ";" + nats(1, 17) + " 0", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1;v0 v17 " + vars(2, 16) + " v1;SWAP16;1 17 " + nats(2, 16) + " 0";
+		agrees("permute;" + vars(0, 17) + ";1 0 " + nats(2, 17), result, result);
+	}
+	{
+		std::string const result = "ok;v16 " + vars(1, 15) + " v0;SWAP16;" + nats(0, 16);
+		agrees("permute;" + vars(0, 16) + ";16 " + nats(1, 15) + " 0", result, result);
+	}
+	{
+		std::string const result = "ok;v0 " + vars(0, 16) + ";;1 0 " + nats(2, 17);
+		agrees("permute;v0 " + vars(0, 16) + ";1 0 " + nats(2, 17), result, result);
+	}
+	{
+		std::string const result = "ok;v0 v2 v1 " + vars(3, 17) + ";SWAP15 SWAP16 SWAP15;" + nats(0, 17);
+		agrees("permute;" + vars(0, 17) + ";0 2 1 " + nats(3, 17), result, result);
+	}
+	{
+		std::string const result = "blocked 0 3;" + vars(0, 19) + ";;19 " + nats(1, 18) + " 0";
+		agrees("permute;" + vars(0, 19) + ";19 " + nats(1, 18) + " 0", result, result);
+	}
+	// the stack limit: the identity, the reversal (it blocks at depth 1023), and a SWAP16 on 1024 slots
+	{
+		std::string const result = "ok;" + vars(0, 1023) + ";;" + nats(0, 1023);
+		agrees("permute;" + vars(0, 1023) + ";" + nats(0, 1023), result, result);
+	}
+	{
+		std::string const result = "blocked 0 1007;" + vars(0, 1023) + ";;" + nats(1023, 0, -1);
+		agrees("permute;" + vars(0, 1023) + ";" + nats(1023, 0, -1), result, result);
+	}
+	{
+		std::string const result = "ok;" + vars(0, 1006) + " v1023 " + vars(1008, 1022) + " v1007;SWAP16;" +
+			nats(0, 1023);
+		agrees("permute;" + vars(0, 1023) + ";" + nats(0, 1006) + " 1023 " + nats(1008, 1022) + " 1007", result,
+			result);
+	}
+	// a wrong model result is not equal to the port result: an operation, a slot, a destination, the status
+	for (std::string const wrong: {"ok;v1 v0 v0;SWAP2 SWAP1;0 1 2", "ok;v0 v1 v0;SWAP1 SWAP2;0 1 2",
+			 "ok;v1 v0 v0;SWAP1 SWAP2;1 0 2", "ok;v1 v0 v0;SWAP1;0 1 2", "blocked 0 1;v1 v0 v0;SWAP1 SWAP2;0 1 2", "err"})
+	{
+		std::optional<port::Check> const check = port::check("permute;v0 v1 v0;1 0 2", wrong);
+		expect(check && check->port != check->model, "a wrong permute model result differs: " + wrong);
+	}
+
+	// not in the domain of the permute unit: too few fields, too many fields, a bad slot, a bad destination, not one
+	// destination per slot, a destination out of the stack, a destination bound twice, a slot without a destination
+	// (not a permutation), more slots than the stack limit
+	throws("permute;v0");
+	throws("permute;v0;0;");
+	throws("permute;x;0");
+	throws("permute;v0;a");
+	throws("permute;v0 v1;0");
+	throws("permute;v0;0 1");
+	throws("permute;v0;1");
+	throws("permute;v0 v1;0 0");
+	throws("permute;v0 v1;0 -");
+	throws("permute;" + vars(0, 1024) + ";" + nats(0, 1024));
+
+	// permuteAtLowestHeight: an empty stack, all slots final, a swap, a parked slot (its destination is above the
+	// stack) in a hole (an offset that no slot is bound for) stays, a parked slot that is not in a hole moves to the
+	// hole, two parked slots keep their order (not the order of their destinations), a parked slot in a hole and one
+	// that moves, each slot kind, equal slots (no swap, and the destinations stay), the spilled variables, an unbound
+	// slot (err)
+	agrees("lowest;;;;", "ok;;;", "ok;;;");
+	agrees("lowest;;v0;;", "ok;;;", "ok;;;");
+	agrees("lowest;v0 v1;v0 v1;0 1;", "ok;v0 v1;;0 1", "ok;v0 v1;;0 1");
+	agrees("lowest;v1 v0;v0 v1;1 0;", "ok;v0 v1;SWAP1;0 1", "ok;v0 v1;SWAP1;0 1");
+	agrees("lowest;v1;v0 v1;1;", "ok;v1;;1", "ok;v1;;1");
+	agrees("lowest;v2 v0;v0 v1 v2;2 0;", "ok;v0 v2;SWAP1;0 2", "ok;v0 v2;SWAP1;0 2");
+	agrees("lowest;v5 v4 v0 v1;v0 v1 v2 v3 v4 v5;5 4 0 1;", "ok;v0 v1 v5 v4;SWAP2 SWAP1 SWAP3 SWAP1;0 1 5 4",
+		"ok;v0 v1 v5 v4;SWAP2 SWAP1 SWAP3 SWAP1;0 1 5 4");
+	agrees("lowest;v4 v5 v0 v1;v0 v1 v2 v3 v4 v5;4 5 0 1;", "ok;v0 v1 v4 v5;SWAP2 SWAP1 SWAP3 SWAP1;0 1 4 5",
+		"ok;v0 v1 v4 v5;SWAP2 SWAP1 SWAP3 SWAP1;0 1 4 5");
+	agrees("lowest;v3 v1 v0;v0 v1 v2 v3;3 1 0;", "ok;v0 v1 v3;SWAP2;0 1 3", "ok;v0 v1 v3;SWAP2;0 1 3");
+	agrees("lowest;v3 v4 v0;v0 v1 v2 v3 v4;3 4 0;", "ok;v0 v4 v3;SWAP2;0 4 3", "ok;v0 v4 v3;SWAP2;0 4 3");
+	agrees("lowest;R _ l2 v5;v5 l2 _ R;3 2 1 0;", "ok;v5 l2 _ R;SWAP3 SWAP1 SWAP2 SWAP1;0 1 2 3",
+		"ok;v5 l2 _ R;SWAP3 SWAP1 SWAP2 SWAP1;0 1 2 3");
+	agrees("lowest;v0 v0;v0 v0;1 0;", "ok;v0 v0;;1 0", "ok;v0 v0;;1 0");
+	agrees("lowest;v0 v0 v1;v1 v0 v0;1 2 0;", "ok;v1 v0 v0;SWAP2;0 2 1", "ok;v1 v0 v0;SWAP2;0 2 1");
+	agrees("lowest;v0;v0;0;0", "ok;v0;;0", "ok;v0;;0");
+	agrees("lowest;v3 v0;v0 v1 v2 v3;3 0;7 9", "ok;v0 v3;SWAP1;0 3", "ok;v0 v3;SWAP1;0 3");
+	agrees("lowest;v0 l1;v0;0 -;", "err", "err");
+	agrees("lowest;l1 v0;v0;- 0;", "err", "err");
+	agrees("lowest;v0 v1;v0 v1 v2;0 -;", "err", "err");
+	// the swap reach: a swap with a slot at depth 16; at depth 17 it blocks, with a parked slot in the way and without
+	{
+		std::string const result = "ok;" + vars(0, 15) + " v17;SWAP16;" + nats(0, 15) + " 17";
+		agrees("lowest;v17 " + vars(1, 15) + " v0;" + vars(0, 17) + ";17 " + nats(1, 15) + " 0;", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1;v18 " + vars(1, 16) + " v0;;18 " + nats(1, 16) + " 0";
+		agrees("lowest;v18 " + vars(1, 16) + " v0;" + vars(0, 18) + ";18 " + nats(1, 16) + " 0;", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1;v17 " + vars(1, 16) + " v0;;17 " + nats(1, 16) + " 0";
+		agrees("lowest;v17 " + vars(1, 16) + " v0;" + vars(0, 17) + ";17 " + nats(1, 16) + " 0;", result, result);
+	}
+	// the stack limit: 1024 final slots, a parked bottom in a hole under 1022 slots, a parked slot that moves to the
+	// top, and a rotation of 1024 slots that blocks
+	{
+		std::string const result = "ok;" + vars(0, 1023) + ";;" + nats(0, 1023);
+		agrees("lowest;" + vars(0, 1023) + ";" + vars(0, 1023) + ";" + nats(0, 1023) + ";", result, result);
+	}
+	{
+		std::string const result = "ok;v1023 " + vars(1, 1022) + ";;1023 " + nats(1, 1022);
+		agrees("lowest;v1023 " + vars(1, 1022) + ";" + vars(0, 1023) + ";1023 " + nats(1, 1022) + ";", result, result);
+	}
+	{
+		std::string const result = "ok;" + vars(0, 1021) + " v1023;SWAP1;" + nats(0, 1021) + " 1023";
+		agrees("lowest;" + vars(0, 1020) + " v1023 v1021;" + vars(0, 1023) + ";" + nats(0, 1020) + " 1023 1021;", result,
+			result);
+	}
+	{
+		std::string const result = "blocked 0 1007;" + vars(1, 1023) + " v0;;" + nats(1, 1023) + " 0";
+		agrees("lowest;" + vars(1, 1023) + " v0;" + vars(0, 1023) + ";" + nats(1, 1023) + " 0;", result, result);
+	}
+	// a wrong model result is not equal to the port result: an operation, a slot, a destination, the status
+	for (std::string const wrong: {"ok;v0 v2;SWAP2;0 2", "ok;v2 v0;SWAP1;0 2", "ok;v0 v2;SWAP1;2 0",
+			 "ok;v0 v2;SWAP1;0 -", "blocked 0 1;v0 v2;SWAP1;0 2", "ok;v0 v2;;0 2", "err"})
+	{
+		std::optional<port::Check> const check = port::check("lowest;v2 v0;v0 v1 v2;2 0;", wrong);
+		expect(check && check->port != check->model, "a wrong lowest model result differs: " + wrong);
+	}
+
+	// not in the domain of the lowest unit: too few fields, too many fields, a bad slot, a bad destination, not one
+	// destination per slot, a destination out of the target, a destination bound twice, a bad spilled id, more stack
+	// slots or target slots than the stack limit
+	throws("lowest;v0;v0;0");
+	throws("lowest;v0;v0;0;;");
+	throws("lowest;x;v0;0;");
+	throws("lowest;v0;y;0;");
+	throws("lowest;v0;v0;a;");
+	throws("lowest;;;;x");
+	throws("lowest;v0;v0;0 -;");
+	throws("lowest;v0;v0;1;");
+	throws("lowest;v0 v1;v0 v1;0 0;");
+	throws("lowest;" + times("_", 1025) + ";;" + times("-", 1025) + ";");
+	throws("lowest;;" + times("_", 1025) + ";;");
+
+	// buildMapping: slots in place, each slot kind; no slots, no target slots; the closest copy below, above, and of
+	// two copies at the same distance the shallower one; the deeper target offsets take the copies first; a copy
+	// outside the wildcard slots before a closer one in a wildcard slot; a copy in a wildcard slot is left (Leave) or
+	// taken (Take), and sawWildcardCopy is 1 for both; a return label in a wildcard slot is always taken, and
+	// sawWildcardCopy stays 0; a wildcard keeps its slot, or takes the closest mappable slot, and of two at the same
+	// distance the deeper one; a dropped slot (1 or 255) is not mapped
+	agrees("map;L;v0 v1;v0 v1;0 0", "ok 0;0 1", "ok 0;0 1");
+	agrees("map;T;v0 l1 _ R;v0 l1 _ R;0 0 0 0", "ok 0;0 1 2 3", "ok 0;0 1 2 3");
+	agrees("map;L;;;", "ok 0;", "ok 0;");
+	agrees("map;L;;v0 _;", "ok 0;- -", "ok 0;- -");
+	agrees("map;T;v0 v1;;0 0", "ok 0;", "ok 0;");
+	agrees("map;L;v0 l0 l1;l2 l3 v0;0 0 0", "ok 0;- - 0", "ok 0;- - 0");
+	agrees("map;L;l0 l1 v0;v0;0 0 0", "ok 0;2", "ok 0;2");
+	agrees("map;L;v0 l0 v0;l1 v0;0 0 0", "ok 0;- 2", "ok 0;- 2");
+	agrees("map;L;v0 l0 l0 v0;l1 v0;0 0 0 0", "ok 0;- 0", "ok 0;- 0");
+	agrees("map;L;v0 v0;v1 v0 v0;0 0", "ok 0;- 1 0", "ok 0;- 1 0");
+	agrees("map;L;l0 v0;v0 l1 v0;0 0", "ok 0;1 - -", "ok 0;1 - -");
+	agrees("map;L;v0;v0 v0;0", "ok 0;0 -", "ok 0;0 -");
+	agrees("map;L;v0 v0 v0;l0;0 0 0", "ok 0;-", "ok 0;-");
+	agrees("map;L;v0 l0 v0;_ l1 l2 v0;0 0 0", "ok 0;0 - - 2", "ok 0;0 - - 2");
+	agrees("map;L;v0 v1;_ v0;0 0", "ok 1;0 -", "ok 1;0 -");
+	agrees("map;T;v0 v1;_ v0;0 0", "ok 1;1 0", "ok 1;1 0");
+	agrees("map;L;v1 _;_ v1;0 0", "ok 1;0 -", "ok 1;0 -");
+	agrees("map;T;v1 _;_ v1;0 0", "ok 1;1 0", "ok 1;1 0");
+	agrees("map;L;R v1;_ R;0 0", "ok 0;1 0", "ok 0;1 0");
+	agrees("map;T;R v1;_ R;0 0", "ok 0;1 0", "ok 0;1 0");
+	agrees("map;L;R;_ R;0", "ok 0;- 0", "ok 0;- 0");
+	agrees("map;L;_ _;_;0 0", "ok 0;0", "ok 0;0");
+	agrees("map;T;l0 l0;l0 _;0 0", "ok 0;0 1", "ok 0;0 1");
+	agrees("map;L;l0 v0 l2;v0 _;0 0 0", "ok 1;- 1", "ok 1;- 1");
+	agrees("map;T;l0 v0 l2;v0 _;0 0 0", "ok 1;1 0", "ok 1;1 0");
+	agrees("map;L;l0 l1;v5 v6 v7 _;0 0", "ok 0;- - - 1", "ok 0;- - - 1");
+	agrees("map;L;l0 l1 l2;l9 _ l8;0 1 0", "ok 0;- 0 -", "ok 0;- 0 -");
+	agrees("map;L;v0;v0;1", "ok 0;-", "ok 0;-");
+	agrees("map;L;v0 v0;v0;1 0", "ok 0;1", "ok 0;1");
+	agrees("map;L;l0;_;255", "ok 0;-", "ok 0;-");
+	// the stack limit: 1024 slots in place; 1024 slots in the reverse order; 1024 target offsets without a copy; 1024
+	// wildcards and one mappable slot
+	{
+		std::string const result = "ok 0;" + nats(0, 1023);
+		agrees("map;L;" + times("v0", 1024) + ";" + times("v0", 1024) + ";" + times("0", 1024), result, result);
+	}
+	{
+		std::string reversed = "v1023";
+		for (int i = 1022; i >= 0; --i)
+			reversed += " v" + std::to_string(i);
+		std::string const result = "ok 0;" + nats(1023, 0, -1);
+		agrees("map;L;" + vars(0, 1023) + ";" + reversed + ";" + times("0", 1024), result, result);
+	}
+	{
+		std::string const result = "ok 0;" + times("-", 1024);
+		agrees("map;T;" + times("l0", 1024) + ";" + times("v0", 1024) + ";" + times("0", 1024), result, result);
+	}
+	{
+		std::string const result = "ok 0;" + times("-", 1023) + " 1023";
+		agrees("map;T;" + times("l0", 1024) + ";" + times("_", 1024) + ";" + times("1", 1023) + " 0", result, result);
+	}
+	// a wrong model result is not equal to the port result: sawWildcardCopy, a source offset, a missing source
+	for (std::string const wrong: {"ok 0;1 0", "ok 1;0 1", "ok 1;1 -", "ok 1;1 0 -", "err"})
+	{
+		std::optional<port::Check> const check = port::check("map;T;v0 v1;_ v0;0 0", wrong);
+		expect(check && check->port != check->model, "a wrong map model result differs: " + wrong);
+	}
+
+	// not in the domain of the map unit: too few fields, too many fields, a bad strategy, a bad slot, not one dropped
+	// byte per source slot (the model result is "err"), a bad byte, more source slots or target slots than the stack
+	// limit
+	throws("map;L;v0;v0");
+	throws("map;L;v0;v0;0;");
+	throws("map;X;v0;v0;0");
+	throws("map;;v0;v0;0");
+	throws("map;L;x;v0;0");
+	throws("map;L;v0;y;0");
+	throws("map;L;v0;v0;");
+	throws("map;L;v0;v0;0 0");
+	throws("map;L;v0;v0;256");
+	throws("map;L;v0;v0;a");
+	throws("map;L;" + times("_", 1025) + ";;" + times("0", 1025));
+	throws("map;L;;" + times("_", 1025) + ";");
+
+	// resolve: excess 0; no slot above the blocked one; each class: a wildcard target of a slot that is not demanded
+	// (0), a literal (1), a spilled variable (2), a variable with another retained copy (3), a variable with spilling
+	// allowed (4, spilled) or not (not dropped); a return label is not dropped; the lowest class first, at a lower and
+	// at a higher offset; in one class the highest target first; two drops; more excess than slots, with the drops
+	// kept; a copy is the other retained copy only until it is dropped; a dropped byte of 255 stays, and a drop writes
+	// 1; a slot of the working stack with no destination is not a candidate; a wildcard target of a demanded variable
+	// is class 4 or no class; a source slot that is bound to a wildcard target; a source wildcard
+	agrees("resolve;0;v0;v0;;0;0;0;0 0", "ok 1;;0", "ok 1;;0");
+	agrees("resolve;0;v0 v1;v0 v1;;0 0;0 1;0 1;1 1", "ok 0;;0 0", "ok 0;;0 0");
+	agrees("resolve;0;v0 v1;v0 _;;0 0;0 1;0 1;0 1", "ok 1;;0 1", "ok 1;;0 1");
+	agrees("resolve;0;v0 l1;v0 l1;;0 0;0 1;0 1;0 1", "ok 1;;0 1", "ok 1;;0 1");
+	agrees("resolve;0;v0 v1;v0 v1;1;0 0;0 1;0 1;0 1", "ok 1;1;0 1", "ok 1;1;0 1");
+	agrees("resolve;0;v1 v0 v1;v1 v0 v1;;0 0 0;0 1 2;0 1 2;1 1", "ok 1;;0 0 1", "ok 1;;0 0 1");
+	agrees("resolve;1;v0 v1;v0 v1;;0 0;0 1;0 1;0 1", "ok 1;1;0 1", "ok 1;1;0 1");
+	agrees("resolve;0;v0 v1;v0 v1;;0 0;0 1;0 1;0 1", "ok 0;;0 0", "ok 0;;0 0");
+	agrees("resolve;1;v0 R;v0 R;;0 0;0 1;0 1;0 1", "ok 0;;0 0", "ok 0;;0 0");
+	agrees("resolve;0;v1 v0 l2 v1;v1 v0 l2 v1;;0 0 0 0;0 1 2 3;0 1 2 3;1 1", "ok 1;;0 0 1 0", "ok 1;;0 0 1 0");
+	agrees("resolve;0;v1 v0 v1 l2;v1 v0 v1 l2;;0 0 0 0;0 1 2 3;0 1 2 3;1 1", "ok 1;;0 0 0 1", "ok 1;;0 0 0 1");
+	agrees("resolve;0;v0 l1 l2;v0 l2 l1;;0 0 0;0 2 1;0 1 2;0 1", "ok 1;;0 1 0", "ok 1;;0 1 0");
+	agrees("resolve;0;v0 l1 l2;v0 l1 l2;;0 0 0;0 1 2;0 1 2;0 2", "ok 1;;0 1 1", "ok 1;;0 1 1");
+	agrees("resolve;0;v0 l1 l2;v0 l1 l2;;0 0 0;0 1 2;0 1 2;0 3", "ok 0;;0 1 1", "ok 0;;0 1 1");
+	agrees("resolve;0;l5 v0 v0;l5 v0 v0;;0 0 0;0 1 2;0 1 2;0 2", "ok 0;;0 0 1", "ok 0;;0 0 1");
+	agrees("resolve;1;l5 v0 v0;l5 v0 v0;;0 0 0;0 1 2;0 1 2;0 2", "ok 1;0;0 1 1", "ok 1;0;0 1 1");
+	agrees("resolve;0;v0 l1;v0 l1;;255 255;0 1;0 1;0 1", "ok 1;;255 1", "ok 1;;255 1");
+	agrees("resolve;0;v0;v0 l1;;0;0;0 -;0 1", "ok 0;;0", "ok 0;;0");
+	agrees("resolve;0;l9 v0;v0 _;;0 0;- 1;- 1;0 1", "ok 0;;0 0", "ok 0;;0 0");
+	agrees("resolve;1;l9 v0;v0 _;;0 0;- 1;- 1;0 1", "ok 1;0;0 1", "ok 1;0;0 1");
+	agrees("resolve;0;v0 v1;v1 _;;0 0;1 0;0 1;0 1", "ok 1;;1 0", "ok 1;;1 0");
+	agrees("resolve;0;v0 _;v0 _;;0 0;0 1;0 1;0 1", "ok 1;;0 1", "ok 1;;0 1");
+	// the stack limit: 1024 literals in place, two drops
+	{
+		std::string const result = "ok 1;;" + times("0", 1022) + " 1 1";
+		agrees(
+			"resolve;0;" + times("l0", 1024) + ";" + times("l0", 1024) + ";;" + times("0", 1024) + ";" + nats(0, 1023)
+				+ ";" + nats(0, 1023) + ";0 2",
+			result,
+			result
+		);
+	}
+	// a wrong model result is not equal to the port result: success, a spill, a dropped byte, a missing byte
+	for (std::string const wrong: {"ok 0;1;0 1", "ok 1;;0 1", "ok 1;1;1 1", "ok 1;1;0", "err"})
+	{
+		std::optional<port::Check> const check = port::check("resolve;1;v0 v1;v0 v1;;0 0;0 1;0 1;0 1", wrong);
+		expect(check && check->port != check->model, "a wrong resolve model result differs: " + wrong);
+	}
+
+	// not in the domain of the resolve unit: too few fields, too many fields, a bad bit, a bad slot, a bad spilled
+	// id, not one dropped byte per source slot, a bad byte, a destination bound twice, a destination out of the
+	// target, not an offset and an excess, the blocked offset not below the working stack size, more source, target
+	// or working stack slots than the stack limit
+	throws("resolve;0;v0;v0;;0;0;0");
+	throws("resolve;0;v0;v0;;0;0;0;0 1;");
+	throws("resolve;2;v0;v0;;0;0;0;0 1");
+	throws("resolve;;v0;v0;;0;0;0;0 1");
+	throws("resolve;0;x;v0;;0;0;0;0 1");
+	throws("resolve;0;v0;y;;0;0;0;0 1");
+	throws("resolve;0;v0;v0;a;0;0;0;0 1");
+	throws("resolve;0;v0;v0;;;0;0;0 1");
+	throws("resolve;0;v0;v0;;0 0;0;0;0 1");
+	throws("resolve;0;v0;v0;;256;0;0;0 1");
+	throws("resolve;0;v0;v0;;1000;0;0;0 1");
+	throws("resolve;1;v0 v1 v2;v0 v1 v2;;0 0 0;0 1 2;2 1 0 0;0 1");
+	throws("resolve;0;v0 v1;v0 v1;;0 0;0 0;0 1;0 1");
+	throws("resolve;0;v0;v0;;0;1;0;0 1");
+	throws("resolve;0;v0;v0;;0;0;1;0 1");
+	throws("resolve;0;v0;v0;;0;0;0;0");
+	throws("resolve;0;v0;v0;;0;0;0;0 1 2");
+	throws("resolve;0;v0;v0;;0;0;0;1 1");
+	throws("resolve;0;v0;v0;;0;0;-;3 1");
+	throws("resolve;0;" + times("l0", 1025) + ";;;" + times("0", 1025) + ";" + times("-", 1025) + ";;0 1");
+	throws("resolve;0;;" + times("_", 1025) + ";;;;-;0 1");
+	throws("resolve;0;;;;;;" + times("-", 1025) + ";0 1");
+
+	// run (emit): an empty stack and target, all slots final, operations of removeSurplus, permuteAtLowestHeight and
+	// buildBottomUp, each alone and in sequence, each slot kind, equal slots, the spilled variables
+	agrees("emit;;;;", "ok;;;", "ok;;;");
+	agrees("emit;v0 v1;v0 v1;0 1;", "ok;v0 v1;;0 1", "ok;v0 v1;;0 1");
+	agrees("emit;v0;v0;0;0", "ok;v0;;0", "ok;v0;;0");
+	agrees("emit;R v0;R v0;0 1;", "ok;R v0;;0 1", "ok;R v0;;0 1");
+	agrees("emit;R;R;0;", "ok;R;;0", "ok;R;;0");
+	agrees("emit;v0 v0;v0 v0;1 0;", "ok;v0 v0;;1 0", "ok;v0 v0;;1 0");
+	agrees("emit;v0 v0;v0;0 -;", "ok;v0;POP;0", "ok;v0;POP;0");
+	agrees("emit;v0 v0 v0;v0;- 0 -;", "ok;v0;POP POP;0", "ok;v0;POP POP;0");
+	agrees("emit;v1 v0;v0 v1;1 0;", "ok;v0 v1;SWAP1;0 1", "ok;v0 v1;SWAP1;0 1");
+	agrees("emit;v0 R;R v0;1 0;", "ok;R v0;SWAP1;0 1", "ok;R v0;SWAP1;0 1");
+	agrees("emit;;l3 _;;", "ok;l3 _;PUSH:l3 PUSH:_;0 1", "ok;l3 _;PUSH:l3 PUSH:_;0 1");
+	agrees("emit;;v3;;3", "ok;v3;LOAD:v3;0", "ok;v3;LOAD:v3;0");
+	agrees("emit;v0;v0 v0;0;", "ok;v0 v0;DUP1;0 1", "ok;v0 v0;DUP1;0 1");
+	agrees("emit;R;_ R;1;", "ok;_ R;PUSH:_ SWAP1;0 1", "ok;_ R;PUSH:_ SWAP1;0 1");
+	agrees("emit;v7;l1 v7;1;", "ok;l1 v7;PUSH:l1 SWAP1;0 1", "ok;l1 v7;PUSH:l1 SWAP1;0 1");
+	agrees("emit;v0;v0;-;0", "ok;v0;POP LOAD:v0;0", "ok;v0;POP LOAD:v0;0");
+	agrees("emit;v0 l1;v0 v0;0 -;", "ok;v0 v0;POP DUP1;0 1", "ok;v0 v0;POP DUP1;0 1");
+	agrees("emit;v1 l2;v1 v1 l2 v3;0 -;3", "ok;v1 v1 l2 v3;POP DUP1 PUSH:l2 LOAD:v3;0 1 2 3",
+		"ok;v1 v1 l2 v3;POP DUP1 PUSH:l2 LOAD:v3;0 1 2 3");
+	agrees("emit;l9 v1 v0;v0 v1 v2;- 1 0;2", "ok;v0 v1 v2;SWAP2 POP LOAD:v2;0 1 2",
+		"ok;v0 v1 v2;SWAP2 POP LOAD:v2;0 1 2");
+	agrees("emit;l5 v0 v0;v0 v0 v0;- 2 0;", "ok;v0 v0 v0;SWAP2 POP DUP1;0 1 2", "ok;v0 v0 v0;SWAP2 POP DUP1;0 1 2");
+	agrees("emit;v0 v0 v0;v0 v0 v0 v0;- 0 -;", "ok;v0 v0 v0 v0;POP POP DUP1 DUP1 DUP1;0 1 2 3",
+		"ok;v0 v0 v0 v0;POP POP DUP1 DUP1 DUP1;0 1 2 3");
+	agrees("emit;R _ l2 v5;v5 l2 _ R;3 2 1 0;", "ok;v5 l2 _ R;SWAP3 SWAP1 SWAP2 SWAP1;0 1 2 3",
+		"ok;v5 l2 _ R;SWAP3 SWAP1 SWAP2 SWAP1;0 1 2 3");
+	agrees("emit;v0 v1;v1 v0 v2;1 0;2", "ok;v1 v0 v2;SWAP1 LOAD:v2;0 1 2", "ok;v1 v0 v2;SWAP1 LOAD:v2;0 1 2");
+	agrees("emit;v2 v0;v0 v1 v2;2 0;1", "ok;v0 v1 v2;SWAP1 LOAD:v1 SWAP1;0 1 2", "ok;v0 v1 v2;SWAP1 LOAD:v1 SWAP1;0 1 2");
+	agrees("emit;v3;v0 v1 v2 v3;3;0 1 2", "ok;v0 v1 v2 v3;LOAD:v1 LOAD:v2 LOAD:v0 SWAP3;0 1 2 3",
+		"ok;v0 v1 v2 v3;LOAD:v1 LOAD:v2 LOAD:v0 SWAP3;0 1 2 3");
+	agrees("emit;v1 R l3;R v1 _ l3;1 0 -;", "ok;R v1 _ l3;POP SWAP1 PUSH:_ PUSH:l3;0 1 2 3",
+		"ok;R v1 _ l3;POP SWAP1 PUSH:_ PUSH:l3;0 1 2 3");
+	agrees("emit;l9 v2 v0 l8;v0 v1 v2;- 2 0 -;1", "ok;v0 v1 v2;POP SWAP2 POP LOAD:v1 SWAP1;0 1 2",
+		"ok;v0 v1 v2;POP SWAP2 POP LOAD:v1 SWAP1;0 1 2");
+	agrees("emit;v4 v5 v0 v1;v0 v1 v2 v3 v4 v5;4 5 0 1;2 3",
+		"ok;v0 v1 v2 v3 v4 v5;SWAP2 SWAP1 SWAP3 SWAP1 LOAD:v2 SWAP2 LOAD:v3 SWAP2;0 1 2 3 4 5",
+		"ok;v0 v1 v2 v3 v4 v5;SWAP2 SWAP1 SWAP3 SWAP1 LOAD:v2 SWAP2 LOAD:v3 SWAP2;0 1 2 3 4 5");
+	agrees("emit;v4 v5 v0 v1;v0 v1 v0 v1 v4 v5;4 5 0 1;",
+		"ok;v0 v1 v0 v1 v4 v5;SWAP2 SWAP1 SWAP3 SWAP1 DUP4 SWAP2 DUP4 SWAP2;0 1 2 3 4 5",
+		"ok;v0 v1 v0 v1 v4 v5;SWAP2 SWAP1 SWAP3 SWAP1 DUP4 SWAP2 DUP4 SWAP2;0 1 2 3 4 5");
+	// the third check of State.Valid fails (err): a target slot that is not on the stack after removeSurplus, not
+	// spilled and not a literal or junk: a variable, also when other variables are spilled, a variable that
+	// removeSurplus pops, a return label that a variable is bound for, a return label that removeSurplus pops, and a
+	// return label that is not on the stack (the third check comes before the fourth)
+	agrees("emit;;v0;;", "err", "err");
+	agrees("emit;l9;v0;-;", "err", "err");
+	agrees("emit;v0;v0;-;", "err", "err");
+	agrees("emit;v0 l1;v0 v0;- -;", "err", "err");
+	agrees("emit;v0 v1;v1 v0 v2;1 0;", "err", "err");
+	agrees("emit;v2 v0;v0 v1 v2;2 0;", "err", "err");
+	agrees("emit;v4 v5 v0 v1;v0 v1 v2 v3 v4 v5;4 5 0 1;", "err", "err");
+	agrees("emit;v0 l9;v0 l9 v1;0 -;", "err", "err");
+	agrees("emit;v0 l9;v0 l9 v1;0 -;9", "err", "err");
+	agrees("emit;v0;R;0;", "err", "err");
+	agrees("emit;v0;v0 R;0;", "err", "err");
+	agrees("emit;;R;;", "err", "err");
+	agrees("emit;R;R;-;", "err", "err");
+	agrees("emit;v1 R l3;R v1 _ l3;1 - -;", "err", "err");
+	agrees("emit;l9 v0;v0 v1 R;- 0;1", "err", "err");
+	// the fourth check of State.Valid fails (err): a return label of the target that is on the stack, but that no
+	// stack slot is bound for
+	agrees("emit;R;R R;0;", "err", "err");
+	agrees("emit;R v0;R v0 R;0 1;", "err", "err");
+	agrees("emit;v0 R;R v0 R;1 0;", "err", "err");
+	agrees("emit;R l1;R R;0 -;", "err", "err");
+	// the third and the fourth check decide the result: without them, buildBottomUp blocks at the DUP of depth 17 of
+	// v0 or R (the model result without v99 is "blocked 0 1")
+	agrees("emit;" + vars(0, 16) + ";" + vars(0, 16) + " v99 v0;" + nats(0, 16) + ";", "err", "err");
+	agrees("emit;R " + vars(1, 16) + ";R " + vars(1, 16) + " R;" + nats(0, 16) + ";", "err", "err");
+	// blocked in removeSurplus: a surplus slot at depth 17, also with a return label in the target that is not on the
+	// stack, so that the third check would fail
+	{
+		std::string const result = "blocked 0 1;l0 " + vars(1, 17) + ";;- " + nats(0, 16);
+		agrees("emit;l0 " + vars(1, 17) + ";" + vars(1, 17) + ";- " + nats(0, 16) + ";", result, result);
+		agrees("emit;l0 " + vars(1, 17) + ";" + vars(1, 17) + " R;- " + nats(0, 16) + ";", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1;l0 " + vars(0, 16) + ";;- " + nats(0, 16);
+		agrees("emit;l0 " + vars(0, 16) + ";" + vars(0, 16) + " v0;- " + nats(0, 16) + ";", result, result);
+	}
+	// a surplus slot at depth 16: removeSurplus, then permuteAtLowestHeight moves the 15 slots above it down
+	{
+		std::string const result = "ok;" + vars(1, 16) + ";SWAP16 POP SWAP1 SWAP2 SWAP3 SWAP4 SWAP5 SWAP6 SWAP7 SWAP8 "
+			"SWAP9 SWAP10 SWAP11 SWAP12 SWAP13 SWAP14 SWAP15;" + nats(0, 15);
+		agrees("emit;l0 " + vars(1, 16) + ";" + vars(1, 16) + ";- " + nats(0, 15) + ";", result, result);
+	}
+	// blocked in permuteAtLowestHeight: a swap of depth 17 or 18, also with a target that fails the third check, and
+	// with a spilled variable that buildBottomUp would load
+	{
+		std::string const result = "blocked 0 1;v18 " + vars(1, 16) + " v0;;18 " + nats(1, 16) + " 0";
+		std::string const stack = "emit;v18 " + vars(1, 16) + " v0;";
+		std::string const dests = ";18 " + nats(1, 16) + " 0;";
+		agrees(stack + vars(0, 18) + dests, result, result);
+		agrees(stack + vars(0, 18) + " v99" + dests, result, result);
+		agrees(stack + vars(0, 18) + dests + "17", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1;v17 " + vars(1, 16) + " v0;;17 " + nats(1, 16) + " 0";
+		agrees("emit;v17 " + vars(1, 16) + " v0;" + vars(0, 17) + " v0;17 " + nats(1, 16) + " 0;", result, result);
+	}
+	// blocked in buildBottomUp: a DUP of depth 17, after a POP of removeSurplus, a SWAP of depth 17; a DUP of depth 16
+	{
+		std::string const result = "blocked 0 1;" + vars(0, 16) + ";;" + nats(0, 16);
+		agrees("emit;" + vars(0, 16) + ";" + vars(0, 16) + " v0;" + nats(0, 16) + ";", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1;" + vars(0, 16) + ";POP;" + nats(0, 16);
+		agrees("emit;" + vars(0, 16) + " l0;" + vars(0, 16) + " v0;" + nats(0, 16) + " -;", result, result);
+	}
+	{
+		std::string const result = "blocked 1 1;" + vars(0, 17) + ";;" + nats(0, 17);
+		agrees("emit;" + vars(0, 17) + ";" + vars(0, 17) + " v1 v0;" + nats(0, 17) + ";", result, result);
+	}
+	{
+		std::string const result = "ok;" + vars(0, 15) + " v0;DUP16;" + nats(0, 16);
+		agrees("emit;" + vars(0, 15) + ";" + vars(0, 15) + " v0;" + nats(0, 15) + ";", result, result);
+	}
+	// the stack limit: 1024 final slots, 1024 surplus slots, 1024 generated slots, 1024 surplus slots then 16 generated
+	// slots, 16 surplus slots then 1024 generated slots, a DUP blocked under 1023 slots, a surplus slot blocked under
+	// 1023 slots
+	{
+		std::string const result = "ok;" + vars(0, 1023) + ";;" + nats(0, 1023);
+		agrees("emit;" + vars(0, 1023) + ";" + vars(0, 1023) + ";" + nats(0, 1023) + ";", result, result);
+	}
+	{
+		std::string const result = "ok;;" + times("POP", 1024) + ";";
+		agrees("emit;" + times("l0", 1024) + ";;" + times("-", 1024) + ";", result, result);
+	}
+	{
+		std::string const result =
+			"ok;" + times("l0", 1024) + ";PUSH:l0 " + times("DUP1", 1023) + ";" + nats(0, 1023);
+		agrees("emit;;" + times("l0", 1024) + ";;", result, result);
+	}
+	{
+		std::string const result =
+			"ok;" + times("l0", 16) + ";" + times("POP", 1024) + " PUSH:l0 " + times("DUP1", 15) + ";" + nats(0, 15);
+		agrees("emit;" + times("l1", 1024) + ";" + times("l0", 16) + ";" + times("-", 1024) + ";", result, result);
+	}
+	{
+		std::string const result = "ok;" + times("l0", 1024) + ";" + times("POP", 16) + " PUSH:l0 " +
+			times("DUP1", 1023) + ";" + nats(0, 1023);
+		agrees("emit;" + times("l1", 16) + ";" + times("l0", 1024) + ";" + times("-", 16) + ";", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1007;" + vars(0, 1022) + ";;" + nats(0, 1022);
+		agrees("emit;" + vars(0, 1022) + ";" + vars(0, 1022) + " v0;" + nats(0, 1022) + ";", result, result);
+	}
+	{
+		std::string const result = "blocked 0 1007;l0 " + vars(1, 1023) + ";;- " + nats(0, 1022);
+		agrees("emit;l0 " + vars(1, 1023) + ";" + vars(1, 1023) + ";- " + nats(0, 1022) + ";", result, result);
+	}
+	// a wrong model result is not equal to the port result: an operation, a slot, a destination, the status
+	for (std::string const wrong: {"ok;v0 v1 v2;SWAP1 LOAD:v2;0 1 2", "ok;v0 v1 v2;SWAP2 POP LOAD:v1;0 1 2",
+			 "ok;v0 v2 v1;SWAP2 POP LOAD:v2;0 1 2", "ok;v0 v1 v2;SWAP2 POP LOAD:v2;0 2 1",
+			 "ok;v0 v1;SWAP2 POP LOAD:v2;0 1", "blocked 0 1;v0 v1 v2;SWAP2 POP LOAD:v2;0 1 2", "err"})
+	{
+		std::optional<port::Check> const check = port::check("emit;l9 v1 v0;v0 v1 v2;- 1 0;2", wrong);
+		expect(check && check->port != check->model, "a wrong emit model result differs: " + wrong);
+	}
+	{
+		std::optional<port::Check> const check = port::check("emit;v0;R;0;", "ok;R;;0");
+		expect(check && check->port != check->model, "a wrong emit model result differs: ok;R;;0");
+	}
+
+	// not in the domain of the emit unit: too few fields, too many fields, a bad slot, a bad destination, not one
+	// destination per slot, a destination out of the target, a destination bound twice, a bad spilled id, more stack
+	// slots or target slots than the stack limit
+	throws("emit;v0;v0;0");
+	throws("emit;v0;v0;0;;");
+	throws("emit;x;v0;0;");
+	throws("emit;v0;y;0;");
+	throws("emit;v0;v0;a;");
+	throws("emit;;;;x");
+	throws("emit;v0;v0;0 -;");
+	throws("emit;v0;v0;1;");
+	throws("emit;v0 v1;v0 v1;0 0;");
+	throws("emit;" + times("_", 1025) + ";;" + times("-", 1025) + ";");
+	throws("emit;;" + times("_", 1025) + ";;");
+
+	// plan: an empty source and target, a swap, the target check (v1 is not on the source and not spilled; spilled,
+	// it is loaded), generated slots, a surplus slot, an assertion after the target check (R can not be duplicated),
+	// the strategy (Leave duplicates the copy in the wildcard slot, Take moves it)
+	agrees("plan;L;0;;;", "ok 1;0;;;;;", "ok 1;0;;;;;");
+	agrees("plan;L;0;v0 v1;v1 v0;", "ok 1;0;;0 0;v1 v0;SWAP1;1 0", "ok 1;0;;0 0;v1 v0;SWAP1;1 0");
+	agrees("plan;L;0;v0;v1;", "err", "err");
+	agrees("plan;L;0;v0;v1;1", "ok 1;0;1;0;v1;POP LOAD:v1;-", "ok 1;0;1;0;v1;POP LOAD:v1;-");
+	agrees("plan;L;0;v0;l5 _ v0;", "ok 1;0;;0;l5 _ v0;PUSH:_ PUSH:l5 SWAP2;- - 0",
+		"ok 1;0;;0;l5 _ v0;PUSH:_ PUSH:l5 SWAP2;- - 0");
+	agrees("plan;L;0;v0 R;R;", "ok 1;0;;0 0;R;SWAP1 POP;1", "ok 1;0;;0 0;R;SWAP1 POP;1");
+	agrees("plan;L;0;R;R R;", "err", "err");
+	agrees("plan;L;0;v0 v1;_ v0;", "ok 1;1;;0 0;v0 v0;POP DUP1;0 -", "ok 1;1;;0 0;v0 v0;POP DUP1;0 -");
+	agrees("plan;T;0;v0 v1;_ v0;", "ok 1;1;;0 0;v1 v0;SWAP1;1 0", "ok 1;1;;0 0;v1 v0;SWAP1;1 0");
+	// v0 is out of reach: the first attempt is blocked; resolve drops v17 with a new spill, and the second attempt
+	// loads it; without spillingAllowed nothing is dropped, and the result has no stack; two drops: the surplus copy
+	// of v0 and v17
+	{
+		std::string const deep = vars(1, 17);
+		std::string const planned = "POP SWAP1 SWAP2 SWAP3 SWAP4 SWAP5 SWAP6 SWAP7 SWAP8 SWAP9 SWAP10 SWAP11 SWAP12 "
+			"SWAP13 SWAP14 SWAP15 SWAP16 LOAD:v17 SWAP1;" + nats(1, 16) + " - 0";
+		std::string const spilledOne = "ok 1;0;17;" + times("0", 17) + " 1;" + deep + " v0;" + planned;
+		agrees("plan;L;1;v0 " + deep + ";" + deep + " v0;", spilledOne, spilledOne);
+		std::string const blocked = "ok 0;0;;" + times("0", 18);
+		agrees("plan;L;0;v0 " + deep + ";" + deep + " v0;", blocked, blocked);
+		std::string const twoDrops = "ok 1;0;0 17;" + times("0", 17) + " 1 1;" + deep + " v0;POP " + planned;
+		agrees("plan;L;1;v0 " + deep + " v0;" + deep + " v0;", twoDrops, twoDrops);
+	}
+	// the stack limit: 1024 literals in place, with Take
+	{
+		std::string const literals = times("l0", 1024);
+		std::string const result = "ok 1;0;;" + times("0", 1024) + ";" + literals + ";;" + nats(0, 1023);
+		agrees("plan;T;0;" + literals + ";" + literals + ";", result, result);
+	}
+	// a wrong model result is not equal to the port result: success, saw, a spill, a dropped byte, the stack, the
+	// operations, a source offset
+	for (std::string const wrong: {"ok 0;0;;0 0", "ok 1;1;;0 0;v1 v0;SWAP1;1 0", "ok 1;0;0;0 0;v1 v0;SWAP1;1 0",
+		"ok 1;0;;1 0;v1 v0;SWAP1;1 0", "ok 1;0;;0 0;v0 v1;SWAP1;1 0", "ok 1;0;;0 0;v1 v0;;1 0",
+		"ok 1;0;;0 0;v1 v0;SWAP1;0 1"})
+	{
+		std::optional<port::Check> const check = port::check("plan;L;0;v0 v1;v1 v0;", wrong);
+		expect(check && check->port != check->model, "a wrong plan model result differs: " + wrong);
+	}
+
+	// not in the domain of the plan unit: too few fields, too many fields, a bad strategy, a bad bit, a bad slot, a
+	// bad spilled id, more source or target slots than the stack limit
+	throws("plan;L;0;v0;v0");
+	throws("plan;L;0;v0;v0;;");
+	throws("plan;X;0;v0;v0;");
+	throws("plan;;0;v0;v0;");
+	throws("plan;L;2;v0;v0;");
+	throws("plan;L;;v0;v0;");
+	throws("plan;L;0;x;v0;");
+	throws("plan;L;0;v0;y;");
+	throws("plan;L;0;v0;v0;a");
+	throws("plan;L;0;" + times("_", 1025) + ";;");
+	throws("plan;L;0;;" + times("_", 1025) + ";");
 
 	if (failures > 0)
 	{

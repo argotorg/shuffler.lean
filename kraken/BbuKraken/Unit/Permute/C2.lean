@@ -3,8 +3,8 @@ import BbuKraken.Unit.Permute.ML
 /-!
 # `permute`: the blocks of phase C (`placeGroup` and the `vacant` loop)
 
-`.LB70`, `.LB63`, `.LB64`, `.LB66`, `.LB68` and `.LB65`.
-The stores of `.LB70` and `.LB68` go through `Fm.storeP`.
+`.LB.Emission.permute.12`, `.LB.Emission.permute.11`, `.LB.Emission.permute.7`, `.LB.Emission.permute.9`, `.LB.Emission.permute.10` and `.LB.Emission.permute.8`.
+The stores of `.LB.Emission.permute.12` and `.LB.Emission.permute.10` go through `Fm.storeP`.
 -/
 
 open Std.WP Lean.Order
@@ -17,7 +17,7 @@ open Bbu.Sep
 namespace Permute
 
 theorem b_70 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB70" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.12" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -94,7 +94,7 @@ theorem b_70 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
     · pm_dec
 
 theorem b_63 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB63" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.11" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -140,7 +140,7 @@ theorem b_63 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
     pm_dec
 
 theorem b_64 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB64" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.7" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -171,7 +171,7 @@ theorem b_64 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F permuteA 2058
   case vc3 => pm_dec
 
 theorem b_66 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB66" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.9" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -210,7 +210,7 @@ theorem b_66 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
     pm_dec
 
 theorem b_68 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB68" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.10" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -297,7 +297,7 @@ theorem b_68 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
   case vc9 => pm_dec
 
 theorem b_65 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB65" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.8" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht

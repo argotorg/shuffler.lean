@@ -21,6 +21,11 @@ text, so that both implementations parse the same input and print the same outpu
           | "spill;" stack ";" stack                           SpillSet.add of each slot of the first stack, in
                                                                order, on the empty set, then SpillSet.is_spilled
                                                                of each slot of the second stack
+          | "resolve;" bit ";" stack ";" stack ";" vars ";" bytes ";" dests ";" dests ";" offset " " excess
+                                                               Planner.resolve of spillingAllowed, source, target,
+                                                               spills and dropped, with the plan, the working
+                                                               mapping (per working stack offset a target offset
+                                                               or "-") and the blocked slot
   state  :=stack ";" stack ";" dests ";" vars                 stack, target, mapping and spilled variables
   dests  := per stack offset a target offset or "-"
   slot   := "v" n | "l" n | "_" | "R"                          Var, Lit, Wildcard, FunctionReturnLabel
@@ -37,6 +42,7 @@ text, so that both implementations parse the same input and print the same outpu
                                                                generations
           | "ok;" vars ";" bits                                spill: the spilled variables, ascending, and per
                                                                query 1 if it is spilled, else 0
+          | "ok " bit ";" vars ";" bytes                       resolve: success, spills and dropped
           | "err"
           | "invalid"                                          the buildBottomUp state is not `Valid`
   status := "ok" | "blocked " offset " " excess
@@ -245,6 +251,37 @@ def runSpill : List String → Except String String
       | .error _ => "err"
   | _ => .error "not a spill case"
 
+-- Planner.resolve on the state of spillingAllowed, the spilled variables and dropped, with the plan, the working
+-- mapping and the blocked slot
+def runResolve : List String → Except String String
+  | [allowed, source, target, vars, dropped, plan, current, blocked] => do
+    let allowed ← match allowed with
+      | "0" => pure false
+      | "1" => pure true
+      | s => throw s!"not a bit: {s}"
+    let source ← parseStack source
+    let target ← parseStack target
+    let inputSpills ← (words vars).mapM parseNat
+    let bytes ← (words dropped).mapM parseByte
+    let plan ← parseMapping source.length target.length plan
+    let current ← parseMapping (words current).length target.length current
+    let blocked ← match ← (words blocked).mapM parseNat with
+      | [offset, excess] => pure (Blocked.mk offset excess)
+      | _ => throw s!"not an offset and an excess: {blocked}"
+    if h : bytes.length = source.length then
+      let state : Planner.State source target :=
+        ⟨(inputSpills.map VarId.mk).toFinset, allowed, ⟨bytes.toArray, by simpa using h⟩⟩
+      return match Planner.resolve state plan blocked current with
+        | .ok (success, s) =>
+          -- resolve only spills source values, so every spilled id is in the case
+          let ids := (source ++ target).filterMap (fun | .Var id => some id.val | _ => none) ++ inputSpills
+          let spilled := (ids.dedup.mergeSort (· ≤ ·)).filter (VarId.mk · ∈ s.spills)
+          let dropped := s.dropped.toList.map (toString ·.val)
+          s!"ok {showBit success};{" ".intercalate (spilled.map toString)};{" ".intercalate dropped}"
+        | .error _ => "err"
+    else throw s!"not one dropped byte per source slot: {dropped}"
+  | _ => .error "not a resolve case"
+
 def run (line : String) : Except String String :=
   match line.splitOn ";" with
   | "map" :: fields => runBuildMapping fields
@@ -259,6 +296,7 @@ def run (line : String) : Except String String :=
   | "pop" :: fields => runPop fields
   | "plan" :: fields => runPlanner fields
   | "spill" :: fields => runSpill fields
+  | "resolve" :: fields => runResolve fields
   | _ => .error s!"not a case: {line}"
 
 end Oracle

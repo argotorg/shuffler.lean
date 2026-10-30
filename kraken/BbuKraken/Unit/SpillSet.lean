@@ -7,10 +7,10 @@ import BbuKraken.Unit.SpillSetLemmas
 `c/bbu/spill_set.S`: 6 pushes and 24 bytes of locals. `(%rsp)` holds `spilled`, and `16(%rsp)`
 is the `SpillSet` object that `SpillSet::add` gets in `rdi`. The four loops are:
 
-- `.LB248`: the check of the adds (an id of a variable is below `idCount`);
-- `.LB251`: the check of the queries;
-- `.LB253`: the adds, with a call of `SpillSet::add` for each;
-- `.LB255`: the queries, with a store of the result byte for each.
+- `.LB.spill_set.1`: the check of the adds (an id of a variable is below `idCount`);
+- `.LB.spill_set.3`: the check of the queries;
+- `.LB.spill_set.6`: the adds, with a call of `SpillSet::add` for each;
+- `.LB.spill_set.9`: the queries, with a store of the result byte for each.
 -/
 
 open Std.WP Lean.Order
@@ -41,54 +41,54 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
       | .entry, t => t = s.pushRa ra
       | .label l, t =>
         if l = Names.spill_set then t = s.pushRa ra
-        else if l = ".LB248" then ∃ y o x2, Sb s ra adds queries r F f res y o x2 t
+        else if l = ".LB.spill_set.1" then ∃ y o x2, Sb s ra adds queries r F f res y o x2 t
           ∧ t.regs.rbx.toBitVec = rdx s ∧ rdi t = rdi s ∧ (rax t).toNat < (rcx s).toNat
           ∧ (A.take (rax t).toNat).all (Flat.idOk (rdi s)) = true
-        else if l = ".LB246" then ∃ y o x2, Sb s ra adds queries r F f res y o x2 t
+        else if l = ".LB.spill_set.0" then ∃ y o x2, Sb s ra adds queries r F f res y o x2 t
           ∧ t.regs.rbx.toBitVec = rdx s ∧ rdi t = rdi s ∧ (rax t).toNat < (rcx s).toNat
           ∧ (A.take ((rax t).toNat + 1)).all (Flat.idOk (rdi s)) = true
-        else if l = ".LB272" then ∃ y o x2, Sb s ra adds queries r F f res y o x2 t
+        else if l = ".LB.spill_set.15" then ∃ y o x2, Sb s ra adds queries r F f res y o x2 t
           ∧ t.regs.rbx.toBitVec = rdx s ∧ rdi t = rdi s ∧ (rcx s).toNat ≠ 0
           ∧ A.all (Flat.idOk (rdi s)) = true
-        else if l = ".LB245" then ∃ y o x2, Sb s ra adds queries r F f res y o x2 t
+        else if l = ".LB.spill_set.14" then ∃ y o x2, Sb s ra adds queries r F f res y o x2 t
           ∧ t.regs.rbx.toBitVec = rdx s ∧ rdi t = rdi s ∧ rcx s = 0#64 ∧ rcx t = 0#64
           ∧ r9 t = r9 s
-        else if l = ".LB251" then ∃ y o x2, Sb s ra adds queries r F f res y o x2 t
+        else if l = ".LB.spill_set.3" then ∃ y o x2, Sb s ra adds queries r F f res y o x2 t
           ∧ t.regs.rbx.toBitVec = rdx s ∧ rdi t = rdi s ∧ (rax t).toNat < (r9 s).toNat
           ∧ A.all (Flat.idOk (rdi s)) = true
           ∧ (Q.take (rax t).toNat).all (Flat.idOk (rdi s)) = true
-        else if l = ".LB250" then ∃ y o x2, Sb s ra adds queries r F f res y o x2 t
+        else if l = ".LB.spill_set.2" then ∃ y o x2, Sb s ra adds queries r F f res y o x2 t
           ∧ t.regs.rbx.toBitVec = rdx s ∧ rdi t = rdi s ∧ (rax t).toNat < (r9 s).toNat
           ∧ A.all (Flat.idOk (rdi s)) = true
           ∧ (Q.take ((rax t).toNat + 1)).all (Flat.idOk (rdi s)) = true
-        else if l = ".LB273" then ∃ y o x2, Sb s ra adds queries r F f res y o x2 t
+        else if l = ".LB.spill_set.4" then ∃ y o x2, Sb s ra adds queries r F f res y o x2 t
           ∧ t.regs.rbx.toBitVec = rdx s ∧ (r9 s).toNat ≠ 0
           ∧ A.all (Flat.idOk (rdi s)) = true ∧ Q.all (Flat.idOk (rdi s)) = true
-        else if l = ".LB257" then ∃ y x2, Sb s ra adds queries r F f res y (rsi s) x2 t
+        else if l = ".LB.spill_set.5" then ∃ y x2, Sb s ra adds queries r F f res y (rsi s) x2 t
           ∧ t.regs.rbx.toBitVec = rdx s ∧ (rcx s).toNat ≠ 0
           ∧ A.all (Flat.idOk (rdi s)) = true ∧ Q.all (Flat.idOk (rdi s)) = true
-        else if l = ".LB253" then ∃ f' y x2, Sb s ra adds queries r F f' res y (rsi s) x2 t
+        else if l = ".LB.spill_set.6" then ∃ f' y x2, Sb s ra adds queries r F f' res y (rsi s) x2 t
           ∧ t.regs.rbx.toBitVec = rdx s + t.regs.r14.toBitVec * 8#64
           ∧ t.regs.r14.toBitVec.toNat < (rcx s).toNat ∧ t.regs.r15.toBitVec = rsp s - 64#64
           ∧ Flat.spillAddAll f (A.take t.regs.r14.toBitVec.toNat) = (.done, f')
           ∧ A.all (Flat.idOk (rdi s)) = true ∧ Q.all (Flat.idOk (rdi s)) = true
-        else if l = ".LB252" then ∃ f' y x2, Sb s ra adds queries r F f' res y (rsi s) x2 t
+        else if l = ".LB.spill_set.7" then ∃ f' y x2, Sb s ra adds queries r F f' res y (rsi s) x2 t
           ∧ (r9 s).toNat ≠ 0 ∧ Q.all (Flat.idOk (rdi s)) = true
           ∧ setRes s f adds queries res = (0, f', Q.map (g f'))
-        else if l = ".LB255" then ∃ f' y x2, Sb s ra adds queries r F f'
+        else if l = ".LB.spill_set.9" then ∃ f' y x2, Sb s ra adds queries r F f'
             ((Q.take (rax t).toNat).map (g f') ++ res.drop (rax t).toNat) y (rsi s) x2 t
           ∧ (rax t).toNat < (r9 s).toNat ∧ Q.all (Flat.idOk (rdi s)) = true
           ∧ setRes s f adds queries res = (0, f', Q.map (g f'))
-        else if l = ".LB254" then ∃ f' y x2, Sb s ra adds queries r F f'
+        else if l = ".LB.spill_set.8" then ∃ f' y x2, Sb s ra adds queries r F f'
             ((Q.take (rax t).toNat).map (g f') ++ res.drop (rax t).toNat) y (rsi s) x2 t
           ∧ (rax t).toNat < (r9 s).toNat ∧ Q.all (Flat.idOk (rdi s)) = true
           ∧ setRes s f adds queries res = (0, f', Q.map (g f'))
           ∧ ∃ q, Q[(rax t).toNat]? = some q ∧ t.regs.rdx.toBitVec.setWidth 8 = g f' q
-        else if l = ".LB274" ∨ l = ".LB262" then ∃ f' res' y o x2,
+        else if l = ".LB.spill_set.10" ∨ l = ".LB.spill_set.13" then ∃ f' res' y o x2,
           Sb s ra adds queries r F f' res' y o x2 t ∧ setRes s f adds queries res = (0, f', res')
-        else if l = ".LB261" then ∃ f' res' y o x2,
+        else if l = ".LB.spill_set.11" then ∃ f' res' y o x2,
           Sb s ra adds queries r F f' res' y o x2 t ∧ setRes s f adds queries res = (-2, f', res')
-        else if l = ".LB244" then ∃ f' res' y o x2,
+        else if l = ".LB.spill_set.12" then ∃ f' res' y o x2,
           Sb s ra adds queries r F f' res' y o x2 t ∧ setRes s f adds queries res = (rax t, f', res')
         else False
       | .exit, _ => False)
@@ -124,7 +124,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
       | with_reducible exact p1 | with_reducible exact p2 | with_reducible exact p3
       | with_reducible exact p4 | with_reducible exact p5 | with_reducible exact p6
       | with_reducible exact p7
-    | goto ".LB245" =>
+    | goto ".LB.spill_set.14" =>
       rename_i hz _
       have h0 := ShallowestCopy.zf_true hz
       cfg_goto
@@ -133,7 +133,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
       · simp only [Names.spill_set, String.reduceEq, ↓reduceIte]
         exact ⟨x0, x3, x2, ⟨hm7, hsp0, rfl, rfl, rfl⟩, rfl, rfl, h0, h0, rfl⟩
       · left; simp only [var, String.reduceEq, ↓reduceIte]; omega
-    | goto ".LB248" =>
+    | goto ".LB.spill_set.1" =>
       rename_i hz _
       have h0 := ShallowestCopy.zf_false hz
       cfg_goto
@@ -145,7 +145,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
         have h1 : s.regs.rcx.toBitVec ≠ 0#64 := h0
         bv_omega
       · left; simp only [var, String.reduceEq, ↓reduceIte]; omega
-  case «.LB244» t ht =>
+  case «.LB.spill_set.12» t ht =>
     simp only [Names.spill_set, String.reduceEq, ↓reduceIte, or_self] at ht
     obtain ⟨f', res', y, o, x2, hsb, hres⟩ := ht
     obtain ⟨p1, p2, p3, p4, p5, p6⟩ := hsb.isSome_pops
@@ -162,7 +162,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
     | ret =>
       refine Kg.ret (hsb.pop ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_) fun t' hm' hax => hsb.post hres hm' hax
       all_goals rfl
-  case «.LB248» t ht =>
+  case «.LB.spill_set.1» t ht =>
     simp only [Names.spill_set, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨y, o, x2, hsb, hbx, hdi, hlt, hall⟩ := ht
     obtain ⟨R, hR⟩ := hsb.addsArr
@@ -179,7 +179,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
     all_goals try symexec_norm
     vc_by_shape
     | load => first | exact o1 | exact k1 | exact w1
-    | goto ".LB246" =>
+    | goto ".LB.spill_set.0" =>
       have hok : Flat.idOk s.regs.rdi.toBitVec A[t.regs.rax.toBitVec.toNat] = true := by
         rw [hAi]
         first
@@ -197,7 +197,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
       · simp only [Names.spill_set, String.reduceEq, ↓reduceIte]
         exact ⟨y, o, x2, hsb.next rfl rfl rfl rfl rfl, hbx, hdi, hlt, all_take_succ hxA hall hok⟩
       · left; simp only [var, rax, Reg64s.get64_rax, String.reduceEq, ↓reduceIte]; omega
-    | goto ".LB244" =>
+    | goto ".LB.spill_set.12" =>
       rename_i ho hk hc
       rw [o2, ProduceProof.sub_beq8] at ho
       rw [k2, ProduceProof.sub_beq8] at hk
@@ -212,7 +212,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
       · simp only [Names.spill_set, String.reduceEq, ↓reduceIte, or_self]
         exact ⟨f, res, y, o, x2, hsb.next rfl rfl rfl rfl rfl, hres⟩
       · left; simp only [var, rax, Reg64s.get64_rax, String.reduceEq, ↓reduceIte, or_self]; omega
-  case «.LB246» t ht =>
+  case «.LB.spill_set.0» t ht =>
     simp only [Names.spill_set, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨y, o, x2, hsb, hbx, hdi, hlt, hall⟩ := ht
     have hc := s.regs.rcx.toBitVec.isLt
@@ -235,7 +235,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
     kvcgen64
     all_goals try symexec_norm
     vc_by_shape
-    | goto ".LB272" =>
+    | goto ".LB.spill_set.15" =>
       have hz : (t.regs.r12.toBitVec - (1#64 + t.regs.rax.toBitVec) == BitVec.zero 64) = true := by
         with_reducible assumption
       have he := ProduceProof.eq_of_z hz
@@ -254,7 +254,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
     · left; simp only [var, rax, Reg64s.get64_rax, String.reduceEq, ↓reduceIte]
       have := hne (by assumption)
       omega
-  case «.LB272» t ht =>
+  case «.LB.spill_set.15» t ht =>
     simp only [Names.spill_set, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨y, o, x2, hsb, hbx, hdi, hc0, hall⟩ := ht
     have hld := hsb.ld_sp
@@ -264,7 +264,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
     all_goals try symexec_norm
     vc_by_shape
     | load => first | exact hld.1 | exact hio
-    | goto ".LB251" =>
+    | goto ".LB.spill_set.3" =>
       rename_i hz _
       have h9 := nz_true hz
       rw [hsb.r13] at h9
@@ -277,7 +277,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
       · left
         simp only [var, rax, Reg64s.get64_rax, String.reduceEq, ↓reduceIte, BitVec.toNat_ofNat]
         omega
-    | goto ".LB257" =>
+    | goto ".LB.spill_set.5" =>
       rename_i hz _
       have h9 := nz_false hz
       rw [hsb.r13] at h9
@@ -289,7 +289,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
       · simp only [Names.spill_set, String.reduceEq, ↓reduceIte]
         exact ⟨y, x2, hsb.st_o rfl rfl rfl rfl rfl, hbx, hc0, hall, by rw [hQ0]; rfl⟩
       · left; simp only [var, String.reduceEq, ↓reduceIte]; omega
-  case «.LB245» t ht =>
+  case «.LB.spill_set.14» t ht =>
     simp only [Names.spill_set, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨y, o, x2, hsb, hbx, hdi, hc0, hc0', h9⟩ := ht
     have hc0'' : t.regs.rcx.toBitVec = 0#64 := hc0'
@@ -301,7 +301,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
     kvcgen64
     all_goals try symexec_norm
     vc_by_shape
-    | goto ".LB251" =>
+    | goto ".LB.spill_set.3" =>
       rename_i hz _
       have hn := nz_true hz
       rw [h9'] at hn
@@ -314,7 +314,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
       · simp only [Names.spill_set, String.reduceEq, ↓reduceIte]
         exact ⟨y, o, x2, hsb.next rfl rfl rfl rfl rfl, hbx, hdi, hq0, by rw [hA0]; rfl, hq1⟩
       · left; simp only [var, rax, Reg64s.get64_rax, String.reduceEq, ↓reduceIte]; omega
-    | goto ".LB244" =>
+    | goto ".LB.spill_set.12" =>
       rename_i hz _
       have hn := nz_false hz
       rw [h9'] at hn
@@ -332,7 +332,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
       · simp only [Names.spill_set, String.reduceEq, ↓reduceIte, or_self]
         exact ⟨f, res, y, o, x2, hsb.next rfl rfl rfl rfl rfl, hres⟩
       · left; simp only [var, String.reduceEq, ↓reduceIte, or_self]; omega
-  case «.LB251» t ht =>
+  case «.LB.spill_set.3» t ht =>
     simp only [Names.spill_set, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨y, o, x2, hsb, hbx, hdi, hlt, hallA, hall⟩ := ht
     obtain ⟨R, hR⟩ := hsb.queriesArr
@@ -349,7 +349,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
     all_goals try symexec_norm
     vc_by_shape
     | load => first | exact o1 | exact k1 | exact w1
-    | goto ".LB250" =>
+    | goto ".LB.spill_set.2" =>
       have hok : Flat.idOk s.regs.rdi.toBitVec Q[t.regs.rax.toBitVec.toNat] = true := by
         rw [hQi]
         first
@@ -368,7 +368,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
         exact ⟨y, o, x2, hsb.next rfl rfl rfl rfl rfl, hbx, hdi, hlt, hallA,
           all_take_succ hxQ hall hok⟩
       · left; simp only [var, rax, Reg64s.get64_rax, String.reduceEq, ↓reduceIte]; omega
-    | goto ".LB244" =>
+    | goto ".LB.spill_set.12" =>
       rename_i ho hk hc
       rw [o2, ProduceProof.sub_beq8] at ho
       rw [k2, ProduceProof.sub_beq8] at hk
@@ -384,7 +384,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
       · simp only [Names.spill_set, String.reduceEq, ↓reduceIte, or_self]
         exact ⟨f, res, y, o, x2, hsb.next rfl rfl rfl rfl rfl, hres⟩
       · left; simp only [var, rax, Reg64s.get64_rax, String.reduceEq, ↓reduceIte, or_self]; omega
-  case «.LB250» t ht =>
+  case «.LB.spill_set.2» t ht =>
     simp only [Names.spill_set, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨y, o, x2, hsb, hbx, hdi, hlt, hallA, hall⟩ := ht
     have hc := s.regs.r9.toBitVec.isLt
@@ -407,7 +407,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
     kvcgen64
     all_goals try symexec_norm
     vc_by_shape
-    | goto ".LB273" =>
+    | goto ".LB.spill_set.4" =>
       have hz : (t.regs.r13.toBitVec - (1#64 + t.regs.rax.toBitVec) == BitVec.zero 64) = true := by
         with_reducible assumption
       have he := ProduceProof.eq_of_z hz
@@ -426,7 +426,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
     · left; simp only [var, rax, Reg64s.get64_rax, String.reduceEq, ↓reduceIte]
       have := hne (by assumption)
       omega
-  case «.LB273» t ht =>
+  case «.LB.spill_set.4» t ht =>
     simp only [Names.spill_set, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨y, o, x2, hsb, hbx, h9, hallA, hallQ⟩ := ht
     have hld := hsb.ld_sp
@@ -435,7 +435,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
     all_goals try symexec_norm
     vc_by_shape
     | load => first | exact hld.1 | exact hio
-    | goto ".LB252" =>
+    | goto ".LB.spill_set.7" =>
       rename_i hz _
       have h12 := ShallowestCopy.zf_true hz
       rw [hsb.r12] at h12
@@ -457,7 +457,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
       have hc0 : s.regs.rcx.toBitVec.toNat ≠ 0 := by bv_omega
       exact ⟨y, x2, hsb.st_o rfl rfl rfl rfl rfl, hbx, hc0, hallA, hallQ⟩
     · left; simp only [var, String.reduceEq, ↓reduceIte]; omega
-  case «.LB257» t ht =>
+  case «.LB.spill_set.5» t ht =>
     simp only [Names.spill_set, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨y, x2, hsb, hbx, hc0, hallA, hallQ⟩ := ht
     have hc := s.regs.rcx.toBitVec.isLt
@@ -473,7 +473,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
     · simp only [Names.spill_set, String.reduceEq, ↓reduceIte]
       exact ⟨f, y, x2, hsb.next rfl rfl rfl rfl rfl, hb, h14, h15, hd, hallA, hallQ⟩
     · left; simp only [var, String.reduceEq, ↓reduceIte, BitVec.toNat_ofNat]; omega
-  case «.LB253» t ht =>
+  case «.LB.spill_set.6» t ht =>
     simp only [Names.spill_set, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨f', y, x2, hsb, hbx, hlt, h15, hdone, hallA, hallQ⟩ := ht
     have hc := s.regs.rcx.toBitVec.isLt
@@ -518,7 +518,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
       kvcgen64
       all_goals try symexec_norm
       vc_by_shape
-      | goto ".LB261" =>
+      | goto ".LB.spill_set.11" =>
         have hal0 := ProduceProof.al_ne (by with_reducible assumption)
         have hst : (Flat.spillAdd f' (StackSlot.ofWord w)).1 ≠ .done :=
           ProduceProof.code_ne_zero (fun e => hal0 (hal.trans e))
@@ -534,7 +534,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
         · simp only [Names.spill_set, String.reduceEq, ↓reduceIte, or_self]
           exact ⟨_, res, v, rsi s, x2, hsb2.next rfl rfl rfl rfl rfl, hres⟩
         · left; simp only [var, String.reduceEq, ↓reduceIte, or_true]; omega
-      | goto ".LB253" =>
+      | goto ".LB.spill_set.6" =>
         have hal0 := ProduceProof.al_zero (by with_reducible assumption)
         have hd := ProduceProof.code_eq_zero (hal.symm.trans hal0)
         have hlt2 : (1#64 + t2.regs.r14.toBitVec).toNat < t2.regs.r12.toBitVec.toNat :=
@@ -552,7 +552,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
         · simp only [Names.spill_set, String.reduceEq, ↓reduceIte]
           exact ⟨_, v, x2, hsb2.next rfl rfl rfl rfl rfl, hb2, hlt2, h15', hdone2, hallA, hallQ⟩
         · left; simp only [var, String.reduceEq, ↓reduceIte]; omega
-      | goto ".LB262" =>
+      | goto ".LB.spill_set.13" =>
         have hal0 := ProduceProof.al_zero (by with_reducible assumption)
         have hd := ProduceProof.code_eq_zero (hal.symm.trans hal0)
         have hge : t2.regs.r12.toBitVec.toNat ≤ (1#64 + t2.regs.r14.toBitVec).toNat :=
@@ -598,7 +598,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
             (by rw [hA]; exact hdoneA), hQ]
         exact ⟨_, v, x2, hsb2.next rfl rfl rfl rfl rfl, h9, hallQ, hres⟩
       · left; simp only [var, String.reduceEq, ↓reduceIte]; omega
-  case «.LB252» t ht =>
+  case «.LB.spill_set.7» t ht =>
     simp only [Names.spill_set, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨f', y, x2, hsb, h9, hallQ, hres⟩ := ht
     have hc9 := s.regs.r9.toBitVec.isLt
@@ -606,7 +606,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
     kvcgen64
     all_goals try symexec_norm
     vc_by_shape
-    | goto ".LB255" =>
+    | goto ".LB.spill_set.9" =>
       cfg_goto
       · exact (hsb.next rfl rfl rfl rfl rfl).stack
       · simp only [Names.spill_set, String.reduceEq, ↓reduceIte]
@@ -615,7 +615,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
       · left
         simp only [var, rax, Reg64s.get64_rax, String.reduceEq, ↓reduceIte, BitVec.toNat_ofNat]
         omega
-  case «.LB255» t ht =>
+  case «.LB.spill_set.9» t ht =>
     simp only [Names.spill_set, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨f', y, x2, hsb, hlt, hallQ, hres⟩ := ht
     obtain ⟨R, hR⟩ := hsb.queriesArr
@@ -658,7 +658,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
       first
       | exact o1 | exact k1 | exact w1 | exact hld.1
       | (rw [ea]; exact (hspl (var_of_andb o2 k2 (by with_reducible assumption))).1)
-    | goto ".LB254" =>
+    | goto ".LB.spill_set.8" =>
       first
       | (have hv := notvar_of_andb o2 k2 (by with_reducible assumption)
          cfg_goto
@@ -674,7 +674,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
            refine ⟨f', y, x2, hsb.next rfl rfl rfl rfl rfl, hlt, hallQ, hres, q, hQs, ?_⟩
            rw [setWidth_replaceLow, ea, (hspl hv).2, setne_byte, g_var hv]
          · left; simp only [var, rax, Reg64s.get64_rax, String.reduceEq, ↓reduceIte]; omega)
-  case «.LB254» t ht =>
+  case «.LB.spill_set.8» t ht =>
     simp only [Names.spill_set, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨f', y, x2, hsb, hlt, hallQ, hres, q, hqs, hdl⟩ := ht
     have hc9 := s.regs.r9.toBitVec.isLt
@@ -705,7 +705,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
     all_goals try symexec_norm
     vc_by_shape
     | load => first | exact hlr.1 | (rw [er]; exact hsb.isSome_res hxr)
-    | goto ".LB274" =>
+    | goto ".LB.spill_set.10" =>
       have hz : (t.regs.r13.toBitVec - (1#64 + t.regs.rax.toBitVec) == BitVec.zero 64) = true := by
         with_reducible assumption
       have he := ProduceProof.eq_of_z hz
@@ -729,14 +729,14 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
     · left; simp only [var, rax, Reg64s.get64_rax, String.reduceEq, ↓reduceIte]
       have := hne (by assumption)
       omega
-  case «.LB274» t ht =>
+  case «.LB.spill_set.10» t ht =>
     simp only [Names.spill_set, String.reduceEq, ↓reduceIte, or_true, true_or, or_false,
       false_or, or_self] at ht
     obtain ⟨f', res', y, o, x2, hsb, hres⟩ := ht
     kvcgen64
     all_goals try symexec_norm
     vc_by_shape
-    | goto ".LB244" =>
+    | goto ".LB.spill_set.12" =>
       cfg_goto
       · exact (hsb.next rfl rfl rfl rfl rfl).stack
       · simp only [Names.spill_set, String.reduceEq, ↓reduceIte, or_self]
@@ -744,14 +744,14 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
       · left
         simp only [var, String.reduceEq, ↓reduceIte, or_true, true_or, or_false, false_or, or_self]
         omega
-  case «.LB262» t ht =>
+  case «.LB.spill_set.13» t ht =>
     simp only [Names.spill_set, String.reduceEq, ↓reduceIte, or_true, true_or, or_false,
       false_or, or_self] at ht
     obtain ⟨f', res', y, o, x2, hsb, hres⟩ := ht
     kvcgen64
     all_goals try symexec_norm
     vc_by_shape
-    | goto ".LB244" =>
+    | goto ".LB.spill_set.12" =>
       cfg_goto
       · exact (hsb.next rfl rfl rfl rfl rfl).stack
       · simp only [Names.spill_set, String.reduceEq, ↓reduceIte, or_self]
@@ -759,7 +759,7 @@ theorem spill_set_unit [Host] [FunDecls] (hadd : AddSpec) :
       · left
         simp only [var, String.reduceEq, ↓reduceIte, or_true, true_or, or_false, false_or, or_self]
         omega
-  case «.LB261» t ht =>
+  case «.LB.spill_set.11» t ht =>
     simp only [Names.spill_set, String.reduceEq, ↓reduceIte, or_self] at ht
     obtain ⟨f', res', y, o, x2, hsb, hres⟩ := ht
     kvcgen64

@@ -4,16 +4,16 @@ _ZN12_GLOBAL__N_18Emission8swapWithE11StackOffset:
 	movq	32(%rdi), %rsi
 	movl	$2, %ecx
 	cmpq	%rsi, %rdx
-	jnb	.LB35
+	jnb	.LB.Emission.swapWith.2
 	leaq	0(,%rdx,8), %rdi
 	cmpq	56(%rax,%rdx,8), %rdx
-	je	.LB35
+	je	.LB.Emission.swapWith.2
 	movq	%rsi, %rcx
 	subq	%rdx, %rcx
 	leaq	-2(%rcx), %r8
 	movl	$2, %ecx
 	cmpq	$15, %r8
-	ja	.LB35
+	ja	.LB.Emission.swapWith.2
 	movq	24(%rax), %r8
 	leaq	(%r8,%rdi), %rcx
 	movl	(%rcx), %r10d
@@ -49,16 +49,16 @@ _ZN12_GLOBAL__N_18Emission8swapWithE11StackOffset:
 	movq	%rsi, 56(%rax,%rcx,8)
 	movq	56(%rax,%rdx,8), %rsi
 	cmpq	$-1, %rsi
-	je	.LB37
+	je	.LB.Emission.swapWith.0
 	movq	%rdx, 8248(%rax,%rsi,8)
-.LB37:
+.LB.Emission.swapWith.0:
 	movq	56(%rax,%rcx,8), %rdx
 	cmpq	$-1, %rdx
-	je	.LB38
+	je	.LB.Emission.swapWith.1
 	movq	%rcx, 8248(%rax,%rdx,8)
-.LB38:
+.LB.Emission.swapWith.1:
 	movl	$0, %ecx
-.LB35:
+.LB.Emission.swapWith.2:
 	movl	%ecx, %eax
 	ret
 	.size	_ZN12_GLOBAL__N_18Emission8swapWithE11StackOffset, .-_ZN12_GLOBAL__N_18Emission8swapWithE11StackOffset

@@ -14,9 +14,9 @@ The caller is `produce`. The copy is a result of `shallowestCopyPosition` that i
 is below `size ≤ n`; the destination is `t < n`; `produceA` gives `len < n` and `nops < 6n`
 (`dupA`). `produce` uses the flat result (`dupQ`).
 
-The proof has one block for the body and one for `.LB14` (`movl %edx, %eax; ret`). The invariant
-of `.LB14` is the result: a ghost `g'` in the memory, `edx` the code of the `Status`. The three
-jumps to `.LB14` are the return label (`g' = g`), a used destination (`g'` after `Stack::dup`) and
+The proof has one block for the body and one for `.LB.Emission.dup.0` (`movl %edx, %eax; ret`). The invariant
+of `.LB.Emission.dup.0` is the result: a ghost `g'` in the memory, `edx` the code of the `Status`. The three
+jumps to `.LB.Emission.dup.0` are the return label (`g' = g`), a used destination (`g'` after `Stack::dup`) and
 the fall-through (`g'` after `Stack::dup` and `Mapping::bind`). The body names each store of the
 view (`View.store_*`, `OpM.store_*`) before `kvcgen64`, so each load and each exit has its view.
 -/
@@ -82,7 +82,7 @@ theorem trace_set {n N : Nat} (ops : Vector OpR n) (hN : N < n) (r : OpR) :
 
 theorem none_eq : Flat.NONE = 18446744073709551615#64 := rfl
 
--- `cmpb $3, 4(%rdi,%rsi,8); je .LB14`: the copy is a return label.
+-- `cmpb $3, 4(%rdi,%rsi,8); je .LB.Emission.dup.0`: the copy is a return label.
 theorem dup_frl {g : G} (hok : g.Ok) {c d : Word} (hc : c.toNat < g.h.n.toNat)
     (h : (BitVec.extractLsb' 32 8 g.stk[c.toNat] - 3#8 == BitVec.zero 8) = true) :
     Flat.dup (flat g) c d = (.assertionFailed, flat g) := by
@@ -106,7 +106,7 @@ theorem pos_dup {g : G} {c d : Word} (hd : d.toNat < MAX_N) :
     Flat.get (Flat.stackDup (flat g) c).pos d = g.h.pos[d.toNat] := by
   simp [Flat.get, Flat.stackDup, flat, hd]
 
--- `cmpq $-1, 8248(%rax,%rcx,8); jne .LB14`: the destination is used.
+-- `cmpq $-1, 8248(%rax,%rcx,8); jne .LB.Emission.dup.0`: the destination is used.
 theorem dup_used {g : G} (hok : g.Ok) {c d : Word} (hc : c.toNat < g.h.n.toNat)
     (hd : d.toNat < MAX_N)
     (h : (BitVec.extractLsb' 32 8 g.stk[c.toNat] - 3#8 == BitVec.zero 8) = false)
@@ -190,7 +190,7 @@ theorem dup_unit [Host] [FunDecls] : UnitThm dupAsm dupA 0 dupQ := by
       | .entry, t => t = s.pushRa ra
       | .label l, t =>
         if l = Names.dup then t = s.pushRa ra
-        else if l = ".LB14" then ∃ g', Kp S g' F s ra [] t ∧ g'.Ok ∧ Keep g g'
+        else if l = ".LB.Emission.dup.0" then ∃ g', Kp S g' F s ra [] t ∧ g'.Ok ∧ Keep g g'
           ∧ flat g' = (Flat.dup (flat g) (rsi s) (rdx s)).2
           ∧ (rdx t).setWidth 8 = code (Flat.dup (flat g) (rsi s) (rdx s)).1
         else False
@@ -201,7 +201,7 @@ theorem dup_unit [Host] [FunDecls] : UnitThm dupAsm dupA 0 dupQ := by
     subst ht
     kvcgen64
     simp only [Names.dup, ↓reduceIte]
-  case «.LB14» t ht =>
+  case «.LB.Emission.dup.0» t ht =>
     simp only [Names.dup, String.reduceEq, ↓reduceIte] at ht
     obtain ⟨g', hk, hok', hkeep, hflat, hcode⟩ := ht
     kvcgen64
@@ -279,7 +279,7 @@ theorem dup_unit [Host] [FunDecls] : UnitThm dupAsm dupA 0 dupQ := by
       | view_load
       | with_reducible exact View.isSome_slot_byte h0 hc (j := 4) (by decide)
     | closed => decide
-    | goto ".LB14" =>
+    | goto ".LB.Emission.dup.0" =>
       cfg_goto
       · exact hk0.stack
       · simp only [Names.dup, String.reduceEq, ↓reduceIte, hcs, hds]

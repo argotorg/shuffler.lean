@@ -1,7 +1,7 @@
 import BbuKraken.Unit.Permute.MD
 
 /-!
-# `permute`: the block `.LB73` (`exchange`)
+# `permute`: the block `.LB.Emission.permute.24` (`exchange`)
 -/
 
 open Std.WP Lean.Order
@@ -20,7 +20,7 @@ theorem top_m8i (d x : Word) :
   rw [show (-8 : Int64).toInt = -8 from rfl]; bv_omega
 
 
--- The record of `.LB73` after `dsimp`: `movb $0`, `movb %sil` (`sil` is `size + ~pos`),
+-- The record of `.LB.Emission.permute.24` after `dsimp`: `movb $0`, `movb %sil` (`sil` is `size + ~pos`),
 -- `movl $0`, `movb $1`, `movb $5`.
 theorem op_eq8 (l p : Word) :
     ({ kind := 0#8, depth := (l + ~~~p).extractLsb' 0 8, slot := ⟨0#32, 1#8, 5#8⟩ } : Op)
@@ -41,7 +41,7 @@ theorem le_of_na {d : Word}
     d ≤ 16#64 :=
   le_of_be (by rw [← Bool.not_or, Bool.not_eq_false'] at h; exact h)
 
--- The stores of `.LB73`: `Flat.stackSwap`, the two stores of `m_destinationOf` and the store of
+-- The stores of `.LB.Emission.permute.24`: `Flat.stackSwap`, the two stores of `m_destinationOf` and the store of
 -- `m_positionOf` for `pos`.
 theorem flat_ex (g : G) (hok : g.Ok) (p top : Word) (htop : g.h.len - 1 = top)
     (hpt : top.toNat ≠ p.toNat) (hn : g.h.nops.toNat < 6 * g.h.n.toNat)
@@ -104,7 +104,7 @@ macro "d3s" " at " h:ident : tactic => `(tactic| simp only [h15, hcx, hax, hlen,
   Vector.getElem_set_ne htM hpM htp] at $h:ident)
 
 theorem b_73 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB73" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.24" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht

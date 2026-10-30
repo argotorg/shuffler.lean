@@ -3,11 +3,11 @@ import BbuKraken.Specs
 /-!
 # The `vcgen` specs of `permute` that `BbuKraken.Specs` does not have
 
-`.LB62` of `c/bbu/<Names.permute>.S` has `xorq 0(%r13,%rax), %rdx`: an index with scale 1.
+`.LB.Emission.permute.5` of `c/bbu/<Names.permute>.S` has `xorq 0(%r13,%rax), %rdx`: an index with scale 1.
 `BbuKraken.Specs` has the xor with scale 8 only (`xor_reg_mem_idx8_spec`). The proof is the proof
 of `xor_reg_mem_idx8_spec`, with the address of `AddrExpr.zeroExtend_interp_base_idx`.
 
-`.LB73` has `xorq (%r9), %rdx`: a base and no index (`xor_reg_mem_disp_spec`). The proof uses
+`.LB.Emission.permute.24` has `xorq (%r9), %rdx`: a base and no index (`xor_reg_mem_disp_spec`). The proof uses
 the address of `AddrExpr.zeroExtend_interp_base_disp`.
 -/
 

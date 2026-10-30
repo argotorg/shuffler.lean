@@ -11,7 +11,7 @@ the kernel checks.
   invariant of the label, the variant.
 * `cfg_stk`: the stack goal, when `rsp` is below the entry `rsp`.
 * `cfg_blocks`: `cfg_cases`, then each block goal has the tag of its block
-  (`entry`, or the label), so `case «.LB11» t ht => …` selects it.
+  (`entry`, or the label), so `case «.LB.Emission.push.0» t ht => …` selects it.
 * `vc_by_shape | kind => tac …`: run `tac` on each goal of that kind.
 * `#cfg_skeleton p`: print a `Program.WP.cfg` proof skeleton for `p`.
 -/

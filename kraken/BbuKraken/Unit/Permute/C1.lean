@@ -3,8 +3,8 @@ import BbuKraken.Unit.Permute.ML
 /-!
 # `permute`: the blocks of phase C (the leader loop and `markDesired`)
 
-`.LB71` (with the call to `shallowestCopyPosition`), `.LB60`, `.LB62`, `.LB61` and `.LB95`.
-The stores of `.LB60` and `.LB62` go through `Fm.storeC0`, `Fm.storeC1` and `Fm.storeD`.
+`.LB.Emission.permute.14` (with the call to `shallowestCopyPosition`), `.LB.Emission.permute.13`, `.LB.Emission.permute.5`, `.LB.Emission.permute.4` and `.LB.Emission.permute.6`.
+The stores of `.LB.Emission.permute.13` and `.LB.Emission.permute.5` go through `Fm.storeC0`, `Fm.storeC1` and `Fm.storeD`.
 -/
 
 open Std.WP Lean.Order
@@ -18,7 +18,7 @@ namespace Permute
 
 theorem b_71 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s)
     (hcopy : Sep.Spec Names.shallowestCopyPosition shallowestCopyA 0 shallowestCopyQ) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB71" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.14" →
       Obl S g F s ra blk := by
   simp only [Names.shallowestCopyPosition] at hcopy
   pm_block [Obl]
@@ -75,7 +75,7 @@ theorem b_71 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
     · pm_dec
 
 theorem b_60 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB60" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.13" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -140,7 +140,7 @@ theorem b_60 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
     pm_dec
 
 theorem b_62 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB62" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.5" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -202,7 +202,7 @@ theorem b_62 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
     · pm_dec
 
 theorem b_61 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB61" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.4" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -249,7 +249,7 @@ theorem b_61 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
     pm_dec
 
 theorem b_95 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB95" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.6" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht

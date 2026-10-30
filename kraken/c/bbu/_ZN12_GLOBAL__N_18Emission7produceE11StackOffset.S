@@ -22,33 +22,33 @@ _ZN12_GLOBAL__N_18Emission7produceE11StackOffset:
 	call	_ZNK12_GLOBAL__N_18Emission22shallowestCopyPositionE9StackSlot
 	movq	%rax, (%rsp)
 	cmpb	$1, %r13b
-	je	.LB33
+	je	.LB.Emission.produce.4
 	movq	(%rsp), %rax
 	cmpq	$-1, %rax
-	je	.LB21
+	je	.LB.Emission.produce.0
 	notq	%rax
 	addq	32(%rbx), %rax
 	cmpq	$15, %rax
-	jbe	.LB22
-.LB21:
+	jbe	.LB.Emission.produce.5
+.LB.Emission.produce.0:
 	cmpb	$2, %r13b
-	je	.LB23
+	je	.LB.Emission.produce.1
 	testb	%r15b, %r15b
-	jne	.LB34
-.LB23:
+	jne	.LB.Emission.produce.6
+.LB.Emission.produce.1:
 	movq	%r12, %rdx
 	movq	%rbp, %rsi
 	movq	%rbx, %rdi
 	call	_ZN12_GLOBAL__N_18Emission4pushE9StackSlot11StackOffset
-.LB20:
+.LB.Emission.produce.2:
 	testb	%al, %al
-	jne	.LB18
+	jne	.LB.Emission.produce.3
 	movq	32(%rbx), %rcx
 	leaq	-1(%rcx), %rdx
 	cmpq	%rdx, 8248(%rbx,%r14)
-	jne	.LB29
+	jne	.LB.Emission.produce.7
 	subq	$1, 16440(%rbx)
-.LB18:
+.LB.Emission.produce.3:
 	addq	$8, %rsp
 	popq	%rbx
 	popq	%rbp
@@ -57,38 +57,38 @@ _ZN12_GLOBAL__N_18Emission7produceE11StackOffset:
 	popq	%r14
 	popq	%r15
 	ret
-.LB33:
+.LB.Emission.produce.4:
 	movq	%r12, %rdx
 	movq	%rbp, %rsi
 	movq	%rbx, %rdi
 	call	_ZN12_GLOBAL__N_18Emission4pushE9StackSlot11StackOffset
-	jmp	.LB20
-.LB22:
+	jmp	.LB.Emission.produce.2
+.LB.Emission.produce.5:
 	movq	%r12, %rdx
 	movq	(%rsp), %rsi
 	movq	%rbx, %rdi
 	call	_ZN12_GLOBAL__N_18Emission3dupE11StackOffsetS1_
-	jmp	.LB20
-.LB34:
+	jmp	.LB.Emission.produce.2
+.LB.Emission.produce.6:
 	movq	%rbp, %rsi
 	movq	%rbx, %rdi
 	call	_ZNK12_GLOBAL__N_18Emission9isSpilledE9StackSlot
 	testb	%al, %al
-	jne	.LB23
+	jne	.LB.Emission.produce.1
 	movl	$2, %eax
 	cmpq	$-1, (%rsp)
-	je	.LB18
+	je	.LB.Emission.produce.3
 	movq	$-16, %rdx
 	movq	(%rsp), %rcx
 	subq	%rcx, %rdx
 	movl	$2, %eax
 	addq	32(%rbx), %rdx
-	je	.LB18
+	je	.LB.Emission.produce.3
 	movq	%rcx, 16448(%rbx)
 	movq	%rdx, 16456(%rbx)
 	movl	$1, %eax
-	jmp	.LB18
-.LB29:
+	jmp	.LB.Emission.produce.3
+.LB.Emission.produce.7:
 	movl	$2, %eax
-	jmp	.LB18
+	jmp	.LB.Emission.produce.3
 	.size	_ZN12_GLOBAL__N_18Emission7produceE11StackOffset, .-_ZN12_GLOBAL__N_18Emission7produceE11StackOffset

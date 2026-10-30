@@ -128,13 +128,13 @@ theorem bsu_eq {st : Flat.St} {pos : Word} (h : ¬(st.size - pos - 1#64 ≤ 16#6
 
 /-! ## The permutation -/
 
--- The offset at `.LB73` is misplaced: the swap keeps `Bij` and makes `mu` smaller.
+-- The offset at `.LB.Emission.permute.24` is misplaced: the swap keeps `Bij` and makes `mu` smaller.
 theorem Mis.step {n pos : Word} {p : Vector Word MAX_N} (hn : n.toNat ≤ MAX_N) (hb : Bij n p)
     (h : Mis n pos p) :
     Bij n (swapP p (n - 1) pos) ∧ mu (n - 1) (swapP p (n - 1) pos) < mu (n - 1) p :=
   ⟨swapP_bij hn hb (by have := h.1; bv_omega) h.1, swapP_mu hn hb h.1 h.2.1 h.2.2⟩
 
--- The two stores of `.LB80` into `permutation`.
+-- The two stores of `.LB.Emission.permute.22` into `permutation`.
 theorem agB_swap {n top pos : Word} {P p : Vector Word MAX_N} (h : AgB n P p) (ht : top < n)
     (hpos : pos < n) (htM : top.toNat < MAX_N) (hpM : pos.toNat < MAX_N) :
     AgB n ((P.set pos.toNat P[top.toNat] hpM).set top.toNat P[pos.toNat] htM) (swapP p top pos) := by

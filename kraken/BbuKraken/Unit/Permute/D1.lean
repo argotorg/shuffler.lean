@@ -3,7 +3,7 @@ import BbuKraken.Unit.Permute.MD
 /-!
 # `permute`: the blocks of phase D without stores
 
-`.LB96`, `.LB84`, `.LB86`, `.LB72`, `.LB97` and `.LB74`.
+`.LB.Emission.permute.15`, `.LB.Emission.permute.23`, `.LB.Emission.permute.16`, `.LB.Emission.permute.17`, `.LB.Emission.permute.18` and `.LB.Emission.permute.19`.
 -/
 
 open Std.WP Lean.Order
@@ -16,7 +16,7 @@ open Bbu.Sep
 namespace Permute
 
 theorem b_96 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB96" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.15" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -39,7 +39,7 @@ theorem b_96 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
       exact Or.inr rfl
 
 theorem b_84 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB84" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.23" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -87,7 +87,7 @@ theorem b_84 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
     pd_dec
 
 theorem b_86 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB86" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.16" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -106,7 +106,7 @@ theorem b_86 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
     pd_dec
 
 theorem b_72 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB72" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.17" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -171,7 +171,7 @@ theorem b_72 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F permuteA 2058 
       pd_dec
 
 theorem b_97 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB97" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.18" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -189,7 +189,7 @@ theorem b_97 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F permuteA 2058
     · pm_dec
 
 theorem b_74 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F permuteA 2058 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB74" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.19" →
       Obl S g F s ra blk := by
   pm_block [Obl]
   intro t ht
