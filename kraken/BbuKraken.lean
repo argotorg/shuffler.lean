@@ -65,6 +65,8 @@ import BbuKraken.Unit.IsSpilledTest
 import BbuKraken.Unit.Loop
 import BbuKraken.Unit.Permute
 import BbuKraken.Unit.Produce
+import BbuKraken.Unit.ProduceLemmas
+import BbuKraken.Unit.ProduceLemmasTest
 import BbuKraken.Unit.Push
 import BbuKraken.Unit.PushTest
 import BbuKraken.Unit.ShallowestCopy
