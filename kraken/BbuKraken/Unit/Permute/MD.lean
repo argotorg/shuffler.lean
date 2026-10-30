@@ -43,6 +43,10 @@ theorem mD_eq {S : Addr} {g g' : G} {F : MProp 64} {s : MachineData} {ra : Int64
 theorem mD_mk {s : MachineData} {g : G} {t : MachineData} {r z st} :
     mD s g { regs := r, zmms := z, status := st, dmem := t.dmem } = mD s g t := rfl
 
+-- `mD` reads the memory only: the state `t` with the memory `m`.
+theorem mD_dmem {s g : _} {r z st m} (t : MachineData) :
+    mD s g { regs := r, zmms := z, status := st, dmem := m } = mD s g { t with dmem := m } := rfl
+
 -- The variant goal of an edge of phase D without stores (`mD_mk`).
 macro "pd_dec" : tactic => `(tactic| (
   simp only [V, wC, mD_mk, Names.permute, String.reduceEq, ↓reduceIte, Nat.reducePow,

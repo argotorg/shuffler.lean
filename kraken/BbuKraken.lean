@@ -57,6 +57,7 @@ import BbuKraken.Unit.Permute.Cfg
 import BbuKraken.Unit.Permute.CfgTest
 import BbuKraken.Unit.Permute.D1
 import BbuKraken.Unit.Permute.D2
+import BbuKraken.Unit.Permute.D3
 import BbuKraken.Unit.Permute.Frame
 import BbuKraken.Unit.Permute.Inv
 import BbuKraken.Unit.Permute.MD

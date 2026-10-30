@@ -58,10 +58,6 @@ theorem b_99 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F permuteA 2058
       · rw [hp, hr]; rfl
     · pm_dec
 
--- `mD` reads the memory only: the state `t` with the memory `m`.
-theorem mD_dmem {s g : _} {r z st m} (t : MachineData) :
-    mD s g { regs := r, zmms := z, status := st, dmem := m } = mD s g { t with dmem := m } := rfl
-
 -- The variant of the edge `.LB80` to `.LB84`.
 theorem lt80 {a b : Nat} (h : a < b) : 2048 * a + 1101 < 2048 * b := by omega
 
