@@ -2532,6 +2532,389 @@ void emitProperties()
 
 }
 
+/// The inputs of plan: the source and the target, the spill set (a byte for each variable id), spillingAllowed and
+/// the strategy
+struct Plan
+{
+	std::vector<StackSlot> source;
+	std::vector<StackSlot> target;
+	std::vector<std::uint8_t> spilled;
+	std::uint8_t allowed;
+	std::uint8_t strategy;
+};
+
+/// The outputs of plan: its result, the spill set, the dropped bytes and sawWildcardCopy, and after a plan the stack
+/// (n slots), the operations and the source offset of each target offset
+struct Planned
+{
+	std::int64_t result;
+	std::vector<std::uint8_t> spilled;
+	std::vector<std::uint8_t> dropped;
+	std::uint8_t saw;
+	std::vector<StackSlot> data;
+	std::vector<ShuffleOp> ops;
+	std::vector<Optional<StackOffset>> sources;
+};
+
+/// The values of the outputs of plan before a call
+std::uint8_t constexpr guardPlan = 0x77;
+
+/// plan on `_in`. The buffers have the room of the contract and no more, so that AddressSanitizer finds a write past
+/// it; the spill set and the dropped bytes have a guard byte. Before the call each dropped byte is guardPlan, the data
+/// unwrittenSlot, each source offset unwritten, and each operation a Store. A result of -2 must leave saw and the
+/// source offsets as they are, and a result of -1 the source offsets.
+Planned planOn(Plan const& _in)
+{
+	std::size_t const m = _in.source.size();
+	std::size_t const n = _in.target.size();
+	std::vector<std::uint8_t> spilled = _in.spilled;
+	spilled.push_back(guardPlan);
+	std::vector<std::uint8_t> dropped(m + 1, guardPlan);
+	std::uint8_t saw[2] = {guardPlan, guardPlan};
+	std::vector<StackSlot> data(std::max(m, n), unwrittenSlot);
+	std::vector<ShuffleOp> ops(4 * m + 6 * n, ShuffleOp{ShuffleOp::Kind::Store, 0, StackSlot::makeJunk()});
+	std::vector<Optional<StackOffset>> sources(n, unwritten);
+	std::int64_t const result = plan(m, n, _in.source.data(), _in.target.data(), spilled.data(), _in.spilled.size(),
+		_in.allowed, _in.strategy, dropped.data(), saw, data.data(), ops.data(), sources.data());
+	expect(spilled.back() == guardPlan && dropped.back() == guardPlan && saw[1] == guardPlan,
+		"plan: writes past the buffers");
+	bool const noSources = sources == std::vector<Optional<StackOffset>>(n, unwritten);
+	expect(result != -2 || (saw[0] == guardPlan && noSources), "plan: writes saw or a source offset with -2");
+	expect(result != -1 || noSources, "plan: writes a source offset with -1");
+	spilled.pop_back();
+	dropped.pop_back();
+	if (result >= 0)
+	{
+		data.resize(n);
+		ops.resize(static_cast<std::size_t>(result));
+	}
+	return {result, spilled, dropped, saw[0], data, ops, sources};
+}
+
+/// The word of Fuzz/Oracle.lean for `_slot`, the inverse of slotOf; another slot is in angle brackets
+std::string wordOf(StackSlot const _slot)
+{
+	for (std::string const word: {"_", "R"})
+		if (sameSlot(_slot, slotOf(word)))
+			return word;
+	std::string const payload = std::to_string(_slot.payload);
+	for (std::string const& word: {"v" + payload, "l" + payload})
+		if (sameSlot(_slot, slotOf(word)))
+			return word;
+	return "<slot>";
+}
+
+/// `_out` in the result format of Fuzz/Oracle.lean: "ok", success (1 for a count, 0 for -1), sawWildcardCopy, the
+/// spilled variable ids and the dropped bytes, and after a plan the stack, the operations and the source offsets; or
+/// "err" for -2. An output outside the contract of plan is in angle brackets.
+std::string show(Planned const& _out)
+{
+	if (_out.result == -2)
+		return "err";
+	if (_out.result < -2)
+		return "<result " + std::to_string(_out.result) + ">";
+	if (_out.saw > 1)
+		return "<saw " + std::to_string(_out.saw) + ">";
+	std::string const head = show(Resolved{_out.result >= 0 ? 0 : -1, _out.spilled, _out.dropped});
+	// the spilled ids and the dropped bytes of show(Resolved), after sawWildcardCopy
+	std::string const result = head.substr(0, 4) + ";" + std::to_string(_out.saw) + head.substr(4);
+	if (_out.result == -1)
+		return result;
+	std::vector<std::string> words;
+	auto const joined = [&] {
+		std::string s;
+		for (std::string const& word: words)
+			s += (s.empty() ? "" : " ") + word;
+		words.clear();
+		return s;
+	};
+	for (StackSlot const slot: _out.data)
+		words.push_back(wordOf(slot));
+	std::string const stack = joined();
+	for (ShuffleOp const op: _out.ops)
+		switch (op.kind)
+		{
+		case ShuffleOp::Kind::Swap: words.push_back("SWAP" + std::to_string(op.depth)); break;
+		case ShuffleOp::Kind::Dup: words.push_back("DUP" + std::to_string(op.depth)); break;
+		case ShuffleOp::Kind::Pop: words.push_back("POP"); break;
+		case ShuffleOp::Kind::Push: words.push_back("PUSH:" + wordOf(op.slot)); break;
+		case ShuffleOp::Kind::Load: words.push_back("LOAD:" + wordOf(op.slot)); break;
+		case ShuffleOp::Kind::Store: words.push_back("<store>"); break;
+		}
+	std::string const operations = joined();
+	for (Optional<StackOffset> const source: _out.sources)
+		words.push_back(source == unwritten ? "<unwritten>" : source ? std::to_string(source->value) : "-");
+	return result + ";" + stack + ";" + operations + ";" + joined();
+}
+
+/// The inputs of a "plan" case of Fuzz/Oracle.lean: "plan;" strategy ";" bit ";" source ";" target ";" vars. The
+/// spill set has a byte for each variable id up to the largest one of the case.
+Plan parsePlan(std::string const& _line)
+{
+	std::vector<std::string> const f = fields(_line, ';');
+	Plan in{};
+	in.strategy = f.at(1) == "T";
+	in.allowed = f.at(2) == "1";
+	for (std::string const& word: wordsOf(f.at(3)))
+		in.source.push_back(slotOf(word));
+	for (std::string const& word: wordsOf(f.at(4)))
+		in.target.push_back(slotOf(word));
+	std::size_t idCount = 0;
+	for (std::vector<StackSlot> const* stack: {&in.source, &in.target})
+		for (StackSlot const slot: *stack)
+			if (isVariable(slot))
+				idCount = std::max<std::size_t>(idCount, slot.payload + 1);
+	for (std::string const& word: wordsOf(f.at(5)))
+		idCount = std::max<std::size_t>(idCount, std::stoul(word) + 1);
+	in.spilled.assign(idCount, 0);
+	for (std::string const& word: wordsOf(f.at(5)))
+		in.spilled[std::stoul(word)] = 1;
+	return in;
+}
+
+/// plan on `_line` gives `_model`
+void plans(std::string const& _line, std::string const& _model)
+{
+	std::string const port = show(planOn(parsePlan(_line)));
+	if (port != _model)
+		std::fprintf(stderr, "plan: %.300s => %.300s, the model: %.300s\n", _line.c_str(), port.c_str(),
+			_model.c_str());
+	expect(port == _model, "plan: the result of the model");
+}
+
+/// plan against the model: each model result is the output of Fuzz/Oracle.lean (runLine on Planner.run) on the case
+void planCases()
+{
+	plans("plan;L;0;;;", "ok 1;0;;;;;");
+	plans("plan;L;0;v0 v1;v1 v0;", "ok 1;0;;0 0;v1 v0;SWAP1;1 0");
+	// the target check: v1 is not on the source and not spilled; spilled, it is loaded
+	plans("plan;L;0;v0;v1;", "err");
+	plans("plan;L;0;v0;v1;1", "ok 1;0;1;0;v1;POP LOAD:v1;-");
+	plans("plan;L;0;v0;l5 _ v0;", "ok 1;0;;0;l5 _ v0;PUSH:_ PUSH:l5 SWAP2;- - 0");
+	plans("plan;L;0;v0 R;R;", "ok 1;0;;0 0;R;SWAP1 POP;1");
+	// a failed assertion after the target check: R can not be duplicated
+	plans("plan;L;0;R;R R;", "err");
+	// the strategy: Leave duplicates the copy in the wildcard slot, Take moves it
+	plans("plan;L;0;v0 v1;_ v0;", "ok 1;1;;0 0;v0 v0;POP DUP1;0 -");
+	plans("plan;T;0;v0 v1;_ v0;", "ok 1;1;;0 0;v1 v0;SWAP1;1 0");
+
+	// v0 is out of reach: the first attempt is blocked; resolve drops v17 with a new spill (class 4), and the second
+	// attempt loads it
+	std::string const deep = numbered("v", 1, 17);
+	std::string const planned = "POP SWAP1 SWAP2 SWAP3 SWAP4 SWAP5 SWAP6 SWAP7 SWAP8 SWAP9 SWAP10 SWAP11 SWAP12 SWAP13 "
+		"SWAP14 SWAP15 SWAP16 LOAD:v17 SWAP1;1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 - 0";
+	plans("plan;L;1;v0 " + deep + ";" + deep + " v0;",
+		"ok 1;0;17;" + repeated("0", 17) + " 1;" + deep + " v0;" + planned);
+	// without spillingAllowed nothing can be dropped; with v0 spilled, nothing is spilled either
+	plans("plan;L;0;v0 " + deep + ";" + deep + " v0;", "ok 0;0;;" + repeated("0", 18));
+	plans("plan;L;0;v0 " + deep + ";" + deep + " v0;0", "ok 0;0;0;" + repeated("0", 18));
+	plans("plan;L;1;R " + deep + ";" + deep + " R;", "ok 1;0;17;" + repeated("0", 17) + " 1;" + deep + " R;" + planned);
+	plans("plan;L;0;R " + deep + ";" + deep + " R;", "ok 0;0;;" + repeated("0", 18));
+	plans("plan;L;0;v0 " + deep + ";" + deep + " v0 v0;", "ok 0;0;;" + repeated("0", 18));
+	plans("plan;T;1;l0 " + deep + ";" + deep + " l0;", "ok 1;0;17;" + repeated("0", 17) + " 1;" + deep + " l0;" + planned);
+	// two drops: the surplus copy of v0 (class 0) and v17 (class 4)
+	plans("plan;L;1;v0 " + deep + " v0;" + deep + " v0;",
+		"ok 1;0;0 17;" + repeated("0", 17) + " 1 1;" + deep + " v0;POP " + planned);
+}
+
+/// The domain of the plan entry: outside it the result is -2 and nothing is written
+void planEntry()
+{
+	Plan const base = parsePlan("plan;L;1;v0 v1;v1 v0;");
+	expect(show(planOn(base)) == "ok 1;0;;0 0;v1 v0;SWAP1;1 0", "plan: the base case");
+	auto const rejects = [](Plan const& _in, char const* const _what) {
+		Planned const out = planOn(_in);
+		std::size_t const m = _in.source.size();
+		std::size_t const n = _in.target.size();
+		expect(out.result == -2 && out.spilled == _in.spilled && out.saw == guardPlan &&
+				out.dropped == std::vector<std::uint8_t>(m, guardPlan) &&
+				std::all_of(out.data.begin(), out.data.end(), [](StackSlot const _s) { return sameSlot(_s, unwrittenSlot); }) &&
+				std::all_of(out.ops.begin(), out.ops.end(), [](ShuffleOp const _op) { return _op.kind == ShuffleOp::Kind::Store; }) &&
+				out.sources == std::vector<Optional<StackOffset>>(n, unwritten),
+			_what);
+	};
+	for (std::uint8_t const value: {2, 255})
+	{
+		Plan allowed = base;
+		allowed.allowed = value;
+		rejects(allowed, "plan: spillingAllowed is not 0 or 1");
+		Plan strategy = base;
+		strategy.strategy = value;
+		rejects(strategy, "plan: the strategy is not 0 or 1");
+	}
+	Plan sourceId = parsePlan("plan;L;1;v0 v4;v0;");
+	sourceId.spilled.resize(4);
+	rejects(sourceId, "plan: a source variable id not below idCount");
+	Plan targetId = parsePlan("plan;L;1;v0;v0 v4;4");
+	targetId.spilled.resize(4);
+	rejects(targetId, "plan: a target variable id not below idCount");
+	Plan noIds = base;
+	noIds.spilled.clear();
+	rejects(noIds, "plan: no ids");
+	Plan tallSource = base;
+	tallSource.source.assign(1025, variable(0));
+	rejects(tallSource, "plan: 1025 source slots");
+	Plan tallTarget = base;
+	tallTarget.target.assign(1025, variable(0));
+	rejects(tallTarget, "plan: 1025 target slots");
+
+	// in the domain: the payload of a literal above idCount, and no ids
+	Plan const literal = parsePlan("plan;L;0;R l1000;l1000 R;");
+	expect(literal.spilled.empty() && show(planOn(literal)) == "ok 1;0;;0 0;l1000 R;SWAP1;1 0",
+		"plan: a literal above idCount");
+	// the stack limit: 1024 slots, in place
+	std::string const vars = numbered("v", 0, 1023);
+	expect(show(planOn(parsePlan("plan;T;1;" + vars + ";" + vars + ";"))) ==
+			"ok 1;0;;" + repeated("0", 1024) + ";" + vars + ";;" + numbered("", 0, 1023),
+		"plan: 1024 slots");
+}
+
+/// The outputs of the loop of Planner.run (Shuffler/Planner/Run/Defs.lean) on the entries build_mapping, emit and
+/// resolve, with the number of attempts and the sawWildcardCopy of the last attempt
+struct Composed
+{
+	Planned out;
+	std::size_t attempts;
+	std::uint8_t lastSaw;
+};
+
+Composed composed(Plan const& _in)
+{
+	std::size_t const m = _in.source.size();
+	std::size_t const n = _in.target.size();
+	Planned out{-2, _in.spilled, std::vector<std::uint8_t>(m, 0), 0, {}, {}, {}};
+	for (StackSlot const slot: _in.target)
+		if (!(canBeFreelyGenerated(slot) ||
+				std::any_of(_in.source.begin(), _in.source.end(), [&](StackSlot const _s) { return _s == slot; }) ||
+				(isVariable(slot) && _in.spilled.at(slot.payload) != 0)))
+			return {out, 0, 0};
+	for (std::size_t attempt = 1;; ++attempt)
+	{
+		Built const built = buildMapping(_in.source, _in.target, out.dropped, _in.strategy);
+		if (built.result != 0)
+			return {out, attempt, 0};
+		out.saw |= built.saw;
+		std::vector<Optional<StackOffset>> dest(m, none);
+		for (std::size_t j = 0; j < n; ++j)
+			if (Opt const source = built.sources[j])
+				dest[*source] = offset(j);
+		Emitted const e = emitted(_in.source, dest, _in.target, out.spilled);
+		if (e.count == -2)
+			return {out, attempt, built.saw};
+		if (e.blocked[0] == 0 && e.blocked[1] == 0)
+		{
+			out.result = e.count;
+			out.data.assign(e.data.begin(), e.data.begin() + static_cast<std::ptrdiff_t>(n));
+			out.ops.assign(e.ops.begin(), e.ops.begin() + e.count);
+			for (Opt const source: built.sources)
+				out.sources.push_back(source ? offset(*source) : none);
+			return {out, attempt, built.saw};
+		}
+		Resolve const r{_in.source, _in.target, dest,
+			std::vector<Optional<StackOffset>>(e.dest.begin(), e.dest.begin() + static_cast<std::ptrdiff_t>(e.height)),
+			e.blocked[0], e.blocked[1], out.spilled, _in.allowed, out.dropped};
+		auto const droppedCount = [](std::vector<std::uint8_t> const& _dropped) {
+			return std::count_if(_dropped.begin(), _dropped.end(), [](std::uint8_t const _b) { return _b != 0; });
+		};
+		std::ptrdiff_t const before = droppedCount(out.dropped);
+		Resolved const resolved = resolveOn(r);
+		if (resolved.result == -2)
+			return {out, attempt, built.saw};
+		out.spilled = resolved.spilled;
+		out.dropped = resolved.dropped;
+		if (resolved.result == -1)
+		{
+			out.result = -1;
+			return {out, attempt, built.saw};
+		}
+		if (droppedCount(out.dropped) <= before)
+			return {Planned{-2, out.spilled, out.dropped, out.saw, {}, {}, {}}, attempt, built.saw};
+	}
+}
+
+/// plan on random cases against the composition of build_mapping, emit and resolve in the loop of Planner.run. Also:
+/// a plan ends with the target, each slot that is not junk at its offset; each source offset of the plan is distinct
+/// and of a slot that is not dropped; the spill set only grows, by source variables that are dropped; and the count
+/// is at most 2m + 6n.
+void planProperties()
+{
+	std::mt19937_64 random{20261030};
+	auto const below = [&](std::size_t const _bound) {
+		return std::uniform_int_distribution<std::size_t>{0, _bound - 1}(random);
+	};
+	// the runs that fail the target check, that err later, that are stuck, that plan after two or more attempts, and
+	// in which sawWildcardCopy is 1 but 0 in the last attempt: the generator has to reach each case
+	unsigned long targetRuns = 0;
+	unsigned long failedRuns = 0;
+	unsigned long stuckRuns = 0;
+	unsigned long retryRuns = 0;
+	unsigned long sawRuns = 0;
+	for (unsigned long run = 0; run < 20000; ++run)
+	{
+		std::size_t const m = below(run % 100 == 0 ? 120 : 26);
+		std::size_t const ids = 2 + below(3) * m / 2;
+		// few distinct slots, so that copies and equal slots are common
+		auto const slot = [&] {
+			return below(4) == 0 ? nonVariables(static_cast<std::uint32_t>(below(2)))[below(4)] :
+				variable(static_cast<std::uint32_t>(below(ids)));
+		};
+		Plan in{};
+		for (std::size_t i = 0; i < m; ++i)
+			in.source.push_back(slot());
+		// mostly slots of the source, so that most runs pass the target check
+		std::size_t const n = below(run % 100 == 0 ? 120 : 26);
+		for (std::size_t j = 0; j < n; ++j)
+			in.target.push_back(m > 0 && below(8) != 0 ? in.source[below(m)] : slot());
+		if (below(4) == 0)
+			std::reverse(in.target.begin(), in.target.end());
+		in.spilled.assign(ids + below(2), 0);
+		for (std::uint8_t& byte: in.spilled)
+			byte = below(6) == 0;
+		in.allowed = static_cast<std::uint8_t>(below(2));
+		in.strategy = static_cast<std::uint8_t>(below(2));
+
+		Planned const out = planOn(in);
+		Composed const reference = composed(in);
+		expect(show(out) == show(reference.out), "plan: the composition of the entries", run);
+		targetRuns += reference.attempts == 0;
+		failedRuns += reference.attempts > 0 && out.result == -2;
+		stuckRuns += out.result == -1;
+		retryRuns += out.result >= 0 && reference.attempts >= 2;
+		sawRuns += out.saw == 1 && reference.lastSaw == 0;
+		if (out.result == -2)
+			continue;
+		for (std::size_t id = 0; id < in.spilled.size(); ++id)
+			if (out.spilled[id] != in.spilled[id])
+			{
+				bool droppedVariable = false;
+				for (std::size_t i = 0; i < m; ++i)
+					droppedVariable = droppedVariable ||
+						(sameSlot(in.source[i], variable(static_cast<std::uint32_t>(id))) && out.dropped[i] == 1);
+				expect(in.spilled[id] == 0 && out.spilled[id] == 1 && droppedVariable,
+					"plan: a new spill is a dropped source variable", run);
+			}
+		if (out.result < 0)
+			continue;
+		expect(static_cast<std::size_t>(out.result) <= 2 * m + 6 * n, "plan: at most 2m + 6n operations", run);
+		std::vector<bool> seen(m, false);
+		for (std::size_t j = 0; j < n; ++j)
+		{
+			expect(in.target[j].isJunk() || sameSlot(out.data[j], in.target[j]), "plan: the target", run);
+			if (Optional<StackOffset> const source = out.sources[j])
+			{
+				expect(source->value < m && !seen[source->value] && out.dropped[source->value] == 0,
+					"plan: the source offsets", run);
+				if (source->value < m)
+					seen[source->value] = true;
+			}
+		}
+	}
+	std::fprintf(stderr, "plan: %lu target, %lu failed, %lu stuck, %lu retry and %lu saw runs\n", targetRuns,
+		failedRuns, stuckRuns, retryRuns, sawRuns);
+	expect(targetRuns > 0 && failedRuns > 0 && stuckRuns > 0 && retryRuns > 0 && sawRuns > 0,
+		"plan: the generator reaches each case");
+}
+
 int main()
 {
 	stackPop();
@@ -2558,6 +2941,9 @@ int main()
 	resolveProperties();
 	emitEntry();
 	emitProperties();
+	planCases();
+	planEntry();
+	planProperties();
 	if (failures > 0)
 	{
 		std::fprintf(stderr, "%d failures\n", failures);

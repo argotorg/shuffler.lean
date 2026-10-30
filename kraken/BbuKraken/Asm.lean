@@ -50,6 +50,8 @@ public def resolveEntryAsm : Program := bbuParseFn(Names.resolveEntry)
 public def isAvailableAsm : Program := bbuParseFn(Names.isAvailable)
 public def runAsm : Program := bbuParseFn(Names.run)
 public def emitAsm : Program := bbuParseFn(Names.emit)
+public def plannerRunAsm : Program := bbuParseFn(Names.plannerRun)
+public def planAsm : Program := bbuParseFn(Names.plan)
 
 set_option maxRecDepth 100000 in
 /-- `c/build_bottom_up.S`, the file that `bbu_harness` links. -/

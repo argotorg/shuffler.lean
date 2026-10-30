@@ -15,7 +15,7 @@ example : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm ++ pro
     ++ mapAsm ++ closestCopyAsm ++ mapInPlaceAsm ++ mapClosestCopiesAsm ++ mapWildcardSlotCopiesAsm
     ++ keepWildcardSlotsAsm ++ absorbSurplusAsm ++ buildMappingAsm ++ isRetainedAsm
     ++ hasOtherRetainedCopyAsm ++ isDemandedAsm ++ classifyAsm ++ resolveAsm ++ resolveEntryAsm
-    ++ isAvailableAsm ++ runAsm ++ emitAsm := by
+    ++ isAvailableAsm ++ runAsm ++ emitAsm ++ plannerRunAsm ++ planAsm := by
   rfl
 
 -- `bbuParseFile` reads `leaq disp(,%i,8), %r` as the operand with no base.
@@ -50,7 +50,8 @@ example : (bbuAsm.filter fun
      .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .r14 .W64) ⟨none, some ⟨.rcx, .W64⟩, .int64 0⟩))] := by
+     .instr (.regular .W64 .W64 (.lea (.low .r14 .W64) ⟨none, some ⟨.rcx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rcx, .W64⟩, .int64 0⟩))] := by
   rfl
 
 -- `bbuParseFn` reads the file of the name.
@@ -68,6 +69,8 @@ example : (permuteAtLowestHeightAsm.head? = some (.label Names.permuteAtLowestHe
 example : (isAvailableAsm.head? = some (.label Names.isAvailable)) := by rfl
 example : (runAsm.head? = some (.label Names.run)) := by rfl
 example : (emitAsm.head? = some (.label Names.emit)) := by rfl
+example : (plannerRunAsm.head? = some (.label Names.plannerRun)) := by rfl
+example : (planAsm.head? = some (.label Names.plan)) := by rfl
 example : (permuteAtLowestHeightEntryAsm.head? = some (.label Names.permute_at_lowest_height)) := by
   rfl
 example : (mapAsm.head? = some (.label Names.map)) := by rfl

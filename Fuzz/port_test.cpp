@@ -76,8 +76,8 @@ std::string times(std::string const& _word, int const _count)
 
 int main()
 {
-	// the kinds without a port unit
-	for (std::string const line: {"plan;L;0;;;"})
+	// each kind of the model has a port unit; a line of another kind has none
+	for (std::string const line: {"", "x;;", "plans;L;0;;;"})
 		expect(!port::check(line, "ok;;;").has_value(), "no port unit for: " + line);
 
 	// buildBottomUp: each slot kind, each operation kind, equal slots, blocked with and without operations
@@ -830,6 +830,63 @@ int main()
 	throws("emit;v0 v1;v0 v1;0 0;");
 	throws("emit;" + times("_", 1025) + ";;" + times("-", 1025) + ";");
 	throws("emit;;" + times("_", 1025) + ";;");
+
+	// plan: an empty source and target, a swap, the target check (v1 is not on the source and not spilled; spilled,
+	// it is loaded), generated slots, a surplus slot, an assertion after the target check (R can not be duplicated),
+	// the strategy (Leave duplicates the copy in the wildcard slot, Take moves it)
+	agrees("plan;L;0;;;", "ok 1;0;;;;;", "ok 1;0;;;;;");
+	agrees("plan;L;0;v0 v1;v1 v0;", "ok 1;0;;0 0;v1 v0;SWAP1;1 0", "ok 1;0;;0 0;v1 v0;SWAP1;1 0");
+	agrees("plan;L;0;v0;v1;", "err", "err");
+	agrees("plan;L;0;v0;v1;1", "ok 1;0;1;0;v1;POP LOAD:v1;-", "ok 1;0;1;0;v1;POP LOAD:v1;-");
+	agrees("plan;L;0;v0;l5 _ v0;", "ok 1;0;;0;l5 _ v0;PUSH:_ PUSH:l5 SWAP2;- - 0",
+		"ok 1;0;;0;l5 _ v0;PUSH:_ PUSH:l5 SWAP2;- - 0");
+	agrees("plan;L;0;v0 R;R;", "ok 1;0;;0 0;R;SWAP1 POP;1", "ok 1;0;;0 0;R;SWAP1 POP;1");
+	agrees("plan;L;0;R;R R;", "err", "err");
+	agrees("plan;L;0;v0 v1;_ v0;", "ok 1;1;;0 0;v0 v0;POP DUP1;0 -", "ok 1;1;;0 0;v0 v0;POP DUP1;0 -");
+	agrees("plan;T;0;v0 v1;_ v0;", "ok 1;1;;0 0;v1 v0;SWAP1;1 0", "ok 1;1;;0 0;v1 v0;SWAP1;1 0");
+	// v0 is out of reach: the first attempt is blocked; resolve drops v17 with a new spill, and the second attempt
+	// loads it; without spillingAllowed nothing is dropped, and the result has no stack; two drops: the surplus copy
+	// of v0 and v17
+	{
+		std::string const deep = vars(1, 17);
+		std::string const planned = "POP SWAP1 SWAP2 SWAP3 SWAP4 SWAP5 SWAP6 SWAP7 SWAP8 SWAP9 SWAP10 SWAP11 SWAP12 "
+			"SWAP13 SWAP14 SWAP15 SWAP16 LOAD:v17 SWAP1;" + nats(1, 16) + " - 0";
+		std::string const spilledOne = "ok 1;0;17;" + times("0", 17) + " 1;" + deep + " v0;" + planned;
+		agrees("plan;L;1;v0 " + deep + ";" + deep + " v0;", spilledOne, spilledOne);
+		std::string const blocked = "ok 0;0;;" + times("0", 18);
+		agrees("plan;L;0;v0 " + deep + ";" + deep + " v0;", blocked, blocked);
+		std::string const twoDrops = "ok 1;0;0 17;" + times("0", 17) + " 1 1;" + deep + " v0;POP " + planned;
+		agrees("plan;L;1;v0 " + deep + " v0;" + deep + " v0;", twoDrops, twoDrops);
+	}
+	// the stack limit: 1024 literals in place, with Take
+	{
+		std::string const literals = times("l0", 1024);
+		std::string const result = "ok 1;0;;" + times("0", 1024) + ";" + literals + ";;" + nats(0, 1023);
+		agrees("plan;T;0;" + literals + ";" + literals + ";", result, result);
+	}
+	// a wrong model result is not equal to the port result: success, saw, a spill, a dropped byte, the stack, the
+	// operations, a source offset
+	for (std::string const wrong: {"ok 0;0;;0 0", "ok 1;1;;0 0;v1 v0;SWAP1;1 0", "ok 1;0;0;0 0;v1 v0;SWAP1;1 0",
+		"ok 1;0;;1 0;v1 v0;SWAP1;1 0", "ok 1;0;;0 0;v0 v1;SWAP1;1 0", "ok 1;0;;0 0;v1 v0;;1 0",
+		"ok 1;0;;0 0;v1 v0;SWAP1;0 1"})
+	{
+		std::optional<port::Check> const check = port::check("plan;L;0;v0 v1;v1 v0;", wrong);
+		expect(check && check->port != check->model, "a wrong plan model result differs: " + wrong);
+	}
+
+	// not in the domain of the plan unit: too few fields, too many fields, a bad strategy, a bad bit, a bad slot, a
+	// bad spilled id, more source or target slots than the stack limit
+	throws("plan;L;0;v0;v0");
+	throws("plan;L;0;v0;v0;;");
+	throws("plan;X;0;v0;v0;");
+	throws("plan;;0;v0;v0;");
+	throws("plan;L;2;v0;v0;");
+	throws("plan;L;;v0;v0;");
+	throws("plan;L;0;x;v0;");
+	throws("plan;L;0;v0;y;");
+	throws("plan;L;0;v0;v0;a");
+	throws("plan;L;0;" + times("_", 1025) + ";;");
+	throws("plan;L;0;;" + times("_", 1025) + ";");
 
 	if (failures > 0)
 	{

@@ -4,11 +4,11 @@ module
 The symbol names of the functions of `c/build_bottom_up.cpp`. The members of `Emission`,
 `SpillSet`, `MappingBuilder` and `Planner` have the names that g++ gives them (the Itanium C++ ABI
 mangling); the entries `build_bottom_up`, `emission_pop`, `spill_set`, `remove_surplus`,
-`permute`, `permute_at_lowest_height`, `build_mapping`, `resolve` and `emit` are `extern "C"`. These
-are the names in `c/build_bottom_up.S`, in the binary, and in `c/bbu/NAME.S`. We do not rename them
-in the asm: each change to the compiler output is one more step between the proved program
-and the program that runs. Each name is here once; `BbuKraken.Asm`, `BbuKraken.Link` and the
-specs use these defs.
+`permute`, `permute_at_lowest_height`, `build_mapping`, `resolve`, `emit` and `plan` are
+`extern "C"`. These are the names in `c/build_bottom_up.S`, in the binary, and in
+`c/bbu/NAME.S`. We do not rename them in the asm: each change to the compiler output is one more
+step between the proved program and the program that runs. Each name is here once;
+`BbuKraken.Asm`, `BbuKraken.Link` and the specs use these defs.
 -/
 
 namespace Bbu.Names
@@ -100,5 +100,11 @@ namespace Bbu.Names
 @[expose] public def run : String := "_ZN12_GLOBAL__N_18Emission3runEv"
 /-- `emit`, `extern "C"` -/
 @[expose] public def emit : String := "emit"
+/-- `Planner::run(MappingBuilder::WildcardSlotsStrategy, StackSlot*, ShuffleOp*,
+  Optional<StackOffset>*, size_t&)` -/
+@[expose] public def plannerRun : String :=
+  "_ZN12_GLOBAL__N_17Planner3runENS_14MappingBuilder21WildcardSlotsStrategyEP9StackSlotP9ShuffleOpPNS_8OptionalI11StackOffsetEERm"
+/-- `plan`, `extern "C"` -/
+@[expose] public def plan : String := "plan"
 
 end Bbu.Names

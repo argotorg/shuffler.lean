@@ -233,6 +233,22 @@ extern "C" std::int64_t emit(
 	std::uint64_t* height
 );
 
+extern "C" std::int64_t plan(
+	std::uint64_t m,
+	std::uint64_t n,
+	Slot const* source,
+	Slot const* target,
+	std::uint8_t* spilled,
+	std::uint64_t idCount,
+	std::uint8_t allowed,
+	std::uint8_t strategy,
+	std::uint8_t* dropped,
+	std::uint8_t* saw,
+	Slot* data,
+	Op* ops,
+	std::uint64_t* sources
+);
+
 namespace
 {
 
@@ -814,6 +830,89 @@ std::string runEmit(std::vector<std::string> const& _fields)
 	return showStatus(blocked) + ";" + showStack(data) + ";" + showOps(ops) + ";" + join(dests);
 }
 
+/// A case "plan;" strategy ";" bit ";" source ";" target ";" vars, in the domain of plan: the strategy is L (Leave) or
+/// T (Take), the bit is spillingAllowed, and the source and the target have at most maxStackSize slots.
+/// The result is "ok", success (0 or 1), sawWildcardCopy (0 or 1), the spilled variables, ascending, and dropped; after
+/// a success also the final stack, the operations and the source offset of each target slot; or "err".
+std::string runPlan(std::vector<std::string> const& _fields)
+{
+	if (_fields.size() != 5)
+		throw std::invalid_argument("not a plan case");
+	if (_fields[0] != "L" && _fields[0] != "T")
+		throw std::invalid_argument("not a strategy: " + _fields[0]);
+	if (_fields[1] != "0" && _fields[1] != "1")
+		throw std::invalid_argument("not a bit: " + _fields[1]);
+	std::uint8_t const strategy = _fields[0] == "T";
+	std::uint8_t const allowed = _fields[1] == "1";
+	std::vector<Slot> const source = parseStack(_fields[2]);
+	std::vector<Slot> const target = parseStack(_fields[3]);
+	std::size_t const m = source.size();
+	std::size_t const n = target.size();
+	if (m > maxStackSize || n > maxStackSize)
+		throw std::invalid_argument("more slots than the stack limit");
+	std::vector<std::uint8_t> const spills = parseSpilled(_fields[4], source, target);
+	std::size_t const idCount = spills.size();
+
+	// plan writes at most idCount bytes of spilled, m of dropped, one of saw, max(m, n) slots, 2m + 6n operations
+	// into a buffer of 4m + 6n, and n source offsets (see kraken/c/build_bottom_up.cpp). A guard area after each
+	// buffer must stay as it is.
+	std::size_t const room = std::max(m, n);
+	std::size_t const opsRoom = 4 * m + 6 * n;
+	std::vector<std::uint8_t> spilled(idCount + guard, guardByte);
+	std::copy(spills.begin(), spills.end(), spilled.begin());
+	std::vector<std::uint8_t> dropped(m + guard, guardByte);
+	std::vector<std::uint8_t> saw(1 + guard, guardByte);
+	std::vector<Slot> data(room + guard, guardSlot);
+	std::vector<Op> ops(opsRoom + guard, guardOp);
+	std::vector<std::uint64_t> sources(n + guard, guardWord);
+	std::int64_t const count = plan(
+		m,
+		n,
+		source.data(),
+		target.data(),
+		spilled.data(),
+		idCount,
+		allowed,
+		strategy,
+		dropped.data(),
+		saw.data(),
+		data.data(),
+		ops.data(),
+		sources.data()
+	);
+	if (!intact(spilled, idCount, guardByte) || !intact(dropped, m, guardByte) || !intact(saw, 1, guardByte) ||
+		!intact(data, room, guardSlot) || !intact(ops, opsRoom, guardOp) || !intact(sources, n, guardWord))
+		return "<port wrote past a buffer>";
+	if (count == -2)
+		return intact(saw, 0, guardByte) && intact(sources, 0, guardWord) ? "err" : "<port wrote saw or sources>";
+	if (count < -1 || count > static_cast<std::int64_t>(2 * m + 6 * n))
+		return "<port result " + std::to_string(count) + ">";
+	if (count == -1 && !intact(sources, 0, guardWord))
+		return "<port wrote sources>";
+	if (saw[0] > 1)
+		return "<port saw byte " + std::to_string(saw[0]) + ">";
+	// add writes 1
+	std::vector<std::string> ids;
+	for (std::size_t id = 0; id < idCount; ++id)
+		if (spilled[id] == 1)
+			ids.push_back(std::to_string(id));
+		else if (spilled[id] != 0)
+			return "<port spilled byte " + std::to_string(spilled[id]) + ">";
+	std::vector<std::string> droppedWords;
+	for (std::size_t i = 0; i < m; ++i)
+		droppedWords.push_back(std::to_string(dropped[i]));
+	std::string const head = std::string{"ok "} + (count >= 0 ? "1" : "0") + ";" + std::to_string(saw[0]) + ";" +
+		join(ids) + ";" + join(droppedWords);
+	if (count == -1)
+		return head;
+	data.resize(n);
+	ops.resize(static_cast<std::size_t>(count));
+	std::vector<std::string> offsets;
+	for (std::size_t j = 0; j < n; ++j)
+		offsets.push_back(showOffset(sources[j]));
+	return head + ";" + showStack(data) + ";" + showOps(ops) + ";" + join(offsets);
+}
+
 std::string identity(std::string const& _model)
 {
 	return _model;
@@ -842,6 +941,7 @@ Unit constexpr units[] = {
 	{"map", runMap, identity},
 	{"resolve", runResolve, identity},
 	{"emit", runEmit, identity},
+	{"plan", runPlan, identity},
 };
 
 }
