@@ -1319,6 +1319,305 @@ void permuteAtLowestHeightProperties()
 	expect(stayRuns > 100, "permuteAtLowestHeight: runs in which a parked slot stays", stayRuns);
 }
 
+using Strategy = MappingBuilder::WildcardSlotsStrategy;
+
+/// The positions of `_mapping` for its `_n` target offsets
+std::vector<Opt> positions(Mapping const& _mapping, std::size_t const _n)
+{
+	std::vector<Opt> result;
+	for (std::size_t j = 0; j < _n; ++j)
+		result.push_back(opt(_mapping.positionOf(StackOffset{j})));
+	return result;
+}
+
+/// The outputs of build_mapping: its result, the position of the slot bound for each target offset, and
+/// sawWildcardCopy. Each output has a guard entry after it, which build_mapping must not write.
+struct Built
+{
+	std::int64_t result;
+	std::vector<Opt> sources;
+	std::uint8_t saw;
+};
+
+/// The guard values of the outputs of buildMapping
+std::size_t constexpr guardOffset = 4242;
+std::uint8_t constexpr guardSaw = 42;
+
+Built buildMapping(
+	std::vector<StackSlot> const& _source,
+	std::vector<StackSlot> const& _target,
+	std::vector<std::uint8_t> const& _dropped,
+	std::uint8_t const _strategy
+)
+{
+	std::size_t const n = _target.size();
+	std::vector<Optional<StackOffset>> sources(n + 1, offset(guardOffset));
+	std::uint8_t saw[2] = {guardSaw, guardSaw};
+	std::int64_t const result = build_mapping(
+		_source.size(), n, _source.data(), _target.data(), _dropped.data(), _strategy, sources.data(), saw);
+	expect(sources[n] == offset(guardOffset) && saw[1] == guardSaw, "build_mapping: writes past the outputs");
+	std::vector<Opt> written;
+	for (std::size_t j = 0; j < n; ++j)
+		written.push_back(opt(sources[j]));
+	return {result, written, saw[0]};
+}
+
+Built buildMapping(
+	std::vector<StackSlot> const& _source,
+	std::vector<StackSlot> const& _target,
+	std::vector<std::uint8_t> const& _dropped,
+	Strategy const _strategy
+)
+{
+	return buildMapping(_source, _target, _dropped, static_cast<std::uint8_t>(_strategy));
+}
+
+/// The phases of MappingBuilder one by one, and a failed assertion of map
+void mappingBuilderPhases()
+{
+	StackSlot const junk = StackSlot::makeJunk();
+	StackSlot const literal{9, StackSlot::Kind::Value, InstOpcode::Const};
+	// v0 in place, v1 two below its target offset, a copy of v2 in a wildcard slot, a literal to absorb
+	std::vector<StackSlot> const source{variable(0), variable(2), literal, variable(1), variable(3)};
+	std::vector<StackSlot> const target{variable(0), junk, variable(1), variable(2), junk, junk};
+	std::uint8_t const dropped[5] = {0, 0, 0, 0, 1};
+	for (Strategy const strategy: {Strategy::Leave, Strategy::Take})
+	{
+		bool const take = strategy == Strategy::Take;
+		Mapping mapping{5, 6};
+		MappingBuilder builder{source.data(), 5, target.data(), 6, dropped, strategy, mapping};
+		expect(builder.mapInPlace() == Status::Done, "MappingBuilder: mapInPlace");
+		expect(positions(mapping, 6) == std::vector<Opt>{0, {}, {}, {}, {}, {}}, "MappingBuilder: mapInPlace, the map");
+		expect(builder.mapClosestCopies() == Status::Done, "MappingBuilder: mapClosestCopies");
+		expect(positions(mapping, 6) == std::vector<Opt>{0, {}, 3, {}, {}, {}},
+			"MappingBuilder: mapClosestCopies, the map");
+		expect(!builder.sawWildcardCopy(), "MappingBuilder: no wildcard copy before mapWildcardSlotCopies");
+		expect(builder.mapWildcardSlotCopies() == Status::Done, "MappingBuilder: mapWildcardSlotCopies");
+		expect(builder.sawWildcardCopy(), "MappingBuilder: mapWildcardSlotCopies, a copy in a wildcard slot");
+		expect(positions(mapping, 6) == (take ? std::vector<Opt>{0, {}, 3, 1, {}, {}} :
+				std::vector<Opt>{0, {}, 3, {}, {}, {}}),
+			"MappingBuilder: mapWildcardSlotCopies, the map", take);
+		expect(builder.keepWildcardSlots() == Status::Done, "MappingBuilder: keepWildcardSlots");
+		expect(positions(mapping, 6) == (take ? std::vector<Opt>{0, {}, 3, 1, {}, {}} :
+				std::vector<Opt>{0, 1, 3, {}, {}, {}}),
+			"MappingBuilder: keepWildcardSlots, the map", take);
+		// the literal at 2 is the only slot left; the dropped v3 is not taken
+		expect(builder.absorbSurplus() == Status::Done, "MappingBuilder: absorbSurplus");
+		expect(positions(mapping, 6) == (take ? std::vector<Opt>{0, 2, 3, 1, {}, {}} :
+				std::vector<Opt>{0, 1, 3, {}, 2, {}}),
+			"MappingBuilder: absorbSurplus, the map", take);
+		expect(mapping.destinationOf(StackOffset{4}) == none, "MappingBuilder: a dropped slot is not mapped", take);
+	}
+
+	// map asserts that the target offset has no source: the caller's mapping binds target offset 0 already
+	std::vector<StackSlot> const inPlace{variable(0), variable(1)};
+	std::uint8_t const kept[2] = {};
+	Mapping bound{2, 2};
+	bound.bind(StackOffset{1}, StackOffset{0});
+	MappingBuilder builder{inPlace.data(), 2, inPlace.data(), 2, kept, Strategy::Leave, bound};
+	expect(builder.mapInPlace() == Status::AssertionFailed, "MappingBuilder: map of a bound target offset fails");
+	expect(positions(bound, 2) == std::vector<Opt>{1, {}} && bound.destinationOf(StackOffset{0}) == none,
+		"MappingBuilder: a failed map does not bind");
+}
+
+/// build_mapping: the bounds, the tie rules, the strategies, function return labels and dropped slots
+void buildMappingEntry()
+{
+	StackSlot const junk = StackSlot::makeJunk();
+	StackSlot const label = nonVariables(0)[3];
+	auto const literal = [](std::uint32_t const _value) {
+		return StackSlot{_value, StackSlot::Kind::Value, InstOpcode::Const};
+	};
+	auto const fresh = [](Built const& _built) {
+		return _built.saw == guardSaw &&
+			std::all_of(_built.sources.begin(), _built.sources.end(), [](Opt const _o) { return _o == guardOffset; });
+	};
+
+	Built const empty = buildMapping({}, {}, {}, Strategy::Leave);
+	expect(empty.result == 0 && empty.sources.empty() && empty.saw == 0, "build_mapping: empty");
+
+	// the bounds: nothing is written
+	std::vector<StackSlot> const big(1025, variable(0));
+	std::vector<std::uint8_t> const bigDropped(1025);
+	Built const tallSource = buildMapping(big, {variable(0)}, bigDropped, Strategy::Leave);
+	expect(tallSource.result == -2 && fresh(tallSource), "build_mapping: 1025 source slots");
+	Built const tallTarget = buildMapping({variable(0)}, big, bigDropped, Strategy::Leave);
+	expect(tallTarget.result == -2 && fresh(tallTarget), "build_mapping: 1025 target slots");
+	Built const strategy = buildMapping({variable(0)}, {variable(0)}, {0}, 2);
+	expect(strategy.result == -2 && fresh(strategy), "build_mapping: strategy 2");
+	Built const strategyMax = buildMapping({variable(0)}, {variable(0)}, {0}, 255);
+	expect(strategyMax.result == -2 && fresh(strategyMax), "build_mapping: strategy 255");
+	std::vector<StackSlot> const limit(1024, variable(0));
+	Built const atLimit = buildMapping(limit, limit, std::vector<std::uint8_t>(1024), Strategy::Take);
+	expect(atLimit.result == 0 && atLimit.saw == 0 && atLimit.sources.size() == 1024 &&
+			atLimit.sources[0] == 0 && atLimit.sources[1023] == 1023,
+		"build_mapping: 1024 slots in place");
+
+	// in place
+	Built const inPlace = buildMapping({variable(0), variable(1)}, {variable(0), variable(1)}, {0, 0}, Strategy::Leave);
+	expect(inPlace.result == 0 && inPlace.saw == 0 && inPlace.sources == std::vector<Opt>{0, 1},
+		"build_mapping: in place");
+
+	// the closest copy: of two at the same distance the shallower one
+	Built const copyTie = buildMapping({variable(0), literal(0), variable(0)}, {literal(1), variable(0)}, {0, 0, 0},
+		Strategy::Leave);
+	expect(copyTie.result == 0 && copyTie.sources == std::vector<Opt>{{}, 2}, "build_mapping: a tie of copies");
+	Built const closer = buildMapping({variable(0), literal(0), literal(0), variable(0)}, {literal(1), variable(0)},
+		{0, 0, 0, 0}, Strategy::Leave);
+	expect(closer.result == 0 && closer.sources == std::vector<Opt>{{}, 0}, "build_mapping: the closer copy");
+
+	// a wildcard absorbs the closest surplus slot: of two at the same distance the deeper one
+	Built const surplusTie = buildMapping({literal(0), literal(1), literal(2)}, {literal(9), junk, literal(8)},
+		{0, 1, 0}, Strategy::Leave);
+	expect(surplusTie.result == 0 && surplusTie.sources == std::vector<Opt>{{}, 0, {}},
+		"build_mapping: a tie of surplus slots");
+	Built const surplus = buildMapping({literal(0), literal(1)}, {variable(5), variable(6), variable(7), junk}, {0, 0},
+		Strategy::Leave);
+	expect(surplus.result == 0 && surplus.sources == std::vector<Opt>{{}, {}, {}, 1},
+		"build_mapping: the closest surplus slot");
+
+	// a copy in a wildcard slot: Leave keeps it there, Take moves it
+	Built const leave = buildMapping({variable(0), variable(1)}, {junk, variable(0)}, {0, 0}, Strategy::Leave);
+	expect(leave.result == 0 && leave.saw == 1 && leave.sources == std::vector<Opt>{0, {}}, "build_mapping: Leave");
+	Built const take = buildMapping({variable(0), variable(1)}, {junk, variable(0)}, {0, 0}, Strategy::Take);
+	expect(take.result == 0 && take.saw == 1 && take.sources == std::vector<Opt>{1, 0}, "build_mapping: Take");
+	// a function return label is taken for both strategies, and is not a wildcard copy
+	for (Strategy const s: {Strategy::Leave, Strategy::Take})
+	{
+		Built const returnLabel = buildMapping({label, variable(1)}, {junk, label}, {0, 0}, s);
+		expect(returnLabel.result == 0 && returnLabel.saw == 0 && returnLabel.sources == std::vector<Opt>{1, 0},
+			"build_mapping: a function return label in a wildcard slot", static_cast<unsigned long>(s));
+	}
+	// a slot in a wildcard slot stays there, and a wildcard before it does not absorb it
+	Built const keep = buildMapping({literal(0), literal(1)}, {junk, junk}, {1, 0}, Strategy::Leave);
+	expect(keep.result == 0 && keep.sources == std::vector<Opt>{{}, 1}, "build_mapping: a slot in a wildcard slot");
+	// a junk slot in a wildcard slot stays
+	Built const junkInPlace = buildMapping({junk, junk}, {junk}, {0, 0}, Strategy::Leave);
+	expect(junkInPlace.result == 0 && junkInPlace.sources == std::vector<Opt>{0}, "build_mapping: junk in place");
+
+	// dropped slots are not mapped, whatever their byte
+	for (std::uint8_t const byte: {1, 2, 255})
+	{
+		Built const dropped = buildMapping({variable(0)}, {variable(0)}, {byte}, Strategy::Leave);
+		expect(dropped.result == 0 && dropped.sources == std::vector<Opt>{{}}, "build_mapping: a dropped slot", byte);
+		Built const wildcard = buildMapping({literal(0)}, {junk}, {byte}, Strategy::Take);
+		expect(wildcard.result == 0 && wildcard.sources == std::vector<Opt>{{}},
+			"build_mapping: a dropped slot is not absorbed", byte);
+	}
+	Built const otherCopy = buildMapping({variable(0), variable(0)}, {variable(0)}, {1, 0}, Strategy::Leave);
+	expect(otherCopy.result == 0 && otherCopy.sources == std::vector<Opt>{1}, "build_mapping: a copy of a dropped slot");
+}
+
+/// build_mapping on random stacks: the mapping is injective, binds equal slots or wildcards and no dropped slot, keeps
+/// slots in place and in wildcard slots, leaves copies in wildcard slots for Leave, and leaves no target offset without
+/// a source while a slot could serve it. The choice among the candidates is the Lean model's, which the differential
+/// fuzzer checks.
+void buildMappingProperties()
+{
+	std::mt19937_64 random{20261030};
+	auto const below = [&](std::size_t const _bound) {
+		return std::uniform_int_distribution<std::size_t>{0, _bound - 1}(random);
+	};
+	// few distinct slots, so that copies and equal slots are common
+	auto const slot = [&] {
+		return below(3) == 0 ? nonVariables(static_cast<std::uint32_t>(below(2)))[below(4)] :
+			variable(static_cast<std::uint32_t>(below(3)));
+	};
+	unsigned long sawRuns = 0;
+	unsigned long differRuns = 0;
+	unsigned long absorbRuns = 0;
+	unsigned long droppedCopyRuns = 0;
+	unsigned long keptRuns = 0;
+	for (unsigned long run = 0; run < 20000; ++run)
+	{
+		std::size_t const m = below(run % 100 == 0 ? 1025 : 13);
+		std::size_t const n = below(run % 100 == 1 ? 1025 : 13);
+		std::vector<StackSlot> source;
+		for (std::size_t i = 0; i < m; ++i)
+			source.push_back(slot());
+		std::vector<StackSlot> target;
+		for (std::size_t j = 0; j < n; ++j)
+			target.push_back(slot());
+		std::size_t const dropOdds = 2 + below(6);
+		std::vector<std::uint8_t> dropped;
+		for (std::size_t i = 0; i < m; ++i)
+			dropped.push_back(below(dropOdds) == 0 ? static_cast<std::uint8_t>(1 + below(255)) : 0);
+		auto const wildcardSlot = [&](std::size_t const _o) { return _o < n && target[_o].isJunk(); };
+
+		Built const leave = buildMapping(source, target, dropped, Strategy::Leave);
+		Built const take = buildMapping(source, target, dropped, Strategy::Take);
+		expect(leave.result == 0 && take.result == 0, "buildMapping: done", run);
+		if (leave.result != 0 || take.result != 0)
+			continue;
+		expect(leave.saw <= 1 && leave.saw == take.saw, "buildMapping: saw is a bool, the same for both", run);
+		sawRuns += leave.saw;
+		differRuns += leave.sources != take.sources;
+
+		for (Built const* built: {&leave, &take})
+		{
+			bool const isTake = built == &take;
+			std::vector<bool> bound(m);
+			std::vector<Opt> destination(m);
+			for (std::size_t j = 0; j < n; ++j)
+				if (Opt const o = built->sources[j])
+				{
+					expect(*o < m && !bound[*o], "buildMapping: an injective map into the source", run);
+					if (*o >= m || bound[*o])
+						continue;
+					bound[*o] = true;
+					destination[*o] = j;
+					expect(dropped[*o] == 0, "buildMapping: a dropped slot is not bound", run);
+					expect(target[j].isJunk() || sameSlot(source[*o], target[j]),
+						"buildMapping: an equal slot or a wildcard", run);
+					absorbRuns += target[j].isJunk() && !sameSlot(source[*o], target[j]);
+					if (!isTake && !target[j].isJunk() && !target[j].isFunctionReturnLabel())
+						expect(!wildcardSlot(*o), "buildMapping: Leave leaves a copy in a wildcard slot", run);
+				}
+			for (std::size_t j = 0; j < std::min(m, n); ++j)
+				if (sameSlot(source[j], target[j]) && dropped[j] == 0)
+					expect(built->sources[j] == j, "buildMapping: a slot in place stays", run);
+			// a slot in a wildcard slot stays, unless mapWildcardSlotCopies takes it for a demand
+			for (std::size_t j = 0; j < std::min(m, n); ++j)
+				if (wildcardSlot(j) && dropped[j] == 0)
+				{
+					Opt const k = destination[j];
+					bool const taken =
+						k && *k != j && !target[*k].isJunk() && (isTake || target[*k].isFunctionReturnLabel());
+					expect(k == j || taken, "buildMapping: a slot in a wildcard slot stays", run);
+					keptRuns += k == j && !sameSlot(source[j], target[j]);
+				}
+			bool const allBound = [&] {
+				for (std::size_t o = 0; o < m; ++o)
+					if (dropped[o] == 0 && !bound[o])
+						return false;
+				return true;
+			}();
+			for (std::size_t j = 0; j < n; ++j)
+				if (!built->sources[j])
+				{
+					if (target[j].isJunk())
+						expect(allBound, "buildMapping: a wildcard without a source, a free slot", run);
+					else
+						for (std::size_t o = 0; o < m; ++o)
+						{
+							bool const free = dropped[o] == 0 && !bound[o] && sameSlot(source[o], target[j]);
+							bool const left = !isTake && !target[j].isFunctionReturnLabel() && wildcardSlot(o);
+							expect(!free || left, "buildMapping: a target offset without a source, a free copy", run);
+						}
+				}
+		}
+		for (std::size_t o = 0; o < m; ++o)
+			if (dropped[o] != 0)
+				for (std::size_t j = 0; j < n; ++j)
+					droppedCopyRuns += sameSlot(source[o], target[j]) && leave.sources[j].has_value();
+	}
+	expect(sawRuns > 1000, "buildMapping: runs with a wildcard copy", sawRuns);
+	expect(differRuns > 1000, "buildMapping: runs where Leave and Take differ", differRuns);
+	expect(absorbRuns > 1000, "buildMapping: runs that absorb a slot", absorbRuns);
+	expect(droppedCopyRuns > 1000, "buildMapping: runs with a dropped slot that has a bound copy", droppedCopyRuns);
+	expect(keptRuns > 1000, "buildMapping: runs that keep a slot in a wildcard slot", keptRuns);
+}
+
 }
 
 int main()
@@ -1338,6 +1637,9 @@ int main()
 	permuteProperties();
 	permuteAtLowestHeightEntry();
 	permuteAtLowestHeightProperties();
+	mappingBuilderPhases();
+	buildMappingEntry();
+	buildMappingProperties();
 	if (failures > 0)
 	{
 		std::fprintf(stderr, "%d failures\n", failures);

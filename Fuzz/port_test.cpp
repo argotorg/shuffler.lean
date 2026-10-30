@@ -77,7 +77,7 @@ std::string times(std::string const& _word, int const _count)
 int main()
 {
 	// the kinds without a port unit
-	for (std::string const line: {"map;L;v0;v0;0", "emit;;;;", "plan;L;0;;;"})
+	for (std::string const line: {"emit;;;;", "plan;L;0;;;"})
 		expect(!port::check(line, "ok;;;").has_value(), "no port unit for: " + line);
 
 	// buildBottomUp: each slot kind, each operation kind, equal slots, blocked with and without operations
@@ -496,6 +496,86 @@ int main()
 	throws("lowest;v0 v1;v0 v1;0 0;");
 	throws("lowest;" + times("_", 1025) + ";;" + times("-", 1025) + ";");
 	throws("lowest;;" + times("_", 1025) + ";;");
+
+	// buildMapping: slots in place, each slot kind; no slots, no target slots; the closest copy below, above, and of
+	// two copies at the same distance the shallower one; the deeper target offsets take the copies first; a copy
+	// outside the wildcard slots before a closer one in a wildcard slot; a copy in a wildcard slot is left (Leave) or
+	// taken (Take), and sawWildcardCopy is 1 for both; a return label in a wildcard slot is always taken, and
+	// sawWildcardCopy stays 0; a wildcard keeps its slot, or takes the closest mappable slot, and of two at the same
+	// distance the deeper one; a dropped slot (1 or 255) is not mapped
+	agrees("map;L;v0 v1;v0 v1;0 0", "ok 0;0 1", "ok 0;0 1");
+	agrees("map;T;v0 l1 _ R;v0 l1 _ R;0 0 0 0", "ok 0;0 1 2 3", "ok 0;0 1 2 3");
+	agrees("map;L;;;", "ok 0;", "ok 0;");
+	agrees("map;L;;v0 _;", "ok 0;- -", "ok 0;- -");
+	agrees("map;T;v0 v1;;0 0", "ok 0;", "ok 0;");
+	agrees("map;L;v0 l0 l1;l2 l3 v0;0 0 0", "ok 0;- - 0", "ok 0;- - 0");
+	agrees("map;L;l0 l1 v0;v0;0 0 0", "ok 0;2", "ok 0;2");
+	agrees("map;L;v0 l0 v0;l1 v0;0 0 0", "ok 0;- 2", "ok 0;- 2");
+	agrees("map;L;v0 l0 l0 v0;l1 v0;0 0 0 0", "ok 0;- 0", "ok 0;- 0");
+	agrees("map;L;v0 v0;v1 v0 v0;0 0", "ok 0;- 1 0", "ok 0;- 1 0");
+	agrees("map;L;l0 v0;v0 l1 v0;0 0", "ok 0;1 - -", "ok 0;1 - -");
+	agrees("map;L;v0;v0 v0;0", "ok 0;0 -", "ok 0;0 -");
+	agrees("map;L;v0 v0 v0;l0;0 0 0", "ok 0;-", "ok 0;-");
+	agrees("map;L;v0 l0 v0;_ l1 l2 v0;0 0 0", "ok 0;0 - - 2", "ok 0;0 - - 2");
+	agrees("map;L;v0 v1;_ v0;0 0", "ok 1;0 -", "ok 1;0 -");
+	agrees("map;T;v0 v1;_ v0;0 0", "ok 1;1 0", "ok 1;1 0");
+	agrees("map;L;v1 _;_ v1;0 0", "ok 1;0 -", "ok 1;0 -");
+	agrees("map;T;v1 _;_ v1;0 0", "ok 1;1 0", "ok 1;1 0");
+	agrees("map;L;R v1;_ R;0 0", "ok 0;1 0", "ok 0;1 0");
+	agrees("map;T;R v1;_ R;0 0", "ok 0;1 0", "ok 0;1 0");
+	agrees("map;L;R;_ R;0", "ok 0;- 0", "ok 0;- 0");
+	agrees("map;L;_ _;_;0 0", "ok 0;0", "ok 0;0");
+	agrees("map;T;l0 l0;l0 _;0 0", "ok 0;0 1", "ok 0;0 1");
+	agrees("map;L;l0 v0 l2;v0 _;0 0 0", "ok 1;- 1", "ok 1;- 1");
+	agrees("map;T;l0 v0 l2;v0 _;0 0 0", "ok 1;1 0", "ok 1;1 0");
+	agrees("map;L;l0 l1;v5 v6 v7 _;0 0", "ok 0;- - - 1", "ok 0;- - - 1");
+	agrees("map;L;l0 l1 l2;l9 _ l8;0 1 0", "ok 0;- 0 -", "ok 0;- 0 -");
+	agrees("map;L;v0;v0;1", "ok 0;-", "ok 0;-");
+	agrees("map;L;v0 v0;v0;1 0", "ok 0;1", "ok 0;1");
+	agrees("map;L;l0;_;255", "ok 0;-", "ok 0;-");
+	// the stack limit: 1024 slots in place; 1024 slots in the reverse order; 1024 target offsets without a copy; 1024
+	// wildcards and one mappable slot
+	{
+		std::string const result = "ok 0;" + nats(0, 1023);
+		agrees("map;L;" + times("v0", 1024) + ";" + times("v0", 1024) + ";" + times("0", 1024), result, result);
+	}
+	{
+		std::string reversed = "v1023";
+		for (int i = 1022; i >= 0; --i)
+			reversed += " v" + std::to_string(i);
+		std::string const result = "ok 0;" + nats(1023, 0, -1);
+		agrees("map;L;" + vars(0, 1023) + ";" + reversed + ";" + times("0", 1024), result, result);
+	}
+	{
+		std::string const result = "ok 0;" + times("-", 1024);
+		agrees("map;T;" + times("l0", 1024) + ";" + times("v0", 1024) + ";" + times("0", 1024), result, result);
+	}
+	{
+		std::string const result = "ok 0;" + times("-", 1023) + " 1023";
+		agrees("map;T;" + times("l0", 1024) + ";" + times("_", 1024) + ";" + times("1", 1023) + " 0", result, result);
+	}
+	// a wrong model result is not equal to the port result: sawWildcardCopy, a source offset, a missing source
+	for (std::string const wrong: {"ok 0;1 0", "ok 1;0 1", "ok 1;1 -", "ok 1;1 0 -", "err"})
+	{
+		std::optional<port::Check> const check = port::check("map;T;v0 v1;_ v0;0 0", wrong);
+		expect(check && check->port != check->model, "a wrong map model result differs: " + wrong);
+	}
+
+	// not in the domain of the map unit: too few fields, too many fields, a bad strategy, a bad slot, not one dropped
+	// byte per source slot (the model result is "err"), a bad byte, more source slots or target slots than the stack
+	// limit
+	throws("map;L;v0;v0");
+	throws("map;L;v0;v0;0;");
+	throws("map;X;v0;v0;0");
+	throws("map;;v0;v0;0");
+	throws("map;L;x;v0;0");
+	throws("map;L;v0;y;0");
+	throws("map;L;v0;v0;");
+	throws("map;L;v0;v0;0 0");
+	throws("map;L;v0;v0;256");
+	throws("map;L;v0;v0;a");
+	throws("map;L;" + times("_", 1025) + ";;" + times("0", 1025));
+	throws("map;L;;" + times("_", 1025) + ";");
 
 	if (failures > 0)
 	{

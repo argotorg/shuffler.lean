@@ -11,7 +11,9 @@ set_option maxRecDepth 100000
 example : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm ++ produceAsm
     ++ swapWithAsm ++ generateAsm ++ finishAsm ++ loopAsm ++ popAsm ++ buildBottomUpAsm
     ++ emissionPopAsm ++ spillSetAddAsm ++ spillSetAsm ++ removeSurplusAsm ++ removeSurplusEntryAsm
-    ++ permuteEntryAsm ++ permuteAtLowestHeightAsm ++ permuteAtLowestHeightEntryAsm := by
+    ++ permuteEntryAsm ++ permuteAtLowestHeightAsm ++ permuteAtLowestHeightEntryAsm
+    ++ mapAsm ++ closestCopyAsm ++ mapInPlaceAsm ++ mapClosestCopiesAsm ++ mapWildcardSlotCopiesAsm
+    ++ keepWildcardSlotsAsm ++ absorbSurplusAsm ++ buildMappingAsm := by
   rfl
 
 -- `bbuParseFile` reads `leaq disp(,%i,8), %r` as the operand with no base.
@@ -40,7 +42,12 @@ example : (bbuAsm.filter fun
      .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rcx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .rsi .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩))] := by
+     .instr (.regular .W64 .W64 (.lea (.low .rsi .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩))] := by
   rfl
 
 -- `bbuParseFn` reads the file of the name.
@@ -57,6 +64,14 @@ example : (permuteEntryAsm.head? = some (.label Names.permuteEntry)) := by rfl
 example : (permuteAtLowestHeightAsm.head? = some (.label Names.permuteAtLowestHeight)) := by rfl
 example : (permuteAtLowestHeightEntryAsm.head? = some (.label Names.permute_at_lowest_height)) := by
   rfl
+example : (mapAsm.head? = some (.label Names.map)) := by rfl
+example : (closestCopyAsm.head? = some (.label Names.closestCopy)) := by rfl
+example : (mapInPlaceAsm.head? = some (.label Names.mapInPlace)) := by rfl
+example : (mapClosestCopiesAsm.head? = some (.label Names.mapClosestCopies)) := by rfl
+example : (mapWildcardSlotCopiesAsm.head? = some (.label Names.mapWildcardSlotCopies)) := by rfl
+example : (keepWildcardSlotsAsm.head? = some (.label Names.keepWildcardSlots)) := by rfl
+example : (absorbSurplusAsm.head? = some (.label Names.absorbSurplus)) := by rfl
+example : (buildMappingAsm.head? = some (.label Names.build_mapping)) := by rfl
 
 end Bbu
 

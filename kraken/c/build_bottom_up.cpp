@@ -1,12 +1,15 @@
-// Emission::buildBottomUp, Emission::removeSurplus, Emission::permuteAtLowestHeight, Emission::permute and
-// Emission::pop of solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp, freestanding, with the behavior of the Lean
-// model, Shuffler/BuildBottomUp/Defs.lean, Shuffler/RemoveSurplus/Defs.lean, Shuffler/PermuteAtLowestHeight/Defs.lean,
-// Shuffler/Permute/Defs.lean and State.pop of Shuffler/Emission/Defs.lean.
+// Emission::buildBottomUp, Emission::removeSurplus, Emission::permuteAtLowestHeight, Emission::permute,
+// Emission::pop and the MappingBuilder of solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp, freestanding, with the
+// behavior of the Lean model, Shuffler/BuildBottomUp/Defs.lean, Shuffler/RemoveSurplus/Defs.lean,
+// Shuffler/PermuteAtLowestHeight/Defs.lean, Shuffler/Permute/Defs.lean, State.pop of Shuffler/Emission/Defs.lean and
+// buildMapping of Shuffler/BuildMapping/Defs.lean.
 // The differences from Shuffler.cpp:
 //
 // - There are no exceptions, so a failed yulAssert returns Status::AssertionFailed.
 // - The source stack of build_bottom_up has no surplus, so every slot has a destination.
 // - The checks marked `Lean` come from the Lean model; Shuffler.cpp does not have them.
+// - The MappingBuilder constructor of Shuffler.cpp is five functions, one for each phase, and the mapping is the
+//   caller's.
 #include <bit>
 #include <compare>
 #include <cstddef>
@@ -1128,4 +1131,237 @@ extern "C" std::int64_t permute_at_lowest_height(
 	for (StackOffset pos{0}; pos < m; ++pos.value)
 		dest[pos.value] = emission.mapping().destinationOf(pos);
 	return static_cast<std::int64_t>(emission.traceSize());
+}
+
+namespace
+{
+
+/// Shuffler.cpp's MappingBuilder, the Lean model's MappingBuilder and buildMapping
+/// (Shuffler/BuildMapping/Defs.lean): builds the mapping of the source stack to the target. Every target offset is
+/// either served by a source slot (retained) or left empty (generated); source slots without a target offset are
+/// surplus. The constructor of Shuffler.cpp runs five phases; here each phase is a unit, and build_mapping runs them
+/// in order.
+///
+/// The mapping is the caller's, so that the builder does not copy its 16 KiB. dropped has a byte for each source slot:
+/// the slot is scheduled to be popped if its byte is not 0. Shuffler.cpp asserts that dropped has the size of the
+/// source; here both sizes are m, so the assertion has no counterpart.
+class MappingBuilder
+{
+public:
+	/// A copy that sits in a wildcard slot can either be moved to the target offset demanding it or left there,
+	/// serving the demand with a duplicate
+	enum class WildcardSlotsStrategy : std::uint8_t { Leave, Take };
+
+	/// `_mapping` has no bindings for `_sourceSize` source slots and `_targetSize` target offsets
+	MappingBuilder(
+		StackSlot const* const _source,
+		std::size_t const _sourceSize,
+		StackSlot const* const _target,
+		std::size_t const _targetSize,
+		std::uint8_t const* const _dropped,
+		WildcardSlotsStrategy const _wildcardSlotsStrategy,
+		Mapping& _mapping
+	):
+		m_source(_source),
+		m_sourceSize(_sourceSize),
+		m_target(_target),
+		m_targetSize(_targetSize),
+		m_dropped(_dropped),
+		m_wildcardSlotsStrategy(_wildcardSlotsStrategy),
+		m_mapping(_mapping)
+	{}
+
+	/// slots already in place get mapped directly
+	Status mapInPlace();
+	/// the remaining target offsets take the closest unused copy, deepest first: what is left over is generated on
+	/// top, where that is cheapest
+	Status mapClosestCopies();
+	/// copies sitting in wildcard slots are taken or left according to the strategy
+	Status mapWildcardSlotCopies();
+	/// wildcards keep whatever sits there
+	Status keepWildcardSlots();
+	/// the remaining wildcards absorb the closest surplus slot instead of having it popped
+	Status absorbSurplus();
+
+	/// Whether any target offset's demand was answered by a copy sitting in a wildcard slot, i.e. whether the
+	/// `WildcardSlotsStrategy` had anything to decide
+	bool sawWildcardCopy() const { return m_sawWildcardCopy; }
+
+private:
+	/// Which copies `closestCopy` considers: only those standing in wildcard slots or only those that do not
+	enum class CopyLocation : std::uint8_t { OutsideWildcardSlots, InWildcardSlots };
+
+	/// Whether the source slot is not scheduled to be dropped and also not yet pointing to a target
+	bool mappable(StackOffset const _sourceOffset) const
+	{
+		return m_dropped[_sourceOffset.value] == 0 && !m_mapping.destinationOf(_sourceOffset).has_value();
+	}
+
+	/// Whether a source slot already serves `_targetOffset`
+	bool hasSourceAssigned(StackOffset const _targetOffset) const
+	{
+		return m_mapping.positionOf(_targetOffset).has_value();
+	}
+
+	/// Whether the target at `_targetOffset` is junk, i.e. accepts whatever ends up there
+	bool isWildcardTarget(StackOffset const _targetOffset) const { return m_target[_targetOffset.value].isJunk(); }
+
+	/// Whether the source slot at `_sourceOffset` stands at an offset that exists in the target and is junk there,
+	/// i.e. a copy that may stay put
+	bool inWildcardSlot(StackOffset const _sourceOffset) const
+	{
+		return _sourceOffset < m_targetSize && isWildcardTarget(_sourceOffset);
+	}
+
+	/// The closest mappable copy of the slot demanded at `_targetOffset` among the copies at `_location`; ties go to
+	/// the shallower copy
+	Optional<StackOffset> closestCopy(StackOffset _targetOffset, CopyLocation _location) const;
+
+	static std::size_t absDiff(StackOffset const _a, StackOffset const _b)
+	{
+		return _a > _b ? _a.value - _b.value : _b.value - _a.value;
+	}
+
+	Status map(StackOffset _sourceOffset, StackOffset _targetOffset);
+
+	std::size_t commonSize() const { return m_sourceSize < m_targetSize ? m_sourceSize : m_targetSize; }
+
+	StackSlot const* m_source;
+	std::size_t m_sourceSize;
+	StackSlot const* m_target;
+	std::size_t m_targetSize;
+	std::uint8_t const* m_dropped;
+	WildcardSlotsStrategy m_wildcardSlotsStrategy;
+	Mapping& m_mapping;
+	bool m_sawWildcardCopy = false;
+};
+
+// `used` and this place make g++ emit the units of MappingBuilder after remove_surplus, so the asm of the units above
+// and their labels stay
+[[gnu::used]] UNIT Status MappingBuilder::map(StackOffset const _sourceOffset, StackOffset const _targetOffset)
+{
+	yulAssert(mappable(_sourceOffset));
+	// the assertions of Shuffler.cpp's Mapping::bind
+	yulAssert(!m_mapping.destinationOf(_sourceOffset).has_value(), "slot already has a destination");
+	yulAssert(!m_mapping.positionOf(_targetOffset).has_value(), "destination already bound to a slot");
+	m_mapping.bind(_sourceOffset, _targetOffset);
+	return Status::Done;
+}
+
+[[gnu::used]] UNIT Optional<StackOffset> MappingBuilder::closestCopy(
+	StackOffset const _targetOffset,
+	CopyLocation const _location
+) const
+{
+	bool const inWildcardSlots = _location == CopyLocation::InWildcardSlots;
+	Optional<StackOffset> best = std::nullopt;
+	for (StackOffset i{0}; i < m_sourceSize; ++i.value)
+		if (m_source[i.value] == m_target[_targetOffset.value] && mappable(i) && inWildcardSlot(i) == inWildcardSlots)
+			if (!best || absDiff(i, _targetOffset) <= absDiff(*best, _targetOffset))
+				best = i;
+	return best;
+}
+
+[[gnu::used]] UNIT Status MappingBuilder::mapInPlace()
+{
+	for (StackOffset j{0}; j < commonSize(); ++j.value)
+		if (m_source[j.value] == m_target[j.value] && mappable(j))
+			if (Status const status = map(j, j); status != Status::Done)
+				return status;
+	return Status::Done;
+}
+
+[[gnu::used]] UNIT Status MappingBuilder::mapClosestCopies()
+{
+	for (StackOffset j{0}; j < m_targetSize; ++j.value)
+		if (!hasSourceAssigned(j) && !isWildcardTarget(j))
+			if (Optional<StackOffset> const copy = closestCopy(j, CopyLocation::OutsideWildcardSlots))
+				if (Status const status = map(*copy, j); status != Status::Done)
+					return status;
+	return Status::Done;
+}
+
+[[gnu::used]] UNIT Status MappingBuilder::mapWildcardSlotCopies()
+{
+	for (StackOffset j{0}; j < m_targetSize; ++j.value)
+		if (!hasSourceAssigned(j) && !isWildcardTarget(j))
+			if (Optional<StackOffset> const copy = closestCopy(j, CopyLocation::InWildcardSlots))
+			{
+				// a function return label is always taken, can't be duped or pushed
+				if (m_target[j.value].isFunctionReturnLabel())
+				{
+					if (Status const status = map(*copy, j); status != Status::Done)
+						return status;
+				}
+				else
+				{
+					m_sawWildcardCopy = true;
+					if (m_wildcardSlotsStrategy == WildcardSlotsStrategy::Take)
+						if (Status const status = map(*copy, j); status != Status::Done)
+							return status;
+				}
+			}
+	return Status::Done;
+}
+
+[[gnu::used]] UNIT Status MappingBuilder::keepWildcardSlots()
+{
+	for (StackOffset j{0}; j < commonSize(); ++j.value)
+		if (isWildcardTarget(j) && !hasSourceAssigned(j) && mappable(j))
+			if (Status const status = map(j, j); status != Status::Done)
+				return status;
+	return Status::Done;
+}
+
+[[gnu::used]] UNIT Status MappingBuilder::absorbSurplus()
+{
+	for (StackOffset j{0}; j < m_targetSize; ++j.value)
+		if (isWildcardTarget(j) && !hasSourceAssigned(j))
+		{
+			// of two slots at the same distance the deeper one: the comparison is strict
+			Optional<StackOffset> best = std::nullopt;
+			for (StackOffset o{0}; o < m_sourceSize; ++o.value)
+				if (mappable(o) && (!best || absDiff(o, j) < absDiff(*best, j)))
+					best = o;
+			if (best)
+				if (Status const status = map(*best, j); status != Status::Done)
+					return status;
+		}
+	return Status::Done;
+}
+
+}
+
+/// Shuffler.cpp's MappingBuilder constructor, the Lean model's buildMapping, for a source stack of m slots and a target
+/// of n slots: dropped[i] is not 0 if source slot i is scheduled to be popped, and strategy is the
+/// WildcardSlotsStrategy, 0 (Leave) or 1 (Take). Writes the position of the source slot bound for each of the n target
+/// offsets, or none (SIZE_MAX), to sources, and sawWildcardCopy, 0 or 1, to saw. Returns 0, or -2 for a failed
+/// assertion; then nothing is written.
+///
+/// dropped has m bytes, and sources has room for n entries. m, n <= 1024 and strategy <= 1, else the result is -2 and
+/// nothing is written.
+extern "C" std::int64_t build_mapping(
+	std::uint64_t const m,
+	std::uint64_t const n,
+	StackSlot const* const source,
+	StackSlot const* const target,
+	std::uint8_t const* const dropped,
+	std::uint8_t const strategy,
+	Optional<StackOffset>* const sources,
+	std::uint8_t* const saw
+)
+{
+	// the mapping has room for maxStackSize offsets, and the strategy is Leave or Take
+	if (m > maxStackSize || n > maxStackSize || strategy > 1)
+		return -2;
+	Mapping mapping{m, n};
+	MappingBuilder builder{source, m, target, n, dropped, MappingBuilder::WildcardSlotsStrategy{strategy}, mapping};
+	if (builder.mapInPlace() != Status::Done || builder.mapClosestCopies() != Status::Done ||
+		builder.mapWildcardSlotCopies() != Status::Done || builder.keepWildcardSlots() != Status::Done ||
+		builder.absorbSurplus() != Status::Done)
+		return -2;
+	for (StackOffset j{0}; j < n; ++j.value)
+		sources[j.value] = mapping.positionOf(j);
+	*saw = builder.sawWildcardCopy();
+	return 0;
 }
