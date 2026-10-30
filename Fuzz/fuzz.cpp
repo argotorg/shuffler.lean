@@ -1,5 +1,5 @@
 // Differential fuzzer for buildMapping, removeSurplus, permute, permuteAtLowestHeight, buildBottomUp,
-// Emission.run, Planner.run and State.pop: decodes each fuzzer input into one case and runs the Lean model
+// Emission.run, Planner.run, State.pop and SpillSet: decodes each fuzzer input into one case and runs the Lean model
 // (through the Lean C FFI), the C++ shuffler of solc and, for the units in Fuzz/port.cpp, the kraken/c port on it.
 // The model is the reference. On the first difference it prints "port <tab> case <tab> port <tab> model" or
 // "solc <tab> case <tab> c++ <tab> lean" to stderr and aborts. The port is checked first. The case and result
@@ -304,6 +304,25 @@ std::string runPlanner(Slots& _slots, std::vector<std::string> const& _fields)
 		";" + join(sources);
 }
 
+/// SpillSet::add of each slot of the first field, in order, then the free isSpilled of each slot of the second field
+std::string runSpill(Slots& _slots, std::vector<std::string> const& _fields)
+{
+	StackData const adds = _slots.parseStack(_fields.at(1));
+	StackData const queries = _slots.parseStack(_fields.at(2));
+	spill::SpillSet spills;
+	for (StackSlot const& slot: adds)
+	{
+		// SpillSet::add takes a value id: Shuffler.cpp's Planner adds a slot only if it is a value and not a literal
+		if (!slot.isValue() || slot.isLiteralValue())
+			return "err";
+		spills.add(slot.value());
+	}
+	std::vector<std::string> bits;
+	for (StackSlot const& slot: queries)
+		bits.push_back(showBit(isSpilled(slot, spills)));
+	return "ok;" + join(_slots.spilledVars(spills)) + ";" + join(bits);
+}
+
 std::string runCpp(Slots& _slots, std::string const& _line)
 {
 	std::vector<std::string> const fields = split(_line, ';');
@@ -320,6 +339,8 @@ std::string runCpp(Slots& _slots, std::string const& _line)
 			return runPermute(_slots, fields);
 		if (kind == "plan" && fields.size() == 6)
 			return runPlanner(_slots, fields);
+		if (kind == "spill" && fields.size() == 3)
+			return runSpill(_slots, fields);
 	}
 	catch (yul::YulAssertion const&)
 	{
@@ -508,9 +529,30 @@ std::string permuteCase(Input& _in)
 	return "permute;" + join(stack) + ";" + join(dests);
 }
 
+/// Adds, then queries of slots. Most adds are of a variable that is not spilled yet, so that most cases do not stop
+/// at an early failed add.
+std::string spillCase(Input& _in)
+{
+	std::size_t const numVars = varCount(_in);
+	std::vector<std::string> free;
+	for (std::size_t v = 0; v < numVars; ++v)
+		free.push_back("v" + std::to_string(v));
+	std::vector<std::string> adds;
+	for (std::size_t i = stackSize(_in); i > 0; --i)
+		if (free.empty() || _in.chance(8))
+			adds.push_back(slot(_in, numVars));
+		else
+		{
+			std::size_t const k = _in.pick(0, free.size() - 1);
+			adds.push_back(free[k]);
+			free.erase(free.begin() + static_cast<std::ptrdiff_t>(k));
+		}
+	return "spill;" + join(adds) + ";" + join(slots(_in, stackSize(_in), numVars));
+}
+
 std::string makeCase(Input& _in)
 {
-	switch (_in.pick(0, 7))
+	switch (_in.pick(0, 8))
 	{
 	case 0: return mapCase(_in);
 	case 1: return stateCase(_in, "surplus");
@@ -519,6 +561,7 @@ std::string makeCase(Input& _in)
 	case 4: return stateCase(_in, "emit");
 	case 5: return planCase(_in);
 	case 6: return stateCase(_in, "pop");
+	case 7: return spillCase(_in);
 	default: return stateCase(_in, "bottomup");
 	}
 }

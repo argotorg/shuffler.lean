@@ -10,7 +10,7 @@ set_option maxRecDepth 100000
 -- The function programs make up the linked file.
 example : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm ++ produceAsm
     ++ swapWithAsm ++ generateAsm ++ finishAsm ++ loopAsm ++ popAsm ++ buildBottomUpAsm
-    ++ emissionPopAsm := by rfl
+    ++ emissionPopAsm ++ spillSetAddAsm ++ spillSetAsm := by rfl
 
 -- `bbuParseFile` reads `leaq disp(,%i,8), %r` as the operand with no base.
 example : swapWithAsm[7]? = some (.instr (.regular .W64 .W64
@@ -41,6 +41,8 @@ example : (isSpilledAsm.head? = some (.label Names.isSpilled)) := by rfl
 example : (buildBottomUpAsm.head? = some (.label Names.build_bottom_up)) := by rfl
 example : (popAsm.head? = some (.label Names.pop)) := by rfl
 example : (emissionPopAsm.head? = some (.label Names.emission_pop)) := by rfl
+example : (spillSetAddAsm.head? = some (.label Names.spillSetAdd)) := by rfl
+example : (spillSetAsm.head? = some (.label Names.spill_set)) := by rfl
 
 end Bbu
 

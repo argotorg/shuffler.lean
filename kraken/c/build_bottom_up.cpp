@@ -111,6 +111,13 @@ constexpr bool canBeFreelyGenerated(StackSlot const _slot)
 	return _slot.isLiteralValue() || _slot.isJunk() || _slot.isFunctionCallReturnLabel();
 }
 
+/// Whether a slot is a variable, Value.Var of the Lean model: a value that is not a literal. Only a variable can be
+/// spilled.
+constexpr bool isVariable(StackSlot const _slot)
+{
+	return _slot.isValue() && !_slot.isLiteralValue();
+}
+
 /// The value of T that Optional<T> takes as its empty state: a value that is never present
 template<class T>
 struct Niche;
@@ -285,6 +292,28 @@ private:
 	OffsetArray<Optional<StackOffset>> m_positionOf;
 };
 
+/// spill/SpillSet.h's SpillSet, the Lean model's SpillSet (a Finset VarId), in a caller's buffer: the variable id is
+/// spilled if m_spilled[id] is not 0. The buffer has a byte for each variable id of the caller.
+///
+/// An aggregate: with a user-provided constructor, g++ -O1 changes the asm of build_bottom_up and emission_pop.
+struct SpillSet
+{
+	/// SpillSet.is_spilled: Shuffler.cpp's free isSpilled and SpillSet::isSpilled. Only a variable can be spilled.
+	constexpr bool isSpilled(StackSlot const _slot) const { return isVariable(_slot) && m_spilled[_slot.payload] != 0; }
+
+	/// SpillSet.add: spills the variable `_slot`. SpillSet::add takes a variable id; Shuffler.cpp's Planner checks
+	/// that the slot is a variable before it calls add (S:955, S:993). Defined after emission_pop.
+	Status add(StackSlot _slot);
+
+	std::uint8_t* m_spilled;
+};
+
+/// Shuffler.cpp's isSpilled
+constexpr bool isSpilled(StackSlot const _slot, SpillSet const _spills)
+{
+	return _spills.isSpilled(_slot);
+}
+
 class Emission
 {
 public:
@@ -306,7 +335,8 @@ public:
 	):
 		m_target(_target),
 		m_targetSize(_targetSize),
-		m_spills(_spills),
+		// m_spills is a SpillSet const, so the Emission does not write _spills
+		m_spills{const_cast<std::uint8_t*>(_spills)},
 		m_stack(_stack),
 		m_mapping(_plannedMapping, _stack.size(), _targetSize),
 		m_pendingGenerations(0),
@@ -618,10 +648,7 @@ private:
 		}
 	}
 
-	UNIT bool isSpilled(StackSlot const _slot) const
-	{
-		return _slot.isValue() && !_slot.isLiteralValue() && m_spills[_slot.payload] != 0;
-	}
+	UNIT bool isSpilled(StackSlot const _slot) const { return m_spills.isSpilled(_slot); }
 
 	/// Whether the slot at `_pos` is bound for `_pos` itself, i.e., already is at its final target offset
 	bool isFinal(StackOffset const _pos) const { return m_mapping.destinationOf(_pos) == _pos; }
@@ -695,8 +722,8 @@ private:
 
 	StackSlot const* m_target;
 	std::size_t m_targetSize;
-	/// m_spills[id] is not 0 if variable id is spilled
-	std::uint8_t const* m_spills;
+	/// Shuffler.cpp's SpillSet const&: the Emission does not spill
+	SpillSet const m_spills;
 
 	/// The working stack and its (in sync) mapping
 	Stack m_stack;
@@ -795,4 +822,50 @@ extern "C" std::int64_t emission_pop(
 		positionOf[destination.value] = emission.mapping().positionOf(destination);
 	*pending = emission.pendingGenerations();
 	return static_cast<std::int64_t>(emission.traceSize());
+}
+
+namespace
+{
+
+// `used` and this place make g++ emit add after emission_pop, so the asm of the units above and their labels stay
+[[gnu::used]] UNIT Status SpillSet::add(StackSlot const _slot)
+{
+	yulAssert(isVariable(_slot), "spill candidate must be a variable");  // Lean
+	yulAssert(m_spilled[_slot.payload] == 0, "can't spill a value twice");
+	m_spilled[_slot.payload] = 1;
+	return Status::Done;
+}
+
+}
+
+/// SpillSet::add for each of the addCount slots of adds, in order, on the spill set in spilled: the variable id is
+/// spilled if spilled[id] is not 0. Then results[i] is 1 if the slot queries[i] is spilled, else 0. Returns 0, or -2
+/// for a failed assertion: an add of a slot that is not a variable, or of a variable that is spilled. Then spilled
+/// holds the adds before it, and results is not written.
+///
+/// spilled has idCount bytes, and results has room for queryCount entries. The id of each variable in adds and
+/// queries is below idCount, else the result is -2 and nothing is written.
+extern "C" std::int64_t spill_set(
+	std::uint64_t const idCount,
+	std::uint8_t* const spilled,
+	StackSlot const* const adds,
+	std::uint64_t const addCount,
+	StackSlot const* const queries,
+	std::uint64_t const queryCount,
+	std::uint8_t* const results
+)
+{
+	for (std::uint64_t i = 0; i < addCount; ++i)
+		if (isVariable(adds[i]) && adds[i].payload >= idCount)
+			return -2;
+	for (std::uint64_t i = 0; i < queryCount; ++i)
+		if (isVariable(queries[i]) && queries[i].payload >= idCount)
+			return -2;
+	SpillSet spills{spilled};
+	for (std::uint64_t i = 0; i < addCount; ++i)
+		if (spills.add(adds[i]) != Status::Done)
+			return -2;
+	for (std::uint64_t i = 0; i < queryCount; ++i)
+		results[i] = isSpilled(queries[i], spills);
+	return 0;
 }
