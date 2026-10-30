@@ -15,7 +15,10 @@ jobs:
         with:
           submodules: true
       - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
-      - run: nix develop -c lake exe cache get
+      # gets the Mathlib cache and keeps .lake in the same cache entry as lean_action_ci.yml
+      - uses: leanprover/lean-action@f061402b660e0c34644504b324e830f2991d4865 # v1.6.1
+        with:
+          test: false
       # the Mathlib cache has no object files, without this Lake compiles about 1200 of them
       - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
