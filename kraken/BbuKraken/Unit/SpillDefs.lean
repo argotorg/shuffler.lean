@@ -98,6 +98,63 @@ theorem Kg.ret [Host] {post : MachineData → MachineData → Prop} {ls : List L
 
 end
 
+/-! ## The bytes of the spill set -/
+
+-- Two ids below `2 ^ 32` are two indices.
+theorem ofNat32_ne {i j : Nat} (hi : i < 2 ^ 32) (hj : j < 2 ^ 32) (h : j ≠ i) :
+    BitVec.ofNat 32 j ≠ BitVec.ofNat 32 i := by
+  intro e; apply h
+  have := congrArg BitVec.toNat e
+  simpa [Nat.mod_eq_of_lt hi, Nat.mod_eq_of_lt hj] using this
+
+theorem Spl.congr {a : Addr} {f g : BitVec 32 → BitVec 8} {is : List Nat}
+    (h : ∀ j ∈ is, f (BitVec.ofNat 32 j) = g (BitVec.ofNat 32 j)) : Spl a f is = Spl a g is := by
+  induction is with
+  | nil => rfl
+  | cons j js ih =>
+    simp only [Spl]
+    rw [h j (List.mem_cons_self ..), ih fun k hk => h k (List.mem_cons_of_mem _ hk)]
+
+-- The atom of the id `i`, and the bytes of the other ids.
+theorem Spl.erase (a : Addr) (f : BitVec 32 → BitVec 8) {is : List Nat} {i : Nat} (hi : i ∈ is) :
+    Spl a f is = B8 (a + BitVec.ofNat 64 i) (f (BitVec.ofNat 32 i)) ∗ Spl a f (is.erase i) := by
+  induction is with
+  | nil => cases hi
+  | cons j js ih =>
+    by_cases e : j = i
+    · subst e; simp [Spl]
+    · have hi' : i ∈ js := (List.mem_cons.mp hi).resolve_left (Ne.symm e)
+      rw [List.erase_cons_tail (by simpa using e)]
+      simp only [Spl]; rw [ih hi', sep_lc]
+
+section
+variable {a : Addr} {f : BitVec 32 → BitVec 8} {is : List Nat} {F : MProp 64} {m : Mem 64} {i : Nat}
+
+theorem Spl.isSome (h : (Spl a f is ∗ F).get m) (hi : i ∈ is) :
+    (m.loadInt (a + BitVec.ofNat 64 i) 1).isSome = true := by
+  rw [Spl.erase a f hi, MProp.sep_assoc] at h; exact B8.isSome h
+
+theorem Spl.rdb (h : (Spl a f is ∗ F).get m) (hi : i ∈ is) :
+    rdb m (a + BitVec.ofNat 64 i) = f (BitVec.ofNat 32 i) := by
+  rw [Spl.erase a f hi, MProp.sep_assoc] at h; exact B8.rdb h
+
+-- `movb` to the byte of the id `i`. The ids are distinct and below `2 ^ 32`.
+theorem Spl.store (hnd : is.Nodup) (hlt : ∀ j ∈ is, j < 2 ^ 32) (h : (Spl a f is ∗ F).get m)
+    (hi : i ∈ is) (x : Int) :
+    (Spl a (Flat.setByte f (BitVec.ofNat 32 i) (BitVec.ofInt 8 x)) is ∗ F).get
+      (m.storeInt (a + BitVec.ofNat 64 i) 1 x) := by
+  have e : Spl a (Flat.setByte f (BitVec.ofNat 32 i) (BitVec.ofInt 8 x)) (is.erase i)
+      = Spl a f (is.erase i) := by
+    refine Spl.congr fun j hj => ?_
+    have hji : j ≠ i := fun e => hnd.not_mem_erase (e ▸ hj)
+    have hj' := List.mem_of_mem_erase hj
+    simp [Flat.setByte, ofNat32_ne (hlt i hi) (hlt j hj') hji]
+  rw [Spl.erase a f hi, MProp.sep_assoc] at h
+  rw [Spl.erase a _ hi, e, MProp.sep_assoc]
+  simpa [Flat.setByte] using B8.store h x
+
+end
+
 /-! ## Bytes -/
 
 -- The bytes `bs` from `a`.
