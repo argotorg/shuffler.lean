@@ -286,22 +286,95 @@ theorem filter_range_two {P : Nat → Bool} {n x y : Nat} (hx : P x) (hy : P y) 
   · have := countP_range_lt hx h; have := countP_range_lt hy hyn; omega
   · have := countP_range_lt hy h; have := countP_range_lt hx hxn; omega
 
+-- The positions of the group go to the destinations of the group, and the destinations of
+-- the group are distinct and below the length.
+theorem grp_sinv {vals : List StackSlot} {p : List Nat} (slot : StackSlot)
+    (hl : p.length = vals.length) (hp : IsPerm p) :
+    SInv vals.length (· ∈ grp vals slot) (· ∈ grpDest vals p slot) p ∧
+      (grpDest vals p slot).Nodup ∧ ∀ d ∈ grpDest vals p slot, d < vals.length := by
+  have hq : SInv vals.length (· ∈ grp vals slot) (· ∈ grpDest vals p slot) p :=
+    SInv.of_isPerm hl hp fun d hd => by
+      obtain ⟨y, hy, he⟩ := List.mem_map.1 hd
+      exact ⟨y, hy, (mem_grp.1 hy).1, he⟩
+  have hGn : (grp vals slot).Nodup := (List.pairwise_lt_range.filter _).imp Nat.ne_of_lt
+  refine ⟨hq, List.pairwise_map.2 (List.Pairwise.imp_of_mem
+    (fun ha hb hab he => hab (hq.inj _ _ (mem_grp.1 ha).1 (mem_grp.1 hb).1 he)) hGn),
+    fun d hd => ?_⟩
+  obtain ⟨y, hy, he⟩ := List.mem_map.1 hd
+  rw [← he]; exact hq.lt y (mem_grp.1 hy).1
+
+-- The movers and the vacant offsets of `regroup` are the positions of the group that are
+-- not destinations of the group, and the destinations of the group that are not positions
+-- of the group. Their numbers are equal.
+theorem movers_vacant {vals : List StackSlot} {p : List Nat} {slot : StackSlot}
+    (hDn : (grpDest vals p slot).Nodup) (hDlt : ∀ d ∈ grpDest vals p slot, d < vals.length) :
+    (grp vals slot).filter (· ∉ (grpDest vals p slot).mergeSort) =
+        (List.range vals.length).filter
+          (fun y => (vals[y]! == slot) && !decide (y ∈ grpDest vals p slot)) ∧
+      ((grpDest vals p slot).mergeSort).filter (· ∉ grp vals slot) =
+        (List.range vals.length).filter
+          (fun w => decide (w ∈ grpDest vals p slot) && !(vals[w]! == slot)) ∧
+      ((List.range vals.length).filter
+          (fun y => (vals[y]! == slot) && !decide (y ∈ grpDest vals p slot))).length =
+        ((List.range vals.length).filter
+          (fun w => decide (w ∈ grpDest vals p slot) && !(vals[w]! == slot))).length := by
+  have hGs : (grp vals slot).Pairwise (· < ·) := List.pairwise_lt_range.filter _
+  have hds : ((grpDest vals p slot).mergeSort).Pairwise (· < ·) := sorted_of_le_nodup
+    (List.pairwise_mergeSort (fun a b c h1 h2 => by simp at *; omega) (fun a b => by simp; omega) _)
+    ((List.mergeSort_perm _ _).nodup_iff.2 hDn)
+  have hmd : ∀ w, w ∈ (grpDest vals p slot).mergeSort ↔ w ∈ grpDest vals p slot :=
+    fun w => List.mem_mergeSort
+  have hdl : ((grpDest vals p slot).mergeSort).length = (grp vals slot).length := by
+    simp [grpDest]
+  generalize (grpDest vals p slot).mergeSort = desired at hds hmd hdl ⊢
+  have hvac : desired.filter (· ∉ grp vals slot) =
+      (List.range vals.length).filter
+        fun w => decide (w ∈ grpDest vals p slot) && !(vals[w]! == slot) := by
+    apply eq_of_sorted (hds.filter _) (List.pairwise_lt_range.filter _)
+    intro w
+    by_cases h1 : w ∈ grpDest vals p slot <;> simp [h1, hmd, mem_grp, hDlt w]
+  have hmov : (grp vals slot).filter (· ∉ desired) =
+      (List.range vals.length).filter
+        fun y => (vals[y]! == slot) && !decide (y ∈ grpDest vals p slot) := by
+    apply eq_of_sorted (hGs.filter _) (List.pairwise_lt_range.filter _)
+    intro y
+    simp [hmd, mem_grp, and_assoc]
+  have h14 : (grp vals slot).filter (· ∈ desired) = desired.filter (· ∈ grp vals slot) := by
+    apply eq_of_sorted (hGs.filter _) (hds.filter _)
+    intro y
+    simp [hmd]
+    exact And.comm
+  refine ⟨hmov, hvac, ?_⟩
+  rw [← hmov, ← hvac]
+  have e1 := length_filter_add (· ∈ desired) (grp vals slot)
+  have e2 := length_filter_add (· ∈ grp vals slot) desired
+  have f1 : (grp vals slot).filter (· ∉ desired) =
+      (grp vals slot).filter (fun x => !decide (x ∈ desired)) :=
+    List.filter_congr fun x _ => by simp
+  have f2 : desired.filter (· ∉ grp vals slot) =
+      desired.filter (fun x => !decide (x ∈ grp vals slot)) :=
+    List.filter_congr fun x _ => by simp
+  rw [f1, f2]
+  rw [h14] at e1
+  omega
+
+-- The number of movers of `regroup` is the number of vacant offsets.
+theorem length_movers {vals : List StackSlot} {p : List Nat} (slot : StackSlot)
+    (hl : p.length = vals.length) (hp : IsPerm p) :
+    ((List.range vals.length).filter
+        (fun y => (vals[y]! == slot) && !decide (y ∈ grpDest vals p slot))).length =
+      ((List.range vals.length).filter
+        (fun w => decide (w ∈ grpDest vals p slot) && !(vals[w]! == slot))).length := by
+  obtain ⟨_, hDn, hDlt⟩ := grp_sinv slot hl hp
+  exact (movers_vacant hDn hDlt).2.2
+
 -- `regroup` of the list model gives `regroupAt` at each position and keeps the permutation.
 theorem regroup_ok {vals : List StackSlot} {p : List Nat} (slot : StackSlot)
     (hl : p.length = vals.length) (hp : IsPerm p) :
     ∃ r, regroup vals p slot = .ok r ∧ r.length = vals.length ∧ IsPerm r ∧
       ∀ x, x < vals.length → r[x]! = regroupAt vals p slot x := by
-  have hq : SInv vals.length (· ∈ grp vals slot) (· ∈ grpDest vals p slot) p :=
-    SInv.of_isPerm hl hp fun d hd => by
-      obtain ⟨y, hy, he⟩ := List.mem_map.1 hd
-      exact ⟨y, hy, (mem_grp.1 hy).1, he⟩
-  have hGs : (grp vals slot).Pairwise (· < ·) := List.pairwise_lt_range.filter _
-  have hGn : (grp vals slot).Nodup := hGs.imp Nat.ne_of_lt
-  have hDn : (grpDest vals p slot).Nodup := List.pairwise_map.2 (List.Pairwise.imp_of_mem
-    (fun ha hb hab he => hab (hq.inj _ _ (mem_grp.1 ha).1 (mem_grp.1 hb).1 he)) hGn)
-  have hDlt : ∀ d ∈ grpDest vals p slot, d < vals.length := fun d hd => by
-    obtain ⟨y, hy, he⟩ := List.mem_map.1 hd
-    rw [← he]; exact hq.lt y (mem_grp.1 hy).1
+  obtain ⟨hq, hDn, hDlt⟩ := grp_sinv slot hl hp
+  have hGn : (grp vals slot).Nodup := (List.pairwise_lt_range.filter _).imp Nat.ne_of_lt
   by_cases hlt : (grp vals slot).length < 2
   · refine ⟨p, by unfold regroup; exact ite_eq_left hlt, hl, hp, fun x hx => ?_⟩
     unfold regroupAt
@@ -352,47 +425,12 @@ theorem regroup_ok {vals : List StackSlot} {p : List Nat} (slot : StackSlot)
     · rw [ite_eq_right hg]
   · rw [regroup_eq hlt]
     dsimp only
-    have hds : ((grpDest vals p slot).mergeSort).Pairwise (· < ·) := sorted_of_le_nodup
-      (List.pairwise_mergeSort (fun a b c h1 h2 => by simp at *; omega) (fun a b => by simp; omega) _)
-      ((List.mergeSort_perm _ _).nodup_iff.2 hDn)
-    have hmd : ∀ w, w ∈ (grpDest vals p slot).mergeSort ↔ w ∈ grpDest vals p slot :=
-      fun w => List.mem_mergeSort
-    have hdl : ((grpDest vals p slot).mergeSort).length = (grp vals slot).length := by
-      simp [grpDest]
-    generalize (grpDest vals p slot).mergeSort = desired at hds hmd hdl ⊢
-    have hvac : desired.filter (· ∉ grp vals slot) =
-        (List.range vals.length).filter
-          fun w => decide (w ∈ grpDest vals p slot) && !(vals[w]! == slot) := by
-      apply eq_of_sorted (hds.filter _) (List.pairwise_lt_range.filter _)
-      intro w
-      by_cases h1 : w ∈ grpDest vals p slot <;> simp [h1, hmd, mem_grp, hDlt w]
-    have hmov : (grp vals slot).filter (· ∉ desired) =
-        (List.range vals.length).filter
-          fun y => (vals[y]! == slot) && !decide (y ∈ grpDest vals p slot) := by
-      apply eq_of_sorted (hGs.filter _) (List.pairwise_lt_range.filter _)
-      intro y
-      simp [hmd, mem_grp, and_assoc]
-    have h14 : (grp vals slot).filter (· ∈ desired) = desired.filter (· ∈ grp vals slot) := by
-      apply eq_of_sorted (hGs.filter _) (hds.filter _)
-      intro y
-      simp [hmd]
-      exact And.comm
-    have hlen : ((grp vals slot).filter (· ∉ desired)).length =
-        (desired.filter (· ∉ grp vals slot)).length := by
-      have e1 := length_filter_add (· ∈ desired) (grp vals slot)
-      have e2 := length_filter_add (· ∈ grp vals slot) desired
-      have f1 : (grp vals slot).filter (· ∉ desired) =
-          (grp vals slot).filter (fun x => !decide (x ∈ desired)) :=
-        List.filter_congr fun x _ => by simp
-      have f2 : desired.filter (· ∉ grp vals slot) =
-          desired.filter (fun x => !decide (x ∈ grp vals slot)) :=
-        List.filter_congr fun x _ => by simp
-      rw [f1, f2]
-      rw [h14] at e1
-      omega
-    rw [hmov, hvac] at hlen
+    obtain ⟨hmov, hvac, hlen⟩ := movers_vacant (slot := slot) hDn hDlt
     rw [hmov, hvac, ite_eq_right (c := _ ≠ _) (fun h => h hlen)]
     refine ⟨_, rfl, ?_⟩
+    have hmd : ∀ w, w ∈ (grpDest vals p slot).mergeSort ↔ w ∈ grpDest vals p slot :=
+      fun w => List.mem_mergeSort
+    generalize (grpDest vals p slot).mergeSort = desired at hmd ⊢
     have hMm : ∀ y, y ∈ (List.range vals.length).filter
         (fun y => (vals[y]! == slot) && !decide (y ∈ grpDest vals p slot)) ↔
         y ∈ grp vals slot ∧ y ∉ grpDest vals p slot := fun y => by simp [mem_grp, and_assoc]
@@ -475,5 +513,83 @@ theorem regroup_ok {vals : List StackSlot} {p : List Nat} (slot : StackSlot)
         refine ⟨fun h => hxG (h ▸ ((hMm _).1 (hMi i hi)).1), fun h => ?_⟩
         rw [hp1] at h
         exact hpx (h ▸ ((hVm _).1 (hVi i hi)).1), hp1]
+
+/-! ## `dedup` -/
+
+section
+variable {α : Type} [DecidableEq α]
+
+theorem dedup_cons (a : α) (l : List α) :
+    dedup (a :: l) = if a ∈ dedup l then dedup l else a :: dedup l := rfl
+
+theorem mem_dedup : ∀ (l : List α) (a : α), a ∈ dedup l ↔ a ∈ l
+  | [], a => by simp [dedup]
+  | b :: l, a => by
+    rw [dedup_cons]
+    by_cases h : b ∈ dedup l
+    · rw [ite_eq_left h, mem_dedup l a, List.mem_cons]
+      refine ⟨Or.inr, fun h' => ?_⟩
+      rcases h' with e | h'
+      · rw [e]; exact (mem_dedup l b).1 h
+      · exact h'
+    · rw [ite_eq_right h, List.mem_cons, List.mem_cons, mem_dedup l a]
+
+variable [Inhabited α]
+
+-- The position `k` of `l` holds the last copy of its element.
+def isLast (l : List α) (k : Nat) : Bool := decide (l[k]! ∉ l.drop (k + 1))
+
+theorem isLast_iff {l : List α} {k : Nat} :
+    isLast l k = true ↔ ∀ j, k < j → j < l.length → l[j]! ≠ l[k]! := by
+  unfold isLast
+  rw [decide_eq_true_iff, List.mem_drop_iff_getElem]
+  constructor
+  · intro h j hkj hj he
+    apply h
+    refine ⟨j - (k + 1), by omega, ?_⟩
+    rw [← getElem!_pos l _ (by omega), show k + 1 + (j - (k + 1)) = j by omega, he]
+  · rintro h ⟨j, hj, he⟩
+    apply h (k + 1 + j) (by omega) (by omega)
+    rw [getElem!_pos l _ (by omega), he]
+
+-- `dedup` keeps the last copy of each element, in order.
+theorem dedup_eq : ∀ l : List α, dedup l = ((List.range l.length).filter (isLast l)).map (l[·]!)
+  | [] => rfl
+  | a :: l => by
+    have h1 : (isLast (a :: l) ∘ Nat.succ) = isLast l := by
+      funext k; simp [isLast]
+    have h2 : (((a :: l)[·]!) ∘ Nat.succ) = (l[·]!) := by
+      funext k; simp
+    rw [dedup_cons, List.length_cons, List.range_succ_eq_map, List.filter_cons, List.filter_map, h1]
+    by_cases h : a ∈ l
+    · rw [ite_eq_left ((mem_dedup l a).2 h), ite_eq_right (by simp [isLast, h]), List.map_map, h2,
+        ← dedup_eq l]
+    · rw [ite_eq_right (fun h' => h ((mem_dedup l a).1 h')), ite_eq_left (by simp [isLast, h]),
+        List.map_cons, List.map_map, h2, ← dedup_eq l]
+      rfl
+
+end
+
+-- The last position below `n` whose value is `f k` is `k` when no position above `k` has it.
+theorem find?_last {α : Type} [BEq α] [LawfulBEq α] (f : Nat → α) {k : Nat} :
+    ∀ n, k < n → ((List.range n).reverse.find? (fun j => f j == f k) = some k ↔
+      ∀ j, k < j → j < n → f j ≠ f k)
+  | 0, h => absurd h (Nat.not_lt_zero k)
+  | n + 1, h => by
+    rw [List.range_succ, List.reverse_append, List.reverse_singleton, List.singleton_append]
+    by_cases hn : n = k
+    · rw [hn, List.find?_cons_of_pos (by simp)]
+      exact ⟨fun _ j h1 h2 => absurd h2 (by omega), fun _ => rfl⟩
+    · have hkn : k < n := by omega
+      by_cases he : f n = f k
+      · rw [List.find?_cons_of_pos (by simp [he])]
+        exact ⟨fun h' => absurd (Option.some.inj h') hn, fun h' => absurd he (h' n hkn (by omega))⟩
+      · rw [List.find?_cons_of_neg (by simp [he]), find?_last f n hkn]
+        constructor
+        · intro h' j h1 h2
+          by_cases hj : j = n
+          · rw [hj]; exact he
+          · exact h' j h1 (by omega)
+        · intro h' j h1 h2; exact h' j h1 (by omega)
 
 end Bbu
