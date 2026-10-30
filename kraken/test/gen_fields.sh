@@ -3,7 +3,7 @@
 # c/build_bottom_up.cpp and of each element of its arrays, with the lemmas on these addresses.
 # The source of truth is the g++ offsetof and sizeof values (the probe of test/struct_layout.sh).
 # With --check, do not write the file, but fail if it is not current.
-# BBU_SRC (default c/) is the directory of build_bottom_up.cpp and permute.S (for the tests).
+# BBU_SRC (default c/) is the directory of build_bottom_up.cpp (for the tests).
 set -euo pipefail
 dir=$(cd "$(dirname "$0")/.." && pwd)
 src=${BBU_SRC:-$dir/c}
@@ -33,8 +33,7 @@ int main()
 	std::printf("size %zu 0 0\n", sizeof(Emission));
 }
 CPP
-# buildBottomUp calls permute.
-${CXX:-g++} -std=c++20 -I "$src" -o "$tmp/probe" "$tmp/probe.cpp" "$src/permute.S"
+${CXX:-g++} -std=c++20 -I "$src" -o "$tmp/probe" "$tmp/probe.cpp"
 "$tmp/probe" > "$tmp/offsets"
 
 awk '

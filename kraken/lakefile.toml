@@ -30,3 +30,9 @@ name = "ProofKit"
 
 [[lean_lib]]
 name = "ProofKitTest"
+
+# The flat model of build_bottom_up, run by test/bbu_diff.sh.
+[[lean_exe]]
+name = "bbu_flat"
+srcDir = "test"
+root = "BbuFlatMain"

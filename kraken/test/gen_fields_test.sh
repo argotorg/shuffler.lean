@@ -15,7 +15,7 @@ echo "ok: real layout"
 # A copy of the sources, with one change. The generator must fail and must not write the file.
 fails() { # expected-message sed-script
 	rm -rf "$tmp/c"; mkdir "$tmp/c"
-	cp "$dir/c/build_bottom_up.cpp" "$dir/c/permute.S" "$tmp/c/"
+	cp "$dir/c/build_bottom_up.cpp" "$tmp/c/"
 	sed -i "$2" "$tmp/c/build_bottom_up.cpp"
 	cmp -s "$dir/c/build_bottom_up.cpp" "$tmp/c/build_bottom_up.cpp" && { echo "FAIL: no change: $2"; exit 1; }
 	local before; before=$(sha1sum "$out")
@@ -41,7 +41,7 @@ echo "ok: an element of 4 bytes fails"
 
 # A different array size: no hole, but --check finds that the file is not current.
 rm -rf "$tmp/c"; mkdir "$tmp/c"
-cp "$dir/c/build_bottom_up.cpp" "$dir/c/permute.S" "$tmp/c/"
+cp "$dir/c/build_bottom_up.cpp" "$tmp/c/"
 sed -i 's|maxStackSize = 1024|maxStackSize = 512|' "$tmp/c/build_bottom_up.cpp"
 grep -q 'maxStackSize = 512' "$tmp/c/build_bottom_up.cpp"
 if BBU_SRC=$tmp/c "$gen" --check 2> "$tmp/err" > /dev/null; then

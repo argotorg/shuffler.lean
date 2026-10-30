@@ -13,6 +13,8 @@ there is no proof that they agree.
 - Each unit returns a `Status` and the state, also when it fails, as the C++ does.
 - There is one function for each function of the C++, and its statements are in
   the order of the C++. A `yulAssert` returns `.assertionFailed`.
+- A loop is a recursive function. The loop of `permute` has no bound in the C++, so
+  the model gives it fuel (`permuteLoop`).
 
 The C++ reads a member of `Emission` only after it writes it, or below the sizes
 that the constructor gets. The arrays are `Vector`s, so a read or a write out of
@@ -69,10 +71,6 @@ def stackSwap (st : St) (offset : Word) : St :=
   let data := put st.data offset (get st.data (st.size - 1))
   let data := put data (st.size - 1) slot
   { st with data, trace := st.trace ++ [Op.swapW (st.size - 1 - offset)] }
-
--- `Stack::swap(StackDepth)`
-def stackSwapDepth (st : St) (depth : Word) : St :=
-  stackSwap st (st.size - 1 - depth)
 
 -- `Stack::push`. `Op.push` is a load for a non-literal value.
 def stackPush (st : St) (slot : StackSlot) : St :=
@@ -146,11 +144,13 @@ def push (st : St) (slot : StackSlot) (destination : Word) : Status × St :=
   if get st.pos destination ≠ NONE then (.assertionFailed, st)
   else (.done, bind st (st.size - 1) destination)
 
--- `dup`
+-- `dup`, with the check of `Stack.h`'s `dup`.
 def dup (st : St) (copy destination : Word) : Status × St :=
-  let st := stackDup st copy
-  if get st.pos destination ≠ NONE then (.assertionFailed, st)
-  else (.done, bind st (st.size - 1) destination)
+  if (get st.data copy).kind = FunctionReturnLabel then (.assertionFailed, st)
+  else
+    let st := stackDup st copy
+    if get st.pos destination ≠ NONE then (.assertionFailed, st)
+    else (.done, bind st (st.size - 1) destination)
 
 -- `block`
 def block (st : St) (position excess : Word) : Status × St :=
@@ -194,22 +194,155 @@ def generate (st : St) (targetOffset : Word) : Status × St :=
         else (.done, st)
       else (.done, st)
 
--- `permuteDestinations`. The C `permute` gets the destinations as `std::uint16_t`
--- and returns the depths as `std::uint8_t` and the blocked slot as `std::uint16_t`.
--- `IsPerm` is the precondition of `PermuteKraken.permute`, as in `Bbu.finish`.
-def permuteDestinations (st : St) : Status × St :=
-  let positions := (List.range st.size.toNat).map (BitVec.ofNat 64)
-  if positions.any (get st.dest · = NONE) then (.assertionFailed, st)
-  else
-    let permutation := positions.map fun pos => ((get st.dest pos).setWidth 16).toNat
-    if h : IsPerm permutation then
-      match PermuteKraken.permute ⟨permutation, h.1, fun i j hi hj => h.2 i hi j hj⟩ with
-      | .error blocked =>
-        (.blocked, { st with blockedOffset := (BitVec.ofNat 16 blocked.offset).setWidth 64,
-                             blockedExcess := (BitVec.ofNat 16 blocked.excess).setWidth 64 })
-      | .ok swapDepths =>
-        (.done, swapDepths.foldl (fun st d => stackSwapDepth st ((BitVec.ofNat 8 d).setWidth 64)) st)
-    else (.assertionFailed, st)
+/-! ## `permute`
+
+The local arrays `permutation` and `desiredBy` of `permute` are `Vector`s. The C++ writes
+each element below the size before it reads it, so their content at the start does not
+matter: the model starts with `initial`. -/
+
+-- The content of the local arrays of `permute` at the start.
+def initial : Vector Word MAX_N := Vector.replicate MAX_N 0
+
+-- The measure of a loop `for (i = a; i < b; ++i)`.
+theorem sub_succ_lt {a b : Word} (h : a < b) : (b - (a + 1)).toNat < (b - a).toNat := by
+  bv_omega
+
+-- The loop that reads the destinations into `permutation`, from `pos` on; none if a slot
+-- has no destination.
+def readDestinations (st : St) (pos : Word) (permutation : Vector Word MAX_N) :
+    Option (Vector Word MAX_N) :=
+  if h : pos < st.size then
+    let destination := get st.dest pos
+    if destination = NONE then none
+    else readDestinations st (pos + 1) (put permutation pos destination)
+  else some permutation
+termination_by (st.size - pos).toNat
+decreasing_by bv_omega
+
+-- The loop that sets `desiredBy` to none, from `offset` on.
+def clearDesired (st : St) (offset : Word) (desiredBy : Vector Word MAX_N) : Vector Word MAX_N :=
+  if h : offset < st.size then clearDesired st (offset + 1) (put desiredBy offset NONE)
+  else desiredBy
+termination_by (st.size - offset).toNat
+decreasing_by bv_omega
+
+-- The loop that marks the desired offsets of the group of `leader`, whose slot is
+-- `slot`, from `pos` up to `leader`.
+def markDesired (st : St) (leader : Word) (hl : leader < st.size) (slot : StackSlot)
+    (permutation : Vector Word MAX_N) (pos : Word) (desiredBy : Vector Word MAX_N) :
+    Vector Word MAX_N :=
+  if h : pos ≤ leader then
+    let desiredBy :=
+      if get st.data pos = slot then put desiredBy (get permutation pos) leader else desiredBy
+    markDesired st leader hl slot permutation (pos + 1) desiredBy
+  else desiredBy
+termination_by (leader + 1 - pos).toNat
+decreasing_by bv_omega
+
+-- The `vacant` loop: from `vacant` on, the first offset that the group of `leader`
+-- desires and that does not hold `slot`, or the size.
+def nextVacant (st : St) (leader : Word) (slot : StackSlot) (desiredBy : Vector Word MAX_N)
+    (vacant : Word) : Word :=
+  if h : vacant < st.size ∧ ¬(get desiredBy vacant = leader ∧ ¬get st.data vacant = slot) then
+    nextVacant st leader slot desiredBy (vacant + 1)
+  else vacant
+termination_by (st.size - vacant).toNat
+decreasing_by bv_omega
+
+-- The loop that gives each slot of the group of `leader` an offset in `permutation`, from
+-- `pos` up to `leader`; none if no vacant offset is left.
+def placeGroup (st : St) (leader : Word) (hl : leader < st.size) (slot : StackSlot)
+    (desiredBy : Vector Word MAX_N) (pos vacant : Word) (permutation : Vector Word MAX_N) :
+    Option (Vector Word MAX_N) :=
+  if h : pos ≤ leader then
+    if ¬get st.data pos = slot then
+      placeGroup st leader hl slot desiredBy (pos + 1) vacant permutation
+    else if get desiredBy pos = leader then
+      placeGroup st leader hl slot desiredBy (pos + 1) vacant (put permutation pos pos)
+    else
+      let vacant := nextVacant st leader slot desiredBy vacant
+      if ¬vacant < st.size then none
+      else placeGroup st leader hl slot desiredBy (pos + 1) (vacant + 1) (put permutation pos vacant)
+  else some permutation
+termination_by (leader + 1 - pos).toNat
+decreasing_by all_goals bv_omega
+
+-- The `leader` loop, from `leader` on; none if a group has no vacant offset left.
+def regroup (st : St) (leader : Word) (permutation desiredBy : Vector Word MAX_N) :
+    Option (Vector Word MAX_N) :=
+  if h : leader < st.size then
+    let slot := get st.data leader
+    if shallowestCopyPosition st slot ≠ leader then regroup st (leader + 1) permutation desiredBy
+    else
+      let desiredBy := markDesired st leader h slot permutation 0 desiredBy
+      match placeGroup st leader h slot desiredBy 0 0 permutation with
+      | none => none
+      | some permutation => regroup st (leader + 1) permutation desiredBy
+  else some permutation
+termination_by (st.size - leader).toNat
+decreasing_by all_goals exact sub_succ_lt h
+
+-- The `candidate` loop of `permute`: the shallowest offset below `candidate` whose slot is
+-- misplaced, or `top`.
+def misplacedBelow (permutation : Vector Word MAX_N) (top candidate : Word) : Word :=
+  if h : candidate = 0 then top
+  else if get permutation (candidate - 1) ≠ candidate - 1 then candidate - 1
+  else misplacedBelow permutation top (candidate - 1)
+termination_by candidate.toNat
+decreasing_by bv_omega
+
+-- How an iteration of the loop of `permute` ends: the next state and `permutation`, or
+-- `return`.
+inductive PNext where
+  | cont (st : St) (permutation : Vector Word MAX_N)
+  | ret (r : Status × St)
+
+-- The end of an iteration of the loop of `permute`: the slot at `pos` and the top.
+def exchange (st : St) (top : Word) (permutation : Vector Word MAX_N) (pos : Word) : PNext :=
+  let r : Except (Status × St) St :=
+    if get st.data pos = get st.data (st.size - 1) then .ok (swapDestinations st pos top)
+    else if !isSwapReachable st pos then .error (blockSwapUnreachable st pos)
+    else .ok (swapDestinations (stackSwap st pos) pos top)
+  match r with
+  | .error r => .ret r
+  | .ok st =>
+    let desired := get permutation pos
+    let permutation := put permutation pos (get permutation top)
+    .cont st (put permutation top desired)
+
+-- An iteration of the loop of `permute`.
+def permuteStep (st : St) (top : Word) (permutation : Vector Word MAX_N) : PNext :=
+  let pos := get permutation top
+  if pos = top then
+    let pos := misplacedBelow permutation top top
+    if pos = top then .ret (.done, st)
+    else exchange st top permutation pos
+  else exchange st top permutation pos
+
+-- The loop of `permute`, for at most `fuel` iterations. If `permutation` is a permutation
+-- of the offsets below the size, the loop ends after at most `2 * size - 1` iterations
+-- (see the C++). Else the C++ loop can run forever, and the model fails when `fuel` is 0.
+def permuteLoop (fuel : Nat) (st : St) (top : Word) (permutation : Vector Word MAX_N) :
+    Status × St :=
+  match fuel with
+  | 0 => (.assertionFailed, st)
+  | fuel + 1 =>
+    match permuteStep st top permutation with
+    | .ret r => r
+    | .cont st permutation => permuteLoop fuel st top permutation
+
+-- `permute`
+def permute (st : St) : Status × St :=
+  if st.size = 0 then (.done, st)
+  else match readDestinations st 0 initial with
+  | none => (.assertionFailed, st)
+  | some permutation =>
+    let desiredBy := clearDesired st 0 initial
+    match regroup st 0 permutation desiredBy with
+    | none => (.assertionFailed, st)
+    | some permutation =>
+      let top := st.size - 1
+      permuteLoop (2 * st.size.toNat) st top permutation
 
 /-! ## `buildBottomUp` -/
 
@@ -287,7 +420,7 @@ def body (st : St) (targetOffset : Word) : Next :=
   if targetOffset < st.size ∧ isFinal st targetOffset then .cont st targetOffset
   else if st.pend = 0 then
     if st.size ≠ st.targetSize then .ret (.assertionFailed, st)
-    else .ret (permuteDestinations st)
+    else .ret (permute st)
   else match urgentFrom st targetOffset targetOffset NONE with
   | .error r => .ret r
   | .ok urgentToDup =>
@@ -331,7 +464,8 @@ theorem push_keep (st : St) (slot : StackSlot) (d : Word) : Keep st (push st slo
   unfold push; dsimp only; split <;> exact ⟨rfl, rfl⟩
 
 theorem dup_keep (st : St) (copy d : Word) : Keep st (dup st copy d).2 := by
-  unfold dup; dsimp only; split <;> exact ⟨rfl, rfl⟩
+  unfold dup; dsimp only; repeat' split
+  all_goals exact ⟨rfl, rfl⟩
 
 theorem swapWith_keep (st : St) (pos : Word) : Keep st (swapWith st pos).2 := by
   unfold swapWith; dsimp only; repeat' split
@@ -495,16 +629,16 @@ def ctor (data : Vector StackSlot MAX_N) (m : Word) (target : Vector StackSlot M
 
 -- `build_bottom_up`: the result and the final state, whose `data` holds the stack
 -- below `size`, `trace` the operations, and `blockedOffset` and `blockedExcess` the
--- words that it writes to `blocked`. `u` is the content of the members that the
--- constructor does not initialize.
+-- words that it writes to `blocked` (0 and 0 if not blocked). `u` is the content of the
+-- members that the constructor does not initialize.
 def build_bottom_up (m n : Word) (data target : Vector StackSlot MAX_N) (dest : Vector Word MAX_N)
     (spilled : BitVec 32 → BitVec 8) (u : Uninit) : Word × Option St :=
   if m > n ∨ n > .ofNat 64 MAX_N then (-2, none)
   else
     let r := buildBottomUp (ctor data m target n dest spilled u)
     match r.1 with
-    | .done => (.ofNat 64 r.2.trace.length, some r.2)
-    | .blocked => (-1, some r.2)
+    | .done => (.ofNat 64 r.2.trace.length, some { r.2 with blockedOffset := 0, blockedExcess := 0 })
+    | .blocked => (.ofNat 64 r.2.trace.length, some r.2)
     | .assertionFailed => (-2, some r.2)
 
 end Bbu.Flat

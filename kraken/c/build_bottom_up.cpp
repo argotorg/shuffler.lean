@@ -1,9 +1,8 @@
 // Emission::buildBottomUp of solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp, freestanding, with the
-// behavior of kraken/c/build_bottom_up.c. The differences from Shuffler.cpp:
+// behavior of the Lean model, Shuffler/BuildBottomUp/Defs.lean. The differences from Shuffler.cpp:
 //
 // - There are no exceptions, so a failed yulAssert returns Status::AssertionFailed.
 // - The source stack has no surplus, so every slot has a destination.
-// - The final permutation is permute.S.
 // - The checks marked `Lean` come from the Lean model; Shuffler.cpp does not have them.
 #include <bit>
 #include <compare>
@@ -39,6 +38,7 @@ struct StackSlot
 	constexpr bool isLiteralValue() const { return valueOpcode == InstOpcode::Const; }
 	constexpr bool isJunk() const { return kind == Kind::Junk; }
 	constexpr bool isFunctionCallReturnLabel() const { return kind == Kind::FunctionCallReturnLabel; }
+	constexpr bool isFunctionReturnLabel() const { return kind == Kind::FunctionReturnLabel; }
 
 	/// The members as one word, to compare them with one compare in place of three. The shift drops the 2
 	/// padding bytes, which the caller does not initialize.
@@ -94,8 +94,6 @@ struct ShuffleOp
 };
 static_assert(sizeof(ShuffleOp) == 12 && alignof(ShuffleOp) == 4);
 static_assert(offsetof(ShuffleOp, kind) == 0 && offsetof(ShuffleOp, depth) == 1 && offsetof(ShuffleOp, slot) == 4);
-
-extern "C" std::int64_t permute(std::uint64_t _n, std::uint16_t* _perm, std::uint8_t* _trace, std::uint16_t* _blocked);
 
 namespace
 {
@@ -191,7 +189,6 @@ public:
 		m_data[m_size - 1] = slot;
 		record(ShuffleOp::swap(offsetToDepth(_offset)));
 	}
-	void swap(StackDepth const _depth) { swap(StackOffset{m_size - 1 - _depth.value}); }
 
 	/// A non-literal value can only be pushed by a reload of its spill
 	void push(StackSlot const _slot)
@@ -307,7 +304,7 @@ public:
 			if (m_pendingGenerations == 0)
 			{
 				yulAssert(m_stack.size() == m_targetSize);
-				return permuteDestinations();
+				return permute();
 			}
 
 			// a target offset that needs something DUPed urgently before it goes out of dup reach
@@ -482,28 +479,92 @@ private:
 		return Status::Done;
 	}
 
-	/// Shuffler.cpp's final permute: every slot goes to the offset it is bound for. The mapping is not used
-	/// after it, so only the stack follows the swaps.
-	UNIT Status permuteDestinations()
+	/// Shuffler.cpp's permute of the destinations: every slot goes to the offset it is bound for. The
+	/// differences from Shuffler.cpp, as in the Lean model: the groups of equal slots come from a mark per
+	/// offset, not from a sort; an empty stack is done; and a swap does not assert that the slot is not final.
+	UNIT Status permute()
 	{
-		OffsetArray<std::uint16_t> permutation;
-		std::uint8_t swapDepths[2 * maxStackSize];
-		std::uint16_t blocked[2];
+		if (m_stack.size() == 0)  // Lean
+			return Status::Done;
+		OffsetArray<StackOffset> permutation;
 		for (StackOffset pos{0}; pos < m_stack.size(); ++pos.value)
 		{
 			Optional<StackOffset> const destination = m_mapping.destinationOf(pos);
 			yulAssert(destination.has_value());
-			permutation[pos] = static_cast<std::uint16_t>(destination->value);
+			permutation[pos] = *destination;
 		}
-		std::int64_t const swapCount = permute(m_stack.size(), permutation.data(), swapDepths, blocked);
-		if (swapCount < 0)
+
+		// Equal slots are interchangeable: among them, those already at one of their desired offsets stay, the
+		// others take the remaining offsets. Otherwise equal slots would pass each other in cycles.
+		// A group is the offsets of equal slots, and the highest of them is its leader. desiredBy[offset] is
+		// the leader of the group that desires the offset, or none before that group.
+		OffsetArray<Optional<StackOffset>> desiredBy;
+		for (StackOffset offset{0}; offset < m_stack.size(); ++offset.value)
+			desiredBy[offset] = std::nullopt;
+		for (StackOffset leader{0}; leader < m_stack.size(); ++leader.value)
 		{
-			m_blocked = {StackOffset{blocked[0]}, blocked[1]};
-			return Status::Blocked;
+			StackSlot const slot = m_stack[leader];
+			if (shallowestCopyPosition(slot) != leader)
+				continue;
+			// the group's desired offsets
+			for (StackOffset pos{0}; pos <= leader; ++pos.value)
+				if (m_stack[pos] == slot)
+					desiredBy[permutation[pos]] = leader;
+			// slots already standing on one of the group's desired offsets stay put, the others take the vacant
+			// offsets (desired, but not in the group), both sides ascending, so nothing crosses
+			StackOffset vacant{0};
+			for (StackOffset pos{0}; pos <= leader; ++pos.value)
+			{
+				if (!(m_stack[pos] == slot))
+					continue;
+				if (desiredBy[pos] == leader)
+				{
+					permutation[pos] = pos;
+					continue;
+				}
+				while (vacant < m_stack.size() && !(desiredBy[vacant] == leader && !(m_stack[vacant] == slot)))
+					++vacant.value;
+				yulAssert(vacant < m_stack.size(), "movers and vacant must have the same size");
+				permutation[pos] = vacant;
+				++vacant.value;
+			}
 		}
-		for (std::int64_t i = 0; i < swapCount; ++i)
-			m_stack.swap(StackDepth{swapDepths[i]});
-		return Status::Done;
+
+		// permutation is a permutation of the offsets. Let m be the number of offsets i with permutation[i] != i,
+		// and t be 1 if permutation[top] == top, else 0. Then 3 <= 2 m + 3 t <= 2 size() + 1, and each iteration
+		// that does not return lowers 2 m + 3 t. Thus the loop ends after at most 2 size() - 1 iterations.
+		StackOffset const top = m_stack.topOffset();
+		while (true)
+		{
+			StackOffset pos = permutation[top];
+			if (pos == top)
+			{
+				// the top is in place: find the shallowest misplaced slot
+				for (StackOffset candidate = top; candidate.value-- > 0;)
+					if (permutation[candidate] != candidate)
+					{
+						pos = candidate;
+						break;
+					}
+				// nothing misplaced was found, we're done
+				if (pos == top)
+					return Status::Done;
+			}
+			// an equal slot at `pos` serves the top's destination just as well; a misplaced slot equal to the
+			// top takes over the top's destination, making the top the misplaced one
+			if (m_stack[pos] == m_stack.top())
+				m_mapping.swapDestinations(pos, top);
+			else if (!isSwapReachable(pos))
+				return blockSwapUnreachable(pos);
+			else
+			{
+				m_stack.swap(pos);
+				m_mapping.swapDestinations(pos, top);
+			}
+			StackOffset const desired = permutation[pos];
+			permutation[pos] = permutation[top];
+			permutation[top] = desired;
+		}
 	}
 
 	UNIT bool isSpilled(StackSlot const _slot) const
@@ -553,6 +614,8 @@ private:
 
 	UNIT Status dup(StackOffset const _copy, StackOffset const _destination)
 	{
+		// Stack.h's dup
+		yulAssert(!m_stack[_copy].isFunctionReturnLabel(), "Cannot dup function return label");
 		m_stack.dup(_copy);
 		yulAssert(!m_mapping.positionOf(_destination), "destination already bound to a slot");
 		m_mapping.bind(m_stack.topOffset(), _destination);
@@ -596,8 +659,9 @@ private:
 
 /// The Emission constructor and Emission::run for a source stack of m slots without surplus: data holds the
 /// source slots and dest[i] is the target offset of source slot i. Writes the operations to ops and returns their
-/// number, writes the offset and the excess to blocked and returns -1, or returns -2 for a failed assertion.
-/// On success data holds the n slots of the target, otherwise its content is undefined.
+/// number, also when a slot is out of reach. Then blocked gets its offset and its excess, which is positive, else
+/// 0 and 0. Returns -2 for a failed assertion. If the result is not -2, data holds the slots of the working stack
+/// after the operations: the n slots of the target if blocked[1] is 0.
 ///
 /// dest holds distinct offsets below n, every variable id in target is an index of spilled, data has room for
 /// n slots and ops for 6n entries. m <= n <= 1024, else the result is -2.
@@ -619,11 +683,13 @@ extern "C" std::int64_t build_bottom_up(
 	switch (emission.buildBottomUp())
 	{
 	case Status::Done:
+		blocked[0] = 0;
+		blocked[1] = 0;
 		return static_cast<std::int64_t>(emission.traceSize());
 	case Status::Blocked:
 		blocked[0] = emission.blocked().offset.value;
 		blocked[1] = emission.blocked().excess;
-		return -1;
+		return static_cast<std::int64_t>(emission.traceSize());
 	case Status::AssertionFailed:
 		return -2;
 	}

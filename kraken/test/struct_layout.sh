@@ -28,8 +28,7 @@ int main()
 	std::printf("size %zu\n", sizeof(Emission));
 }
 CPP
-# buildBottomUp calls permute.
-${CXX:-g++} -std=c++20 -I "$dir/c" -o "$tmp/probe" "$tmp/probe.cpp" "$dir/c/permute.S"
+${CXX:-g++} -std=c++20 -I "$dir/c" -o "$tmp/probe" "$tmp/probe.cpp"
 "$tmp/probe" > "$tmp/offsets"
 
 awk '

@@ -20,7 +20,7 @@ public def dupAsm : Program := bbuParseFn(Names.dup)
 public def produceAsm : Program := bbuParseFn(Names.produce)
 public def swapWithAsm : Program := bbuParseFn(Names.swapWith)
 public def generateAsm : Program := bbuParseFn(Names.generate)
-public def finishAsm : Program := bbuParseFn(Names.permuteDestinations)
+public def finishAsm : Program := bbuParseFn(Names.permute)
 public def loopAsm : Program := bbuParseFn(Names.buildBottomUp)
 public def buildBottomUpAsm : Program := bbuParseFn(Names.build_bottom_up)
 

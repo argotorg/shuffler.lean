@@ -3,7 +3,7 @@ import BbuKraken.BinLayout
 
 /-!
 A concrete `Host` for the binary `c/bbu_harness` (linked with `-no-pie`). The program
-is `c/build_bottom_up.S` then `c/permute.S`. The layout comes from
+is `c/build_bottom_up.S`. The layout comes from
 `BbuKraken/BinLayout.lean`, which `test/bin_layout.sh` makes from the binary. Each
 axiom of `Host` is proved by computation. `test/bin_check.sh` compares the directives
 with the bytes of the binary.
@@ -14,7 +14,7 @@ open scoped Program.WP
 
 namespace Bbu
 
-def binProg : Program := bbuAsm ++ State.permuteAsm
+def binProg : Program := bbuAsm
 
 @[instance_reducible] def binLayout : Layout where
   start := .ofNat BinLayout.start
@@ -70,14 +70,20 @@ theorem binProg_size {i : Nat} {d : Directive} (h : binProg[i]? = some d) :
     sizeOk d (@Kraken.Layout.size _ binLayout i) = true :=
   (sizesOk_sound binProg_sizesOk).2 i d h
 
--- The sizes of the directives, in order, are `BinLayout.sizes`.
-theorem binExe_sizes : (binLayout.apply binProg).program.map (·.size) = BinLayout.sizes := by
-  have hl := (sizesOk_sound binProg_sizesOk).1
+-- The sizes of the directives of a program with as many directives as `BinLayout.sizes`, in order,
+-- are `BinLayout.sizes`. With `binProg` in place of `p`, the `simp only` reaches the maximum
+-- recursion depth.
+theorem apply_sizes {p : Program} (hl : p.length = BinLayout.sizes.length) :
+    (binLayout.apply p).program.map (·.size) = BinLayout.sizes := by
   apply List.ext_getElem (by simp [Kraken.Layout.apply, hl])
   intro i h1 h2
   simp only [Kraken.Layout.apply, List.getElem_map, List.getElem_mapIdx]
   show BinLayout.sizes.getD i 0 = _
   simp [List.getD_eq_getElem?_getD, h2]
+
+-- The sizes of the directives, in order, are `BinLayout.sizes`.
+theorem binExe_sizes : (binLayout.apply binProg).program.map (·.size) = BinLayout.sizes :=
+  apply_sizes (sizesOk_sound binProg_sizesOk).1
 
 theorem sum_take_le (l : List Nat) (i : Nat) : (l.take i).sum ≤ l.sum := by
   have := congrArg List.sum (List.take_append_drop i l)
@@ -119,14 +125,10 @@ instance binHost : Host where
     have := binProg_fits
     exact ofNat_cancel (by omega) (by omega) h
 
-/-- `c/build_bottom_up.S` at position 0 and `c/permute.S` right after it. -/
+/-- `c/build_bottom_up.S` at position 0. -/
 def binLinked : Linked where
   k := 0
-  j := bbuAsm.length
-  hb := List.prefix_append _ _
-  hp := by
-    show State.permuteAsm.IsPrefix (binProg.drop bbuAsm.length)
-    simp [binProg]
+  hb := List.prefix_refl _
 
 theorem bbu_harness_correct :
     letI := binLinked.decls

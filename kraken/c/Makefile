@@ -13,10 +13,9 @@ all: permute.S harness build_bottom_up.S bbu_harness
 permute.S: permute.c
 	$(CC) $(CFLAGS_ASM) -S $< -o $@
 
-# The labels get the prefix .LB, so that they differ from the labels of permute.S
-# in a program that holds both files. bbu/NAME.S holds the function NAME. NAME is the
-# g++ (Itanium) name, for example _ZN12_GLOBAL__N_18Emission7produceE11StackOffset,
-# or build_bottom_up, which is extern "C".
+# The labels get the prefix .LB: the proofs use the .LB names. bbu/NAME.S holds the
+# function NAME. NAME is the g++ (Itanium) name, for example
+# _ZN12_GLOBAL__N_18Emission7produceE11StackOffset, or build_bottom_up, which is extern "C".
 build_bottom_up.S: build_bottom_up.cpp
 	$(CXX) $(CXXFLAGS_ASM) -S $< -o - | sed 's/^\.L\([0-9]\)/.LB\1/; s/\(	j[a-z]*	\)\.L\([0-9]\)/\1.LB\2/' > $@
 	rm -rf bbu && mkdir bbu
@@ -25,8 +24,8 @@ build_bottom_up.S: build_bottom_up.cpp
 harness: harness.c permute.S
 	$(CC) -O1 -o $@ harness.c permute.S
 
-bbu_harness: bbu_harness.c build_bottom_up.S permute.S
-	$(CC) -O1 -no-pie -o $@ bbu_harness.c build_bottom_up.S permute.S
+bbu_harness: bbu_harness.c build_bottom_up.S
+	$(CC) -O1 -no-pie -o $@ bbu_harness.c build_bottom_up.S
 
 clean:
 	rm -f harness bbu_harness

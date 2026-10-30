@@ -57,7 +57,7 @@ def topSpl : List (Addr × Nat) :=
 def topLocals : Nat := 8 * WORDS + 8
 -- The frame: the return address, the locals and the frame of `buildBottomUp`.
 def topF : Nat := 8 + topLocals + loopF
-theorem topF_eq : topF = 20720 := rfl
+theorem topF_eq : topF = 33032 := rfl
 
 -- The memory that `build_bottom_up` writes: the working stack, the ops buffer and `blocked`.
 def topOut : List (Addr × Nat) :=
@@ -148,7 +148,7 @@ theorem TopMem.env_dests (hm : TopMem s) : Dests (topEnv s).n (topDests s) := by
 theorem TopGuard.n_le_max (hg : TopGuard s) : (topEnv s).n ≤ MAX_N := by
   rw [length_topEnv]; exact hg.2
 
-theorem TopPre.rsp_ge (hp : TopPre s) : 20720 ≤ (rsp s).toNat := by
+theorem TopPre.rsp_ge (hp : TopPre s) : 33032 ≤ (rsp s).toNat := by
   have := hp.rsp_le; simp only [topF_eq] at this; omega
 
 -- The guard with the value of `MAX_N`, for `omega`.

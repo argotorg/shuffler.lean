@@ -18,7 +18,7 @@ namespace Bbu
 -- The calls of `generate` need `0 < pendingGenerations` (`generateA`): it follows from
 -- `Inv.len_pending` and `len < n`.
 theorem loop_body [Host] [FunDecls]
-    (hfin : Spec Names.permuteDestinations finishF finishA finishR)
+    (hfin : Spec Names.permute finishF finishA finishR)
     (hspill : Spec Names.isSpilled isSpilledF isSpilledA isSpilledR)
     (hcopy : Spec Names.shallowestCopyPosition shallowestCopyF shallowestCopyA shallowestCopyR)
     (hgen : Spec Names.generate generateF generateA generateR)

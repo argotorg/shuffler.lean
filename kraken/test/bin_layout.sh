@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 # Make BbuKraken/BinLayout.lean, the start address and the byte size of each
-# directive of `bbuAsm ++ State.permuteAsm` in c/bbu_harness.
+# directive of `bbuAsm` in c/bbu_harness.
 # With --check, do not write the file, but fail if it is not current.
 #
 # A label has size 0. An instruction has the size of its bytes in the binary plus
 # the size of the alignment nops that follow it: the Kraken parser drops `.p2align`,
-# so the padding has no directive of its own. This includes the padding between
-# the code of build_bottom_up.S and permute.S.
+# so the padding has no directive of its own.
 set -euo pipefail
 dir=$(cd "$(dirname "$0")/.." && pwd)
 out=BbuKraken/BinLayout.lean
@@ -15,7 +14,7 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 make -C "$dir/c" -s bbu_harness
-(cd "$dir" && lake build -q BbuKraken.Asm PermuteKraken.Asm Kraken.X64.PrintATT >/dev/null)
+(cd "$dir" && lake build -q BbuKraken.Asm Kraken.X64.PrintATT >/dev/null)
 (cd "$dir" && lake env lean --run test/BinAsmMain.lean) > "$tmp/asm"
 "$dir/test/bin_objdump.sh" "$bin" > "$tmp/dis"
 

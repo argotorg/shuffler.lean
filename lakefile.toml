@@ -40,3 +40,9 @@ root = "OriginalMain"
 name = "bbu_original"
 srcDir = "kraken/test"
 root = "BuildBottomUpMain"
+
+# The PR31 buildBottomUp, run by kraken/test/bbu_diff.sh.
+[[lean_exe]]
+name = "bbu_pr31"
+srcDir = "kraken/test"
+root = "BbuPr31Main"

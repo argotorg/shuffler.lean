@@ -83,23 +83,25 @@ def generateA (s : MachineData) : Prop :=
 def generateR (s t : MachineData) : Prop :=
   Res (rdi s) (generate (env s) (st s) (rsi s).toNat) (Ok s t id) t
 
--- `permuteDestinations(e)`, for a permutation of the destinations
--- The locals of `permuteDestinations` from `rsp` after `subq`: `blocked` at 12,
--- `swapDepths` at 16, `permutation` at `finishPerm`, then 8 bytes of padding.
-def finishPerm : Nat := 16 + 2 * MAX_N
-def finishLocals : Nat := finishPerm + 2 * MAX_N + 8
--- The return address, `pushq %rbp`, `pushq %rbx`, the locals and the frame of `permute`.
-def finishF : Nat := 8 + 16 + finishLocals + 16
-theorem finishF_eq : finishF = 4160 := rfl
+-- `permute(e)`: the solc permute of the stack to the destinations
+-- The locals of `permute` after `subq $16408, %rsp`: the `OffsetArray`s `permutation` and
+-- `desiredBy` (8 bytes for each offset) and 24 bytes.
+def finishLocals : Nat := 2 * 8 * MAX_N + 24
+-- The return address, six `pushq`, the locals and the frame of `shallowestCopyPosition`.
+def finishF : Nat := 8 + 48 + finishLocals + shallowestCopyF
+theorem finishF_eq : finishF = 16472 := rfl
+-- wf: asm changed. `finishA` and `finishR` are of the old asm (`permuteDestinations`) and of the
+-- old model `finish`. The C++ `permute` regroups equal slots, and it returns `AssertionFailed` for a
+-- slot with no destination and for a group of equal slots with too few vacant offsets.
 def finishA (s : MachineData) : Prop :=
   IsPerm ((st s).slots.map Slot.dest) ∧ (st s).trace.length + 2 * (st s).len ≤ cap s
 def finishR (s t : MachineData) : Prop :=
   Res (rdi s) (finish (st s)) (Ok s t id) t
 
 -- `buildBottomUp(e)`: `loop` from offset 0
--- The return address, six `pushq`, `subq $24` and the frame of `permuteDestinations`.
+-- The return address, six `pushq`, `subq $24` and the frame of `permute`.
 def loopF : Nat := 8 + 48 + 24 + finishF
-theorem loopF_eq : loopF = 4240 := rfl
+theorem loopF_eq : loopF = 16552 := rfl
 def loopA (s : MachineData) : Prop := Inv (env s) (st s) 0
 def loopR (s t : MachineData) : Prop :=
   Res (rdi s) (loop (env s) (st s) 0) (Ok s t id) t

@@ -42,7 +42,7 @@ expect_fail mnemonic dis '0,/movl /s//movw /'
 expect_fail target dis "0,/jbe  *$jbe/s//jbe    $(hex "$jbe" -1)/"
 expect_fail call dis "0,/$call <$push>/s//$(hex "$call" -1) <$push>/"
 expect_fail movzx dis '0,/movzbl %dl,%eax/s//movzwl %dx,%eax/'
-expect_fail cmov dis '0,/cmovneq/s//cmoveq/'
+expect_fail cmov dis '0,/cmoveq/s//cmovneq/'
 expect_fail and-l dis '0,/andl *%r10d,%esi/s//andq   %r10,%rsi/'
 expect_fail or-b dis '0,/orb *%dl,%al/s//orw    %dx,%ax/'
 expect_fail movabs dis '0,/movabsq *\(\$0x[0-9a-f]*\),%rbp/s//movabsq \1,%rbx/'
