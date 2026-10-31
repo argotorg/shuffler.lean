@@ -128,6 +128,7 @@ import BbuKraken.Unit.Plan.IsRetained
 import BbuKraken.Unit.Plan.Map
 import BbuKraken.Unit.Plan.MapInPlace
 import BbuKraken.Unit.Plan.MapClosest
+import BbuKraken.Unit.Plan.MapWildcard
 import BbuKraken.Unit.Plan.Specs
 import BbuKraken.Unit.SpillSet
 import BbuKraken.Unit.SwapWith
