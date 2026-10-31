@@ -284,9 +284,6 @@ theorem placeGroup_spec (st : Flat.St) (hn : st.size.toNat ≤ MAX_N) (L : Word)
 
 /-! ## `regroup` gives a bijection -/
 
--- `p` is a bijection of the offsets below `n`.
-def Bij (n : Word) (p : Vector Word MAX_N) : Prop :=
-  (∀ i < n, Flat.get p i < n) ∧ ∀ i < n, ∀ k < n, Flat.get p i = Flat.get p k → i = k
 
 theorem ofNat_toNat (w : Word) : BitVec.ofNat 64 w.toNat = w := by
   apply BitVec.eq_of_toNat_eq; simp
@@ -305,6 +302,31 @@ theorem permOk_bij {st : Flat.St} (hn : st.size.toNat ≤ MAX_N) (hp : PermOk st
   · rw [hd i hi, hd k hk] at he
     have := hp.inj i.toNat hi k.toNat hk (by rw [ofNat_toNat, ofNat_toNat]; exact he)
     exact BitVec.eq_of_toNat_eq this
+
+-- `readDestinations` gives a result if no destination below the size is `NONE`.
+theorem rd_some (st : Flat.St) (hne : ∀ i < st.size, Flat.get st.dest i ≠ Flat.NONE)
+    (pos : Word) (v : Vector Word MAX_N) : ∃ p, Flat.readDestinations st pos v = some p := by
+  fun_induction Flat.readDestinations st pos v with
+  | case1 pos v hlt d hd => exact absurd hd (hne pos hlt)
+  | case2 pos v hlt d hd ih => exact ih
+  | case3 pos v hge => exact ⟨_, rfl⟩
+
+-- The destinations of `PermOk` are below the size, so not `NONE`: `readDestinations` gives a
+-- result.
+theorem rd_some_of_permOk {st : Flat.St} (hn : st.size.toNat ≤ MAX_N) (hp : PermOk st) :
+    ∃ p, Flat.readDestinations st 0 Flat.initial = some p := by
+  refine rd_some st (fun i hi e => ?_) 0 _
+  have := hp.lt i.toNat (BitVec.lt_def.mp hi)
+  rw [ofNat_toNat, e] at this
+  have h1 : Flat.NONE.toNat = 2 ^ 64 - 1 := by decide
+  simp only [MAX_N] at hn
+  omega
+
+-- `permuteMapping` is `permute` with the result of `readDestinations`.
+theorem permuteMapping_of {st : Flat.St} {p : Vector Word MAX_N}
+    (h : Flat.readDestinations st 0 Flat.initial = some p) :
+    Flat.permuteMapping st = Flat.permute st p := by
+  rw [Flat.permuteMapping, h]
 
 -- The invariant of `regroup` before the leader `L`, from the permutation `p0` of the
 -- destinations. An offset whose leader is below `L` has the destination of an offset with its
@@ -456,11 +478,11 @@ theorem regroup_spec (st : Flat.St) (hn : st.size.toNat ≤ MAX_N) (p0 : Vector 
     cases h
     exact hr.bij hb (by bv_omega)
 
--- The permutation of `permute` after `regroup` is a bijection.
-theorem regroup_bij {st : Flat.St} (hn : st.size.toNat ≤ MAX_N) (hp : PermOk st)
-    {p0 p : Vector Word MAX_N} (h0 : Flat.readDestinations st 0 Flat.initial = some p0)
+-- The permutation of `permute` after `regroup` is a bijection, for a bijection `p0`.
+theorem regroup_bij {st : Flat.St} (hn : st.size.toNat ≤ MAX_N) {p0 p : Vector Word MAX_N}
+    (hb : Bij st.size p0)
     (h : Flat.regroup st 0 p0 (Flat.clearDesired st 0 Flat.initial) = some p) : Bij st.size p :=
-  regroup_spec st hn p0 (permOk_bij hn hp h0) 0 p0 _ p (RInv.init st hn p0) h
+  regroup_spec st hn p0 hb 0 p0 _ p (RInv.init st hn p0) h
 
 /-! ## The measure of the loop of `permute` -/
 

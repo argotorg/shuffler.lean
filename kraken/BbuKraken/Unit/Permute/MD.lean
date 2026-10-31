@@ -151,14 +151,14 @@ theorem ltB_swapD {n a b : Word} {d : Vector Word MAX_N} (h : LtB n d) (ha : a <
 
 /-! ## The registers of phase D -/
 
--- `DC` for a state with the same memory, `rsp`, `r15`, `rbx`, `rcx` and `rsi`.
+-- `DC` for a state with the same memory, `rsp`, `r13`, `r14`, `rcx` and `rsi`.
 theorem DC.next {S : Addr} {g g' : G} {F : MProp 64} {s : MachineData} {ra : Int64} {L : Lc}
     {p : Vector Word MAX_N} {t P : MachineData} (h : DC S g F s ra g' L p t)
-    (hm : P.dmem = t.dmem) (hsp : P.regs.rsp = t.regs.rsp) (h15 : P.regs.r15 = t.regs.r15)
-    (hbx : P.regs.rbx = t.regs.rbx) (hcx : P.regs.rcx = t.regs.rcx)
+    (hm : P.dmem = t.dmem) (hsp : P.regs.rsp = t.regs.rsp) (h13 : P.regs.r13 = t.regs.r13)
+    (h14 : P.regs.r14 = t.regs.r14) (hcx : P.regs.rcx = t.regs.rcx)
     (hsi : P.regs.rsi = t.regs.rsi) : DC S g F s ra g' L p P :=
-  ⟨h.fm.next hm hsp, h.ok, h.keep, h.len, h.pos, h.dl, by rw [h15]; exact h.r15,
-    by rw [hbx]; exact h.bx, by rw [hcx]; exact h.cx, by rw [hsi]; exact h.si, h.agP, h.bij⟩
+  ⟨h.fm.next hm hsp, h.ok, h.keep, h.len, h.pos, h.dl, by rw [h13]; exact h.r13,
+    by rw [h14]; exact h.r14, by rw [hcx]; exact h.cx, by rw [hsi]; exact h.si, h.agP, h.bij⟩
 
 end Permute
 end Bbu.Unit

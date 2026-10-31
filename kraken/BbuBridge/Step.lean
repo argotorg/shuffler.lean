@@ -30,7 +30,6 @@ theorem step_corr (hu : UrgentStmt) (h1 : RestUrgentStmt) (h2 : RestTopStmt)
   rw [ite_eq_right hp, loop_rest t state htn hnf (h.pendingGenerations ▸ hp)]
   -- The urgent scan, then one of four branches.
   refine hu e source st state t _ (origRest t state) h fun u uo hc => ?_
-  beta_reduce
   by_cases c4 : u ≠ e.n ∧ u ≠ t ∧ st.len < t + Bbu.MAX_SWAP_DEPTH
   · rw [ite_eq_left c4]
     exact h1 e source st state t u uo h (Nat.pos_of_ne_zero hp) ht hc c4
@@ -42,10 +41,10 @@ theorem step_corr (hu : UrgentStmt) (h1 : RestUrgentStmt) (h2 : RestTopStmt)
   rw [ite_eq_right c5]
   cases hb : Bbu.positionOf st t with
   | some b =>
-    simp only [hb, Option.isSome_some, ↓reduceIte]
+    simp only [Option.isSome_some, ↓reduceIte]
     exact h3 e source st state t u uo b h ht hc c4 c5 hb
   | none =>
-    simp only [hb, Option.isSome_none, Bool.false_eq_true, ↓reduceIte]
+    simp only [Option.isSome_none, Bool.false_eq_true, ↓reduceIte]
     exact h4 e source st state t u uo h (Nat.pos_of_ne_zero hp) ht hc c4 c5 hb
 
 end BbuBridge

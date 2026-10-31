@@ -17,7 +17,8 @@ open Shuffler Shuffler.Emission
 def PushStmt : Prop :=
   ∀ (e : Bbu.Env) (source : Stack) (st : Bbu.St) (state : OState e source) (v : Bbu.StackSlot)
     (d : Nat) (hd : d < (tgt e).length),
-    Rel e st state → Canon v → (Bbu.canBeFreelyGenerated v = true ∨ Bbu.isSpilled e v = true) →
+    Rel e st state → Canon v →
+    ((decode v).can_be_freely_generated ∨ (spillSet e source).is_spilled (decode v)) →
     Corr (Rel e) (Bbu.add st v d (.push v)) (state.push (decode v) ⟨d, hd⟩)
 
 -- `add` with a dup of the slot at `c` is `State.dup`. As `emit`, the model

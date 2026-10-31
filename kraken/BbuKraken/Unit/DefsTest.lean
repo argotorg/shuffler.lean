@@ -6,7 +6,7 @@ Tests of `Unit/Defs.lean`: the flat state `flat g` of a ghost, and the codes of 
 
 namespace Bbu.Unit.DefsTest
 
-open Bbu.Sep (G Hdr OpR)
+open Bbu.Sep (G Hdr OpR splIds)
 
 -- A ghost with `n = 2`, one slot and one operation.
 def hdr (len nops : Word) : Hdr :=
@@ -20,7 +20,13 @@ def w7 : Word := 7#64 + (1#64 <<< 40)
 def w7hi : Word := w7 + (0xab#64 <<< 48)
 
 def ghost (len nops : Word) (w : Word) : G :=
-  ⟨hdr len nops, Vector.replicate 2 w,
+  ⟨hdr len nops, 0, 0, Vector.replicate 2 w,
+    Vector.ofFn fun i => ⟨if i.val = 0 then opA else opB, 0, 0⟩,
+    Vector.replicate 2 w7, fun _ => 0⟩
+
+-- `ghost` with one more stack slot and one more record: `xs = xo = 1`.
+def ghostX (len nops : Word) (w : Word) : G :=
+  ⟨hdr len nops, 1, 1, Vector.replicate 3 w,
     Vector.ofFn fun i => ⟨if i.val = 0 then opA else opB, 0, 0⟩,
     Vector.replicate 2 w7, fun _ => 0⟩
 
@@ -47,6 +53,25 @@ def ghost (len nops : Word) (w : Word) : G :=
 -- The header fields.
 #guard (flat (ghost 1 1 w7)).size == 1#64 && (flat (ghost 1 1 w7)).targetSize == 2#64
 
+/-! ## The slack above `n` and `6n` -/
+
+-- The stack slot above `n` and the record above `6n` are in the flat state.
+#guard (flat (ghostX 3 13 w7)).data[2] == StackSlot.ofWord w7
+#guard (flat (ghostX 3 13 w7)).data[3] == default
+#guard (flat (ghostX 3 13 w7)).trace.length == 13
+#guard (flat (ghostX 3 12 w7)).trace.length == 12
+
+-- `G.Ok` allows `len` up to `n + xs`; `ghost` has no slack, so `len = 3 > n = 2` is not ok.
+example : (ghostX 3 13 w7).Ok :=
+  ⟨by decide, by decide, by decide, by decide, by decide, fun i hi => by
+    obtain ⟨a, ha, hs⟩ := by simpa [splIds, ghostX] using hi
+    obtain rfl : a = w7 := List.eq_of_mem_replicate ha
+    obtain rfl : i = 7 := Option.some.inj ((show spillId (StackSlot.ofWord w7) = some 7 by decide) ▸ hs).symm
+    decide⟩
+-- Negative: `len = 4 > n + xs = 3`, and `nops = 14 > 6n + xo = 13`.
+example : ¬ (ghostX 4 13 w7).Ok := fun h => absurd h.len (by decide)
+example : ¬ (ghostX 3 14 w7).Ok := fun h => absurd h.nops (by decide)
+
 /-! ## The codes of the results are distinct -/
 
 #guard code .done == DONE && code .blocked == BLOCKED && code .assertionFailed == ASSERTION_FAILED
@@ -54,7 +79,7 @@ def ghost (len nops : Word) (w : Word) : G :=
   && code .done != code .assertionFailed
 
 -- A function that writes nothing keeps the members.
-example (g : G) : Keep g g := ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+example (g : G) : Keep g g := ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 /-! ## `G.Ok` after a function that keeps the members -/
 
@@ -63,11 +88,12 @@ example (g : G) : Keep g g := ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 example (g : G) (h : g.Ok) (len nops : Word) (hl : len.toNat ≤ g.h.n.toNat)
     (hn : nops.toNat ≤ 6 * g.h.n.toNat) :
     G.Ok { g with h := { g.h with len := len, nops := nops } } :=
-  Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ h hl hn
+  Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ h (Nat.le_add_right_of_le hl)
+    (Nat.le_add_right_of_le hn)
 
 -- Negative: `Keep` does not give the bound of `len`. `ghost 3 1` keeps the members of
 -- `ghost 1 1`, but `len = 3 > n = 2`.
 example : Keep (ghost 1 1 w7) (ghost 3 1 w7) ∧ ¬ (ghost 3 1 w7).Ok :=
-  ⟨⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, fun h => absurd h.len (by decide)⟩
+  ⟨⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, fun h => absurd h.len (by decide)⟩
 
 end Bbu.Unit.DefsTest

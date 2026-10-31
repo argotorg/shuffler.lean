@@ -20,6 +20,15 @@ def Dests (n : Nat) (l : List Nat) : Prop :=
   (∀ i (h : i < l.length), l[i] < n) ∧
     ∀ i (hi : i < l.length) j (hj : j < l.length), l[i] = l[j] → i = j
 
+-- A list of distinct offsets below `n` has at most `n` entries.
+theorem Dests.length_le {n : Nat} {l : List Nat} (h : Dests n l) : l.length ≤ n := by
+  have hnd : l.Nodup := List.pairwise_iff_getElem.mpr fun i j hi hj hij he => by
+    have := h.2 i hi j hj he; omega
+  have := hnd.length_le_of_subset (l₂ := List.range n) fun x hx => by
+    obtain ⟨i, hi, rfl⟩ := List.mem_iff_getElem.mp hx
+    exact List.mem_range.mpr (h.1 i hi)
+  simpa using this
+
 theorem St.length_dests (st : St) : st.dests.length = st.len := by
   simp [St.dests, St.len]
 
@@ -698,6 +707,51 @@ theorem step_inv {e : Env} {st st' : St} {t t' : Nat} (hi : Inv e st t) (ht : t 
     · exact ⟨by omega, h2, by omega, gp, by omega⟩
     · obtain ⟨k1, k2, k3⟩ := placeTop_shape h
       exact ⟨by omega, h2, by omega, gp.placeTop h, by omega⟩
+
+-- `Inv` without the trace bound. The models do not read the trace, so the flat loop holds the list
+-- loop also for a state whose trace has operations from before `buildBottomUp`.
+structure InvS (e : Env) (st : St) (targetOffset : Nat) : Prop where
+  len_pending : st.len + st.pendingGenerations = e.n
+  n_le : e.n ≤ MAX_N
+  t_le : targetOffset ≤ e.n
+  pos : Pos e.n st
+
+theorem Inv.toS {e : Env} {st : St} {t : Nat} (hi : Inv e st t) : InvS e st t :=
+  ⟨hi.len_pending, hi.n_le, hi.t_le, hi.pos⟩
+
+theorem step_invS {e : Env} {st st' : St} {t t' : Nat} (hi : InvS e st t) (ht : t < e.n)
+    (h : step e st t = .ok (st', .next t')) : InvS e st' t' := by
+  obtain ⟨h1, h2, h3, h4⟩ := hi
+  rcases step_next h with ⟨rfl, rfl⟩ | ⟨rfl, hp, d, h⟩ | ⟨rfl, b, r, hb, hr, h⟩ | ⟨rfl, hp, s, hs, h⟩
+  · exact ⟨h1, h2, by omega, h4⟩
+  · obtain ⟨g1, g2, g3⟩ := generate_shape h
+    rw [sizeDec_pos hp] at g3
+    exact ⟨by omega, h2, h3, h4.generate h⟩
+  · have hb' := positionOf_some h4 hb
+    obtain ⟨g1, g2, g3⟩ := takeBound_shape hb' hb hr
+    have gp := h4.takeBound hb' hb hr
+    rcases h with rfl | ⟨nx, h⟩
+    · exact ⟨by omega, h2, by omega, gp⟩
+    · obtain ⟨k1, k2, k3⟩ := placeTop_shape h
+      exact ⟨by omega, h2, by omega, gp.placeTop h⟩
+  · obtain ⟨g1, g2, g3⟩ := generate_shape hs
+    rw [sizeDec_pos hp] at g3
+    have gp := h4.generate hs
+    rcases h with rfl | ⟨nx, h⟩
+    · exact ⟨by omega, h2, by omega, gp⟩
+    · obtain ⟨k1, k2, k3⟩ := placeTop_shape h
+      exact ⟨by omega, h2, by omega, gp.placeTop h⟩
+
+-- The destinations are a permutation when no generation is pending.
+theorem InvS.isPerm {e : Env} {st : St} {t : Nat} (hi : InvS e st t)
+    (hp : st.pendingGenerations = 0) : IsPerm (st.slots.map Slot.dest) := by
+  have h1 := hi.len_pending
+  have hl := st.length_dests
+  obtain ⟨d1, d2⟩ := hi.pos.dests
+  refine ⟨fun i h => ?_, d2⟩
+  have := d1 i h
+  unfold St.dests at hl this
+  omega
 
 -- The precondition of `step`.
 theorem Inv.lt {e : Env} {st : St} {t : Nat} (hi : Inv e st t) (ht : t < e.n) :

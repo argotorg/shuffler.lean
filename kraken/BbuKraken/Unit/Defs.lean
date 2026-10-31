@@ -1,4 +1,5 @@
 import BbuKraken.FlatRel
+import BbuKraken.Unit.LoopInv
 import BbuKraken.Sep.Contract
 import BbuKraken.Asm
 import BbuKraken.Names
@@ -51,14 +52,19 @@ structure Keep (g g' : G) : Prop where
   splp : g'.h.spl = g.h.spl
   data : g'.h.data = g.h.data
   ops : g'.h.ops = g.h.ops
+  xs : g'.xs = g.xs
+  xo : g'.xo = g.xo
   tgt : g'.tgt.toList = g.tgt.toList
   spl : g'.spl = g.spl
 
 -- `G.Ok` of `g'`: `G.Ok.n` and `G.Ok.spl` read only the members that `Keep` keeps.
-theorem Keep.ok {g g' : G} (hk : Keep g g') (h : g.Ok) (hl : g'.h.len.toNat ≤ g'.h.n.toNat)
-    (hn : g'.h.nops.toNat ≤ 6 * g'.h.n.toNat) : g'.Ok where
+theorem Keep.ok {g g' : G} (hk : Keep g g') (h : g.Ok)
+    (hl : g'.h.len.toNat ≤ g'.h.n.toNat + g'.xs)
+    (hn : g'.h.nops.toNat ≤ 6 * g'.h.n.toNat + g'.xo) : g'.Ok where
   len := hl
   n := by rw [hk.n]; exact h.n
+  xs := by rw [hk.n, hk.xs]; exact h.xs
+  xo := by rw [hk.xo]; exact h.xo
   nops := hn
   spl i hi k hk' j hj ha := by
     have hkn : k < g.h.n.toNat := by rw [← hk.n]; exact hk'
@@ -98,6 +104,12 @@ abbrev UnitThm [Host] [FunDecls] (prog : Program) (A : G → MachineData → Pro
     (Q : G → G → MachineData → MachineData → Prop) : Prop :=
   ∀ S g F, Sep.Body prog (Sep.Pre S g F A d) (fun s t => Sep.Post S F d (fun g' t => Q g g' s t) s t)
 
+-- A unit theorem of a function that also owns `W s` (see `Sep.SpecW`).
+abbrev UnitThmW [Host] [FunDecls] (prog : Program) (W : MachineData → MProp 64)
+    (A : G → MachineData → Prop) (d : Nat) (Q : G → G → MachineData → MachineData → Prop) : Prop :=
+  ∀ S g F, Sep.Body prog (fun s => Sep.Pre S g (W s ∗ F) A d s)
+    (fun s t => Sep.Post S (W s ∗ F) d (fun g' t => Q g g' s t) s t)
+
 /-! ## The preconditions and the results
 
 `rsi` and `rdx` are the arguments after `this`. A slot argument is the word of the slot. -/
@@ -115,40 +127,49 @@ def shallowestCopyQ (g g' : G) (s t : MachineData) : Prop :=
 
 -- `push(slot, destination)`: a free slot, a free record, and a destination in `m_positionOf`.
 def pushA (g : G) (s : MachineData) : Prop :=
-  g.h.len.toNat < g.h.n.toNat ∧ g.h.nops.toNat < 6 * g.h.n.toNat ∧ (rdx s).toNat < g.h.n.toNat
+  g.h.len.toNat < g.h.n.toNat ∧ g.h.nops.toNat < 6 * g.h.n.toNat + g.xo ∧ (rdx s).toNat < g.h.n.toNat
 def pushQ (g g' : G) (s t : MachineData) : Prop :=
   Res (Flat.push · (StackSlot.ofWord (rsi s)) (rdx s)) g g' t
 
 -- `dup(copy, destination)`: also a copy in the working stack.
 def dupA (g : G) (s : MachineData) : Prop :=
-  (rsi s).toNat < g.h.n.toNat ∧ g.h.len.toNat < g.h.n.toNat ∧ g.h.nops.toNat < 6 * g.h.n.toNat
+  (rsi s).toNat < g.h.n.toNat ∧ g.h.len.toNat < g.h.n.toNat ∧ g.h.nops.toNat < 6 * g.h.n.toNat + g.xo
     ∧ (rdx s).toNat < g.h.n.toNat
 def dupQ (g g' : G) (s t : MachineData) : Prop := Res (Flat.dup · (rsi s) (rdx s)) g g' t
 
 -- `swapWith(pos)`
 def swapWithA (g : G) (_s : MachineData) : Prop :=
-  g.h.nops.toNat < 6 * g.h.n.toNat ∧ DestOk (flat g)
+  g.h.nops.toNat < 6 * g.h.n.toNat + g.xo ∧ DestOk (flat g)
 def swapWithQ (g g' : G) (s t : MachineData) : Prop := Res (Flat.swapWith · (rsi s)) g g' t
 
 -- `produce(targetOffset)`
 def produceA (g : G) (s : MachineData) : Prop :=
-  (rsi s).toNat < g.h.n.toNat ∧ g.h.len.toNat < g.h.n.toNat ∧ g.h.nops.toNat < 6 * g.h.n.toNat
+  (rsi s).toNat < g.h.n.toNat ∧ g.h.len.toNat < g.h.n.toNat ∧ g.h.nops.toNat < 6 * g.h.n.toNat + g.xo
 def produceQ (g g' : G) (s t : MachineData) : Prop := Res (Flat.produce · (rsi s)) g g' t
 
 -- `generate(targetOffset)`: room for the operation of `produce` and a swap.
 def generateA (g : G) (_s : MachineData) : Prop :=
-  g.h.len.toNat < g.h.n.toNat ∧ g.h.nops.toNat + 2 ≤ 6 * g.h.n.toNat ∧ DestOk (flat g)
+  g.h.len.toNat < g.h.n.toNat ∧ g.h.nops.toNat + 2 ≤ 6 * g.h.n.toNat + g.xo ∧ DestOk (flat g)
 def generateQ (g g' : G) (s t : MachineData) : Prop := Res (Flat.generate · (rsi s)) g g' t
 
--- `permute()`: room for `2 * size` swaps.
-def permuteA (g : G) (_s : MachineData) : Prop :=
-  g.h.nops.toNat + 2 * g.h.len.toNat ≤ 6 * g.h.n.toNat ∧ PermOk (flat g)
-def permuteQ (g g' : G) (_s t : MachineData) : Prop := Res Flat.permute g g' t
+-- `p` is a bijection of the offsets below `n`.
+def Bij (n : Word) (p : Vector Word MAX_N) : Prop :=
+  (∀ i < n, Flat.get p i < n) ∧ ∀ i < n, ∀ k < n, Flat.get p i = Flat.get p k → i = k
 
--- `buildBottomUp()`: the state of the constructor, for distinct destinations below `n`.
-def loopA (g : G) (_s : MachineData) : Prop :=
-  ∃ dests u, Dests g.h.n.toNat (Flat.listDests g.h.len.toNat dests)
-    ∧ flat g = Flat.ctor (flat g).data g.h.len (flat g).target g.h.n dests g.spl u
+-- `permute(permutation)` for the ghost `p`: room for `2 * size` swaps, the destinations are none
+-- or target offsets, `p` is a bijection of the offsets below the size, and `permutation` (the
+-- array at `rsi`, in the frame `permW`) holds `p` below the size.
+def permuteA (p : Vector Word MAX_N) (g : G) (s : MachineData) : Prop :=
+  g.h.nops.toNat + 2 * g.h.len.toNat ≤ 6 * g.h.n.toNat + g.xo ∧ DestOk (flat g) ∧ Bij g.h.len p
+    ∧ ∀ i < g.h.len.toNat,
+      rd s.dmem (rsi s + BitVec.ofNat 64 (8 * i)) = Flat.get p (BitVec.ofNat 64 i)
+def permW (s : MachineData) : MProp 64 := Sep.ExArr (rsi s) MAX_N
+def permuteQ (p : Vector Word MAX_N) (g g' : G) (_s t : MachineData) : Prop :=
+  Res (Flat.permute · p) g g' t
+
+-- `buildBottomUp()`: the invariant of the loop head at `T = 0`. `xo` is the room of the trace
+-- buffer for the operations before the loop.
+def loopA (g : G) (_s : MachineData) : Prop := Flat.HInv (flat g) 0#64 g.xo
 def loopQ (g g' : G) (_s t : MachineData) : Prop := Res Flat.buildBottomUp g g' t
 
 end Bbu.Unit

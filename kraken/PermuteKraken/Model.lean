@@ -290,12 +290,12 @@ end Perm
 
 -- `permute.go`
 def permute (p : Perm) : Except Blocked (List Nat) :=
-  match h : step p.toList with
+  match _h : step p.toList with
   | .done => .ok []
   | .blocked b => .error b
   | .swap idx _ => (permute p.advance).map (idx :: ·)
 termination_by measure p.toList
-decreasing_by exact p.measure_advance h
+decreasing_by exact p.measure_advance _h
 
 -- The number of swaps before `permute` stops.
 def steps (p : Perm) : Nat :=

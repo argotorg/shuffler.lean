@@ -147,7 +147,7 @@ theorem View.rdb_spl (h : (View S g ∗ F).get m) (hok : g.Ok) {i : Nat}
     (hi : i ∈ splIds g.tgt.toList) : rdb m (g.h.spl + BitVec.ofNat 64 i) = g.spl (BitVec.ofNat 32 i) :=
   let ⟨_, h⟩ := View.b8_spl h hok hi; B8.rdb h
 
-theorem View.store_stk (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) (w : Word) :
+theorem View.store_stk (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) (w : Word) :
     (View S { g with stk := g.stk.set i w } ∗ F).get (m.storeInt (slotAt g.h.data i) 8 w.toInt) :=
   swap_of_eq h (A := Arr g.h.data g.stk.toList) (A' := Arr g.h.data (g.stk.set i w).toList)
     (by unfold View; ecancel) (by unfold View; ecancel)
@@ -176,7 +176,7 @@ def View.rest (S : Addr) (g : G) (i : Nat) : MProp 64 :=
     ∗ Arr g.h.tgt g.tgt.toList
     ∗ Spl g.h.spl g.spl (splOut g.h.tgt g.h.spl g.h.n.toNat (splIds g.tgt.toList))
 
-theorem View.focus (h : (View S g ∗ F).get m) {i : Nat} (hi : i < 6 * g.h.n.toNat) :
+theorem View.focus (h : (View S g ∗ F).get m) {i : Nat} (hi : i < 6 * g.h.n.toNat + g.xo) :
     (OpM (opAt g.h.ops i) g.ops[i] ∗ (View.rest S g i ∗ F)).get m := by
   have e : View S g ∗ F = OpM (opAt g.h.ops i) g.ops[i] ∗ (View.rest S g i ∗ F) := by
     unfold View View.rest
@@ -187,7 +187,7 @@ theorem View.focus (h : (View S g ∗ F).get m) {i : Nat} (hi : i < 6 * g.h.n.to
   exact e ▸ h
 
 theorem View.unfocus {i : Nat} {r : OpR} (h : (OpM (opAt g.h.ops i) r ∗ (View.rest S g i ∗ F)).get m)
-    (hi : i < 6 * g.h.n.toNat) : (View S { g with ops := g.ops.set i r } ∗ F).get m := by
+    (hi : i < 6 * g.h.n.toNat + g.xo) : (View S { g with ops := g.ops.set i r } ∗ F).get m := by
   have e : View S { g with ops := g.ops.set i r } ∗ F
       = OpM (opAt g.h.ops i) r ∗ (View.rest S g i ∗ F) := by
     unfold View View.rest
@@ -243,16 +243,22 @@ theorem fold_op (o n : Word) : o + (n + n * 2#64).shiftLeft 2 = opAt o n.toNat :
   have : (n + n * 2#64).shiftLeft 2 = n * 12 := by bv_decide
   rw [this]; unfold opAt; bv_omega
 
-theorem View.isSome_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+theorem View.isSome_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     (m.loadInt (slotAt g.h.data i) 8).isSome = true :=
   let ⟨_, h⟩ := View.arr_stk h; Arr.isSome h (by simpa using hi)
 
-theorem View.rd_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+-- `isSome_slot` for a slot below `n`, for `view_load`, which closes the side goals with
+-- `assumption`.
+theorem View.isSome_slot_n (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+    (m.loadInt (slotAt g.h.data i) 8).isSome = true :=
+  View.isSome_slot h (Nat.lt_add_right _ hi)
+
+theorem View.rd_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     rd m (slotAt g.h.data i) = g.stk[i] :=
   let ⟨_, h⟩ := View.arr_stk h; (Arr.rd h (by simpa using hi)).trans (by simp)
 
 -- Byte `j` of stack word `k`.
-theorem View.b8_slot (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat) {j : Nat}
+theorem View.b8_slot (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat + g.xs) {j : Nat}
     (hj : j < 8) :
     ∃ R, (B8 (slotAt g.h.data k + BitVec.ofNat 64 j) (g.stk[k].extractLsb' (8 * j) 8) ∗ R).get m := by
   obtain ⟨R, h⟩ := View.arr_stk h
@@ -263,11 +269,11 @@ theorem View.b8_slot (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNa
   rw [e', MProp.sep_assoc, MProp.sep_assoc] at h
   exact ⟨_, h⟩
 
-theorem View.isSome_slot_byte (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat) {j : Nat}
+theorem View.isSome_slot_byte (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat + g.xs) {j : Nat}
     (hj : j < 8) : (m.loadInt (slotAt g.h.data k + BitVec.ofNat 64 j) 1).isSome = true :=
   let ⟨_, h⟩ := View.b8_slot h hk hj; B8.isSome h
 
-theorem View.rdb_slot (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat) {j : Nat}
+theorem View.rdb_slot (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat + g.xs) {j : Nat}
     (hj : j < 8) : rdb m (slotAt g.h.data k + BitVec.ofNat 64 j) = g.stk[k].extractLsb' (8 * j) 8 :=
   let ⟨_, h⟩ := View.b8_slot h hk hj; B8.rdb h
 
@@ -295,7 +301,8 @@ end
 
 /-- `view_load` closes a load VC from a `View` or `OpM` hypothesis. -/
 macro "view_load" : tactic => `(tactic| sep_load [View.isSome_data, View.isSome_len,
-  View.isSome_ops, View.isSome_nops, View.isSome_slot, View.isSome_pos, View.isSome_dest,
+  View.isSome_ops, View.isSome_nops, View.isSome_slot, View.isSome_slot_n, View.isSome_pos,
+  View.isSome_dest,
   OpM.isSome_kind, OpM.isSome_depth, OpM.isSome_payload, OpM.isSome_skind, OpM.isSome_sop])
 
 end Bbu.Sep

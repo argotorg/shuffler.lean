@@ -83,7 +83,7 @@ def hdr0 : Hdr :=
 
 -- A ghost with `n = 0` and the spilled bytes `spl`.
 def ghost (spl : BitVec 32 → BitVec 8) : G :=
-  ⟨hdr0, ⟨#[], rfl⟩, ⟨#[], rfl⟩, ⟨#[], rfl⟩, spl⟩
+  ⟨hdr0, 0, 0, ⟨#[], rfl⟩, ⟨#[], rfl⟩, ⟨#[], rfl⟩, spl⟩
 
 def spl7 : BitVec 32 → BitVec 8 := fun p => if p = 7#32 then 1#8 else 0#8
 

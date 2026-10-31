@@ -165,6 +165,8 @@ def gh (d : List Nat) : G where
   h := { tgt := 0, n := .ofNat 64 d.length, spl := 0, data := 0, len := .ofNat 64 d.length,
          ops := 0, nops := 0, dest := kw d, pos := Flat.initial, pend := 0, blkOff := 0,
          blkExc := 0 }
+  xs := 0
+  xo := 0
   stk := Vector.replicate _ 0
   ops := Vector.replicate _ ⟨⟨0, 0, default⟩, 0, 0⟩
   tgt := Vector.replicate _ 0
@@ -173,23 +175,55 @@ def gh (d : List Nat) : G where
 /-! ## `ML.lean`: the destinations -/
 
 def gP : G := gh [1, 0]
-def gBad : G := gh [0, 5]
 def gNone : G := gh [Flat.NONE.toNat, 0]
+-- The destination `2000` is not `NONE` and not below `MAX_N`.
+def gBad : G := gh [0, 2000]
 
-theorem permOk_gP : PermOk (flat gP) := by decide +kernel
+instance (fs : Flat.St) : Decidable (DestOk fs) :=
+  inferInstanceAs (Decidable (∀ i < fs.size.toNat, _))
 
-example := dest_lt (g := gP) (x := 1) permOk_gP (by decide +kernel)
-#guard Flat.get gP.h.dest 1 < gP.h.len
-#guard Flat.get gP.h.dest 0 < gP.h.len
--- Negative: not `PermOk`, and the destination of `1` is not below the size.
-#guard ¬PermOk (flat gBad)
-#guard ¬Flat.get gBad.h.dest 1 < gBad.h.len
+-- The target of `gh` is all `0`: no spilled byte.
+theorem gh_ok (d : List Nat) (hl : d.length ≤ MAX_N)
+    (hs : splIds (gh d).tgt.toList = []) : (gh d).Ok where
+  len := Nat.le_refl _
+  n := by
+    show (BitVec.ofNat 64 d.length).toNat ≤ MAX_N
+    rw [BitVec.toNat_ofNat]; simp only [MAX_N] at hl ⊢; omega
+  xs := by
+    show (BitVec.ofNat 64 d.length).toNat + 0 ≤ MAX_N
+    rw [BitVec.toNat_ofNat]; simp only [MAX_N] at hl ⊢; omega
+  xo := Nat.zero_le _
+  nops := Nat.zero_le _
+  spl := by rw [hs]; simp
 
-example := dest_ne_none (g := gP) (x := 0) permOk_gP (by decide +kernel)
-#guard Flat.get gP.h.dest 0 ≠ Flat.NONE
--- Negative: not `PermOk`, and the destination of `0` is `NONE`.
-#guard ¬PermOk (flat gNone)
+theorem okP : gP.Ok := gh_ok _ (by decide) (by decide +kernel)
+theorem okNone : gNone.Ok := gh_ok _ (by decide) (by decide +kernel)
+
+example := dest_ok okP (by decide +kernel : DestOk (flat gP)) (x := 1) (by decide +kernel)
+#guard (Flat.get gP.h.dest 1).toNat < MAX_N
+example := dest_ok okNone (by decide +kernel : DestOk (flat gNone)) (x := 0) (by decide +kernel)
 #guard Flat.get gNone.h.dest 0 = Flat.NONE
+-- Negative: not `DestOk`, and the destination of `1` is not `NONE` and not below `MAX_N`.
+#guard ¬DestOk (flat gBad)
+#guard ¬(Flat.get gBad.h.dest 1 = Flat.NONE ∨ (Flat.get gBad.h.dest 1).toNat < MAX_N)
+
+-- `destOk_swapD`: the swap of the destinations `0` and `1` of `gNone`.
+example := destOk_swapD (st := flat gNone) (by decide +kernel) (by decide) (a := 0) (b := 1)
+  (by decide) (by decide)
+#guard DestOk { (flat gNone) with dest := swapD (flat gNone).dest 0 1 }
+-- Negative: the offset `1` is not below the size `1`. The swap moves `2000` to the offset `0`,
+-- and the state is not `DestOk`.
+def sOne : Flat.St := { (flat gBad) with size := 1 }
+#guard DestOk sOne
+#guard ¬(1 : Word) < sOne.size
+#guard ¬DestOk { sOne with dest := swapD sOne.dest 0 1 }
+
+-- `destOk_of_eq`: a state with other positions and the same destinations and sizes.
+example := destOk_of_eq (st := flat gP) (st' := { (flat gP) with pos := kw [7] })
+  (by decide +kernel) rfl rfl rfl
+#guard DestOk { (flat gP) with pos := kw [7] }
+-- Negative: other destinations, and the state is not `DestOk`.
+#guard ¬DestOk { (flat gP) with dest := (flat gBad).dest }
 
 /-! ## `ML.lean`: the agreement of vectors -/
 
@@ -405,12 +439,12 @@ theorem rgF : Flat.regroup kF 0 dF (Flat.clearDesired kF 0 Flat.initial) = none 
   Option.isNone_iff_eq_none.mp rgFn
 theorem szF : kF.size ≠ 0 := by decide +kernel
 
-example := rg_none (st := kF) ⟨dF, rdF, rgF⟩ szF
+example := rg_none (st := kF) (p0 := dF) rgF szF
 #guard Flat.regroup kF 0 (kw [0, 0]) (Flat.clearDesired kF 0 Flat.initial) = none
-#guard fr (Flat.permute kF) = fr (.assertionFailed, kF)
+#guard fr (Flat.permute kF dF) = fr (.assertionFailed, kF)
 -- Negative: `regroup` of `k3` does not fail, and `permute` does not fail.
 #guard Flat.regroup k3 0 pR dBc ≠ none
-#guard (Flat.permute k3).1 ≠ .assertionFailed
+#guard (Flat.permute k3 pR).1 ≠ .assertionFailed
 
 def pG : Vector Word MAX_N := kw [1, 0, 2]
 
@@ -429,8 +463,16 @@ theorem rg3 : Flat.regroup k3 0 d3 (Flat.clearDesired k3 0 Flat.initial) = some 
 theorem sz3 : k3.size ≠ 0 := by decide +kernel
 theorem ok3 : PermOk k3 := by decide +kernel
 
-example := rg_some (st := k3) (p := pK) ⟨d3, rd3, rg3⟩ sz3 (by decide +kernel) ok3
-#guard fr (Flat.permute k3) = fr (Flat.permuteLoop (2 * k3.size.toNat) k3 (k3.size - 1) pG)
+-- `rd_some_of_permOk` and `permuteMapping_of` (`PermuteModel.lean`).
+example := rd_some_of_permOk (st := k3) (by decide) ok3
+example := permuteMapping_of rd3
+#guard fr (Flat.permuteMapping k3) = fr (Flat.permute k3 pR)
+-- Negative: a `NONE` destination is not `PermOk`, and `readDestinations` gives none (above).
+#guard ¬PermOk kNone
+
+example := rg_some (st := k3) (p := pK) rg3 sz3 (by decide +kernel)
+  (permOk_bij (by decide) ok3 rd3)
+#guard fr (Flat.permute k3 d3) = fr (Flat.permuteLoop (2 * k3.size.toNat) k3 (k3.size - 1) pG)
 #guard Bij k3.size pG
 -- Negative: the destinations of `notBij` are not `PermOk`, and `regroup` gives a vector that is
 -- not a bijection.
@@ -624,19 +666,21 @@ example := ltB_swapD (n := 3) (a := 0) (b := 2) (d := pR) (by decide +kernel) (b
 A concrete `MachineData` has a memory of `2 ^ 64` bytes, and `mD` reads `MAX_N` words of it. Thus
 these examples are symbolic: `pm_dec` (the tactic of the proofs) unfolds `V`. -/
 
-example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.22" t = 2048 * mD s g t := by pm_dec
-example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.23" t = 2048 * mD s g t + 1101 := by pm_dec
-example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.15" t = 2048 * mD s g t + 1101 := by pm_dec
+example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.22" t = 2048 * mD s g t + 2 := by pm_dec
+example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.23" t = 2048 * mD s g t + 1 := by pm_dec
+example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.13" t = 2048 * mD s g t + 1101 := by pm_dec
+example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.20" t = 2048 * mD s g t := by pm_dec
+example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.21" t = 2048 * mD s g t + 1101 := by pm_dec
 
--- The edge `.LB.Emission.permute.22` to `.LB.Emission.permute.23` (`lt80` of `D2.lean`): `V` gets smaller if and only if `mD` gets
--- smaller.
+-- The edge `.LB.Emission.permute.20` to `.LB.Emission.permute.21` (`lt20` of `D2.lean`): `V` gets
+-- smaller if and only if `mD` gets smaller.
 example (s t u : MachineData) (g : G) (h : mD s g u < mD s g t) :
-    V s g ".LB.Emission.permute.23" u < V s g ".LB.Emission.permute.22" t := by pm_dec
+    V s g ".LB.Emission.permute.21" u < V s g ".LB.Emission.permute.20" t := by pm_dec
 example (s t u : MachineData) (g : G) :
-    V s g ".LB.Emission.permute.23" u < V s g ".LB.Emission.permute.22" t ↔ mD s g u < mD s g t := by pm_dec
+    V s g ".LB.Emission.permute.21" u < V s g ".LB.Emission.permute.20" t ↔ mD s g u < mD s g t := by pm_dec
 -- Negative: `mD` does not change, and `V` does not get smaller.
 example (s t u : MachineData) (g : G) (h : mD s g u = mD s g t) :
-    ¬V s g ".LB.Emission.permute.23" u < V s g ".LB.Emission.permute.22" t := by pm_dec
+    ¬V s g ".LB.Emission.permute.21" u < V s g ".LB.Emission.permute.20" t := by pm_dec
 -- The arithmetic of the edge on small values.
 #guard (List.range 5).all fun a => (List.range 5).all fun b =>
   decide (2048 * a + 1101 < 2048 * b) == decide (a < b)

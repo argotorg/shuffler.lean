@@ -3,8 +3,9 @@ import BbuKraken.Unit.Permute.Inv
 /-!
 # `permute`: facts of the model for the blocks
 
-* The destinations of `PermOk` are below the size and not `NONE`.
-* `start`: the model vectors at `.LB.Emission.permute.14`, from the locals at the end of phase B.
+* The destinations of `DestOk` are `NONE` or below `MAX_N`.
+* `start`: the model vectors at `.LB.Emission.permute.12`, from the locals at the end of the
+  loop `.LB.Emission.permute.0`.
 -/
 
 namespace Bbu.Unit
@@ -18,21 +19,41 @@ macro "pm_dec" : tactic => `(tactic| (
   try omega))
 
 theorem lt_max {g : G} (hok : g.Ok) {x : Word} (hx : x < g.h.len) : x.toNat < MAX_N :=
-  Nat.lt_of_lt_of_le (BitVec.lt_def.mp hx) (Nat.le_trans hok.len hok.n)
+  Nat.lt_of_lt_of_le (BitVec.lt_def.mp hx) (Nat.le_trans hok.len hok.xs)
 
-theorem dest_lt {g : G} (hp : PermOk (flat g)) {x : Word} (hx : x < g.h.len) :
-    Flat.get g.h.dest x < g.h.len := by
-  have h1 := hp.lt x.toNat (BitVec.lt_def.mp hx)
+-- A destination below the size of a `DestOk` state is `NONE` or below `MAX_N`.
+theorem dest_ok {g : G} (hok : g.Ok) (hd : DestOk (flat g)) {x : Word} (hx : x < g.h.len) :
+    Flat.get g.h.dest x = Flat.NONE ∨ (Flat.get g.h.dest x).toNat < MAX_N := by
+  have h1 := hd x.toNat (BitVec.lt_def.mp hx)
   rw [BitVec.ofNat_toNat, BitVec.setWidth_eq] at h1
-  exact BitVec.lt_def.mpr h1
+  exact h1.imp id fun h => Nat.lt_of_lt_of_le h hok.n
 
-theorem dest_ne_none {g : G} (hp : PermOk (flat g)) {x : Word} (hx : x < g.h.len) :
-    Flat.get g.h.dest x ≠ Flat.NONE := by
-  intro h
-  have h1 := BitVec.lt_def.mp (dest_lt hp hx)
-  rw [h, none_toNat] at h1
-  have := g.h.len.isLt
-  omega
+-- `DestOk` is kept by the swap of two destinations below the size.
+theorem destOk_swapD {st : Flat.St} (hd : DestOk st) (hN : st.size.toNat ≤ MAX_N) {a b : Word}
+    (ha : a < st.size) (hb : b < st.size) : DestOk { st with dest := swapD st.dest a b } := by
+  intro i hi
+  have haN : a.toNat < MAX_N := by have := BitVec.lt_def.mp ha; omega
+  have hbN : b.toNat < MAX_N := by have := BitVec.lt_def.mp hb; omega
+  have hda := hd a.toNat (BitVec.lt_def.mp ha)
+  have hdb := hd b.toNat (BitVec.lt_def.mp hb)
+  simp only [BitVec.ofNat_toNat, BitVec.setWidth_eq] at hda hdb
+  show Flat.get (swapD st.dest a b) (BitVec.ofNat 64 i) = Flat.NONE
+    ∨ (Flat.get (swapD st.dest a b) (BitVec.ofNat 64 i)).toNat < st.targetSize.toNat
+  unfold swapD
+  by_cases eb : BitVec.ofNat 64 i = b
+  · rw [eb, get_put_self _ hbN]; exact hda
+  · rw [get_put_ne _ _ eb]
+    by_cases ea : BitVec.ofNat 64 i = a
+    · rw [ea, get_put_self _ haN]; exact hdb
+    · rw [get_put_ne _ _ ea]; exact hd i hi
+
+-- `DestOk` depends only on `dest`, `size` and `targetSize`.
+theorem destOk_of_eq {st st' : Flat.St} (h : DestOk st) (hd : st'.dest = st.dest)
+    (hs : st'.size = st.size) (ht : st'.targetSize = st.targetSize) : DestOk st' := by
+  intro i hi
+  rw [hd, ht]
+  rw [hs] at hi
+  exact h i hi
 
 -- `permutation[x] = destinationOf[x]`: the agreement goes up to `x + 1`.
 theorem agB_step {P d : Vector Word MAX_N} {x : Word} (hag : AgB x P d) (hx : x.toNat < MAX_N) :
@@ -52,27 +73,15 @@ theorem AgB.trans {k : Word} {u v w : Vector Word MAX_N} (h1 : AgB k u v) (h2 : 
 theorem AgB.symm {k : Word} {u v : Vector Word MAX_N} (h : AgB k u v) : AgB k v u :=
   fun i hi => (h i hi).symm
 
--- `readDestinations` gives a vector if no destination is `NONE`.
-theorem rd_some (st : Flat.St) (hne : ∀ i < st.size, Flat.get st.dest i ≠ Flat.NONE)
-    (pos : Word) (v : Vector Word MAX_N) : ∃ p, Flat.readDestinations st pos v = some p := by
-  fun_induction Flat.readDestinations st pos v with
-  | case1 pos v hlt d hd => exact absurd hd (hne pos hlt)
-  | case2 pos v hlt d hd ih => exact ih
-  | case3 pos v hge => exact ⟨_, rfl⟩
-
--- `.LB.Emission.permute.14` at the start: `permutation` agrees with `destinationOf` and `desiredBy` is `NONE`.
-theorem start {g : G} (hok : g.Ok) (hp : PermOk (flat g)) {P D : Vector Word MAX_N}
-    (hP : AgB g.h.len P g.h.dest) (hD : ∀ i < g.h.len, Flat.get D i = Flat.NONE) :
-    ∃ p0, RG (flat g) (Flat.regroup (flat g) 0 p0 (Flat.clearDesired (flat g) 0 Flat.initial))
+-- `.LB.Emission.permute.12` at the start: `permutation` agrees with `p0` and `desiredBy` is `NONE`.
+theorem start {g : G} (hok : g.Ok) {p0 P D : Vector Word MAX_N} (hb : Bij g.h.len p0)
+    (hP : AgB g.h.len P p0) (hD : ∀ i < g.h.len, Flat.get D i = Flat.NONE) :
+    RG (flat g) p0 (Flat.regroup (flat g) 0 p0 (Flat.clearDesired (flat g) 0 Flat.initial))
       ∧ AgB g.h.len P p0 ∧ AgB g.h.len D (Flat.clearDesired (flat g) 0 Flat.initial)
       ∧ LtB g.h.len p0 := by
-  have hn : (flat g).size.toNat ≤ MAX_N := Nat.le_trans hok.len hok.n
-  obtain ⟨p0, hrd⟩ := rd_some (flat g) (fun i hi => dest_ne_none hp hi) 0 Flat.initial
-  have hp0 : AgB g.h.len p0 g.h.dest := fun i hi => by
-    rw [readDestinations_spec (flat g) hn 0 _ _ hrd i hi, ite_eq_left (by bv_omega)]; rfl
-  refine ⟨p0, ⟨p0, hrd, rfl⟩, hP.trans hp0.symm, fun i hi => ?_, fun i hi => ?_⟩
-  · rw [hD i hi, clearDesired_spec (flat g) hn 0 _ i hi, ite_eq_left (by bv_omega)]
-  · rw [hp0 i hi]; exact dest_lt hp hi
+  have hn : (flat g).size.toNat ≤ MAX_N := Nat.le_trans hok.len hok.xs
+  refine ⟨rfl, hP, fun i hi => ?_, hb.1⟩
+  rw [hD i hi, clearDesired_spec (flat g) hn 0 _ i hi, ite_eq_left (by bv_omega)]
 
 theorem none_toInt : Flat.NONE.toInt = -1 := by decide
 
@@ -201,21 +210,19 @@ end
 /-! ## The end of phase C -/
 
 -- `regroup` fails: `permute` fails.
-theorem rg_none {st : Flat.St} (h : RG st none) (h0 : st.size ≠ 0) :
-    Flat.permute st = (.assertionFailed, st) := by
-  obtain ⟨p0, h1, h2⟩ := h
+theorem rg_none {st : Flat.St} {p0 : Vector Word MAX_N} (h : RG st p0 none) (h0 : st.size ≠ 0) :
+    Flat.permute st p0 = (.assertionFailed, st) := by
   rw [Flat.permute, ite_eq_right h0]
-  simp only [h1, h2]
+  simp only [show Flat.regroup st 0 p0 (Flat.clearDesired st 0 Flat.initial) = none from h]
 
 -- `regroup` gives `p`: the loop of `permute` starts with `p`, a bijection.
-theorem rg_some {st : Flat.St} {p : Vector Word MAX_N} (h : RG st (some p)) (h0 : st.size ≠ 0)
-    (hn : st.size.toNat ≤ MAX_N) (hp : PermOk st) :
-    Flat.permute st = Flat.permuteLoop (2 * st.size.toNat) st (st.size - 1) p
+theorem rg_some {st : Flat.St} {p0 p : Vector Word MAX_N} (h : RG st p0 (some p))
+    (h0 : st.size ≠ 0) (hn : st.size.toNat ≤ MAX_N) (hb : Bij st.size p0) :
+    Flat.permute st p0 = Flat.permuteLoop (2 * st.size.toNat) st (st.size - 1) p
       ∧ Bij st.size p := by
-  obtain ⟨p0, h1, h2⟩ := h
-  refine ⟨?_, regroup_bij hn hp h1 h2⟩
+  refine ⟨?_, regroup_bij hn hb h⟩
   rw [Flat.permute, ite_eq_right h0]
-  simp only [h1, h2]
+  simp only [show Flat.regroup st 0 p0 (Flat.clearDesired st 0 Flat.initial) = some p from h]
 
 /-! ## The registers of phase C -/
 
@@ -226,9 +233,9 @@ theorem GC.step {S : Addr} {g : G} {F : MProp 64} {s : MachineData} {ra : Int64}
     (h12 : P.regs.r12 = t.regs.r12) (h13 : P.regs.r13 = t.regs.r13)
     (h14 : P.regs.r14 = t.regs.r14) (h15 : P.regs.r15 = t.regs.r15)
     (hbx : P.regs.rbx = t.regs.rbx) : GC S g F s ra L' l P :=
-  ⟨⟨hF, hG.cc.lt, by rw [hbp]; exact hG.cc.bp, by rw [h0]; exact hG.cc.c0,
-    by rw [h1]; exact hG.cc.c1, by rw [h12]; exact hG.cc.r12, by rw [h15]; exact hG.cc.r15,
-    by rw [hbx]; exact hG.cc.bx⟩, by rw [h13]; exact hG.r13, by rw [h14]; exact hG.r14⟩
+  ⟨⟨hF, hG.cc.lt, by rw [hbx]; exact hG.cc.bx, by rw [h15]; exact hG.cc.r15,
+    by rw [h0]; exact hG.cc.c0, by rw [hbp]; exact hG.cc.bp, by rw [h13]; exact hG.cc.r13,
+    by rw [h14]; exact hG.cc.r14⟩, by rw [h1]; exact hG.c1, by rw [h12]; exact hG.r12⟩
 
 end Permute
 end Bbu.Unit

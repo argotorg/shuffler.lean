@@ -15,10 +15,7 @@ private theorem mpr_apply {m n k : Nat} (hc : Mapping m k = Mapping n k) (M : Ma
 
 theorem push_corr : PushStmt := by
   intro e source st state v d hd h hc hv
-  have hgen : (decode v).can_be_freely_generated ∨ (spillSet e).is_spilled (decode v) := by
-    rcases hv with hv | hv
-    · exact .inl ((isFree_iff v).mp hv)
-    · exact .inr ((isSpilled_iff e v).mp hv)
+  have hgen := hv
   have hpos := h.positionOf ⟨d, hd⟩
   rw [Bbu.add_eq]
   unfold State.push

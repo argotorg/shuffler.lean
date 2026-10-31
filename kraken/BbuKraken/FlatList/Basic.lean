@@ -63,10 +63,17 @@ structure Sim (e : Env) (fs : St) (st : Bbu.St) : Prop where
   trace : fs.trace = st.trace
   hpos : Pos fs.targetSize.toNat st
 
+-- The flat state `fs` holds the list state `st` and the blocked slot `pos` with the excess
+-- `excess`.
+structure Blk (e : Env) (fs : St) (st : Bbu.St) (pos excess : Nat) : Prop where
+  sim : Sim e fs st
+  blk0 : fs.blockedOffset.toNat = pos
+  blk1 : fs.blockedExcess.toNat = excess
+
 -- The flat result `r` holds the list result `m`.
 def SimR (e : Env) (r : Status × St) : M Bbu.St → Prop
   | .ok st => r.1 = .done ∧ Sim e r.2 st
-  | .error (.blocked pos excess st) => r.1 = .blocked ∧ Holds r.2 st pos excess
+  | .error (.blocked pos excess st) => r.1 = .blocked ∧ Blk e r.2 st pos excess
   | .error .assertion => r.1 = .assertionFailed
 
 section
@@ -96,6 +103,9 @@ theorem Sim.slots (hs : Sim e fs st) : slotsOf fs = st.slots.map Slot.val := by
 
 theorem Sim.holds (hs : Sim e fs st) : Holds fs st fs.blockedOffset.toNat fs.blockedExcess.toNat :=
   ⟨hs.trace, hs.slots, by simp, by simp⟩
+
+theorem Blk.holds {pos excess : Nat} (h : Blk e fs st pos excess) : Holds fs st pos excess :=
+  ⟨h.sim.trace, h.sim.slots, by rw [← h.blk0]; simp, by rw [← h.blk1]; simp⟩
 
 -- The target slot at an offset below `n`.
 theorem Sim.target (hs : Sim e fs st) {t : Word} (ht : t.toNat < e.n) :

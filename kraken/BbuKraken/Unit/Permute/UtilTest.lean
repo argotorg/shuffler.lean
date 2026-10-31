@@ -478,11 +478,11 @@ def h0 : Hdr :=
   ⟨0x1000#64, 2#64, 0x2000#64, 0x3000#64, 1#64, 0x4000#64, 0#64, Flat.initial, Flat.initial,
     0#64, 0#64, 0#64⟩
 
-def g0 : G := ⟨h0, Vector.replicate _ 7#64, Vector.replicate _ ⟨Op.swapW 0#64, 0, 0⟩,
+def g0 : G := ⟨h0, 0, 0, Vector.replicate _ 7#64, Vector.replicate _ ⟨Op.swapW 0#64, 0, 0⟩,
   Vector.replicate _ 8#64, fun _ => 0⟩
 
 -- The same ghost with the size `3`: `Keep` does not hold.
-def g3 : G := ⟨{ h0 with n := 3#64 }, Vector.replicate _ 7#64,
+def g3 : G := ⟨{ h0 with n := 3#64 }, 0, 0, Vector.replicate _ 7#64,
   Vector.replicate _ ⟨Op.swapW 0#64, 0, 0⟩, Vector.replicate _ 8#64, fun _ => 0⟩
 
 def d1 : Vector Word MAX_N := Flat.put Flat.initial 1#64 5#64
@@ -561,37 +561,38 @@ example : ¬∃ i, (12#64 : Addr).toNat = 8 * i := by
 example : (0x1000#64 : Addr) + 16#64 + 0#64 ≠ 0x1000#64 + 0#64 + BitVec.ofNat 64 (8 * 3) := by
   decide
 
-/-! ## The locals: `Lc.length_toList`, `split2058` -/
+/-! ## The locals: `Lc.length_toList`, `split1034` -/
 
 def L0 : Lc :=
   ⟨1#64, 2#64, 3#64, Vector.ofFn fun i => BitVec.ofNat 64 (1000 + i.val),
     Vector.ofFn fun i => BitVec.ofNat 64 (5000 + i.val), 9#64⟩
 
-example : L0.toList.length = 2052 := Lc.length_toList L0
-#guard L0.toList.length == 2052
--- The order from `base - 8` up: `w`, `c0`, `c1`, `D`, `P`, `pad`.
+example : L0.toList.length = 1028 := Lc.length_toList L0
+#guard L0.toList.length == 1028
+-- The order from `base - 8` up: `w`, `c0`, `c1`, `D`, `pad`.
 #guard L0.toList[0]! == 1#64 && L0.toList[1]! == 2#64 && L0.toList[2]! == 3#64
 #guard L0.toList[3]! == 1000#64 && L0.toList[1026]! == 2023#64
-#guard L0.toList[1027]! == 5000#64 && L0.toList[2050]! == 6023#64
-#guard L0.toList[2051]! == 9#64
+#guard L0.toList[1027]! == 9#64
+-- Negative: `P` (the array `permutation` at `rsi`) is not a word of the locals.
+#guard (List.range MAX_N).all fun i => !L0.toList.contains (BitVec.ofNat 64 (5000 + i))
 
-example : ∃ L : Lc, ∃ x0 x1 x2 x3 x4 x5,
-    List.replicate 2058 (0#64 : Word) = L.toList ++ [x0, x1, x2, x3, x4, x5] :=
-  split2058 (List.length_replicate ..)
-example : ∃ L : Lc, ∃ x0 x1 x2 x3 x4 x5,
+example : ∃ L : Lc, L.P = L0.P ∧ ∃ x0 x1 x2 x3 x4 x5,
+    List.replicate 1034 (0#64 : Word) = L.toList ++ [x0, x1, x2, x3, x4, x5] :=
+  split1034 (List.length_replicate ..) L0.P
+example : ∃ L : Lc, L.P = L0.P ∧ ∃ x0 x1 x2 x3 x4 x5,
     L0.toList ++ [1#64, 2#64, 3#64, 4#64, 5#64, 6#64] = L.toList ++ [x0, x1, x2, x3, x4, x5] :=
-  split2058 (by rw [List.length_append, Lc.length_toList]; rfl)
+  split1034 (by rw [List.length_append, Lc.length_toList]; rfl) L0.P
 
--- Negative: lists of 2057 and 2059 words have no split.
+-- Negative: lists of 1033 and 1035 words have no split.
 example : ¬∃ L : Lc, ∃ x0 x1 x2 x3 x4 x5,
-    List.replicate 2057 (0#64 : Word) = L.toList ++ [x0, x1, x2, x3, x4, x5] := by
+    List.replicate 1033 (0#64 : Word) = L.toList ++ [x0, x1, x2, x3, x4, x5] := by
   rintro ⟨L, x0, x1, x2, x3, x4, x5, e⟩
   have := congrArg List.length e
   rw [List.length_append, Lc.length_toList] at this
   simp only [List.length_replicate, List.length_cons, List.length_nil] at this
   omega
 example : ¬∃ L : Lc, ∃ x0 x1 x2 x3 x4 x5,
-    List.replicate 2059 (0#64 : Word) = L.toList ++ [x0, x1, x2, x3, x4, x5] := by
+    List.replicate 1035 (0#64 : Word) = L.toList ++ [x0, x1, x2, x3, x4, x5] := by
   rintro ⟨L, x0, x1, x2, x3, x4, x5, e⟩
   have := congrArg List.length e
   rw [List.length_append, Lc.length_toList] at this
@@ -606,26 +607,26 @@ example : ¬∃ L : Lc, ∃ x0 x1 x2 x3 x4 x5,
   simp only [List.length_cons, List.length_nil] at this
   omega
 
-/-! ## `base` and the frame map (decision 7 of the unit report)
+/-! ## `base` and the frame map
 
 `rsp s` is the `rsp` of the caller. The return address is at `rsp s - 8`, the pushes put `r15`
 at `- 16`, `r14` at `- 24`, `r13` at `- 32`, `r12` at `- 40`, `rbp` at `- 48`, `rbx` at `- 56`.
-The body base is `R = rsp s - 16464`. The return slot `w` of the callee is at `R - 8`, `c0` at
-`R`, `c1` at `R + 8`, `desiredBy` at `R + 16`, `permutation` at `R + 8208`, the pad at
-`R + 16400`. These are the 2058 free words below the return address. -/
+The body base is `R = rsp s - 8272`. The return slot `w` of the callee is at `R - 8`, `c0` at
+`R`, `c1` at `R + 8`, `desiredBy` at `R + 16`, the pad at `R + 8208`. These are the 1034 free
+words below the return address. -/
 
-example (s : MachineData) : base s = rsp s - 16464#64 := rfl
-example (s : MachineData) (h : rsp s = 0x7FFF0000#64) : base s = 0x7FFEBFB0#64 := by
+example (s : MachineData) : base s = rsp s - 8272#64 := rfl
+example (s : MachineData) (h : rsp s = 0x7FFF0000#64) : base s = 0x7FFEDFB0#64 := by
   rw [base, h]; decide
 -- Edges: `base` is `0`, and `base` wraps below `0`.
-example (s : MachineData) (h : rsp s = 16464#64) : base s = 0#64 := by
+example (s : MachineData) (h : rsp s = 8272#64) : base s = 0#64 := by
   rw [base, h]; decide
-example (s : MachineData) (h : rsp s = 0#64) : base s = 18446744073709535152#64 := by
+example (s : MachineData) (h : rsp s = 0#64) : base s = 18446744073709543344#64 := by
   rw [base, h]; decide
 
--- Word `k` of the 2058 free words of `Stk (rsp s) fr v` (`Arr` from the lowest address).
+-- Word `k` of the 1034 free words of `Stk (rsp s) fr v` (`Arr` from the lowest address).
 def fw (s : MachineData) (k : Nat) : Addr :=
-  rsp s - 8#64 - BitVec.ofNat 64 (8 * 2058) + BitVec.ofNat 64 (8 * k)
+  rsp s - 8#64 - BitVec.ofNat 64 (8 * 1034) + BitVec.ofNat 64 (8 * k)
 
 -- The words of `L.toList ++ [rbx, rbp, r12, r13, r14, r15]` are at these addresses.
 example (s : MachineData) : fw s 0 = base s - 8#64 := by unfold fw base; bv_omega
@@ -635,24 +636,23 @@ example (s : MachineData) : fw s 3 = base s + 16#64 := by unfold fw base; bv_ome
 example (s : MachineData) : fw s (3 + 1023) = base s + 16#64 + BitVec.ofNat 64 (8 * 1023) := by
   unfold fw base; bv_omega
 example (s : MachineData) : fw s 1027 = base s + 8208#64 := by unfold fw base; bv_omega
-example (s : MachineData) : fw s (1027 + 1023) = base s + 8208#64 + BitVec.ofNat 64 (8 * 1023) := by
-  unfold fw base; bv_omega
-example (s : MachineData) : fw s 2051 = base s + 16400#64 := by unfold fw base; bv_omega
-example (s : MachineData) : fw s 2052 = rsp s - 56#64 := by unfold fw; bv_omega
-example (s : MachineData) : fw s 2057 = rsp s - 16#64 := by unfold fw; bv_omega
+example (s : MachineData) : fw s 1028 = rsp s - 56#64 := by unfold fw; bv_omega
+example (s : MachineData) : fw s 1033 = rsp s - 16#64 := by unfold fw; bv_omega
 -- The word above the free words is the return address.
-example (s : MachineData) : fw s 2058 = rsp s - 8#64 := by unfold fw; bv_omega
--- Negative: the base is not `rsp s - 16408` (the `subq` alone).
-example (s : MachineData) : base s ≠ rsp s - 16408#64 := by unfold base; bv_omega
+example (s : MachineData) : fw s 1034 = rsp s - 8#64 := by unfold fw; bv_omega
+-- Negative: the base is not `rsp s - 8216` (the `subq` alone).
+example (s : MachineData) : base s ≠ rsp s - 8216#64 := by unfold base; bv_omega
+-- Negative: the base is not the base of the old frame (`rsp s - 16464`).
+example (s : MachineData) : base s ≠ rsp s - 16464#64 := by unfold base; bv_omega
 
 -- The indexes of the words of `L0.toList ++ [rbx, …, r15]` that the addresses above name.
 #guard
   let fr := L0.toList ++ [11#64, 12#64, 13#64, 14#64, 15#64, 16#64]
-  fr.length == 2058 && fr[0]! == L0.w && fr[1]! == L0.c0 && fr[2]! == L0.c1
-    && fr[3]! == L0.D[0] && fr[1026]! == L0.D[1023] && fr[1027]! == L0.P[0]
-    && fr[2050]! == L0.P[1023] && fr[2051]! == L0.pad && fr[2052]! == 11#64 && fr[2057]! == 16#64
+  fr.length == 1034 && fr[0]! == L0.w && fr[1]! == L0.c0 && fr[2]! == L0.c1
+    && fr[3]! == L0.D[0] && fr[1026]! == L0.D[1023] && fr[1027]! == L0.pad
+    && fr[1028]! == 11#64 && fr[1033]! == 16#64
 
--- `base` in the frame lemma: the 2058 free words are the locals at `base s` and the pushes.
+-- `base` in the frame lemma: the 1034 free words are the locals at `base s` and the pushes.
 example (s : MachineData) (L : Lc) (x0 x1 x2 x3 x4 x5 v : Word) (F : MProp 64) :
     Stk (rsp s) (L.toList ++ [x0, x1, x2, x3, x4, x5]) v ∗ F
       = Loc (base s) L ∗ Top (rsp s) x0 x1 x2 x3 x4 x5 v F :=

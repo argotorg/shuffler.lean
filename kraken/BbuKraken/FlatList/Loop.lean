@@ -27,8 +27,8 @@ theorem floop_ge {fs : St} {t : Word} (ht : ¬t < fs.targetSize) :
 
 -- The final permutation of the flat model holds the final permutation of the list model.
 def PermR (e : Env) : Prop :=
-  ∀ fs st t, Sim e fs st → Inv e st t → st.pendingGenerations = 0 → st.len = e.n →
-    SimR e (permute fs) (finish st)
+  ∀ fs st t, Sim e fs st → InvS e st t → st.pendingGenerations = 0 → st.len = e.n →
+    SimR e (permuteMapping fs) (finish st)
 
 theorem Sim.size_eq_iff {e : Env} {fs : St} {st : Bbu.St} (hs : Sim e fs st) :
     fs.size = fs.targetSize ↔ st.len = e.n := by
@@ -36,7 +36,7 @@ theorem Sim.size_eq_iff {e : Env} {fs : St} {st : Bbu.St} (hs : Sim e fs st) :
   exact ⟨congrArg BitVec.toNat, eq_of_toNat⟩
 
 theorem sim_loop {e : Env} (hfin : PermR e) (fs : St) (st : Bbu.St) (k : Nat)
-    (hs : Sim e fs st) (hi : Inv e st k) (hk : k ≤ st.len) :
+    (hs : Sim e fs st) (hi : InvS e st k) (hk : k ≤ st.len) :
     SimR e (loop fs (BitVec.ofNat 64 k)) (Bbu.loop finish e st k) := by
   have hn := hs.n
   have hle : e.n ≤ MAX_N := hs.n ▸ hs.n_le
@@ -83,7 +83,7 @@ theorem sim_loop {e : Env} (hfin : PermR e) (fs : St) (st : Bbu.St) (k : Nat)
           rw [hx] at hb
           obtain ⟨hk', hs'⟩ := hb
           rw [floop_cont ht' hx, hk']
-          exact sim_loop hfin fs' st' k' hs' (step_inv hi ht h) (step_le_len hi.pos h hk)
+          exact sim_loop hfin fs' st' k' hs' (step_invS hi ht h) (step_le_len hi.pos h hk)
   · rw [floop_ge (by bv_omega), loop_ge ht]
     by_cases hl : st.len = e.n
     · rw [ite_eq_right (c := fs.size ≠ fs.targetSize) (fun h => h (hs.size_eq_iff.mpr hl)),
@@ -115,8 +115,8 @@ theorem rel_outOf {e : Env} {r : Status × St} {m : M Bbu.St} (h : SimR e r m) :
     · unfold outOf; rw [h1, h2.trace]
     · exact ⟨h2.trace, h2.slots, rfl, rfl⟩
   | .error (.blocked p x s), ⟨h1, h2⟩ =>
-    refine ⟨r.2, ?_, h2⟩
-    unfold outOf; rw [h1, h2.trace]
+    refine ⟨r.2, ?_, h2.holds⟩
+    unfold outOf; rw [h1, h2.sim.trace]
   | .error .assertion, h1 =>
     show (outOf r).1 = -2#64
     unfold outOf; rw [h1]; rfl

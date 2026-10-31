@@ -67,7 +67,7 @@ theorem put_eq {α : Type} (v : Vector α MAX_N) {i : Word} (hi : i.toNat < MAX_
 
 theorem get_data {g : G} (hok : g.Ok) {c : Word} (hc : c.toNat < g.h.n.toNat) :
     Flat.get (flat g).data c = StackSlot.ofWord g.stk[c.toNat] := by
-  rw [flat, get_vec (by simpa using hc) (by simpa using hok.n)]
+  rw [flat, get_vec (by simpa using Nat.lt_add_right g.xs hc) (by simpa using hok.xs)]
   simp
 
 -- The records below `N + 1` after a store to record `N`.
@@ -139,19 +139,22 @@ theorem dupW_eq (L c : Word) :
 
 -- The ghost after the record, the copy and the size: `Stack::dup`.
 theorem flat_dup {g : G} (hok : g.Ok) {c : Word} (hc : c.toNat < g.h.n.toNat)
-    (hL : g.h.len.toNat < g.h.n.toNat) (hN : g.h.nops.toNat < 6 * g.h.n.toNat) :
+    (hL : g.h.len.toNat < g.h.n.toNat) (hN : g.h.nops.toNat < 6 * g.h.n.toNat + g.xo) :
     flat { h := { g.h with len := g.h.len + 1#64, nops := g.h.nops + 1#64 },
-           stk := g.stk.set g.h.len.toNat g.stk[c.toNat] hL,
+           xs := g.xs, xo := g.xo,
+           stk := g.stk.set g.h.len.toNat g.stk[c.toNat] (Nat.lt_add_right _ hL),
            ops := g.ops.set g.h.nops.toNat
              ⟨⟨1#8, BitVec.extractLsb' 0 8 (g.h.len - c), ⟨0#32, 1#8, 5#8⟩⟩,
                g.ops[g.h.nops.toNat].pad2, g.ops[g.h.nops.toNat].pad10⟩ hN,
            tgt := g.tgt, spl := g.spl }
       = Flat.stackDup (flat g) c := by
   have hn := hok.n
-  have e : (g.h.nops + 1#64).toNat = g.h.nops.toNat + 1 := by simp only [MAX_N] at hn; bv_omega
+  have hx := hok.xo
+  have e : (g.h.nops + 1#64).toNat = g.h.nops.toNat + 1 := by
+    simp only [MAX_N] at hn hx; bv_omega
   simp only [flat, Flat.stackDup, Flat.put, Flat.St.mk.injEq, true_and, and_true]
   refine ⟨?_, rfl, ?_⟩
-  · rw [Vector.toList_set, List.map_set, vec_set (by simpa using hL)]
+  · rw [Vector.toList_set, List.map_set, vec_set (by simpa using Nat.lt_add_right g.xs hL)]
     exact congrArg _ (get_data hok hc).symm
   · rw [e, trace_set, dupW_eq]
 
@@ -164,12 +167,13 @@ theorem flat_bind (g : G) {L d : Word} (hL : L.toNat < MAX_N) (hd : d.toNat < MA
 
 -- The ghost after `dup`: `Stack::dup` and `Mapping::bind`.
 theorem flat_dup_bind {g : G} (hok : g.Ok) {c d : Word} (hc : c.toNat < g.h.n.toNat)
-    (hL : g.h.len.toNat < g.h.n.toNat) (hN : g.h.nops.toNat < 6 * g.h.n.toNat)
+    (hL : g.h.len.toNat < g.h.n.toNat) (hN : g.h.nops.toNat < 6 * g.h.n.toNat + g.xo)
     (hLM : g.h.len.toNat < MAX_N) (hd : d.toNat < MAX_N) :
     flat { h := { g.h with len := g.h.len + 1#64, nops := g.h.nops + 1#64,
                            dest := g.h.dest.set g.h.len.toNat d hLM,
                            pos := g.h.pos.set d.toNat g.h.len hd },
-           stk := g.stk.set g.h.len.toNat g.stk[c.toNat] hL,
+           xs := g.xs, xo := g.xo,
+           stk := g.stk.set g.h.len.toNat g.stk[c.toNat] (Nat.lt_add_right _ hL),
            ops := g.ops.set g.h.nops.toNat
              ⟨⟨1#8, BitVec.extractLsb' 0 8 (g.h.len - c), ⟨0#32, 1#8, 5#8⟩⟩,
                g.ops[g.h.nops.toNat].pad2, g.ops[g.h.nops.toNat].pad10⟩ hN,
@@ -235,7 +239,7 @@ theorem dup_unit [Host] [FunDecls] : UnitThm dupAsm dupA 0 dupQ := by
     have rN : BitVec.ofInt 64 (Mem.loadInt (s.pushRa ra).dmem (Fld.stack_traceSize S) 8).get!
       = g.h.nops := View.rd_nops h0
     have rK : BitVec.ofInt 8 (Mem.loadInt (s.pushRa ra).dmem (slotAt g.h.data c.toNat + 4#64) 1).get!
-      = g.stk[c.toNat].extractLsb' 32 8 := View.rdb_slot h0 hc (j := 4) (by decide)
+      = g.stk[c.toNat].extractLsb' 32 8 := View.rdb_slot h0 (Nat.lt_add_right _ hc) (j := 4) (by decide)
     -- `traceSize + 1`, then the 5 stores of the record.
     have h2 := View.store_nops h0 (g.h.nops + 1#64)
     have rO := View.rd_ops h2
@@ -254,10 +258,10 @@ theorem dup_unit [Host] [FunDecls] : UnitThm dupAsm dupA 0 dupQ := by
     have h4 := View.unfocus (g := { g with h := { g.h with nops := g.h.nops + 1#64 } }) h3e hN
     have rD4 := View.rd_data h4
     have rL4 := View.rd_len h4
-    have rC4 := View.rd_slot h4 hc
+    have rC4 := View.rd_slot h4 (Nat.lt_add_right _ hc)
     dsimp only [rd] at rD4 rL4 rC4
     -- The copy and `size + 1`.
-    have h7 := View.store_stk h4 (i := g.h.len.toNat) hL g.stk[c.toNat]
+    have h7 := View.store_stk h4 (i := g.h.len.toNat) (Nat.lt_add_right _ hL) g.stk[c.toNat]
     have rL7 := View.rd_len h7
     dsimp only [rd] at rL7
     have h9 := View.store_len h7 (g.h.len + 1#64)
@@ -277,7 +281,7 @@ theorem dup_unit [Host] [FunDecls] : UnitThm dupAsm dupA 0 dupQ := by
     | load =>
       first
       | view_load
-      | with_reducible exact View.isSome_slot_byte h0 hc (j := 4) (by decide)
+      | with_reducible exact View.isSome_slot_byte h0 (Nat.lt_add_right _ hc) (j := 4) (by decide)
     | closed => decide
     | goto ".LB.Emission.dup.0" =>
       cfg_goto
@@ -286,18 +290,18 @@ theorem dup_unit [Host] [FunDecls] : UnitThm dupAsm dupA 0 dupQ := by
         first
         | rw [Dup.dup_frl hok hc ‹_›]
           exact ⟨g, hk0.next rfl rfl rfl rfl rfl rfl rfl rfl, hok,
-            ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, rfl, rfl⟩
+            ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, rfl, rfl⟩
         | rw [Dup.dup_used hok hc hdM ‹_› ‹_›]
           exact ⟨_, ⟨h9, hk0.sp, hk0.bx, hk0.bp, hk0.r12, hk0.r13, hk0.r14, hk0.r15⟩,
-            Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok (Dup.succ_le hL)
+            Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok (Nat.le_add_right_of_le (Dup.succ_le hL))
               (Dup.succ_le hN),
-            ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, Dup.flat_dup hok hc hL hN, rfl⟩
+            ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, Dup.flat_dup hok hc hL hN, rfl⟩
       · simp
     | other =>
       simp only [Names.dup, String.reduceEq, ↓reduceIte, hcs, hds]
       rw [Dup.dup_done hok hc hdM ‹_› ‹_›]
       exact ⟨_, ⟨h11, hk0.sp, hk0.bx, hk0.bp, hk0.r12, hk0.r13, hk0.r14, hk0.r15⟩,
-        Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok (Dup.succ_le hL) (Dup.succ_le hN),
-        ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, Dup.flat_dup_bind hok hc hL hN hLM hdM, rfl⟩
+        Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok (Nat.le_add_right_of_le (Dup.succ_le hL)) (Dup.succ_le hN),
+        ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, Dup.flat_dup_bind hok hc hL hN hLM hdM, rfl⟩
 
 end Bbu.Unit

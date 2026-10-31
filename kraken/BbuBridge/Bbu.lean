@@ -115,7 +115,8 @@ theorem model_no_assertion (h : ModelValid e source dests) :
 theorem model_ok (h : ModelValid e source dests) {st : Bbu.St}
     (hok : Bbu.buildBottomUp e source dests = .ok st) :
     st.slots.map Bbu.Slot.val = expected e source dests ∧
-      ∃ trace : Trace (spillSet e) (source.map decode) ((expected e source dests).map decode),
+      ∃ trace : Trace (spillSet e (source.map decode)) (source.map decode)
+        ((expected e source dests).map decode),
         (traceOps trace).map encodeOp = st.trace := by
   obtain ⟨r, hr, hrel⟩ := orig_of_ok h hok
   have hres := buildBottomUp_expected_of_ok _ _ hr
@@ -132,7 +133,7 @@ theorem model_ok (h : ModelValid e source dests) {st : Bbu.St}
 theorem model_ok_target (h : ModelValid e source dests) (hm : Mapped e source dests)
     {st : Bbu.St} (hok : Bbu.buildBottomUp e source dests = .ok st) :
     st.slots.map Bbu.Slot.val = e.target ∧
-      ∃ trace : Trace (spillSet e) (source.map decode) (tgt e),
+      ∃ trace : Trace (spillSet e (source.map decode)) (source.map decode) (tgt e),
         (traceOps trace).map encodeOp = st.trace := by
   obtain ⟨r, hr, hrel⟩ := orig_of_ok h hok
   have hres := buildBottomUp_correct_of_ok _ _ (mapped e source dests h hm) hr

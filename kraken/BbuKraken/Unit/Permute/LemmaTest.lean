@@ -52,10 +52,10 @@ def rec8 (l p : Word) : Op :=
 example (d x : Word) : d + x * 8#64 + BitVec.ofInt 64 (-8 : Int64).toInt = d + x * 8#64 - 8#64 := by
   rw [top_m8i]; bv_omega
 
-/-! ## The variant of `.LB.Emission.permute.22` (`lt80`) -/
+/-! ## The variant of `.LB.Emission.permute.22` (`lt20`) -/
 
 -- `mu` one smaller is enough for the largest variant (`.LB.Emission.permute.15`) of the next iteration.
-example : 2048 * 4 + 1101 < 2048 * 5 := lt80 (by decide)
+example : 2048 * 4 + 1101 < 2048 * 5 := lt20 (by decide)
 -- Negative: the same `mu` is not enough.
 #guard !decide (2048 * 5 + 1101 < 2048 * 5)
 

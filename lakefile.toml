@@ -28,7 +28,7 @@ roots = ["Fuzz.Oracle"]
 [[lean_lib]]
 name = "BbuBridge"
 srcDir = "kraken"
-globs = ["PermuteKraken.Model", "PermuteKraken.Trace", "BbuKraken.Model", "BbuKraken.ModelLemmas", "BbuBridge.+"]
+globs = ["PermuteKraken.Model", "PermuteKraken.Trace", "BbuKraken.Model", "BbuKraken.ModelLemmas", "BbuKraken.MapModel", "BbuKraken.ModelLowest", "BbuBridge.+"]
 
 # The originals of permute and buildBottomUp, run by kraken/test/diff.sh and bbu_diff.sh.
 [[lean_exe]]
@@ -47,9 +47,28 @@ name = "bbu_pr31"
 srcDir = "kraken/test"
 root = "BbuPr31Main"
 
+# The PR31 Emission.State.pop, run by kraken/test/pop_diff.sh.
+[[lean_exe]]
+name = "pop_pr31"
+srcDir = "kraken/test"
+root = "PopPr31Main"
+
+# The PR31 permuteAtLowestHeight, through Fuzz/Oracle.lean, run by kraken/test/lowest_diff.sh.
+[[lean_exe]]
+name = "lowest_pr31"
+srcDir = "kraken/test"
+root = "LowestPr31Main"
+
 # The flat model of the spill set, and the proofs that it equals SpillSet.add and
 # SpillSet.is_spilled of PR31. Not a default target.
 [[lean_lib]]
 name = "SpillBridge"
 srcDir = "kraken"
 globs = ["BbuKraken.FlatModel", "BbuKraken.FlatSpill", "SpillBridge.+"]
+
+# The flat model of Planner.run, and the proofs that it equals Planner.run of PR31.
+# Not a default target.
+[[lean_lib]]
+name = "PlanBridge"
+srcDir = "kraken"
+globs = ["BbuKraken.FlatPop", "BbuKraken.FlatSurplus", "BbuKraken.FlatLowest", "BbuKraken.FlatPlan", "BbuKraken.FlatPopRel", "BbuKraken.FlatSurplusRel", "BbuKraken.FlatLowestRel", "BbuKraken.FlatRel", "BbuKraken.FlatBridge", "BbuKraken.FlatList.Basic", "BbuKraken.FlatList.Ctor", "BbuKraken.FlatList.Leaf", "BbuKraken.FlatList.Loop", "BbuKraken.FlatList.PermList", "BbuKraken.FlatList.PermLoop", "BbuKraken.FlatList.Permute", "BbuKraken.FlatList.Produce", "BbuKraken.FlatList.Regroup", "BbuKraken.FlatList.Step", "PlanBridge.+"]

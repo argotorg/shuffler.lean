@@ -39,6 +39,34 @@ theorem finish_at : finishAsm.IsInfixAt bbuAsm 319 := by rw [bbuAsm_eq]; exact �
 theorem loop_at : loopAsm.IsInfixAt bbuAsm 528 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 theorem buildBottomUp_at : buildBottomUpAsm.IsInfixAt bbuAsm 849 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem pop_at : popAsm.IsInfixAt bbuAsm 822 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem removeSurplus_at : removeSurplusAsm.IsInfixAt bbuAsm 1291 := by
+  rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem permuteAtLowestHeight_at : permuteAtLowestHeightAsm.IsInfixAt bbuAsm 1682 := by
+  rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem map_at : mapAsm.IsInfixAt bbuAsm 1894 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem closestCopy_at : closestCopyAsm.IsInfixAt bbuAsm 1916 := by
+  rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem mapInPlace_at : mapInPlaceAsm.IsInfixAt bbuAsm 1990 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem mapClosestCopies_at : mapClosestCopiesAsm.IsInfixAt bbuAsm 2039 := by
+  rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem mapWildcardSlotCopies_at : mapWildcardSlotCopiesAsm.IsInfixAt bbuAsm 2081 := by
+  rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem keepWildcardSlots_at : keepWildcardSlotsAsm.IsInfixAt bbuAsm 2140 := by
+  rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem absorbSurplus_at : absorbSurplusAsm.IsInfixAt bbuAsm 2189 := by
+  rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem isRetained_at : isRetainedAsm.IsInfixAt bbuAsm 2364 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem hasOtherRetainedCopy_at : hasOtherRetainedCopyAsm.IsInfixAt bbuAsm 2368 := by
+  rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem isDemanded_at : isDemandedAsm.IsInfixAt bbuAsm 2421 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem classify_at : classifyAsm.IsInfixAt bbuAsm 2447 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem resolve_at : resolveAsm.IsInfixAt bbuAsm 2583 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem isAvailable_at : isAvailableAsm.IsInfixAt bbuAsm 2866 := by
+  rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem run_at : runAsm.IsInfixAt bbuAsm 2896 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem plannerRun_at : plannerRunAsm.IsInfixAt bbuAsm 3146 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem plan_at : planAsm.IsInfixAt bbuAsm 3437 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 end
 
 section

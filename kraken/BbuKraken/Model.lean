@@ -13,9 +13,10 @@ allows slots that are bound for no offset; `buildBottomUp` starts with every
 slot bound, so the model does not represent them. `St.positionOf` is
 `m_positionOf`: the position of the slot bound for each target offset.
 
-`finish` is the final permutation of the original (`Shuffler.Permute.permute`),
-which groups equal slots. `finishC` is the final permutation of the C++
-(`permuteDestinations`). `loop` takes the final permutation as an argument.
+`permute` is the permutation of the original (`Shuffler.Permute.permute`), which
+groups equal slots, for a permutation that is an argument. `finish` is the final
+permutation: `permute` with the destinations. `finishC` is the final permutation of
+the C++ (`permuteDestinations`). `loop` takes the final permutation as an argument.
 -/
 
 namespace Bbu
@@ -372,15 +373,19 @@ def go (st : St) (p : PermuteKraken.Perm) : M St :=
 termination_by PermuteKraken.measure p.toList
 decreasing_by all_goals exact p.measure_target_lt h _ _
 
--- `Permute.permute` with the permutation of the mapping: the final permutation
--- of the original. Each slot must have a destination. As in the original, an
--- empty stack does not go to `go`.
-def finish (st : St) : M St :=
-  if !(List.range st.len).all fun pos => (st.destinationOf pos).isSome then .error .assertion
-  else (normalize (st.slots.map Slot.val) (st.slots.map Slot.dest)).bind fun p =>
+-- `Permute.permute`: the slot at `i` goes to the offset `p[i]`. `normalize` regroups equal
+-- slots, then `go` does the swaps. As in the original, an empty stack does not go to `go`.
+def permute (st : St) (p : List Nat) : M St :=
+  (normalize (st.slots.map Slot.val) p).bind fun p =>
     if h : IsPerm p then
       if st.len = 0 then .ok st else go st ⟨p, h.1, fun i j hi hj => h.2 i hi j hj⟩
     else .error .assertion
+
+-- `permute` with the permutation of the mapping: the final permutation of the original. Each
+-- slot must have a destination.
+def finish (st : St) : M St :=
+  if !(List.range st.len).all fun pos => (st.destinationOf pos).isSome then .error .assertion
+  else permute st (st.slots.map Slot.dest)
 
 /-! ## Termination -/
 

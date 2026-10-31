@@ -91,7 +91,7 @@ theorem buildBottomUp_correct [Host] (L : Linked) :
   have hswap := Sep.spec_of_body L.swapWith_decl Unit.swapWith_unit
   have hprod := Sep.spec_of_body L.produce_decl (Unit.produce_unit hcopy hspill hpush hdup)
   have hgen := Sep.spec_of_body L.generate_decl (Unit.generate_unit hprod hswap)
-  have hperm := Sep.spec_of_body L.finish_decl (Unit.permute_unit hcopy)
+  have hperm := fun p => Sep.spec_of_bodyW L.finish_decl (Unit.permute_unit hcopy p)
   have hloop := Sep.spec_of_body L.loop_decl (Unit.loop_unit hperm hspill hcopy hgen hswap)
   intro s ra
   refine ⟨fun t ht => ?_⟩

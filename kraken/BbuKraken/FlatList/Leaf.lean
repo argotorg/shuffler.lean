@@ -23,11 +23,11 @@ theorem optW_ne_NONE {x : Option Nat} (hx : ∀ p, x = some p → p < 2 ^ 64 - 1
 theorem slot_append {l : List Slot} {x : Slot} {i : Nat} :
     (l ++ [x])[i]? = if i < l.length then l[i]? else if i = l.length then some x else none := by
   by_cases h1 : i < l.length
-  · rw [if_pos h1, List.getElem?_append_left h1]
-  · rw [if_neg h1, List.getElem?_append_right (by omega)]
+  · rw [ite_eq_left h1, List.getElem?_append_left h1]
+  · rw [ite_eq_right h1, List.getElem?_append_right (by omega)]
     by_cases h2 : i = l.length
     · subst h2; simp
-    · rw [if_neg h2, List.getElem?_eq_none (by simp; omega)]
+    · rw [ite_eq_right h2, List.getElem?_eq_none (by simp; omega)]
 
 theorem val_append {st st' : Bbu.St} {x : Slot} (h : st'.slots = st.slots ++ [x]) (i : Nat) :
     st'.val i = if i < st.len then st.val i else if i = st.len then x.val else default := by
@@ -210,10 +210,10 @@ theorem swapDest_val {st : Bbu.St} {a b : Nat} (ha : a < st.len) (hb : b < st.le
   simp only [Bbu.St.len] at ha hb
   by_cases h1 : b = i
   · subst h1; by_cases h2 : a = b
-    · subst h2; simp [ha, Bbu.St.val, List.getElem?_eq_getElem ha]
-    · simp [hb, Bbu.St.val, List.getElem?_eq_getElem hb]
+    · subst h2; simp [ha]
+    · simp [hb]
   · by_cases h2 : a = i
-    · subst h2; simp [h1, ha, Bbu.St.val, List.getElem?_eq_getElem ha]
+    · subst h2; simp [h1, ha]
     · simp [h1, h2]
 
 theorem swapDest_dest {st : Bbu.St} {a b : Nat} (ha : a < st.len) (hb : b < st.len) (i : Nat) :

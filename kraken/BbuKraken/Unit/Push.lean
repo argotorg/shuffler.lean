@@ -58,7 +58,7 @@ theorem take_set_succ {α : Type} (l : List α) (i : Nat) (r : α) (hi : i < l.l
   rw [List.take_add_one, List.getElem?_set_self hi, List.take_set_of_le (Nat.le_refl i)]
   rfl
 
-theorem toNat_succ (x : Word) {k : Nat} (h : x.toNat < k) (hk : k ≤ 6 * MAX_N) :
+theorem toNat_succ (x : Word) {k : Nat} (h : x.toNat < k) (hk : k ≤ 10 * MAX_N) :
     (x + 1#64).toNat = x.toNat + 1 := by
   rw [BitVec.toNat_add, BitVec.toNat_ofNat]
   simp only [MAX_N] at hk
@@ -80,17 +80,20 @@ theorem push_ok (fs : Flat.St) (x : StackSlot) (d : Word) (h : Flat.get fs.pos d
 
 -- The two stores and the two counters: `Flat.stackPush`.
 theorem flat_push (g : G) (hok : g.Ok) (hl : g.h.len.toNat < g.h.n.toNat)
-    (hn : g.h.nops.toNat < 6 * g.h.n.toNat) (w : Word) (r : OpR)
+    (hn : g.h.nops.toNat < 6 * g.h.n.toNat + g.xo) (w : Word) (r : OpR)
     (hr : r.op = Op.push (StackSlot.ofWord w)) :
     flat { h := { g.h with len := g.h.len + 1#64, nops := g.h.nops + 1#64 },
-           stk := g.stk.set g.h.len.toNat w hl, ops := g.ops.set g.h.nops.toNat r hn,
+           xs := g.xs, xo := g.xo, stk := g.stk.set g.h.len.toNat w (Nat.lt_add_right _ hl),
+           ops := g.ops.set g.h.nops.toNat r hn,
            tgt := g.tgt, spl := g.spl }
       = Flat.stackPush (flat g) (StackSlot.ofWord w) := by
   have hN := hok.n
+  have hx := hok.xo
   have hlN : g.h.len.toNat < MAX_N := by omega
-  have hd : vec ((g.stk.set g.h.len.toNat w hl).toList.map StackSlot.ofWord)
+  have hd : vec ((g.stk.set g.h.len.toNat w (Nat.lt_add_right _ hl)).toList.map StackSlot.ofWord)
       = Flat.put (vec (g.stk.toList.map StackSlot.ofWord)) g.h.len (StackSlot.ofWord w) := by
-    rw [Vector.toList_set, List.map_set, vec_set _ _ _ (by simpa using hl) hlN,
+    rw [Vector.toList_set, List.map_set,
+      vec_set _ _ _ (by simpa using Nat.lt_add_right g.xs hl) hlN,
       put_eq_set _ _ _ hlN]
   have ht : ((g.ops.set g.h.nops.toNat r hn).toList.take (g.h.nops + 1#64).toNat).map OpR.op
       = (g.ops.toList.take g.h.nops.toNat).map OpR.op ++ [Op.push (StackSlot.ofWord w)] := by
@@ -108,18 +111,21 @@ theorem flat_bind (g : G) (p d : Word) (hp : p.toNat < MAX_N) (hd : d.toNat < MA
 
 -- The ghost of the fall-through path: `Flat.stackPush`, then `Flat.bind`.
 theorem flat_push_bind (g : G) (hok : g.Ok) (hl : g.h.len.toNat < g.h.n.toNat)
-    (hn : g.h.nops.toNat < 6 * g.h.n.toNat) (w : Word) (r : OpR)
+    (hn : g.h.nops.toNat < 6 * g.h.n.toNat + g.xo) (w : Word) (r : OpR)
     (hr : r.op = Op.push (StackSlot.ofWord w)) (d : Word)
     (hp : g.h.len.toNat < MAX_N) (hd : d.toNat < MAX_N) :
     flat { h := { g.h with len := g.h.len + 1#64, nops := g.h.nops + 1#64,
                            dest := g.h.dest.set g.h.len.toNat d hp,
                            pos := g.h.pos.set d.toNat g.h.len hd },
-           stk := g.stk.set g.h.len.toNat w hl, ops := g.ops.set g.h.nops.toNat r hn,
+           xs := g.xs, xo := g.xo, stk := g.stk.set g.h.len.toNat w (Nat.lt_add_right _ hl),
+           ops := g.ops.set g.h.nops.toNat r hn,
            tgt := g.tgt, spl := g.spl }
       = Flat.bind (Flat.stackPush (flat g) (StackSlot.ofWord w)) g.h.len d := by
   rw [← flat_push g hok hl hn w r hr]
   exact flat_bind { h := { g.h with len := g.h.len + 1#64, nops := g.h.nops + 1#64 },
-                    stk := g.stk.set g.h.len.toNat w hl, ops := g.ops.set g.h.nops.toNat r hn,
+                    xs := g.xs, xo := g.xo,
+                    stk := g.stk.set g.h.len.toNat w (Nat.lt_add_right _ hl),
+                    ops := g.ops.set g.h.nops.toNat r hn,
                     tgt := g.tgt, spl := g.spl } g.h.len d hp hd
 
 /-! ## The asm forms after `symexec_norm` -/
@@ -194,13 +200,15 @@ theorem push_unit [Host] [FunDecls] : UnitThm pushAsm pushA 0 pushQ := by
     have hm0 := hk0.mem
     obtain ⟨hl, hn, hdn⟩ := hpre.args
     have hN := hok.n
+    have hx := hok.xo
     have hd' : (s.pushRa ra).regs.rdx.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hdn hN
     have hlN : g.h.len.toNat < MAX_N := Nat.lt_of_lt_of_le hl hN
     have hl1 : (g.h.len + 1#64).toNat = g.h.len.toNat + 1 := toNat_succ _ hl (by omega)
     have hn1 : (g.h.nops + 1#64).toNat = g.h.nops.toNat + 1 := toNat_succ _ hn (by omega)
     -- The view after each store of the asm, in the order of the asm.
     have h1 := View.store_len hm0 (g.h.len + 1#64)
-    have h2 := View.store_stk h1 (i := g.h.len.toNat) hl (s.pushRa ra).regs.rsi.toBitVec
+    have h2 := View.store_stk h1 (i := g.h.len.toNat)
+      (Nat.lt_add_right _ hl) (s.pushRa ra).regs.rsi.toBitVec
     have h3 := View.store_nops h2 (g.h.nops + 1#64)
     have hf := View.focus h3 (i := g.h.nops.toNat) hn
     have hr1 := OpM.store_kind hf
@@ -240,10 +248,10 @@ theorem push_unit [Host] [FunDecls] : UnitThm pushAsm pushA 0 pushQ := by
       · exact Kp.stack (fr := []) ⟨h8, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
       · show lbInv S g F s ra _
         refine ⟨_, ⟨h8, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, ?_,
-          ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, ?_, ?_⟩
-        · exact Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok
-            (by show (g.h.len + 1#64).toNat ≤ g.h.n.toNat; omega)
-            (by show (g.h.nops + 1#64).toNat ≤ 6 * g.h.n.toNat; omega)
+          ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, ?_, ?_⟩
+        · exact Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok
+            (by show (g.h.len + 1#64).toNat ≤ g.h.n.toNat + g.xs; omega)
+            (by show (g.h.nops + 1#64).toNat ≤ 6 * g.h.n.toNat + g.xo; omega)
         · rw [push_fail _ _ _ hne]; exact flat_push g hok hl hn _ _ (by rfl)
         · rw [push_fail _ _ _ hne]; rfl
       · simp
@@ -260,10 +268,10 @@ theorem push_unit [Host] [FunDecls] : UnitThm pushAsm pushA 0 pushQ := by
         rw [get_eq _ (rdx s) hd']; exact hc'
       show lbInv S g F s ra _
       refine ⟨_, ⟨h10, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, ?_,
-        ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, ?_, ?_⟩
-      · exact Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok
-          (by show (g.h.len + 1#64).toNat ≤ g.h.n.toNat; omega)
-          (by show (g.h.nops + 1#64).toNat ≤ 6 * g.h.n.toNat; omega)
+        ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, ?_, ?_⟩
+      · exact Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok
+          (by show (g.h.len + 1#64).toNat ≤ g.h.n.toNat + g.xs; omega)
+          (by show (g.h.nops + 1#64).toNat ≤ 6 * g.h.n.toNat + g.xo; omega)
       · rw [push_ok _ _ _ heq]
         exact flat_push_bind g hok hl hn _ _ (by rfl) _ hlN hd'
       · rw [push_ok _ _ _ heq]; rfl

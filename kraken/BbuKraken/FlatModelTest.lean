@@ -172,45 +172,83 @@ def far : St :=
 
 /-! ## `permute` -/
 
+-- `permute` with the permutation `p` on the stack `source`, whose slots `mk` binds for `p`.
+def pm (source : List StackSlot) (p : List Nat) : Status × St :=
+  permute (mk source source p) (vec (words p))
+
 -- An empty stack, and slots in place.
-#guard viewR (permute (mk [] [] [])) = (.done, [], [], [], 0, [])
-#guard viewR (permute (mk [x] [x] [0])) = (.done, [x], words [0], words [0], 0, [])
-#guard viewR (permute (mk [x, y] [x, y] [0, 1]))
-  = (.done, [x, y], words [0, 1], words [0, 1], 0, [])
+#guard viewR (pm [] []) = (.done, [], [], [], 0, [])
+#guard viewR (pm [x] [0]) = (.done, [x], words [0], words [0], 0, [])
+#guard viewR (pm [x, y] [0, 1]) = (.done, [x, y], words [0, 1], words [0, 1], 0, [])
 -- Two slots that change places.
-#guard viewR (permute (mk [x, y] [x, y] [1, 0]))
-  = (.done, [y, x], words [0, 1], words [0, 1], 0, [⟨Swap, 1, .junk⟩])
+#guard viewR (pm [x, y] [1, 0]) = (.done, [y, x], words [0, 1], words [0, 1], 0, [⟨Swap, 1, .junk⟩])
 -- Equal slots are interchangeable: they keep their offsets and their destinations.
-#guard viewR (permute (mk [x, x] [x, x] [1, 0]))
-  = (.done, [x, x], words [1, 0], words [1, 0], 0, [])
+#guard viewR (pm [x, x] [1, 0]) = (.done, [x, x], words [1, 0], words [1, 0], 0, [])
 -- After two swaps the slot at 1 is equal to the top and takes over its destination:
 -- no third swap.
-#guard viewR (permute (mk [x, y, x] [x, y, x] [1, 0, 2]))
+#guard viewR (pm [x, y, x] [1, 0, 2])
   = (.done, [y, x, x], words [0, 1, 2], words [0, 1, 2], 0, [⟨Swap, 1, .junk⟩, ⟨Swap, 2, .junk⟩])
--- A slot with no destination.
-#guard (permute
-    { mk [x, y] [x, y] [0, 1] with dest := put (mk [x, y] [x, y] [0, 1]).dest 1 NONE }).1
-  = .assertionFailed
+-- An empty stack with a permutation that is not empty: `permute` reads no entry.
+#guard viewR (permute (mk [] [] []) (vec (words [1, 0]))) = (.done, [], [], [], 0, [])
+-- `permute` reads the permutation and not `m_destinationOf`: the slots move although they are
+-- in place by the mapping, and `swapDestinations` exchanges their destinations.
+#guard viewR (permute (mk [x, y] [x, y] [0, 1]) (vec (words [1, 0])))
+  = (.done, [y, x], words [1, 0], words [1, 0], 0, [⟨Swap, 1, .junk⟩])
+-- A slot with no destination moves too, by the permutation.
+#guard viewR (permute { mk [x, y] [x, y] [1, 0] with dest := put (mk [x, y] [x, y] [1, 0]).dest 1 NONE }
+    (vec (words [1, 0])))
+  = (.done, [y, x], [NONE, 1], words [1, 1], 0, [⟨Swap, 1, .junk⟩])
+-- The entries above the size do not count.
+#guard viewR (permute (mk [x, y] [x, y] [1, 0]) (vec (words [1, 0, 7, 7])))
+  = (.done, [y, x], words [0, 1], words [0, 1], 0, [⟨Swap, 1, .junk⟩])
 -- Not a permutation: the C++ loop does not end, and the model fails when the fuel ends.
-#guard (permute
-    { mk [x, y] [x, y] [0, 1] with dest := put (mk [x, y] [x, y] [0, 1]).dest 1 0 }).1
-  = .assertionFailed
+#guard (permute (mk [x, y] [x, y] [0, 1]) (vec (words [0, 0]))).1 = .assertionFailed
 -- Not a permutation: the group of `x` has two slots and one desired offset.
-#guard (permute
-    { mk [x, x] [x, x] [0, 1] with dest := put (mk [x, x] [x, x] [0, 1]).dest 0 1 }).1
-  = .assertionFailed
+#guard (permute (mk [x, x] [x, x] [0, 1]) (vec (words [1, 1]))).1 = .assertionFailed
+-- Not a permutation: an entry above the size is not a vacant offset.
+#guard (permute (mk [x, y] [x, y] [0, 1]) (vec (words [5, 0]))).1 = .assertionFailed
 -- The slot at 0 is bound for 17: out of swap reach by 1.
 def wideDests : List Nat := [17] ++ (List.range 17).drop 1 ++ [0]
 def wide : St := mk ((List.range 18).map var) ((List.range 18).map var) wideDests
-#guard (permute wide).1 = .blocked
-#guard ((permute wide).2.blockedOffset, (permute wide).2.blockedExcess) = (0, 1)
-#guard (permute wide).2.trace = []
+def widePerm : Vector Word MAX_N := vec (words wideDests)
+#guard (permute wide widePerm).1 = .blocked
+#guard ((permute wide widePerm).2.blockedOffset, (permute wide widePerm).2.blockedExcess) = (0, 1)
+#guard (permute wide widePerm).2.trace = []
 -- One swap, then the slot at 0 is out of reach: the trace keeps the swap.
 def lateDests : List Nat := [17, 0] ++ (List.range 17).drop 2 ++ [1]
 def late : St := mk ((List.range 18).map var) ((List.range 18).map var) lateDests
-#guard (permute late).1 = .blocked
-#guard ((permute late).2.blockedOffset, (permute late).2.blockedExcess) = (0, 1)
-#guard (permute late).2.trace = [⟨Swap, 16, .junk⟩]
+def latePerm : Vector Word MAX_N := vec (words lateDests)
+#guard (permute late latePerm).1 = .blocked
+#guard ((permute late latePerm).2.blockedOffset, (permute late latePerm).2.blockedExcess) = (0, 1)
+#guard (permute late latePerm).2.trace = [⟨Swap, 16, .junk⟩]
+
+/-! ## The call of `permute` in `buildBottomUp` -/
+
+-- `permuteMapping` reads the destinations into the permutation and calls `permute`.
+#guard viewR (permuteMapping (mk [] [] [])) = (.done, [], [], [], 0, [])
+#guard viewR (permuteMapping (mk [x, y, x] [x, y, x] [1, 0, 2])) = viewR (pm [x, y, x] [1, 0, 2])
+#guard viewR (permuteMapping wide) = viewR (permute wide widePerm)
+#guard viewR (permuteMapping late) = viewR (permute late latePerm)
+-- A slot with no destination, at the bottom or at the top: the state does not change.
+def noDest (k : Nat) : St := { mk [x, y] [x, y] [1, 0] with dest := put (mk [x, y] [x, y] [1, 0]).dest (.ofNat 64 k) NONE }
+#guard viewR (permuteMapping (noDest 0)) = (.assertionFailed, view (noDest 0))
+#guard viewR (permuteMapping (noDest 1)) = (.assertionFailed, view (noDest 1))
+-- A `NONE` above the size is not read.
+#guard (permuteMapping { mk [x] [x] [0] with dest := put (mk [x] [x] [0]).dest 1 NONE }).1 = .done
+-- `body` calls `permuteMapping` when no generation is pending and the sizes agree.
+def bodyIs (n : Next) (r : Status × St) : Bool :=
+  match n with
+  | .ret r' => decide (viewR r' = viewR r)
+  | .cont .. => false
+#guard bodyIs (body (noDest 1) 1) (.assertionFailed, noDest 1)
+#guard bodyIs (body (noDest 0) 0) (.assertionFailed, noDest 0)
+#guard bodyIs (body (mk [x, y] [x, y] [1, 0]) 0) (pm [x, y] [1, 0])
+-- A final slot at `targetOffset` comes first: no call.
+def finalBottom : St := { mk [x, y] [x, y] [0, 1] with dest := put (mk [x, y] [x, y] [0, 1]).dest 1 NONE }
+#guard match body finalBottom 0 with
+  | .cont st t => decide (view st = view finalBottom) && t == 0
+  | .ret _ => false
+#guard bodyIs (body finalBottom 1) (.assertionFailed, finalBottom)
 
 /-! ## The scans of `buildBottomUp` -/
 

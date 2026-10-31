@@ -42,7 +42,7 @@ def words : List Word :=
 
 #guard (BitVec.ofNat 64 (6 * MAX_N - 1) + 1#64).toNat == 6 * MAX_N
 example (x : Word) (h : x.toNat < 6 * MAX_N) : (x + 1#64).toNat = x.toNat + 1 :=
-  toNat_succ x h (Nat.le_refl _)
+  toNat_succ x h (by decide)
 -- Negative: with no bound, `2^64 - 1` wraps to `0`.
 #guard (BitVec.allOnes 64 + 1#64).toNat == 0
 #guard (BitVec.allOnes 64 + 1#64).toNat != (BitVec.allOnes 64).toNat + 1
@@ -104,7 +104,7 @@ def opA : Op := ⟨1#8, 2#8, ⟨7#32, 0#8, 1#8⟩⟩
 
 def ghost (p : Word) : G :=
   ⟨⟨0, 2#64, 0, 0, 1, 0, 1, Vector.replicate MAX_N Flat.NONE, Vector.replicate MAX_N p, 0, 0, 0⟩,
-    Vector.replicate 2 var7, Vector.replicate 12 ⟨opA, 0, 0⟩, Vector.replicate 2 var7,
+    0, 0, Vector.replicate 2 var7, Vector.replicate 12 ⟨opA, 0, 0⟩, Vector.replicate 2 var7,
     fun _ => 0⟩
 
 -- The members of a flat state that `push` reads or writes (`spills` is a function).
@@ -132,19 +132,21 @@ def x : StackSlot := StackSlot.ofWord lit7
 
 -- The ghost after the stores of the `jne` path: the slot word `w`, the record `r`.
 def stored (g : G) (w : Word) (r : OpR) (hl : g.h.len.toNat < g.h.n.toNat)
-    (hn : g.h.nops.toNat < 6 * g.h.n.toNat) : G :=
+    (hn : g.h.nops.toNat < 6 * g.h.n.toNat + g.xo) : G :=
   { h := { g.h with len := g.h.len + 1#64, nops := g.h.nops + 1#64 },
-    stk := g.stk.set g.h.len.toNat w hl, ops := g.ops.set g.h.nops.toNat r hn,
+    xs := g.xs, xo := g.xo, stk := g.stk.set g.h.len.toNat w (Nat.lt_add_right _ hl),
+    ops := g.ops.set g.h.nops.toNat r hn,
     tgt := g.tgt, spl := g.spl }
 
 -- The ghost after the stores of the fall-through path: also `dest` and `pos`.
 def bound (g : G) (w : Word) (r : OpR) (hl : g.h.len.toNat < g.h.n.toNat)
-    (hn : g.h.nops.toNat < 6 * g.h.n.toNat) (dd : Word) (hp : g.h.len.toNat < MAX_N)
+    (hn : g.h.nops.toNat < 6 * g.h.n.toNat + g.xo) (dd : Word) (hp : g.h.len.toNat < MAX_N)
     (hd : dd.toNat < MAX_N) : G :=
   { h := { g.h with len := g.h.len + 1#64, nops := g.h.nops + 1#64,
                     dest := g.h.dest.set g.h.len.toNat dd hp,
                     pos := g.h.pos.set dd.toNat g.h.len hd },
-    stk := g.stk.set g.h.len.toNat w hl, ops := g.ops.set g.h.nops.toNat r hn,
+    xs := g.xs, xo := g.xo, stk := g.stk.set g.h.len.toNat w (Nat.lt_add_right _ hl),
+    ops := g.ops.set g.h.nops.toNat r hn,
     tgt := g.tgt, spl := g.spl }
 
 def g0 : G := ghost Flat.NONE

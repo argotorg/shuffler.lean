@@ -50,10 +50,11 @@ private theorem origScan_eq {source target : Stack} {spills : SpillSet}
 variable {e : Bbu.Env} {source : Stack} {st : Bbu.St} {state : OState e source}
 
 -- The test of the loop.
-private theorem urgent_gen_iff (e : Bbu.Env) (v : Bbu.StackSlot) :
-    ((decode v).is_junk ∨ (decode v).can_be_freely_generated ∨ (spillSet e).is_spilled (decode v)) ↔
+private theorem urgent_gen_iff (e : Bbu.Env) (source : Stack) (v : Bbu.StackSlot)
+    (hv : decode v ∈ source ++ tgt e) :
+    ((decode v).is_junk ∨ (decode v).can_be_freely_generated ∨ (spillSet e source).is_spilled (decode v)) ↔
       (Bbu.isJunk v || Bbu.canBeFreelyGenerated v || Bbu.isSpilled e v) = true := by
-  rw [Bool.or_eq_true, Bool.or_eq_true, isJunk_iff, isFree_iff, isSpilled_iff, or_assoc]
+  rw [Bool.or_eq_true, Bool.or_eq_true, isJunk_iff, isFree_iff, isSpilled_iff e source v hv, or_assoc]
 
 -- The scan from offset `d` on, with the related results `u` and `acc` so far.
 private theorem urgent_scan (h : Rel e st state) (t : Nat)
@@ -83,11 +84,13 @@ private theorem urgent_scan (h : Rel e st state) (t : Nat)
       rw [← Option.isSome_map (f := Fin.val), hp]; exact hs
     simp only [hs, hs', Bool.false_eq_true, ↓reduceIte, slotAt_index (tgt e) ⟨d, hd⟩, except_ok_bind,
       Fin.getElem_fin, tgt_get e d hd]
+    have hmem : decode e.target[d]! ∈ source ++ tgt e := by
+      rw [← tgt_get e d hd]; exact List.mem_append_right _ (List.getElem_mem hd)
     by_cases hg : (Bbu.isJunk e.target[d]! || Bbu.canBeFreelyGenerated e.target[d]! ||
         Bbu.isSpilled e e.target[d]!) = true
-    · simp only [hg, (urgent_gen_iff e _).mpr hg, ↓reduceIte, pure, Except.pure, except_ok_bind]
+    · simp only [hg, (urgent_gen_iff e source _ hmem).mpr hg, ↓reduceIte, pure, Except.pure, except_ok_bind]
       exact ih u acc (by omega) hu
-    simp only [hg, mt (urgent_gen_iff e _).mp hg, Bool.false_eq_true, ↓reduceIte]
+    simp only [hg, mt (urgent_gen_iff e source _ hmem).mp hg, Bool.false_eq_true, ↓reduceIte]
     have hc := h.shallowestCopyPosition (h.canonTarget d)
     cases hsc : state.stack.shallowestCopyPosition (decode e.target[d]!) with
     | none =>

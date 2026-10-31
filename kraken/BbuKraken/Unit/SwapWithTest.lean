@@ -103,17 +103,17 @@ example (_h0 : (View S g ∗ F).get m') (h : (View S g ∗ F).get m) :
   mem_load [View.isSome_data, View.isSome_len]
 
 -- A side goal of the lemma closes by `assumption`.
-example (h : (View S g ∗ F).get m) (hi : i < g.h.n.toNat) :
+example (h : (View S g ∗ F).get m) (hi : i < g.h.n.toNat + g.xs) :
     (m.loadInt (slotAt g.h.data i) 4).isSome = true := by
   mem_load [View.isSome_len, isSome32_slot]
 
 -- No hypothesis on the memory of the load: the memory under the stores, one and two stores down.
-example (h : (View S g ∗ F).get m) (hi : i < g.h.n.toNat) (x : BitVec 32) :
+example (h : (View S g ∗ F).get m) (hi : i < g.h.n.toNat + g.xs) (x : BitVec 32) :
     ((m.storeInt (slotAt g.h.data i) 4 x.toInt).loadInt (slotAt g.h.data i + 4#64) 1).isSome
       = true := by
   mem_load [isSome4_411]
 
-example (h : (View S g ∗ F).get m) (hi : i < g.h.n.toNat) (x : BitVec 32) (y : BitVec 8) :
+example (h : (View S g ∗ F).get m) (hi : i < g.h.n.toNat + g.xs) (x : BitVec 32) (y : BitVec 8) :
     (((m.storeInt (slotAt g.h.data i) 4 x.toInt).storeInt (slotAt g.h.data i + 4#64) 1
       y.toInt).loadInt (slotAt g.h.data i + 5#64) 1).isSome = true := by
   mem_load [isSome4_411, isSome5_411]
@@ -139,7 +139,7 @@ example (h : (View S g ∗ F).get m) : (m.loadInt (slotAt g.h.data i) 4).isSome 
 -- Negative: a hypothesis on the memory of the load stops the search, also when no lemma fits it.
 /-- error: mem_load: no lemma gives this load from the sep hyps on its memory -/
 #guard_msgs in
-example (h : (View S g ∗ F).get m) (hi : i < g.h.n.toNat) (x : BitVec 32)
+example (h : (View S g ∗ F).get m) (hi : i < g.h.n.toNat + g.xs) (x : BitVec 32)
     (h1 : F.get (m.storeInt (slotAt g.h.data i) 4 x.toInt)) :
     ((m.storeInt (slotAt g.h.data i) 4 x.toInt).loadInt (slotAt g.h.data i + 4#64) 1).isSome
       = true := by

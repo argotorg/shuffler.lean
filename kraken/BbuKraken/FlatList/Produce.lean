@@ -67,7 +67,7 @@ theorem sim_block (hs : Sim e fs st) (p w : Word) (hw : w ≠ 0) :
     SimR e (block fs p w) (.error (.blocked p.toNat w.toNat st)) := by
   unfold block
   rw [ite_eq_right hw]
-  exact ⟨rfl, hs.trace, hs.slots, by simp, by simp⟩
+  exact ⟨rfl, ⟨hs.1, hs.2, hs.3, hs.4, hs.5, hs.6, hs.7, hs.8, hs.9, hs.10⟩, rfl, rfl⟩
 
 theorem sim_blockDup (hs : Sim e fs st) {c : Word} (hc : c.toNat < st.len)
     (hx : MAX_DUP_DEPTH < st.len - 1 - c.toNat) :
