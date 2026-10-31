@@ -353,6 +353,34 @@ macro "ho_inv" "at" h:ident : tactic => `(tactic|
 macro "ho_var" : tactic => `(tactic|
   simp only [V, Names.hasOtherRetainedCopy, String.reduceEq, ↓reduceIte])
 
+/-! ### `xorq (%b, %i), %rd` -/
+
+section
+variable [Host] [FunDecls] {Q : Unit → MachineData → Prop} {E : Int64 → MachineData → Prop}
+
+theorem xor_reg_mem_idx_spec (rd b i : Reg64) (d : Int64) :
+    ⦃ fun s =>
+        let addr := s.regs.get64 b + s.regs.get64 i + BitVec.ofInt 64 d.toInt
+        (Mem.loadInt s.dmem addr 8).isSome = true ∧
+          let v := s.regs.get64 rd ^^^ BitVec.ofInt 64 (Mem.loadInt s.dmem addr 8).get!
+          ∀ af : Bool, Q () { s with
+            regs := s.regs.set64 rd v
+            status := StatusFlags.from_result v { cf := false, of := false, af } } ⦄
+      (Directive.instr (.regular .W64 .W64
+          (.xor (.reg (.low rd .W64))
+            (.regOrMem (.mem ⟨some (.reg b), some ⟨i, .W8⟩, .int64 d⟩)))))
+    ⦃ Q; E ⦄ := by
+  refine ⟨fun s hpre => ?_⟩
+  obtain ⟨hmapped, hpre⟩ := hpre
+  obtain ⟨v, hload⟩ := Option.isSome_iff_exists.mp hmapped
+  refine Program.wp_single fun _ _ _ _ hn _ => ?_
+  simp only [Directive.interp, Instr.interp, Operation.interp, Operand.interp,
+    RegOrMem.interp, MachineData.load, MachineData.set, MachineData.setReg, Reg64s.get_low_W64,
+    Reg64s.set_low_W64, AddrExpr.zeroExtend_interp_base_idx, Width.bytes, hload, Effects.All]
+  intro af
+  exact hn _ (by rw [hload, Option.get!_some] at hpre; exact hpre af)
+end
+
 /-! ### The blocks -/
 
 open ShallowestCopy
@@ -552,8 +580,188 @@ theorem b_3 (hok : HG.Ok h) : hasOtherRetainedCopyAsm.ForallBlocks fun blk =>
     rw [hax]
     exact hal
 
+
+set_option maxHeartbeats 400000 in
+theorem b_1 (hret : VSpec MapM (fun _ => True) Names.isRetained isRetainedA 0 isRetainedQ)
+    (hok : HG.Ok h) (hA : hasOtherA h s) :
+    hasOtherRetainedCopyAsm.ForallBlocks fun blk =>
+    blk.label = .label ".LB.Planner.hasOtherRetainedCopy.1" → Obl P h F s ra blk := by
+  cfg_block [Obl]
+  intro t ht
+  ho_inv at ht
+  obtain ⟨w, hli, hlt, hrest⟩ := ht
+  obtain ⟨hsi, hdx, hcx⟩ := hA
+  have hbp := hli.rbp
+  have h13 := hli.r13
+  have h14 := hli.r14
+  have hb := hli.kb.mem
+  rw [sep_lc] at hb
+  obtain ⟨_, hR⟩ := HView.pv hb
+  have h_src := PView.rd_src hR
+  have k_src := PView.isSome_src hR
+  have h_x := PView.rd_sw hR hok hlt
+  have k_x := PView.isSome_sw hR hok hlt
+  have h_o := PView.rd_sw hR hok hcx
+  have k_o := PView.isSome_sw hR hok hcx
+  unfold rd at h_src
+  clear hb hR
+  simp only [Names.isRetained] at hret
+  unfold rd at h_x h_o
+  have hmax : t.regs.rbx.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hlt hok.m
+  kvcgen64 [hret, xor_reg_mem_idx_spec]
+  all_goals try symexec_norm
+  all_goals try simp only [h13, h14, h_src, fold_slot] at ⊢
+  vc_by_shape
+  | load =>
+    first
+    | with_reducible exact k_src
+    | with_reducible exact k_x
+    | with_reducible exact k_o
+  | goto ".LB.Planner.hasOtherRetainedCopy.0" =>
+    rename_i hc
+    have hskip : Flat.otherFrom h.p.fl h.M h.dv (rcx s) t.regs.rbx.toBitVec
+        = Flat.otherFrom h.p.fl h.M h.dv (rcx s) (t.regs.rbx.toBitVec + 1#64) := by
+      first
+      | (refine skip_off (BitVec.lt_def.2 hlt) ?_
+         simp only [sub_beq_zero] at hc
+         exact (beq_iff_eq.mp hc).trans hbp)
+      | (refine skip_slot (BitVec.lt_def.2 hlt) ?_
+         have hne := jne_true hc
+         simp only [h13, h14, h_src, fold_slot] at hne
+         rwa [h_x, h_o] at hne)
+    cfg_goto
+    · exact hli.stk rfl rfl
+    · ho_inv
+      exact ⟨w, hli.next rfl rfl rfl rfl rfl rfl rfl, hlt, hskip.symm.trans hrest⟩
+    · left; ho_var; omega
+  | other =>
+    first
+    | decide
+    | (rename_i hoff _ _ _ _ hsl
+       simp only [sub_beq_zero] at hoff
+       have hoff' : t.regs.rbx.toBitVec ≠ rcx s := by
+         show _ ≠ s.regs.rcx.toBitVec; rw [← hbp]; simpa using hoff
+       have hsl' := jne_false hsl
+       simp only [h13, h14, h_src, fold_slot] at hsl'
+       rw [h_x, h_o] at hsl'
+       clear hsl
+       refine Kb.vcall (V := MapM) (ok := fun _ => True) (A := isRetainedA) (Q := isRetainedQ)
+         (S := h.mp) (a := h.M) (F := PView P h.p ∗ Bs h.dn h.dv.toList ∗ F) (s := s) (ra := ra)
+         (lo := []) (w := w) (hi := [s.regs.rdx.toBitVec, s.regs.rbx.toBitVec,
+           s.regs.rbp.toBitVec, s.regs.r12.toBitVec, s.regs.r13.toBitVec, s.regs.r14.toBitVec,
+           s.regs.r15.toBitVec]) (k := 0) ?kb rfl rfl ?rdi trivial ?A ?_
+       case kb => rw [← HView.split]; exact hli.kb.next rfl rfl
+       case rdi => exact hli.r15
+       case A => exact hmax
+       intro t2 a' lo' w' hkb hl hQ _ hag
+       obtain rfl := List.eq_nil_of_length_eq_zero hl
+       obtain ⟨hli2, hbx⟩ := LI.after hag (hli.next rfl rfl rfl rfl rfl rfl rfl) hkb hQ.1
+       have hal : al t2 = if Flat.isRetained h.M t.regs.rbx.toBitVec then 1#8 else 0#8 := hQ.2
+       clear hQ hkb
+       have hbx' : t2.regs.rbx.toBitVec = t.regs.rbx.toBitVec := by rw [hbx]
+       have hk2 : Kb (HView P h ∗ F) s ra ([w'] ++ [s.regs.rdx.toBitVec, s.regs.rbx.toBitVec,
+           s.regs.rbp.toBitVec, s.regs.r12.toBitVec, s.regs.r13.toBitVec, s.regs.r14.toBitVec,
+           s.regs.r15.toBitVec]) 56#64 t2 := hli2.kb
+       have e0 : t2.regs.rsp.toBitVec + BitVec.ofNat 64 (8 * 0) = t2.regs.rsp.toBitVec := by simp
+       have h_dn : rd t2.dmem t2.regs.rsp.toBitVec = h.dn := by
+         rw [← e0, hk2.rd_hi rfl (i := 0) (by simp)]; exact hdx
+       have k_dn : (t2.dmem.loadInt t2.regs.rsp.toBitVec 8).isSome = true := by
+         rw [← e0]; exact hk2.isSome_hi rfl (i := 0) (by simp)
+       have hb2 := hli2.kb.mem
+       rw [sep_lc] at hb2
+       have hmax2 : t2.regs.rbx.toBitVec.toNat < MAX_N := hbx' ▸ hmax
+       have h_b := HView.rdb_dn hb2 hmax2
+       have k_b := HView.isSome_dn hb2 hmax2
+       unfold rd at h_dn
+       unfold rdb at h_b
+       clear hb2 hk2
+       kvcgen64
+       all_goals try symexec_norm
+       all_goals try simp only [h_dn] at ⊢
+       vc_by_shape
+       | load =>
+         first
+         | with_reducible exact k_dn
+         | with_reducible exact k_b
+       | goto ".LB.Planner.hasOtherRetainedCopy.0" =>
+         rename_i hc
+         have hskip : Flat.otherFrom h.p.fl h.M h.dv (rcx s) t.regs.rbx.toBitVec
+             = Flat.otherFrom h.p.fl h.M h.dv (rcx s) (t.regs.rbx.toBitVec + 1#64) := by
+           first
+           | (refine skip_ret (BitVec.lt_def.2 hlt) ?_
+              have h1 := hal.symm.trans (al_zero (t := t2) (by
+                first
+                | with_reducible assumption
+                | (rw [Bool.not_eq_false']; with_reducible assumption)))
+              cases hr : Flat.isRetained h.M t.regs.rbx.toBitVec
+              · rfl
+              · rw [hr] at h1; exact absurd h1 (by decide))
+           | (refine skip_dn (BitVec.lt_def.2 hlt) ?_
+              simp only [h_dn] at hc
+              simp only [h_b] at hc
+              rw [hbx'] at hc
+              simpa using hc)
+         cfg_goto
+         · exact hli2.stk rfl rfl
+         · ho_inv
+           refine ⟨w', hli2.next rfl rfl rfl rfl rfl rfl rfl, ?_, ?_⟩
+           · rw [hbx']; exact hlt
+           · rw [hbx']; exact hskip.symm.trans hrest
+         · left; ho_var; rw [hbx']; omega
+       | goto ".LB.Planner.hasOtherRetainedCopy.3" =>
+         rename_i hc
+         have hr : Flat.isRetained h.M t.regs.rbx.toBitVec = true := by
+           have h1 := al_ne (t := t2) (by
+             first
+             | with_reducible assumption
+             | (rw [Bool.not_eq_true']; with_reducible assumption))
+           cases hr : Flat.isRetained h.M t.regs.rbx.toBitVec
+           · rw [hr] at hal; exact (h1 hal).elim
+           · rfl
+         have hd : Flat.get h.dv t.regs.rbx.toBitVec = 0#8 := by
+           simp only [h_dn] at hc
+           simp only [h_b] at hc
+           rw [hbx'] at hc
+           simpa using hc
+         have hres : res h s = true :=
+           hrest.symm.trans (found (BitVec.lt_def.2 hlt) hoff' hsl' hr hd)
+         have ha1 : al t2 = 1#8 := hal.trans (by rw [hr]; rfl)
+         cfg_goto
+         · exact (hli2.kb.next rfl rfl).stack (by decide)
+         · ho_inv
+           refine ⟨w', hli2.kb.next rfl rfl, ?_⟩
+           rw [hres]; exact ha1
+         · left; ho_var; omega)
+  all_goals decide
+
 end
 
 end OtherU
+
+end Bbu.Unit
+
+namespace Bbu.Unit
+
+open OtherU in
+theorem hasOtherRetainedCopy_unit [Host] [FunDecls]
+    (hret : VSpec MapM (fun _ => True) Names.isRetained isRetainedA 0 isRetainedQ) :
+    VThm HView HG.Ok hasOtherRetainedCopyAsm hasOtherA 8 hasOtherQ := by
+  intro P h F s ra
+  refine ⟨fun s₀ ⟨h₀, hpre⟩ => ?_⟩
+  subst h₀
+  obtain ⟨fr₀, hfr, hk0⟩ := hpre.kg ra
+  match fr₀, hfr, hk0 with
+  | [w₀, w₁, w₂, w₃, w₄, w₅, w₆, w₇], _, hk0 =>
+  refine Program.WP.cfg (OtherU.Inv P h F s ra) (OtherU.V h) ?_ rfl
+  refine forallBlocks_cases labels labels_cover fun l hl => ?_
+  simp only [labels, List.mem_cons, List.not_mem_nil, or_false] at hl
+  rcases hl with rfl | rfl | rfl | rfl | rfl | rfl | rfl
+  · exact b_entry P h F s ra
+  · exact b_fn P h F s ra hpre w₀ w₁ w₂ w₃ w₄ w₅ w₆ w₇ hk0
+  · exact b_0 P h F s ra
+  · exact b_1 P h F s ra hret hpre.ok hpre.args
+  · exact b_2 P h F s ra
+  · exact b_3 P h F s ra hpre.ok
+  · exact b_4 P h F s ra
 
 end Bbu.Unit
