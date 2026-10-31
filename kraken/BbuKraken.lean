@@ -126,6 +126,7 @@ import BbuKraken.Unit.Plan.Defs
 import BbuKraken.Unit.Plan.Frame
 import BbuKraken.Unit.Plan.IsRetained
 import BbuKraken.Unit.Plan.Map
+import BbuKraken.Unit.Plan.MapInPlace
 import BbuKraken.Unit.Plan.Specs
 import BbuKraken.Unit.SpillSet
 import BbuKraken.Unit.SwapWith
