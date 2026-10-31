@@ -17,9 +17,12 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 if [ $# -eq 0 ]; then
-	(cd "$dir" && lake build -q BbuKraken.Bin >/dev/null)
-	printf 'import BbuKraken.Bin\n' > "$tmp/final.lean"
-	set -- "$tmp/final.lean" Bbu.buildBottomUp_correct Bbu.bbu_harness_correct
+	(cd "$dir" && nice lake build -q BbuKraken.PlanFinal BbuKraken.Unit.Plan.PlannerRunBin >/dev/null)
+	printf 'import BbuKraken.PlanFinal\nimport BbuKraken.Unit.Plan.PlannerRunBin\n' > "$tmp/final.lean"
+	set -- "$tmp/final.lean" Bbu.buildBottomUp_correct Bbu.bbu_harness_correct \
+		Bbu.planner_helpers_correct Bbu.emission_run_correct Bbu.planner_classify_correct \
+		Bbu.planner_resolve_correct Bbu.planner_run_correct Bbu.planner_run_harness_correct \
+		Bbu.plan_correct Bbu.plan_harness_correct
 fi
 src=$1
 shift
@@ -66,7 +69,7 @@ open Lean Elab Command in
 EOF
 } > "$tmp/Check.lean"
 
-if ! (cd "$dir" && lake env lean "$tmp/Check.lean") > "$tmp/out" 2>&1; then
+if ! (cd "$dir" && nice lake env lean "$tmp/Check.lean") > "$tmp/out" 2>&1; then
 	grep -v 'declaration uses `sorry`' "$tmp/out" >&2
 	exit 1
 fi

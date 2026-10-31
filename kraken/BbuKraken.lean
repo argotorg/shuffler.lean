@@ -48,6 +48,9 @@ import BbuKraken.Fn.SwapWithLemmas
 import BbuKraken.Kit
 import BbuKraken.Layout
 import BbuKraken.Link
+import BbuKraken.PlannerHelpers
+import BbuKraken.PlannerHelpersTest
+import BbuKraken.PlanFinal
 import BbuKraken.LowestFinal
 import BbuKraken.MapModel
 import BbuKraken.Model
@@ -78,6 +81,8 @@ import BbuKraken.Unit.Dup
 import BbuKraken.Unit.DupTest
 import BbuKraken.Unit.Generate
 import BbuKraken.Unit.GenerateTest
+import BbuKraken.Unit.IsAvailable
+import BbuKraken.Unit.IsAvailableTest
 import BbuKraken.Unit.IsSpilled
 import BbuKraken.Unit.IsSpilledTest
 import BbuKraken.Unit.Loop
@@ -133,6 +138,18 @@ import BbuKraken.Unit.Plan.KeepWildcard
 import BbuKraken.Unit.Plan.Absorb
 import BbuKraken.Unit.Plan.HasOther
 import BbuKraken.Unit.Plan.IsDemanded
+import BbuKraken.Unit.Plan.Classify
+import BbuKraken.Unit.Plan.ClassifyMore
+import BbuKraken.Unit.Plan.ClassifyCopied
+import BbuKraken.Unit.Plan.ClassifySpill
+import BbuKraken.Unit.Plan.ClassifyRoute
+import BbuKraken.Unit.Plan.ClassifyFree
+import BbuKraken.Unit.Plan.Resolve
+import BbuKraken.Unit.Plan.PlannerRunBin
+import BbuKraken.Unit.Run.Linked
+import BbuKraken.Unit.Run.ModelTest
+import BbuKraken.Unit.Run.LoadTest
+import BbuKraken.Unit.Plan.ClassifyTest
 import BbuKraken.Unit.Plan.Specs
 import BbuKraken.Unit.SpillSet
 import BbuKraken.Unit.SwapWith
