@@ -83,6 +83,44 @@ theorem Kb.vcall {S : Addr} {a : α} {F : MProp 64} {s c : MachineData} {ra : In
   · rw [hsp, ← Stk.callee]; exact h.mem
   · rw [hsp, ← Stk.callee] at hm; exact hm
   · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rsp]; exact h.sp
+
+-- The lowest words `xs` of a frame are not in the frame of the callee.
+theorem Stk.split (sp : Addr) (xs ys : List Word) (v : Word) (P : MProp 64) :
+    Stk sp (xs ++ ys) v ∗ P
+      = Stk sp ys v ∗ (Arr (sp - 8#64 - BitVec.ofNat 64 (8 * (xs.length + ys.length))) xs ∗ P) := by
+  have e : sp - 8#64 - BitVec.ofNat 64 (8 * (xs.length + ys.length)) + BitVec.ofNat 64 (8 * xs.length)
+      = sp - 8#64 - BitVec.ofNat 64 (8 * ys.length) := by
+    apply BitVec.eq_of_toNat_eq
+    simp only [BitVec.toNat_add, BitVec.toNat_sub, BitVec.toNat_ofNat]
+    omega
+  unfold Stk
+  rw [List.length_append, Arr.append, e]
+  simp only [MProp.sep_assoc]
+  rw [sep_lc (Arr _ xs), sep_lc (Arr _ xs)]
+
+-- The call rule of a callee with `k` free words, above the frame words `xs`.
+theorem Kb.vcall_above {S : Addr} {a : α} {F : MProp 64} {s c : MachineData} {ra : Int64}
+    {xs lo hi : List Word} {w d : Word} {k : Nat} {A : α → MachineData → Prop}
+    {Q : α → α → MachineData → MachineData → Prop} {K : MachineData → Prop}
+    (h : Kb (V S a ∗ F) s ra (xs ++ lo ++ w :: hi) d c) (hd : d = BitVec.ofNat 64 (8 * hi.length))
+    (hl : lo.length = k) (hdi : rdi c = S) (hok : ok a) (hA : A a c)
+    (hK : ∀ t a' lo' w', Kb (V S a' ∗ F) s ra (xs ++ lo' ++ w' :: hi) d t → lo'.length = k →
+      Q a a' c t → ok a' → Sep.mod.Agree c t → K t) :
+    ∃ S' a' F', VPre V ok S' a' F' A k c
+      ∧ ∀ s', VPost V ok S' F' k (fun a'' t => Q a' a'' c t) c s' → Sep.mod.Agree c s'
+        → K s' := by
+  have split : ∀ (a : α) (lo : List Word) (w : Word) (u : MachineData), lo.length = k →
+      ((Stk (rsp s) (xs ++ lo ++ w :: hi) ra.toBitVec ∗ V S a ∗ F).get u.dmem
+        ↔ (Stk (rsp s) (lo ++ w :: hi) ra.toBitVec ∗ V S a
+          ∗ (Arr (rsp s - 8#64 - BitVec.ofNat 64 (8 * (xs.length + (k + 1 + hi.length)))) xs ∗ F)).get
+            u.dmem) := by
+    intro a lo w u hl
+    rw [List.append_assoc, Stk.split, sep_lc (Arr _ xs) (V S a)]
+    simp only [List.length_append, List.length_cons, hl]
+    rw [show k + (hi.length + 1) = k + 1 + hi.length by omega]
+  exact Kb.vcall ⟨(split a lo w c hl).1 h.mem, h.sp⟩ hd hl hdi hok hA
+    fun t a' lo' w' hkb hl' hQ hok' hag =>
+      hK t a' lo' w' ⟨(split a' lo' w' t hl').2 hkb.mem, hkb.sp⟩ hl' hQ hok' hag
 end
 
 /-! ## `testb %al, %al` after a call -/
