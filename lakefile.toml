@@ -65,3 +65,10 @@ root = "LowestPr31Main"
 name = "SpillBridge"
 srcDir = "kraken"
 globs = ["BbuKraken.FlatModel", "BbuKraken.FlatSpill", "SpillBridge.+"]
+
+# The flat model of Planner.run, and the proofs that it equals Planner.run of PR31.
+# Not a default target.
+[[lean_lib]]
+name = "PlanBridge"
+srcDir = "kraken"
+globs = ["BbuKraken.FlatPop", "BbuKraken.FlatSurplus", "BbuKraken.FlatLowest", "BbuKraken.FlatPlan", "BbuKraken.FlatPopRel", "BbuKraken.FlatSurplusRel", "BbuKraken.FlatLowestRel", "BbuKraken.FlatRel", "BbuKraken.FlatBridge", "BbuKraken.FlatList.Basic", "BbuKraken.FlatList.Ctor", "BbuKraken.FlatList.Leaf", "BbuKraken.FlatList.Loop", "BbuKraken.FlatList.PermList", "BbuKraken.FlatList.PermLoop", "BbuKraken.FlatList.Permute", "BbuKraken.FlatList.Produce", "BbuKraken.FlatList.Regroup", "BbuKraken.FlatList.Step", "PlanBridge.+"]
