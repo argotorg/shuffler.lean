@@ -120,6 +120,13 @@ import BbuKraken.Unit.ShallowestCopy
 import BbuKraken.Unit.ShallowestCopyTest
 import BbuKraken.Unit.SpillAdd
 import BbuKraken.Unit.SpillDefs
+import BbuKraken.Unit.Plan.Call
+import BbuKraken.Unit.Plan.ClosestCopy
+import BbuKraken.Unit.Plan.Defs
+import BbuKraken.Unit.Plan.Frame
+import BbuKraken.Unit.Plan.IsRetained
+import BbuKraken.Unit.Plan.Map
+import BbuKraken.Unit.Plan.Specs
 import BbuKraken.Unit.SpillSet
 import BbuKraken.Unit.SwapWith
 import BbuKraken.Unit.SwapWithTest
