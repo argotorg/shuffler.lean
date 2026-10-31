@@ -54,3 +54,9 @@ root = "SurplusFlatMain"
 name = "lowest_flat"
 srcDir = "test"
 root = "LowestFlatMain"
+
+# The flat model of plan, run by test/plan_diff.sh.
+[[lean_exe]]
+name = "plan_flat"
+srcDir = "test"
+root = "PlanFlatMain"
