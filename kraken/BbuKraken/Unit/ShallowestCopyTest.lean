@@ -15,7 +15,7 @@ def hdr (len : Word) : Hdr :=
   ⟨0, 3#64, 0, 0, len, 0, 0, Vector.replicate MAX_N 0, Vector.replicate MAX_N 0, 0, 0, 0⟩
 
 def ghost (len : Word) (ws : Vector Word 3) : G :=
-  ⟨hdr len, ws, Vector.replicate 18 ⟨⟨0, 0, ⟨0, 0, 0⟩⟩, 0, 0⟩, Vector.replicate 3 0, fun _ => 0⟩
+  ⟨hdr len, 0, 0, ws, Vector.replicate 18 ⟨⟨0, 0, ⟨0, 0, 0⟩⟩, 0, 0⟩, Vector.replicate 3 0, fun _ => 0⟩
 
 -- The slot with the id 7 and the opcode 1; the same slot with the bytes 6 and 7 set; the same
 -- word with a different kind byte (byte 4); a different slot.

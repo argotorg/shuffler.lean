@@ -88,17 +88,17 @@ end
 
 theorem v0_lt (x : Word) : 2 ^ 33 + x.toNat < 2 ^ 66 := by have := x.isLt; omega
 
-theorem b_entry [Host] [FunDecls] (S g F s ra) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .entry → Obl S g F s ra blk := by
+theorem b_entry [Host] [FunDecls] (S g p0 F s ra) :
+    Program.ForallBlocks finishAsm fun blk => blk.label = .entry → Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   kvcgen64
   simp only [LInv, Names.permute, ↓reduceIte]
   exact ht
 
-theorem b_fn [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) permuteA 1034 s) :
+theorem b_fn [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label Names.permute →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   pm_block [Obl, Names.permute]
   intro t ht
   simp only [LInv, Names.permute, ↓reduceIte] at ht
@@ -124,14 +124,14 @@ theorem b_fn [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) 
   all_goals clear p1 p2 p3 p4 p5 p6
   case vc2 _ hz =>
     simp only [hS, rd_len' hk0.mem, BitVec.and_self, BitVec.zero_eq, beq_iff_eq] at hz
-    have hp : Flat.permute (flat g) = (.done, flat g) := by
+    have hp : Flat.permute (flat g) p0 = (.done, flat g) := by
       simp only [Flat.permute, show (flat g).size = 0 from hz, ↓reduceIte]
     cfg_goto
     · exact hk25.stack
     · simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
       refine ⟨_, hk25.next rfl rfl rfl rfl rfl rfl rfl rfl, hfr, hpre.ok, Keep.refl g, ?_, ?_⟩
-      · rw [hp]
-      · rw [hp]; rfl
+      · dsimp only; rw [hp]
+      · dsimp only; rw [hp]; rfl
     · left; simp [V, Names.permute]
   case vc9 _ hz =>
     simp only [hS, rd_len' hk0.mem, BitVec.and_self, BitVec.zero_eq, beq_eq_false_iff_ne, LInv,
@@ -141,21 +141,21 @@ theorem b_fn [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) 
     · dsimp only; rw [hr]; unfold base; rw [show rsp s = s.regs.rsp.toBitVec from rfl]; bv_omega
     · dsimp only; rw [hr]; unfold base; rw [show rsp s = s.regs.rsp.toBitVec from rfl]; bv_omega
     · have hx := lt_max hpre.ok hi
-      have h1 := hpre.args.2.2 i.toNat (BitVec.lt_def.mp hi)
+      have h1 := hpre.args.2.2.2 i.toNat (BitVec.lt_def.mp hi)
       rw [show rsi s = s.regs.rsi.toBitVec from rfl, hrdP _ hx, BitVec.ofNat_toNat,
         BitVec.setWidth_eq] at h1
       rw [← h1, get_eq _ _ hx]; simp [hx]
   case vc10 =>
     left; simp only [V, Names.permute, String.reduceEq, ↓reduceIte]; exact v0_lt _
 
-theorem b_0 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) permuteA 1034 s) :
+theorem b_0 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.0" →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨L, k, hF, h13, h14, hk, hax, hdx, hD, hag⟩ := ht
-  have hn := Nat.le_trans hpre.ok.len hpre.ok.n
+  have hn := Nat.le_trans hpre.ok.len hpre.ok.xs
   simp only [MAX_N] at hn
   have hk' : k < MAX_N := by simp only [MAX_N]; omega
   -- The stores `desiredBy[k]` and `c0`.
@@ -187,7 +187,7 @@ theorem b_0 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) p
     simp only [Bool.not_eq_false', beq_iff_eq, BitVec.zero_eq] at hz
     rw [hax, hdx] at hz
     have hlen : g.h.len.toNat = k + 1 := by bv_omega
-    obtain ⟨p0, hrg, hP0, hD0, hlt0⟩ := start hpre.ok hpre.args.2.1 hag
+    obtain ⟨hrg, hP0, hD0, hlt0⟩ := start hpre.ok hpre.args.2.2.1 hag
       (fun i hi => none_step hk' hD i (by rw [← hlen]; exact BitVec.lt_def.mp hi))
     have hF2 : Fm S g F s ra { L with D := L.D.set k Flat.NONE hk', c0 := 8#64 }
         { t with dmem := ((Mem.storeInt t.dmem t.regs.rax.toBitVec 8 (-1)).storeInt
@@ -218,9 +218,9 @@ theorem Fm.isSome_pops {S : Addr} {g : G} {F : MProp 64} {s : MachineData} {ra :
     e 2 _ (by bv_omega) (by decide), e 3 _ (by bv_omega) (by decide),
     e 4 _ (by bv_omega) (by decide), e 5 _ (by bv_omega) (by decide)⟩
 
-theorem b_6 [Host] [FunDecls] (S g F s ra) :
+theorem b_6 [Host] [FunDecls] (S g p0 F s ra) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.6" →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
@@ -242,9 +242,9 @@ theorem b_6 [Host] [FunDecls] (S g F s ra) :
       fun t' _ hax => ⟨hQ.1, hQ.2.1, by show (rax t').setWidth 8 = _; rw [hax]; exact hQ.2.2⟩
     all_goals rfl
 
-theorem b_25 [Host] [FunDecls] (S g F s ra) :
+theorem b_25 [Host] [FunDecls] (S g p0 F s ra) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.25" →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht

@@ -53,13 +53,28 @@ example (_h : (View S g ∗ F).get m) :
   exact Or.inr trivial
 
 -- A slot of the working stack.
-example (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+example (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     ((m.storeInt (slotAt g.h.data i) 8 w.toInt).loadInt (slotAt g.h.data i) 8).isSome = true := by
   have h1 := View.store_stk h hi w
   exact (View.isSome_slot h1 hi :)
 
+-- A load of a stack slot below `n` with `view_load` (`View.isSome_slot_n`), and above `n` (in
+-- the slack `xs`, `View.isSome_slot`).
+example (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+    (m.loadInt (slotAt g.h.data i) 8).isSome = true := by
+  view_load
+example (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
+    (m.loadInt (slotAt g.h.data i) 8).isSome = true := by
+  view_load
+-- Negative: with no bound of the slot, `view_load` does not close the load.
+/-- error: sep_load: no sep hyp gives this load -/
+#guard_msgs in
+example (h : (View S g ∗ F).get m) {i : Nat} :
+    (m.loadInt (slotAt g.h.data i) 8).isSome = true := by
+  view_load
+
 -- A store to slot `i`, then a load of slot `i` and of a different slot `j`.
-example (h : (View S g ∗ F).get m) {i j : Nat} (hi : i < g.h.n.toNat) (hj : j < g.h.n.toNat)
+example (h : (View S g ∗ F).get m) {i j : Nat} (hi : i < g.h.n.toNat + g.xs) (hj : j < g.h.n.toNat + g.xs)
     (hij : i ≠ j) :
     rd (m.storeInt (slotAt g.h.data i) 8 w.toInt) (slotAt g.h.data i) = w
     ∧ rd (m.storeInt (slotAt g.h.data i) 8 w.toInt) (slotAt g.h.data j) = g.stk[j] := by
@@ -69,7 +84,7 @@ example (h : (View S g ∗ F).get m) {i j : Nat} (hi : i < g.h.n.toNat) (hj : j 
 
 -- Byte 4 of a slot (the kind) in the form of `cmpb $3, 4(%rdx,%rsi,8)` (`4#64`), after a store
 -- of the slot: the byte of the stored word.
-example (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat) :
+example (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat + g.xs) :
     rdb (m.storeInt (slotAt g.h.data k) 8 w.toInt) (slotAt g.h.data k + 4#64) = w.extractLsb' 32 8
     ∧ ((m.storeInt (slotAt g.h.data k) 8 w.toInt).loadInt (slotAt g.h.data k + 4#64) 1).isSome
       = true := by
@@ -78,16 +93,16 @@ example (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat) :
     View.isSome_slot_byte h1 hk (j := 4) (by decide)⟩
 
 -- Byte 0 and byte 7 of a slot.
-example (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat) :
+example (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat + g.xs) :
     rdb m (slotAt g.h.data k + BitVec.ofNat 64 0) = g.stk[k].extractLsb' 0 8
     ∧ rdb m (slotAt g.h.data k + BitVec.ofNat 64 7) = g.stk[k].extractLsb' 56 8 :=
   ⟨View.rdb_slot h hk (j := 0) (by decide), View.rdb_slot h hk (j := 7) (by decide)⟩
 
 -- Negative: byte 8 is not a byte of the slot. The same steps with byte 7 close the goal.
-example (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat) :
+example (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toNat + g.xs) :
     (m.loadInt (slotAt g.h.data k + BitVec.ofNat 64 7) 1).isSome = true := by
   apply View.isSome_slot_byte h hk; decide
-example (_h : (View S g ∗ F).get m) {k : Nat} (_hk : k < g.h.n.toNat) :
+example (_h : (View S g ∗ F).get m) {k : Nat} (_hk : k < g.h.n.toNat + g.xs) :
     (m.loadInt (slotAt g.h.data k + BitVec.ofNat 64 8) 1).isSome = true ∨ True := by
   fail_if_success (left; apply View.isSome_slot_byte _h _hk; decide; done)
   exact Or.inr trivial
@@ -95,7 +110,7 @@ example (_h : (View S g ∗ F).get m) {k : Nat} (_hk : k < g.h.n.toNat) :
 /-! ## Op records -/
 
 -- Take record `i` out, store its kind and payload, load its depth, and put it back.
-example (h : (View S g ∗ F).get m) {i : Nat} (hi : i < 6 * g.h.n.toNat) (x y : Int) :
+example (h : (View S g ∗ F).get m) {i : Nat} (hi : i < 6 * g.h.n.toNat + g.xo) (x y : Int) :
     ∃ r, (View S { g with ops := g.ops.set i r } ∗ F).get
       ((m.storeInt (opAt g.h.ops i) 1 x).storeInt (opAt g.h.ops i + 4#64) 4 y) := by
   have h1 := OpM.store_kind (View.focus h hi) x
@@ -104,7 +119,7 @@ example (h : (View S g ∗ F).get m) {i : Nat} (hi : i < 6 * g.h.n.toNat) (x y :
   exact ⟨_, View.unfocus h2 hi⟩
 
 -- `view_load` finds the record hypothesis and the lemma of the byte.
-example (h : (View S g ∗ F).get m) {i : Nat} (hi : i < 6 * g.h.n.toNat) :
+example (h : (View S g ∗ F).get m) {i : Nat} (hi : i < 6 * g.h.n.toNat + g.xo) :
     (m.loadInt (opAt g.h.ops i + 9#64) 1).isSome = true := by
   have _h1 := View.focus h hi
   view_load
@@ -112,7 +127,7 @@ example (h : (View S g ∗ F).get m) {i : Nat} (hi : i < 6 * g.h.n.toNat) :
 -- Negative: `view_load` does not close a load at a byte that no lemma gives (byte 2 is padding).
 /-- error: sep_load: no sep hyp gives this load -/
 #guard_msgs in
-example (h : (View S g ∗ F).get m) {i : Nat} (hi : i < 6 * g.h.n.toNat) :
+example (h : (View S g ∗ F).get m) {i : Nat} (hi : i < 6 * g.h.n.toNat + g.xo) :
     (m.loadInt (opAt g.h.ops i + 2#64) 1).isSome = true := by
   have _h1 := View.focus h hi
   view_load
@@ -154,7 +169,10 @@ example (s : MachineData) (hm : (View S g ∗ F).get s.dmem) (hS : rdi s = S) {i
 def hdr4 : Hdr := ⟨0, 4#64, 0, 0, 0, 0, 0, Vector.replicate MAX_N 0, Vector.replicate MAX_N 0, 0, 0, 0⟩
 
 -- A stack of `n = 4` slots and `6n = 24` records.
-example : G := ⟨hdr4, Vector.replicate 4 (0 : Word), Vector.replicate 24 ⟨⟨0, 0, ⟨0, 0, 0⟩⟩, 0, 0⟩,
+example : G := ⟨hdr4, 0, 0, Vector.replicate 4 (0 : Word), Vector.replicate 24 ⟨⟨0, 0, ⟨0, 0, 0⟩⟩, 0, 0⟩,
+  Vector.replicate 4 (0 : Word), fun _ => 0⟩
+-- With the slack `xs = 2` and `xo = 3`: a stack of 6 slots and 27 records.
+example : G := ⟨hdr4, 2, 3, Vector.replicate 6 (0 : Word), Vector.replicate 27 ⟨⟨0, 0, ⟨0, 0, 0⟩⟩, 0, 0⟩,
   Vector.replicate 4 (0 : Word), fun _ => 0⟩
 
 -- Negative: a stack of 3 slots for `n = 4` does not typecheck.
@@ -164,12 +182,12 @@ error: Application type mismatch: The argument
 has type
   Vector Word 3
 but is expected to have type
-  Vector Word (BitVec.toNat hdr4.n)
+  Vector Word (BitVec.toNat hdr4.n + 0)
 in the application
-  G.mk hdr4 (Vector.replicate 3 0)
+  G.mk hdr4 0 0 (Vector.replicate 3 0)
 -/
 #guard_msgs in
-example : G := ⟨hdr4, Vector.replicate 3 (0 : Word), Vector.replicate 24 ⟨⟨0, 0, ⟨0, 0, 0⟩⟩, 0, 0⟩,
+example : G := ⟨hdr4, 0, 0, Vector.replicate 3 (0 : Word), Vector.replicate 24 ⟨⟨0, 0, ⟨0, 0, 0⟩⟩, 0, 0⟩,
   Vector.replicate 4 (0 : Word), fun _ => 0⟩
 
 -- Negative: a target of 5 words for `n = 4` does not typecheck.
@@ -181,13 +199,13 @@ has type
 but is expected to have type
   Vector Word (BitVec.toNat hdr4.n)
 in the application
-  G.mk hdr4 (Vector.replicate 4 0)
+  G.mk hdr4 0 0 (Vector.replicate 4 0)
     (Vector.replicate 24
       { op := { kind := 0, depth := 0, slot := { payload := 0, kind := 0, valueOpcode := 0 } }, pad2 := 0, pad10 := 0 })
     (Vector.replicate 5 0)
 -/
 #guard_msgs in
-example : G := ⟨hdr4, Vector.replicate 4 (0 : Word), Vector.replicate 24 ⟨⟨0, 0, ⟨0, 0, 0⟩⟩, 0, 0⟩,
+example : G := ⟨hdr4, 0, 0, Vector.replicate 4 (0 : Word), Vector.replicate 24 ⟨⟨0, 0, ⟨0, 0, 0⟩⟩, 0, 0⟩,
   Vector.replicate 5 (0 : Word), fun _ => 0⟩
 
 /-! ## The target and the spilled bytes -/

@@ -12,7 +12,8 @@ there is no proof that they agree.
   below `m_traceSize`.
 - Each unit returns a `Status` and the state, also when it fails, as the C++ does.
 - There is one function for each function of the C++, and its statements are in
-  the order of the C++. A `yulAssert` returns `.assertionFailed`.
+  the order of the C++. A `yulAssert` returns `.assertionFailed`. `permuteMapping` holds
+  statements of `buildBottomUp`: the loop that reads the destinations and the call of `permute`.
 - A loop is a recursive function. The loop of `permute` has no bound in the C++, so
   the model gives it fuel (`permuteLoop`).
 
@@ -196,11 +197,11 @@ def generate (st : St) (targetOffset : Word) : Status × St :=
 
 /-! ## `permute`
 
-The local arrays `permutation` and `desiredBy` of `permute` are `Vector`s. The C++ writes
-each element below the size before it reads it, so their content at the start does not
-matter: the model starts with `initial`. -/
+The array `permutation` of `buildBottomUp` and the local array `desiredBy` of `permute` are
+`Vector`s. The C++ writes each element below the size before it reads it, so their content at
+the start does not matter: the model starts with `initial`. -/
 
--- The content of the local arrays of `permute` at the start.
+-- The content of the local arrays at the start.
 def initial : Vector Word MAX_N := Vector.replicate MAX_N 0
 
 -- The measure of a loop `for (i = a; i < b; ++i)`.
@@ -331,18 +332,26 @@ def permuteLoop (fuel : Nat) (st : St) (top : Word) (permutation : Vector Word M
     | .ret r => r
     | .cont st permutation => permuteLoop fuel st top permutation
 
--- `permute`
-def permute (st : St) : Status × St :=
+-- `permute(_permutation)`: the slot at each offset `pos` goes to `permutation[pos]`. The C++
+-- changes the caller's array in place; the caller does not read it after the call, so the model
+-- does not return it.
+def permute (st : St) (permutation : Vector Word MAX_N) : Status × St :=
   if st.size = 0 then (.done, st)
-  else match readDestinations st 0 initial with
-  | none => (.assertionFailed, st)
-  | some permutation =>
+  else
     let desiredBy := clearDesired st 0 initial
     match regroup st 0 permutation desiredBy with
     | none => (.assertionFailed, st)
     | some permutation =>
       let top := st.size - 1
       permuteLoop (2 * st.size.toNat) st top permutation
+
+-- The end of `buildBottomUp` when no generation is pending: the loop that reads the
+-- destinations into `permutation`, then `permute(permutation)`. The C++ has these statements
+-- in `buildBottomUp`.
+def permuteMapping (st : St) : Status × St :=
+  match readDestinations st 0 initial with
+  | none => (.assertionFailed, st)
+  | some permutation => permute st permutation
 
 /-! ## `buildBottomUp` -/
 
@@ -420,7 +429,7 @@ def body (st : St) (targetOffset : Word) : Next :=
   if targetOffset < st.size ∧ isFinal st targetOffset then .cont st targetOffset
   else if st.pend = 0 then
     if st.size ≠ st.targetSize then .ret (.assertionFailed, st)
-    else .ret (permute st)
+    else .ret (permuteMapping st)
   else match urgentFrom st targetOffset targetOffset NONE with
   | .error r => .ret r
   | .ok urgentToDup =>

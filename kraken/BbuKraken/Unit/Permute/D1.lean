@@ -16,16 +16,16 @@ namespace Bbu.Unit
 open Bbu.Sep
 namespace Permute
 
-theorem b_13 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) permuteA 1034 s) :
+theorem b_13 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.13" →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨L, p, hF, h13, h14, hcx, h0, hrg, hP⟩ := ht
   have hok := hpre.ok
-  have hn : (flat g).size.toNat ≤ MAX_N := Nat.le_trans hok.len hok.n
-  obtain ⟨hperm, hb⟩ := rg_some hrg (by show g.h.len ≠ 0; bv_omega) hn hpre.args.2.1
+  have hn : (flat g).size.toNat ≤ MAX_N := Nat.le_trans hok.len hok.xs
+  obtain ⟨hperm, hb⟩ := rg_some hrg (by show g.h.len ≠ 0; bv_omega) hn hpre.args.2.2.1
   kvcgen64
   all_goals try symexec_norm
   all_goals try rw [add_neg_one]
@@ -34,14 +34,14 @@ theorem b_13 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) 
     · exact Fm.stack (hF.next rfl rfl)
     · simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
       exact ⟨g, L, p, 2 * g.h.len.toNat, ⟨hF.next rfl rfl, hok, Keep.refl g, rfl, h0,
-        fun i hi => dest_lt hpre.args.2.1 hi, h13, h14, hcx, by rw [← hcx], hP, hb⟩,
+        hpre.args.2.1, h13, h14, hcx, by rw [← hcx], hP, hb⟩,
         hperm, mu_start p h0, hpre.args.1⟩
     · pm_dec
       exact Or.inr rfl
 
-theorem b_21 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) permuteA 1034 s) :
+theorem b_21 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.21" →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
@@ -87,14 +87,14 @@ theorem b_21 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) 
   case vc4 =>
     pd_dec
 
-theorem b_14 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) permuteA 1034 s) :
+theorem b_14 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.14" →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨g', L, p, f, hD, hperm, hmu, hnops, hpt⟩ := ht
-  have hn : g.h.len.toNat ≤ MAX_N := Nat.le_trans hpre.ok.len hpre.ok.n
+  have hn : g.h.len.toNat ≤ MAX_N := Nat.le_trans hpre.ok.len hpre.ok.xs
   have hcxN : t.regs.rsi.toBitVec.toNat < 1024 := by
     rw [hD.si]; have := hD.pos; simp only [MAX_N] at hn; bv_omega
   kvcgen64
@@ -106,9 +106,9 @@ theorem b_14 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) 
   case vc2 =>
     pd_dec
 
-theorem b_15 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) permuteA 1034 s) :
+theorem b_15 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.15" →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
@@ -172,9 +172,9 @@ theorem b_15 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) 
         rw [hdx]; bv_omega
       pd_dec
 
-theorem b_16 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g (permW s ∗ F) permuteA 1034 s) :
+theorem b_16 [Host] [FunDecls] (S g p0 F s ra) (_hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.16" →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
@@ -186,13 +186,13 @@ theorem b_16 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g (permW s ∗ F)
     · exact Fm.stack (hF.next rfl rfl)
     · simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
       refine ⟨g', L, hF.next rfl rfl, hok, hk, ?_, ?_⟩
-      · rw [hp]
-      · rw [hp]; rfl
+      · dsimp only; rw [hp]
+      · dsimp only; rw [hp]; rfl
     · pm_dec
 
-theorem b_17 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g (permW s ∗ F) permuteA 1034 s) :
+theorem b_17 [Host] [FunDecls] (S g p0 F s ra) (_hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.17" →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht

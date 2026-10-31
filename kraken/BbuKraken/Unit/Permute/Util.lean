@@ -63,14 +63,14 @@ theorem arr_focus_set (a : Addr) (vs : List Word) {i : Nat} (hi : i < vs.length)
       · rw [List.set_cons_succ, Arr, e' w, addr_succ, ← MProp.sep_assoc,
           MProp.sep_comm (Wd a v), MProp.sep_assoc]
 
-theorem wd_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+theorem wd_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     ∃ R, (Wd (slotAt g.h.data i) g.stk[i] ∗ R).get m := by
   obtain ⟨R, h⟩ := View.arr_stk h
   obtain ⟨Q, e, -⟩ := arr_focus_set g.h.data g.stk.toList (i := i) (by simpa using hi)
   rw [e, Vector.getElem_toList, MProp.sep_assoc] at h
   exact ⟨_, h⟩
 
-theorem rd_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+theorem rd_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     rd m (slotAt g.h.data i) = g.stk[i] :=
   let ⟨_, h⟩ := wd_slot h hi; Wd.rd h
 
@@ -81,32 +81,32 @@ theorem B32.rd32 {a : Addr} {v : BitVec 32} (h : (B32 a v ∗ F).get m) :
     BitVec.ofInt_ofBytes_toBytes 32 4 rfl]
 
 -- `movl (slot), %r32`: the low 4 bytes.
-theorem rd32_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+theorem rd32_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     BitVec.ofInt 32 (m.loadInt (slotAt g.h.data i) 4).get! = g.stk[i].extractLsb' 0 32 := by
   obtain ⟨R, h⟩ := wd_slot h hi
   rw [Wd.split, MProp.sep_assoc] at h
   exact B32.rd32 h
 
-theorem isSome32_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+theorem isSome32_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     (m.loadInt (slotAt g.h.data i) 4).isSome = true := by
   obtain ⟨R, h⟩ := wd_slot h hi
   rw [Wd.split, MProp.sep_assoc] at h
   exact B32.isSome h
 
 -- `movzbl 4(slot)` and `movzbl 5(slot)`.
-theorem rdb4_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+theorem rdb4_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     rdb m (slotAt g.h.data i + 4#64) = g.stk[i].extractLsb' 32 8 :=
   let ⟨_, h⟩ := wd_slot h hi; Wd.rdb_byte h (j := 4) (by decide)
 
-theorem rdb5_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+theorem rdb5_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     rdb m (slotAt g.h.data i + 5#64) = g.stk[i].extractLsb' 40 8 :=
   let ⟨_, h⟩ := wd_slot h hi; Wd.rdb_byte h (j := 5) (by decide)
 
-theorem isSome4_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+theorem isSome4_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     (m.loadInt (slotAt g.h.data i + 4#64) 1).isSome = true :=
   let ⟨_, h⟩ := wd_slot h hi; Wd.isSome_byte h (j := 4) (by decide)
 
-theorem isSome5_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+theorem isSome5_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     (m.loadInt (slotAt g.h.data i + 5#64) 1).isSome = true :=
   let ⟨_, h⟩ := wd_slot h hi; Wd.isSome_byte h (j := 5) (by decide)
 
@@ -115,12 +115,12 @@ theorem rd_dest (h : (View S g ∗ F).get m) {i : Nat} (hi : i < MAX_N) :
   obtain ⟨R, h'⟩ := View.arr_dest h
   exact (Arr.rd h' (by simpa using hi)).trans (by simp)
 
-theorem rd_stk (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+theorem rd_stk (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     rd m (slotAt g.h.data i) = g.stk[i] :=
   let ⟨_, h⟩ := View.arr_stk h; (Arr.rd h (by simpa using hi)).trans (by simp)
 
 -- `movl` and two `movb` to slot `i`: the low 6 bytes. Bytes 6 and 7 do not change.
-theorem store411_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat)
+theorem store411_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs)
     (x : BitVec 32) (y z : BitVec 8) :
     (View S { g with stk := g.stk.set i (g.stk[i].extractLsb' 48 16 ++ z ++ y ++ x) } ∗ F).get
       (((m.storeInt (slotAt g.h.data i) 4 x.toInt).storeInt (slotAt g.h.data i + 4#64) 1
@@ -134,7 +134,7 @@ theorem store411_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toN
   exact Wd.store411 h x y z
 
 -- The bytes `4` and `5` of slot `i` between the stores of `store411_slot`.
-theorem isSome4_411 (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) (x : BitVec 32) :
+theorem isSome4_411 (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) (x : BitVec 32) :
     ((m.storeInt (slotAt g.h.data i) 4 x.toInt).loadInt (slotAt g.h.data i + 4#64) 1).isSome
       = true := by
   obtain ⟨R, h⟩ := wd_slot h hi
@@ -144,7 +144,7 @@ theorem isSome4_411 (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat
   rw [sep_lc] at h1
   exact B8.isSome h1
 
-theorem isSome5_411 (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) (x : BitVec 32)
+theorem isSome5_411 (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) (x : BitVec 32)
     (y : BitVec 8) :
     (((m.storeInt (slotAt g.h.data i) 4 x.toInt).storeInt (slotAt g.h.data i + 4#64) 1
       y.toInt).loadInt (slotAt g.h.data i + 5#64) 1).isSome = true := by
@@ -199,10 +199,10 @@ theorem isSome_pos' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < MAX_
     (m.loadInt (S + x * 8#64 + 8248#64) 8).isSome = true := by
   rw [Fld.fold_mapping_positionOf]; exact View.isSome_pos h hx
 
-theorem rd_slot' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < g.h.n.toNat) :
+theorem rd_slot' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < g.h.n.toNat + g.xs) :
     BitVec.ofInt 64 (m.loadInt (g.h.data + x * 8#64) 8).get! = g.stk[x.toNat] := by
   rw [fold_slot]; exact rd_stk h hx
-theorem isSome_slot' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < g.h.n.toNat) :
+theorem isSome_slot' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < g.h.n.toNat + g.xs) :
     (m.loadInt (g.h.data + x * 8#64) 8).isSome = true := by
   rw [fold_slot]; exact View.isSome_slot h hx
 
@@ -219,11 +219,12 @@ end
 
 /-! ## `Keep` -/
 
-theorem Keep.refl (g : G) : Keep g g := ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+theorem Keep.refl (g : G) : Keep g g := ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 theorem Keep.trans {g g1 g2 : G} (h1 : Keep g g1) (h2 : Keep g1 g2) : Keep g g2 :=
   ⟨h2.tgtp.trans h1.tgtp, h2.n.trans h1.n, h2.splp.trans h1.splp, h2.data.trans h1.data,
-    h2.ops.trans h1.ops, h2.tgt.trans h1.tgt, h2.spl.trans h1.spl⟩
+    h2.ops.trans h1.ops, h2.xs.trans h1.xs, h2.xo.trans h1.xo, h2.tgt.trans h1.tgt,
+    h2.spl.trans h1.spl⟩
 
 /-! ## Flags -/
 
@@ -336,9 +337,9 @@ theorem take_set_succ {α : Type} (l : List α) (i : Nat) (r : α) (hi : i < l.l
   rw [List.take_add_one, List.getElem?_set_self hi, List.take_set_of_le (Nat.le_refl i)]
   rfl
 
-theorem get_data {g : G} (hok : g.Ok) {i : Word} (hi : i.toNat < g.h.n.toNat) :
+theorem get_data {g : G} (hok : g.Ok) {i : Word} (hi : i.toNat < g.h.n.toNat + g.xs) :
     Flat.get (flat g).data i = StackSlot.ofWord g.stk[i.toNat] := by
-  simp [Flat.get, flat, vec, Nat.lt_of_lt_of_le hi hok.n, hi]
+  simp [Flat.get, flat, vec, Nat.lt_of_lt_of_le hi hok.xs, hi]
 
 theorem none_toNat : Flat.NONE.toNat = 2 ^ 64 - 1 := rfl
 
@@ -353,7 +354,7 @@ variable {g1 : G} {S : Addr} {R : MProp 64} {m : Mem 64}
 
 -- `xorq; salq $16; je`: the slots `a` and `b` of the stack.
 theorem data_eq (hm : (View S g1 ∗ R).get m) (hok : g1.Ok) {a b : Word}
-    (ha : a.toNat < g1.h.n.toNat) (hb : b.toNat < g1.h.n.toNat)
+    (ha : a.toNat < g1.h.n.toNat + g1.xs) (hb : b.toNat < g1.h.n.toNat + g1.xs)
     (h : ((BitVec.ofInt 64 (m.loadInt (g1.h.data + b * 8#64) 8).get!
       ^^^ BitVec.ofInt 64 (m.loadInt (g1.h.data + a * 8#64) 8).get!).shiftLeft 16
       == BitVec.zero 64) = true) :
@@ -362,7 +363,7 @@ theorem data_eq (hm : (View S g1 ∗ R).get m) (hok : g1.Ok) {a b : Word}
   rw [get_data hok ha, get_data hok hb, h]
 
 theorem data_ne (hm : (View S g1 ∗ R).get m) (hok : g1.Ok) {a b : Word}
-    (ha : a.toNat < g1.h.n.toNat) (hb : b.toNat < g1.h.n.toNat)
+    (ha : a.toNat < g1.h.n.toNat + g1.xs) (hb : b.toNat < g1.h.n.toNat + g1.xs)
     (h : ((BitVec.ofInt 64 (m.loadInt (g1.h.data + b * 8#64) 8).get!
       ^^^ BitVec.ofInt 64 (m.loadInt (g1.h.data + a * 8#64) 8).get!).shiftLeft 16
       == BitVec.zero 64) = false) :
@@ -410,14 +411,14 @@ theorem flat_withPos (p : Vector Word MAX_N) : flat (withPos g p) = { flat g wit
   rfl
 
 theorem Ok.withDest (h : g.Ok) (d : Vector Word MAX_N) : (withDest g d).Ok :=
-  ⟨h.len, h.n, h.nops, h.spl⟩
+  ⟨h.len, h.n, h.xs, h.xo, h.nops, h.spl⟩
 theorem Ok.withPos (h : g.Ok) (p : Vector Word MAX_N) : (withPos g p).Ok :=
-  ⟨h.len, h.n, h.nops, h.spl⟩
+  ⟨h.len, h.n, h.xs, h.xo, h.nops, h.spl⟩
 
 theorem Keep.withDest (d : Vector Word MAX_N) : Keep g (withDest g d) :=
-  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 theorem Keep.withPos (p : Vector Word MAX_N) : Keep g (withPos g p) :=
-  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 end
 

@@ -7,7 +7,7 @@ facts of the proofs on all inputs with the slots `x` and `y`, a size from 1 to 4
 that are a permutation (`regroup` gives a bijection, `mu` is at least 1, at most `2 * size - 1`, and
 each iteration of the last loop makes it smaller). The negative cases show that the theorems need
 their hypotheses: destinations that are not a bijection give a permutation that is not a
-bijection, and a `mu` of 0.
+bijection, and a `mu` of 0. With `NONE` destinations, `permute` ends for each bijection `p`.
 -/
 
 namespace Bbu.Unit.Permute.Test
@@ -63,7 +63,7 @@ def notBij : Flat.St := mk [x, y] [x, y] [0, 0]
   = some (words [0, 0])
 #guard !bijB 2 (pv [0, 0])
 #guard mu 1 (pv [0, 0]) = 0
-#guard (Flat.permute notBij).1 = .assertionFailed
+#guard (Flat.permuteMapping notBij).1 = .assertionFailed
 -- A destination that is `NONE`: `readDestinations` gives none.
 #guard (Flat.readDestinations (mk [x, y] [x, y] [1, Flat.NONE.toNat]) 0 Flat.initial).isNone
 -- `bijB` is not true for a list of the wrong values.
@@ -104,7 +104,7 @@ def check (s : List StackSlot) (d : List Nat) : Bool :=
     | some p =>
       let ms := mus (st.size - 1) (2 * n) st p
       bijB n p && ms.all (fun m => 1 ≤ m && m ≤ 2 * n - 1) && strictDecreasing ms
-        && ms.length < 2 * n && (Flat.permute st).1 != .assertionFailed
+        && ms.length < 2 * n && (Flat.permute st p0).1 != .assertionFailed
 
 def inputs : List (List StackSlot × List Nat) :=
   (List.range 4).flatMap fun k =>
@@ -115,4 +115,29 @@ def inputs : List (List StackSlot × List Nat) :=
 -- `check` fails for the negative case.
 #guard !check [x, y] [0, 0]
 
+
+/-! ## `NONE` destinations and the ghost `p` -/
+
+-- `readDestinations` gives none, but `permute` takes the bijection `p` and ends. The result
+-- depends on `p`.
+def stN : Flat.St := mk [x, y] [x, y] [1, Flat.NONE.toNat]
+#guard (Flat.permuteMapping stN).1 = .assertionFailed
+#guard (Flat.permute stN (pv [1, 0])).1 = .done
+#guard (Flat.permute stN (pv [0, 1])).1 = .done
+#guard (Flat.permute stN (pv [1, 0])).2.data != (Flat.permute stN (pv [0, 1])).2.data
+
+-- The destinations `d` with the offsets of `mask` replaced by `NONE`.
+def withNone (d : List Nat) (mask : Nat) : List Nat :=
+  d.zipIdx.map fun (v, i) => if mask.testBit i then Flat.NONE.toNat else v
+
+-- All inputs with a size from 1 to 3, destinations that are a permutation or `NONE`, and all
+-- bijections `p`: `permute` ends with `done`.
+def ghostInputs : List (List StackSlot × List Nat × List Nat) :=
+  (List.range 3).flatMap fun k =>
+    (slotLists (k + 1)).flatMap fun s => (perms (List.range (k + 1))).flatMap fun d =>
+      (List.range (2 ^ (k + 1))).flatMap fun mask =>
+        (perms (List.range (k + 1))).map fun p => (s, withNone d mask, p)
+
+#guard ghostInputs.length = 2 * 1 * 2 * 1 + 4 * 2 * 4 * 2 + 8 * 6 * 8 * 6
+#guard ghostInputs.all fun (s, d, p) => (Flat.permute (mk s s d) (pv p)).1 == .done
 end Bbu.Unit.Permute.Test

@@ -93,7 +93,7 @@ def op0 : OpR := ⟨⟨0#8, 0#8, ⟨0#32, 0#8, 0#8⟩⟩, 0x1234#16, 0x5678#16�
 def hdr (pos : Vector Word MAX_N) : Hdr :=
   ⟨0, 2, 0, 0, 1, 0, 0, Vector.replicate MAX_N Flat.NONE, pos, 0, 0, 0⟩
 def ghost (s0 : Word) (pos : Vector Word MAX_N) : G :=
-  ⟨hdr pos, ⟨#[s0, 0], rfl⟩, ⟨Array.replicate 12 op0, rfl⟩, ⟨#[0, 0], rfl⟩, fun _ => 0⟩
+  ⟨hdr pos, 0, 0, ⟨#[s0, 0], rfl⟩, ⟨Array.replicate 12 op0, rfl⟩, ⟨#[0, 0], rfl⟩, fun _ => 0⟩
 
 def free : Vector Word MAX_N := Vector.replicate MAX_N Flat.NONE
 def used : Vector Word MAX_N := free.set 1 0
@@ -125,6 +125,7 @@ def after (g : G) (d : Word) : G :=
   { h := { g.h with len := g.h.len + 1, nops := g.h.nops + 1,
                     dest := g.h.dest.setIfInBounds g.h.len.toNat d,
                     pos := g.h.pos.setIfInBounds d.toNat g.h.len },
+    xs := g.xs, xo := g.xo,
     stk := g.stk.setIfInBounds g.h.len.toNat g.stk[0]!,
     ops := g.ops.setIfInBounds g.h.nops.toNat
       ⟨dupR g.h.len 0, (g.ops[g.h.nops.toNat]?.getD opZ).pad2,

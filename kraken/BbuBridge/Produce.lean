@@ -60,25 +60,27 @@ theorem produce_corr (hpush : PushStmt) (hdup : DupStmt) : ProduceStmt := by
       trivial
   -- A push of a free or spilled value.
   have hpush' : ∀ v : Bbu.StackSlot, Canon v →
-      (decode v).can_be_freely_generated ∨ (spillSet e).is_spilled (decode v) →
+      (decode v).can_be_freely_generated ∨ (spillSet e source).is_spilled (decode v) →
       ResCorr (Rel e) ((Bbu.add st v d (.push v)).bind _) (state.push (decode v) ⟨d, hd⟩ >>= _) :=
     fun v hv hg => produce_corr_bind (produce_corr_add (hpush e source st state v d hd h hv
-      (by rwa [isFree_iff, isSpilled_iff])) hp0) hfin
+      hg) hp0) hfin
   unfold Bbu.produce Bbu.emit State.produce
   dsimp only
   rw [tgt_get e d hd]
   have hcv := h.canonTarget d
-  revert hcv
+  have hmem : decode e.target[d]! ∈ source ++ tgt e := by
+    rw [← tgt_get e d hd]; exact List.mem_append_right _ (List.getElem_mem hd)
+  revert hcv hmem
   generalize e.target[d]! = v
-  intro hcv
+  intro hcv hmem
   -- A wildcard.
   by_cases h0 : Bbu.isJunk v = true
   · rw [ite_eq_left h0, ite_eq_left ((isJunk_iff v).mpr h0)]
     exact hpush' v hcv (.inl ((isFree_iff v).mp (by unfold Bbu.isJunk at h0; simp [Bbu.canBeFreelyGenerated, h0])))
   rw [ite_eq_right h0, ite_eq_right (mt (isJunk_iff v).mp h0)]
-  have hfree : (decode v).can_be_freely_generated ∨ (spillSet e).is_spilled (decode v) ↔
+  have hfree : (decode v).can_be_freely_generated ∨ (spillSet e source).is_spilled (decode v) ↔
       (Bbu.canBeFreelyGenerated v || Bbu.isSpilled e v) = true := by
-    rw [Bool.or_eq_true, isFree_iff, isSpilled_iff]
+    rw [Bool.or_eq_true, isFree_iff, isSpilled_iff e source v hmem]
   have hc := h.shallowestCopyPosition hcv
   cases hco : state.stack.shallowestCopyPosition (decode v) with
   | none =>
@@ -86,7 +88,7 @@ theorem produce_corr (hpush : PushStmt) (hdup : DupStmt) : ProduceStmt := by
     rw [hco, Option.map_none] at hc
     rw [← hc]
     simp only [Option.filter_none]
-    by_cases hg : (decode v).can_be_freely_generated ∨ (spillSet e).is_spilled (decode v)
+    by_cases hg : (decode v).can_be_freely_generated ∨ (spillSet e source).is_spilled (decode v)
     · rw [ite_eq_left hg, ite_eq_left (hfree.mp hg)]
       exact hpush' v hcv hg
     · rw [ite_eq_right hg, ite_eq_right (mt hfree.mpr hg)]
@@ -112,7 +114,7 @@ theorem produce_corr (hpush : PushStmt) (hdup : DupStmt) : ProduceStmt := by
       exact produce_corr_bind (produce_corr_dup this hp0) hfin
     simp only [Option.filter_some, decide_eq_false (mt hreach.mp hr), decide_eq_false hr,
       Bool.false_eq_true, ite_false]
-    by_cases hg : (decode v).can_be_freely_generated ∨ (spillSet e).is_spilled (decode v)
+    by_cases hg : (decode v).can_be_freely_generated ∨ (spillSet e source).is_spilled (decode v)
     · rw [ite_eq_left hg, ite_eq_left (hfree.mp hg)]
       exact hpush' v hcv hg
     -- The copy is out of dup reach.

@@ -517,11 +517,12 @@ end
 
 /-! ## `Keep`, `Ok` and the ghost with other words of the struct -/
 
-theorem Keep.refl (g : G) : Keep g g := ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+theorem Keep.refl (g : G) : Keep g g := ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 theorem Keep.trans {g g1 g2 : G} (h1 : Keep g g1) (h2 : Keep g1 g2) : Keep g g2 :=
   ⟨h2.tgtp.trans h1.tgtp, h2.n.trans h1.n, h2.splp.trans h1.splp, h2.data.trans h1.data,
-    h2.ops.trans h1.ops, h2.tgt.trans h1.tgt, h2.spl.trans h1.spl⟩
+    h2.ops.trans h1.ops, h2.xs.trans h1.xs, h2.xo.trans h1.xo, h2.tgt.trans h1.tgt,
+    h2.spl.trans h1.spl⟩
 
 def withPend (g : G) (v : Word) : G := { g with h := { g.h with pend := v } }
 def withOff (g : G) (v : Word) : G := { g with h := { g.h with blkOff := v } }
@@ -534,13 +535,13 @@ theorem flat_withPend (v : Word) : flat (withPend g v) = { flat g with pend := v
 theorem flat_withBlk (p e : Word) :
     flat (withExc (withOff g p) e) = { flat g with blockedOffset := p, blockedExcess := e } := rfl
 
-theorem Ok.withPend (h : g.Ok) (v : Word) : (withPend g v).Ok := ⟨h.len, h.n, h.nops, h.spl⟩
+theorem Ok.withPend (h : g.Ok) (v : Word) : (withPend g v).Ok := ⟨h.len, h.n, h.xs, h.xo, h.nops, h.spl⟩
 theorem Ok.withBlk (h : g.Ok) (p e : Word) : (withExc (withOff g p) e).Ok :=
-  ⟨h.len, h.n, h.nops, h.spl⟩
+  ⟨h.len, h.n, h.xs, h.xo, h.nops, h.spl⟩
 
-theorem Keep.withPend (v : Word) : Keep g (withPend g v) := ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+theorem Keep.withPend (v : Word) : Keep g (withPend g v) := ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 theorem Keep.withBlk (p e : Word) : Keep g (withExc (withOff g p) e) :=
-  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 end
 

@@ -42,7 +42,7 @@ theorem rd_dest (h : (View S g ∗ F).get m) {i : Nat} (hi : i < MAX_N) :
   obtain ⟨R, h'⟩ := View.arr_dest h
   exact (Arr.rd h' (by simpa using hi)).trans (by simp)
 
-theorem rd_stk (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+theorem rd_stk (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     rd m (slotAt g.h.data i) = g.stk[i] :=
   let ⟨_, h⟩ := View.arr_stk h; (Arr.rd h (by simpa using hi)).trans (by simp)
 
@@ -252,10 +252,10 @@ theorem isSome_pos' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < MAX_
     (m.loadInt (S + x * 8#64 + 8248#64) 8).isSome = true := by
   rw [Fld.fold_mapping_positionOf]; exact View.isSome_pos h hx
 
-theorem rd_slot' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < g.h.n.toNat) :
+theorem rd_slot' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < g.h.n.toNat + g.xs) :
     BitVec.ofInt 64 (m.loadInt (g.h.data + x * 8#64) 8).get! = g.stk[x.toNat] := by
   rw [fold_slot]; exact rd_stk h hx
-theorem isSome_slot' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < g.h.n.toNat) :
+theorem isSome_slot' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < g.h.n.toNat + g.xs) :
     (m.loadInt (g.h.data + x * 8#64) 8).isSome = true := by
   rw [fold_slot]; exact View.isSome_slot h hx
 
@@ -457,11 +457,12 @@ end
 
 /-! ## `Keep` -/
 
-theorem Keep.refl (g : G) : Keep g g := ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+theorem Keep.refl (g : G) : Keep g g := ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 theorem Keep.trans {g g1 g2 : G} (h1 : Keep g g1) (h2 : Keep g1 g2) : Keep g g2 :=
   ⟨h2.tgtp.trans h1.tgtp, h2.n.trans h1.n, h2.splp.trans h1.splp, h2.data.trans h1.data,
-    h2.ops.trans h1.ops, h2.tgt.trans h1.tgt, h2.spl.trans h1.spl⟩
+    h2.ops.trans h1.ops, h2.xs.trans h1.xs, h2.xo.trans h1.xo, h2.tgt.trans h1.tgt,
+    h2.spl.trans h1.spl⟩
 
 /-! ## Flags -/
 
@@ -570,9 +571,9 @@ theorem get_put_ne {α : Type} [Inhabited α] (v : Vector α MAX_N) {i j : Word}
     exact fun e => h (BitVec.eq_of_toNat_eq e.symm)
   · rfl
 
-theorem get_data {g : G} (hok : g.Ok) {i : Word} (hi : i.toNat < g.h.n.toNat) :
+theorem get_data {g : G} (hok : g.Ok) {i : Word} (hi : i.toNat < g.h.n.toNat + g.xs) :
     Flat.get (flat g).data i = StackSlot.ofWord g.stk[i.toNat] := by
-  simp [Flat.get, flat, vec, Nat.lt_of_lt_of_le hi hok.n, hi]
+  simp [Flat.get, flat, vec, Nat.lt_of_lt_of_le hi hok.xs, hi]
 
 /-! ## The state after `produce` -/
 
@@ -582,7 +583,7 @@ theorem after_prod {g g1 : G} {T : Word} {s : MachineData} (hok : g.Ok) (hok1 : 
     (hA : generateA g s) (hT : T < (flat g).targetSize) (hp : (Flat.produce (flat g) T).1 = .done)
     (hf : flat g1 = (Flat.produce (flat g) T).2) :
     g1.h.len = g.h.len + 1#64 ∧ g1.h.len.toNat = g.h.len.toNat + 1
-      ∧ g1.h.nops.toNat < 6 * g1.h.n.toNat ∧ DestOk (flat g1) := by
+      ∧ g1.h.nops.toNat < 6 * g1.h.n.toNat + g1.xo ∧ DestOk (flat g1) := by
   have gr := produce_grow hp
   rw [← hf] at gr
   have hl : g1.h.len = g.h.len + 1#64 := gr.size
@@ -597,7 +598,7 @@ theorem after_prod {g g1 : G} {T : Word} {s : MachineData} (hok : g.Ok) (hok1 : 
     have := hok.nops
     have := hok1.nops
     have := hA.2.1
-    rw [hK.n] at e ⊢
+    rw [hK.n, hK.xo] at e ⊢
     omega
   · intro i hi
     have hs : (flat g1).size = g1.h.len := rfl
@@ -634,7 +635,7 @@ theorem add_neg_one (x : Word) : x + BitVec.ofInt 64 (-1) = x - 1#64 := by
 
 -- The top slot is a slot of the stack.
 theorem top_lt {g1 : G} (hok : g1.Ok) {x : Word} (h : x + 1#64 < g1.h.len) :
-    (g1.h.len - 1#64).toNat < g1.h.n.toNat := by
+    (g1.h.len - 1#64).toNat < g1.h.n.toNat + g1.xs := by
   have := hok.len
   bv_omega
 
@@ -664,7 +665,7 @@ variable {S : Addr} {R : MProp 64} {m : Mem 64}
 
 -- `xorq; salq $16; je`: the slots `a` and `b` of the stack.
 theorem data_eq (hm : (View S g1 ∗ R).get m) (hok : g1.Ok) {a b : Word}
-    (ha : a.toNat < g1.h.n.toNat) (hb : b.toNat < g1.h.n.toNat)
+    (ha : a.toNat < g1.h.n.toNat + g1.xs) (hb : b.toNat < g1.h.n.toNat + g1.xs)
     (h : ((BitVec.ofInt 64 (m.loadInt (g1.h.data + b * 8#64) 8).get!
       ^^^ BitVec.ofInt 64 (m.loadInt (g1.h.data + a * 8#64) 8).get!).shiftLeft 16
       == BitVec.zero 64) = true) :
@@ -673,7 +674,7 @@ theorem data_eq (hm : (View S g1 ∗ R).get m) (hok : g1.Ok) {a b : Word}
   rw [get_data hok ha, get_data hok hb, h]
 
 theorem data_ne (hm : (View S g1 ∗ R).get m) (hok : g1.Ok) {a b : Word}
-    (ha : a.toNat < g1.h.n.toNat) (hb : b.toNat < g1.h.n.toNat)
+    (ha : a.toNat < g1.h.n.toNat + g1.xs) (hb : b.toNat < g1.h.n.toNat + g1.xs)
     (h : ((BitVec.ofInt 64 (m.loadInt (g1.h.data + b * 8#64) 8).get!
       ^^^ BitVec.ofInt 64 (m.loadInt (g1.h.data + a * 8#64) 8).get!).shiftLeft 16
       == BitVec.zero 64) = false) :
@@ -721,14 +722,14 @@ theorem flat_withPos (p : Vector Word MAX_N) : flat (withPos g p) = { flat g wit
   rfl
 
 theorem Ok.withDest (h : g.Ok) (d : Vector Word MAX_N) : (withDest g d).Ok :=
-  ⟨h.len, h.n, h.nops, h.spl⟩
+  ⟨h.len, h.n, h.xs, h.xo, h.nops, h.spl⟩
 theorem Ok.withPos (h : g.Ok) (p : Vector Word MAX_N) : (withPos g p).Ok :=
-  ⟨h.len, h.n, h.nops, h.spl⟩
+  ⟨h.len, h.n, h.xs, h.xo, h.nops, h.spl⟩
 
 theorem Keep.withDest (d : Vector Word MAX_N) : Keep g (withDest g d) :=
-  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 theorem Keep.withPos (p : Vector Word MAX_N) : Keep g (withPos g p) :=
-  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+  ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 end
 
@@ -786,11 +787,12 @@ theorem lb52_facts {g1 : G} {a b : Word} (hok : g1.Ok) (ha : a.toNat < MAX_N)
       ∨ (Flat.get (dsw (flat g1) a b).dest b).toNat < MAX_N) := by
   have hl := hok.len
   have hn := hok.n
-  have hlt : a.toNat < g1.h.len.toNat := by simp only [MAX_N] at ha hn; bv_omega
+  have hx := hok.xs
+  have hlt : a.toNat < g1.h.len.toNat := by simp only [MAX_N] at ha hn hx; bv_omega
   have hbl : b.toNat < g1.h.len.toNat := by subst hb; bv_omega
   have hbN : b.toNat < MAX_N := by omega
   have hab : a ≠ b := by
-    subst hb; intro e; subst e; simp only [MAX_N] at ha hn; bv_omega
+    subst hb; intro e; subst e; simp only [MAX_N] at ha hn hx; bv_omega
   have hdo (i : Word) (hi : i.toNat < g1.h.len.toNat) :
       Flat.get g1.h.dest i = Flat.NONE ∨ (Flat.get g1.h.dest i).toNat < MAX_N := by
     have := hd i.toNat hi
@@ -919,7 +921,7 @@ theorem generate_unit [Host] [FunDecls]
       have hbx1 : t.regs.rbx.toBitVec = s.regs.rsi.toBitVec := by rw [hmid1.bx]
       have hTn : (rsi s).toNat < g.h.n.toNat := BitVec.lt_def.mp hlt
       have hTm : (rsi s).toNat < MAX_N := by have := hpre.ok.n; omega
-      have hTn1 : (rsi s).toNat < g1.h.n.toNat := by rw [hK1.n]; exact hTn
+      have hTn1 : (rsi s).toNat < g1.h.n.toNat + g1.xs := Nat.lt_add_right _ (by rw [hK1.n]; exact hTn)
       have hm1 := hmid1.mem
       have hnx (h : rsi s + 1#64 < g1.h.len) := top_lt hok1 h
       kvcgen64

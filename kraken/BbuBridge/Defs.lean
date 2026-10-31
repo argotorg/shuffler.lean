@@ -8,7 +8,7 @@ original state, the relation between the states, and the relation between the
 results.
 
 The original target is `e.target.map decode`, and the original spill set is
-`spillSet e`. A model state `st` and an original state are related (`Rel`) if
+`spillSet e source`. A model state `st` and an original state are related (`Rel`) if
 they have the same stack (after `decode`), the same destination for each slot,
 the same `pending` and the same operations (after `encodeOp`).
 
@@ -82,18 +82,22 @@ theorem decode_inj {a b : Bbu.StackSlot} (ha : Canon a) (hb : Canon b)
     (h : decode a = decode b) : a = b := by
   rw [← encode_decode ha, ← encode_decode hb, h]
 
--- The spilled variables: the ids of all slots that the model takes as spilled.
-def spillSet (e : Bbu.Env) : SpillSet :=
-  ((Finset.range (2 ^ 48)).filter (fun i => Bbu.isSpilled e (ofNumber i) = true)).image VarId.mk
-
 -- The original target.
 abbrev tgt (e : Bbu.Env) : Stack := e.target.map decode
 
+-- The spilled variables: the ids of the variables of the source and the target that the model
+-- takes as spilled. The model keys the spills by the payload only. If no two variables of the
+-- source and the target have the same payload, a spill of a source variable in the model adds
+-- exactly its id to this set, as `SpillSet.add` of the original.
+def spillSet (e : Bbu.Env) (source : Stack) : SpillSet :=
+  ((Finset.range (2 ^ 48)).filter (fun i => Bbu.isSpilled e (ofNumber i) = true ∧
+    Value.Var ⟨i⟩ ∈ source ++ tgt e)).image VarId.mk
+
 -- An original state for the model environment `e`.
-abbrev OState (e : Bbu.Env) (source : Stack) := State source (tgt e) (spillSet e)
+abbrev OState (e : Bbu.Env) (source : Stack) := State source (tgt e) (spillSet e source)
 
 -- An original result for the model environment `e`.
-abbrev OResult (e : Bbu.Env) (source : Stack) := Result source (tgt e) (spillSet e)
+abbrev OResult (e : Bbu.Env) (source : Stack) := Result source (tgt e) (spillSet e source)
 
 /-! ## Operations -/
 

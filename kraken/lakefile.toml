@@ -36,3 +36,21 @@ name = "ProofKitTest"
 name = "bbu_flat"
 srcDir = "test"
 root = "BbuFlatMain"
+
+# The flat model and the list model of emission_pop, run by test/pop_diff.sh.
+[[lean_exe]]
+name = "pop_flat"
+srcDir = "test"
+root = "PopFlatMain"
+
+# The flat model and the list model of remove_surplus, run by test/surplus_diff.sh.
+[[lean_exe]]
+name = "surplus_flat"
+srcDir = "test"
+root = "SurplusFlatMain"
+
+# The flat and list models of permute_at_lowest_height, run by test/lowest_diff.sh.
+[[lean_exe]]
+name = "lowest_flat"
+srcDir = "test"
+root = "LowestFlatMain"

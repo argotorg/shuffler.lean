@@ -53,20 +53,20 @@ example : ¬ Program.ForallBlocks finishAsm fun blk => blk.label ∈ labels.eras
 
 -- The unit theorem from `hcopy` and an obligation for `.LB.Emission.permute.22`. The lemma of another block
 -- (`.LB.Emission.permute.24`) does not take the place of `h22`.
-example [Host] [FunDecls]
+example [Host] [FunDecls] (p0 : Vector Word MAX_N)
     (hcopy : Sep.Spec Names.shallowestCopyPosition shallowestCopyA 0 shallowestCopyQ)
-    (h22 : ∀ S g F s ra, Sep.Pre S g (permW s ∗ F) permuteA 1034 s →
+    (h22 : ∀ S g p0 F s ra, Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s →
       Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.22" →
-        Obl S g F s ra blk) :
-    UnitThmW finishAsm permW permuteA 1034 permuteQ := by
-  fail_if_success (exact permute_of_b22 hcopy fun S g F s ra hpre => b_24 S g F s ra hpre)
-  exact permute_of_b22 hcopy h22
+        Obl S g p0 F s ra blk) :
+    UnitThmW finishAsm permW (permuteA p0) 1034 (permuteQ p0) := by
+  fail_if_success (exact permute_of_b22 p0 hcopy fun S g p F s ra hpre => b_24 S g p F s ra hpre)
+  exact permute_of_b22 p0 hcopy h22
 
 -- The lemma of `.LB.Emission.permute.24` has the shape of `h22` with its own label. Thus the failure above is
 -- only from the label.
-example [Host] [FunDecls] : ∀ S g F s ra, Sep.Pre S g (permW s ∗ F) permuteA 1034 s →
+example [Host] [FunDecls] : ∀ S g p0 F s ra, Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s →
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.24" →
-      Obl S g F s ra blk :=
-  fun S g F s ra hpre => b_24 S g F s ra hpre
+      Obl S g p0 F s ra blk :=
+  fun S g p0 F s ra hpre => b_24 S g p0 F s ra hpre
 
 end Bbu.Unit.Permute.AssembleTest

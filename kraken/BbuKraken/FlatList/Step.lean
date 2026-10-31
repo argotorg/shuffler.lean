@@ -177,7 +177,7 @@ def NR (e : Env) : Next → M (Bbu.St × Bbu.Next) → Prop
   | .cont fs t', .ok (st, .next k) => t' + 1 = BitVec.ofNat 64 k ∧ Sim e fs st
   | .ret r, .ok (st, .finish) => ∃ fs, Sim e fs st ∧
       (fs.size ≠ fs.targetSize → r = (.assertionFailed, fs)) ∧
-      (fs.size = fs.targetSize → r = permute fs)
+      (fs.size = fs.targetSize → r = permuteMapping fs)
   | .ret r, .error err => SimR e r (.error err)
   | _, _ => False
 
@@ -353,7 +353,7 @@ theorem sim_bound (hs : Sim e fs st) {t : Word} (ht : t.toNat < e.n) {b : Nat}
 
 /-! ## `body` -/
 
-theorem sim_body (hs : Sim e fs st) {t : Word} (hi : Inv e st t.toNat) (ht : t.toNat < e.n)
+theorem sim_body (hs : Sim e fs st) {t : Word} (hi : InvS e st t.toNat) (ht : t.toNat < e.n)
     (htl : t.toNat ≤ st.len) : NR e (body fs t) (step e st t.toNat) := by
   have hsz := hs.size
   have hl := hs.len_lt

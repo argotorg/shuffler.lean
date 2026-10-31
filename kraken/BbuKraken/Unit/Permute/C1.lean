@@ -17,10 +17,10 @@ namespace Bbu.Unit
 open Bbu.Sep
 namespace Permute
 
-theorem b_12 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) permuteA 1034 s)
+theorem b_12 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s)
     (hcopy : Sep.Spec Names.shallowestCopyPosition shallowestCopyA 0 shallowestCopyQ) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.12" →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   simp only [Names.shallowestCopyPosition] at hcopy
   pm_block [Obl]
   intro t ht
@@ -29,7 +29,7 @@ theorem b_12 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) 
   have hok := hpre.ok
   have hF := hC.fm
   have hm := hF.mem
-  have hlN : l.toNat < g.h.n.toNat := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hC.lt) hok.len
+  have hlN : l.toNat < g.h.n.toNat + g.xs := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hC.lt) hok.len
   have ha1 : t.regs.rsp.toBitVec + 8#64 = base s + 8#64 := by rw [hF.sp]
   have hm1 : (View S g ∗ Loc (base s) { L with c1 := g.h.data } ∗ Fr s ra { L with c1 := g.h.data } F).get
       (t.dmem.storeInt (t.regs.rsp.toBitVec + 8#64) 8 g.h.data.toInt) :=
@@ -85,16 +85,16 @@ theorem b_12 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) 
     · pm_dec
 
 
-theorem b_11 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) permuteA 1034 s) :
+theorem b_11 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.11" →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨L, l, p, dB, hC, hrg, hP, hD, hlt⟩ := ht
   have hF := hC.fm
   have hm := hF.mem
-  have hn := Nat.le_trans hpre.ok.len hpre.ok.n
+  have hn := Nat.le_trans hpre.ok.len hpre.ok.xs
   simp only [MAX_N] at hn
   have hlt' := BitVec.lt_def.mp hC.lt
   have e0 : BitVec.ofInt 64 (Mem.loadInt t.dmem t.regs.rsp.toBitVec 8).get! = (l + 1) * 8#64 :=
@@ -143,9 +143,9 @@ theorem b_11 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) 
     have hb1 : (1#64 + l).toNat = l.toNat + 1 := by bv_omega
     pm_dec
 
-theorem b_2 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) permuteA 1034 s) :
+theorem b_2 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.2" →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
@@ -156,7 +156,7 @@ theorem b_2 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) p
   have hm := hF.mem
   have hjl : j < g.h.len := by have := hC.lt; bv_omega
   have hjM := lt_max hok hjl
-  have hjN : j.toNat < g.h.n.toNat := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hjl) hok.len
+  have hjN : j.toNat < g.h.n.toNat + g.xs := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hjl) hok.len
   have ha1 : t.regs.rsp.toBitVec + 8#64 = base s + 8#64 := by rw [hF.sp]
   have e1 : BitVec.ofInt 64 (Mem.loadInt t.dmem (t.regs.rsp.toBitVec + 8#64) 8).get! = g.h.data :=
     (hF.rdC1 ha1).trans hG.c1
@@ -209,16 +209,16 @@ theorem b_2 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) p
         by rw [md_eq hj hz] at hrg; exact hrg, hP, agB_set hD hkM l, hlt⟩
     · pm_dec
 
-theorem b_1 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) permuteA 1034 s) :
+theorem b_1 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.1" →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨L, l, hl, p, dB, j, hG, hj, hax, hrg, hP, hD, hlt⟩ := ht
   have hC := hG.cc
   have hF := hC.fm
-  have hn := Nat.le_trans hpre.ok.len hpre.ok.n
+  have hn := Nat.le_trans hpre.ok.len hpre.ok.xs
   simp only [MAX_N] at hn
   have hlt' := BitVec.lt_def.mp hC.lt
   have e0 : BitVec.ofInt 64 (Mem.loadInt t.dmem t.regs.rsp.toBitVec 8).get! = (l + 1) * 8#64 :=
@@ -255,9 +255,9 @@ theorem b_1 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) p
     have h3 : j.toNat + 1 ≤ l.toNat := by bv_omega
     pm_dec
 
-theorem b_3 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g (permW s ∗ F) permuteA 1034 s) :
+theorem b_3 [Host] [FunDecls] (S g p0 F s ra) (_hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.3" →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht

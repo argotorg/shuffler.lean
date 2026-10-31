@@ -27,7 +27,7 @@ theorem trace_depth (p : Perm) : ∀ k ≤ steps p, ∀ x ∈ p.trace k, 1 ≤ x
       rw [Perm.length_state] at this
       omega
 
-theorem permute_depth {p : Perm} {L : List Nat} (h : permute p = .ok L) :
+theorem permute_depth {p : Perm} {L : List Nat} (h : PermuteKraken.permute p = .ok L) :
     ∀ x ∈ L, 1 ≤ x ∧ x < p.toList.length := by
   rw [Perm.permute_eq] at h
   split at h

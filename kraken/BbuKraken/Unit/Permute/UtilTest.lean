@@ -478,11 +478,11 @@ def h0 : Hdr :=
   ⟨0x1000#64, 2#64, 0x2000#64, 0x3000#64, 1#64, 0x4000#64, 0#64, Flat.initial, Flat.initial,
     0#64, 0#64, 0#64⟩
 
-def g0 : G := ⟨h0, Vector.replicate _ 7#64, Vector.replicate _ ⟨Op.swapW 0#64, 0, 0⟩,
+def g0 : G := ⟨h0, 0, 0, Vector.replicate _ 7#64, Vector.replicate _ ⟨Op.swapW 0#64, 0, 0⟩,
   Vector.replicate _ 8#64, fun _ => 0⟩
 
 -- The same ghost with the size `3`: `Keep` does not hold.
-def g3 : G := ⟨{ h0 with n := 3#64 }, Vector.replicate _ 7#64,
+def g3 : G := ⟨{ h0 with n := 3#64 }, 0, 0, Vector.replicate _ 7#64,
   Vector.replicate _ ⟨Op.swapW 0#64, 0, 0⟩, Vector.replicate _ 8#64, fun _ => 0⟩
 
 def d1 : Vector Word MAX_N := Flat.put Flat.initial 1#64 5#64

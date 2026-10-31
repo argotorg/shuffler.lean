@@ -1,4 +1,7 @@
 /.lake
 harness
 bbu_harness
+pop_harness
+surplus_harness
+lowest_harness
 unit_test

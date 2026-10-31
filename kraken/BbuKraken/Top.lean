@@ -71,13 +71,14 @@ def topTgt (d : Nat) : StackSlot := StackSlot.ofWord (rd s.dmem (wordAt (tgtArg 
 def topSpl : List (Addr × Nat) :=
   (List.range (nArg s)).filterMap fun d =>
     (spillId (topTgt s d)).map fun i => (splArg s + BitVec.ofNat 64 i, 1)
-
--- The locals of `build_bottom_up` after `subq`: the struct and 8 bytes of padding.
-def topLocals : Nat := 8 * WORDS + 8
+-- The locals of `build_bottom_up` after `subq`: the struct (`8 * WORDS` bytes and the word
+-- `m_plannedMapping`), 8 bytes of padding, the two arrays of the planned mapping (`MAX_N` words
+-- each) and 8 bytes of padding.
+def topLocals : Nat := 8 * WORDS + 8 + 8 + 2 * (8 * MAX_N) + 8
 -- The frame: the return address, the locals, and the return address and the 2068 free words
 -- of `buildBottomUp` (`Unit.loop_unit`).
 def topF : Nat := 8 + topLocals + 8 * (1 + 2068)
-theorem topF_eq : topF = 33032 := rfl
+theorem topF_eq : topF = 49432 := rfl
 
 -- The memory that `build_bottom_up` writes: the working stack, the ops buffer and `blocked`.
 def topOut : List (Addr × Nat) :=
@@ -196,15 +197,6 @@ theorem length_topDests_eq : (topDests s).length = (topSource s).length := by
   simp only [topDests, topSource, Flat.listDests, Flat.listSource, List.length_map,
     List.length_take, Vector.length_toList]
 
--- A list of distinct offsets below `n` has at most `n` entries.
-theorem Dests.length_le {n : Nat} {l : List Nat} (h : Dests n l) : l.length ≤ n := by
-  have hnd : l.Nodup := List.pairwise_iff_getElem.mpr fun i j hi hj hij he => by
-    have := h.2 i hi j hj he; omega
-  have := hnd.length_le_of_subset (l₂ := List.range n) fun x hx => by
-    obtain ⟨i, hi, rfl⟩ := List.mem_iff_getElem.mp hx
-    exact List.mem_range.mpr (h.1 i hi)
-  simpa using this
-
 theorem TopGuard.source_le (hg : TopGuard s) : (topSource s).length ≤ (topEnv s).n := by
   rw [length_topSource hg, length_topEnv hg]; exact hg.1
 
@@ -214,7 +206,7 @@ theorem TopMem.env_dests (hg : TopGuard s) (hm : TopMem s) : Dests (topEnv s).n 
 theorem TopGuard.n_le_max (hg : TopGuard s) : (topEnv s).n ≤ MAX_N := by
   rw [length_topEnv hg]; exact hg.2
 
-theorem TopPre.rsp_ge (hp : TopPre s) : 33032 ≤ (rsp s).toNat := by
+theorem TopPre.rsp_ge (hp : TopPre s) : 49432 ≤ (rsp s).toNat := by
   have := hp.rsp_le; simp only [topF_eq] at this; omega
 
 -- The guard with the value of `MAX_N`, for `omega`.

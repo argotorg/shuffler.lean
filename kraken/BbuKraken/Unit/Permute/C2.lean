@@ -17,9 +17,9 @@ namespace Bbu.Unit
 open Bbu.Sep
 namespace Permute
 
-theorem b_10 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) permuteA 1034 s) :
+theorem b_10 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.10" →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
@@ -28,11 +28,11 @@ theorem b_10 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) 
   have hF := hC.fm
   have hok := hpre.ok
   have hm := hF.mem
-  have hn := Nat.le_trans hok.len hok.n
+  have hn := Nat.le_trans hok.len hok.xs
   simp only [MAX_N] at hn
   have hposl : pos < g.h.len := by have := hC.lt; bv_omega
   have hpM := lt_max hok hposl
-  have hpN : pos.toNat < g.h.n.toNat := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hposl) hok.len
+  have hpN : pos.toNat < g.h.n.toNat + g.xs := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hposl) hok.len
   have hp4 : pos.toNat < 1024 := by have := BitVec.lt_def.mp hposl; omega
   have hr := congrArg BitVec.toNat hcx
   have hv := congrArg BitVec.toNat hax
@@ -97,16 +97,16 @@ theorem b_10 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) 
         ltB_put hlt pos hposl⟩
     · pm_dec
 
-theorem b_9 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) permuteA 1034 s) :
+theorem b_9 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.9" →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨L, l, hl, dB, pos, vac, pc, hG, hpos, hvac, hcx, hax, hrg, hP, hD, hlt⟩ := ht
   have hC := hG.cc
   have hF := hC.fm
-  have hn := Nat.le_trans hpre.ok.len hpre.ok.n
+  have hn := Nat.le_trans hpre.ok.len hpre.ok.xs
   simp only [MAX_N] at hn
   have hlt' := BitVec.lt_def.mp hC.lt
   have hr := congrArg BitVec.toNat hcx
@@ -139,9 +139,9 @@ theorem b_9 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) p
     have h2 : pos.toNat < 1024 := by bv_omega
     pm_dec
 
-theorem b_4 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g (permW s ∗ F) permuteA 1034 s) :
+theorem b_4 [Host] [FunDecls] (S g p0 F s ra) (_hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.4" →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
@@ -176,16 +176,16 @@ theorem b_4 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g (permW s ∗ F) 
     exact ⟨_, hF.next rfl rfl, rg_none (by rw [nv_ge hge] at hrg; exact hrg) h0⟩
   case vc4 => pm_dec
 
-theorem b_7 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) permuteA 1034 s) :
+theorem b_7 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.7" →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨L, l, hl, dB, pos, x, pc, hG, hpos, hx, hcx, hax, hdi, hsi, hrg, hP, hD, hlt⟩ := ht
   have hC := hG.cc
   have hF := hC.fm
-  have hn := Nat.le_trans hpre.ok.len hpre.ok.n
+  have hn := Nat.le_trans hpre.ok.len hpre.ok.xs
   simp only [MAX_N] at hn
   kvcgen64
   all_goals try symexec_norm
@@ -216,9 +216,9 @@ theorem b_7 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) p
     have h3 := congrArg BitVec.toNat hax
     pm_dec
 
-theorem b_8 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) permuteA 1034 s) :
+theorem b_8 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.8" →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
@@ -227,13 +227,13 @@ theorem b_8 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) p
   have hF := hC.fm
   have hok := hpre.ok
   have hm := hF.mem
-  have hn := Nat.le_trans hok.len hok.n
+  have hn := Nat.le_trans hok.len hok.xs
   simp only [MAX_N] at hn
   have hposl : pos < g.h.len := by have := hC.lt; bv_omega
   have hpM := lt_max hok hposl
   have hp4 : pos.toNat < 1024 := by have := BitVec.lt_def.mp hposl; omega
   have hxM := lt_max hok hx
-  have hxN : x.toNat < g.h.n.toNat := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hx) hok.len
+  have hxN : x.toNat < g.h.n.toNat + g.xs := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hx) hok.len
   have hx4 : x.toNat < 1024 := by have := BitVec.lt_def.mp hx; omega
   have hr := congrArg BitVec.toNat hcx
   have hv := congrArg BitVec.toNat hax
@@ -302,9 +302,9 @@ theorem b_8 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) p
       ltB_put hlt pos hx⟩
   case vc9 => pm_dec
 
-theorem b_5 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) permuteA 1034 s) :
+theorem b_5 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.5" →
-      Obl S g F s ra blk := by
+      Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
@@ -314,8 +314,8 @@ theorem b_5 [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g (permW s ∗ F) p
   case vc1 =>
     simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
     refine ⟨g, L, hF.next rfl rfl, hpre.ok, Keep.refl g, ?_, ?_⟩
-    · rw [hp]
-    · rw [hp]; rfl
+    · dsimp only; rw [hp]
+    · dsimp only; rw [hp]; rfl
   case vc2 => pm_dec
 
 end Permute

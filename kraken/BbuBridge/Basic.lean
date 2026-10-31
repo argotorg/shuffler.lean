@@ -24,8 +24,11 @@ theorem isFree_iff (v : Bbu.StackSlot) :
   unfold Bbu.canBeFreelyGenerated Bbu.isLiteralValue decode
   split_ifs <;> simp_all [Value.can_be_freely_generated]
 
-theorem isSpilled_iff (e : Bbu.Env) (v : Bbu.StackSlot) :
-    Bbu.isSpilled e v = true ↔ (spillSet e).is_spilled (decode v) := by
+-- A value of the source or the target is spilled in the model if and only if it is spilled in the
+-- original.
+theorem isSpilled_iff (e : Bbu.Env) (source : Stack) (v : Bbu.StackSlot)
+    (hv : decode v ∈ source ++ tgt e) :
+    Bbu.isSpilled e v = true ↔ (spillSet e source).is_spilled (decode v) := by
   unfold decode
   split_ifs with h0 h1 h2
   · simp [SpillSet.is_spilled, Bbu.isSpilled, h0, Bbu.Junk, Bbu.Value]
@@ -33,11 +36,12 @@ theorem isSpilled_iff (e : Bbu.Env) (v : Bbu.StackSlot) :
     · simp [SpillSet.is_spilled, Bbu.isSpilled, Bbu.isLiteralValue, h1]
     · simp [SpillSet.is_spilled, Bbu.isSpilled, h1, Bbu.FunctionCallReturnLabel, Bbu.Value]
   · simp [SpillSet.is_spilled, Bbu.isSpilled, h2, Bbu.FunctionReturnLabel, Bbu.Value]
-  · simp only [SpillSet.is_spilled, spillSet, Finset.mem_image, Finset.mem_filter,
+  · rw [show decode v = .Var ⟨number v⟩ by simp [decode, h0, h1, h2]] at hv
+    simp only [SpillSet.is_spilled, spillSet, Finset.mem_image, Finset.mem_filter,
       Finset.mem_range, VarId.mk.injEq]
     constructor
-    · intro h; exact ⟨number v, ⟨number_lt v, by rw [ofNumber_number]; exact h⟩, rfl⟩
-    · rintro ⟨i, ⟨-, hi⟩, rfl⟩; rwa [ofNumber_number] at hi
+    · intro h; exact ⟨number v, ⟨number_lt v, by rw [ofNumber_number]; exact h, hv⟩, rfl⟩
+    · rintro ⟨i, ⟨-, hi, -⟩, rfl⟩; rwa [ofNumber_number] at hi
 
 -- A canonical slot decodes to a function return label if and only if its kind
 -- is a function return label.
@@ -119,7 +123,7 @@ theorem stepcorr_bind {e : Bbu.Env} {source : Stack} {state : OState e source}
     (h : ResCorr (Rel e) x y) (hf : ∀ a r, r.blocked = none → Rel e a r.state → StepCorr e (f a) state (g r)) :
     StepCorr e (x.bind f) state (y >>= fun r => if r.blocked.isSome then pure r else g r) := by
   rcases x with (⟨pos, ex, a⟩ | _) | a <;> rcases y with (_ | _) | ⟨_ | b, s⟩ <;>
-    simp only [ResCorr, reduceCtorEq, false_and, and_false] at h
+    simp only [ResCorr, reduceCtorEq, false_and] at h
   · obtain ⟨hb, hr⟩ := h
     exact ⟨s, hr, by rw [hb]; rfl⟩
   · exact ⟨_, rfl⟩

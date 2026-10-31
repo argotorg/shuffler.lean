@@ -70,14 +70,14 @@ theorem arr_focus_set (a : Addr) (vs : List Word) {i : Nat} (hi : i < vs.length)
       · rw [List.set_cons_succ, Arr, e' w, addr_succ, ← MProp.sep_assoc,
           MProp.sep_comm (Wd a v), MProp.sep_assoc]
 
-theorem wd_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+theorem wd_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     ∃ R, (Wd (slotAt g.h.data i) g.stk[i] ∗ R).get m := by
   obtain ⟨R, h⟩ := View.arr_stk h
   obtain ⟨Q, e, -⟩ := arr_focus_set g.h.data g.stk.toList (i := i) (by simpa using hi)
   rw [e, Vector.getElem_toList, MProp.sep_assoc] at h
   exact ⟨_, h⟩
 
-theorem rd_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+theorem rd_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     rd m (slotAt g.h.data i) = g.stk[i] :=
   let ⟨_, h⟩ := wd_slot h hi; Wd.rd h
 
@@ -88,32 +88,32 @@ theorem B32.rd32 {a : Addr} {v : BitVec 32} (h : (B32 a v ∗ F).get m) :
     BitVec.ofInt_ofBytes_toBytes 32 4 rfl]
 
 -- `movl (slot), %r32`: the low 4 bytes.
-theorem rd32_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+theorem rd32_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     BitVec.ofInt 32 (m.loadInt (slotAt g.h.data i) 4).get! = g.stk[i].extractLsb' 0 32 := by
   obtain ⟨R, h⟩ := wd_slot h hi
   rw [Wd.split, MProp.sep_assoc] at h
   exact B32.rd32 h
 
-theorem isSome32_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+theorem isSome32_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     (m.loadInt (slotAt g.h.data i) 4).isSome = true := by
   obtain ⟨R, h⟩ := wd_slot h hi
   rw [Wd.split, MProp.sep_assoc] at h
   exact B32.isSome h
 
 -- `movzbl 4(slot)` and `movzbl 5(slot)`.
-theorem rdb4_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+theorem rdb4_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     rdb m (slotAt g.h.data i + 4#64) = g.stk[i].extractLsb' 32 8 :=
   let ⟨_, h⟩ := wd_slot h hi; Wd.rdb_byte h (j := 4) (by decide)
 
-theorem rdb5_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+theorem rdb5_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     rdb m (slotAt g.h.data i + 5#64) = g.stk[i].extractLsb' 40 8 :=
   let ⟨_, h⟩ := wd_slot h hi; Wd.rdb_byte h (j := 5) (by decide)
 
-theorem isSome4_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+theorem isSome4_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     (m.loadInt (slotAt g.h.data i + 4#64) 1).isSome = true :=
   let ⟨_, h⟩ := wd_slot h hi; Wd.isSome_byte h (j := 4) (by decide)
 
-theorem isSome5_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) :
+theorem isSome5_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) :
     (m.loadInt (slotAt g.h.data i + 5#64) 1).isSome = true :=
   let ⟨_, h⟩ := wd_slot h hi; Wd.isSome_byte h (j := 5) (by decide)
 
@@ -123,7 +123,7 @@ theorem rd_dest (h : (View S g ∗ F).get m) {i : Nat} (hi : i < MAX_N) :
   exact (Arr.rd h' (by simpa using hi)).trans (by simp)
 
 -- `movl` and two `movb` to slot `i`: the low 6 bytes. Bytes 6 and 7 do not change.
-theorem store411_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat)
+theorem store411_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs)
     (x : BitVec 32) (y z : BitVec 8) :
     (View S { g with stk := g.stk.set i (g.stk[i].extractLsb' 48 16 ++ z ++ y ++ x) } ∗ F).get
       (((m.storeInt (slotAt g.h.data i) 4 x.toInt).storeInt (slotAt g.h.data i + 4#64) 1
@@ -137,7 +137,7 @@ theorem store411_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toN
   exact Wd.store411 h x y z
 
 -- The bytes `4` and `5` of slot `i` between the stores of `store411_slot`.
-theorem isSome4_411 (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) (x : BitVec 32) :
+theorem isSome4_411 (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) (x : BitVec 32) :
     ((m.storeInt (slotAt g.h.data i) 4 x.toInt).loadInt (slotAt g.h.data i + 4#64) 1).isSome
       = true := by
   obtain ⟨R, h⟩ := wd_slot h hi
@@ -147,7 +147,7 @@ theorem isSome4_411 (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat
   rw [sep_lc] at h1
   exact B8.isSome h1
 
-theorem isSome5_411 (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat) (x : BitVec 32)
+theorem isSome5_411 (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNat + g.xs) (x : BitVec 32)
     (y : BitVec 8) :
     (((m.storeInt (slotAt g.h.data i) 4 x.toInt).storeInt (slotAt g.h.data i + 4#64) 1
       y.toInt).loadInt (slotAt g.h.data i + 5#64) 1).isSome = true := by
@@ -327,8 +327,8 @@ theorem ofWord_411 (a b : Word) :
 
 -- The stores of `Flat.stackSwap` and the two stores of `m_destinationOf`.
 theorem flat_swap (g : G) (hok : g.Ok) (p : Word) (hp : p.toNat < g.h.len.toNat)
-    (hn : g.h.nops.toNat < 6 * g.h.n.toNat) (hpn : p.toNat < g.h.n.toNat)
-    (ht : (g.h.len - 1).toNat < g.h.n.toNat) (hpM : p.toNat < MAX_N)
+    (hn : g.h.nops.toNat < 6 * g.h.n.toNat + g.xo) (hpn : p.toNat < g.h.n.toNat + g.xs)
+    (ht : (g.h.len - 1).toNat < g.h.n.toNat + g.xs) (hpM : p.toNat < MAX_N)
     (htM : (g.h.len - 1).toNat < MAX_N) (w : Word)
     (hw : StackSlot.ofWord w = StackSlot.ofWord g.stk[p.toNat]) (r : OpR)
     (hr : r.op = Op.swapW (g.h.len - 1 - p)) :
@@ -336,13 +336,15 @@ theorem flat_swap (g : G) (hok : g.Ok) (p : Word) (hp : p.toNat < g.h.len.toNat)
              nops := g.h.nops + 1#64,
              dest := (g.h.dest.set p.toNat g.h.dest[(g.h.len - 1).toNat] hpM).set
                (g.h.len - 1).toNat g.h.dest[p.toNat] htM },
+           xs := g.xs, xo := g.xo,
            stk := (g.stk.set p.toNat g.stk[(g.h.len - 1).toNat] hpn).set (g.h.len - 1).toNat w ht,
            ops := g.ops.set g.h.nops.toNat r hn, tgt := g.tgt, spl := g.spl }
       = { Flat.stackSwap (flat g) p with dest := swapD (flat g).dest p ((flat g).size - 1) } := by
   have hN := hok.n
+  have hx := hok.xo
   have hs : (g.h.nops + 1#64).toNat = g.h.nops.toNat + 1 := by
-    rw [BitVec.toNat_add, BitVec.toNat_ofNat]; simp only [MAX_N] at hN; omega
-  have hl : (g.stk.toList.map StackSlot.ofWord).length = g.h.n.toNat := by simp
+    rw [BitVec.toNat_add, BitVec.toNat_ofNat]; simp only [MAX_N] at hN hx; omega
+  have hl : (g.stk.toList.map StackSlot.ofWord).length = g.h.n.toNat + g.xs := by simp
   have e1 := (get_eq _ _ htM).symm.trans
     (get_vec (g.stk.toList.map StackSlot.ofWord) _ (by rw [hl]; exact ht) htM)
   have e2 := (get_eq _ _ hpM).symm.trans
@@ -461,21 +463,24 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
     have hm0 := hk0.mem
     obtain ⟨hn, hdok⟩ := hpre.args
     have hN := hok.n
+    have hx := hok.xo
+    have hX := hok.xs
     have hLn := hok.len
     have hpM {x : Word} (h : x.toNat < g.h.len.toNat) : x.toNat < MAX_N :=
-      Nat.lt_of_lt_of_le (Nat.lt_of_lt_of_le h hLn) hN
+      Nat.lt_of_lt_of_le (Nat.lt_of_lt_of_le h hLn) hX
     by_cases c : (s.pushRa ra).regs.rsi.toBitVec.toNat < g.h.len.toNat
         ∧ Flat.get g.h.dest (s.pushRa ra).regs.rsi.toBitVec ≠ (s.pushRa ra).regs.rsi.toBitVec
         ∧ ¬ 15 < (g.h.len - (s.pushRa ra).regs.rsi.toBitVec + BitVec.ofInt 64 (-2)).toNat
     · -- The three asserts pass.
       obtain ⟨hp, hd, hdep⟩ := c
-      have hpn : (s.pushRa ra).regs.rsi.toBitVec.toNat < g.h.n.toNat := Nat.lt_of_lt_of_le hp hLn
+      have hpn : (s.pushRa ra).regs.rsi.toBitVec.toNat < g.h.n.toNat + g.xs :=
+        Nat.lt_of_lt_of_le hp hLn
       have hpM' := hpM hp
       have hdep' := (depth_iff _ _).mpr hdep
       have hpt : (s.pushRa ra).regs.rsi.toBitVec.toNat < (g.h.len - 1#64).toNat := by
         have := hdep'.1; simp only [BitVec.le_def] at this; bv_omega
       have htl : (g.h.len - 1#64).toNat < g.h.len.toNat := by bv_omega
-      have ht : (g.h.len - 1#64).toNat < g.h.n.toNat := Nat.lt_of_lt_of_le htl hLn
+      have ht : (g.h.len - 1#64).toNat < g.h.n.toNat + g.xs := Nat.lt_of_lt_of_le htl hLn
       have htM := hpM htl
       have hdp := hdok _ hp
       have hdt := hdok _ htl
@@ -499,8 +504,8 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
       dsimp only at h2 h3 hf hr1 hr2 hr3 hr4 hr5 h8 h9 h10
       have hd' : (s.pushRa ra).regs.rsi.toBitVec ≠ g.h.dest[(s.pushRa ra).regs.rsi.toBitVec.toNat] := by
         rw [get_eq _ _ hpM'] at hd; exact Ne.symm hd
-      have hnops : (g.h.nops + 1#64).toNat ≤ 6 * g.h.n.toNat := by
-        rw [BitVec.toNat_add, BitVec.toNat_ofNat]; simp only [MAX_N] at hN; omega
+      have hnops : (g.h.nops + 1#64).toNat ≤ 6 * g.h.n.toNat + g.xo := by
+        rw [BitVec.toNat_add, BitVec.toNat_ofNat]; simp only [MAX_N] at hN hx; omega
       -- `Flat.swapWith` before the `m_positionOf` stores, on the ghost of `h10`.
       have hres := (sw_ok (flat g) _ hp hd hdep).trans (by
         rw [← flat_swap g hok _ hp hn hpn ht hpM' htM
@@ -563,8 +568,8 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
         cfg_goto
         · exact Kp.stack (fr := []) ⟨h10, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
         · refine ⟨_, _, ⟨h10, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩,
-            Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok hLn hnops,
-            ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, hS, rfl, htM, ?_, ?_⟩
+            Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok hLn hnops,
+            ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, hS, rfl, htM, ?_, ?_⟩
           · simp only [get_eq _ _ htM, Vector.getElem_set_self]
             exact hdp.imp_right fun h => Nat.lt_of_lt_of_le h hN
           · show Flat.swapWith (flat g) (s.pushRa ra).regs.rsi.toBitVec = _
@@ -586,8 +591,8 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
           Nat.lt_of_lt_of_le (hdt.resolve_left hc) hN
         have h11 := View.store_pos h10 hdtM (s.pushRa ra).regs.rsi.toBitVec
         refine ⟨_, _, ⟨h11, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩,
-          Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok hLn hnops,
-          ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, hS, rfl, htM, ?_, ?_⟩
+          Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok hLn hnops,
+          ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, hS, rfl, htM, ?_, ?_⟩
         · simp only [get_eq _ _ htM, Vector.getElem_set_self]
           exact hdp.imp_right fun h => Nat.lt_of_lt_of_le h hN
         · show Flat.swapWith (flat g) (s.pushRa ra).regs.rsi.toBitVec = _
@@ -623,7 +628,7 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
         cfg_goto
         · exact Kp.stack (fr := []) ⟨hm0, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
         · exact ⟨g, ⟨hm0, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, hok,
-            ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, by rw [e], by rw [e]; rfl⟩
+            ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, by rw [e], by rw [e]; rfl⟩
         · simp
   case «.LB.Emission.swapWith.0» t ht =>
     -- `movq dest[b], %rdx; cmpq $-1, %rdx; je .LB.Emission.swapWith.1; movq %rcx, pos[dest[b]]`.
@@ -661,8 +666,8 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
       have hdM : g'.h.dest[b.toNat].toNat < MAX_N := hdb.resolve_left hc
       have h1 := View.store_pos hm hdM b
       refine ⟨_, ⟨h1, hk.sp, hk.bx, hk.bp, hk.r12, hk.r13, hk.r14, hk.r15⟩,
-        Keep.ok (g := g') ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok hok.len hok.nops,
-        ⟨hkeep.tgtp, hkeep.n, hkeep.splp, hkeep.data, hkeep.ops, hkeep.tgt, hkeep.spl⟩, ?_, ?_⟩
+        Keep.ok (g := g') ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok hok.len hok.nops,
+        ⟨hkeep.tgtp, hkeep.n, hkeep.splp, hkeep.data, hkeep.ops, hkeep.xs, hkeep.xo, hkeep.tgt, hkeep.spl⟩, ?_, ?_⟩
       · rw [rsi_eq, hres, posFix_some _ _ hb hdM]
       · rw [rsi_eq, hres]
   case «.LB.Emission.swapWith.1» t ht =>

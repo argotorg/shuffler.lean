@@ -1,4 +1,4 @@
-import BbuBridge.Permute
+import BbuBridge.PermuteExplicit
 
 /-!
 `Bbu.finish` is the final permutation of the loop and the check after the loop.
@@ -55,31 +55,10 @@ theorem finish_corr : FinishStmt := by
     rw [← ha] at hd
     simp only [Option.map_some, Option.some_inj, Fin.val_cast] at hd
     rw [getElem_destList, hd, List.getElem_map, h.slot_dest k (by simpa using hk)]
-  have hvals : state.stack = (st.slots.map Bbu.Slot.val).map decode := by
-    rw [h.stack, List.map_map]
-    rfl
-  have hcan : ∀ v ∈ st.slots.map Bbu.Slot.val, Canon v := by
-    intro v hv
-    obtain ⟨s, hs, rfl⟩ := List.mem_map.mp hv
-    exact h.canon s hs
-  rw [hof, Permute.permute_eq_normalize]
+  rw [hof]
   unfold Bbu.finish
   simp only [Bbu.St.all_destinationOf, Bool.not_true, Bool.false_eq_true, ↓reduceIte]
   rw [hds]
-  have hN := normalize_corr _ hcan state.stack hvals (state.mapping.toPermutation hlen hbound')
-  generalize Bbu.normalize _ _ = x at hN ⊢
-  generalize Permute.normalize _ _ = y at hN ⊢
-  rcases x with (_ | _) | p <;> rcases y with (_ | _) | r <;> simp only [Corr] at hN
-  · exact trivial
-  subst hN
-  rw [except_ok_bind]
-  show ResCorr (Rel e) ((Except.ok (destList r) : Bbu.M _).bind _) _
-  simp only [Except.bind]
-  rw [dite_eq_left (isPerm_destList r)]
-  by_cases h0 : st.len = 0
-  · rw [ite_eq_left h0, dite_eq_right (by omega)]
-    exact rescorr_post ⟨rfl, h⟩ fun st' hst => by cases hst; exact hn
-  · rw [ite_eq_right h0, dite_eq_left (by omega)]
-    exact rescorr_post (go_corr st state _ r _ h rfl) fun st' hg => (go_len _ _ hg).trans hn
+  exact rescorr_post (permute_corr h _) fun st' hp => (permute_len hp).trans hn
 
 end BbuBridge

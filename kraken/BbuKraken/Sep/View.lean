@@ -120,12 +120,22 @@ def Em (S : Addr) (h : Hdr) : MProp 64 :=
     ∗ Wd (Fld.pendingGenerations S) h.pend ∗ Wd (Fld.blocked_offset S) h.blkOff
     ∗ Wd (Fld.blocked_excess S) h.blkExc
 
--- The ghost: the struct, the working stack (`n` slots), the trace buffer (`6n` records), the
--- target (`n` words) and the spilled bytes (`m_spills[i]` is `spl i`).
+-- The bytes of `Em`: the struct up to `m_plannedMapping`. The callees do not read
+-- `m_plannedMapping`; only the constructor writes it.
+def EmSize : Nat := 16464
+theorem EmSize_eq (S : Addr) : Fld.plannedMapping S = S + BitVec.ofNat 64 EmSize := rfl
+theorem EmSize_add : EmSize + 8 = Fld.SIZE := rfl
+
+-- The ghost: the struct, the working stack (`n + xs` slots), the trace buffer (`6n + xo`
+-- records), the target (`n` words) and the spilled bytes (`m_spills[i]` is `spl i`). The entry
+-- `build_bottom_up` has `xs = xo = 0`. `Planner::run` has a stack of `max(m, n)` slots, for the
+-- `m` slots of the source, and a trace buffer of `4m + 6n` records.
 structure G where
   h : Hdr
-  stk : Vector Word h.n.toNat
-  ops : Vector OpR (6 * h.n.toNat)
+  xs : Nat
+  xo : Nat
+  stk : Vector Word (h.n.toNat + xs)
+  ops : Vector OpR (6 * h.n.toNat + xo)
   tgt : Vector Word h.n.toNat
   spl : BitVec 32 → BitVec 8
 
@@ -138,9 +148,11 @@ def View (S : Addr) (g : G) : MProp 64 :=
 
 -- The ghost invariant that the contracts keep.
 structure G.Ok (g : G) : Prop where
-  len : g.h.len.toNat ≤ g.h.n.toNat
+  len : g.h.len.toNat ≤ g.h.n.toNat + g.xs
   n : g.h.n.toNat ≤ MAX_N
-  nops : g.h.nops.toNat ≤ 6 * g.h.n.toNat
+  xs : g.h.n.toNat + g.xs ≤ MAX_N
+  xo : g.xo ≤ 4 * MAX_N
+  nops : g.h.nops.toNat ≤ 6 * g.h.n.toNat + g.xo
   -- A spilled byte in target word `k` is byte `j` of that word (see `splOut`).
   spl : ∀ i ∈ splIds g.tgt.toList, ∀ k (hk : k < g.h.n.toNat), ∀ j < 8,
     g.h.spl + BitVec.ofNat 64 i = slotAt g.h.tgt k + BitVec.ofNat 64 j →

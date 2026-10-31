@@ -46,7 +46,8 @@ theorem initValid : InitValidStmt := by
     have hi : i.val < e.target.length := by simpa using i.isLt
     have ht : (tgt e)[i] = decode e.target[i.val] := by simp [tgt]
     simp only [State.isAvailable, Stack.shallowestCopyPosition_isSome]
-    rw [ht, ← isFree_iff, ← isSpilled_iff]
+    rw [ht, ← isFree_iff, ← isSpilled_iff e _ _
+      (List.mem_append_right _ (List.mem_map_of_mem (List.getElem_mem hi)))]
     rcases h.available _ (List.getElem_mem hi) with h1 | h1 | h1
     · exact Or.inl h1
     · exact Or.inr (Or.inl h1)

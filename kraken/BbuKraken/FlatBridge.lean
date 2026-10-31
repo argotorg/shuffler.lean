@@ -37,7 +37,7 @@ theorem build_bottom_up_rel_of_perm {m n : Word} {data target : Vector StackSlot
     rw [hen]; exact hd
   have hi := Inv_init hl (by rw [hen, listDests_length dest hM]; exact hmn) (by rw [hen]; exact hn) hd'
   have hs := sim_ctor (data := data) (target := target) (spilled := spilled) u hm hn hd
-  have h := sim_loop hfin _ _ 0 hs hi (Nat.zero_le _)
+  have h := sim_loop hfin _ _ 0 hs hi.toS (Nat.zero_le _)
   unfold build_bottom_up
   rw [ite_eq_right hg]
   exact rel_outOf h

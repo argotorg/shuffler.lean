@@ -38,8 +38,9 @@ theorem copyBelow_ne (st : Flat.St) (x : StackSlot) {p : Word} (h : p ≠ 0#64) 
       if Flat.get st.data (p - 1#64) = x then p - 1#64 else Flat.copyBelow st x (p - 1#64) := by
   rw [Flat.copyBelow]; exact dite_eq_right h
 
--- Slot `i < n` of the flat data is word `i` of the ghost stack.
-theorem get_flat_data {g : G} (hn : g.h.n.toNat ≤ MAX_N) {i : Word} (hi : i.toNat < g.h.n.toNat) :
+-- Slot `i < n + xs` of the flat data is word `i` of the ghost stack.
+theorem get_flat_data {g : G} (hn : g.h.n.toNat + g.xs ≤ MAX_N) {i : Word}
+    (hi : i.toNat < g.h.n.toNat + g.xs) :
     Flat.get (flat g).data i = StackSlot.ofWord g.stk[i.toNat] := by
   simp [Flat.get, flat, vec, Nat.lt_of_lt_of_le hi hn, hi]
 
@@ -89,7 +90,7 @@ theorem jne_false {a b : Word} (h : (!((a ^^^ b).shiftLeft 16 == BitVec.zero 64)
 /-! ## The load of a slot -/
 
 theorem rd_stk {S : Addr} {g : G} {F : MProp 64} {m : Mem 64} (h : (View S g ∗ F).get m) {i : Nat}
-    (hi : i < g.h.n.toNat) : rd m (slotAt g.h.data i) = g.stk[i] :=
+    (hi : i < g.h.n.toNat + g.xs) : rd m (slotAt g.h.data i) = g.stk[i] :=
   let ⟨_, h⟩ := View.arr_stk h; (Arr.rd h (by simpa using hi)).trans (by simp)
 
 end Bbu.Unit.ShallowestCopy
@@ -165,7 +166,8 @@ theorem shallowestCopy_unit [Host] [FunDecls] :
         + (t.regs.rax.toBitVec - 1#64) * 8#64
         = slotAt g.h.data (t.regs.rax.toBitVec - 1#64).toNat := by
       rw [hrdi, Fld.fold_stack_data, hd, fold_slot]
-    have hi : t.regs.rax.toBitVec ≠ 0#64 → (t.regs.rax.toBitVec - 1#64).toNat < g.h.n.toNat :=
+    have hi : t.regs.rax.toBitVec ≠ 0#64 →
+        (t.regs.rax.toBitVec - 1#64).toNat < g.h.n.toNat + g.xs :=
       fun h0 => Nat.lt_of_succ_le
         (Nat.le_trans (Nat.le_trans (Nat.le_of_eq (pred_toNat h0)) hrax) hok.len)
     -- One turn of the loop is one unfold of `copyBelow`.
@@ -182,7 +184,7 @@ theorem shallowestCopy_unit [Host] [FunDecls] :
       have hx : BitVec.ofInt 64 (Mem.loadInt t.dmem
           (slotAt g.h.data (t.regs.rax.toBitVec - 1#64).toNat) 8).get!
           = g.stk[(t.regs.rax.toBitVec - 1#64).toNat] := rd_stk hm hih
-      rw [← hcb, copyBelow_ne _ _ h0, get_flat_data hok.n hih, ha, hx]
+      rw [← hcb, copyBelow_ne _ _ h0, get_flat_data hok.xs hih, ha, hx]
     kvcgen64
     all_goals try symexec_norm
     vc_by_shape

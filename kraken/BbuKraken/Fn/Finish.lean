@@ -123,15 +123,15 @@ def FInv (p0 : Perm) : CfgLabel → MachineData → Prop
   | .label ".LB.Emission.permute.1", t => Fr s ra t ∧ Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem
       ∧ rdi t = rd s.dmem (wordAt (rdi s) 0)
       ∧ Mem.Contains t.dmem (rsp s - 2064#64) (words p0.toList)
-  | .label ".LB.Emission.permute.2", t => Fr s ra t ∧ ∃ L, permute p0 = .ok L ∧ ∃ j < L.length,
+  | .label ".LB.Emission.permute.2", t => Fr s ra t ∧ ∃ L, PermuteKraken.permute p0 = .ok L ∧ ∃ j < L.length,
       rdx t = rsp s - 4112#64 + BitVec.ofNat 64 j ∧ SwInv s L j t
   | .label ".LB.Emission.permute.3", t => Fr s ra t ∧ Wf t.dmem (rdi s) ∧ finishR s t
       ∧ Mem.UnchangedOutside (frame finishF s :: writable s.dmem (rdi s)) s.dmem t.dmem
   | .label ".LB.Emission.permute.4", t => Fr s ra t ∧ Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem
-      ∧ ∃ b, permute p0 = .error b
+      ∧ ∃ b, PermuteKraken.permute p0 = .error b
         ∧ Mem.Contains t.dmem (rsp s - 4116#64) (words [b.offset, b.excess])
   | .label ".LB.Emission.permute.5", t => Fr s ra t ∧ Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem
-      ∧ permute p0 = .ok []
+      ∧ PermuteKraken.permute p0 = .ok []
   | _, _ => False
 
 def FVar (l : Label) (t : MachineData) : Nat :=
@@ -297,7 +297,7 @@ def lb60Mem (m : Mem 64) (x sp : Addr) : Mem 64 :=
 
 -- `finishC` in terms of `permute p0`.
 theorem finish_eq {p0 : Perm} {st0 : St} (hp0 : p0.toList = st0.slots.map Slot.dest) :
-    finishC st0 = (match permute p0 with
+    finishC st0 = (match PermuteKraken.permute p0 with
       | .ok L => .ok (L.foldl swapTop st0)
       | .error b => .error (.blocked b.offset b.excess st0)) := by
   obtain ⟨l, lt, inj⟩ := p0

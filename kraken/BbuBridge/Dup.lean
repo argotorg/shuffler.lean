@@ -43,7 +43,7 @@ theorem dup_corr : DupStmt := by
     · simp only [requires, hp, ↓reduceDIte, bind, Except.bind]
       exact trivial
   have hf : ¬ (state.stack[c]'hcl).isFunctionReturnLabel := fun h' => hk (hlab.mp h')
-  rw [if_neg (show ¬((st.val c).kind == Bbu.FunctionReturnLabel) = true by simpa using hk),
+  rw [ite_eq_right (show ¬((st.val c).kind == Bbu.FunctionReturnLabel) = true by simpa using hk),
     Bbu.add_eq]
   -- The destination is free: both add the slot. Else both fail.
   by_cases hp : state.mapping.positionOf ⟨d, hd⟩ = none
