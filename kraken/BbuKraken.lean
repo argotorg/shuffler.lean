@@ -130,6 +130,7 @@ import BbuKraken.Unit.Plan.MapInPlace
 import BbuKraken.Unit.Plan.MapClosest
 import BbuKraken.Unit.Plan.MapWildcard
 import BbuKraken.Unit.Plan.KeepWildcard
+import BbuKraken.Unit.Plan.Absorb
 import BbuKraken.Unit.Plan.Specs
 import BbuKraken.Unit.SpillSet
 import BbuKraken.Unit.SwapWith
