@@ -34,7 +34,9 @@ theorem cfg_28 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
         (v.regs.rsp.toBitVec + 96#64)
       have cells : EmissionCells ls hpost.localLength ec.out := by
         rw [hout]
-        exact EmissionLocals.cells _ _ _ _
+        have hc := EmissionLocals.cells (EmissionLocals.ofList locals hc.localLength)
+          a (v.regs.rsp.toBitVec + 96#64) hpost.localLength
+        exact ⟨hc.size, hc.offset, hc.excess, hc.current⟩
       have hbudget (w : MachineData) (hw : PostEmitLI P newg M F s ra lo' ls w) :
           dropBudget g w = dropBudget g t := by
         calc
@@ -61,9 +63,12 @@ theorem cfg_28 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
       · intro w hw he hz hbp
         have hs : ec.status = .blocked := (code_blocked_iff _).mp (hal.symm.trans he)
         have bounds := hc.blockedBounds ctx.ok ctx.map hp a hq he
+        have restored : BlockedBounds newg.p.n ec.out := by
+          rw [hout]
+          exact ⟨bounds.size, bounds.offset, bounds.excess, bounds.current⟩
         have inputs : ResolveInputs newg M ls hpost.localLength := by
           apply cells.resolveInputs
-          · simpa only [newg, emissionResult, hout] using bounds
+          · exact restored
           · exact ctx.map
         have hb := hbudget w hw
         apply Program.Intercept.intro_label (i := 31) (by decide)
@@ -82,9 +87,12 @@ theorem cfg_28 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
       · intro w hw he hn hbp hax hdx
         have hs : ec.status = .blocked := (code_blocked_iff _).mp (hal.symm.trans he)
         have bounds := hc.blockedBounds ctx.ok ctx.map hp a hq he
+        have restored : BlockedBounds newg.p.n ec.out := by
+          rw [hout]
+          exact ⟨bounds.size, bounds.offset, bounds.excess, bounds.current⟩
         have inputs : ResolveInputs newg M ls hpost.localLength := by
           apply cells.resolveInputs
-          · simpa only [newg, emissionResult, hout] using bounds
+          · exact restored
           · exact ctx.map
         have hb := hbudget w hw
         refine ⟨?_, Or.inl ?_⟩

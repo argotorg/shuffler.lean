@@ -44,7 +44,7 @@ theorem b_29 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   cfg_block
   intro t ⟨lo, locals, i, h, hi, hax, hdx, hmodel⟩
   have hiN := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) h.ok.planner.m
-  obtain ⟨R, hb⟩ := dropped_read h.kb.vmem hiN
+  obtain ⟨R, hb⟩ := dropped_read h.kb.vmem hiN (BitVec.lt_def.mp hi)
   have ks := B8.isSome hb
   have rd := B8.rdb hb
   unfold rdb at rd

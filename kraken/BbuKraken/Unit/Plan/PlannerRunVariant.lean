@@ -7,21 +7,32 @@ open Bbu.Sep
 def readDropped (p : Addr) (m : Mem 64) : Vector (BitVec 8) MAX_N :=
   Vector.ofFn fun i => rdb m (p + BitVec.ofNat 64 i.val)
 
+theorem droppedFrom_congr (m : Word) (a b : Vector (BitVec 8) MAX_N)
+    (h : ∀ i, i < m → Flat.get a i = Flat.get b i) (i c : Word) :
+    Flat.droppedFrom m a i c = Flat.droppedFrom m b i c := by
+  conv => lhs; rw [Flat.droppedFrom]
+  conv => rhs; rw [Flat.droppedFrom]
+  split
+  · rename_i hi
+    rw [h i hi]
+    exact droppedFrom_congr m a b h (i + 1) _
+  · rfl
+termination_by (m - i).toNat
+decreasing_by exact Flat.sub_succ_lt ‹i < m›
+
+-- Only the first m bytes are owned. Their count does not depend on the unowned tail.
 theorem readDropped_eq {P : Addr} {g : PlannerRunG} {F : MProp 64} {t : MachineData}
-    (h : (PlannerRunView P g ∗ F).get t.dmem) : readDropped g.p.drp t.dmem = g.dropped := by
-  apply Vector.ext
+    (h : (PlannerRunView P g ∗ F).get t.dmem) :
+    Flat.droppedCount g.p.m (readDropped g.p.drp t.dmem) =
+      Flat.droppedCount g.p.m g.dropped := by
+  apply droppedFrom_congr
   intro i hi
-  let w := BitVec.ofNat 64 i
-  have hw : w.toNat = i := by
-    simp only [w, BitVec.toNat_ofNat]
-    apply Nat.mod_eq_of_lt
-    change i < 1024 at hi
-    omega
-  obtain ⟨R, hb⟩ := dropped_read h
-    (i := w) (by rwa [hw])
-  have hr := B8.rdb hb
-  simpa only [readDropped, Vector.getElem_ofFn, w, Flat.get,
-    hw, dite_eq_left hi] using hr
+  by_cases hiN : i.toNat < MAX_N
+  · obtain ⟨R, hb⟩ := dropped_read h hiN (BitVec.lt_def.mp hi)
+    have hr := B8.rdb hb
+    simpa only [readDropped, Flat.get, dite_eq_left hiN,
+      Vector.getElem_ofFn, BitVec.ofNat_toNat, BitVec.setWidth_eq] using hr
+  · simp only [Flat.get, dite_eq_right hiN]
 
 def dropBudget (g : PlannerRunG) (t : MachineData) : Nat :=
   (g.p.m - Flat.droppedCount g.p.m (readDropped g.p.drp t.dmem)).toNat

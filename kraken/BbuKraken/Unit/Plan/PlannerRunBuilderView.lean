@@ -34,18 +34,10 @@ theorem builder_view_frame (P B : Addr) (g : PlannerRunG) (hok : g.Ok)
     Wd (P + 16#64) g.p.tgt ∗ Wd (P + 24#64) g.p.n ∗ Wd (P + 32#64) g.p.spl ∗
     B8 (P + 40#64) g.p.allowed ∗ Wd (P + 48#64) g.p.drp ∗ B8 (P + 56#64) g.p.saw
   refine ⟨headers ∗ Spl g.p.spl g.spills (List.range g.spillCount) ∗
-    Bs (g.p.drp + g.p.m) (g.dropped.toList.drop g.p.m.toNat) ∗
-    Arr g.dataPtr g.data.toList ∗ Ops g.opsPtr 0 g.ops ∗
-    Arr g.sourcesPtr g.sources.toList ∗ Wd g.countPtr g.count, ?_⟩
+    Arr g.dataPtr (g.data.toList.take g.dataCapacity) ∗ Ops g.opsPtr 0 g.ops ∗
+    Arr g.sourcesPtr (g.sources.toList.take g.p.n.toNat) ∗ Wd g.countPtr g.count, ?_⟩
   intro M saw
-  have hdrop : Bs g.p.drp g.dropped.toList =
-      Bs g.p.drp (g.dropped.toList.take g.p.m.toNat) ∗
-        Bs (g.p.drp + g.p.m) (g.dropped.toList.drop g.p.m.toNat) := by
-    conv => lhs; rw [← List.take_append_drop g.p.m.toNat g.dropped.toList]
-    rw [ResolveU.Bs_append]
-    simp only [List.length_take, Vector.length_toList, Nat.min_eq_left hok.planner.m,
-      BitVec.ofNat_toNat, BitVec.setWidth_eq]
-  simp only [PlannerRunView, PView, BView, BuilderMembers, builderGhost, headers, hdrop]
+  simp only [PlannerRunG.dataCapacity, PlannerRunView, PView, BView, BuilderMembers, builderGhost, headers]
   simp only [MProp.sep_assoc]
   ac_rfl
 

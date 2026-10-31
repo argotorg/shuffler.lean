@@ -26,14 +26,14 @@ theorem RetryLI.prepare (h : RetryLI P g M F s ra lo locals t) :
   ⟨lo, locals, h.toLoopLI, h.r13, h.count, h.targets⟩
 
 theorem dropped_read (h : (PlannerRunView P g ∗ F).get t.dmem)
-    {i : Word} (hi : i.toNat < MAX_N) :
+    {i : Word} (hi : i.toNat < MAX_N) (hm : i.toNat < g.p.m.toNat) :
     ∃ R, (B8 (g.p.drp + i) (get g.dropped i) ∗ R).get t.dmem := by
   obtain ⟨R, hd⟩ := dropped h
-  obtain ⟨Q, he, _⟩ := SpillSetProof.Bs.focus g.p.drp g.dropped.toList
-    (by simpa only [Vector.length_toList] using hi) 0#8
+  obtain ⟨Q, he, _⟩ := SpillSetProof.Bs.focus g.p.drp (g.dropped.toList.take g.p.m.toNat) (i := i.toNat)
+    (by simp only [List.length_take, Vector.length_toList]; omega) 0#8
   rw [he, MProp.sep_assoc] at hd
   refine ⟨Q ∗ R, ?_⟩
-  simpa only [Vector.getElem_toList, BitVec.ofNat_toNat, BitVec.setWidth_eq,
+  simpa only [List.getElem_take, Vector.getElem_toList, BitVec.ofNat_toNat, BitVec.setWidth_eq,
     Flat.get_toNat g.dropped hi] using hd
 
 end

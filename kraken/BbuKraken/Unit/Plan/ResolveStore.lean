@@ -4,33 +4,38 @@ namespace Bbu.Unit.ResolveU
 open Bbu.Sep
 
 theorem store_dropped {P : Addr} {r : RG} {F : MProp 64} {m : Mem 64} {o : Word}
-    (hm : (RView P r ∗ F).get m) (ho : o.toNat < MAX_N) (z : Int) :
+    (hm : (RView P r ∗ F).get m) (ho : o.toNat < r.p.m.toNat)
+    (hoN : o.toNat < MAX_N) (z : Int) :
     (RView P { r with dropped := Flat.put r.dropped o (BitVec.ofInt 8 z) } ∗ F).get
       (m.storeInt (r.p.drp + o) 1 z) := by
   let rest := PView P r.p ∗ MapM r.mp r.M ∗ MapM r.currentPtr r.current ∗
     Spl r.p.spl r.spills (List.range r.spillCount) ∗ F
   have he : ∀ d : Vector (BitVec 8) MAX_N,
-      RView P { r with dropped := d } ∗ F = Bs r.p.drp d.toList ∗ rest := by
+      RView P { r with dropped := d } ∗ F =
+        Bs r.p.drp (d.toList.take r.p.m.toNat) ∗ rest := by
     intro d
     unfold RView rest
     ecancel
-  have hm' : (Bs r.p.drp r.dropped.toList ∗ rest).get m := he r.dropped ▸ hm
-  have hs := SpillSetProof.Bs.store hm' (by simpa using ho) z
+  have hm' : (Bs r.p.drp (r.dropped.toList.take r.p.m.toNat) ∗ rest).get m :=
+    he r.dropped ▸ hm
+  have hs := SpillSetProof.Bs.store hm'
+    (by simpa only [List.length_take, Vector.length_toList] using
+      Nat.lt_min.mpr (And.intro ho hoN)) z
   rw [he]
-  simpa only [Flat.put, Vector.toList_setIfInBounds] using hs
+  simpa only [Flat.put, Vector.toList_setIfInBounds, List.take_set] using hs
 
 section
 variable {P : Addr} {r : RG} {F : MProp 64} {s t u : MachineData} {ra : Int64}
     {lo loc : List Word}
 
 theorem Bd.storeDropped (hb : Bd P r F s ra lo loc t) {o : Word}
-    (ho : o.toNat < MAX_N) (z : Int)
+    (ho : o.toNat < r.p.m.toNat) (hoN : o.toNat < MAX_N) (z : Int)
     (hm : u.dmem = t.dmem.storeInt (r.p.drp + o) 1 z)
     (hsp : u.regs.rsp = t.regs.rsp) :
     Bd P { r with dropped := Flat.put r.dropped o (BitVec.ofInt 8 z) } F s ra lo loc u := by
   have hm' : (RView P r ∗ (Stk (rsp s) (fr s lo loc) ra.toBitVec ∗ F)).get t.dmem :=
     (sep_lc _ _ _) ▸ hb.kb.mem
-  have hs := store_dropped hm' ho z
+  have hs := store_dropped hm' ho hoN z
   refine ⟨⟨?_, hsp ▸ hb.kb.sp⟩, hb.free, hb.locals⟩
   rw [hm]
   exact (sep_lc _ _ _).symm ▸ hs

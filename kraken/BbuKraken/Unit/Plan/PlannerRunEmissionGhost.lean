@@ -1,5 +1,6 @@
 import BbuKraken.Unit.Plan.PlannerRunBuilderView
 import BbuKraken.Unit.Defs
+import BbuKraken.Unit.Plan.PlannerRunData
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep
@@ -9,18 +10,21 @@ def emissionHdr (g : PlannerRunG) (h : Hdr) : Hdr :=
 
 def emissionGhost (g : PlannerRunG) (hok : g.Ok) (h : Hdr) : G where
   h := emissionHdr g h
-  xs := MAX_N - g.p.n.toNat
+  xs := g.dataCapacity - g.p.n.toNat
   xo := 4 * g.p.m.toNat
-  stk := g.data.cast (by
-    change MAX_N = g.p.n.toNat + (MAX_N - g.p.n.toNat)
-    have := hok.planner.n
-    omega)
+  stk := ⟨(g.data.toList.take g.dataCapacity).toArray, by
+    have hm := hok.planner.m
+    have hn := hok.planner.n
+    simp only [List.size_toArray, List.length_take, Vector.length_toList,
+      emissionHdr, PlannerRunG.dataCapacity]
+    omega⟩
   ops := ⟨g.ops.toArray, by simpa only [List.size_toArray, emissionHdr] using hok.ops⟩
   tgt := ⟨g.p.tw.toArray, by simpa only [List.size_toArray, emissionHdr] using hok.planner.tw⟩
   spl := g.spills
 
 theorem emissionGhost_stk (g : PlannerRunG) (hok : g.Ok) (h : Hdr) :
-    (emissionGhost g hok h).stk.toList = g.data.toList := rfl
+    (emissionGhost g hok h).stk.toList = g.data.toList.take g.dataCapacity := by
+  simp only [emissionGhost, Vector.toList_mk, List.toList_toArray]
 
 theorem emissionGhost_ops (g : PlannerRunG) (hok : g.Ok) (h : Hdr) :
     (emissionGhost g hok h).ops.toList = g.ops := by

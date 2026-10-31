@@ -30,7 +30,8 @@ structure RG.Ok (r : RG) : Prop where
 
 def RView (P : Addr) (r : RG) : MProp 64 :=
   PView P r.p ∗ MapM r.mp r.M ∗ MapM r.currentPtr r.current
-    ∗ Spl r.p.spl r.spills (List.range r.spillCount) ∗ Bs r.p.drp r.dropped.toList
+    ∗ Spl r.p.spl r.spills (List.range r.spillCount)
+    ∗ Bs r.p.drp (r.dropped.toList.take r.p.m.toNat)
 
 def resolveA (r : RG) (s : MachineData) : Prop :=
   rsi s = r.mp ∧ r8 s = r.currentPtr ∧ (r9 s).toNat ≤ MAX_N ∧
@@ -149,7 +150,7 @@ theorem classify_split (P : Addr) (r : RG) (hok : r.Ok) (dn : Addr)
     ∃ rest, ∀ f : BitVec 32 → BitVec 8,
       RView P { r with spills := f } ∗ Bs dn dv.toList =
         CView P (classifyGhost { r with spills := f } dn dv) ∗
-          (MapM r.currentPtr r.current ∗ Bs r.p.drp r.dropped.toList ∗
+          (MapM r.currentPtr r.current ∗ Bs r.p.drp (r.dropped.toList.take r.p.m.toNat) ∗
             Spl r.p.spl f rest) := by
   obtain ⟨rest, hrest⟩ := spl_partition r.p.spl (List.range r.spillCount) (splIds r.p.sw)
     (Top.nodup_eraseDups _) (fun i hi => List.mem_range.mpr (hok.spillIds i hi))
@@ -165,7 +166,8 @@ theorem add_split (P : Addr) (r : RG) :
   refine ⟨Wd P r.p.src ∗ Wd (P + 8#64) r.p.m ∗ Wd (P + 16#64) r.p.tgt ∗
     Wd (P + 24#64) r.p.n ∗ B8 (P + 40#64) r.p.allowed ∗ Wd (P + 48#64) r.p.drp ∗
     B8 (P + 56#64) r.p.saw ∗ Arr r.p.src r.p.sw ∗ Arr r.p.tgt r.p.tw ∗
-    MapM r.mp r.M ∗ MapM r.currentPtr r.current ∗ Bs r.p.drp r.dropped.toList, fun f => ?_⟩
+    MapM r.mp r.M ∗ MapM r.currentPtr r.current ∗
+    Bs r.p.drp (r.dropped.toList.take r.p.m.toNat), fun f => ?_⟩
   unfold RView PView
   ecancel
 
@@ -191,8 +193,9 @@ theorem RView.working (h : (RView P r ∗ F).get m) :
   ⟨_, (by unfold RView; ecancel : RView P r ∗ F = MapM r.currentPtr r.current ∗ _) ▸ h⟩
 
 theorem RView.dropped (h : (RView P r ∗ F).get m) :
-    ∃ R, (Bs r.p.drp r.dropped.toList ∗ R).get m :=
-  ⟨_, (by unfold RView; ecancel : RView P r ∗ F = Bs r.p.drp r.dropped.toList ∗ _) ▸ h⟩
+    ∃ R, (Bs r.p.drp (r.dropped.toList.take r.p.m.toNat) ∗ R).get m :=
+  ⟨_, (by unfold RView; ecancel : RView P r ∗ F =
+    Bs r.p.drp (r.dropped.toList.take r.p.m.toNat) ∗ _) ▸ h⟩
 
 theorem RView.spill (h : (RView P r ∗ F).get m) :
     ∃ R, (Spl r.p.spl r.spills (List.range r.spillCount) ∗ R).get m :=

@@ -66,7 +66,8 @@ theorem b_28 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     change l.toList (emissionHdr g h) (v.regs.rsp.toBitVec + 96#64) = locals at he
     rw [he]
     exact hv.toBd
-  · exact (hc.header.localHdr hc.localLength).2.2.2.2.1 ▸ hok.planner.m
+  · rw [(hc.header.localHdr hc.localLength).2.2.2.2.1]
+    exact Nat.le_max_left _ _
   · rw [(hc.header.localHdr hc.localLength).2.2.2.2.2.2]
     exact Nat.zero_le _
   · simp only [v, rdi, Reg64s.set64_rdi, Reg64s.get64_rdi]

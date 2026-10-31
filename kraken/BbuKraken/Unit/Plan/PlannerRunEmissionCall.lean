@@ -12,7 +12,7 @@ theorem emission_call_frame (P : Addr) (g : PlannerRunG) (hok : g.Ok)
     ∃ EF CF,
       (∀ (data : Vector Word MAX_N) (ops : List OpR),
         PlannerRunView P { g with data := data, ops := ops } =
-          Ev g data.toList ops ∗ EF) ∧
+          Ev g (data.toList.take g.dataCapacity) ops ∗ EF) ∧
       ∀ (lo : List Word) (w : Word) (h : Hdr) (data : List Word) (ops : List OpR),
         Stk (rsp s) (lo ++ w :: (l.toList h (sp + 96#64) ++ saved s)) ra.toBitVec ∗
             ((Ev g data ops ∗ EF) ∗ F) =
@@ -47,7 +47,7 @@ theorem Bd.callEmission
     (hb : Bd P g F s ra lo
       (l.toList (emissionHdr g h) (t.regs.rsp.toBitVec + 96#64)) t)
     (hok : g.Ok)
-    (hlen : h.len.toNat ≤ MAX_N) (hops : h.nops.toNat ≤ g.ops.length)
+    (hlen : h.len.toNat ≤ g.dataCapacity) (hops : h.nops.toNat ≤ g.ops.length)
     (hdi : rdi t = t.regs.rsp.toBitVec + 16480#64)
     (hA : A (emissionGhost g hok h) t)
     (hkeep : ∀ a u, Q (emissionGhost g hok h) a t u →
@@ -83,7 +83,7 @@ theorem Bd.callEmission
     (t.regs.rsp.toBitVec + 96#64) ++ saved s)) ra.toBitVec ∗
       (PlannerRunView P g ∗ F)).get t.dmem at hm
   rw [he, List.append_assoc, List.singleton_append, hsp, hf g.data g.ops] at hm
-  rw [hframe xs w (emissionHdr g h) g.data.toList g.ops, ← hsp] at hm
+  rw [hframe xs w (emissionHdr g h) (g.data.toList.take g.dataCapacity) g.ops, ← hsp] at hm
   have hv := emission_view (t.regs.rsp.toBitVec + 16480#64) g hok h
   refine ⟨t.regs.rsp.toBitVec + 16480#64, emissionGhost g hok h, CF,
     ⟨hdi, hok', hA, xs, w, hxs, ?_⟩, ?_⟩

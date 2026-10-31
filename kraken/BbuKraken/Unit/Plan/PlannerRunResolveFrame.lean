@@ -61,8 +61,8 @@ theorem resolve_call_frame (P : Addr) (g : PlannerRunG) (s : MachineData) (ra : 
   let sp := rsp s - 8#64 - 33016#64
   refine ⟨Arr sp (locals.take 12) ∗ Arr (sp + 16480#64) ((locals.drop 2060).take 7) ∗
     Arr (sp + 32920#64) (locals.drop 4115 ++ saved s) ∗
-    Arr g.dataPtr g.data.toList ∗ Ops g.opsPtr 0 g.ops ∗
-    Arr g.sourcesPtr g.sources.toList ∗ Wd g.countPtr g.count ∗
+    Arr g.dataPtr (g.data.toList.take g.dataCapacity) ∗ Ops g.opsPtr 0 g.ops ∗
+    Arr g.sourcesPtr (g.sources.toList.take g.p.n.toNat) ∗ Wd g.countPtr g.count ∗
     Wd (rsp s - 8#64) ra.toBitVec ∗ F, ?_⟩
   intro lo w spills dropped
   rw [Stk.callee]
@@ -71,7 +71,7 @@ theorem resolve_call_frame (P : Addr) (g : PlannerRunG) (s : MachineData) (ra : 
   change Stk sp lo w ∗ (PlannerRunView P (withResolve g spills dropped) ∗
     (Arr sp (locals ++ saved s) ∗ Wd (rsp s - 8#64) ra.toBitVec ∗ F)) = _
   rw [local_mapping sp locals hl, local_current_mapping sp locals hl]
-  simp only [PlannerRunView, RView, plannerResolve, withResolve]
+  simp only [PlannerRunG.dataCapacity, PlannerRunView, RView, plannerResolve, withResolve]
   simp only [sp, rsp, saved, Reg64s.get64_rsp]
   ecancel
 

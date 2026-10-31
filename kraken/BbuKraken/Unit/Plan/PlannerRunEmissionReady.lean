@@ -20,11 +20,27 @@ theorem EmitCountLI.ghost_ctor (h : EmitCountLI P g M F s ra lo locals t)
     (hp : locals[4115]? = some (Flat.unmappedFrom (countState g M) 0 0)) :
     let a := localEmissionHdr locals h.localLength
     flat (emissionGhost g hok a) =
-      Flat.ctorP (g.data.map StackSlot.ofWord) g.p.m g.p.fl.target g.p.n M g.spills
+      Flat.ctorP (vec ((g.data.toList.take g.dataCapacity).map StackSlot.ofWord))
+        g.p.m g.p.fl.target g.p.n M g.spills
         ⟨a.dest, a.pos, a.blkOff, a.blkExc⟩ := by
   obtain ⟨_, _, _, _, hlen, _, hnops⟩ := h.header.localHdr h.localLength
   dsimp only
   rw [emissionGhost_flat, hlen, hnops]
+  simp only [BitVec.toNat_ofNat, Nat.zero_mod, List.take_zero, List.map_nil]
+  rw [ctorP_data _ (g.data.map StackSlot.ofWord), h.ctorP hok hp]
+  rfl
+
+theorem EmitCountLI.ghost_ctor_full (h : EmitCountLI P g M F s ra lo locals t)
+    (hok : g.Ok)
+    (hp : locals[4115]? = some (Flat.unmappedFrom (countState g M) 0 0)) :
+    let a := localEmissionHdr locals h.localLength
+    Flat.restoreData g.dataCapacity (g.data.map StackSlot.ofWord)
+      (flat (emissionGhost g hok a)) =
+      Flat.ctorP (g.data.map StackSlot.ofWord) g.p.m g.p.fl.target g.p.n M g.spills
+        ⟨a.dest, a.pos, a.blkOff, a.blkExc⟩ := by
+  obtain ⟨_, _, _, _, hlen, _, hnops⟩ := h.header.localHdr h.localLength
+  dsimp only
+  rw [emissionGhost_restore, hlen, hnops]
   simp only [BitVec.toNat_ofNat, Nat.zero_mod, List.take_zero, List.map_nil]
   exact (h.ctorP hok hp).symm
 

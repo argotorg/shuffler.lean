@@ -5,6 +5,12 @@ import BbuKraken.Unit.Plan.PlannerRunSafeCtor
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep Flat
 
+theorem ctorP_data (data old target : Vector StackSlot MAX_N) (m n : Word)
+    (M : Flat.Mapping) (spills : BitVec 32 → BitVec 8) (u : Flat.Uninit) :
+    Flat.ctorP data m target n M spills u =
+      { Flat.ctorP old m target n M spills u with data := data } := by
+  simp only [Flat.ctorP, Flat.pend_fold]
+
 theorem mapping_copy_eq {m n : Word} (u M : Flat.Mapping)
     (hm : m.toNat ≤ MAX_N) (hn : n.toNat ≤ MAX_N)
     (hd : ∀ p, p < m → get u.dest p = get M.dest p)

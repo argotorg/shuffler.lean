@@ -29,7 +29,8 @@ def Ev (g : PlannerRunG) (data : List Word) (ops : List OpR) : MProp 64 :=
 
 theorem emission_view_frame (P : Addr) (g : PlannerRunG) (hok : g.Ok) :
     ∃ EF, ∀ (data : Vector Word MAX_N) (ops : List OpR),
-      PlannerRunView P { g with data := data, ops := ops } = Ev g data.toList ops ∗ EF := by
+      PlannerRunView P { g with data := data, ops := ops } =
+        Ev g (data.toList.take g.dataCapacity) ops ∗ EF := by
   have hnd : (emissionIds g).Nodup := by
     unfold emissionIds splOut splIds
     exact List.Pairwise.filter _ (Top.nodup_eraseDups _)
@@ -40,21 +41,24 @@ theorem emission_view_frame (P : Addr) (g : PlannerRunG) (hok : g.Ok) :
   let headers := Wd P g.p.src ∗ Wd (P + 8#64) g.p.m ∗
     Wd (P + 16#64) g.p.tgt ∗ Wd (P + 24#64) g.p.n ∗ Wd (P + 32#64) g.p.spl ∗
     B8 (P + 40#64) g.p.allowed ∗ Wd (P + 48#64) g.p.drp ∗ B8 (P + 56#64) g.p.saw
-  refine ⟨headers ∗ Arr g.p.src g.p.sw ∗ R ∗ Bs g.p.drp g.dropped.toList ∗
-    Arr g.sourcesPtr g.sources.toList ∗ Wd g.countPtr g.count, ?_⟩
+  refine ⟨headers ∗ Arr g.p.src g.p.sw ∗ R ∗
+    Bs g.p.drp (g.dropped.toList.take g.p.m.toNat) ∗
+    Arr g.sourcesPtr (g.sources.toList.take g.p.n.toNat) ∗ Wd g.countPtr g.count, ?_⟩
   intro data ops
   simp only [PlannerRunView, PView, Ev, headers, he, MProp.sep_assoc]
   ac_rfl
 
 theorem emissionGhost_ok {P : Addr} {g : PlannerRunG} (hok : g.Ok) (h : Hdr)
     {F : MProp 64} {m : Mem 64} (hm : (PlannerRunView P g ∗ F).get m)
-    (hlen : h.len.toNat ≤ MAX_N) (hops : h.nops.toNat ≤ g.ops.length) :
+    (hlen : h.len.toNat ≤ g.dataCapacity) (hops : h.nops.toNat ≤ g.ops.length) :
     (emissionGhost g hok h).Ok := by
   have hn := hok.planner.n
   refine ⟨?_, hok.planner.n, ?_, ?_, ?_, ?_⟩
-  · change h.len.toNat ≤ g.p.n.toNat + (MAX_N - g.p.n.toNat)
+  · change h.len.toNat ≤ g.p.n.toNat + (g.dataCapacity - g.p.n.toNat)
+    have hc : g.p.n.toNat ≤ g.dataCapacity := Nat.le_max_right _ _
     omega
-  · change g.p.n.toNat + (MAX_N - g.p.n.toNat) ≤ MAX_N
+  · change g.p.n.toNat + (g.dataCapacity - g.p.n.toNat) ≤ MAX_N
+    have hc : g.dataCapacity ≤ MAX_N := Nat.max_le.mpr ⟨hok.planner.m, hok.planner.n⟩
     omega
   · change 4 * g.p.m.toNat ≤ 4 * MAX_N
     have := hok.planner.m
@@ -82,7 +86,8 @@ theorem emissionGhost_ok {P : Addr} {g : PlannerRunG} (hok : g.Ok) (h : Hdr)
     simp only [emissionGhost, Vector.getElem_mk, List.getElem_toArray]
 
 theorem emission_view (S : Addr) (g : PlannerRunG) (hok : g.Ok) (h : Hdr) :
-    View S (emissionGhost g hok h) = Em S (emissionHdr g h) ∗ Ev g g.data.toList g.ops := by
+    View S (emissionGhost g hok h) =
+      Em S (emissionHdr g h) ∗ Ev g (g.data.toList.take g.dataCapacity) g.ops := by
   simp only [View, emissionGhost_stk, emissionGhost_ops, emissionGhost_tgt]
   rfl
 
@@ -101,14 +106,23 @@ theorem emission_keep_view {g : PlannerRunG} {hok : g.Ok} {h : Hdr}
   rw [ho]
   rfl
 
+theorem emission_keep_capacity {g : PlannerRunG} {hok : g.Ok} {h : Hdr}
+    {a : G} (hk : Keep (emissionGhost g hok h) a) :
+    a.h.n.toNat + a.xs = g.dataCapacity := by
+  rw [hk.n, hk.xs]
+  change g.p.n.toNat + (g.dataCapacity - g.p.n.toNat) = g.dataCapacity
+  have hc : g.p.n.toNat ≤ g.dataCapacity := Nat.le_max_right _ _
+  omega
+
 def emissionResult (g : PlannerRunG) (hok : g.Ok) (h : Hdr)
     (a : G) (hk : Keep (emissionGhost g hok h) a) : PlannerRunG :=
   { g with
-    data := a.stk.cast (by
-      rw [hk.n, hk.xs]
-      change g.p.n.toNat + (MAX_N - g.p.n.toNat) = MAX_N
-      have := hok.planner.n
-      omega)
+    data := ⟨(a.stk.toList ++ g.data.toList.drop g.dataCapacity).toArray, by
+      have hcap := emission_keep_capacity hk
+      have hb : g.dataCapacity ≤ MAX_N := Nat.max_le.mpr ⟨hok.planner.m, hok.planner.n⟩
+      simp only [List.size_toArray, List.length_append, Vector.length_toList,
+        List.length_drop]
+      omega⟩
     ops := a.ops.toList
     traceLength := a.h.nops.toNat }
 
@@ -123,17 +137,29 @@ theorem emissionResult_ok {g : PlannerRunG} (hok : g.Ok) (h : Hdr)
     rw [Vector.length_toList]
     exact ha.nops
 
+theorem emissionResult_data_prefix {g : PlannerRunG} {hok : g.Ok} {h : Hdr}
+    {a : G} (hk : Keep (emissionGhost g hok h) a) :
+    (emissionResult g hok h a hk).data.toList.take g.dataCapacity = a.stk.toList := by
+  change (a.stk.toList ++ g.data.toList.drop g.dataCapacity).take g.dataCapacity = _
+  have hl : a.stk.toList.length = g.dataCapacity := by
+    rw [Vector.length_toList, emission_keep_capacity hk]
+  rw [← hl, List.take_left]
+
 theorem emission_result_view {P : Addr} {g : PlannerRunG} {hok : g.Ok} {h : Hdr}
     {a : G} (hk : Keep (emissionGhost g hok h) a) {EF : MProp 64}
     (hf : ∀ (data : Vector Word MAX_N) (ops : List OpR),
-      PlannerRunView P { g with data := data, ops := ops } = Ev g data.toList ops ∗ EF) :
+      PlannerRunView P { g with data := data, ops := ops } =
+        Ev g (data.toList.take g.dataCapacity) ops ∗ EF) :
     PlannerRunView P (emissionResult g hok h a hk) = Ev g a.stk.toList a.ops.toList ∗ EF := by
-  exact hf _ _
+  have he := hf (emissionResult g hok h a hk).data a.ops.toList
+  rw [emissionResult_data_prefix hk] at he
+  exact he
 
 theorem emission_restore {P S : Addr} {g : PlannerRunG} {hok : g.Ok} {h : Hdr}
     {a : G} (hk : Keep (emissionGhost g hok h) a) {EF : MProp 64}
     (hf : ∀ (data : Vector Word MAX_N) (ops : List OpR),
-      PlannerRunView P { g with data := data, ops := ops } = Ev g data.toList ops ∗ EF) :
+      PlannerRunView P { g with data := data, ops := ops } =
+        Ev g (data.toList.take g.dataCapacity) ops ∗ EF) :
     View S a ∗ EF = Em S a.h ∗ PlannerRunView P (emissionResult g hok h a hk) := by
   rw [emission_keep_view hk, emission_result_view hk hf, MProp.sep_assoc]
 
@@ -146,20 +172,73 @@ theorem full_data_model (v : Vector Word MAX_N) :
 theorem emissionGhost_flat (g : PlannerRunG) (hok : g.Ok) (h : Hdr) :
     flat (emissionGhost g hok h) =
       { target := g.p.fl.target, targetSize := g.p.n, spills := g.spills,
-        data := g.data.map StackSlot.ofWord, size := h.len,
+        data := vec ((g.data.toList.take g.dataCapacity).map StackSlot.ofWord), size := h.len,
         trace := (g.ops.take h.nops.toNat).map OpR.op, dest := h.dest, pos := h.pos,
         pend := h.pend, blockedOffset := h.blkOff, blockedExcess := h.blkExc } := by
   simp only [flat, emissionGhost_stk, emissionGhost_ops, emissionGhost_tgt, full_data_model]
   rfl
 
+theorem emissionGhost_restore (g : PlannerRunG) (hok : g.Ok) (h : Hdr) :
+    Flat.restoreData g.dataCapacity (g.data.map StackSlot.ofWord)
+      (flat (emissionGhost g hok h)) =
+      { target := g.p.fl.target, targetSize := g.p.n, spills := g.spills,
+        data := g.data.map StackSlot.ofWord, size := h.len,
+        trace := (g.ops.take h.nops.toNat).map OpR.op, dest := h.dest, pos := h.pos,
+        pend := h.pend, blockedOffset := h.blkOff, blockedExcess := h.blkExc } := by
+  rw [emissionGhost_flat]
+  have hd : (Flat.restoreData g.dataCapacity (g.data.map StackSlot.ofWord)
+      {target := g.p.fl.target, targetSize := g.p.n, spills := g.spills,
+        data := vec ((g.data.toList.take g.dataCapacity).map StackSlot.ofWord), size := h.len,
+        trace := (g.ops.take h.nops.toNat).map OpR.op, dest := h.dest, pos := h.pos,
+        pend := h.pend, blockedOffset := h.blkOff, blockedExcess := h.blkExc}).data =
+      g.data.map StackSlot.ofWord := by
+    ext i hi
+    by_cases hic : i < g.dataCapacity
+    · have hit : i < (g.data.toList.take g.dataCapacity).length := by
+        simp only [List.length_take, Vector.length_toList]
+        omega
+      simp only [Flat.restoreData, Vector.getElem_ofFn, hic, ↓reduceIte, vec,
+        List.getElem?_map, List.getElem?_eq_getElem hit, Option.map_some,
+        Option.getD_some, List.getElem_take, Vector.getElem_toList, Vector.getElem_map]
+    · simp only [Flat.restoreData, Vector.getElem_ofFn, hic, ↓reduceIte]
+  exact congrArg (fun data : Vector StackSlot MAX_N =>
+    ({ target := g.p.fl.target, targetSize := g.p.n, spills := g.spills, data := data,
+       size := h.len, trace := (g.ops.take h.nops.toNat).map OpR.op,
+       dest := h.dest, pos := h.pos, pend := h.pend,
+       blockedOffset := h.blkOff, blockedExcess := h.blkExc } : Flat.St)) hd
+
 theorem emissionResult_state {g : PlannerRunG} {hok : g.Ok} {h : Hdr}
     {a : G} (hk : Keep (emissionGhost g hok h) a) :
     (emissionResult g hok h a hk).state =
-      { g.state with data := (flat a).data, trace := (flat a).trace } := by
-  have he : (emissionResult g hok h a hk).data.toList = a.stk.toList := rfl
-  have hd : (emissionResult g hok h a hk).data.map StackSlot.ofWord = (flat a).data := by
-    change _ = vec (a.stk.toList.map StackSlot.ofWord)
-    rw [← he, full_data_model]
+      { g.state with
+        data := (Flat.restoreData g.dataCapacity (g.data.map StackSlot.ofWord) (flat a)).data,
+        trace := (flat a).trace } := by
+  have hcap := emission_keep_capacity hk
+  have he : (emissionResult g hok h a hk).data.toList =
+      a.stk.toList ++ g.data.toList.drop g.dataCapacity := rfl
+  have hd : (emissionResult g hok h a hk).data.map StackSlot.ofWord =
+      (Flat.restoreData g.dataCapacity (g.data.map StackSlot.ofWord) (flat a)).data := by
+    rw [← full_data_model, he]
+    ext i hi
+    by_cases hic : i < g.dataCapacity
+    · have hia : i < a.stk.toList.length := by rw [Vector.length_toList, hcap]; exact hic
+      simp only [vec, Vector.getElem_ofFn, List.map_append, List.getElem?_append,
+        List.length_map, hia, ↓reduceIte, List.getElem?_map, List.getElem?_eq_getElem hia,
+        Option.map_some, Option.getD_some, Flat.restoreData, hic]
+      simp only [flat, vec, Vector.getElem_ofFn, List.getElem?_map,
+        List.getElem?_eq_getElem hia, Option.map_some, Option.getD_some]
+    · have hia : ¬i < a.stk.toList.length := by rw [Vector.length_toList, hcap]; exact hic
+      have hid : i - a.stk.toList.length < (g.data.toList.drop g.dataCapacity).length := by
+        simp only [List.length_drop, Vector.length_toList, hcap]
+        omega
+      simp only [vec, Vector.getElem_ofFn, List.map_append, List.getElem?_append,
+        List.length_map, hia, ↓reduceIte, List.getElem?_map,
+        List.getElem?_eq_getElem hid, Option.map_some, Option.getD_some,
+        List.getElem_drop, Vector.getElem_toList, Flat.restoreData, hic,
+        Vector.getElem_map]
+      congr 2
+      rw [Vector.length_toList, hcap]
+      omega
   change { g.state with
     data := (emissionResult g hok h a hk).data.map StackSlot.ofWord
     trace := (flat a).trace } = _

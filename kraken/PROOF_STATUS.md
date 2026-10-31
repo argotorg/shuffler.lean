@@ -6,6 +6,12 @@ The assembly proof for the full public planner is complete.
 
 - `Bbu.plan_correct` proves the public `plan` assembly contract in a linked host.
 - `Bbu.plan_harness_correct` specializes that proof to `binLinked`.
+- `Bbu.plan_rejects_bad_args` proves rejection without input or output buffers.
+- `Bbu.plan_rejects_invalid_ids` proves rejection with only the source and target
+  prefixes that the checks can read.
+- `Bbu.plan_harness_rejects_bad_args` and
+  `Bbu.plan_harness_rejects_invalid_ids` specialize these rejection proofs to
+  `binLinked`.
 - `Bbu.planner_run_correct` proves the full `Planner::run` assembly contract.
 - `Bbu.planner_run_spec` supplies its call specification.
 - `Bbu.planner_run_harness_correct` specializes the internal function proof to
@@ -13,7 +19,8 @@ The assembly proof for the full public planner is complete.
 - `Bbu.planner_classify_correct`, `Bbu.planner_resolve_correct`, and
   `Bbu.emission_run_correct` discharge the remaining internal calls.
 
-The public theorems are in `BbuKraken/PlanFinal.lean`. The internal run theorem is
+The public theorems are in `BbuKraken/PlanFinal.lean` and
+`BbuKraken/PlanReject.lean`. The internal run theorem is
 assembled in `BbuKraken/Unit/Plan/PlannerRunAssemble.lean` and linked in
 `PlannerRunLinked.lean`. `BbuKraken.lean` imports the final results.
 
@@ -42,6 +49,23 @@ Local mapping bounds and emission safety are derived inside the proof.
 `EntryValidU.Post` gives an exact `Flat.planEntry` result witness and restores the
 memory frame. The linked public theorem has no helper-call specification
 parameters.
+
+The public and internal run contracts own `m` dropped bytes, `max(m,n)` data
+words, and `n` source-result words. The operation buffer has `4m + 6n` records.
+The pure model keeps its `MAX_N` vectors. Values above each physical buffer
+prefix remain ghost values; the emission proof restores their original values
+in the exact model result.
+
+The separate bad-argument contract owns only 11 free stack words, the return
+slot, and the two enum arguments. Invalid-ID rejection also owns the
+read source and target prefixes. A source rejection needs no target cells. A
+target rejection needs all source cells and a target prefix that contains an
+invalid ID. Neither rejection contract needs output buffers or spill bytes.
+Both return `-2` and restore their memory frame.
+
+The separation assertions require the owned memory blocks to be disjoint.
+The proof does not permit arbitrary overlap between nonempty source, target,
+output, spill, and stack regions.
 
 The ancillary `build_mapping`, `emit`, and public `resolve` wrappers still lack
 assembly proofs. They are outside the public `plan` call path.
@@ -78,13 +102,19 @@ are imported together.
 
 ## Verification
 
-- `LEAN_NUM_THREADS=6 nice lake build BbuKraken ProofKitTest`: passed, 916 jobs.
-- `LEAN_NUM_THREADS=6 nice lake build`: passed, 922 jobs.
+- `LEAN_NUM_THREADS=6 nice lake build BbuKraken ProofKitTest`: passed, 950 jobs.
 - Root `nice lake build PlanBridge`: passed, 1420 jobs.
 - The final theorem axiom audits pass. Allowed dependencies are the Lean core
   axioms and the checked `bv_decide` reflection axioms for small word lemmas.
-- `test/axioms.sh` audits ten final theorems, including both public planner
+- `test/axioms.sh` audits 14 final theorems, including the four rejection
   theorems. `test/axioms_test.sh` passed all acceptance and rejection cases.
+- The buffer tests cover empty inputs, unequal input lengths, `MAX_N`, and
+  stores at the first index outside an owned prefix. The rejection tests cover
+  source and target prefixes, an empty source, valid prefixes, and prefixes
+  that exceed the public size.
+- The data frame tests cover zero capacity, one slot, `MAX_N`, arbitrary ghost
+  tails, swaps, and invalid permutation indices. The frame theorems for
+  `buildBottomUp` and `emissionRun` use only Lean's core axioms.
 
 The proof sources contain no `sorry`, `admit`, user axiom declarations, or
 `native_decide`. The user assigned this task 24 threads and 96 GB RAM and

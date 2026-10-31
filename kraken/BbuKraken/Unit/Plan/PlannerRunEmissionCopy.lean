@@ -28,7 +28,9 @@ theorem b_10 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   cfg_block
   intro ⟨lo, locals, hc, hi, hmodel⟩
   let i := rax t
-  have hiN := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) hok.planner.m
+  have hiN : i.toNat < MAX_N := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) hok.planner.m
+  have hcap : i.toNat < g.dataCapacity :=
+    Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) (Nat.le_max_left _ _)
   obtain ⟨_, hp0⟩ := pv hc.kb.vmem
   obtain ⟨_, ha0⟩ := PView.arr_src hp0
   have hraw : rd t.dmem (slotAt g.p.src i.toNat) = g.p.sw[i.toNat]! := by
@@ -41,9 +43,9 @@ theorem b_10 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   have hsrc := PView.rd_src hp0
   have kslot := PView.isSome_sw hp0 hok.planner (BitVec.lt_def.mp hi)
   obtain ⟨_, hdata⟩ := data hc.kb.vmem
-  have hdataIdx : i.toNat < g.data.toList.length := by
-    rw [Vector.length_toList]
-    exact hiN
+  have hdataIdx : i.toNat < (g.data.toList.take g.dataCapacity).length := by
+    simp only [List.length_take, Vector.length_toList]
+    omega
   have kd : (t.dmem.loadInt (slotAt g.dataPtr i.toNat) 8).isSome = true :=
     Arr.isSome hdata hdataIdx
   let raw := g.p.sw[i.toNat]!
@@ -51,7 +53,7 @@ theorem b_10 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   let v : MachineData := {t with
     dmem := t.dmem.storeInt (slotAt g.dataPtr i.toNat) 8 raw.toInt}
   have hc1 : AttemptLI P g1 M F s ra lo locals v :=
-    hc.storeData hiN raw rfl rfl rfl rfl rfl rfl rfl rfl
+    hc.storeData hiN hcap raw rfl rfl rfl rfl rfl rfl rfl rfl
   have hok1 : g1.Ok := data_ok hok _
   have hstep := data_copy_step hmodel hi raw hslot
   obtain ⟨_, hp1⟩ := pv hc1.kb.vmem

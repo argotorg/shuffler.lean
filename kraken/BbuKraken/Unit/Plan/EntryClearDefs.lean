@@ -39,7 +39,7 @@ theorem ClearLI.next (h : ClearLI g F s ra lo locals t)
     h8 ▸ h.r8, hbx ▸ h.rbx, h11 ▸ h.r11⟩
 
 theorem ClearLI.storeDropped (h : ClearLI g F s ra lo locals t)
-    {i : Word} (hi : i.toNat < MAX_N) (z : Int)
+    {i : Word} (hi : i.toNat < MAX_N) (hmn : i.toNat < g.r.p.m.toNat) (z : Int)
     (hm : u.dmem = t.dmem.storeInt (g.r.p.drp + i) 1 z)
     (hsp : u.regs.rsp = t.regs.rsp)
     (hbp : u.regs.rbp = t.regs.rbp) (h12 : u.regs.r12 = t.regs.r12)
@@ -53,14 +53,14 @@ theorem ClearLI.storeDropped (h : ClearLI g F s ra lo locals t)
       F s ra lo locals u := by
   obtain ⟨R, he⟩ : ∃ R, ∀ d : Vector (BitVec 8) MAX_N,
       View (rsp s) (withDropped g d) ∗
-        (Stk (rsp s) (fr s lo locals) ra.toBitVec ∗ F) = Bs g.r.p.drp d.toList ∗ R :=
-    ⟨_, fun d => by simp only [View, Args, Buffers, withDropped]; ecancel⟩
-  have hs := SpillSetProof.Bs.store (he g.r.dropped ▸ h.mem)
-    (by simpa only [Vector.length_toList] using hi) z
+        (Stk (rsp s) (fr s lo locals) ra.toBitVec ∗ F) = Bs g.r.p.drp (d.toList.take g.r.p.m.toNat) ∗ R :=
+    ⟨_, fun d => by simp only [View, Args, Buffers, withDropped, PlannerRunG.dataCapacity]; ecancel⟩
+  have hs := SpillSetProof.Bs.store (x := i) (he g.r.dropped ▸ h.mem)
+    (by simp only [List.length_take, Vector.length_toList]; omega) z
   have hm' : (View (rsp s) (withDropped g (Flat.put g.r.dropped i (BitVec.ofInt 8 z))) ∗
       (Stk (rsp s) (fr s lo locals) ra.toBitVec ∗ F)).get u.dmem := by
     rw [hm, he]
-    simpa only [Flat.put, Vector.toList_setIfInBounds] using hs
+    simpa only [Flat.put, Vector.toList_setIfInBounds, List.take_set] using hs
   exact ⟨⟨⟨(sep_lc _ _ _).symm ▸ hm', hsp ▸ h.kb.sp⟩,
       h.low, h.localLength, hbp.trans h.bp, h12.trans h.r12,
       h13.trans h.r13, h14.trans h.r14, h15.trans h.r15⟩,

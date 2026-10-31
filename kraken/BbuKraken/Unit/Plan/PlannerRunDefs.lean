@@ -3,7 +3,7 @@ import BbuKraken.Unit.Plan.HasOther
 /-! The intended contract of `Planner::run`.
 The input condition gives sizes, buffers and valid variable IDs. Conditions on
 the local mappings are established by the function, so they are not input
-assumptions. Full array buffers keep the view independent of the live size. -/
+assumptions. The memory view owns only the input-sized buffers. -/
 
 namespace Bbu.Unit
 open Bbu.Sep
@@ -23,6 +23,9 @@ structure PlannerRunG where
   sources : Vector Word MAX_N
   count : Word
 
+def PlannerRunG.dataCapacity (g : PlannerRunG) : Nat :=
+  max g.p.m.toNat g.p.n.toNat
+
 structure PlannerRunG.Ok (g : PlannerRunG) : Prop where
   planner : g.p.Ok
   spillCount : g.spillCount ≤ 2 ^ 32
@@ -33,8 +36,10 @@ structure PlannerRunG.Ok (g : PlannerRunG) : Prop where
 
 def PlannerRunView (P : Addr) (g : PlannerRunG) : MProp 64 :=
   PView P g.p ∗ Spl g.p.spl g.spills (List.range g.spillCount)
-    ∗ Bs g.p.drp g.dropped.toList ∗ Arr g.dataPtr g.data.toList
-    ∗ Ops g.opsPtr 0 g.ops ∗ Arr g.sourcesPtr g.sources.toList ∗ Wd g.countPtr g.count
+    ∗ Bs g.p.drp (g.dropped.toList.take g.p.m.toNat)
+    ∗ Arr g.dataPtr (g.data.toList.take g.dataCapacity)
+    ∗ Ops g.opsPtr 0 g.ops ∗ Arr g.sourcesPtr (g.sources.toList.take g.p.n.toNat)
+    ∗ Wd g.countPtr g.count
 
 def PlannerRunG.state (g : PlannerRunG) : Flat.PSt :=
   ⟨g.spills, g.dropped, g.p.saw != 0#8, g.data.map StackSlot.ofWord,

@@ -34,7 +34,7 @@ theorem b_14 [Host] [FunDecls]
   let t2 : MachineData := { t1 with dmem := t1.dmem.storeInt (r.p.drp + best) 1 1 }
   let w' := w.drop best
   have hb2 : Bd P (w'.ghost r) F s ra lo L1.toList t2 :=
-    hb1.storeDropped ho 1 rfl rfl
+    hb1.storeDropped (BitVec.lt_def.mp hbest) ho 1 rfl rfl
   let t3 : MachineData := { t2 with dmem := (t2.dmem.storeInt
     (t.regs.rsp.toBitVec + 32#64) 8 (w.pass + 1#64).toInt) }
   let L2 := { L1 with pass := w.pass + 1#64 }
@@ -48,7 +48,9 @@ theorem b_14 [Host] [FunDecls]
   have rptr := Wd.rd hptr
   change rd t1.dmem (P + 48#64) = r.p.drp at rptr
   obtain ⟨_, hdrop⟩ := RView.dropped hb1.kb.vmem
-  have kd := SpillSetProof.Bs.isSome hdrop (x := best) (by simpa using ho)
+  have kd := SpillSetProof.Bs.isSome hdrop (x := best)
+    (by simpa only [List.length_take, Vector.length_toList, Work.ghost] using
+      Nat.lt_min.mpr (And.intro (BitVec.lt_def.mp hbest) ho))
   obtain ⟨_, hp2⟩ := hb2.typedWord 4 (by decide)
   have kp2 := Wd.isSome hp2
   have rp2 := Wd.rd hp2

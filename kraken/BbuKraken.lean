@@ -51,6 +51,7 @@ import BbuKraken.Link
 import BbuKraken.PlannerHelpers
 import BbuKraken.PlannerHelpersTest
 import BbuKraken.PlanFinal
+import BbuKraken.PlanReject
 import BbuKraken.LowestFinal
 import BbuKraken.MapModel
 import BbuKraken.Model
@@ -146,6 +147,8 @@ import BbuKraken.Unit.Plan.ClassifyRoute
 import BbuKraken.Unit.Plan.ClassifyFree
 import BbuKraken.Unit.Plan.Resolve
 import BbuKraken.Unit.Plan.PlannerRunBin
+import BbuKraken.Unit.Plan.EntryBuffersTest
+import BbuKraken.Unit.Plan.EntryRejectIdsTest
 import BbuKraken.Unit.Run.Linked
 import BbuKraken.Unit.Run.ModelTest
 import BbuKraken.Unit.Run.LoadTest
@@ -168,3 +171,4 @@ import BbuKraken.Unit.TopInv
 import BbuKraken.Unit.TopInvoke
 import BbuKraken.Unit.TopPos
 import BbuKraken.Unit.TopRet
+import BbuKraken.Unit.Plan.PlannerRunDataPermuteTest

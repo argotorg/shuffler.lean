@@ -24,26 +24,26 @@ theorem pv (h : (PlannerRunView P g ∗ F).get m) :
     PlannerRunView P g ∗ F = PView P g.p ∗ _) ▸ h⟩
 
 theorem data (h : (PlannerRunView P g ∗ F).get m) :
-    ∃ R, (Arr g.dataPtr g.data.toList ∗ R).get m := by
+    ∃ R, (Arr g.dataPtr (g.data.toList.take g.dataCapacity) ∗ R).get m := by
   exact ⟨_, (by unfold PlannerRunView; ecancel :
-    PlannerRunView P g ∗ F = Arr g.dataPtr g.data.toList ∗ _) ▸ h⟩
+    PlannerRunView P g ∗ F = Arr g.dataPtr (g.data.toList.take g.dataCapacity) ∗ _) ▸ h⟩
 
 theorem sources (h : (PlannerRunView P g ∗ F).get m) :
-    ∃ R, (Arr g.sourcesPtr g.sources.toList ∗ R).get m := by
+    ∃ R, (Arr g.sourcesPtr (g.sources.toList.take g.p.n.toNat) ∗ R).get m := by
   exact ⟨_, (by unfold PlannerRunView; ecancel :
-    PlannerRunView P g ∗ F = Arr g.sourcesPtr g.sources.toList ∗ _) ▸ h⟩
+    PlannerRunView P g ∗ F = Arr g.sourcesPtr (g.sources.toList.take g.p.n.toNat) ∗ _) ▸ h⟩
 
 theorem dropped (h : (PlannerRunView P g ∗ F).get m) :
-    ∃ R, (Bs g.p.drp g.dropped.toList ∗ R).get m := by
+    ∃ R, (Bs g.p.drp (g.dropped.toList.take g.p.m.toNat) ∗ R).get m := by
   exact ⟨_, (by unfold PlannerRunView; ecancel :
-    PlannerRunView P g ∗ F = Bs g.p.drp g.dropped.toList ∗ _) ▸ h⟩
+    PlannerRunView P g ∗ F = Bs g.p.drp (g.dropped.toList.take g.p.m.toNat) ∗ _) ▸ h⟩
 
 theorem store_saw (h : (PlannerRunView P g ∗ F).get m) (x : Int) :
     (PlannerRunView P (withSaw g (BitVec.ofInt 8 x)) ∗ F).get
       (m.storeInt (P + 56#64) 1 x) := by
   obtain ⟨R, e⟩ : ∃ R, ∀ v, PlannerRunView P (withSaw g v) ∗ F =
       B8 (P + 56#64) v ∗ R :=
-    ⟨_, fun v => by simp only [PlannerRunView, PView, withSaw]; ecancel⟩
+    ⟨_, fun v => by simp only [PlannerRunView, PView, withSaw, PlannerRunG.dataCapacity]; ecancel⟩
   rw [e]
   exact B8.store (e g.p.saw ▸ h) x
 
@@ -54,31 +54,38 @@ theorem isSome_saw (h : (PlannerRunView P g ∗ F).get m) :
   exact B8.isSome (e ▸ h)
 
 theorem store_data (h : (PlannerRunView P g ∗ F).get m) {i : Word}
-    (hi : i.toNat < MAX_N) (w : Word) :
+    (hi : i.toNat < MAX_N) (hcap : i.toNat < g.dataCapacity) (w : Word) :
     (PlannerRunView P { g with data := Flat.put g.data i w } ∗ F).get
       (m.storeInt (slotAt g.dataPtr i.toNat) 8 w.toInt) := by
   obtain ⟨R, e⟩ : ∃ R, ∀ v : Vector Word MAX_N,
-      PlannerRunView P { g with data := v } ∗ F = Arr g.dataPtr v.toList ∗ R :=
-    ⟨_, fun v => by simp only [PlannerRunView]; ecancel⟩
+      PlannerRunView P { g with data := v } ∗ F = Arr g.dataPtr (v.toList.take g.dataCapacity) ∗ R :=
+    ⟨_, fun v => by simp only [PlannerRunG.dataCapacity, PlannerRunView]; ecancel⟩
   rw [e]
-  simpa [Flat.put, slotAt] using Arr.store (e g.data ▸ h) (by simpa using hi) w
+  simpa [Flat.put, slotAt, PlannerRunG.dataCapacity, List.take_set] using
+    Arr.store (e g.data ▸ h) (by
+      simp only [List.length_take, Vector.length_toList]
+      change i.toNat < min g.dataCapacity MAX_N
+      omega) w
 
 theorem store_sources (h : (PlannerRunView P g ∗ F).get m) {i : Word}
-    (hi : i.toNat < MAX_N) (w : Word) :
+    (hi : i.toNat < MAX_N) (hn : i.toNat < g.p.n.toNat) (w : Word) :
     (PlannerRunView P { g with sources := Flat.put g.sources i w } ∗ F).get
       (m.storeInt (slotAt g.sourcesPtr i.toNat) 8 w.toInt) := by
   obtain ⟨R, e⟩ : ∃ R, ∀ v : Vector Word MAX_N,
-      PlannerRunView P { g with sources := v } ∗ F = Arr g.sourcesPtr v.toList ∗ R :=
-    ⟨_, fun v => by simp only [PlannerRunView]; ecancel⟩
+      PlannerRunView P { g with sources := v } ∗ F = Arr g.sourcesPtr (v.toList.take g.p.n.toNat) ∗ R :=
+    ⟨_, fun v => by simp only [PlannerRunG.dataCapacity, PlannerRunView]; ecancel⟩
   rw [e]
-  simpa [Flat.put, slotAt] using Arr.store (e g.sources ▸ h) (by simpa using hi) w
+  simpa [Flat.put, slotAt, List.take_set] using
+    Arr.store (e g.sources ▸ h) (by
+      simp only [List.length_take, Vector.length_toList]
+      omega) w
 
 theorem store_count (h : (PlannerRunView P g ∗ F).get m) (w : Word) :
     (PlannerRunView P { g with count := w } ∗ F).get
       (m.storeInt g.countPtr 8 w.toInt) := by
   obtain ⟨R, e⟩ : ∃ R, ∀ v : Word,
       PlannerRunView P { g with count := v } ∗ F = Wd g.countPtr v ∗ R :=
-    ⟨_, fun v => by simp only [PlannerRunView]; ecancel⟩
+    ⟨_, fun v => by simp only [PlannerRunG.dataCapacity, PlannerRunView]; ecancel⟩
   rw [e]
   exact Wd.store (e g.count ▸ h) w
 

@@ -60,14 +60,14 @@ theorem b_7 [Host] [FunDecls] (g : EG) (F : MProp 64) (s t : MachineData)
   simp only [MAX_N] at hm
   have hiN := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) (sizes_m hs)
   obtain ⟨R, he⟩ : ∃ R, View (rsp s) g ∗
-      (Stk (rsp s) (fr s lo locals) ra.toBitVec ∗ F) = Bs g.r.p.drp g.r.dropped.toList ∗ R :=
+      (Stk (rsp s) (fr s lo locals) ra.toBitVec ∗ F) = Bs g.r.p.drp (g.r.dropped.toList.take g.r.p.m.toNat) ∗ R :=
     ⟨_, by unfold View Buffers; ecancel⟩
-  have km := SpillSetProof.Bs.isSome (he ▸ hc.mem)
-    (by simpa only [Vector.length_toList] using hiN)
+  have km := SpillSetProof.Bs.isSome (x := i) (he ▸ hc.mem)
+    (by simp only [List.length_take, Vector.length_toList]; have him := BitVec.lt_def.mp hi; omega)
   let d := Flat.put g.r.dropped i 0#8
   let v : MachineData := {t with dmem := t.dmem.storeInt (g.r.p.drp + i) 1 0}
   have hc1 : ClearLI (withDropped g d) F s ra lo locals v := by
-    apply hc.storeDropped hiN 0 <;> rfl
+    apply hc.storeDropped hiN (BitVec.lt_def.mp hi) 0 <;> rfl
   have hstep : Flat.zeroFrom g.r.p.m (i + 1#64) d = wanted := by
     rw [Flat.zeroFrom, dite_eq_left hi] at hmodel
     exact hmodel

@@ -35,14 +35,14 @@ theorem PostEmitLI.posRead (h : PostEmitLI P g M F s ra lo locals t)
   rw [h.localRead hidx, ← localMapping_pos locals h.localLength hi, h.mappingEq]
 
 theorem PostEmitLI.storeSources (h : PostEmitLI P g M F s ra lo locals t)
-    {i : Word} (hi : i.toNat < MAX_N) (w : Word)
+    {i : Word} (hi : i.toNat < MAX_N) (hn : i.toNat < g.p.n.toNat) (w : Word)
     (hm : u.dmem = t.dmem.storeInt (slotAt g.sourcesPtr i.toNat) 8 w.toInt)
     (hsp : u.regs.rsp = t.regs.rsp)
     (hbx : u.regs.rbx = t.regs.rbx) (h12 : u.regs.r12 = t.regs.r12)
     (h15 : u.regs.r15 = t.regs.r15) (h14 : u.regs.r14 = t.regs.r14)
     (h13 : u.regs.r13 = t.regs.r13) :
     PostEmitLI P {g with sources := put g.sources i w} M F s ra lo locals u := by
-  have hnew := store_sources h.kb.vmem hi w
+  have hnew := store_sources h.kb.vmem hi hn w
   refine ⟨⟨⟨⟨?_, hsp ▸ h.kb.sp⟩, h.low, h.localLength⟩,
     hbx ▸ h.rbx, h12 ▸ h.r12, h15 ▸ h.r15, h14 ▸ h.r14, h.sources⟩,
     h.count, h.nops, h.mappingEq,

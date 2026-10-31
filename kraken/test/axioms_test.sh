@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Test axioms.sh: it must accept State.permute_spec and a bv_decide proof, and reject
 # sorry, native_decide, a user axiom, a forged bv_decide axiom and an unknown name.
-# With no arguments it must accept and report all 10 final theorems.
+# With no arguments it must accept and report all 14 final theorems.
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 tmp=$(mktemp -d)
@@ -57,9 +57,11 @@ n=$(grep -c -e '^Bbu.buildBottomUp_correct:' -e '^Bbu.bbu_harness_correct:' \
 	-e '^Bbu.planner_helpers_correct:' -e '^Bbu.emission_run_correct:' \
 	-e '^Bbu.planner_classify_correct:' -e '^Bbu.planner_resolve_correct:' \
 	-e '^Bbu.planner_run_correct:' -e '^Bbu.planner_run_harness_correct:' \
-	-e '^Bbu.plan_correct:' -e '^Bbu.plan_harness_correct:' "$tmp/final" || true)
+	-e '^Bbu.plan_correct:' -e '^Bbu.plan_harness_correct:' \
+	-e '^Bbu.plan_rejects_bad_args:' -e '^Bbu.plan_rejects_invalid_ids:' \
+	-e '^Bbu.plan_harness_rejects_bad_args:' -e '^Bbu.plan_harness_rejects_invalid_ids:' "$tmp/final" || true)
 other=$(grep -o 'not allowed: .*' "$tmp/final" | grep -o '([^()]*)' | grep -v ', sorryAx)$' || true)
-if $final_ok && [ "$n" -eq 10 ] && [ -z "$other" ] && ! grep -q sorryAx "$tmp/final"; then
+if $final_ok && [ "$n" -eq 14 ] && [ -z "$other" ] && ! grep -q sorryAx "$tmp/final"; then
 	echo "ok final: $n theorems"
 else
 	echo "FAIL final"; cat "$tmp/final"; fails=$((fails + 1))

@@ -1,4 +1,5 @@
 import BbuKraken.Unit.Plan.PlannerRunAttemptContext
+import BbuKraken.Unit.Plan.PlannerRunDataEmission
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep
@@ -30,7 +31,8 @@ theorem afterEmission {initial current : PlannerRunG} {s t u : MachineData}
       (emissionGhost current ctx.ok (localEmissionHdr locals h.localLength)) a t u) :
     ∃ ec : EmittedContext initial
       (emissionResult current ctx.ok (localEmissionHdr locals h.localLength) a hk) s M,
-      al u = code ec.status ∧ ec.out = flat a := by
+      al u = code ec.status ∧ ec.out =
+        Flat.restoreData current.dataCapacity (current.data.map StackSlot.ofWord) (flat a) := by
   obtain ⟨l, _, he, hal⟩ := hq
   let e := Flat.emissionRun (EmissionLocals.ofList locals h.localLength).planned.pos l
     (flat (emissionGhost current ctx.ok (localEmissionHdr locals h.localLength)))
@@ -42,20 +44,37 @@ theorem afterEmission {initial current : PlannerRunG} {s t u : MachineData}
     l := l}
   have hplan : (EmissionLocals.ofList locals h.localLength).planned = M :=
     h.mappingEq h.localLength
-  have hctor := h.ghost_ctor ctx.ok hp
+  have hctor := h.ghost_ctor_full ctx.ok hp
   have hs := ctx.copiedState hd
   have hemit : Flat.emissionRun M.pos l
       (Flat.ctorP (buildState ctx.before.p.fl ctx.before.state ctx.saw).data
         ctx.before.p.m ctx.before.p.fl.target ctx.before.p.n M ctx.before.spills u0.u) =
-        (e.1, flat a) := by
+        (e.1, Flat.restoreData current.dataCapacity
+          (current.data.map StackSlot.ofWord) (flat a)) := by
     have he0 : Flat.emissionRun M.pos l
         (flat (emissionGhost current ctx.ok hdr)) = (e.1, flat a) := by
       have hh : Flat.emissionRun M.pos l (flat (emissionGhost current ctx.ok hdr)) = e := by
         dsimp only [e]
         rw [hplan]
       exact hh.trans (Prod.ext rfl he.symm)
-    dsimp only at hctor
-    rw [hctor] at he0
+    have hsafe := h.runA ctx.ok ctx.map hp
+    change RunU.Safe (EmissionLocals.ofList locals h.localLength).planned.pos
+      (flat (emissionGhost current ctx.ok (localEmissionHdr locals h.localLength)))
+      (4 * current.p.m.toNat) at hsafe
+    rw [hplan] at hsafe
+    have hsize : (flat (emissionGhost current ctx.ok hdr)).size.toNat ≤
+        current.dataCapacity := by
+      change (localEmissionHdr locals h.localLength).len.toNat ≤ current.dataCapacity
+      rw [(h.header.localHdr h.localLength).2.2.2.2.1]
+      exact Nat.le_max_left _ _
+    have hn : (flat (emissionGhost current ctx.ok hdr)).targetSize.toNat ≤
+        current.dataCapacity := Nat.le_max_right _ _
+    have hefull := Flat.restoreData_emissionRun current.dataCapacity
+      (current.data.map StackSlot.ofWord) M.pos l
+      (flat (emissionGhost current ctx.ok hdr)) hsize hn hsafe
+    rw [he0] at hefull
+    dsimp only at hctor hefull
+    rw [hctor] at hefull
     have hdata := congrArg Flat.PSt.data hs
     change current.data.map StackSlot.ofWord = _ at hdata
     have hsp := congrArg Flat.PSt.spills hs
@@ -64,16 +83,17 @@ theorem afterEmission {initial current : PlannerRunG} {s t u : MachineData}
     have hn := congrArg Flat.Planner.n ctx.planner
     change current.p.m = ctx.before.p.m at hm
     change current.p.n = ctx.before.p.n at hn
-    simpa only [hdata, hm, hn, hsp, ctx.planner] using he0
+    simpa only [hdata, hm, hn, hsp, ctx.planner] using hefull
   have hstate : result.state = emittedState
-      (buildState ctx.before.p.fl ctx.before.state ctx.saw) (flat a) := by
+      (buildState ctx.before.p.fl ctx.before.state ctx.saw)
+        (Flat.restoreData current.dataCapacity (current.data.map StackSlot.ofWord) (flat a)) := by
     rw [emissionResult_state hk, hs]
     rfl
   let ec : EmittedContext initial result s M := {
     before := ctx.before
     loop := ctx.loop
     attempt := u0
-    out := flat a
+    out := Flat.restoreData current.dataCapacity (current.data.map StackSlot.ofWord) (flat a)
     status := e.1
     stable := ⟨ctx.stable.planner, ctx.stable.dataPtr, ctx.stable.opsPtr,
       ctx.stable.sourcesPtr, ctx.stable.countPtr, ctx.stable.spillCount⟩

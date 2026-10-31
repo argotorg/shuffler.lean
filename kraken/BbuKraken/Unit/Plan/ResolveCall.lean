@@ -42,7 +42,7 @@ theorem classify_frame (P : Addr) (r : RG) (hok : r.Ok) (s : MachineData)
   refine ⟨dv,
     Arr sp (loc.take 1030) ∗ Arr (sp + 9264#64) (loc.drop 1158 ++ saved s) ∗
       Wd (rsp s - 8#64) ra.toBitVec ∗ MapM r.currentPtr r.current ∗
-      Bs r.p.drp r.dropped.toList ∗ Spl r.p.spl r.spills rest ∗ F,
+      Bs r.p.drp (r.dropped.toList.take r.p.m.toNat) ∗ Spl r.p.spl r.spills rest ∗ F,
     fun lo w => ?_⟩
   have hhi : BitVec.ofNat 64 (8 * (loc ++ saved s).length) = 9320#64 := by
     simp [hl, saved]
@@ -52,7 +52,7 @@ theorem classify_frame (P : Addr) (r : RG) (hok : r.Ok) (s : MachineData)
   rw [he]
   have hr' : RView P r ∗ Bs (sp + 8240#64) dv.toList =
       CView P (classifyGhost r (sp + 8240#64) dv) ∗
-        (MapM r.currentPtr r.current ∗ Bs r.p.drp r.dropped.toList ∗
+        (MapM r.currentPtr r.current ∗ Bs r.p.drp (r.dropped.toList.take r.p.m.toNat) ∗
           Spl r.p.spl r.spills rest) := hr r.spills
   calc
     _ = Stk sp lo w ∗ ((RView P r ∗ Bs (sp + 8240#64) dv.toList) ∗

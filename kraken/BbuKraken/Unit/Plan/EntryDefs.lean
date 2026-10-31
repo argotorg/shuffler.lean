@@ -23,8 +23,10 @@ structure EG.Ok (g : EG) : Prop where
 def Buffers (g : EG) : MProp 64 :=
   Arr g.r.p.src g.r.p.sw ∗ Arr g.r.p.tgt g.r.p.tw ∗
     Spl g.r.p.spl g.r.spills (List.range g.r.spillCount) ∗
-    Bs g.r.p.drp g.r.dropped.toList ∗ Arr g.r.dataPtr g.r.data.toList ∗
-    Ops g.r.opsPtr 0 g.r.ops ∗ Arr g.r.sourcesPtr g.r.sources.toList ∗ B8 g.sawPtr g.saw
+    Bs g.r.p.drp (g.r.dropped.toList.take g.r.p.m.toNat) ∗
+    Arr g.r.dataPtr (g.r.data.toList.take g.r.dataCapacity) ∗
+    Ops g.r.opsPtr 0 g.r.ops ∗
+    Arr g.r.sourcesPtr (g.r.sources.toList.take g.r.p.n.toNat) ∗ B8 g.sawPtr g.saw
 
 def Args (S : Addr) (g : EG) : MProp 64 :=
   B32 S g.allowed ∗ B32 (S + 8#64) g.strategy ∗
