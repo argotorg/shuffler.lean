@@ -1,4 +1,9 @@
-import BbuKraken.Unit.TopRet
+module
+
+public import BbuKraken.Unit.TopRet
+import all BbuKraken.Unit.TopRet
+
+@[expose] public section
 
 /-!
 # The call of `buildBottomUp` in `build_bottom_up`

@@ -1,7 +1,15 @@
-import Kraken.StateCfg
-import Kraken.KVCGen
-import ProofKit.Shape
-import ProofKit.SymExec
+module
+
+public import Kraken.StateCfg
+import all Kraken.StateCfg
+public import Kraken.KVCGen
+import all Kraken.KVCGen
+public import ProofKit.Shape
+import all ProofKit.Shape
+public import ProofKit.SymExec
+import all ProofKit.SymExec
+
+@[expose] public meta section
 
 /-!
 Tools for `Program.WP.cfg` proofs. All untrusted: they only build terms that

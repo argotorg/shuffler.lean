@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Defs
+module
+
+public import BbuKraken.Unit.Defs
+import all BbuKraken.Unit.Defs
+
+@[expose] public section
 
 /-!
 # The flat model of `permute`: the facts for the asm proof

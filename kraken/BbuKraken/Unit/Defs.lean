@@ -1,8 +1,17 @@
-import BbuKraken.FlatRel
-import BbuKraken.Unit.LoopInv
-import BbuKraken.Sep.Contract
-import BbuKraken.Asm
-import BbuKraken.Names
+module
+
+public import BbuKraken.FlatRel
+import all BbuKraken.FlatRel
+public import BbuKraken.Unit.LoopInv
+import all BbuKraken.Unit.LoopInv
+public import BbuKraken.Sep.Contract
+import all BbuKraken.Sep.Contract
+public import BbuKraken.Asm
+import all BbuKraken.Asm
+public import BbuKraken.Names
+import all BbuKraken.Names
+
+@[expose] public section
 
 /-!
 # The unit contracts

@@ -1,8 +1,17 @@
-import BbuKraken.Unit.ShallowestCopy
-import BbuKraken.Unit.Permute
-import BbuKraken.Unit.Lowest
-import BbuKraken.FlatLowestRel
-import BbuKraken.Link
+module
+
+public import BbuKraken.Unit.ShallowestCopy
+import all BbuKraken.Unit.ShallowestCopy
+public import BbuKraken.Unit.Permute
+import all BbuKraken.Unit.Permute
+public import BbuKraken.Unit.Lowest
+import all BbuKraken.Unit.Lowest
+public import BbuKraken.FlatLowestRel
+import all BbuKraken.FlatLowestRel
+public import BbuKraken.Link
+import all BbuKraken.Link
+
+@[expose] public section
 
 /-!
 `Emission::permuteAtLowestHeight` in a host program that contains `c/bbu/build_bottom_up.S`

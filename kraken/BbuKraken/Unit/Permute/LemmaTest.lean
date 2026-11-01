@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Permute.D2
-import BbuKraken.Unit.Permute.D3
-import BbuKraken.Unit.PermuteModelTest
+module
+
+public import BbuKraken.Unit.Permute.D2
+import all BbuKraken.Unit.Permute.D2
+public import BbuKraken.Unit.Permute.D3
+import all BbuKraken.Unit.Permute.D3
+public import BbuKraken.Unit.PermuteModelTest
+import all BbuKraken.Unit.PermuteModelTest
+
+@[expose] public section
 
 /-!
 Tests of the helper lemmas of phase D of `permute` (`MD.lean`, `D2.lean`, `D3.lean`): the

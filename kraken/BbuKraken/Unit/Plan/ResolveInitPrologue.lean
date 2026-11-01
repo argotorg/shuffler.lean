@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.ResolveInitDefs
-import BbuKraken.Unit.Run.Load
+module
+
+public import BbuKraken.Unit.Plan.ResolveInitDefs
+import all BbuKraken.Unit.Plan.ResolveInitDefs
+public import BbuKraken.Unit.Run.Load
+import all BbuKraken.Unit.Run.Load
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

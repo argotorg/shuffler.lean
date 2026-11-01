@@ -1,4 +1,9 @@
-import PermuteKraken.Model
+module
+
+public import PermuteKraken.Model
+import all PermuteKraken.Model
+
+@[expose] public section
 
 /-!
 A model of `Shuffler.Emission.buildBottomUp` without Mathlib. Each definition

@@ -1,5 +1,11 @@
-import BbuKraken.Layout
-import BbuKraken.FlatRel
+module
+
+public import BbuKraken.Layout
+import all BbuKraken.Layout
+public import BbuKraken.FlatRel
+import all BbuKraken.FlatRel
+
+@[expose] public section
 
 /-!
 The spec of `build_bottom_up(m, n, data, target, dest, spilled, ops, blocked)`.

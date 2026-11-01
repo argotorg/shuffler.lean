@@ -1,8 +1,17 @@
-import BbuKraken.Unit.Plan.EntryCfgStart
-import BbuKraken.Unit.Plan.EntryCfgScan
-import BbuKraken.Unit.Plan.EntryCfgClear
-import BbuKraken.Unit.Plan.EntryCfgFinish
-import BbuKraken.Unit.Plan.EntryRejectFull
+module
+
+public import BbuKraken.Unit.Plan.EntryCfgStart
+import all BbuKraken.Unit.Plan.EntryCfgStart
+public import BbuKraken.Unit.Plan.EntryCfgScan
+import all BbuKraken.Unit.Plan.EntryCfgScan
+public import BbuKraken.Unit.Plan.EntryCfgClear
+import all BbuKraken.Unit.Plan.EntryCfgClear
+public import BbuKraken.Unit.Plan.EntryCfgFinish
+import all BbuKraken.Unit.Plan.EntryCfgFinish
+public import BbuKraken.Unit.Plan.EntryRejectFull
+import all BbuKraken.Unit.Plan.EntryRejectFull
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP

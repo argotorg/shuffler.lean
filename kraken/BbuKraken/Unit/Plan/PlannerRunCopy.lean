@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.PlannerRunMapping
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunMapping
+import all BbuKraken.Unit.Plan.PlannerRunMapping
+
+@[expose] public section
 
 /-! The copies made by `Planner::run` preserve buffer entries outside the
 copied range. The equations concern the production flat model. -/

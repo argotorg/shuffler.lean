@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ResolveWorkModel
+module
+
+public import BbuKraken.Unit.Plan.ResolveWorkModel
+import all BbuKraken.Unit.Plan.ResolveWorkModel
+
+@[expose] public section
 
 namespace Bbu.Unit.ResolveU
 open Bbu.Sep

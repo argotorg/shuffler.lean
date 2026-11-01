@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ClassifyReturnPrefix
+module
+
+public import BbuKraken.Unit.Plan.ClassifyReturnPrefix
+import all BbuKraken.Unit.Plan.ClassifyReturnPrefix
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

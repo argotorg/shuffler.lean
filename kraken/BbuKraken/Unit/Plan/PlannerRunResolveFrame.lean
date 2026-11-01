@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunBuilderCall
-import BbuKraken.Unit.Plan.ResolveMem
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunBuilderCall
+import all BbuKraken.Unit.Plan.PlannerRunBuilderCall
+public import BbuKraken.Unit.Plan.ResolveMem
+import all BbuKraken.Unit.Plan.ResolveMem
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep Flat

@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunEmissionGhost
-import BbuKraken.Unit.TopGhost
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunEmissionGhost
+import all BbuKraken.Unit.Plan.PlannerRunEmissionGhost
+public import BbuKraken.Unit.TopGhost
+import all BbuKraken.Unit.TopGhost
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep
@@ -175,7 +181,7 @@ theorem emissionGhost_flat (g : PlannerRunG) (hok : g.Ok) (h : Hdr) :
         data := vec ((g.data.toList.take g.dataCapacity).map StackSlot.ofWord), size := h.len,
         trace := (g.ops.take h.nops.toNat).map OpR.op, dest := h.dest, pos := h.pos,
         pend := h.pend, blockedOffset := h.blkOff, blockedExcess := h.blkExc } := by
-  simp only [flat, emissionGhost_stk, emissionGhost_ops, emissionGhost_tgt, full_data_model]
+  simp only [flat, emissionGhost_stk, emissionGhost_ops, emissionGhost_tgt]
   rfl
 
 theorem emissionGhost_restore (g : PlannerRunG) (hok : g.Ok) (h : Hdr) :

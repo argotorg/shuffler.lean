@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.ResolveChoose
-import BbuKraken.Unit.Plan.ResolveCursor
-import BbuKraken.Unit.Plan.ResolveWorkModel
+module
+
+public import BbuKraken.Unit.Plan.ResolveChoose
+import all BbuKraken.Unit.Plan.ResolveChoose
+public import BbuKraken.Unit.Plan.ResolveCursor
+import all BbuKraken.Unit.Plan.ResolveCursor
+public import BbuKraken.Unit.Plan.ResolveWorkModel
+import all BbuKraken.Unit.Plan.ResolveWorkModel
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

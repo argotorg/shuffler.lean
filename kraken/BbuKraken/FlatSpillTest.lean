@@ -1,4 +1,9 @@
-import BbuKraken.FlatSpill
+module
+
+public import BbuKraken.FlatSpill
+import all BbuKraken.FlatSpill
+
+@[expose] public section
 
 /-!
 Tests of `FlatSpill.lean` by evaluation. The cases are those of `spill_set` in

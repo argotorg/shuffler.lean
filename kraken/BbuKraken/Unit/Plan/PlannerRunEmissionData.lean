@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunEmissionHeader
-import BbuKraken.Unit.Plan.PlannerRunCopy
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunEmissionHeader
+import all BbuKraken.Unit.Plan.PlannerRunEmissionHeader
+public import BbuKraken.Unit.Plan.PlannerRunCopy
+import all BbuKraken.Unit.Plan.PlannerRunCopy
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep Flat
@@ -13,7 +19,7 @@ theorem AttemptLI.storeData (h : AttemptLI P g M F s ra lo locals t)
     (hm : u.dmem = t.dmem.storeInt (slotAt g.dataPtr i.toNat) 8 w.toInt)
     (hsp : u.regs.rsp = t.regs.rsp)
     (hbx : u.regs.rbx = t.regs.rbx) (h12 : u.regs.r12 = t.regs.r12)
-    (h15 : u.regs.r15 = t.regs.r15) (hbp : u.regs.rbp = t.regs.rbp)
+    (h15 : u.regs.r15 = t.regs.r15) (_hbp : u.regs.rbp = t.regs.rbp)
     (h14 : u.regs.r14 = t.regs.r14) (h13 : u.regs.r13 = t.regs.r13) :
     AttemptLI P { g with data := Flat.put g.data i w } M F s ra lo locals u := by
   have hnew := store_data h.kb.vmem hi hcap w

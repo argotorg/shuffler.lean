@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.Classify
+module
+
+public import BbuKraken.Unit.Plan.Classify
+import all BbuKraken.Unit.Plan.Classify
+
+@[expose] public section
 open Std.WP Lean.Order
 open scoped Program.WP
 open ProofKit

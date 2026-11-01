@@ -1,5 +1,11 @@
-import BbuKraken.Fn.Loop.Machine
-import BbuKraken.Fn.Loop.Model
+module
+
+public import BbuKraken.Fn.Loop.Machine
+import all BbuKraken.Fn.Loop.Machine
+public import BbuKraken.Fn.Loop.Model
+import all BbuKraken.Fn.Loop.Model
+
+@[expose] public section
 
 /-!
 Lemmas of the proof of the slot bound for `targetOffset` (`Fn/Loop/Bound.lean`): the

@@ -1,5 +1,11 @@
-import BbuKraken.Sep.View
-import ProofKit.SepLoad
+module
+
+public import BbuKraken.Sep.View
+import all BbuKraken.Sep.View
+public import ProofKit.SepLoad
+import all ProofKit.SepLoad
+
+@[expose] public section
 
 /-!
 # Load and store lemmas of the struct

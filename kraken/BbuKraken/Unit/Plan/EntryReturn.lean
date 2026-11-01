@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.EntryFrame
+module
+
+public import BbuKraken.Unit.Plan.EntryFrame
+import all BbuKraken.Unit.Plan.EntryFrame
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP

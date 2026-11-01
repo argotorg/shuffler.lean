@@ -85,7 +85,7 @@ theorem buildMapping_differs_of_sawWildcardCopy (source target : Stack) (dropped
 #guard_msgs in
 #print opaques MappingBuilder.closestCopy
 
-/-- info: 'Shuffler.BuildMapping.MappingBuilder.closestCopy' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Shuffler.BuildMapping.MappingBuilder.closestCopy' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms MappingBuilder.closestCopy
 
@@ -94,35 +94,39 @@ theorem buildMapping_differs_of_sawWildcardCopy (source target : Stack) (dropped
 #guard_msgs in
 #print opaques buildMapping
 
-/-- info: 'Shuffler.BuildMapping.buildMapping' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Shuffler.BuildMapping.buildMapping' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms buildMapping
 
-/-- info: 'Shuffler.BuildMapping.buildMapping_ok' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Shuffler.BuildMapping.buildMapping_ok' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms buildMapping_ok
 
-/-- info: 'Shuffler.BuildMapping.buildMapping_no_assertion' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Shuffler.BuildMapping.buildMapping_no_assertion' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms buildMapping_no_assertion
 
-/-- info: 'Shuffler.BuildMapping.buildMapping_valid_of_ok' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Shuffler.BuildMapping.buildMapping_valid_of_ok' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms buildMapping_valid_of_ok
 
-/-- info: 'Shuffler.BuildMapping.buildMapping_in_place_of_ok' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Shuffler.BuildMapping.buildMapping_in_place_of_ok' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms buildMapping_in_place_of_ok
 
-/-- info: 'Shuffler.BuildMapping.buildMapping_sawWildcardCopy_eq' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Shuffler.BuildMapping.buildMapping_sawWildcardCopy_eq' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms buildMapping_sawWildcardCopy_eq
 
-/-- info: 'Shuffler.BuildMapping.buildMapping_mapping_eq_iff' depends on axioms: [propext, Quot.sound] -/
+/-- info: 'Shuffler.BuildMapping.buildMapping_mapping_eq_iff' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms buildMapping_mapping_eq_iff
 
-/-- info: 'Shuffler.BuildMapping.buildMapping_differs_of_sawWildcardCopy' depends on axioms: [propext, Quot.sound] -/
+/--
+info: 'Shuffler.BuildMapping.buildMapping_differs_of_sawWildcardCopy' depends on axioms: [propext,
+ Classical.choice,
+ Quot.sound]
+-/
 #guard_msgs in
 #print axioms buildMapping_differs_of_sawWildcardCopy
 

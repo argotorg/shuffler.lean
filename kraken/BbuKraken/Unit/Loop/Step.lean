@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Loop.Inv
-import BbuKraken.Unit.Loop.Ctor
-import BbuKraken.Unit.PermuteModel
+module
+
+public import BbuKraken.Unit.Loop.Inv
+import all BbuKraken.Unit.Loop.Inv
+public import BbuKraken.Unit.Loop.Ctor
+import all BbuKraken.Unit.Loop.Ctor
+public import BbuKraken.Unit.PermuteModel
+import all BbuKraken.Unit.PermuteModel
+
+@[expose] public section
 
 /-!
 # `buildBottomUp`: the model steps of the invariant (part P1)

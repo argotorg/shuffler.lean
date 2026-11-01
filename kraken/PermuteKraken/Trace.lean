@@ -1,9 +1,15 @@
+module
+
 /-
 `permute` as a function of the swap count `k`. The compiled code keeps `k` in a
 register, so the loop invariants of the proof refer to `state p k` and `trace p k`
 and need no existential.
 -/
-import PermuteKraken.Model
+public import PermuteKraken.Model
+import all PermuteKraken.Model
+import all Init.Control.Except
+
+@[expose] public section
 
 namespace PermuteKraken
 
@@ -138,7 +144,7 @@ theorem permute_eq (p : Perm) : permute p =
         | .blocked b => Except.error b
         | _ => .ok (p.depth :: p.advance.trace (steps p.advance))
       rw [ih, p.depth_eq h]
-      split <;> rfl
+      split <;> simp_all [Except.map]
   | case2 p hn =>
     have h : (step p.toList).isSwap = false := by
       cases h : step p.toList <;> simp_all [Step.isSwap]

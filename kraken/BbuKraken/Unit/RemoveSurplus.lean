@@ -1,12 +1,25 @@
-import BbuKraken.Unit.Defs
-import BbuKraken.Unit.Pop
-import BbuKraken.Unit.PermuteSpecs
-import BbuKraken.Unit.RemoveSurplusLemmas
-import BbuKraken.Unit.ShallowestCopy
-import BbuKraken.FlatSurplus
-import BbuKraken.Sep.Stores
-import ProofKit.Cfg
-import ProofKit.Idioms
+module
+
+public import BbuKraken.Unit.Defs
+import all BbuKraken.Unit.Defs
+public import BbuKraken.Unit.Pop
+import all BbuKraken.Unit.Pop
+public import BbuKraken.Unit.PermuteSpecs
+import all BbuKraken.Unit.PermuteSpecs
+public import BbuKraken.Unit.RemoveSurplusLemmas
+import all BbuKraken.Unit.RemoveSurplusLemmas
+public import BbuKraken.Unit.ShallowestCopy
+import all BbuKraken.Unit.ShallowestCopy
+public import BbuKraken.FlatSurplus
+import all BbuKraken.FlatSurplus
+public import BbuKraken.Sep.Stores
+import all BbuKraken.Sep.Stores
+public import ProofKit.Cfg
+import all ProofKit.Cfg
+public import ProofKit.Idioms
+import all ProofKit.Idioms
+
+@[expose] public section
 
 /-!
 # `removeSurplus`

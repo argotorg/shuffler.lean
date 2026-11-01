@@ -1,4 +1,9 @@
-import BbuKraken.Top
+module
+
+public import BbuKraken.Top
+import all BbuKraken.Top
+
+@[expose] public section
 
 /-!
 Tests of `Top.lean`. `TopMem` is the `TopMem` of commit 12cb0e8 (`OldTopMem`) and two facts on

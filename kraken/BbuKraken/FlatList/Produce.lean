@@ -1,4 +1,9 @@
-import BbuKraken.FlatList.Leaf
+module
+
+public import BbuKraken.FlatList.Leaf
+import all BbuKraken.FlatList.Leaf
+
+@[expose] public section
 
 /-!
 `produce` and `generate` of the flat model against `Bbu.produce` and `Bbu.generate`.

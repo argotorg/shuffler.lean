@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.PlannerRunBuilderDefs
-import BbuKraken.Unit.Plan.PlannerRunBuilderTail
-import Kraken.X64.Parser
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunBuilderDefs
+import all BbuKraken.Unit.Plan.PlannerRunBuilderDefs
+public import BbuKraken.Unit.Plan.PlannerRunBuilderTail
+import all BbuKraken.Unit.Plan.PlannerRunBuilderTail
+public import Kraken.X64.Parser
+import all Kraken.X64.Parser
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

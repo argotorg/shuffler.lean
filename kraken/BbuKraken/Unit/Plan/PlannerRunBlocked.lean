@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunBlockedSurplus
-import BbuKraken.Unit.Plan.PlannerRunBlockedLoop
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunBlockedSurplus
+import all BbuKraken.Unit.Plan.PlannerRunBlockedSurplus
+public import BbuKraken.Unit.Plan.PlannerRunBlockedLoop
+import all BbuKraken.Unit.Plan.PlannerRunBlockedLoop
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Flat

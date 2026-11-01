@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.EntryAssemble
-import BbuKraken.Unit.Plan.PlannerRunLinked
-import BbuKraken.Bin
+module
+
+public import BbuKraken.Unit.Plan.EntryAssemble
+import all BbuKraken.Unit.Plan.EntryAssemble
+public import BbuKraken.Unit.Plan.PlannerRunLinked
+import all BbuKraken.Unit.Plan.PlannerRunLinked
+public import BbuKraken.Bin
+import all BbuKraken.Bin
+
+@[expose] public section
 
 namespace Bbu
 open Bbu.Unit

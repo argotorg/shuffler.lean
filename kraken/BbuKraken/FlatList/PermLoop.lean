@@ -1,5 +1,11 @@
-import BbuKraken.FlatList.Ctor
-import BbuKraken.FlatList.Produce
+module
+
+public import BbuKraken.FlatList.Ctor
+import all BbuKraken.FlatList.Ctor
+public import BbuKraken.FlatList.Produce
+import all BbuKraken.FlatList.Produce
+
+@[expose] public section
 
 /-!
 The loop of the flat `permute` (`permuteLoop`) against `Bbu.go`. The vector `permutation`

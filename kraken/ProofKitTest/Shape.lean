@@ -1,6 +1,13 @@
-import ProofKit.Cfg
-import PermuteKraken.Specs
-import Kraken.X64.Parser
+module
+
+public import ProofKit.Cfg
+import all ProofKit.Cfg
+public import PermuteKraken.Specs
+import all PermuteKraken.Specs
+public import Kraken.X64.Parser
+import all Kraken.X64.Parser
+
+@[expose] public section
 
 /-! # Tests: `vcKind`, `vc_shapes`, `vc_by_shape`
 

@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.ResolveFrame
-import ProofKit.CfgBlock
+module
+
+public import BbuKraken.Unit.Plan.ResolveFrame
+import all BbuKraken.Unit.Plan.ResolveFrame
+public import ProofKit.CfgBlock
+import all ProofKit.CfgBlock
+
+@[expose] public section
 
 /-! The return blocks of `Planner::resolve`. The phase invariant remains a
 parameter so the loop proofs can use these blocks without changing them. -/

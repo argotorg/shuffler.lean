@@ -1,5 +1,11 @@
-import Kraken.StateCfg
-import Kraken.KVCGen
+module
+
+public import Kraken.StateCfg
+import all Kraken.StateCfg
+public import Kraken.KVCGen
+import all Kraken.KVCGen
+
+@[expose] public meta section
 
 /-!
 VC shapes. `vcKind` reads the target of a goal that `kvcgen64` leaves and

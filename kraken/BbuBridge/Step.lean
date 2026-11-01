@@ -1,4 +1,9 @@
-import BbuBridge.Statements
+module
+
+public import BbuBridge.Statements
+import all BbuBridge.Statements
+
+@[expose] public section
 
 /-!
 One model step is one iteration of the original loop: the skip of a final

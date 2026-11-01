@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Defs
-import BbuKraken.FlatSpill
+module
+
+public import BbuKraken.Unit.Defs
+import all BbuKraken.Unit.Defs
+public import BbuKraken.FlatSpill
+import all BbuKraken.FlatSpill
+
+@[expose] public section
 
 /-!
 # The contracts of the spill set unit

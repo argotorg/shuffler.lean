@@ -1,4 +1,10 @@
-import Kraken.X64.Registers
+module
+
+public import Kraken.X64.Registers
+import all Kraken.X64.Registers
+import Std.Tactic.BVDecide
+
+@[expose] public section
 
 /-!
 # Idioms

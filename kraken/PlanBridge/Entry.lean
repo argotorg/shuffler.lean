@@ -1,5 +1,11 @@
-import PlanBridge.Run
-import PlanBridge.Loops
+module
+
+public import PlanBridge.Run
+import all PlanBridge.Run
+public import PlanBridge.Loops
+import all PlanBridge.Loops
+
+@[expose] public section
 
 /-!
 The flat `plannerRun` and PR31 `Planner.run` (`plannerRun_corr`), and the entry `planEntry`

@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Defs
-import BbuKraken.Unit.Permute.Cfg
+module
+
+public import BbuKraken.Unit.Defs
+import all BbuKraken.Unit.Defs
+public import BbuKraken.Unit.Permute.Cfg
+import all BbuKraken.Unit.Permute.Cfg
+
+@[expose] public section
 
 /-! # Tests: `forallBlocks_cases`, `pm_labels`, `pm_block` on `finishAsm` -/
 

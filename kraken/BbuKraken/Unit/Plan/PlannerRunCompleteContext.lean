@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunEmittedContext
-import BbuKraken.Unit.Plan.PlannerRunResolveDefs
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunEmittedContext
+import all BbuKraken.Unit.Plan.PlannerRunEmittedContext
+public import BbuKraken.Unit.Plan.PlannerRunResolveDefs
+import all BbuKraken.Unit.Plan.PlannerRunResolveDefs
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep

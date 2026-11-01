@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.PlannerRunResolveFrame
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunResolveFrame
+import all BbuKraken.Unit.Plan.PlannerRunResolveFrame
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep

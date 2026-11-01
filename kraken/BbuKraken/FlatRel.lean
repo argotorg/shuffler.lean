@@ -1,5 +1,11 @@
-import BbuKraken.FlatModel
-import BbuKraken.ModelLemmas
+module
+
+public import BbuKraken.FlatModel
+import all BbuKraken.FlatModel
+public import BbuKraken.ModelLemmas
+import all BbuKraken.ModelLemmas
+
+@[expose] public section
 
 /-!
 The relation of the flat model (`FlatModel.lean`) to the list model (`Model.lean`).

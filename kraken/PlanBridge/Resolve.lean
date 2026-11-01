@@ -1,6 +1,13 @@
-import PlanBridge.Spill
-import PlanBridge.Bounded
-import Shuffler.Resolve.Lemmas
+module
+
+public import PlanBridge.Spill
+import all PlanBridge.Spill
+public import PlanBridge.Bounded
+import all PlanBridge.Bounded
+public import Shuffler.Resolve.Lemmas
+import all Shuffler.Resolve.Lemmas
+
+@[expose] public section
 
 /-!
 The flat `resolve` of `Planner::resolve` and PR31 `Planner.resolve`.

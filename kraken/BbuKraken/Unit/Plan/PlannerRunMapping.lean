@@ -1,6 +1,13 @@
-import BbuKraken.FlatPlan
-import BbuKraken.FlatPopRel
-import BbuKraken.FlatList.Basic
+module
+
+public import BbuKraken.FlatPlan
+import all BbuKraken.FlatPlan
+public import BbuKraken.FlatPopRel
+import all BbuKraken.FlatPopRel
+public import BbuKraken.FlatList.Basic
+import all BbuKraken.FlatList.Basic
+
+@[expose] public section
 
 /-! Bounds and inverse relations of the mapping built by the planner.
 Only the live source and target ranges are constrained. The unused local-array

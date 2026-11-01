@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ClassifyMem
+module
+
+public import BbuKraken.Unit.Plan.ClassifyMem
+import all BbuKraken.Unit.Plan.ClassifyMem
+
+@[expose] public section
 
 namespace Bbu.Unit.ClassifyU
 open Bbu.Sep

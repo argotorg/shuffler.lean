@@ -1,4 +1,11 @@
-import BbuKraken.Unit.Lowest.Fill
+module
+
+public import BbuKraken.Unit.Lowest.Fill
+import all BbuKraken.Unit.Lowest.Fill
+
+@[expose] public section
+
+set_option experimental.vcgen true
 
 /-!
 # `permuteAtLowestHeight`: the call of `permute` and the return

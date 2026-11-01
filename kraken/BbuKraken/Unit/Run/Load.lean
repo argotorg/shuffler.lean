@@ -1,11 +1,16 @@
-import ProofKit.SymExec
+module
+
+public import ProofKit.SymExec
+import all ProofKit.SymExec
+
+@[expose] public meta section
 
 open Lean Meta Elab Tactic
 
 namespace Bbu.Unit.RunU
 
 -- Match the memory, address, and byte count before `exact` can unfold memory.
-private def loadKey? (e : Expr) : Option (Expr × Expr × Expr) := do
+def loadKey? (e : Expr) : Option (Expr × Expr × Expr) := do
   let (_, lhs, _) ← e.consumeMData.eq?
   if !lhs.isAppOfArity ``Option.isSome 2 then none
   else

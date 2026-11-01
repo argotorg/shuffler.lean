@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ResolveChoose
+module
+
+public import BbuKraken.Unit.Plan.ResolveChoose
+import all BbuKraken.Unit.Plan.ResolveChoose
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

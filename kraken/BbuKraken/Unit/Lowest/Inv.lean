@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Lowest.Frame
-import BbuKraken.Unit.Permute.Util
-import ProofKit.CfgBlock
+module
+
+public import BbuKraken.Unit.Lowest.Frame
+import all BbuKraken.Unit.Lowest.Frame
+public import BbuKraken.Unit.Permute.Util
+import all BbuKraken.Unit.Permute.Util
+public import ProofKit.CfgBlock
+import all ProofKit.CfgBlock
+
+@[expose] public section
 
 /-!
 # `permuteAtLowestHeight`: the invariant and the variant of each block
@@ -33,31 +40,31 @@ variable {planned : Vector Word MAX_N} {st : St} {pos : Word} {sc : Scan}
 theorem scan_lt (h : pos < st.size) (hd : get st.dest pos ≠ NONE) (ht : pos < st.targetSize) :
     scan planned st pos sc
       = scan planned st (pos + 1) (scanStep planned st pos (get st.dest pos) sc) := by
-  rw [scan, dif_pos h]
+  rw [scan, dite_eq_left h]
   simp only [hd, ht, not_true_eq_false, ite_false]
 
 theorem scan_none_dest (h : pos < st.size) (hd : get st.dest pos = NONE) :
     scan planned st pos sc = none := by
-  rw [scan, dif_pos h]
+  rw [scan, dite_eq_left h]
   simp only [hd, ite_true]
 
 theorem scan_none_tgt (h : pos < st.size) (hd : get st.dest pos ≠ NONE)
     (ht : ¬pos < st.targetSize) : scan planned st pos sc = none := by
-  rw [scan, dif_pos h]
+  rw [scan, dite_eq_left h]
   simp only [hd, ht, not_false_eq_true, ite_true, ite_false]
 
 theorem scan_ge (h : ¬pos < st.size) : scan planned st pos sc = some sc := by
-  rw [scan, dif_neg h]
+  rw [scan, dite_eq_right h]
 
 end
 
 theorem fill_lt {sc : Scan} {i : Word} {p : Vector Word MAX_N} (h : i < sc.parkedCount) :
     fill sc i p = fill sc (i + 1) (put p (get sc.parked i) (get sc.holes i)) := by
-  rw [fill, dif_pos h]
+  rw [fill, dite_eq_left h]
 
 theorem fill_ge {sc : Scan} {i : Word} {p : Vector Word MAX_N} (h : ¬i < sc.parkedCount) :
     fill sc i p = p := by
-  rw [fill, dif_neg h]
+  rw [fill, dite_eq_right h]
 
 section
 variable {planned : Vector Word MAX_N} {l : Locals} {st : St}
@@ -69,12 +76,12 @@ theorem lowest_none (h : scan planned st 0 (Scan.init l) = none) :
 theorem lowest_ne {sc : Scan} (h : scan planned st 0 (Scan.init l) = some sc)
     (hne : sc.parkedCount ≠ sc.holeCount) :
     permuteAtLowestHeight planned l st = (.assertionFailed, st) := by
-  rw [permuteAtLowestHeight, h]; exact if_pos hne
+  rw [permuteAtLowestHeight, h]; exact ite_eq_left hne
 
 theorem lowest_eq {sc : Scan} (h : scan planned st 0 (Scan.init l) = some sc)
     (heq : sc.parkedCount = sc.holeCount) :
     permuteAtLowestHeight planned l st = permute st (fill sc 0 sc.permutation) := by
-  rw [permuteAtLowestHeight, h]; exact if_neg (fun h => h heq)
+  rw [permuteAtLowestHeight, h]; exact ite_eq_right (fun h => h heq)
 
 end
 

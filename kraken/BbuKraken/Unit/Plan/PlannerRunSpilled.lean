@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.PlannerRunRead
-import BbuKraken.Unit.Plan.PlannerRunValidate
-import BbuKraken.Unit.SpillSetLemmas
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunRead
+import all BbuKraken.Unit.Plan.PlannerRunRead
+public import BbuKraken.Unit.Plan.PlannerRunValidate
+import all BbuKraken.Unit.Plan.PlannerRunValidate
+public import BbuKraken.Unit.SpillSetLemmas
+import all BbuKraken.Unit.SpillSetLemmas
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -80,7 +87,7 @@ theorem b_3 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
     obtain ⟨_, hs⟩ := hspill hk
     have hb := B8.rdb hs
     unfold rdb at hb
-    simp only [rcx, Reg64s.get64_rcx, BitVec.ofNat_toNat] at hb
+    simp only [Reg64s.get64_rcx, BitVec.ofNat_toNat] at hb
     simp only [hc.r10, hc.rbx, fold_slot, hpay, hptr, hb, BitVec.sub_zero,
       BitVec.zero_eq, Bool.not_eq_true', beq_eq_false_iff_ne] at hsp
     apply hnext
@@ -102,7 +109,7 @@ theorem b_3 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
     obtain ⟨_, hs⟩ := hspill hk
     have hb := B8.rdb hs
     unfold rdb at hb
-    simp only [rcx, Reg64s.get64_rcx, BitVec.ofNat_toNat] at hb
+    simp only [Reg64s.get64_rcx, BitVec.ofNat_toNat] at hb
     simp only [hc.r10, hc.rbx, fold_slot, hpay, hptr, hb, BitVec.sub_zero,
       BitVec.zero_eq, Bool.not_eq_false', beq_iff_eq] at hsp
     apply hret

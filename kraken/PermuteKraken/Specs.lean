@@ -163,7 +163,7 @@ local macro "run_step" : tactic =>
   refine Program.wp_single fun _ _ _ _ hn _ => ?_
   simp only [Directive.interp, Instr.interp, Operation.interp, Operand.interp,
     RegOrMem.interp, MachineData.set, MachineData.store,
-    AddrExpr.zeroExtend_interp_base_idx, Width.bytes, hload, Effects.All, ite_true]
+    AddrExpr.zeroExtend_interp_base_idx, Width.bytes, hload, Effects.All]
   exact hn _ hpre
 
 /-- `movzbl disp(%b), %r32` -/
@@ -180,10 +180,8 @@ local macro "run_step" : tactic =>
   obtain ⟨hmapped, hpre⟩ := hpre
   obtain ⟨v, hload⟩ := Option.isSome_iff_exists.mp hmapped
   refine Program.wp_single fun _ _ _ _ hn _ => ?_
-  simp only [Directive.interp, Instr.interp, Operation.interp, Operand.interp,
-    RegOrMem.interp, MachineData.load, MachineData.set, MachineData.setReg,
-    AddrExpr.zeroExtend_interp_base_disp, Width.bytes, hload, Effects.All, ite_true,
-    Reg64s.set_low_W32]
+  simp only [Directive.interp, Instr.interp, Operation.interp, RegOrMem.interp, MachineData.load, MachineData.set, MachineData.setReg,
+    AddrExpr.zeroExtend_interp_base_disp, Width.bytes, hload, Effects.All, Reg64s.set_low_W32]
   exact hn _ (by rwa [hload, Option.get!_some] at hpre)
 
 /-- `movzbl disp(%b, %i), %r32` -/
@@ -200,10 +198,8 @@ local macro "run_step" : tactic =>
   obtain ⟨hmapped, hpre⟩ := hpre
   obtain ⟨v, hload⟩ := Option.isSome_iff_exists.mp hmapped
   refine Program.wp_single fun _ _ _ _ hn _ => ?_
-  simp only [Directive.interp, Instr.interp, Operation.interp, Operand.interp,
-    RegOrMem.interp, MachineData.load, MachineData.set, MachineData.setReg,
-    AddrExpr.zeroExtend_interp_base_idx, Width.bytes, hload, Effects.All, ite_true,
-    Reg64s.set_low_W32]
+  simp only [Directive.interp, Instr.interp, Operation.interp, RegOrMem.interp, MachineData.load, MachineData.set, MachineData.setReg,
+    AddrExpr.zeroExtend_interp_base_idx, Width.bytes, hload, Effects.All, Reg64s.set_low_W32]
   exact hn _ (by rwa [hload, Option.get!_some] at hpre)
 
 
@@ -234,7 +230,7 @@ local macro "run_step" : tactic =>
   refine Program.wp_single fun _ _ _ _ hn _ => ?_
   simp only [Directive.interp, Instr.interp, Operation.interp, Operand.interp,
     RegOrMem.interp, MachineData.set, MachineData.store,
-    AddrExpr.zeroExtend_interp_base_disp, Width.bytes, hload, Effects.All, ite_true]
+    AddrExpr.zeroExtend_interp_base_disp, Width.bytes, hload, Effects.All]
   exact hn _ hpre
 
 /-- `movzwl disp(%b), %r32` -/
@@ -251,8 +247,7 @@ local macro "run_step" : tactic =>
   obtain ⟨hmapped, hpre⟩ := hpre
   obtain ⟨v, hload⟩ := Option.isSome_iff_exists.mp hmapped
   refine Program.wp_single fun _ _ _ _ hn _ => ?_
-  simp only [Directive.interp, Instr.interp, Operation.interp, Operand.interp,
-    RegOrMem.interp, MachineData.load, MachineData.set, MachineData.setReg,
+  simp only [Directive.interp, Instr.interp, Operation.interp, RegOrMem.interp, MachineData.load, MachineData.set, MachineData.setReg,
     AddrExpr.zeroExtend_interp_base_disp, Width.bytes, hload, Effects.All,
     Reg64s.set_low_W32]
   exact hn _ (by rwa [hload, Option.get!_some] at hpre)
@@ -272,8 +267,7 @@ local macro "run_step" : tactic =>
   obtain ⟨hmapped, hpre⟩ := hpre
   obtain ⟨v, hload⟩ := Option.isSome_iff_exists.mp hmapped
   refine Program.wp_single fun _ _ _ _ hn _ => ?_
-  simp only [Directive.interp, Instr.interp, Operation.interp, Operand.interp,
-    RegOrMem.interp, MachineData.load, MachineData.set, MachineData.setReg,
+  simp only [Directive.interp, Instr.interp, Operation.interp, RegOrMem.interp, MachineData.load, MachineData.set, MachineData.setReg,
     AddrExpr.zeroExtend_interp_base_idx2, Width.bytes, hload, Effects.All,
     Reg64s.set_low_W32]
   exact hn _ (by rwa [hload, Option.get!_some] at hpre)

@@ -1,7 +1,15 @@
-import Shuffler.Trace
-import Mathlib.Data.Finset.Range
-import Mathlib.Data.Finset.Image
-import BbuKraken.FlatSpill
+module
+
+public import Shuffler.Trace
+import all Shuffler.Trace
+public import Mathlib.Data.Finset.Range
+import all Mathlib.Data.Finset.Range
+public import Mathlib.Data.Finset.Image
+import all Mathlib.Data.Finset.Image
+public import BbuKraken.FlatSpill
+import all BbuKraken.FlatSpill
+
+@[expose] public section
 
 /-!
 The link between the flat model of the spill set (`BbuKraken/FlatSpill.lean`) and

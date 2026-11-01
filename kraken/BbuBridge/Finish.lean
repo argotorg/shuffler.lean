@@ -1,4 +1,9 @@
-import BbuBridge.PermuteExplicit
+module
+
+public import BbuBridge.PermuteExplicit
+import all BbuBridge.PermuteExplicit
+
+@[expose] public section
 
 /-!
 `Bbu.finish` is the final permutation of the loop and the check after the loop.

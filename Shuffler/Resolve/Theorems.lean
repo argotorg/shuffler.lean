@@ -27,7 +27,8 @@ theorem resolve_ok (init : State source target)
   | ok result => exact ⟨result, rfl⟩
   | error err =>
     rw [hresolve] at h
-    simp [wp, WP.wpTrans] at h
+    simp only [wp, WP.trans, Lean.Order.pushExcept, Lean.Order.bot_apply,
+      Lean.Order.bot_prop_eq] at h
 
 -- Each required target value remains available, including after an attempt that returns false.
 theorem resolve_preserves_target_available (init result : State source target)

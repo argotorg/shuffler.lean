@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunResolveSetup
-import BbuKraken.Unit.Plan.PlannerRunResolveTail
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunResolveSetup
+import all BbuKraken.Unit.Plan.PlannerRunResolveSetup
+public import BbuKraken.Unit.Plan.PlannerRunResolveTail
+import all BbuKraken.Unit.Plan.PlannerRunResolveTail
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP

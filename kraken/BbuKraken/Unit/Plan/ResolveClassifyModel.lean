@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ResolveTie
+module
+
+public import BbuKraken.Unit.Plan.ResolveTie
+import all BbuKraken.Unit.Plan.ResolveTie
+
+@[expose] public section
 
 namespace Bbu.Unit.ResolveU
 open Bbu.Sep
@@ -139,7 +144,7 @@ theorem dropped_eq {dv : Vector (BitVec 8) MAX_N}
   have he := (hv (BitVec.ofNat 64 j) hj').trans
     (hb.droppedRead (o := BitVec.ofNat 64 j) hj').symm
   rw [hd] at he
-  simpa only [Flat.get, ho, dif_pos hj] using he
+  simpa only [Flat.get, ho, dite_eq_left hj] using he
 
 theorem pick_select (h : PickAt P r F s ra w lo L i best cls t)
     (heq : PickEq r w i best cls)
@@ -162,6 +167,7 @@ variable [Host] [FunDecls]
   {w : Work} {lo : List Word} {L : Lc} {i best : Word} {cls : BitVec 8}
   {K : MachineData → Prop}
 
+omit [Host] [FunDecls] in
 theorem PickAt.callClassify (h : PickAt P r F s ra w lo L i best cls t)
     (hok : r.Ok)
     (hmem : c.dmem = t.dmem.storeInt (t.regs.rsp.toBitVec + 8#64) 8

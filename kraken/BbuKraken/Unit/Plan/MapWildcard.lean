@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.MapClosest
+module
+
+public import BbuKraken.Unit.Plan.MapClosest
+import all BbuKraken.Unit.Plan.MapClosest
+
+@[expose] public section
 
 /-!
 # `MappingBuilder::mapWildcardSlotCopies`

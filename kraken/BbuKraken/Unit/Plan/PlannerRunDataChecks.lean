@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunDataFrame
-import BbuKraken.Unit.Run.Model
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunDataFrame
+import all BbuKraken.Unit.Plan.PlannerRunDataFrame
+public import BbuKraken.Unit.Run.Model
+import all BbuKraken.Unit.Run.Model
+
+@[expose] public section
 
 namespace Bbu.Flat
 

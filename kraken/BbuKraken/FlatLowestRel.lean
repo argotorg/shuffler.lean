@@ -1,9 +1,19 @@
-import BbuKraken.FlatLowest
-import BbuKraken.ModelLowest
-import BbuKraken.FlatList.Permute
-import BbuKraken.FlatList.PermList
-import BbuKraken.FlatList.Loop
-import BbuKraken.FlatList.Ctor
+module
+
+public import BbuKraken.FlatLowest
+import all BbuKraken.FlatLowest
+public import BbuKraken.ModelLowest
+import all BbuKraken.ModelLowest
+public import BbuKraken.FlatList.Permute
+import all BbuKraken.FlatList.Permute
+public import BbuKraken.FlatList.PermList
+import all BbuKraken.FlatList.PermList
+public import BbuKraken.FlatList.Loop
+import all BbuKraken.FlatList.Loop
+public import BbuKraken.FlatList.Ctor
+import all BbuKraken.FlatList.Ctor
+
+@[expose] public section
 
 /-!
 The flat `permuteAtLowestHeight` (`FlatLowest.lean`) against the list `Bbu.lowest`

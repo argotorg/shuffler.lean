@@ -1,11 +1,23 @@
-import BbuKraken.Unit.Plan.ResolveInit
-import BbuKraken.Unit.Plan.ResolveOuter
-import BbuKraken.Unit.Plan.ResolveTie
-import BbuKraken.Unit.Plan.ResolveCursor
-import BbuKraken.Unit.Plan.ResolveClassify
-import BbuKraken.Unit.Plan.ResolveDispatch
-import BbuKraken.Unit.Plan.ResolveDrop
-import BbuKraken.Unit.Plan.ResolveSpill
+module
+
+public import BbuKraken.Unit.Plan.ResolveInit
+import all BbuKraken.Unit.Plan.ResolveInit
+public import BbuKraken.Unit.Plan.ResolveOuter
+import all BbuKraken.Unit.Plan.ResolveOuter
+public import BbuKraken.Unit.Plan.ResolveTie
+import all BbuKraken.Unit.Plan.ResolveTie
+public import BbuKraken.Unit.Plan.ResolveCursor
+import all BbuKraken.Unit.Plan.ResolveCursor
+public import BbuKraken.Unit.Plan.ResolveClassify
+import all BbuKraken.Unit.Plan.ResolveClassify
+public import BbuKraken.Unit.Plan.ResolveDispatch
+import all BbuKraken.Unit.Plan.ResolveDispatch
+public import BbuKraken.Unit.Plan.ResolveDrop
+import all BbuKraken.Unit.Plan.ResolveDrop
+public import BbuKraken.Unit.Plan.ResolveSpill
+import all BbuKraken.Unit.Plan.ResolveSpill
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -20,9 +32,9 @@ theorem phase_commute (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra :
       loopPhase P r F s ra (dropPhase P r F s ra (initFullPhase P r F s ra rest)) := by
   funext l t
   by_cases h0 : l = ".LB.Planner.resolve.0"
-  · subst l; simp [initFullPhase, zphase, initPhase, loopPhase, dropPhase]
+  · subst l; simp [initFullPhase, zphase, loopPhase, dropPhase]
   by_cases h1 : l = ".LB.Planner.resolve.1"
-  · subst l; simp [initFullPhase, zphase, initPhase, loopPhase, dropPhase]
+  · subst l; simp [initFullPhase, zphase, loopPhase, dropPhase]
   by_cases h4 : l = ".LB.Planner.resolve.4"
   · subst l; simp [initFullPhase, zphase, initPhase, loopPhase, dropPhase]
   by_cases h5 : l = ".LB.Planner.resolve.5"
@@ -37,7 +49,7 @@ theorem var_commute (s : MachineData) (rest : Label → MachineData → Nat) :
     initFullVar s (loopVar s rest) = loopVar s (initFullVar s rest) := by
   funext l t
   by_cases h0 : l = ".LB.Planner.resolve.0"
-  · subst l; simp [initFullVar, zvar, initVar, loopVar, Names.resolve]
+  · subst l; simp [initFullVar, zvar, loopVar]
   by_cases hf : l = Names.resolve
   · subst l; simp [initFullVar, zvar, initVar, loopVar, Names.resolve]
   by_cases h1 : l = ".LB.Planner.resolve.1"
@@ -90,7 +102,7 @@ theorem resolve_unit [Host] [FunDecls]
     · intro t ht
       have he := hp.args.2.2.2.2.1
       change (rcx s).toNat ≤ 1024 at he
-      simp only [variant, ResolveU.loopVar, String.reduceEq, ↓reduceIte,
+      simp only [variant, ResolveU.loopVar, ↓reduceIte,
         ResolveU.loopBase, ht, BitVec.sub_zero]
       omega
   all_goals change resolveAsm.ForallBlocks (fun blk => blk.label = _ →

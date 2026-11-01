@@ -1,7 +1,15 @@
-import BbuKraken.Unit.Plan.PlannerRunCompleteContext
-import BbuKraken.Unit.Plan.PlannerRunVariant
-import BbuKraken.Unit.Plan.PlannerRunScanDefs
-import BbuKraken.Unit.Plan.PlannerRunValidate
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunCompleteContext
+import all BbuKraken.Unit.Plan.PlannerRunCompleteContext
+public import BbuKraken.Unit.Plan.PlannerRunVariant
+import all BbuKraken.Unit.Plan.PlannerRunVariant
+public import BbuKraken.Unit.Plan.PlannerRunScanDefs
+import all BbuKraken.Unit.Plan.PlannerRunScanDefs
+public import BbuKraken.Unit.Plan.PlannerRunValidate
+import all BbuKraken.Unit.Plan.PlannerRunValidate
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP

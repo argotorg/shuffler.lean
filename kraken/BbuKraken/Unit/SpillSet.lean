@@ -1,5 +1,11 @@
-import BbuKraken.Unit.SpillAdd
-import BbuKraken.Unit.SpillSetLemmas
+module
+
+public import BbuKraken.Unit.SpillAdd
+import all BbuKraken.Unit.SpillAdd
+public import BbuKraken.Unit.SpillSetLemmas
+import all BbuKraken.Unit.SpillSetLemmas
+
+@[expose] public section
 
 /-!
 # `spill_set`

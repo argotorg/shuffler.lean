@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunBuilderFrame
-import BbuKraken.Unit.Plan.ResolveByteFrame
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunBuilderFrame
+import all BbuKraken.Unit.Plan.PlannerRunBuilderFrame
+public import BbuKraken.Unit.Plan.ResolveByteFrame
+import all BbuKraken.Unit.Plan.ResolveByteFrame
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep

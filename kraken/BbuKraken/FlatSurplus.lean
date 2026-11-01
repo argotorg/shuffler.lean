@@ -1,4 +1,9 @@
-import BbuKraken.FlatPop
+module
+
+public import BbuKraken.FlatPop
+import all BbuKraken.FlatPop
+
+@[expose] public section
 
 /-!
 The flat model of `Emission::removeSurplus` and `remove_surplus` in `c/build_bottom_up.cpp`, as in

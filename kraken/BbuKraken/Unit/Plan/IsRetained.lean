@@ -1,7 +1,15 @@
-import BbuKraken.Unit.Plan.Defs
-import BbuKraken.Unit.IsSpilled
-import BbuKraken.Asm
-import ProofKit.Cfg
+module
+
+public import BbuKraken.Unit.Plan.Defs
+import all BbuKraken.Unit.Plan.Defs
+public import BbuKraken.Unit.IsSpilled
+import all BbuKraken.Unit.IsSpilled
+public import BbuKraken.Asm
+import all BbuKraken.Asm
+public import ProofKit.Cfg
+import all ProofKit.Cfg
+
+@[expose] public section
 
 /-!
 # `Planner::isRetained`

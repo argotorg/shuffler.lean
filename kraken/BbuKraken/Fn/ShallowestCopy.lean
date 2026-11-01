@@ -1,5 +1,11 @@
-import BbuKraken.Fn.IsSpilled
-import BbuKraken.Kit
+module
+
+public import BbuKraken.Fn.IsSpilled
+import all BbuKraken.Fn.IsSpilled
+public import BbuKraken.Kit
+import all BbuKraken.Kit
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

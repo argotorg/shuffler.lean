@@ -1,4 +1,9 @@
-import BbuKraken.FlatList.Produce
+module
+
+public import BbuKraken.FlatList.Produce
+import all BbuKraken.FlatList.Produce
+
+@[expose] public section
 
 /-!
 An iteration of the loop: `urgentFrom`, `candidateFrom`, `placeTop`, `bound` and `body` of

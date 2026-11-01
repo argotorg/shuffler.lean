@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ResolveCongruence
+module
+
+public import BbuKraken.Unit.Plan.ResolveCongruence
+import all BbuKraken.Unit.Plan.ResolveCongruence
+
+@[expose] public section
 
 namespace Bbu.Unit.ResolveU
 open Flat

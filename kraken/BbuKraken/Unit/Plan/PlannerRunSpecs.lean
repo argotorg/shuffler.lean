@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.Emission
+module
+
+public import BbuKraken.Unit.Plan.Emission
+import all BbuKraken.Unit.Plan.Emission
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -22,8 +27,7 @@ variable [Host] [FunDecls] {Q : Unit → MachineData → Prop} {E : Int64 → Ma
   obtain ⟨hmapped, hpre⟩ := hpre
   obtain ⟨v, hload⟩ := Option.isSome_iff_exists.mp hmapped
   refine Program.wp_single fun _ _ _ _ hn _ => ?_
-  simp only [Directive.interp, Instr.interp, Operation.interp, Operand.interp,
-    RegOrMem.interp, MachineData.load, MachineData.set, MachineData.setReg,
+  simp only [Directive.interp, Instr.interp, Operation.interp, RegOrMem.interp, MachineData.load, MachineData.set, MachineData.setReg,
     Reg64s.set_low_W32, AddrExpr.zeroExtend_interp_base_idx8, Width.bytes, hload,
     Effects.All]
   exact hn _ (by rwa [hload, Option.get!_some] at hpre)

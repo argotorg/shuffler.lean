@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Run.Assemble
+module
+
+public import BbuKraken.Unit.Run.Assemble
+import all BbuKraken.Unit.Run.Assemble
+
+@[expose] public section
 
 /-! `Emission::run` uses the planned mapping and returns the result of `Flat.emissionRun`.
 The initial values of the lowest-height locals are existential, as in `LowestThm`.

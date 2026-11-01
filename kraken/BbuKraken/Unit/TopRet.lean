@@ -1,5 +1,11 @@
-import BbuKraken.Unit.TopFrame
-import BbuKraken.Kit
+module
+
+public import BbuKraken.Unit.TopFrame
+import all BbuKraken.Unit.TopFrame
+public import BbuKraken.Kit
+import all BbuKraken.Kit
+
+@[expose] public section
 
 /-!
 # The result of `build_bottom_up`

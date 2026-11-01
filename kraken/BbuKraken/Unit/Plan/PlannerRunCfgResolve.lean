@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.PlannerRunCfgResolveDefs
-import BbuKraken.Unit.Plan.PlannerRunResolve
-import BbuKraken.Unit.Plan.PlannerRunResolveTargets
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunCfgResolveDefs
+import all BbuKraken.Unit.Plan.PlannerRunCfgResolveDefs
+public import BbuKraken.Unit.Plan.PlannerRunResolve
+import all BbuKraken.Unit.Plan.PlannerRunResolve
+public import BbuKraken.Unit.Plan.PlannerRunResolveTargets
+import all BbuKraken.Unit.Plan.PlannerRunResolveTargets
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP
@@ -76,7 +83,7 @@ theorem cfg_29 : plannerRunAsm.ForallBlocks fun blk =>
         omega)
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
-    String.reduceEq, Nat.reduceAdd, false_implies, true_implies, and_true, true_and] at hh
+    String.reduceEq, false_implies, true_implies, and_true, true_and] at hh
   exact hh ⟨lo, i, h0, hi, hax, hrest⟩
 
 set_option maxRecDepth 4096 in
@@ -122,7 +129,7 @@ theorem cfg_30 (hresolve : VSpec RView RG.Ok Names.resolve resolveA 1182 resolve
       · simp only [FullRunInv, RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte]
         exact ⟨withResolve current spills dropped, lo', resolveLocals locals hl,
           h1.toBd, h1.ok, hq⟩
-      · simp only [runV, String.reduceEq, or_false, or_true, ↓reduceIte]
+      · simp only [runV, String.reduceEq, or_false, ↓reduceIte]
         omega) (by
       intro spills dropped res lo' u hr h1 hres hm0
       have hmodel := hcells.resolved hr scratch
@@ -166,7 +173,7 @@ theorem cfg_30 (hresolve : VSpec RView RG.Ok Names.resolve resolveA 1182 resolve
         omega)
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
-    String.reduceEq, Nat.reduceAdd, false_implies, true_implies, and_true, true_and] at hh
+    String.reduceEq, false_implies, true_implies, and_true, true_and] at hh
   exact hh t ⟨lo, h0.toPostEmitLI⟩ hbp
 
 end

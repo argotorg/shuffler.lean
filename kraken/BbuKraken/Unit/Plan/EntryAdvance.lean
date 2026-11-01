@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.EntryFrame
-import BbuKraken.Unit.Plan.EntryIdsModel
+module
+
+public import BbuKraken.Unit.Plan.EntryFrame
+import all BbuKraken.Unit.Plan.EntryFrame
+public import BbuKraken.Unit.Plan.EntryIdsModel
+import all BbuKraken.Unit.Plan.EntryIdsModel
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP
@@ -41,7 +47,7 @@ theorem b_0 [Host] [FunDecls] (g : EG) (F : MProp 64) (s t : MachineData)
   | other =>
     rename_i he
     symexec_norm at he
-    simp only [hm, sub_beq_zero, Bool.not_eq_true', beq_eq_false_iff_ne] at he
+    simp only [hm, sub_beq_zero, beq_eq_false_iff_ne] at he
     apply hnext
     · refine ⟨lo, locals, (by apply hc.next <;> rfl), ?_, ?_⟩
       · change 1#64 + t.regs.rax.toBitVec < g.r.p.m

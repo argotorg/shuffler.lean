@@ -1,6 +1,13 @@
-import PlanBridge.ForIn
-import PlanBridge.List
-import Shuffler.BuildMapping.Defs
+module
+
+public import PlanBridge.ForIn
+import all PlanBridge.ForIn
+public import PlanBridge.List
+import all PlanBridge.List
+public import Shuffler.BuildMapping.Defs
+import all Shuffler.BuildMapping.Defs
+
+@[expose] public section
 
 /-!
 The flat `Mapping` arrays and the PR31 `Mapping`, and the members of the flat `Builder` and the

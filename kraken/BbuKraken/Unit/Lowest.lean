@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Lowest.Assemble
+module
+
+public import BbuKraken.Unit.Lowest.Assemble
+import all BbuKraken.Unit.Lowest.Assemble
+
+@[expose] public section
 
 /-!
 # `permuteAtLowestHeight`

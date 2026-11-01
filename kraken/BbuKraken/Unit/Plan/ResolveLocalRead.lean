@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.ResolveLocals
-import BbuKraken.Unit.Plan.ResolveZero
+module
+
+public import BbuKraken.Unit.Plan.ResolveLocals
+import all BbuKraken.Unit.Plan.ResolveLocals
+public import BbuKraken.Unit.Plan.ResolveZero
+import all BbuKraken.Unit.Plan.ResolveZero
+
+@[expose] public section
 
 namespace Bbu.Unit.ResolveU
 open Bbu.Sep
@@ -69,7 +75,7 @@ theorem Bd.droppedRead (h : Bd P r F s ra lo L.toList t) {o : Word}
     (t.regs.rsp.toBitVec + 8240#64) L.droppedNow.toList (i := o.toNat)
     (by rw [Vector.length_toList]; exact ho) 0#8
   rw [he, MProp.sep_assoc, BitVec.ofNat_toNat, BitVec.setWidth_eq] at hm
-  simpa only [Flat.get, dif_pos ho, Vector.getElem_toList] using (B8.rdb hm).symm
+  simpa only [Flat.get, dite_eq_left ho, Vector.getElem_toList] using (B8.rdb hm).symm
 
 theorem Bd.droppedZero (h : Bd P r F s ra lo L.toList t)
     (hz : ZeroPrefix r.p.m t) (hm : r.p.m.toNat ≤ MAX_N) :

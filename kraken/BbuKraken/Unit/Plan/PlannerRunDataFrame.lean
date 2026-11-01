@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunData
-import BbuKraken.FlatList.Basic
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunData
+import all BbuKraken.Unit.Plan.PlannerRunData
+public import BbuKraken.FlatList.Basic
+import all BbuKraken.FlatList.Basic
+
+@[expose] public section
 
 namespace Bbu.Flat
 

@@ -1,4 +1,9 @@
-import PlanBridge.Out
+module
+
+public import PlanBridge.Out
+import all PlanBridge.Out
+
+@[expose] public section
 
 /-!
 The list state of a flat state in which each slot has a destination (`listOf`), as after a

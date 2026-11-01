@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.EntryPack
-import Kraken.X64.Parser
-import BbuKraken.Unit.Run.Load
+module
+
+public import BbuKraken.Unit.Plan.EntryPack
+import all BbuKraken.Unit.Plan.EntryPack
+public import Kraken.X64.Parser
+import all Kraken.X64.Parser
+public import BbuKraken.Unit.Run.Load
+import all BbuKraken.Unit.Run.Load
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP

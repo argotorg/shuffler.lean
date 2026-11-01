@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunSurplus
-import BbuKraken.Unit.PermuteModel
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunSurplus
+import all BbuKraken.Unit.Plan.PlannerRunSurplus
+public import BbuKraken.Unit.PermuteModel
+import all BbuKraken.Unit.PermuteModel
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Flat

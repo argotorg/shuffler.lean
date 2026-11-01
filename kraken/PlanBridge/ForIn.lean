@@ -1,5 +1,11 @@
-import PlanBridge.Loops
-import Shuffler.Contracts
+module
+
+public import PlanBridge.Loops
+import all PlanBridge.Loops
+public import Shuffler.Contracts
+import all Shuffler.Contracts
+
+@[expose] public section
 
 /-!
 The loops of the flat model and the `for` loops of PR31 over `List.finRange n`.

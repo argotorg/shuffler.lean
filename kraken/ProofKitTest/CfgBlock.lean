@@ -1,5 +1,11 @@
-import ProofKit.CfgBlock
-import ProofKitTest.Cfg
+module
+
+public import ProofKit.CfgBlock
+import all ProofKit.CfgBlock
+public import ProofKitTest.Cfg
+import all ProofKitTest.Cfg
+
+@[expose] public section
 
 /-! # Tests: `forallBlocks_cases`, `cfg_labels`, `cfg_block`
 

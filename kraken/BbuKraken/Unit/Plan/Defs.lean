@@ -1,7 +1,15 @@
-import BbuKraken.Unit.SpillDefs
-import BbuKraken.FlatPlan
-import BbuKraken.Sep.Stores
-import BbuKraken.Unit.IsSpilled
+module
+
+public import BbuKraken.Unit.SpillDefs
+import all BbuKraken.Unit.SpillDefs
+public import BbuKraken.FlatPlan
+import all BbuKraken.FlatPlan
+public import BbuKraken.Sep.Stores
+import all BbuKraken.Sep.Stores
+public import BbuKraken.Unit.IsSpilled
+import all BbuKraken.Unit.IsSpilled
+
+@[expose] public section
 
 /-!
 # The contracts of the planner units

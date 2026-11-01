@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Lowest.Defs
-import BbuKraken.Unit.Loop.Frame
+module
+
+public import BbuKraken.Unit.Lowest.Defs
+import all BbuKraken.Unit.Lowest.Defs
+public import BbuKraken.Unit.Loop.Frame
+import all BbuKraken.Unit.Loop.Frame
+
+@[expose] public section
 
 /-!
 # `permuteAtLowestHeight`: the stack frame
@@ -65,9 +71,9 @@ theorem stk_frame (sp : Addr) (lo : List Word) (w : Word) (L : Lc) (v : Word) (F
   rw [Arr.append, Arr.append, Arr.append]
   simp only [Arr, MProp.sep_emp]
   rw [show sp - 24592#64 + BitVec.ofNat 64 (8 * L.parked.toList.length) = sp - 16400#64 by
-      simp only [List.length_append, hp, hh, hq]; bv_omega,
+      simp only [hp]; bv_omega,
     show sp - 24592#64 + BitVec.ofNat 64 (8 * (L.parked.toList ++ L.holes.toList).length)
-      = sp - 8208#64 by simp only [List.length_append, hp, hh, hq]; bv_omega,
+      = sp - 8208#64 by simp only [List.length_append, hp, hh]; bv_omega,
     show sp - 24592#64 + BitVec.ofNat 64
       (8 * (L.parked.toList ++ L.holes.toList ++ L.perm.toList).length) = sp - 16#64 by
       simp only [List.length_append, hp, hh, hq]; bv_omega]

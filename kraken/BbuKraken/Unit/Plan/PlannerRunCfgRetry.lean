@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.PlannerRunCfgDefs
-import BbuKraken.Unit.Plan.PlannerRunRetryAfter
-import BbuKraken.Unit.Plan.PlannerRunBuilderFailure
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunCfgDefs
+import all BbuKraken.Unit.Plan.PlannerRunCfgDefs
+public import BbuKraken.Unit.Plan.PlannerRunRetryAfter
+import all BbuKraken.Unit.Plan.PlannerRunRetryAfter
+public import BbuKraken.Unit.Plan.PlannerRunBuilderFailure
+import all BbuKraken.Unit.Plan.PlannerRunBuilderFailure
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP

@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.PlannerRunEmissionDefs
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunEmissionDefs
+import all BbuKraken.Unit.Plan.PlannerRunEmissionDefs
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP

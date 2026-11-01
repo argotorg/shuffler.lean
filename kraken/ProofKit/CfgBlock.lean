@@ -1,4 +1,9 @@
-import ProofKit.Cfg
+module
+
+public import ProofKit.Cfg
+import all ProofKit.Cfg
+
+@[expose] public section
 
 /-!
 `Program.WP.cfg` proofs with one lemma for each block. All untrusted: they only

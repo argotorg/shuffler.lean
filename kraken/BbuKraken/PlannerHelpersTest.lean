@@ -1,5 +1,11 @@
-import BbuKraken.PlannerHelpers
-import BbuKraken.Bin
+module
+
+public import BbuKraken.PlannerHelpers
+import all BbuKraken.PlannerHelpers
+public import BbuKraken.Bin
+import all BbuKraken.Bin
+
+@[expose] public section
 
 namespace Bbu
 

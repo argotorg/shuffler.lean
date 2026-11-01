@@ -1,5 +1,11 @@
-import BbuKraken.Unit.PermuteModel
-import BbuKraken.FlatModelTest
+module
+
+public import BbuKraken.Unit.PermuteModel
+import all BbuKraken.Unit.PermuteModel
+public import BbuKraken.FlatModelTest
+import all BbuKraken.FlatModelTest
+
+@[expose] public section
 
 /-!
 Tests of `PermuteModel.lean`: `lead`, `mu`, `misplacedBelow` and `swapP` on small inputs, and the

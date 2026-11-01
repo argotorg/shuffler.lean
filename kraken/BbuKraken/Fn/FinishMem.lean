@@ -1,5 +1,11 @@
-import BbuKraken.Kit
-import PermuteKraken.Proof
+module
+
+public import BbuKraken.Kit
+import all BbuKraken.Kit
+public import PermuteKraken.Proof
+import all PermuteKraken.Proof
+
+@[expose] public section
 
 /-!
 Memory lemmas for the old `permuteDestinations`: stores of 1, 4 and 8 bytes, the low 6 bytes of

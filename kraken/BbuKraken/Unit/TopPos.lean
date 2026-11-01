@@ -1,4 +1,9 @@
-import BbuKraken.Unit.TopInv
+module
+
+public import BbuKraken.Unit.TopInv
+import all BbuKraken.Unit.TopInv
+
+@[expose] public section
 
 /-!
 # `build_bottom_up`: the position blocks
@@ -228,7 +233,7 @@ theorem b_11 [Host] [FunDecls] (s ra) (_hpre : TopPre s) :
     · exact hs.stack_of rfl
     · simp only [LInv, Names.build_bottom_up, String.reduceEq, ↓reduceIte]
       exact ⟨j, hj, TS.cast (hs.step hs.mem rfl rfl rfl rfl rfl rfl rfl)
-        (by rw [Flat.countNone_succ, get_ofNat _ hjN, ite_cond_eq_false _ _ (eq_false hne)] <;> rfl) rfl, hax, hdx⟩
+        (by rw [Flat.countNone_succ, get_ofNat _ hjN, ite_eq_right_of_eq_false _ _ (eq_false hne)] <;> rfl) rfl, hax, hdx⟩
     · top_dec
   case vc3 => rw [hs.sp]; exact Em.isSome_pend hs.mem
   case vc4 =>
@@ -241,7 +246,7 @@ theorem b_11 [Host] [FunDecls] (s ra) (_hpre : TopPre s) :
     · exact hs.stack_of rfl
     · simp only [LInv, Names.build_bottom_up, String.reduceEq, ↓reduceIte]
       exact ⟨j, hj, TS.cast (hs.step hm' rfl rfl rfl rfl rfl rfl rfl)
-        (by rw [Flat.countNone_succ, get_ofNat _ hjN, ite_cond_eq_true _ _ (eq_true hne), BitVec.add_comm] <;> rfl) rfl, hax, hdx⟩
+        (by rw [Flat.countNone_succ, get_ofNat _ hjN, ite_eq_left_of_eq_true _ _ (eq_true hne), BitVec.add_comm] <;> rfl) rfl, hax, hdx⟩
     · top_dec
 
 end Top

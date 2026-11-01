@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.PlannerRunFrame
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunFrame
+import all BbuKraken.Unit.Plan.PlannerRunFrame
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -48,7 +53,7 @@ theorem b_26 [Host] [FunDecls] (P : Addr) (g g' : PlannerRunG) (F : MProp 64)
   have k4 := hb.popSome 4 (by decide)
   have k5 := hb.popSome 5 (by decide)
   simp only [BitVec.add_comm t.regs.rsp.toBitVec (32968#64), BitVec.add_zero,
-    Nat.reduceMul, BitVec.add_assoc, BitVec.reduceAdd] at k0 k1 k2 k3 k4 k5
+    Nat.reduceMul, BitVec.add_assoc] at k0 k1 k2 k3 k4 k5
   kvcgen64
   all_goals try symexec_norm at ⊢
   all_goals try simp only [BitVec.add_assoc, BitVec.reduceAdd] at ⊢

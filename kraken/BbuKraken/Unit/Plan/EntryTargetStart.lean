@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.EntryFrame
-import BbuKraken.Unit.Plan.EntryIdsModel
+module
+
+public import BbuKraken.Unit.Plan.EntryFrame
+import all BbuKraken.Unit.Plan.EntryFrame
+public import BbuKraken.Unit.Plan.EntryIdsModel
+import all BbuKraken.Unit.Plan.EntryIdsModel
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP

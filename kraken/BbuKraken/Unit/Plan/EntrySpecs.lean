@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.Emission
+module
+
+public import BbuKraken.Unit.Plan.Emission
+import all BbuKraken.Unit.Plan.Emission
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

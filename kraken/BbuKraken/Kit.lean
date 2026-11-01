@@ -1,4 +1,9 @@
-import BbuKraken.Contracts
+module
+
+public import BbuKraken.Contracts
+import all BbuKraken.Contracts
+
+@[expose] public section
 
 /-!
 # Kit: lemmas for the proofs of the function bodies

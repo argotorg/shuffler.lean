@@ -1,4 +1,9 @@
-import BbuKraken.PlanReject
+module
+
+public import BbuKraken.PlanReject
+import all BbuKraken.PlanReject
+
+@[expose] public section
 
 namespace Bbu.Unit.EntryRejectIds.Test
 open EntryValidU

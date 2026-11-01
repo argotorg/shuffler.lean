@@ -1,6 +1,13 @@
-import ProofKit.SymExec
-import PermuteKraken.Specs
-import Kraken.X64.Parser
+module
+
+public import ProofKit.SymExec
+import all ProofKit.SymExec
+public import PermuteKraken.Specs
+import all PermuteKraken.Specs
+public import Kraken.X64.Parser
+import all Kraken.X64.Parser
+
+@[expose] public section
 
 /-! # Tests: `#symexec`
 

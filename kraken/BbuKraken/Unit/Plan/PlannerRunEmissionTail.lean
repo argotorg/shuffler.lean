@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunEmissionPost
-import Kraken.X64.Parser
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunEmissionPost
+import all BbuKraken.Unit.Plan.PlannerRunEmissionPost
+public import Kraken.X64.Parser
+import all Kraken.X64.Parser
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP
@@ -69,7 +75,7 @@ theorem emission_tail [Host] [FunDecls] (P : Addr) (g : PlannerRunG)
     apply hzero
     · exact h.next rfl rfl rfl rfl rfl rfl rfl
     · simp only [BitVec.zero_eq, Bool.not_eq_false', beq_iff_eq] at hj
-      simp only [al, rax, Reg64s.get64_rax,
+      simp only [Reg64s.get64_rax,
         BitVec.setWidth_eq_extractLsb' (by decide : 8 ≤ 64)]
       bv_omega
     · exact hm
@@ -81,7 +87,7 @@ theorem emission_tail [Host] [FunDecls] (P : Addr) (g : PlannerRunG)
     apply hmore
     · exact h.next rfl rfl rfl rfl rfl rfl rfl
     · simp only [BitVec.zero_eq, Bool.not_eq_false', beq_iff_eq] at hj
-      simp only [al, rax, Reg64s.get64_rax,
+      simp only [Reg64s.get64_rax,
         BitVec.setWidth_eq_extractLsb' (by decide : 8 ≤ 64)]
       bv_omega
     · exact hm

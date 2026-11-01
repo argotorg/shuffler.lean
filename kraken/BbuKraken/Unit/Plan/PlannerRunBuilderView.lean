@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunBuilderLayout
-import BbuKraken.Unit.Plan.PlannerRunBuilderModel
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunBuilderLayout
+import all BbuKraken.Unit.Plan.PlannerRunBuilderLayout
+public import BbuKraken.Unit.Plan.PlannerRunBuilderModel
+import all BbuKraken.Unit.Plan.PlannerRunBuilderModel
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep Flat
@@ -25,7 +31,7 @@ theorem builderGhost_ok (g : PlannerRunG) (hok : g.Ok) (mp : Addr)
   simp only [builderGhost, List.length_take, Vector.length_toList]
   exact Nat.min_eq_left hok.planner.m
 
-theorem builder_view_frame (P B : Addr) (g : PlannerRunG) (hok : g.Ok)
+theorem builder_view_frame (P B : Addr) (g : PlannerRunG) (_hok : g.Ok)
     (mp : Addr) (strat : BitVec 8) :
     ∃ PF, ∀ (M : Flat.Mapping) (saw : BitVec 8),
       PlannerRunView P g ∗ MapM mp M ∗ BuilderMembers B (builderGhost g mp strat saw M) =

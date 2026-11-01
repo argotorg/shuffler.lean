@@ -1,7 +1,15 @@
-import BbuKraken.Unit.Defs
-import BbuKraken.Sep.Stores
-import ProofKit.Cfg
-import ProofKit.Idioms
+module
+
+public import BbuKraken.Unit.Defs
+import all BbuKraken.Unit.Defs
+public import BbuKraken.Sep.Stores
+import all BbuKraken.Sep.Stores
+public import ProofKit.Cfg
+import all ProofKit.Cfg
+public import ProofKit.Idioms
+import all ProofKit.Idioms
+
+@[expose] public section
 
 /-!
 # `swapWith`
@@ -326,7 +334,7 @@ theorem ofWord_411 (a b : Word) :
   refine ⟨?_, ?_, ?_⟩ <;> bv_decide
 
 -- The stores of `Flat.stackSwap` and the two stores of `m_destinationOf`.
-theorem flat_swap (g : G) (hok : g.Ok) (p : Word) (hp : p.toNat < g.h.len.toNat)
+theorem flat_swap (g : G) (hok : g.Ok) (p : Word) (_hp : p.toNat < g.h.len.toNat)
     (hn : g.h.nops.toNat < 6 * g.h.n.toNat + g.xo) (hpn : p.toNat < g.h.n.toNat + g.xs)
     (ht : (g.h.len - 1).toNat < g.h.n.toNat + g.xs) (hpM : p.toNat < MAX_N)
     (htM : (g.h.len - 1).toNat < MAX_N) (w : Word)
@@ -387,7 +395,7 @@ before the first part.) The match is reducible, as in `apply`. Untrusted: it onl
 
 open Lean in
 /-- `m`, then the memories under the stores of `m`, the last store first. -/
-partial def memChain (m : Expr) : List Expr :=
+meta partial def memChain (m : Expr) : List Expr :=
   if m.isAppOfArity ``Mem.storeInt 5 then m :: memChain (m.getArg! 1) else [m]
 
 open Lean Meta Elab Tactic in

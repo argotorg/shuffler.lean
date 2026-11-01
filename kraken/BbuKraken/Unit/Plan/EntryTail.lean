@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.EntryInvoke
+module
+
+public import BbuKraken.Unit.Plan.EntryInvoke
+import all BbuKraken.Unit.Plan.EntryInvoke
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP

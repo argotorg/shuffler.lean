@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.ResolveMem
-import BbuKraken.FlatList.Basic
+module
+
+public import BbuKraken.Unit.Plan.ResolveMem
+import all BbuKraken.Unit.Plan.ResolveMem
+public import BbuKraken.FlatList.Basic
+import all BbuKraken.FlatList.Basic
+
+@[expose] public section
 
 /-! The live part of a resolve local array determines every result. Bytes and
 words outside the live ranges may have any value. -/

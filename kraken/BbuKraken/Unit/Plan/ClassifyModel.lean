@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.IsDemanded
+module
+
+public import BbuKraken.Unit.Plan.IsDemanded
+import all BbuKraken.Unit.Plan.IsDemanded
+
+@[expose] public section
 
 /-! The branch results used by the assembly proof of `Planner::classify`. -/
 

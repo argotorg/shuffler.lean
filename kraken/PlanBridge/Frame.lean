@@ -1,4 +1,9 @@
-import BbuKraken.FlatSurplus
+module
+
+public import BbuKraken.FlatSurplus
+import all BbuKraken.FlatSurplus
+
+@[expose] public section
 
 /-!
 The members of the flat state that `removeSurplus` does not write: the target, the target size,

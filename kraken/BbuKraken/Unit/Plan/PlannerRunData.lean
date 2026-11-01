@@ -1,4 +1,9 @@
-import BbuKraken.FlatPlan
+module
+
+public import BbuKraken.FlatPlan
+import all BbuKraken.FlatPlan
+
+@[expose] public section
 
 namespace Bbu.Flat
 

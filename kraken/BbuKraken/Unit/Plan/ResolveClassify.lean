@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.ResolveClassifyModel
-import BbuKraken.Unit.Plan.ResolveClassifySpecs
-import BbuKraken.Unit.Run.Load
+module
+
+public import BbuKraken.Unit.Plan.ResolveClassifyModel
+import all BbuKraken.Unit.Plan.ResolveClassifyModel
+public import BbuKraken.Unit.Plan.ResolveClassifySpecs
+import all BbuKraken.Unit.Plan.ResolveClassifySpecs
+public import BbuKraken.Unit.Run.Load
+import all BbuKraken.Unit.Run.Load
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -118,7 +125,7 @@ theorem b_12 (hclass : VSpec CView CG.Ok Names.classify classifyA 16 classifyQ) 
     rw [hclassread] at hclassread2
     kvcgen64 [cmp8_exact_spec]
     all_goals try symexec_norm at ⊢
-    all_goals try simp only [hclassread, hclassread2, movzbl_take, movzbl_low] at ⊢
+    all_goals try simp only [hclassread, hclassread2, movzbl_take] at ⊢
     vc_by_shape
     | load =>
       first

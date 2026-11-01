@@ -1,4 +1,9 @@
-import BbuBridge.Statements
+module
+
+public import BbuBridge.Statements
+import all BbuBridge.Statements
+
+@[expose] public section
 
 /-!
 The branch of the loop for an urgent offset.

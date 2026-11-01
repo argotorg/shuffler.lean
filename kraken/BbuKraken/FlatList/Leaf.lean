@@ -1,4 +1,9 @@
-import BbuKraken.FlatList.Basic
+module
+
+public import BbuKraken.FlatList.Basic
+import all BbuKraken.FlatList.Basic
+
+@[expose] public section
 
 /-!
 The leaf units of the flat model keep `Sim`: `push`, `dup`, `swapDestinations`, `swapWith`

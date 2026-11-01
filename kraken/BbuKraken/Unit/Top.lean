@@ -1,9 +1,19 @@
-import BbuKraken.Unit.TopFill
-import BbuKraken.Unit.TopBind
-import BbuKraken.Unit.TopHdr
-import BbuKraken.Unit.TopPos
-import BbuKraken.Unit.TopInvoke
-import BbuKraken.Unit.TopExit
+module
+
+public import BbuKraken.Unit.TopFill
+import all BbuKraken.Unit.TopFill
+public import BbuKraken.Unit.TopBind
+import all BbuKraken.Unit.TopBind
+public import BbuKraken.Unit.TopHdr
+import all BbuKraken.Unit.TopHdr
+public import BbuKraken.Unit.TopPos
+import all BbuKraken.Unit.TopPos
+public import BbuKraken.Unit.TopInvoke
+import all BbuKraken.Unit.TopInvoke
+public import BbuKraken.Unit.TopExit
+import all BbuKraken.Unit.TopExit
+
+@[expose] public section
 
 /-!
 # `build_bottom_up`

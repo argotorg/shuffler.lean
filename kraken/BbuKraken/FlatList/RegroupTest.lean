@@ -1,5 +1,11 @@
-import BbuKraken.FlatList.Permute
-import BbuKraken.FlatModelTest
+module
+
+public import BbuKraken.FlatList.Permute
+import all BbuKraken.FlatList.Permute
+public import BbuKraken.FlatModelTest
+import all BbuKraken.FlatModelTest
+
+@[expose] public section
 
 /-!
 Tests of `PermList.lean`, `Regroup.lean` and `Permute.lean`: `dedup` and `isLast`; the

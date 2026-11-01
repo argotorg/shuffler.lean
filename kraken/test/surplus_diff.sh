@@ -14,7 +14,7 @@ trap 'rm -rf "$tmp"' EXIT
 
 make -C "$root/kraken/c" -s surplus_harness
 (cd "$root" && lake build pop_pr31 >/dev/null)
-(cd "$root/kraken" && lake build surplus_flat >/dev/null)
+(cd "$root" && lake build PermuteKraken/surplus_flat >/dev/null)
 
 run() {
 	"$root/kraken/c/surplus_harness" < "$1" > "$2/c"

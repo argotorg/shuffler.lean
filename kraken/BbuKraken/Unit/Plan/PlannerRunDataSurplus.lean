@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunDataFrame
-import BbuKraken.Unit.Plan.PlannerRunBlockedSurplus
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunDataFrame
+import all BbuKraken.Unit.Plan.PlannerRunDataFrame
+public import BbuKraken.Unit.Plan.PlannerRunBlockedSurplus
+import all BbuKraken.Unit.Plan.PlannerRunBlockedSurplus
+
+@[expose] public section
 
 namespace Bbu.Flat
 

@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ClassifyFrame
+module
+
+public import BbuKraken.Unit.Plan.ClassifyFrame
+import all BbuKraken.Unit.Plan.ClassifyFrame
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

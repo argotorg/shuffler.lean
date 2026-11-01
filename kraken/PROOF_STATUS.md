@@ -76,20 +76,50 @@ assembly proofs. They are outside the public `plan` call path.
 `Planner.run`. Its `SlotsOk` premise requires canonical slot encodings, kinds
 below four, and consistent variable encodings for equal payloads.
 
-The assembly result witness supplies the flat-model side of this connection.
-The assembly theorem covers arbitrary slot bits under its memory contract; the
-PR31 correspondence retains `SlotsOk`. The two proof stages use separate Lake
-packages and toolchains. There is no combined theorem that imports both compiled
-packages into one Lean environment.
+`PlanBridge.plan_correct` composes the assembly and model contracts.
+`PlanBridge.plan_harness_correct` specializes the result to the binary host.
+Both are in `PlanBridge/Final.lean`. `Interface.lean` defines the shared input and
+exact flat result. `Assembly.lean` keeps the Kraken proof imports private and
+lifts a property of that flat result into the assembly postcondition.
+`Model.lean` keeps the Shuffler proof imports private and proves that property
+from `planEntry_corr`.
+
+The old theorem statements directly named both implementation libraries. Their
+types would export those dependencies even with private imports. The new public
+predicates have types over the shared flat data.
+
+The contract definitions retain the canonical-slot premise, assembly witness,
+output and frame facts, and the assertion-failure flag rule. Rejected arguments
+return `-2`. Accepted arguments give the PR31 result relation, including the
+output stack, trace, and source mapping on success. The definitions have private
+bodies so that the public interfaces do not load either implementation library.
+They are definitions of the original predicates; they add no axioms.
 
 ## Build diagnosis
 
-The repository root uses Lean `v4.35.0`. This package uses
-`nightly-2026-10-20`. Run assembly commands from `kraken/`.
+Both packages use the root `nightly-2026-10-20` toolchain. The root package depends
+on this package by path. Each model module belongs to this package; the root
+package defines only the Shuffler and correspondence libraries. `Verification.lean`
+imports the assembly proofs, proof tool tests, and combined theorem. All these
+targets are part of the default root build.
 
-The nightly toolchain was absent. A download with a 20-second limit stopped before
-installation finished. Installation without that limit succeeded. No toolchain
-or package configuration was changed.
+The pinned Kraken source is unmodified. There is no patch or update hook.
+The local proof files use Lean's module system. Files that import the combined
+contract must start with `module`; a legacy importer loads private dependencies
+transitively. `kraken/test/modules_test.sh` checks that public composition works
+and that importing both implementations directly still reports the original
+`List.allSome` conflict.
+
+Both local packages compile with `-E warning`, so warnings in their source files
+are errors. Kraken's own warnings remain visible. A workspace-wide `--wfail`
+would also reject those dependency warnings, so the CI uses the package settings.
+
+The assembly file readers resolve paths from the source file that uses them.
+The root build and direct file checks therefore read the same assembly files.
+
+The new Lean core uses `Classical.choice` in `WellFounded.fixF`. The exact axiom
+reports now include that core axiom. The audit still rejects proof holes,
+`native_decide`, and user axioms.
 
 The final package build also found missing explicit binders that direct Lean
 checks had accepted with automatic implicit arguments enabled. The binders are
@@ -102,21 +132,36 @@ are imported together.
 
 ## Verification
 
-- `LEAN_NUM_THREADS=6 nice lake build BbuKraken ProofKitTest`: passed, 950 jobs.
-- Root `nice lake build PlanBridge`: passed, 1420 jobs.
-- The final theorem axiom audits pass. Allowed dependencies are the Lean core
-  axioms and the checked `bv_decide` reflection axioms for small word lemmas.
-- `test/axioms.sh` audits 14 final theorems, including the four rejection
-  theorems. `test/axioms_test.sh` passed all acceptance and rejection cases.
-- The buffer tests cover empty inputs, unequal input lengths, `MAX_N`, and
-  stores at the first index outside an owned prefix. The rejection tests cover
-  source and target prefixes, an empty source, valid prefixes, and prefixes
-  that exceed the public size.
-- The data frame tests cover zero capacity, one slot, `MAX_N`, arbitrary ghost
-  tails, swaps, and invalid permutation indices. The frame theorems for
-  `buildBottomUp` and `emissionRun` use only Lean's core axioms.
+All Lean checks use `LEAN_NUM_THREADS=1` and `nice`.
 
-The proof sources contain no `sorry`, `admit`, user axiom declarations, or
-`native_decide`. The user assigned this task 24 threads and 96 GB RAM and
-authorized parallel proof work, which overrides the shared-machine process
-limit in `AGENTS.md` for this task.
+- Root `lake build`: passed (3,792 jobs). It includes the assembly proofs,
+  proof tool tests, correspondence proofs, and `PlanBridge.Final`.
+- Root `lake test`: all seven property-test modules passed.
+- `kraken/test/axioms_test.sh`: all 19 final theorems passed. The negative
+  tests reject proof holes, `native_decide`, user axioms, forged reflection
+  axioms, and unknown theorem names. The tests check that the rejected theorems
+  reached the audit and that proof holes and `native_decide` report their own axioms.
+- `kraken/test/modules_test.sh`: passed. The public composition hides both
+  implementations. Direct mixed imports and a legacy import are rejected.
+- The native unit tests, binary instruction tests, binary and struct layout
+  checks, field generator tests, and label tests passed.
+- All six runtime comparison scripts passed. They cover 3,787 permutations,
+  558,467 build-bottom-up states, 22,091 pop cases, 21,171 surplus cases,
+  35,200 lowest-height cases, and 409,376 planner cases. The surplus,
+  lowest-height, and planner checks also passed with their changed-input cases.
+- Before the module refactor, direct checks of both assembly readers from
+  `kraken/`, with the root Lake environment and strict implicit arguments, passed.
+- Before the module refactor, `Fuzz/build.sh build/fuzz 1` passed with the shared
+  compiler. The port unit tests, 3,011,850 generated cases, and CI wrapper tests passed.
+- The earlier 30-second fuzz run with one worker exited with status 0 and reported
+  no crashes or differences.
+
+The buffer tests cover empty inputs, unequal lengths, `MAX_N`, and stores at
+one index beyond an owned prefix. The rejection tests cover source and target
+prefixes, an empty source, valid prefixes, and sizes above the public limit.
+The data frame tests cover zero capacity, one slot, `MAX_N`, arbitrary ghost
+tails, swaps, and invalid permutation indices.
+
+The unmodified Kraken dependency reports compiler warnings. Local source files
+compile with warnings treated as errors. The final theorem audit permits only
+Lean's core axioms and the checked `bv_decide` reflection axioms.

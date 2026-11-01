@@ -1,8 +1,17 @@
-import BbuKraken.Unit.Loop.Head
-import BbuKraken.Unit.Loop.Urgent
-import BbuKraken.Unit.Loop.Gen
-import BbuKraken.Unit.Loop.Bound
-import BbuKraken.Unit.Loop.Swap
+module
+
+public import BbuKraken.Unit.Loop.Head
+import all BbuKraken.Unit.Loop.Head
+public import BbuKraken.Unit.Loop.Urgent
+import all BbuKraken.Unit.Loop.Urgent
+public import BbuKraken.Unit.Loop.Gen
+import all BbuKraken.Unit.Loop.Gen
+public import BbuKraken.Unit.Loop.Bound
+import all BbuKraken.Unit.Loop.Bound
+public import BbuKraken.Unit.Loop.Swap
+import all BbuKraken.Unit.Loop.Swap
+
+@[expose] public section
 
 /-!
 # `buildBottomUp`: the unit theorem from the block lemmas

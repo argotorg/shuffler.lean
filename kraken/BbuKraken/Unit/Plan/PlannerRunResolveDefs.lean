@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunResolveCall
-import BbuKraken.Unit.Plan.PlannerRunRetryDefs
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunResolveCall
+import all BbuKraken.Unit.Plan.PlannerRunResolveCall
+public import BbuKraken.Unit.Plan.PlannerRunRetryDefs
+import all BbuKraken.Unit.Plan.PlannerRunRetryDefs
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep Flat

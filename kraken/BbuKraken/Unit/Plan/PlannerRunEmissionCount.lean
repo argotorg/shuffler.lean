@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunEmissionDefs
-import BbuKraken.Unit.Run.Model
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunEmissionDefs
+import all BbuKraken.Unit.Plan.PlannerRunEmissionDefs
+public import BbuKraken.Unit.Run.Model
+import all BbuKraken.Unit.Run.Model
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP
@@ -61,19 +67,18 @@ theorem b_15 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
          hj, hax, hdx, ?_, ?_⟩
        · exact List.getElem?_eq_getElem _ |>.trans (congrArg some (Option.some.inj hp))
        · rw [RunU.unmapped_step hj] at hmodel
-         simp only [show (countState g M).pos = M.pos from rfl, hne, ite_eq_right] at hmodel
+         simp only [show (countState g M).pos = M.pos from rfl, hne] at hmodel
          exact hmodel)
     | (rename_i heq
        symexec_norm at heq
-       simp only [hax', pos_addr, hr, sub_beq_zero, Bool.not_eq_false', Bool.not_eq_true',
-         beq_iff_eq, beq_eq_false_iff_ne] at heq
+       simp only [hax', pos_addr, hr, sub_beq_zero, Bool.not_eq_false', beq_iff_eq] at heq
        change get M.pos j = NONE at heq
        apply hnext
        · rfl
        refine ⟨lo, locals.set 4115 (1#64 + c), j, 1#64 + c,
          hc.storePending hok (1#64 + c) ?_ rfl rfl rfl rfl rfl rfl rfl,
          hj, hax, hdx, ?_, ?_⟩
-       · simp only [hpread]
+       · rfl
        · exact List.getElem?_set_self (by rw [hc.localLength]; decide)
        · rw [RunU.unmapped_step hj] at hmodel
          simp only [show (countState g M).pos = M.pos from rfl, heq, ite_eq_left] at hmodel

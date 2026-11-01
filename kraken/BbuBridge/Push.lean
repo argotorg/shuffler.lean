@@ -1,4 +1,9 @@
-import BbuBridge.Statements
+module
+
+public import BbuBridge.Statements
+import all BbuBridge.Statements
+
+@[expose] public section
 
 /-!
 `Bbu.add` with a push is `State.push`.

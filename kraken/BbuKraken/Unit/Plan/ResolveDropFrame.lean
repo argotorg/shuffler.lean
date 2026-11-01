@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.ResolveDropDefs
-import BbuKraken.Unit.Plan.ResolveClassByte
+module
+
+public import BbuKraken.Unit.Plan.ResolveDropDefs
+import all BbuKraken.Unit.Plan.ResolveDropDefs
+public import BbuKraken.Unit.Plan.ResolveClassByte
+import all BbuKraken.Unit.Plan.ResolveClassByte
+
+@[expose] public section
 
 namespace Bbu.Unit.ResolveU
 open Bbu.Sep

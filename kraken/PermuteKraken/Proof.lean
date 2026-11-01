@@ -1,7 +1,15 @@
-import PermuteKraken.Asm
-import PermuteKraken.Specs
-import PermuteKraken.Trace
-import PermuteKraken.Bytes
+module
+
+public import PermuteKraken.Asm
+import all PermuteKraken.Asm
+public import PermuteKraken.Specs
+import all PermuteKraken.Specs
+public import PermuteKraken.Trace
+import all PermuteKraken.Trace
+public import PermuteKraken.Bytes
+import all PermuteKraken.Bytes
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

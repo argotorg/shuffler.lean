@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ClassifyPrologueTail
+module
+
+public import BbuKraken.Unit.Plan.ClassifyPrologueTail
+import all BbuKraken.Unit.Plan.ClassifyPrologueTail
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

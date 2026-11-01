@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ResolveMem
+module
+
+public import BbuKraken.Unit.Plan.ResolveMem
+import all BbuKraken.Unit.Plan.ResolveMem
+
+@[expose] public section
 
 namespace Bbu.Unit.ResolveU
 
@@ -102,8 +107,7 @@ theorem Bd.pop (h : Bd P r F s ra lo loc t) (hm : u.dmem = t.dmem)
     Kg (RView P r ∗ F) s ra (fr s lo loc) u := by
   simp only [BitVec.add_comm (9272#64) t.regs.rsp.toBitVec] at hsp hbx hbp h12 h13 h14 h15
   have hr := fun i (hi : i < 6) => h.popWord i hi
-  simp only [BitVec.add_assoc, BitVec.reduceAdd, saved, List.getElem_cons_zero,
-    List.getElem_cons_succ, BitVec.add_zero] at hr
+  simp only [BitVec.add_assoc, saved] at hr
   simp only [BitVec.add_assoc, BitVec.reduceAdd] at hbx hbp h12 h13 h14 h15
   refine h.kb.kg hm (by rw [hsp, h.kb.sp]; bv_omega) ?_ ?_ ?_ ?_ ?_ ?_
   all_goals apply UInt64.toBitVec_inj.mp

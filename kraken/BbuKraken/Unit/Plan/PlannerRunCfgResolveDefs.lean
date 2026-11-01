@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.PlannerRunCfgDefs
-import BbuKraken.Unit.Plan.PlannerRunResolveInputs
-import BbuKraken.Unit.Plan.PlannerRunRetryFixed
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunCfgDefs
+import all BbuKraken.Unit.Plan.PlannerRunCfgDefs
+public import BbuKraken.Unit.Plan.PlannerRunResolveInputs
+import all BbuKraken.Unit.Plan.PlannerRunResolveInputs
+public import BbuKraken.Unit.Plan.PlannerRunRetryFixed
+import all BbuKraken.Unit.Plan.PlannerRunRetryFixed
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep

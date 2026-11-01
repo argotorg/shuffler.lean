@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.PlannerRunBuilderFrame
-import BbuKraken.Unit.Plan.PlannerRunStore
-import BbuKraken.Unit.Plan.PlannerRunCtor
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunBuilderFrame
+import all BbuKraken.Unit.Plan.PlannerRunBuilderFrame
+public import BbuKraken.Unit.Plan.PlannerRunStore
+import all BbuKraken.Unit.Plan.PlannerRunStore
+public import BbuKraken.Unit.Plan.PlannerRunCtor
+import all BbuKraken.Unit.Plan.PlannerRunCtor
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep Flat
@@ -57,7 +64,7 @@ theorem AttemptLI.storeLocal (h : AttemptLI P g M F s ra lo locals t)
       (t.regs.rsp.toBitVec + BitVec.ofNat 64 (8 * i)) 8 w.toInt)
     (hsp : u.regs.rsp = t.regs.rsp)
     (hbx : u.regs.rbx = t.regs.rbx) (h12 : u.regs.r12 = t.regs.r12)
-    (h15 : u.regs.r15 = t.regs.r15) (hbp : u.regs.rbp = t.regs.rbp)
+    (h15 : u.regs.r15 = t.regs.r15) (_hbp : u.regs.rbp = t.regs.rbp)
     (h14 : u.regs.r14 = t.regs.r14) (h13 : u.regs.r13 = t.regs.r13) :
     AttemptLI P g M F s ra lo (locals.set i w) u := by
   have unchanged (j : Nat) (hj : j < 2060) : (locals.set i w)[j]? = locals[j]? := by

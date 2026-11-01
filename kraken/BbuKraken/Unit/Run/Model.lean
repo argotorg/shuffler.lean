@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.Emission
-import BbuKraken.Unit.Lowest.Defs
-import BbuKraken.Unit.RemoveSurplusLemmas
+module
+
+public import BbuKraken.Unit.Plan.Emission
+import all BbuKraken.Unit.Plan.Emission
+public import BbuKraken.Unit.Lowest.Defs
+import all BbuKraken.Unit.Lowest.Defs
+public import BbuKraken.Unit.RemoveSurplusLemmas
+import all BbuKraken.Unit.RemoveSurplusLemmas
+
+@[expose] public section
 
 /-! The checks after the two preparation calls of `Emission::run`. -/
 

@@ -1,4 +1,9 @@
-import BbuKraken.Model
+module
+
+public import BbuKraken.Model
+import all BbuKraken.Model
+
+@[expose] public section
 
 /-!
 A model of the stack and mapping operations of `c/build_bottom_up.cpp` with lists, in core Lean.

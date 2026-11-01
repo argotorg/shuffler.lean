@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.EntryModel
-import BbuKraken.Unit.Plan.EntryReject
-import BbuKraken.Unit.Plan.Call
+module
+
+public import BbuKraken.Unit.Plan.EntryModel
+import all BbuKraken.Unit.Plan.EntryModel
+public import BbuKraken.Unit.Plan.EntryReject
+import all BbuKraken.Unit.Plan.EntryReject
+public import BbuKraken.Unit.Plan.Call
+import all BbuKraken.Unit.Plan.Call
+
+@[expose] public section
 
 namespace Bbu.Unit.EntryValidU
 open Bbu.Sep

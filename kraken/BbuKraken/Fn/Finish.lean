@@ -1,7 +1,15 @@
-import BbuKraken.Contracts
-import PermuteKraken.Proof
-import BbuKraken.Kit
-import BbuKraken.Fn.FinishMem
+module
+
+public import BbuKraken.Contracts
+import all BbuKraken.Contracts
+public import PermuteKraken.Proof
+import all PermuteKraken.Proof
+public import BbuKraken.Kit
+import all BbuKraken.Kit
+public import BbuKraken.Fn.FinishMem
+import all BbuKraken.Fn.FinishMem
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

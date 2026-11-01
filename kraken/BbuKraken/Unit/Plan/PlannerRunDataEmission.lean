@@ -1,7 +1,15 @@
-import BbuKraken.Unit.Plan.PlannerRunDataSurplus
-import BbuKraken.Unit.Plan.PlannerRunDataChecks
-import BbuKraken.Unit.Plan.PlannerRunDataPermute
-import BbuKraken.Unit.Plan.PlannerRunDataLoop
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunDataSurplus
+import all BbuKraken.Unit.Plan.PlannerRunDataSurplus
+public import BbuKraken.Unit.Plan.PlannerRunDataChecks
+import all BbuKraken.Unit.Plan.PlannerRunDataChecks
+public import BbuKraken.Unit.Plan.PlannerRunDataPermute
+import all BbuKraken.Unit.Plan.PlannerRunDataPermute
+public import BbuKraken.Unit.Plan.PlannerRunDataLoop
+import all BbuKraken.Unit.Plan.PlannerRunDataLoop
+
+@[expose] public section
 
 namespace Bbu.Flat
 

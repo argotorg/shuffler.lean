@@ -1,5 +1,11 @@
-import BbuKraken.Kit
-import BbuKraken.Names
+module
+
+public import BbuKraken.Kit
+import all BbuKraken.Kit
+public import BbuKraken.Names
+import all BbuKraken.Names
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

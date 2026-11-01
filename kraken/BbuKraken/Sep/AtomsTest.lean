@@ -1,4 +1,9 @@
-import BbuKraken.Sep.Atoms
+module
+
+public import BbuKraken.Sep.Atoms
+import all BbuKraken.Sep.Atoms
+
+@[expose] public section
 
 /-!
 Tests of the atoms: a load after a store, at the same atom and at a different atom, for words,

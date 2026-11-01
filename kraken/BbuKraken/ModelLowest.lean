@@ -1,4 +1,9 @@
-import BbuKraken.Model
+module
+
+public import BbuKraken.Model
+import all BbuKraken.Model
+
+@[expose] public section
 
 /-!
 The list model of `permuteAtLowestHeight` (`Shuffler.PermuteAtLowestHeight.permuteAtLowestHeight`,

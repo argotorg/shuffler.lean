@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunDefs
-import BbuKraken.Unit.SpillSetLemmas
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunDefs
+import all BbuKraken.Unit.Plan.PlannerRunDefs
+public import BbuKraken.Unit.SpillSetLemmas
+import all BbuKraken.Unit.SpillSetLemmas
+
+@[expose] public section
 
 /-! The checks made by the public `plan` entry. -/
 

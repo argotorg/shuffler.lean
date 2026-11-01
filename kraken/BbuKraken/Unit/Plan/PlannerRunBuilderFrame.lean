@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunInitDefs
-import BbuKraken.Unit.Plan.PlannerRunMapping
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunInitDefs
+import all BbuKraken.Unit.Plan.PlannerRunInitDefs
+public import BbuKraken.Unit.Plan.PlannerRunMapping
+import all BbuKraken.Unit.Plan.PlannerRunMapping
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep Flat

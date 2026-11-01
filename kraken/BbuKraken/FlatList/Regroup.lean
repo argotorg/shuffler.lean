@@ -1,5 +1,11 @@
-import BbuKraken.FlatList.PermLoop
-import BbuKraken.FlatList.PermList
+module
+
+public import BbuKraken.FlatList.PermLoop
+import all BbuKraken.FlatList.PermLoop
+public import BbuKraken.FlatList.PermList
+import all BbuKraken.FlatList.PermList
+
+@[expose] public section
 
 /-!
 The loops of the flat `permute` before `permuteLoop`: `readDestinations`, `clearDesired` and

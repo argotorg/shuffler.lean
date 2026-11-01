@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Permute.MD
+module
+
+public import BbuKraken.Unit.Permute.MD
+import all BbuKraken.Unit.Permute.MD
+
+@[expose] public section
 
 /-!
 # `permute`: the blocks of phase D after `exchange`

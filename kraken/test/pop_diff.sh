@@ -13,7 +13,7 @@ trap 'rm -rf "$tmp"' EXIT
 
 make -C "$root/kraken/c" -s pop_harness
 (cd "$root" && lake build pop_pr31 >/dev/null)
-(cd "$root/kraken" && lake build pop_flat >/dev/null)
+(cd "$root" && lake build PermuteKraken/pop_flat >/dev/null)
 
 sh "$root/Fuzz/pop_cases.sh" "${1:-5}" > "$tmp/cases"
 "$root/kraken/c/pop_harness" < "$tmp/cases" > "$tmp/c"

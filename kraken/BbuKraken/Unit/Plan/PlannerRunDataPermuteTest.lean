@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.PlannerRunDataPermute
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunDataPermute
+import all BbuKraken.Unit.Plan.PlannerRunDataPermute
+
+@[expose] public section
 
 namespace Bbu.Flat.DataPermuteTest
 

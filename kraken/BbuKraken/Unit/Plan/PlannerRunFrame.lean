@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.PlannerRunDefs
-import BbuKraken.Unit.Plan.Emission
-import ProofKit.CfgBlock
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunDefs
+import all BbuKraken.Unit.Plan.PlannerRunDefs
+public import BbuKraken.Unit.Plan.Emission
+import all BbuKraken.Unit.Plan.Emission
+public import ProofKit.CfgBlock
+import all ProofKit.CfgBlock
+
+@[expose] public section
 
 /-! The frame and the return block of `Planner::run`.
 The locals contain 4121 words. The six saved registers are above them, and

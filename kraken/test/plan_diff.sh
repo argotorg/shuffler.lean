@@ -12,7 +12,7 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 (cd "$root" && lake build lowest_pr31 >/dev/null)
-(cd "$root/kraken" && lake build plan_flat >/dev/null)
+(cd "$root" && lake build PermuteKraken/plan_flat >/dev/null)
 
 run() {
 	"$root/.lake/build/bin/lowest_pr31" < "$1" > "$2/pr31"

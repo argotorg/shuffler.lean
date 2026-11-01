@@ -1,5 +1,11 @@
-import BbuKraken.Sep.Atoms
-import BbuKraken.Sep.Fields
+module
+
+public import BbuKraken.Sep.Atoms
+import all BbuKraken.Sep.Atoms
+public import BbuKraken.Sep.Fields
+import all BbuKraken.Sep.Fields
+
+@[expose] public section
 
 /-!
 # The struct as separation atoms

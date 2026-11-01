@@ -1,4 +1,9 @@
-import BbuKraken.Unit.TopInv
+module
+
+public import BbuKraken.Unit.TopInv
+import all BbuKraken.Unit.TopInv
+
+@[expose] public section
 
 /-!
 # `build_bottom_up`: the bind blocks

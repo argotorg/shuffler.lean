@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Lowest.Call
+module
+
+public import BbuKraken.Unit.Lowest.Call
+import all BbuKraken.Unit.Lowest.Call
+
+@[expose] public section
 
 /-!
 # `permuteAtLowestHeight`: the unit theorem from the block lemmas

@@ -1,5 +1,11 @@
-import BbuKraken.Unit.TopCtor
-import BbuKraken.FlatModelTest
+module
+
+public import BbuKraken.Unit.TopCtor
+import all BbuKraken.Unit.TopCtor
+public import BbuKraken.FlatModelTest
+import all BbuKraken.FlatModelTest
+
+@[expose] public section
 
 /-!
 Tests of `TopCtor.lean`: the folds against `ctor` on small inputs (`n = 0`, `m = 0`, `m = n`,

@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ClassifyMore
+module
+
+public import BbuKraken.Unit.Plan.ClassifyMore
+import all BbuKraken.Unit.Plan.ClassifyMore
+
+@[expose] public section
 
 open Bbu
 

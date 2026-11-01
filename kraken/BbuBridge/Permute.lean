@@ -1,5 +1,13 @@
-import BbuBridge.SwapDest
-import BbuBridge.SwapWith
+module
+
+public import BbuBridge.SwapDest
+import all BbuBridge.SwapDest
+public import BbuBridge.SwapWith
+import all BbuBridge.SwapWith
+public import Shuffler.Permute.Normalization
+import all Shuffler.Permute.Normalization
+
+@[expose] public section
 
 /-!
 The final permutation of the model (`Bbu.normalize`, then `Bbu.go`) is the

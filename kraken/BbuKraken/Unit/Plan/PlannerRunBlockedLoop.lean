@@ -1,9 +1,19 @@
-import BbuKraken.Unit.Plan.PlannerRunBlockedBasic
-import BbuKraken.Unit.Plan.PlannerRunBlockedProduce
-import BbuKraken.Unit.Plan.PlannerRunBlockedPermute
-import BbuKraken.Unit.Loop.Cont
-import BbuKraken.Unit.Loop.Step
-import BbuKraken.FlatSurplusRel
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunBlockedBasic
+import all BbuKraken.Unit.Plan.PlannerRunBlockedBasic
+public import BbuKraken.Unit.Plan.PlannerRunBlockedProduce
+import all BbuKraken.Unit.Plan.PlannerRunBlockedProduce
+public import BbuKraken.Unit.Plan.PlannerRunBlockedPermute
+import all BbuKraken.Unit.Plan.PlannerRunBlockedPermute
+public import BbuKraken.Unit.Loop.Cont
+import all BbuKraken.Unit.Loop.Cont
+public import BbuKraken.Unit.Loop.Step
+import all BbuKraken.Unit.Loop.Step
+public import BbuKraken.FlatSurplusRel
+import all BbuKraken.FlatSurplusRel
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Flat

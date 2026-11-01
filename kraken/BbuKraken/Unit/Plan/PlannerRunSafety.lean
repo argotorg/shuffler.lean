@@ -1,7 +1,15 @@
-import BbuKraken.Unit.Plan.PlannerRunCtor
-import BbuKraken.Unit.Run.Model
-import BbuKraken.FlatLowestRel
-import BbuKraken.Unit.Loop.Model
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunCtor
+import all BbuKraken.Unit.Plan.PlannerRunCtor
+public import BbuKraken.Unit.Run.Model
+import all BbuKraken.Unit.Run.Model
+public import BbuKraken.FlatLowestRel
+import all BbuKraken.FlatLowestRel
+public import BbuKraken.Unit.Loop.Model
+import all BbuKraken.Unit.Loop.Model
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Flat
@@ -13,9 +21,9 @@ theorem exchangeAt_self (a b i : Word) : exchangeAt a b (exchangeAt a b i) = i :
   · subst i
     by_cases hb : a = b
     · simp [exchangeAt, hb]
-    · simp [exchangeAt, hb, Ne.symm hb]
+    · simp [exchangeAt, Ne.symm hb]
   by_cases hb : i = b
-  · subst i; simp [exchangeAt, ha, Ne.symm ha]
+  · subst i; simp [exchangeAt, ha]
   simp [exchangeAt, ha, hb]
 
 theorem exchangeAt_lt {a b i n : Word} (ha : a < n) (hb : b < n) (hi : i < n) :

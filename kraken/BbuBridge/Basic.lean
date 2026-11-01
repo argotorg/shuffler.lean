@@ -1,4 +1,9 @@
-import BbuBridge.Defs
+module
+
+public import BbuBridge.Defs
+import all BbuBridge.Defs
+
+@[expose] public section
 
 /-!
 Basic facts: the queries of the model on canonical slots equal the queries of

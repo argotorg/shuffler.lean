@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.ResolveInitFrame
-import BbuKraken.Unit.Plan.ResolveInitModel
-import BbuKraken.Unit.Plan.ResolveLoopDefs
+module
+
+public import BbuKraken.Unit.Plan.ResolveInitFrame
+import all BbuKraken.Unit.Plan.ResolveInitFrame
+public import BbuKraken.Unit.Plan.ResolveInitModel
+import all BbuKraken.Unit.Plan.ResolveInitModel
+public import BbuKraken.Unit.Plan.ResolveLoopDefs
+import all BbuKraken.Unit.Plan.ResolveLoopDefs
+
+@[expose] public section
 
 namespace Bbu.Unit.ResolveU
 open Bbu.Sep

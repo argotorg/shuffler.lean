@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Run.Model
-import BbuKraken.Unit.IsAvailable
-import ProofKit.CfgBlock
+module
+
+public import BbuKraken.Unit.Run.Model
+import all BbuKraken.Unit.Run.Model
+public import BbuKraken.Unit.IsAvailable
+import all BbuKraken.Unit.IsAvailable
+public import ProofKit.CfgBlock
+import all ProofKit.CfgBlock
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

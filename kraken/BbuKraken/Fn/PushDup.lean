@@ -1,4 +1,9 @@
-import BbuKraken.Kit
+module
+
+public import BbuKraken.Kit
+import all BbuKraken.Kit
+
+@[expose] public section
 
 /-!
 Lemmas for the body triples of `push` (`c/bbu/<Names.push>.S`) and `dup` (`c/bbu/<Names.dup>.S`).

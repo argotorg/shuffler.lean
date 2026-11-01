@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunPrologueFrame
-import BbuKraken.Unit.Plan.PlannerRunCheckDefs
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunPrologueFrame
+import all BbuKraken.Unit.Plan.PlannerRunPrologueFrame
+public import BbuKraken.Unit.Plan.PlannerRunCheckDefs
+import all BbuKraken.Unit.Plan.PlannerRunCheckDefs
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -68,14 +74,14 @@ theorem b_fn [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
   rcases hp.args with ⟨hdata, hops, hsrc, hcount, _⟩
   have hdi : s.regs.rdi.toBitVec = P := hp.rdi
   have hregs : (s.pushRa ra).regs = { s.regs with rsp := ⟨rsp s - 8#64⟩ } := rfl
-  simp only [rd, u2, u1, u0, m0, q, pushWords, pushes, withSaw] at hn kn htgt ktgt ksaw ksource
+  simp only [rd, u2, u1, u0, m0, q, pushWords, pushes] at hn kn htgt ktgt ksaw ksource
   simp only [rdx, rcx, r8, r9, Reg64s.get64_rdx, Reg64s.get64_rcx,
     Reg64s.get64_r8, Reg64s.get64_r9] at hdata hops hsrc hcount
   simp only [hregs, BitVec.sub_sub, BitVec.reduceAdd] at k0 k1 k2 k3 k4 k5 ksource ksaw hn kn htgt ktgt
   clear hv1 hv2 hp2 hpush
   kvcgen64
   all_goals try symexec_norm at ⊢
-  all_goals try simp only [hregs, hdi, hdata, hops, hsrc, hcount, BitVec.sub_sub,
+  all_goals try simp only [hregs, hdi, hsrc, BitVec.sub_sub,
     BitVec.reduceAdd, hn, htgt] at ⊢
   vc_by_shape
   | load =>
@@ -83,15 +89,14 @@ theorem b_fn [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
   | goto ".LB.Planner.run.4" =>
     rename_i af hz
     symexec_norm at hz
-    simp only [hregs, hdi, hdata, hops, hsrc, hcount, BitVec.sub_sub,
+    simp only [hregs, hdi, hsrc, BitVec.sub_sub,
       BitVec.reduceAdd, hn, BitVec.and_self, BitVec.zero_eq, beq_iff_eq] at hz
     apply hdone
     refine ⟨lo, locals.set 2 g.sourcesPtr,
       ⟨hb2.next ?_ ?_, hdi, hdata, hops, hcount, ?_, hsources⟩, ?_⟩
-    · simp only [u2, u1, u0, m0, q, pushWords, pushes, hregs, hdi, hsrc,
-        BitVec.sub_sub, BitVec.reduceAdd]
+    · simp only [u2, u1, m0, q, pushWords, pushes, hregs, BitVec.sub_sub, BitVec.reduceAdd]
     · apply UInt64.toBitVec_inj.mp
-      simp only [u2, u1, u0, q, rsp, Reg64s.get64_rsp, hregs, BitVec.sub_sub, BitVec.reduceAdd]
+      simp only [u2, u1, u0, q, Reg64s.get64_rsp, BitVec.sub_sub, BitVec.reduceAdd]
     · exact byte32 _
     · apply targets_end
       change ¬ (0 : Word) < g.p.n
@@ -100,16 +105,15 @@ theorem b_fn [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
   | goto ".LB.Planner.run.1" =>
     rename_i af hz
     symexec_norm at hz
-    simp only [hregs, hdi, hdata, hops, hsrc, hcount, BitVec.sub_sub,
+    simp only [hregs, hdi, hsrc, BitVec.sub_sub,
       BitVec.reduceAdd, hn, BitVec.and_self, BitVec.zero_eq, beq_eq_false_iff_ne] at hz
     apply hcheck
     refine ⟨lo, locals.set 2 g.sourcesPtr,
       ⟨⟨hb2.next ?_ ?_, hdi, hdata, hops, hcount, ?_, hsources⟩, rfl, rfl⟩,
       zero_lt hz, rfl⟩
-    · simp only [u2, u1, u0, m0, q, pushWords, pushes, hregs, hdi, hsrc,
-        BitVec.sub_sub, BitVec.reduceAdd]
+    · simp only [u2, u1, m0, q, pushWords, pushes, hregs, BitVec.sub_sub, BitVec.reduceAdd]
     · apply UInt64.toBitVec_inj.mp
-      simp only [u2, u1, u0, q, rsp, Reg64s.get64_rsp, hregs, BitVec.sub_sub, BitVec.reduceAdd]
+      simp only [u2, u1, u0, q, Reg64s.get64_rsp, BitVec.sub_sub, BitVec.reduceAdd]
     · exact byte32 _
 
 end Bbu.Unit.PlannerRunU

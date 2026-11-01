@@ -1,8 +1,17 @@
-import BbuKraken.Unit.Defs
-import BbuKraken.Sep.Stores
-import ProofKit.Cfg
-import ProofKit.Idioms
-import BbuKraken.Unit.PermuteModel
+module
+
+public import BbuKraken.Unit.Defs
+import all BbuKraken.Unit.Defs
+public import BbuKraken.Sep.Stores
+import all BbuKraken.Sep.Stores
+public import ProofKit.Cfg
+import all ProofKit.Cfg
+public import ProofKit.Idioms
+import all ProofKit.Idioms
+public import BbuKraken.Unit.PermuteModel
+import all BbuKraken.Unit.PermuteModel
+
+@[expose] public section
 
 /-!
 # `permute`: helper lemmas
@@ -468,7 +477,7 @@ lemma. -/
 
 open Lean in
 /-- `m`, then the memories under the stores of `m`, the last store first. -/
-partial def memChain (m : Expr) : List Expr :=
+meta partial def memChain (m : Expr) : List Expr :=
   if m.isAppOfArity ``Mem.storeInt 5 then m :: memChain (m.getArg! 1) else [m]
 
 open Lean Meta Elab Tactic in

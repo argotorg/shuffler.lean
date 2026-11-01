@@ -1,7 +1,15 @@
-import BbuKraken.Contracts
-import BbuKraken.ModelLemmas
-import BbuKraken.Kit
-import BbuKraken.Fn.ProduceLemmas
+module
+
+public import BbuKraken.Contracts
+import all BbuKraken.Contracts
+public import BbuKraken.ModelLemmas
+import all BbuKraken.ModelLemmas
+public import BbuKraken.Kit
+import all BbuKraken.Kit
+public import BbuKraken.Fn.ProduceLemmas
+import all BbuKraken.Fn.ProduceLemmas
+
+@[expose] public section
 
 /-!
 The body triple of `produce` (`c/bbu/<Names.produce>.S`). The saved registers `rbx`,

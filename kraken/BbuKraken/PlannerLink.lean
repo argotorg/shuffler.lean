@@ -1,5 +1,11 @@
-import BbuKraken.Link
-import BbuKraken.SpillFinal
+module
+
+public import BbuKraken.Link
+import all BbuKraken.Link
+public import BbuKraken.SpillFinal
+import all BbuKraken.SpillFinal
+
+@[expose] public section
 
 /-! The declarations of all internal functions called by the planner. Each declaration
 is a fragment of the same assembly file in the host program. Lookup uses the label

@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Permute.ML
+module
+
+public import BbuKraken.Unit.Permute.ML
+import all BbuKraken.Unit.Permute.ML
+
+@[expose] public section
 
 /-!
 # `permute`: facts of the model for phase D

@@ -1,4 +1,11 @@
-import BbuKraken.Unit.Loop.Step
+module
+
+public import BbuKraken.Unit.Loop.Step
+import all BbuKraken.Unit.Loop.Step
+
+@[expose] public section
+
+set_option experimental.vcgen true
 
 /-!
 # `buildBottomUp`: the prologue, the loop head, the end, and the epilogue (part P2)
@@ -375,8 +382,8 @@ theorem b_0 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) 
     cfg_goto
     · exact (hM.next rfl rfl rfl).stack
     · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
-      exact ⟨g', u, ⟨x0, x2, lo, w, hM.next rfl rfl rfl, hok, hk⟩, hk, by rw [hR, if_pos hc'],
-        by rw [hR, if_pos hc']; rfl⟩
+      exact ⟨g', u, ⟨x0, x2, lo, w, hM.next rfl rfl rfl, hok, hk⟩, hk, by rw [hR, ite_eq_left hc'],
+        by rw [hR, ite_eq_left hc']; rfl⟩
     · loop_dec
   · rename_i hc
     simp only [BitVec.zero_eq, Idioms.sub_beq_zero, Bool.not_eq_false', beq_iff_eq, h13, h15] at hc
@@ -388,7 +395,7 @@ theorem b_0 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) 
     · intro j _ hj
       change j < t.regs.rdx.toBitVec.toNat at hj
       simp [hdx] at hj
-    · rw [hR, if_neg (fun h => h hc')]
+    · rw [hR, ite_eq_right (fun h => h hc')]
   · loop_dec
 
 theorem b_1 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)

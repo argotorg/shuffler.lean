@@ -1,6 +1,14 @@
-import BbuKraken.Unit.Plan.ClassifyPrologueFrame
-import BbuKraken.Unit.Plan.ClassifyFreeModel
-import BbuKraken.Unit.Run.Load
+module
+
+public import BbuKraken.Unit.Plan.ClassifyPrologueFrame
+import all BbuKraken.Unit.Plan.ClassifyPrologueFrame
+public import BbuKraken.Unit.Plan.ClassifyFreeModel
+import all BbuKraken.Unit.Plan.ClassifyFreeModel
+public import BbuKraken.Unit.Run.Load
+import all BbuKraken.Unit.Run.Load
+import all BbuKraken.Asm
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -36,13 +44,15 @@ theorem initScratch {P : Addr} {c : CG} {F : MProp 64} {s t : MachineData}
       ((inp c s).slot.payload ++ (inp c s).slot.valueOpcode ++ q.extractLsb' 0 24) t :=
   ⟨hb, hbx, hbp, h12, h13, h14, h15, hn, fun _ => scratch_fields _ _ _⟩
 
-def prologueScratchTail : Program := by
+-- This construction reads the unexposed body of `classifyAsm`.
+@[no_expose] def prologueScratchTail : Program := by
   run_tac
     let bs ← ProofKit.blocks (← ProofKit.directives (Lean.mkConst ``classifyAsm))
     let p ← Lean.Meta.mkListLit (Lean.mkConst ``Directive) (bs[1]!.2.toList.drop 16)
     (← Lean.Elab.Tactic.getMainGoal).assign p
 
-theorem prologueScratchTail_eq : ((Program.view classifyAsm).2.head!).2.drop 16 = prologueScratchTail := rfl
+theorem prologueScratchTail_eq : ((Program.view classifyAsm).2.head!).2.drop 16 = prologueScratchTail := by
+  rfl
 
 def prologueI (P : Addr) (c : CG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (b : CfgLabel) (j : Nat) (_ : Unit) (t : MachineData) : Prop :=
@@ -120,14 +130,13 @@ theorem prologue_scratch [Host] [FunDecls]
   kvcgen64
   all_goals try symexec_norm at ⊢
   all_goals try rw [prologue_sp] at ⊢
-  all_goals try simp only [hdi', hsi', hdx', hcx', hslot, hrdi, h13, fold_slot, rp, ro, widen8_low] at ⊢
+  all_goals try simp only [hslot, h13, rp, ro, widen8_low] at ⊢
   vc_by_shape
   | load => run_loads [kp, klp, ko, klo]
   | goto ".LB.Planner.classify.6" =>
     rename_i hj
     symexec_norm at hj
-    simp only [hdi', hcx', hslot, hrdi, h13, fold_slot, widen8_low, prologue_sp, BitVec.zero_eq, sub8_eq_zero, Bool.not_eq_true', Bool.not_eq_false',
-      beq_eq_false_iff_ne, beq_iff_eq] at hj
+    simp only [h13, BitVec.zero_eq, sub8_eq_zero, beq_iff_eq] at hj
     have hr := hret
     have hjunk : (inp c s).slot.kind = Junk := hj
     have hf : (inp c s).free = true := by
@@ -135,7 +144,7 @@ theorem prologue_scratch [Host] [FunDecls]
       simp only [hjunk, BEq.rfl, Bool.true_or]
     cfg_goto
     · exact hb.kb.stack (by decide)
-    · simp only [prologueI, Inv, Names.classify, String.reduceEq, ↓reduceIte, Body]
+    · simp only [Inv, Names.classify, String.reduceEq, ↓reduceIte, Body]
       refine ⟨⟨lo, w, q, ?_, eval_generated (inp c s) hr (by simp [hf]), hf⟩,
         (by simpa only [rsi, Reg64s.get64_rsi] using hsi'),
         (by simpa only [rcx, Reg64s.get64_rcx] using hcx')⟩
@@ -146,14 +155,13 @@ theorem prologue_scratch [Host] [FunDecls]
   | goto ".LB.Planner.classify.0" =>
     rename_i hj af ho
     symexec_norm at hj ho
-    simp only [hdi', hcx', hslot, hrdi, h13, fold_slot, rp, ro, widen8_low, prologue_sp, BitVec.zero_eq, sub8_eq_zero, Bool.not_eq_true', Bool.not_eq_false',
-      BitVec.and_self, BitVec.zero_eq, beq_eq_false_iff_ne, beq_iff_eq] at hj ho
+    simp only [hslot, h13, rp, ro, widen8_low, BitVec.zero_eq, BitVec.and_self, BitVec.zero_eq, beq_eq_false_iff_ne, beq_iff_eq] at hj ho
     have hr := hret
     have hop0 : (inp c s).slot.valueOpcode = Const := ho
     have hf := free_of_op (inp c s) hop0
     cfg_goto
     · exact hb2.kb.stack (by decide)
-    · simp only [prologueI, Inv, Names.classify, String.reduceEq, ↓reduceIte, Body]
+    · simp only [Inv, Names.classify, String.reduceEq, ↓reduceIte, Body]
       refine ⟨lo, w, _, initScratch (by apply hb2.next <;> rfl) hdi' hcx' hsi' ?_ hdx' hrdi hr,
         eval_generated (inp c s) hr (by simp [hf])⟩
       simp only [h13]
@@ -161,8 +169,7 @@ theorem prologue_scratch [Host] [FunDecls]
   | goto ".LB.Planner.classify.4" =>
     rename_i hj af ho hc
     symexec_norm at hj ho hc
-    simp only [hdi', hcx', hslot, hrdi, h13, fold_slot, rp, ro, widen8_low, prologue_sp, BitVec.zero_eq, sub8_eq_zero, Bool.not_eq_true', Bool.not_eq_false',
-      BitVec.and_self, BitVec.zero_eq, beq_eq_false_iff_ne, beq_iff_eq] at hj ho hc
+    simp only [hslot, h13, rp, ro, widen8_low, BitVec.zero_eq, Bool.not_eq_true', BitVec.and_self, BitVec.zero_eq, beq_eq_false_iff_ne] at hj ho hc
     have hr := hret
     have hjunk : (inp c s).slot.kind ≠ Junk :=
       fun h => hj ((sub8_eq_zero _ _).mpr h)
@@ -174,7 +181,7 @@ theorem prologue_scratch [Host] [FunDecls]
         Bool.false_or]) hop0
     cfg_goto
     · exact hb2.kb.stack (by decide)
-    · simp only [prologueI, Inv, Names.classify, String.reduceEq, ↓reduceIte, Body]
+    · simp only [Inv, Names.classify, String.reduceEq, ↓reduceIte, Body]
       refine ⟨⟨lo, w, _, initScratch (by apply hb2.next <;> rfl) hdi' hcx' hsi' ?_ hdx' hrdi hr, hf⟩,
         (by simpa only [rsi, Reg64s.get64_rsi] using hsi'), ?_⟩
       · simp only [h13]
@@ -186,14 +193,14 @@ theorem prologue_scratch [Host] [FunDecls]
     |
       rename_i hj af ho hc
       symexec_norm at hj ho hc
-      simp only [hdi', hcx', hslot, hrdi, h13, fold_slot, rp, ro, widen8_low, prologue_sp, BitVec.zero_eq, sub8_eq_zero, Bool.not_eq_true', Bool.not_eq_false',
+      simp only [hslot, h13, rp, ro, widen8_low, BitVec.zero_eq, sub8_eq_zero, Bool.not_eq_false',
         BitVec.and_self, BitVec.zero_eq, beq_eq_false_iff_ne, beq_iff_eq] at hj ho hc
       have hr := hret
       have hcall : (inp c s).slot.kind = FunctionCallReturnLabel := hc
       have hf : (inp c s).free = true := by
         apply free_of_range
         simp only [hcall, BEq.rfl, Bool.or_true]
-      simp only [prologueI, Inv, Names.classify, String.reduceEq, ↓reduceIte, Body]
+      simp only [Inv, Names.classify, String.reduceEq, ↓reduceIte, Body]
       refine ⟨lo, w, _, initScratch (by apply hb2.next <;> rfl) hdi' hcx' hsi' ?_ hdx' hrdi hr,
         eval_generated (inp c s) hr (by simp [hf])⟩
       simp only [h13]

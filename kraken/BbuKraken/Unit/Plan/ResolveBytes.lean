@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.ResolveFrame
-import BbuKraken.Unit.SpillSetLemmas
+module
+
+public import BbuKraken.Unit.Plan.ResolveFrame
+import all BbuKraken.Unit.Plan.ResolveFrame
+public import BbuKraken.Unit.SpillSetLemmas
+import all BbuKraken.Unit.SpillSetLemmas
+
+@[expose] public section
 
 /-! The byte array on the resolve stack can be passed to classify and then
 joined into the word array that the caller's stack contract requires. -/
@@ -51,9 +57,9 @@ theorem bytesAt_Bs (a : Addr) (bs : List UInt8) (h : bs.length ≤ 2 ^ 64) :
       rw [Int.toBytes_one_byte]
     rw [show b :: bs = [b] ++ bs from rfl,
       AtM_append _ _ _ (by simp only [List.length_cons, List.length_nil] at *; omega)]
-    simp only [List.length_singleton, List.map_append, List.map_singleton, List.singleton_append,
+    simp only [List.length_singleton, List.singleton_append,
       List.map_cons, Bs,
-      MProp.emp_sep, MProp.sep_emp]
+      ]
     rw [← e, ih _ (by simp only [List.length_cons] at h; omega)]
 
 theorem Wd_Bs (a : Addr) (w : Word) : Wd a w = Bs a (wordBytes w) := by

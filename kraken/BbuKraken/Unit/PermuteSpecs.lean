@@ -1,4 +1,9 @@
-import BbuKraken.Specs
+module
+
+public import BbuKraken.Specs
+import all BbuKraken.Specs
+
+@[expose] public section
 
 /-!
 # The `vcgen` specs of `permute` that `BbuKraken.Specs` does not have

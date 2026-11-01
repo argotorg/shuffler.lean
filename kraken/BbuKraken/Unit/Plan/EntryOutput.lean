@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.EntryReturn
-import BbuKraken.Unit.Plan.ResolveByteFrame
-import BbuKraken.Unit.Run.Load
+module
+
+public import BbuKraken.Unit.Plan.EntryReturn
+import all BbuKraken.Unit.Plan.EntryReturn
+public import BbuKraken.Unit.Plan.ResolveByteFrame
+import all BbuKraken.Unit.Plan.ResolveByteFrame
+public import BbuKraken.Unit.Run.Load
+import all BbuKraken.Unit.Run.Load
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP

@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.EntrySpecs
-import ProofKit.CfgBlock
+module
+
+public import BbuKraken.Unit.Plan.EntrySpecs
+import all BbuKraken.Unit.Plan.EntrySpecs
+public import ProofKit.CfgBlock
+import all ProofKit.CfgBlock
+
+@[expose] public section
 
 /-! The rejection paths of the public `plan` entry.
 The argument guard runs before the source, target and output buffers are read.
@@ -143,7 +149,7 @@ theorem b_12 : planAsm.ForallBlocks fun blk =>
   all_goals try symexec_norm at ⊢
   cfg_goto
   · exact (hb.kb.next rfl rfl).stack (by decide)
-  · simp only [Inv, Names.plan, String.reduceEq, ↓reduceIte, or_self, false_or]
+  · simp only [Inv, Names.plan, String.reduceEq, ↓reduceIte, or_self]
     exact ⟨lo, hb.next rfl rfl rfl rfl rfl rfl rfl, rfl⟩
   · left; simp [V, Names.plan]
 
@@ -157,7 +163,7 @@ theorem b_13 : planAsm.ForallBlocks fun blk =>
   all_goals try symexec_norm at ⊢
   cfg_goto
   · exact (hb.kb.next rfl rfl).stack (by decide)
-  · simp only [Inv, Names.plan, String.reduceEq, ↓reduceIte, or_self, false_or]
+  · simp only [Inv, Names.plan, String.reduceEq, ↓reduceIte, or_self]
     exact ⟨lo, hb.next rfl rfl rfl rfl rfl rfl rfl, rfl⟩
   · left; simp [V, Names.plan]
 

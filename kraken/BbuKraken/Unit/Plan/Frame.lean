@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.Defs
+module
+
+public import BbuKraken.Unit.Plan.Defs
+import all BbuKraken.Unit.Plan.Defs
+
+@[expose] public section
 
 /-!
 # The frame of a planner unit

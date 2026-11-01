@@ -1,5 +1,11 @@
-import BbuKraken.Asm
-import BbuKraken.Names
+module
+
+public import BbuKraken.Asm
+import all BbuKraken.Asm
+public import BbuKraken.Names
+import all BbuKraken.Names
+
+@[expose] public section
 
 /-!
 The function declarations of the linked program: `c/build_bottom_up.S` at the position `k`
@@ -146,6 +152,7 @@ def frag (p : Program) {o : Nat} (h : p.IsInfixAt bbuAsm o) : Fragment :=
   @Fragment.mk _ p ⟨⟨L.k + o, h.trans L.hb⟩⟩
 
 -- The functions that are called.
+@[instance_reducible]
 def decls : FunDecls := ⟨[L.frag isSpilledAsm isSpilled_at,
   L.frag shallowestCopyAsm shallowestCopy_at, L.frag swapWithAsm swapWith_at,
   L.frag pushAsm push_at, L.frag dupAsm dup_at, L.frag produceAsm produce_at,

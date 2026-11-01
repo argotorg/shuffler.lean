@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.EntryDefs
-import BbuKraken.Unit.Plan.PlannerRunMem
+module
+
+public import BbuKraken.Unit.Plan.EntryDefs
+import all BbuKraken.Unit.Plan.EntryDefs
+public import BbuKraken.Unit.Plan.PlannerRunMem
+import all BbuKraken.Unit.Plan.PlannerRunMem
+
+@[expose] public section
 
 namespace Bbu.Unit.EntryValidU.Test
 open Bbu.Sep

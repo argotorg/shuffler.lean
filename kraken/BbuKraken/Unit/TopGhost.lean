@@ -1,5 +1,11 @@
-import BbuKraken.Unit.TopCall
-import BbuKraken.Unit.Loop.Ctor
+module
+
+public import BbuKraken.Unit.TopCall
+import all BbuKraken.Unit.TopCall
+public import BbuKraken.Unit.Loop.Ctor
+import all BbuKraken.Unit.Loop.Ctor
+
+@[expose] public section
 
 /-!
 # The call of `buildBottomUp` in `build_bottom_up`

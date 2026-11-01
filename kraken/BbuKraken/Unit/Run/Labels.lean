@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Run.Scan
-import BbuKraken.Unit.Run.Load
+module
+
+public import BbuKraken.Unit.Run.Scan
+import all BbuKraken.Unit.Run.Scan
+public import BbuKraken.Unit.Run.Load
+import all BbuKraken.Unit.Run.Load
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

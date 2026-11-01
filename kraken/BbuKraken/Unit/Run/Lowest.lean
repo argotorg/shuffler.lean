@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Run.Calls
+module
+
+public import BbuKraken.Unit.Run.Calls
+import all BbuKraken.Unit.Run.Calls
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

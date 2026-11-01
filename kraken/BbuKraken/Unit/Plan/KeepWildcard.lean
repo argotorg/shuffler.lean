@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.MapWildcard
+module
+
+public import BbuKraken.Unit.Plan.MapWildcard
+import all BbuKraken.Unit.Plan.MapWildcard
+
+@[expose] public section
 
 /-!
 # `MappingBuilder::keepWildcardSlots`

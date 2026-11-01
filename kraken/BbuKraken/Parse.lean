@@ -3,6 +3,7 @@ module
 public import Kraken.X64.Parser.Basic
 public meta import Kraken.X64.Parser.Basic
 public meta import Lean
+public meta import ProofKit.Assembly
 
 /-!
 `parseFile` for the files of `c/bbu`, with one more operand form: `leaq disp(,%i,s), %r`,
@@ -38,7 +39,7 @@ public meta def parseLines (s : String) : Except String Program := do
 
 -- The program of the file `path`. An error points at `ref`.
 meta def elabFile (ref : Syntax) (path : String) : TermElabM Expr := do
-  let content ← IO.FS.readFile path
+  let content ← ProofKit.readAssembly ref s!"../{path}"
   match parseLines (stripDirectives content) with
   | .ok p => return Lean.toExpr p
   | .error e => throwErrorAt ref e

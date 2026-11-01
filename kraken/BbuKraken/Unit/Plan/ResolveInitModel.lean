@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.ResolveCandidates
-import BbuKraken.Unit.Plan.ResolveLocalRead
+module
+
+public import BbuKraken.Unit.Plan.ResolveCandidates
+import all BbuKraken.Unit.Plan.ResolveCandidates
+public import BbuKraken.Unit.Plan.ResolveLocalRead
+import all BbuKraken.Unit.Plan.ResolveLocalRead
+
+@[expose] public section
 
 namespace Bbu.Unit.ResolveU
 open Flat

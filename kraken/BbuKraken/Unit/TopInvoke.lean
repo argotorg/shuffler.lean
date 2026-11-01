@@ -1,4 +1,9 @@
-import BbuKraken.Unit.TopPos
+module
+
+public import BbuKraken.Unit.TopPos
+import all BbuKraken.Unit.TopPos
+
+@[expose] public section
 
 /-!
 # `build_bottom_up`: the call block

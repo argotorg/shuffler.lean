@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.ResolveModel
-import BbuKraken.Unit.TopGhost
+module
+
+public import BbuKraken.Unit.Plan.ResolveModel
+import all BbuKraken.Unit.Plan.ResolveModel
+public import BbuKraken.Unit.TopGhost
+import all BbuKraken.Unit.TopGhost
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

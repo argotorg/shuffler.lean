@@ -1,5 +1,11 @@
-import BbuKraken.Unit.SpillDefs
-import BbuKraken.Unit.IsSpilled
+module
+
+public import BbuKraken.Unit.SpillDefs
+import all BbuKraken.Unit.SpillDefs
+public import BbuKraken.Unit.IsSpilled
+import all BbuKraken.Unit.IsSpilled
+
+@[expose] public section
 
 /-!
 # `SpillSet::add`

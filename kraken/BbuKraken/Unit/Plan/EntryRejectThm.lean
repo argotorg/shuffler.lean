@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.EntryRejectGuard
+module
+
+public import BbuKraken.Unit.Plan.EntryRejectGuard
+import all BbuKraken.Unit.Plan.EntryRejectGuard
+
+@[expose] public section
 
 namespace Bbu.Unit.EntryU
 open Bbu.Sep ProofKit Std.WP Lean.Order
@@ -37,6 +42,6 @@ theorem plan_rejects_bad_args [Host] [FunDecls]
   | exact b_9 a b F s ra
   | (cfg_block [Obl]
      intro t ht
-     simp only [Inv, Names.plan, String.reduceEq, ↓reduceIte, or_self, false_or] at ht)
+     simp only [Inv, Names.plan, String.reduceEq, ↓reduceIte, or_self] at ht)
 
 end Bbu.Unit.EntryU

@@ -1,8 +1,17 @@
-import BbuKraken.Unit.Plan.ResolveLocals
-import BbuKraken.Unit.Plan.ResolvePickModel
-import BbuKraken.Unit.Plan.ResolveZero
-import BbuKraken.Unit.Plan.ResolveStore
-import BbuKraken.Unit.Plan.ResolveLocalRead
+module
+
+public import BbuKraken.Unit.Plan.ResolveLocals
+import all BbuKraken.Unit.Plan.ResolveLocals
+public import BbuKraken.Unit.Plan.ResolvePickModel
+import all BbuKraken.Unit.Plan.ResolvePickModel
+public import BbuKraken.Unit.Plan.ResolveZero
+import all BbuKraken.Unit.Plan.ResolveZero
+public import BbuKraken.Unit.Plan.ResolveStore
+import all BbuKraken.Unit.Plan.ResolveStore
+public import BbuKraken.Unit.Plan.ResolveLocalRead
+import all BbuKraken.Unit.Plan.ResolveLocalRead
+
+@[expose] public section
 
 namespace Bbu.Unit.ResolveU
 open Bbu.Sep

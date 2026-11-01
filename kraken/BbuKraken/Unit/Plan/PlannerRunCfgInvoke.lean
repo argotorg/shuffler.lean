@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.PlannerRunCfgResolveDefs
-import BbuKraken.Unit.Plan.PlannerRunEmissionInvoke
-import BbuKraken.Unit.Plan.PlannerRunEmissionBlocked
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunCfgResolveDefs
+import all BbuKraken.Unit.Plan.PlannerRunCfgResolveDefs
+public import BbuKraken.Unit.Plan.PlannerRunEmissionInvoke
+import all BbuKraken.Unit.Plan.PlannerRunEmissionInvoke
+public import BbuKraken.Unit.Plan.PlannerRunEmissionBlocked
+import all BbuKraken.Unit.Plan.PlannerRunEmissionBlocked
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP

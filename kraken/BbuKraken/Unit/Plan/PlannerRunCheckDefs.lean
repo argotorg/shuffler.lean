@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunFrame
-import BbuKraken.Unit.Plan.PlannerRunModel
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunFrame
+import all BbuKraken.Unit.Plan.PlannerRunFrame
+public import BbuKraken.Unit.Plan.PlannerRunModel
+import all BbuKraken.Unit.Plan.PlannerRunModel
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 

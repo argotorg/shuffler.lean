@@ -1,5 +1,11 @@
-import BbuKraken.Unit.PermuteSpecs
-import Kraken.X64.Parser
+module
+
+public import BbuKraken.Unit.PermuteSpecs
+import all BbuKraken.Unit.PermuteSpecs
+public import Kraken.X64.Parser
+import all Kraken.X64.Parser
+
+@[expose] public section
 
 /-!
 Tests of `xor_reg_mem_idx_spec` and `xor_reg_mem_disp_spec`: `kvcgen64` over the compare of

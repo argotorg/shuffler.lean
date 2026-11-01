@@ -1,4 +1,9 @@
-import BbuKraken.Unit.TopInv
+module
+
+public import BbuKraken.Unit.TopInv
+import all BbuKraken.Unit.TopInv
+
+@[expose] public section
 
 /-!
 # `build_bottom_up`: the fill blocks
@@ -177,9 +182,9 @@ theorem TS.fill_pp {s ra t j} (hs : TS s ra (hdr0 s ra) (locF s ra j) t)
 
 theorem TS.pp_addr {s ra h L t j} (_hs : TS s ra h L t)
     (hax : t.regs.rax.toBitVec = topS s + BitVec.ofNat 64 offPD + BitVec.ofNat 64 (8 * j))
-    (hj : j < MAX_N) :
+    (_hj : j < MAX_N) :
     t.regs.rax.toBitVec + 8192#64 = topS s + BitVec.ofNat 64 offPP + BitVec.ofNat 64 (8 * j) := by
-  rw [hax]; simp only [offPD, offPP, MAX_N] at hj ⊢; bv_omega
+  rw [hax]; simp only [offPD, offPP, MAX_N] at _hj ⊢; bv_omega
 
 theorem b_1 [Host] [FunDecls] (s ra) (_hpre : TopPre s) :
     Program.ForallBlocks buildBottomUpAsm fun blk => blk.label = .label ".LB.build_bottom_up.1" →

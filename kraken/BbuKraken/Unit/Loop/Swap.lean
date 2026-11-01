@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Loop.Step
+module
+
+public import BbuKraken.Unit.Loop.Step
+import all BbuKraken.Unit.Loop.Step
+
+@[expose] public section
 
 /-!
 # `buildBottomUp`: `swapWith` and `placeTop` (part P6)
@@ -67,7 +72,7 @@ theorem b_11 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
     idioms at hc
     have hpT : t.regs.rax.toBitVec = t.regs.r14.toBitVec := by bv_omega
     have hT : t.regs.r14.toBitVec < g'.h.len := hpT ▸ hax
-    rw [Flat.kBoundSw, if_pos hpT, Flat.kfin] at hR
+    rw [Flat.kBoundSw, ite_eq_left hpT, Flat.kfin] at hR
     cfg_goto
     · exact hM.stack_of rfl
     · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
@@ -81,7 +86,7 @@ theorem b_11 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
     idioms at hc1 hc2
     have hne : t.regs.rax.toBitVec ≠ t.regs.r14.toBitVec := by bv_omega
     have hpL : t.regs.rax.toBitVec = (flat g').size - 1 := by rw [hsz]; bv_omega
-    rw [Flat.kBoundSw, if_neg hne, if_neg (fun h => h hpL)] at hR
+    rw [Flat.kBoundSw, ite_eq_right hne, ite_eq_right (fun h => h hpL)] at hR
     cfg_goto
     · exact hM.stack_of rfl
     · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
@@ -138,7 +143,7 @@ theorem b_11 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
         rename_i _ hz
         rw [hc] at hz
         replace hz := of_decide_eq_false (by simpa only [Bool.not_eq_true'] using hz)
-        simp only [hz, ne_eq, not_false_eq_true, ↓reduceIte, Flat.kfin] at hR
+        simp only [hz, not_false_eq_true, ↓reduceIte, Flat.kfin] at hR
         cfg_goto
         · exact hmid.stack
         · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
@@ -151,7 +156,7 @@ theorem b_11 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
         rename_i _ hz
         rw [hc] at hz
         replace hz := of_decide_eq_true (by simpa only [Bool.not_eq_false'] using hz)
-        simp only [hz, ne_eq, not_true_eq_false, ↓reduceIte] at hR
+        simp only [hz, not_true_eq_false, ↓reduceIte] at hR
         obtain ⟨hf', hb', hp', -⟩ := Flat.Bud.swapWith hf hb hz
         rw [← hfl] at hf' hb' hp' hR
         rw [← hk2.xo] at hb'
@@ -165,7 +170,7 @@ theorem b_11 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
           | (have hpp : g''.h.pend = g'.h.pend := hp'
              refine Or.inr ⟨?_, by decide⟩
              simp only [V, H, Names.buildBottomUp, String.reduceEq, ↓reduceIte, or_self, or_false,
-               false_or, true_or, or_true, h14, hM.rd_pend, hmid.rd_pend, hpp])
+               or_true, h14, hM.rd_pend, hmid.rd_pend, hpp])
 
 theorem b_12 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :
     Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.12" →
@@ -260,7 +265,7 @@ theorem b_17 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
     rename_i hc
     idioms at hc
     have hTL : t.regs.r14.toBitVec = (flat g').size - 1 := by rw [hsz]; bv_omega
-    rw [Flat.kTail, if_neg (fun h => h hTL), Flat.kfin] at hR
+    rw [Flat.kTail, ite_eq_right (fun h => h hTL), Flat.kfin] at hR
     cfg_goto
     · exact hM.stack_of rfl
     · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
@@ -313,7 +318,7 @@ theorem b_17 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
         rename_i _ hz
         rw [hc] at hz
         replace hz := of_decide_eq_false (by simpa only [Bool.not_eq_false'] using hz)
-        simp only [hz, ne_eq, not_false_eq_true, ↓reduceIte, Flat.kfin] at hR
+        simp only [hz, not_false_eq_true, ↓reduceIte, Flat.kfin] at hR
         cfg_goto
         · exact hmid.stack_of rfl
         · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
@@ -326,7 +331,7 @@ theorem b_17 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
         rename_i _ hz
         rw [hc] at hz
         replace hz := of_decide_eq_true (by simpa only [Bool.not_eq_true'] using hz)
-        simp only [hz, ne_eq, not_true_eq_false, ↓reduceIte, Flat.kfin] at hR
+        simp only [hz, not_true_eq_false, ↓reduceIte, Flat.kfin] at hR
         obtain ⟨hf', hb', hp', hs'⟩ := Flat.Bud.swapWith (k := 0) hf hb hz
         rw [← hfl] at hf' hb' hp' hs' hR
         rw [← hk2.xo] at hb'

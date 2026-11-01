@@ -1,7 +1,15 @@
-import BbuKraken.Unit.Generate
-import BbuKraken.Unit.ProduceLemmas
-import BbuKraken.Unit.Pop
-import BbuKraken.FlatSurplusRel
+module
+
+public import BbuKraken.Unit.Generate
+import all BbuKraken.Unit.Generate
+public import BbuKraken.Unit.ProduceLemmas
+import all BbuKraken.Unit.ProduceLemmas
+public import BbuKraken.Unit.Pop
+import all BbuKraken.Unit.Pop
+public import BbuKraken.FlatSurplusRel
+import all BbuKraken.FlatSurplusRel
+
+@[expose] public section
 
 /-!
 # Lemmas for the `removeSurplus` unit proof

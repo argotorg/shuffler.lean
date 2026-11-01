@@ -1,4 +1,9 @@
-import BbuKraken.FlatList.Step
+module
+
+public import BbuKraken.FlatList.Step
+import all BbuKraken.FlatList.Step
+
+@[expose] public section
 
 /-!
 The loop of the flat model against the loop of the list model. The final permutation is a

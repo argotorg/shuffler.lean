@@ -1,8 +1,17 @@
-import BbuKraken.Unit.Permute.A
-import BbuKraken.Unit.Permute.C1
-import BbuKraken.Unit.Permute.C2
-import BbuKraken.Unit.Permute.D1
-import BbuKraken.Unit.Permute.D2
+module
+
+public import BbuKraken.Unit.Permute.A
+import all BbuKraken.Unit.Permute.A
+public import BbuKraken.Unit.Permute.C1
+import all BbuKraken.Unit.Permute.C1
+public import BbuKraken.Unit.Permute.C2
+import all BbuKraken.Unit.Permute.C2
+public import BbuKraken.Unit.Permute.D1
+import all BbuKraken.Unit.Permute.D1
+public import BbuKraken.Unit.Permute.D2
+import all BbuKraken.Unit.Permute.D2
+
+@[expose] public section
 
 /-!
 # `permute`: the unit theorem from the block lemmas

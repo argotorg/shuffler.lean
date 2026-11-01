@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Permute.Inv
+module
+
+public import BbuKraken.Unit.Permute.Inv
+import all BbuKraken.Unit.Permute.Inv
+
+@[expose] public section
 
 /-!
 # `permute`: facts of the model for the blocks

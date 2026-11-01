@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ResolveInitDefs
+module
+
+public import BbuKraken.Unit.Plan.ResolveInitDefs
+import all BbuKraken.Unit.Plan.ResolveInitDefs
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -20,7 +25,7 @@ theorem b_4 : resolveAsm.ForallBlocks fun blk =>
   cfg_block [Obl]
   intro t ht
   simp only [Inv, initFullPhase, zphase, initPhase, Names.resolve,
-    String.reduceEq, ↓reduceIte, Scan, Bool.true_eq] at ht
+    String.reduceEq, ↓reduceIte, Scan] at ht
   obtain ⟨lo, L, u0, count, hc, hbp, hp, hcount, hnext, he⟩ := ht
   have h9 : t.regs.r9.toBitVec = r9 s := hc.r9
   symexec_norm at h9 hp hcount hnext he

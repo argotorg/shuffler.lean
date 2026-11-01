@@ -1,4 +1,9 @@
-import BbuKraken.Sep.Contract
+module
+
+public import BbuKraken.Sep.Contract
+import all BbuKraken.Sep.Contract
+
+@[expose] public section
 
 /-!
 # Atoms from mapped memory

@@ -1,4 +1,9 @@
-import PlanBridge.Resolve
+module
+
+public import PlanBridge.Resolve
+import all PlanBridge.Resolve
+
+@[expose] public section
 
 /-!
 The loops of the flat `resolve` and of PR31 `Planner.resolve` (`resolve_corr`).

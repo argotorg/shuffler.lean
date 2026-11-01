@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.ClassifyAssemble
-import BbuKraken.PlannerHelpers
+module
+
+public import BbuKraken.Unit.Plan.ClassifyAssemble
+import all BbuKraken.Unit.Plan.ClassifyAssemble
+public import BbuKraken.PlannerHelpers
+import all BbuKraken.PlannerHelpers
+
+@[expose] public section
 
 namespace Bbu
 open Bbu.Unit

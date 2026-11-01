@@ -1,5 +1,11 @@
-import Shuffler.Emission.Run.Lemmas.Execution
-import Std.WP.Triple.SpecLemmas
+module
+
+public import Shuffler.Emission.Run.Lemmas.Execution
+import all Shuffler.Emission.Run.Lemmas.Execution
+public import Std.WP.Triple.SpecLemmas
+import all Std.WP.Triple.SpecLemmas
+
+@[expose] public section
 
 /-!
 The blocked offset of a PR31 `Emission.run` result lies below the height of its stack

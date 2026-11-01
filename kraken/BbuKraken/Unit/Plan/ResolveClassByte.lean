@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ResolveLoopDefs
+module
+
+public import BbuKraken.Unit.Plan.ResolveLoopDefs
+import all BbuKraken.Unit.Plan.ResolveLoopDefs
+
+@[expose] public section
 
 namespace Bbu.Unit.ResolveU
 open Bbu.Sep

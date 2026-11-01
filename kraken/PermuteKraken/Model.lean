@@ -1,3 +1,7 @@
+module
+
+@[expose] public section
+
 /-
 A model of `Shuffler.Permute.permute` without Mathlib. A permutation is a list:
 `toList[i]` is the destination of the slot at position `i`, and position

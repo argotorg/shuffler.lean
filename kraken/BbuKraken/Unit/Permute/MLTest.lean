@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Permute.MD
-import BbuKraken.Unit.PermuteModelTest
+module
+
+public import BbuKraken.Unit.Permute.MD
+import all BbuKraken.Unit.Permute.MD
+public import BbuKraken.Unit.PermuteModelTest
+import all BbuKraken.Unit.PermuteModelTest
+
+@[expose] public section
 
 /-!
 Tests of the model steps of the `permute` proof (`Permute/ML.lean`, `Permute/MD.lean`) and of the

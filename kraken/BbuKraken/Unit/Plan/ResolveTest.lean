@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ResolveMem
+module
+
+public import BbuKraken.Unit.Plan.ResolveMem
+import all BbuKraken.Unit.Plan.ResolveMem
+
+@[expose] public section
 
 open Bbu
 

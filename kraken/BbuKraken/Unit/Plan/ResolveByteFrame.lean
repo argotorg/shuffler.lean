@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ResolveBytes
+module
+
+public import BbuKraken.Unit.Plan.ResolveBytes
+import all BbuKraken.Unit.Plan.ResolveBytes
+
+@[expose] public section
 
 namespace Bbu.Unit.ResolveU
 open Bbu.Sep

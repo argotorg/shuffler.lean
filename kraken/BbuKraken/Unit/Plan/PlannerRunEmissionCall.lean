@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.PlannerRunEmissionLayout
-import BbuKraken.Unit.Plan.PlannerRunEmissionView
-import BbuKraken.Unit.Plan.PlannerRunBuilderCall
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunEmissionLayout
+import all BbuKraken.Unit.Plan.PlannerRunEmissionLayout
+public import BbuKraken.Unit.Plan.PlannerRunEmissionView
+import all BbuKraken.Unit.Plan.PlannerRunEmissionView
+public import BbuKraken.Unit.Plan.PlannerRunBuilderCall
+import all BbuKraken.Unit.Plan.PlannerRunBuilderCall
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep

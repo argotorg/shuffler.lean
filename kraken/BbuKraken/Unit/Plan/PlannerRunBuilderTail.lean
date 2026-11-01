@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.PlannerRunBuilderDefs
-import BbuKraken.Unit.Plan.PlannerRunEmissionDefs
-import Kraken.X64.Parser
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunBuilderDefs
+import all BbuKraken.Unit.Plan.PlannerRunBuilderDefs
+public import BbuKraken.Unit.Plan.PlannerRunEmissionDefs
+import all BbuKraken.Unit.Plan.PlannerRunEmissionDefs
+public import Kraken.X64.Parser
+import all Kraken.X64.Parser
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -115,14 +122,14 @@ theorem builder_tail [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 6
   | goto ".LB.Planner.run.32" =>
     rename_i af hj
     symexec_norm at hj
-    simp only [hb.rbx, rsaw, rbyte, hselect, hselect', rm, BitVec.sub_zero,
+    simp only [hb.rbx, rsaw, rbyte, hselect', rm, BitVec.sub_zero,
       BitVec.zero_eq, beq_iff_eq] at hj
     apply hzero _ hj
     exact hb'.next rfl rfl rfl rfl rfl rfl rfl rfl
   | other =>
     rename_i af hj
     symexec_norm at hj
-    simp only [hb.rbx, rsaw, rbyte, hselect, hselect', rm, BitVec.sub_zero,
+    simp only [hb.rbx, rsaw, rbyte, hselect, rm, BitVec.sub_zero,
       BitVec.zero_eq, beq_eq_false_iff_ne] at hj
     apply hnonzero _ hj rfl
     exact hb'.next rfl rfl rfl rfl rfl rfl rfl rfl

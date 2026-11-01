@@ -1,6 +1,13 @@
-import BbuKraken.FlatList.Loop
-import BbuKraken.FlatList.Ctor
-import BbuKraken.FlatList.Permute
+module
+
+public import BbuKraken.FlatList.Loop
+import all BbuKraken.FlatList.Loop
+public import BbuKraken.FlatList.Ctor
+import all BbuKraken.FlatList.Ctor
+public import BbuKraken.FlatList.Permute
+import all BbuKraken.FlatList.Permute
+
+@[expose] public section
 
 /-!
 The bridge from the flat model to the list model: for each input that the guard of

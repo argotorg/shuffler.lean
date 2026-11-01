@@ -1,4 +1,9 @@
-import BbuKraken.Unit.IsAvailable
+module
+
+public import BbuKraken.Unit.IsAvailable
+import all BbuKraken.Unit.IsAvailable
+
+@[expose] public section
 
 open Bbu
 

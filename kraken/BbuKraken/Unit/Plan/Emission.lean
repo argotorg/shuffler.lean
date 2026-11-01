@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.Call
+module
+
+public import BbuKraken.Unit.Plan.Call
+import all BbuKraken.Unit.Plan.Call
+
+@[expose] public section
 
 /-! The view contracts and the `Emission` contracts describe the same owned memory.
 These lemmas let an `Emission` unit use the frame and call rules of the planner units. -/

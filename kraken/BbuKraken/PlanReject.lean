@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.EntryRejectIds
-import BbuKraken.Bin
-import BbuKraken.PlannerLink
+module
+
+public import BbuKraken.Unit.Plan.EntryRejectIds
+import all BbuKraken.Unit.Plan.EntryRejectIds
+public import BbuKraken.Bin
+import all BbuKraken.Bin
+public import BbuKraken.PlannerLink
+import all BbuKraken.PlannerLink
+
+@[expose] public section
 
 namespace Bbu
 open Bbu.Unit

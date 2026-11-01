@@ -1,5 +1,12 @@
-import Shuffler.BuildBottomUp.Defs
-import BbuKraken.Model
+module
+
+public import Shuffler.BuildBottomUp.Defs
+public meta import Shuffler.BuildBottomUp.Defs
+import all Shuffler.BuildBottomUp.Defs
+public import BbuKraken.Model
+import all BbuKraken.Model
+
+@[expose] public section
 
 /-!
 A differential test of the model `Bbu.buildBottomUp` against the original

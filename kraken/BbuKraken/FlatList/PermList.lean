@@ -1,4 +1,9 @@
-import BbuKraken.Model
+module
+
+public import BbuKraken.Model
+import all BbuKraken.Model
+
+@[expose] public section
 
 /-!
 Lemmas on lists for `Bbu.normalize` of the list model. `regroup_ok` gives the result of

@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunRetryDefs
-import BbuKraken.Unit.Plan.PlannerRunRetrySpec
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunRetryDefs
+import all BbuKraken.Unit.Plan.PlannerRunRetryDefs
+public import BbuKraken.Unit.Plan.PlannerRunRetrySpec
+import all BbuKraken.Unit.Plan.PlannerRunRetrySpec
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -59,7 +65,7 @@ theorem b_29 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   | goto ".LB.Planner.run.29" =>
     rename_i hj
     symexec_norm at hj
-    simp only [hax', hdx', sub_beq_zero, BitVec.zero_eq,
+    simp only [hax', hdx', BitVec.zero_eq,
       Bool.not_eq_true', beq_eq_false_iff_ne] at hj
     have hne : i + 1#64 ≠ g.p.m := by intro he; apply hj; bv_omega
     have hin : i + 1#64 < g.p.m := by bv_omega
@@ -71,7 +77,7 @@ theorem b_29 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   | other =>
     rename_i hj
     symexec_norm at hj
-    simp only [hax', hdx', sub_beq_zero, BitVec.zero_eq,
+    simp only [hax', hdx', BitVec.zero_eq,
       Bool.not_eq_false', beq_iff_eq] at hj
     have he : i + 1#64 = g.p.m := by bv_omega
     apply hdone

@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.EntryRunModel
-import BbuKraken.Unit.Plan.EntryOutput
+module
+
+public import BbuKraken.Unit.Plan.EntryRunModel
+import all BbuKraken.Unit.Plan.EntryRunModel
+public import BbuKraken.Unit.Plan.EntryOutput
+import all BbuKraken.Unit.Plan.EntryOutput
+
+@[expose] public section
 
 namespace Bbu.Unit.EntryValidU
 open Bbu.Sep

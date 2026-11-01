@@ -1,7 +1,15 @@
-import BbuKraken.Unit.Plan.Call
-import BbuKraken.Unit.Plan.IsRetained
-import BbuKraken.Unit.ShallowestCopy
-import ProofKit.CfgBlock
+module
+
+public import BbuKraken.Unit.Plan.Call
+import all BbuKraken.Unit.Plan.Call
+public import BbuKraken.Unit.Plan.IsRetained
+import all BbuKraken.Unit.Plan.IsRetained
+public import BbuKraken.Unit.ShallowestCopy
+import all BbuKraken.Unit.ShallowestCopy
+public import ProofKit.CfgBlock
+import all ProofKit.CfgBlock
+
+@[expose] public section
 
 /-!
 # `Planner::hasOtherRetainedCopy`

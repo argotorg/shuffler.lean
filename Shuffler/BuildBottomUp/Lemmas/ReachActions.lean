@@ -29,7 +29,9 @@ theorem Succeeds.of_triple (result : Except ShuffleErr α) (post : α → Prop)
   have hp := h.le_wp trivial
   cases result with
   | ok value => exact ⟨value, rfl, hp⟩
-  | error err => simp [wp, WP.wpTrans] at hp
+  | error err =>
+    simp only [wp, WP.trans, Lean.Order.pushExcept, Lean.Order.bot_apply,
+      Lean.Order.bot_prop_eq] at hp
 
 -- A triple under `noBlockedErrors` excludes blocked errors.
 theorem noBlocked_of_triple {result : Except ShuffleErr α}
@@ -134,15 +136,19 @@ theorem generate_final (state : State source target spills) (dest : Fin target.l
   all_goals try assumption
   all_goals try simp_all
   all_goals first
-    | exact Growth.final_swapped (by assumption) rfl (by assumption)
-    | exact Growth.final_swapped (by assumption) rfl (Swapped.retag _ _ (by assumption))
-    | exact Growth.final_at_exit (by assumption) hle (fun hlt => absurd hlt (by omega))
     | exact Growth.swap_reachable (by assumption) (by omega) _ rfl
     | exact State.not_isFinal_of_val_eq (by assumption) (by assumption)
-    | exact State.isFinal_of_val_eq (by assumption) (by assumption)
+    | exact (State.isFinal_of_val_eq (by assumption) (by assumption)).choose_spec
     | omega
+    | exact (Growth.final_swapped (by assumption) rfl (by assumption)).choose
+    | exact (Growth.final_swapped (by assumption) rfl (by assumption)).choose_spec
+    | exact (Growth.final_swapped (by assumption) rfl (Swapped.retag _ _ (by assumption))).choose_spec
+    | exact (Growth.final_at_exit (by assumption) hle (fun hlt => absurd hlt (by omega))).choose
+    | exact (Growth.final_at_exit (by assumption) hle (fun hlt => absurd hlt (by omega))).choose_spec
     | (have := (‹Growth _ _ _ _›).size
-       simp only [State.isSwapReachable, State.depthOf, Stack.offsetToDepth] at *; omega)
+       simp only [State.isSwapReachable, State.depthOf, Stack.offsetToDepth] at *
+       omega)
+    | exact (Growth.final_swapped (by assumption) rfl (Swapped.retag _ _ (by assumption))).choose
 
 theorem generate_reachable (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest)

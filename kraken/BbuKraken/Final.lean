@@ -1,15 +1,31 @@
-import BbuKraken.Unit.IsSpilled
-import BbuKraken.Unit.ShallowestCopy
-import BbuKraken.Unit.Push
-import BbuKraken.Unit.Dup
-import BbuKraken.Unit.SwapWith
-import BbuKraken.Unit.Produce
-import BbuKraken.Unit.Generate
-import BbuKraken.Unit.Permute
-import BbuKraken.Unit.Loop
-import BbuKraken.Unit.Top
-import BbuKraken.FlatBridge
-import BbuKraken.Link
+module
+
+public import BbuKraken.Unit.IsSpilled
+import all BbuKraken.Unit.IsSpilled
+public import BbuKraken.Unit.ShallowestCopy
+import all BbuKraken.Unit.ShallowestCopy
+public import BbuKraken.Unit.Push
+import all BbuKraken.Unit.Push
+public import BbuKraken.Unit.Dup
+import all BbuKraken.Unit.Dup
+public import BbuKraken.Unit.SwapWith
+import all BbuKraken.Unit.SwapWith
+public import BbuKraken.Unit.Produce
+import all BbuKraken.Unit.Produce
+public import BbuKraken.Unit.Generate
+import all BbuKraken.Unit.Generate
+public import BbuKraken.Unit.Permute
+import all BbuKraken.Unit.Permute
+public import BbuKraken.Unit.Loop
+import all BbuKraken.Unit.Loop
+public import BbuKraken.Unit.Top
+import all BbuKraken.Unit.Top
+public import BbuKraken.FlatBridge
+import all BbuKraken.FlatBridge
+public import BbuKraken.Link
+import all BbuKraken.Link
+
+@[expose] public section
 
 /-!
 `build_bottom_up` in a host program that contains `c/bbu/build_bottom_up.S` returns the result of

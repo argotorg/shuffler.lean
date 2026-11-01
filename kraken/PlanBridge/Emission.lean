@@ -1,7 +1,15 @@
-import PlanBridge.List
-import PlanBridge.Loops
-import PlanBridge.Frame
-import Shuffler.Emission.Run.Lemmas.Execution
+module
+
+public import PlanBridge.List
+import all PlanBridge.List
+public import PlanBridge.Loops
+import all PlanBridge.Loops
+public import PlanBridge.Frame
+import all PlanBridge.Frame
+public import Shuffler.Emission.Run.Lemmas.Execution
+import all Shuffler.Emission.Run.Lemmas.Execution
+
+@[expose] public section
 
 /-!
 The flat `emissionRun` and PR31 `Emission.run` (`emissionRun_erel`). The checks of `run` after

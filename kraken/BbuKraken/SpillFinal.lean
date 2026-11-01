@@ -1,5 +1,11 @@
-import BbuKraken.Unit.SpillSet
-import BbuKraken.Link
+module
+
+public import BbuKraken.Unit.SpillSet
+import all BbuKraken.Unit.SpillSet
+public import BbuKraken.Link
+import all BbuKraken.Link
+
+@[expose] public section
 
 /-!
 `spill_set` in a host program that contains `c/build_bottom_up.S` returns the result of the
@@ -28,6 +34,7 @@ namespace Linked
 variable [Host] (L : Linked)
 
 -- The function that `spill_set` calls.
+@[instance_reducible]
 def spillDecls : FunDecls := ⟨[L.frag spillSetAddAsm spillSetAdd_at]⟩
 
 theorem spillSetAdd_decl :

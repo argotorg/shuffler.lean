@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.EntryRejectIdsDefs
-import BbuKraken.Unit.Run.Load
+module
+
+public import BbuKraken.Unit.Plan.EntryRejectIdsDefs
+import all BbuKraken.Unit.Plan.EntryRejectIdsDefs
+public import BbuKraken.Unit.Run.Load
+import all BbuKraken.Unit.Run.Load
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP
@@ -33,7 +39,7 @@ theorem b_1 (hok : g.Ok) : planAsm.ForallBlocks fun blk =>
   have hp := hr.payload
   have hptr := hc.rdx
   have hid := hc.r9
-  simp only [rdx, rcx, r9, Reg64s.get64_rdx, Reg64s.get64_rcx, Reg64s.get64_r9] at hptr hid
+  simp only [rdx, r9, Reg64s.get64_rdx, Reg64s.get64_r9] at hptr hid
   have step (h : Flat.idOk g.idCount (StackSlot.ofWord w) = true) :
       idsFrom g.sw g.idCount 0 = idsFrom g.sw g.idCount ((rax t).toNat + 1) :=
     hmodel.trans (idsFrom_good _ _ hiL h)
@@ -69,7 +75,7 @@ theorem b_1 (hok : g.Ok) : planAsm.ForallBlocks fun blk =>
     · simp only [Inv, Names.plan, String.reduceEq, ↓reduceIte]
       exact ⟨lo, (by apply hc.next <;> rfl), hi, step hslot⟩
     · left
-      simp only [V, Names.plan, String.reduceEq, ↓reduceIte, or_false, rax, Reg64s.get64_rax, MachineData.regs_mk]
+      simp only [V, Names.plan, String.reduceEq, ↓reduceIte, rax, Reg64s.get64_rax]
       omega
   | goto ".LB.plan.9" =>
     cfg_goto
@@ -77,7 +83,7 @@ theorem b_1 (hok : g.Ok) : planAsm.ForallBlocks fun blk =>
     · simp only [Inv, Names.plan, String.reduceEq, ↓reduceIte]
       exact ⟨lo, (by apply hc.toBd.next <;> rfl), rfl⟩
     · left
-      simp only [V, Names.plan, String.reduceEq, ↓reduceIte, or_false, rax, Reg64s.get64_rax, MachineData.regs_mk]
+      simp only [V, Names.plan, String.reduceEq, ↓reduceIte, or_false, rax, Reg64s.get64_rax]
       omega
 
 set_option maxRecDepth 4096 in
@@ -98,7 +104,7 @@ theorem b_4 (hok : g.Ok) : planAsm.ForallBlocks fun blk =>
   have hp := hr.payload
   have hptr := hc.rcx
   have hid := hc.r9
-  simp only [rdx, rcx, r9, Reg64s.get64_rdx, Reg64s.get64_rcx, Reg64s.get64_r9] at hptr hid
+  simp only [rcx, r9, Reg64s.get64_rcx, Reg64s.get64_r9] at hptr hid
   have step (h : Flat.idOk g.idCount (StackSlot.ofWord w) = true) :
       idsFrom g.tw g.idCount 0 = idsFrom g.tw g.idCount ((rax t).toNat + 1) :=
     hmodel.trans (idsFrom_good _ _ hiL h)
@@ -134,7 +140,7 @@ theorem b_4 (hok : g.Ok) : planAsm.ForallBlocks fun blk =>
     · simp only [Inv, Names.plan, String.reduceEq, ↓reduceIte]
       exact ⟨lo, (by apply hc.next <;> rfl), hi, hsrc, step hslot⟩
     · left
-      simp only [V, Names.plan, String.reduceEq, ↓reduceIte, or_false, rax, Reg64s.get64_rax, MachineData.regs_mk]
+      simp only [V, Names.plan, String.reduceEq, ↓reduceIte, or_false, rax, Reg64s.get64_rax]
       omega
   | goto ".LB.plan.9" =>
     cfg_goto
@@ -142,7 +148,7 @@ theorem b_4 (hok : g.Ok) : planAsm.ForallBlocks fun blk =>
     · simp only [Inv, Names.plan, String.reduceEq, ↓reduceIte]
       exact ⟨lo, (by apply hc.toBd.next <;> rfl), rfl⟩
     · left
-      simp only [V, Names.plan, String.reduceEq, ↓reduceIte, or_false, rax, Reg64s.get64_rax, MachineData.regs_mk]
+      simp only [V, Names.plan, String.reduceEq, ↓reduceIte, or_false, rax, Reg64s.get64_rax]
       omega
 
 end

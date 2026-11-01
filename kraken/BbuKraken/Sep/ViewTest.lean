@@ -1,6 +1,13 @@
-import BbuKraken.Sep.Stores
-import ProofKit.SymExec
-import Kraken.X64.Parser
+module
+
+public import BbuKraken.Sep.Stores
+import all BbuKraken.Sep.Stores
+public import ProofKit.SymExec
+import all ProofKit.SymExec
+public import Kraken.X64.Parser
+import all Kraken.X64.Parser
+
+@[expose] public section
 
 /-!
 Tests of the struct view: the load and store lemmas of each kind of field, the folds of the asm

@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.ResolveSpillCall
-import BbuKraken.Unit.Plan.ResolveDropDefs
-import BbuKraken.Unit.Run.Load
+module
+
+public import BbuKraken.Unit.Plan.ResolveSpillCall
+import all BbuKraken.Unit.Plan.ResolveSpillCall
+public import BbuKraken.Unit.Plan.ResolveDropDefs
+import all BbuKraken.Unit.Plan.ResolveDropDefs
+public import BbuKraken.Unit.Run.Load
+import all BbuKraken.Unit.Run.Load
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

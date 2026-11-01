@@ -1,5 +1,13 @@
-import BbuKraken.Unit.SwapWith
-import BbuKraken.FlatModelTest
+module
+
+public meta import Kraken.X64.Semantics
+
+public import BbuKraken.Unit.SwapWith
+import all BbuKraken.Unit.SwapWith
+public import BbuKraken.FlatModelTest
+import all BbuKraken.FlatModelTest
+
+@[expose] public section
 
 /-!
 Tests of `Unit/SwapWith.lean`: the word facts of the asm tests and of the record, on edge words,

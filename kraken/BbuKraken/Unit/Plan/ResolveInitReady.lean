@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ResolveInitDefs
+module
+
+public import BbuKraken.Unit.Plan.ResolveInitDefs
+import all BbuKraken.Unit.Plan.ResolveInitDefs
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -117,7 +122,7 @@ theorem b_7 [Host] [FunDecls]
         rw [hsp, hdr]⟩
     · left
       simp only [V, initFullVar, zvar, initVar, Names.resolve, String.reduceEq, ↓reduceIte,
-        true_or, or_true, false_or, or_false]
+        or_true, or_false]
       decide
   | other =>
     rename_i hj

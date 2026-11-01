@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.Call
-import BbuKraken.Unit.Plan.ClosestCopy
-import BbuKraken.Unit.Plan.Map
+module
+
+public import BbuKraken.Unit.Plan.Call
+import all BbuKraken.Unit.Plan.Call
+public import BbuKraken.Unit.Plan.ClosestCopy
+import all BbuKraken.Unit.Plan.ClosestCopy
+public import BbuKraken.Unit.Plan.Map
+import all BbuKraken.Unit.Plan.Map
+
+@[expose] public section
 
 /-!
 # `MappingBuilder::mapInPlace`

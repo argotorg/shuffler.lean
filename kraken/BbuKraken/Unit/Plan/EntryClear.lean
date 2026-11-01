@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.EntryClearDefs
-import BbuKraken.Unit.Plan.EntryIdsModel
-import BbuKraken.Unit.Run.Load
+module
+
+public import BbuKraken.Unit.Plan.EntryClearDefs
+import all BbuKraken.Unit.Plan.EntryClearDefs
+public import BbuKraken.Unit.Plan.EntryIdsModel
+import all BbuKraken.Unit.Plan.EntryIdsModel
+public import BbuKraken.Unit.Run.Load
+import all BbuKraken.Unit.Run.Load
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP
@@ -95,7 +102,7 @@ theorem b_7 [Host] [FunDecls] (g : EG) (F : MProp 64) (s t : MachineData)
     symexec_norm at hz
     simp only [hax, h9, sub_beq_zero, Bool.not_eq_false', beq_iff_eq] at hz
     have heq : i + 1#64 = g.r.p.m := by bv_omega
-    have hend : ¬ i + 1#64 < g.r.p.m := by rw [heq]; simp [BitVec.lt_def]
+    have hend : ¬ i + 1#64 < g.r.p.m := by rw [heq]; simp
     rw [Flat.zeroFrom, dite_eq_right hend] at hstep
     apply hdone d
     · exact ⟨lo, locals, (by apply hc1.next <;> rfl)⟩

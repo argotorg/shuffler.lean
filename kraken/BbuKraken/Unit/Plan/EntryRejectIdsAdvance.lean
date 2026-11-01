@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.EntryRejectIdsDefs
-import ProofKit.Idioms
+module
+
+public import BbuKraken.Unit.Plan.EntryRejectIdsDefs
+import all BbuKraken.Unit.Plan.EntryRejectIdsDefs
+public import ProofKit.Idioms
+import all ProofKit.Idioms
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP
@@ -37,18 +43,18 @@ theorem b_0 (hok : g.Ok) : planAsm.ForallBlocks fun blk =>
       rw [hmodel, ← hadd, ← he]
       exact idsFrom_end _ _ hok.sw
     · left
-      simp only [V, Names.plan, String.reduceEq, ↓reduceIte, or_false, or_true, true_or]
+      simp only [V, Names.plan, String.reduceEq, ↓reduceIte, or_false]
       omega
   | other =>
     first
     | apply Or.inl
       simp only [V, Names.plan, String.reduceEq, ↓reduceIte, rax, Reg64s.get64_rax,
-        MachineData.regs_mk, hadd]
+        hadd]
       change t.regs.rax.toBitVec.toNat < g.m.toNat at hi
       omega
     | rename_i he
       symexec_norm at he
-      simp only [hm, sub_beq_zero, Bool.not_eq_true', beq_eq_false_iff_ne] at he
+      simp only [hm, sub_beq_zero, beq_eq_false_iff_ne] at he
       simp only [Inv, Names.plan, String.reduceEq, ↓reduceIte]
       refine ⟨lo, (by apply hc.next <;> rfl), ?_, ?_⟩
       · change 1#64 + t.regs.rax.toBitVec < g.m
@@ -84,7 +90,7 @@ theorem b_3 (hok : g.Ok) : planAsm.ForallBlocks fun blk =>
     first
     | apply Or.inl
       simp only [V, Names.plan, String.reduceEq, ↓reduceIte, rax, Reg64s.get64_rax,
-        MachineData.regs_mk, hadd, or_false]
+        hadd, or_false]
       change t.regs.rax.toBitVec.toNat < g.n.toNat at hi
       omega
     | rename_i he
@@ -125,8 +131,8 @@ theorem b_2 (hok : g.Ok) : planAsm.ForallBlocks fun blk =>
       change 0#64 < g.n
       bv_omega
     · left
-      simp only [V, Names.plan, String.reduceEq, ↓reduceIte, or_false, or_true, true_or, rax,
-        Reg64s.get64_rax, MachineData.regs_mk, BitVec.toNat_ofNat, Nat.zero_mod, Nat.sub_zero]
+      simp only [V, Names.plan, String.reduceEq, ↓reduceIte, or_false, rax,
+        Reg64s.get64_rax, BitVec.toNat_ofNat, Nat.zero_mod, Nat.sub_zero]
       omega
 
 set_option maxRecDepth 4096 in
@@ -159,8 +165,8 @@ theorem b_14 (hok : g.Ok) : planAsm.ForallBlocks fun blk =>
         rw [hdi, hm]
         rfl
     · left
-      simp only [V, Names.plan, String.reduceEq, ↓reduceIte, or_false, or_true, true_or, rax,
-        Reg64s.get64_rax, MachineData.regs_mk, hdi, hm, BitVec.toNat_ofNat,
+      simp only [V, Names.plan, String.reduceEq, ↓reduceIte, or_false, or_true, rax,
+        Reg64s.get64_rax, hdi, hm, BitVec.toNat_ofNat,
         Nat.zero_mod, Nat.sub_zero]
       omega
   | goto ".LB.plan.8" =>

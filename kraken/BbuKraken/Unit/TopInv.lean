@@ -1,6 +1,15 @@
-import BbuKraken.Unit.TopGhost
-import BbuKraken.Unit.Permute.Cfg
-import ProofKit.Cfg
+module
+
+public import BbuKraken.Unit.TopGhost
+import all BbuKraken.Unit.TopGhost
+public import BbuKraken.Unit.Permute.Cfg
+import all BbuKraken.Unit.Permute.Cfg
+public import ProofKit.Cfg
+import all ProofKit.Cfg
+
+@[expose] public section
+
+set_option experimental.vcgen true
 
 /-!
 # `build_bottom_up`: the invariant and the variant of each block
@@ -257,10 +266,10 @@ theorem TS.m_lt (hs : TS s ra h L t) (hk : k < mArg s) : k < MAX_N := by
 
 -- `16480(%rsp,%rax,8)` with `rax = k`: `PD[k]`.
 theorem TS.pdk_addr (hs : TS s ra h L t) (hax : t.regs.rax.toBitVec = BitVec.ofNat 64 k)
-    (hk : k < MAX_N) :
+    (_hk : k < MAX_N) :
     t.regs.rsp.toBitVec + t.regs.rax.toBitVec * 8#64 + 16480#64
       = topS s + BitVec.ofNat 64 offPD + BitVec.ofNat 64 (8 * k) := by
-  rw [hs.sp, hax]; simp only [MAX_N, offPD] at hk ⊢; bv_omega
+  rw [hs.sp, hax]; simp only [MAX_N, offPD] at _hk ⊢; bv_omega
 
 theorem TS.st_pdk (hs : TS s ra h L t) (hax : t.regs.rax.toBitVec = BitVec.ofNat 64 k)
     (hk : k < MAX_N) (w : Word) :

@@ -57,7 +57,7 @@ theorem run_planned_mapping (source target : Stack) (mapping : Mapping source.le
   cases hrun.symm.trans hr
   exact hp
 
-/-- info: 'Shuffler.Emission.run' depends on opaque or partial definitions: [String.Internal.append] -/
+/-- info: 'Shuffler.Emission.run' depends on opaque or partial definitions: [String.Internal.append, Classical.choice] -/
 #guard_msgs in
 #print opaques run
 

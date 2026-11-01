@@ -1,4 +1,11 @@
-import BbuBridge.Permute
+module
+
+public import BbuBridge.Permute
+import all BbuBridge.Permute
+public import Shuffler.Permute.Normalization
+import all Shuffler.Permute.Normalization
+
+@[expose] public section
 
 /-!
 The list `Bbu.permute` with an explicit permutation is the original

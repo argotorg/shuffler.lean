@@ -1,8 +1,14 @@
+module
+
 /-
 Memory lemmas for byte and word arrays that hold lists of small numbers.
 -/
-import Kraken.StateCfg
-import Kraken.SeparationMem
+public import Kraken.StateCfg
+import all Kraken.StateCfg
+public import Kraken.SeparationMem
+import all Kraken.SeparationMem
+
+@[expose] public section
 
 namespace PermuteKraken
 

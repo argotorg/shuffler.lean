@@ -1,5 +1,11 @@
-import BbuKraken.FlatModel
-import BbuKraken.MapModel
+module
+
+public import BbuKraken.FlatModel
+import all BbuKraken.FlatModel
+public import BbuKraken.MapModel
+import all BbuKraken.MapModel
+
+@[expose] public section
 
 /-!
 The flat model of `Stack::pop`, `Mapping::pop`, `Emission::pop`, the constructors of `Mapping`

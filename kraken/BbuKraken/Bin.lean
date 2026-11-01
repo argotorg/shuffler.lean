@@ -1,5 +1,11 @@
-import BbuKraken.Final
-import BbuKraken.BinLayout
+module
+
+public import BbuKraken.Final
+import all BbuKraken.Final
+public import BbuKraken.BinLayout
+import all BbuKraken.BinLayout
+
+@[expose] public section
 
 /-!
 A concrete `Host` for the binary `c/bbu_harness` (linked with `-no-pie`). The program

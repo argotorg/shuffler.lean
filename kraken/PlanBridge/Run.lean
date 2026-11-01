@@ -1,5 +1,11 @@
-import PlanBridge.ResolveLoop
-import PlanBridge.Bounded
+module
+
+public import PlanBridge.ResolveLoop
+import all PlanBridge.ResolveLoop
+public import PlanBridge.Bounded
+import all PlanBridge.Bounded
+
+@[expose] public section
 
 /-!
 The flat `runLoop` and PR31 `Planner.run.loop` (`runLoop_corr`).

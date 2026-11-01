@@ -1,4 +1,11 @@
-import BbuKraken.Unit.Lowest.Step
+module
+
+public import BbuKraken.Unit.Lowest.Step
+import all BbuKraken.Unit.Lowest.Step
+
+@[expose] public section
+
+set_option experimental.vcgen true
 
 /-!
 # `permuteAtLowestHeight`: the end of the first loop and the second loop
@@ -90,7 +97,7 @@ theorem b_2 [Host] [FunDecls] (S PM planned g F0 s ra)
   · lowest_dec
 
 -- The address of `permutation[d]`.
-theorem perm_addr {sp d : Word} (hd : d.toNat < 1024) :
+theorem perm_addr {sp d : Word} (_hd : d.toNat < 1024) :
     sp - 24592#64 + d * 8#64 + 16384#64 = sp - 8208#64 + BitVec.ofNat 64 (8 * d.toNat) := by
   bv_omega
 
@@ -99,8 +106,8 @@ theorem ofNat_succ (k : Nat) : BitVec.ofNat 64 (k + 1) = BitVec.ofNat 64 k + 1#6
 
 -- The second loop ends at `rax + 8 = rsi`.
 theorem last_of {k : Nat} {pc rsi rax : Word} (hz : rsi = 8#64 + rax)
-    (hrsi : rsi.toNat = 8 * pc.toNat) (hrax : rax.toNat = 8 * k) (hk : k < pc.toNat)
-    (hpc : pc.toNat ≤ 1024) : ¬BitVec.ofNat 64 k + 1#64 < pc := by
+    (hrsi : rsi.toNat = 8 * pc.toNat) (hrax : rax.toNat = 8 * k) (_hk : k < pc.toNat)
+    (_hpc : pc.toNat ≤ 1024) : ¬BitVec.ofNat 64 k + 1#64 < pc := by
   subst hz; bv_omega
 
 theorem b_3 [Host] [FunDecls] (S PM planned g F0 s ra)

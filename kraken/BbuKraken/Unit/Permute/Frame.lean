@@ -1,7 +1,15 @@
-import BbuKraken.Unit.Defs
-import BbuKraken.Sep.Stores
-import ProofKit.Cfg
-import ProofKit.Idioms
+module
+
+public import BbuKraken.Unit.Defs
+import all BbuKraken.Unit.Defs
+public import BbuKraken.Sep.Stores
+import all BbuKraken.Sep.Stores
+public import ProofKit.Cfg
+import all ProofKit.Cfg
+public import ProofKit.Idioms
+import all ProofKit.Idioms
+
+@[expose] public section
 
 /-!
 # `permute`: the stack frame

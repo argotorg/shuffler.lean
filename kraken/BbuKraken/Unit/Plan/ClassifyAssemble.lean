@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.ClassifyPrologue
-import BbuKraken.Unit.Plan.ClassifyFree
-import BbuKraken.Unit.Plan.ClassifyRoute
+module
+
+public import BbuKraken.Unit.Plan.ClassifyPrologue
+import all BbuKraken.Unit.Plan.ClassifyPrologue
+public import BbuKraken.Unit.Plan.ClassifyFree
+import all BbuKraken.Unit.Plan.ClassifyFree
+public import BbuKraken.Unit.Plan.ClassifyRoute
+import all BbuKraken.Unit.Plan.ClassifyRoute
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

@@ -1,8 +1,17 @@
-import BbuKraken.Unit.SwapWith
-import BbuKraken.Unit.Pop
-import BbuKraken.Unit.RemoveSurplus
-import BbuKraken.FlatSurplusRel
-import BbuKraken.Link
+module
+
+public import BbuKraken.Unit.SwapWith
+import all BbuKraken.Unit.SwapWith
+public import BbuKraken.Unit.Pop
+import all BbuKraken.Unit.Pop
+public import BbuKraken.Unit.RemoveSurplus
+import all BbuKraken.Unit.RemoveSurplus
+public import BbuKraken.FlatSurplusRel
+import all BbuKraken.FlatSurplusRel
+public import BbuKraken.Link
+import all BbuKraken.Link
+
+@[expose] public section
 
 /-!
 `Emission::removeSurplus` in a host program that contains `c/bbu/build_bottom_up.S` returns the
@@ -28,6 +37,7 @@ namespace Linked
 variable [Host] (L : Linked)
 
 -- The functions that `removeSurplus` calls.
+@[instance_reducible]
 def surplusDecls : FunDecls := ⟨[L.frag swapWithAsm swapWith_at, L.frag popAsm pop_at]⟩
 
 theorem surplusHeads :

@@ -1,5 +1,11 @@
-import BbuKraken.Kit
-import BbuKraken.ModelLemmas
+module
+
+public import BbuKraken.Kit
+import all BbuKraken.Kit
+public import BbuKraken.ModelLemmas
+import all BbuKraken.ModelLemmas
+
+@[expose] public section
 
 /-!
 The body triple of `generate` (`c/bbu/<Names.generate>.S`). The body pushes `rbp` and

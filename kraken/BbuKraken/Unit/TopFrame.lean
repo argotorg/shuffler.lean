@@ -1,9 +1,19 @@
-import BbuKraken.Unit.Defs
-import BbuKraken.Top
-import BbuKraken.Sep.Stores
-import BbuKraken.Sep.Carve
-import BbuKraken.Unit.TopCtor
-import ProofKit.Idioms
+module
+
+public import BbuKraken.Unit.Defs
+import all BbuKraken.Unit.Defs
+public import BbuKraken.Top
+import all BbuKraken.Top
+public import BbuKraken.Sep.Stores
+import all BbuKraken.Sep.Stores
+public import BbuKraken.Sep.Carve
+import all BbuKraken.Sep.Carve
+public import BbuKraken.Unit.TopCtor
+import all BbuKraken.Unit.TopCtor
+public import ProofKit.Idioms
+import all ProofKit.Idioms
+
+@[expose] public section
 
 /-!
 # The frame of `build_bottom_up`

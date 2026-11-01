@@ -1,4 +1,9 @@
-import BbuKraken.Unit.TopInv
+module
+
+public import BbuKraken.Unit.TopInv
+import all BbuKraken.Unit.TopInv
+
+@[expose] public section
 
 /-!
 # `build_bottom_up`: the header blocks
@@ -186,7 +191,7 @@ theorem b_19 [Host] [FunDecls] (s ra) (hpre : TopPre s) :
       unfold hdr; rw [Dm_m0 s ra hm0, ha.rcx, ha.rsi, ha.r9, ha.r10, hdi]; rfl
     · top_dec
 
-theorem b_7 [Host] [FunDecls] (s ra) (hpre : TopPre s) :
+theorem b_7 [Host] [FunDecls] (s ra) (_hpre : TopPre s) :
     Program.ForallBlocks buildBottomUpAsm fun blk => blk.label = .label ".LB.build_bottom_up.7" →
       Obl s ra blk := by
   pm_block [Obl]

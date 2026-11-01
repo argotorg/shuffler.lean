@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Run.Return
+module
+
+public import BbuKraken.Unit.Run.Return
+import all BbuKraken.Unit.Run.Return
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

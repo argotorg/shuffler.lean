@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.PlannerRunSafety
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunSafety
+import all BbuKraken.Unit.Plan.PlannerRunSafety
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Flat

@@ -1,5 +1,11 @@
-import BbuKraken.FlatSurplus
-import BbuKraken.FlatPopRel
+module
+
+public import BbuKraken.FlatSurplus
+import all BbuKraken.FlatSurplus
+public import BbuKraken.FlatPopRel
+import all BbuKraken.FlatPopRel
+
+@[expose] public section
 
 /-!
 The flat model of `removeSurplus` (`FlatSurplus.lean`) is an instance of the list model

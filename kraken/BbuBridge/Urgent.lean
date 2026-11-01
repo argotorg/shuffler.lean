@@ -1,4 +1,9 @@
-import BbuBridge.Statements
+module
+
+public import BbuBridge.Statements
+import all BbuBridge.Statements
+
+@[expose] public section
 
 /-!
 `Bbu.urgent` (with `Bbu.urgentFrom`) is the `urgentToDup` scan of the loop.

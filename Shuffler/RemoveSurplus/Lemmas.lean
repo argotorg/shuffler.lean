@@ -137,8 +137,8 @@ theorem boundValue_pop (state : State source target spills) (hne : 0 < state.sta
     Stack.offsetToDepth]
   all_goals first
     | omega
-    | exact ⟨boundValue_swap state ⟨offset, by assumption⟩ ⟨state.stack.length - 1, by omega⟩ _,
-        topSurplus_swap _ ⟨offset, by assumption⟩ (by simp_all [State.isSurplus]) _ _⟩
+    | exact boundValue_swap state ⟨offset, by assumption⟩ ⟨state.stack.length - 1, by omega⟩ _
+    | exact topSurplus_swap _ ⟨offset, by assumption⟩ (by simp_all [State.isSurplus]) _ _
 
 -- Popping a non-empty stack with a surplus top lowers the height by one and keeps every target's
 -- value: only surplus slots are ever popped.
@@ -147,7 +147,7 @@ theorem boundValue_pop (state : State source target spills) (hne : 0 < state.sta
     ⦃fun next => next.stack.length = state.stack.length - 1 ∧ next.boundValue = state.boundValue;
       allowedErrors⦄ := by
   vcgen [State.pop]
-  all_goals simp_all
+  all_goals try simp_all
   all_goals rename_i h; exact boundValue_pop _ h.1 h.2
 
 --- Scans ------------------------------------------------------------------------------------------
@@ -372,7 +372,6 @@ theorem removeSurplus_triple (initial : State source target spills) :
            | exact SurplusScan.first_unreachable hyp hyp hyp hyp
            | exact SurplusScan.later_unreachable hyp hyp
        · aesop)
-    | exact SurplusScan.top_ready hyp hyp hyp
     | exact SurplusScan.start _
     | exact SurplusScan.first_reachable hyp hyp hyp hyp hyp
     | exact SurplusScan.later_reachable hyp hyp hyp hyp
@@ -380,20 +379,24 @@ theorem removeSurplus_triple (initial : State source target spills) :
     | exact outer_pop hyp (SurplusScan.not_noSurplus hyp hyp) hyp
     | exact Or.inl (noSurplus_of_nil _ hyp)
     | exact outer_end hyp
-    | exact SurplusScan.deepest_swappable hyp hyp hyp hyp
     | exact absurd (SurplusScan.shallowest_lt hyp hyp) (by omega)
     | exact List.length_pos_iff.mpr hyp
     | exact range_lt hyp
     | (have := List.length_pos_iff.mpr (hyp : _ ≠ []); omega)
     | (have := range_lt hyp; omega)
     | exact lt_of_exists_lt hyp
+    | exact (SurplusScan.top_ready hyp hyp hyp).2
+    | exact (SurplusScan.deepest_swappable hyp hyp hyp hyp).1
+    | exact (SurplusScan.deepest hyp _ hyp).choose
+    | exact (SurplusScan.deepest hyp _ hyp).choose_spec.1
+    | exact (SurplusScan.deepest hyp _ hyp).choose_spec.2
     | (rename_i hchoice
-       exact retag_ready _ _ _ _ (hchoice _ rfl))
+       exact (retag_ready _ _ _ _ (hchoice _ rfl)).2)
+    | (have hbad := (hyp : _ ∧ (_ :: _ = [])).2; contradiction)
     | (rename_i st shallowest deepest equal popped outer nonempty nontop hlen scan unreach hchoice hpopped
-       first
-       | (have hbad := outer.2; contradiction)
-       | exact ⟨outer_pop outer.1 (SurplusScan.not_noSurplus scan rfl) (by simpa using nonempty),
-           (retag_bound _ _ _ _ (hchoice _ rfl)).trans outer.2⟩)
+       exact ⟨outer_pop outer.1 (SurplusScan.not_noSurplus scan rfl)
+         (by simpa using nonempty),
+         (retag_bound _ _ _ _ (hchoice _ rfl)).trans outer.2⟩)
 
 
 end Shuffler.Emission

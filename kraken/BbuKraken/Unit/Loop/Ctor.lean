@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Loop.Model
+module
+
+public import BbuKraken.Unit.Loop.Model
+import all BbuKraken.Unit.Loop.Model
+
+@[expose] public section
 
 /-!
 # `buildBottomUp`: the state of the constructor

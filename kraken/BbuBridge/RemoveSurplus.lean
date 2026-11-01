@@ -1,7 +1,15 @@
-import BbuBridge.Basic
-import BbuBridge.Pop
-import BbuBridge.SwapWith
-import Shuffler.RemoveSurplus.Defs
+module
+
+public import BbuBridge.Basic
+import all BbuBridge.Basic
+public import BbuBridge.Pop
+import all BbuBridge.Pop
+public import BbuBridge.SwapWith
+import all BbuBridge.SwapWith
+public import Shuffler.RemoveSurplus.Defs
+import all Shuffler.RemoveSurplus.Defs
+
+@[expose] public section
 
 /-!
 The list model `Bbu.Map.State.removeSurplus` (`BbuKraken/MapModel.lean`) is an instance of the

@@ -7,7 +7,7 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 make -C "$root/kraken/c" -s
-(cd "$root/kraken" && lake build model >/dev/null)
+(cd "$root" && lake build PermuteKraken/model >/dev/null)
 (cd "$root" && lake build original >/dev/null)
 
 "$root/kraken/c/harness" gen > "$tmp/perms"

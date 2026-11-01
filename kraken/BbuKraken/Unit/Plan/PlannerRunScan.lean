@@ -1,7 +1,15 @@
-import BbuKraken.Unit.Plan.PlannerRunScanDefs
-import BbuKraken.Unit.Plan.PlannerRunMem
-import BbuKraken.Unit.ShallowestCopy
-import BbuKraken.Specs
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunScanDefs
+import all BbuKraken.Unit.Plan.PlannerRunScanDefs
+public import BbuKraken.Unit.Plan.PlannerRunMem
+import all BbuKraken.Unit.Plan.PlannerRunMem
+public import BbuKraken.Unit.ShallowestCopy
+import all BbuKraken.Unit.ShallowestCopy
+public import BbuKraken.Specs
+import all BbuKraken.Specs
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

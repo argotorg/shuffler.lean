@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Pop
+module
+
+public import BbuKraken.Unit.Pop
+import all BbuKraken.Unit.Pop
+
+@[expose] public section
 
 /-!
 Tests of `Unit/Pop.lean`: the asm forms (`leaq -1`, `movq $-1`, `cmpq $-1`) and the three

@@ -1,4 +1,11 @@
-import BbuKraken.Unit.Lowest.Inv
+module
+
+public import BbuKraken.Unit.Lowest.Inv
+import all BbuKraken.Unit.Lowest.Inv
+
+@[expose] public section
+
+set_option experimental.vcgen true
 
 /-!
 # `permuteAtLowestHeight`: the entry, the prologue and the head of the first loop
@@ -81,7 +88,7 @@ theorem b_fn [Host] [FunDecls] (S PM planned g F0 s ra)
     cfg_goto
     · refine Mid.stack (Mid.init hk0 rfl hlo ?_ ?_)
       · rfl
-      · simp only [Reg64s.get64_rsp, Reg64s.set64_rsp]; exact hsp
+      · simp only [Reg64s.get64_rsp]; exact hsp
     · simp only [LInv, Names.permuteAtLowestHeight, String.reduceEq, ↓reduceIte]
       refine ⟨L, L.locals, Flat.Scan.init L.locals, ⟨lo, w, Mid.init hk0 rfl hlo rfl hsp, hS⟩,
         Flat.scan_ge ?_, rfl, (Flat.fill_ge ?_).symm⟩

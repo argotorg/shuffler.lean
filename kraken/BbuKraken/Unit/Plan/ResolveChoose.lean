@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ResolveClassByte
+module
+
+public import BbuKraken.Unit.Plan.ResolveClassByte
+import all BbuKraken.Unit.Plan.ResolveClassByte
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

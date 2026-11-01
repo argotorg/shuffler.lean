@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.PlannerRunBuilderMem
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunBuilderMem
+import all BbuKraken.Unit.Plan.PlannerRunBuilderMem
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep

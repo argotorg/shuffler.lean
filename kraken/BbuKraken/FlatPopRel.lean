@@ -1,4 +1,9 @@
-import BbuKraken.FlatPop
+module
+
+public import BbuKraken.FlatPop
+import all BbuKraken.FlatPop
+
+@[expose] public section
 
 /-!
 The flat model of the stack and mapping operations (`FlatPop.lean`, `FlatModel.lean`) is an

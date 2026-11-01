@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ClassifyCopied
+module
+
+public import BbuKraken.Unit.Plan.ClassifyCopied
+import all BbuKraken.Unit.Plan.ClassifyCopied
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -72,7 +77,7 @@ theorem b_3 (hok : c.Ok) (ha : classifyA c s)
   clear hm hp hsp hs
   kvcgen64 [hother]
   all_goals try symexec_norm at ⊢
-  all_goals try simp only [hb, h_pl, h_sp, BitVec.setWidth_eq] at ⊢
+  all_goals try simp only [hb, h_pl, h_sp] at ⊢
   vc_by_shape
   | load =>
     first
@@ -82,7 +87,7 @@ theorem b_3 (hok : c.Ok) (ha : classifyA c s)
   | goto ".LB.Planner.classify.8" =>
     rename_i hj
     symexec_norm at hj
-    simp only [hb, h_pl, h_sp, BitVec.setWidth_eq] at hj
+    simp only [hb, h_pl, h_sp] at hj
     have hs : (inp c s).spill = true :=
       (spill_nz_flag (inp c s) hv _ h_b).symm.trans hj
     cfg_goto
@@ -92,7 +97,7 @@ theorem b_3 (hok : c.Ok) (ha : classifyA c s)
     · left; simp [V, Names.classify]
   | other =>
     symexec_norm at *
-    simp only [hb, h_pl, h_sp, BitVec.setWidth_eq] at *
+    simp only [hb, h_pl, h_sp] at *
     have hs : (inp c s).spill = false :=
       (spill_nz_flag (inp c s) hv _ h_b).symm.trans (by assumption)
     refine LI.callOther (hli.next rfl rfl rfl rfl rfl rfl rfl rfl) hok ha
@@ -127,7 +132,7 @@ theorem b_3 (hok : c.Ok) (ha : classifyA c s)
          · exact (hli'.kb.next rfl rfl).stack (by decide)
          · simp only [Inv, Names.classify, String.reduceEq, ↓reduceIte, Result]
            refine ⟨lo', w', q, hli'.toBd.next rfl rfl, ?_⟩
-           simp only [h_allow, hb']
+           simp only [h_allow]
            exact (allowed_class_code c.h.p.allowed _).trans
              (hr.trans (rank_value_without_other (inp c s) hf hs hv ho)).symm
          · left; simp [V, Names.classify])

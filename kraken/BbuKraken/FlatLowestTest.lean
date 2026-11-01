@@ -1,6 +1,13 @@
-import BbuKraken.FlatLowest
-import BbuKraken.ModelLowest
-import BbuKraken.FlatModelTest
+module
+
+public import BbuKraken.FlatLowest
+import all BbuKraken.FlatLowest
+public import BbuKraken.ModelLowest
+import all BbuKraken.ModelLowest
+public import BbuKraken.FlatModelTest
+import all BbuKraken.FlatModelTest
+
+@[expose] public section
 
 /-!
 Tests of `FlatLowest.lean`: the two loops (`scan`, `fill`), the paths of

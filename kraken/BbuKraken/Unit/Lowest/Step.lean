@@ -1,4 +1,11 @@
-import BbuKraken.Unit.Lowest.Scan
+module
+
+public import BbuKraken.Unit.Lowest.Scan
+import all BbuKraken.Unit.Lowest.Scan
+
+@[expose] public section
+
+set_option experimental.vcgen true
 
 /-!
 # `permuteAtLowestHeight`: the step of the first loop

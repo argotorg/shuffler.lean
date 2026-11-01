@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.EntryCallDefs
+module
+
+public import BbuKraken.Unit.Plan.EntryCallDefs
+import all BbuKraken.Unit.Plan.EntryCallDefs
+
+@[expose] public section
 
 namespace Bbu.Unit.EntryValidU
 open Bbu.Sep

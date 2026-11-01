@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.EntryClearDefs
-import BbuKraken.Unit.Plan.PlannerRunBuilderMem
-import BbuKraken.Unit.Plan.EntryIdsModel
+module
+
+public import BbuKraken.Unit.Plan.EntryClearDefs
+import all BbuKraken.Unit.Plan.EntryClearDefs
+public import BbuKraken.Unit.Plan.PlannerRunBuilderMem
+import all BbuKraken.Unit.Plan.PlannerRunBuilderMem
+public import BbuKraken.Unit.Plan.EntryIdsModel
+import all BbuKraken.Unit.Plan.EntryIdsModel
+
+@[expose] public section
 
 namespace Bbu.Unit.EntryValidU
 open Bbu.Sep

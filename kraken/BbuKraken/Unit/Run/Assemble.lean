@@ -1,7 +1,15 @@
-import BbuKraken.Unit.Run.Lowest
-import BbuKraken.Unit.Run.Available
-import BbuKraken.Unit.Run.Labels
-import BbuKraken.Unit.Run.Checks
+module
+
+public import BbuKraken.Unit.Run.Lowest
+import all BbuKraken.Unit.Run.Lowest
+public import BbuKraken.Unit.Run.Available
+import all BbuKraken.Unit.Run.Available
+public import BbuKraken.Unit.Run.Labels
+import all BbuKraken.Unit.Run.Labels
+public import BbuKraken.Unit.Run.Checks
+import all BbuKraken.Unit.Run.Checks
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

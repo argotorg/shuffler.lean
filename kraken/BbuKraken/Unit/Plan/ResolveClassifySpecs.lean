@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.Specs
+module
+
+public import BbuKraken.Unit.Plan.Specs
+import all BbuKraken.Unit.Plan.Specs
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -21,16 +26,18 @@ theorem cmp8_exact_spec (asz : Width) (r r' : Reg64) :
     ⦃ Q; E ⦄ := by
   refine ⟨fun _ hq => Program.wp_single fun _ _ _ _ hn _ => ?_⟩
   simp only [Directive.interp, Instr.interp, Operation.interp, Operand.interp,
-    RegOrMem.interp, ConstExpr.interp, MachineData.set, MachineData.setReg,
-    Reg64s.get_low_W8, Effects.All]
+    RegOrMem.interp, Reg64s.get_low_W8, Effects.All]
   exact hn _ hq
 
+omit [Host] [FunDecls] in
 theorem movzbl_low (x : BitVec 8) :
     ((x.setWidth 32).setWidth 64).setWidth 8 = x := by bv_decide
 
+omit [Host] [FunDecls] in
 theorem movzbl_take (x : BitVec 8) :
     ((x.setWidth 32).setWidth 64).extractLsb' 0 8 = x := by bv_decide
 
+omit [Host] [FunDecls] in
 theorem borrow8_iff (a b : BitVec 8) :
     ¬ (((a - b).toNat : Int) = (a.toNat : Int) - (b.toNat : Int)) ↔ a < b := by
   rw [BitVec.lt_def, BitVec.toNat_sub]
@@ -38,6 +45,7 @@ theorem borrow8_iff (a b : BitVec 8) :
   have := b.isLt
   omega
 
+omit [Host] [FunDecls] in
 theorem no_borrow8_iff (a b : BitVec 8) :
     (((a - b).toNat : Int) = (a.toNat : Int) - (b.toNat : Int)) ↔ b ≤ a := by
   rw [BitVec.le_def, BitVec.toNat_sub]

@@ -1,4 +1,9 @@
-import BbuKraken.FlatPopRel
+module
+
+public import BbuKraken.FlatPopRel
+import all BbuKraken.FlatPopRel
+
+@[expose] public section
 
 /-!
 Tests of `FlatPop.lean`, `MapModel.lean` and `FlatPopRel.lean`: `pop` on an empty stack, on a

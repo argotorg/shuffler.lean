@@ -148,26 +148,26 @@ theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
   · fun seen _ result => result.1 = none ∧ ScanProgress cursor state seen result.2
   all_goals try simp_all
   case vc1 => exact ⟨by simp, by simp⟩
-  case vc12 => exact (not_lt_of_ge (by assumption)) (range_offset_lt (by assumption))
-  case vc3 =>
+  case vc13 => exact (not_lt_of_ge (by assumption)) (range_offset_lt (by assumption))
+  case vc4 =>
     rename_i hprog hsome
     exact hprog.2.skip (Or.inl fun ⟨_, hnone, _⟩ => by simp_all)
-  case vc4 =>
+  case vc5 =>
     rename_i hprog _ hgen
     refine hprog.2.skip (Or.inl fun ⟨_, _, hfree, hspill, _⟩ => ?_)
     rcases hgen with hjunk | hgen | hgen
     · exact hfree (Value.can_be_freely_generated_of_is_junk _ hjunk)
     · exact hfree hgen
     · exact hspill hgen
-  case vc6 | vc7 =>
+  case vc7 | vc8 =>
     rename_i hlt _ copy _ _ _ hnone hgen hcopy hnreach _
     obtain ⟨p, hp⟩ := hr.filtered ⟨_, hlt⟩ hnone (by tauto)
     simp [hcopy] at hp
     exact hnreach (hp.1 ▸ hp.2)
-  case vc8 =>
+  case vc9 =>
     rename_i hlt _ copy _ _ hnone hgen hcopy _ hdepth
     exact ScanProgress.select ⟨by assumption, hnone, hgen.2.1, hgen.2.2, _, hcopy, hdepth.1, hdepth.2.1⟩
-  case vc9 =>
+  case vc10 =>
     rename_i choice _ _ copy _ hprog _ _ hcopy _ hnot
     apply hprog.2.skip
     cases choice with
@@ -178,7 +178,7 @@ theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
       simp only [hcopy, Option.some.injEq] at hc
       subst hc
       exact hnot hd hne rfl
-  case vc10 =>
+  case vc11 =>
     rename_i hprog _ _ hall heq
     exact hprog.2.skip (Or.inl fun ⟨_, _, _, _, c, hc, _⟩ => hall c (heq.symm.trans hc))
 

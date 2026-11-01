@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.EntryCfgDefs
-import BbuKraken.Unit.Plan.EntryGuard
+module
+
+public import BbuKraken.Unit.Plan.EntryCfgDefs
+import all BbuKraken.Unit.Plan.EntryCfgDefs
+public import BbuKraken.Unit.Plan.EntryGuard
+import all BbuKraken.Unit.Plan.EntryGuard
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP

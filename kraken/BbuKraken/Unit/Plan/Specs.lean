@@ -1,4 +1,9 @@
-import BbuKraken.Specs
+module
+
+public import BbuKraken.Specs
+import all BbuKraken.Specs
+
+@[expose] public section
 
 /-!
 # `vcgen` specs for the planner units

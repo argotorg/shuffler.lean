@@ -1,4 +1,11 @@
-import BbuKraken.Unit.Loop.Step
+module
+
+public import BbuKraken.Unit.Loop.Step
+import all BbuKraken.Unit.Loop.Step
+
+@[expose] public section
+
+set_option experimental.vcgen true
 
 /-!
 # `buildBottomUp`: the generations (part P4)

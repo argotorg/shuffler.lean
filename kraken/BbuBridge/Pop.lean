@@ -1,5 +1,11 @@
-import BbuBridge.Defs
-import BbuKraken.MapModel
+module
+
+public import BbuBridge.Defs
+import all BbuBridge.Defs
+public import BbuKraken.MapModel
+import all BbuKraken.MapModel
+
+@[expose] public section
 
 /-!
 The list model of the stack and mapping operations (`BbuKraken/MapModel.lean`) is an instance of

@@ -36,7 +36,7 @@ theorem run_no_assertion (source target : Stack) (spills : SpillSet) (spillingAl
   intro he
   cases he
 
-/-- info: 'Shuffler.Planner.run' depends on opaque or partial definitions: [String.Internal.append] -/
+/-- info: 'Shuffler.Planner.run' depends on opaque or partial definitions: [String.Internal.append, Classical.choice] -/
 #guard_msgs in
 #print opaques run
 

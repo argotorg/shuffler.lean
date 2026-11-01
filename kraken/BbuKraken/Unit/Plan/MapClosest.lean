@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.MapInPlace
+module
+
+public import BbuKraken.Unit.Plan.MapInPlace
+import all BbuKraken.Unit.Plan.MapInPlace
+
+@[expose] public section
 
 /-!
 # `MappingBuilder::mapClosestCopies`

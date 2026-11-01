@@ -1,4 +1,9 @@
-import BbuKraken.Kit
+module
+
+public import BbuKraken.Kit
+import all BbuKraken.Kit
+
+@[expose] public section
 
 /-!
 The definitions of the old proof of `loop_body` (the C build, git 6f580e5) (`c/bbu/<Names.buildBottomUp>.S`): the model

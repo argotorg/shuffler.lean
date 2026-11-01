@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.EntryRejectThm
-import BbuKraken.Unit.Plan.EntryResult
+module
+
+public import BbuKraken.Unit.Plan.EntryRejectThm
+import all BbuKraken.Unit.Plan.EntryRejectThm
+public import BbuKraken.Unit.Plan.EntryResult
+import all BbuKraken.Unit.Plan.EntryResult
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

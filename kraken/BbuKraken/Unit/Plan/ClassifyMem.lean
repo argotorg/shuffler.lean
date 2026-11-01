@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.ClassifyModel
-import BbuKraken.Unit.Plan.Emission
+module
+
+public import BbuKraken.Unit.Plan.ClassifyModel
+import all BbuKraken.Unit.Plan.ClassifyModel
+public import BbuKraken.Unit.Plan.Emission
+import all BbuKraken.Unit.Plan.Emission
+
+@[expose] public section
 
 namespace Bbu.Unit
 open Bbu.Sep

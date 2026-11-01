@@ -1,4 +1,10 @@
-import BbuBridge.Statements
+module
+
+public import BbuBridge.Statements
+import all BbuBridge.Statements
+import all Shuffler.BuildBottomUp.Lemmas.Invariants
+
+@[expose] public section
 
 /-!
 The initial original state of valid model inputs is valid.

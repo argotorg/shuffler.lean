@@ -13,7 +13,7 @@ trap 'rm -rf "$tmp"' EXIT
 
 make -C "$root/kraken/c" -s
 (cd "$root" && lake build bbu_pr31 >/dev/null)
-(cd "$root/kraken" && lake build bbu_flat >/dev/null)
+(cd "$root" && lake build PermuteKraken/bbu_flat >/dev/null)
 
 "$root/kraken/c/bbu_harness" gen > "$tmp/states"
 "$root/kraken/c/bbu_harness" run < "$tmp/states" > "$tmp/c"

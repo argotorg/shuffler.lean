@@ -18,7 +18,7 @@ import all Init.Prelude
 namespace Shuffler.Emission
 
 -- Audit the whole function, including the recursion and the action helpers.
-/-- info: 'Shuffler.Emission.buildBottomUp' depends on opaque or partial definitions: [String.Internal.append] -/
+/-- info: 'Shuffler.Emission.buildBottomUp' depends on opaque or partial definitions: [Classical.choice, String.Internal.append] -/
 #guard_msgs in
 #print opaques buildBottomUp
 

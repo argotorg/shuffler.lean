@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Defs
-import BbuKraken.FlatLowest
+module
+
+public import BbuKraken.Unit.Defs
+import all BbuKraken.Unit.Defs
+public import BbuKraken.FlatLowest
+import all BbuKraken.FlatLowest
+
+@[expose] public section
 
 /-!
 # `permuteAtLowestHeight`: the contract

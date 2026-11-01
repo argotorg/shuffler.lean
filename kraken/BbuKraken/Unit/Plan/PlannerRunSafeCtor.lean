@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunLowOk
-import BbuKraken.Unit.Plan.PlannerRunLowest
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunLowOk
+import all BbuKraken.Unit.Plan.PlannerRunLowOk
+public import BbuKraken.Unit.Plan.PlannerRunLowest
+import all BbuKraken.Unit.Plan.PlannerRunLowest
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Flat
@@ -18,7 +24,7 @@ theorem Prep.lowest_ready {planned : Vector Word MAX_N} {m : Nat} {st : Flat.St}
   omega
 
 theorem size_pend_nat {m p n : Word}
-    (hm : m.toNat ≤ MAX_N) (hn : n.toNat ≤ MAX_N) (hp : p.toNat ≤ n.toNat)
+    (hm : m.toNat ≤ MAX_N) (_hn : n.toNat ≤ MAX_N) (hp : p.toNat ≤ n.toNat)
     (hc : m + p = n) : m.toNat + p.toNat = n.toNat := by
   have hN : MAX_N = 1024 := rfl
   bv_omega

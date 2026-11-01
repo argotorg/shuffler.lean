@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunAttemptContext
-import BbuKraken.Unit.Plan.PlannerRunRetryDefs
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunAttemptContext
+import all BbuKraken.Unit.Plan.PlannerRunAttemptContext
+public import BbuKraken.Unit.Plan.PlannerRunRetryDefs
+import all BbuKraken.Unit.Plan.PlannerRunRetryDefs
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep

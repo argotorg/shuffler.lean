@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.PlannerRunRetryCount
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunRetryCount
+import all BbuKraken.Unit.Plan.PlannerRunRetryCount
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP

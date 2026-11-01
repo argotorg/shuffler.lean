@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunDataFrame
-import BbuKraken.Unit.Plan.PlannerRunBlockedLoop
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunDataFrame
+import all BbuKraken.Unit.Plan.PlannerRunDataFrame
+public import BbuKraken.Unit.Plan.PlannerRunBlockedLoop
+import all BbuKraken.Unit.Plan.PlannerRunBlockedLoop
+
+@[expose] public section
 
 namespace Bbu.Flat
 

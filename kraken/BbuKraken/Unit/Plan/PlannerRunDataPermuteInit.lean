@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunDataFrame
-import BbuKraken.Unit.PermuteModel
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunDataFrame
+import all BbuKraken.Unit.Plan.PlannerRunDataFrame
+public import BbuKraken.Unit.PermuteModel
+import all BbuKraken.Unit.PermuteModel
+
+@[expose] public section
 
 namespace Bbu.Flat
 

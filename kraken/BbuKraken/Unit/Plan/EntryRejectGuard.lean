@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.EntryReject
-import ProofKit.Idioms
+module
+
+public import BbuKraken.Unit.Plan.EntryReject
+import all BbuKraken.Unit.Plan.EntryReject
+public import ProofKit.Idioms
+import all ProofKit.Idioms
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

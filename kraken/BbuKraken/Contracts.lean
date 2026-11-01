@@ -1,5 +1,11 @@
-import BbuKraken.Layout
-import BbuKraken.ModelLemmas
+module
+
+public import BbuKraken.Layout
+import all BbuKraken.Layout
+public import BbuKraken.ModelLemmas
+import all BbuKraken.ModelLemmas
+
+@[expose] public section
 
 /-!
 The spec of each member function of `Emission` in `c/build_bottom_up.cpp`: the

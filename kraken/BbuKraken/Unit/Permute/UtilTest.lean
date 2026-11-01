@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Permute.Inv
+module
+
+public import BbuKraken.Unit.Permute.Inv
+import all BbuKraken.Unit.Permute.Inv
+
+@[expose] public section
 
 /-!
 # Tests: the pure helper lemmas of `Permute/Util.lean` and `Permute/Frame.lean`

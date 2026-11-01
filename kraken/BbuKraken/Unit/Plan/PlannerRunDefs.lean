@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.HasOther
+module
+
+public import BbuKraken.Unit.Plan.HasOther
+import all BbuKraken.Unit.Plan.HasOther
+
+@[expose] public section
 
 /-! The intended contract of `Planner::run`.
 The input condition gives sizes, buffers and valid variable IDs. Conditions on

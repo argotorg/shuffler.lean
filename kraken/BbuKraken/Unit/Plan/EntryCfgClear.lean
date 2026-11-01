@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.EntryCfgDefs
-import BbuKraken.Unit.Plan.EntryClear
+module
+
+public import BbuKraken.Unit.Plan.EntryCfgDefs
+import all BbuKraken.Unit.Plan.EntryCfgDefs
+public import BbuKraken.Unit.Plan.EntryClear
+import all BbuKraken.Unit.Plan.EntryClear
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP
@@ -45,7 +51,7 @@ theorem cfg_6 (hs : Sizes g) : planAsm.ForallBlocks fun blk =>
     · simp only [EntryInv, Names.plan, String.reduceEq, ↓reduceIte]
       refine ⟨hsrc, htgt, g.r.dropped, ?_⟩
       exact hu
-    · simp only [entryV, String.reduceEq, ↓reduceIte, or_self, false_or]
+    · simp only [entryV, String.reduceEq, ↓reduceIte, or_self]
       omega)
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
@@ -82,14 +88,14 @@ theorem cfg_7 (hs : Sizes g) : planAsm.ForallBlocks fun blk =>
       refine ⟨hc'.kb.stack (by decide), ?_, Or.inl ?_⟩
       · simp only [EntryInv, Names.plan, String.reduceEq, ↓reduceIte]
         exact ⟨hsrc, htgt, d', hu⟩
-      · simp only [entryV, String.reduceEq, or_self, false_or, or_false, or_true, ↓reduceIte, hnine, hau]
+      · simp only [entryV, String.reduceEq, or_self, ↓reduceIte, hnine, hau]
         have hdec := clear_gap_step _ _ hgap
         omega) (by
       intro d' u hu hd'
       refine ⟨?_, Or.inl ?_⟩
       · simp only [EntryInv, Names.plan, String.reduceEq, ↓reduceIte]
         exact ⟨hsrc, htgt, hd' ▸ hu⟩
-      · simp only [entryV, String.reduceEq, or_self, false_or, or_false, or_true, ↓reduceIte]
+      · simp only [entryV, String.reduceEq, or_self, ↓reduceIte]
         omega)
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,

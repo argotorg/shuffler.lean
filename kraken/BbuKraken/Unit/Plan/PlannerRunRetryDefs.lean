@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.PlannerRunOutputDefs
-import BbuKraken.Unit.Plan.PlannerRunPrepare
-import BbuKraken.Unit.SpillSetLemmas
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunOutputDefs
+import all BbuKraken.Unit.Plan.PlannerRunOutputDefs
+public import BbuKraken.Unit.Plan.PlannerRunPrepare
+import all BbuKraken.Unit.Plan.PlannerRunPrepare
+public import BbuKraken.Unit.SpillSetLemmas
+import all BbuKraken.Unit.SpillSetLemmas
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep Flat

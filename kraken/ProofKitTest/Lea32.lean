@@ -1,7 +1,15 @@
-import ProofKit.Lea32
-import BbuKraken.Specs
-import Kraken.X64.Parser
-import ProofKit.SymExec
+module
+
+public import ProofKit.Lea32
+import all ProofKit.Lea32
+public import BbuKraken.Specs
+import all BbuKraken.Specs
+public import Kraken.X64.Parser
+import all Kraken.X64.Parser
+public import ProofKit.SymExec
+import all ProofKit.SymExec
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP

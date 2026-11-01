@@ -1,5 +1,11 @@
-import BbuKraken.FlatPlan
-import BbuKraken.FlatPopRel
+module
+
+public import BbuKraken.FlatPlan
+import all BbuKraken.FlatPlan
+public import BbuKraken.FlatPopRel
+import all BbuKraken.FlatPopRel
+
+@[expose] public section
 
 /-!
 The loops of the checks of the flat `Emission::run`: `availableFrom` and `labelsFrom` check a

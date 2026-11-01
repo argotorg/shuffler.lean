@@ -1,4 +1,9 @@
-import BbuKraken.Kit
+module
+
+public import BbuKraken.Kit
+import all BbuKraken.Kit
+
+@[expose] public section
 /-!
 Memory lemmas for `swapWith`: stores of 1, 4 and 8 bytes, and the low 6 bytes of a word.
 -/

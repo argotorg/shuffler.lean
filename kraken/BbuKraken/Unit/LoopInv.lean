@@ -1,4 +1,9 @@
-import BbuKraken.FlatModel
+module
+
+public import BbuKraken.FlatModel
+import all BbuKraken.FlatModel
+
+@[expose] public section
 
 /-!
 # `buildBottomUp`: the invariants of the flat state

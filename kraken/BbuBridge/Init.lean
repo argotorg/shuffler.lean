@@ -1,4 +1,9 @@
-import BbuBridge.Statements
+module
+
+public import BbuBridge.Statements
+import all BbuBridge.Statements
+
+@[expose] public section
 
 /-!
 The initial states: the model and the original start related, and `Mapped`

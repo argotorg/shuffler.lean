@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunFrame
-import BbuKraken.Unit.Plan.PlannerRunMem
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunFrame
+import all BbuKraken.Unit.Plan.PlannerRunFrame
+public import BbuKraken.Unit.Plan.PlannerRunMem
+import all BbuKraken.Unit.Plan.PlannerRunMem
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep

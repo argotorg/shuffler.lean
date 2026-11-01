@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Loop.Step
-import BbuKraken.FlatModelTest
+module
+
+public import BbuKraken.Unit.Loop.Step
+import all BbuKraken.Unit.Loop.Step
+public import BbuKraken.FlatModelTest
+import all BbuKraken.FlatModelTest
+
+@[expose] public section
 
 /-!
 Tests of `Loop/Step.lean` on the states of `FlatModelTest.lean`: the budget `Bud` at the edges

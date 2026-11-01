@@ -1,4 +1,9 @@
-import BbuKraken.FlatPlan
+module
+
+public import BbuKraken.FlatPlan
+import all BbuKraken.FlatPlan
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 
@@ -65,7 +70,7 @@ theorem runLoop_emitted
   dsimp only
   rw [he]
   dsimp only
-  rw [if_pos hn]
+  rw [ite_eq_left hn]
   split <;> rfl
 
 theorem runLoop_blocked

@@ -1,4 +1,9 @@
-import BbuBridge.Defs
+module
+
+public import BbuBridge.Defs
+import all BbuBridge.Defs
+
+@[expose] public section
 
 /-!
 The unfolding of `buildBottomUp.loop`: past the target, at a final offset, at

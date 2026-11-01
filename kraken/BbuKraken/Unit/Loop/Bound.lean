@@ -1,4 +1,11 @@
-import BbuKraken.Unit.Loop.Step
+module
+
+public import BbuKraken.Unit.Loop.Step
+import all BbuKraken.Unit.Loop.Step
+
+@[expose] public section
+
+set_option experimental.vcgen true
 
 /-!
 # `buildBottomUp`: `bound` and the swap of the destinations (part P5)
@@ -220,7 +227,7 @@ theorem b_8 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) 
     rename_i hj
     try idioms at hj
     rw [hP, ← Bound.none_eq] at hj
-    rw [Flat.kU3, if_neg (fun h => h hj)] at hR
+    rw [Flat.kU3, ite_eq_right (fun h => h hj)] at hR
     cfg_goto
     · exact Mid.stack (hM.next rfl rfl rfl)
     · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
@@ -232,8 +239,8 @@ theorem b_8 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) 
     try idioms at hn hj
     rw [hP, ← Bound.none_eq] at hn
     rw [hP] at hj
-    rw [Flat.kU3, if_pos hn, Flat.bound_eq,
-      if_pos (fun ⟨_, h⟩ => absurd hj (Nat.not_lt.mpr (BitVec.le_def.mp h)))] at hR
+    rw [Flat.kU3, ite_eq_left hn, Flat.bound_eq,
+      ite_eq_left (fun ⟨_, h⟩ => absurd hj (Nat.not_lt.mpr (BitVec.le_def.mp h)))] at hR
     cfg_goto
     · exact Mid.stack (hM.next rfl rfl rfl)
     · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
@@ -254,8 +261,8 @@ theorem b_8 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) 
     rw [hP] at hj
     rw [hC, hP, Bound.slot_shl_iff,
       Bound.rd_data_slot hM.mem hok (hpn hn), Bound.rd_data_slot hM.mem hok hTx] at hs
-    rw [Flat.kU3, if_pos hn, Flat.bound_eq, if_neg (not_not_intro ⟨hn, hge hj⟩),
-      if_neg (fun e => hs e.symm)] at hR
+    rw [Flat.kU3, ite_eq_left hn, Flat.bound_eq, ite_eq_right (not_not_intro ⟨hn, hge hj⟩),
+      ite_eq_right (fun e => hs e.symm)] at hR
     cfg_goto
     · exact Mid.stack (hM.next rfl rfl rfl)
     · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
@@ -271,8 +278,8 @@ theorem b_8 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) 
     rw [hP] at hj
     rw [hC, hP, Bound.slot_shl_iff,
       Bound.rd_data_slot hM.mem hok (hpn hn), Bound.rd_data_slot hM.mem hok hTx] at hs
-    rw [Flat.kU3, if_pos hn, Flat.bound_eq, if_neg (not_not_intro ⟨hn, hge hj⟩),
-      if_pos hs.symm] at hR
+    rw [Flat.kU3, ite_eq_left hn, Flat.bound_eq, ite_eq_right (not_not_intro ⟨hn, hge hj⟩),
+      ite_eq_left hs.symm] at hR
     simp only [Flat.kB, hs, ne_eq, not_true_eq_false, ↓reduceIte] at hR
     simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
     exact ⟨g', u, ⟨x0, x2, lo, w, hM.next rfl rfl rfl, hok, hk⟩, hH.2.1, by bv_omega,

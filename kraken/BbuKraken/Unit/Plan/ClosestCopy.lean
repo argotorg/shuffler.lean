@@ -1,8 +1,17 @@
-import BbuKraken.Unit.Plan.Frame
-import BbuKraken.Unit.Plan.Specs
-import BbuKraken.Unit.ShallowestCopy
-import BbuKraken.Asm
-import ProofKit.CfgBlock
+module
+
+public import BbuKraken.Unit.Plan.Frame
+import all BbuKraken.Unit.Plan.Frame
+public import BbuKraken.Unit.Plan.Specs
+import all BbuKraken.Unit.Plan.Specs
+public import BbuKraken.Unit.ShallowestCopy
+import all BbuKraken.Unit.ShallowestCopy
+public import BbuKraken.Asm
+import all BbuKraken.Asm
+public import ProofKit.CfgBlock
+import all ProofKit.CfgBlock
+
+@[expose] public section
 
 /-!
 # `MappingBuilder::closestCopy`

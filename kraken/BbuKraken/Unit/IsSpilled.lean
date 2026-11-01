@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Defs
-import BbuKraken.Sep.Stores
-import ProofKit.Cfg
+module
+
+public import BbuKraken.Unit.Defs
+import all BbuKraken.Unit.Defs
+public import BbuKraken.Sep.Stores
+import all BbuKraken.Sep.Stores
+public import ProofKit.Cfg
+import all ProofKit.Cfg
+
+@[expose] public section
 
 /-!
 # `isSpilled`

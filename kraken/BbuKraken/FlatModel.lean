@@ -1,4 +1,9 @@
-import BbuKraken.Model
+module
+
+public import BbuKraken.Model
+import all BbuKraken.Model
+
+@[expose] public section
 
 /-!
 A model of `c/build_bottom_up.cpp` whose state is the image of `class Emission`.

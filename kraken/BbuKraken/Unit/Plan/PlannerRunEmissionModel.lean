@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.PlannerRunEmissionLayout
-import BbuKraken.Unit.Plan.PlannerRunEmissionDefs
-import BbuKraken.Unit.Plan.PlannerRunSafeCtor
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunEmissionLayout
+import all BbuKraken.Unit.Plan.PlannerRunEmissionLayout
+public import BbuKraken.Unit.Plan.PlannerRunEmissionDefs
+import all BbuKraken.Unit.Plan.PlannerRunEmissionDefs
+public import BbuKraken.Unit.Plan.PlannerRunSafeCtor
+import all BbuKraken.Unit.Plan.PlannerRunSafeCtor
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep Flat
@@ -44,8 +51,7 @@ theorem unmapped_range (st : Flat.St) (hn : st.targetSize.toNat ≤ MAX_N)
     have hc : st.targetSize.toNat - i = (st.targetSize.toNat - (i + 1)) + 1 := by omega
     rw [hc, List.range'_succ]
     by_cases hz : get st.pos (BitVec.ofNat 64 i) = NONE
-    · simp only [hz, ↓reduceIte, List.countP_cons, decide_true, Bool.toNat_true,
-        BitVec.ofNat_add]
+    · simp only [hz, ↓reduceIte, List.countP_cons, decide_true, BitVec.ofNat_add]
       bv_omega
     · simp only [List.countP_cons, hz, decide_false, Bool.false_eq_true, ↓reduceIte,
         Nat.add_zero]

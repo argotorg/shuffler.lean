@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.EntryCfgDefs
-import BbuKraken.Unit.Plan.EntryTail
-import BbuKraken.Unit.Plan.EntryLocalOutput
+module
+
+public import BbuKraken.Unit.Plan.EntryCfgDefs
+import all BbuKraken.Unit.Plan.EntryCfgDefs
+public import BbuKraken.Unit.Plan.EntryTail
+import all BbuKraken.Unit.Plan.EntryTail
+public import BbuKraken.Unit.Plan.EntryLocalOutput
+import all BbuKraken.Unit.Plan.EntryLocalOutput
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP

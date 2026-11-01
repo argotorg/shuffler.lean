@@ -1,11 +1,23 @@
-import BbuKraken.PlannerLink
-import BbuKraken.Unit.IsAvailable
-import BbuKraken.Unit.Plan.MapInPlace
-import BbuKraken.Unit.Plan.MapClosest
-import BbuKraken.Unit.Plan.MapWildcard
-import BbuKraken.Unit.Plan.KeepWildcard
-import BbuKraken.Unit.Plan.Absorb
-import BbuKraken.Unit.Plan.IsDemanded
+module
+
+public import BbuKraken.PlannerLink
+import all BbuKraken.PlannerLink
+public import BbuKraken.Unit.IsAvailable
+import all BbuKraken.Unit.IsAvailable
+public import BbuKraken.Unit.Plan.MapInPlace
+import all BbuKraken.Unit.Plan.MapInPlace
+public import BbuKraken.Unit.Plan.MapClosest
+import all BbuKraken.Unit.Plan.MapClosest
+public import BbuKraken.Unit.Plan.MapWildcard
+import all BbuKraken.Unit.Plan.MapWildcard
+public import BbuKraken.Unit.Plan.KeepWildcard
+import all BbuKraken.Unit.Plan.KeepWildcard
+public import BbuKraken.Unit.Plan.Absorb
+import all BbuKraken.Unit.Plan.Absorb
+public import BbuKraken.Unit.Plan.IsDemanded
+import all BbuKraken.Unit.Plan.IsDemanded
+
+@[expose] public section
 
 /-! The call specifications of the proved planner helpers in one linked host.
 All specifications come from assembly unit theorems and declaration lookup proofs. -/

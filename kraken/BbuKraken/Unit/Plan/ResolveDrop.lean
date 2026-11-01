@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.ResolveDropFrame
-import BbuKraken.Unit.Plan.ResolveDropSpecs
-import BbuKraken.Unit.Run.Load
+module
+
+public import BbuKraken.Unit.Plan.ResolveDropFrame
+import all BbuKraken.Unit.Plan.ResolveDropFrame
+public import BbuKraken.Unit.Plan.ResolveDropSpecs
+import all BbuKraken.Unit.Plan.ResolveDropSpecs
+public import BbuKraken.Unit.Run.Load
+import all BbuKraken.Unit.Run.Load
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -86,13 +93,13 @@ theorem b_14 [Host] [FunDecls]
   dsimp only [t1, t2, t3] at kptr kd kp2 kp3 ke3 rptr rp2 rp3 re3
   kvcgen64 [mov_byte_idx_imm_spec]
   all_goals try symexec_norm at ⊢
-  all_goals try simp only [h15, h.r14, haddr, rptr, rp2, hinc, hstore, rp3, re3] at ⊢
+  all_goals try simp only [h15, h.r14, haddr, rptr, rp2, hinc, rp3, re3] at ⊢
   vc_by_shape
   | load => run_loads [kdn, kptr, kd, kp2, kp3, ke3]
   | goto ".LB.Planner.resolve.8" =>
     rename_i hj
     symexec_norm at hj
-    simp only [h15, h.r14, haddr, rptr, rp2, hinc, hstore, rp3, re3,
+    simp only [h15, h.r14, haddr, rptr, rp2, hinc, rp3, re3,
       Idioms.sub_beq_zero, Bool.not_eq_true', beq_eq_false_iff_ne, BitVec.zero_eq] at hj
     have hn : w.pass + 1#64 ≠ rcx s := hj
     have hlt : w.pass + 1#64 < rcx s := by
@@ -113,7 +120,7 @@ theorem b_14 [Host] [FunDecls]
   | goto ".LB.Planner.resolve.3" =>
     rename_i hj
     symexec_norm at hj
-    simp only [h15, h.r14, haddr, rptr, rp2, hinc, hstore, rp3, re3,
+    simp only [h15, h.r14, haddr, rptr, rp2, hinc, rp3, re3,
       Idioms.sub_beq_zero, Bool.not_eq_false', beq_iff_eq, BitVec.zero_eq] at hj
     have he : w.pass + 1#64 = rcx s := hj
     have hq : modelQ r (w'.ghost r) s .dropped := by

@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunInitDefs
-import BbuKraken.Unit.Plan.PlannerRunRead
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunInitDefs
+import all BbuKraken.Unit.Plan.PlannerRunInitDefs
+public import BbuKraken.Unit.Plan.PlannerRunRead
+import all BbuKraken.Unit.Plan.PlannerRunRead
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

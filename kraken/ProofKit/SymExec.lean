@@ -1,6 +1,13 @@
-import Kraken.StateCfg
-import Kraken.KVCGen
-import ProofKit.Shape
+module
+
+public import Kraken.StateCfg
+import all Kraken.StateCfg
+public import Kraken.KVCGen
+import all Kraken.KVCGen
+public import ProofKit.Shape
+import all ProofKit.Shape
+
+@[expose] public meta section
 
 /-!
 `#symexec p from "L"`: run one block of the parsed program `p` on a symbolic

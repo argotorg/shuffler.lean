@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Permute.Assemble
+module
+
+public import BbuKraken.Unit.Permute.Assemble
+import all BbuKraken.Unit.Permute.Assemble
+
+@[expose] public section
 
 /-! # Tests: `labels_cover` and `permute_of_b22` -/
 

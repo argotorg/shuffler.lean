@@ -25,7 +25,9 @@ theorem permuteAtLowestHeight_no_assertion (state : State source target spills)
   intro he
   cases he
 
-/-- info: 'Shuffler.PermuteAtLowestHeight.permuteAtLowestHeight' depends on opaque or partial definitions: [String.Internal.append] -/
+-- Lean's WellFounded.fixF uses Classical.choice; its compiler replacement is fixFC.
+/-- info: 'Shuffler.PermuteAtLowestHeight.permuteAtLowestHeight' depends on opaque or partial definitions: [Classical.choice,
+ String.Internal.append] -/
 #guard_msgs in
 #print opaques permuteAtLowestHeight
 

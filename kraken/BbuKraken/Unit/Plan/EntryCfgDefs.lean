@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.EntryResult
-import ProofKit.CfgBlock
+module
+
+public import BbuKraken.Unit.Plan.EntryResult
+import all BbuKraken.Unit.Plan.EntryResult
+public import ProofKit.CfgBlock
+import all ProofKit.CfgBlock
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP

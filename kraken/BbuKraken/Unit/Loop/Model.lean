@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Defs
-import BbuKraken.FlatList.Basic
+module
+
+public import BbuKraken.Unit.Defs
+import all BbuKraken.Unit.Defs
+public import BbuKraken.FlatList.Basic
+import all BbuKraken.FlatList.Basic
+
+@[expose] public section
 
 /-!
 # `buildBottomUp`: the flat model

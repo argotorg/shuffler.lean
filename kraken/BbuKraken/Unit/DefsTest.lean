@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Defs
+module
+
+public import BbuKraken.Unit.Defs
+import all BbuKraken.Unit.Defs
+
+@[expose] public section
 
 /-!
 Tests of `Unit/Defs.lean`: the flat state `flat g` of a ghost, and the codes of the results.

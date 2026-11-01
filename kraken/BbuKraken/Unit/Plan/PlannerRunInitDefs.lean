@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.PlannerRunPrepare
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunPrepare
+import all BbuKraken.Unit.Plan.PlannerRunPrepare
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Flat
@@ -32,7 +37,7 @@ theorem InitLI.storeLocal (h : InitLI P g F s ra lo locals t) {i : Nat}
       (t.regs.rsp.toBitVec + BitVec.ofNat 64 (8 * i)) 8 w.toInt)
     (hsp : u.regs.rsp = t.regs.rsp)
     (hbx : u.regs.rbx = t.regs.rbx) (h12 : u.regs.r12 = t.regs.r12)
-    (h15 : u.regs.r15 = t.regs.r15) (hbp : u.regs.rbp = t.regs.rbp)
+    (h15 : u.regs.r15 = t.regs.r15) (_hbp : u.regs.rbp = t.regs.rbp)
     (h14 : u.regs.r14 = t.regs.r14) (h13 : u.regs.r13 = t.regs.r13)
     (hdx : u.regs.rdx = t.regs.rdx) (hsi : u.regs.rsi = t.regs.rsi) :
     InitLI P g F s ra lo (locals.set i w) u := by

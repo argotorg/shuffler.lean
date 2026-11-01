@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.ResolveByteFrame
-import BbuKraken.Unit.Plan.ResolveExit
+module
+
+public import BbuKraken.Unit.Plan.ResolveByteFrame
+import all BbuKraken.Unit.Plan.ResolveByteFrame
+public import BbuKraken.Unit.Plan.ResolveExit
+import all BbuKraken.Unit.Plan.ResolveExit
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

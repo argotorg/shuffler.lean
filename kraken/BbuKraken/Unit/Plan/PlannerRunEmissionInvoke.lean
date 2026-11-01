@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunEmissionCall
-import BbuKraken.Unit.Plan.PlannerRunEmissionTail
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunEmissionCall
+import all BbuKraken.Unit.Plan.PlannerRunEmissionCall
+public import BbuKraken.Unit.Plan.PlannerRunEmissionTail
+import all BbuKraken.Unit.Plan.PlannerRunEmissionTail
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP

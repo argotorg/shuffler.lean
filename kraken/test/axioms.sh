@@ -10,32 +10,35 @@
 #
 # Usage: axioms.sh [FILE NAME...]
 # With no arguments, check the final theorems. With arguments, check the theorems
-# NAME... of the Lean file FILE (FILE starts with its imports).
+# NAME... of the Lean file FILE (with an optional module header).
 set -euo pipefail
 dir=$(cd "$(dirname "$0")/.." && pwd)
+root=$(cd "$dir/.." && pwd)
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 if [ $# -eq 0 ]; then
-	(cd "$dir" && nice lake build -q BbuKraken.PlanFinal BbuKraken.PlanReject BbuKraken.Unit.Plan.PlannerRunBin >/dev/null)
-	printf 'import BbuKraken.PlanFinal\nimport BbuKraken.PlanReject\nimport BbuKraken.Unit.Plan.PlannerRunBin\n' > "$tmp/final.lean"
+	(cd "$root" && nice lake build -q PlanBridge.Final BbuKraken.PlanReject BbuKraken.Unit.Plan.PlannerRunBin >/dev/null)
+	printf 'module\nimport PlanBridge.Final\nimport all BbuKraken.PlanFinal\nimport BbuKraken.PlanReject\nimport BbuKraken.Unit.Plan.PlannerRunBin\n' > "$tmp/final.lean"
 	set -- "$tmp/final.lean" Bbu.buildBottomUp_correct Bbu.bbu_harness_correct \
 		Bbu.planner_helpers_correct Bbu.emission_run_correct Bbu.planner_classify_correct \
 		Bbu.planner_resolve_correct Bbu.planner_run_correct Bbu.planner_run_harness_correct \
 		Bbu.plan_correct Bbu.plan_harness_correct \
 		Bbu.plan_rejects_bad_args Bbu.plan_rejects_invalid_ids \
-		Bbu.plan_harness_rejects_bad_args Bbu.plan_harness_rejects_invalid_ids
+		Bbu.plan_harness_rejects_bad_args Bbu.plan_harness_rejects_invalid_ids \
+		PlanBridge.kraken_to_flat PlanBridge.kraken_to_flat_harness PlanBridge.flat_to_shuffler \
+		PlanBridge.plan_correct PlanBridge.plan_harness_correct
 fi
-src=$1
+src=$(realpath "$1")
 shift
 names=$(printf '"%s", ' "$@")
 
 # A user `axiom` with the name and the type of a bv_decide axiom passes the check
 # below: Lean adds the bv_decide axiom as a plain axiom declaration with no mark. Thus
-# no `axiom` declaration is allowed in FILE or in the Lean files of this package. The
+# no `axiom` declaration is allowed in FILE or in the Lean files of this repository. The
 # check below still runs: it is the only check for the imported packages.
-decls=$(find "$dir" -name .lake -prune -o -name '*.lean' -print0 |
-	xargs -0 awk -f "$dir/test/axiom_decls.awk" "$src")
+decls=$(git -C "$root" ls-files --cached --others --exclude-standard -z '*.lean' |
+	(cd "$root" && xargs -0 awk -f "$dir/test/axiom_decls.awk" "$src"))
 ok=true
 if [ -n "$decls" ]; then
 	printf 'axioms: axiom declaration not allowed:\n%s\n' "$decls" >&2
@@ -43,8 +46,31 @@ if [ -n "$decls" ]; then
 fi
 
 {
+	echo 'module'
 	echo 'import Lean'
-	cat "$src"
+	# Retain module visibility. Legacy definitions and imports are public.
+	awk 'NR == FNR {
+	    if ($0 ~ /^module([[:space:]]|$)/) modern = 1
+	    if ($0 ~ /^(public )?(meta )?import /) last = FNR
+	    next
+	  }
+	  FNR == 1 && !modern && !last { print "@[expose] public section" }
+	  /^module([[:space:]]|$)/ { next }
+	  !modern && /^import / {
+	    if ($2 == "all") {
+	      print "public import " $3
+	      print
+	    } else if ($2 == "meta") {
+	      print "public " $0
+	    } else {
+	      print "public " $0
+	      print "import all " $2
+	    }
+	    if (FNR == last) print "\n@[expose] public section\n"
+	    next
+	  }
+	  { print }
+	  FNR == last && !modern { print "\n@[expose] public section\n" }' "$src" "$src"
 	cat <<EOF
 
 open Lean Elab Command in
@@ -71,7 +97,7 @@ open Lean Elab Command in
 EOF
 } > "$tmp/Check.lean"
 
-if ! (cd "$dir" && nice lake env lean "$tmp/Check.lean") > "$tmp/out" 2>&1; then
+if ! (cd "$root" && nice lake env lean "$tmp/Check.lean") > "$tmp/out" 2>&1; then
 	grep -v 'declaration uses `sorry`' "$tmp/out" >&2
 	exit 1
 fi

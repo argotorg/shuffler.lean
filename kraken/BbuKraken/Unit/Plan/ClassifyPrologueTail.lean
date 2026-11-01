@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.ClassifyPrologueReturn
-import BbuKraken.Unit.Plan.ClassifyPrologueContinue
+module
+
+public import BbuKraken.Unit.Plan.ClassifyPrologueReturn
+import all BbuKraken.Unit.Plan.ClassifyPrologueReturn
+public import BbuKraken.Unit.Plan.ClassifyPrologueContinue
+import all BbuKraken.Unit.Plan.ClassifyPrologueContinue
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

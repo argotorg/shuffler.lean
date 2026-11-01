@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Permute.Assemble
-import BbuKraken.Unit.Permute.D3
+module
+
+public import BbuKraken.Unit.Permute.Assemble
+import all BbuKraken.Unit.Permute.Assemble
+public import BbuKraken.Unit.Permute.D3
+import all BbuKraken.Unit.Permute.D3
+
+@[expose] public section
 
 /-!
 # `permute`

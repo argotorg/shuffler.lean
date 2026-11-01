@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.ResolveInitAppend
-import BbuKraken.Unit.Run.Load
+module
+
+public import BbuKraken.Unit.Plan.ResolveInitAppend
+import all BbuKraken.Unit.Plan.ResolveInitAppend
+public import BbuKraken.Unit.Run.Load
+import all BbuKraken.Unit.Run.Load
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -63,7 +69,7 @@ theorem b_5 [Host] [FunDecls]
     kvcgen64
     all_goals try symexec_norm at *
     all_goals try simp only [h8, h12, fold_slot, slot_8192, rdCur, neg_one_eq_none,
-      sub_beq_zero, beq_iff_eq, beq_eq_false_iff_ne, Bool.false_eq_true, Bool.true_eq_false, not_true_eq_false, not_false_eq_true, hd] at *
+      sub_beq_zero, beq_iff_eq, beq_eq_false_iff_ne, not_true_eq_false, hd] at *
     all_goals try contradiction
     vc_by_shape
     | load => run_loads [kCur]
@@ -87,7 +93,7 @@ theorem b_5 [Host] [FunDecls]
       kvcgen64
       all_goals try symexec_norm at *
       all_goals try simp only [h8, h12, fold_slot, slot_8192, rdCur, rp, neg_one_eq_none,
-        sub_beq_zero, beq_iff_eq, beq_eq_false_iff_ne, Bool.false_eq_true, Bool.true_eq_false, not_true_eq_false, not_false_eq_true, hd, ho] at *
+        sub_beq_zero, beq_iff_eq, beq_eq_false_iff_ne, not_true_eq_false, not_false_eq_true, hd, ho] at *
       all_goals try contradiction
       vc_by_shape
       | load => first | run_loads [kCur, kp] | exact kp
@@ -118,7 +124,7 @@ theorem b_5 [Host] [FunDecls]
         kvcgen64
         all_goals try symexec_norm at *
         all_goals try simp only [h8, h12, fold_slot, slot_8192, rdCur, rp, rr, neg_one_eq_none,
-          sub_beq_zero, beq_iff_eq, beq_eq_false_iff_ne, Bool.false_eq_true, Bool.true_eq_false, not_true_eq_false, not_false_eq_true, hd, ho, hr] at *
+          sub_beq_zero, beq_iff_eq, beq_eq_false_iff_ne, not_false_eq_true, hd, ho, hr] at *
         all_goals try contradiction
         vc_by_shape
         | load => first | run_loads [kCur, kp, kr] | exact kp | exact kr
@@ -129,7 +135,7 @@ theorem b_5 [Host] [FunDecls]
             exact ⟨r, lo, L.toList, hc.bd.next rfl rfl, hok, hmodel⟩
           · left
             simp only [V, initFullVar, zvar, initVar, Names.resolve, String.reduceEq, ↓reduceIte,
-              false_or, or_false]
+              or_false]
             omega
       · have offSmall : off < r.p.m := BitVec.lt_def.mpr (offBound hd ho)
         have append (u : MachineData)
@@ -150,7 +156,7 @@ theorem b_5 [Host] [FunDecls]
         kvcgen64
         all_goals try symexec_norm at *
         all_goals try simp only [h8, h12, hbp, fold_slot, slot_8192, rdCur, rp, rr, neg_one_eq_none,
-          sub_beq_zero, beq_iff_eq, beq_eq_false_iff_ne, Bool.false_eq_true, Bool.true_eq_false, not_true_eq_false, not_false_eq_true, hd, ho, hr, haSlot] at *
+          sub_beq_zero, beq_iff_eq, beq_eq_false_iff_ne, not_false_eq_true, hd, ho, hr, haSlot] at *
         all_goals try contradiction
         vc_by_shape
         | load => first | run_loads [kCur, kp, kr, kslot] | exact kp | exact kr

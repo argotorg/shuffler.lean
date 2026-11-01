@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.ClassifyFreeModel
-import ProofKit.Lea32
+module
+
+public import BbuKraken.Unit.Plan.ClassifyFreeModel
+import all BbuKraken.Unit.Plan.ClassifyFreeModel
+public import ProofKit.Lea32
+import all ProofKit.Lea32
+
+@[expose] public section
 open Std.WP Lean.Order
 open scoped Program.WP
 open ProofKit

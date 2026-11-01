@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.PlannerRunMapping
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunMapping
+import all BbuKraken.Unit.Plan.PlannerRunMapping
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Flat

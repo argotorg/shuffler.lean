@@ -1,5 +1,11 @@
-import BbuKraken.Model
-import PermuteKraken.Trace
+module
+
+public import BbuKraken.Model
+import all BbuKraken.Model
+public import PermuteKraken.Trace
+import all PermuteKraken.Trace
+
+@[expose] public section
 
 /-!
 Lemmas about the model: the shape of each action, the invariant of

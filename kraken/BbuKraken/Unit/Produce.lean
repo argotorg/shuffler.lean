@@ -1,4 +1,9 @@
-import BbuKraken.Unit.ProduceLemmas
+module
+
+public import BbuKraken.Unit.ProduceLemmas
+import all BbuKraken.Unit.ProduceLemmas
+
+@[expose] public section
 
 /-!
 # `produce`

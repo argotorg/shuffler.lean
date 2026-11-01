@@ -1,5 +1,11 @@
-import Kraken.X64.WP.Instance
-import ProofKit.Idioms
+module
+
+public import Kraken.X64.WP.Instance
+import all Kraken.X64.WP.Instance
+public import ProofKit.Idioms
+import all ProofKit.Idioms
+
+@[expose] public section
 open Std.WP Lean.Order
 open scoped Program.WP
 set_option experimental.vcgen true

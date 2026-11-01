@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Run.Return
-import BbuKraken.Unit.Run.Load
-import BbuKraken.Unit.RemoveSurplus
+module
+
+public import BbuKraken.Unit.Run.Return
+import all BbuKraken.Unit.Run.Return
+public import BbuKraken.Unit.Run.Load
+import all BbuKraken.Unit.Run.Load
+public import BbuKraken.Unit.RemoveSurplus
+import all BbuKraken.Unit.RemoveSurplus
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

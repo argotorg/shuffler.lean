@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.Classify
-import BbuKraken.Unit.Plan.ClassifyCalls
+module
+
+public import BbuKraken.Unit.Plan.Classify
+import all BbuKraken.Unit.Plan.Classify
+public import BbuKraken.Unit.Plan.ClassifyCalls
+import all BbuKraken.Unit.Plan.ClassifyCalls
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

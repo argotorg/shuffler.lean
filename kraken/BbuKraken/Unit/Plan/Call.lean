@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.Frame
+module
+
+public import BbuKraken.Unit.Plan.Frame
+import all BbuKraken.Unit.Plan.Frame
+
+@[expose] public section
 
 /-!
 # A call from a planner unit

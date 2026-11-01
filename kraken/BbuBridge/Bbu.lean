@@ -1,21 +1,43 @@
-import BbuBridge.Push
-import BbuBridge.Dup
-import BbuBridge.SwapWith
-import BbuBridge.SwapDest
-import BbuBridge.Produce
-import BbuBridge.Generate
-import BbuBridge.Urgent
-import BbuBridge.CopyScan
-import BbuBridge.Finish
-import BbuBridge.RestUrgent
-import BbuBridge.RestTop
-import BbuBridge.RestBound
-import BbuBridge.RestUnbound
-import BbuBridge.Step
-import BbuBridge.Loop
-import BbuBridge.Init
-import BbuBridge.InitValid
-import BbuBridge.Expected
+module
+
+public import BbuBridge.Push
+import all BbuBridge.Push
+public import BbuBridge.Dup
+import all BbuBridge.Dup
+public import BbuBridge.SwapWith
+import all BbuBridge.SwapWith
+public import BbuBridge.SwapDest
+import all BbuBridge.SwapDest
+public import BbuBridge.Produce
+import all BbuBridge.Produce
+public import BbuBridge.Generate
+import all BbuBridge.Generate
+public import BbuBridge.Urgent
+import all BbuBridge.Urgent
+public import BbuBridge.CopyScan
+import all BbuBridge.CopyScan
+public import BbuBridge.Finish
+import all BbuBridge.Finish
+public import BbuBridge.RestUrgent
+import all BbuBridge.RestUrgent
+public import BbuBridge.RestTop
+import all BbuBridge.RestTop
+public import BbuBridge.RestBound
+import all BbuBridge.RestBound
+public import BbuBridge.RestUnbound
+import all BbuBridge.RestUnbound
+public import BbuBridge.Step
+import all BbuBridge.Step
+public import BbuBridge.Loop
+import all BbuBridge.Loop
+public import BbuBridge.Init
+import all BbuBridge.Init
+public import BbuBridge.InitValid
+import all BbuBridge.InitValid
+public import BbuBridge.Expected
+import all BbuBridge.Expected
+
+@[expose] public section
 
 /-!
 The model `Bbu.buildBottomUp` is the original `buildBottomUp` on the decoded

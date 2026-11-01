@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ResolveByteFrame
+module
+
+public import BbuKraken.Unit.Plan.ResolveByteFrame
+import all BbuKraken.Unit.Plan.ResolveByteFrame
+
+@[expose] public section
 
 namespace Bbu.Unit.ResolveU
 open Bbu.Sep

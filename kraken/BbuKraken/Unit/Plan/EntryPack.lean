@@ -1,6 +1,13 @@
-import Init.Data.Fin.Lemmas
-import BbuKraken.Unit.Plan.EntryCall
-import BbuKraken.Unit.Plan.EntryOutput
+module
+
+public import Init.Data.Fin.Lemmas
+import all Init.Data.Fin.Lemmas
+public import BbuKraken.Unit.Plan.EntryCall
+import all BbuKraken.Unit.Plan.EntryCall
+public import BbuKraken.Unit.Plan.EntryOutput
+import all BbuKraken.Unit.Plan.EntryOutput
+
+@[expose] public section
 
 namespace Bbu.Unit.EntryValidU
 open Bbu.Sep

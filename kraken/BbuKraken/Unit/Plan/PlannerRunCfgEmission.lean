@@ -1,12 +1,25 @@
-import BbuKraken.Unit.Plan.PlannerRunCfgDefs
-import BbuKraken.Unit.Plan.PlannerRunEmissionCopy
-import BbuKraken.Unit.Plan.PlannerRunEmissionDest
-import BbuKraken.Unit.Plan.PlannerRunEmissionPosStart
-import BbuKraken.Unit.Plan.PlannerRunEmissionPos
-import BbuKraken.Unit.Plan.PlannerRunEmissionCountAdvance
-import BbuKraken.Unit.Plan.PlannerRunEmissionCount
-import BbuKraken.Unit.Plan.PlannerRunEmissionEmpty
-import BbuKraken.Unit.Plan.PlannerRunEmissionZero
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunCfgDefs
+import all BbuKraken.Unit.Plan.PlannerRunCfgDefs
+public import BbuKraken.Unit.Plan.PlannerRunEmissionCopy
+import all BbuKraken.Unit.Plan.PlannerRunEmissionCopy
+public import BbuKraken.Unit.Plan.PlannerRunEmissionDest
+import all BbuKraken.Unit.Plan.PlannerRunEmissionDest
+public import BbuKraken.Unit.Plan.PlannerRunEmissionPosStart
+import all BbuKraken.Unit.Plan.PlannerRunEmissionPosStart
+public import BbuKraken.Unit.Plan.PlannerRunEmissionPos
+import all BbuKraken.Unit.Plan.PlannerRunEmissionPos
+public import BbuKraken.Unit.Plan.PlannerRunEmissionCountAdvance
+import all BbuKraken.Unit.Plan.PlannerRunEmissionCountAdvance
+public import BbuKraken.Unit.Plan.PlannerRunEmissionCount
+import all BbuKraken.Unit.Plan.PlannerRunEmissionCount
+public import BbuKraken.Unit.Plan.PlannerRunEmissionEmpty
+import all BbuKraken.Unit.Plan.PlannerRunEmissionEmpty
+public import BbuKraken.Unit.Plan.PlannerRunEmissionZero
+import all BbuKraken.Unit.Plan.PlannerRunEmissionZero
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP
@@ -37,7 +50,7 @@ theorem cfg_10 : plannerRunAsm.ForallBlocks fun blk =>
   cfg_view as hv
   cfg_block [RunObl]
   intro t ht
-  simp only [RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte] at ht
+  simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨current, M, ctx, ht⟩ := ht
   have h0 := ht.choose_spec.choose_spec.1
   have hi := ht.choose_spec.choose_spec.2.1
@@ -83,7 +96,7 @@ theorem cfg_10 : plannerRunAsm.ForallBlocks fun blk =>
         omega)
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
-    String.reduceEq, Nat.reduceAdd, false_implies, true_implies, and_true, true_and] at hh
+    String.reduceEq, false_implies, true_implies, and_true, true_and] at hh
   exact hh ht
 
 set_option maxRecDepth 4096 in
@@ -92,7 +105,7 @@ theorem cfg_11 : plannerRunAsm.ForallBlocks fun blk =>
   cfg_view as hv
   cfg_block [RunObl]
   intro t ht
-  simp only [RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte] at ht
+  simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨current, M, ctx, hd, ht⟩ := ht
   have h0 := ht.choose_spec.choose_spec.1
   have hi := ht.choose_spec.choose_spec.2.1
@@ -133,7 +146,7 @@ theorem cfg_11 : plannerRunAsm.ForallBlocks fun blk =>
         omega)
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
-    String.reduceEq, Nat.reduceAdd, false_implies, true_implies, and_true, true_and] at hh
+    String.reduceEq, false_implies, true_implies, and_true, true_and] at hh
   exact hh ht
 
 set_option maxRecDepth 4096 in
@@ -142,7 +155,7 @@ theorem cfg_12 : plannerRunAsm.ForallBlocks fun blk =>
   cfg_view as hv
   cfg_block [RunObl]
   intro t ht
-  simp only [RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte] at ht
+  simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨current, M, ctx, hd, ht⟩ := ht
   have h0 := ht.choose_spec.choose_spec.1
   have hn := congrArg PG.n ctx.stable.planner
@@ -177,7 +190,7 @@ theorem cfg_12 : plannerRunAsm.ForallBlocks fun blk =>
         omega)
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
-    String.reduceEq, Nat.reduceAdd, false_implies, true_implies, and_true, true_and] at hh
+    String.reduceEq, false_implies, true_implies, and_true, true_and] at hh
   exact hh t ht
 
 set_option maxRecDepth 4096 in
@@ -186,7 +199,7 @@ theorem cfg_13 : plannerRunAsm.ForallBlocks fun blk =>
   cfg_view as hv
   cfg_block [RunObl]
   intro t ht
-  simp only [RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte] at ht
+  simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨current, M, ctx, hd, ht⟩ := ht
   obtain ⟨lo, locals, j, h0, hj, hax, hrest⟩ := ht
   have hn := congrArg PG.n ctx.stable.planner
@@ -233,7 +246,7 @@ theorem cfg_13 : plannerRunAsm.ForallBlocks fun blk =>
         omega)
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
-    String.reduceEq, Nat.reduceAdd, false_implies, true_implies, and_true, true_and] at hh
+    String.reduceEq, false_implies, true_implies, and_true, true_and] at hh
   exact hh ⟨lo, locals, j, h0, hj, hax, hrest⟩
 
 set_option maxRecDepth 4096 in
@@ -242,7 +255,7 @@ theorem cfg_14 : plannerRunAsm.ForallBlocks fun blk =>
   cfg_view as hv
   cfg_block [RunObl]
   intro t ht
-  simp only [RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte] at ht
+  simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨current, M, ctx, hd, ht⟩ := ht
   obtain ⟨lo, locals, j, c, h0, hj, hax, hrest⟩ := ht
   have hn := congrArg PG.n ctx.stable.planner
@@ -285,7 +298,7 @@ theorem cfg_14 : plannerRunAsm.ForallBlocks fun blk =>
         omega)
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
-    String.reduceEq, Nat.reduceAdd, false_implies, true_implies, and_true, true_and] at hh
+    String.reduceEq, false_implies, true_implies, and_true, true_and] at hh
   exact hh ⟨lo, locals, j, c, h0, hj, hax, hrest⟩
 
 set_option maxRecDepth 4096 in
@@ -294,7 +307,7 @@ theorem cfg_15 : plannerRunAsm.ForallBlocks fun blk =>
   cfg_view as hv
   cfg_block [RunObl]
   intro t ht
-  simp only [RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte] at ht
+  simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨current, M, ctx, hd, ht⟩ := ht
   obtain ⟨lo, locals, j, c, h0, hj, hax, hrest⟩ := ht
   have hjN : j.toNat < 1024 := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hj) ctx.ok.planner.n
@@ -323,7 +336,7 @@ theorem cfg_15 : plannerRunAsm.ForallBlocks fun blk =>
         omega)
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
-    String.reduceEq, Nat.reduceAdd, false_implies, true_implies, and_true, true_and] at hh
+    String.reduceEq, false_implies, true_implies, and_true, true_and] at hh
   exact hh ⟨lo, locals, j, c, h0, hj, hax, hrest⟩
 
 set_option maxRecDepth 4096 in
@@ -351,7 +364,7 @@ theorem cfg_27 : plannerRunAsm.ForallBlocks fun blk =>
         omega)
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
-    String.reduceEq, Nat.reduceAdd, false_implies, true_implies, and_true, and_false, true_and] at hh
+    String.reduceEq, false_implies, true_implies, and_true, true_and] at hh
   exact hh t ht
 
 set_option maxRecDepth 4096 in
@@ -383,7 +396,7 @@ theorem cfg_32 : plannerRunAsm.ForallBlocks fun blk =>
         omega)
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
-    String.reduceEq, Nat.reduceAdd, false_implies, true_implies, and_true, and_false, true_and] at hh
+    String.reduceEq, false_implies, true_implies, true_and] at hh
   exact hh t ht
 
 end

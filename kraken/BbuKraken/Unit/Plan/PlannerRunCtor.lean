@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunMapping
-import BbuKraken.Unit.Defs
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunMapping
+import all BbuKraken.Unit.Plan.PlannerRunMapping
+public import BbuKraken.Unit.Defs
+import all BbuKraken.Unit.Defs
+
+@[expose] public section
 
 /-! The live mapping bounds hold after the emission constructor copies it.
 The constructor starts each attempt with an empty trace. -/

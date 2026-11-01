@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.PlannerRunValidate
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunValidate
+import all BbuKraken.Unit.Plan.PlannerRunValidate
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

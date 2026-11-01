@@ -1,5 +1,11 @@
-import Kraken.MProp
-import Lean.Elab.Tactic
+module
+
+public import Kraken.MProp
+import all Kraken.MProp
+public import Lean.Elab.Tactic
+import all Lean.Elab.Tactic
+
+@[expose] public meta section
 
 /-!
 `sep_load [l₁, …, lₙ]` closes a load VC (`(m.loadInt a n).isSome = true`, or a value of a load)
@@ -28,7 +34,7 @@ open Lean Meta Elab Tactic
 namespace ProofKit
 
 /-- Try `with_reducible apply l h` and close the side goals with `assumption`. -/
-private def trySepLoad (l : Term) (h : Expr) : TacticM Bool := do
+def trySepLoad (l : Term) (h : Expr) : TacticM Bool := do
   let s ← saveState
   try
     let hs ← Term.exprToSyntax h
@@ -40,7 +46,7 @@ private def trySepLoad (l : Term) (h : Expr) : TacticM Bool := do
     return false
 
 /-- The memory `m` of the first `Mem.loadInt m a n` in `e`. -/
-private def loadMem? (e : Expr) : Option Expr :=
+def loadMem? (e : Expr) : Option Expr :=
   (e.find? (·.isAppOfArity ``Mem.loadInt 4)).map (·.getArg! 1)
 
 elab "sep_load " "[" ls:term,* "]" : tactic => withMainContext do

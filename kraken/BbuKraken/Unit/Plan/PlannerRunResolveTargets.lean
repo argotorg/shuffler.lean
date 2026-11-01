@@ -1,5 +1,11 @@
-import BbuKraken.FlatPlan
-import BbuKraken.Unit.Plan.ResolveInitModel
+module
+
+public import BbuKraken.FlatPlan
+import all BbuKraken.FlatPlan
+public import BbuKraken.Unit.Plan.ResolveInitModel
+import all BbuKraken.Unit.Plan.ResolveInitModel
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Flat

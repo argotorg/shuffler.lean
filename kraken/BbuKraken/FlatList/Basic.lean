@@ -1,5 +1,11 @@
-import BbuKraken.FlatRel
-import BbuKraken.ModelLemmas
+module
+
+public import BbuKraken.FlatRel
+import all BbuKraken.FlatRel
+public import BbuKraken.ModelLemmas
+import all BbuKraken.ModelLemmas
+
+@[expose] public section
 
 /-!
 The relation between a state of the flat model and a state of the list model (`Sim`), and

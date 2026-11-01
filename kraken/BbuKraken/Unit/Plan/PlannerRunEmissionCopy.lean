@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.PlannerRunEmissionData
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunEmissionData
+import all BbuKraken.Unit.Plan.PlannerRunEmissionData
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP
@@ -77,14 +82,14 @@ theorem b_10 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   have k6 := hc1.headerSome hok1 6 (by decide)
   have hd := hc1.headerSetup hok1
   simp only [headerWrites, storeLocalWords, List.take, List.foldl_cons, List.foldl_nil,
-    Nat.reduceAdd, Nat.reduceMul, BitVec.toInt_zero, g1, v] at k0 k1 k2 k3 k4 k5 k6
+    Nat.reduceAdd, Nat.reduceMul, g1, v] at k0 k1 k2 k3 k4 k5 k6
   have hbx := hc.rbx
   have h12 := hc.r12
   have h15 := hc.r15
   unfold rd at hraw hsrc hm ht hn hs
   simp only [g1, v] at km hm kt kn ks ht hn hs
   simp only [i, rax, Reg64s.get64_rax] at hraw kslot kd raw hstep hi
-  simp only [i, rax, Reg64s.get64_rax, raw] at km hm kt kn ks ht hn hs k0 k1 k2 k3 k4 k5 k6 kd
+  simp only [i, Reg64s.get64_rax, raw] at km hm kt kn ks ht hn hs k0 k1 k2 k3 k4 k5 k6 kd
   clear hp0 hp1 ha0 hdata
   kvcgen64
   all_goals try symexec_norm at ⊢
@@ -122,7 +127,7 @@ theorem b_10 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     refine ⟨lo, headerLocals g1 locals, hd.next ?_ rfl rfl rfl rfl rfl rfl rfl,
       ?_, ?_, ?_, WordPrefix.zero _ _ _⟩
     · simp only [headerWrites, storeLocalWords, List.foldl_cons, List.foldl_nil,
-        Nat.reduceMul, BitVec.toInt_zero, g1, v, i, raw, rax, Reg64s.get64_rax]
+        Nat.reduceMul, BitVec.toInt_zero, g1, v, i, raw, Reg64s.get64_rax]
     · have hmpos : 0#64 < g.p.m := by bv_omega
       exact hmpos
     · rfl

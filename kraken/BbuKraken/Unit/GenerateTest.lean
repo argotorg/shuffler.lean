@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Generate
+module
+
+public import BbuKraken.Unit.Generate
+import all BbuKraken.Unit.Generate
+
+@[expose] public section
 
 /-!
 Tests of the model lemmas of `Unit/Generate.lean`: the swap of two destinations (`dsw`, `posAt`,

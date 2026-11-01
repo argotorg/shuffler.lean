@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.PlannerRunScanDefs
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunScanDefs
+import all BbuKraken.Unit.Plan.PlannerRunScanDefs
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 

@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.EntryDefs
+module
+
+public import BbuKraken.Unit.Plan.EntryDefs
+import all BbuKraken.Unit.Plan.EntryDefs
+
+@[expose] public section
 
 namespace Bbu.Unit.EntryValidU
 open Bbu.Sep
@@ -48,7 +53,7 @@ theorem Bd.localFocus (h : Bd g F s ra lo locals t) :
     bv_omega
   have hb : t.regs.rsp.toBitVec - 65928#64 + 65928#64 = t.regs.rsp.toBitVec := by
     bv_omega
-  simp only [ha, hb, hl, h.low, Nat.reduceMul, MProp.sep_assoc]
+  simp only [ha, hb, MProp.sep_assoc]
   exact sep_lc _ _ _
 
 theorem Bd.localRead (h : Bd g F s ra lo locals t) {i : Nat} (hi : i < 10) :

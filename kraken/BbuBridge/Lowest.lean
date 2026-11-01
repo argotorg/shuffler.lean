@@ -1,6 +1,13 @@
-import BbuBridge.PermuteExplicit
-import BbuKraken.ModelLowest
-import Shuffler.PermuteAtLowestHeight.Lemmas
+module
+
+public import BbuBridge.PermuteExplicit
+import all BbuBridge.PermuteExplicit
+public import BbuKraken.ModelLowest
+import all BbuKraken.ModelLowest
+public import Shuffler.PermuteAtLowestHeight.Lemmas
+import all Shuffler.PermuteAtLowestHeight.Lemmas
+
+@[expose] public section
 
 /-!
 The list `Bbu.lowest` (`BbuKraken/ModelLowest.lean`) is the original

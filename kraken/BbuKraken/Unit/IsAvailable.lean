@@ -1,7 +1,15 @@
-import BbuKraken.Unit.Plan.Emission
-import BbuKraken.Unit.IsSpilled
-import BbuKraken.Unit.ShallowestCopy
-import ProofKit.CfgBlock
+module
+
+public import BbuKraken.Unit.Plan.Emission
+import all BbuKraken.Unit.Plan.Emission
+public import BbuKraken.Unit.IsSpilled
+import all BbuKraken.Unit.IsSpilled
+public import BbuKraken.Unit.ShallowestCopy
+import all BbuKraken.Unit.ShallowestCopy
+public import ProofKit.CfgBlock
+import all ProofKit.CfgBlock
+
+@[expose] public section
 
 /-! `Emission::isAvailable` reads a target slot and tests whether it can be generated,
 is spilled, or has a copy on the working stack. It pushes `rbp` and `rbx` and calls

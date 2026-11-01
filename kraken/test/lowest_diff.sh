@@ -16,7 +16,7 @@ trap 'rm -rf "$tmp"' EXIT
 
 make -C "$root/kraken/c" -s lowest_harness
 (cd "$root" && lake build lowest_pr31 >/dev/null)
-(cd "$root/kraken" && lake build lowest_flat >/dev/null)
+(cd "$root" && lake build PermuteKraken/lowest_flat >/dev/null)
 
 run() {
 	"$root/kraken/c/lowest_harness" < "$1" > "$2/c"

@@ -1,8 +1,17 @@
-import BbuKraken.Model
-import BbuKraken.Asm
-import BbuKraken.Specs
-import PermuteKraken.Proof
-import BbuKraken.StructLayout
+module
+
+public import BbuKraken.Model
+import all BbuKraken.Model
+public import BbuKraken.Asm
+import all BbuKraken.Asm
+public import BbuKraken.Specs
+import all BbuKraken.Specs
+public import PermuteKraken.Proof
+import all PermuteKraken.Proof
+public import BbuKraken.StructLayout
+import all BbuKraken.StructLayout
+
+@[expose] public section
 
 /-!
 The memory layout of `class Emission` in `c/build_bottom_up.cpp`, and the shape of

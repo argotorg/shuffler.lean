@@ -1,4 +1,9 @@
-import BbuKraken.FlatList.Basic
+module
+
+public import BbuKraken.FlatList.Basic
+import all BbuKraken.FlatList.Basic
+
+@[expose] public section
 
 /-!
 The constructor of the flat model against `init` of the list model: the state of `ctor` holds

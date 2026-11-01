@@ -1,8 +1,17 @@
-import ProofKit.Cfg
-import PermuteKraken.Asm
-import PermuteKraken.Specs
-import Kraken.X64.Parser
-import ProofKitTest.Shape
+module
+
+public import ProofKit.Cfg
+import all ProofKit.Cfg
+public import PermuteKraken.Asm
+import all PermuteKraken.Asm
+public import PermuteKraken.Specs
+import all PermuteKraken.Specs
+public import Kraken.X64.Parser
+import all Kraken.X64.Parser
+public import ProofKitTest.Shape
+import all ProofKitTest.Shape
+
+@[expose] public section
 
 /-! # Tests: `#cfg_skeleton`, `cfg_blocks`, `cfg_goto`, `cfg_stk`
 

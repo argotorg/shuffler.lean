@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ResolveCandidates
+module
+
+public import BbuKraken.Unit.Plan.ResolveCandidates
+import all BbuKraken.Unit.Plan.ResolveCandidates
+
+@[expose] public section
 
 namespace Bbu.Unit.ResolveU
 open Flat

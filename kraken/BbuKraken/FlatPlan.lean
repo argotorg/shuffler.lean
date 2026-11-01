@@ -1,6 +1,13 @@
-import BbuKraken.FlatSurplus
-import BbuKraken.FlatLowest
-import BbuKraken.FlatSpill
+module
+
+public import BbuKraken.FlatSurplus
+import all BbuKraken.FlatSurplus
+public import BbuKraken.FlatLowest
+import all BbuKraken.FlatLowest
+public import BbuKraken.FlatSpill
+import all BbuKraken.FlatSpill
+
+@[expose] public section
 
 /-!
 The flat model of `MappingBuilder`, `Planner`, `Emission::isAvailable`, `Emission::run` and the

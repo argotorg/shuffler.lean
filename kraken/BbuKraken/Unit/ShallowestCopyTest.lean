@@ -1,4 +1,9 @@
-import BbuKraken.Unit.ShallowestCopy
+module
+
+public import BbuKraken.Unit.ShallowestCopy
+import all BbuKraken.Unit.ShallowestCopy
+
+@[expose] public section
 
 /-!
 Tests of `Unit/ShallowestCopy.lean`: the result of `shallowestCopyQ` on small ghosts, and the

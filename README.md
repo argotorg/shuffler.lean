@@ -6,9 +6,29 @@ This repo contains a work in progress formalization of the new plan based shuffl
 
 Either run `nix develop` or install [elan](https://github.com/leanprover/elan).
 
-Then run `lake build` to compile the project.
+Run `LEAN_NUM_THREADS=1 nice lake update` once after checkout.
+The pinned Kraken dependency is used without source changes.
+Fetch the Mathlib cache with `MATHLIB_CACHE_FROM=forks nice lake exe cache get`.
 
-Run `lake test` to run the property tests.
+Then run `LEAN_NUM_THREADS=1 nice lake build` to check all proofs.
+The build includes the Shuffler model, assembly proofs, correspondence proofs,
+and their composition in `PlanBridge.Final`.
+Both Lake packages use the root `lean-toolchain` (`nightly-2026-10-20`).
+Mathlib is pinned to a commit of its nightly testing repository for that compiler.
+
+Both local packages treat compiler warnings as errors. Warnings from the pinned
+Kraken dependency remain visible; they do not fail the local proof build.
+
+`PlanBridge.Final` combines two proof modules through contracts over shared flat
+data. Kraken and Shuffler implementation imports stay private. A file that
+imports this combined theorem must start with `module` to retain that boundary.
+The public predicates have types over the shared data and keep their bodies private.
+Run `LEAN_NUM_THREADS=1 nice kraken/test/modules_test.sh` to check the boundary.
+
+Run `LEAN_NUM_THREADS=1 nice lake test` to run the property tests.
+Run `LEAN_NUM_THREADS=1 nice kraken/test/axioms_test.sh` to audit the final theorems and test the audit.
+The Lean CI job also runs the assembly, layout, and model comparison checks in
+`kraken/test/`. The Fuzz job builds and tests the C FFI with the same Lean compiler.
 
 ## Differential fuzzing
 

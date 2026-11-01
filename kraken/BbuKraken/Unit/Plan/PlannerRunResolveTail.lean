@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunResolveDefs
-import Kraken.X64.Parser
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunResolveDefs
+import all BbuKraken.Unit.Plan.PlannerRunResolveDefs
+public import Kraken.X64.Parser
+import all Kraken.X64.Parser
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP
@@ -63,12 +69,12 @@ theorem resolve_tail [Host] [FunDecls] (P : Addr) (g : PlannerRunG)
     · intro he
       subst res
       simp only [ResolveU.code] at ha
-      all_goals (rename_i hj; symexec_norm at hj; simp only [BitVec.take, ha] at hj; contradiction)
+      all_goals (rename_i hj; symexec_norm at hj; simp only [ha] at hj; contradiction)
     · exact hal
   | goto ".LB.Planner.run.24" =>
     rename_i af h1 af' h2 af'' hm
     symexec_norm at h1 h2 hm
-    simp only [BitVec.take, ha, BitVec.zero_eq, beq_eq_false_iff_ne] at h1 h2
+    simp only [ha, BitVec.zero_eq, beq_eq_false_iff_ne] at h1 h2
     simp only [h.rbx, rm, BitVec.and_self, BitVec.zero_eq, beq_iff_eq] at hm
     apply hzero
     · exact h.next rfl rfl rfl rfl rfl rfl rfl
@@ -77,7 +83,7 @@ theorem resolve_tail [Host] [FunDecls] (P : Addr) (g : PlannerRunG)
   | other =>
     rename_i af h1 af' h2 af'' hm
     symexec_norm at h1 h2 hm
-    simp only [BitVec.take, ha, BitVec.zero_eq, beq_eq_false_iff_ne] at h1 h2
+    simp only [ha, BitVec.zero_eq, beq_eq_false_iff_ne] at h1 h2
     simp only [h.rbx, rm, BitVec.and_self, BitVec.zero_eq, beq_eq_false_iff_ne] at hm
     apply hmore
     · exact h.next rfl rfl rfl rfl rfl rfl rfl

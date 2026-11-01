@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Loop.Bound
-import BbuKraken.FlatModelTest
+module
+
+public import BbuKraken.Unit.Loop.Bound
+import all BbuKraken.Unit.Loop.Bound
+public import BbuKraken.FlatModelTest
+import all BbuKraken.FlatModelTest
+
+@[expose] public section
 
 /-!
 Tests of the local lemmas of `Unit/Loop/Bound.lean`:

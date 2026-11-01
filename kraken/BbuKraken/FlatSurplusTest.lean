@@ -1,5 +1,11 @@
-import BbuKraken.FlatSurplusRel
-import BbuKraken.FlatPopTest
+module
+
+public import BbuKraken.FlatSurplusRel
+import all BbuKraken.FlatSurplusRel
+public import BbuKraken.FlatPopTest
+import all BbuKraken.FlatPopTest
+
+@[expose] public section
 
 /-!
 Tests of `FlatSurplus.lean`, of `Map.State.removeSurplus` (`MapModel.lean`) and of `absOut`

@@ -1,5 +1,11 @@
-import BbuKraken.FlatRel
-import BbuKraken.FlatModelTest
+module
+
+public import BbuKraken.FlatRel
+import all BbuKraken.FlatRel
+public import BbuKraken.FlatModelTest
+import all BbuKraken.FlatModelTest
+
+@[expose] public section
 
 /-!
 Tests of the statement of `FlatBridge.lean`. `relB` is a decision procedure for `Rel`

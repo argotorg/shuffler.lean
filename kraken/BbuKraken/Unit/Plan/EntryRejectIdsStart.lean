@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.EntryRejectIdsDefs
-import BbuKraken.Unit.Run.Load
-import ProofKit.Idioms
+module
+
+public import BbuKraken.Unit.Plan.EntryRejectIdsDefs
+import all BbuKraken.Unit.Plan.EntryRejectIdsDefs
+public import BbuKraken.Unit.Run.Load
+import all BbuKraken.Unit.Run.Load
+public import ProofKit.Idioms
+import all ProofKit.Idioms
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP
@@ -91,7 +98,7 @@ theorem b_fn (hp : Pre g F s) : planAsm.ForallBlocks fun blk =>
       exact ⟨⟨_, ⟨⟨⟨hh, frame88 _⟩, hlo, rfl, rfl, rfl, rfl, rfl⟩,
         hdi, hsi, hdx, hcx, h9⟩, hs⟩, hz⟩
     · left
-      simp only [V, Names.plan, String.reduceEq, ↓reduceIte, or_false, or_true]
+      simp only [V, Names.plan, String.reduceEq, ↓reduceIte, or_true]
       omega
   | goto ".LB.plan.1" =>
     rename_i hm hn af he af' hz
@@ -108,7 +115,7 @@ theorem b_fn (hp : Pre g F s) : planAsm.ForallBlocks fun blk =>
       exact positive _ hz
     · left
       simp only [V, Names.plan, String.reduceEq, ↓reduceIte, rax, Reg64s.get64_rax,
-        MachineData.regs_mk, Reg64s.get, BitVec.toNat_ofNat, Nat.zero_mod, Nat.sub_zero]
+        BitVec.toNat_ofNat, Nat.zero_mod, Nat.sub_zero]
       omega
 
 theorem b_9 : planAsm.ForallBlocks fun blk =>

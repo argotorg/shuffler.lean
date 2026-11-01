@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ClassifyMore
+module
+
+public import BbuKraken.Unit.Plan.ClassifyMore
+import all BbuKraken.Unit.Plan.ClassifyMore
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -20,7 +25,7 @@ theorem code_bool_false (b : Bool) (a : BitVec 8)
 theorem not_junk_of_not_free (x : Inputs) (hf : x.free = false) :
     x.slot.kind ≠ Junk := by
   intro hj
-  simp [Inputs.free, canBeFreelyGenerated, isJunk, hj] at hf
+  simp [Inputs.free, canBeFreelyGenerated, hj] at hf
 
 theorem pack_fields (w : Word) (x : BitVec 32) (o : BitVec 8)
     (hx : x = (StackSlot.ofWord w).payload)

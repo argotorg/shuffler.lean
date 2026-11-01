@@ -1,5 +1,11 @@
-import BbuKraken.Sep.Carve
-import BbuKraken.StructLayout
+module
+
+public import BbuKraken.Sep.Carve
+import all BbuKraken.Sep.Carve
+public import BbuKraken.StructLayout
+import all BbuKraken.StructLayout
+
+@[expose] public section
 
 /-!
 Tests of `EmSize`: `Em` holds the bytes of the struct before `m_plannedMapping`, and not that

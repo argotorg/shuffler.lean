@@ -1,4 +1,9 @@
-import BbuKraken.FlatPlan
+module
+
+public import BbuKraken.FlatPlan
+import all BbuKraken.FlatPlan
+
+@[expose] public section
 
 /-! Loop equations used by the assembly proof of `Planner::run`.
 Each equation follows the exit or the next iteration of one source loop. -/

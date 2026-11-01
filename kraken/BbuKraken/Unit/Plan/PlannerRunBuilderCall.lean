@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunBuilderView
-import BbuKraken.Unit.Plan.Call
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunBuilderView
+import all BbuKraken.Unit.Plan.PlannerRunBuilderView
+public import BbuKraken.Unit.Plan.Call
+import all BbuKraken.Unit.Plan.Call
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep

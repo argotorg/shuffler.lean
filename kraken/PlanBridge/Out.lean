@@ -1,4 +1,9 @@
-import PlanBridge.Basic
+module
+
+public import PlanBridge.Basic
+import all PlanBridge.Basic
+
+@[expose] public section
 
 /-!
 The relation between a flat result of `emissionRun` and a PR31 result of `Emission.run`

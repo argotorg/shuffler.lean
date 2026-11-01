@@ -1,4 +1,9 @@
-import BbuKraken.FlatModel
+module
+
+public import BbuKraken.FlatModel
+import all BbuKraken.FlatModel
+
+@[expose] public section
 
 /-!
 Tests of `FlatModel.lean`: each unit on small states, the paths that fail

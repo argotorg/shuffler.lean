@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ClassifySpecs
+module
+
+public import BbuKraken.Unit.Plan.ClassifySpecs
+import all BbuKraken.Unit.Plan.ClassifySpecs
+
+@[expose] public section
 
 namespace Bbu.Unit.ClassifyU
 open Bbu.Sep
@@ -8,6 +13,7 @@ variable [Host] [FunDecls]
   {P : Addr} {c : CG} {F : MProp 64} {s t : MachineData} {ra : Int64}
   {lo : List Word} {w q : Word} {K : MachineData → Prop}
 
+omit [Host] [FunDecls] in
 theorem LI.callOther (h : LI P c F s ra lo w q t)
     (hok : c.Ok) (ha : classifyA c s)
     (hdi : rdi t = P) (hsi : rsi t = c.h.mp)
@@ -36,6 +42,7 @@ theorem LI.callOther (h : LI P c F s ra lo w q t)
   rw [hcx] at hret
   exact hret
 
+omit [Host] [FunDecls] in
 theorem LI.callDemand (h : LI P c F s ra lo w q t)
     (hok : c.Ok) (hdi : rdi t = P)
     (hsi : StackSlot.ofWord (rsi t) = (inp c s).slot)

@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ClassifySpill
+module
+
+public import BbuKraken.Unit.Plan.ClassifySpill
+import all BbuKraken.Unit.Plan.ClassifySpill
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

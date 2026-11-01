@@ -1,4 +1,9 @@
-import ProofKit.SepLoad
+module
+
+public import ProofKit.SepLoad
+import all ProofKit.SepLoad
+
+@[expose] public section
 
 /-! # Tests: `sep_load`
 

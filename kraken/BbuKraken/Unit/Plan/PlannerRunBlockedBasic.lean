@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunSafeCtor
-import BbuKraken.Unit.ProduceLemmas
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunSafeCtor
+import all BbuKraken.Unit.Plan.PlannerRunSafeCtor
+public import BbuKraken.Unit.ProduceLemmas
+import all BbuKraken.Unit.ProduceLemmas
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Flat

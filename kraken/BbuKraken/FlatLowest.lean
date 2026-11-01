@@ -1,4 +1,9 @@
-import BbuKraken.FlatModel
+module
+
+public import BbuKraken.FlatModel
+import all BbuKraken.FlatModel
+
+@[expose] public section
 
 /-!
 A model of `Emission::permuteAtLowestHeight` and of the entry `permute_at_lowest_height`

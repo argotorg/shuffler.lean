@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Loop.Frame
-import BbuKraken.Unit.Loop.Cont
-import ProofKit.CfgBlock
+module
+
+public import BbuKraken.Unit.Loop.Frame
+import all BbuKraken.Unit.Loop.Frame
+public import BbuKraken.Unit.Loop.Cont
+import all BbuKraken.Unit.Loop.Cont
+public import ProofKit.CfgBlock
+import all ProofKit.CfgBlock
+
+@[expose] public section
 
 /-!
 # `buildBottomUp`: the invariant and the variant of each block

@@ -1,5 +1,13 @@
-import Shuffler.BuildBottomUp.Theorems
-import BbuKraken.ModelLemmas
+module
+
+public import Shuffler.BuildBottomUp.Theorems
+import all Shuffler.BuildBottomUp.Theorems
+public import Shuffler.Emission.Lemmas
+import all Shuffler.Emission.Lemmas
+public import BbuKraken.ModelLemmas
+import all BbuKraken.ModelLemmas
+
+@[expose] public section
 
 /-!
 The link between the model `Bbu.buildBottomUp` and the original

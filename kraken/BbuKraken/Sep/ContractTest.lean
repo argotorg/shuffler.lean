@@ -1,7 +1,15 @@
-import BbuKraken.Sep.Contract
-import BbuKraken.Sep.Stores
-import ProofKit.Cfg
-import Kraken.X64.Parser
+module
+
+public import BbuKraken.Sep.Contract
+import all BbuKraken.Sep.Contract
+public import BbuKraken.Sep.Stores
+import all BbuKraken.Sep.Stores
+public import ProofKit.Cfg
+import all ProofKit.Cfg
+public import Kraken.X64.Parser
+import all Kraken.X64.Parser
+
+@[expose] public section
 
 /-!
 Tests of the contract: a body that pushes and pops a callee-saved register (`rbx_t`, one free stack

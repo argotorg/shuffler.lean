@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.EntryRejectIdsStart
-import BbuKraken.Unit.Plan.EntryRejectIdsRead
-import BbuKraken.Unit.Plan.EntryRejectIdsAdvance
+module
+
+public import BbuKraken.Unit.Plan.EntryRejectIdsStart
+import all BbuKraken.Unit.Plan.EntryRejectIdsStart
+public import BbuKraken.Unit.Plan.EntryRejectIdsRead
+import all BbuKraken.Unit.Plan.EntryRejectIdsRead
+public import BbuKraken.Unit.Plan.EntryRejectIdsAdvance
+import all BbuKraken.Unit.Plan.EntryRejectIdsAdvance
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP

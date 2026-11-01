@@ -1,5 +1,12 @@
-import BbuKraken.Layout
-import Kraken.SepCancel
+module
+
+public import BbuKraken.Layout
+import all BbuKraken.Layout
+public import Kraken.SepCancel
+import all Kraken.SepCancel
+import Std.Tactic.BVDecide
+
+@[expose] public section
 
 /-!
 # Separation atoms

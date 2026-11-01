@@ -1,7 +1,15 @@
-import BbuKraken.Unit.SpillDefs
-import BbuKraken.Sep.Stores
-import BbuKraken.Unit.ProduceLemmas
-import BbuKraken.Unit.ShallowestCopy
+module
+
+public import BbuKraken.Unit.SpillDefs
+import all BbuKraken.Unit.SpillDefs
+public import BbuKraken.Sep.Stores
+import all BbuKraken.Sep.Stores
+public import BbuKraken.Unit.ProduceLemmas
+import all BbuKraken.Unit.ProduceLemmas
+public import BbuKraken.Unit.ShallowestCopy
+import all BbuKraken.Unit.ShallowestCopy
+
+@[expose] public section
 
 /-!
 # Lemmas for the `spill_set` unit proof

@@ -1,4 +1,9 @@
-import BbuKraken.Fn.Loop.Defs
+module
+
+public import BbuKraken.Fn.Loop.Defs
+import all BbuKraken.Fn.Loop.Defs
+
+@[expose] public section
 
 /-!
 Tests of the checks of `Model.lean` that follow `c/build_bottom_up.cpp`: the

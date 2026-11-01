@@ -1,4 +1,11 @@
-import BbuKraken.Unit.Dup
+module
+
+public meta import Kraken.X64.Semantics
+
+public import BbuKraken.Unit.Dup
+import all BbuKraken.Unit.Dup
+
+@[expose] public section
 
 /-!
 Tests of `Unit/Dup.lean`: the flags and the bytes that the asm reads, the record of `dup`, the

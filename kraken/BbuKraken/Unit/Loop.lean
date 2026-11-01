@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Loop.Assemble
+module
+
+public import BbuKraken.Unit.Loop.Assemble
+import all BbuKraken.Unit.Loop.Assemble
+
+@[expose] public section
 
 /-!
 # `buildBottomUp`

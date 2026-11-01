@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ClassifyPrologueScratch
+module
+
+public import BbuKraken.Unit.Plan.ClassifyPrologueScratch
+import all BbuKraken.Unit.Plan.ClassifyPrologueScratch
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -9,14 +14,16 @@ set_option experimental.vcgen true
 namespace Bbu.Unit.ClassifyU
 open Bbu.Sep
 
-def prologueTail : Program := by
+-- This construction reads the unexposed body of `classifyAsm`.
+@[no_expose] def prologueTail : Program := by
   run_tac
     let bs ← ProofKit.blocks (← ProofKit.directives (Lean.mkConst ``classifyAsm))
     let p ← Lean.Meta.mkListLit (Lean.mkConst ``Directive) (bs[1]!.2.toList.drop 7)
     (← Lean.Elab.Tactic.getMainGoal).assign p
 
 theorem prologueTail_eq :
-    ((Program.view classifyAsm).2.head!).2.drop 7 = prologueTail := rfl
+    ((Program.view classifyAsm).2.head!).2.drop 7 = prologueTail := by
+  rfl
 
 def returnPrefixState (t : MachineData) (src slot : Word) (kind : BitVec 8)
     (flags : StatusFlags) : MachineData :=

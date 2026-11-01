@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.KeepWildcard
+module
+
+public import BbuKraken.Unit.Plan.KeepWildcard
+import all BbuKraken.Unit.Plan.KeepWildcard
+
+@[expose] public section
 
 /-!
 # `MappingBuilder::absorbSurplus`

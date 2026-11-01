@@ -1,6 +1,13 @@
-import ProofKit.Idioms
-import BbuKraken.Specs
-import Kraken.X64.Parser
+module
+
+public import ProofKit.Idioms
+import all ProofKit.Idioms
+public import BbuKraken.Specs
+import all BbuKraken.Specs
+public import Kraken.X64.Parser
+import all Kraken.X64.Parser
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP

@@ -1,4 +1,9 @@
-import BbuKraken.Sep.View
+module
+
+public import BbuKraken.Sep.View
+import all BbuKraken.Sep.View
+
+@[expose] public section
 
 /-!
 # Contracts with separation atoms

@@ -19,22 +19,33 @@ tactics of this repo.
 
 ## Build and check
 
-- Run all commands from `kraken/`.
-- Use `nice` for each Lean process. Run only one Lean process at a time. The machine is shared.
+- Run `LEAN_NUM_THREADS=1 nice lake update` from the repository root after checkout.
+  The pinned Kraken dependency is used without source changes.
+- Run the full build from the repository root: `LEAN_NUM_THREADS=1 nice lake build`. It includes the
+  assembly proofs, the correspondence proofs, and `PlanBridge.Final`.
+  Run the build commands in this section from the repository root.
+  Both packages use the root `lean-toolchain`. The shell tests use the root dependency graph.
+- Both local packages pass `-E warning` to Lean. Dependency warnings remain visible.
+- Start files that import `PlanBridge.Final` with `module`. Its public contracts
+  keep the Kraken and Shuffler implementation imports private.
+- Run `LEAN_NUM_THREADS=1 nice kraken/test/modules_test.sh` to check this boundary.
+- Use `LEAN_NUM_THREADS=1 nice` for each Lean process. Run only one Lean process at a time. The machine is shared.
 - Do not kill a `lean` or `lake` process that you did not start. Do not use `pkill lean` or
   `pkill lake`.
-- One target: `nice lake build BbuKraken` (or `PermuteKraken`, `ProofKit`, `ProofKitTest`).
-- One file, without a build of its dependents: `nice lake env lean BbuKraken/Unit/Push.lean`.
+- One target: `LEAN_NUM_THREADS=1 nice lake build BbuKraken` (or `PermuteKraken`, `ProofKit`, `ProofKitTest`).
+- One file, without a build of its dependents:
+  `LEAN_NUM_THREADS=1 nice lake env lean -DautoImplicit=false -DrelaxedAutoImplicit=false kraken/BbuKraken/Unit/Push.lean`.
 - Find the slow declarations:
   ```
-  nice lake env lean -Dtrace.profiler=true -Dtrace.profiler.threshold=200 -DElab.async=false FILE
+  LEAN_NUM_THREADS=1 nice lake env lean -Dtrace.profiler=true -Dtrace.profiler.threshold=200 -DElab.async=false FILE
   ```
   The profiler adds time. A proof that is near its heartbeat limit can fail under the profiler.
 - Heartbeats do not change from run to run. Wall time changes by about 20% on a machine with a high
   load. Compare heartbeats, not seconds. To measure one declaration, read `IO.getNumHeartbeats`
   before and after it.
-- Axioms: `test/axioms.sh` checks the 3 final theorems; `test/axioms.sh FILE NAME...` checks
-  the theorems NAME... of FILE. `test/axioms_test.sh` tests the check. Permitted:
+- Axioms: `kraken/test/axioms.sh` checks the 19 final theorems;
+  `kraken/test/axioms.sh FILE NAME...` checks the theorems NAME... of FILE.
+  `kraken/test/axioms_test.sh` tests the check. Permitted:
   - `propext`, `Classical.choice`, `Quot.sound`;
   - the `bv_decide` axioms. On this toolchain, each use of `bv_decide` adds one axiom
     `D._native.bv_decide.ax_I_J` with the type `Std.Tactic.BVDecide.Reflect.verifyBVExpr _ _ = true`.
@@ -122,8 +133,8 @@ takes less than 2 s, and one `all_goals` block with `omega` alternatives takes 1
 - It matches atoms by term. Normalize the addresses first (rule 2). Give the atom values (rule 8).
 - Lake builds a module of the Kraken package only when a module of this package imports it.
   `BbuKraken/Sep/Atoms.lean` imports `Kraken.SepCancel`, so `lake build` builds the separation
-  modules. A file that imports a Kraken module gets the warning "designed for use with the
-  module system". The build passes with this warning.
+  modules. Library proof files start with `module`. The executable entry files can use the
+  older import system because the packages set `allowNonModules`.
 - `FrameWP` (X64/WP/Frame.lean) has no cfg rule and no call rule. Use the state wp
   (`Program.WP.cfg`, `kvcgen64`, `CallSpec`) and put the `∗` assertion inside the invariants and
   the contracts.

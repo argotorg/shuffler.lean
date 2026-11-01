@@ -1,5 +1,11 @@
-import BbuKraken.Asm
-import Kraken.X64.Parser
+module
+
+public import BbuKraken.Asm
+import all BbuKraken.Asm
+public import Kraken.X64.Parser
+import all Kraken.X64.Parser
+
+@[expose] public section
 
 open Kraken.X64.Parser
 
@@ -111,10 +117,7 @@ def noFile : String := "noFile"
 /-- error: Bbu.AsmTest.notLiteral is not a def with a string literal as its value -/
 #guard_msgs in
 example : Program := bbuParseFn(notLiteral)
-/--
-error: no such file or directory (error code: 2)
-  file: c/bbu/noFile.S
--/
+/-- error: cannot read assembly file: ../c/bbu/noFile.S -/
 #guard_msgs in
 example : Program := bbuParseFn(noFile)
 

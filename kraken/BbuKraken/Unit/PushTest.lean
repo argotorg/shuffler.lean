@@ -1,4 +1,11 @@
-import BbuKraken.Unit.Push
+module
+
+public meta import Kraken.X64.Semantics
+
+public import BbuKraken.Unit.Push
+import all BbuKraken.Unit.Push
+
+@[expose] public section
 
 /-!
 Tests of `Unit/Push.lean`: the asm forms (the `NONE` test, `size + 1 - 1`, the kind byte,

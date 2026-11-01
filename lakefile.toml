@@ -1,10 +1,15 @@
 name = "shuffler-lean"
 version = "0.1.0"
-defaultTargets = ["Shuffler"]
+defaultTargets = ["Shuffler", "Verification", "BbuBridge", "SpillBridge", "PlanBridge"]
 testDriver = "Tests"
+allowNonModules = true
+moreLeanArgs = ["-E", "warning"]
 
 [[lean_lib]]
 name = "Shuffler"
+
+[[lean_lib]]
+name = "Verification"
 
 [[lean_lib]]
 name = "Tests"
@@ -12,13 +17,17 @@ globs = ["Tests.+"]
 
 [[require]]
 name = "mathlib"
-scope = "leanprover-community"
-rev = "v4.35.0"
+git = "https://github.com/leanprover-community/mathlib4-nightly-testing.git"
+rev = "d107e3b8fafb81ea3e41a9e27ac7db46b47ad738"
 
 [[require]]
 name = "batteries"
 scope = "leanprover-community"
-rev = "v4.35.0"
+rev = "8bca74780c076fc173eb623dc0bed36d87bd7399"
+
+[[require]]
+name = "PermuteKraken"
+path = "kraken"
 
 [[lean_lib]]
 name = "Fuzz"
@@ -28,7 +37,7 @@ roots = ["Fuzz.Oracle"]
 [[lean_lib]]
 name = "BbuBridge"
 srcDir = "kraken"
-globs = ["PermuteKraken.Model", "PermuteKraken.Trace", "BbuKraken.Model", "BbuKraken.ModelLemmas", "BbuKraken.MapModel", "BbuKraken.ModelLowest", "BbuBridge.+"]
+globs = ["BbuBridge.+"]
 
 # The originals of permute and buildBottomUp, run by kraken/test/diff.sh and bbu_diff.sh.
 [[lean_exe]]
@@ -60,15 +69,14 @@ srcDir = "kraken/test"
 root = "LowestPr31Main"
 
 # The flat model of the spill set, and the proofs that it equals SpillSet.add and
-# SpillSet.is_spilled of PR31. Not a default target.
+# SpillSet.is_spilled of PR31.
 [[lean_lib]]
 name = "SpillBridge"
 srcDir = "kraken"
-globs = ["BbuKraken.FlatModel", "BbuKraken.FlatSpill", "SpillBridge.+"]
+globs = ["SpillBridge.+"]
 
 # The flat model of Planner.run, and the proofs that it equals Planner.run of PR31.
-# Not a default target.
 [[lean_lib]]
 name = "PlanBridge"
 srcDir = "kraken"
-globs = ["BbuKraken.FlatPop", "BbuKraken.FlatSurplus", "BbuKraken.FlatLowest", "BbuKraken.FlatPlan", "BbuKraken.FlatPopRel", "BbuKraken.FlatSurplusRel", "BbuKraken.FlatLowestRel", "BbuKraken.FlatRel", "BbuKraken.FlatBridge", "BbuKraken.FlatList.Basic", "BbuKraken.FlatList.Ctor", "BbuKraken.FlatList.Leaf", "BbuKraken.FlatList.Loop", "BbuKraken.FlatList.PermList", "BbuKraken.FlatList.PermLoop", "BbuKraken.FlatList.Permute", "BbuKraken.FlatList.Produce", "BbuKraken.FlatList.Regroup", "BbuKraken.FlatList.Step", "PlanBridge.+"]
+globs = ["PlanBridge.+"]

@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.PlannerRunEmissionCountSetup
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunEmissionCountSetup
+import all BbuKraken.Unit.Plan.PlannerRunEmissionCountSetup
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP
@@ -90,10 +95,10 @@ theorem b_13 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
       have hne := beq_eq_false_iff_ne.mp (hptr false hb)
       bv_omega
     apply hnext
-    · simp only [rax, Reg64s.get64_rax, hax']
+    · simp only [Reg64s.get64_rax, hax']
     refine ⟨lo, newloc, j + 1#64, hc1.next rfl rfl rfl rfl rfl rfl rfl rfl,
       hjnext, ?_, hdx, hsi, hdi, hd1, ?_⟩
-    · simp only [rax, Reg64s.get64_rax, hax']; bv_omega
+    · simp only [rax, Reg64s.get64_rax]; bv_omega
     · rw [hsucc]; exact hp1
   | goto ".LB.Planner.run.15" =>
     rename_i he
@@ -106,7 +111,7 @@ theorem b_13 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     apply hdone
     refine ⟨lo, setupLocals newloc t.regs.rsp.toBitVec, (0 : Word), (0 : Word),
       hc1.setupCount hok hd1 hpdone ?_ rfl rfl rfl rfl rfl rfl rfl, ?_, ?_, ?_, ?_, rfl⟩
-    · simp only [v, hsi, hdi, hax', src_addr, dst_addr, hr]
+    · simp only [v]
     · bv_omega
     · simp only [rax, Reg64s.get64_rax]; bv_omega
     · simp only [rdx, Reg64s.get64_rdx]

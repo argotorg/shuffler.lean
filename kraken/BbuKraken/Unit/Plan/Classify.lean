@@ -1,6 +1,13 @@
-import BbuKraken.Unit.Plan.ClassifyFrame
-import BbuKraken.Unit.IsAvailable
-import ProofKit.CfgBlock
+module
+
+public import BbuKraken.Unit.Plan.ClassifyFrame
+import all BbuKraken.Unit.Plan.ClassifyFrame
+public import BbuKraken.Unit.IsAvailable
+import all BbuKraken.Unit.IsAvailable
+public import ProofKit.CfgBlock
+import all ProofKit.CfgBlock
+
+@[expose] public section
 
 /-! Checked blocks of `Planner::classify`. The function theorem is still open:
 the entry prologue is not proved here. Other block modules supply the remaining labels. -/

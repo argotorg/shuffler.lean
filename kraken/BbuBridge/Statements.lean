@@ -1,5 +1,11 @@
-import BbuBridge.Basic
-import BbuBridge.Unfold
+module
+
+public import BbuBridge.Basic
+import all BbuBridge.Basic
+public import BbuBridge.Unfold
+import all BbuBridge.Unfold
+
+@[expose] public section
 
 /-!
 The statements of the bridge lemmas, one for each model function. Each lemma is

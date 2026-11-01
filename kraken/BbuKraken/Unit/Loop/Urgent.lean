@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Loop.Step
+module
+
+public import BbuKraken.Unit.Loop.Step
+import all BbuKraken.Unit.Loop.Step
+
+@[expose] public section
 
 /-!
 # `buildBottomUp`: the `urgentToDup` loop (part P3)

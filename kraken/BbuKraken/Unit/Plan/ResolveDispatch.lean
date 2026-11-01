@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.ResolveDropDefs
-import BbuKraken.Unit.Plan.ResolveClassByte
+module
+
+public import BbuKraken.Unit.Plan.ResolveDropDefs
+import all BbuKraken.Unit.Plan.ResolveDropDefs
+public import BbuKraken.Unit.Plan.ResolveClassByte
+import all BbuKraken.Unit.Plan.ResolveClassByte
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -40,7 +46,7 @@ theorem b_13 [Host] [FunDecls]
       exact ⟨w.ghost r, lo, L.toList, h.bd.next rfl rfl,
         update_ok hok _ _, Work.no_best h.ok hm hb⟩
     · left
-      simp only [V, loopVar, String.reduceEq, true_or, false_or, ↓reduceIte]
+      simp only [V, loopVar, String.reduceEq, false_or, ↓reduceIte]
       omega
   | goto ".LB.Planner.resolve.15" =>
     rename_i hb hc

@@ -1,5 +1,11 @@
-import PlanBridge.MapR
-import PlanBridge.Emission
+module
+
+public import PlanBridge.MapR
+import all PlanBridge.MapR
+public import PlanBridge.Emission
+import all PlanBridge.Emission
+
+@[expose] public section
 
 /-!
 The flat spill bytes and the PR31 spill set of the planner.

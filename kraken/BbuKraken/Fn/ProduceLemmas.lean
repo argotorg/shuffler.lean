@@ -1,5 +1,11 @@
-import BbuKraken.Contracts
-import BbuKraken.Kit
+module
+
+public import BbuKraken.Contracts
+import all BbuKraken.Contracts
+public import BbuKraken.Kit
+import all BbuKraken.Kit
+
+@[expose] public section
 
 /-!
 Lemmas for the body of `produce` (`c/bbu/<Names.produce>.S`): the bytes of a word, the model

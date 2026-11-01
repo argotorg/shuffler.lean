@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.PlannerRunBlockedBasic
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunBlockedBasic
+import all BbuKraken.Unit.Plan.PlannerRunBlockedBasic
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Flat

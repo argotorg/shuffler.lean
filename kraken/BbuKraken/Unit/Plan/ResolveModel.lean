@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.ClassifyMem
+module
+
+public import BbuKraken.Unit.Plan.ClassifyMem
+import all BbuKraken.Unit.Plan.ClassifyMem
+
+@[expose] public section
 
 /-! Steps of the three loops in `Planner::resolve`. Each step follows one
 branch of the assembly. These lemmas do not assume correctness of a callee. -/

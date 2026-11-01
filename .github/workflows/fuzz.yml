@@ -9,6 +9,9 @@ jobs:
   fuzz:
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    env:
+      MATHLIB_CACHE_FROM: forks
+      LEAN_NUM_THREADS: 1
 
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
@@ -17,6 +20,7 @@ jobs:
       - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
       - name: Build
         run: |
+          MATHLIB_NO_CACHE_ON_UPDATE=1 nix develop -c nice lake update
           nix develop -c lake exe cache get
           nix develop -c sh Fuzz/build.sh build/fuzz
       # each run starts from the corpus of the last saved run, pull requests also from the runs on main

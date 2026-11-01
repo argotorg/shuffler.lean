@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Plan.PlannerRunDefs
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunDefs
+import all BbuKraken.Unit.Plan.PlannerRunDefs
+
+@[expose] public section
 
 /-! Memory access to the buffers and fields owned by `Planner::run`. -/
 

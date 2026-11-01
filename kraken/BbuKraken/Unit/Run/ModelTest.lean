@@ -1,4 +1,9 @@
-import BbuKraken.Unit.Run.Model
+module
+
+public import BbuKraken.Unit.Run.Model
+import all BbuKraken.Unit.Run.Model
+
+@[expose] public section
 
 namespace Bbu.Unit.RunU.Test
 open Bbu

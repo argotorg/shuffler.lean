@@ -1,4 +1,10 @@
-import SpillBridge.Spill
+module
+
+public import SpillBridge.Spill
+import all SpillBridge.Spill
+public meta import SpillBridge.Spill
+
+@[expose] public section
 
 /-!
 A differential test of `Flat.spill_set` against `SpillSet.add` and `SpillSet.is_spilled` of PR31,

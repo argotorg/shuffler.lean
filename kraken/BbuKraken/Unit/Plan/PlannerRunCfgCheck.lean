@@ -1,11 +1,23 @@
-import BbuKraken.Unit.Plan.PlannerRunCfgDefs
-import BbuKraken.Unit.Plan.PlannerRunPrologue
-import BbuKraken.Unit.Plan.PlannerRunCheck
-import BbuKraken.Unit.Plan.PlannerRunTarget
-import BbuKraken.Unit.Plan.PlannerRunScan
-import BbuKraken.Unit.Plan.PlannerRunSpilled
-import BbuKraken.Unit.Plan.PlannerRunFailure
-import BbuKraken.Unit.Plan.PlannerRunReturn
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunCfgDefs
+import all BbuKraken.Unit.Plan.PlannerRunCfgDefs
+public import BbuKraken.Unit.Plan.PlannerRunPrologue
+import all BbuKraken.Unit.Plan.PlannerRunPrologue
+public import BbuKraken.Unit.Plan.PlannerRunCheck
+import all BbuKraken.Unit.Plan.PlannerRunCheck
+public import BbuKraken.Unit.Plan.PlannerRunTarget
+import all BbuKraken.Unit.Plan.PlannerRunTarget
+public import BbuKraken.Unit.Plan.PlannerRunScan
+import all BbuKraken.Unit.Plan.PlannerRunScan
+public import BbuKraken.Unit.Plan.PlannerRunSpilled
+import all BbuKraken.Unit.Plan.PlannerRunSpilled
+public import BbuKraken.Unit.Plan.PlannerRunFailure
+import all BbuKraken.Unit.Plan.PlannerRunFailure
+public import BbuKraken.Unit.Plan.PlannerRunReturn
+import all BbuKraken.Unit.Plan.PlannerRunReturn
+
+@[expose] public section
 
 open Std.WP Lean.Order ProofKit
 open scoped Program.WP

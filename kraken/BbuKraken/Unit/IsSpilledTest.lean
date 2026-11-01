@@ -1,4 +1,11 @@
-import BbuKraken.Unit.IsSpilled
+module
+
+public meta import Kraken.X64.Semantics
+
+public import BbuKraken.Unit.IsSpilled
+import all BbuKraken.Unit.IsSpilled
+
+@[expose] public section
 
 /-!
 Tests of `Unit/IsSpilled.lean`: the bytes and the flags that the asm tests, the result in `al`,

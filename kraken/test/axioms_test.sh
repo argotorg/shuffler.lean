@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Test axioms.sh: it must accept State.permute_spec and a bv_decide proof, and reject
 # sorry, native_decide, a user axiom, a forged bv_decide axiom and an unknown name.
-# With no arguments it must accept and report all 14 final theorems.
+# With no arguments it must accept and report all 19 final theorems.
 set -euo pipefail
 here=$(cd "$(dirname "$0")" && pwd)
 tmp=$(mktemp -d)
@@ -16,6 +16,19 @@ check() {
 		printf '%s\n' "$3"
 	} > "$tmp/$1.lean"
 	if "$here/axioms.sh" "$tmp/$1.lean" "$4" > "$tmp/out" 2>&1; then got=ok; else got=fail; fi
+	if [ "$2" = fail ] && [ "$1" != unknown ] && ! grep -q "^$4:" "$tmp/out"; then
+		echo "FAIL $1: the theorem was not checked"; cat "$tmp/out"; fails=$((fails + 1))
+		return
+	fi
+	local reason=''
+	case "$1" in
+		sorry*) reason=sorryAx ;;
+		native_decide) reason=_native.native_decide.ax_ ;;
+	esac
+	if [ -n "$reason" ] && ! grep -qF "$reason" "$tmp/out"; then
+		echo "FAIL $1: no $reason axiom"; cat "$tmp/out"; fails=$((fails + 1))
+		return
+	fi
 	if [ "$got" = "$2" ]; then
 		echo "ok $1: $(grep -m1 -e 'not allowed' -e 'unknown' -e "^$4:" "$tmp/out")"
 	else
@@ -59,9 +72,12 @@ n=$(grep -c -e '^Bbu.buildBottomUp_correct:' -e '^Bbu.bbu_harness_correct:' \
 	-e '^Bbu.planner_run_correct:' -e '^Bbu.planner_run_harness_correct:' \
 	-e '^Bbu.plan_correct:' -e '^Bbu.plan_harness_correct:' \
 	-e '^Bbu.plan_rejects_bad_args:' -e '^Bbu.plan_rejects_invalid_ids:' \
-	-e '^Bbu.plan_harness_rejects_bad_args:' -e '^Bbu.plan_harness_rejects_invalid_ids:' "$tmp/final" || true)
+	-e '^Bbu.plan_harness_rejects_bad_args:' -e '^Bbu.plan_harness_rejects_invalid_ids:' \
+	-e '^PlanBridge.kraken_to_flat:' -e '^PlanBridge.kraken_to_flat_harness:' \
+	-e '^PlanBridge.flat_to_shuffler:' -e '^PlanBridge.plan_correct:' \
+	-e '^PlanBridge.plan_harness_correct:' "$tmp/final" || true)
 other=$(grep -o 'not allowed: .*' "$tmp/final" | grep -o '([^()]*)' | grep -v ', sorryAx)$' || true)
-if $final_ok && [ "$n" -eq 14 ] && [ -z "$other" ] && ! grep -q sorryAx "$tmp/final"; then
+if $final_ok && [ "$n" -eq 19 ] && [ -z "$other" ] && ! grep -q sorryAx "$tmp/final"; then
 	echo "ok final: $n theorems"
 else
 	echo "FAIL final"; cat "$tmp/final"; fails=$((fails + 1))

@@ -1,5 +1,11 @@
-import BbuKraken.Fn.SwapWithLemmas
-import BbuKraken.ModelLemmas
+module
+
+public import BbuKraken.Fn.SwapWithLemmas
+import all BbuKraken.Fn.SwapWithLemmas
+public import BbuKraken.ModelLemmas
+import all BbuKraken.ModelLemmas
+
+@[expose] public section
 open Std.WP Lean.Order
 open scoped Program.WP
 namespace Bbu

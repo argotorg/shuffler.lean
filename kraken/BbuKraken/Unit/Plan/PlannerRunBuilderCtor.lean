@@ -1,5 +1,11 @@
-import BbuKraken.Unit.Plan.PlannerRunBuilderCall
-import Init.Data.Fin.Lemmas
+module
+
+public import BbuKraken.Unit.Plan.PlannerRunBuilderCall
+import all BbuKraken.Unit.Plan.PlannerRunBuilderCall
+public import Init.Data.Fin.Lemmas
+import all Init.Data.Fin.Lemmas
+
+@[expose] public section
 
 namespace Bbu.Unit.PlannerRunU
 open Bbu.Sep

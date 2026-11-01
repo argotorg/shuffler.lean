@@ -1,4 +1,9 @@
-import BbuKraken.Fn.Loop.Defs
+module
+
+public import BbuKraken.Fn.Loop.Defs
+import all BbuKraken.Fn.Loop.Defs
+
+@[expose] public section
 
 /-!
 Machine lemmas of the old proof of `loop_body` (the C build, git 6f580e5): the frame, the calls, the stores to the

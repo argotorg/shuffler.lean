@@ -1,8 +1,17 @@
-import BbuKraken.Unit.Permute.Frame
-import BbuKraken.Unit.Permute.Cfg
-import BbuKraken.Unit.PermuteModel
-import BbuKraken.Unit.PermuteSpecs
-import BbuKraken.Unit.Permute.Util
+module
+
+public import BbuKraken.Unit.Permute.Frame
+import all BbuKraken.Unit.Permute.Frame
+public import BbuKraken.Unit.Permute.Cfg
+import all BbuKraken.Unit.Permute.Cfg
+public import BbuKraken.Unit.PermuteModel
+import all BbuKraken.Unit.PermuteModel
+public import BbuKraken.Unit.PermuteSpecs
+import all BbuKraken.Unit.PermuteSpecs
+public import BbuKraken.Unit.Permute.Util
+import all BbuKraken.Unit.Permute.Util
+
+@[expose] public section
 
 /-!
 # `permute`: the invariant and the variant of each block

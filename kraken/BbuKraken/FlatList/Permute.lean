@@ -1,5 +1,11 @@
-import BbuKraken.FlatList.Regroup
-import BbuKraken.FlatList.Loop
+module
+
+public import BbuKraken.FlatList.Regroup
+import all BbuKraken.FlatList.Regroup
+public import BbuKraken.FlatList.Loop
+import all BbuKraken.FlatList.Loop
+
+@[expose] public section
 
 /-!
 The flat `permute` against the list `Bbu.permute` (`sim_permute`): the `leader` loop gives the

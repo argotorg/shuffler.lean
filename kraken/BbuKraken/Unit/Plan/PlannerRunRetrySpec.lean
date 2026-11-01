@@ -1,4 +1,9 @@
-import BbuKraken.Specs
+module
+
+public import BbuKraken.Specs
+import all BbuKraken.Specs
+
+@[expose] public section
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -24,8 +29,8 @@ namespace Bbu.Unit.PlannerRunU
   refine ⟨fun s hpre => ?_⟩
   refine Program.wp_single fun _ _ _ _ hn _ => ?_
   simp only [Directive.interp, Instr.interp, Operation.interp, Operand.interp,
-    RegOrMem.interp, RelRegOrMem.interp, ConstExpr.interp, MachineData.set, MachineData.setReg,
-    Reg64s.get_low_W64, Reg64s.set_low_W64, Effects.All, ite_true]
+    RegOrMem.interp, ConstExpr.interp, MachineData.set, MachineData.setReg,
+    Reg64s.get_low_W64, Reg64s.set_low_W64, Effects.All]
   exact hn _ hpre
 
 end Bbu.Unit.PlannerRunU
