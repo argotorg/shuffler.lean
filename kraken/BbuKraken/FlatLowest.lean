@@ -7,7 +7,7 @@ import all BbuKraken.FlatModel
 
 /-!
 A model of `Emission::permuteAtLowestHeight` and of the entry `permute_at_lowest_height`
-(`c/build_bottom_up.cpp`), in the style of `FlatModel.lean`: the statements are in the order of
+(`c/shuffler/test_wrappers.cpp`), in the style of `FlatModel.lean`: the statements are in the order of
 the C++, a loop is a recursive function, and a `yulAssert` returns `.assertionFailed`.
 
 - `St` has no member for `m_plannedMapping`: it is a reference to a `Mapping` out of the struct.

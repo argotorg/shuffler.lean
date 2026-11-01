@@ -24,7 +24,7 @@ using fuzztext::words;
 namespace
 {
 
-/// StackSlot of kraken/c/build_bottom_up.cpp
+/// StackSlot of kraken/c/shuffler/StackSlot.h
 struct Slot
 {
 	std::uint32_t payload;
@@ -39,7 +39,7 @@ enum SlotKind : std::uint8_t { Value = 0, Junk = 1, FunctionCallReturnLabel = 2,
 /// InstOpcode: a literal is a Const; a variable gets Phi, which is not Const
 enum Opcode : std::uint8_t { Const = 0, Phi = 1, Unreachable = 5 };
 
-/// ShuffleOp of kraken/c/build_bottom_up.cpp
+/// ShuffleOp of kraken/c/shuffler/ShuffleTrace.h
 struct Op
 {
 	std::uint8_t kind;
@@ -255,7 +255,7 @@ namespace
 /// The maximal stack size of build_bottom_up (the EVM stack limit)
 std::size_t constexpr maxStackSize = 1024;
 
-/// The none of an Optional<StackOffset> of kraken/c/build_bottom_up.cpp
+/// The none of an Optional<StackOffset> of kraken/c/shuffler/Freestanding.h
 std::uint64_t constexpr none = SIZE_MAX;
 
 std::string showOffset(std::uint64_t const _offset)
@@ -788,7 +788,7 @@ std::string runEmit(std::vector<std::string> const& _fields)
 	std::vector<std::uint8_t> const spilled = parseSpilled(_fields[3], source, target);
 
 	// emit writes at most max(m, n) slots and destinations, and at most 2m + 6n operations into a buffer of 4m + 6n
-	// (see kraken/c/build_bottom_up.cpp). A guard area after each buffer must stay as it is.
+	// (see kraken/c/shuffler/test_wrappers.cpp). A guard area after each buffer must stay as it is.
 	std::size_t const room = std::max(m, n);
 	std::size_t const opsRoom = 4 * m + 6 * n;
 	std::vector<Slot> data(room + guard, guardSlot);
@@ -854,7 +854,7 @@ std::string runPlan(std::vector<std::string> const& _fields)
 	std::size_t const idCount = spills.size();
 
 	// plan writes at most idCount bytes of spilled, m of dropped, one of saw, max(m, n) slots, 2m + 6n operations
-	// into a buffer of 4m + 6n, and n source offsets (see kraken/c/build_bottom_up.cpp). A guard area after each
+	// into a buffer of 4m + 6n, and n source offsets (see kraken/c/shuffler/test_wrappers.cpp). A guard area after each
 	// buffer must stay as it is.
 	std::size_t const room = std::max(m, n);
 	std::size_t const opsRoom = 4 * m + 6 * n;

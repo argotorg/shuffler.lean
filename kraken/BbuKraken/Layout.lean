@@ -14,7 +14,7 @@ import all BbuKraken.StructLayout
 @[expose] public section
 
 /-!
-The memory layout of `class Emission` in `c/build_bottom_up.cpp`, and the shape of
+The memory layout of `class Emission` in `c/shuffler/stack/Shuffler.cpp`, and the shape of
 the function specs.
 
 The model state and environment are functions of the memory and the address `S`

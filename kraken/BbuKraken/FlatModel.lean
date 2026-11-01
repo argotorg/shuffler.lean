@@ -6,7 +6,7 @@ import all BbuKraken.Model
 @[expose] public section
 
 /-!
-A model of `c/build_bottom_up.cpp` whose state is the image of `class Emission`.
+A model of `c/shuffler/stack/Shuffler.cpp` whose state is the image of `class Emission`.
 `Model.lean` is the list model. `FlatModelTest.lean` compares the two by evaluation;
 there is no proof that they agree.
 

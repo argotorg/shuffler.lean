@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* the StackSlot and ShuffleOp of build_bottom_up.cpp */
+/* the types in shuffler/StackSlot.h and shuffler/ShuffleTrace.h */
 typedef struct {
 	uint32_t payload;
 	uint8_t kind;

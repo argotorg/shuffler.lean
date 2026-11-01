@@ -253,7 +253,7 @@ Traps:
 ### The field generator (test/gen_fields.sh)
 
 - `test/gen_fields.sh` writes `BbuKraken/Sep/Fields.lean` from the g++ `offsetof` and `sizeof` of
-  `Emission` in `c/build_bottom_up.cpp`. Run it after a change to the struct.
+  `Emission` in `c/shuffler/stack/Shuffler.cpp`. Run it after a change to the struct.
 - `test/gen_fields.sh --check` does not write the file. It fails if the file is not current.
 - It fails if the struct has bytes that no member of the probe covers (a hole, or bytes after the
   last member), or if an array element is not 8 bytes. `test/gen_fields_test.sh` tests these

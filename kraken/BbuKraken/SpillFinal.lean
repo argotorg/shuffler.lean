@@ -25,9 +25,9 @@ namespace Bbu
 section
 set_option maxRecDepth 100000
 
-theorem spillSetAdd_at : spillSetAddAsm.IsInfixAt bbuAsm 1154 := by
+theorem spillSetAdd_at : spillSetAddAsm.IsInfixAt bbuAsm 822 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem spillSet_at : spillSetAsm.IsInfixAt bbuAsm 1175 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem spillSet_at : spillSetAsm.IsInfixAt bbuAsm 2448 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 end
 
 namespace Linked

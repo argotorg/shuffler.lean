@@ -21,14 +21,15 @@ namespace Bbu
 
 set_option maxRecDepth 100000 in
 theorem bbuAsm_eq : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm
-    ++ produceAsm ++ swapWithAsm ++ generateAsm ++ finishAsm ++ loopAsm
-    ++ popAsm ++ buildBottomUpAsm ++ emissionPopAsm ++ spillSetAddAsm ++ spillSetAsm
-    ++ removeSurplusAsm ++ removeSurplusEntryAsm ++ permuteEntryAsm ++ permuteAtLowestHeightAsm
-    ++ permuteAtLowestHeightEntryAsm ++ mapAsm ++ closestCopyAsm ++ mapInPlaceAsm
-    ++ mapClosestCopiesAsm ++ mapWildcardSlotCopiesAsm ++ keepWildcardSlotsAsm ++ absorbSurplusAsm
-    ++ buildMappingAsm ++ isRetainedAsm ++ hasOtherRetainedCopyAsm ++ isDemandedAsm ++ classifyAsm
-    ++ resolveAsm ++ resolveEntryAsm ++ isAvailableAsm ++ runAsm ++ emitAsm ++ plannerRunAsm
-    ++ planAsm := by rfl
+    ++ produceAsm ++ swapWithAsm ++ generateAsm ++ finishAsm
+    ++ loopAsm ++ spillSetAddAsm ++ mapAsm ++ closestCopyAsm
+    ++ mapInPlaceAsm ++ mapClosestCopiesAsm ++ mapWildcardSlotCopiesAsm ++ keepWildcardSlotsAsm
+    ++ absorbSurplusAsm ++ popAsm ++ removeSurplusAsm ++ permuteAtLowestHeightAsm
+    ++ isAvailableAsm ++ runAsm ++ isRetainedAsm ++ hasOtherRetainedCopyAsm
+    ++ isDemandedAsm ++ classifyAsm ++ resolveAsm ++ plannerRunAsm
+    ++ buildBottomUpAsm ++ emissionPopAsm ++ spillSetAsm ++ removeSurplusEntryAsm
+    ++ permuteEntryAsm ++ permuteAtLowestHeightEntryAsm ++ buildMappingAsm ++ resolveEntryAsm
+    ++ emitAsm ++ planAsm := by rfl
 
 section
 set_option maxRecDepth 100000
@@ -43,35 +44,35 @@ theorem produce_at : produceAsm.IsInfixAt bbuAsm 110 := by rw [bbuAsm_eq]; exact
 theorem generate_at : generateAsm.IsInfixAt bbuAsm 266 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 theorem finish_at : finishAsm.IsInfixAt bbuAsm 319 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 theorem loop_at : loopAsm.IsInfixAt bbuAsm 528 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem buildBottomUp_at : buildBottomUpAsm.IsInfixAt bbuAsm 849 := by
+theorem buildBottomUp_at : buildBottomUpAsm.IsInfixAt bbuAsm 2143 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem pop_at : popAsm.IsInfixAt bbuAsm 822 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem removeSurplus_at : removeSurplusAsm.IsInfixAt bbuAsm 1291 := by
+theorem pop_at : popAsm.IsInfixAt bbuAsm 1211 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem removeSurplus_at : removeSurplusAsm.IsInfixAt bbuAsm 1238 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem permuteAtLowestHeight_at : permuteAtLowestHeightAsm.IsInfixAt bbuAsm 1682 := by
+theorem permuteAtLowestHeight_at : permuteAtLowestHeightAsm.IsInfixAt bbuAsm 1326 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem map_at : mapAsm.IsInfixAt bbuAsm 1894 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem closestCopy_at : closestCopyAsm.IsInfixAt bbuAsm 1916 := by
+theorem map_at : mapAsm.IsInfixAt bbuAsm 843 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem closestCopy_at : closestCopyAsm.IsInfixAt bbuAsm 865 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem mapInPlace_at : mapInPlaceAsm.IsInfixAt bbuAsm 1990 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem mapClosestCopies_at : mapClosestCopiesAsm.IsInfixAt bbuAsm 2039 := by
+theorem mapInPlace_at : mapInPlaceAsm.IsInfixAt bbuAsm 939 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem mapClosestCopies_at : mapClosestCopiesAsm.IsInfixAt bbuAsm 988 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem mapWildcardSlotCopies_at : mapWildcardSlotCopiesAsm.IsInfixAt bbuAsm 2081 := by
+theorem mapWildcardSlotCopies_at : mapWildcardSlotCopiesAsm.IsInfixAt bbuAsm 1030 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem keepWildcardSlots_at : keepWildcardSlotsAsm.IsInfixAt bbuAsm 2140 := by
+theorem keepWildcardSlots_at : keepWildcardSlotsAsm.IsInfixAt bbuAsm 1089 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem absorbSurplus_at : absorbSurplusAsm.IsInfixAt bbuAsm 2189 := by
+theorem absorbSurplus_at : absorbSurplusAsm.IsInfixAt bbuAsm 1138 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem isRetained_at : isRetainedAsm.IsInfixAt bbuAsm 2364 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem hasOtherRetainedCopy_at : hasOtherRetainedCopyAsm.IsInfixAt bbuAsm 2368 := by
+theorem isRetained_at : isRetainedAsm.IsInfixAt bbuAsm 1495 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem hasOtherRetainedCopy_at : hasOtherRetainedCopyAsm.IsInfixAt bbuAsm 1499 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem isDemanded_at : isDemandedAsm.IsInfixAt bbuAsm 2421 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem classify_at : classifyAsm.IsInfixAt bbuAsm 2447 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem resolve_at : resolveAsm.IsInfixAt bbuAsm 2583 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem isAvailable_at : isAvailableAsm.IsInfixAt bbuAsm 2866 := by
+theorem isDemanded_at : isDemandedAsm.IsInfixAt bbuAsm 1552 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem classify_at : classifyAsm.IsInfixAt bbuAsm 1578 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem resolve_at : resolveAsm.IsInfixAt bbuAsm 1714 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem isAvailable_at : isAvailableAsm.IsInfixAt bbuAsm 1387 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem run_at : runAsm.IsInfixAt bbuAsm 2896 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem plannerRun_at : plannerRunAsm.IsInfixAt bbuAsm 3146 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem run_at : runAsm.IsInfixAt bbuAsm 1417 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem plannerRun_at : plannerRunAsm.IsInfixAt bbuAsm 1852 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 theorem plan_at : planAsm.IsInfixAt bbuAsm 3437 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 end
 

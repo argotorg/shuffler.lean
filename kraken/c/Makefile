@@ -4,9 +4,15 @@
 CFLAGS_ASM = -O1 -fno-ident -fno-asynchronous-unwind-tables -fcf-protection=none \
 	-fomit-frame-pointer -fzero-call-used-regs=skip -fno-stack-protector -fno-pic \
 	-fno-stack-clash-protection
-# build_bottom_up.cpp is freestanding: no exceptions, RTTI, guard variables or C++ library.
+# The shuffler is freestanding: no exceptions, RTTI, guard variables or C++ library.
 CXXFLAGS_ASM = $(CFLAGS_ASM) -std=c++20 -ffreestanding -fno-exceptions -fno-rtti \
 	-fno-threadsafe-statics -nostdlib++
+
+# One translation unit exposes the internal shuffler classes to the test wrappers.
+# Track each included source for both the assembly and hosted unit tests.
+BBU_SOURCES = shuffler/test_wrappers.cpp shuffler/stack/Shuffler.cpp \
+	shuffler/SSACFGTypes.h shuffler/StackSlot.h shuffler/ShuffleTrace.h \
+	shuffler/Stack.h shuffler/spill/SpillSet.h shuffler/Freestanding.h
 
 all: permute.S harness build_bottom_up.S bbu_harness pop_harness surplus_harness lowest_harness unit_test
 
@@ -17,7 +23,7 @@ permute.S: permute.c
 # of the function NAME, so a label name depends only on its own function. bbu/NAME.S holds the
 # function NAME. NAME is the g++ (Itanium) name, for example
 # _ZN12_GLOBAL__N_18Emission7produceE11StackOffset, or build_bottom_up, which is extern "C".
-build_bottom_up.S: build_bottom_up.cpp labels.awk
+build_bottom_up.S: $(BBU_SOURCES) labels.awk
 	$(CXX) $(CXXFLAGS_ASM) -S $< -o - | sed 's/^\.L\([0-9]\)/.LB\1/; s/\(	j[a-z]*	\)\.L\([0-9]\)/\1.LB\2/' \
 		| awk -f labels.awk > $@
 	rm -rf bbu && mkdir bbu
@@ -38,10 +44,10 @@ surplus_harness: surplus_harness.c build_bottom_up.S
 lowest_harness: lowest_harness.c build_bottom_up.S
 	$(CC) -O1 -no-pie -o $@ lowest_harness.c build_bottom_up.S
 
-# The unit tests, hosted and with the sanitizers. They include build_bottom_up.cpp. Run them with
+# The unit tests, hosted and with the sanitizers. They include test_wrappers.cpp. Run them with
 # ASAN_OPTIONS=detect_leaks=0 where LeakSanitizer cannot run (under ptrace).
-unit_test: unit_test.cpp build_bottom_up.cpp
-	$(CXX) -std=c++20 -O1 -g -Wall -Wextra -fsanitize=address,undefined -fno-sanitize-recover=all -o $@ unit_test.cpp
+unit_test: shuffler/unit_test.cpp $(BBU_SOURCES)
+	$(CXX) -std=c++20 -O1 -g -Wall -Wextra -fsanitize=address,undefined -fno-sanitize-recover=all -o $@ $<
 
 clean:
 	rm -f harness bbu_harness pop_harness surplus_harness lowest_harness unit_test

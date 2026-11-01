@@ -6,7 +6,7 @@ import all BbuKraken.Model
 @[expose] public section
 
 /-!
-A model of the stack and mapping operations of `c/build_bottom_up.cpp` with lists, in core Lean.
+A model of the stack and mapping operations of `c/shuffler/test_wrappers.cpp` with lists, in core Lean.
 Both projects compile it: `FlatPop.lean` (Kraken) shows that the flat model is an instance of
 it, and `BbuBridge/Pop.lean` (root) shows that it is an instance of the PR31 model
 (`Shuffler.Mapping`, `Shuffler.Emission.State.pop`).

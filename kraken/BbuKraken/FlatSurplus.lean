@@ -6,7 +6,7 @@ import all BbuKraken.FlatPop
 @[expose] public section
 
 /-!
-The flat model of `Emission::removeSurplus` and `remove_surplus` in `c/build_bottom_up.cpp`, as in
+The flat model of `Emission::removeSurplus` and `remove_surplus` in `c/shuffler/test_wrappers.cpp`, as in
 `FlatModel.lean`.
 
 The `while` loop of the C++ has no bound. Each pass that does not return pops one slot, so the

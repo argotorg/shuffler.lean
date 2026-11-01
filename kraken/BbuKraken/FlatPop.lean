@@ -9,7 +9,7 @@ import all BbuKraken.MapModel
 
 /-!
 The flat model of `Stack::pop`, `Mapping::pop`, `Emission::pop`, the constructors of `Mapping`
-and `Emission`, and `emission_pop` in `c/build_bottom_up.cpp`, as in `FlatModel.lean`.
+and `Emission`, and `emission_pop` in `c/shuffler/test_wrappers.cpp`, as in `FlatModel.lean`.
 
 The C++ `Mapping` is a value of `Mapping` here: the arrays `m_destinationOf` and
 `m_positionOf`. The members of an `Emission` are a `St`. The constructors read the content of

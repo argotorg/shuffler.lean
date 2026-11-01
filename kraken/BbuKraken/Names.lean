@@ -1,7 +1,7 @@
 module
 
 /-!
-The symbol names of the functions of `c/build_bottom_up.cpp`. The members of `Emission`,
+The symbol names of the functions of `c/shuffler/test_wrappers.cpp`. The members of `Emission`,
 `SpillSet`, `MappingBuilder` and `Planner` have the names that g++ gives them (the Itanium C++ ABI
 mangling); the entries `build_bottom_up`, `emission_pop`, `spill_set`, `remove_surplus`,
 `permute`, `permute_at_lowest_height`, `build_mapping`, `resolve`, `emit` and `plan` are

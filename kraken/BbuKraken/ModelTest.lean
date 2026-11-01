@@ -6,7 +6,7 @@ import all BbuKraken.Fn.Loop.Defs
 @[expose] public section
 
 /-!
-Tests of the checks of `Model.lean` that follow `c/build_bottom_up.cpp`: the
+Tests of the checks of `Model.lean` that follow `c/shuffler/test_wrappers.cpp`: the
 count of the constructor, the size_t wrap of `pendingGenerations`, the reads and
 asserts of the bound branch, the checks of `swapDestinations` and
 `permuteDestinations`, and the order of `add`.

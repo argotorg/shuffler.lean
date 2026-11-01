@@ -7,7 +7,7 @@ import all PermuteKraken.Model
 
 /-!
 A model of `Shuffler.Emission.buildBottomUp` without Mathlib. Each definition
-mirrors a function of `c/build_bottom_up.cpp`, and so the parts of the Lean
+mirrors a function of `c/shuffler/test_wrappers.cpp`, and so the parts of the Lean
 original.
 
 A `StackSlot` and an `Op` have the fields of `StackSlot` and `ShuffleOp` in the C++.
@@ -30,7 +30,7 @@ abbrev Word := BitVec 64
 
 def MAX_SWAP_DEPTH : Nat := 16
 def MAX_DUP_DEPTH : Nat := 15
--- `maxStackSize` in `c/build_bottom_up.cpp`: the EVM stack limit.
+-- `maxStackSize` in `c/shuffler/Freestanding.h`: the EVM stack limit.
 def MAX_N : Nat := 1024
 
 -- `StackSlot::Kind`

@@ -7,7 +7,7 @@ import all BbuKraken.FlatSpill
 
 /-!
 Tests of `FlatSpill.lean` by evaluation. The cases are those of `spill_set` in
-`c/build_bottom_up.cpp`: each kind of slot, the bound `idCount`, a byte that is not 0 or 1,
+`c/shuffler/test_wrappers.cpp`: each kind of slot, the bound `idCount`, a byte that is not 0 or 1,
 a failed add after some adds, and the largest id.
 -/
 

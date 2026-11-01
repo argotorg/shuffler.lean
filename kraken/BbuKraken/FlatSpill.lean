@@ -8,7 +8,7 @@ import all BbuKraken.FlatModel
 /-!
 # The spill set
 
-A model of `struct SpillSet` and of `spill_set` in `c/build_bottom_up.cpp`, in the style of
+A model of `struct SpillSet` and of `spill_set` in `c/shuffler/test_wrappers.cpp`, in the style of
 `FlatModel.lean`: one function for each function of the C++, with the statements in the order of
 the C++. The spill set is the buffer `m_spilled`: the byte of the variable id `i` is `sp i`.
 A `yulAssert` returns `.assertionFailed`.

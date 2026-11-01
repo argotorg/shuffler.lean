@@ -11,7 +11,7 @@ import all BbuKraken.FlatSpill
 
 /-!
 The flat model of `MappingBuilder`, `Planner`, `Emission::isAvailable`, `Emission::run` and the
-entry `plan` in `c/build_bottom_up.cpp`, as in `FlatModel.lean`: one function for each function of
+entry `plan` in `c/shuffler/test_wrappers.cpp`, as in `FlatModel.lean`: one function for each function of
 the C++, with the statements in the order of the C++, a loop is a recursive function, and a
 `yulAssert` returns `.assertionFailed`.
 

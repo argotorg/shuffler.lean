@@ -8,7 +8,7 @@ import all BbuKraken.ModelLemmas
 @[expose] public section
 
 /-!
-The spec of each member function of `Emission` in `c/build_bottom_up.cpp`: the
+The spec of each member function of `Emission` in `c/shuffler/stack/Shuffler.cpp`: the
 frame size `F`, the further precondition `A` and the result `R`. A function
 spec is `Spec name`; the proof of a caller takes the `Spec` of each callee as a
 hypothesis. `st` and `e` are the model state and environment at the call.

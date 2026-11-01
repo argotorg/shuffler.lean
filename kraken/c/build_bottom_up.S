@@ -1,4 +1,4 @@
-	.file	"build_bottom_up.cpp"
+	.file	"test_wrappers.cpp"
 	.text
 	.align 2
 	.type	_ZNK12_GLOBAL__N_18Emission9isSpilledE9StackSlot, @function
@@ -856,361 +856,6 @@ _ZN12_GLOBAL__N_18Emission13buildBottomUpEv:
 	jmp	.LB.Emission.buildBottomUp.13
 	.size	_ZN12_GLOBAL__N_18Emission13buildBottomUpEv, .-_ZN12_GLOBAL__N_18Emission13buildBottomUpEv
 	.align 2
-	.type	_ZN12_GLOBAL__N_18Emission3popEv, @function
-_ZN12_GLOBAL__N_18Emission3popEv:
-	movq	32(%rdi), %rax
-	movl	$2, %edx
-	testq	%rax, %rax
-	je	.LB.Emission.pop.1
-	leaq	-1(%rax), %rdx
-	movq	%rdx, 32(%rdi)
-	movq	48(%rdi), %rax
-	leaq	1(%rax), %rcx
-	movq	%rcx, 48(%rdi)
-	leaq	(%rax,%rax,2), %rax
-	salq	$2, %rax
-	addq	40(%rdi), %rax
-	movb	$2, (%rax)
-	movb	$0, 1(%rax)
-	movl	$0, 4(%rax)
-	movb	$1, 8(%rax)
-	movb	$5, 9(%rax)
-	movq	56(%rdi,%rdx,8), %rax
-	cmpq	$-1, %rax
-	je	.LB.Emission.pop.0
-	movq	$-1, 8248(%rdi,%rax,8)
-.LB.Emission.pop.0:
-	movl	$0, %edx
-.LB.Emission.pop.1:
-	movl	%edx, %eax
-	ret
-	.size	_ZN12_GLOBAL__N_18Emission3popEv, .-_ZN12_GLOBAL__N_18Emission3popEv
-	.globl	build_bottom_up
-	.type	build_bottom_up, @function
-build_bottom_up:
-	cmpq	%rdi, %rsi
-	jb	.LB.build_bottom_up.14
-	movq	%rdx, %r10
-	cmpq	$1024, %rsi
-	ja	.LB.build_bottom_up.14
-	subq	$32872, %rsp
-	testq	%rdi, %rdi
-	je	.LB.build_bottom_up.18
-	movl	$0, %eax
-	.p2align 5
-.LB.build_bottom_up.0:
-	movq	$-1, 16480(%rsp,%rax,8)
-	addq	$1, %rax
-	cmpq	%rax, %rdi
-	jne	.LB.build_bottom_up.0
-	testq	%rsi, %rsi
-	je	.LB.build_bottom_up.3
-.LB.build_bottom_up.1:
-	leaq	16480(%rsp), %rax
-	leaq	(%rax,%rsi,8), %rdx
-	.p2align 5
-.LB.build_bottom_up.2:
-	movq	$-1, 8192(%rax)
-	addq	$8, %rax
-	cmpq	%rdx, %rax
-	jne	.LB.build_bottom_up.2
-	testq	%rdi, %rdi
-	je	.LB.build_bottom_up.19
-.LB.build_bottom_up.3:
-	movl	$0, %eax
-	jmp	.LB.build_bottom_up.5
-	.p2align 5
-.LB.build_bottom_up.4:
-	leaq	1(%rax), %rdx
-	cmpq	%rdx, %rdi
-	je	.LB.build_bottom_up.6
-	movq	%rdx, %rax
-.LB.build_bottom_up.5:
-	movq	(%r8,%rax,8), %rdx
-	cmpq	$-1, %rdx
-	je	.LB.build_bottom_up.4
-	movq	%rdx, 16480(%rsp,%rax,8)
-	movq	%rax, 24672(%rsp,%rdx,8)
-	jmp	.LB.build_bottom_up.4
-.LB.build_bottom_up.6:
-	movq	%rcx, (%rsp)
-	movq	%rsi, 8(%rsp)
-	movq	%r9, 16(%rsp)
-	movq	%r10, 24(%rsp)
-	movq	%rdx, 32(%rsp)
-	movq	32880(%rsp), %rdi
-	movq	%rdi, 40(%rsp)
-	movq	$0, 48(%rsp)
-	movl	$0, %edx
-	addq	$1, %rax
-	.p2align 5
-.LB.build_bottom_up.7:
-	movq	16480(%rsp,%rdx,8), %rcx
-	movq	%rcx, 56(%rsp,%rdx,8)
-	addq	$1, %rdx
-	cmpq	%rax, %rdx
-	jne	.LB.build_bottom_up.7
-.LB.build_bottom_up.8:
-	testq	%rsi, %rsi
-	je	.LB.build_bottom_up.15
-	leaq	0(,%rsi,8), %rdx
-	movl	$0, %eax
-	leaq	8248(%rsp), %rdi
-	leaq	24672(%rsp), %rsi
-	.p2align 5
-.LB.build_bottom_up.9:
-	movq	(%rsi,%rax), %rcx
-	movq	%rcx, (%rdi,%rax)
-	addq	$8, %rax
-	cmpq	%rdx, %rax
-	jne	.LB.build_bottom_up.9
-	movq	$0, 16440(%rsp)
-	leaq	16480(%rsp), %rax
-	movq	%rax, 16464(%rsp)
-	movq	%rsp, %rax
-	addq	%rsp, %rdx
-	jmp	.LB.build_bottom_up.11
-	.p2align 5
-.LB.build_bottom_up.10:
-	addq	$8, %rax
-	cmpq	%rdx, %rax
-	je	.LB.build_bottom_up.16
-.LB.build_bottom_up.11:
-	cmpq	$-1, 8248(%rax)
-	jne	.LB.build_bottom_up.10
-	addq	$1, 16440(%rsp)
-	jmp	.LB.build_bottom_up.10
-.LB.build_bottom_up.12:
-	movq	32888(%rsp), %rax
-	movq	$0, (%rax)
-	movq	$0, 8(%rax)
-	movq	48(%rsp), %rdx
-	jmp	.LB.build_bottom_up.17
-.LB.build_bottom_up.13:
-	movq	16448(%rsp), %rax
-	movq	32888(%rsp), %rsi
-	movq	%rax, (%rsi)
-	movq	16456(%rsp), %rax
-	movq	%rax, 8(%rsi)
-	movq	48(%rsp), %rdx
-	jmp	.LB.build_bottom_up.17
-.LB.build_bottom_up.14:
-	movq	$-2, %rdx
-	movq	%rdx, %rax
-	ret
-.LB.build_bottom_up.15:
-	movq	$0, 16440(%rsp)
-	leaq	16480(%rsp), %rax
-	movq	%rax, 16464(%rsp)
-.LB.build_bottom_up.16:
-	movq	%rsp, %rdi
-	call	_ZN12_GLOBAL__N_18Emission13buildBottomUpEv
-	cmpb	$1, %al
-	je	.LB.build_bottom_up.13
-	movq	$-2, %rdx
-	cmpb	$2, %al
-	jne	.LB.build_bottom_up.12
-.LB.build_bottom_up.17:
-	movq	%rdx, %rax
-	addq	$32872, %rsp
-	ret
-.LB.build_bottom_up.18:
-	testq	%rsi, %rsi
-	jne	.LB.build_bottom_up.1
-.LB.build_bottom_up.19:
-	movq	%rcx, (%rsp)
-	movq	%rsi, 8(%rsp)
-	movq	%r9, 16(%rsp)
-	movq	%r10, 24(%rsp)
-	movq	$0, 32(%rsp)
-	movq	32880(%rsp), %rax
-	movq	%rax, 40(%rsp)
-	movq	$0, 48(%rsp)
-	jmp	.LB.build_bottom_up.8
-	.size	build_bottom_up, .-build_bottom_up
-	.globl	emission_pop
-	.type	emission_pop, @function
-emission_pop:
-	pushq	%r15
-	pushq	%r14
-	pushq	%r13
-	pushq	%r12
-	pushq	%rbp
-	pushq	%rbx
-	subq	$32872, %rsp
-	movq	32928(%rsp), %r13
-	movq	32952(%rsp), %r15
-	cmpq	$1024, %rdi
-	ja	.LB.emission_pop.12
-	movq	%rdi, %rbx
-	movq	%rsi, %r12
-	movq	%rdx, %rsi
-	cmpq	$1024, %r12
-	ja	.LB.emission_pop.12
-	testq	%rdi, %rdi
-	je	.LB.emission_pop.23
-	movl	$0, %eax
-	.p2align 5
-.LB.emission_pop.0:
-	movq	$-1, 16480(%rsp,%rax,8)
-	addq	$1, %rax
-	cmpq	%rax, %rbx
-	jne	.LB.emission_pop.0
-	testq	%r12, %r12
-	je	.LB.emission_pop.3
-.LB.emission_pop.1:
-	leaq	16480(%rsp), %rax
-	leaq	(%rax,%r12,8), %rdx
-	.p2align 5
-.LB.emission_pop.2:
-	movq	$-1, 8192(%rax)
-	addq	$8, %rax
-	cmpq	%rdx, %rax
-	jne	.LB.emission_pop.2
-	testq	%rbx, %rbx
-	je	.LB.emission_pop.24
-.LB.emission_pop.3:
-	movl	$0, %eax
-	jmp	.LB.emission_pop.5
-	.p2align 5
-.LB.emission_pop.4:
-	leaq	1(%rax), %rdx
-	cmpq	%rdx, %rbx
-	je	.LB.emission_pop.6
-	movq	%rdx, %rax
-.LB.emission_pop.5:
-	movq	(%r8,%rax,8), %rdx
-	cmpq	$-1, %rdx
-	je	.LB.emission_pop.4
-	movq	%rdx, 16480(%rsp,%rax,8)
-	movq	%rax, 24672(%rsp,%rdx,8)
-	jmp	.LB.emission_pop.4
-.LB.emission_pop.6:
-	movq	%rcx, (%rsp)
-	movq	%r12, 8(%rsp)
-	movq	%r9, 16(%rsp)
-	movq	%rsi, 24(%rsp)
-	movq	%rdx, 32(%rsp)
-	movq	32936(%rsp), %rdi
-	movq	%rdi, 40(%rsp)
-	movq	$0, 48(%rsp)
-	movl	$0, %edx
-	addq	$1, %rax
-	.p2align 5
-.LB.emission_pop.7:
-	movq	16480(%rsp,%rdx,8), %rcx
-	movq	%rcx, 56(%rsp,%rdx,8)
-	addq	$1, %rdx
-	cmpq	%rax, %rdx
-	jne	.LB.emission_pop.7
-.LB.emission_pop.8:
-	testq	%r12, %r12
-	je	.LB.emission_pop.14
-	leaq	0(,%r12,8), %rdx
-	movl	$0, %eax
-	leaq	8248(%rsp), %rdi
-	leaq	24672(%rsp), %rsi
-	.p2align 5
-.LB.emission_pop.9:
-	movq	(%rsi,%rax), %rcx
-	movq	%rcx, (%rdi,%rax)
-	addq	$8, %rax
-	cmpq	%rdx, %rax
-	jne	.LB.emission_pop.9
-	movq	$0, 16440(%rsp)
-	leaq	16480(%rsp), %rax
-	movq	%rax, 16464(%rsp)
-	movq	%rsp, %rax
-	addq	%rsp, %rdx
-	jmp	.LB.emission_pop.11
-	.p2align 5
-.LB.emission_pop.10:
-	addq	$8, %rax
-	cmpq	%rdx, %rax
-	je	.LB.emission_pop.15
-.LB.emission_pop.11:
-	cmpq	$-1, 8248(%rax)
-	jne	.LB.emission_pop.10
-	addq	$1, 16440(%rsp)
-	jmp	.LB.emission_pop.10
-.LB.emission_pop.12:
-	movq	$-2, %rax
-	jmp	.LB.emission_pop.22
-.LB.emission_pop.13:
-	movq	$-2, %rax
-	jmp	.LB.emission_pop.22
-.LB.emission_pop.14:
-	movq	$0, 16440(%rsp)
-	leaq	16480(%rsp), %rax
-	movq	%rax, 16464(%rsp)
-.LB.emission_pop.15:
-	testq	%r13, %r13
-	je	.LB.emission_pop.17
-	movl	$0, %ebp
-	movq	%rsp, %r14
-.LB.emission_pop.16:
-	movq	%r14, %rdi
-	call	_ZN12_GLOBAL__N_18Emission3popEv
-	testb	%al, %al
-	jne	.LB.emission_pop.13
-	addq	$1, %rbp
-	cmpq	%rbp, %r13
-	jne	.LB.emission_pop.16
-.LB.emission_pop.17:
-	cmpq	%r13, %rbx
-	je	.LB.emission_pop.19
-	subq	%r13, %rbx
-	movl	$0, %eax
-	.p2align 5
-.LB.emission_pop.18:
-	movq	56(%rsp,%rax,8), %rdx
-	movq	32944(%rsp), %rsi
-	movq	%rdx, (%rsi,%rax,8)
-	addq	$1, %rax
-	cmpq	%rbx, %rax
-	jb	.LB.emission_pop.18
-.LB.emission_pop.19:
-	testq	%r12, %r12
-	je	.LB.emission_pop.21
-	salq	$3, %r12
-	movl	$0, %eax
-	leaq	8248(%rsp), %rcx
-	.p2align 5
-.LB.emission_pop.20:
-	movq	(%rcx,%rax), %rdx
-	movq	%rdx, (%r15,%rax)
-	addq	$8, %rax
-	cmpq	%rax, %r12
-	jne	.LB.emission_pop.20
-.LB.emission_pop.21:
-	movq	32960(%rsp), %rax
-	movq	16440(%rsp), %rdx
-	movq	%rdx, (%rax)
-	movq	48(%rsp), %rax
-.LB.emission_pop.22:
-	addq	$32872, %rsp
-	popq	%rbx
-	popq	%rbp
-	popq	%r12
-	popq	%r13
-	popq	%r14
-	popq	%r15
-	ret
-.LB.emission_pop.23:
-	testq	%r12, %r12
-	jne	.LB.emission_pop.1
-.LB.emission_pop.24:
-	movq	%rcx, (%rsp)
-	movq	%r12, 8(%rsp)
-	movq	%r9, 16(%rsp)
-	movq	%rsi, 24(%rsp)
-	movq	$0, 32(%rsp)
-	movq	32936(%rsp), %rax
-	movq	%rax, 40(%rsp)
-	movq	$0, 48(%rsp)
-	jmp	.LB.emission_pop.8
-	.size	emission_pop, .-emission_pop
-	.align 2
 	.type	_ZN12_GLOBAL__N_18SpillSet3addE9StackSlot, @function
 _ZN12_GLOBAL__N_18SpillSet3addE9StackSlot:
 	movq	%rsi, %rdx
@@ -1234,770 +879,6 @@ _ZN12_GLOBAL__N_18SpillSet3addE9StackSlot:
 .LB.SpillSet.add.1:
 	ret
 	.size	_ZN12_GLOBAL__N_18SpillSet3addE9StackSlot, .-_ZN12_GLOBAL__N_18SpillSet3addE9StackSlot
-	.globl	spill_set
-	.type	spill_set, @function
-spill_set:
-	pushq	%r15
-	pushq	%r14
-	pushq	%r13
-	pushq	%r12
-	pushq	%rbp
-	pushq	%rbx
-	subq	$24, %rsp
-	movq	%rsi, (%rsp)
-	movq	%rdx, %rbx
-	movq	%rcx, %r12
-	movq	%r8, %rbp
-	movq	%r9, %r13
-	testq	%rcx, %rcx
-	je	.LB.spill_set.14
-	movl	$0, %eax
-	jmp	.LB.spill_set.1
-	.p2align 4
-.LB.spill_set.0:
-	addq	$1, %rax
-	cmpq	%rax, %r12
-	je	.LB.spill_set.15
-.LB.spill_set.1:
-	cmpb	$0, 5(%rbx,%rax,8)
-	je	.LB.spill_set.0
-	cmpb	$0, 4(%rbx,%rax,8)
-	jne	.LB.spill_set.0
-	movl	(%rbx,%rax,8), %edx
-	cmpq	%rdi, %rdx
-	jb	.LB.spill_set.0
-	movq	$-2, %rax
-	jmp	.LB.spill_set.12
-	.p2align 4
-.LB.spill_set.2:
-	addq	$1, %rax
-	cmpq	%rax, %r13
-	je	.LB.spill_set.4
-.LB.spill_set.3:
-	cmpb	$0, 5(%rbp,%rax,8)
-	je	.LB.spill_set.2
-	cmpb	$0, 4(%rbp,%rax,8)
-	jne	.LB.spill_set.2
-	movl	0(%rbp,%rax,8), %edx
-	cmpq	%rdi, %rdx
-	jb	.LB.spill_set.2
-	movq	$-2, %rax
-	jmp	.LB.spill_set.12
-.LB.spill_set.4:
-	movq	(%rsp), %rax
-	movq	%rax, 16(%rsp)
-	testq	%r12, %r12
-	je	.LB.spill_set.7
-.LB.spill_set.5:
-	movl	$0, %r14d
-	leaq	16(%rsp), %r15
-.LB.spill_set.6:
-	movq	(%rbx), %rsi
-	movq	%r15, %rdi
-	call	_ZN12_GLOBAL__N_18SpillSet3addE9StackSlot
-	testb	%al, %al
-	jne	.LB.spill_set.11
-	addq	$1, %r14
-	addq	$8, %rbx
-	cmpq	%r12, %r14
-	jb	.LB.spill_set.6
-	testq	%r13, %r13
-	je	.LB.spill_set.13
-.LB.spill_set.7:
-	movl	$0, %eax
-	jmp	.LB.spill_set.9
-	.p2align 6
-.LB.spill_set.8:
-	movq	80(%rsp), %rcx
-	movb	%dl, (%rcx,%rax)
-	addq	$1, %rax
-	cmpq	%rax, %r13
-	je	.LB.spill_set.10
-.LB.spill_set.9:
-	cmpb	$0, 5(%rbp,%rax,8)
-	setne	%dl
-	cmpb	$0, 4(%rbp,%rax,8)
-	sete	%cl
-	andb	%cl, %dl
-	je	.LB.spill_set.8
-	movl	0(%rbp,%rax,8), %edx
-	movq	(%rsp), %rcx
-	cmpb	$0, (%rcx,%rdx)
-	setne	%dl
-	jmp	.LB.spill_set.8
-.LB.spill_set.10:
-	movl	$0, %eax
-	jmp	.LB.spill_set.12
-.LB.spill_set.11:
-	movq	$-2, %rax
-.LB.spill_set.12:
-	addq	$24, %rsp
-	popq	%rbx
-	popq	%rbp
-	popq	%r12
-	popq	%r13
-	popq	%r14
-	popq	%r15
-	ret
-.LB.spill_set.13:
-	movl	$0, %eax
-	jmp	.LB.spill_set.12
-.LB.spill_set.14:
-	movq	%rcx, %rax
-	testq	%r9, %r9
-	jne	.LB.spill_set.3
-	movl	$0, %eax
-	jmp	.LB.spill_set.12
-.LB.spill_set.15:
-	movl	$0, %eax
-	testq	%r13, %r13
-	jne	.LB.spill_set.3
-	movq	(%rsp), %rax
-	movq	%rax, 16(%rsp)
-	jmp	.LB.spill_set.5
-	.size	spill_set, .-spill_set
-	.align 2
-	.type	_ZN12_GLOBAL__N_18Emission13removeSurplusEv, @function
-_ZN12_GLOBAL__N_18Emission13removeSurplusEv:
-	pushq	%rbx
-	movq	%rdi, %rbx
-.LB.Emission.removeSurplus.0:
-	movq	32(%rbx), %r8
-	testq	%r8, %r8
-	je	.LB.Emission.removeSurplus.9
-	leaq	-1(%r8), %rdi
-	movq	%rdi, %rax
-	movq	$-1, %rdx
-	movq	$-1, %rsi
-	jmp	.LB.Emission.removeSurplus.2
-	.p2align 5
-.LB.Emission.removeSurplus.1:
-	subq	$1, %rax
-	cmpq	$-1, %rax
-	je	.LB.Emission.removeSurplus.3
-.LB.Emission.removeSurplus.2:
-	cmpq	$-1, 56(%rbx,%rax,8)
-	jne	.LB.Emission.removeSurplus.1
-	cmpq	$-1, %rdx
-	cmove	%rax, %rdx
-	movq	%rdi, %rcx
-	subq	%rax, %rcx
-	cmpq	$16, %rcx
-	cmovbe	%rax, %rsi
-	jmp	.LB.Emission.removeSurplus.1
-.LB.Emission.removeSurplus.3:
-	cmpq	$-1, %rdx
-	je	.LB.Emission.removeSurplus.7
-	cmpq	$-1, %rsi
-	je	.LB.Emission.removeSurplus.6
-	cmpq	%rdx, %rdi
-	je	.LB.Emission.removeSurplus.11
-	leaq	0(,%rdi,8), %r8
-	movq	%rdi, %rax
-	.p2align 5
-.LB.Emission.removeSurplus.4:
-	testq	%rax, %rax
-	je	.LB.Emission.removeSurplus.10
-	subq	$1, %rax
-	cmpq	$-1, 56(%rbx,%rax,8)
-	jne	.LB.Emission.removeSurplus.4
-	movq	24(%rbx), %rcx
-	movq	(%rcx,%rax,8), %rdx
-	xorq	(%rcx,%r8), %rdx
-	salq	$16, %rdx
-	jne	.LB.Emission.removeSurplus.4
-	movq	56(%rbx,%rax,8), %rdx
-	movq	56(%rbx,%rdi,8), %rcx
-	movq	%rcx, 56(%rbx,%rax,8)
-	movq	%rdx, 56(%rbx,%rdi,8)
-	movq	56(%rbx,%rax,8), %rdx
-	cmpq	$-1, %rdx
-	je	.LB.Emission.removeSurplus.5
-	movq	%rax, 8248(%rbx,%rdx,8)
-.LB.Emission.removeSurplus.5:
-	movq	56(%rbx,%rdi,8), %rax
-	cmpq	$-1, %rax
-	je	.LB.Emission.removeSurplus.11
-	movq	%rdi, 8248(%rbx,%rax,8)
-	jmp	.LB.Emission.removeSurplus.11
-.LB.Emission.removeSurplus.6:
-	subq	$17, %r8
-	movl	$2, %eax
-	subq	%rdx, %r8
-	je	.LB.Emission.removeSurplus.8
-	movq	%rdx, 16448(%rbx)
-	movq	%r8, 16456(%rbx)
-	movl	$1, %eax
-	jmp	.LB.Emission.removeSurplus.8
-.LB.Emission.removeSurplus.7:
-	movl	$0, %eax
-.LB.Emission.removeSurplus.8:
-	popq	%rbx
-	ret
-.LB.Emission.removeSurplus.9:
-	movl	$0, %eax
-	jmp	.LB.Emission.removeSurplus.8
-.LB.Emission.removeSurplus.10:
-	movq	%rbx, %rdi
-	call	_ZN12_GLOBAL__N_18Emission8swapWithE11StackOffset
-	testb	%al, %al
-	jne	.LB.Emission.removeSurplus.8
-.LB.Emission.removeSurplus.11:
-	movq	%rbx, %rdi
-	call	_ZN12_GLOBAL__N_18Emission3popEv
-	testb	%al, %al
-	je	.LB.Emission.removeSurplus.0
-	jmp	.LB.Emission.removeSurplus.8
-	.size	_ZN12_GLOBAL__N_18Emission13removeSurplusEv, .-_ZN12_GLOBAL__N_18Emission13removeSurplusEv
-	.globl	remove_surplus
-	.type	remove_surplus, @function
-remove_surplus:
-	cmpq	$1024, %rdi
-	ja	.LB.remove_surplus.22
-	pushq	%rbx
-	subq	$32864, %rsp
-	movq	%rdx, %r10
-	movq	%r8, %rbx
-	cmpq	$1024, %rsi
-	ja	.LB.remove_surplus.13
-	testq	%rdi, %rdi
-	je	.LB.remove_surplus.20
-	movl	$0, %eax
-	.p2align 5
-.LB.remove_surplus.0:
-	movq	$-1, 16480(%rsp,%rax,8)
-	addq	$1, %rax
-	cmpq	%rax, %rdi
-	jne	.LB.remove_surplus.0
-	testq	%rsi, %rsi
-	je	.LB.remove_surplus.3
-.LB.remove_surplus.1:
-	leaq	16480(%rsp), %rax
-	leaq	(%rax,%rsi,8), %rdx
-	.p2align 5
-.LB.remove_surplus.2:
-	movq	$-1, 8192(%rax)
-	addq	$8, %rax
-	cmpq	%rdx, %rax
-	jne	.LB.remove_surplus.2
-	testq	%rdi, %rdi
-	je	.LB.remove_surplus.21
-.LB.remove_surplus.3:
-	movl	$0, %eax
-	jmp	.LB.remove_surplus.5
-	.p2align 5
-.LB.remove_surplus.4:
-	leaq	1(%rax), %rdx
-	cmpq	%rdx, %rdi
-	je	.LB.remove_surplus.6
-	movq	%rdx, %rax
-.LB.remove_surplus.5:
-	movq	(%rbx,%rax,8), %rdx
-	cmpq	$-1, %rdx
-	je	.LB.remove_surplus.4
-	movq	%rdx, 16480(%rsp,%rax,8)
-	movq	%rax, 24672(%rsp,%rdx,8)
-	jmp	.LB.remove_surplus.4
-.LB.remove_surplus.6:
-	movq	%rcx, (%rsp)
-	movq	%rsi, 8(%rsp)
-	movq	%r9, 16(%rsp)
-	movq	%r10, 24(%rsp)
-	movq	%rdx, 32(%rsp)
-	movq	32888(%rsp), %rdi
-	movq	%rdi, 40(%rsp)
-	movq	$0, 48(%rsp)
-	movl	$0, %edx
-	addq	$1, %rax
-	.p2align 5
-.LB.remove_surplus.7:
-	movq	16480(%rsp,%rdx,8), %rcx
-	movq	%rcx, 56(%rsp,%rdx,8)
-	addq	$1, %rdx
-	cmpq	%rax, %rdx
-	jne	.LB.remove_surplus.7
-.LB.remove_surplus.8:
-	testq	%rsi, %rsi
-	je	.LB.remove_surplus.14
-	leaq	0(,%rsi,8), %rdx
-	movl	$0, %eax
-	leaq	8248(%rsp), %rdi
-	leaq	24672(%rsp), %rsi
-	.p2align 5
-.LB.remove_surplus.9:
-	movq	(%rsi,%rax), %rcx
-	movq	%rcx, (%rdi,%rax)
-	addq	$8, %rax
-	cmpq	%rdx, %rax
-	jne	.LB.remove_surplus.9
-	movq	$0, 16440(%rsp)
-	leaq	16480(%rsp), %rax
-	movq	%rax, 16464(%rsp)
-	movq	%rsp, %rax
-	addq	%rsp, %rdx
-	jmp	.LB.remove_surplus.11
-	.p2align 5
-.LB.remove_surplus.10:
-	addq	$8, %rax
-	cmpq	%rdx, %rax
-	je	.LB.remove_surplus.15
-.LB.remove_surplus.11:
-	cmpq	$-1, 8248(%rax)
-	jne	.LB.remove_surplus.10
-	addq	$1, 16440(%rsp)
-	jmp	.LB.remove_surplus.10
-.LB.remove_surplus.12:
-	movq	16448(%rsp), %rax
-	movq	32896(%rsp), %rsi
-	movq	%rax, (%rsi)
-	movq	16456(%rsp), %rax
-	movq	%rax, 8(%rsi)
-	jmp	.LB.remove_surplus.16
-.LB.remove_surplus.13:
-	movq	$-2, %rdx
-	jmp	.LB.remove_surplus.19
-.LB.remove_surplus.14:
-	movq	$0, 16440(%rsp)
-	leaq	16480(%rsp), %rax
-	movq	%rax, 16464(%rsp)
-.LB.remove_surplus.15:
-	movq	%rsp, %rdi
-	call	_ZN12_GLOBAL__N_18Emission13removeSurplusEv
-	cmpb	$1, %al
-	je	.LB.remove_surplus.12
-	movq	$-2, %rdx
-	cmpb	$2, %al
-	je	.LB.remove_surplus.19
-	testb	%al, %al
-	jne	.LB.remove_surplus.16
-	movq	32896(%rsp), %rax
-	movq	$0, (%rax)
-	movq	$0, 8(%rax)
-.LB.remove_surplus.16:
-	movq	32(%rsp), %rcx
-	movq	32904(%rsp), %rax
-	movq	%rcx, (%rax)
-	testq	%rcx, %rcx
-	je	.LB.remove_surplus.18
-	salq	$3, %rcx
-	movl	$0, %eax
-	leaq	56(%rsp), %rsi
-	.p2align 5
-.LB.remove_surplus.17:
-	movq	(%rsi,%rax), %rdx
-	movq	%rdx, (%rbx,%rax)
-	addq	$8, %rax
-	cmpq	%rax, %rcx
-	jne	.LB.remove_surplus.17
-.LB.remove_surplus.18:
-	movq	48(%rsp), %rdx
-.LB.remove_surplus.19:
-	movq	%rdx, %rax
-	addq	$32864, %rsp
-	popq	%rbx
-	ret
-.LB.remove_surplus.20:
-	testq	%rsi, %rsi
-	jne	.LB.remove_surplus.1
-.LB.remove_surplus.21:
-	movq	%rcx, (%rsp)
-	movq	%rsi, 8(%rsp)
-	movq	%r9, 16(%rsp)
-	movq	%r10, 24(%rsp)
-	movq	$0, 32(%rsp)
-	movq	32888(%rsp), %rax
-	movq	%rax, 40(%rsp)
-	movq	$0, 48(%rsp)
-	jmp	.LB.remove_surplus.8
-.LB.remove_surplus.22:
-	movq	$-2, %rdx
-	movq	%rdx, %rax
-	ret
-	.size	remove_surplus, .-remove_surplus
-	.globl	permute
-	.type	permute, @function
-permute:
-	pushq	%r14
-	pushq	%rbp
-	pushq	%rbx
-	subq	$49248, %rsp
-	movq	%rdi, %rbx
-	cmpq	$1024, %rdi
-	ja	.LB.permute.15
-	movq	%rsi, %rdi
-	movq	%rdx, %r10
-	movq	%rcx, %r11
-	movq	%r8, %r14
-	movq	%r9, %rbp
-	testq	%rbx, %rbx
-	je	.LB.permute.16
-	leaq	16480(%rsp), %rax
-	leaq	0(,%rbx,8), %rcx
-	leaq	(%rax,%rcx), %rsi
-	movq	%rax, %rdx
-	.p2align 4
-.LB.permute.0:
-	movq	$-1, (%rdx)
-	addq	$8, %rdx
-	cmpq	%rsi, %rdx
-	jne	.LB.permute.0
-	.p2align 5
-.LB.permute.1:
-	movq	$-1, 8192(%rax)
-	addq	$8, %rax
-	cmpq	%rsi, %rax
-	jne	.LB.permute.1
-	movl	$0, %eax
-	.p2align 6
-.LB.permute.2:
-	movq	(%r10,%rax,8), %rdx
-	movq	%rdx, 41056(%rsp,%rax,8)
-	movq	(%rdi,%rax,8), %rsi
-	movq	%rsi, 32864(%rsp,%rdx,8)
-	movq	%rdx, 16480(%rsp,%rax,8)
-	movq	%rax, 24672(%rsp,%rdx,8)
-	addq	$1, %rax
-	cmpq	%rax, %rbx
-	jne	.LB.permute.2
-	leaq	32864(%rsp), %rdx
-	movq	%rdx, (%rsp)
-	movq	%rax, 8(%rsp)
-	movq	$0, 16(%rsp)
-	movq	%rdi, 24(%rsp)
-	movq	%rax, 32(%rsp)
-	movq	%r11, 40(%rsp)
-	movq	$0, 48(%rsp)
-	movl	$0, %eax
-	leaq	56(%rsp), %rsi
-	.p2align 5
-.LB.permute.3:
-	movq	16480(%rsp,%rax), %rdx
-	movq	%rdx, (%rsi,%rax)
-	addq	$8, %rax
-	cmpq	%rcx, %rax
-	jne	.LB.permute.3
-	movl	$0, %eax
-	leaq	8248(%rsp), %rdi
-	leaq	24672(%rsp), %rsi
-	.p2align 5
-.LB.permute.4:
-	movq	(%rsi,%rax), %rdx
-	movq	%rdx, (%rdi,%rax)
-	addq	$8, %rax
-	cmpq	%rcx, %rax
-	jne	.LB.permute.4
-	movq	$0, 16440(%rsp)
-	leaq	16480(%rsp), %rax
-	movq	%rax, 16464(%rsp)
-	movq	%rsp, %rax
-	addq	%rsp, %rcx
-	jmp	.LB.permute.6
-	.p2align 5
-.LB.permute.5:
-	addq	$8, %rax
-	cmpq	%rcx, %rax
-	je	.LB.permute.7
-.LB.permute.6:
-	cmpq	$-1, 8248(%rax)
-	jne	.LB.permute.5
-	addq	$1, 16440(%rsp)
-	jmp	.LB.permute.5
-.LB.permute.7:
-	leaq	41056(%rsp), %rsi
-	movq	%rsp, %rdi
-	call	_ZN12_GLOBAL__N_18Emission7permuteERNS_11OffsetArrayI11StackOffsetEE
-	cmpb	$1, %al
-	je	.LB.permute.14
-	movq	$-2, %rdx
-	cmpb	$2, %al
-	je	.LB.permute.13
-	testb	%al, %al
-	jne	.LB.permute.10
-.LB.permute.8:
-	movl	$0, %edx
-	movl	$0, %eax
-.LB.permute.9:
-	movq	%rdx, (%r14)
-	movq	%rax, 8(%r14)
-	testq	%rbx, %rbx
-	je	.LB.permute.12
-.LB.permute.10:
-	salq	$3, %rbx
-	movl	$0, %eax
-	leaq	56(%rsp), %rcx
-	.p2align 5
-.LB.permute.11:
-	movq	(%rcx,%rax), %rdx
-	movq	%rdx, 0(%rbp,%rax)
-	addq	$8, %rax
-	cmpq	%rax, %rbx
-	jne	.LB.permute.11
-.LB.permute.12:
-	movq	48(%rsp), %rdx
-.LB.permute.13:
-	movq	%rdx, %rax
-	addq	$49248, %rsp
-	popq	%rbx
-	popq	%rbp
-	popq	%r14
-	ret
-.LB.permute.14:
-	movq	16448(%rsp), %rdx
-	movq	16456(%rsp), %rax
-	jmp	.LB.permute.9
-.LB.permute.15:
-	movq	$-2, %rdx
-	jmp	.LB.permute.13
-.LB.permute.16:
-	leaq	32864(%rsp), %rax
-	movq	%rax, (%rsp)
-	movq	%rbx, 8(%rsp)
-	movq	$0, 16(%rsp)
-	movq	%rsi, 24(%rsp)
-	movq	%rbx, 32(%rsp)
-	movq	%rcx, 40(%rsp)
-	movq	$0, 48(%rsp)
-	movq	$0, 16440(%rsp)
-	leaq	16480(%rsp), %rax
-	movq	%rax, 16464(%rsp)
-	leaq	41056(%rsp), %rsi
-	movq	%rsp, %rdi
-	call	_ZN12_GLOBAL__N_18Emission7permuteERNS_11OffsetArrayI11StackOffsetEE
-	cmpb	$1, %al
-	je	.LB.permute.14
-	movq	$-2, %rdx
-	cmpb	$2, %al
-	je	.LB.permute.13
-	testb	%al, %al
-	je	.LB.permute.8
-	jmp	.LB.permute.12
-	.size	permute, .-permute
-	.align 2
-	.type	_ZN12_GLOBAL__N_18Emission21permuteAtLowestHeightEv, @function
-_ZN12_GLOBAL__N_18Emission21permuteAtLowestHeightEv:
-	subq	$24584, %rsp
-	movq	32(%rdi), %rcx
-	testq	%rcx, %rcx
-	je	.LB.Emission.permuteAtLowestHeight.4
-	movl	$0, %eax
-	movl	$0, %esi
-	movl	$0, %r8d
-.LB.Emission.permuteAtLowestHeight.0:
-	movq	56(%rdi,%rax,8), %rdx
-	cmpq	$-1, %rdx
-	je	.LB.Emission.permuteAtLowestHeight.5
-	cmpq	8(%rdi), %rax
-	jnb	.LB.Emission.permuteAtLowestHeight.5
-	movq	16464(%rdi), %r9
-	movq	8192(%r9,%rax,8), %r9
-	cmpq	%rcx, %rdx
-	je	.LB.Emission.permuteAtLowestHeight.1
-	jb	.LB.Emission.permuteAtLowestHeight.7
-.LB.Emission.permuteAtLowestHeight.1:
-	cmpq	$-1, %r9
-	jne	.LB.Emission.permuteAtLowestHeight.8
-	movq	%rax, 16384(%rsp,%rax,8)
-.LB.Emission.permuteAtLowestHeight.2:
-	addq	$1, %rax
-	cmpq	%rcx, %rax
-	jne	.LB.Emission.permuteAtLowestHeight.0
-	movl	$2, %eax
-	cmpq	%rsi, %r8
-	jne	.LB.Emission.permuteAtLowestHeight.6
-	testq	%rsi, %rsi
-	je	.LB.Emission.permuteAtLowestHeight.4
-	salq	$3, %rsi
-	movl	$0, %eax
-	.p2align 5
-.LB.Emission.permuteAtLowestHeight.3:
-	movq	(%rsp,%rax), %rdx
-	movq	8192(%rsp,%rax), %rcx
-	movq	%rcx, 16384(%rsp,%rdx,8)
-	addq	$8, %rax
-	cmpq	%rax, %rsi
-	jne	.LB.Emission.permuteAtLowestHeight.3
-.LB.Emission.permuteAtLowestHeight.4:
-	leaq	16384(%rsp), %rsi
-	call	_ZN12_GLOBAL__N_18Emission7permuteERNS_11OffsetArrayI11StackOffsetEE
-	jmp	.LB.Emission.permuteAtLowestHeight.6
-.LB.Emission.permuteAtLowestHeight.5:
-	movl	$2, %eax
-.LB.Emission.permuteAtLowestHeight.6:
-	addq	$24584, %rsp
-	ret
-.LB.Emission.permuteAtLowestHeight.7:
-	movq	%rdx, 16384(%rsp,%rax,8)
-	cmpq	$-1, %r9
-	jne	.LB.Emission.permuteAtLowestHeight.2
-	movq	%rax, 8192(%rsp,%r8,8)
-	leaq	1(%r8), %r8
-	jmp	.LB.Emission.permuteAtLowestHeight.2
-.LB.Emission.permuteAtLowestHeight.8:
-	movq	%rax, (%rsp,%rsi,8)
-	leaq	1(%rsi), %rsi
-	jmp	.LB.Emission.permuteAtLowestHeight.2
-	.size	_ZN12_GLOBAL__N_18Emission21permuteAtLowestHeightEv, .-_ZN12_GLOBAL__N_18Emission21permuteAtLowestHeightEv
-	.globl	permute_at_lowest_height
-	.type	permute_at_lowest_height, @function
-permute_at_lowest_height:
-	pushq	%rbp
-	pushq	%rbx
-	subq	$32872, %rsp
-	movq	%rdi, %rbx
-	cmpq	$1024, %rdi
-	ja	.LB.permute_at_lowest_height.13
-	movq	%rdx, %rdi
-	movq	%r8, %rbp
-	cmpq	$1024, %rsi
-	ja	.LB.permute_at_lowest_height.13
-	testq	%rbx, %rbx
-	je	.LB.permute_at_lowest_height.20
-	movl	$0, %eax
-	.p2align 5
-.LB.permute_at_lowest_height.0:
-	movq	$-1, 16480(%rsp,%rax,8)
-	addq	$1, %rax
-	cmpq	%rax, %rbx
-	jne	.LB.permute_at_lowest_height.0
-	testq	%rsi, %rsi
-	je	.LB.permute_at_lowest_height.3
-.LB.permute_at_lowest_height.1:
-	leaq	16480(%rsp), %rax
-	leaq	(%rax,%rsi,8), %rdx
-	.p2align 5
-.LB.permute_at_lowest_height.2:
-	movq	$-1, 8192(%rax)
-	addq	$8, %rax
-	cmpq	%rdx, %rax
-	jne	.LB.permute_at_lowest_height.2
-	testq	%rbx, %rbx
-	je	.LB.permute_at_lowest_height.21
-.LB.permute_at_lowest_height.3:
-	movl	$0, %eax
-	jmp	.LB.permute_at_lowest_height.5
-	.p2align 5
-.LB.permute_at_lowest_height.4:
-	leaq	1(%rax), %rdx
-	cmpq	%rdx, %rbx
-	je	.LB.permute_at_lowest_height.6
-	movq	%rdx, %rax
-.LB.permute_at_lowest_height.5:
-	movq	0(%rbp,%rax,8), %rdx
-	cmpq	$-1, %rdx
-	je	.LB.permute_at_lowest_height.4
-	movq	%rdx, 16480(%rsp,%rax,8)
-	movq	%rax, 24672(%rsp,%rdx,8)
-	jmp	.LB.permute_at_lowest_height.4
-.LB.permute_at_lowest_height.6:
-	movq	%rcx, (%rsp)
-	movq	%rsi, 8(%rsp)
-	movq	%r9, 16(%rsp)
-	movq	%rdi, 24(%rsp)
-	movq	%rdx, 32(%rsp)
-	movq	32904(%rsp), %rdi
-	movq	%rdi, 40(%rsp)
-	movq	$0, 48(%rsp)
-	movl	$0, %edx
-	addq	$1, %rax
-	.p2align 5
-.LB.permute_at_lowest_height.7:
-	movq	16480(%rsp,%rdx,8), %rcx
-	movq	%rcx, 56(%rsp,%rdx,8)
-	addq	$1, %rdx
-	cmpq	%rax, %rdx
-	jne	.LB.permute_at_lowest_height.7
-.LB.permute_at_lowest_height.8:
-	testq	%rsi, %rsi
-	je	.LB.permute_at_lowest_height.14
-	leaq	0(,%rsi,8), %rdx
-	movl	$0, %eax
-	leaq	8248(%rsp), %rdi
-	leaq	24672(%rsp), %rsi
-	.p2align 5
-.LB.permute_at_lowest_height.9:
-	movq	(%rsi,%rax), %rcx
-	movq	%rcx, (%rdi,%rax)
-	addq	$8, %rax
-	cmpq	%rdx, %rax
-	jne	.LB.permute_at_lowest_height.9
-	movq	$0, 16440(%rsp)
-	leaq	16480(%rsp), %rax
-	movq	%rax, 16464(%rsp)
-	movq	%rsp, %rax
-	addq	%rsp, %rdx
-	jmp	.LB.permute_at_lowest_height.11
-	.p2align 5
-.LB.permute_at_lowest_height.10:
-	addq	$8, %rax
-	cmpq	%rdx, %rax
-	je	.LB.permute_at_lowest_height.15
-.LB.permute_at_lowest_height.11:
-	cmpq	$-1, 8248(%rax)
-	jne	.LB.permute_at_lowest_height.10
-	addq	$1, 16440(%rsp)
-	jmp	.LB.permute_at_lowest_height.10
-.LB.permute_at_lowest_height.12:
-	movq	16448(%rsp), %rax
-	movq	32912(%rsp), %rdi
-	movq	%rax, (%rdi)
-	movq	16456(%rsp), %rax
-	movq	%rax, 8(%rdi)
-	jmp	.LB.permute_at_lowest_height.16
-.LB.permute_at_lowest_height.13:
-	movq	$-2, %rdx
-	jmp	.LB.permute_at_lowest_height.19
-.LB.permute_at_lowest_height.14:
-	movq	$0, 16440(%rsp)
-	leaq	16480(%rsp), %rax
-	movq	%rax, 16464(%rsp)
-.LB.permute_at_lowest_height.15:
-	movq	%rsp, %rdi
-	call	_ZN12_GLOBAL__N_18Emission21permuteAtLowestHeightEv
-	cmpb	$1, %al
-	je	.LB.permute_at_lowest_height.12
-	movq	$-2, %rdx
-	cmpb	$2, %al
-	je	.LB.permute_at_lowest_height.19
-	testb	%al, %al
-	jne	.LB.permute_at_lowest_height.16
-	movq	32912(%rsp), %rax
-	movq	$0, (%rax)
-	movq	$0, 8(%rax)
-.LB.permute_at_lowest_height.16:
-	leaq	0(,%rbx,8), %rsi
-	movl	$0, %eax
-	leaq	56(%rsp), %rcx
-	testq	%rbx, %rbx
-	je	.LB.permute_at_lowest_height.18
-	.p2align 5
-.LB.permute_at_lowest_height.17:
-	movq	(%rcx,%rax), %rdx
-	movq	%rdx, 0(%rbp,%rax)
-	addq	$8, %rax
-	cmpq	%rsi, %rax
-	jne	.LB.permute_at_lowest_height.17
-.LB.permute_at_lowest_height.18:
-	movq	48(%rsp), %rdx
-.LB.permute_at_lowest_height.19:
-	movq	%rdx, %rax
-	addq	$32872, %rsp
-	popq	%rbx
-	popq	%rbp
-	ret
-.LB.permute_at_lowest_height.20:
-	testq	%rsi, %rsi
-	jne	.LB.permute_at_lowest_height.1
-.LB.permute_at_lowest_height.21:
-	movq	%rcx, (%rsp)
-	movq	%rsi, 8(%rsp)
-	movq	%r9, 16(%rsp)
-	movq	%rdi, 24(%rsp)
-	movq	$0, 32(%rsp)
-	movq	32904(%rsp), %rax
-	movq	%rax, 40(%rsp)
-	movq	$0, 48(%rsp)
-	jmp	.LB.permute_at_lowest_height.8
-	.size	permute_at_lowest_height, .-permute_at_lowest_height
 	.align 2
 	.type	_ZN12_GLOBAL__N_114MappingBuilder3mapE11StackOffsetS1_, @function
 _ZN12_GLOBAL__N_114MappingBuilder3mapE11StackOffsetS1_:
@@ -2394,114 +1275,310 @@ _ZN12_GLOBAL__N_114MappingBuilder13absorbSurplusEv:
 	movl	$0, %eax
 	ret
 	.size	_ZN12_GLOBAL__N_114MappingBuilder13absorbSurplusEv, .-_ZN12_GLOBAL__N_114MappingBuilder13absorbSurplusEv
-	.globl	build_mapping
-	.type	build_mapping, @function
-build_mapping:
+	.align 2
+	.type	_ZN12_GLOBAL__N_18Emission3popEv, @function
+_ZN12_GLOBAL__N_18Emission3popEv:
+	movq	32(%rdi), %rax
+	movl	$2, %edx
+	testq	%rax, %rax
+	je	.LB.Emission.pop.1
+	leaq	-1(%rax), %rdx
+	movq	%rdx, 32(%rdi)
+	movq	48(%rdi), %rax
+	leaq	1(%rax), %rcx
+	movq	%rcx, 48(%rdi)
+	leaq	(%rax,%rax,2), %rax
+	salq	$2, %rax
+	addq	40(%rdi), %rax
+	movb	$2, (%rax)
+	movb	$0, 1(%rax)
+	movl	$0, 4(%rax)
+	movb	$1, 8(%rax)
+	movb	$5, 9(%rax)
+	movq	56(%rdi,%rdx,8), %rax
+	cmpq	$-1, %rax
+	je	.LB.Emission.pop.0
+	movq	$-1, 8248(%rdi,%rax,8)
+.LB.Emission.pop.0:
+	movl	$0, %edx
+.LB.Emission.pop.1:
+	movl	%edx, %eax
+	ret
+	.size	_ZN12_GLOBAL__N_18Emission3popEv, .-_ZN12_GLOBAL__N_18Emission3popEv
+	.align 2
+	.type	_ZN12_GLOBAL__N_18Emission13removeSurplusEv, @function
+_ZN12_GLOBAL__N_18Emission13removeSurplusEv:
+	pushq	%rbx
+	movq	%rdi, %rbx
+.LB.Emission.removeSurplus.0:
+	movq	32(%rbx), %r8
+	testq	%r8, %r8
+	je	.LB.Emission.removeSurplus.9
+	leaq	-1(%r8), %rdi
+	movq	%rdi, %rax
+	movq	$-1, %rdx
+	movq	$-1, %rsi
+	jmp	.LB.Emission.removeSurplus.2
+	.p2align 5
+.LB.Emission.removeSurplus.1:
+	subq	$1, %rax
+	cmpq	$-1, %rax
+	je	.LB.Emission.removeSurplus.3
+.LB.Emission.removeSurplus.2:
+	cmpq	$-1, 56(%rbx,%rax,8)
+	jne	.LB.Emission.removeSurplus.1
+	cmpq	$-1, %rdx
+	cmove	%rax, %rdx
+	movq	%rdi, %rcx
+	subq	%rax, %rcx
+	cmpq	$16, %rcx
+	cmovbe	%rax, %rsi
+	jmp	.LB.Emission.removeSurplus.1
+.LB.Emission.removeSurplus.3:
+	cmpq	$-1, %rdx
+	je	.LB.Emission.removeSurplus.7
+	cmpq	$-1, %rsi
+	je	.LB.Emission.removeSurplus.6
+	cmpq	%rdx, %rdi
+	je	.LB.Emission.removeSurplus.11
+	leaq	0(,%rdi,8), %r8
+	movq	%rdi, %rax
+	.p2align 5
+.LB.Emission.removeSurplus.4:
+	testq	%rax, %rax
+	je	.LB.Emission.removeSurplus.10
+	subq	$1, %rax
+	cmpq	$-1, 56(%rbx,%rax,8)
+	jne	.LB.Emission.removeSurplus.4
+	movq	24(%rbx), %rcx
+	movq	(%rcx,%rax,8), %rdx
+	xorq	(%rcx,%r8), %rdx
+	salq	$16, %rdx
+	jne	.LB.Emission.removeSurplus.4
+	movq	56(%rbx,%rax,8), %rdx
+	movq	56(%rbx,%rdi,8), %rcx
+	movq	%rcx, 56(%rbx,%rax,8)
+	movq	%rdx, 56(%rbx,%rdi,8)
+	movq	56(%rbx,%rax,8), %rdx
+	cmpq	$-1, %rdx
+	je	.LB.Emission.removeSurplus.5
+	movq	%rax, 8248(%rbx,%rdx,8)
+.LB.Emission.removeSurplus.5:
+	movq	56(%rbx,%rdi,8), %rax
+	cmpq	$-1, %rax
+	je	.LB.Emission.removeSurplus.11
+	movq	%rdi, 8248(%rbx,%rax,8)
+	jmp	.LB.Emission.removeSurplus.11
+.LB.Emission.removeSurplus.6:
+	subq	$17, %r8
+	movl	$2, %eax
+	subq	%rdx, %r8
+	je	.LB.Emission.removeSurplus.8
+	movq	%rdx, 16448(%rbx)
+	movq	%r8, 16456(%rbx)
+	movl	$1, %eax
+	jmp	.LB.Emission.removeSurplus.8
+.LB.Emission.removeSurplus.7:
+	movl	$0, %eax
+.LB.Emission.removeSurplus.8:
+	popq	%rbx
+	ret
+.LB.Emission.removeSurplus.9:
+	movl	$0, %eax
+	jmp	.LB.Emission.removeSurplus.8
+.LB.Emission.removeSurplus.10:
+	movq	%rbx, %rdi
+	call	_ZN12_GLOBAL__N_18Emission8swapWithE11StackOffset
+	testb	%al, %al
+	jne	.LB.Emission.removeSurplus.8
+.LB.Emission.removeSurplus.11:
+	movq	%rbx, %rdi
+	call	_ZN12_GLOBAL__N_18Emission3popEv
+	testb	%al, %al
+	je	.LB.Emission.removeSurplus.0
+	jmp	.LB.Emission.removeSurplus.8
+	.size	_ZN12_GLOBAL__N_18Emission13removeSurplusEv, .-_ZN12_GLOBAL__N_18Emission13removeSurplusEv
+	.align 2
+	.type	_ZN12_GLOBAL__N_18Emission21permuteAtLowestHeightEv, @function
+_ZN12_GLOBAL__N_18Emission21permuteAtLowestHeightEv:
+	subq	$24584, %rsp
+	movq	32(%rdi), %rcx
+	testq	%rcx, %rcx
+	je	.LB.Emission.permuteAtLowestHeight.4
+	movl	$0, %eax
+	movl	$0, %esi
+	movl	$0, %r8d
+.LB.Emission.permuteAtLowestHeight.0:
+	movq	56(%rdi,%rax,8), %rdx
+	cmpq	$-1, %rdx
+	je	.LB.Emission.permuteAtLowestHeight.5
+	cmpq	8(%rdi), %rax
+	jnb	.LB.Emission.permuteAtLowestHeight.5
+	movq	16464(%rdi), %r9
+	movq	8192(%r9,%rax,8), %r9
+	cmpq	%rcx, %rdx
+	je	.LB.Emission.permuteAtLowestHeight.1
+	jb	.LB.Emission.permuteAtLowestHeight.7
+.LB.Emission.permuteAtLowestHeight.1:
+	cmpq	$-1, %r9
+	jne	.LB.Emission.permuteAtLowestHeight.8
+	movq	%rax, 16384(%rsp,%rax,8)
+.LB.Emission.permuteAtLowestHeight.2:
+	addq	$1, %rax
+	cmpq	%rcx, %rax
+	jne	.LB.Emission.permuteAtLowestHeight.0
+	movl	$2, %eax
+	cmpq	%rsi, %r8
+	jne	.LB.Emission.permuteAtLowestHeight.6
+	testq	%rsi, %rsi
+	je	.LB.Emission.permuteAtLowestHeight.4
+	salq	$3, %rsi
+	movl	$0, %eax
+	.p2align 5
+.LB.Emission.permuteAtLowestHeight.3:
+	movq	(%rsp,%rax), %rdx
+	movq	8192(%rsp,%rax), %rcx
+	movq	%rcx, 16384(%rsp,%rdx,8)
+	addq	$8, %rax
+	cmpq	%rax, %rsi
+	jne	.LB.Emission.permuteAtLowestHeight.3
+.LB.Emission.permuteAtLowestHeight.4:
+	leaq	16384(%rsp), %rsi
+	call	_ZN12_GLOBAL__N_18Emission7permuteERNS_11OffsetArrayI11StackOffsetEE
+	jmp	.LB.Emission.permuteAtLowestHeight.6
+.LB.Emission.permuteAtLowestHeight.5:
+	movl	$2, %eax
+.LB.Emission.permuteAtLowestHeight.6:
+	addq	$24584, %rsp
+	ret
+.LB.Emission.permuteAtLowestHeight.7:
+	movq	%rdx, 16384(%rsp,%rax,8)
+	cmpq	$-1, %r9
+	jne	.LB.Emission.permuteAtLowestHeight.2
+	movq	%rax, 8192(%rsp,%r8,8)
+	leaq	1(%r8), %r8
+	jmp	.LB.Emission.permuteAtLowestHeight.2
+.LB.Emission.permuteAtLowestHeight.8:
+	movq	%rax, (%rsp,%rsi,8)
+	leaq	1(%rsi), %rsi
+	jmp	.LB.Emission.permuteAtLowestHeight.2
+	.size	_ZN12_GLOBAL__N_18Emission21permuteAtLowestHeightEv, .-_ZN12_GLOBAL__N_18Emission21permuteAtLowestHeightEv
+	.align 2
+	.type	_ZNK12_GLOBAL__N_18Emission11isAvailableE11StackOffset, @function
+_ZNK12_GLOBAL__N_18Emission11isAvailableE11StackOffset:
 	pushq	%rbp
 	pushq	%rbx
-	subq	$16456, %rsp
-	movq	%rsi, %rbx
-	movq	%rdx, %rsi
-	movq	16480(%rsp), %rbp
-	cmpq	$1024, %rbx
-	seta	%al
-	cmpb	$1, %r9b
-	seta	%dl
+	movq	(%rdi), %rax
+	leaq	(%rax,%rsi,8), %rdx
+	movq	(%rdx), %rbp
+	movzbl	4(%rdx), %eax
+	subl	$1, %eax
+	cmpb	$1, %al
+	setbe	%al
+	cmpb	$0, 5(%rdx)
+	sete	%dl
 	orb	%dl, %al
-	jne	.LB.build_mapping.7
-	cmpq	$1024, %rdi
-	ja	.LB.build_mapping.7
-	testq	%rdi, %rdi
-	je	.LB.build_mapping.1
-	movl	$0, %eax
-	.p2align 5
-.LB.build_mapping.0:
-	movq	$-1, 64(%rsp,%rax,8)
-	addq	$1, %rax
-	cmpq	%rax, %rdi
-	jne	.LB.build_mapping.0
-.LB.build_mapping.1:
-	testq	%rbx, %rbx
-	je	.LB.build_mapping.3
-	leaq	64(%rsp), %rax
-	leaq	(%rax,%rbx,8), %rdx
-	.p2align 5
-.LB.build_mapping.2:
-	movq	$-1, 8192(%rax)
-	addq	$8, %rax
-	cmpq	%rdx, %rax
-	jne	.LB.build_mapping.2
-.LB.build_mapping.3:
-	movq	%rsi, (%rsp)
-	movq	%rdi, 8(%rsp)
-	movq	%rcx, 16(%rsp)
-	movq	%rbx, 24(%rsp)
-	movq	%r8, 32(%rsp)
-	movb	%r9b, 40(%rsp)
-	leaq	64(%rsp), %rax
-	movq	%rax, 48(%rsp)
-	movb	$0, 56(%rsp)
-	movq	%rsp, %rdi
-	call	_ZN12_GLOBAL__N_114MappingBuilder10mapInPlaceEv
-	testb	%al, %al
-	jne	.LB.build_mapping.8
-	movq	%rsp, %rdi
-	call	_ZN12_GLOBAL__N_114MappingBuilder16mapClosestCopiesEv
-	testb	%al, %al
-	jne	.LB.build_mapping.9
-	movq	%rsp, %rdi
-	call	_ZN12_GLOBAL__N_114MappingBuilder21mapWildcardSlotCopiesEv
-	testb	%al, %al
-	jne	.LB.build_mapping.10
-	movq	%rsp, %rdi
-	call	_ZN12_GLOBAL__N_114MappingBuilder17keepWildcardSlotsEv
-	testb	%al, %al
-	jne	.LB.build_mapping.11
-	movq	%rsp, %rdi
-	call	_ZN12_GLOBAL__N_114MappingBuilder13absorbSurplusEv
-	testb	%al, %al
-	jne	.LB.build_mapping.12
-	testq	%rbx, %rbx
-	je	.LB.build_mapping.5
-	leaq	0(,%rbx,8), %rdx
-	movl	$0, %eax
-	leaq	8256(%rsp), %rsi
-	.p2align 5
-.LB.build_mapping.4:
-	movq	(%rsi,%rax), %rcx
-	movq	%rcx, 0(%rbp,%rax)
-	addq	$8, %rax
-	cmpq	%rax, %rdx
-	jne	.LB.build_mapping.4
-.LB.build_mapping.5:
-	movq	16488(%rsp), %rax
-	movzbl	56(%rsp), %edx
-	movb	%dl, (%rax)
-	movl	$0, %eax
-.LB.build_mapping.6:
-	addq	$16456, %rsp
+	je	.LB.Emission.isAvailable.1
+.LB.Emission.isAvailable.0:
 	popq	%rbx
 	popq	%rbp
 	ret
-.LB.build_mapping.7:
-	movq	$-2, %rax
-	jmp	.LB.build_mapping.6
-.LB.build_mapping.8:
-	movq	$-2, %rax
-	jmp	.LB.build_mapping.6
-.LB.build_mapping.9:
-	movq	$-2, %rax
-	jmp	.LB.build_mapping.6
-.LB.build_mapping.10:
-	movq	$-2, %rax
-	jmp	.LB.build_mapping.6
-.LB.build_mapping.11:
-	movq	$-2, %rax
-	jmp	.LB.build_mapping.6
-.LB.build_mapping.12:
-	movq	$-2, %rax
-	jmp	.LB.build_mapping.6
-	.size	build_mapping, .-build_mapping
+.LB.Emission.isAvailable.1:
+	movq	%rdi, %rbx
+	movq	%rbp, %rsi
+	call	_ZNK12_GLOBAL__N_18Emission9isSpilledE9StackSlot
+	testb	%al, %al
+	jne	.LB.Emission.isAvailable.0
+	movq	%rbp, %rsi
+	movq	%rbx, %rdi
+	call	_ZNK12_GLOBAL__N_18Emission22shallowestCopyPositionE9StackSlot
+	cmpq	$-1, %rax
+	setne	%al
+	jmp	.LB.Emission.isAvailable.0
+	.size	_ZNK12_GLOBAL__N_18Emission11isAvailableE11StackOffset, .-_ZNK12_GLOBAL__N_18Emission11isAvailableE11StackOffset
+	.align 2
+	.type	_ZN12_GLOBAL__N_18Emission3runEv, @function
+_ZN12_GLOBAL__N_18Emission3runEv:
+	pushq	%r12
+	pushq	%rbp
+	pushq	%rbx
+	movq	%rdi, %rbx
+	call	_ZN12_GLOBAL__N_18Emission13removeSurplusEv
+	testb	%al, %al
+	je	.LB.Emission.run.1
+.LB.Emission.run.0:
+	popq	%rbx
+	popq	%rbp
+	popq	%r12
+	ret
+.LB.Emission.run.1:
+	movq	%rbx, %rdi
+	call	_ZN12_GLOBAL__N_18Emission21permuteAtLowestHeightEv
+	testb	%al, %al
+	jne	.LB.Emission.run.0
+	movq	16440(%rbx), %rcx
+	movq	8(%rbx), %r12
+	movq	%rcx, %rdx
+	addq	32(%rbx), %rdx
+	movl	$2, %eax
+	cmpq	%r12, %rdx
+	jne	.LB.Emission.run.0
+	testq	%r12, %r12
+	je	.LB.Emission.run.7
+	movl	$0, %eax
+	movl	$0, %edx
+	jmp	.LB.Emission.run.3
+	.p2align 5
+.LB.Emission.run.2:
+	addq	$1, %rax
+	cmpq	%rax, %r12
+	je	.LB.Emission.run.9
+.LB.Emission.run.3:
+	cmpq	$-1, 8248(%rbx,%rax,8)
+	jne	.LB.Emission.run.2
+	addq	$1, %rdx
+	jmp	.LB.Emission.run.2
+	.p2align 4
+.LB.Emission.run.4:
+	addq	$1, %rax
+	cmpq	%rax, %r12
+	je	.LB.Emission.run.8
+.LB.Emission.run.5:
+	cmpb	$3, 4(%rdx,%rax,8)
+	jne	.LB.Emission.run.4
+	cmpq	$-1, 8248(%rbx,%rax,8)
+	jne	.LB.Emission.run.4
+	movl	$2, %eax
+	jmp	.LB.Emission.run.0
+.LB.Emission.run.6:
+	movl	$2, %eax
+	jmp	.LB.Emission.run.0
+.LB.Emission.run.7:
+	movl	$2, %eax
+	testq	%rcx, %rcx
+	jne	.LB.Emission.run.0
+.LB.Emission.run.8:
+	movq	%rbx, %rdi
+	call	_ZN12_GLOBAL__N_18Emission13buildBottomUpEv
+	jmp	.LB.Emission.run.0
+.LB.Emission.run.9:
+	movl	$2, %eax
+	movl	$0, %ebp
+	cmpq	%rdx, %rcx
+	jne	.LB.Emission.run.0
+.LB.Emission.run.10:
+	movq	%rbp, %rsi
+	movq	%rbx, %rdi
+	call	_ZNK12_GLOBAL__N_18Emission11isAvailableE11StackOffset
+	testb	%al, %al
+	je	.LB.Emission.run.6
+	addq	$1, %rbp
+	cmpq	%rbp, %r12
+	jne	.LB.Emission.run.10
+	movq	(%rbx), %rdx
+	movl	$0, %eax
+	jmp	.LB.Emission.run.5
+	.size	_ZN12_GLOBAL__N_18Emission3runEv, .-_ZN12_GLOBAL__N_18Emission3runEv
 	.align 2
 	.type	_ZN12_GLOBAL__N_17Planner10isRetainedERKNS_7MappingE11StackOffset, @function
 _ZN12_GLOBAL__N_17Planner10isRetainedERKNS_7MappingE11StackOffset:
@@ -2878,460 +1955,6 @@ _ZN12_GLOBAL__N_17Planner7resolveERKNS_7MappingENS_8Emission7BlockedES3_m:
 	movl	$1, %eax
 	jmp	.LB.Planner.resolve.3
 	.size	_ZN12_GLOBAL__N_17Planner7resolveERKNS_7MappingENS_8Emission7BlockedES3_m, .-_ZN12_GLOBAL__N_17Planner7resolveERKNS_7MappingENS_8Emission7BlockedES3_m
-	.globl	resolve
-	.type	resolve, @function
-resolve:
-	pushq	%rbp
-	pushq	%rbx
-	subq	$32840, %rsp
-	movq	%r8, %rbx
-	movq	32864(%rsp), %r11
-	movq	32896(%rsp), %rbp
-	movl	32904(%rsp), %r8d
-	cmpq	$1024, %rdi
-	ja	.LB.resolve.13
-	movq	%rsi, %r10
-	movq	%rdx, %rsi
-	cmpq	$1024, %r10
-	ja	.LB.resolve.13
-	cmpq	$1024, %r9
-	seta	%al
-	cmpq	%r9, 32872(%rsp)
-	setnb	%dl
-	orb	%dl, %al
-	jne	.LB.resolve.14
-	cmpb	$1, %r8b
-	ja	.LB.resolve.14
-	testq	%rdi, %rdi
-	je	.LB.resolve.15
-	movl	$0, %eax
-	jmp	.LB.resolve.1
-	.p2align 5
-.LB.resolve.0:
-	leaq	1(%rax), %rdx
-	cmpq	%rdx, %rdi
-	je	.LB.resolve.2
-	movq	%rdx, %rax
-.LB.resolve.1:
-	cmpb	$0, 5(%rsi,%rax,8)
-	je	.LB.resolve.0
-	cmpb	$0, 4(%rsi,%rax,8)
-	jne	.LB.resolve.0
-	movl	(%rsi,%rax,8), %edx
-	cmpq	%rbp, %rdx
-	jb	.LB.resolve.0
-	movq	$-2, %rdx
-	jmp	.LB.resolve.12
-.LB.resolve.2:
-	movl	$0, %edx
-	addq	$1, %rax
-	.p2align 5
-.LB.resolve.3:
-	movq	$-1, 16448(%rsp,%rdx,8)
-	addq	$1, %rdx
-	cmpq	%rax, %rdx
-	jne	.LB.resolve.3
-	testq	%r10, %r10
-	je	.LB.resolve.6
-.LB.resolve.4:
-	movl	$0, %eax
-	.p2align 5
-.LB.resolve.5:
-	movq	$-1, 24640(%rsp,%rax,8)
-	addq	$1, %rax
-	cmpq	%r10, %rax
-	jb	.LB.resolve.5
-	testq	%rdi, %rdi
-	je	.LB.resolve.16
-.LB.resolve.6:
-	movl	$0, %eax
-	jmp	.LB.resolve.8
-	.p2align 5
-.LB.resolve.7:
-	addq	$1, %rax
-	cmpq	%rax, %rdi
-	je	.LB.resolve.16
-.LB.resolve.8:
-	movq	(%rbx,%rax,8), %rdx
-	cmpq	$-1, %rdx
-	je	.LB.resolve.7
-	movq	%rdx, 16448(%rsp,%rax,8)
-	movq	%rax, 24640(%rsp,%rdx,8)
-	jmp	.LB.resolve.7
-	.p2align 5
-.LB.resolve.9:
-	addq	$1, %rax
-	cmpq	%r9, %rax
-	jnb	.LB.resolve.11
-.LB.resolve.10:
-	movq	(%r11,%rax,8), %rdx
-	cmpq	$-1, %rdx
-	je	.LB.resolve.9
-	movq	%rdx, 64(%rsp,%rax,8)
-	movq	%rax, 8256(%rsp,%rdx,8)
-	jmp	.LB.resolve.9
-.LB.resolve.11:
-	movq	%rsi, (%rsp)
-	movq	%rdi, 8(%rsp)
-	movq	%rcx, 16(%rsp)
-	movq	%r10, 24(%rsp)
-	movq	32888(%rsp), %rax
-	movq	%rax, 32(%rsp)
-	cmpb	$1, %r8b
-	sete	40(%rsp)
-	movq	32912(%rsp), %rax
-	movq	%rax, 48(%rsp)
-	movq	32872(%rsp), %rax
-	movq	32880(%rsp), %rdx
-	leaq	16448(%rsp), %rsi
-	movq	%rsp, %rdi
-	leaq	64(%rsp), %r8
-	movq	%rdx, %rcx
-	movq	%rax, %rdx
-	call	_ZN12_GLOBAL__N_17Planner7resolveERKNS_7MappingENS_8Emission7BlockedES3_m
-	movq	$-1, %rdx
-	cmpb	$1, %al
-	je	.LB.resolve.12
-	cmpb	$2, %al
-	setne	%dl
-	movzbl	%dl, %edx
-	leaq	-2(%rdx,%rdx), %rdx
-.LB.resolve.12:
-	movq	%rdx, %rax
-	addq	$32840, %rsp
-	popq	%rbx
-	popq	%rbp
-	ret
-.LB.resolve.13:
-	movq	$-2, %rdx
-	jmp	.LB.resolve.12
-.LB.resolve.14:
-	movq	$-2, %rdx
-	jmp	.LB.resolve.12
-.LB.resolve.15:
-	testq	%r10, %r10
-	jne	.LB.resolve.4
-.LB.resolve.16:
-	movl	$0, %eax
-	.p2align 5
-.LB.resolve.17:
-	movq	$-1, 64(%rsp,%rax,8)
-	addq	$1, %rax
-	cmpq	%r9, %rax
-	jb	.LB.resolve.17
-	testq	%r10, %r10
-	je	.LB.resolve.19
-	leaq	64(%rsp), %rax
-	leaq	(%rax,%r10,8), %rdx
-	.p2align 5
-.LB.resolve.18:
-	movq	$-1, 8192(%rax)
-	addq	$8, %rax
-	cmpq	%rax, %rdx
-	jne	.LB.resolve.18
-.LB.resolve.19:
-	movl	$0, %eax
-	jmp	.LB.resolve.10
-	.size	resolve, .-resolve
-	.align 2
-	.type	_ZNK12_GLOBAL__N_18Emission11isAvailableE11StackOffset, @function
-_ZNK12_GLOBAL__N_18Emission11isAvailableE11StackOffset:
-	pushq	%rbp
-	pushq	%rbx
-	movq	(%rdi), %rax
-	leaq	(%rax,%rsi,8), %rdx
-	movq	(%rdx), %rbp
-	movzbl	4(%rdx), %eax
-	subl	$1, %eax
-	cmpb	$1, %al
-	setbe	%al
-	cmpb	$0, 5(%rdx)
-	sete	%dl
-	orb	%dl, %al
-	je	.LB.Emission.isAvailable.1
-.LB.Emission.isAvailable.0:
-	popq	%rbx
-	popq	%rbp
-	ret
-.LB.Emission.isAvailable.1:
-	movq	%rdi, %rbx
-	movq	%rbp, %rsi
-	call	_ZNK12_GLOBAL__N_18Emission9isSpilledE9StackSlot
-	testb	%al, %al
-	jne	.LB.Emission.isAvailable.0
-	movq	%rbp, %rsi
-	movq	%rbx, %rdi
-	call	_ZNK12_GLOBAL__N_18Emission22shallowestCopyPositionE9StackSlot
-	cmpq	$-1, %rax
-	setne	%al
-	jmp	.LB.Emission.isAvailable.0
-	.size	_ZNK12_GLOBAL__N_18Emission11isAvailableE11StackOffset, .-_ZNK12_GLOBAL__N_18Emission11isAvailableE11StackOffset
-	.align 2
-	.type	_ZN12_GLOBAL__N_18Emission3runEv, @function
-_ZN12_GLOBAL__N_18Emission3runEv:
-	pushq	%r12
-	pushq	%rbp
-	pushq	%rbx
-	movq	%rdi, %rbx
-	call	_ZN12_GLOBAL__N_18Emission13removeSurplusEv
-	testb	%al, %al
-	je	.LB.Emission.run.1
-.LB.Emission.run.0:
-	popq	%rbx
-	popq	%rbp
-	popq	%r12
-	ret
-.LB.Emission.run.1:
-	movq	%rbx, %rdi
-	call	_ZN12_GLOBAL__N_18Emission21permuteAtLowestHeightEv
-	testb	%al, %al
-	jne	.LB.Emission.run.0
-	movq	16440(%rbx), %rcx
-	movq	8(%rbx), %r12
-	movq	%rcx, %rdx
-	addq	32(%rbx), %rdx
-	movl	$2, %eax
-	cmpq	%r12, %rdx
-	jne	.LB.Emission.run.0
-	testq	%r12, %r12
-	je	.LB.Emission.run.7
-	movl	$0, %eax
-	movl	$0, %edx
-	jmp	.LB.Emission.run.3
-	.p2align 5
-.LB.Emission.run.2:
-	addq	$1, %rax
-	cmpq	%rax, %r12
-	je	.LB.Emission.run.9
-.LB.Emission.run.3:
-	cmpq	$-1, 8248(%rbx,%rax,8)
-	jne	.LB.Emission.run.2
-	addq	$1, %rdx
-	jmp	.LB.Emission.run.2
-	.p2align 4
-.LB.Emission.run.4:
-	addq	$1, %rax
-	cmpq	%rax, %r12
-	je	.LB.Emission.run.8
-.LB.Emission.run.5:
-	cmpb	$3, 4(%rdx,%rax,8)
-	jne	.LB.Emission.run.4
-	cmpq	$-1, 8248(%rbx,%rax,8)
-	jne	.LB.Emission.run.4
-	movl	$2, %eax
-	jmp	.LB.Emission.run.0
-.LB.Emission.run.6:
-	movl	$2, %eax
-	jmp	.LB.Emission.run.0
-.LB.Emission.run.7:
-	movl	$2, %eax
-	testq	%rcx, %rcx
-	jne	.LB.Emission.run.0
-.LB.Emission.run.8:
-	movq	%rbx, %rdi
-	call	_ZN12_GLOBAL__N_18Emission13buildBottomUpEv
-	jmp	.LB.Emission.run.0
-.LB.Emission.run.9:
-	movl	$2, %eax
-	movl	$0, %ebp
-	cmpq	%rdx, %rcx
-	jne	.LB.Emission.run.0
-.LB.Emission.run.10:
-	movq	%rbp, %rsi
-	movq	%rbx, %rdi
-	call	_ZNK12_GLOBAL__N_18Emission11isAvailableE11StackOffset
-	testb	%al, %al
-	je	.LB.Emission.run.6
-	addq	$1, %rbp
-	cmpq	%rbp, %r12
-	jne	.LB.Emission.run.10
-	movq	(%rbx), %rdx
-	movl	$0, %eax
-	jmp	.LB.Emission.run.5
-	.size	_ZN12_GLOBAL__N_18Emission3runEv, .-_ZN12_GLOBAL__N_18Emission3runEv
-	.globl	emit
-	.type	emit, @function
-emit:
-	pushq	%rbx
-	subq	$32864, %rsp
-	movq	%r8, %rbx
-	movq	32880(%rsp), %r8
-	cmpq	$1024, %rdi
-	ja	.LB.emit.16
-	movq	%rdx, %r10
-	movq	%rcx, %rdx
-	cmpq	$1024, %rsi
-	ja	.LB.emit.16
-	testq	%rsi, %rsi
-	je	.LB.emit.2
-	movl	$0, %eax
-	jmp	.LB.emit.1
-	.p2align 4
-.LB.emit.0:
-	addq	$1, %rax
-	cmpq	%rax, %rsi
-	je	.LB.emit.2
-.LB.emit.1:
-	cmpb	$0, 4(%rdx,%rax,8)
-	jne	.LB.emit.0
-	cmpb	$0, 5(%rdx,%rax,8)
-	je	.LB.emit.0
-	movl	(%rdx,%rax,8), %ecx
-	cmpq	%r8, %rcx
-	jb	.LB.emit.0
-	movq	$-2, %rdx
-	jmp	.LB.emit.22
-.LB.emit.2:
-	testq	%rdi, %rdi
-	je	.LB.emit.23
-	movl	$0, %eax
-	.p2align 5
-.LB.emit.3:
-	movq	$-1, 16480(%rsp,%rax,8)
-	addq	$1, %rax
-	cmpq	%rax, %rdi
-	jne	.LB.emit.3
-	testq	%rsi, %rsi
-	je	.LB.emit.6
-.LB.emit.4:
-	leaq	16480(%rsp), %rax
-	leaq	(%rax,%rsi,8), %rcx
-	.p2align 5
-.LB.emit.5:
-	movq	$-1, 8192(%rax)
-	addq	$8, %rax
-	cmpq	%rcx, %rax
-	jne	.LB.emit.5
-	testq	%rdi, %rdi
-	je	.LB.emit.24
-.LB.emit.6:
-	movl	$0, %eax
-	jmp	.LB.emit.8
-	.p2align 5
-.LB.emit.7:
-	leaq	1(%rax), %rcx
-	cmpq	%rcx, %rdi
-	je	.LB.emit.9
-	movq	%rcx, %rax
-.LB.emit.8:
-	movq	(%rbx,%rax,8), %rcx
-	cmpq	$-1, %rcx
-	je	.LB.emit.7
-	movq	%rcx, 16480(%rsp,%rax,8)
-	movq	%rax, 24672(%rsp,%rcx,8)
-	jmp	.LB.emit.7
-.LB.emit.9:
-	movq	%rdx, (%rsp)
-	movq	%rsi, 8(%rsp)
-	movq	%r9, 16(%rsp)
-	movq	%r10, 24(%rsp)
-	movq	%rcx, 32(%rsp)
-	movq	32888(%rsp), %rdi
-	movq	%rdi, 40(%rsp)
-	movq	$0, 48(%rsp)
-	movl	$0, %edx
-	movq	%rcx, %rax
-	.p2align 5
-.LB.emit.10:
-	movq	16480(%rsp,%rdx,8), %rcx
-	movq	%rcx, 56(%rsp,%rdx,8)
-	addq	$1, %rdx
-	cmpq	%rax, %rdx
-	jne	.LB.emit.10
-.LB.emit.11:
-	testq	%rsi, %rsi
-	je	.LB.emit.17
-	salq	$3, %rsi
-	movl	$0, %eax
-	leaq	8248(%rsp), %rdi
-	leaq	24672(%rsp), %rcx
-	.p2align 5
-.LB.emit.12:
-	movq	(%rcx,%rax), %rdx
-	movq	%rdx, (%rdi,%rax)
-	addq	$8, %rax
-	cmpq	%rsi, %rax
-	jne	.LB.emit.12
-	movq	$0, 16440(%rsp)
-	leaq	16480(%rsp), %rax
-	movq	%rax, 16464(%rsp)
-	movq	%rsp, %rax
-	addq	%rsp, %rsi
-	jmp	.LB.emit.14
-	.p2align 5
-.LB.emit.13:
-	addq	$8, %rax
-	cmpq	%rsi, %rax
-	je	.LB.emit.18
-.LB.emit.14:
-	cmpq	$-1, 8248(%rax)
-	jne	.LB.emit.13
-	addq	$1, 16440(%rsp)
-	jmp	.LB.emit.13
-.LB.emit.15:
-	movq	16448(%rsp), %rax
-	movq	32896(%rsp), %rdi
-	movq	%rax, (%rdi)
-	movq	16456(%rsp), %rax
-	movq	%rax, 8(%rdi)
-	jmp	.LB.emit.19
-.LB.emit.16:
-	movq	$-2, %rdx
-	jmp	.LB.emit.22
-.LB.emit.17:
-	movq	$0, 16440(%rsp)
-	leaq	16480(%rsp), %rax
-	movq	%rax, 16464(%rsp)
-.LB.emit.18:
-	movq	%rsp, %rdi
-	call	_ZN12_GLOBAL__N_18Emission3runEv
-	cmpb	$1, %al
-	je	.LB.emit.15
-	movq	$-2, %rdx
-	cmpb	$2, %al
-	je	.LB.emit.22
-	testb	%al, %al
-	jne	.LB.emit.19
-	movq	32896(%rsp), %rax
-	movq	$0, (%rax)
-	movq	$0, 8(%rax)
-.LB.emit.19:
-	movq	32(%rsp), %rcx
-	movq	32904(%rsp), %rax
-	movq	%rcx, (%rax)
-	testq	%rcx, %rcx
-	je	.LB.emit.21
-	salq	$3, %rcx
-	movl	$0, %eax
-	leaq	56(%rsp), %rsi
-	.p2align 5
-.LB.emit.20:
-	movq	(%rsi,%rax), %rdx
-	movq	%rdx, (%rbx,%rax)
-	addq	$8, %rax
-	cmpq	%rax, %rcx
-	jne	.LB.emit.20
-.LB.emit.21:
-	movq	48(%rsp), %rdx
-.LB.emit.22:
-	movq	%rdx, %rax
-	addq	$32864, %rsp
-	popq	%rbx
-	ret
-.LB.emit.23:
-	testq	%rsi, %rsi
-	jne	.LB.emit.4
-.LB.emit.24:
-	movq	%rdx, (%rsp)
-	movq	%rsi, 8(%rsp)
-	movq	%r9, 16(%rsp)
-	movq	%r10, 24(%rsp)
-	movq	$0, 32(%rsp)
-	movq	32888(%rsp), %rax
-	movq	%rax, 40(%rsp)
-	movq	$0, 48(%rsp)
-	jmp	.LB.emit.11
-	.size	emit, .-emit
 	.align 2
 	.type	_ZN12_GLOBAL__N_17Planner3runENS_14MappingBuilder21WildcardSlotsStrategyEP9StackSlotP9ShuffleOpPNS_8OptionalI11StackOffsetEERm, @function
 _ZN12_GLOBAL__N_17Planner3runENS_14MappingBuilder21WildcardSlotsStrategyEP9StackSlotP9ShuffleOpPNS_8OptionalI11StackOffsetEERm:
@@ -3636,6 +2259,1383 @@ _ZN12_GLOBAL__N_17Planner3runENS_14MappingBuilder21WildcardSlotsStrategyEP9Stack
 	movq	$0, 16528(%rsp)
 	jmp	.LB.Planner.run.12
 	.size	_ZN12_GLOBAL__N_17Planner3runENS_14MappingBuilder21WildcardSlotsStrategyEP9StackSlotP9ShuffleOpPNS_8OptionalI11StackOffsetEERm, .-_ZN12_GLOBAL__N_17Planner3runENS_14MappingBuilder21WildcardSlotsStrategyEP9StackSlotP9ShuffleOpPNS_8OptionalI11StackOffsetEERm
+	.globl	build_bottom_up
+	.type	build_bottom_up, @function
+build_bottom_up:
+	cmpq	%rdi, %rsi
+	jb	.LB.build_bottom_up.14
+	movq	%rdx, %r10
+	cmpq	$1024, %rsi
+	ja	.LB.build_bottom_up.14
+	subq	$32872, %rsp
+	testq	%rdi, %rdi
+	je	.LB.build_bottom_up.18
+	movl	$0, %eax
+	.p2align 5
+.LB.build_bottom_up.0:
+	movq	$-1, 16480(%rsp,%rax,8)
+	addq	$1, %rax
+	cmpq	%rax, %rdi
+	jne	.LB.build_bottom_up.0
+	testq	%rsi, %rsi
+	je	.LB.build_bottom_up.3
+.LB.build_bottom_up.1:
+	leaq	16480(%rsp), %rax
+	leaq	(%rax,%rsi,8), %rdx
+	.p2align 5
+.LB.build_bottom_up.2:
+	movq	$-1, 8192(%rax)
+	addq	$8, %rax
+	cmpq	%rdx, %rax
+	jne	.LB.build_bottom_up.2
+	testq	%rdi, %rdi
+	je	.LB.build_bottom_up.19
+.LB.build_bottom_up.3:
+	movl	$0, %eax
+	jmp	.LB.build_bottom_up.5
+	.p2align 5
+.LB.build_bottom_up.4:
+	leaq	1(%rax), %rdx
+	cmpq	%rdx, %rdi
+	je	.LB.build_bottom_up.6
+	movq	%rdx, %rax
+.LB.build_bottom_up.5:
+	movq	(%r8,%rax,8), %rdx
+	cmpq	$-1, %rdx
+	je	.LB.build_bottom_up.4
+	movq	%rdx, 16480(%rsp,%rax,8)
+	movq	%rax, 24672(%rsp,%rdx,8)
+	jmp	.LB.build_bottom_up.4
+.LB.build_bottom_up.6:
+	movq	%rcx, (%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%r9, 16(%rsp)
+	movq	%r10, 24(%rsp)
+	movq	%rdx, 32(%rsp)
+	movq	32880(%rsp), %rdi
+	movq	%rdi, 40(%rsp)
+	movq	$0, 48(%rsp)
+	movl	$0, %edx
+	addq	$1, %rax
+	.p2align 5
+.LB.build_bottom_up.7:
+	movq	16480(%rsp,%rdx,8), %rcx
+	movq	%rcx, 56(%rsp,%rdx,8)
+	addq	$1, %rdx
+	cmpq	%rax, %rdx
+	jne	.LB.build_bottom_up.7
+.LB.build_bottom_up.8:
+	testq	%rsi, %rsi
+	je	.LB.build_bottom_up.15
+	leaq	0(,%rsi,8), %rdx
+	movl	$0, %eax
+	leaq	8248(%rsp), %rdi
+	leaq	24672(%rsp), %rsi
+	.p2align 5
+.LB.build_bottom_up.9:
+	movq	(%rsi,%rax), %rcx
+	movq	%rcx, (%rdi,%rax)
+	addq	$8, %rax
+	cmpq	%rdx, %rax
+	jne	.LB.build_bottom_up.9
+	movq	$0, 16440(%rsp)
+	leaq	16480(%rsp), %rax
+	movq	%rax, 16464(%rsp)
+	movq	%rsp, %rax
+	addq	%rsp, %rdx
+	jmp	.LB.build_bottom_up.11
+	.p2align 5
+.LB.build_bottom_up.10:
+	addq	$8, %rax
+	cmpq	%rdx, %rax
+	je	.LB.build_bottom_up.16
+.LB.build_bottom_up.11:
+	cmpq	$-1, 8248(%rax)
+	jne	.LB.build_bottom_up.10
+	addq	$1, 16440(%rsp)
+	jmp	.LB.build_bottom_up.10
+.LB.build_bottom_up.12:
+	movq	32888(%rsp), %rax
+	movq	$0, (%rax)
+	movq	$0, 8(%rax)
+	movq	48(%rsp), %rdx
+	jmp	.LB.build_bottom_up.17
+.LB.build_bottom_up.13:
+	movq	16448(%rsp), %rax
+	movq	32888(%rsp), %rsi
+	movq	%rax, (%rsi)
+	movq	16456(%rsp), %rax
+	movq	%rax, 8(%rsi)
+	movq	48(%rsp), %rdx
+	jmp	.LB.build_bottom_up.17
+.LB.build_bottom_up.14:
+	movq	$-2, %rdx
+	movq	%rdx, %rax
+	ret
+.LB.build_bottom_up.15:
+	movq	$0, 16440(%rsp)
+	leaq	16480(%rsp), %rax
+	movq	%rax, 16464(%rsp)
+.LB.build_bottom_up.16:
+	movq	%rsp, %rdi
+	call	_ZN12_GLOBAL__N_18Emission13buildBottomUpEv
+	cmpb	$1, %al
+	je	.LB.build_bottom_up.13
+	movq	$-2, %rdx
+	cmpb	$2, %al
+	jne	.LB.build_bottom_up.12
+.LB.build_bottom_up.17:
+	movq	%rdx, %rax
+	addq	$32872, %rsp
+	ret
+.LB.build_bottom_up.18:
+	testq	%rsi, %rsi
+	jne	.LB.build_bottom_up.1
+.LB.build_bottom_up.19:
+	movq	%rcx, (%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%r9, 16(%rsp)
+	movq	%r10, 24(%rsp)
+	movq	$0, 32(%rsp)
+	movq	32880(%rsp), %rax
+	movq	%rax, 40(%rsp)
+	movq	$0, 48(%rsp)
+	jmp	.LB.build_bottom_up.8
+	.size	build_bottom_up, .-build_bottom_up
+	.globl	emission_pop
+	.type	emission_pop, @function
+emission_pop:
+	pushq	%r15
+	pushq	%r14
+	pushq	%r13
+	pushq	%r12
+	pushq	%rbp
+	pushq	%rbx
+	subq	$32872, %rsp
+	movq	32928(%rsp), %r13
+	movq	32952(%rsp), %r15
+	cmpq	$1024, %rdi
+	ja	.LB.emission_pop.12
+	movq	%rdi, %rbx
+	movq	%rsi, %r12
+	movq	%rdx, %rsi
+	cmpq	$1024, %r12
+	ja	.LB.emission_pop.12
+	testq	%rdi, %rdi
+	je	.LB.emission_pop.23
+	movl	$0, %eax
+	.p2align 5
+.LB.emission_pop.0:
+	movq	$-1, 16480(%rsp,%rax,8)
+	addq	$1, %rax
+	cmpq	%rax, %rbx
+	jne	.LB.emission_pop.0
+	testq	%r12, %r12
+	je	.LB.emission_pop.3
+.LB.emission_pop.1:
+	leaq	16480(%rsp), %rax
+	leaq	(%rax,%r12,8), %rdx
+	.p2align 5
+.LB.emission_pop.2:
+	movq	$-1, 8192(%rax)
+	addq	$8, %rax
+	cmpq	%rdx, %rax
+	jne	.LB.emission_pop.2
+	testq	%rbx, %rbx
+	je	.LB.emission_pop.24
+.LB.emission_pop.3:
+	movl	$0, %eax
+	jmp	.LB.emission_pop.5
+	.p2align 5
+.LB.emission_pop.4:
+	leaq	1(%rax), %rdx
+	cmpq	%rdx, %rbx
+	je	.LB.emission_pop.6
+	movq	%rdx, %rax
+.LB.emission_pop.5:
+	movq	(%r8,%rax,8), %rdx
+	cmpq	$-1, %rdx
+	je	.LB.emission_pop.4
+	movq	%rdx, 16480(%rsp,%rax,8)
+	movq	%rax, 24672(%rsp,%rdx,8)
+	jmp	.LB.emission_pop.4
+.LB.emission_pop.6:
+	movq	%rcx, (%rsp)
+	movq	%r12, 8(%rsp)
+	movq	%r9, 16(%rsp)
+	movq	%rsi, 24(%rsp)
+	movq	%rdx, 32(%rsp)
+	movq	32936(%rsp), %rdi
+	movq	%rdi, 40(%rsp)
+	movq	$0, 48(%rsp)
+	movl	$0, %edx
+	addq	$1, %rax
+	.p2align 5
+.LB.emission_pop.7:
+	movq	16480(%rsp,%rdx,8), %rcx
+	movq	%rcx, 56(%rsp,%rdx,8)
+	addq	$1, %rdx
+	cmpq	%rax, %rdx
+	jne	.LB.emission_pop.7
+.LB.emission_pop.8:
+	testq	%r12, %r12
+	je	.LB.emission_pop.14
+	leaq	0(,%r12,8), %rdx
+	movl	$0, %eax
+	leaq	8248(%rsp), %rdi
+	leaq	24672(%rsp), %rsi
+	.p2align 5
+.LB.emission_pop.9:
+	movq	(%rsi,%rax), %rcx
+	movq	%rcx, (%rdi,%rax)
+	addq	$8, %rax
+	cmpq	%rdx, %rax
+	jne	.LB.emission_pop.9
+	movq	$0, 16440(%rsp)
+	leaq	16480(%rsp), %rax
+	movq	%rax, 16464(%rsp)
+	movq	%rsp, %rax
+	addq	%rsp, %rdx
+	jmp	.LB.emission_pop.11
+	.p2align 5
+.LB.emission_pop.10:
+	addq	$8, %rax
+	cmpq	%rdx, %rax
+	je	.LB.emission_pop.15
+.LB.emission_pop.11:
+	cmpq	$-1, 8248(%rax)
+	jne	.LB.emission_pop.10
+	addq	$1, 16440(%rsp)
+	jmp	.LB.emission_pop.10
+.LB.emission_pop.12:
+	movq	$-2, %rax
+	jmp	.LB.emission_pop.22
+.LB.emission_pop.13:
+	movq	$-2, %rax
+	jmp	.LB.emission_pop.22
+.LB.emission_pop.14:
+	movq	$0, 16440(%rsp)
+	leaq	16480(%rsp), %rax
+	movq	%rax, 16464(%rsp)
+.LB.emission_pop.15:
+	testq	%r13, %r13
+	je	.LB.emission_pop.17
+	movl	$0, %ebp
+	movq	%rsp, %r14
+.LB.emission_pop.16:
+	movq	%r14, %rdi
+	call	_ZN12_GLOBAL__N_18Emission3popEv
+	testb	%al, %al
+	jne	.LB.emission_pop.13
+	addq	$1, %rbp
+	cmpq	%rbp, %r13
+	jne	.LB.emission_pop.16
+.LB.emission_pop.17:
+	cmpq	%r13, %rbx
+	je	.LB.emission_pop.19
+	subq	%r13, %rbx
+	movl	$0, %eax
+	.p2align 5
+.LB.emission_pop.18:
+	movq	56(%rsp,%rax,8), %rdx
+	movq	32944(%rsp), %rsi
+	movq	%rdx, (%rsi,%rax,8)
+	addq	$1, %rax
+	cmpq	%rbx, %rax
+	jb	.LB.emission_pop.18
+.LB.emission_pop.19:
+	testq	%r12, %r12
+	je	.LB.emission_pop.21
+	salq	$3, %r12
+	movl	$0, %eax
+	leaq	8248(%rsp), %rcx
+	.p2align 5
+.LB.emission_pop.20:
+	movq	(%rcx,%rax), %rdx
+	movq	%rdx, (%r15,%rax)
+	addq	$8, %rax
+	cmpq	%rax, %r12
+	jne	.LB.emission_pop.20
+.LB.emission_pop.21:
+	movq	32960(%rsp), %rax
+	movq	16440(%rsp), %rdx
+	movq	%rdx, (%rax)
+	movq	48(%rsp), %rax
+.LB.emission_pop.22:
+	addq	$32872, %rsp
+	popq	%rbx
+	popq	%rbp
+	popq	%r12
+	popq	%r13
+	popq	%r14
+	popq	%r15
+	ret
+.LB.emission_pop.23:
+	testq	%r12, %r12
+	jne	.LB.emission_pop.1
+.LB.emission_pop.24:
+	movq	%rcx, (%rsp)
+	movq	%r12, 8(%rsp)
+	movq	%r9, 16(%rsp)
+	movq	%rsi, 24(%rsp)
+	movq	$0, 32(%rsp)
+	movq	32936(%rsp), %rax
+	movq	%rax, 40(%rsp)
+	movq	$0, 48(%rsp)
+	jmp	.LB.emission_pop.8
+	.size	emission_pop, .-emission_pop
+	.globl	spill_set
+	.type	spill_set, @function
+spill_set:
+	pushq	%r15
+	pushq	%r14
+	pushq	%r13
+	pushq	%r12
+	pushq	%rbp
+	pushq	%rbx
+	subq	$24, %rsp
+	movq	%rsi, (%rsp)
+	movq	%rdx, %rbx
+	movq	%rcx, %r12
+	movq	%r8, %rbp
+	movq	%r9, %r13
+	testq	%rcx, %rcx
+	je	.LB.spill_set.14
+	movl	$0, %eax
+	jmp	.LB.spill_set.1
+	.p2align 4
+.LB.spill_set.0:
+	addq	$1, %rax
+	cmpq	%rax, %r12
+	je	.LB.spill_set.15
+.LB.spill_set.1:
+	cmpb	$0, 5(%rbx,%rax,8)
+	je	.LB.spill_set.0
+	cmpb	$0, 4(%rbx,%rax,8)
+	jne	.LB.spill_set.0
+	movl	(%rbx,%rax,8), %edx
+	cmpq	%rdi, %rdx
+	jb	.LB.spill_set.0
+	movq	$-2, %rax
+	jmp	.LB.spill_set.12
+	.p2align 4
+.LB.spill_set.2:
+	addq	$1, %rax
+	cmpq	%rax, %r13
+	je	.LB.spill_set.4
+.LB.spill_set.3:
+	cmpb	$0, 5(%rbp,%rax,8)
+	je	.LB.spill_set.2
+	cmpb	$0, 4(%rbp,%rax,8)
+	jne	.LB.spill_set.2
+	movl	0(%rbp,%rax,8), %edx
+	cmpq	%rdi, %rdx
+	jb	.LB.spill_set.2
+	movq	$-2, %rax
+	jmp	.LB.spill_set.12
+.LB.spill_set.4:
+	movq	(%rsp), %rax
+	movq	%rax, 16(%rsp)
+	testq	%r12, %r12
+	je	.LB.spill_set.7
+.LB.spill_set.5:
+	movl	$0, %r14d
+	leaq	16(%rsp), %r15
+.LB.spill_set.6:
+	movq	(%rbx), %rsi
+	movq	%r15, %rdi
+	call	_ZN12_GLOBAL__N_18SpillSet3addE9StackSlot
+	testb	%al, %al
+	jne	.LB.spill_set.11
+	addq	$1, %r14
+	addq	$8, %rbx
+	cmpq	%r12, %r14
+	jb	.LB.spill_set.6
+	testq	%r13, %r13
+	je	.LB.spill_set.13
+.LB.spill_set.7:
+	movl	$0, %eax
+	jmp	.LB.spill_set.9
+	.p2align 6
+.LB.spill_set.8:
+	movq	80(%rsp), %rcx
+	movb	%dl, (%rcx,%rax)
+	addq	$1, %rax
+	cmpq	%rax, %r13
+	je	.LB.spill_set.10
+.LB.spill_set.9:
+	cmpb	$0, 5(%rbp,%rax,8)
+	setne	%dl
+	cmpb	$0, 4(%rbp,%rax,8)
+	sete	%cl
+	andb	%cl, %dl
+	je	.LB.spill_set.8
+	movl	0(%rbp,%rax,8), %edx
+	movq	(%rsp), %rcx
+	cmpb	$0, (%rcx,%rdx)
+	setne	%dl
+	jmp	.LB.spill_set.8
+.LB.spill_set.10:
+	movl	$0, %eax
+	jmp	.LB.spill_set.12
+.LB.spill_set.11:
+	movq	$-2, %rax
+.LB.spill_set.12:
+	addq	$24, %rsp
+	popq	%rbx
+	popq	%rbp
+	popq	%r12
+	popq	%r13
+	popq	%r14
+	popq	%r15
+	ret
+.LB.spill_set.13:
+	movl	$0, %eax
+	jmp	.LB.spill_set.12
+.LB.spill_set.14:
+	movq	%rcx, %rax
+	testq	%r9, %r9
+	jne	.LB.spill_set.3
+	movl	$0, %eax
+	jmp	.LB.spill_set.12
+.LB.spill_set.15:
+	movl	$0, %eax
+	testq	%r13, %r13
+	jne	.LB.spill_set.3
+	movq	(%rsp), %rax
+	movq	%rax, 16(%rsp)
+	jmp	.LB.spill_set.5
+	.size	spill_set, .-spill_set
+	.globl	remove_surplus
+	.type	remove_surplus, @function
+remove_surplus:
+	cmpq	$1024, %rdi
+	ja	.LB.remove_surplus.22
+	pushq	%rbx
+	subq	$32864, %rsp
+	movq	%rdx, %r10
+	movq	%r8, %rbx
+	cmpq	$1024, %rsi
+	ja	.LB.remove_surplus.13
+	testq	%rdi, %rdi
+	je	.LB.remove_surplus.20
+	movl	$0, %eax
+	.p2align 5
+.LB.remove_surplus.0:
+	movq	$-1, 16480(%rsp,%rax,8)
+	addq	$1, %rax
+	cmpq	%rax, %rdi
+	jne	.LB.remove_surplus.0
+	testq	%rsi, %rsi
+	je	.LB.remove_surplus.3
+.LB.remove_surplus.1:
+	leaq	16480(%rsp), %rax
+	leaq	(%rax,%rsi,8), %rdx
+	.p2align 5
+.LB.remove_surplus.2:
+	movq	$-1, 8192(%rax)
+	addq	$8, %rax
+	cmpq	%rdx, %rax
+	jne	.LB.remove_surplus.2
+	testq	%rdi, %rdi
+	je	.LB.remove_surplus.21
+.LB.remove_surplus.3:
+	movl	$0, %eax
+	jmp	.LB.remove_surplus.5
+	.p2align 5
+.LB.remove_surplus.4:
+	leaq	1(%rax), %rdx
+	cmpq	%rdx, %rdi
+	je	.LB.remove_surplus.6
+	movq	%rdx, %rax
+.LB.remove_surplus.5:
+	movq	(%rbx,%rax,8), %rdx
+	cmpq	$-1, %rdx
+	je	.LB.remove_surplus.4
+	movq	%rdx, 16480(%rsp,%rax,8)
+	movq	%rax, 24672(%rsp,%rdx,8)
+	jmp	.LB.remove_surplus.4
+.LB.remove_surplus.6:
+	movq	%rcx, (%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%r9, 16(%rsp)
+	movq	%r10, 24(%rsp)
+	movq	%rdx, 32(%rsp)
+	movq	32888(%rsp), %rdi
+	movq	%rdi, 40(%rsp)
+	movq	$0, 48(%rsp)
+	movl	$0, %edx
+	addq	$1, %rax
+	.p2align 5
+.LB.remove_surplus.7:
+	movq	16480(%rsp,%rdx,8), %rcx
+	movq	%rcx, 56(%rsp,%rdx,8)
+	addq	$1, %rdx
+	cmpq	%rax, %rdx
+	jne	.LB.remove_surplus.7
+.LB.remove_surplus.8:
+	testq	%rsi, %rsi
+	je	.LB.remove_surplus.14
+	leaq	0(,%rsi,8), %rdx
+	movl	$0, %eax
+	leaq	8248(%rsp), %rdi
+	leaq	24672(%rsp), %rsi
+	.p2align 5
+.LB.remove_surplus.9:
+	movq	(%rsi,%rax), %rcx
+	movq	%rcx, (%rdi,%rax)
+	addq	$8, %rax
+	cmpq	%rdx, %rax
+	jne	.LB.remove_surplus.9
+	movq	$0, 16440(%rsp)
+	leaq	16480(%rsp), %rax
+	movq	%rax, 16464(%rsp)
+	movq	%rsp, %rax
+	addq	%rsp, %rdx
+	jmp	.LB.remove_surplus.11
+	.p2align 5
+.LB.remove_surplus.10:
+	addq	$8, %rax
+	cmpq	%rdx, %rax
+	je	.LB.remove_surplus.15
+.LB.remove_surplus.11:
+	cmpq	$-1, 8248(%rax)
+	jne	.LB.remove_surplus.10
+	addq	$1, 16440(%rsp)
+	jmp	.LB.remove_surplus.10
+.LB.remove_surplus.12:
+	movq	16448(%rsp), %rax
+	movq	32896(%rsp), %rsi
+	movq	%rax, (%rsi)
+	movq	16456(%rsp), %rax
+	movq	%rax, 8(%rsi)
+	jmp	.LB.remove_surplus.16
+.LB.remove_surplus.13:
+	movq	$-2, %rdx
+	jmp	.LB.remove_surplus.19
+.LB.remove_surplus.14:
+	movq	$0, 16440(%rsp)
+	leaq	16480(%rsp), %rax
+	movq	%rax, 16464(%rsp)
+.LB.remove_surplus.15:
+	movq	%rsp, %rdi
+	call	_ZN12_GLOBAL__N_18Emission13removeSurplusEv
+	cmpb	$1, %al
+	je	.LB.remove_surplus.12
+	movq	$-2, %rdx
+	cmpb	$2, %al
+	je	.LB.remove_surplus.19
+	testb	%al, %al
+	jne	.LB.remove_surplus.16
+	movq	32896(%rsp), %rax
+	movq	$0, (%rax)
+	movq	$0, 8(%rax)
+.LB.remove_surplus.16:
+	movq	32(%rsp), %rcx
+	movq	32904(%rsp), %rax
+	movq	%rcx, (%rax)
+	testq	%rcx, %rcx
+	je	.LB.remove_surplus.18
+	salq	$3, %rcx
+	movl	$0, %eax
+	leaq	56(%rsp), %rsi
+	.p2align 5
+.LB.remove_surplus.17:
+	movq	(%rsi,%rax), %rdx
+	movq	%rdx, (%rbx,%rax)
+	addq	$8, %rax
+	cmpq	%rax, %rcx
+	jne	.LB.remove_surplus.17
+.LB.remove_surplus.18:
+	movq	48(%rsp), %rdx
+.LB.remove_surplus.19:
+	movq	%rdx, %rax
+	addq	$32864, %rsp
+	popq	%rbx
+	ret
+.LB.remove_surplus.20:
+	testq	%rsi, %rsi
+	jne	.LB.remove_surplus.1
+.LB.remove_surplus.21:
+	movq	%rcx, (%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%r9, 16(%rsp)
+	movq	%r10, 24(%rsp)
+	movq	$0, 32(%rsp)
+	movq	32888(%rsp), %rax
+	movq	%rax, 40(%rsp)
+	movq	$0, 48(%rsp)
+	jmp	.LB.remove_surplus.8
+.LB.remove_surplus.22:
+	movq	$-2, %rdx
+	movq	%rdx, %rax
+	ret
+	.size	remove_surplus, .-remove_surplus
+	.globl	permute
+	.type	permute, @function
+permute:
+	pushq	%r14
+	pushq	%rbp
+	pushq	%rbx
+	subq	$49248, %rsp
+	movq	%rdi, %rbx
+	cmpq	$1024, %rdi
+	ja	.LB.permute.15
+	movq	%rsi, %rdi
+	movq	%rdx, %r10
+	movq	%rcx, %r11
+	movq	%r8, %r14
+	movq	%r9, %rbp
+	testq	%rbx, %rbx
+	je	.LB.permute.16
+	leaq	16480(%rsp), %rax
+	leaq	0(,%rbx,8), %rcx
+	leaq	(%rax,%rcx), %rsi
+	movq	%rax, %rdx
+	.p2align 4
+.LB.permute.0:
+	movq	$-1, (%rdx)
+	addq	$8, %rdx
+	cmpq	%rsi, %rdx
+	jne	.LB.permute.0
+	.p2align 5
+.LB.permute.1:
+	movq	$-1, 8192(%rax)
+	addq	$8, %rax
+	cmpq	%rsi, %rax
+	jne	.LB.permute.1
+	movl	$0, %eax
+	.p2align 6
+.LB.permute.2:
+	movq	(%r10,%rax,8), %rdx
+	movq	%rdx, 41056(%rsp,%rax,8)
+	movq	(%rdi,%rax,8), %rsi
+	movq	%rsi, 32864(%rsp,%rdx,8)
+	movq	%rdx, 16480(%rsp,%rax,8)
+	movq	%rax, 24672(%rsp,%rdx,8)
+	addq	$1, %rax
+	cmpq	%rax, %rbx
+	jne	.LB.permute.2
+	leaq	32864(%rsp), %rdx
+	movq	%rdx, (%rsp)
+	movq	%rax, 8(%rsp)
+	movq	$0, 16(%rsp)
+	movq	%rdi, 24(%rsp)
+	movq	%rax, 32(%rsp)
+	movq	%r11, 40(%rsp)
+	movq	$0, 48(%rsp)
+	movl	$0, %eax
+	leaq	56(%rsp), %rsi
+	.p2align 5
+.LB.permute.3:
+	movq	16480(%rsp,%rax), %rdx
+	movq	%rdx, (%rsi,%rax)
+	addq	$8, %rax
+	cmpq	%rcx, %rax
+	jne	.LB.permute.3
+	movl	$0, %eax
+	leaq	8248(%rsp), %rdi
+	leaq	24672(%rsp), %rsi
+	.p2align 5
+.LB.permute.4:
+	movq	(%rsi,%rax), %rdx
+	movq	%rdx, (%rdi,%rax)
+	addq	$8, %rax
+	cmpq	%rcx, %rax
+	jne	.LB.permute.4
+	movq	$0, 16440(%rsp)
+	leaq	16480(%rsp), %rax
+	movq	%rax, 16464(%rsp)
+	movq	%rsp, %rax
+	addq	%rsp, %rcx
+	jmp	.LB.permute.6
+	.p2align 5
+.LB.permute.5:
+	addq	$8, %rax
+	cmpq	%rcx, %rax
+	je	.LB.permute.7
+.LB.permute.6:
+	cmpq	$-1, 8248(%rax)
+	jne	.LB.permute.5
+	addq	$1, 16440(%rsp)
+	jmp	.LB.permute.5
+.LB.permute.7:
+	leaq	41056(%rsp), %rsi
+	movq	%rsp, %rdi
+	call	_ZN12_GLOBAL__N_18Emission7permuteERNS_11OffsetArrayI11StackOffsetEE
+	cmpb	$1, %al
+	je	.LB.permute.14
+	movq	$-2, %rdx
+	cmpb	$2, %al
+	je	.LB.permute.13
+	testb	%al, %al
+	jne	.LB.permute.10
+.LB.permute.8:
+	movl	$0, %edx
+	movl	$0, %eax
+.LB.permute.9:
+	movq	%rdx, (%r14)
+	movq	%rax, 8(%r14)
+	testq	%rbx, %rbx
+	je	.LB.permute.12
+.LB.permute.10:
+	salq	$3, %rbx
+	movl	$0, %eax
+	leaq	56(%rsp), %rcx
+	.p2align 5
+.LB.permute.11:
+	movq	(%rcx,%rax), %rdx
+	movq	%rdx, 0(%rbp,%rax)
+	addq	$8, %rax
+	cmpq	%rax, %rbx
+	jne	.LB.permute.11
+.LB.permute.12:
+	movq	48(%rsp), %rdx
+.LB.permute.13:
+	movq	%rdx, %rax
+	addq	$49248, %rsp
+	popq	%rbx
+	popq	%rbp
+	popq	%r14
+	ret
+.LB.permute.14:
+	movq	16448(%rsp), %rdx
+	movq	16456(%rsp), %rax
+	jmp	.LB.permute.9
+.LB.permute.15:
+	movq	$-2, %rdx
+	jmp	.LB.permute.13
+.LB.permute.16:
+	leaq	32864(%rsp), %rax
+	movq	%rax, (%rsp)
+	movq	%rbx, 8(%rsp)
+	movq	$0, 16(%rsp)
+	movq	%rsi, 24(%rsp)
+	movq	%rbx, 32(%rsp)
+	movq	%rcx, 40(%rsp)
+	movq	$0, 48(%rsp)
+	movq	$0, 16440(%rsp)
+	leaq	16480(%rsp), %rax
+	movq	%rax, 16464(%rsp)
+	leaq	41056(%rsp), %rsi
+	movq	%rsp, %rdi
+	call	_ZN12_GLOBAL__N_18Emission7permuteERNS_11OffsetArrayI11StackOffsetEE
+	cmpb	$1, %al
+	je	.LB.permute.14
+	movq	$-2, %rdx
+	cmpb	$2, %al
+	je	.LB.permute.13
+	testb	%al, %al
+	je	.LB.permute.8
+	jmp	.LB.permute.12
+	.size	permute, .-permute
+	.globl	permute_at_lowest_height
+	.type	permute_at_lowest_height, @function
+permute_at_lowest_height:
+	pushq	%rbp
+	pushq	%rbx
+	subq	$32872, %rsp
+	movq	%rdi, %rbx
+	cmpq	$1024, %rdi
+	ja	.LB.permute_at_lowest_height.13
+	movq	%rdx, %rdi
+	movq	%r8, %rbp
+	cmpq	$1024, %rsi
+	ja	.LB.permute_at_lowest_height.13
+	testq	%rbx, %rbx
+	je	.LB.permute_at_lowest_height.20
+	movl	$0, %eax
+	.p2align 5
+.LB.permute_at_lowest_height.0:
+	movq	$-1, 16480(%rsp,%rax,8)
+	addq	$1, %rax
+	cmpq	%rax, %rbx
+	jne	.LB.permute_at_lowest_height.0
+	testq	%rsi, %rsi
+	je	.LB.permute_at_lowest_height.3
+.LB.permute_at_lowest_height.1:
+	leaq	16480(%rsp), %rax
+	leaq	(%rax,%rsi,8), %rdx
+	.p2align 5
+.LB.permute_at_lowest_height.2:
+	movq	$-1, 8192(%rax)
+	addq	$8, %rax
+	cmpq	%rdx, %rax
+	jne	.LB.permute_at_lowest_height.2
+	testq	%rbx, %rbx
+	je	.LB.permute_at_lowest_height.21
+.LB.permute_at_lowest_height.3:
+	movl	$0, %eax
+	jmp	.LB.permute_at_lowest_height.5
+	.p2align 5
+.LB.permute_at_lowest_height.4:
+	leaq	1(%rax), %rdx
+	cmpq	%rdx, %rbx
+	je	.LB.permute_at_lowest_height.6
+	movq	%rdx, %rax
+.LB.permute_at_lowest_height.5:
+	movq	0(%rbp,%rax,8), %rdx
+	cmpq	$-1, %rdx
+	je	.LB.permute_at_lowest_height.4
+	movq	%rdx, 16480(%rsp,%rax,8)
+	movq	%rax, 24672(%rsp,%rdx,8)
+	jmp	.LB.permute_at_lowest_height.4
+.LB.permute_at_lowest_height.6:
+	movq	%rcx, (%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%r9, 16(%rsp)
+	movq	%rdi, 24(%rsp)
+	movq	%rdx, 32(%rsp)
+	movq	32904(%rsp), %rdi
+	movq	%rdi, 40(%rsp)
+	movq	$0, 48(%rsp)
+	movl	$0, %edx
+	addq	$1, %rax
+	.p2align 5
+.LB.permute_at_lowest_height.7:
+	movq	16480(%rsp,%rdx,8), %rcx
+	movq	%rcx, 56(%rsp,%rdx,8)
+	addq	$1, %rdx
+	cmpq	%rax, %rdx
+	jne	.LB.permute_at_lowest_height.7
+.LB.permute_at_lowest_height.8:
+	testq	%rsi, %rsi
+	je	.LB.permute_at_lowest_height.14
+	leaq	0(,%rsi,8), %rdx
+	movl	$0, %eax
+	leaq	8248(%rsp), %rdi
+	leaq	24672(%rsp), %rsi
+	.p2align 5
+.LB.permute_at_lowest_height.9:
+	movq	(%rsi,%rax), %rcx
+	movq	%rcx, (%rdi,%rax)
+	addq	$8, %rax
+	cmpq	%rdx, %rax
+	jne	.LB.permute_at_lowest_height.9
+	movq	$0, 16440(%rsp)
+	leaq	16480(%rsp), %rax
+	movq	%rax, 16464(%rsp)
+	movq	%rsp, %rax
+	addq	%rsp, %rdx
+	jmp	.LB.permute_at_lowest_height.11
+	.p2align 5
+.LB.permute_at_lowest_height.10:
+	addq	$8, %rax
+	cmpq	%rdx, %rax
+	je	.LB.permute_at_lowest_height.15
+.LB.permute_at_lowest_height.11:
+	cmpq	$-1, 8248(%rax)
+	jne	.LB.permute_at_lowest_height.10
+	addq	$1, 16440(%rsp)
+	jmp	.LB.permute_at_lowest_height.10
+.LB.permute_at_lowest_height.12:
+	movq	16448(%rsp), %rax
+	movq	32912(%rsp), %rdi
+	movq	%rax, (%rdi)
+	movq	16456(%rsp), %rax
+	movq	%rax, 8(%rdi)
+	jmp	.LB.permute_at_lowest_height.16
+.LB.permute_at_lowest_height.13:
+	movq	$-2, %rdx
+	jmp	.LB.permute_at_lowest_height.19
+.LB.permute_at_lowest_height.14:
+	movq	$0, 16440(%rsp)
+	leaq	16480(%rsp), %rax
+	movq	%rax, 16464(%rsp)
+.LB.permute_at_lowest_height.15:
+	movq	%rsp, %rdi
+	call	_ZN12_GLOBAL__N_18Emission21permuteAtLowestHeightEv
+	cmpb	$1, %al
+	je	.LB.permute_at_lowest_height.12
+	movq	$-2, %rdx
+	cmpb	$2, %al
+	je	.LB.permute_at_lowest_height.19
+	testb	%al, %al
+	jne	.LB.permute_at_lowest_height.16
+	movq	32912(%rsp), %rax
+	movq	$0, (%rax)
+	movq	$0, 8(%rax)
+.LB.permute_at_lowest_height.16:
+	leaq	0(,%rbx,8), %rsi
+	movl	$0, %eax
+	leaq	56(%rsp), %rcx
+	testq	%rbx, %rbx
+	je	.LB.permute_at_lowest_height.18
+	.p2align 5
+.LB.permute_at_lowest_height.17:
+	movq	(%rcx,%rax), %rdx
+	movq	%rdx, 0(%rbp,%rax)
+	addq	$8, %rax
+	cmpq	%rsi, %rax
+	jne	.LB.permute_at_lowest_height.17
+.LB.permute_at_lowest_height.18:
+	movq	48(%rsp), %rdx
+.LB.permute_at_lowest_height.19:
+	movq	%rdx, %rax
+	addq	$32872, %rsp
+	popq	%rbx
+	popq	%rbp
+	ret
+.LB.permute_at_lowest_height.20:
+	testq	%rsi, %rsi
+	jne	.LB.permute_at_lowest_height.1
+.LB.permute_at_lowest_height.21:
+	movq	%rcx, (%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%r9, 16(%rsp)
+	movq	%rdi, 24(%rsp)
+	movq	$0, 32(%rsp)
+	movq	32904(%rsp), %rax
+	movq	%rax, 40(%rsp)
+	movq	$0, 48(%rsp)
+	jmp	.LB.permute_at_lowest_height.8
+	.size	permute_at_lowest_height, .-permute_at_lowest_height
+	.globl	build_mapping
+	.type	build_mapping, @function
+build_mapping:
+	pushq	%rbp
+	pushq	%rbx
+	subq	$16456, %rsp
+	movq	%rsi, %rbx
+	movq	%rdx, %rsi
+	movq	16480(%rsp), %rbp
+	cmpq	$1024, %rbx
+	seta	%al
+	cmpb	$1, %r9b
+	seta	%dl
+	orb	%dl, %al
+	jne	.LB.build_mapping.7
+	cmpq	$1024, %rdi
+	ja	.LB.build_mapping.7
+	testq	%rdi, %rdi
+	je	.LB.build_mapping.1
+	movl	$0, %eax
+	.p2align 5
+.LB.build_mapping.0:
+	movq	$-1, 64(%rsp,%rax,8)
+	addq	$1, %rax
+	cmpq	%rax, %rdi
+	jne	.LB.build_mapping.0
+.LB.build_mapping.1:
+	testq	%rbx, %rbx
+	je	.LB.build_mapping.3
+	leaq	64(%rsp), %rax
+	leaq	(%rax,%rbx,8), %rdx
+	.p2align 5
+.LB.build_mapping.2:
+	movq	$-1, 8192(%rax)
+	addq	$8, %rax
+	cmpq	%rdx, %rax
+	jne	.LB.build_mapping.2
+.LB.build_mapping.3:
+	movq	%rsi, (%rsp)
+	movq	%rdi, 8(%rsp)
+	movq	%rcx, 16(%rsp)
+	movq	%rbx, 24(%rsp)
+	movq	%r8, 32(%rsp)
+	movb	%r9b, 40(%rsp)
+	leaq	64(%rsp), %rax
+	movq	%rax, 48(%rsp)
+	movb	$0, 56(%rsp)
+	movq	%rsp, %rdi
+	call	_ZN12_GLOBAL__N_114MappingBuilder10mapInPlaceEv
+	testb	%al, %al
+	jne	.LB.build_mapping.8
+	movq	%rsp, %rdi
+	call	_ZN12_GLOBAL__N_114MappingBuilder16mapClosestCopiesEv
+	testb	%al, %al
+	jne	.LB.build_mapping.9
+	movq	%rsp, %rdi
+	call	_ZN12_GLOBAL__N_114MappingBuilder21mapWildcardSlotCopiesEv
+	testb	%al, %al
+	jne	.LB.build_mapping.10
+	movq	%rsp, %rdi
+	call	_ZN12_GLOBAL__N_114MappingBuilder17keepWildcardSlotsEv
+	testb	%al, %al
+	jne	.LB.build_mapping.11
+	movq	%rsp, %rdi
+	call	_ZN12_GLOBAL__N_114MappingBuilder13absorbSurplusEv
+	testb	%al, %al
+	jne	.LB.build_mapping.12
+	testq	%rbx, %rbx
+	je	.LB.build_mapping.5
+	leaq	0(,%rbx,8), %rdx
+	movl	$0, %eax
+	leaq	8256(%rsp), %rsi
+	.p2align 5
+.LB.build_mapping.4:
+	movq	(%rsi,%rax), %rcx
+	movq	%rcx, 0(%rbp,%rax)
+	addq	$8, %rax
+	cmpq	%rax, %rdx
+	jne	.LB.build_mapping.4
+.LB.build_mapping.5:
+	movq	16488(%rsp), %rax
+	movzbl	56(%rsp), %edx
+	movb	%dl, (%rax)
+	movl	$0, %eax
+.LB.build_mapping.6:
+	addq	$16456, %rsp
+	popq	%rbx
+	popq	%rbp
+	ret
+.LB.build_mapping.7:
+	movq	$-2, %rax
+	jmp	.LB.build_mapping.6
+.LB.build_mapping.8:
+	movq	$-2, %rax
+	jmp	.LB.build_mapping.6
+.LB.build_mapping.9:
+	movq	$-2, %rax
+	jmp	.LB.build_mapping.6
+.LB.build_mapping.10:
+	movq	$-2, %rax
+	jmp	.LB.build_mapping.6
+.LB.build_mapping.11:
+	movq	$-2, %rax
+	jmp	.LB.build_mapping.6
+.LB.build_mapping.12:
+	movq	$-2, %rax
+	jmp	.LB.build_mapping.6
+	.size	build_mapping, .-build_mapping
+	.globl	resolve
+	.type	resolve, @function
+resolve:
+	pushq	%rbp
+	pushq	%rbx
+	subq	$32840, %rsp
+	movq	%r8, %rbx
+	movq	32864(%rsp), %r11
+	movq	32896(%rsp), %rbp
+	movl	32904(%rsp), %r8d
+	cmpq	$1024, %rdi
+	ja	.LB.resolve.13
+	movq	%rsi, %r10
+	movq	%rdx, %rsi
+	cmpq	$1024, %r10
+	ja	.LB.resolve.13
+	cmpq	$1024, %r9
+	seta	%al
+	cmpq	%r9, 32872(%rsp)
+	setnb	%dl
+	orb	%dl, %al
+	jne	.LB.resolve.14
+	cmpb	$1, %r8b
+	ja	.LB.resolve.14
+	testq	%rdi, %rdi
+	je	.LB.resolve.15
+	movl	$0, %eax
+	jmp	.LB.resolve.1
+	.p2align 5
+.LB.resolve.0:
+	leaq	1(%rax), %rdx
+	cmpq	%rdx, %rdi
+	je	.LB.resolve.2
+	movq	%rdx, %rax
+.LB.resolve.1:
+	cmpb	$0, 5(%rsi,%rax,8)
+	je	.LB.resolve.0
+	cmpb	$0, 4(%rsi,%rax,8)
+	jne	.LB.resolve.0
+	movl	(%rsi,%rax,8), %edx
+	cmpq	%rbp, %rdx
+	jb	.LB.resolve.0
+	movq	$-2, %rdx
+	jmp	.LB.resolve.12
+.LB.resolve.2:
+	movl	$0, %edx
+	addq	$1, %rax
+	.p2align 5
+.LB.resolve.3:
+	movq	$-1, 16448(%rsp,%rdx,8)
+	addq	$1, %rdx
+	cmpq	%rax, %rdx
+	jne	.LB.resolve.3
+	testq	%r10, %r10
+	je	.LB.resolve.6
+.LB.resolve.4:
+	movl	$0, %eax
+	.p2align 5
+.LB.resolve.5:
+	movq	$-1, 24640(%rsp,%rax,8)
+	addq	$1, %rax
+	cmpq	%r10, %rax
+	jb	.LB.resolve.5
+	testq	%rdi, %rdi
+	je	.LB.resolve.16
+.LB.resolve.6:
+	movl	$0, %eax
+	jmp	.LB.resolve.8
+	.p2align 5
+.LB.resolve.7:
+	addq	$1, %rax
+	cmpq	%rax, %rdi
+	je	.LB.resolve.16
+.LB.resolve.8:
+	movq	(%rbx,%rax,8), %rdx
+	cmpq	$-1, %rdx
+	je	.LB.resolve.7
+	movq	%rdx, 16448(%rsp,%rax,8)
+	movq	%rax, 24640(%rsp,%rdx,8)
+	jmp	.LB.resolve.7
+	.p2align 5
+.LB.resolve.9:
+	addq	$1, %rax
+	cmpq	%r9, %rax
+	jnb	.LB.resolve.11
+.LB.resolve.10:
+	movq	(%r11,%rax,8), %rdx
+	cmpq	$-1, %rdx
+	je	.LB.resolve.9
+	movq	%rdx, 64(%rsp,%rax,8)
+	movq	%rax, 8256(%rsp,%rdx,8)
+	jmp	.LB.resolve.9
+.LB.resolve.11:
+	movq	%rsi, (%rsp)
+	movq	%rdi, 8(%rsp)
+	movq	%rcx, 16(%rsp)
+	movq	%r10, 24(%rsp)
+	movq	32888(%rsp), %rax
+	movq	%rax, 32(%rsp)
+	cmpb	$1, %r8b
+	sete	40(%rsp)
+	movq	32912(%rsp), %rax
+	movq	%rax, 48(%rsp)
+	movq	32872(%rsp), %rax
+	movq	32880(%rsp), %rdx
+	leaq	16448(%rsp), %rsi
+	movq	%rsp, %rdi
+	leaq	64(%rsp), %r8
+	movq	%rdx, %rcx
+	movq	%rax, %rdx
+	call	_ZN12_GLOBAL__N_17Planner7resolveERKNS_7MappingENS_8Emission7BlockedES3_m
+	movq	$-1, %rdx
+	cmpb	$1, %al
+	je	.LB.resolve.12
+	cmpb	$2, %al
+	setne	%dl
+	movzbl	%dl, %edx
+	leaq	-2(%rdx,%rdx), %rdx
+.LB.resolve.12:
+	movq	%rdx, %rax
+	addq	$32840, %rsp
+	popq	%rbx
+	popq	%rbp
+	ret
+.LB.resolve.13:
+	movq	$-2, %rdx
+	jmp	.LB.resolve.12
+.LB.resolve.14:
+	movq	$-2, %rdx
+	jmp	.LB.resolve.12
+.LB.resolve.15:
+	testq	%r10, %r10
+	jne	.LB.resolve.4
+.LB.resolve.16:
+	movl	$0, %eax
+	.p2align 5
+.LB.resolve.17:
+	movq	$-1, 64(%rsp,%rax,8)
+	addq	$1, %rax
+	cmpq	%r9, %rax
+	jb	.LB.resolve.17
+	testq	%r10, %r10
+	je	.LB.resolve.19
+	leaq	64(%rsp), %rax
+	leaq	(%rax,%r10,8), %rdx
+	.p2align 5
+.LB.resolve.18:
+	movq	$-1, 8192(%rax)
+	addq	$8, %rax
+	cmpq	%rax, %rdx
+	jne	.LB.resolve.18
+.LB.resolve.19:
+	movl	$0, %eax
+	jmp	.LB.resolve.10
+	.size	resolve, .-resolve
+	.globl	emit
+	.type	emit, @function
+emit:
+	pushq	%rbx
+	subq	$32864, %rsp
+	movq	%r8, %rbx
+	movq	32880(%rsp), %r8
+	cmpq	$1024, %rdi
+	ja	.LB.emit.16
+	movq	%rdx, %r10
+	movq	%rcx, %rdx
+	cmpq	$1024, %rsi
+	ja	.LB.emit.16
+	testq	%rsi, %rsi
+	je	.LB.emit.2
+	movl	$0, %eax
+	jmp	.LB.emit.1
+	.p2align 4
+.LB.emit.0:
+	addq	$1, %rax
+	cmpq	%rax, %rsi
+	je	.LB.emit.2
+.LB.emit.1:
+	cmpb	$0, 4(%rdx,%rax,8)
+	jne	.LB.emit.0
+	cmpb	$0, 5(%rdx,%rax,8)
+	je	.LB.emit.0
+	movl	(%rdx,%rax,8), %ecx
+	cmpq	%r8, %rcx
+	jb	.LB.emit.0
+	movq	$-2, %rdx
+	jmp	.LB.emit.22
+.LB.emit.2:
+	testq	%rdi, %rdi
+	je	.LB.emit.23
+	movl	$0, %eax
+	.p2align 5
+.LB.emit.3:
+	movq	$-1, 16480(%rsp,%rax,8)
+	addq	$1, %rax
+	cmpq	%rax, %rdi
+	jne	.LB.emit.3
+	testq	%rsi, %rsi
+	je	.LB.emit.6
+.LB.emit.4:
+	leaq	16480(%rsp), %rax
+	leaq	(%rax,%rsi,8), %rcx
+	.p2align 5
+.LB.emit.5:
+	movq	$-1, 8192(%rax)
+	addq	$8, %rax
+	cmpq	%rcx, %rax
+	jne	.LB.emit.5
+	testq	%rdi, %rdi
+	je	.LB.emit.24
+.LB.emit.6:
+	movl	$0, %eax
+	jmp	.LB.emit.8
+	.p2align 5
+.LB.emit.7:
+	leaq	1(%rax), %rcx
+	cmpq	%rcx, %rdi
+	je	.LB.emit.9
+	movq	%rcx, %rax
+.LB.emit.8:
+	movq	(%rbx,%rax,8), %rcx
+	cmpq	$-1, %rcx
+	je	.LB.emit.7
+	movq	%rcx, 16480(%rsp,%rax,8)
+	movq	%rax, 24672(%rsp,%rcx,8)
+	jmp	.LB.emit.7
+.LB.emit.9:
+	movq	%rdx, (%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%r9, 16(%rsp)
+	movq	%r10, 24(%rsp)
+	movq	%rcx, 32(%rsp)
+	movq	32888(%rsp), %rdi
+	movq	%rdi, 40(%rsp)
+	movq	$0, 48(%rsp)
+	movl	$0, %edx
+	movq	%rcx, %rax
+	.p2align 5
+.LB.emit.10:
+	movq	16480(%rsp,%rdx,8), %rcx
+	movq	%rcx, 56(%rsp,%rdx,8)
+	addq	$1, %rdx
+	cmpq	%rax, %rdx
+	jne	.LB.emit.10
+.LB.emit.11:
+	testq	%rsi, %rsi
+	je	.LB.emit.17
+	salq	$3, %rsi
+	movl	$0, %eax
+	leaq	8248(%rsp), %rdi
+	leaq	24672(%rsp), %rcx
+	.p2align 5
+.LB.emit.12:
+	movq	(%rcx,%rax), %rdx
+	movq	%rdx, (%rdi,%rax)
+	addq	$8, %rax
+	cmpq	%rsi, %rax
+	jne	.LB.emit.12
+	movq	$0, 16440(%rsp)
+	leaq	16480(%rsp), %rax
+	movq	%rax, 16464(%rsp)
+	movq	%rsp, %rax
+	addq	%rsp, %rsi
+	jmp	.LB.emit.14
+	.p2align 5
+.LB.emit.13:
+	addq	$8, %rax
+	cmpq	%rsi, %rax
+	je	.LB.emit.18
+.LB.emit.14:
+	cmpq	$-1, 8248(%rax)
+	jne	.LB.emit.13
+	addq	$1, 16440(%rsp)
+	jmp	.LB.emit.13
+.LB.emit.15:
+	movq	16448(%rsp), %rax
+	movq	32896(%rsp), %rdi
+	movq	%rax, (%rdi)
+	movq	16456(%rsp), %rax
+	movq	%rax, 8(%rdi)
+	jmp	.LB.emit.19
+.LB.emit.16:
+	movq	$-2, %rdx
+	jmp	.LB.emit.22
+.LB.emit.17:
+	movq	$0, 16440(%rsp)
+	leaq	16480(%rsp), %rax
+	movq	%rax, 16464(%rsp)
+.LB.emit.18:
+	movq	%rsp, %rdi
+	call	_ZN12_GLOBAL__N_18Emission3runEv
+	cmpb	$1, %al
+	je	.LB.emit.15
+	movq	$-2, %rdx
+	cmpb	$2, %al
+	je	.LB.emit.22
+	testb	%al, %al
+	jne	.LB.emit.19
+	movq	32896(%rsp), %rax
+	movq	$0, (%rax)
+	movq	$0, 8(%rax)
+.LB.emit.19:
+	movq	32(%rsp), %rcx
+	movq	32904(%rsp), %rax
+	movq	%rcx, (%rax)
+	testq	%rcx, %rcx
+	je	.LB.emit.21
+	salq	$3, %rcx
+	movl	$0, %eax
+	leaq	56(%rsp), %rsi
+	.p2align 5
+.LB.emit.20:
+	movq	(%rsi,%rax), %rdx
+	movq	%rdx, (%rbx,%rax)
+	addq	$8, %rax
+	cmpq	%rax, %rcx
+	jne	.LB.emit.20
+.LB.emit.21:
+	movq	48(%rsp), %rdx
+.LB.emit.22:
+	movq	%rdx, %rax
+	addq	$32864, %rsp
+	popq	%rbx
+	ret
+.LB.emit.23:
+	testq	%rsi, %rsi
+	jne	.LB.emit.4
+.LB.emit.24:
+	movq	%rdx, (%rsp)
+	movq	%rsi, 8(%rsp)
+	movq	%r9, 16(%rsp)
+	movq	%r10, 24(%rsp)
+	movq	$0, 32(%rsp)
+	movq	32888(%rsp), %rax
+	movq	%rax, 40(%rsp)
+	movq	$0, 48(%rsp)
+	jmp	.LB.emit.11
+	.size	emit, .-emit
 	.globl	plan
 	.type	plan, @function
 plan:

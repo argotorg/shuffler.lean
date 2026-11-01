@@ -1,7 +1,7 @@
-// The unit tests of build_bottom_up.cpp: the stack and mapping operations, the Emission constructor and pop, and
-// the entries. The file includes build_bottom_up.cpp, so the tests run the production code, compiled hosted.
+// The unit tests of the freestanding shuffler: the stack and mapping operations, the Emission constructor and
+// pop, and the entries. test_wrappers.cpp includes the production code, compiled hosted here.
 // `make unit_test` builds it; Shuffler/Mapping.lean is the model of the mapping checks.
-#include "build_bottom_up.cpp"
+#include "test_wrappers.cpp"
 
 #include <algorithm>
 #include <cstdio>

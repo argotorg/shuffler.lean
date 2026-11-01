@@ -15,13 +15,14 @@ set_option maxRecDepth 100000
 
 -- The function programs make up the linked file.
 example : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm ++ produceAsm
-    ++ swapWithAsm ++ generateAsm ++ finishAsm ++ loopAsm ++ popAsm ++ buildBottomUpAsm
-    ++ emissionPopAsm ++ spillSetAddAsm ++ spillSetAsm ++ removeSurplusAsm ++ removeSurplusEntryAsm
-    ++ permuteEntryAsm ++ permuteAtLowestHeightAsm ++ permuteAtLowestHeightEntryAsm
-    ++ mapAsm ++ closestCopyAsm ++ mapInPlaceAsm ++ mapClosestCopiesAsm ++ mapWildcardSlotCopiesAsm
-    ++ keepWildcardSlotsAsm ++ absorbSurplusAsm ++ buildMappingAsm ++ isRetainedAsm
-    ++ hasOtherRetainedCopyAsm ++ isDemandedAsm ++ classifyAsm ++ resolveAsm ++ resolveEntryAsm
-    ++ isAvailableAsm ++ runAsm ++ emitAsm ++ plannerRunAsm ++ planAsm := by
+    ++ swapWithAsm ++ generateAsm ++ finishAsm ++ loopAsm ++ spillSetAddAsm ++ mapAsm
+    ++ closestCopyAsm ++ mapInPlaceAsm ++ mapClosestCopiesAsm ++ mapWildcardSlotCopiesAsm
+    ++ keepWildcardSlotsAsm ++ absorbSurplusAsm ++ popAsm ++ removeSurplusAsm
+    ++ permuteAtLowestHeightAsm ++ isAvailableAsm ++ runAsm ++ isRetainedAsm
+    ++ hasOtherRetainedCopyAsm ++ isDemandedAsm ++ classifyAsm ++ resolveAsm ++ plannerRunAsm
+    ++ buildBottomUpAsm ++ emissionPopAsm ++ spillSetAsm ++ removeSurplusEntryAsm
+    ++ permuteEntryAsm ++ permuteAtLowestHeightEntryAsm ++ buildMappingAsm ++ resolveEntryAsm
+    ++ emitAsm ++ planAsm := by
   rfl
 
 -- `bbuParseFile` reads `leaq disp(,%i,8), %r` as the operand with no base.
@@ -44,20 +45,20 @@ example : (bbuAsm.filter fun
     [.instr (.regular .W64 .W64 (.lea (.low .r14 .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rdi .W64) ⟨none, some ⟨.rdx, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rbx .W64) ⟨none, some ⟨.r14, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .r8 .W64) ⟨none, some ⟨.rdi, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .r14 .W64) ⟨none, some ⟨.rcx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rcx, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.r12, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .r8 .W64) ⟨none, some ⟨.rdi, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rcx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rsi .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .r14 .W64) ⟨none, some ⟨.rcx, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rcx, .W64⟩, .int64 0⟩))] := by
+     .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩))] := by
   rfl
 
 -- `bbuParseFn` reads the file of the name.

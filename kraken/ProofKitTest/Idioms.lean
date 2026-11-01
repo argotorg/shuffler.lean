@@ -50,7 +50,7 @@ end Program.WP
 
 /-! # Tests: each lemma on the VC that `kvcgen64` gives for the asm pattern.
 
-Each test program is a copy of an instruction sequence from the g++ -O1 build of the C++ port (`c/build_bottom_up.cpp`, variant F).
+Each test program is a copy of an instruction sequence from the g++ -O1 build of the C++ port (`c/shuffler/test_wrappers.cpp`, variant F).
 `step1_of_wp` makes the jump branch `⊥`, so each jump test has a precondition that makes
 the jump impossible; the proof must use the lemma on the hypothesis to get the contradiction. -/
 
