@@ -1,5 +1,6 @@
 /.lake
 /.direnv
 /.claude
+/.cache/
 /build
 /scratch
