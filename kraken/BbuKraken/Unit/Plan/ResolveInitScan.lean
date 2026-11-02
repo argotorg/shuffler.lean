@@ -17,11 +17,11 @@ namespace Bbu.Unit.ResolveU
 open Bbu.Sep
 
 set_option maxRecDepth 4096 in
-theorem b_5 [Host] [FunDecls]
+theorem b_4 [Host] [FunDecls]
     (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (rest : Label → MachineData → Prop) (var : Label → MachineData → Nat)
     (hok : r.Ok) (ha : resolveA r s) :
-    resolveAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.resolve.5" →
+    resolveAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.resolve.4" →
       Obl P r F s ra (initFullPhase P r F s ra rest) (initFullVar s var) blk := by
   cfg_block [Obl]
   intro t ht
@@ -73,7 +73,7 @@ theorem b_5 [Host] [FunDecls]
     all_goals try contradiction
     vc_by_shape
     | load => run_loads [kCur]
-    | goto ".LB.Planner.resolve.4" =>
+    | goto ".LB.Planner.resolve.3" =>
       cfg_goto
       · exact hc.bd.kb.stack (by decide)
       · simp only [Inv, initFullPhase, zphase, initPhase, Names.resolve,
@@ -97,7 +97,7 @@ theorem b_5 [Host] [FunDecls]
       all_goals try contradiction
       vc_by_shape
       | load => first | run_loads [kCur, kp] | exact kp
-      | goto ".LB.Planner.resolve.4" =>
+      | goto ".LB.Planner.resolve.3" =>
         cfg_goto
         · exact hc.bd.kb.stack (by decide)
         · simp only [Inv, initFullPhase, zphase, initPhase, Names.resolve,
@@ -160,7 +160,7 @@ theorem b_5 [Host] [FunDecls]
         all_goals try contradiction
         vc_by_shape
         | load => first | run_loads [kCur, kp, kr, kslot] | exact kp | exact kr
-        | goto ".LB.Planner.resolve.4" =>
+        | goto ".LB.Planner.resolve.3" =>
           cfg_goto
           · exact hc.bd.kb.stack (by decide)
           · simp only [Inv, initFullPhase, zphase, initPhase, Names.resolve,

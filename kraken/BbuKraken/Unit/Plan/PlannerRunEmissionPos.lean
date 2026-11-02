@@ -30,10 +30,10 @@ theorem b_13 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     (K : Unit → MachineData → Prop) (I' : CfgLabel → Nat → Unit → MachineData → Prop)
     (E : Int64 → MachineData → Prop)
     (hnext : ∀ u, rax u = 8#64 + rax t → EmitPosHead P g M F s ra u →
-      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.14") u)
+      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.27") u)
     (hdone : ∀ u, EmitCountHead P g M F s ra u →
-      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.16") u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.14" →
+      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.8") u) :
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.27" →
       EmitPosHead P g M F s ra t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
@@ -85,7 +85,7 @@ theorem b_13 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   all_goals try simp only [hsi, hdi, hax', hdx', src_addr, dst_addr, hr] at ⊢
   vc_by_shape
   | load => simp only [ks, kd, kp, ko]
-  | goto ".LB.Planner.run.14" =>
+  | goto ".LB.Planner.run.27" =>
     rename_i he
     symexec_norm at he
     simp only [hax', hdx', sub_beq_zero, Bool.not_eq_true', beq_eq_false_iff_ne] at he
@@ -100,7 +100,7 @@ theorem b_13 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
       hjnext, ?_, hdx, hsi, hdi, hd1, ?_⟩
     · simp only [rax, Reg64s.get64_rax]; bv_omega
     · rw [hsucc]; exact hp1
-  | goto ".LB.Planner.run.16" =>
+  | goto ".LB.Planner.run.8" =>
     rename_i he
     symexec_norm at he
     simp only [hax', hdx'] at he

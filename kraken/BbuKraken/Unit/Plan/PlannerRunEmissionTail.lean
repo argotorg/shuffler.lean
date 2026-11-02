@@ -16,10 +16,10 @@ open Bbu.Sep
 
 def emissionTail : Program := parse("
   cmpb $1, %al
-  jne .LB.Planner.run.17
+  jne .LB.Planner.run.9
   movq 8(%rbx), %rbp
   testq %rbp, %rbp
-  je .LB.Planner.run.29
+  je .LB.Planner.run.17
   movq 48(%rbx), %rax
   leaq (%rbp,%rax), %rdx
   movl $0, %ebp
@@ -35,11 +35,11 @@ theorem emission_tail [Host] [FunDecls] (P : Addr) (g : PlannerRunG)
     (hother : ∀ u, PostEmitLI P g M F s ra lo locals u →
       al u = al t → al u ≠ 1#8 →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-        (label ".LB.Planner.run.17") u)
+        (label ".LB.Planner.run.9") u)
     (hzero : ∀ u, PostEmitLI P g M F s ra lo locals u →
       al t = 1#8 → g.p.m = 0#64 → u.regs.rbp.toBitVec = 0#64 →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-        (label ".LB.Planner.run.29") u)
+        (label ".LB.Planner.run.17") u)
     (hmore : ∀ u, PostEmitLI P g M F s ra lo locals u →
       al t = 1#8 → g.p.m ≠ 0#64 → u.regs.rbp.toBitVec = 0#64 →
       rax u = g.p.drp → rdx u = g.p.drp + g.p.m → K () u) :
@@ -58,22 +58,22 @@ theorem emission_tail [Host] [FunDecls] (P : Addr) (g : PlannerRunG)
   all_goals try simp only [h.rbx, rm, rdrop] at ⊢
   vc_by_shape
   | load => simp only [km, kd]
-  | goto ".LB.Planner.run.17" =>
+  | goto ".LB.Planner.run.9" =>
     rename_i af hj
     symexec_norm at hj
     apply hother
-    · exact h.next rfl rfl rfl rfl rfl rfl rfl
+    · exact h.next rfl rfl rfl rfl rfl
     · rfl
     · simp only [BitVec.zero_eq, Bool.not_eq_true', beq_eq_false_iff_ne] at hj
       simp only [al, rax, Reg64s.get64_rax,
         BitVec.setWidth_eq_extractLsb' (by decide : 8 ≤ 64)]
       bv_omega
-  | goto ".LB.Planner.run.29" =>
+  | goto ".LB.Planner.run.17" =>
     rename_i af hj af' hm
     symexec_norm at hj hm
     simp only [h.rbx, rm, BitVec.and_self, BitVec.zero_eq, beq_iff_eq] at hm
     apply hzero
-    · exact h.next rfl rfl rfl rfl rfl rfl rfl
+    · exact h.next rfl rfl rfl rfl rfl
     · simp only [BitVec.zero_eq, Bool.not_eq_false', beq_iff_eq] at hj
       simp only [Reg64s.get64_rax,
         BitVec.setWidth_eq_extractLsb' (by decide : 8 ≤ 64)]
@@ -85,7 +85,7 @@ theorem emission_tail [Host] [FunDecls] (P : Addr) (g : PlannerRunG)
     symexec_norm at hj hm
     simp only [h.rbx, rm, BitVec.and_self, BitVec.zero_eq, beq_eq_false_iff_ne] at hm
     apply hmore
-    · exact h.next rfl rfl rfl rfl rfl rfl rfl
+    · exact h.next rfl rfl rfl rfl rfl
     · simp only [BitVec.zero_eq, Bool.not_eq_false', beq_iff_eq] at hj
       simp only [Reg64s.get64_rax,
         BitVec.setWidth_eq_extractLsb' (by decide : 8 ≤ 64)]

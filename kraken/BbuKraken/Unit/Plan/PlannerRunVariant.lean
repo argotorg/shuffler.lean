@@ -60,36 +60,34 @@ def runV (g : PlannerRunG) (l : Label) (t : MachineData) : Nat :=
   let m := g.p.m.toNat
   let n := g.p.n.toNat
   let b := dropBudget g t * 65536
-  if l = ".LB.Planner.run.21" then 0
-  else if l = ".LB.Planner.run.20" ∨ l = ".LB.Planner.run.22" ∨
-      l = ".LB.Planner.run.23" ∨ l = ".LB.Planner.run.24" ∨
-      l = ".LB.Planner.run.25" ∨ l = ".LB.Planner.run.31" ∨
+  if l = ".LB.Planner.run.12" then 0
+  else if l = ".LB.Planner.run.6" ∨ l = ".LB.Planner.run.13" ∨
       l = ".LB.Planner.run.4" then 1
-  else if l = ".LB.Planner.run.19" then 1000
-  else if l = ".LB.Planner.run.18" then 2000 + (n - (rdx t).toNat)
-  else if l = ".LB.Planner.run.17" then 3500
-  else if l = ".LB.Planner.run.30" then
+  else if l = ".LB.Planner.run.11" then 1000
+  else if l = ".LB.Planner.run.10" then 2000 + (n - (rdx t).toNat)
+  else if l = ".LB.Planner.run.9" then 3500
+  else if l = ".LB.Planner.run.18" then
     (g.p.m - t.regs.rbp.toBitVec).toNat * 65536 + 4096 +
       (m - (rax t - g.p.drp).toNat)
-  else if l = ".LB.Planner.run.29" then b + 8000
-  else if l = ".LB.Planner.run.28" then b + 12000 + (m - (rax t - g.p.drp).toNat)
-  else if l = ".LB.Planner.run.27" then b + 16000
-  else if l = ".LB.Planner.run.15" then
+  else if l = ".LB.Planner.run.17" then b + 8000
+  else if l = ".LB.Planner.run.16" then b + 12000 + (m - (rax t - g.p.drp).toNat)
+  else if l = ".LB.Planner.run.15" then b + 16000
+  else if l = ".LB.Planner.run.7" then
     b + 20000 + 2 * (n - indexAt (t.regs.rsp.toBitVec + 16480#64) t)
-  else if l = ".LB.Planner.run.16" then
+  else if l = ".LB.Planner.run.8" then
     b + 20000 + 2 * (n - indexAt (t.regs.rsp.toBitVec + 16480#64) t) + 1
-  else if l = ".LB.Planner.run.26" then b + 24000
-  else if l = ".LB.Planner.run.14" then b + 28000 + (n - indexAt 0#64 t)
-  else if l = ".LB.Planner.run.13" then b + 32000
-  else if l = ".LB.Planner.run.12" then b + 34000 + (m - (rax t).toNat)
-  else if l = ".LB.Planner.run.11" then b + 38000 + (m - (rax t).toNat)
-  else if l = ".LB.Planner.run.32" then b + 42000
-  else if l = ".LB.Planner.run.10" then b + 44000
-  else if l = ".LB.Planner.run.9" then
+  else if l = ".LB.Planner.run.14" then b + 24000
+  else if l = ".LB.Planner.run.27" then b + 28000 + (n - indexAt 0#64 t)
+  else if l = ".LB.Planner.run.26" then b + 32000
+  else if l = ".LB.Planner.run.25" then b + 34000 + (m - (rax t).toNat)
+  else if l = ".LB.Planner.run.24" then b + 38000 + (m - (rax t).toNat)
+  else if l = ".LB.Planner.run.28" then b + 42000
+  else if l = ".LB.Planner.run.23" then b + 44000
+  else if l = ".LB.Planner.run.22" then
     b + 48000 + (n - indexAt (t.regs.rsp.toBitVec + 96#64) t)
-  else if l = ".LB.Planner.run.8" then b + 52000
-  else if l = ".LB.Planner.run.7" then b + 56000 + (m - (rax t).toNat)
-  else if l = ".LB.Planner.run.6" then b + 60000
+  else if l = ".LB.Planner.run.21" then b + 52000
+  else if l = ".LB.Planner.run.20" then b + 56000 + (m - (rax t).toNat)
+  else if l = ".LB.Planner.run.19" then b + 60000
   else if l = ".LB.Planner.run.5" then (m + 1) * 65536
   else
     let check := (m + 1) * 65536 + (n - (rcx t).toNat) * (m + 4)

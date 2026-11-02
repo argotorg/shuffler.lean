@@ -1,7 +1,7 @@
 module
 
-public import BbuKraken.Unit.Plan.PlannerRunResolveSetup
-import all BbuKraken.Unit.Plan.PlannerRunResolveSetup
+public import BbuKraken.Unit.Plan.PlannerRunResolveDefs
+import all BbuKraken.Unit.Plan.PlannerRunResolveDefs
 public import BbuKraken.Unit.Plan.PlannerRunResolveTail
 import all BbuKraken.Unit.Plan.PlannerRunResolveTail
 
@@ -22,17 +22,18 @@ theorem b_30_call [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mappi
     (K : Unit → MachineData → Prop)
     (I' : CfgLabel → Nat → Unit → MachineData → Prop) (E : Int64 → MachineData → Prop)
     (hfinish : ∀ spills dropped res lo' u,
-      PostEmitLI P (withResolve g spills dropped) M F s ra lo' (resolveLocals locals hl) u →
+      PostEmitLI P (withResolve g spills dropped) M F s ra lo' locals u →
       Resolved g M locals hl spills dropped res → al u = ResolveU.code res →
+      res ≠ .assertionFailed →
       u.regs.rbp.toBitVec = before →
       WP.wp resolveTail K (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) u)
     (hstop : ∀ spills dropped lo' u, lo'.length = 4113 →
-      (Stk (rsp s) (fr s lo' (resolveLocals locals hl)) ra.toBitVec ∗
+      (Stk (rsp s) (fr s lo' locals) ra.toBitVec ∗
         (PlannerRunView P (withResolve g spills dropped) ∗ F)).get u.dmem →
       Resolved g M locals hl spills dropped .assertionFailed →
       u.regs.get64 .rdi = 1#64 →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label "exit") u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.29" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.17" →
       ∀ t, (∃ lo, PostEmitLI P g M F s ra lo locals t) →
         t.regs.rbp.toBitVec = before → WP.wp blk.body K
           (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
@@ -41,50 +42,31 @@ theorem b_30_call [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mappi
   intro t ⟨lo, h⟩ hbp
   let off := resolveOffset locals hl
   let ex := resolveExcess locals hl
-  let v : MachineData := {t with dmem := t.dmem.storeInt t.regs.rsp.toBitVec 8 off.toInt}
-  have hv : PostEmitLI P g M F s ra lo (locals.set 0 off) v :=
-    h.storeFront (by decide) off (by simp [v]) rfl rfl rfl rfl rfl rfl
-  let w : MachineData := {v with dmem := v.dmem.storeInt t.regs.rsp.toBitVec 8 off.toInt}
-  have hw : PostEmitLI P g M F s ra lo ((locals.set 0 off).set 0 off) w :=
-    hv.storeFront (by decide) off (by simp [w, v]) rfl rfl rfl rfl rfl rfl
-  let x : MachineData := {w with dmem := (w.dmem.storeInt
-    (t.regs.rsp.toBitVec + 8#64) 8 ex.toInt)}
-  have hx : PostEmitLI P g M F s ra lo (resolveLocals locals hl) x :=
-    hw.storeFront (by decide) ex rfl rfl rfl rfl rfl rfl rfl
   have kro := h.localSome (i := 4116) (by decide)
-  have k0 := h.localSome (i := 0) (by decide)
-  have k1 := hw.localSome (i := 1) (by decide)
   have ro : Bbu.rd t.dmem (t.regs.rsp.toBitVec + 32928#64) = off :=
     h.localRead (i := 4116) (by decide)
-  have kr0 := hv.localSome (i := 0) (by decide)
-  have r0 : Bbu.rd v.dmem t.regs.rsp.toBitVec = off := by
-    simpa [v] using hv.localRead (i := 0) (by decide)
-  have kre := hv.localSome (i := 4117) (by decide)
-  have re : Bbu.rd v.dmem (t.regs.rsp.toBitVec + 32936#64) = ex := by
-    simpa [v, ex, resolveExcess] using
-      hv.localRead (i := 4117) (by decide)
-  have krs := hx.localSome (i := 2064) (by decide)
-  have rs : Bbu.rd x.dmem (t.regs.rsp.toBitVec + 16512#64) = resolveSize locals hl := by
-    simpa [x, w, v, resolveLocals, resolveSize] using
-      hx.localRead (i := 2064) (by decide)
-  simp only [v, Nat.reduceMul, BitVec.add_zero] at kr0 kre
-  simp only [Nat.reduceMul, BitVec.add_zero] at kro k0
-  simp only [w, v, Nat.reduceMul] at k1
-  simp only [x, w, v, Nat.reduceMul] at krs rs
-  unfold Bbu.rd at ro r0 re rs
-  simp only [v] at r0 re
+  have kre := h.localSome (i := 4117) (by decide)
+  have re : Bbu.rd t.dmem (t.regs.rsp.toBitVec + 32936#64) = ex :=
+    h.localRead (i := 4117) (by decide)
+  have krs := h.localSome (i := 2064) (by decide)
+  have rs : Bbu.rd t.dmem (t.regs.rsp.toBitVec + 16512#64) = resolveSize locals hl :=
+    h.localRead (i := 2064) (by decide)
+  simp only [Nat.reduceMul] at kro kre krs
+  unfold Bbu.rd at ro re rs
   kvcgen64 [hresolve]
   all_goals try symexec_norm at ⊢
-  all_goals try simp only [ro, r0, re, rs] at ⊢
+  all_goals try simp only [ro, re, rs] at ⊢
   vc_by_shape
-  | load => simp only [kro, k0, k1, kr0, kre, krs]
+  | load => simp only [kro, kre, krs]
   | other =>
-    let y : MachineData := {x with regs :=
-      (((((((t.regs.set64 .rax off).set64 .rcx ex).set64 .rdx off).set64 .rsi
-        (t.regs.rsp.toBitVec + 96#64)).set64 .rdi t.regs.rbx.toBitVec).set64 .r8
-          (t.regs.rsp.toBitVec + 16536#64)).set64 .r9 (resolveSize locals hl))}
-    have hy : PostEmitLI P g M F s ra lo (resolveLocals locals hl) y := by
-      apply hx.next
+    let y : MachineData := {t with regs := {t.regs with
+      r12 := .ofBitVec off, r13 := .ofBitVec ex,
+      rsi := .ofBitVec (t.regs.rsp.toBitVec + 96#64),
+      r9 := .ofBitVec (resolveSize locals hl),
+      r8 := .ofBitVec (t.regs.rsp.toBitVec + 16536#64),
+      rdx := .ofBitVec off, rcx := .ofBitVec ex, rdi := t.regs.rbx}}
+    have hy : PostEmitLI P g M F s ra lo locals y := by
+      apply h.next
       all_goals rfl
     refine hy.toBd.callResolve ?_ ?_ ?_ ?_ ?_ ?_ ?_
     · rw [hy.mappingEq]
@@ -94,10 +76,9 @@ theorem b_30_call [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mappi
       · exact hin.size
       · exact hin.offset
       · exact hin.excess
-      · rw [resolveLocals_current hl hy.localLength]
-        exact hin.current
+      · exact hin.current
     · intro r' u hq
-      have hr := (hq ⟨Vector.replicate MAX_N 0#8, Vector.replicate MAX_N 0#64⟩).2
+      have hr := (hq ⟨Vector.replicate MAX_N 0#8, Vector.replicate MAX_N 0#64⟩).2.1
       rw [hr]
       rfl
     · intro r' u hq
@@ -106,18 +87,16 @@ theorem b_30_call [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mappi
       rfl
     · intro spills dropped u lo' hb hq hag
       have hp := hy.afterResolve spills dropped hb hag
-      obtain ⟨res, hal, hmodel⟩ := resolved_of_resolveQ hq
-      apply hfinish spills dropped res lo' u hp ?_ hal ?_
-      · simp only [plannerResolve, hy.mappingEq,
-          resolveLocals_current hl hy.localLength] at hmodel
+      obtain ⟨res, hal, hnormal, hmodel⟩ := resolved_of_resolveQ hq
+      apply hfinish spills dropped res lo' u hp ?_ hal hnormal ?_
+      · simp only [plannerResolve, hy.mappingEq] at hmodel
         exact hmodel
       · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rbp]
         exact hbp
     · intro spills dropped u lo' hlo hmem hx harg
       apply hstop spills dropped lo' u hlo hmem
       · have hmodel := resolved_of_resolveX hx
-        simp only [plannerResolve, hy.mappingEq,
-          resolveLocals_current hl hy.localLength] at hmodel
+        simp only [plannerResolve, hy.mappingEq] at hmodel
         exact hmodel
       · exact harg
 
@@ -129,35 +108,35 @@ theorem b_30 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     (I' : CfgLabel → Nat → Unit → MachineData → Prop) (E : Int64 → MachineData → Prop)
     (hbad : ∀ spills dropped res lo' u,
       Resolved g M locals hl spills dropped res →
-      PostEmitLI P (withResolve g spills dropped) M F s ra lo' (resolveLocals locals hl) u →
+      PostEmitLI P (withResolve g spills dropped) M F s ra lo' locals u →
       res ≠ .dropped → al u = ResolveU.code res →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-        (label ".LB.Planner.run.21") u)
+        (label ".LB.Planner.run.12") u)
     (hzero : ∀ spills dropped res lo' u,
       Resolved g M locals hl spills dropped res →
-      PostEmitLI P (withResolve g spills dropped) M F s ra lo' (resolveLocals locals hl) u →
+      PostEmitLI P (withResolve g spills dropped) M F s ra lo' locals u →
       res = .dropped → g.p.m = 0#64 →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-        (label ".LB.Planner.run.31") u)
+        (label ".LB.Planner.run.13") u)
     (hmore : ∀ spills dropped res lo' u,
       Resolved g M locals hl spills dropped res →
-      PostEmitLI P (withResolve g spills dropped) M F s ra lo' (resolveLocals locals hl) u →
+      PostEmitLI P (withResolve g spills dropped) M F s ra lo' locals u →
       res = .dropped → g.p.m ≠ 0#64 → u.regs.rbp.toBitVec = before →
       rax u = g.p.drp → rcx u = g.p.drp + g.p.m → rdx u = 0#64 → K () u)
     (hstop : ∀ spills dropped lo' u, lo'.length = 4113 →
-      (Stk (rsp s) (fr s lo' (resolveLocals locals hl)) ra.toBitVec ∗
+      (Stk (rsp s) (fr s lo' locals) ra.toBitVec ∗
         (PlannerRunView P (withResolve g spills dropped) ∗ F)).get u.dmem →
       Resolved g M locals hl spills dropped .assertionFailed →
       u.regs.get64 .rdi = 1#64 →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label "exit") u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.29" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.17" →
       ∀ t, (∃ lo, PostEmitLI P g M F s ra lo locals t) →
         t.regs.rbp.toBitVec = before → WP.wp blk.body K
           (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   refine b_30_call P g M F s ra locals hl hin before hresolve K I' E ?_ hstop
-  intro spills dropped res lo' u h hmodel hal hbp
+  intro spills dropped res lo' u h hmodel hal hnormal hbp
   apply resolve_tail P (withResolve g spills dropped) M F s ra lo'
-    (resolveLocals locals hl) u res before h hal hbp K I' E
+    locals u res before h hal hnormal hbp K I' E
   · intro v hv hres ha
     exact hbad spills dropped res lo' v hmodel hv hres ha
   · intro v hv hres hm

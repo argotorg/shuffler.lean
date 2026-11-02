@@ -18,16 +18,14 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 if [ $# -eq 0 ]; then
-	(cd "$root" && nice lake build -q PlanBridge.Final BbuKraken.PlanReject BbuKraken.Unit.Plan.PlannerRunBin >/dev/null)
-	printf 'module\nimport PlanBridge.Final\nimport all BbuKraken.PlanFinal\nimport BbuKraken.PlanReject\nimport BbuKraken.Unit.Plan.PlannerRunBin\n' > "$tmp/final.lean"
-	set -- "$tmp/final.lean" Bbu.buildBottomUp_correct Bbu.bbu_harness_correct \
+	(cd "$root" && nice lake build -q PlanBridge.Final BbuKraken.Bin BbuKraken.Unit.Plan.PlannerRunBin >/dev/null)
+	printf 'module\nimport PlanBridge.Final\nimport all BbuKraken.PlanFinal\nimport all BbuKraken.Bin\nimport BbuKraken.Unit.Plan.PlannerRunBin\n' > "$tmp/final.lean"
+	set -- "$tmp/final.lean" Bbu.buildBottomUp_correct Bbu.buildBottomUp_binary_correct \
 		Bbu.planner_helpers_correct Bbu.emission_run_correct Bbu.planner_classify_correct \
-		Bbu.planner_resolve_correct Bbu.planner_run_correct Bbu.planner_run_harness_correct \
-		Bbu.plan_correct Bbu.plan_harness_correct \
-		Bbu.plan_rejects_bad_args Bbu.plan_rejects_invalid_ids \
-		Bbu.plan_harness_rejects_bad_args Bbu.plan_harness_rejects_invalid_ids \
-		PlanBridge.kraken_to_flat PlanBridge.kraken_to_flat_harness PlanBridge.flat_to_shuffler \
-		PlanBridge.plan_correct PlanBridge.plan_harness_correct
+		Bbu.planner_resolve_correct Bbu.planner_run_correct Bbu.planner_run_binary_correct \
+		Bbu.plan_correct Bbu.plan_binary_correct \
+		PlanBridge.kraken_to_flat PlanBridge.kraken_to_flat_binary PlanBridge.flat_to_shuffler \
+		PlanBridge.plan_correct PlanBridge.plan_binary_correct
 fi
 src=$(realpath "$1")
 shift

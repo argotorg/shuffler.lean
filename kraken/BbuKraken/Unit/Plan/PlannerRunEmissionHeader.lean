@@ -53,6 +53,20 @@ theorem AttemptLI.headerSome (h : AttemptLI P g M F s ra lo locals t) (hok : g.O
     (fun p hp => headerWrites.bounds g p (List.mem_of_mem_take hp))
   exact hh.localSome (by omega)
 
+theorem AttemptLI.headerOpsSome (h : AttemptLI P g M F s ra lo locals t) (hok : g.Ok) :
+    ((storeLocalWords t.dmem t.regs.rsp.toBitVec ((headerWrites g).take 5)).loadInt
+      (t.regs.rsp.toBitVec + 8#64) 8).isSome = true := by
+  have hh := h.storeWords hok ((headerWrites g).take 5)
+    (fun p hp => headerWrites.bounds g p (List.mem_of_mem_take hp))
+  exact hh.localSome (i := 1) (by decide)
+
+theorem AttemptLI.headerOpsRead (h : AttemptLI P g M F s ra lo locals t) (hok : g.Ok) :
+    rd (storeLocalWords t.dmem t.regs.rsp.toBitVec ((headerWrites g).take 5))
+      (t.regs.rsp.toBitVec + 8#64) = g.opsPtr := by
+  have hh := h.storeWords hok ((headerWrites g).take 5)
+    (fun p hp => headerWrites.bounds g p (List.mem_of_mem_take hp))
+  exact hh.toLoopLI.opsRead
+
 theorem AttemptLI.headerSetup (h : AttemptLI P g M F s ra lo locals t) (hok : g.Ok) :
     EmitLI P g M F s ra lo (headerLocals g locals)
       { t with dmem := storeLocalWords t.dmem t.regs.rsp.toBitVec (headerWrites g) } := by

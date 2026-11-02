@@ -8,8 +8,7 @@ import all PlanBridge.Loops
 @[expose] public section
 
 /-!
-The flat `plannerRun` and PR31 `Planner.run` (`plannerRun_corr`), and the entry `planEntry`
-(`planEntry_corr`).
+The flat `plannerRun` and PR31 `Planner.run` (`plannerRun_corr`).
 -/
 
 namespace PlanBridge
@@ -146,46 +145,5 @@ theorem plannerRun_corr {pl : Bbu.Flat.Planner} (hm : pl.m.toNat ≤ Bbu.MAX_N)
     exact runLoop_corr hm hn ok take _ _ _ false us rfl ⟨rfl, rfl, hd⟩ rfl
   · rw [ite_eq_left (by simp [ht]), ite_eq_right (mt hall.mp ht), except_error_bind]
     rfl
-
-/-! ## The entry -/
-
--- The return value of `plan` for the result `r` of `run`.
-def codeOf (r : Bbu.Flat.Status × Bbu.Flat.PSt) : Bbu.Word :=
-  match r.1 with
-  | .done => .ofNat 64 r.2.trace.length
-  | .blocked => -1
-  | .assertionFailed => -2
-
--- `plan` returns -2 for the arguments that it rejects. Else it runs `Planner.run` and its
--- result is that of PR31 `Planner.run` on the decoded slots.
-theorem planEntry_corr (m n : Bbu.Word) (source target : Vector Bbu.StackSlot Bbu.MAX_N)
-    (spilled : BitVec 32 → BitVec 8) (idCount : Bbu.Word) (allowed strategy : BitVec 8)
-    (dropped : Vector (BitVec 8) Bbu.MAX_N) (data : Vector Bbu.StackSlot Bbu.MAX_N)
-    (sources : Vector Bbu.Word Bbu.MAX_N) (us : Nat → Bbu.Flat.RunU)
-    (ok : SlotsOk (source.toList.take m.toNat ++ target.toList.take n.toNat)) :
-    match Bbu.Flat.planEntry m n source target spilled idCount allowed strategy dropped data
-      sources us with
-    | (c, none) => c = -2
-    | (c, some r) => m.toNat ≤ Bbu.MAX_N ∧ n.toNat ≤ Bbu.MAX_N ∧ c = codeOf r ∧
-        RunR ⟨source, m, target, n, allowed = 1⟩ r
-          (Planner.run (srcOf source m) (srcOf target n)
-            (pSpills (source.toList.take m.toNat) n.toNat target spilled) (allowed = 1)
-            (if decide (strategy = 1) then .Take else .Leave)) := by
-  unfold Bbu.Flat.planEntry
-  split_ifs with h1 <;> try rfl
-  all_goals
-    obtain ⟨hm, hn⟩ := not_or.mp h1
-    rw [gt_iff_lt, Bbu.Flat.ofNat_lt_iff le_rfl, Nat.not_lt] at hm
-    replace hn := (not_or.mp hn).1
-    rw [gt_iff_lt, Bbu.Flat.ofNat_lt_iff le_rfl, Nat.not_lt] at hn
-    have hr := plannerRun_corr (pl := ⟨source, m, target, n, allowed = 1⟩) hm hn ok (strategy = 1)
-      ⟨spilled, Bbu.Flat.zeroFrom m 0 dropped, false, data, [], sources⟩ us (dnR_replicate hm dropped)
-    first
-    | rw [ite_eq_left ‹decide (strategy = 1) = true›] at hr
-    | rw [ite_eq_right ‹¬decide (strategy = 1) = true›] at hr
-    dsimp only
-    generalize Bbu.Flat.plannerRun _ _ _ _ = r at hr ⊢
-    rcases r with ⟨st, ps⟩
-    cases st <;> exact ⟨hm, hn, rfl, hr⟩
 
 end PlanBridge

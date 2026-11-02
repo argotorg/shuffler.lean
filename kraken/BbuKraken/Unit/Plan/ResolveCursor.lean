@@ -59,8 +59,8 @@ variable [Host] [FunDecls]
   (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
   (rest : Label → MachineData → Prop) (var : Label → MachineData → Nat)
 
-theorem b_11 : resolveAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.resolve.11" →
+theorem b_10 : resolveAsm.ForallBlocks fun blk =>
+    blk.label = .label ".LB.Planner.resolve.10" →
       Obl P r F s ra (loopPhase P r F s ra rest) (loopVar s var) blk := by
   cfg_block [Obl]
   intro t ht
@@ -78,12 +78,13 @@ theorem b_11 : resolveAsm.ForallBlocks fun blk =>
   kvcgen64
   all_goals try symexec_norm at ⊢
   vc_by_shape
-  | goto ".LB.Planner.resolve.13" =>
+  | goto ".LB.Planner.resolve.12" =>
     rename_i hj
     symexec_norm at hj
     have he : i + 1 = w.count := by
       have hh : 8#64 + t.regs.rbx.toBitVec = t.regs.r13.toBitVec := by
-        simpa only [sub_beq_zero, beq_iff_eq] using hj
+        exact (show t.regs.r13.toBitVec = 8#64 + t.regs.rbx.toBitVec from by
+          simpa only [sub_beq_zero, beq_iff_eq] using hj).symm
       rw [h.rbx, h.r13] at hh
       bv_omega
     cfg_goto

@@ -75,33 +75,31 @@ def RunInv (P : Addr) (g : PlannerRunG) (F : MProp 64) (s : MachineData) (ra : I
     else if l = ".LB.Planner.run.2" then CheckScan P (withSaw g 0#8) F s ra t
     else if l = ".LB.Planner.run.3" then CheckMissing P (withSaw g 0#8) F s ra t
     else if l = ".LB.Planner.run.5" then CheckDone P (withSaw g 0#8) F s ra t
-    else if l = ".LB.Planner.run.6" then LoopPhase g s (fun a => PrepareHead P a F s ra) t
-    else if l = ".LB.Planner.run.7" then LoopPhase g s (fun a => InitDestHead P a F s ra) t
-    else if l = ".LB.Planner.run.8" then LoopPhase g s (fun a => InitDestDone P a F s ra) t
-    else if l = ".LB.Planner.run.9" then LoopPhase g s (fun a => InitPosHead P a F s ra) t
-    else if l = ".LB.Planner.run.10" then LoopPhase g s (fun a => InitDone P a F s ra) t
-    else if l = ".LB.Planner.run.11" then
+    else if l = ".LB.Planner.run.19" then LoopPhase g s (fun a => PrepareHead P a F s ra) t
+    else if l = ".LB.Planner.run.20" then LoopPhase g s (fun a => InitDestHead P a F s ra) t
+    else if l = ".LB.Planner.run.21" then LoopPhase g s (fun a => InitDestDone P a F s ra) t
+    else if l = ".LB.Planner.run.22" then LoopPhase g s (fun a => InitPosHead P a F s ra) t
+    else if l = ".LB.Planner.run.23" then LoopPhase g s (fun a => InitDone P a F s ra) t
+    else if l = ".LB.Planner.run.24" then
       ∃ current M, ∃ ctx : AttemptContext g current s M,
         EmitDataHead P current M F s ra ctx.wanted t
-    else if l = ".LB.Planner.run.12" then AttemptPhase g s (fun a M => EmitDestHead P a M F s ra) t
-    else if l = ".LB.Planner.run.13" then AttemptPhase g s (fun a M => EmitDestDone P a M F s ra) t
-    else if l = ".LB.Planner.run.14" then AttemptPhase g s (fun a M => EmitPosHead P a M F s ra) t
-    else if l = ".LB.Planner.run.15" then AttemptPhase g s (fun a M => EmitCountNext P a M F s ra) t
-    else if l = ".LB.Planner.run.16" then AttemptPhase g s (fun a M => EmitCountHead P a M F s ra) t
-    else if l = ".LB.Planner.run.17" then EmittedPhase g s (fun a M => PostEmitHead P a M F s ra) t
-    else if l = ".LB.Planner.run.18" then SourcePhase P g F s ra t
-    else if l = ".LB.Planner.run.19" then SourceDonePhase P g F s ra t
-    else if l = ".LB.Planner.run.20" ∨ l = ".LB.Planner.run.22" ∨
-      l = ".LB.Planner.run.23" ∨ l = ".LB.Planner.run.24" ∨
-      l = ".LB.Planner.run.25" then BuildFailPhase P g F s ra t
-    else if l = ".LB.Planner.run.31" then RetryFailPhase P g F s ra t
+    else if l = ".LB.Planner.run.25" then AttemptPhase g s (fun a M => EmitDestHead P a M F s ra) t
+    else if l = ".LB.Planner.run.26" then AttemptPhase g s (fun a M => EmitDestDone P a M F s ra) t
+    else if l = ".LB.Planner.run.27" then AttemptPhase g s (fun a M => EmitPosHead P a M F s ra) t
+    else if l = ".LB.Planner.run.7" then AttemptPhase g s (fun a M => EmitCountNext P a M F s ra) t
+    else if l = ".LB.Planner.run.8" then AttemptPhase g s (fun a M => EmitCountHead P a M F s ra) t
+    else if l = ".LB.Planner.run.9" then EmittedPhase g s (fun a M => PostEmitHead P a M F s ra) t
+    else if l = ".LB.Planner.run.10" then SourcePhase P g F s ra t
+    else if l = ".LB.Planner.run.11" then SourceDonePhase P g F s ra t
+    else if l = ".LB.Planner.run.6" then BuildFailPhase P g F s ra t
+    else if l = ".LB.Planner.run.13" then RetryFailPhase P g F s ra t
     else if l = ".LB.Planner.run.4" then CheckBad P (withSaw g 0#8) F s ra t
-    else if l = ".LB.Planner.run.21" then RunReturn P g F s ra t
-    else if l = ".LB.Planner.run.26" then
+    else if l = ".LB.Planner.run.12" then RunReturn P g F s ra t
+    else if l = ".LB.Planner.run.14" then
       AttemptPhase g s (fun a M t => a.p.n = 0#64 ∧ EmitMapped P a M F s ra t) t
-    else if l = ".LB.Planner.run.27" then AttemptPhase g s (fun a M => EmitReady P a M F s ra) t
-    else if l = ".LB.Planner.run.30" then RetryPhase P g F s ra t
-    else if l = ".LB.Planner.run.32" then
+    else if l = ".LB.Planner.run.15" then AttemptPhase g s (fun a M => EmitReady P a M F s ra) t
+    else if l = ".LB.Planner.run.18" then RetryPhase P g F s ra t
+    else if l = ".LB.Planner.run.28" then
       AttemptPhase g s (fun a M t => a.p.m = 0#64 ∧
         ∃ lo locals, AttemptLI P a M F s ra lo locals t) t
     else resolvePhase l t

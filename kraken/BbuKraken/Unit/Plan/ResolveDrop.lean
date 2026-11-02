@@ -18,11 +18,11 @@ set_option experimental.vcgen true
 namespace Bbu.Unit.ResolveU
 open Bbu.Sep
 
-theorem b_14 [Host] [FunDecls]
+theorem b_13 [Host] [FunDecls]
     (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (rest : Label → MachineData → Prop) (var : Label → MachineData → Nat)
     (hok : r.Ok) :
-    resolveAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.resolve.14" →
+    resolveAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.resolve.13" →
       Obl P r F s ra (loopPhase P r F s ra (dropPhase P r F s ra rest)) (loopVar s var) blk := by
   cfg_block [Obl]
   intro t ht
@@ -55,7 +55,7 @@ theorem b_14 [Host] [FunDecls]
   have rptr := Wd.rd hptr
   change rd t1.dmem (P + 48#64) = r.p.drp at rptr
   obtain ⟨_, hdrop⟩ := RView.dropped hb1.kb.vmem
-  have kd := SpillSetProof.Bs.isSome hdrop (x := best)
+  have kd := Bs.isSome_word hdrop (x := best)
     (by simpa only [List.length_take, Vector.length_toList, Work.ghost] using
       Nat.lt_min.mpr (And.intro (BitVec.lt_def.mp hbest) ho))
   obtain ⟨_, hp2⟩ := hb2.typedWord 4 (by decide)
@@ -96,7 +96,7 @@ theorem b_14 [Host] [FunDecls]
   all_goals try simp only [h15, h.r14, haddr, rptr, rp2, hinc, rp3, re3] at ⊢
   vc_by_shape
   | load => run_loads [kdn, kptr, kd, kp2, kp3, ke3]
-  | goto ".LB.Planner.resolve.8" =>
+  | goto ".LB.Planner.resolve.7" =>
     rename_i hj
     symexec_norm at hj
     simp only [h15, h.r14, haddr, rptr, rp2, hinc, rp3, re3,
@@ -117,7 +117,7 @@ theorem b_14 [Host] [FunDecls]
       rw [hbase3, h.base]
       simp only [rcx, Reg64s.get64_rcx]
       omega
-  | goto ".LB.Planner.resolve.3" =>
+  | goto ".LB.Planner.resolve.18" =>
     rename_i hj
     symexec_norm at hj
     simp only [h15, h.r14, haddr, rptr, rp2, hinc, rp3, re3,
@@ -131,7 +131,7 @@ theorem b_14 [Host] [FunDecls]
     · exact h.bd.kb.stack (by decide)
     · simp only [Inv, Names.resolve, String.reduceEq, ↓reduceIte, Result]
       exact ⟨w'.ghost r, lo, L2.toList, .dropped, hb3.next rfl rfl,
-        update_ok hok _ _, hq, rfl⟩
+        update_ok hok _ _, hq, rfl, by decide⟩
     · left
       simp only [V, loopVar, String.reduceEq, false_or, ↓reduceIte]
       omega

@@ -7,7 +7,7 @@ import BbuKraken.Names
 namespace Bbu
 
 /-!
-The output of `g++ -O1` for `c/shuffler/test_wrappers.cpp`, one program for each function, in
+The output of `g++ -O1` for `c/shuffler/stack/Shuffler.cpp`, one program for each function, in
 the order of the file. Each Lean name is that of the model function that the C++
 function implements; `BbuKraken.Names` gives the symbol name. `positionOf` is inline: it
 is a load of `m_positionOf`. Failed assertions call the external symbol `exit` with status 1.
@@ -43,19 +43,9 @@ public def isDemandedAsm : Program := bbuParseFn(Names.isDemanded)
 public def classifyAsm : Program := bbuParseFn(Names.classify)
 public def resolveAsm : Program := bbuParseFn(Names.resolve)
 public def plannerRunAsm : Program := bbuParseFn(Names.plannerRun)
-public def buildBottomUpAsm : Program := bbuParseFn(Names.build_bottom_up)
-public def emissionPopAsm : Program := bbuParseFn(Names.emission_pop)
-public def spillSetAsm : Program := bbuParseFn(Names.spill_set)
-public def removeSurplusEntryAsm : Program := bbuParseFn(Names.remove_surplus)
-public def permuteEntryAsm : Program := bbuParseFn(Names.permuteEntry)
-public def permuteAtLowestHeightEntryAsm : Program := bbuParseFn(Names.permute_at_lowest_height)
-public def buildMappingAsm : Program := bbuParseFn(Names.build_mapping)
-public def resolveEntryAsm : Program := bbuParseFn(Names.resolveEntry)
-public def emitAsm : Program := bbuParseFn(Names.emit)
-public def planAsm : Program := bbuParseFn(Names.plan)
 
 set_option maxRecDepth 100000 in
-/-- The generated assembly also linked by `bbu_harness`. -/
+/-- The generated assembly checked against the C++ methods in `bbu_harness`. -/
 public def bbuAsm : Program := bbuParseFile("../../build/kraken/c/build_bottom_up.S")
 
 end Bbu

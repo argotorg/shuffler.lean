@@ -19,12 +19,13 @@ theorem b_31 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     (K : Unit → MachineData → Prop) (I' : CfgLabel → Nat → Unit → MachineData → Prop)
     (E : Int64 → MachineData → Prop)
     (hloop : ∀ u, rax u = 1#64 + rax t → DropAfterHead P g M F s ra before u →
-      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.30") u)
+      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.18") u)
     (hretry : ∀ u, Flat.droppedCount g.p.m g.dropped > before → PrepareHead P g F s ra u →
-      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.6") u)
+      K () u)
     (hfail : ∀ u, ¬ Flat.droppedCount g.p.m g.dropped > before →
-      (∃ lo locals, Bd P g F s ra lo locals u) → K () u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.30" →
+      (∃ lo locals, Bd P g F s ra lo locals u) →
+      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.13") u) :
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.18" →
       DropAfterHead P g M F s ra before t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
@@ -42,7 +43,7 @@ theorem b_31 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   all_goals try simp only [hax', rd, count_byte] at ⊢
   vc_by_shape
   | load => exact ks
-  | goto ".LB.Planner.run.30" =>
+  | goto ".LB.Planner.run.18" =>
     rename_i hj
     symexec_norm at hj
     simp only [hax', hcx', BitVec.zero_eq, Bool.not_eq_true', beq_eq_false_iff_ne] at hj
@@ -52,23 +53,9 @@ theorem b_31 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     · change 1#64 + (g.p.drp + i) = 1#64 + rax t
       exact congrArg (fun w : Word => 1#64 + w) hax.symm
     refine ⟨lo, locals, i + 1#64, ?_, hin, ?_, hcx, hbp, hmodel'⟩
-    · exact h.next rfl rfl rfl rfl rfl rfl rfl
+    · exact h.next rfl rfl rfl rfl rfl
     · change 1#64 + (g.p.drp + i) = g.p.drp + (i + 1#64)
       bv_omega
-  | goto ".LB.Planner.run.6" =>
-    rename_i he hj
-    symexec_norm at he hj
-    simp only [hax', hcx', BitVec.zero_eq, Bool.not_eq_false', beq_iff_eq] at he
-    have hiend : i + 1#64 = g.p.m := by bv_omega
-    have hend := dropped_end (m := g.p.m) (d := g.dropped)
-      (i := i + 1#64) (count := byteCount t.regs.rdx.toBitVec (get g.dropped i)) (by bv_omega)
-    have hcount := hend.symm.trans hmodel'
-    simp only [hax', rd, count_byte, hbp, Idioms.cf_sub, decide_eq_true_eq] at hj
-    apply hretry
-    · change before.toNat < (Flat.droppedCount g.p.m g.dropped).toNat
-      simpa only [hcount] using hj
-    · refine ⟨lo, locals, ?_, h.r13, h.count, h.targets⟩
-      exact h.toLoopLI.next rfl rfl rfl rfl rfl rfl rfl
   | other =>
     rename_i he hj
     symexec_norm at he hj
@@ -77,7 +64,23 @@ theorem b_31 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     have hend := dropped_end (m := g.p.m) (d := g.dropped)
       (i := i + 1#64) (count := byteCount t.regs.rdx.toBitVec (get g.dropped i)) (by bv_omega)
     have hcount := hend.symm.trans hmodel'
-    simp only [hax', rd, count_byte, hbp, Idioms.cf_sub, decide_eq_false_iff_not] at hj
+    simp only [hax', rd, count_byte, hbp, Idioms.cf_sub,
+      Bool.not_eq_false', decide_eq_true_eq] at hj
+    apply hretry
+    · change before.toNat < (Flat.droppedCount g.p.m g.dropped).toNat
+      simpa only [hcount] using hj
+    · refine ⟨lo, locals, ?_, h.r15, h.count, h.targets⟩
+      exact h.toLoopLI.next rfl rfl rfl rfl rfl rfl rfl
+  | goto ".LB.Planner.run.13" =>
+    rename_i he hj
+    symexec_norm at he hj
+    simp only [hax', hcx', BitVec.zero_eq, Bool.not_eq_false', beq_iff_eq] at he
+    have hiend : i + 1#64 = g.p.m := by bv_omega
+    have hend := dropped_end (m := g.p.m) (d := g.dropped)
+      (i := i + 1#64) (count := byteCount t.regs.rdx.toBitVec (get g.dropped i)) (by bv_omega)
+    have hcount := hend.symm.trans hmodel'
+    simp only [hax', rd, count_byte, hbp, Idioms.cf_sub,
+      Bool.not_eq_true', decide_eq_false_iff_not] at hj
     apply hfail
     · change ¬ before.toNat < (Flat.droppedCount g.p.m g.dropped).toNat
       simpa only [hcount] using hj

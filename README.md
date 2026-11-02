@@ -17,7 +17,9 @@ and their composition in `PlanBridge.Final`.
 Lake uses CMake to generate `build/kraken/c/build_bottom_up.S` from the C++23
 shuffler source before it checks the assembly proofs. CMake checks the source
 and header dependencies on each build. The assembly is a build output and is
-not kept in source control. The proofs, test harnesses, and fuzzer use this file.
+not kept in source control. It contains the C++ methods used by the proofs.
+The test harnesses and fuzzer use `build/kraken/c/test_wrappers.S`.
+The build checks that both files contain the same C++ method bodies.
 Both Lake packages use the root `lean-toolchain` (`nightly-2026-10-20`).
 Mathlib is pinned to a commit of its nightly testing repository for that compiler.
 
@@ -59,8 +61,8 @@ The case language is described in `Fuzz/Oracle.lean`.
 
 The fuzz target also runs the port in `kraken/c` on each case that it has a unit for, and aborts
 when the port result differs from the Lean model result. It links the asm
-`build/kraken/c/build_bottom_up.S`. `Fuzz/build.sh` generates it through the same
-Lake target used by the proofs. `Fuzz/port.cpp` converts a case to
+`build/kraken/c/test_wrappers.S`. `Fuzz/build.sh` generates it with CMake and checks
+its C++ method bodies against the proof assembly. `Fuzz/port.cpp` converts a case to
 the C interface of the port, and has one entry in `units` for each port function.
 For `buildBottomUp`, the comparison omits the final destinations, which its C interface does not give.
 

@@ -36,6 +36,27 @@ theorem Bd.hi_len (h : Bd P r F s ra lo loc t) :
 theorem Bd.fr_len (h : Bd P r F s ra lo loc t) : (fr s lo loc).length = resolveD := by
   simp [fr, h.free, h.locals, saved, resolveD]
 
+theorem Bd.exit_mem (h : Bd P r F s ra lo loc t) (exitra : Int64) :
+    (t.dmem.loadInt (t.regs.rsp.toBitVec - 8#64) 8).isSome = true ∧
+      StkMem resolveD (RView P r ∗ F) s
+        (t.dmem.storeInt (t.regs.rsp.toBitVec - 8#64) 8 exitra.toBitVec.toInt) := by
+  obtain ⟨xs, w, he⟩ : ∃ xs w, lo = xs ++ [w] :=
+    ⟨lo.dropLast, lo.getLast (by intro hn; have hl := h.free; rw [hn] at hl; contradiction),
+      (List.dropLast_concat_getLast _).symm⟩
+  have hm := h.kb.mem
+  rw [fr, he, List.append_assoc, List.singleton_append] at hm
+  have ha : t.regs.rsp.toBitVec - 8#64 =
+      rsp s - 8#64 - BitVec.ofNat 64 (8 * ((loc ++ saved s).length + 1)) := by
+    rw [h.kb.sp]
+    simp only [List.length_append, h.locals, saved, List.length_cons,
+      List.length_nil, Nat.reduceAdd, Nat.reduceMul]
+    bv_omega
+  refine ⟨Stk.wd_isSome hm ha, xs ++ exitra.toBitVec :: (loc ++ saved s),
+    ra.toBitVec, ?_, Stk.wd_store hm ha exitra.toBitVec⟩
+  have hl := h.fr_len
+  simpa only [fr, he, List.length_append, List.length_cons, List.length_nil,
+    Nat.zero_add, Nat.add_assoc, Nat.add_left_comm, Nat.add_comm] using hl
+
 theorem Bd.localWord (h : Bd P r F s ra lo loc t) (i : Nat) (hi : i < loc.length) :
     ∃ R, (Wd (t.regs.rsp.toBitVec + BitVec.ofNat 64 (8 * i)) loc[i] ∗ R).get t.dmem := by
   obtain ⟨R, hm⟩ := h.kb.arr_hi (lo := lo) (hi := loc ++ saved s) h.hi_len

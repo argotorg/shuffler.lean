@@ -9,22 +9,7 @@ import all BbuKraken.Sep.ExitContract
 
 @[expose] public section
 
-/-!
-# The contracts of the spill set unit
-
-The unit is `SpillSet::add` (`Names.spillSetAdd` in `build/kraken/c/build_bottom_up.S`) and `spill_set`
-(`build/kraken/c/build_bottom_up.S`). These functions do not use `Emission`, so their contracts do not use
-`Sep.View`: the memory part is the bytes of the spill set (`Sep.Spl`), the arrays of the
-arguments, the stack below `rsp` (`Sep.Stk`) and a frame `F`. The body triples are `Sep.Body`.
-
-- `AddPre` and `AddPost`: `rdi` is the `SpillSet` object `p`, which holds the pointer `S` to the
-  bytes. The bytes of the ids below `n` are in the contract, and the id of a variable slot is
-  below `n`. The result is `Flat.spillAdd`. `AddSpec` is the call rule; `addSpec_of_body` gives
-  it from the unit theorem.
-- `SetPre` and `SetPost`: the arguments of `spill_set`, and the result `Flat.spill_set`. The
-  bytes of `spilled` are those of the ids below `Flat.ids idCount`: the ids that `spill_set`
-  can read or write. `results` is the word at `rsp`.
--/
+/-! The memory and call contracts of `SpillSet::add`. -/
 
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -234,47 +219,5 @@ theorem addSpec_of_body [Host] [FunDecls] {g₀ : Fragment}
   refine ⟨fun s ⟨p, S, f, n, F, hp, hk, hx⟩ => ?_⟩
   exact (ProofKit.callSpecWithExit_of_triple hg hr (hb p S f n F) asz osz K E).1 s
     ⟨hp.isSome, hp, hk, fun t ⟨harg, hpost⟩ => hx t hpost harg⟩
-
-/-! ## `spill_set` -/
-
--- The free words of `spill_set`: 6 saved registers, 5 locals, the callee return slot
--- and the 2 scratch words of `SpillSet::add`.
-def setD : Nat := 14
-
--- The memory of `spill_set(idCount, spilled, adds, addCount, queries, queryCount, results)` in
--- the state `s` at the call: the bytes `f` of the ids at `spilled`, the words of `adds` and of
--- `queries`, the bytes `res` at `r`, the word `r` (`results`) at `rsp`, the stack below `rsp`
--- (the free words `fr` and the return slot `v`) and `F`.
-def SetMem (s : MachineData) (f : BitVec 32 → BitVec 8) (adds queries : List Word) (r : Addr)
-    (res : List (BitVec 8)) (F : MProp 64) (fr : List Word) (v : Word) : MProp 64 :=
-  Spl (rsi s) f (List.range (Flat.ids (rdi s))) ∗ Arr (rdx s) adds ∗ Arr (r8 s) queries
-    ∗ Bs r res ∗ Wd (rsp s) r ∗ Stk (rsp s) fr v ∗ F
-
-structure SetPre (f : BitVec 32 → BitVec 8) (adds queries : List Word) (r : Addr)
-    (res : List (BitVec 8)) (F : MProp 64) (s : MachineData) : Prop where
-  hadds : adds.length = (rcx s).toNat
-  hqueries : queries.length = (r9 s).toNat
-  hres : res.length = (r9 s).toNat
-  mem : ∃ fr v, fr.length = setD ∧ (SetMem s f adds queries r res F fr v).get s.dmem
-
--- The result of the flat model for the arguments in `s`.
-def setRes (s : MachineData) (f : BitVec 32 → BitVec 8) (adds queries : List Word)
-    (res : List (BitVec 8)) : Word × (BitVec 32 → BitVec 8) × List (BitVec 8) :=
-  Flat.spill_set (rdi s) f (adds.map StackSlot.ofWord) (queries.map StackSlot.ofWord) res
-
--- `rax` is the result of `Flat.spill_set`, and the memory holds its bytes.
-def SetPost (f : BitVec 32 → BitVec 8) (adds queries : List Word) (r : Addr)
-    (res : List (BitVec 8)) (F : MProp 64) (s t : MachineData) : Prop :=
-  rax t = (setRes s f adds queries res).1
-    ∧ ∃ fr v, fr.length = setD ∧ (SetMem s (setRes s f adds queries res).2.1 adds queries r
-      (setRes s f adds queries res).2.2 F fr v).get t.dmem
-
--- The add loop stops at an assertion before the query loop.
-def SetExit (f : BitVec 32 → BitVec 8) (adds queries : List Word) (r : Addr)
-    (res : List (BitVec 8)) (F : MProp 64) (s t : MachineData) : Prop :=
-  (Flat.spillAddAll f (adds.map StackSlot.ofWord)).1 = .assertionFailed
-    ∧ (setRes s f adds queries res).1 = -2#64
-    ∧ ∃ fr v, fr.length = setD ∧ (SetMem s (setRes s f adds queries res).2.1 adds queries r
-      (setRes s f adds queries res).2.2 F fr v).get t.dmem
 
 end Bbu.Unit

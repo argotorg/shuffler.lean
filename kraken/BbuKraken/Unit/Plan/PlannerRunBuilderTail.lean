@@ -24,9 +24,9 @@ def builderTail : Program := parse("
   movzbl 88(%rsp), %edx
   cmove %edx, %eax
   movb %al, 56(%rbx)
-  cmpq $0, 8(%rbx)
-  je .LB.Planner.run.32
   movl $0, %eax
+  cmpq $0, 8(%rbx)
+  je .LB.Planner.run.28
 ")
 
 def mergeSaw (old saw : BitVec 8) : BitVec 8 := if old = 0#8 then saw else old
@@ -56,16 +56,16 @@ theorem BuildLI.storeSaw {P : Addr} {g : PlannerRunG} {F : MProp 64}
     (h : BuildLI P g F s ra lo l M saw t) (hok : g.Ok) (x : Int)
     (hm : u.dmem = t.dmem.storeInt (P + 56#64) 1 x)
     (hsp : u.regs.rsp = t.regs.rsp)
-    (hbx : u.regs.rbx = t.regs.rbx) (h12 : u.regs.r12 = t.regs.r12)
-    (h15 : u.regs.r15 = t.regs.r15) (h14 : u.regs.r14 = t.regs.r14)
-    (h13 : u.regs.r13 = t.regs.r13) :
+    (hbx : u.regs.rbx = t.regs.rbx) (h14 : u.regs.r14 = t.regs.r14)
+    (_h13 : u.regs.r13 = t.regs.r13) (_h12 : u.regs.r12 = t.regs.r12)
+    (h15 : u.regs.r15 = t.regs.r15) :
     AttemptLI P (withSaw g (BitVec.ofInt 8 x)) M F s ra lo
       (l.toList (plannerBuilder g s M saw)) u := by
   have hc := MapCells.localMapping h.toBd hok
   rw [l.mapping] at hc
-  exact ⟨⟨h.toBd.storeSaw x hm hsp, hbx ▸ h.rbx, h12 ▸ h.r12,
-    h15 ▸ h.r15, h14 ▸ h.r14, h.sources⟩, h.count, hc, fun _ => l.mapping _,
-      by simpa only [h13, hsp] using h.r13⟩
+  exact ⟨⟨h.toBd.storeSaw x hm hsp, hbx ▸ h.rbx, h14 ▸ h.r14,
+    h.ops, h.strategy, h.sources⟩, h.count, hc, fun _ => l.mapping _,
+      by simpa only [h15, hsp] using h.r15⟩
 
 set_option maxRecDepth 4096 in
 theorem builder_tail [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
@@ -77,7 +77,7 @@ theorem builder_tail [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 6
     (hzero : ∀ u, g.p.m = 0#64 →
       AttemptLI P (withSaw g (mergeSaw g.p.saw saw)) M F s ra lo
         (l.toList (plannerBuilder g s M saw)) u →
-      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.32") u)
+      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.28") u)
     (hnonzero : ∀ u, g.p.m ≠ 0#64 → rax u = 0#64 →
       AttemptLI P (withSaw g (mergeSaw g.p.saw saw)) M F s ra lo
         (l.toList (plannerBuilder g s M saw)) u → K () u) :
@@ -119,7 +119,7 @@ theorem builder_tail [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 6
   all_goals try simp only [hb.rbx, rsaw, rbyte, select_saw] at ⊢
   vc_by_shape
   | load => simp only [ksaw, kbyte, km]
-  | goto ".LB.Planner.run.32" =>
+  | goto ".LB.Planner.run.28" =>
     rename_i af hj
     symexec_norm at hj
     simp only [hb.rbx, rsaw, rbyte, hselect', rm, BitVec.sub_zero,

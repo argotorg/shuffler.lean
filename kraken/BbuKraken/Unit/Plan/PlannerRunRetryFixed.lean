@@ -29,9 +29,9 @@ theorem b_29_fixed [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapp
     (K : Unit → MachineData → Prop) (I' : CfgLabel → Nat → Unit → MachineData → Prop)
     (E : Int64 → MachineData → Prop)
     (hloop : ∀ u, rax u = 1#64 + rax t → DropBeforeFixed P g M F s ra locals u →
-      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.28") u)
+      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.16") u)
     (hdone : ∀ u, ResolveFixed P g M F s ra locals u → K () u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.28" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.16" →
       DropBeforeFixed P g M F s ra locals t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
@@ -49,7 +49,7 @@ theorem b_29_fixed [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapp
   all_goals try simp only [hax', rd, count_byte] at ⊢
   vc_by_shape
   | load => exact ks
-  | goto ".LB.Planner.run.28" =>
+  | goto ".LB.Planner.run.16" =>
     rename_i hj
     symexec_norm at hj
     simp only [hax', hdx', BitVec.zero_eq, Bool.not_eq_true', beq_eq_false_iff_ne] at hj
@@ -59,7 +59,7 @@ theorem b_29_fixed [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapp
     · change 1#64 + (g.p.drp + i) = 1#64 + rax t
       exact congrArg (fun x : Word => 1#64 + x) hax.symm
     refine ⟨lo, i + 1#64, ?_, hin, ?_, hdx, hmodel'⟩
-    · exact h.next rfl rfl rfl rfl rfl rfl rfl
+    · exact h.next rfl rfl rfl rfl rfl
     · change 1#64 + (g.p.drp + i) = g.p.drp + (i + 1#64)
       bv_omega
   | other =>
@@ -69,7 +69,7 @@ theorem b_29_fixed [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapp
     have he : i + 1#64 = g.p.m := by bv_omega
     apply hdone
     refine ⟨lo, ?_, ?_⟩
-    · exact h.next rfl rfl rfl rfl rfl rfl rfl
+    · exact h.next rfl rfl rfl rfl rfl
     · have hend := dropped_end (m := g.p.m) (d := g.dropped)
         (i := i + 1#64) (count := byteCount t.regs.rbp.toBitVec (get g.dropped i)) (by bv_omega)
       exact hend.symm.trans hmodel'

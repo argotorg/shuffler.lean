@@ -1,5 +1,5 @@
 // Emission::buildBottomUp, Emission::removeSurplus, Emission::permuteAtLowestHeight, Emission::permute,
-// Emission::pop, the MappingBuilder, Planner::resolve, Emission::run (with emit) and Planner::run (with plan) of
+// Emission::pop, the MappingBuilder, Planner::resolve, Emission::run and Planner::run of
 // solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp, freestanding, with the behavior of the Lean model,
 // Shuffler/BuildBottomUp/Defs.lean, Shuffler/RemoveSurplus/Defs.lean, Shuffler/PermuteAtLowestHeight/Defs.lean,
 // Shuffler/Permute/Defs.lean, State.pop of Shuffler/Emission/Defs.lean, buildMapping of
@@ -8,7 +8,6 @@
 // The differences from Shuffler.cpp:
 //
 // - There are no exceptions, so a failed yulAssert calls exit(1).
-// - The source stack of build_bottom_up has no surplus, so every slot has a destination.
 // - The checks marked `Lean` come from the Lean model; Shuffler.cpp does not have them.
 // - The MappingBuilder constructor of Shuffler.cpp is five functions, one for each phase, and the mapping is the
 //   caller's.
@@ -91,7 +90,7 @@ private:
 /// Shuffler.cpp's MappingBuilder, the Lean model's MappingBuilder and buildMapping
 /// (Shuffler/BuildMapping/Defs.lean): builds the mapping of the source stack to the target. Every target offset is
 /// either served by a source slot (retained) or left empty (generated); source slots without a target offset are
-/// surplus. The constructor of Shuffler.cpp runs five phases; here each phase is a unit, and build_mapping runs them
+/// surplus. The constructor of Shuffler.cpp runs five phases; here each phase is a unit, and Planner::run runs them
 /// in order.
 ///
 /// The mapping is the caller's, so that the builder does not copy its 16 KiB. dropped has a byte for each source slot:
@@ -840,9 +839,9 @@ private:
 	return buildBottomUp();
 }
 
-/// How Planner::resolve ends: the excess is dropped; no candidate is left to drop (Shuffler.cpp's false); or a failed
-/// assertion. Not Status: its Blocked has another meaning.
-enum class [[nodiscard]] Resolution : std::uint8_t { Dropped, Stuck, AssertionFailed };
+/// How Planner::resolve ends: the excess is dropped, or no candidate is left to drop (Shuffler.cpp's false).
+/// A failed yulAssert ends the process. Status::Blocked has another meaning.
+enum class [[nodiscard]] Resolution : std::uint8_t { Dropped, Stuck };
 
 /// How a slot can be regenerated after a drop, cheapest first: not needed or for free, pushed, reloaded from an
 /// existing spill, duplicated from another copy, reloaded after a planned spill. Shuffler.cpp's classes 0 to 4; the
@@ -934,7 +933,7 @@ private:
 	SpillSet m_spills;
 	bool m_spillingAllowed;
 	std::uint8_t* m_dropped;
-	/// set by run; no initializer, so that the asm of the resolve entry stays
+	/// Set by run before the first read.
 	bool m_sawWildcardCopy;
 };
 
@@ -1014,8 +1013,7 @@ private:
 			if (Optional<StackOffset> const source = _mapping.positionOf(*destination))
 			{
 				// the Lean model checks this in classify and in the loop below, where it holds for each candidate
-				if (!_mapping.destinationOf(*source))  // Lean
-					return Resolution::AssertionFailed;
+				yulAssert(_mapping.destinationOf(*source).has_value());  // Lean
 				candidates[StackOffset{candidateCount++}] = *source;
 			}
 
@@ -1045,8 +1043,8 @@ private:
 		}
 		if (!best)
 			return Resolution::Stuck;  // couldn't drop anything
-		if (bestClass == Class::Spill && m_spills.add(m_source[best->value]) != Status::Done)
-			return Resolution::AssertionFailed;
+		if (bestClass == Class::Spill)
+			yulAssert(m_spills.add(m_source[best->value]) == Status::Done);
 		droppedNow[*best] = 1;
 		m_dropped[best->value] = 1;
 	}
@@ -1084,10 +1082,9 @@ constexpr bool contains(StackSlot const* const _stack, std::size_t const _size, 
 	{
 		Mapping mapping{m_sourceSize, m_targetSize};
 		MappingBuilder builder{m_source, m_sourceSize, m_target, m_targetSize, m_dropped, _strategy, mapping};
-		if (builder.mapInPlace() != Status::Done || builder.mapClosestCopies() != Status::Done ||
-			builder.mapWildcardSlotCopies() != Status::Done || builder.keepWildcardSlots() != Status::Done ||
-			builder.absorbSurplus() != Status::Done)
-			return Status::AssertionFailed;
+		yulAssert(builder.mapInPlace() == Status::Done && builder.mapClosestCopies() == Status::Done &&
+			builder.mapWildcardSlotCopies() == Status::Done && builder.keepWildcardSlots() == Status::Done &&
+			builder.absorbSurplus() == Status::Done);
 		m_sawWildcardCopy = m_sawWildcardCopy || builder.sawWildcardCopy();
 		for (std::size_t i = 0; i < m_sourceSize; ++i)
 			_data[i] = m_source[i];
@@ -1111,8 +1108,6 @@ constexpr bool contains(StackSlot const* const _stack, std::size_t const _size, 
 			break;
 		case Resolution::Stuck:
 			return Status::Blocked;
-		case Resolution::AssertionFailed:
-			return Status::AssertionFailed;
 		}
 		std::size_t droppedAfter = 0;
 		for (std::size_t i = 0; i < m_sourceSize; ++i)

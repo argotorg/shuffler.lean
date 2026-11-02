@@ -16,8 +16,7 @@ for the call of `permute`). The local array at `16(%rsp)` is the argument `permu
 `loopA` is the loop invariant `HInv` (`Unit/LoopInv.lean`) at `T = 0`, with the room `xo` of the
 trace buffer. The caller sets up the state of the constructor, which satisfies it (`HInv.ctor`).
 The flat model keeps the invariant of `Model.lean` (`Inv`) on this state, and the invariant gives
-the preconditions of the callees (see the callee files). The caller is `build_bottom_up`
-(`Unit/Top.lean`), which uses the flat result (`loopQ`).
+the preconditions of the callees (see the callee files). The caller is `Emission::run`, which uses the flat result (`loopQ`).
 -/
 
 namespace Bbu.Unit

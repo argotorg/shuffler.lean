@@ -33,12 +33,35 @@ asm="$tmp/build/kraken/c/build_bottom_up.S"
 
 build || { cat "$tmp/build.log" >&2; exit 1; }
 [ -s "$asm" ]
-grep -q '^plan:$' "$asm"
+grep -Eq '^_ZN.*Planner3run.*:$' "$asm"
+if awk '/^[[:alpha:]_][[:alnum:]_]*:$/ && !/^_Z/ { found = 1 }
+    END { exit !found }' "$asm"; then
+  echo 'FAIL assembly build: test wrappers are in the proof input' >&2
+  exit 1
+fi
 grep -Eq 'call[[:space:]]+exit' "$asm"
 [ "$(wc -l < "$ASSEMBLY_TEST_LOG")" -eq 1 ]
 build
 [ "$(wc -l < "$ASSEMBLY_TEST_LOG")" -eq 1 ]
 echo 'ok assembly build: generates the program and skips unchanged inputs'
+
+interface_check="$root/kraken/test/assembly_interfaces_test.sh"
+bash "$interface_check" "$asm" "$asm" > "$tmp/interface.log"
+reject_interface() {
+	if bash "$interface_check" "$1" "$2" > "$tmp/interface.log" 2>&1; then
+		echo "FAIL assembly interface: accepts $3" >&2
+		exit 1
+	fi
+	grep -qF "$4" "$tmp/interface.log"
+}
+cp "$asm" "$tmp/wrapper.S"
+printf '\nplan:\n\tret\n' >> "$tmp/wrapper.S"
+reject_interface "$tmp/wrapper.S" "$asm" 'a test wrapper' 'a test wrapper is in the proof input'
+sed '0,/^\tret$/s/^\tret$/\tnop/' "$asm" > "$tmp/changed.S"
+reject_interface "$asm" "$tmp/changed.S" 'a changed method' 'the C++ method bodies differ'
+: > "$tmp/empty.S"
+reject_interface "$tmp/empty.S" "$asm" 'an empty input' 'the C++ method bodies differ'
+echo 'ok assembly interface: rejects a test wrapper, a changed method, and an empty input'
 
 rm "$asm"
 build

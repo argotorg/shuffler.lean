@@ -10,7 +10,7 @@ open Flat
 
 structure InitLI (P : Addr) (g : PlannerRunG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (lo locals : List Word) (t : MachineData) : Prop extends LoopLI P g F s ra lo locals t where
-  r13 : t.regs.r13.toBitVec = t.regs.rsp.toBitVec + 32#64
+  r15 : t.regs.r15.toBitVec = t.regs.rsp.toBitVec + 32#64
   count : locals[3]? = some g.countPtr
   targets : Flat.targetsFrom g.p.fl g.spills 0 = true
   rdx : t.regs.rdx.toBitVec = g.p.m
@@ -22,31 +22,35 @@ variable {P : Addr} {g : PlannerRunG} {F : MProp 64} {s t u : MachineData}
 
 theorem InitLI.next (h : InitLI P g F s ra lo locals t)
     (hm : u.dmem = t.dmem) (hsp : u.regs.rsp = t.regs.rsp)
-    (hbx : u.regs.rbx = t.regs.rbx) (h12 : u.regs.r12 = t.regs.r12)
-    (h15 : u.regs.r15 = t.regs.r15) (hbp : u.regs.rbp = t.regs.rbp)
-    (h14 : u.regs.r14 = t.regs.r14) (h13 : u.regs.r13 = t.regs.r13)
+    (hbx : u.regs.rbx = t.regs.rbx) (h14 : u.regs.r14 = t.regs.r14)
+    (h13 : u.regs.r13 = t.regs.r13) (hbp : u.regs.rbp = t.regs.rbp)
+    (h12 : u.regs.r12 = t.regs.r12) (h15 : u.regs.r15 = t.regs.r15)
     (hdx : u.regs.rdx = t.regs.rdx) (hsi : u.regs.rsi = t.regs.rsi) :
     InitLI P g F s ra lo locals u := by
-  refine ⟨h.toLoopLI.next hm hsp hbx h12 h15 hbp h14, ?_, h.count,
+  refine ⟨h.toLoopLI.next hm hsp hbx h14 h13 hbp h12, ?_, h.count,
     h.targets, hdx ▸ h.rdx, hsi ▸ h.rsi⟩
-  simpa only [h13, hsp] using h.r13
+  simpa only [h15, hsp] using h.r15
 
 theorem InitLI.storeLocal (h : InitLI P g F s ra lo locals t) {i : Nat}
     (hi : i < 4121) (hlo : 4 ≤ i) (w : Word)
     (hm : u.dmem = t.dmem.storeInt
       (t.regs.rsp.toBitVec + BitVec.ofNat 64 (8 * i)) 8 w.toInt)
     (hsp : u.regs.rsp = t.regs.rsp)
-    (hbx : u.regs.rbx = t.regs.rbx) (h12 : u.regs.r12 = t.regs.r12)
-    (h15 : u.regs.r15 = t.regs.r15) (_hbp : u.regs.rbp = t.regs.rbp)
-    (h14 : u.regs.r14 = t.regs.r14) (h13 : u.regs.r13 = t.regs.r13)
+    (hbx : u.regs.rbx = t.regs.rbx) (h14 : u.regs.r14 = t.regs.r14)
+    (_h13 : u.regs.r13 = t.regs.r13) (_hbp : u.regs.rbp = t.regs.rbp)
+    (_h12 : u.regs.r12 = t.regs.r12) (h15 : u.regs.r15 = t.regs.r15)
     (hdx : u.regs.rdx = t.regs.rdx) (hsi : u.regs.rsi = t.regs.rsi) :
     InitLI P g F s ra lo (locals.set i w) u := by
-  refine ⟨⟨h.toBd.storeLocal hi w hm hsp, hbx ▸ h.rbx, h12 ▸ h.r12,
-    h15 ▸ h.r15, h14 ▸ h.r14, ?_⟩, ?_, ?_, h.targets,
+  refine ⟨⟨h.toBd.storeLocal hi w hm hsp, hbx ▸ h.rbx, h14 ▸ h.r14,
+    ?_, ?_, ?_⟩, ?_, ?_, h.targets,
     hdx ▸ h.rdx, hsi ▸ h.rsi⟩
+  · simpa only [List.getElem?_set, show i ≠ 1 by omega,
+      show 1 ≠ i by omega, ↓reduceIte] using h.ops
+  · simpa only [List.getElem?_set, show i ≠ 0 by omega,
+      show 0 ≠ i by omega, ↓reduceIte] using h.strategy
   · simpa only [List.getElem?_set, show i ≠ 2 by omega,
       show 2 ≠ i by omega, ↓reduceIte] using h.sources
-  · simpa only [h13, hsp] using h.r13
+  · simpa only [h15, hsp] using h.r15
   · simpa only [List.getElem?_set, show i ≠ 3 by omega,
       show 3 ≠ i by omega, ↓reduceIte] using h.count
 

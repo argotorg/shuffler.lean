@@ -26,9 +26,9 @@ variable [Host] [FunDecls]
 
 include hok
 
-theorem b_12 (hclass : VSpec CView CG.Ok Names.classify classifyA 16 classifyQ) :
+theorem b_11 (hclass : VSpec CView CG.Ok Names.classify classifyA 16 classifyQ) :
     resolveAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.resolve.12" →
+    blk.label = .label ".LB.Planner.resolve.11" →
       Obl P r F s ra (loopPhase P r F s ra rest) (loopVar s var) blk := by
   simp only [Names.classify] at hclass
   cfg_block [Obl]
@@ -73,7 +73,7 @@ theorem b_12 (hclass : VSpec CView CG.Ok Names.classify classifyA 16 classifyQ) 
   all_goals try simp only [hr] at ⊢
   vc_by_shape
   | load => run_loads [kc, kp, kd]
-  | goto ".LB.Planner.resolve.11" =>
+  | goto ".LB.Planner.resolve.10" =>
     rename_i hj
     symexec_norm at hj
     simp only [hr, ← hd, Bool.not_eq_true', BitVec.sub_zero,
@@ -132,7 +132,7 @@ theorem b_12 (hclass : VSpec CView CG.Ok Names.classify classifyA 16 classifyQ) 
       | exact kclass
       | exact kpu
       | (rw [class_some_store_pending]; exact kclass)
-    | goto ".LB.Planner.resolve.11" =>
+    | goto ".LB.Planner.resolve.10" =>
       rename_i hno
       symexec_norm at hno
       simp only [Idioms.sub_beq_zero, beq_iff_eq, BitVec.zero_eq, hal] at hno
@@ -149,7 +149,7 @@ theorem b_12 (hclass : VSpec CView CG.Ok Names.classify classifyA 16 classifyQ) 
         symexec_norm at ⊢
         rw [hpassu, h13u, hbxu]
         omega
-    | goto ".LB.Planner.resolve.9" =>
+    | goto ".LB.Planner.resolve.8" =>
       rename_i hno hcf hbest he
       symexec_norm at hno hcf hbest he
       simp only [hclassread, movzbl_take, hal, hu.r15] at hno hcf hbest he
@@ -173,7 +173,7 @@ theorem b_12 (hclass : VSpec CView CG.Ok Names.classify classifyA 16 classifyQ) 
         symexec_norm at ⊢
         rw [hpassu, h13u, hbxu]
         omega
-    | goto ".LB.Planner.resolve.10" =>
+    | goto ".LB.Planner.resolve.9" =>
       first
       | (rename_i hno hcf
          symexec_norm at hno hcf

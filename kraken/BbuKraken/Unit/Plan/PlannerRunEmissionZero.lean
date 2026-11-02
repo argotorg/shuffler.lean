@@ -18,8 +18,8 @@ theorem b_32 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     (K : Unit → MachineData → Prop) (I' : CfgLabel → Nat → Unit → MachineData → Prop)
     (E : Int64 → MachineData → Prop)
     (hdone : ∀ u, EmitDestDone P g M F s ra u →
-      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.13") u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.32" →
+      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.26") u) :
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.28" →
       ∀ t, (∃ lo locals, AttemptLI P g M F s ra lo locals t) → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
@@ -41,20 +41,21 @@ theorem b_32 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   have k4 := hc.headerSome hok 4 (by decide)
   have k5 := hc.headerSome hok 5 (by decide)
   have k6 := hc.headerSome hok 6 (by decide)
+  have ko := hc.headerOpsSome hok
+  have ho := hc.headerOpsRead hok
   have hd := hc.headerSetup hok
   simp only [headerWrites, storeLocalWords, List.take, List.foldl_cons, List.foldl_nil,
-    Nat.reduceAdd, Nat.reduceMul, hm, BitVec.toInt_zero] at k0 k1 k2 k3 k4 k5 k6
+    Nat.reduceAdd, Nat.reduceMul, hm, BitVec.toInt_zero] at k0 k1 k2 k3 k4 k5 k6 ko ho
   have hbx := hc.rbx
-  have h12 := hc.r12
-  have h15 := hc.r15
-  unfold rd at ht hn hs
+  have h14 := hc.r14
+  unfold rd at ht hn hs ho
   clear hv
   kvcgen64
   all_goals try symexec_norm at ⊢
-  all_goals try simp only [hbx, h12, h15, ht, hn, hs] at ⊢
+  all_goals try simp only [hbx, h14, ht, hn, hs, ho] at ⊢
   vc_by_shape
-  | load => simp only [kt, kn, ks, k0, k1, k2, k3, k4, k5, k6]
-  | goto ".LB.Planner.run.13" =>
+  | load => simp only [kt, kn, ks, k0, k1, k2, k3, k4, k5, k6, ko]
+  | goto ".LB.Planner.run.26" =>
     apply hdone
     refine ⟨lo, headerLocals g locals, hd.next ?_ rfl rfl rfl rfl rfl rfl rfl, rfl, ?_⟩
     · simp only [headerWrites, storeLocalWords, List.foldl_cons, List.foldl_nil,

@@ -1,5 +1,7 @@
 module
 
+public import BbuKraken.Kit
+import all BbuKraken.Kit
 public import BbuKraken.Unit.Plan.ResolveChoose
 import all BbuKraken.Unit.Plan.ResolveChoose
 
@@ -88,8 +90,8 @@ variable [Host] [FunDecls]
 
 include hok
 
-theorem b_9 : resolveAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.resolve.9" →
+theorem b_8 : resolveAsm.ForallBlocks fun blk =>
+    blk.label = .label ".LB.Planner.resolve.8" →
       Obl P r F s ra (loopPhase P r F s ra rest) (loopVar s var) blk := by
   cfg_block [Obl]
   intro t ht

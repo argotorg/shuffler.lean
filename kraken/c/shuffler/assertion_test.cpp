@@ -3,7 +3,7 @@
 
 #include <string_view>
 
-// The entries in build_bottom_up.S use the same C++ data layout.
+// The entries in test_wrappers.S use the same C++ data layout.
 extern "C" std::int64_t emission_pop(std::uint64_t, std::uint64_t, StackSlot*, StackSlot const*,
 	Optional<StackOffset> const*, std::uint8_t const*, std::uint64_t, ShuffleOp*,
 	Optional<StackOffset>*, Optional<StackOffset>*, std::uint64_t*);
@@ -52,6 +52,24 @@ int main(int argc, char** argv)
 	{
 		Stack stack{data, 1, ops};
 		return stack.pop() == Status::Done && stack.size() == 0 && stack.traceSize() == 1 ? 0 : 3;
+	}
+	else if (name == "inconsistent-plan" || name == "consistent-plan")
+	{
+		StackSlot const resolveTarget[]{StackSlot::makeJunk(), StackSlot::makeJunk()};
+		std::uint8_t dropped[2]{};
+		Mapping planned{2, 2};
+		planned.bind(StackOffset{0}, StackOffset{0});
+		if (name == "inconsistent-plan")
+		{
+			// Leave positionOf(0) bound to a source slot that has no destination.
+			planned.bind(StackOffset{0}, StackOffset{1});
+			planned.swapDestinations(StackOffset{0}, StackOffset{1});
+		}
+		Mapping current{2, 2};
+		current.bind(StackOffset{1}, StackOffset{0});
+		Planner planner{data, 2, resolveTarget, 2, SpillSet{spilled}, false, dropped};
+		return planner.resolve(planned, Emission::Blocked{StackOffset{0}, 1}, current, 2) ==
+			Resolution::Dropped && dropped[0] == 1 ? 0 : 3;
 	}
 	else if (name == "assembly-empty-stack")
 		static_cast<void>(emission_pop(0, 0, data, target, dest, spilled, 1, ops, dest, positions, &pending));

@@ -2,8 +2,9 @@ module
 
 public import BbuKraken.Unit.Plan.PlannerRunEmissionGhost
 import all BbuKraken.Unit.Plan.PlannerRunEmissionGhost
-public import BbuKraken.Unit.TopGhost
-import all BbuKraken.Unit.TopGhost
+
+public import BbuKraken.Unit.VectorLemmas
+import all BbuKraken.Unit.VectorLemmas
 
 @[expose] public section
 
@@ -39,7 +40,7 @@ theorem emission_view_frame (P : Addr) (g : PlannerRunG) (hok : g.Ok) :
         Ev g (data.toList.take g.dataCapacity) ops ∗ EF := by
   have hnd : (emissionIds g).Nodup := by
     unfold emissionIds splOut splIds
-    exact List.Pairwise.filter _ (Top.nodup_eraseDups _)
+    exact List.Pairwise.filter _ (nodup_eraseDups _)
   have hsub : emissionIds g ⊆ List.range g.spillCount := by
     intro i hi
     exact List.mem_range.mpr (hok.targetIds i (List.mem_filter.mp hi).1)
@@ -171,7 +172,7 @@ theorem emission_restore {P S : Addr} {g : PlannerRunG} {hok : g.Ok} {h : Hdr}
 
 theorem full_data_model (v : Vector Word MAX_N) :
     vec (v.toList.map StackSlot.ofWord) = v.map StackSlot.ofWord := by
-  rw [Top.vec_map]
+  rw [vec_map]
   ext i hi
   simp
 

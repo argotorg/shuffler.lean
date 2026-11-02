@@ -4,8 +4,9 @@ public import BbuKraken.Unit.Plan.PlannerRunRead
 import all BbuKraken.Unit.Plan.PlannerRunRead
 public import BbuKraken.Unit.Plan.PlannerRunValidate
 import all BbuKraken.Unit.Plan.PlannerRunValidate
-public import BbuKraken.Unit.SpillSetLemmas
-import all BbuKraken.Unit.SpillSetLemmas
+
+public import BbuKraken.Unit.Memory
+import all BbuKraken.Unit.Memory
 
 @[expose] public section
 
@@ -39,7 +40,7 @@ theorem b_3 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
   have hv := hc.kb.mem
   rw [sep_lc] at hv
   obtain ⟨_, hp⟩ := target_payload hv hok hi
-  have hpay := SpillSetProof.rd32_b32 hp
+  have hpay := rd32_b32 hp
   have kpay := B32.isSome hp
   have hptr := spill_pointer hv
   have kptr := spill_pointer_some hv
@@ -50,7 +51,7 @@ theorem b_3 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
     fun hk => target_spill hv hok hi (variable_of_not_generated hfree hk)
   unfold rd at hptr
   clear hp hv
-  kvcgen64 [SpillSetProof.movl_idx8_spec]
+  kvcgen64 [movl_idx8_spec]
   all_goals try symexec_norm at ⊢
   all_goals try simp only [hc.r10, hc.rbx, fold_slot, hpay, hptr] at ⊢
   vc_by_shape

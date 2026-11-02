@@ -48,7 +48,7 @@ theorem b_1 [Host] [FunDecls]
   kvcgen64
   all_goals try symexec_norm at ⊢
   vc_by_shape
-  | goto ".LB.Planner.resolve.6" =>
+  | goto ".LB.Planner.resolve.5" =>
     rename_i hj
     symexec_norm at hj
     have hend : ¬ (rdx s + 1#64) < r9 s := by
@@ -67,7 +67,7 @@ theorem b_1 [Host] [FunDecls]
     · left
       simp only [V, initFullVar, zvar, initVar, Names.resolve, String.reduceEq, ↓reduceIte, false_or]
       decide
-  | goto ".LB.Planner.resolve.5" =>
+  | goto ".LB.Planner.resolve.4" =>
     rename_i hj
     symexec_norm at hj
     have hlt : (rdx s + 1#64) < r9 s := by

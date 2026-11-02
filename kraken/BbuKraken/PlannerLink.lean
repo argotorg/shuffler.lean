@@ -2,8 +2,9 @@ module
 
 public import BbuKraken.Link
 import all BbuKraken.Link
-public import BbuKraken.SpillFinal
-import all BbuKraken.SpillFinal
+
+public import BbuKraken.Unit.SpillAdd
+import all BbuKraken.Unit.SpillAdd
 
 @[expose] public section
 

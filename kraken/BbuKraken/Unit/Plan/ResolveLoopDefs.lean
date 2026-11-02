@@ -115,12 +115,12 @@ def Tie (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
 
 def loopPhase (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (rest : Label → MachineData → Prop) (l : Label) (t : MachineData) : Prop :=
-  if l = ".LB.Planner.resolve.8" then Outer P r F s ra t
-  else if l = ".LB.Planner.resolve.9" then Tie P r F s ra t
-  else if l = ".LB.Planner.resolve.10" then Pending P r F s ra t
-  else if l = ".LB.Planner.resolve.11" then PickNext P r F s ra t
-  else if l = ".LB.Planner.resolve.12" then Pick P r F s ra t
-  else if l = ".LB.Planner.resolve.13" then PickEnd P r F s ra t
+  if l = ".LB.Planner.resolve.7" then Outer P r F s ra t
+  else if l = ".LB.Planner.resolve.8" then Tie P r F s ra t
+  else if l = ".LB.Planner.resolve.9" then Pending P r F s ra t
+  else if l = ".LB.Planner.resolve.10" then PickNext P r F s ra t
+  else if l = ".LB.Planner.resolve.11" then Pick P r F s ra t
+  else if l = ".LB.Planner.resolve.12" then PickEnd P r F s ra t
   else rest l t
 
 def loopBase (s t : MachineData) : Nat :=
@@ -128,18 +128,18 @@ def loopBase (s t : MachineData) : Nat :=
 
 def loopVar (s : MachineData) (rest : Label → MachineData → Nat)
     (l : Label) (t : MachineData) : Nat :=
-  if l = ".LB.Planner.resolve.8" then loopBase s t + 20000
-  else if l = ".LB.Planner.resolve.9" then
+  if l = ".LB.Planner.resolve.7" then loopBase s t + 20000
+  else if l = ".LB.Planner.resolve.8" then
     loopBase s t + 2 * (t.regs.r13.toBitVec - t.regs.rbx.toBitVec).toNat + 6
-  else if l = ".LB.Planner.resolve.10" then
+  else if l = ".LB.Planner.resolve.9" then
     loopBase s t + 2 * (t.regs.r13.toBitVec - t.regs.rbx.toBitVec).toNat + 4
-  else if l = ".LB.Planner.resolve.11" then
+  else if l = ".LB.Planner.resolve.10" then
     loopBase s t + 2 * (t.regs.r13.toBitVec - t.regs.rbx.toBitVec).toNat + 2
-  else if l = ".LB.Planner.resolve.12" then
+  else if l = ".LB.Planner.resolve.11" then
     loopBase s t + 2 * (t.regs.r13.toBitVec - t.regs.rbx.toBitVec).toNat + 8
-  else if l = ".LB.Planner.resolve.13" then loopBase s t + 8
-  else if l = ".LB.Planner.resolve.15" then loopBase s t + 6
-  else if l = ".LB.Planner.resolve.14" then loopBase s t + 4
+  else if l = ".LB.Planner.resolve.12" then loopBase s t + 8
+  else if l = ".LB.Planner.resolve.14" then loopBase s t + 6
+  else if l = ".LB.Planner.resolve.13" then loopBase s t + 4
   else rest l t
 
 section

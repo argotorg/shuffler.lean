@@ -43,8 +43,8 @@ theorem b_2 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
   obtain ⟨_, hp⟩ := pv hv
   have hword := PView.rd_sw hp hok.planner (BitVec.lt_def.mp hj)
   have kword := PView.isSome_sw hp hok.planner (BitVec.lt_def.mp hj)
-  simp only [rax, rcx, r8, r9, rdi, Reg64s.get64_rax, Reg64s.get64_rcx,
-    Reg64s.get64_r8, Reg64s.get64_r9, Reg64s.get64_rdi] at hword kword hkind hfree hm hsrc hslot hj hcontains
+  simp only [rax, rcx, r9, rdi, Reg64s.get64_rax, Reg64s.get64_rcx,
+    Reg64s.get64_r9, Reg64s.get64_rdi] at hword kword hkind hfree hm hsrc hslot hj hcontains
   unfold rd at hword
   clear hp hv
   kvcgen64 [Program.WP.xor_reg_mem_idx8_spec]

@@ -23,7 +23,7 @@ structure AttemptLI (P : Addr) (g : PlannerRunG) (M : Flat.Mapping) (F : MProp 6
   count : locals[3]? = some g.countPtr
   mapping : MapCells g M locals
   mappingEq : ∀ hl : locals.length = 4121, localMapping locals hl = M
-  r13 : t.regs.r13.toBitVec = t.regs.rsp.toBitVec + 32#64
+  r15 : t.regs.r15.toBitVec = t.regs.rsp.toBitVec + 32#64
 
 section
 variable {P : Addr} {g : PlannerRunG} {M : Flat.Mapping} {F : MProp 64}
@@ -51,26 +51,30 @@ theorem localMapping_set_tail (hl : locals.length = 4121) (i : Nat) (hi : 2060 �
 
 theorem AttemptLI.next (h : AttemptLI P g M F s ra lo locals t)
     (hm : u.dmem = t.dmem) (hsp : u.regs.rsp = t.regs.rsp)
-    (hbx : u.regs.rbx = t.regs.rbx) (h12 : u.regs.r12 = t.regs.r12)
-    (h15 : u.regs.r15 = t.regs.r15) (hbp : u.regs.rbp = t.regs.rbp)
-    (h14 : u.regs.r14 = t.regs.r14) (h13 : u.regs.r13 = t.regs.r13) :
+    (hbx : u.regs.rbx = t.regs.rbx) (h14 : u.regs.r14 = t.regs.r14)
+    (h13 : u.regs.r13 = t.regs.r13) (hbp : u.regs.rbp = t.regs.rbp)
+    (h12 : u.regs.r12 = t.regs.r12) (h15 : u.regs.r15 = t.regs.r15) :
     AttemptLI P g M F s ra lo locals u :=
-  ⟨h.toLoopLI.next hm hsp hbx h12 h15 hbp h14, h.count, h.mapping, h.mappingEq,
-    by simpa only [h13, hsp] using h.r13⟩
+  ⟨h.toLoopLI.next hm hsp hbx h14 h13 hbp h12, h.count, h.mapping, h.mappingEq,
+    by simpa only [h15, hsp] using h.r15⟩
 
 theorem AttemptLI.storeLocal (h : AttemptLI P g M F s ra lo locals t)
     (hok : g.Ok) {i : Nat} (hi : i < 4121) (hlo : 2060 ≤ i) (w : Word)
     (hm : u.dmem = t.dmem.storeInt
       (t.regs.rsp.toBitVec + BitVec.ofNat 64 (8 * i)) 8 w.toInt)
     (hsp : u.regs.rsp = t.regs.rsp)
-    (hbx : u.regs.rbx = t.regs.rbx) (h12 : u.regs.r12 = t.regs.r12)
-    (h15 : u.regs.r15 = t.regs.r15) (_hbp : u.regs.rbp = t.regs.rbp)
-    (h14 : u.regs.r14 = t.regs.r14) (h13 : u.regs.r13 = t.regs.r13) :
+    (hbx : u.regs.rbx = t.regs.rbx) (h14 : u.regs.r14 = t.regs.r14)
+    (_h13 : u.regs.r13 = t.regs.r13) (_hbp : u.regs.rbp = t.regs.rbp)
+    (_h12 : u.regs.r12 = t.regs.r12) (h15 : u.regs.r15 = t.regs.r15) :
     AttemptLI P g M F s ra lo (locals.set i w) u := by
   have unchanged (j : Nat) (hj : j < 2060) : (locals.set i w)[j]? = locals[j]? := by
     simp only [List.getElem?_set, show i ≠ j by omega, ↓reduceIte]
-  refine ⟨⟨h.toBd.storeLocal hi w hm hsp, hbx ▸ h.rbx, h12 ▸ h.r12,
-    h15 ▸ h.r15, h14 ▸ h.r14, ?_⟩, ?_, ⟨?_, ?_⟩, ?_, ?_⟩
+  refine ⟨⟨h.toBd.storeLocal hi w hm hsp, hbx ▸ h.rbx, h14 ▸ h.r14,
+    ?_, ?_, ?_⟩, ?_, ⟨?_, ?_⟩, ?_, ?_⟩
+  · rw [unchanged 1 (by decide)]
+    exact h.ops
+  · rw [unchanged 0 (by decide)]
+    exact h.strategy
   · rw [unchanged 2 (by decide)]
     exact h.sources
   · rw [unchanged 3 (by decide)]
@@ -90,7 +94,7 @@ theorem AttemptLI.storeLocal (h : AttemptLI P g M F s ra lo locals t)
   · intro hl'
     rw [localMapping_set_tail h.localLength i hlo w hl']
     exact h.mappingEq _
-  · simpa only [h13, hsp] using h.r13
+  · simpa only [h15, hsp] using h.r15
 
 end
 
@@ -148,22 +152,22 @@ variable {P : Addr} {g : PlannerRunG} {M : Flat.Mapping} {F : MProp 64}
 
 theorem EmitLI.next (h : EmitLI P g M F s ra lo locals t)
     (hm : u.dmem = t.dmem) (hsp : u.regs.rsp = t.regs.rsp)
-    (hbx : u.regs.rbx = t.regs.rbx) (h12 : u.regs.r12 = t.regs.r12)
-    (h15 : u.regs.r15 = t.regs.r15) (hbp : u.regs.rbp = t.regs.rbp)
-    (h14 : u.regs.r14 = t.regs.r14) (h13 : u.regs.r13 = t.regs.r13) :
+    (hbx : u.regs.rbx = t.regs.rbx) (h14 : u.regs.r14 = t.regs.r14)
+    (h13 : u.regs.r13 = t.regs.r13) (hbp : u.regs.rbp = t.regs.rbp)
+    (h12 : u.regs.r12 = t.regs.r12) (h15 : u.regs.r15 = t.regs.r15) :
     EmitLI P g M F s ra lo locals u :=
-  ⟨h.toAttemptLI.next hm hsp hbx h12 h15 hbp h14 h13, h.header⟩
+  ⟨h.toAttemptLI.next hm hsp hbx h14 h13 hbp h12 h15, h.header⟩
 
 theorem EmitLI.storeLocal (h : EmitLI P g M F s ra lo locals t)
     (hok : g.Ok) {i : Nat} (hi : i < 4121) (hlo : 2067 ≤ i) (w : Word)
     (hm : u.dmem = t.dmem.storeInt
       (t.regs.rsp.toBitVec + BitVec.ofNat 64 (8 * i)) 8 w.toInt)
     (hsp : u.regs.rsp = t.regs.rsp)
-    (hbx : u.regs.rbx = t.regs.rbx) (h12 : u.regs.r12 = t.regs.r12)
-    (h15 : u.regs.r15 = t.regs.r15) (hbp : u.regs.rbp = t.regs.rbp)
-    (h14 : u.regs.r14 = t.regs.r14) (h13 : u.regs.r13 = t.regs.r13) :
+    (hbx : u.regs.rbx = t.regs.rbx) (h14 : u.regs.r14 = t.regs.r14)
+    (h13 : u.regs.r13 = t.regs.r13) (hbp : u.regs.rbp = t.regs.rbp)
+    (h12 : u.regs.r12 = t.regs.r12) (h15 : u.regs.r15 = t.regs.r15) :
     EmitLI P g M F s ra lo (locals.set i w) u :=
-  ⟨h.toAttemptLI.storeLocal hok hi (by omega) w hm hsp hbx h12 h15 hbp h14 h13,
+  ⟨h.toAttemptLI.storeLocal hok hi (by omega) w hm hsp hbx h14 h13 hbp h12 h15,
     h.header.set_tail hlo w⟩
 
 end
@@ -209,21 +213,21 @@ variable {P : Addr} {g : PlannerRunG} {M : Flat.Mapping} {F : MProp 64}
 
 theorem EmitCountLI.next (h : EmitCountLI P g M F s ra lo locals t)
     (hm : u.dmem = t.dmem) (hsp : u.regs.rsp = t.regs.rsp)
-    (hbx : u.regs.rbx = t.regs.rbx) (h12 : u.regs.r12 = t.regs.r12)
-    (h15 : u.regs.r15 = t.regs.r15) (hbp : u.regs.rbp = t.regs.rbp)
-    (h14 : u.regs.r14 = t.regs.r14) (h13 : u.regs.r13 = t.regs.r13) :
+    (hbx : u.regs.rbx = t.regs.rbx) (h14 : u.regs.r14 = t.regs.r14)
+    (h13 : u.regs.r13 = t.regs.r13) (hbp : u.regs.rbp = t.regs.rbp)
+    (h12 : u.regs.r12 = t.regs.r12) (h15 : u.regs.r15 = t.regs.r15) :
     EmitCountLI P g M F s ra lo locals u :=
-  ⟨h.toEmitLI.next hm hsp hbx h12 h15 hbp h14 h13, h.dest, h.pos, by simpa [hsp] using h.original⟩
+  ⟨h.toEmitLI.next hm hsp hbx h14 h13 hbp h12 h15, h.dest, h.pos, by simpa [hsp] using h.original⟩
 
 theorem EmitCountLI.storePending (h : EmitCountLI P g M F s ra lo locals t)
     (hok : g.Ok) (w : Word)
     (hm : u.dmem = t.dmem.storeInt (t.regs.rsp.toBitVec + 32920#64) 8 w.toInt)
     (hsp : u.regs.rsp = t.regs.rsp)
-    (hbx : u.regs.rbx = t.regs.rbx) (h12 : u.regs.r12 = t.regs.r12)
-    (h15 : u.regs.r15 = t.regs.r15) (hbp : u.regs.rbp = t.regs.rbp)
-    (h14 : u.regs.r14 = t.regs.r14) (h13 : u.regs.r13 = t.regs.r13) :
+    (hbx : u.regs.rbx = t.regs.rbx) (h14 : u.regs.r14 = t.regs.r14)
+    (h13 : u.regs.r13 = t.regs.r13) (hbp : u.regs.rbp = t.regs.rbp)
+    (h12 : u.regs.r12 = t.regs.r12) (h15 : u.regs.r15 = t.regs.r15) :
     EmitCountLI P g M F s ra lo (locals.set 4115 w) u := by
-  refine ⟨h.toEmitLI.storeLocal hok (by decide) (by decide) w hm hsp hbx h12 h15 hbp h14 h13,
+  refine ⟨h.toEmitLI.storeLocal hok (by decide) (by decide) w hm hsp hbx h14 h13 hbp h12 h15,
     h.dest.set_outside ?_ w, h.pos.set_outside ?_ w, ?_⟩
   · intro i hi
     have hm := hok.planner.m

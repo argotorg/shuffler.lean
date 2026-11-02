@@ -48,20 +48,20 @@ def CandidatesDone (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : In
 
 def initPhase (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (rest : Label → MachineData → Prop) (l : Label) (t : MachineData) : Prop :=
-  if l = ".LB.Planner.resolve.4" then Scan P r F s ra true t
-  else if l = ".LB.Planner.resolve.5" then Scan P r F s ra false t
-  else if l = ".LB.Planner.resolve.6" then CandidatesDone P r F s ra false t
-  else if l = ".LB.Planner.resolve.7" then CandidatesDone P r F s ra true t
+  if l = ".LB.Planner.resolve.3" then Scan P r F s ra true t
+  else if l = ".LB.Planner.resolve.4" then Scan P r F s ra false t
+  else if l = ".LB.Planner.resolve.5" then CandidatesDone P r F s ra false t
+  else if l = ".LB.Planner.resolve.6" then CandidatesDone P r F s ra true t
   else rest l t
 
 def initVar (s : MachineData) (rest : Label → MachineData → Nat)
     (l : Label) (t : MachineData) : Nat :=
   if l = Names.resolve then 67120000
   else if l = ".LB.Planner.resolve.1" then 67113864
-  else if l = ".LB.Planner.resolve.4" then 67108864 + 4 * (r9 s - rdx t).toNat + 2
-  else if l = ".LB.Planner.resolve.5" then 67108864 + 4 * (r9 s - rdx t).toNat + 3
-  else if l = ".LB.Planner.resolve.6" then 67108866
-  else if l = ".LB.Planner.resolve.7" then 67108865
+  else if l = ".LB.Planner.resolve.3" then 67108864 + 4 * (r9 s - rdx t).toNat + 2
+  else if l = ".LB.Planner.resolve.4" then 67108864 + 4 * (r9 s - rdx t).toNat + 3
+  else if l = ".LB.Planner.resolve.5" then 67108866
+  else if l = ".LB.Planner.resolve.6" then 67108865
   else rest l t
 
 def initFullPhase (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)

@@ -36,7 +36,7 @@ gcc() {
 }
 
 # The real asm has labels, and each label name has the form .LB.NAME.K.
-[ "$(grep -c '^\.LB' "$asm")" -gt 400 ] || fail "real: fewer than 400 labels"
+[ "$(grep -c '^\.LB' "$asm")" -eq 239 ] || fail "real: expected 239 C++ method labels"
 if grep -E '\.LB[0-9]' "$asm" >/dev/null; then fail "real: a label of the sed step is left"; fi
 
 # For each numbering of the labels, the awk gives the real asm back, and the object code is the

@@ -22,19 +22,19 @@ theorem cfg_28 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
     (hrun : ∀ PM planned, VSpecWithExit (RunView PM planned) G.Ok Names.run
       (runA planned) runD (runQ planned) (runX planned)) :
     plannerRunAsm.ForallBlocks fun blk =>
-      blk.label = .label ".LB.Planner.run.27" → FullRunObl P g F s ra blk := by
+      blk.label = .label ".LB.Planner.run.15" → FullRunObl P g F s ra blk := by
   cfg_view as hv
   cfg_block [FullRunObl, RunObl]
   intro t ht
-  simp only [RunInv, Names.plannerRun, String.reduceEq, or_false,
+  simp only [RunInv, Names.plannerRun, String.reduceEq,
     ↓reduceIte, AttemptPhase] at ht
   obtain ⟨current, M, ctx, hd, ht⟩ := ht
   have h0 := ht.choose_spec.choose_spec.1
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     FullRunInv P g F s ra b u ∧
-      Program.Decreases (runV g) (.label ".LB.Planner.run.27") 29 t b j u
+      Program.Decreases (runV g) (.label ".LB.Planner.run.15") 17 t b j u
   have hh := b_28 P current M F s ra ctx.ok ctx.map hrun
-    (I' (.label ".LB.Planner.run.28") 30) I' (RunExit P g F s ra) (by
+    (I' (.label ".LB.Planner.run.16") 18) I' (RunExit P g F s ra) (by
       intro v lo locals hc hp a hk u lo' hpost hq ha hag
       obtain ⟨ec, hal, hout⟩ := ctx.afterEmission hd hc hp a hk hq
       let newg := emissionResult current ctx.ok (localEmissionHdr locals hc.localLength) a hk
@@ -60,7 +60,7 @@ theorem cfg_28 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
           apply hn
           rw [hpres, hal, he]
           rfl
-        apply Program.Intercept.intro_label (i := 18) (by decide)
+        apply Program.Intercept.intro_label (i := 10) (by decide)
         left
         refine ⟨hw.kb.stack (by decide), ?_, Or.inl ?_⟩
         · simp only [FullRunInv, RunInv, Names.plannerRun, String.reduceEq,
@@ -79,10 +79,10 @@ theorem cfg_28 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
           · exact restored
           · exact ctx.map
         have hb := hbudget w hw
-        apply Program.Intercept.intro_label (i := 30) (by decide)
+        apply Program.Intercept.intro_label (i := 18) (by decide)
         left
         refine ⟨hw.kb.stack (by decide), ?_, Or.inl ?_⟩
-        · simp only [FullRunInv, RunInv, Names.plannerRun, String.reduceEq, or_false,
+        · simp only [FullRunInv, RunInv, Names.plannerRun, String.reduceEq,
             ↓reduceIte, RunResolvePhase]
           refine ⟨newg, M, ls, hpost.localLength, ec, hs, cells, inputs, lo',
             ⟨hw, ec.targets⟩, ?_⟩
@@ -104,7 +104,7 @@ theorem cfg_28 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
           · exact ctx.map
         have hb := hbudget w hw
         refine ⟨?_, Or.inl ?_⟩
-        · simp only [FullRunInv, RunInv, Names.plannerRun, String.reduceEq, or_false,
+        · simp only [FullRunInv, RunInv, Names.plannerRun, String.reduceEq,
             ↓reduceIte, RunResolvePhase]
           refine ⟨newg, M, ls, hpost.localLength, ec, hs, cells, inputs,
             lo', 0#64, ⟨hw, ec.targets⟩, ?_, ?_, hdx, ?_⟩

@@ -1,7 +1,7 @@
 module
 
-public import BbuKraken.Unit.Plan.PlannerRunResolveSetup
-import all BbuKraken.Unit.Plan.PlannerRunResolveSetup
+public import BbuKraken.Unit.Plan.PlannerRunResolveDefs
+import all BbuKraken.Unit.Plan.PlannerRunResolveDefs
 public import BbuKraken.Unit.Plan.PlannerRunEmissionPost
 import all BbuKraken.Unit.Plan.PlannerRunEmissionPost
 public import BbuKraken.Unit.Plan.PlannerRunBlockedBasic

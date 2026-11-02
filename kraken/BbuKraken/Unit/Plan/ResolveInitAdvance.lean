@@ -19,8 +19,8 @@ variable [Host] [FunDecls]
   (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
   (rest : Label → MachineData → Prop) (var : Label → MachineData → Nat)
 
-theorem b_4 : resolveAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.resolve.4" →
+theorem b_3 : resolveAsm.ForallBlocks fun blk =>
+    blk.label = .label ".LB.Planner.resolve.3" →
       Obl P r F s ra (initFullPhase P r F s ra rest) (initFullVar s var) blk := by
   cfg_block [Obl]
   intro t ht
@@ -32,7 +32,7 @@ theorem b_4 : resolveAsm.ForallBlocks fun blk =>
   kvcgen64
   all_goals try symexec_norm at ⊢
   vc_by_shape
-  | goto ".LB.Planner.resolve.7" =>
+  | goto ".LB.Planner.resolve.6" =>
     rename_i hj
     symexec_norm at hj
     have hend : ¬ (rdx t + 1#64) < r9 s := by
@@ -78,8 +78,8 @@ theorem b_4 : resolveAsm.ForallBlocks fun blk =>
        rw [heq]
        omega)
 
-theorem b_6 : resolveAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.resolve.6" →
+theorem b_5 : resolveAsm.ForallBlocks fun blk =>
+    blk.label = .label ".LB.Planner.resolve.5" →
       Obl P r F s ra (initFullPhase P r F s ra rest) (initFullVar s var) blk := by
   cfg_block [Obl]
   intro t ht

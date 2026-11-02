@@ -26,7 +26,7 @@ structure BuildLI (P : Addr) (g : PlannerRunG) (F : MProp 64) (s : MachineData) 
     (lo : List Word) (l : BuilderLocals) (M : Flat.Mapping) (saw : BitVec 8)
     (t : MachineData) : Prop
     extends LoopLI P g F s ra lo (l.toList (plannerBuilder g s M saw)) t where
-  r13 : t.regs.r13.toBitVec = t.regs.rsp.toBitVec + 32#64
+  r15 : t.regs.r15.toBitVec = t.regs.rsp.toBitVec + 32#64
   count : (l.toList (plannerBuilder g s M saw))[3]? = some g.countPtr
   targets : Flat.targetsFrom g.p.fl g.spills 0 = true
 
@@ -36,12 +36,12 @@ variable {P : Addr} {g : PlannerRunG} {F : MProp 64} {s t u : MachineData} {ra :
 
 theorem BuildLI.next (h : BuildLI P g F s ra lo l M saw t)
     (hm : u.dmem = t.dmem) (hsp : u.regs.rsp = t.regs.rsp)
-    (hbx : u.regs.rbx = t.regs.rbx) (h12 : u.regs.r12 = t.regs.r12)
-    (h15 : u.regs.r15 = t.regs.r15) (hbp : u.regs.rbp = t.regs.rbp)
-    (h14 : u.regs.r14 = t.regs.r14) (h13 : u.regs.r13 = t.regs.r13) :
+    (hbx : u.regs.rbx = t.regs.rbx) (h14 : u.regs.r14 = t.regs.r14)
+    (h13 : u.regs.r13 = t.regs.r13) (hbp : u.regs.rbp = t.regs.rbp)
+    (h12 : u.regs.r12 = t.regs.r12) (h15 : u.regs.r15 = t.regs.r15) :
     BuildLI P g F s ra lo l M saw u :=
-  ⟨h.toLoopLI.next hm hsp hbx h12 h15 hbp h14,
-    by simpa only [h13, hsp] using h.r13, h.count, h.targets⟩
+  ⟨h.toLoopLI.next hm hsp hbx h14 h13 hbp h12,
+    by simpa only [h15, hsp] using h.r15, h.count, h.targets⟩
 
 theorem BuilderLocals.sameHead (l : BuilderLocals) (b b' : BG) (i : Nat) (hi : i < 4) :
     (l.toList b)[i]? = (l.toList b')[i]? := by
@@ -54,12 +54,13 @@ theorem BuildLI.afterCall (h : BuildLI P g F s ra lo l M saw t)
   have hsp := mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rsp
   refine ⟨⟨hb, ?_, ?_, ?_, ?_, ?_⟩, ?_, ?_, h.targets⟩
   · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rbx]; exact h.rbx
-  · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r12]; exact h.r12
-  · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r15]; exact h.r15
   · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r14]; exact h.r14
+  · exact (l.sameHead _ _ 1 (by decide)).trans h.ops
+  · exact (congrArg (Option.map (fun w : Word => w.extractLsb' 56 8))
+      (l.sameHead _ _ 0 (by decide))).trans h.strategy
   · exact (l.sameHead _ _ 2 (by decide)).trans h.sources
-  · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r13, hsp]
-    exact h.r13
+  · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r15, hsp]
+    exact h.r15
   · exact (l.sameHead _ _ 3 (by decide)).trans h.count
 
 theorem BuildLI.call {A : BG → MachineData → Prop}
@@ -165,7 +166,17 @@ theorem InitLI.builderSetup (h : InitLI P g F s ra lo locals t) :
       {t with dmem := (builderStoreMem t.dmem t.regs.rsp.toBitVec
         (builderStores g t.regs.rsp.toBitVec (s.regs.rsi.toBitVec.setWidth 8)))} := by
     simpa only [hp, plannerBuilder, Bbu.rsi, Reg64s.get64_rsi] using hb
-  refine ⟨l, ⟨⟨hb', h.rbx, h.r12, h.r15, h.r14, ?_⟩, h.r13, ?_, h.targets⟩⟩
+  refine ⟨l, ⟨⟨hb', h.rbx, h.r14, ?_, ?_, ?_⟩, h.r15, ?_, h.targets⟩⟩
+  · change (l.toList (builderGhost g (builderSp s + 96#64) ((s.regs.rsi.toBitVec).setWidth 8) 0#8
+        (localMapping locals h.localLength)))[1]? = _
+    rw [← hp, ← he]
+    dsimp only [builderSetLocals, builderStores, BuilderWrite.locals, List.foldl_cons, List.foldl_nil]
+    simpa [h.localLength] using h.ops
+  · change ((l.toList (builderGhost g (builderSp s + 96#64) ((s.regs.rsi.toBitVec).setWidth 8) 0#8
+        (localMapping locals h.localLength)))[0]?).map (fun w => w.extractLsb' 56 8) = _
+    rw [← hp, ← he]
+    dsimp only [builderSetLocals, builderStores, BuilderWrite.locals, List.foldl_cons, List.foldl_nil]
+    simpa [h.localLength] using h.strategy
   · change (l.toList (builderGhost g (builderSp s + 96#64) ((s.regs.rsi.toBitVec).setWidth 8) 0#8
         (localMapping locals h.localLength)))[2]? = _
     rw [← hp, ← he]

@@ -16,11 +16,11 @@ set_option experimental.vcgen true
 namespace Bbu.Unit.ResolveU
 open Bbu.Sep
 
-theorem b_13 [Host] [FunDecls]
+theorem b_12 [Host] [FunDecls]
     (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (rest : Label → MachineData → Prop) (var : Label → MachineData → Nat)
     (hok : r.Ok) :
-    resolveAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.resolve.13" →
+    resolveAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.resolve.12" →
       Obl P r F s ra (loopPhase P r F s ra (dropPhase P r F s ra rest)) (loopVar s var) blk := by
   cfg_block [Obl]
   intro t ht
@@ -35,7 +35,7 @@ theorem b_13 [Host] [FunDecls]
   all_goals try symexec_norm at ⊢
   vc_by_shape
   | load => exact kc
-  | goto ".LB.Planner.resolve.18" =>
+  | goto ".LB.Planner.resolve.17" =>
     rename_i hj
     symexec_norm at hj
     simp only [h15, Idioms.sub_beq_zero, beq_iff_eq, BitVec.zero_eq] at hj
@@ -48,7 +48,7 @@ theorem b_13 [Host] [FunDecls]
     · left
       simp only [V, loopVar, String.reduceEq, false_or, ↓reduceIte]
       omega
-  | goto ".LB.Planner.resolve.15" =>
+  | goto ".LB.Planner.resolve.14" =>
     rename_i hb hc
     symexec_norm at hb hc
     simp only [h15, Idioms.sub_beq_zero, beq_eq_false_iff_ne, BitVec.zero_eq] at hb

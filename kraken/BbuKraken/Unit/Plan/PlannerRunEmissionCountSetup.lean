@@ -23,16 +23,16 @@ theorem EmitLI.setupCount (h : EmitLI P g M F s ra lo locals t) (hok : g.Ok)
     (hm : u.dmem = (t.dmem.storeInt (t.regs.rsp.toBitVec + 32920#64) 8 0).storeInt
       (t.regs.rsp.toBitVec + 32944#64) 8 (t.regs.rsp.toBitVec + 96#64).toInt)
     (hsp : u.regs.rsp = t.regs.rsp)
-    (hbx : u.regs.rbx = t.regs.rbx) (h12 : u.regs.r12 = t.regs.r12)
-    (h15 : u.regs.r15 = t.regs.r15) (hbp : u.regs.rbp = t.regs.rbp)
-    (h14 : u.regs.r14 = t.regs.r14) (h13 : u.regs.r13 = t.regs.r13) :
+    (hbx : u.regs.rbx = t.regs.rbx) (h14 : u.regs.r14 = t.regs.r14)
+    (h13 : u.regs.r13 = t.regs.r13) (hbp : u.regs.rbp = t.regs.rbp)
+    (h12 : u.regs.r12 = t.regs.r12) (h15 : u.regs.r15 = t.regs.r15) :
     EmitCountLI P g M F s ra lo (setupLocals locals t.regs.rsp.toBitVec) u := by
   let v : MachineData := { t with dmem := t.dmem.storeInt (t.regs.rsp.toBitVec + 32920#64) 8 0 }
   have h1 : EmitLI P g M F s ra lo (locals.set 4115 0#64) v :=
     h.storeLocal hok (by decide) (by decide) 0#64 rfl rfl rfl rfl rfl rfl rfl rfl
   have h2 : EmitLI P g M F s ra lo (setupLocals locals t.regs.rsp.toBitVec) u :=
     h1.storeLocal hok (by decide) (by decide) (t.regs.rsp.toBitVec + 96#64)
-      hm hsp hbx h12 h15 hbp h14 h13
+      hm hsp hbx h14 h13 hbp h12 h15
   have hout (base count : Nat) (hb : base + count ≤ 4115) (v : Vector Word MAX_N)
       (hh : WordPrefix locals base v count) :
       WordPrefix (setupLocals locals t.regs.rsp.toBitVec) base v count :=

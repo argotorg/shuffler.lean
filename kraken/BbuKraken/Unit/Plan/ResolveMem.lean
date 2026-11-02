@@ -4,8 +4,9 @@ public import BbuKraken.Unit.Plan.ResolveModel
 import all BbuKraken.Unit.Plan.ResolveModel
 public import BbuKraken.Unit.Plan.ExitCall
 import all BbuKraken.Unit.Plan.ExitCall
-public import BbuKraken.Unit.TopGhost
-import all BbuKraken.Unit.TopGhost
+
+public import BbuKraken.Unit.VectorLemmas
+import all BbuKraken.Unit.VectorLemmas
 
 @[expose] public section
 
@@ -54,7 +55,8 @@ def resolveQ (r r' : RG) (s t : MachineData) : Prop :=
   ∀ u : Flat.ResolveU,
     let q := Flat.resolve r.p.fl r.spills r.dropped r.M (rdx s) (rcx s)
       r.current (r9 s) u
-    al t = ResolveU.code q.1 ∧ r' = { r with spills := q.2.1, dropped := q.2.2 }
+    al t = ResolveU.code q.1 ∧ r' = { r with spills := q.2.1, dropped := q.2.2 } ∧
+      q.1 ≠ .assertionFailed
 
 def resolveX (r r' : RG) (s _t : MachineData) : Prop :=
   ∀ u : Flat.ResolveU,
@@ -180,7 +182,7 @@ theorem classify_split (P : Addr) (r : RG) (hok : r.Ok) (dn : Addr)
           (MapM r.currentPtr r.current ∗ Bs r.p.drp (r.dropped.toList.take r.p.m.toNat) ∗
             Spl r.p.spl f rest) := by
   obtain ⟨rest, hrest⟩ := spl_partition r.p.spl (List.range r.spillCount) (splIds r.p.sw)
-    (Top.nodup_eraseDups _) (fun i hi => List.mem_range.mpr (hok.spillIds i hi))
+    (nodup_eraseDups _) (fun i hi => List.mem_range.mpr (hok.spillIds i hi))
   refine ⟨rest, fun f => ?_⟩
   simp only [RView, CView, HView, classifyGhost]
   rw [hrest f]

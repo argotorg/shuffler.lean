@@ -32,24 +32,19 @@ theorem b_17 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     (hnext : ∀ sources u, rdx u = 1#64 + rdx t →
       SourcesHead P {g with sources := sources} M F s ra wanted u → al u = al t →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-        (label ".LB.Planner.run.18") u)
+        (label ".LB.Planner.run.10") u)
     (hdone : ∀ sources u, SourcesDone P {g with sources := sources} M F s ra u →
       sources = wanted → al u = al t → K () u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.18" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.10" →
       SourcesHead P g M F s ra wanted t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
-  intro ⟨lo, locals, hc, hbp, hi, hmodel⟩
+  intro ⟨lo, locals, hc, hbp, h8, hi, hmodel⟩
   let i := rdx t
   have hiN : i.toNat < MAX_N := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) hc.ok.planner.n
   have hidx : 1036 + i.toNat < 4121 := by change i.toNat < 1024 at hiN; omega
   have hr := hc.posRead hiN
   have kp := hc.localSome hidx
-  have hp := hc.localRead (i := 2) (by decide)
-  have he := hc.sources
-  rw [List.getElem?_eq_getElem (by rw [hc.localLength]; decide)] at he
-  replace hp := hp.trans (Option.some.inj he)
-  have kl := hc.localSome (i := 2) (by decide)
   obtain ⟨_, hsrc⟩ := sources hc.kb.vmem
   have ks : (t.dmem.loadInt (slotAt g.sourcesPtr i.toNat) 8).isSome = true :=
     Arr.isSome hsrc (by simp only [List.length_take, Vector.length_toList]; have him : i.toNat < g.p.n.toNat := BitVec.lt_def.mp hi; omega)
@@ -69,26 +64,26 @@ theorem b_17 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     rw [← sources_next hi]
     exact hmodel
   have hbx := hc.rbx
-  simp only [Nat.reduceMul] at hp kl
+  simp only [r8, Reg64s.get64_r8] at h8
   simp only [i, rdx, Reg64s.get64_rdx] at hidx hr kp ks hi hstep
   simp only [v, i, Reg64s.get64_rdx] at kn hn
-  unfold rd at hr hp hn
+  unfold rd at hr hn
   kvcgen64
   all_goals try symexec_norm at ⊢
-  all_goals try simp only [planned_pos_addr, hr, hp, hbx] at ⊢
+  all_goals try simp only [planned_pos_addr, hr, h8, hbx] at ⊢
   all_goals try simp only [sources_addr, hn] at ⊢
   vc_by_shape
-  | load => run_loads [kp, kl, ks, kn]
-  | goto ".LB.Planner.run.18" =>
+  | load => run_loads [kp, ks, kn]
+  | goto ".LB.Planner.run.10" =>
     rename_i hb
     symexec_norm at hb
-    simp only [planned_pos_addr, hr, hp, hbx] at hb
+    simp only [planned_pos_addr, hr, h8, hbx] at hb
     simp only [sources_addr, hn,
       Idioms.cf_sub, decide_eq_true_eq] at hb
     have hlt : 1#64 + rdx t < g.p.n := hb
     apply hnext g1.sources
     · rfl
-    · refine ⟨lo, locals, hc1.next ?_ rfl rfl rfl rfl rfl rfl, hbp, hlt, ?_⟩
+    · refine ⟨lo, locals, hc1.next ?_ rfl rfl rfl rfl, hbp, h8, hlt, ?_⟩
       · rfl
       · simpa only [g1, i, rdx, Reg64s.get64_rdx,
           BitVec.add_comm 1#64 t.regs.rdx.toBitVec] using hstep
@@ -96,7 +91,7 @@ theorem b_17 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   | other =>
     rename_i hb
     symexec_norm at hb
-    simp only [planned_pos_addr, hr, hp, hbx] at hb
+    simp only [planned_pos_addr, hr, h8, hbx] at hb
     simp only [sources_addr, hn,
       Idioms.cf_sub, decide_eq_false_iff_not] at hb
     have hend : ¬ t.regs.rdx.toBitVec + 1#64 < g.p.n := by
@@ -104,7 +99,7 @@ theorem b_17 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
         BitVec.add_comm 1#64 t.regs.rdx.toBitVec] using hb
     rw [sources_end hend] at hstep
     apply hdone g1.sources
-    · exact ⟨lo, locals, hc1.next rfl rfl rfl rfl rfl rfl rfl, hbp⟩
+    · exact ⟨lo, locals, hc1.next rfl rfl rfl rfl rfl, hbp⟩
     · exact hstep
     · rfl
 

@@ -71,7 +71,7 @@ theorem Bd.droppedRead (h : Bd P r F s ra lo L.toList t) {o : Word}
           ([L.x0, L.pending, L.classWord, L.excess, L.pass, L.count] ++ L.candidates.toList) ∗
           Arr (t.regs.rsp.toBitVec + 9264#64) (L.padding :: saved s) ∗ R) := by ecancel
   rw [e] at hm
-  obtain ⟨Q, he, _⟩ := SpillSetProof.Bs.focus
+  obtain ⟨Q, he, _⟩ := Bs.focus
     (t.regs.rsp.toBitVec + 8240#64) L.droppedNow.toList (i := o.toNat)
     (by rw [Vector.length_toList]; exact ho) 0#8
   rw [he, MProp.sep_assoc, BitVec.ofNat_toNat, BitVec.setWidth_eq] at hm

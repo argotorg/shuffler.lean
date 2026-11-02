@@ -17,9 +17,10 @@ echo "ok C process helper: keeps return values, exit status and buffer writes"
 
 "$bin/shuffler_assertion_test" success
 "$bin/shuffler_assertion_test" assembly-success
+"$bin/shuffler_assertion_test" consistent-plan
 
 fails=0
-for name in empty-stack duplicate-spill nonvariable-spill unavailable-target \
+for name in empty-stack duplicate-spill nonvariable-spill unavailable-target inconsistent-plan \
 	assembly-empty-stack assembly-duplicate-spill assembly-nonvariable-spill assembly-unavailable-target; do
 	status=0
 	"$bin/shuffler_assertion_test" "$name" > "$tmp/out" 2> "$tmp/err" || status=$?

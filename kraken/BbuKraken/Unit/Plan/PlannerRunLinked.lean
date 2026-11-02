@@ -26,7 +26,7 @@ theorem planner_resolve_correct [Host] (L : Linked) (X : ExitBoundary) :
   have hclass := vspec_of_body L.planner_classify_decl (planner_classify_correct L X)
   have hadd := addSpec_of_body L.planner_spillSetAdd_decl (X.returnDistinct _)
     (spillSetAdd_unit (L.planner_exit_decl X) (X.outside spillSetAdd_at))
-  exact resolve_unit (X.outside resolve_at) hclass hadd
+  exact resolve_unit (L.planner_exit_decl X) (X.outside resolve_at) hclass hadd
 
 theorem emission_run_vthm [Host] (L : Linked) (X : ExitBoundary) (PM : Addr) (planned : Vector Word MAX_N) :
     letI := L.plannerDecls

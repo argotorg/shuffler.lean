@@ -20,7 +20,7 @@ set_option maxRecDepth 4096 in
 theorem b_26 [Host] [FunDecls] (P : Addr) (g g' : PlannerRunG) (F : MProp 64)
     (s : MachineData) (ra : Int64) (hok : g'.Ok)
     (K : Unit → MachineData → Prop) (I' : CfgLabel → Nat → Unit → MachineData → Prop) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.21" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.12" →
       ∀ t, (∃ lo locals, Bd P g' F s ra lo locals t ∧ plannerRunQ g g' s t) →
         WP.wp blk.body K
           (Program.Intercept (Program.labels plannerRunAsm) (s.pushRa ra) I'

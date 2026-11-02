@@ -16,12 +16,10 @@ open Bbu.Sep Flat
 
 def resolveTail : Program := parse("
   cmpb $1, %al
-  je .LB.Planner.run.21
-  cmpb $2, %al
-  je .LB.Planner.run.21
+  je .LB.Planner.run.12
   movq 8(%rbx), %rcx
   testq %rcx, %rcx
-  je .LB.Planner.run.31
+  je .LB.Planner.run.13
   movq 48(%rbx), %rax
   addq %rax, %rcx
   movl $0, %edx
@@ -32,16 +30,17 @@ theorem resolve_tail [Host] [FunDecls] (P : Addr) (g : PlannerRunG)
     (M : Flat.Mapping) (F : MProp 64) (s : MachineData) (ra : Int64)
     (lo locals : List Word) (t : MachineData) (res : Flat.Resolution) (before : Word)
     (h : PostEmitLI P g M F s ra lo locals t)
-    (hal : al t = ResolveU.code res) (hbp : t.regs.rbp.toBitVec = before)
+    (hal : al t = ResolveU.code res) (hnormal : res ≠ .assertionFailed)
+    (hbp : t.regs.rbp.toBitVec = before)
     (K : Unit → MachineData → Prop)
     (I' : CfgLabel → Nat → Unit → MachineData → Prop) (E : Int64 → MachineData → Prop)
     (hbad : ∀ u, PostEmitLI P g M F s ra lo locals u → res ≠ .dropped →
       al u = ResolveU.code res →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-        (label ".LB.Planner.run.21") u)
+        (label ".LB.Planner.run.12") u)
     (hzero : ∀ u, PostEmitLI P g M F s ra lo locals u → res = .dropped → g.p.m = 0#64 →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-        (label ".LB.Planner.run.31") u)
+        (label ".LB.Planner.run.13") u)
     (hmore : ∀ u, PostEmitLI P g M F s ra lo locals u → res = .dropped → g.p.m ≠ 0#64 →
       u.regs.rbp.toBitVec = before → rax u = g.p.drp →
       rcx u = g.p.drp + g.p.m → rdx u = 0#64 → K () u) :
@@ -63,31 +62,31 @@ theorem resolve_tail [Host] [FunDecls] (P : Addr) (g : PlannerRunG)
   all_goals try simp only [h.rbx, rm, rd] at ⊢
   vc_by_shape
   | load => simp only [km, kd]
-  | goto ".LB.Planner.run.21" =>
+  | goto ".LB.Planner.run.12" =>
     apply hbad
-    · exact h.next rfl rfl rfl rfl rfl rfl rfl
+    · exact h.next rfl rfl rfl rfl rfl
     · intro he
       subst res
       simp only [ResolveU.code] at ha
       all_goals (rename_i hj; symexec_norm at hj; simp only [ha] at hj; contradiction)
     · exact hal
-  | goto ".LB.Planner.run.31" =>
-    rename_i af h1 af' h2 af'' hm
-    symexec_norm at h1 h2 hm
-    simp only [ha, BitVec.zero_eq, beq_eq_false_iff_ne] at h1 h2
+  | goto ".LB.Planner.run.13" =>
+    rename_i af h1 af' hm
+    symexec_norm at h1 hm
+    simp only [ha, BitVec.zero_eq, beq_eq_false_iff_ne] at h1
     simp only [h.rbx, rm, BitVec.and_self, BitVec.zero_eq, beq_iff_eq] at hm
     apply hzero
-    · exact h.next rfl rfl rfl rfl rfl rfl rfl
-    · cases res <;> simp_all [ResolveU.code, BitVec.take]
+    · exact h.next rfl rfl rfl rfl rfl
+    · cases res <;> simp_all [ResolveU.code]
     · exact hm
   | other =>
-    rename_i af h1 af' h2 af'' hm
-    symexec_norm at h1 h2 hm
-    simp only [ha, BitVec.zero_eq, beq_eq_false_iff_ne] at h1 h2
+    rename_i af h1 af' hm
+    symexec_norm at h1 hm
+    simp only [ha, BitVec.zero_eq, beq_eq_false_iff_ne] at h1
     simp only [h.rbx, rm, BitVec.and_self, BitVec.zero_eq, beq_eq_false_iff_ne] at hm
     apply hmore
-    · exact h.next rfl rfl rfl rfl rfl rfl rfl
-    · cases res <;> simp_all [ResolveU.code, BitVec.take]
+    · exact h.next rfl rfl rfl rfl rfl
+    · cases res <;> simp_all [ResolveU.code]
     · exact hm
     · exact hbp
     · rfl

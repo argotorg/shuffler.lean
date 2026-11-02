@@ -1,15 +1,7 @@
 module
 
-/-!
-The symbol names of the functions of `c/shuffler/test_wrappers.cpp`. The members of `Emission`,
-`SpillSet`, `MappingBuilder` and `Planner` have the names that g++ gives them (the Itanium C++ ABI
-mangling); the entries `build_bottom_up`, `emission_pop`, `spill_set`, `remove_surplus`,
-`permute`, `permute_at_lowest_height`, `build_mapping`, `resolve`, `emit` and `plan` are
-`extern "C"`. These are the names in `build/kraken/c/build_bottom_up.S` and in the binary.
-We do not rename them in the asm: each change to the compiler output is one more
-step between the proved program and the program that runs. Each name is here once;
-`BbuKraken.Asm`, `BbuKraken.Link` and the specs use these defs.
--/
+/-! The C++ symbols in `c/shuffler/stack/Shuffler.cpp` and its headers.
+The names use the Itanium C++ ABI. The proof input contains no test wrappers. -/
 
 namespace Bbu.Names
 
@@ -35,18 +27,10 @@ namespace Bbu.Names
 @[expose] public def buildBottomUp : String := "_ZN12_GLOBAL__N_18Emission13buildBottomUpEv"
 /-- `Emission::pop()` -/
 @[expose] public def pop : String := "_ZN12_GLOBAL__N_18Emission3popEv"
-/-- `build_bottom_up`, `extern "C"` -/
-@[expose] public def build_bottom_up : String := "build_bottom_up"
-/-- `emission_pop`, `extern "C"` -/
-@[expose] public def emission_pop : String := "emission_pop"
 /-- `SpillSet::add(StackSlot)` -/
 @[expose] public def spillSetAdd : String := "_ZN12_GLOBAL__N_18SpillSet3addE9StackSlot"
-/-- `spill_set`, `extern "C"` -/
-@[expose] public def spill_set : String := "spill_set"
 /-- `Emission::removeSurplus()` -/
 @[expose] public def removeSurplus : String := "_ZN12_GLOBAL__N_18Emission13removeSurplusEv"
-/-- `remove_surplus`, `extern "C"` -/
-@[expose] public def remove_surplus : String := "remove_surplus"
 /-- `MappingBuilder::map(StackOffset, StackOffset)` -/
 @[expose] public def map : String := "_ZN12_GLOBAL__N_114MappingBuilder3mapE11StackOffsetS1_"
 /-- `MappingBuilder::closestCopy(StackOffset, CopyLocation) const` -/
@@ -65,16 +49,10 @@ namespace Bbu.Names
   "_ZN12_GLOBAL__N_114MappingBuilder17keepWildcardSlotsEv"
 /-- `MappingBuilder::absorbSurplus()` -/
 @[expose] public def absorbSurplus : String := "_ZN12_GLOBAL__N_114MappingBuilder13absorbSurplusEv"
-/-- `build_mapping`, `extern "C"` -/
-@[expose] public def build_mapping : String := "build_mapping"
 
-/-- `permute`, `extern "C"`. `Names.permute` is the member `Emission::permute`. -/
-@[expose] public def permuteEntry : String := "permute"
 /-- `Emission::permuteAtLowestHeight()` -/
 @[expose] public def permuteAtLowestHeight : String :=
   "_ZN12_GLOBAL__N_18Emission21permuteAtLowestHeightEv"
-/-- `permute_at_lowest_height`, `extern "C"` -/
-@[expose] public def permute_at_lowest_height : String := "permute_at_lowest_height"
 
 /-- `Planner::isRetained(Mapping const&, StackOffset)`, static -/
 @[expose] public def isRetained : String :=
@@ -90,21 +68,15 @@ namespace Bbu.Names
 /-- `Planner::resolve(Mapping const&, Emission::Blocked, Mapping const&, size_t)` -/
 @[expose] public def resolve : String :=
   "_ZN12_GLOBAL__N_17Planner7resolveERKNS_7MappingENS_8Emission7BlockedES3_m"
-/-- `resolve`, `extern "C"`. `Names.resolve` is the member `Planner::resolve`. -/
-@[expose] public def resolveEntry : String := "resolve"
 
 /-- `Emission::isAvailable(StackOffset) const` -/
 @[expose] public def isAvailable : String :=
   "_ZNK12_GLOBAL__N_18Emission11isAvailableE11StackOffset"
 /-- `Emission::run()` -/
 @[expose] public def run : String := "_ZN12_GLOBAL__N_18Emission3runEv"
-/-- `emit`, `extern "C"` -/
-@[expose] public def emit : String := "emit"
 /-- `Planner::run(MappingBuilder::WildcardSlotsStrategy, StackSlot*, ShuffleOp*,
   Optional<StackOffset>*, size_t&)` -/
 @[expose] public def plannerRun : String :=
   "_ZN12_GLOBAL__N_17Planner3runENS_14MappingBuilder21WildcardSlotsStrategyEP9StackSlotP9ShuffleOpPNS_8OptionalI11StackOffsetEERm"
-/-- `plan`, `extern "C"` -/
-@[expose] public def plan : String := "plan"
 
 end Bbu.Names

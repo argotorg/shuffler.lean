@@ -20,11 +20,11 @@ def EmissionCont [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mappin
     (I' : CfgLabel → Nat → Unit → MachineData → Prop) (E : Int64 → MachineData → Prop) : Prop :=
   (∀ u, PostEmitLI P g M F s ra lo locals u → al u = al t → al u ≠ 1#8 →
     Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-      (label ".LB.Planner.run.17") u) ∧
+      (label ".LB.Planner.run.9") u) ∧
   (∀ u, PostEmitLI P g M F s ra lo locals u → al t = 1#8 → g.p.m = 0#64 →
     u.regs.rbp.toBitVec = 0#64 →
     Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-      (label ".LB.Planner.run.29") u) ∧
+      (label ".LB.Planner.run.17") u) ∧
   (∀ u, PostEmitLI P g M F s ra lo locals u → al t = 1#8 → g.p.m ≠ 0#64 →
     u.regs.rbp.toBitVec = 0#64 → rax u = g.p.drp → rdx u = g.p.drp + g.p.m → K () u)
 
@@ -63,7 +63,7 @@ theorem b_28 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
         (emissionGhost g hok (localEmissionHdr locals hc.localLength)) a t u →
       a.Ok → u.regs.get64 .rdi = 1#64 →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label "exit") u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.27" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.15" →
       ∀ t, EmitReady P g M F s ra t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block

@@ -21,9 +21,9 @@ theorem b_14 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     (E : Int64 → MachineData → Prop)
     (hdone : ∀ u, EmitReady P g M F s ra u →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-        (label ".LB.Planner.run.27") u)
+        (label ".LB.Planner.run.15") u)
     (hnext : ∀ u, rax u = 8#64 + rax t → EmitCountHead P g M F s ra u → K () u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.15" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.7" →
       EmitCountNext P g M F s ra t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
@@ -46,7 +46,7 @@ theorem b_14 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   kvcgen64
   all_goals try symexec_norm at ⊢
   vc_by_shape
-  | goto ".LB.Planner.run.27" =>
+  | goto ".LB.Planner.run.15" =>
     rename_i he
     symexec_norm at he
     have hjend : j + 1#64 = g.p.n := beq_iff_eq.mp (hptr true he)

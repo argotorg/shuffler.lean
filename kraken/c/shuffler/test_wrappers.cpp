@@ -1,6 +1,6 @@
-// C entry points for the test harnesses and their assembly contracts.
+// C entry points for the test harnesses and fuzzer.
 // Include the implementation to test its internal classes in the same translation unit.
-// A failed yulAssert exits with status 1. A returned assertion-error Status becomes -2.
+// A failed yulAssert exits with status 1.
 #include "stack/Shuffler.cpp"
 
 /// The Emission constructor and Emission::buildBottomUp for a source stack of m slots without surplus: data holds
@@ -41,8 +41,6 @@ extern "C" std::int64_t build_bottom_up(
 		blocked[0] = emission.blocked().offset.value;
 		blocked[1] = emission.blocked().excess;
 		return static_cast<std::int64_t>(emission.traceSize());
-	case Status::AssertionFailed:
-		return -2;
 	}
 	__builtin_unreachable();
 }
@@ -161,8 +159,6 @@ extern "C" std::int64_t remove_surplus(
 		blocked[0] = emission.blocked().offset.value;
 		blocked[1] = emission.blocked().excess;
 		break;
-	case Status::AssertionFailed:
-		return -2;
 	}
 	*height = emission.stackSize();
 	for (StackOffset pos{0}; pos < emission.stackSize(); ++pos.value)
@@ -212,8 +208,6 @@ extern "C" std::int64_t permute(
 		blocked[0] = emission.blocked().offset.value;
 		blocked[1] = emission.blocked().excess;
 		break;
-	case Status::AssertionFailed:
-		return -2;
 	}
 	for (StackOffset pos{0}; pos < h; ++pos.value)
 		dest[pos.value] = emission.mapping().destinationOf(pos);
@@ -260,8 +254,6 @@ extern "C" std::int64_t permute_at_lowest_height(
 		blocked[0] = emission.blocked().offset.value;
 		blocked[1] = emission.blocked().excess;
 		break;
-	case Status::AssertionFailed:
-		return -2;
 	}
 	for (StackOffset pos{0}; pos < m; ++pos.value)
 		dest[pos.value] = emission.mapping().destinationOf(pos);
@@ -307,7 +299,7 @@ extern "C" std::int64_t build_mapping(
 /// slot at offset is blocked by excess slots. The variable id is spilled if spilled[id] is not 0, allowed is
 /// spillingAllowed, 0 or 1, and dropped[i] is not 0 if source slot i is scheduled to be popped. Sets the dropped byte of
 /// each victim to 1, and the spill byte of each new spill to 1. Returns 0 when it dropped excess slots, -1 when no slot
-/// is left to drop, or -2 for a returned assertion-error status. A failed yulAssert exits with status 1.
+/// is left to drop. A failed yulAssert exits with status 1.
 /// The drops and spills of the passes before the error stay.
 ///
 /// plan holds m and current h distinct offsets below n, spilled has idCount bytes, and dropped has m bytes. m, n, h <=
@@ -351,8 +343,6 @@ extern "C" std::int64_t resolve(
 		return 0;
 	case Resolution::Stuck:
 		return -1;
-	case Resolution::AssertionFailed:
-		return -2;
 	}
 	__builtin_unreachable();
 }
@@ -412,8 +402,6 @@ extern "C" std::int64_t emit(
 		blocked[0] = emission.blocked().offset.value;
 		blocked[1] = emission.blocked().excess;
 		break;
-	case Status::AssertionFailed:
-		return -2;
 	}
 	*height = emission.stackSize();
 	for (StackOffset pos{0}; pos < emission.stackSize(); ++pos.value)
@@ -471,8 +459,6 @@ extern "C" std::int64_t plan(
 	case Status::Blocked:
 		*saw = planner.sawWildcardCopy();
 		return -1;
-	case Status::AssertionFailed:
-		return -2;
 	}
 	__builtin_unreachable();
 }

@@ -35,13 +35,13 @@ theorem phase_commute (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra :
   · subst l; simp [initFullPhase, zphase, loopPhase, dropPhase]
   by_cases h1 : l = ".LB.Planner.resolve.1"
   · subst l; simp [initFullPhase, zphase, loopPhase, dropPhase]
-  by_cases h4 : l = ".LB.Planner.resolve.4"
+  by_cases h4 : l = ".LB.Planner.resolve.3"
   · subst l; simp [initFullPhase, zphase, initPhase, loopPhase, dropPhase]
-  by_cases h5 : l = ".LB.Planner.resolve.5"
+  by_cases h5 : l = ".LB.Planner.resolve.4"
   · subst l; simp [initFullPhase, zphase, initPhase, loopPhase, dropPhase]
-  by_cases h6 : l = ".LB.Planner.resolve.6"
+  by_cases h6 : l = ".LB.Planner.resolve.5"
   · subst l; simp [initFullPhase, zphase, initPhase, loopPhase, dropPhase]
-  by_cases h7 : l = ".LB.Planner.resolve.7"
+  by_cases h7 : l = ".LB.Planner.resolve.6"
   · subst l; simp [initFullPhase, zphase, initPhase, loopPhase, dropPhase]
   simp [initFullPhase, zphase, initPhase, loopPhase, dropPhase, h0, h1, h4, h5, h6, h7]
 
@@ -54,19 +54,20 @@ theorem var_commute (s : MachineData) (rest : Label → MachineData → Nat) :
   · subst l; simp [initFullVar, zvar, initVar, loopVar, Names.resolve]
   by_cases h1 : l = ".LB.Planner.resolve.1"
   · subst l; simp [initFullVar, zvar, initVar, loopVar, Names.resolve]
-  by_cases h4 : l = ".LB.Planner.resolve.4"
+  by_cases h4 : l = ".LB.Planner.resolve.3"
   · subst l; simp [initFullVar, zvar, initVar, loopVar, Names.resolve]
-  by_cases h5 : l = ".LB.Planner.resolve.5"
+  by_cases h5 : l = ".LB.Planner.resolve.4"
   · subst l; simp [initFullVar, zvar, initVar, loopVar, Names.resolve]
-  by_cases h6 : l = ".LB.Planner.resolve.6"
+  by_cases h6 : l = ".LB.Planner.resolve.5"
   · subst l; simp [initFullVar, zvar, initVar, loopVar, Names.resolve]
-  by_cases h7 : l = ".LB.Planner.resolve.7"
+  by_cases h7 : l = ".LB.Planner.resolve.6"
   · subst l; simp [initFullVar, zvar, initVar, loopVar, Names.resolve]
   simp [initFullVar, zvar, initVar, loopVar, h0, hf, h1, h4, h5, h6, h7]
 
 end ResolveU
 
 theorem resolve_unit [Host] [FunDecls]
+    (hexit : FunDecls.at (label "exit") = none)
     (hout : ∀ l ∈ Program.labels resolveAsm, label l ≠ label "exit")
     (hclass : VSpec CView CG.Ok Names.classify classifyA 16 classifyQ)
     (hadd : AddSpec) : VThmWithExit RView RG.Ok resolveAsm resolveA 1182 resolveQ resolveX := by
@@ -92,12 +93,12 @@ theorem resolve_unit [Host] [FunDecls]
       (ResolveU.initPhase P r F s ra phase) (ResolveU.initVar s variant) 67113864
       hp.ok (ResolveU.initPayload_store s) (by intro t; simp [ResolveU.initVar, Names.resolve])
   · exact ResolveU.b_1 P r F s ra phase variant hp.ok hp.args
-  · exact ResolveU.b_2 P r F s ra _ _
-  · exact ResolveU.b_3 P r F s ra _ _
-  · exact ResolveU.b_4 P r F s ra phase variant
-  · exact ResolveU.b_5 P r F s ra phase variant hp.ok hp.args
-  · exact ResolveU.b_6 P r F s ra phase variant
-  · apply ResolveU.b_7 P r F s ra phase variant hp.ok hp.args
+  · exact ResolveU.b_2 P r F s ra _ _ hexit hout
+  · exact ResolveU.b_18 P r F s ra _ _
+  · exact ResolveU.b_3 P r F s ra phase variant
+  · exact ResolveU.b_4 P r F s ra phase variant hp.ok hp.args
+  · exact ResolveU.b_5 P r F s ra phase variant
+  · apply ResolveU.b_6 P r F s ra phase variant hp.ok hp.args
     · intro t ht
       simpa [phase, ResolveU.loopPhase] using ht
     · intro t ht
@@ -112,16 +113,16 @@ theorem resolve_unit [Host] [FunDecls]
         (ResolveU.loopPhase P r F s ra (ResolveU.dropPhase P r F s ra rest)))
       (ResolveU.initFullVar s (ResolveU.loopVar s var)) blk)
   all_goals rw [ResolveU.phase_commute, ResolveU.var_commute]
+  · exact ResolveU.b_7 P r F s ra _ _ hp.ok
   · exact ResolveU.b_8 P r F s ra _ _ hp.ok
-  · exact ResolveU.b_9 P r F s ra _ _ hp.ok
+  · exact ResolveU.b_9 P r F s ra _ _
   · exact ResolveU.b_10 P r F s ra _ _
-  · exact ResolveU.b_11 P r F s ra _ _
-  · exact ResolveU.b_12 P r F s ra _ _ hp.ok hclass
+  · exact ResolveU.b_11 P r F s ra _ _ hp.ok hclass
+  · exact ResolveU.b_12 P r F s ra _ _ hp.ok
   · exact ResolveU.b_13 P r F s ra _ _ hp.ok
-  · exact ResolveU.b_14 P r F s ra _ _ hp.ok
-  · exact ResolveU.b_15 P r F s ra _ _ hout hp.ok (ResolveU.addVSpec hadd)
+  · exact ResolveU.b_14 P r F s ra _ _ hexit hout hp.ok (ResolveU.addVSpec hadd)
+  · exact ResolveU.b_15 P r F s ra _ _
   · exact ResolveU.b_16 P r F s ra _ _
   · exact ResolveU.b_17 P r F s ra _ _
-  · exact ResolveU.b_18 P r F s ra _ _
 
 end Bbu.Unit

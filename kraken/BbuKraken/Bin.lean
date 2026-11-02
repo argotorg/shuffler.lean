@@ -7,17 +7,12 @@ import all BbuKraken.BinHost
 
 @[expose] public section
 
-open Std.WP Lean.Order
-open scoped Program.WP
-
 namespace Bbu
 
-theorem bbu_harness_correct :
+/-- The C++ method in the binary checked by `test/bin_check.sh`. -/
+theorem buildBottomUp_binary_correct :
     letI := binLinked.decls
-    ∀ s ra, ⦃ fun t => t = s.pushRa ra ∧ TopPre s ⦄ buildBottomUpAsm
-      ⦃ (fun _ _ => False); fun a t =>
-        (a = ra ∧ TopPost s t ∧ (topMod s).Agree s t) ∨
-        (a = label "exit" ∧ t.regs.get64 .rdi = 1#64 ∧ TopModelExit s t) ⦄ :=
+    Unit.UnitThmWithExit loopAsm Unit.loopA 2068 Unit.loopQ Unit.loopX :=
   buildBottomUp_correct binLinked binBoundary
 
 end Bbu

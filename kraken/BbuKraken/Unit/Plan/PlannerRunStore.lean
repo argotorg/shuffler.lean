@@ -1,5 +1,7 @@
 module
 
+public import BbuKraken.Unit.Plan.ResolveByteFrame
+import all BbuKraken.Unit.Plan.ResolveByteFrame
 public import BbuKraken.Unit.Plan.PlannerRunFrame
 import all BbuKraken.Unit.Plan.PlannerRunFrame
 public import BbuKraken.Unit.Plan.PlannerRunMem
@@ -56,6 +58,41 @@ theorem Bd.storeLocal (h : Bd P g F s ra lo locals t) {i : Nat} (hi : i < 4121)
   have hl : (locals.set i w).length = 4121 := by simp [h.localLength]
   refine ⟨⟨?_, hsp ▸ h.kb.sp⟩, h.low, hl⟩
   rw [hm, e _ hl]
+  exact hnew
+
+theorem Bd.localByteRead (h : Bd P g F s ra lo locals t) {i j : Nat}
+    (hi : i < 4121) (hj : j < 8) :
+    rdb t.dmem (t.regs.rsp.toBitVec + BitVec.ofNat 64 (8 * i) + BitVec.ofNat 64 j) =
+      (locals[i]'(h.localLength ▸ hi)).extractLsb' (8 * j) 8 := by
+  obtain ⟨R, e⟩ := h.localFocus
+  obtain ⟨Q, he⟩ := Arr.focus t.regs.rsp.toBitVec locals (h.localLength ▸ hi)
+  have hm := e locals h.localLength ▸ h.kb.mem
+  rw [he, MProp.sep_assoc] at hm
+  exact Wd.rdb_byte hm hj
+
+theorem Bd.localByteSome (h : Bd P g F s ra lo locals t) {i j : Nat}
+    (hi : i < 4121) (hj : j < 8) :
+    (t.dmem.loadInt (t.regs.rsp.toBitVec + BitVec.ofNat 64 (8 * i) + BitVec.ofNat 64 j) 1).isSome = true := by
+  obtain ⟨R, e⟩ := h.localFocus
+  obtain ⟨Q, he⟩ := Arr.focus t.regs.rsp.toBitVec locals (h.localLength ▸ hi)
+  have hm := e locals h.localLength ▸ h.kb.mem
+  rw [he, MProp.sep_assoc] at hm
+  exact Wd.isSome_byte hm hj
+
+theorem Bd.storeLocalByte (h : Bd P g F s ra lo locals t) {i : Nat} (hi : i < 4121)
+    {j : Word} (hj : j.toNat < 8) (z : Int)
+    (hm : u.dmem = t.dmem.storeInt
+      (t.regs.rsp.toBitVec + BitVec.ofNat 64 (8 * i) + j) 1 z)
+    (hsp : u.regs.rsp = t.regs.rsp) :
+    ∃ w : Word, Bd P g F s ra lo (locals.set i w) u := by
+  obtain ⟨R, e⟩ := h.localFocus
+  obtain ⟨Q, he, hs⟩ := ResolveU.Arr_focus_set t.regs.rsp.toBitVec locals (h.localLength ▸ hi)
+  have hmem := e locals h.localLength ▸ h.kb.mem
+  rw [he, MProp.sep_assoc] at hmem
+  obtain ⟨w, hnew⟩ := ResolveU.Wd_storeByte hmem hj z
+  have hl : (locals.set i w).length = 4121 := by simp [h.localLength]
+  refine ⟨w, ⟨⟨?_, hsp ▸ h.kb.sp⟩, h.low, hl⟩⟩
+  rw [hm, e _ hl, hs, MProp.sep_assoc]
   exact hnew
 
 theorem Bd.storeSaw (h : Bd P g F s ra lo locals t) (x : Int)

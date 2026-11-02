@@ -128,7 +128,9 @@ theorem cfg_4 (hok : g.Ok) : plannerRunAsm.ForallBlocks fun blk =>
     I' (RunExit P g F s ra) (by
       intro u hu
       let ctx := LoopContext.start g s hu.choose_spec.choose_spec.2.2.2
-      refine ⟨?_, Or.inl ?_⟩
+      apply Program.Intercept.intro_label (i := 20) (by decide)
+      left
+      refine ⟨hu.choose_spec.choose_spec.1.kb.stack (by decide), ?_, Or.inl ?_⟩
       · simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte, LoopPhase]
         exact ⟨withSaw g 0#8, withSaw_ok hok _, ⟨ctx⟩, hu⟩
       · simp only [runV, String.reduceEq, or_false, ↓reduceIte]
@@ -152,7 +154,7 @@ theorem cfg_25 (hok : g.Ok)
   cfg_view as hv
   cfg_block [RunObl]
   intro t ht
-  simp only [RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte] at ht
+  simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨lo, locals, hb, htgt⟩ := ht
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
@@ -170,16 +172,16 @@ theorem cfg_25 (hok : g.Ok)
 
 set_option maxRecDepth 4096 in
 theorem cfg_26 : plannerRunAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.run.21" → RunObl P g F s ra resolvePhase blk := by
+    blk.label = .label ".LB.Planner.run.12" → RunObl P g F s ra resolvePhase blk := by
   cfg_view as hv
   cfg_block [RunObl]
   intro t ht
-  simp only [RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte, RunReturn] at ht
+  simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte, RunReturn] at ht
   obtain ⟨current, lo, locals, hb, hok, hq⟩ := ht
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
-      Program.Decreases (runV g) (.label ".LB.Planner.run.21") 23 t b j u
-  have hh := b_26 P g current F s ra hok (I' (.label ".LB.Planner.run.22") 24) I'
+      Program.Decreases (runV g) (.label ".LB.Planner.run.12") 14 t b j u
+  have hh := b_26 P g current F s ra hok (I' (.label ".LB.Planner.run.13") 15) I'
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
     String.reduceEq, false_implies, true_implies, and_true, true_and] at hh

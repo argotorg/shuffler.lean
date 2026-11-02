@@ -17,7 +17,7 @@ structure PostEmitLI (P : Addr) (g : PlannerRunG) (M : Flat.Mapping) (F : MProp 
   nops : locals[2066]? = some (BitVec.ofNat 64 g.traceLength)
   mappingEq : ∀ hl : locals.length = 4121, localMapping locals hl = M
   ok : g.Ok
-  r13 : t.regs.r13.toBitVec = t.regs.rsp.toBitVec + 32#64
+  r15 : t.regs.r15.toBitVec = t.regs.rsp.toBitVec + 32#64
 
 section
 variable {P : Addr} {g : PlannerRunG} {M : Flat.Mapping} {F : MProp 64}
@@ -25,13 +25,12 @@ variable {P : Addr} {g : PlannerRunG} {M : Flat.Mapping} {F : MProp 64}
 
 theorem PostEmitLI.next (h : PostEmitLI P g M F s ra lo locals t)
     (hm : u.dmem = t.dmem) (hsp : u.regs.rsp = t.regs.rsp)
-    (hbx : u.regs.rbx = t.regs.rbx) (h12 : u.regs.r12 = t.regs.r12)
-    (h15 : u.regs.r15 = t.regs.r15) (h14 : u.regs.r14 = t.regs.r14)
-    (h13 : u.regs.r13 = t.regs.r13) :
+    (hbx : u.regs.rbx = t.regs.rbx) (h14 : u.regs.r14 = t.regs.r14)
+    (h15 : u.regs.r15 = t.regs.r15) :
     PostEmitLI P g M F s ra lo locals u :=
-  ⟨⟨h.toBd.next hm hsp, hbx ▸ h.rbx, h12 ▸ h.r12, h15 ▸ h.r15,
-    h14 ▸ h.r14, h.sources⟩, h.count, h.nops, h.mappingEq, h.ok,
-    by rw [h13, hsp]; exact h.r13⟩
+  ⟨⟨h.toBd.next hm hsp, hbx ▸ h.rbx, h14 ▸ h.r14, h.ops,
+    h.strategy, h.sources⟩, h.count, h.nops, h.mappingEq, h.ok,
+    by rw [h15, hsp]; exact h.r15⟩
 
 theorem PostEmitLI.posRead (h : PostEmitLI P g M F s ra lo locals t)
     {i : Word} (hi : i.toNat < MAX_N) :
@@ -44,16 +43,16 @@ theorem PostEmitLI.storeSources (h : PostEmitLI P g M F s ra lo locals t)
     {i : Word} (hi : i.toNat < MAX_N) (hn : i.toNat < g.p.n.toNat) (w : Word)
     (hm : u.dmem = t.dmem.storeInt (slotAt g.sourcesPtr i.toNat) 8 w.toInt)
     (hsp : u.regs.rsp = t.regs.rsp)
-    (hbx : u.regs.rbx = t.regs.rbx) (h12 : u.regs.r12 = t.regs.r12)
-    (h15 : u.regs.r15 = t.regs.r15) (h14 : u.regs.r14 = t.regs.r14)
-    (h13 : u.regs.r13 = t.regs.r13) :
+    (hbx : u.regs.rbx = t.regs.rbx) (h14 : u.regs.r14 = t.regs.r14)
+    (_h13 : u.regs.r13 = t.regs.r13) (_h12 : u.regs.r12 = t.regs.r12)
+    (h15 : u.regs.r15 = t.regs.r15) :
     PostEmitLI P {g with sources := put g.sources i w} M F s ra lo locals u := by
   have hnew := store_sources h.kb.vmem hi hn w
   refine ⟨⟨⟨⟨?_, hsp ▸ h.kb.sp⟩, h.low, h.localLength⟩,
-    hbx ▸ h.rbx, h12 ▸ h.r12, h15 ▸ h.r15, h14 ▸ h.r14, h.sources⟩,
+    hbx ▸ h.rbx, h14 ▸ h.r14, h.ops, h.strategy, h.sources⟩,
     h.count, h.nops, h.mappingEq,
     ⟨h.ok.planner, h.ok.spillCount, h.ok.sourceIds, h.ok.targetIds,
-      h.ok.ops, h.ok.traceLength⟩, by rw [h13, hsp]; exact h.r13⟩
+      h.ok.ops, h.ok.traceLength⟩, by rw [h15, hsp]; exact h.r15⟩
   rw [hm]
   exact (sep_lc _ _ _).symm ▸ hnew
 
@@ -75,7 +74,7 @@ def PostEmitHead (P : Addr) (g : PlannerRunG) (M : Flat.Mapping) (F : MProp 64)
 def SourcesHead (P : Addr) (g : PlannerRunG) (M : Flat.Mapping) (F : MProp 64)
     (s : MachineData) (ra : Int64) (wanted : Vector Word MAX_N) (t : MachineData) : Prop :=
   ∃ lo locals, PostEmitLI P g M F s ra lo locals t ∧
-    t.regs.rbp.toBitVec = g.countPtr ∧ rdx t < g.p.n ∧
+    t.regs.rbp.toBitVec = g.countPtr ∧ r8 t = g.sourcesPtr ∧ rdx t < g.p.n ∧
     Flat.sourcesFrom g.p.n (rdx t) M g.sources = wanted
 
 def SourcesDone (P : Addr) (g : PlannerRunG) (M : Flat.Mapping) (F : MProp 64)

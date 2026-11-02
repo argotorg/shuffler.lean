@@ -26,9 +26,9 @@ theorem b_6 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
     (I' : CfgLabel → Nat → Unit → MachineData → Prop) (E : Int64 → MachineData → Prop)
     (hnext : ∀ u, rax u = 1#64 + rax t → InitDestHead P g F s ra u →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-        (label ".LB.Planner.run.7") u)
+        (label ".LB.Planner.run.20") u)
     (hdone : ∀ u, rax u = g.p.m → InitDestDone P g F s ra u → K () u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.7" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.20" →
       InitDestHead P g F s ra t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
@@ -47,7 +47,7 @@ theorem b_6 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
   | load =>
     rw [dest_addr]
     exact hc.localSome hidx
-  | goto ".LB.Planner.run.7" =>
+  | goto ".LB.Planner.run.20" =>
     rename_i heq
     symexec_norm at heq
     simp only [hc.rdx, sub_beq_zero, Bool.not_eq_true', beq_eq_false_iff_ne] at heq

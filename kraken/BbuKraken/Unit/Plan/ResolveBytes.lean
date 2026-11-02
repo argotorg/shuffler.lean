@@ -2,8 +2,9 @@ module
 
 public import BbuKraken.Unit.Plan.ResolveFrame
 import all BbuKraken.Unit.Plan.ResolveFrame
-public import BbuKraken.Unit.SpillSetLemmas
-import all BbuKraken.Unit.SpillSetLemmas
+
+public import BbuKraken.Unit.Memory
+import all BbuKraken.Unit.Memory
 
 @[expose] public section
 
@@ -115,7 +116,7 @@ theorem Wd_storeByte {a : Addr} {w : Word} {F : MProp 64} {m : Mem 64}
     (h : (Wd a w ∗ F).get m) {i : Word} (hi : i.toNat < 8) (z : Int) :
     ∃ w' : Word, (Wd a w' ∗ F).get (m.storeInt (a + i) 1 z) := by
   rw [Wd_Bs] at h
-  have hs := SpillSetProof.Bs.store h (by simpa [wordBytes_length] using hi) z
+  have hs := Bs.store h (by simpa [wordBytes_length] using hi) z
   obtain ⟨w', hw⟩ := Bs_word a ((wordBytes w).set i.toNat (BitVec.ofInt 8 z))
     (by simp [wordBytes_length])
   exact ⟨w', hw ▸ hs⟩
@@ -125,7 +126,7 @@ theorem Arr_storeByte {a : Addr} {ws : List Word} {F : MProp 64} {m : Mem 64}
     ∃ ws' : List Word, ws'.length = ws.length ∧
       (Arr a ws' ∗ F).get (m.storeInt (a + i) 1 z) := by
   rw [Arr_Bs] at h
-  have hs := SpillSetProof.Bs.store h (by simpa [wordsBytes_length] using hi) z
+  have hs := Bs.store h (by simpa [wordsBytes_length] using hi) z
   obtain ⟨ws', hl, he⟩ := Bs_Arr a ((wordsBytes ws).set i.toNat (BitVec.ofInt 8 z)) ws.length
     (by simp [wordsBytes_length])
   exact ⟨ws', hl, he ▸ hs⟩

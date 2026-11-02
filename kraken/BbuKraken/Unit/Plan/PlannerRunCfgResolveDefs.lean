@@ -18,8 +18,8 @@ def RunResolvePhase (P : Addr) (initial : PlannerRunG) (F : MProp 64)
     ∃ ctx : EmittedContext initial current s M,
       ctx.status = .blocked ∧ EmissionCells locals hl ctx.out ∧
       ResolveInputs current M locals hl ∧
-      if l = ".LB.Planner.run.28" then DropBeforeFixed P current M F s ra locals t
-      else if l = ".LB.Planner.run.29" then ResolveFixed P current M F s ra locals t
+      if l = ".LB.Planner.run.16" then DropBeforeFixed P current M F s ra locals t
+      else if l = ".LB.Planner.run.17" then ResolveFixed P current M F s ra locals t
       else False
 
 abbrev FullRunInv (P : Addr) (g : PlannerRunG) (F : MProp 64) (s : MachineData) (ra : Int64) :=

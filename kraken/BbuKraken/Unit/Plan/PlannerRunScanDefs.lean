@@ -14,8 +14,8 @@ def CheckScan (P : Addr) (g : PlannerRunG) (F : MProp 64) (s : MachineData) (ra 
     (rsi t).setWidth 8 = (Flat.get g.p.fl.target (rcx t)).kind ∧
     (isJunk (Flat.get g.p.fl.target (rcx t)) ||
       canBeFreelyGenerated (Flat.get g.p.fl.target (rcx t))) = false ∧
-    rdi t = g.p.m ∧ r9 t = g.p.src ∧
-    StackSlot.ofWord (r8 t) = Flat.get g.p.fl.target (rcx t) ∧ rax t < g.p.m ∧
+    rdi t = g.p.m ∧ t.regs.r15.toBitVec = g.p.src ∧
+    StackSlot.ofWord (r9 t) = Flat.get g.p.fl.target (rcx t) ∧ rax t < g.p.m ∧
     Flat.containsFrom g.p.fl.source g.p.m (Flat.get g.p.fl.target (rcx t)) 0 =
       Flat.containsFrom g.p.fl.source g.p.m (Flat.get g.p.fl.target (rcx t)) (rax t)
 

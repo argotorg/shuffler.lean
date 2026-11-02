@@ -21,8 +21,8 @@ def DropReady (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
 
 def dropPhase (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (rest : Label → MachineData → Prop) (l : Label) (t : MachineData) : Prop :=
-  if l = ".LB.Planner.resolve.14" then DropReady P r F s ra t
-  else if l = ".LB.Planner.resolve.15" then SpillReady P r F s ra t
+  if l = ".LB.Planner.resolve.13" then DropReady P r F s ra t
+  else if l = ".LB.Planner.resolve.14" then SpillReady P r F s ra t
   else rest l t
 
 end Bbu.Unit.ResolveU

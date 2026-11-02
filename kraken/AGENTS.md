@@ -45,7 +45,7 @@ tactics of this repo.
 - Heartbeats do not change from run to run. Wall time changes by about 20% on a machine with a high
   load. Compare heartbeats, not seconds. To measure one declaration, read `IO.getNumHeartbeats`
   before and after it.
-- Axioms: `kraken/test/axioms.sh` checks the 19 final theorems;
+- Axioms: `kraken/test/axioms.sh` checks the 15 final theorems;
   `kraken/test/axioms.sh FILE NAME...` checks the theorems NAME... of FILE.
   `kraken/test/axioms_test.sh` tests the check. Permitted:
   - `propext`, `Classical.choice`, `Quot.sound`;
@@ -282,7 +282,6 @@ step, move it to `Kit.lean` or `ProofKit/`, with a test.
 - `BbuKraken/Fn/SwapWithLemmas.lean`: `in_omega`.
 - `BbuKraken/Fn/Loop/Defs.lean`: `loop_case`, `loop_goto`.
 - `BbuKraken/Link.lean`: `head_tac`, `at_tac`.
-- `BbuKraken/Top.lean`: `top_nrm`.
 - `BbuKraken/Unit/SwapWith.lean`: `mem_load`, a `sep_load` that tries only the hypotheses on the
   memory of the load. Tests in `Unit/SwapWithTest.lean`.
 

@@ -24,10 +24,10 @@ theorem b_10 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     (E : Int64 → MachineData → Prop)
     (hnext : ∀ data u, rax u = 1#64 + rax t →
       EmitDataHead P {g with data := data} M F s ra wanted u →
-      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.11") u)
+      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.24") u)
     (hdone : ∀ data u, data.map StackSlot.ofWord = wanted →
       EmitDestHead P {g with data := data} M F s ra u → K () u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.11" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.24" →
       EmitDataHead P g M F s ra wanted t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
@@ -80,36 +80,37 @@ theorem b_10 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   have k4 := hc1.headerSome hok1 4 (by decide)
   have k5 := hc1.headerSome hok1 5 (by decide)
   have k6 := hc1.headerSome hok1 6 (by decide)
+  have ko := hc1.headerOpsSome hok1
+  have ho := hc1.headerOpsRead hok1
   have hd := hc1.headerSetup hok1
   simp only [headerWrites, storeLocalWords, List.take, List.foldl_cons, List.foldl_nil,
-    Nat.reduceAdd, Nat.reduceMul, g1, v] at k0 k1 k2 k3 k4 k5 k6
+    Nat.reduceAdd, Nat.reduceMul, g1, v] at k0 k1 k2 k3 k4 k5 k6 ko ho
   have hbx := hc.rbx
-  have h12 := hc.r12
-  have h15 := hc.r15
-  unfold rd at hraw hsrc hm ht hn hs
+  have h14 := hc.r14
+  unfold rd at hraw hsrc hm ht hn hs ho
   simp only [g1, v] at km hm kt kn ks ht hn hs
   simp only [i, rax, Reg64s.get64_rax] at hraw kslot kd raw hstep hi
-  simp only [i, Reg64s.get64_rax, raw] at km hm kt kn ks ht hn hs k0 k1 k2 k3 k4 k5 k6 kd
+  simp only [i, Reg64s.get64_rax, raw] at km hm kt kn ks ht hn hs k0 k1 k2 k3 k4 k5 k6 kd ko ho
   clear hp0 hp1 ha0 hdata
   kvcgen64
   all_goals try symexec_norm at ⊢
-  all_goals try simp only [hbx, h12, h15, hsrc, slot_addr, hraw, hm, ht, hn, hs] at ⊢
+  all_goals try simp only [hbx, h14, hsrc, slot_addr, hraw, hm, ht, hn, hs, ho] at ⊢
   vc_by_shape
-  | load => simp only [ksrc, kslot, kd, km, kt, kn, ks, k0, k1, k2, k3, k4, k5, k6]
-  | goto ".LB.Planner.run.11" =>
+  | load => simp only [ksrc, kslot, kd, km, kt, kn, ks, k0, k1, k2, k3, k4, k5, k6, ko]
+  | goto ".LB.Planner.run.24" =>
     rename_i hb
     symexec_norm at hb
-    simp only [hbx, h12, hsrc, slot_addr, hraw, hm, Idioms.cf_sub, decide_eq_true_eq] at hb
+    simp only [hbx, h14, hsrc, slot_addr, hraw, hm, Idioms.cf_sub, decide_eq_true_eq] at hb
     have hlt : 1#64 + rax t < g.p.m := hb
     apply hnext g1.data
     · rfl
     refine ⟨lo, locals, hc1.next ?_ rfl rfl rfl rfl rfl rfl rfl, hlt, ?_⟩
     · rfl
     · simpa only [g1, i, rax, Reg64s.get64_rax, BitVec.add_comm 1#64 t.regs.rax.toBitVec] using hstep
-  | goto ".LB.Planner.run.13" =>
+  | goto ".LB.Planner.run.26" =>
     rename_i hb af hz
     symexec_norm at hz
-    simp only [hbx, h12, hsrc, slot_addr, hraw, hm, BitVec.and_self, BitVec.zero_eq,
+    simp only [hbx, h14, hsrc, slot_addr, hraw, hm, BitVec.and_self, BitVec.zero_eq,
       beq_iff_eq] at hz
     have hm0 : g.p.m = 0#64 := hz
     rw [hm0] at hi
@@ -117,7 +118,7 @@ theorem b_10 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   | other =>
     rename_i hb af hz
     symexec_norm at hb
-    simp only [hbx, h12, hsrc, slot_addr, hraw, hm, Idioms.cf_sub,
+    simp only [hbx, h14, hsrc, slot_addr, hraw, hm, Idioms.cf_sub,
       decide_eq_false_iff_not] at hb
     have hend : ¬ t.regs.rax.toBitVec + 1#64 < g.p.m := by
       simpa only [BitVec.lt_def, BitVec.add_comm 1#64 t.regs.rax.toBitVec] using hb

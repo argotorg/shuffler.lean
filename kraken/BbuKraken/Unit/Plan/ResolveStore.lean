@@ -23,7 +23,7 @@ theorem store_dropped {P : Addr} {r : RG} {F : MProp 64} {m : Mem 64} {o : Word}
     ecancel
   have hm' : (Bs r.p.drp (r.dropped.toList.take r.p.m.toNat) ∗ rest).get m :=
     he r.dropped ▸ hm
-  have hs := SpillSetProof.Bs.store hm'
+  have hs := Bs.store hm'
     (by simpa only [List.length_take, Vector.length_toList] using
       Nat.lt_min.mpr (And.intro ho hoN)) z
   rw [he]

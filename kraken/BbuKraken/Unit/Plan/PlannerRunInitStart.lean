@@ -24,13 +24,13 @@ theorem b_5 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
     (I' : CfgLabel → Nat → Unit → MachineData → Prop) (E : Int64 → MachineData → Prop)
     (hempty : ∀ u, InitDestDone P g F s ra u →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-        (label ".LB.Planner.run.8") u)
+        (label ".LB.Planner.run.21") u)
     (hinit : ∀ u, rax u = 0#64 → InitDestHead P g F s ra u → K () u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.6" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.19" →
       ∀ t, PrepareHead P g F s ra t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
-  intro t ⟨lo, locals, hc, h13, hcount, htargets⟩
+  intro t ⟨lo, locals, hc, h15, hcount, htargets⟩
   have hv := hc.kb.mem
   rw [sep_lc] at hv
   obtain ⟨_, hp⟩ := pv hv
@@ -45,12 +45,12 @@ theorem b_5 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
   all_goals try simp only [hc.rbx, hm, hn] at ⊢
   vc_by_shape
   | load => first | exact km | exact kn
-  | goto ".LB.Planner.run.8" =>
+  | goto ".LB.Planner.run.21" =>
     rename_i af hz
     symexec_norm at hz
     simp only [hc.rbx, hm, BitVec.and_self, BitVec.zero_eq, beq_iff_eq] at hz
     apply hempty
-    refine ⟨lo, locals, ⟨hc.next rfl rfl rfl rfl rfl rfl rfl, h13,
+    refine ⟨lo, locals, ⟨hc.next rfl rfl rfl rfl rfl rfl rfl, h15,
       hcount, htargets, rfl, rfl⟩, ?_⟩
     rw [hz]
     exact InitPrefix.zero _ _
@@ -60,7 +60,7 @@ theorem b_5 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
     simp only [hc.rbx, hm, BitVec.and_self, BitVec.zero_eq, beq_eq_false_iff_ne] at hz
     apply hinit
     · rfl
-    refine ⟨lo, locals, ⟨hc.next rfl rfl rfl rfl rfl rfl rfl, h13,
+    refine ⟨lo, locals, ⟨hc.next rfl rfl rfl rfl rfl rfl rfl, h15,
       hcount, htargets, rfl, rfl⟩, zero_lt hz, InitPrefix.zero _ _⟩
 
 end Bbu.Unit.PlannerRunU

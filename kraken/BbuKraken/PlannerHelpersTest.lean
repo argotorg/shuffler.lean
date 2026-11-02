@@ -20,12 +20,12 @@ example :
     PlannerHelperSpecs :=
   planner_helpers_correct binLinked binBoundary
 
--- Only function entries are declarations. An internal block and the public entry
+-- Only C++ function entries are declarations. An internal block and a test wrapper
 -- cannot be used as a callee in this table.
 example [Host] (L : Linked) :
     L.plannerFunctions.lookup ".LB.Emission.isAvailable.0" = none := rfl
 
-example [Host] (L : Linked) : L.plannerFunctions.lookup Names.plan = none := rfl
+example [Host] (L : Linked) : L.plannerFunctions.lookup "plan" = none := rfl
 
 -- Duplicate table keys keep the first declaration, as `FunDecls.at` does.
 example [Host] (L : Linked) :

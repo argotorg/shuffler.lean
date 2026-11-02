@@ -27,11 +27,11 @@ variable [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
 
 set_option maxRecDepth 4096 in
 theorem cfg_29 : plannerRunAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.run.28" → FullRunObl P g F s ra blk := by
+    blk.label = .label ".LB.Planner.run.16" → FullRunObl P g F s ra blk := by
   cfg_view as hv
   cfg_block [FullRunObl, RunObl]
   intro t ht
-  simp only [RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte,
+  simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte,
     RunResolvePhase] at ht
   obtain ⟨current, M, locals, hl, ctx, hblocked, hcells, hin, ht⟩ := ht
   obtain ⟨lo, i, h0, hi, hax, hrest⟩ := ht
@@ -45,8 +45,8 @@ theorem cfg_29 : plannerRunAsm.ForallBlocks fun blk =>
     rw [he]
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     FullRunInv P g F s ra b u ∧
-      Program.Decreases (runV g) (.label ".LB.Planner.run.28") 30 t b j u
-  have hh := b_29_fixed P current M F s t ra locals (I' (.label ".LB.Planner.run.29") 31)
+      Program.Decreases (runV g) (.label ".LB.Planner.run.16") 18 t b j u
+  have hh := b_29_fixed P current M F s t ra locals (I' (.label ".LB.Planner.run.17") 19)
     I' (RunExit P g F s ra) (by
       intro u ha hu
       obtain ⟨lo', i', h1, hi', hax', hrest'⟩ := hu
@@ -56,11 +56,11 @@ theorem cfg_29 : plannerRunAsm.ForallBlocks fun blk =>
         rw [he]
       have hs : i'.toNat = i.toNat + 1 := by rw [hax, hax'] at ha; bv_omega
       have hb := same_budget ctx.stable h0.toBd h1.toBd
-      apply Program.Intercept.intro_label (i := 29)
+      apply Program.Intercept.intro_label (i := 17)
       · decide
       left
       refine ⟨h1.kb.stack (by decide), ?_, Or.inl ?_⟩
-      · simp only [FullRunInv, RunInv, Names.plannerRun, String.reduceEq, or_false,
+      · simp only [FullRunInv, RunInv, Names.plannerRun, String.reduceEq,
           ↓reduceIte, RunResolvePhase]
         refine ⟨current, M, locals, hl, ctx, hblocked, hcells, hin, ?_⟩
         simpa only [String.reduceEq, ↓reduceIte] using
@@ -75,7 +75,7 @@ theorem cfg_29 : plannerRunAsm.ForallBlocks fun blk =>
       have h1 := hu.choose_spec.1
       have hb := same_budget ctx.stable h0.toBd h1.toBd
       refine ⟨?_, Or.inl ?_⟩
-      · simp only [FullRunInv, RunInv, Names.plannerRun, String.reduceEq, or_false,
+      · simp only [FullRunInv, RunInv, Names.plannerRun, String.reduceEq,
           ↓reduceIte, RunResolvePhase]
         refine ⟨current, M, locals, hl, ctx, hblocked, hcells, hin, ?_⟩
         simpa only [String.reduceEq, ↓reduceIte] using hu
@@ -90,11 +90,11 @@ set_option maxRecDepth 4096 in
 theorem cfg_30 (hout : ∀ l ∈ plannerRunAsm.labels, label l ≠ label "exit")
     (hresolve : VSpecWithExit RView RG.Ok Names.resolve resolveA 1182 resolveQ resolveX) :
     plannerRunAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.run.29" → FullRunObl P g F s ra blk := by
+    blk.label = .label ".LB.Planner.run.17" → FullRunObl P g F s ra blk := by
   cfg_view as hv
   cfg_block [FullRunObl, RunObl]
   intro t ht
-  simp only [RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte,
+  simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte,
     RunResolvePhase] at ht
   obtain ⟨current, M, locals, hl, ctx, hblocked, hcells, hin, ht⟩ := ht
   obtain ⟨lo, h0, hbp⟩ := ht
@@ -108,9 +108,9 @@ theorem cfg_30 (hout : ∀ l ∈ plannerRunAsm.labels, label l ≠ label "exit")
   have hb := dropBudget_eq ctx.stable h0.kb.vmem
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     FullRunInv P g F s ra b u ∧
-      Program.Decreases (runV g) (.label ".LB.Planner.run.29") 31 t b j u
+      Program.Decreases (runV g) (.label ".LB.Planner.run.17") 19 t b j u
   have hh := b_30 P current M F s ra locals hl hin before hresolve
-    (I' (.label ".LB.Planner.run.30") 32) I' (RunExit P g F s ra) (by
+    (I' (.label ".LB.Planner.run.18") 20) I' (RunExit P g F s ra) (by
       intro spills dropped res lo' u hr h1 hres hal
       have hmodel := hcells.resolved hr scratch
       let rc := ctx.afterResolve hblocked scratch res spills dropped hmodel
@@ -123,12 +123,12 @@ theorem cfg_30 (hout : ∀ l ∈ plannerRunAsm.labels, label l ≠ label "exit")
       have hresult := rc.terminal hres'
       have hq : plannerRunQ g (withResolve current spills dropped) s u := hresult.finish
         (hal.trans hcode) (by cases res <;> exact ctx.count)
-      apply Program.Intercept.intro_label (i := 22)
+      apply Program.Intercept.intro_label (i := 13)
       · decide
       left
       refine ⟨h1.kb.stack (by decide), ?_, Or.inl ?_⟩
-      · simp only [FullRunInv, RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte]
-        exact ⟨withResolve current spills dropped, lo', resolveLocals locals hl,
+      · simp only [FullRunInv, RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte]
+        exact ⟨withResolve current spills dropped, lo', locals,
           h1.toBd, h1.ok, hq⟩
       · simp only [runV, String.reduceEq, or_false, ↓reduceIte]
         omega) (by
@@ -140,12 +140,12 @@ theorem cfg_30 (hout : ∀ l ∈ plannerRunAsm.labels, label l ≠ label "exit")
         change ¬ Flat.droppedCount current.p.m dropped > Flat.droppedCount current.p.m current.dropped
         simp only [hm0, Flat.droppedCount, dropped_end (by decide : ¬ (0 : Word) < 0#64)]
         decide
-      apply Program.Intercept.intro_label (i := 32)
+      apply Program.Intercept.intro_label (i := 14)
       · decide
       left
       refine ⟨h1.kb.stack (by decide), ?_, Or.inl ?_⟩
-      · simp only [FullRunInv, RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte]
-        exact ⟨withResolve current spills dropped, before, lo', resolveLocals locals hl,
+      · simp only [FullRunInv, RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte]
+        exact ⟨withResolve current spills dropped, before, lo', locals,
           rc, hres, hnone, h1.toBd, h1.ok⟩
       · simp only [runV, String.reduceEq, or_false, or_true, ↓reduceIte]
         omega) (by
@@ -156,11 +156,11 @@ theorem cfg_30 (hout : ∀ l ∈ plannerRunAsm.labels, label l ≠ label "exit")
         ctx.out.blockedOffset ctx.out.blockedExcess ⟨ctx.out.dest, ctx.out.pos⟩ ctx.out.size scratch
         hmodel ctx.targets
       have hretry : RetryLI P (withResolve current spills dropped) M F s ra lo'
-          (resolveLocals locals hl) u := ⟨h1, htargets⟩
+          locals u := ⟨h1, htargets⟩
       refine ⟨?_, Or.inl ?_⟩
-      · simp only [FullRunInv, RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte]
+      · simp only [FullRunInv, RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte]
         refine ⟨withResolve current spills dropped, M, before, rc, hres,
-          lo', resolveLocals locals hl, (0 : Word), hretry, ?_, ?_, hcx, hbp', ?_⟩
+          lo', locals, (0 : Word), hretry, ?_, ?_, hcx, hbp', ?_⟩
         · change 0#64 < current.p.m
           bv_omega
         · exact hax.trans (by change current.p.drp = current.p.drp + 0#64; bv_omega)
@@ -179,9 +179,9 @@ theorem cfg_30 (hout : ∀ l ∈ plannerRunAsm.labels, label l ≠ label "exit")
         rc.terminal (by change Flat.Resolution.assertionFailed ≠ .dropped; decide)
       have hq := hresult.exit (t := u) ctx.count
       refine Or.inr ⟨Or.inr ⟨rfl, harg, withResolve current spills dropped,
-        hq, withResolve_ok h0.ok spills dropped, fr s lo' (resolveLocals locals hl),
+        hq, withResolve_ok h0.ok spills dropped, fr s lo' locals,
         ra.toBitVec, ?_, hmem⟩, ?_⟩
-      · simp [fr, saved, hlo, resolveLocals, hl, plannerRunD]
+      · simp [fr, saved, hlo, hl, plannerRunD]
       · intro l hl heq
         exact False.elim (hout l hl heq))
   rw [Program.ForallBlocks, hv] at hh

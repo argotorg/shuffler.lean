@@ -56,14 +56,14 @@ theorem candidate_outer {P : Addr} {r : RG} {F : MProp 64} {s t u : MachineData}
       ⟨hc.countBound, hex, hc.bounded, hc.live⟩, h12 ▸ hc.r12, h14 ▸ hc.r14, h13⟩
   · exact hc.model hok ha he
 
-theorem b_7 [Host] [FunDecls]
+theorem b_6 [Host] [FunDecls]
     (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (rest : Label → MachineData → Prop) (var : Label → MachineData → Nat)
     (hok : r.Ok) (ha : resolveA r s)
-    (h8 : ∀ t, Outer P r F s ra t → rest ".LB.Planner.resolve.8" t)
+    (h8 : ∀ t, Outer P r F s ra t → rest ".LB.Planner.resolve.7" t)
     (hV : ∀ t, rd t.dmem (t.regs.rsp.toBitVec + 32#64) = 0#64 →
-      var ".LB.Planner.resolve.8" t < 67108865) :
-    resolveAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.resolve.7" →
+      var ".LB.Planner.resolve.7" t < 67108865) :
+    resolveAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.resolve.6" →
       Obl P r F s ra (initFullPhase P r F s ra rest) (initFullVar s var) blk := by
   cfg_block [Obl]
   intro t ht
@@ -94,7 +94,7 @@ theorem b_7 [Host] [FunDecls]
   all_goals try symexec_norm at ⊢
   vc_by_shape
   | load => first | exact kex | exact kp | exact kn | exact kn'
-  | goto ".LB.Planner.resolve.17" =>
+  | goto ".LB.Planner.resolve.16" =>
     rename_i hj
     symexec_norm at hj
     rw [rex] at hj

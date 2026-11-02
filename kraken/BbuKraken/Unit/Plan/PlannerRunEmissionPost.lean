@@ -66,21 +66,20 @@ theorem EmitCountLI.postEmission (h : EmitCountLI P g M F s ra lo locals t)
   refine ⟨⟨hb, ?_, ?_, ?_, ?_, ?_⟩, ?_, ?_, ?_, emissionResult_ok hok _ hk ha, ?_⟩
   · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rbx]
     exact h.rbx
-  · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r12]
-    exact h.r12
-  · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r15]
-    exact h.r15
   · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r14]
     exact h.r14
+  · exact (hget 1 (by decide)).trans h.ops
+  · rw [hget 0 (by decide)]
+    exact h.strategy
   · exact (hget 2 (by decide)).trans h.sources
   · exact (hget 3 (by decide)).trans h.count
   · rw [l.nops]
     simp only [emissionResult, BitVec.ofNat_toNat, BitVec.setWidth_eq]
   · intro hl
     exact (l.mapping a.h _).trans (h.mappingEq h.localLength)
-  · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r13,
+  · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r15,
       mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rsp]
-    exact h.r13
+    exact h.r15
 
 end
 end Bbu.Unit.PlannerRunU

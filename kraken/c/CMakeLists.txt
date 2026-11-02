@@ -1,4 +1,4 @@
-add_library(shuffler STATIC shuffler/test_wrappers.cpp)
+add_library(shuffler STATIC shuffler/stack/Shuffler.cpp)
 
 # The proofs use GCC output, including its instruction choices and function order.
 set(SHUFFLER_ASM_CXX "g++" CACHE FILEPATH "GCC 15.3.0 compiler for the assembly proofs")
@@ -9,13 +9,28 @@ add_custom_command(
     "${SHUFFLER_ASM_CXX}" "${shuffler_assembly}"
   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
   DEPENDS generate_assembly.sh labels.awk
-    shuffler/test_wrappers.cpp shuffler/stack/Shuffler.cpp
+    shuffler/stack/Shuffler.cpp
     shuffler/SSACFGTypes.h shuffler/StackSlot.h shuffler/ShuffleTrace.h
     shuffler/Stack.h shuffler/spill/SpillSet.h shuffler/Freestanding.h
   VERBATIM)
 add_custom_target(shuffler_assembly DEPENDS "${shuffler_assembly}")
 
 if(BUILD_TESTING)
+  set(shuffler_test_assembly "${CMAKE_CURRENT_BINARY_DIR}/test_wrappers.S")
+  add_custom_command(
+    OUTPUT "${shuffler_test_assembly}"
+    COMMAND bash "${CMAKE_CURRENT_SOURCE_DIR}/generate_assembly.sh"
+      "${SHUFFLER_ASM_CXX}" "${shuffler_test_assembly}" shuffler/test_wrappers.cpp
+    COMMAND bash "${CMAKE_CURRENT_SOURCE_DIR}/../test/assembly_interfaces_test.sh"
+      "${shuffler_assembly}" "${shuffler_test_assembly}"
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    DEPENDS "${shuffler_assembly}" shuffler/test_wrappers.cpp
+      "${CMAKE_CURRENT_SOURCE_DIR}/../test/assembly_interfaces_test.sh"
+    VERBATIM)
+  add_custom_target(shuffler_test_assembly DEPENDS "${shuffler_test_assembly}")
+  add_test(NAME shuffler_assembly_interfaces COMMAND bash
+    "${CMAKE_CURRENT_SOURCE_DIR}/../test/assembly_interfaces_test.sh"
+    "${shuffler_assembly}" "${shuffler_test_assembly}")
   # The recorded binary layout uses GCC for the C test programs.
   find_program(SHUFFLER_TEST_CC gcc REQUIRED)
   foreach(name bbu_harness pop_harness surplus_harness lowest_harness)
@@ -23,8 +38,8 @@ if(BUILD_TESTING)
       OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${name}"
       COMMAND "${SHUFFLER_TEST_CC}" -O1 -no-pie
         -o "${CMAKE_CURRENT_BINARY_DIR}/${name}"
-        "${CMAKE_CURRENT_SOURCE_DIR}/${name}.c" "${shuffler_assembly}"
-      DEPENDS "${name}.c" harness_process.h "${shuffler_assembly}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/${name}.c" "${shuffler_test_assembly}"
+      DEPENDS "${name}.c" harness_process.h "${shuffler_test_assembly}"
       VERBATIM)
     add_custom_target(shuffler_${name} ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/${name}")
   endforeach()
@@ -39,7 +54,7 @@ if(BUILD_TESTING)
   add_custom_target(shuffler_harness_process_test ALL
     DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/harness_process_test")
 
-  add_executable(shuffler_assertion_test shuffler/assertion_test.cpp "${shuffler_assembly}")
+  add_executable(shuffler_assertion_test shuffler/assertion_test.cpp "${shuffler_test_assembly}")
   target_compile_options(shuffler_assertion_test PRIVATE -O1 -Wall -Wextra)
   target_link_options(shuffler_assertion_test PRIVATE -no-pie)
   add_test(NAME shuffler_assertions COMMAND bash

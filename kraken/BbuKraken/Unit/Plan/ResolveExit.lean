@@ -27,10 +27,11 @@ def modelQ (r r' : RG) (s : MachineData) (st : Flat.Resolution) : Prop :=
     q.1 = st ∧ r' = { r with spills := q.2.1, dropped := q.2.2 }
 
 theorem model_post {r r' : RG} {s t : MachineData} {st : Flat.Resolution}
-    (hm : modelQ r r' s st) (ha : al t = code st) : resolveQ r r' s t := by
+    (hm : modelQ r r' s st) (ha : al t = code st) (hst : st ≠ .assertionFailed) :
+    resolveQ r r' s t := by
   intro u
   obtain ⟨hres, hout⟩ := hm u
-  exact ⟨ha.trans (congrArg code hres).symm, hout⟩
+  exact ⟨ha.trans (congrArg code hres).symm, hout, fun he => hst (hres.symm.trans he)⟩
 
 def Return (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (st : Flat.Resolution) (t : MachineData) : Prop :=
@@ -38,7 +39,8 @@ def Return (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
 
 def Result (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (t : MachineData) : Prop :=
-  ∃ r' lo loc st, Bd P r' F s ra lo loc t ∧ r'.Ok ∧ modelQ r r' s st ∧ al t = code st
+  ∃ r' lo loc st, Bd P r' F s ra lo loc t ∧ r'.Ok ∧ modelQ r r' s st ∧
+    al t = code st ∧ st ≠ .assertionFailed
 
 def Inv (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (phase : Label → MachineData → Prop) : CfgLabel → MachineData → Prop
@@ -47,16 +49,16 @@ def Inv (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
   | .label l, t =>
     if l = Names.resolve then t = s.pushRa ra
     else if l = ".LB.Planner.resolve.2" then Return P r F s ra .assertionFailed t
-    else if l = ".LB.Planner.resolve.3" then Result P r F s ra t
-    else if l = ".LB.Planner.resolve.16" then Return P r F s ra .stuck t
-    else if l = ".LB.Planner.resolve.17" then Return P r F s ra .dropped t
-    else if l = ".LB.Planner.resolve.18" then Return P r F s ra .stuck t
+    else if l = ".LB.Planner.resolve.18" then Result P r F s ra t
+    else if l = ".LB.Planner.resolve.15" then Return P r F s ra .stuck t
+    else if l = ".LB.Planner.resolve.16" then Return P r F s ra .dropped t
+    else if l = ".LB.Planner.resolve.17" then Return P r F s ra .stuck t
     else phase l t
 
 def V (phase : Label → MachineData → Nat) (l : Label) (t : MachineData) : Nat :=
-  if l = ".LB.Planner.resolve.3" then 0
-  else if l = ".LB.Planner.resolve.2" ∨ l = ".LB.Planner.resolve.16" ∨
-      l = ".LB.Planner.resolve.17" ∨ l = ".LB.Planner.resolve.18" then 1
+  if l = ".LB.Planner.resolve.18" then 0
+  else if l = ".LB.Planner.resolve.2" ∨ l = ".LB.Planner.resolve.15" ∨
+      l = ".LB.Planner.resolve.16" ∨ l = ".LB.Planner.resolve.17" then 1
   else phase l t + 2
 
 def E [Labels] (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64) :
@@ -78,15 +80,15 @@ def Obl [Host] [FunDecls] (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (
 def labels : List CfgLabel :=
   [.entry, .label Names.resolve,
     .label ".LB.Planner.resolve.0", .label ".LB.Planner.resolve.1",
-    .label ".LB.Planner.resolve.2", .label ".LB.Planner.resolve.3",
-    .label ".LB.Planner.resolve.4", .label ".LB.Planner.resolve.5",
-    .label ".LB.Planner.resolve.6", .label ".LB.Planner.resolve.7",
-    .label ".LB.Planner.resolve.8", .label ".LB.Planner.resolve.9",
-    .label ".LB.Planner.resolve.10", .label ".LB.Planner.resolve.11",
-    .label ".LB.Planner.resolve.12", .label ".LB.Planner.resolve.13",
-    .label ".LB.Planner.resolve.14", .label ".LB.Planner.resolve.15",
-    .label ".LB.Planner.resolve.16", .label ".LB.Planner.resolve.17",
-    .label ".LB.Planner.resolve.18"]
+    .label ".LB.Planner.resolve.2", .label ".LB.Planner.resolve.18",
+    .label ".LB.Planner.resolve.3", .label ".LB.Planner.resolve.4",
+    .label ".LB.Planner.resolve.5", .label ".LB.Planner.resolve.6",
+    .label ".LB.Planner.resolve.7", .label ".LB.Planner.resolve.8",
+    .label ".LB.Planner.resolve.9", .label ".LB.Planner.resolve.10",
+    .label ".LB.Planner.resolve.11", .label ".LB.Planner.resolve.12",
+    .label ".LB.Planner.resolve.13", .label ".LB.Planner.resolve.14",
+    .label ".LB.Planner.resolve.15", .label ".LB.Planner.resolve.16",
+    .label ".LB.Planner.resolve.17"]
 
 theorem labels_cover : resolveAsm.ForallBlocks fun blk => blk.label ∈ labels := by
   simp only [labels, Names.resolve]
@@ -103,24 +105,29 @@ theorem b_entry : resolveAsm.ForallBlocks fun blk =>
   kvcgen64
   simpa only [Inv, Names.resolve, ↓reduceIte] using ht
 
-theorem b_2 : resolveAsm.ForallBlocks fun blk =>
+theorem b_2 (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels resolveAsm, label l ≠ label "exit") : resolveAsm.ForallBlocks fun blk =>
     blk.label = .label ".LB.Planner.resolve.2" → Obl P r F s ra phase var blk := by
   cfg_block [Obl]
   intro t ht
   simp only [Inv, Names.resolve, String.reduceEq, ↓reduceIte, Return] at ht
   obtain ⟨r', lo, loc, hb, hok, hm⟩ := ht
-  kvcgen64
+  have he := ProofKit.external_call_spec "exit" hexit
+  kvcgen64 [he]
   all_goals try symexec_norm at ⊢
-  · simp only [Inv, Names.resolve, String.reduceEq, ↓reduceIte, Result]
-    exact ⟨r', lo, loc, .assertionFailed, hb.next rfl rfl, hok, hm, rfl⟩
-  · left; simp [V]
+  vc_by_shape
+  | load => exact (hb.exit_mem 0).1
+  | jumpOut =>
+    refine Or.inr ⟨Or.inr ⟨rfl, rfl, r', hm, hok, (hb.exit_mem _).2⟩, ?_⟩
+    intro l hl heq
+    exact False.elim (hout l hl heq)
 
-theorem b_3 : resolveAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.resolve.3" → Obl P r F s ra phase var blk := by
+theorem b_18 : resolveAsm.ForallBlocks fun blk =>
+    blk.label = .label ".LB.Planner.resolve.18" → Obl P r F s ra phase var blk := by
   cfg_block [Obl]
   intro t ht
   simp only [Inv, Names.resolve, String.reduceEq, ↓reduceIte, Result] at ht
-  obtain ⟨r', lo, loc, st, hb, hok, hm, ha⟩ := ht
+  obtain ⟨r', lo, loc, st, hb, hok, hm, ha, hst⟩ := ht
   have k0 := hb.popSome 0 (by decide)
   have k1 := hb.popSome 1 (by decide)
   have k2 := hb.popSome 2 (by decide)
@@ -155,7 +162,22 @@ theorem b_3 : resolveAsm.ForallBlocks fun blk =>
       fun u _ hax => ?_
     · exact hb.pop rfl rfl rfl rfl rfl rfl rfl rfl
     · apply model_post hm
-      exact (congrArg (BitVec.setWidth 8) hax).trans ha
+      · exact (congrArg (BitVec.setWidth 8) hax).trans ha
+      · exact hst
+
+theorem b_15 : resolveAsm.ForallBlocks fun blk =>
+    blk.label = .label ".LB.Planner.resolve.15" → Obl P r F s ra phase var blk := by
+  cfg_block [Obl]
+  intro t ht
+  simp only [Inv, Names.resolve, String.reduceEq, ↓reduceIte, Return] at ht
+  obtain ⟨r', lo, loc, hb, hok, hm⟩ := ht
+  kvcgen64
+  all_goals try symexec_norm at ⊢
+  cfg_goto
+  · exact (hb.next rfl rfl).kb.stack (by decide)
+  · simp only [Inv, Names.resolve, String.reduceEq, ↓reduceIte, Result]
+    exact ⟨r', lo, loc, .stuck, hb.next rfl rfl, hok, hm, rfl, by decide⟩
+  · left; simp [V]
 
 theorem b_16 : resolveAsm.ForallBlocks fun blk =>
     blk.label = .label ".LB.Planner.resolve.16" → Obl P r F s ra phase var blk := by
@@ -168,7 +190,7 @@ theorem b_16 : resolveAsm.ForallBlocks fun blk =>
   cfg_goto
   · exact (hb.next rfl rfl).kb.stack (by decide)
   · simp only [Inv, Names.resolve, String.reduceEq, ↓reduceIte, Result]
-    exact ⟨r', lo, loc, .stuck, hb.next rfl rfl, hok, hm, rfl⟩
+    exact ⟨r', lo, loc, .dropped, hb.next rfl rfl, hok, hm, rfl, by decide⟩
   · left; simp [V]
 
 theorem b_17 : resolveAsm.ForallBlocks fun blk =>
@@ -179,24 +201,8 @@ theorem b_17 : resolveAsm.ForallBlocks fun blk =>
   obtain ⟨r', lo, loc, hb, hok, hm⟩ := ht
   kvcgen64
   all_goals try symexec_norm at ⊢
-  cfg_goto
-  · exact (hb.next rfl rfl).kb.stack (by decide)
   · simp only [Inv, Names.resolve, String.reduceEq, ↓reduceIte, Result]
-    exact ⟨r', lo, loc, .dropped, hb.next rfl rfl, hok, hm, rfl⟩
-  · left; simp [V]
-
-theorem b_18 : resolveAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.resolve.18" → Obl P r F s ra phase var blk := by
-  cfg_block [Obl]
-  intro t ht
-  simp only [Inv, Names.resolve, String.reduceEq, ↓reduceIte, Return] at ht
-  obtain ⟨r', lo, loc, hb, hok, hm⟩ := ht
-  kvcgen64
-  all_goals try symexec_norm at ⊢
-  cfg_goto
-  · exact (hb.next rfl rfl).kb.stack (by decide)
-  · simp only [Inv, Names.resolve, String.reduceEq, ↓reduceIte, Result]
-    exact ⟨r', lo, loc, .stuck, hb.next rfl rfl, hok, hm, rfl⟩
+    exact ⟨r', lo, loc, .stuck, hb.next rfl rfl, hok, hm, rfl, by decide⟩
   · left; simp [V]
 
 end

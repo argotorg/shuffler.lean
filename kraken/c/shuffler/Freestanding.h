@@ -34,7 +34,7 @@ constexpr bool isVariable(StackSlot const _slot)
 template<class T>
 struct Niche;
 
-/// build_bottom_up checks n <= maxStackSize, so an offset that is stored is below maxStackSize. (In
+/// A stored stack offset is below maxStackSize. (In
 /// buildBottomUp, targetOffset is SIZE_MAX between the decrement and the increment, and is not stored then.)
 template<>
 struct Niche<StackOffset>
@@ -84,7 +84,7 @@ private:
 };
 
 /// The result of an emission step. A failed yulAssert ends the process.
-enum class [[nodiscard]] Status : std::uint8_t { Done, Blocked, AssertionFailed };
+enum class [[nodiscard]] Status : std::uint8_t { Done, Blocked };
 
 #define yulAssert(_condition, ...) do { if (!(_condition)) std::exit(1); } while (false)
 

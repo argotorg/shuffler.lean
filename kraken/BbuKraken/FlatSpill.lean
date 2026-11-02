@@ -13,7 +13,7 @@ A model of `struct SpillSet` and of `spill_set` in `c/shuffler/test_wrappers.cpp
 the C++. The spill set is the buffer `m_spilled`: the byte of the variable id `i` is `sp i`.
 A `yulAssert` returns `.assertionFailed`.
 
-The unit theorems `Unit.spillSetAdd_unit` and `Unit.spill_set_unit` (`Unit/SpillSet.lean`) give
+The unit theorem `Unit.spillSetAdd_unit` (`Unit/SpillAdd.lean`) gives
 that the asm computes these functions. The root lib `SpillBridge` also compiles this file, and
 `SpillBridge/Spill.lean` relates it to `SpillSet.add` and `SpillSet.is_spilled` of PR31.
 -/

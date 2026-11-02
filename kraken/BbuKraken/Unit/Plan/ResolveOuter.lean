@@ -46,8 +46,8 @@ variable [Host] [FunDecls]
 
 include hok
 
-theorem b_8 : resolveAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.resolve.8" →
+theorem b_7 : resolveAsm.ForallBlocks fun blk =>
+    blk.label = .label ".LB.Planner.resolve.7" →
       Obl P r F s ra (loopPhase P r F s ra rest) (loopVar s var) blk := by
   cfg_block [Obl]
   intro t ht
@@ -66,7 +66,7 @@ theorem b_8 : resolveAsm.ForallBlocks fun blk =>
   all_goals try symexec_norm at ⊢
   vc_by_shape
   | load => first | with_reducible exact hsome | exact hcs
-  | goto ".LB.Planner.resolve.16" =>
+  | goto ".LB.Planner.resolve.15" =>
     rename_i hj
     symexec_norm at hj
     have hc : w.count = 0#64 := by
@@ -80,7 +80,7 @@ theorem b_8 : resolveAsm.ForallBlocks fun blk =>
       exact ⟨w.ghost r, lo, L.toList, h.bd.next rfl rfl,
         update_ok hok w.spills w.dropped, Work.empty h.ok hm hc⟩
     · left; simp [V, loopVar]
-  | goto ".LB.Planner.resolve.12" =>
+  | goto ".LB.Planner.resolve.11" =>
     rename_i hj
     symexec_norm at hj
     have hc : w.count ≠ 0#64 := by

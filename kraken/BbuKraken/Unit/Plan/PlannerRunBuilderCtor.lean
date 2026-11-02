@@ -111,7 +111,7 @@ theorem Bd.builderStores {P : Addr} {g : PlannerRunG} {F : MProp 64}
           Option.getD_some, BitVec.ofInt_toInt] using hs
     exact ih h1
 
-theorem Bd.localByteSome {P : Addr} {g : PlannerRunG} {F : MProp 64}
+theorem Bd.localLowByteSome {P : Addr} {g : PlannerRunG} {F : MProp 64}
     {s t : MachineData} {ra : Int64} {lo locals : List Word}
     (h : Bd P g F s ra lo locals t) (i : Nat) (hi : i < 4121) :
     (t.dmem.loadInt (t.regs.rsp.toBitVec + BitVec.ofNat 64 (8 * i)) 1).isSome = true := by
@@ -133,7 +133,7 @@ theorem InitLI.builderSome {P : Addr} {g : PlannerRunG} {F : MProp 64}
     ((builderStores g t.regs.rsp.toBitVec (s.regs.rsi.toBitVec.setWidth 8)).take j)
   dsimp only
   split
-  · exact hb.localByteSome (4 + j) (by omega)
+  · exact hb.localLowByteSome (4 + j) (by omega)
   · exact hb.localSome (i := 4 + j) (by omega)
 
 private theorem pack_byte (w : Word) (v : BitVec 8) :

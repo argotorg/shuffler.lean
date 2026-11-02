@@ -29,9 +29,7 @@ theorem bbuAsm_eq : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ dupAsm ++ push
     ++ absorbSurplusAsm ++ popAsm ++ removeSurplusAsm ++ permuteAtLowestHeightAsm
     ++ isAvailableAsm ++ runAsm ++ isRetainedAsm ++ hasOtherRetainedCopyAsm
     ++ isDemandedAsm ++ classifyAsm ++ resolveAsm ++ plannerRunAsm
-    ++ buildBottomUpAsm ++ emissionPopAsm ++ spillSetAsm ++ removeSurplusEntryAsm
-    ++ permuteEntryAsm ++ permuteAtLowestHeightEntryAsm ++ buildMappingAsm ++ resolveEntryAsm
-    ++ emitAsm ++ planAsm := by rfl
+    := by rfl
 
 section
 set_option maxRecDepth 100000
@@ -46,12 +44,12 @@ theorem produce_at : produceAsm.IsInfixAt bbuAsm 114 := by rw [bbuAsm_eq]; exact
 theorem generate_at : generateAsm.IsInfixAt bbuAsm 282 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 theorem finish_at : finishAsm.IsInfixAt bbuAsm 337 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 theorem loop_at : loopAsm.IsInfixAt bbuAsm 545 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem buildBottomUp_at : buildBottomUpAsm.IsInfixAt bbuAsm 2184 := by
-  rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 theorem pop_at : popAsm.IsInfixAt bbuAsm 1248 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 theorem removeSurplus_at : removeSurplusAsm.IsInfixAt bbuAsm 1276 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 theorem permuteAtLowestHeight_at : permuteAtLowestHeightAsm.IsInfixAt bbuAsm 1366 := by
+  rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem spillSetAdd_at : spillSetAddAsm.IsInfixAt bbuAsm 846 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 theorem map_at : mapAsm.IsInfixAt bbuAsm 870 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 theorem closestCopy_at : closestCopyAsm.IsInfixAt bbuAsm 892 := by
@@ -75,7 +73,6 @@ theorem isAvailable_at : isAvailableAsm.IsInfixAt bbuAsm 1431 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 theorem run_at : runAsm.IsInfixAt bbuAsm 1461 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 theorem plannerRun_at : plannerRunAsm.IsInfixAt bbuAsm 1897 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem plan_at : planAsm.IsInfixAt bbuAsm 3478 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 end
 
 section

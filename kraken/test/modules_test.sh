@@ -18,13 +18,13 @@ import Lean
 example : PlanBridge.AssemblyContract PlanBridge.InputOk PlanBridge.ResultOk :=
   PlanBridge.plan_correct
 
-example : PlanBridge.AssemblyHarnessContract PlanBridge.InputOk PlanBridge.ResultOk :=
-  PlanBridge.plan_harness_correct
+example : PlanBridge.AssemblyBinaryContract PlanBridge.InputOk PlanBridge.ResultOk :=
+  PlanBridge.plan_binary_correct
 
 open Lean Elab Command in
 #eval show CommandElabM Unit from do
   let env ← getEnv
-  for n in [`List.allSome, `Mem, `Shuffler.Planner.run, `PlanBridge.planEntry_corr] do
+  for n in [`List.allSome, `Mem, `Shuffler.Planner.run, `PlanBridge.plannerRun_corr] do
     if env.contains n then throwError "implementation declaration is public: {n}"
 EOF
 lean_file "$tmp/Public.lean"

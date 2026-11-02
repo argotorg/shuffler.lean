@@ -22,7 +22,7 @@ theorem assertion_block [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MPro
     (hX : ∀ u, StkMem plannerRunD (PlannerRunView P g ∗ F) s u.dmem →
       u.regs.get64 .rdi = 1#64 → E (label "exit") u) :
     plannerRunAsm.ForallBlocks fun blk =>
-      blk.label ∈ [.label ".LB.Planner.run.4", .label ".LB.Planner.run.31"] →
+      blk.label ∈ [.label ".LB.Planner.run.4", .label ".LB.Planner.run.13"] →
       ∀ t, (∃ lo locals, Bd P g F s ra lo locals t) → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block [List.mem_cons, List.not_mem_nil, or_false, or_true, true_or]

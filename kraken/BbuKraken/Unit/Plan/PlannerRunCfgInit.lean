@@ -39,7 +39,7 @@ variable [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
 
 set_option maxRecDepth 4096 in
 theorem cfg_5 : plannerRunAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.run.6" → RunObl P g F s ra resolvePhase blk := by
+    blk.label = .label ".LB.Planner.run.19" → RunObl P g F s ra resolvePhase blk := by
   cfg_view as hv
   cfg_block [RunObl]
   intro t ht
@@ -51,13 +51,13 @@ theorem cfg_5 : plannerRunAsm.ForallBlocks fun blk =>
   have hmb : g.p.m.toNat ≤ 1024 := by rw [← hm]; exact hok.planner.m
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
-      Program.Decreases (runV g) (.label ".LB.Planner.run.6") 8 t b j u
-  have hh := b_5 P current F s ra (I' (.label ".LB.Planner.run.7") 9)
+      Program.Decreases (runV g) (.label ".LB.Planner.run.19") 21 t b j u
+  have hh := b_5 P current F s ra (I' (.label ".LB.Planner.run.20") 22)
     I' (RunExit P g F s ra) (by
       intro u hu
       have h1 := hu.choose_spec.choose_spec.1
       have hb := same_budget ctx.stable h0.toBd h1.toBd
-      apply Program.Intercept.intro_label (i := 9)
+      apply Program.Intercept.intro_label (i := 22)
       · decide
       left
       refine ⟨h1.kb.stack (by decide), ?_, Or.inl ?_⟩
@@ -82,7 +82,7 @@ theorem cfg_5 : plannerRunAsm.ForallBlocks fun blk =>
 
 set_option maxRecDepth 4096 in
 theorem cfg_8 : plannerRunAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.run.9" → RunObl P g F s ra resolvePhase blk := by
+    blk.label = .label ".LB.Planner.run.22" → RunObl P g F s ra resolvePhase blk := by
   cfg_view as hv
   cfg_block [RunObl]
   intro t ht
@@ -96,8 +96,8 @@ theorem cfg_8 : plannerRunAsm.ForallBlocks fun blk =>
   have hix := index_at (by omega : i.toNat ≤ 1024) ha
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
-      Program.Decreases (runV g) (.label ".LB.Planner.run.9") 11 t b j u
-  have hh := b_8 P current F s t ra hok (I' (.label ".LB.Planner.run.10") 12)
+      Program.Decreases (runV g) (.label ".LB.Planner.run.22") 24 t b j u
+  have hh := b_8 P current F s t ra hok (I' (.label ".LB.Planner.run.23") 25)
     I' (RunExit P g F s ra) (by
       intro u hau hu
       obtain ⟨lo', locals', j, h1, hj, haj, rest'⟩ := hu
@@ -109,7 +109,7 @@ theorem cfg_8 : plannerRunAsm.ForallBlocks fun blk =>
       have hij : j.toNat = i.toNat + 1 := by
         rw [hau, ha, hs] at haj
         bv_omega
-      apply Program.Intercept.intro_label (i := 10)
+      apply Program.Intercept.intro_label (i := 23)
       · decide
       left
       refine ⟨h1.kb.stack (by decide), ?_, Or.inl ?_⟩
@@ -137,7 +137,7 @@ theorem cfg_8 : plannerRunAsm.ForallBlocks fun blk =>
 
 set_option maxRecDepth 4096 in
 theorem cfg_6 : plannerRunAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.run.7" → RunObl P g F s ra resolvePhase blk := by
+    blk.label = .label ".LB.Planner.run.20" → RunObl P g F s ra resolvePhase blk := by
   cfg_view as hv
   cfg_block [RunObl]
   intro t ht
@@ -149,14 +149,14 @@ theorem cfg_6 : plannerRunAsm.ForallBlocks fun blk =>
   change current.p.m = g.p.m at hm
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
-      Program.Decreases (runV g) (.label ".LB.Planner.run.7") 9 t b j u
-  have hh := b_6 P current F s t ra hok (I' (.label ".LB.Planner.run.8") 10)
+      Program.Decreases (runV g) (.label ".LB.Planner.run.20") 22 t b j u
+  have hh := b_6 P current F s t ra hok (I' (.label ".LB.Planner.run.21") 23)
     I' (RunExit P g F s ra) (by
       intro u ha hu
       have h1 := hu.choose_spec.choose_spec.1
       have hui := hu.choose_spec.choose_spec.2.1
       have hb := same_budget ctx.stable h0.toBd h1.toBd
-      apply Program.Intercept.intro_label (i := 8)
+      apply Program.Intercept.intro_label (i := 21)
       · decide
       left
       refine ⟨h1.kb.stack (by decide), ?_, Or.inl ?_⟩
@@ -187,7 +187,7 @@ theorem cfg_6 : plannerRunAsm.ForallBlocks fun blk =>
 
 set_option maxRecDepth 4096 in
 theorem cfg_7 : plannerRunAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.run.8" → RunObl P g F s ra resolvePhase blk := by
+    blk.label = .label ".LB.Planner.run.21" → RunObl P g F s ra resolvePhase blk := by
   cfg_view as hv
   cfg_block [RunObl]
   intro t ht
@@ -199,13 +199,13 @@ theorem cfg_7 : plannerRunAsm.ForallBlocks fun blk =>
   have hnb : g.p.n.toNat ≤ 1024 := by rw [← hn]; exact hok.planner.n
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
-      Program.Decreases (runV g) (.label ".LB.Planner.run.8") 10 t b j u
-  have hh := b_7 P current F s ra (I' (.label ".LB.Planner.run.9") 11)
+      Program.Decreases (runV g) (.label ".LB.Planner.run.21") 23 t b j u
+  have hh := b_7 P current F s ra (I' (.label ".LB.Planner.run.22") 24)
     I' (RunExit P g F s ra) (by
       intro u hu
       have h1 := hu.choose_spec.choose_spec.1
       have hb := same_budget ctx.stable h0.toBd h1.toBd
-      apply Program.Intercept.intro_label (i := 11)
+      apply Program.Intercept.intro_label (i := 24)
       · decide
       left
       refine ⟨h1.kb.stack (by decide), ?_, Or.inl ?_⟩
@@ -238,7 +238,7 @@ theorem cfg_9
     (hkeep : BSpecWithExit Names.keepWildcardSlots keepWildA 6 keepWildQ keepWildX)
     (habsorb : BSpecWithExit Names.absorbSurplus absorbA 6 absorbQ absorbX) :
     plannerRunAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.run.10" → RunObl P g F s ra resolvePhase blk := by
+    blk.label = .label ".LB.Planner.run.23" → RunObl P g F s ra resolvePhase blk := by
   cfg_view as hv
   cfg_block [RunObl]
   intro t ht
@@ -250,29 +250,19 @@ theorem cfg_9
   have hmb : g.p.m.toNat ≤ 1024 := by rw [← hsize]; exact hok.planner.m
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
-      Program.Decreases (runV g) (.label ".LB.Planner.run.10") 12 t b j u
+      Program.Decreases (runV g) (.label ".LB.Planner.run.23") 25 t b j u
   have hh := b_9 P current F s ra hok hip hclosest hwild hkeep habsorb
-    (I' (.label ".LB.Planner.run.11") 13) I' (RunExit P g F s ra) (by
-      intro lab hl M0 u hu
+    (I' (.label ".LB.Planner.run.24") 26) I' (RunExit P g F s ra) (by
+      intro M0 u hu
       have h1 := hu.choose_spec.choose_spec.1
       have hphase : BuildFailPhase P g F s ra u := ⟨current, M0, hok, ⟨ctx⟩, hu⟩
-      simp only [List.mem_cons, List.not_mem_nil, or_false] at hl
-      have hlabel : ∃ i : Nat, plannerRunAsm.labels[i]? = some lab := by
-        rcases hl with rfl | rfl | rfl | rfl | rfl
-        · exact ⟨21, by decide⟩
-        · exact ⟨23, by decide⟩
-        · exact ⟨24, by decide⟩
-        · exact ⟨25, by decide⟩
-        · exact ⟨26, by decide⟩
-      obtain ⟨i, hi⟩ := hlabel
-      apply Program.Intercept.intro_label hi
+      apply Program.Intercept.intro_label (i := 7) (by decide)
       left
       refine ⟨h1.kb.stack (by decide), ?_, Or.inl ?_⟩
-      · rcases hl with rfl | rfl | rfl | rfl | rfl <;>
-          simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, or_true,
-            ↓reduceIte] using hphase
-      · rcases hl with rfl | rfl | rfl | rfl | rfl <;>
-          simp only [runV, String.reduceEq, or_false, or_true, ↓reduceIte] <;> omega) (by
+      · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false,
+          ↓reduceIte] using hphase
+      · simp only [runV, String.reduceEq, or_false, ↓reduceIte]
+        omega) (by
       intro M0 u hx harg
       obtain ⟨lo, locals, hlo, hlocals, hmem, hinit, hfail⟩ := hx
       let v : MachineData := {u with regs := {u.regs with rax := ⟨2#64⟩}}
@@ -300,7 +290,7 @@ theorem cfg_9
         · rename_i hlt
           exact False.elim (hn hlt)
         · rfl
-      apply Program.Intercept.intro_label (i := 33) (by decide)
+      apply Program.Intercept.intro_label (i := 29) (by decide)
       left
       refine ⟨h1.kb.stack (by decide), ?_, Or.inl ?_⟩
       · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte] using

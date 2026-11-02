@@ -12,6 +12,8 @@ build=$1
 jobs=${2:-}
 mkdir -p "$build"
 lake build ShufflerKraken/bbuAssembly Fuzz
+cmake -S . -B build -G Ninja -DBUILD_TESTING=ON
+cmake --build build --target shuffler_test_assembly
 # Init, Std and Lean are in libleanshared and Lake is in libLake_shared. The Lean model is compiled
 # from C with coverage instrumentation, every other imported module is linked as an object.
 lake env lean --run Fuzz/closure.lean Fuzz.Oracle | grep -vE '^(Init|Std|Lean|Lake)(\.|$)' > "$build/modules.txt"

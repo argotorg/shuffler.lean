@@ -54,8 +54,8 @@ variable [Host] [FunDecls]
   (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
   (rest : Label → MachineData → Prop) (var : Label → MachineData → Nat)
 
-theorem b_10 : resolveAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.resolve.10" →
+theorem b_9 : resolveAsm.ForallBlocks fun blk =>
+    blk.label = .label ".LB.Planner.resolve.9" →
       Obl P r F s ra (loopPhase P r F s ra rest) (loopVar s var) blk := by
   cfg_block [Obl]
   intro t ht
