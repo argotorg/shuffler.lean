@@ -4,17 +4,30 @@ This repo contains a work in progress formalization of the new plan based shuffl
 
 ## Proof audit
 
-Start at [kraken/Theorems/Main.lean](kraken/Theorems/Main.lean). It states the
-assumptions and limits first, then gives these claims:
+Read these Lean files in order:
 
-- `planner_model_returns_correct_plan_or_blocked` proves the model's result.
-  Each Done result has a legal abstract trace from source to target.
+1. [PlannerModel.lean](kraken/Theorems/PlannerModel.lean): correctness of the actual
+   Lean planner, input conditions, result comparison, and agreement with the flat model.
+2. [PlannerAssembly.lean](kraken/Theorems/PlannerAssembly.lean): machine conditions,
+   memory effects, and the connection to the instruction proof.
+3. [Main.lean](kraken/Theorems/Main.lean): assembly/model agreement, exclusion of
+   assertion exit, property transfer, and correctness on success.
+
+The supporting definitions are in [PlannerInput.lean](kraken/Theorems/PlannerInput.lean),
+[ValueEncoding.lean](kraken/Theorems/ValueEncoding.lean), and
+[NativeInterface.lean](kraken/Theorems/NativeInterface.lean). The implementation
+proofs use these definitions, so they must precede the review theorems.
+
+The main claims are:
+
+- `planner_model_correct` proves that the actual Lean planner returns a plan or
+  Blocked. Each returned plan matches the target and contains a legal abstract trace.
 - `planner_assembly_returns_correct_plan_or_blocked` transfers that result to
   assembly and excludes assertion exit.
 - `planner_assembly_transfers_model_postcondition` transfers any property of the
   results covered by the model comparison to the assembly contract.
 - `planner_assembly_returns_normally` excludes assertion exit for valid planner
-  inputs. It follows from the transfer and the Lean model's `run_ok` theorem.
+  inputs. It follows from the transfer and `planner_model_correct`.
 - `planner_assembly_matches_model` also covers input errors and requires an
   assertion exit to match a model error.
 
@@ -26,13 +39,10 @@ execution, plan optimality, or that Blocked means no plan exists.
 Valid inputs require each target value to be junk, freely generated, in the source,
 or spilled, and require enough source function return labels. Size, encoding,
 memory, and register conditions also apply. Blocked results remain possible.
-The specification files in `kraken/Theorems/` contain named input assumptions,
-the explicit output comparison, value and operation encodings, and the machine
-contract. They contain no proof tactics.
+The Lean files in `kraken/Theorems/` contain the review definitions and their proofs.
 `kraken/FlatShuffler/` contains the models and assembly proofs.
 `kraken/ShufflerBridge/` contains the correspondence proofs for emission, spills,
-and the planner. The two files `ShufflerBridge/Planner/ModelContract.lean` and
-`AssemblyContract.lean` connect the review definitions to those proofs.
+and the planner.
 Import `Theorems.Main` from a Lean file that starts with `module`.
 
 ## Development
@@ -62,6 +72,8 @@ Kraken dependency remain visible; they do not fail the local proof build.
 `Theorems.Main` combines two proof modules through contracts over shared flat
 data. Kraken and Shuffler implementation imports stay private. A file that
 imports this combined theorem must start with `module` to retain that boundary.
+The model and machine imports stay separate because Batteries and Kraken both
+define `List.allSome`.
 The public predicates have types over the shared data and keep their bodies private.
 Run `kraken/test/modules_test.sh` to check the boundary.
 It also checks the transfer interfaces, normal-return status bounds, and rejection

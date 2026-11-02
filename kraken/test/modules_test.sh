@@ -120,6 +120,37 @@ open Lean Elab Command in
 EOF
 lean_file "$tmp/Public.lean"
 
+cat > "$tmp/ModelReview.lean" <<'EOF'
+module
+import Theorems.PlannerModel
+
+open ShufflerVerification in
+example (input : PlannerInput) (validInput : PlannerInputsValidForNormalReturn input) :
+    PlannerModelPostcondition PlannerReturnsCorrectPlanOrBlocked input :=
+  planner_model_returns_correct_plan_or_blocked input validInput
+
+open ShufflerVerification in
+example (input : PlannerInput) (locals : Nat → FlatShuffler.Flat.RunU)
+    (assumptions : PlannerInputAssumptions input) :
+    PlannerResultMatchesModel input (input.execute locals) :=
+  planner_flat_execution_matches_model input locals assumptions
+EOF
+lean_file "$tmp/ModelReview.lean"
+
+cat > "$tmp/AssemblyReview.lean" <<'EOF'
+module
+import Theorems.PlannerAssembly
+
+open ShufflerVerification in
+example {assumptions : PlannerInput → Prop}
+    {postcondition : PlannerInput → PlannerExecutionResult → Prop}
+    (flatPostcondition : ∀ input locals, assumptions input →
+      postcondition input (input.execute locals)) :
+    PlannerAssemblyContract assumptions postcondition :=
+  planner_assembly_satisfies_model_contract flatPostcondition
+EOF
+lean_file "$tmp/AssemblyReview.lean"
+
 cat > "$tmp/NormalReturn.lean" <<'EOF'
 module
 import all Theorems.PlannerAssembly
@@ -166,6 +197,17 @@ module
 import all Theorems.PlannerModel
 
 open ShufflerVerification Shuffler
+
+example (source target : Stack) (spills : SpillSet)
+    (spillingAllowed : Bool) (strategy : BuildMapping.WildcardSlotsStrategy)
+    (availableTargets : ∀ value ∈ target,
+      value.is_junk ∨ value.can_be_freely_generated ∨ value ∈ source ∨ spills.is_spilled value)
+    (enoughReturnLabels :
+      target.count .FunctionReturnLabel ≤ source.count .FunctionReturnLabel) :
+    ∃ result, Shuffler.Planner.run source target spills spillingAllowed strategy = .ok result ∧
+      ∀ plan, result.result = some plan → StackMatches plan.stack target :=
+  planner_model_correct source target spills spillingAllowed strategy
+    availableTargets enoughReturnLabels
 
 example (input : PlannerInput) (state : FlatShuffler.Flat.PSt) :
     PlannerReturnsCorrectPlanOrBlocked input (.blocked, state) := Or.inl rfl

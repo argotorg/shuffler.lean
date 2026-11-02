@@ -8,8 +8,10 @@ tactics of this repo.
 
 | Path | Content |
 |---|---|
-| `Theorems/Main.lean` | the main planner statements, their assumptions, results, and trust boundary |
-| `Theorems/` | the review definitions: input assumptions, result comparison, encodings, and machine contract; no proof tactics |
+| `Theorems/PlannerModel.lean` | the model review: correctness, input assumptions, result comparison, and correspondence proof |
+| `Theorems/PlannerAssembly.lean` | the machine review: preconditions, effects, and connection to the instruction proof |
+| `Theorems/Main.lean` | the composition: agreement, normal return, property transfer, and correctness |
+| `Theorems/` | the Lean review and its shared input, encoding, and memory definitions |
 | `ShufflerBridge/` | correspondence proofs for emission, spills, and the planner |
 | `FlatShuffler/Permutation/` | the permutation model and trace lemmas used by the C++ proofs |
 | `FlatShuffler/` | the models, contracts, and assembly proofs of the C++ shuffler methods |

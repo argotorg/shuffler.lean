@@ -83,7 +83,7 @@ n=$(grep -c -e '^FlatShuffler.buildBottomUp_correct:' -e '^FlatShuffler.buildBot
 	-e '^ShufflerVerification.planner_flat_execution_transfers_model_postcondition:' \
 	-e '^ShufflerVerification.planner_assembly_transfers_model_postcondition:' \
 	-e '^ShufflerVerification.planner_binary_transfers_model_postcondition:' \
-	-e '^ShufflerVerification.planner_model_establishes_correctness:' \
+	-e '^Shuffler.Planner.run_correct:' \
 	-e '^ShufflerVerification.planner_model_returns_correct_plan_or_blocked:' \
 	-e '^ShufflerVerification.planner_assembly_returns_correct_plan_or_blocked:' \
 	-e '^ShufflerVerification.planner_binary_returns_correct_plan_or_blocked:' "$tmp/final" || true)

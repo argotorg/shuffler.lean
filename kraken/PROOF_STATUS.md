@@ -1,7 +1,11 @@
 # Planner proof status
 
-Start at [Theorems/Main.lean](Theorems/Main.lean) for the claims, assumptions, and
-limits. The entry point is the C++ method `Planner::run`. `Shuffle::run` is outside
+Read [Theorems/PlannerModel.lean](Theorems/PlannerModel.lean),
+[Theorems/PlannerAssembly.lean](Theorems/PlannerAssembly.lean), then
+[Theorems/Main.lean](Theorems/Main.lean). These files contain the review
+definitions and proofs. Shared input, encoding, and memory definitions stay in
+separate files because the implementation proofs also use them.
+The entry point is the C++ method `Planner::run`. `Shuffle::run` is outside
 these claims. The review definitions are in `Theorems/`; assembly proofs are in
 `FlatShuffler/`; correspondence proofs are in `ShufflerBridge/`.
 
@@ -25,7 +29,7 @@ optimality, or that Blocked means no plan exists.
 The general postcondition transfer uses `PlannerResultMatchesModel` to state which
 observations match the Lean result. It applies to every property that holds for all
 observations admitted by that comparison. The no-assertion corollary uses this
-transfer with `Shuffler.Planner.run_ok`. It adds no assembly instruction proof.
+transfer with `planner_model_correct`. It adds no assembly instruction proof.
 Error text, a final high-level error state, padding, and unused buffer tails are
 outside the comparison. The spill comparison covers input source and target
 variables only. See `Theorems/PlannerModel.lean` for each outcome's comparison.

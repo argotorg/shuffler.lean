@@ -19,6 +19,9 @@ trap 'rm -rf "$tmp"' EXIT
 
 if [ $# -eq 0 ]; then
 	(cd "$root" && nice lake build -q Theorems FlatShuffler.Bin FlatShuffler.Unit.Plan.PlannerRunBin >/dev/null)
+	# Check the direct model statement without the conflicting Kraken imports.
+	printf 'module\nimport all Theorems.PlannerModel\n' > "$tmp/model.lean"
+	"$0" "$tmp/model.lean" Shuffler.Planner.run_correct
 	printf 'module\nimport Theorems.Main\nimport all FlatShuffler.PlanFinal\nimport all FlatShuffler.Bin\nimport FlatShuffler.Unit.Plan.PlannerRunBin\n' > "$tmp/final.lean"
 	set -- "$tmp/final.lean" FlatShuffler.buildBottomUp_correct FlatShuffler.buildBottomUp_binary_correct \
 		FlatShuffler.planner_helpers_correct FlatShuffler.emission_run_correct FlatShuffler.planner_classify_correct \
@@ -32,7 +35,7 @@ if [ $# -eq 0 ]; then
 		ShufflerVerification.PlannerInputsValidForNormalReturn.inputAssumptions \
 		ShufflerVerification.planner_flat_execution_transfers_model_postcondition \
 		ShufflerVerification.planner_assembly_transfers_model_postcondition ShufflerVerification.planner_binary_transfers_model_postcondition \
-		ShufflerVerification.planner_model_establishes_correctness ShufflerVerification.planner_model_returns_correct_plan_or_blocked \
+		ShufflerVerification.planner_model_returns_correct_plan_or_blocked \
 		ShufflerVerification.planner_assembly_returns_correct_plan_or_blocked ShufflerVerification.planner_binary_returns_correct_plan_or_blocked
 fi
 src=$(realpath "$1")
