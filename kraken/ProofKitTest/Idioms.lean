@@ -2,8 +2,8 @@ module
 
 public import ProofKit.Idioms
 import all ProofKit.Idioms
-public import BbuKraken.Specs
-import all BbuKraken.Specs
+public import FlatShuffler.Specs
+import all FlatShuffler.Specs
 public import Kraken.X64.Parser
 import all Kraken.X64.Parser
 

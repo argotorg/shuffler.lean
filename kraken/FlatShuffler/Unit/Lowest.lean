@@ -1,0 +1,25 @@
+module
+
+public import FlatShuffler.Unit.Lowest.Assemble
+import all FlatShuffler.Unit.Lowest.Assemble
+
+@[expose] public section
+
+/-!
+# `permuteAtLowestHeight`
+
+`Names.permuteAtLowestHeight` in `build/kraken/c/build_bottom_up.S`. The contract is in `Lowest/Defs.lean`, and the proof
+from the block lemmas in `Lowest/Assemble.lean`.
+-/
+
+namespace FlatShuffler.Unit
+
+theorem permuteAtLowestHeight_unit [Host] [FunDecls]
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels permuteAtLowestHeightAsm, label l ≠ label "exit")
+    (hperm : ∀ p, Sep.SpecWWithExit Names.permute permW (permuteA p) 1034
+      (permuteQ p) (permuteX p)) :
+    LowestThm permuteAtLowestHeightAsm :=
+  Lowest.lowest_of_blocks hexit hout hperm
+
+end FlatShuffler.Unit

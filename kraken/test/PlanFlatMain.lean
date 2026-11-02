@@ -1,8 +1,8 @@
-import BbuKraken.FlatPlan
+import FlatShuffler.FlatPlan
 
 /-!
 Run the "plan" cases of `Fuzz/Oracle.lean` ("plan;STRATEGY;ALLOWED;SOURCE;TARGET;VARS", one per
-line, as from `Fuzz/plan_cases.sh`) on the flat model `Bbu.Flat.planEntry`, and print one line for
+line, as from `Fuzz/plan_cases.sh`) on the flat model `FlatShuffler.Flat.planEntry`, and print one line for
 each in the format of the oracle: "ok SUCCESS;SAW;VARS;DROPPED[;STACK;OPS;SOURCES]" or "err" (see
 `runPlan` of `Fuzz/port.cpp`). `idCount` is one more than the largest variable id of the case, as
 in `Fuzz/port.cpp`. It prints "bad input" for a line that it cannot read, and "invalid ..." for a
@@ -11,7 +11,7 @@ result that the C++ cannot give. The kraken project builds it as `plan_flat`:
   lake exe plan_flat < cases.txt
 -/
 
-open Bbu Bbu.Flat
+open FlatShuffler FlatShuffler.Flat
 
 def slotOf? (w : String) : Option StackSlot :=
   match w.toList with

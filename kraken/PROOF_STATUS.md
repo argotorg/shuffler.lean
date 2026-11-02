@@ -1,47 +1,46 @@
 # Planner proof status
 
-The proof boundary is the C++ method `Planner::run`. The assertion-exit proofs pass.
+Start at [Theorems/Main.lean](Theorems/Main.lean) for the claims, assumptions, and
+limits. The entry point is the C++ method `Planner::run`. `Shuffle::run` is outside
+these claims. The review definitions are in `Theorems/`; assembly proofs are in
+`FlatShuffler/`; correspondence proofs are in `ShufflerBridge/`.
 
-## Interfaces
+The general correspondence covers plans, blocked results, and model errors.
+Normal returns permit only Done or Blocked. A model error uses the separate
+assertion-exit outcome. That outcome reaches external `exit` with argument 1;
+the proof stops before the external implementation runs.
 
-`Bbu.plan_correct` uses `Unit.PlannerRunThm` on `plannerRunAsm`.
-`Bbu.plan_binary_correct` uses the same contract in the binary host.
-`PlanBridge.plan_correct` connects that method contract to `Shuffler.Planner.run`.
-`PlanBridge.plan_binary_correct` gives the same connection in the binary host.
+The normal-return theorem adds two sufficient input conditions: each target value
+is junk, can be generated, is in the source, or is spilled; and the target has no
+more function return labels than the source. It excludes assertion exit but still
+permits Blocked. The size, encoding, memory, and register assumptions still apply.
 
-`PlanBridge.Input` contains a planner, its wildcard strategy, and the initial state.
-Its result is a status and state. There is no test-wrapper error word or argument-rejection result.
-The Shuffler connection requires canonical slots and initial dropped bytes that are zero,
-as required by the planner model. The method contract supplies the buffer ownership and sizes.
-The bridge does not assume that target slots are available; assertion cases remain covered.
+`Shuffler.Planner.run_correct` also proves that each returned plan matches the
+target. Its trace type proves legal abstract operations from the source stack.
+`planner_assembly_returns_correct_plan_or_blocked` transfers this claim to the
+output stack and operations. Target wildcards accept any value. Loads use the
+final spill set. These claims do not prove spill-memory contents, EVM execution,
+optimality, or that Blocked means no plan exists.
 
-The C++ `Status` and `Resolution` types have no assertion-failure value. Failed assertions call
-`exit(1)`. The flat model retains `.assertionFailed` as an abstract error outcome, which the
-assembly exit contract connects to `exit(1)`. Normal resolve results exclude assertion failure.
+The general postcondition transfer uses `PlannerResultMatchesModel` to state which
+observations match the Lean result. It applies to every property that holds for all
+observations admitted by that comparison. The no-assertion corollary uses this
+transfer with `Shuffler.Planner.run_ok`. It adds no assembly instruction proof.
+Error text, a final high-level error state, padding, and unused buffer tails are
+outside the comparison. The spill comparison covers input source and target
+variables only. See `Theorems/PlannerModel.lean` for each outcome's comparison.
 
-The assembly input is generated directly from `c/shuffler/stack/Shuffler.cpp`.
-It contains 28 C++ methods and no test wrappers. Tests and fuzzing compile `test_wrappers.cpp`
-separately. `test/assembly_interfaces_test.sh` checks that both builds contain the same C++
-method bodies. The binary layout and instruction checks cover only those methods.
+The proof assembly is generated from `c/shuffler/stack/Shuffler.cpp` and contains
+the production C++ methods. Test wrappers are compiled separately. The C harness
+only links the methods for tests and byte checks; it is outside the proved code.
+Instruction and layout checks connect the parsed assembly and recorded binary
+host to method bytes. This connection, compiler correctness, hardware behavior,
+external `exit`, and agreement with Solidity are outside the Lean proof.
 
-The wrapper assembly proofs and their input-rejection contracts have been removed.
-The shared byte-array and vector lemmas are in `Unit/Memory.lean` and `Unit/VectorLemmas.lean`.
-The production method contracts still cover assertion exits and normal returns.
-
-## Checks for this change
-
-- Full Lean build, including `PlanBridge.Final`: passed (3685 build jobs).
-- `lake test` and public import checks: passed.
-- Axiom audit of all 15 final theorems and the audit's negative tests: passed.
-- CMake configuration, C++ build, and all three CTest tests: passed, including the sanitizer suite.
-- Fuzzer port build and fixed-result tests: passed.
-- Equality of the C++ method bodies in the proof and test builds: passed.
-- The assembly check rejects an added C symbol, a changed method body, and an empty input.
-- The new inconsistent-mapping regression requires `exit(1)` and passes.
-- Assembly generation, compiler failure, dependency, and proof-cache tests: passed.
-- Binary instruction checks, binary layout, struct layout, field generation, and label tests: passed.
-- Pop, surplus, lowest-height, and planner model comparisons: passed. The planner comparison
-  covers 409376 cases and 409376 cases with the wildcard strategy changed.
-
-All Lean checks use `LEAN_NUM_THREADS=1` and `nice`.
-The Kraken dependency is unchanged. No proof holes, user axioms, or heartbeat increases were added.
+`lake build` checks the full composition. `test/modules_test.sh` checks the public
+interfaces and invalid input cases. `test/axioms_test.sh` audits all listed final
+and transfer theorems and tests the audit's rejection cases. The audit permits
+`propext`, `Classical.choice`, `Quot.sound`, and generated `bv_decide` verifier-result
+axioms. It checks the latter's names and types; their results remain trusted axioms.
+It rejects holes, user axioms, and `native_decide` axioms. Commands are in `README.md`.
+Run each Lean check one process at a time.

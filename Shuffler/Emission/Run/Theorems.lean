@@ -42,7 +42,7 @@ theorem run_blocked_positive (source target : Stack) (mapping : Mapping source.l
     {result : Result source target spills} {blocked : Blocked}
     (hrun : run source target mapping spills = .ok result)
     (hblocked : result.blocked = some blocked) : 0 < blocked.excess := by
-  obtain ⟨actual, hr, _, hp⟩ := run_spec source target mapping spills havailable hlabels
+  obtain ⟨actual, hr, _, hp, _⟩ := run_spec source target mapping spills havailable hlabels
   cases hrun.symm.trans hr
   exact hp blocked hblocked
 

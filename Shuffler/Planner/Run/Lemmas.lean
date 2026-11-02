@@ -48,11 +48,13 @@ theorem loop_spec (source target : Stack) (strategy : BuildMapping.WildcardSlots
     (hcount : target.count .FunctionReturnLabel ≤ source.count .FunctionReturnLabel)
     (hlabels : current.LabelsUndropped) :
     ∃ result, run.loop source target strategy current sawWildcardCopy = .ok result ∧
-      result.state.TargetAvailable ∧ result.state.LabelsUndropped := by
+      result.state.TargetAvailable ∧ result.state.LabelsUndropped ∧
+      ∀ plan, result.result = some plan → StackMatches plan.stack target := by
   refine run.loop.induct source target
     (motive := fun current sawWildcardCopy => current.TargetAvailable → current.LabelsUndropped →
       ∃ result, run.loop source target strategy current sawWildcardCopy = .ok result ∧
-        result.state.TargetAvailable ∧ result.state.LabelsUndropped)
+        result.state.TargetAvailable ∧ result.state.LabelsUndropped ∧
+        ∀ plan, result.result = some plan → StackMatches plan.stack target)
       ?_ current sawWildcardCopy havailable hlabels
   intro current sawWildcardCopy
   dsimp only
@@ -62,13 +64,18 @@ theorem loop_spec (source target : Stack) (strategy : BuildMapping.WildcardSlots
   have hretained := buildMapping_retainedUndropped current strategy hbuilder
   have hboundLabels := BuildMapping.buildMapping_labels_bound_of_ok source target _ strategy hbuilder
     hcount (fun i hi => by simpa [Vector.getElem?_toList, i.isLt] using hlabels i hi)
-  obtain ⟨emitted, hemitted, _, hpositive⟩ := Emission.run_spec source target builder.mapping
+  obtain ⟨emitted, hemitted, _, hpositive, hmatching⟩ := Emission.run_spec source target builder.mapping
     current.spills (buildMapping_available current strategy hbuilder havailable) hboundLabels
   rw [run.loop.eq_1, hbuilder, except_ok_bind]
   dsimp only
   rw [hemitted, except_ok_bind]
   cases hblocked : emitted.blocked with
-  | none => exact ⟨_, rfl, havailable, hlabels⟩
+  | none =>
+    refine ⟨_, rfl, havailable, hlabels, ?_⟩
+    intro plan hplan
+    cases hplan
+    exact hmatching (fun i j hb =>
+      (BuildMapping.buildMapping_valid_of_ok source target _ strategy hbuilder i j hb).2) hblocked
   | some blocked =>
     obtain ⟨⟨success, resolved⟩, hresolved⟩ := resolve_ok current builder.mapping blocked emitted.state.mapping
     have hravailable := resolve_preserves_target_available current resolved builder.mapping blocked
@@ -77,7 +84,7 @@ theorem loop_spec (source target : Stack) (strategy : BuildMapping.WildcardSlots
       emitted.state.mapping success hlabels hresolved
     simp only [hresolved, except_ok_bind]
     cases success with
-    | false => exact ⟨_, rfl, hravailable, hrlabels⟩
+    | false => exact ⟨_, rfl, hravailable, hrlabels, by simp⟩
     | true =>
       have hprogress := resolve_remaining_strict current resolved builder.mapping blocked
         emitted.state.mapping hretained hresolved (hpositive blocked hblocked)
@@ -91,7 +98,8 @@ theorem run_spec (source target : Stack) (spills : SpillSet) (spillingAllowed : 
       value ∈ source ∨ spills.is_spilled value)
     (hlabels : target.count .FunctionReturnLabel ≤ source.count .FunctionReturnLabel) :
     ∃ result, run source target spills spillingAllowed strategy = .ok result ∧
-      result.state.TargetAvailable ∧ result.state.LabelsUndropped := by
+      result.state.TargetAvailable ∧ result.state.LabelsUndropped ∧
+      ∀ plan, result.result = some plan → StackMatches plan.stack target := by
   have hchecks : (forIn target PUnit.unit fun slot _ => do
       _ ← requires (slot.is_junk ∨ slot.can_be_freely_generated ∨ slot ∈ source ∨ spills.is_spilled slot)
         "target slot neither on the stack nor generatable"

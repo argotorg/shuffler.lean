@@ -3,7 +3,7 @@
 set -euo pipefail
 dir=$(cd "$(dirname "$0")/.." && pwd)
 gen=$dir/test/gen_fields.sh
-out=$dir/BbuKraken/Sep/Fields.lean
+out=$dir/FlatShuffler/Sep/Fields.lean
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 

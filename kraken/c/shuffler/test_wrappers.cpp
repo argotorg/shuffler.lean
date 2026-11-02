@@ -365,7 +365,7 @@ extern "C" std::int64_t resolve(
 /// - permuteAtLowestHeight: permute makes at most 2h - 1 passes, each with at most one swap: at most 2h;
 /// - buildBottomUp starts with pendingGenerations = n - h (the first check). Each iteration of its loop lowers
 ///   2 pendingGenerations + 2(n - targetOffset), first 4n - 2h, by at least the number of operations it adds
-///   (Inv.ops_le, kraken/BbuKraken/ModelLemmas.lean), and the final permute of n slots adds at most 2n - 1: at most
+///   (Inv.ops_le, kraken/FlatShuffler/ModelLemmas.lean), and the final permute of n slots adds at most 2n - 1: at most
 ///   6n - 2h.
 extern "C" std::int64_t emit(
 	std::uint64_t const m,

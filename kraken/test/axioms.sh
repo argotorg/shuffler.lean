@@ -18,14 +18,22 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 if [ $# -eq 0 ]; then
-	(cd "$root" && nice lake build -q PlanBridge.Final BbuKraken.Bin BbuKraken.Unit.Plan.PlannerRunBin >/dev/null)
-	printf 'module\nimport PlanBridge.Final\nimport all BbuKraken.PlanFinal\nimport all BbuKraken.Bin\nimport BbuKraken.Unit.Plan.PlannerRunBin\n' > "$tmp/final.lean"
-	set -- "$tmp/final.lean" Bbu.buildBottomUp_correct Bbu.buildBottomUp_binary_correct \
-		Bbu.planner_helpers_correct Bbu.emission_run_correct Bbu.planner_classify_correct \
-		Bbu.planner_resolve_correct Bbu.planner_run_correct Bbu.planner_run_binary_correct \
-		Bbu.plan_correct Bbu.plan_binary_correct \
-		PlanBridge.kraken_to_flat PlanBridge.kraken_to_flat_binary PlanBridge.flat_to_shuffler \
-		PlanBridge.plan_correct PlanBridge.plan_binary_correct
+	(cd "$root" && nice lake build -q Theorems FlatShuffler.Bin FlatShuffler.Unit.Plan.PlannerRunBin >/dev/null)
+	printf 'module\nimport Theorems.Main\nimport all FlatShuffler.PlanFinal\nimport all FlatShuffler.Bin\nimport FlatShuffler.Unit.Plan.PlannerRunBin\n' > "$tmp/final.lean"
+	set -- "$tmp/final.lean" FlatShuffler.buildBottomUp_correct FlatShuffler.buildBottomUp_binary_correct \
+		FlatShuffler.planner_helpers_correct FlatShuffler.emission_run_correct FlatShuffler.planner_classify_correct \
+		FlatShuffler.planner_resolve_correct FlatShuffler.planner_run_correct FlatShuffler.planner_run_binary_correct \
+		FlatShuffler.plan_correct FlatShuffler.plan_binary_correct \
+		ShufflerVerification.planner_assembly_satisfies_model_contract ShufflerVerification.planner_binary_satisfies_model_contract ShufflerVerification.planner_flat_execution_matches_model \
+		ShufflerVerification.planner_assembly_matches_model ShufflerVerification.planner_binary_matches_model \
+		ShufflerVerification.planner_flat_execution_does_not_assert \
+		ShufflerVerification.planner_assembly_satisfies_normal_return_contract ShufflerVerification.planner_binary_satisfies_normal_return_contract \
+		ShufflerVerification.planner_assembly_returns_normally ShufflerVerification.planner_binary_returns_normally \
+		ShufflerVerification.PlannerInputsValidForNormalReturn.inputAssumptions \
+		ShufflerVerification.planner_flat_execution_transfers_model_postcondition \
+		ShufflerVerification.planner_assembly_transfers_model_postcondition ShufflerVerification.planner_binary_transfers_model_postcondition \
+		ShufflerVerification.planner_model_establishes_correctness ShufflerVerification.planner_model_returns_correct_plan_or_blocked \
+		ShufflerVerification.planner_assembly_returns_correct_plan_or_blocked ShufflerVerification.planner_binary_returns_correct_plan_or_blocked
 fi
 src=$(realpath "$1")
 shift
@@ -97,7 +105,7 @@ open Lean Elab Command in
 EOF
 } > "$tmp/Check.lean"
 
-if ! (cd "$root" && nice lake env lean "$tmp/Check.lean") > "$tmp/out" 2>&1; then
+if ! (cd "$root" && nice lake env lean -DElab.async=false "$tmp/Check.lean") > "$tmp/out" 2>&1; then
 	grep -v 'declaration uses `sorry`' "$tmp/out" >&2
 	exit 1
 fi

@@ -1,8 +1,18 @@
-import Shuffler.Planner.Run.Defs
+import Shuffler.Planner.Run.Theorems
 
 namespace PlannerRunTests
 
 open Shuffler
+
+-- The production theorem covers both normal outcomes and checks every returned plan.
+example (source target : Stack) (spills : SpillSet) (allowed : Bool)
+    (strategy : BuildMapping.WildcardSlotsStrategy)
+    (available : ∀ value ∈ target, value.is_junk ∨ value.can_be_freely_generated ∨
+      value ∈ source ∨ spills.is_spilled value)
+    (labels : target.count .FunctionReturnLabel ≤ source.count .FunctionReturnLabel) :
+    ∃ result, Planner.run source target spills allowed strategy = .ok result ∧
+      ∀ plan, result.result = some plan → StackMatches plan.stack target :=
+  Planner.run_correct source target spills allowed strategy available labels
 
 private def a : Value := .Var ⟨0⟩
 private def b : Value := .Var ⟨1⟩

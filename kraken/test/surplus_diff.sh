@@ -3,10 +3,10 @@
 # Run the "surplus" cases of Fuzz/surplus_cases.sh [max] [k] (default 4 and 2) on the compiled
 # remove_surplus of build_bottom_up.S (through build/kraken/c/surplus_harness), the PR31 model
 # Shuffler.Emission.removeSurplus (pop_pr31 of the root project, through Fuzz/Oracle.lean), the
-# flat model Bbu.Flat.remove_surplus (surplus_flat) and the list model Bbu.Map.State.removeSurplus
+# flat model FlatShuffler.Flat.remove_surplus (surplus_flat) and the list model FlatShuffler.Map.State.removeSurplus
 # (surplus_flat list), and compare the full results: the status with the blocked offset and
 # excess, the stack, the operations and the destination of each slot. Then check that a case
-# with a changed destination gives a different result. Run it with nice.
+# with a changed destination gives a different result.
 set -euo pipefail
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 tmp=$(mktemp -d)

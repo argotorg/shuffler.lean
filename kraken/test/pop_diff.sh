@@ -3,9 +3,9 @@
 # Run the "pop" cases of Fuzz/pop_cases.sh [max] (default 5) on the compiled emission_pop of
 # build_bottom_up.S (through build/kraken/c/pop_harness), the PR31 model Shuffler.Emission.State.pop
 # (pop_pr31 of the root project, through Fuzz/Oracle.lean), the flat model
-# Bbu.Flat.emission_pop (pop_flat) and the list model Bbu.Map.State.pops (pop_flat list), and
+# FlatShuffler.Flat.emission_pop (pop_flat) and the list model FlatShuffler.Map.State.pops (pop_flat list), and
 # compare the full results: the status, the stack, the operations, the destination of each slot,
-# the position of each target offset and the pending count. Run it with nice.
+# the position of each target offset and the pending count.
 set -euo pipefail
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 tmp=$(mktemp -d)

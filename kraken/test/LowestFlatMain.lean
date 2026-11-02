@@ -1,10 +1,10 @@
-import BbuKraken.FlatLowest
-import BbuKraken.ModelLowest
+import FlatShuffler.FlatLowest
+import FlatShuffler.ModelLowest
 
 /-!
 Run the "lowest" cases of `Fuzz/Oracle.lean` ("lowest;STACK;TARGET;DESTS;VARS", one per line, as
-from `Fuzz/lowest_cases.sh`) on the flat model `Bbu.Flat.permute_at_lowest_height`, or with the
-argument `list` on the list model `Bbu.lowest` of `Bbu.init`, and print one line for each in the
+from `Fuzz/lowest_cases.sh`) on the flat model `FlatShuffler.Flat.permute_at_lowest_height`, or with the
+argument `list` on the list model `FlatShuffler.lowest` of `FlatShuffler.init`, and print one line for each in the
 format of the oracle: "ok;STACK;OPS;DESTS", "blocked OFFSET EXCESS;STACK;OPS;DESTS" or "err" (see
 `c/lowest_harness.c`). It prints "bad input" for a line that it cannot read.
 
@@ -15,7 +15,7 @@ project builds it as `lowest_flat`:
   lake exe lowest_flat [list] < cases.txt
 -/
 
-open Bbu Bbu.Flat
+open FlatShuffler FlatShuffler.Flat
 
 def slotOf? (w : String) : Option StackSlot :=
   match w.toList with
@@ -90,7 +90,7 @@ def runList (stack target : List StackSlot) (ds : List (Option Nat)) (vars : Lis
   | none => "unbound"
   | some ds =>
     let e : Env := ⟨target, fun i => if vars.contains i then 1 else 0⟩
-    let parts (st : Bbu.St) := (st.slots.map Slot.val, st.trace, st.slots.map fun s => some s.dest)
+    let parts (st : FlatShuffler.St) := (st.slots.map Slot.val, st.trace, st.slots.map fun s => some s.dest)
     match lowest e.n (initPositionOf e.n ds) (init e stack ds) with
     | .ok st => let (s, t, d) := parts st; render none s t d
     | .error (.blocked pos excess st) => let (s, t, d) := parts st; render (some (pos, excess)) s t d

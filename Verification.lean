@@ -1,6 +1,6 @@
 module
 
-import BbuKraken
+import FlatShuffler
 import ProofKit
 import ProofKitTest
-import PlanBridge.Final
+import Theorems.Main

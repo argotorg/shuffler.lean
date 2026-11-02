@@ -2,8 +2,8 @@ module
 
 public import ProofKit.Lea32
 import all ProofKit.Lea32
-public import BbuKraken.Specs
-import all BbuKraken.Specs
+public import FlatShuffler.Specs
+import all FlatShuffler.Specs
 public import Kraken.X64.Parser
 import all Kraken.X64.Parser
 public import ProofKit.SymExec

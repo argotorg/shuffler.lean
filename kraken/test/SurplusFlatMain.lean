@@ -1,9 +1,9 @@
-import BbuKraken.FlatSurplus
+import FlatShuffler.FlatSurplus
 
 /-!
 Run the "surplus" cases of `Fuzz/Oracle.lean` ("surplus;STACK;TARGET;DESTS;VARS", one per line,
-as from `Fuzz/surplus_cases.sh`) on the flat model `Bbu.Flat.remove_surplus`, or with the argument
-`list` on the list model `Bbu.Map.State.removeSurplus` of `Map.State.init` of `Map.plan`, and print
+as from `Fuzz/surplus_cases.sh`) on the flat model `FlatShuffler.Flat.remove_surplus`, or with the argument
+`list` on the list model `FlatShuffler.Map.State.removeSurplus` of `Map.State.init` of `Map.plan`, and print
 one line for each in the format of the oracle: "ok;STACK;OPS;DESTS",
 "blocked OFFSET EXCESS;STACK;OPS;DESTS" or "err" (see `c/surplus_harness.c`). It prints
 "bad input" for a line that it cannot read. The kraken project builds it as `surplus_flat`:
@@ -13,7 +13,7 @@ one line for each in the format of the oracle: "ok;STACK;OPS;DESTS",
 The functions that read and print slots are those of `PopFlatMain.lean`.
 -/
 
-open Bbu Bbu.Flat
+open FlatShuffler FlatShuffler.Flat
 
 def slotOf? (w : String) : Option StackSlot :=
   match w.toList with

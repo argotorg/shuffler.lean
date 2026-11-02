@@ -1,9 +1,9 @@
-import BbuKraken.FlatPop
+import FlatShuffler.FlatPop
 
 /-!
 Run the "pop" cases of `Fuzz/Oracle.lean` ("pop;STACK;TARGET;DESTS;VARS;COUNT", one per line, as
-from `Fuzz/pop_cases.sh`) on the flat model `Bbu.Flat.emission_pop`, or with the argument `list`
-on the list model `Bbu.Map.State.pops` of `Map.State.init` of `Map.plan`, and print one line for
+from `Fuzz/pop_cases.sh`) on the flat model `FlatShuffler.Flat.emission_pop`, or with the argument `list`
+on the list model `FlatShuffler.Map.State.pops` of `Map.State.init` of `Map.plan`, and print one line for
 each in the format of the oracle: "ok;STACK;OPS;DESTS;SOURCES;PEND" or "err" (see
 `c/pop_harness.c`). It prints "bad input" for a line that it cannot read. The kraken project
 builds it as `pop_flat`:
@@ -11,7 +11,7 @@ builds it as `pop_flat`:
   lake exe pop_flat [list] < cases.txt
 -/
 
-open Bbu Bbu.Flat
+open FlatShuffler FlatShuffler.Flat
 
 def slotOf? (w : String) : Option StackSlot :=
   match w.toList with

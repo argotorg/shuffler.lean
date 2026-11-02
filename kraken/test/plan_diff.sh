@@ -2,10 +2,10 @@
 # Usage: test/plan_diff.sh [max] [count] [seed]
 # Run the "plan" cases of Fuzz/plan_cases.sh [max] (default 3) and [count] (default 20000) random
 # "plan" cases from [seed] (default 1) on the PR31 model Shuffler.Planner.run (lowest_pr31 of the
-# root project, through Fuzz/Oracle.lean) and the flat model Bbu.Flat.planEntry (plan_flat), and
+# root project, through Fuzz/Oracle.lean) and the flat model FlatShuffler.Flat.planEntry (plan_flat), and
 # compare the full results: the success, the spills, the dropped slots, the stack, the operations
 # and the source of each target slot. Then check that the cases with the other strategy agree too
-# and give different results. Run it with nice.
+# and give different results.
 set -euo pipefail
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 tmp=$(mktemp -d)

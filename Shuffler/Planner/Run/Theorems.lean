@@ -13,6 +13,19 @@ import all Init.Prelude
 
 namespace Shuffler.Planner
 
+-- Every run returns a plan or Blocked. Each returned plan matches the target.
+-- Its trace type proves legal stack operations from the source, with the final spills.
+theorem run_correct (source target : Stack) (spills : SpillSet) (spillingAllowed : Bool)
+    (strategy : BuildMapping.WildcardSlotsStrategy)
+    (havailable : ∀ value ∈ target, value.is_junk ∨ value.can_be_freely_generated ∨
+      value ∈ source ∨ spills.is_spilled value)
+    (hlabels : target.count .FunctionReturnLabel ≤ source.count .FunctionReturnLabel) :
+    ∃ result, run source target spills spillingAllowed strategy = .ok result ∧
+      ∀ plan, result.result = some plan → StackMatches plan.stack target := by
+  obtain ⟨result, hr, _, _, hmatches⟩ :=
+    run_spec source target spills spillingAllowed strategy havailable hlabels
+  exact ⟨result, hr, hmatches⟩
+
 -- Every run returns a result, including plans that cannot resolve a blocked emission.
 theorem run_ok (source target : Stack) (spills : SpillSet) (spillingAllowed : Bool)
     (strategy : BuildMapping.WildcardSlotsStrategy)
@@ -51,6 +64,14 @@ theorem run_no_assertion (source target : Stack) (spills : SpillSet) (spillingAl
 /-- info: 'Shuffler.Planner.run_ok' depends on axioms: [propext, Classical.choice, Quot.sound] -/
 #guard_msgs in
 #print axioms run_ok
+
+/-- info: 'Shuffler.Planner.run_correct' does not use any opaque or partial definitions -/
+#guard_msgs in
+#print opaques run_correct
+
+/-- info: 'Shuffler.Planner.run_correct' depends on axioms: [propext, Classical.choice, Quot.sound] -/
+#guard_msgs in
+#print axioms run_correct
 
 /-- info: 'Shuffler.Planner.run_no_assertion' does not use any opaque or partial definitions -/
 #guard_msgs in

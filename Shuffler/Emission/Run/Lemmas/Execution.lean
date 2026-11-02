@@ -5,6 +5,7 @@ public import Shuffler.PermuteAtLowestHeight.Lemmas
 public import Shuffler.Emission.Run.Lemmas.RemoveSurplus
 public import Shuffler.Emission.Run.Lemmas.BuildBottomUp
 import Shuffler.BuildBottomUp.Theorems.Safety
+import Shuffler.BuildBottomUp.Theorems.Wildcard
 
 @[expose] public section
 
@@ -17,7 +18,9 @@ theorem run_spec (source target : Stack) (mapping : Mapping source.length target
       ∃ i dest, mapping i = some dest ∧ source[i] = target[j])
     (hlabels : ∀ j : Fin target.length, target[j].isFunctionReturnLabel → (mapping.symm j).isSome) :
     ∃ result, run source target mapping spills = .ok result ∧
-      result.state.planned_mapping = mapping ∧ result.Positive := by
+      result.state.planned_mapping = mapping ∧ result.Positive ∧
+      ((∀ i j, mapping i = some j → SlotMatches source[i] target[j]) →
+        result.blocked = none → StackMatches result.state.stack target) := by
   let initial : State source target spills := {
     planned_mapping := mapping, stack := source, trace := .Lit source,
     mapping, pending_generations := mapping.unmapped_target_slots }
@@ -29,7 +32,7 @@ theorem run_spec (source target : Stack) (mapping : Mapping source.length target
   cases hblocked : removed.blocked with
   | some blocked =>
     simp only [Option.isSome_some, ↓reduceIte]
-    exact ⟨removed, rfl, hrplan, hrpositive⟩
+    exact ⟨removed, rfl, hrplan, hrpositive, by simp [hblocked]⟩
   | none =>
     simp only [Option.isSome_none, Bool.false_eq_true, ↓reduceIte]
     have hre : removeSurplus initial = .ok ⟨none, removed.state⟩ := by
@@ -49,7 +52,7 @@ theorem run_spec (source target : Stack) (mapping : Mapping source.length target
     cases hpblocked : permuted.blocked with
     | some blocked =>
       simp only [Option.isSome_some, ↓reduceIte]
-      exact ⟨permuted, rfl, hpplan.trans hrplan, hppositive⟩
+      exact ⟨permuted, rfl, hpplan.trans hrplan, hppositive, by simp [hpblocked]⟩
     | none =>
       simp only [Option.isSome_none, Bool.false_eq_true, ↓reduceIte]
       have hbound : permuted.state.boundValue = initial.boundValue := hpbound.trans hrbound'
@@ -80,6 +83,20 @@ theorem run_spec (source target : Stack) (mapping : Mapping source.length target
         requires_of_true _ (by simpa only [Fin.getElem_fin] using hlabels'), except_ok_bind]
       obtain ⟨result, hb, hbpositive, hbplan⟩ :=
         buildBottomUp_ok permuted.state ⟨hsize, hpending, havailable, hlabels'⟩
-      exact ⟨result, hb, hbplan.trans (hpplan.trans hrplan), hbpositive⟩
+      refine ⟨result, hb, hbplan.trans (hpplan.trans hrplan), hbpositive, ?_⟩
+      intro hmatching hdone
+      apply buildBottomUp_matches_of_ok permuted.state
+        ⟨hsize, hpending, havailable, hlabels'⟩
+      · intro i j hbinding
+        have hvalue : permuted.state.boundValue j = some permuted.state.stack[i] := by
+          simp only [State.boundValue, Mapping.positionOf,
+            permuted.state.mapping.eq_some_iff.mpr hbinding, Option.map_some]
+        rw [hbound] at hvalue
+        change (mapping.symm j).map (fun pos => source[pos]) =
+          some permuted.state.stack[i] at hvalue
+        obtain ⟨pos, hsource, heq⟩ := Option.map_eq_some_iff.mp hvalue
+        rw [← heq]
+        exact hmatching pos j (mapping.eq_some_iff.mp hsource)
+      · simpa only [← hdone] using hb
 
 end Shuffler.Emission

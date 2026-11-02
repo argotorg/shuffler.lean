@@ -1,7 +1,7 @@
-import BbuKraken.FlatModel
+import FlatShuffler.FlatModel
 
 /-!
-Run `Bbu.Flat.build_bottom_up` on lines "m n s1 .. sm t1 .. tn d1 .. dm k v1 .. vk" and print one
+Run `FlatShuffler.Flat.build_bottom_up` on lines "m n s1 .. sm t1 .. tn d1 .. dm k v1 .. vk" and print one
 line for each, in the format of `test/BbuPr31Main.lean`:
 
 - "assertion" for the result -2,
@@ -18,7 +18,7 @@ the size and DESTS `m_destinationOf` of each, or "-" for `NONE`. The kraken proj
   lake exe bbu_flat < states.txt
 -/
 
-open Bbu Bbu.Flat
+open FlatShuffler FlatShuffler.Flat
 
 def slotOf (k : Nat) : StackSlot :=
   if k = 0 then .junk

@@ -1,0 +1,316 @@
+module
+
+public import FlatShuffler.Unit.Plan.PlannerRunCfgDefs
+import all FlatShuffler.Unit.Plan.PlannerRunCfgDefs
+public import FlatShuffler.Unit.Plan.PlannerRunPrologue
+import all FlatShuffler.Unit.Plan.PlannerRunPrologue
+public import FlatShuffler.Unit.Plan.PlannerRunCheck
+import all FlatShuffler.Unit.Plan.PlannerRunCheck
+public import FlatShuffler.Unit.Plan.PlannerRunTarget
+import all FlatShuffler.Unit.Plan.PlannerRunTarget
+public import FlatShuffler.Unit.Plan.PlannerRunScan
+import all FlatShuffler.Unit.Plan.PlannerRunScan
+public import FlatShuffler.Unit.Plan.PlannerRunSpilled
+import all FlatShuffler.Unit.Plan.PlannerRunSpilled
+public import FlatShuffler.Unit.Plan.PlannerRunFailure
+import all FlatShuffler.Unit.Plan.PlannerRunFailure
+public import FlatShuffler.Unit.Plan.PlannerRunReturn
+import all FlatShuffler.Unit.Plan.PlannerRunReturn
+
+@[expose] public section
+
+open Std.WP Lean.Order ProofKit
+open scoped Program.WP
+set_option experimental.vcgen true
+
+namespace FlatShuffler.Unit.PlannerRunU
+open FlatShuffler.Sep
+
+section
+variable [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : MProp 64)
+    (s : MachineData) (ra : Int64) (resolvePhase : Label → MachineData → Prop)
+
+set_option maxRecDepth 4096 in
+theorem cfg_0 : plannerRunAsm.ForallBlocks fun blk =>
+    blk.label = .label ".LB.Planner.run.0" → RunObl P g F s ra resolvePhase blk := by
+  cfg_view as hv
+  cfg_block [RunObl]
+  intro t ht
+  simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
+  let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
+    RunInv P g F s ra resolvePhase b u ∧
+      Program.Decreases (runV g) (.label ".LB.Planner.run.0") 2 t b j u
+  have hh := b_0 P (withSaw g 0#8) F s t ra (I' (.label ".LB.Planner.run.1") 3)
+    I' (RunExit P g F s ra) (by
+      intro u he hu
+      refine ⟨?_, Or.inl ?_⟩
+      · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, or_true, ↓reduceIte] using hu
+      · have hi := ht.choose_spec.choose_spec.2.1
+        have huI := hu.choose_spec.choose_spec.2.1
+        have hs : (rcx u).toNat = (rcx t).toNat + 1 := by
+          rw [he]
+          change rcx t < g.p.n at hi
+          bv_omega
+        simp only [runV, String.reduceEq, or_false, ↓reduceIte]
+        rw [hs]
+        change (rcx t).toNat < g.p.n.toNat at hi
+        change (rcx u).toNat < g.p.n.toNat at huI
+        have hr : g.p.n.toNat - (rcx t).toNat =
+            g.p.n.toNat - ((rcx t).toNat + 1) + 1 := by omega
+        rw [hr]
+        simp only [Nat.add_mul, Nat.one_mul]
+        omega) (by
+      intro u he hu
+      apply Program.Intercept.intro_label (i := 6)
+      · decide
+      left
+      refine ⟨?_, ?_, Or.inl ?_⟩
+      · exact (hu.choose_spec.choose_spec.1.toBd.kb.stack (by decide))
+      · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, or_true, ↓reduceIte] using hu
+      · have hi := ht.choose_spec.choose_spec.2.1
+        simp only [runV, String.reduceEq, or_false, ↓reduceIte]
+        change (rcx t).toNat < g.p.n.toNat at hi
+        have hp : 0 < (g.p.n.toNat - (rcx t).toNat) * (g.p.m.toNat + 4) :=
+          Nat.mul_pos (by omega) (by omega)
+        omega)
+  rw [Program.ForallBlocks, hv] at hh
+  simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
+    String.reduceEq, false_implies, true_implies, and_true, true_and] at hh
+  exact hh ht
+
+set_option maxRecDepth 4096 in
+theorem cfg_3 (hok : g.Ok) : plannerRunAsm.ForallBlocks fun blk =>
+    blk.label = .label ".LB.Planner.run.3" → RunObl P g F s ra resolvePhase blk := by
+  cfg_view as hv
+  cfg_block [RunObl]
+  intro t ht
+  simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
+  let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
+    RunInv P g F s ra resolvePhase b u ∧
+      Program.Decreases (runV g) (.label ".LB.Planner.run.3") 5 t b j u
+  have hh := b_3 P (withSaw g 0#8) F s t ra (withSaw_ok hok _)
+    (I' (.label ".LB.Planner.run.4") 6) I' (RunExit P g F s ra) (by
+      intro u he hu
+      apply Program.Intercept.intro_label (i := 1) (by decide)
+      left
+      refine ⟨hu.choose_spec.choose_spec.1.toBd.kb.stack (by decide), ?_, Or.inl ?_⟩
+      · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, or_true, ↓reduceIte] using hu
+      · simp only [runV, String.reduceEq, or_false, ↓reduceIte, he]
+        omega) (by
+      intro u he hu
+      apply Program.Intercept.intro_label (i := 5) (by decide)
+      left
+      refine ⟨hu.choose_spec.choose_spec.1.toBd.kb.stack (by decide), ?_, Or.inl ?_⟩
+      · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, or_true, ↓reduceIte] using hu
+      · simp only [runV, String.reduceEq, or_false, or_true, ↓reduceIte]
+        omega) (by
+      intro u he hu
+      refine ⟨?_, Or.inl ?_⟩
+      · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte] using hu
+      · simp only [runV, String.reduceEq, or_false, or_true, ↓reduceIte]
+        omega)
+  rw [Program.ForallBlocks, hv] at hh
+  simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
+    String.reduceEq, false_implies, true_implies, and_true, true_and] at hh
+  exact hh ht
+
+set_option maxRecDepth 4096 in
+theorem cfg_4 (hok : g.Ok) : plannerRunAsm.ForallBlocks fun blk =>
+    blk.label = .label ".LB.Planner.run.5" → RunObl P g F s ra resolvePhase blk := by
+  cfg_view as hv
+  cfg_block [RunObl]
+  intro t ht
+  simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
+  let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
+    RunInv P g F s ra resolvePhase b u ∧
+      Program.Decreases (runV g) (.label ".LB.Planner.run.5") 7 t b j u
+  have hh := b_4 P (withSaw g 0#8) F s ra (I' (.label ".LB.Planner.run.6") 8)
+    I' (RunExit P g F s ra) (by
+      intro u hu
+      let ctx := LoopContext.start g s hu.choose_spec.choose_spec.2.2.2
+      apply Program.Intercept.intro_label (i := 20) (by decide)
+      left
+      refine ⟨hu.choose_spec.choose_spec.1.kb.stack (by decide), ?_, Or.inl ?_⟩
+      · simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte, LoopPhase]
+        exact ⟨withSaw g 0#8, withSaw_ok hok _, ⟨ctx⟩, hu⟩
+      · simp only [runV, String.reduceEq, or_false, ↓reduceIte]
+        rw [dropBudget_eq ctx.stable hu.choose_spec.choose_spec.1.kb.vmem]
+        have hd := Flat.droppedCount_le g.p.m g.dropped
+        have hb : (g.p.m - Flat.droppedCount g.p.m g.dropped).toNat ≤ g.p.m.toNat := by
+          bv_omega
+        change (g.p.m - Flat.droppedCount g.p.m g.dropped).toNat * 65536 + 60000 < _
+        omega)
+  rw [Program.ForallBlocks, hv] at hh
+  simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
+    String.reduceEq, false_implies, true_implies, and_true, true_and] at hh
+  exact hh t ht
+
+set_option maxRecDepth 4096 in
+theorem cfg_25 (hok : g.Ok)
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ plannerRunAsm.labels, label l ≠ label "exit") :
+    plannerRunAsm.ForallBlocks fun blk =>
+    blk.label = .label ".LB.Planner.run.4" → RunObl P g F s ra resolvePhase blk := by
+  cfg_view as hv
+  cfg_block [RunObl]
+  intro t ht
+  simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
+  obtain ⟨lo, locals, hb, htgt⟩ := ht
+  let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
+    RunInv P g F s ra resolvePhase b u ∧
+      Program.Decreases (runV g) (.label ".LB.Planner.run.4") 6 t b j u
+  have hh := assertion_block P (withSaw g 0#8) F s ra
+    (I' (.label ".LB.Planner.run.5") 7) I' (RunExit P g F s ra) hexit hout (by
+      intro u hm ha
+      exact Or.inr ⟨rfl, ha, withSaw g 0#8,
+        plannerRunX_bad_target g s u htgt, withSaw_ok hok _, hm⟩)
+  rw [Program.ForallBlocks, hv] at hh
+  simp only [Program.forallBlocksFrom, List.mem_cons, List.not_mem_nil, or_false, or_true,
+    CfgLabel.label.injEq, reduceCtorEq, String.reduceEq, false_implies,
+    true_implies, and_true, true_and, and_self] at hh
+  exact hh t ⟨lo, locals, hb.toBd⟩
+
+set_option maxRecDepth 4096 in
+theorem cfg_26 : plannerRunAsm.ForallBlocks fun blk =>
+    blk.label = .label ".LB.Planner.run.12" → RunObl P g F s ra resolvePhase blk := by
+  cfg_view as hv
+  cfg_block [RunObl]
+  intro t ht
+  simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte, RunReturn] at ht
+  obtain ⟨current, lo, locals, hb, hok, hq⟩ := ht
+  let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
+    RunInv P g F s ra resolvePhase b u ∧
+      Program.Decreases (runV g) (.label ".LB.Planner.run.12") 14 t b j u
+  have hh := b_26 P g current F s ra hok (I' (.label ".LB.Planner.run.13") 15) I'
+  rw [Program.ForallBlocks, hv] at hh
+  simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
+    String.reduceEq, false_implies, true_implies, and_true, true_and] at hh
+  exact hh t ⟨lo, locals, hb, hq⟩
+
+theorem cfg_entry : plannerRunAsm.ForallBlocks fun blk =>
+    blk.label = .entry → RunObl P g F s ra resolvePhase blk := by
+  cfg_block [RunObl]
+  intro t ht
+  kvcgen64
+  simpa only [RunInv, Names.plannerRun, ↓reduceIte] using ht
+
+set_option maxRecDepth 4096 in
+theorem cfg_fn (hp : VPre plannerCallOwnedMemory PlannerCallMemory.Ok P g F plannerRunA plannerRunD s) :
+    plannerRunAsm.ForallBlocks fun blk =>
+      blk.label = .label Names.plannerRun → RunObl P g F s ra resolvePhase blk := by
+  cfg_view as hv
+  cfg_block [RunObl, Names.plannerRun]
+  intro t ht
+  simp only [RunInv, Names.plannerRun, ↓reduceIte] at ht
+  subst t
+  let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
+    RunInv P g F s ra resolvePhase b u ∧
+      Program.Decreases (runV g) (.label Names.plannerRun) 1 (s.pushRa ra) b j u
+  have hh := b_fn P g F s ra hp (I' (.label ".LB.Planner.run.0") 2)
+    I' (RunExit P g F s ra) (by
+      intro u hu
+      apply Program.Intercept.intro_label (i := 2) (by decide)
+      left
+      refine ⟨hu.choose_spec.choose_spec.1.toBd.kb.stack (by decide), ?_, Or.inl ?_⟩
+      · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, or_true, ↓reduceIte] using hu
+      · simp only [runV, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte]
+        have hm := Nat.mul_le_mul_right (g.p.m.toNat + 4)
+          (Nat.sub_le g.p.n.toNat (rcx u).toNat)
+        simp only [Nat.add_mul, Nat.one_mul]
+        omega) (by
+      intro u hu
+      apply Program.Intercept.intro_label (i := 6) (by decide)
+      left
+      refine ⟨hu.choose_spec.choose_spec.1.toBd.kb.stack (by decide), ?_, Or.inl ?_⟩
+      · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, or_true, ↓reduceIte] using hu
+      · simp only [runV, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte]
+        have hm : 0 < (g.p.n.toNat + 1) * (g.p.m.toNat + 4) :=
+          Nat.mul_pos (by omega) (by omega)
+        omega)
+  rw [Program.ForallBlocks, hv] at hh
+  simp only [Program.forallBlocksFrom, Names.plannerRun, CfgLabel.label.injEq, reduceCtorEq,
+    String.reduceEq, false_implies, true_implies, and_true, true_and] at hh
+  exact hh
+
+set_option maxRecDepth 4096 in
+theorem cfg_1 (hok : g.Ok) : plannerRunAsm.ForallBlocks fun blk =>
+    blk.label = .label ".LB.Planner.run.1" → RunObl P g F s ra resolvePhase blk := by
+  cfg_view as hv
+  cfg_block [RunObl]
+  intro t ht
+  simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
+  let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
+    RunInv P g F s ra resolvePhase b u ∧
+      Program.Decreases (runV g) (.label ".LB.Planner.run.1") 3 t b j u
+  have hh := b_1 P (withSaw g 0#8) F s t ra (withSaw_ok hok _)
+    (I' (.label ".LB.Planner.run.2") 4) I' (RunExit P g F s ra) (by
+      intro u he hu
+      apply Program.Intercept.intro_label (i := 1) (by decide)
+      left
+      refine ⟨hu.choose_spec.choose_spec.1.toBd.kb.stack (by decide), ?_, Or.inl ?_⟩
+      · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, or_true, ↓reduceIte] using hu
+      · simp only [runV, String.reduceEq, or_false, ↓reduceIte, he]
+        omega) (by
+      intro u he hu
+      apply Program.Intercept.intro_label (i := 4) (by decide)
+      left
+      refine ⟨hu.choose_spec.choose_spec.1.toBd.kb.stack (by decide), ?_, Or.inl ?_⟩
+      · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, or_true, ↓reduceIte] using hu
+      · simp only [runV, String.reduceEq, or_false, ↓reduceIte, he]
+        omega) (by
+      intro u he hz hu
+      refine ⟨?_, Or.inl ?_⟩
+      · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, or_true, ↓reduceIte] using hu
+      · simp only [runV, String.reduceEq, or_false, ↓reduceIte, he, hz,
+          BitVec.toNat_ofNat, Nat.zero_mod, Nat.sub_zero]
+        omega)
+  rw [Program.ForallBlocks, hv] at hh
+  simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
+    String.reduceEq, false_implies, true_implies, and_true, true_and] at hh
+  exact hh ht
+
+set_option maxRecDepth 4096 in
+theorem cfg_2 (hok : g.Ok) : plannerRunAsm.ForallBlocks fun blk =>
+    blk.label = .label ".LB.Planner.run.2" → RunObl P g F s ra resolvePhase blk := by
+  cfg_view as hv
+  cfg_block [RunObl]
+  intro t ht
+  simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
+  let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
+    RunInv P g F s ra resolvePhase b u ∧
+      Program.Decreases (runV g) (.label ".LB.Planner.run.2") 4 t b j u
+  have hh := b_2 P (withSaw g 0#8) F s t ra (withSaw_ok hok _)
+    (I' (.label ".LB.Planner.run.3") 5) I' (RunExit P g F s ra) (by
+      intro u he hu
+      apply Program.Intercept.intro_label (i := 1) (by decide)
+      left
+      refine ⟨hu.choose_spec.choose_spec.1.toBd.kb.stack (by decide), ?_, Or.inl ?_⟩
+      · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, or_true, ↓reduceIte] using hu
+      · simp only [runV, String.reduceEq, or_false, ↓reduceIte, he]
+        omega) (by
+      intro u hc ha hu
+      apply Program.Intercept.intro_label (i := 3) (by decide)
+      left
+      refine ⟨hu.choose_spec.choose_spec.1.toBd.kb.stack (by decide), ?_, Or.inl ?_⟩
+      · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, or_true, ↓reduceIte] using hu
+      · have hi := ht.choose_spec.choose_spec.2.2.2.2.2.2.2.2.1
+        have hui := hu.choose_spec.choose_spec.2.2.2.2.2.2.2.2.1
+        change rax t < g.p.m at hi
+        change rax u < g.p.m at hui
+        have hs : (rax u).toNat = (rax t).toNat + 1 := by rw [ha]; bv_omega
+        simp only [runV, String.reduceEq, or_false, ↓reduceIte, hc, hs]
+        change (rax t).toNat < g.p.m.toNat at hi
+        change (rax u).toNat < g.p.m.toNat at hui
+        omega) (by
+      intro u he hu
+      refine ⟨?_, Or.inl ?_⟩
+      · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, or_true, ↓reduceIte] using hu
+      · simp only [runV, String.reduceEq, or_false, ↓reduceIte, he]
+        omega)
+  rw [Program.ForallBlocks, hv] at hh
+  simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
+    String.reduceEq, false_implies, true_implies, and_true, true_and] at hh
+  exact hh ht
+
+end
+end FlatShuffler.Unit.PlannerRunU

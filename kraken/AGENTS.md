@@ -8,44 +8,47 @@ tactics of this repo.
 
 | Path | Content |
 |---|---|
-| `BbuKraken/Permutation/` | the permutation model and trace lemmas used by the C++ proofs |
-| `BbuKraken/` | the model, the contracts and the asm proofs of `build_bottom_up` |
-| `BbuKraken/Kit.lean` | the shared lemmas and macros of the bbu proofs (`rd`, `bbu_norm`, `bbu_flags`, `bbu_rd`) |
-| `BbuKraken/Fn/` | one file (or directory) for each function of the asm |
-| `BbuKraken/Sep/` | the separation library: atoms, the struct view, the contracts with a frame (see below) |
+| `Theorems/Main.lean` | the main planner statements, their assumptions, results, and trust boundary |
+| `Theorems/` | the review definitions: input assumptions, result comparison, encodings, and machine contract; no proof tactics |
+| `ShufflerBridge/` | correspondence proofs for emission, spills, and the planner |
+| `FlatShuffler/Permutation/` | the permutation model and trace lemmas used by the C++ proofs |
+| `FlatShuffler/` | the models, contracts, and assembly proofs of the C++ shuffler methods |
+| `FlatShuffler/Kit.lean` | the shared lemmas and macros of the bbu proofs (`rd`, `bbu_norm`, `bbu_flags`, `bbu_rd`) |
+| `FlatShuffler/Fn/` | one file (or directory) for each function of the asm |
+| `FlatShuffler/Sep/` | the separation library: atoms, the struct view, the contracts with a frame (see below) |
 | `ProofKit/` | proof tools that do not depend on one function: `Shape`, `SymExec`, `Cfg`, `Idioms`, `SepLoad` |
 | `ProofKitTest/` | tests of the ProofKit tools on real `kvcgen64` VCs |
 | `test/` | shell tests: the model against the originals, the binary against the asm, the struct layout, the axioms; the field generator `gen_fields.sh` |
 
 ## Build and check
 
-- Run `LEAN_NUM_THREADS=1 nice lake update` from the repository root after checkout.
+- Run `lake update` from the repository root after checkout.
   The pinned Kraken dependency is used without source changes.
-- Run the full build from the repository root: `LEAN_NUM_THREADS=1 nice lake build`. It includes the
-  assembly proofs, the correspondence proofs, and `PlanBridge.Final`.
+- Run the full build from the repository root: `lake build`. It includes the
+  assembly proofs, the correspondence proofs, and `Theorems.Main`.
   Run the build commands in this section from the repository root.
   Both packages use the root `lean-toolchain`. The shell tests use the root dependency graph.
 - Both local packages pass `-E warning` to Lean. Dependency warnings remain visible.
-- Start files that import `PlanBridge.Final` with `module`. Its public contracts
+- Start files that import `Theorems.Main` with `module`. Its public contracts
   keep the Kraken and Shuffler implementation imports private.
-- Run `LEAN_NUM_THREADS=1 nice kraken/test/modules_test.sh` to check this boundary.
-- Use `LEAN_NUM_THREADS=1 nice` for each Lean process. Run only one Lean process at a time. The machine is shared.
+- Run `kraken/test/modules_test.sh` to check this boundary.
+- Run only one Lean process at a time. The machine is shared.
 - Do not kill a `lean` or `lake` process that you did not start. Do not use `pkill lean` or
   `pkill lake`.
 - The proof build generates `build/kraken/c/build_bottom_up.S` with CMake and GCC 15.3.0.
   The assembly is not kept in source control. Use `nix develop` for these tools.
-- One target: `LEAN_NUM_THREADS=1 nice lake build BbuKraken` (or `ProofKit`, `ProofKitTest`).
+- One target: `lake build FlatShuffler` (or `ProofKit`, `ProofKitTest`).
 - One file, without a build of its dependents:
-  `LEAN_NUM_THREADS=1 nice lake env lean -DautoImplicit=false -DrelaxedAutoImplicit=false kraken/BbuKraken/Unit/Push.lean`.
+  `lake env lean -DautoImplicit=false -DrelaxedAutoImplicit=false kraken/FlatShuffler/Unit/Push.lean`.
 - Find the slow declarations:
   ```
-  LEAN_NUM_THREADS=1 nice lake env lean -Dtrace.profiler=true -Dtrace.profiler.threshold=200 -DElab.async=false FILE
+  lake env lean -Dtrace.profiler=true -Dtrace.profiler.threshold=200 -DElab.async=false FILE
   ```
   The profiler adds time. A proof that is near its heartbeat limit can fail under the profiler.
 - Heartbeats do not change from run to run. Wall time changes by about 20% on a machine with a high
   load. Compare heartbeats, not seconds. To measure one declaration, read `IO.getNumHeartbeats`
   before and after it.
-- Axioms: `kraken/test/axioms.sh` checks the 15 final theorems;
+- Axioms: `kraken/test/axioms.sh` checks the listed final and transfer theorems;
   `kraken/test/axioms.sh FILE NAME...` checks the theorems NAME... of FILE.
   `kraken/test/axioms_test.sh` tests the check. Permitted:
   - `propext`, `Classical.choice`, `Quot.sound`;
@@ -134,7 +137,7 @@ takes less than 2 s, and one `all_goals` block with `omega` alternatives takes 1
 - `∗` is exact: `(P ∗ Q).get m` splits all of `m`. A top-level frame must hold all other memory.
 - It matches atoms by term. Normalize the addresses first (rule 2). Give the atom values (rule 8).
 - Lake builds a module of the Kraken package only when a module of this package imports it.
-  `BbuKraken/Sep/Atoms.lean` imports `Kraken.SepCancel`, so `lake build` builds the separation
+  `FlatShuffler/Sep/Atoms.lean` imports `Kraken.SepCancel`, so `lake build` builds the separation
   modules. Library proof files start with `module`. The executable entry files can use the
   older import system because the packages set `allowNonModules`.
 - `FrameWP` (X64/WP/Frame.lean) has no cfg rule and no call rule. Use the state wp
@@ -209,7 +212,7 @@ Notes:
 - No lemma yet: `movw`/`movzwl`, byte loads of slot fields, `movb` stores. These are memory patterns.
 - 9 lemmas use `bv_decide` (`pack40_*`, `pack32_*`, `slot_eq_iff`, `slot_beq`, `extract48_eq_iff`).
 
-### The separation library (BbuKraken/Sep/, ProofKit/SepLoad.lean)
+### The separation library (FlatShuffler/Sep/, ProofKit/SepLoad.lean)
 
 | File | Content |
 |---|---|
@@ -254,14 +257,14 @@ Traps:
 
 ### The field generator (test/gen_fields.sh)
 
-- `test/gen_fields.sh` writes `BbuKraken/Sep/Fields.lean` from the g++ `offsetof` and `sizeof` of
+- `test/gen_fields.sh` writes `FlatShuffler/Sep/Fields.lean` from the g++ `offsetof` and `sizeof` of
   `Emission` in `c/shuffler/stack/Shuffler.cpp`. Run it after a change to the struct.
 - `test/gen_fields.sh --check` does not write the file. It fails if the file is not current.
 - It fails if the struct has bytes that no member of the probe covers (a hole, or bytes after the
   last member), or if an array element is not 8 bytes. `test/gen_fields_test.sh` tests these
   cases and `--check`.
 
-### BbuKraken/Kit.lean
+### FlatShuffler/Kit.lean
 
 | Tactic | Use |
 |---|---|
@@ -277,12 +280,12 @@ stores. Do not add a `first` cascade around it (rule 1).
 These macros are for one proof. Do not copy them into a new file. If a new proof needs the same
 step, move it to `Kit.lean` or `ProofKit/`, with a test.
 
-- `BbuKraken/Fn/PushDup.lean`: `addr_omega`, `pd_clear`, `pd_off`, `pd_disch`, `pd_rd`. `pd_disch`
+- `FlatShuffler/Fn/PushDup.lean`: `addr_omega`, `pd_clear`, `pd_off`, `pd_disch`, `pd_rd`. `pd_disch`
   is an `omega` cascade (rule 1).
-- `BbuKraken/Fn/SwapWithLemmas.lean`: `in_omega`.
-- `BbuKraken/Fn/Loop/Defs.lean`: `loop_case`, `loop_goto`.
-- `BbuKraken/Link.lean`: `head_tac`, `at_tac`.
-- `BbuKraken/Unit/SwapWith.lean`: `mem_load`, a `sep_load` that tries only the hypotheses on the
+- `FlatShuffler/Fn/SwapWithLemmas.lean`: `in_omega`.
+- `FlatShuffler/Fn/Loop/Defs.lean`: `loop_case`, `loop_goto`.
+- `FlatShuffler/Link.lean`: `head_tac`, `at_tac`.
+- `FlatShuffler/Unit/SwapWith.lean`: `mem_load`, a `sep_load` that tries only the hypotheses on the
   memory of the load. Tests in `Unit/SwapWithTest.lean`.
 
 ## Procedure for a new function proof

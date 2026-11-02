@@ -1,15 +1,15 @@
-import BbuKraken.BinHost
+import FlatShuffler.BinHost
 import Kraken.X64.PrintATT
 
 /-!
-Print the program of `Bbu.binHost`, one directive on each line: the address in hex
+Print the program of `FlatShuffler.binHost`, one directive on each line: the address in hex
 and the size from the layout of the host, then the directive in AT&T syntax.
 `test/bin_check.sh` compares this with the disassembly of `build/kraken/c/bbu_harness`:
 
   lake env lean --run test/BinHostMain.lean
 -/
 
-open Bbu
+open FlatShuffler
 
 def main : IO Unit :=
   for d in Host.prog, i in [0:Host.prog.length] do

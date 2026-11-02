@@ -22,13 +22,13 @@ target bbuAssembly pkg : FilePath := Job.async do
   setTrace (← computeTrace (TextFilePath.mk assembly))
   return assembly
 
-@[default_target] lean_lib BbuKraken where
+@[default_target] lean_lib FlatShuffler where
   extraDepTargets := #[`bbuAssembly]
 @[default_target] lean_lib ProofKit
 @[default_target] lean_lib ProofKitTest
 
 lean_exe bbu_model where
-  root := `BbuModelMain
+  root := `FlatShuffler.ModelMain
 
 lean_exe bbu_flat where
   srcDir := "test"

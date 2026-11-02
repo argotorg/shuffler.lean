@@ -3,12 +3,11 @@
 # Run the "lowest" cases of Fuzz/lowest_cases.sh [max] (default 4) on the compiled
 # permute_at_lowest_height of build_bottom_up.S (through build/kraken/c/lowest_harness), the PR31 model
 # Shuffler.PermuteAtLowestHeight.permuteAtLowestHeight (lowest_pr31 of the root project, through
-# Fuzz/Oracle.lean), the flat model Bbu.Flat.permute_at_lowest_height (lowest_flat) and the list
-# model Bbu.lowest (lowest_flat list), and compare the full results: the status with the blocked
+# Fuzz/Oracle.lean), the flat model FlatShuffler.Flat.permute_at_lowest_height (lowest_flat) and the list
+# model FlatShuffler.lowest (lowest_flat list), and compare the full results: the status with the blocked
 # offset and excess, the stack, the operations and the destination of each slot. The list model has
 # no unbound slot: it prints "unbound" for a case with a destination "-", and the script does not
 # compare these lines. Then check that a case with changed destinations gives a different result.
-# Run it with nice.
 set -euo pipefail
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 tmp=$(mktemp -d)

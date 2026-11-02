@@ -2,18 +2,51 @@
 
 This repo contains a work in progress formalization of the new plan based shuffler in solc.
 
+## Proof audit
+
+Start at [kraken/Theorems/Main.lean](kraken/Theorems/Main.lean). It states the
+assumptions and limits first, then gives these claims:
+
+- `planner_model_returns_correct_plan_or_blocked` proves the model's result.
+  Each Done result has a legal abstract trace from source to target.
+- `planner_assembly_returns_correct_plan_or_blocked` transfers that result to
+  assembly and excludes assertion exit.
+- `planner_assembly_transfers_model_postcondition` transfers any property of the
+  results covered by the model comparison to the assembly contract.
+- `planner_assembly_returns_normally` excludes assertion exit for valid planner
+  inputs. It follows from the transfer and the Lean model's `run_ok` theorem.
+- `planner_assembly_matches_model` also covers input errors and requires an
+  assertion exit to match a model error.
+
+The assembly claims also have binary forms. `Shuffler.Planner.run_correct` is the
+theorem over the top-level Lean model. Target wildcards accept any value. Loads
+use the final spill set. The claims do not prove spill-memory contents, EVM
+execution, plan optimality, or that Blocked means no plan exists.
+
+Valid inputs require each target value to be junk, freely generated, in the source,
+or spilled, and require enough source function return labels. Size, encoding,
+memory, and register conditions also apply. Blocked results remain possible.
+The specification files in `kraken/Theorems/` contain named input assumptions,
+the explicit output comparison, value and operation encodings, and the machine
+contract. They contain no proof tactics.
+`kraken/FlatShuffler/` contains the models and assembly proofs.
+`kraken/ShufflerBridge/` contains the correspondence proofs for emission, spills,
+and the planner. The two files `ShufflerBridge/Planner/ModelContract.lean` and
+`AssemblyContract.lean` connect the review definitions to those proofs.
+Import `Theorems.Main` from a Lean file that starts with `module`.
+
 ## Development
 
 Run `nix develop` for the proof and C++ toolchains. With a separate installation,
 use [elan](https://github.com/leanprover/elan), CMake, Ninja, and GCC 15.3.0.
 
-Run `LEAN_NUM_THREADS=1 nice lake update` once after checkout.
+Run `lake update` once after checkout.
 The pinned Kraken dependency is used without source changes.
-Fetch the Mathlib cache with `MATHLIB_CACHE_FROM=forks nice lake exe cache get`.
+Fetch the Mathlib cache with `MATHLIB_CACHE_FROM=forks lake exe cache get`.
 
-Then run `LEAN_NUM_THREADS=1 nice lake build` to check all proofs.
+Then run `lake build` to check all proofs.
 The build includes the Shuffler model, assembly proofs, correspondence proofs,
-and their composition in `PlanBridge.Final`.
+and their composition in `Theorems.Main`.
 Lake uses CMake to generate `build/kraken/c/build_bottom_up.S` from the C++23
 shuffler source before it checks the assembly proofs. CMake checks the source
 and header dependencies on each build. The assembly is a build output and is
@@ -26,14 +59,24 @@ Mathlib is pinned to a commit of its nightly testing repository for that compile
 Both local packages treat compiler warnings as errors. Warnings from the pinned
 Kraken dependency remain visible; they do not fail the local proof build.
 
-`PlanBridge.Final` combines two proof modules through contracts over shared flat
+`Theorems.Main` combines two proof modules through contracts over shared flat
 data. Kraken and Shuffler implementation imports stay private. A file that
 imports this combined theorem must start with `module` to retain that boundary.
 The public predicates have types over the shared data and keep their bodies private.
-Run `LEAN_NUM_THREADS=1 nice kraken/test/modules_test.sh` to check the boundary.
+Run `kraken/test/modules_test.sh` to check the boundary.
+It also checks the transfer interfaces, normal-return status bounds, and rejection
+of inputs that lack available target values or source function return labels.
 
-Run `LEAN_NUM_THREADS=1 nice lake test` to run the property tests.
-Run `LEAN_NUM_THREADS=1 nice kraken/test/axioms_test.sh` to audit the final theorems and test the audit.
+The assembly parser reads `build/kraken/c/build_bottom_up.S`. The binary checks
+read the C++ method bytes from `build/kraken/c/bbu_harness`, which links those
+methods for the buildBottomUp tests. The C test driver and test wrappers are
+outside the proved code. `kraken/test/bin_check.sh` compares the parsed instructions
+with the method bytes. `kraken/test/bin_layout.sh --check` checks the recorded
+instruction layout used by `FlatShuffler/BinHost.lean`. The Lean theorem does not
+itself extract or decode executable bytes.
+
+Run `lake test` to run the property tests.
+Run `kraken/test/axioms_test.sh` to audit the final theorems and test the audit.
 The Lean CI job also runs the assembly, layout, and model comparison checks in
 `kraken/test/`. The Fuzz job builds and tests the C FFI with the same Lean compiler.
 

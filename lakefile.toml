@@ -1,6 +1,6 @@
 name = "shuffler-lean"
 version = "0.1.0"
-defaultTargets = ["Shuffler", "Verification", "BbuBridge", "SpillBridge", "PlanBridge"]
+defaultTargets = ["Shuffler", "Verification", "ShufflerBridge", "Theorems"]
 testDriver = "Tests"
 allowNonModules = true
 moreLeanArgs = ["-E", "warning"]
@@ -10,6 +10,12 @@ name = "Shuffler"
 
 [[lean_lib]]
 name = "Verification"
+
+[[lean_lib]]
+name = "Theorems"
+srcDir = "kraken"
+roots = ["Theorems.Main"]
+globs = ["Theorems.+"]
 
 [[lean_lib]]
 name = "Tests"
@@ -33,11 +39,11 @@ path = "kraken"
 name = "Fuzz"
 roots = ["Fuzz.Oracle"]
 
-# The Kraken shuffler model and its correspondence proofs.
+# Correspondence proofs for emission, spills, and the planner.
 [[lean_lib]]
-name = "BbuBridge"
+name = "ShufflerBridge"
 srcDir = "kraken"
-globs = ["BbuBridge.+"]
+globs = ["ShufflerBridge.+"]
 
 # The original buildBottomUp, run by kraken/test/bbu_diff.sh.
 [[lean_exe]]
@@ -62,16 +68,3 @@ root = "PopPr31Main"
 name = "lowest_pr31"
 srcDir = "kraken/test"
 root = "LowestPr31Main"
-
-# The flat model of the spill set, and the proofs that it equals SpillSet.add and
-# SpillSet.is_spilled of PR31.
-[[lean_lib]]
-name = "SpillBridge"
-srcDir = "kraken"
-globs = ["SpillBridge.+"]
-
-# The flat model of Planner.run, and the proofs that it equals Planner.run of PR31.
-[[lean_lib]]
-name = "PlanBridge"
-srcDir = "kraken"
-globs = ["PlanBridge.+"]

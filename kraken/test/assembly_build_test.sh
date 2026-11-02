@@ -97,14 +97,14 @@ echo 'ok assembly build: rejects a different compiler version'
 
 # Use the production Lake dependency, including when proof objects already exist.
 rm -f "$proof_asm"
-(cd "$root" && LEAN_NUM_THREADS=1 nice lake build BbuKraken.AsmTest) > "$tmp/proof.log" 2>&1 \
+(cd "$root" && LEAN_NUM_THREADS=1 nice lake build FlatShuffler.AsmTest) > "$tmp/proof.log" 2>&1 \
 	|| { cat "$tmp/proof.log" >&2; exit 1; }
 [ -s "$proof_asm" ]
 echo 'ok proof build: generates a missing assembly input before checking proofs'
 
 cp "$proof_asm" "$tmp/proof-assembly.S"
 printf '\n\tassembly_trace_failure\n' >> "$proof_asm"
-if (cd "$root" && LEAN_NUM_THREADS=1 nice lake build BbuKraken.AsmTest) \
+if (cd "$root" && LEAN_NUM_THREADS=1 nice lake build FlatShuffler.AsmTest) \
 	> "$tmp/trace-failure.log" 2>&1; then
 	echo 'FAIL proof build: accepts changed invalid assembly with cached proofs' >&2
 	exit 1
@@ -112,7 +112,7 @@ fi
 grep -q 'unsupported instruction: assembly_trace_failure' "$tmp/trace-failure.log"
 cp "$tmp/proof-assembly.S" "$proof_asm"
 rm "$tmp/proof-assembly.S"
-(cd "$root" && LEAN_NUM_THREADS=1 nice lake build BbuKraken.AsmTest) > "$tmp/proof.log" 2>&1 \
+(cd "$root" && LEAN_NUM_THREADS=1 nice lake build FlatShuffler.AsmTest) > "$tmp/proof.log" 2>&1 \
 	|| { cat "$tmp/proof.log" >&2; exit 1; }
 echo 'ok proof build: changed assembly invalidates cached proofs'
 
@@ -123,7 +123,7 @@ echo assembly_build_failure >&2
 exit 42
 EOF
 chmod +x "$tmp/fail-bin/cmake"
-if (cd "$root" && PATH="$tmp/fail-bin:$PATH" LEAN_NUM_THREADS=1 nice lake build BbuKraken.AsmTest) \
+if (cd "$root" && PATH="$tmp/fail-bin:$PATH" LEAN_NUM_THREADS=1 nice lake build FlatShuffler.AsmTest) \
 	> "$tmp/failure.log" 2>&1; then
 	echo 'FAIL proof build: accepts a failed assembly build' >&2
 	exit 1

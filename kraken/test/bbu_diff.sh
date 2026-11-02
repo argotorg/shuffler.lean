@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 # Run the compiled build_bottom_up.S (through build/kraken/c/bbu_harness), the PR31 model
 # Shuffler.Emission.buildBottomUp (bbu_pr31 of the root project) and the flat model
-# Bbu.Flat.build_bottom_up (bbu_flat) on the same states, and compare the full results:
+# FlatShuffler.Flat.build_bottom_up (bbu_flat) on the same states, and compare the full results:
 # the status, the blocked offset and excess, the operations and the final stack. The two
 # models also print the destination of each slot of the final stack; the C interface
-# does not give it, so the C++ is compared without it. Run it with nice: it takes some
-# minutes.
+# does not give it, so the C++ is compared without it. The check takes some minutes.
 set -euo pipefail
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 tmp=$(mktemp -d)
