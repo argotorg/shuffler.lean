@@ -6,7 +6,7 @@ import all BbuKraken.Kit
 @[expose] public section
 
 /-!
-The definitions of the old proof of `loop_body` (the C build, git 6f580e5) (`c/bbu/<Names.buildBottomUp>.S`): the model
+The definitions of the old proof of `loop_body` (the C build, git 6f580e5) (`Names.buildBottomUp` in `build/kraken/c/build_bottom_up.S`): the model
 steps between the cut labels, the invariant at each label, the variant, and the
 obligation of one block of the cfg as a standalone `Prop`.
 

@@ -8,7 +8,7 @@ import all BbuKraken.ModelLemmas
 @[expose] public section
 
 /-!
-The body triple of `generate` (`c/bbu/<Names.generate>.S`). The body pushes `rbp` and
+The body triple of `generate` (`Names.generate` in `build/kraken/c/build_bottom_up.S`). The body pushes `rbp` and
 `rbx` and calls `produce`. It exits with `-2` (`.LB.Emission.generate.2`) when the target is out of
 range. When the two slot values are equal, it swaps the two dests inline; else it
 calls `swapWith` (`.LB.Emission.generate.1`) when the depth is at most 16. The other paths end at `.LB.Emission.generate.0`.

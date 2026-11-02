@@ -115,11 +115,11 @@ namespace Bbu.AsmTest
 def notLiteral : String := "a" ++ "b"
 def noFile : String := "noFile"
 
--- `bbuParseFn` takes only a def with a string literal value, and the file must exist.
+-- `bbuParseFn` takes only a def with a string literal value, and the function must exist.
 /-- error: Bbu.AsmTest.notLiteral is not a def with a string literal as its value -/
 #guard_msgs in
 example : Program := bbuParseFn(notLiteral)
-/-- error: cannot read assembly file: ../c/bbu/noFile.S -/
+/-- error: assembly function not found: noFile -/
 #guard_msgs in
 example : Program := bbuParseFn(noFile)
 

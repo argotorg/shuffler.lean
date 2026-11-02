@@ -8,7 +8,7 @@ import all BbuKraken.Kit
 @[expose] public section
 
 /-!
-Lemmas for the body of `produce` (`c/bbu/<Names.produce>.S`): the bytes of a word, the model
+Lemmas for the body of `produce` (`Names.produce` in `build/kraken/c/build_bottom_up.S`): the bytes of a word, the model
 facts of `emit`, and the local byte at `rsp s - 57`.
 -/
 

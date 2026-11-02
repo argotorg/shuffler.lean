@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Make BbuKraken/BinLayout.lean, the start address and the byte size of each
-# directive of `bbuAsm` in c/bbu_harness.
+# directive of `bbuAsm` in build/kraken/c/bbu_harness.
 # With --check, do not write the file, but fail if it is not current.
 #
 # A label has size 0. An instruction has the size of its bytes in the binary plus
@@ -10,16 +10,17 @@ set -euo pipefail
 dir=$(cd "$(dirname "$0")/.." && pwd)
 root=$(cd "$dir/.." && pwd)
 out=BbuKraken/BinLayout.lean
-bin=$dir/c/bbu_harness
+bin=$root/build/kraken/c/bbu_harness
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-make -C "$dir/c" -s bbu_harness
+cmake -S "$root" -B "$root/build" -G Ninja -DBUILD_TESTING=ON >/dev/null
+cmake --build "$root/build" --target shuffler_bbu_harness >/dev/null
 (cd "$root" && lake build -q BbuKraken.Asm Kraken.X64.PrintATT >/dev/null)
 (cd "$root" && lake env lean --run kraken/test/BinAsmMain.lean) > "$tmp/asm"
 "$dir/test/bin_objdump.sh" "$bin" > "$tmp/dis"
 
-awk -v src="c/bbu_harness" '
+awk -v src="build/kraken/c/bbu_harness" '
 	function labelcode(s,   h, i) {
 		h = 0
 		for (i = 1; i <= length(s); i++) h = (h * 257 + code[substr(s, i, 1)]) % 4294967296

@@ -3,7 +3,7 @@
  "packages":
  [{"type": "path",
    "scope": "",
-   "name": "PermuteKraken",
+   "name": "ShufflerKraken",
    "manifestFile": "lake-manifest.json",
    "inherited": false,
    "dir": "kraken",

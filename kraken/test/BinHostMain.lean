@@ -4,7 +4,7 @@ import Kraken.X64.PrintATT
 /-!
 Print the program of `Bbu.binHost`, one directive on each line: the address in hex
 and the size from the layout of the host, then the directive in AT&T syntax.
-`test/bin_check.sh` compares this with the disassembly of `c/bbu_harness`:
+`test/bin_check.sh` compares this with the disassembly of `build/kraken/c/bbu_harness`:
 
   lake env lean --run test/BinHostMain.lean
 -/

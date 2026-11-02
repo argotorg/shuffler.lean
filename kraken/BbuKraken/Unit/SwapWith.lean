@@ -14,7 +14,7 @@ import all ProofKit.Idioms
 /-!
 # `swapWith`
 
-`c/bbu/<Names.swapWith>.S`: one alignment word. It asserts `pos < size`, that `pos` is not
+`Names.swapWith` in `build/kraken/c/build_bottom_up.S`: one alignment word. It asserts `pos < size`, that `pos` is not
 final, and `1 ≤ depth ≤ 16`. Then it swaps the two slots (the top slot gets the 6 low bytes of
 the other slot), stores the operation, swaps the two destinations, and writes `m_positionOf` at
 each destination that is not `-1`. A failed assertion calls `exit(1)`.

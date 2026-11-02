@@ -14,7 +14,7 @@ import all ProofKit.Cfg
 /-!
 # `Planner::isRetained`
 
-`c/bbu/<Names.isRetained>.S`: no frame, no call, no store. `cmpq $-1, (%rdi,%rsi,8)` reads
+`Names.isRetained` in `build/kraken/c/build_bottom_up.S`: no frame, no call, no store. `cmpq $-1, (%rdi,%rsi,8)` reads
 `m_destinationOf[rsi]` of the `Mapping` at `rdi`, and `setne %al` gives the result bit.
 -/
 

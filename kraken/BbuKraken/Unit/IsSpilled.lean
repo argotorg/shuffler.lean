@@ -12,7 +12,7 @@ import all ProofKit.Cfg
 /-!
 # `isSpilled`
 
-`c/bbu/<Names.isSpilled>.S`: no frame, no call, no store. It tests the kind byte and the opcode
+`Names.isSpilled` in `build/kraken/c/build_bottom_up.S`: no frame, no call, no store. It tests the kind byte and the opcode
 byte of the slot, and reads the byte `m_spills[payload]` for a variable.
 
 The callers are `produce` (the slot `m_target[t]`) and `buildBottomUp` (a target slot). The slot

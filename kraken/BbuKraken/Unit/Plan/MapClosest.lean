@@ -8,7 +8,7 @@ import all BbuKraken.Unit.Plan.MapInPlace
 /-!
 # `MappingBuilder::mapClosestCopies`
 
-`c/bbu/<Names.mapClosestCopies>.S`: if `n = 0` it returns `DONE` at once. Else it pushes `rbp`,
+`Names.mapClosestCopies` in `build/kraken/c/build_bottom_up.S`: if `n = 0` it returns `DONE` at once. Else it pushes `rbp`,
 `rbx` and runs the loop over the targets `rbx < n`. `rbp` is the builder. Each turn of the loop
 is one unfold of `Flat.closestCopiesFrom`: for a target with no source that is not a wildcard,
 `closestCopy` gives a copy and `map` maps the copy to the target. A status other than `DONE`

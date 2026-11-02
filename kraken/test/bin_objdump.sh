@@ -10,7 +10,7 @@ bin=$1
 
 # The addresses are only fixed if the binary is not position independent.
 if [ "$(readelf -h "$bin" | awk '$1 == "Type:" { print $2 }')" != EXEC ]; then
-	echo "bin_objdump: $bin is not linked with -no-pie; remove it and run make -C c" >&2
+	echo "bin_objdump: $bin is not linked with -no-pie; rebuild the shuffler_bbu_harness CMake target" >&2
 	exit 1
 fi
 sym() { nm -S "$bin" | awk -v s="$1" '$4 == s { print $1, $2 }'; }

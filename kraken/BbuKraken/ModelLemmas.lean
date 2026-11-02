@@ -2,8 +2,8 @@ module
 
 public import BbuKraken.Model
 import all BbuKraken.Model
-public import PermuteKraken.Trace
-import all PermuteKraken.Trace
+public import BbuKraken.Permutation.Trace
+import all BbuKraken.Permutation.Trace
 
 @[expose] public section
 
@@ -15,7 +15,7 @@ congruence of `buildBottomUp` in the spilled bytes that it reads.
 
 namespace Bbu
 
-open PermuteKraken (swapEntries)
+open Bbu.Permutation (swapEntries)
 
 /-! ## Destinations -/
 
@@ -783,7 +783,7 @@ theorem Inv.finish {e : Env} {st : St} {t : Nat} (hi : Inv e st t)
 
 theorem finishC_ok {st st' : St} (h : finishC st = .ok st') :
     ∃ (hp : IsPerm (st.slots.map Slot.dest)) (swaps : List Nat),
-      PermuteKraken.permute ⟨_, hp.1, fun i j hi hj => hp.2 i hi j hj⟩ = .ok swaps
+      Bbu.Permutation.permute ⟨_, hp.1, fun i j hi hj => hp.2 i hi j hj⟩ = .ok swaps
         ∧ st' = swaps.foldl swapTop st := by
   unfold finishC at h
   split at h
@@ -812,26 +812,26 @@ theorem foldl_swapTop (swaps : List Nat) (st : St) :
     simp only [List.foldl_cons, h1, h2, h3, h4]
     simp [swapTop, St.len]
 
-theorem depth_le (p : PermuteKraken.Perm) : p.depth ≤ 16 := by
-  unfold PermuteKraken.Perm.depth
+theorem depth_le (p : Bbu.Permutation.Perm) : p.depth ≤ 16 := by
+  unfold Bbu.Permutation.Perm.depth
   split
-  · rename_i h; exact (PermuteKraken.step_swap h).2.1
+  · rename_i h; exact (Bbu.Permutation.step_swap h).2.1
   · exact Nat.zero_le _
 
-theorem mem_trace (p : PermuteKraken.Perm) (k : Nat) : ∀ x ∈ p.trace k, x ≤ 16 := by
+theorem mem_trace (p : Bbu.Permutation.Perm) (k : Nat) : ∀ x ∈ p.trace k, x ≤ 16 := by
   induction k generalizing p with
-  | zero => simp [PermuteKraken.Perm.trace]
+  | zero => simp [Bbu.Permutation.Perm.trace]
   | succ k ih =>
     intro x hx
-    simp only [PermuteKraken.Perm.trace, List.mem_cons] at hx
+    simp only [Bbu.Permutation.Perm.trace, List.mem_cons] at hx
     rcases hx with rfl | hx
     · exact depth_le p
     · exact ih p.advance x hx
 
-theorem permute_ok {p : PermuteKraken.Perm} {ds : List Nat} (h : PermuteKraken.permute p = .ok ds) :
+theorem permute_ok {p : Bbu.Permutation.Perm} {ds : List Nat} (h : Bbu.Permutation.permute p = .ok ds) :
     ds.length ≤ 2 * p.toList.length ∧ ∀ x ∈ ds, x ≤ 16 := by
   rw [p.permute_eq] at h
-  have hds : ds = p.trace (PermuteKraken.steps p) := by
+  have hds : ds = p.trace (Bbu.Permutation.steps p) := by
     split at h <;> cases h <;> rfl
   subst hds
   refine ⟨?_, mem_trace p _⟩

@@ -18,7 +18,7 @@ import all ProofKit.Idioms
 /-!
 # `pop`
 
-`c/bbu/<Names.pop>.S`: if `m_size` is 0, it calls `exit(1)`. Else it decrements `m_size`, stores the record `Pop` at `m_traceSize`,
+`Names.pop` in `build/kraken/c/build_bottom_up.S`: if `m_size` is 0, it calls `exit(1)`. Else it decrements `m_size`, stores the record `Pop` at `m_traceSize`,
 increments `m_traceSize`, and then stores `-1` to `m_positionOf[d]` if the destination `d` of
 the old top is not `-1`. It returns `0`.
 

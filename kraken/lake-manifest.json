@@ -11,6 +11,6 @@
    "inputRev": "2fd79ae53504b5db4407de57efa9d4bd4fbc3e2b",
    "inherited": false,
    "configFile": "lakefile.toml"}],
- "name": "PermuteKraken",
+ "name": "ShufflerKraken",
  "lakeDir": ".lake",
  "fixedToolchain": false}

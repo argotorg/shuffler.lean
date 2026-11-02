@@ -26,25 +26,20 @@ scope = "leanprover-community"
 rev = "8bca74780c076fc173eb623dc0bed36d87bd7399"
 
 [[require]]
-name = "PermuteKraken"
+name = "ShufflerKraken"
 path = "kraken"
 
 [[lean_lib]]
 name = "Fuzz"
 roots = ["Fuzz.Oracle"]
 
-# The Kraken models of permute and buildBottomUp, and the proofs that they equal the originals.
+# The Kraken shuffler model and its correspondence proofs.
 [[lean_lib]]
 name = "BbuBridge"
 srcDir = "kraken"
 globs = ["BbuBridge.+"]
 
-# The originals of permute and buildBottomUp, run by kraken/test/diff.sh and bbu_diff.sh.
-[[lean_exe]]
-name = "original"
-srcDir = "kraken/test"
-root = "OriginalMain"
-
+# The original buildBottomUp, run by kraken/test/bbu_diff.sh.
 [[lean_exe]]
 name = "bbu_original"
 srcDir = "kraken/test"

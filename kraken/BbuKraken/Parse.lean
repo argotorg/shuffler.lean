@@ -6,7 +6,7 @@ public meta import Lean
 public meta import ProofKit.Assembly
 
 /-!
-`parseFile` for the files of `c/bbu`, with one more operand form: `leaq disp(,%i,s), %r`,
+`parseFile` for the generated shuffler assembly, with one more operand form: `leaq disp(,%i,s), %r`,
 an index and no base, which the Kraken parser does not read. `parse` reads each line
 by itself, so a program is the parse of its lines one by one. A line with the operand
 `(,` is parsed with `%rax` as the base, and the base of the result is then removed.
@@ -39,7 +39,7 @@ public meta def parseLines (s : String) : Except String Program := do
 
 -- The program of the file `path`. An error points at `ref`.
 meta def elabFile (ref : Syntax) (path : String) : TermElabM Expr := do
-  let content ← ProofKit.readAssembly ref s!"../{path}"
+  let content ← ProofKit.readAssembly ref path
   match parseLines (stripDirectives content) with
   | .ok p => return Lean.toExpr p
   | .error e => throwErrorAt ref e
@@ -47,12 +47,19 @@ meta def elabFile (ref : Syntax) (path : String) : TermElabM Expr := do
 /-- `parseFile`, with `leaq disp(,%i,s), %r`. -/
 elab "bbuParseFile(" path:str ")" : term => elabFile path path.getString
 
-/-- `bbuParseFile` of `c/bbu/NAME.S`, for the def `n : String := "NAME"` of
+/-- Read one function from the combined assembly, for the def `n : String := "NAME"` of
 `BbuKraken.Names`. The def must have a string literal as its value. -/
 elab "bbuParseFn(" n:ident ")" : term => do
   let c ← realizeGlobalConstNoOverloadWithInfo n
   match (← getConstInfo c).value? with
-  | some (.lit (.strVal s)) => elabFile n s!"c/bbu/{s}.S"
+  | some (.lit (.strVal s)) =>
+    let content ← ProofKit.readAssembly n "../../build/kraken/c/build_bottom_up.S"
+    let lines := (content.splitOn "\n").dropWhile (· != s!"{s}:")
+    if lines.isEmpty then throwErrorAt n "assembly function not found: {s}"
+    let body := lines.takeWhile (! ·.startsWith "\t.size")
+    match parseLines (stripDirectives ("\n".intercalate body)) with
+    | .ok p => return Lean.toExpr p
+    | .error e => throwErrorAt n e
   | _ => throwErrorAt n m!"{c} is not a def with a string literal as its value"
 
 end Bbu

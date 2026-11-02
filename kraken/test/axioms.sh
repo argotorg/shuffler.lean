@@ -38,7 +38,9 @@ names=$(printf '"%s", ' "$@")
 # no `axiom` declaration is allowed in FILE or in the Lean files of this repository. The
 # check below still runs: it is the only check for the imported packages.
 decls=$(git -C "$root" ls-files --cached --others --exclude-standard -z '*.lean' |
-	(cd "$root" && xargs -0 awk -f "$dir/test/axiom_decls.awk" "$src"))
+	(cd "$root" && while IFS= read -r -d '' file; do
+		if [ -f "$file" ]; then printf '%s\0' "$file"; fi
+	done | xargs -0 awk -f "$dir/test/axiom_decls.awk" "$src"))
 ok=true
 if [ -n "$decls" ]; then
 	printf 'axioms: axiom declaration not allowed:\n%s\n' "$decls" >&2

@@ -12,7 +12,7 @@ import all BbuKraken.Fn.ProduceLemmas
 @[expose] public section
 
 /-!
-The body triple of `produce` (`c/bbu/<Names.produce>.S`). The saved registers `rbx`,
+The body triple of `produce` (`Names.produce` in `build/kraken/c/build_bottom_up.S`). The saved registers `rbx`,
 `rbp`, `r14`, `r13`, `r15` and `r12` hold the struct, the offset `d`, `8 * d`, the
 target slot of `d`, its kind and the encoded copy of the slot. The byte at
 `rsp s - 57` holds the opcode of the slot. Every call is at `rsp s - 64`.

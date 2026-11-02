@@ -14,34 +14,41 @@ jobs:
 
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
       - uses: leanprover/lean-action@f061402b660e0c34644504b324e830f2991d4865 # v1.6.1
         with:
           build: false
           test: false
       - name: Fetch dependencies
-        run: MATHLIB_NO_CACHE_ON_UPDATE=1 nice lake update
+        run: MATHLIB_NO_CACHE_ON_UPDATE=1 nix develop -c nice lake update
       - name: Build proofs and run property tests
         run: |
+          nix develop -c bash -e -c '
           nice lake build
           nice lake test
           kraken/test/modules_test.sh
+          '
       - name: Audit proof axioms
-        run: nice kraken/test/axioms_test.sh
+        run: nix develop -c nice kraken/test/axioms_test.sh
       - name: Check assembly and layouts
         run: |
+          nix develop -c bash -e -c '
+          nice bash kraken/test/assembly_build_test.sh
           nice kraken/test/bin_check_test.sh
           nice kraken/test/bin_layout.sh --check
           nice kraken/test/struct_layout.sh --check
           nice kraken/test/gen_fields.sh --check
           nice kraken/test/gen_fields_test.sh
           nice kraken/test/labels_test.sh
+          '
       - name: Compare assembly and models
         run: |
-          nice kraken/test/diff.sh
-          nice kraken/test/assertions_test.sh
-          ASAN_OPTIONS=detect_leaks=0:quarantine_size_mb=8 nice kraken/c/unit_test
+          nix develop -c bash -e -c '
+          cmake --build build
+          nice ctest --test-dir build --output-on-failure
           nice kraken/test/bbu_diff.sh
           nice kraken/test/pop_diff.sh
           nice kraken/test/surplus_diff.sh
           nice kraken/test/lowest_diff.sh
           nice kraken/test/plan_diff.sh
+          '

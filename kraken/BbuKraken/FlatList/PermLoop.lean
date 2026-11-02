@@ -9,12 +9,12 @@ import all BbuKraken.FlatList.Produce
 
 /-!
 The loop of the flat `permute` (`permuteLoop`) against `Bbu.go`. The vector `permutation`
-of the flat model holds the list of `PermuteKraken.Perm` (`PermV`).
+of the flat model holds the list of `Bbu.Permutation.Perm` (`PermV`).
 -/
 
 namespace Bbu.Flat
 
-open PermuteKraken (lastMisplaced target measure Perm)
+open Bbu.Permutation (lastMisplaced target measure Perm)
 
 -- The vector `v` holds the list `l` of length `k`.
 def PermV (k : Nat) (v : Vector Word MAX_N) (l : List Nat) : Prop :=
@@ -98,7 +98,7 @@ theorem permuteStep_eq {n : Nat} {v : Vector Word MAX_N} (p : Perm) (fs : St) {t
       simp only [Option.elim_none]
       exact ite_eq_left trivial
     | some i =>
-      have hi := (PermuteKraken.lastMisplaced_spec p.toList (n - 1) i hc).1
+      have hi := (Bbu.Permutation.lastMisplaced_spec p.toList (n - 1) i hc).1
       have hne : BitVec.ofNat 64 i ≠ top := fun h => by
         have := congrArg BitVec.toNat h
         rw [toNat_ofNat_of_lt (by omega), htop] at this; omega

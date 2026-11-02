@@ -10,7 +10,7 @@ import all BbuKraken.FlatLowest
 /-!
 # `permuteAtLowestHeight`: the contract
 
-`c/bbu/<Names.permuteAtLowestHeight>.S`: `subq $24584`, so 3073 words: the arrays `parked` (at
+`Names.permuteAtLowestHeight` in `build/kraken/c/build_bottom_up.S`: `subq $24584`, so 3073 words: the arrays `parked` (at
 `rsp`), `holes` (at `rsp + 8192`) and `permutation` (at `rsp + 16384`) and one word. Then the call
 of `permute` takes one word for its return address and 1034 words. So `lowestD` is
 `3073 + 1 + 1034`.

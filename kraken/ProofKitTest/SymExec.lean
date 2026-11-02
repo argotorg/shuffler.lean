@@ -2,8 +2,8 @@ module
 
 public import ProofKit.SymExec
 import all ProofKit.SymExec
-public import PermuteKraken.Specs
-import all PermuteKraken.Specs
+public import ProofKit.X64Specs
+import all ProofKit.X64Specs
 public import Kraken.X64.Parser
 import all Kraken.X64.Parser
 

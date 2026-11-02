@@ -12,7 +12,7 @@ import all BbuKraken.Unit.Plan.Map
 /-!
 # `MappingBuilder::mapInPlace`
 
-`c/bbu/<Names.mapInPlace>.S`: if `commonSize = 0` it returns `DONE` at once. Else it pushes
+`Names.mapInPlace` in `build/kraken/c/build_bottom_up.S`: if `commonSize = 0` it returns `DONE` at once. Else it pushes
 `rbp`, `rbx` and runs the loop over the positions `rbx < commonSize`. `rbp` is the builder. Each
 turn of the loop is one unfold of `Flat.inPlaceFrom`: a position with the same slot in the source
 and the target that `map` can take is given to `map`. A status other than `DONE` stops the loop.

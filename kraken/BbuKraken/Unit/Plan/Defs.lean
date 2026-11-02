@@ -14,7 +14,7 @@ import all BbuKraken.Unit.IsSpilled
 /-!
 # The contracts of the planner units
 
-The units of `MappingBuilder` and `Planner` (`c/bbu/*.S`) do not use `Emission`, so their
+The units of `MappingBuilder` and `Planner` (`build/kraken/c/build_bottom_up.S`) do not use `Emission`, so their
 contracts do not use `Sep.View`. A contract here has a view `V S a`: the memory of the object
 at `S` (`rdi`) for a ghost `a : α`, with an invariant `ok a`. `VPre`, `VPost`, `VThm` and `VSpec`
 are `Sep.Pre`, `Sep.Post`, `UnitThm` and `Sep.Spec` with `V` in place of `Sep.View`. The body

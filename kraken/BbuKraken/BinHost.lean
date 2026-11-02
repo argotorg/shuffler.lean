@@ -8,8 +8,8 @@ import all BbuKraken.BinLayout
 @[expose] public section
 
 /-!
-A concrete `Host` for the binary `c/bbu_harness` (linked with `-no-pie`). The program
-is `c/build_bottom_up.S`. The layout comes from
+A concrete `Host` for the binary `build/kraken/c/bbu_harness` (linked with `-no-pie`). The program
+is `build/kraken/c/build_bottom_up.S`. The layout comes from
 `BbuKraken/BinLayout.lean`, which `test/bin_layout.sh` makes from the binary. Each
 axiom of `Host` is proved by computation. `test/bin_check.sh` compares the directives
 with the bytes of the binary.
@@ -167,7 +167,7 @@ instance binHost : Host where
     exact ofNat_cancel (by omega) (by omega) h
 
 set_option maxRecDepth 100000 in
-/-- `c/build_bottom_up.S` after the external label and opaque bytes. -/
+/-- `build/kraken/c/build_bottom_up.S` after the external label and opaque bytes. -/
 def binLinked : Linked where
   k := 2
   hb := List.prefix_refl bbuAsm

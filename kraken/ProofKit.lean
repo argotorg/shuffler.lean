@@ -16,5 +16,9 @@ public import ProofKit.Assembly
 import all ProofKit.Assembly
 public import ProofKit.ExternalCall
 import all ProofKit.ExternalCall
+public import ProofKit.Memory
+import all ProofKit.Memory
+public import ProofKit.X64Specs
+import all ProofKit.X64Specs
 
 @[expose] public section

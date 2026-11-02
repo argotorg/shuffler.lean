@@ -8,7 +8,7 @@ import all BbuKraken.Unit.Loop.Assemble
 /-!
 # `buildBottomUp`
 
-`c/bbu/<Names.buildBottomUp>.S`: 6 `pushq` and `subq $8216`, so 2068 free words (1033, and 1035
+`Names.buildBottomUp` in `build/kraken/c/build_bottom_up.S`: 6 `pushq` and `subq $8216`, so 2068 free words (1033, and 1035
 for the call of `permute`). The local array at `16(%rsp)` is the argument `permutation` of
 `permute` (`permW`). The loop over the target offsets calls `generate`, `swapWith`,
 `isSpilled`, `shallowestCopyPosition`, and at the end `permute`.

@@ -55,7 +55,7 @@ public def emitAsm : Program := bbuParseFn(Names.emit)
 public def planAsm : Program := bbuParseFn(Names.plan)
 
 set_option maxRecDepth 100000 in
-/-- `c/build_bottom_up.S`, the file that `bbu_harness` links. -/
-public def bbuAsm : Program := bbuParseFile("c/build_bottom_up.S")
+/-- The generated assembly also linked by `bbu_harness`. -/
+public def bbuAsm : Program := bbuParseFile("../../build/kraken/c/build_bottom_up.S")
 
 end Bbu

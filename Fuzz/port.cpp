@@ -8,13 +8,19 @@
 #include "text.h"
 
 #include <algorithm>
+#include <cerrno>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <stdexcept>
 #include <string>
 #include <string_view>
 #include <vector>
+
+#include <sys/wait.h>
+#include <unistd.h>
 
 using fuzztext::join;
 using fuzztext::parseNat;
@@ -929,6 +935,73 @@ struct Unit
 	std::string (*view)(std::string const&);
 };
 
+/// Keep exit(1) in the assembly from terminating the fuzzer. Results and input errors cross the pipe.
+std::string runInChild(Unit const& _unit, std::vector<std::string> const& _fields)
+{
+	if (std::fflush(nullptr) != 0)
+		throw std::runtime_error("port: cannot flush before fork");
+	int descriptors[2];
+	if (pipe(descriptors) != 0)
+		throw std::runtime_error("port: pipe failed");
+	pid_t const child = fork();
+	if (child < 0)
+	{
+		close(descriptors[0]);
+		close(descriptors[1]);
+		throw std::runtime_error("port: fork failed");
+	}
+	if (child == 0)
+	{
+		close(descriptors[0]);
+		std::string reply;
+		try { reply = "r" + _unit.run(_fields); }
+		catch (std::invalid_argument const& error) { reply = "e" + std::string(error.what()); }
+		std::size_t sent = 0;
+		while (sent < reply.size())
+		{
+			ssize_t const count = write(descriptors[1], reply.data() + sent, reply.size() - sent);
+			if (count < 0 && errno == EINTR)
+				continue;
+			if (count <= 0)
+				std::_Exit(2);
+			sent += static_cast<std::size_t>(count);
+		}
+		std::_Exit(0);
+	}
+	close(descriptors[1]);
+	std::string reply;
+	bool readOk = true;
+	char buffer[4096];
+	for (;;)
+	{
+		ssize_t const count = read(descriptors[0], buffer, sizeof buffer);
+		if (count < 0 && errno == EINTR)
+			continue;
+		if (count <= 0)
+		{
+			readOk = count == 0;
+			break;
+		}
+		reply.append(buffer, static_cast<std::size_t>(count));
+	}
+	close(descriptors[0]);
+	int status;
+	while (waitpid(child, &status, 0) < 0)
+		if (errno != EINTR)
+			throw std::runtime_error("port: waitpid failed");
+	if (!readOk || !WIFEXITED(status))
+		throw std::runtime_error("port: child process failed");
+	if (WEXITSTATUS(status) == 1 && reply.empty())
+		return "err";
+	if (WEXITSTATUS(status) != 0 || reply.empty())
+		throw std::runtime_error("port: child returned no result");
+	if (reply[0] == 'e')
+		throw std::invalid_argument(reply.substr(1));
+	if (reply[0] != 'r')
+		throw std::runtime_error("port: child returned an invalid result");
+	return reply.substr(1);
+}
+
 /// The units of the port. A kind without an entry is checked against solc only.
 Unit constexpr units[] = {
 	// the C interface does not give the destinations
@@ -953,7 +1026,7 @@ std::optional<port::Check> port::check(std::string const& _line, std::string con
 		if (!fields.empty() && fields[0] == unit.kind)
 		{
 			fields.erase(fields.begin());
-			return Check{unit.run(fields), unit.view(_model)};
+			return Check{runInChild(unit, fields), unit.view(_model)};
 		}
 	return std::nullopt;
 }

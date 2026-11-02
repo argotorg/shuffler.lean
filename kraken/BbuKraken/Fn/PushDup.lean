@@ -6,7 +6,7 @@ import all BbuKraken.Kit
 @[expose] public section
 
 /-!
-Lemmas for the body triples of `push` (`c/bbu/<Names.push>.S`) and `dup` (`c/bbu/<Names.dup>.S`).
+Lemmas for the body triples of `push` (`Names.push` in `build/kraken/c/build_bottom_up.S`) and `dup` (`Names.dup` in `build/kraken/c/build_bottom_up.S`).
 Both read `m_positionOf[_destination]`, write the destination, the position, one
 operation and the slot, and add 1 to `nops` and `len`. Neither has a frame or a call.
 -/

@@ -4,7 +4,7 @@ import BbuKraken.Specs
 import Kraken.X64.Parser
 
 /-!
-Each example runs `kvcgen64` over a program of one or two instructions of `c/bbu/*.S`, so that
+Each example runs `kvcgen64` over a program of one or two instructions of `build/kraken/c/build_bottom_up.S`, so that
 `vcgen` must apply a spec of `BbuKraken.Specs`. The postconditions state the effect on concrete
 values. A compare or a test is followed by a `setcc`, which shows the flags it sets.
 -/

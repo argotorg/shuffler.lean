@@ -8,7 +8,7 @@ import all BbuKraken.Unit.Plan.MapWildcard
 /-!
 # `MappingBuilder::keepWildcardSlots`
 
-`c/bbu/<Names.keepWildcardSlots>.S`: the same frame and loop as `mapInPlace` (`InPlaceU`), with
+`Names.keepWildcardSlots` in `build/kraken/c/build_bottom_up.S`: the same frame and loop as `mapInPlace` (`InPlaceU`), with
 an other test in block `.1`: a target wildcard slot `j` without a source, that `map` can take, is
 given to `map` as `(j, j)`. Each turn of the loop is one unfold of `Flat.keepFrom`.
 -/

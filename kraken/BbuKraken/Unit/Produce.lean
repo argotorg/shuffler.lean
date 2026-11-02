@@ -12,7 +12,7 @@ import all ProofKit.CfgBlock
 /-!
 # `produce`
 
-`c/bbu/<Names.produce>.S`: 6 `pushq` and `subq $24`, with 12 free words for the
+`Names.produce` in `build/kraken/c/build_bottom_up.S`: 6 `pushq` and `subq $24`, with 12 free words for the
 saved registers, locals, callee return address and callee scratch words.
 It reads the target word `m_target[t]` and calls `shallowestCopyPosition`,
 then `push`, `dup` or `isSpilled` and `push`, or writes `m_blocked`. Then it asserts

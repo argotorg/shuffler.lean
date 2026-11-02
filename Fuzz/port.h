@@ -1,4 +1,4 @@
-// The kraken/c port in the differential fuzzer: runs the compiled port (kraken/c/*.S) on a case line of
+// The kraken/c port in the differential fuzzer: runs the generated assembly on a case line of
 // Fuzz/Oracle.lean and prints its result in the result format of Fuzz/Oracle.lean.
 #pragma once
 

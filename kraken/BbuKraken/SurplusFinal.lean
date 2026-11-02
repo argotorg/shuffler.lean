@@ -14,7 +14,7 @@ import all BbuKraken.Link
 @[expose] public section
 
 /-!
-`Emission::removeSurplus` in a host program that contains `c/bbu/build_bottom_up.S` returns the
+`Emission::removeSurplus` in a host program that contains `build/kraken/c/build_bottom_up.S` returns the
 result of the list model `Map.State.removeSurplus`. If the model reports an assertion failure,
 the assembly calls `exit(1)`.
 

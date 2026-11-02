@@ -12,8 +12,8 @@ import all BbuKraken.Sep.ExitContract
 /-!
 # The contracts of the spill set unit
 
-The unit is `SpillSet::add` (`c/bbu/<Names.spillSetAdd>.S`) and `spill_set`
-(`c/bbu/spill_set.S`). These functions do not use `Emission`, so their contracts do not use
+The unit is `SpillSet::add` (`Names.spillSetAdd` in `build/kraken/c/build_bottom_up.S`) and `spill_set`
+(`build/kraken/c/build_bottom_up.S`). These functions do not use `Emission`, so their contracts do not use
 `Sep.View`: the memory part is the bytes of the spill set (`Sep.Spl`), the arrays of the
 arguments, the stack below `rsp` (`Sep.Stk`) and a frame `F`. The body triples are `Sep.Body`.
 

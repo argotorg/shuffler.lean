@@ -4,10 +4,12 @@ public import BbuKraken.Kit
 import all BbuKraken.Kit
 public import BbuKraken.Names
 import all BbuKraken.Names
+public import ProofKit.Cfg
+import all ProofKit.Cfg
 
 @[expose] public section
 
-open Std.WP Lean.Order
+open Std.WP Lean.Order ProofKit
 open scoped Program.WP
 
 set_option experimental.vcgen true

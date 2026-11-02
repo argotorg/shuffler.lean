@@ -6,8 +6,8 @@ public import BbuKraken.Asm
 import all BbuKraken.Asm
 public import BbuKraken.Specs
 import all BbuKraken.Specs
-public import PermuteKraken.Proof
-import all PermuteKraken.Proof
+public import ProofKit.Memory
+import all ProofKit.Memory
 public import BbuKraken.StructLayout
 import all BbuKraken.StructLayout
 

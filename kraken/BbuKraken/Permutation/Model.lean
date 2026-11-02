@@ -10,7 +10,7 @@ the order of application, or the first swap that is out of reach. The result
 stack is not part of the model: the swaps determine it.
 -/
 
-namespace PermuteKraken
+namespace Bbu.Permutation
 
 def MAX_SWAP_DEPTH : Nat := 16
 
@@ -182,7 +182,7 @@ theorem target_lt (p : Perm) {pos : Nat} (h : target p.toList = some pos) :
 theorem step_swap (p : Perm) {idx pos : Nat} (h : step p.toList = .swap idx pos) :
     idx = p.toList.length - 1 - pos ∧ 1 ≤ idx ∧ idx ≤ MAX_SWAP_DEPTH
       ∧ pos < p.toList.length - 1 ∧ p.toList[pos]! ≠ pos := by
-  obtain ⟨hidx, hmax, -⟩ := PermuteKraken.step_swap h
+  obtain ⟨hidx, hmax, -⟩ := Bbu.Permutation.step_swap h
   obtain ⟨hlt, hmis⟩ := p.target_lt (step_target h)
   exact ⟨hidx, by omega, hmax, hlt, hmis⟩
 
@@ -309,4 +309,4 @@ def steps (p : Perm) : Nat :=
 termination_by measure p.toList
 decreasing_by exact p.measure_advance h
 
-end PermuteKraken
+end Bbu.Permutation

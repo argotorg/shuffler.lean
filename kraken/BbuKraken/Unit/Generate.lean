@@ -16,7 +16,7 @@ import all ProofKit.Idioms
 /-!
 # `generate`
 
-`c/bbu/<Names.generate>.S`: 2 `pushq` and `subq $8`, so 16 free words (3, a return slot,
+`Names.generate` in `build/kraken/c/build_bottom_up.S`: 2 `pushq` and `subq $8`, so 16 free words (3, a return slot,
 and 12 for the call of `produce`).
 It asserts `t < n`, calls `produce`, and then, if `t + 1 < size` and `t` is not final, swaps the
 destinations of `t` and of the top slot (equal slots) or calls `swapWith(t)`.

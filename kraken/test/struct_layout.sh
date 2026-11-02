@@ -32,7 +32,7 @@ int main()
 CPP
 # The reference member m_plannedMapping makes Emission a class without standard layout; g++ gives offsetof
 # for such a class without a virtual base, but warns.
-${CXX:-g++} -std=c++20 -Wno-invalid-offsetof -I "$dir/c/shuffler" -o "$tmp/probe" "$tmp/probe.cpp"
+${CXX:-g++} -std=c++23 -Wno-invalid-offsetof -I "$dir/c/shuffler" -o "$tmp/probe" "$tmp/probe.cpp"
 "$tmp/probe" > "$tmp/offsets"
 
 awk '

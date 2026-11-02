@@ -1,12 +1,12 @@
 module
 
 /-
-`vcgen` specs for the instruction forms in `c/bbu/*.S` that neither Kraken nor
-`PermuteKraken.Specs` covers. Each spec is proved from `Directive.interp`, as the
+`vcgen` specs for the instruction forms in `build/kraken/c/build_bottom_up.S` that neither Kraken nor
+`ProofKit.X64Specs` covers. Each spec is proved from `Directive.interp`, as the
 specs in `Kraken.X64.WP.Instance`. `call` has no spec here: a call steps by the
 `CallSpec` of its callee, which `Program.WP.callSpec_of_triple` gives.
 -/
-public import PermuteKraken.Specs
+public import ProofKit.X64Specs
 
 open Std.WP
 open Lean.Order

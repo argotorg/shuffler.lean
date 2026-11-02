@@ -8,7 +8,7 @@ import all BbuKraken.Unit.Plan.MapClosest
 /-!
 # `MappingBuilder::mapWildcardSlotCopies`
 
-`c/bbu/<Names.mapWildcardSlotCopies>.S`: if `n = 0` it returns `DONE` at once. Else it pushes
+`Names.mapWildcardSlotCopies` in `build/kraken/c/build_bottom_up.S`: if `n = 0` it returns `DONE` at once. Else it pushes
 `r13`, `r12`, `rbp`, `rbx` and runs the loop over the targets `rbx < n`. `rbp` is the builder and
 `r12` the kind of target `rbx`. Each turn of the loop is one unfold of `Flat.wildcardFrom`: for a
 target with no source that is not a wildcard, `closestCopy` gives a copy in a wildcard slot. A

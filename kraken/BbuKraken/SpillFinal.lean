@@ -8,7 +8,7 @@ import all BbuKraken.Link
 @[expose] public section
 
 /-!
-`spill_set` in a host program that contains `c/build_bottom_up.S` returns the result of the
+`spill_set` in a host program that contains `build/kraken/c/build_bottom_up.S` returns the result of the
 flat model `Flat.spill_set` (`Unit.SetPost`). The spec of `SpillSet::add` comes from its unit
 theorem (`Unit.addSpec_of_body`). The root lib `SpillBridge` relates `Flat.spill_set`,
 `Flat.spillAdd` and `Flat.spillIsSpilled` to `SpillSet.add` and `SpillSet.is_spilled` of PR31.

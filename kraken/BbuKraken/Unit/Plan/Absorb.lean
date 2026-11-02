@@ -8,7 +8,7 @@ import all BbuKraken.Unit.Plan.KeepWildcard
 /-!
 # `MappingBuilder::absorbSurplus`
 
-`c/bbu/<Names.absorbSurplus>.S`: if `n = 0` it returns `DONE` at once. Else it pushes `rbp`, `rbx`
+`Names.absorbSurplus` in `build/kraken/c/build_bottom_up.S`: if `n = 0` it returns `DONE` at once. Else it pushes `rbp`, `rbx`
 and runs the outer loop over the targets `rbx < n` (block `.5`, the step in `.4`). `rbp` is the
 builder. A wildcard target without a source runs the inner loop of `Flat.absorbBest` over the
 sources `rax < m` (blocks `.2`, `.1`, `.0`), with the best source so far in `rsi`, `rax - rbx` in

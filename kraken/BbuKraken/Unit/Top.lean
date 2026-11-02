@@ -18,7 +18,7 @@ import all BbuKraken.Unit.TopExit
 /-!
 # `build_bottom_up`
 
-`c/bbu/build_bottom_up.S`: the guard, `subq $32872` (the struct, `m_plannedMapping`, a pad and
+`build/kraken/c/build_bottom_up.S`: the guard, `subq $32872` (the struct, `m_plannedMapping`, a pad and
 the local planned mapping), the loops of the constructor of `Emission`, the call of
 `buildBottomUp`, and the map of the `Status` to the result.
 

@@ -231,12 +231,12 @@ theorem heq_mpr {α β : Sort _} (h : α = β) (b : β) : HEq b (Eq.mpr h b) := 
 
 -- `perm * Equiv.swap i j` exchanges the entries `i` and `j`.
 theorem destList_mul_swap {n : Nat} (perm : Equiv.Perm (Fin n)) (i j : Fin n) :
-    destList (perm * Equiv.swap i j) = PermuteKraken.swapEntries (destList perm) i j := by
+    destList (perm * Equiv.swap i j) = Bbu.Permutation.swapEntries (destList perm) i j := by
   apply List.ext_getElem
-  · simp [PermuteKraken.swapEntries, length_destList]
+  · simp [Bbu.Permutation.swapEntries, length_destList]
   · intro k h1 h2
     have hk : k < n := by simpa [length_destList] using h1
-    simp only [PermuteKraken.swapEntries, List.getElem_set, getElem!_destList, getElem_destList,
+    simp only [Bbu.Permutation.swapEntries, List.getElem_set, getElem!_destList, getElem_destList,
       Equiv.Perm.mul_apply]
     by_cases hkj : (j : Nat) = k
     · have : (⟨k, hk⟩ : Fin n) = j := Fin.ext hkj.symm
@@ -250,12 +250,12 @@ theorem destList_mul_swap {n : Nat} (perm : Equiv.Perm (Fin n)) (i j : Fin n) :
 
 -- If the top is out of place, `target` is the destination of the top.
 theorem target_top {n : Nat} (perm : Equiv.Perm (Fin n)) (top : Fin n) (htop : top.val = n - 1)
-    (ht : perm top ≠ top) : PermuteKraken.target (destList perm) = some (perm top).val := by
-  unfold PermuteKraken.target
+    (ht : perm top ≠ top) : Bbu.Permutation.target (destList perm) = some (perm top).val := by
+  unfold Bbu.Permutation.target
   dsimp only
   rw [length_destList, ← htop, getElem!_destList, ite_eq_left (fun h => ht (Fin.ext h))]
 
--- The `foldl` of `permute.go` is `PermuteKraken.lastMisplaced`.
+-- The `foldl` of `permute.go` is `Bbu.Permutation.lastMisplaced`.
 theorem foldl_misplaced {n : Nat} (perm : Equiv.Perm (Fin n)) (xs : List (Fin n))
     (acc : Option {i : Fin n // perm i ≠ i}) :
     (xs.foldl (fun p i => if h : perm i ≠ i then some ⟨i, h⟩ else p) acc).map (fun x => x.1.val) =
@@ -274,18 +274,18 @@ theorem foldl_misplaced {n : Nat} (perm : Equiv.Perm (Fin n)) (xs : List (Fin n)
 
 -- If the top is in place, `target` is the last out-of-place position.
 theorem target_fixed {n : Nat} (perm : Equiv.Perm (Fin n)) (top : Fin n) (htop : top.val = n - 1)
-    (ht : perm top = top) : PermuteKraken.target (destList perm) =
+    (ht : perm top = top) : Bbu.Permutation.target (destList perm) =
       ((List.finRange n).foldl (fun p i => if h : perm i ≠ i then some ⟨i, h⟩ else p)
         (none : Option {i : Fin n // perm i ≠ i})).map
         (fun x => x.1.val) := by
   rw [foldl_misplaced, map_val_finRange]
-  unfold PermuteKraken.target PermuteKraken.lastMisplaced
+  unfold Bbu.Permutation.target Bbu.Permutation.lastMisplaced
   dsimp only
   rw [length_destList, ← htop, getElem!_destList, ht, ite_eq_right (fun h => h rfl)]
   rfl
 
 -- `Bbu.go` with no position to swap.
-theorem go_none {st : Bbu.St} {p : PermuteKraken.Perm} (h : PermuteKraken.target p.toList = none) :
+theorem go_none {st : Bbu.St} {p : Bbu.Permutation.Perm} (h : Bbu.Permutation.target p.toList = none) :
     Bbu.go st p = .ok st := by
   rw [Bbu.go]
   split
@@ -293,8 +293,8 @@ theorem go_none {st : Bbu.St} {p : PermuteKraken.Perm} (h : PermuteKraken.target
   · simp_all
 
 -- One step of `Bbu.go`.
-theorem go_some {st : Bbu.St} {p : PermuteKraken.Perm} {pos : Nat}
-    (h : PermuteKraken.target p.toList = some pos) (hi : p.toList.length - 1 < p.toList.length)
+theorem go_some {st : Bbu.St} {p : Bbu.Permutation.Perm} {pos : Nat}
+    (h : Bbu.Permutation.target p.toList = some pos) (hi : p.toList.length - 1 < p.toList.length)
     (hj : pos < p.toList.length) :
     Bbu.go st p =
       if st.val pos = st.val (st.len - 1) then
@@ -369,11 +369,11 @@ theorem swapPos_rel {e : Bbu.Env} {source : Stack} {st : Bbu.St} {state : OState
 
 -- One step of `Bbu.go` at the position `pos` that `permute.go` finds.
 theorem go_at {e : Bbu.Env} {source : Stack} {st : Bbu.St} {state : OState e source}
-    (h : Rel e st state) {p : PermuteKraken.Perm} {perm : Permute.Permutation state.stack}
+    (h : Rel e st state) {p : Bbu.Permutation.Perm} {perm : Permute.Permutation state.stack}
     (hp : p.toList = destList perm) (top pos : Fin state.stack.length)
     (htop : top.val = state.stack.length - 1)
-    (hT : PermuteKraken.target p.toList = some pos.val) :
-    ∃ p' : PermuteKraken.Perm, p'.toList = destList (perm * Equiv.swap top pos) ∧
+    (hT : Bbu.Permutation.target p.toList = some pos.val) :
+    ∃ p' : Bbu.Permutation.Perm, p'.toList = destList (perm * Equiv.swap top pos) ∧
       Bbu.go st p =
         if state.stack[pos] = state.stack[top] then Bbu.go (Bbu.swapDestinations st pos top) p'
         else if pos.rev.val > MAX_SWAP_DEPTH then
@@ -384,7 +384,7 @@ theorem go_at {e : Bbu.Env} {source : Stack} {st : Bbu.St} {state : OState e sou
   have hi : p.toList.length - 1 < p.toList.length := by have := pos.isLt; omega
   have hj : pos.val < p.toList.length := by have := pos.isLt; omega
   refine ⟨p.swap _ pos hi hj, ?_, ?_⟩
-  · show PermuteKraken.swapEntries p.toList (p.toList.length - 1) pos = _
+  · show Bbu.Permutation.swapEntries p.toList (p.toList.length - 1) pos = _
     rw [destList_mul_swap, ← hp, htop, hlen]
   · have ht : st.len - 1 = top.val := by omega
     have hr : top.val - pos.val = pos.rev.val := by rw [Fin.val_rev]; omega
@@ -395,7 +395,7 @@ theorem go_at {e : Bbu.Env} {source : Stack} {st : Bbu.St} {state : OState e sou
     rfl
 
 -- `Bbu.go` keeps the number of slots.
-theorem go_len (st : Bbu.St) (p : PermuteKraken.Perm) {st' : Bbu.St} (h : Bbu.go st p = .ok st') :
+theorem go_len (st : Bbu.St) (p : Bbu.Permutation.Perm) {st' : Bbu.St} (h : Bbu.go st p = .ok st') :
     st'.len = st.len := by
   revert st'
   refine Bbu.go.induct_unfolding (motive := fun st _ r => ∀ {st' : Bbu.St}, r = .ok st' → st'.len = st.len)
@@ -415,12 +415,12 @@ theorem go_len (st : Bbu.St) (p : PermuteKraken.Perm) {st' : Bbu.St} (h : Bbu.go
 
 -- `Bbu.go` is `permute.go`.
 theorem go_corr {e : Bbu.Env} {source : Stack} (st : Bbu.St) (state : OState e source)
-    (p : PermuteKraken.Perm) (perm : Permute.Permutation state.stack) (hne : 0 < state.stack.length)
+    (p : Bbu.Permutation.Perm) (perm : Permute.Permutation state.stack) (hne : 0 < state.stack.length)
     (h : Rel e st state) (hp : p.toList = destList perm) :
     ResCorr (Rel e) (Bbu.go st p) (Permute.permute.go state perm hne) := by
   revert st p
   refine Permute.permute.go.induct_unfolding
-    (motive := fun state perm _ run => ∀ (st : Bbu.St) (p : PermuteKraken.Perm),
+    (motive := fun state perm _ run => ∀ (st : Bbu.St) (p : Bbu.Permutation.Perm),
       Rel e st state → p.toList = destList perm → ResCorr (Rel e) (Bbu.go st p) run)
     ?equal_top ?blocked_top ?swap_top ?equal_pos ?blocked_pos ?swap_pos ?done state perm hne
   case equal_top =>
@@ -450,7 +450,7 @@ theorem go_corr {e : Bbu.Env} {source : Stack} (st : Bbu.St) (state : OState e s
       (hp'.trans (destList_heq List.length_swap.symm (heq_mpr _ _)))
   case equal_pos =>
     intro state perm hne top htop ht search pos hpos hsearch perm' he ih st p h hp
-    have hT : PermuteKraken.target p.toList = some pos.val := by
+    have hT : Bbu.Permutation.target p.toList = some pos.val := by
       rw [hp, target_fixed perm top htop (not_not.mp ht)]
       exact congrArg (Option.map fun x => x.1.val) hsearch
     obtain ⟨p', hp', hgo⟩ := go_at h hp top pos htop hT
@@ -458,7 +458,7 @@ theorem go_corr {e : Bbu.Env} {source : Stack} (st : Bbu.St) (state : OState e s
     exact ih _ _ (swapDest_rel h pos top) hp'
   case blocked_pos =>
     intro state perm hne top htop ht search pos hpos hsearch he idx hdepth st p h hp
-    have hT : PermuteKraken.target p.toList = some pos.val := by
+    have hT : Bbu.Permutation.target p.toList = some pos.val := by
       rw [hp, target_fixed perm top htop (not_not.mp ht)]
       exact congrArg (Option.map fun x => x.1.val) hsearch
     obtain ⟨p', hp', hgo⟩ := go_at h hp top pos htop hT
@@ -468,7 +468,7 @@ theorem go_corr {e : Bbu.Env} {source : Stack} (st : Bbu.St) (state : OState e s
   case swap_pos =>
     intro state perm hne top htop ht search pos hpos hsearch perm' he idx hdepth hpos_ne hlt stack'
       h1 h2 h3 trace' ih st p h hp
-    have hT : PermuteKraken.target p.toList = some pos.val := by
+    have hT : Bbu.Permutation.target p.toList = some pos.val := by
       rw [hp, target_fixed perm top htop (not_not.mp ht)]
       exact congrArg (Option.map fun x => x.1.val) hsearch
     obtain ⟨p', hp', hgo⟩ := go_at h hp top pos htop hT

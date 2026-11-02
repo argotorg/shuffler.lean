@@ -8,7 +8,7 @@ import all BbuKraken.Unit.Plan.HasOther
 /-!
 # `Planner::isDemanded`
 
-`c/bbu/<Names.isDemanded>.S`: no frame, no call, no store. If `n = 0` it returns `false` at
+`Names.isDemanded` in `build/kraken/c/build_bottom_up.S`: no frame, no call, no store. If `n = 0` it returns `false` at
 once. Else it runs the loop over the targets `rax < n`: `rcx` is `m_target` and `r8` is `n`. It
 skips a target slot of kind `Junk` (`cmpb $1, 4(%rcx,%rax,8)`) and compares the low 6 bytes of
 the other target slots and of the slot `rsi` (`xorq; salq $16`). Each turn of the loop is one

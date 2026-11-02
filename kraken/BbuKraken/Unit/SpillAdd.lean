@@ -10,7 +10,7 @@ import all BbuKraken.Unit.IsSpilled
 /-!
 # `SpillSet::add`
 
-`c/bbu/<Names.spillSetAdd>.S`: no frame, no call. It tests the kind byte and the opcode byte of
+`Names.spillSetAdd` in `build/kraken/c/build_bottom_up.S`: no frame, no call. It tests the kind byte and the opcode byte of
 the slot (as `isSpilled`), reads the byte `m_spilled[payload]` and, if it is 0, stores 1 to it.
 `al` is the `Status`: 0 (`DONE`) or 2 (`ASSERTION_FAILED`).
 -/

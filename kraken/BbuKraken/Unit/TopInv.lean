@@ -14,7 +14,7 @@ set_option experimental.vcgen true
 /-!
 # `build_bottom_up`: the invariant and the variant of each block
 
-`c/bbu/build_bottom_up.S`. `S = topS s` is `rsp` after `subq $32872`. `m = mArg s`,
+`build/kraken/c/build_bottom_up.S`. `S = topS s` is `rsp` after `subq $32872`. `m = mArg s`,
 `n = nArg s`, `H0 = hdr0 s ra` is the struct at the entry and `loc0 s ra` are the locals at the
 entry (`Lc`: `m_plannedMapping`, a pad, the local planned mapping `PD` and `PP`).
 

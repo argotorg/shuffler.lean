@@ -4,7 +4,8 @@ This repo contains a work in progress formalization of the new plan based shuffl
 
 ## Development
 
-Either run `nix develop` or install [elan](https://github.com/leanprover/elan).
+Run `nix develop` for the proof and C++ toolchains. With a separate installation,
+use [elan](https://github.com/leanprover/elan), CMake, Ninja, and GCC 15.3.0.
 
 Run `LEAN_NUM_THREADS=1 nice lake update` once after checkout.
 The pinned Kraken dependency is used without source changes.
@@ -13,6 +14,10 @@ Fetch the Mathlib cache with `MATHLIB_CACHE_FROM=forks nice lake exe cache get`.
 Then run `LEAN_NUM_THREADS=1 nice lake build` to check all proofs.
 The build includes the Shuffler model, assembly proofs, correspondence proofs,
 and their composition in `PlanBridge.Final`.
+Lake uses CMake to generate `build/kraken/c/build_bottom_up.S` from the C++23
+shuffler source before it checks the assembly proofs. CMake checks the source
+and header dependencies on each build. The assembly is a build output and is
+not kept in source control. The proofs, test harnesses, and fuzzer use this file.
 Both Lake packages use the root `lean-toolchain` (`nightly-2026-10-20`).
 Mathlib is pinned to a commit of its nightly testing repository for that compiler.
 
@@ -30,6 +35,17 @@ Run `LEAN_NUM_THREADS=1 nice kraken/test/axioms_test.sh` to audit the final theo
 The Lean CI job also runs the assembly, layout, and model comparison checks in
 `kraken/test/`. The Fuzz job builds and tests the C FFI with the same Lean compiler.
 
+From the repository root, build and test the C++ shuffler with CMake:
+
+```
+cmake -S . -B build -G Ninja
+cmake --build build
+ctest --test-dir build --output-on-failure
+```
+
+CMake writes `build/compile_commands.json` for clangd. It contains the C++23 build
+settings for the shuffler and its tests. Test programs are in `build/kraken/c/`.
+
 ## Differential fuzzing
 
 `Fuzz/fuzz.cpp` is a fuzz target that runs `buildMapping`, `removeSurplus`, `permute`,
@@ -43,10 +59,15 @@ The case language is described in `Fuzz/Oracle.lean`.
 
 The fuzz target also runs the port in `kraken/c` on each case that it has a unit for, and aborts
 when the port result differs from the Lean model result. It links the asm
-`kraken/c/build_bottom_up.S`, not a new compilation of the C++. `Fuzz/port.cpp` converts a case to
-the C interface of the port, and has one entry in `units` for each unit of the port (now:
-`buildBottomUp`, without the final destinations, which the C interface does not give). The other
-kinds are checked against solc only.
+`build/kraken/c/build_bottom_up.S`. `Fuzz/build.sh` generates it through the same
+Lake target used by the proofs. `Fuzz/port.cpp` converts a case to
+the C interface of the port, and has one entry in `units` for each port function.
+For `buildBottomUp`, the comparison omits the final destinations, which its C interface does not give.
+
+The port runs each check in a child process so that an assembly assertion can
+return `err` to the fuzzer. This adds a process start for each port check.
+The fuzzer binds the assembly's external `exit` call to `_Exit` in that child
+to avoid libFuzzer's exit handler.
 
 Build and run with libFuzzer:
 

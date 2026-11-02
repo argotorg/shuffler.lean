@@ -18,7 +18,7 @@ import all ProofKit.Idioms
 /-!
 # The frame of `build_bottom_up`
 
-`build_bottom_up` (`c/bbu/build_bottom_up.S`) does `subq $32872,%rsp` after the return address.
+`build_bottom_up` (`build/kraken/c/build_bottom_up.S`) does `subq $32872,%rsp` after the return address.
 The offsets from the new `rsp`, `topS s = rsp s - 32880` (one def each):
 
 | def | offset | bytes |

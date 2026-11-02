@@ -8,7 +8,7 @@ import all BbuKraken.Unit.Lowest.Assemble
 /-!
 # `permuteAtLowestHeight`
 
-`c/bbu/<Names.permuteAtLowestHeight>.S`. The contract is in `Lowest/Defs.lean`, and the proof
+`Names.permuteAtLowestHeight` in `build/kraken/c/build_bottom_up.S`. The contract is in `Lowest/Defs.lean`, and the proof
 from the block lemmas in `Lowest/Assemble.lean`.
 -/
 

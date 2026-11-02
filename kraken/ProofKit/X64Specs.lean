@@ -1,7 +1,7 @@
 module
 
 /-
-`vcgen` specs for the instruction forms in `c/permute.S` that Kraken does not cover.
+`vcgen` specs for the instruction forms in the generated shuffler assembly that Kraken does not cover.
 Each spec is proved from `Directive.interp`, as the specs in `Kraken.X64.WP.Instance`.
 -/
 public import Kraken.StateCfg

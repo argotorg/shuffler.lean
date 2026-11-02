@@ -14,7 +14,7 @@ import all BbuKraken.Link
 @[expose] public section
 
 /-!
-`Emission::permuteAtLowestHeight` in a host program that contains `c/bbu/build_bottom_up.S`
+`Emission::permuteAtLowestHeight` in a host program that contains `build/kraken/c/build_bottom_up.S`
 returns the result of the list model `Bbu.lowest`.
 
 The chain: the spec of `permute` comes from its unit theorem, and that one from the unit theorem

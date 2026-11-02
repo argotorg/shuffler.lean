@@ -8,7 +8,7 @@ tactics of this repo.
 
 | Path | Content |
 |---|---|
-| `PermuteKraken/` | the model and the asm proof of `permute` |
+| `BbuKraken/Permutation/` | the permutation model and trace lemmas used by the C++ proofs |
 | `BbuKraken/` | the model, the contracts and the asm proofs of `build_bottom_up` |
 | `BbuKraken/Kit.lean` | the shared lemmas and macros of the bbu proofs (`rd`, `bbu_norm`, `bbu_flags`, `bbu_rd`) |
 | `BbuKraken/Fn/` | one file (or directory) for each function of the asm |
@@ -32,7 +32,9 @@ tactics of this repo.
 - Use `LEAN_NUM_THREADS=1 nice` for each Lean process. Run only one Lean process at a time. The machine is shared.
 - Do not kill a `lean` or `lake` process that you did not start. Do not use `pkill lean` or
   `pkill lake`.
-- One target: `LEAN_NUM_THREADS=1 nice lake build BbuKraken` (or `PermuteKraken`, `ProofKit`, `ProofKitTest`).
+- The proof build generates `build/kraken/c/build_bottom_up.S` with CMake and GCC 15.3.0.
+  The assembly is not kept in source control. Use `nix develop` for these tools.
+- One target: `LEAN_NUM_THREADS=1 nice lake build BbuKraken` (or `ProofKit`, `ProofKitTest`).
 - One file, without a build of its dependents:
   `LEAN_NUM_THREADS=1 nice lake env lean -DautoImplicit=false -DrelaxedAutoImplicit=false kraken/BbuKraken/Unit/Push.lean`.
 - Find the slow declarations:
@@ -275,7 +277,6 @@ stores. Do not add a `first` cascade around it (rule 1).
 These macros are for one proof. Do not copy them into a new file. If a new proof needs the same
 step, move it to `Kit.lean` or `ProofKit/`, with a test.
 
-- `PermuteKraken/Proof.lean`: `cfg_goto` (the same as the ProofKit version).
 - `BbuKraken/Fn/PushDup.lean`: `addr_omega`, `pd_clear`, `pd_off`, `pd_disch`, `pd_rd`. `pd_disch`
   is an `omega` cascade (rule 1).
 - `BbuKraken/Fn/SwapWithLemmas.lean`: `in_omega`.

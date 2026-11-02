@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Usage: test/surplus_diff.sh [max] [k]
 # Run the "surplus" cases of Fuzz/surplus_cases.sh [max] [k] (default 4 and 2) on the compiled
-# remove_surplus of build_bottom_up.S (through c/surplus_harness), the PR31 model
+# remove_surplus of build_bottom_up.S (through build/kraken/c/surplus_harness), the PR31 model
 # Shuffler.Emission.removeSurplus (pop_pr31 of the root project, through Fuzz/Oracle.lean), the
 # flat model Bbu.Flat.remove_surplus (surplus_flat) and the list model Bbu.Map.State.removeSurplus
 # (surplus_flat list), and compare the full results: the status with the blocked offset and
@@ -12,12 +12,13 @@ root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-make -C "$root/kraken/c" -s surplus_harness
+cmake -S "$root" -B "$root/build" -G Ninja -DBUILD_TESTING=ON >/dev/null
+cmake --build "$root/build" --target shuffler_surplus_harness >/dev/null
 (cd "$root" && lake build pop_pr31 >/dev/null)
-(cd "$root" && lake build PermuteKraken/surplus_flat >/dev/null)
+(cd "$root" && lake build ShufflerKraken/surplus_flat >/dev/null)
 
 run() {
-	"$root/kraken/c/surplus_harness" < "$1" > "$2/c"
+	"$root/build/kraken/c/surplus_harness" < "$1" > "$2/c"
 	"$root/.lake/build/bin/pop_pr31" < "$1" > "$2/pr31"
 	"$root/kraken/.lake/build/bin/surplus_flat" < "$1" > "$2/flat"
 	"$root/kraken/.lake/build/bin/surplus_flat" list < "$1" > "$2/list"

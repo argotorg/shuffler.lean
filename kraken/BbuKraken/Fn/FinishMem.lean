@@ -2,8 +2,8 @@ module
 
 public import BbuKraken.Kit
 import all BbuKraken.Kit
-public import PermuteKraken.Proof
-import all PermuteKraken.Proof
+public import ProofKit.Memory
+import all ProofKit.Memory
 
 @[expose] public section
 
@@ -12,7 +12,7 @@ Memory lemmas for the old `permuteDestinations`: stores of 1, 4 and 8 bytes, the
 a word, and one iteration of the swap loop `.LB.Emission.permute.2`.
 -/
 
-open PermuteKraken
+open Bbu.Permutation
 
 namespace Bbu.FinishMem
 
@@ -33,7 +33,7 @@ theorem trace_depth (p : Perm) : ∀ k ≤ steps p, ∀ x ∈ p.trace k, 1 ≤ x
       rw [Perm.length_state] at this
       omega
 
-theorem permute_depth {p : Perm} {L : List Nat} (h : PermuteKraken.permute p = .ok L) :
+theorem permute_depth {p : Perm} {L : List Nat} (h : Bbu.Permutation.permute p = .ok L) :
     ∀ x ∈ L, 1 ≤ x ∧ x < p.toList.length := by
   rw [Perm.permute_eq] at h
   split at h

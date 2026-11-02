@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Run the compiled build_bottom_up.S (through c/bbu_harness), the PR31 model
+# Run the compiled build_bottom_up.S (through build/kraken/c/bbu_harness), the PR31 model
 # Shuffler.Emission.buildBottomUp (bbu_pr31 of the root project) and the flat model
 # Bbu.Flat.build_bottom_up (bbu_flat) on the same states, and compare the full results:
 # the status, the blocked offset and excess, the operations and the final stack. The two
@@ -11,12 +11,13 @@ root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-make -C "$root/kraken/c" -s
+cmake -S "$root" -B "$root/build" -G Ninja -DBUILD_TESTING=ON >/dev/null
+cmake --build "$root/build" --target shuffler_bbu_harness >/dev/null
 (cd "$root" && lake build bbu_pr31 >/dev/null)
-(cd "$root" && lake build PermuteKraken/bbu_flat >/dev/null)
+(cd "$root" && lake build ShufflerKraken/bbu_flat >/dev/null)
 
-"$root/kraken/c/bbu_harness" gen > "$tmp/states"
-"$root/kraken/c/bbu_harness" run < "$tmp/states" > "$tmp/c"
+"$root/build/kraken/c/bbu_harness" gen > "$tmp/states"
+"$root/build/kraken/c/bbu_harness" run < "$tmp/states" > "$tmp/c"
 "$root/.lake/build/bin/bbu_pr31" < "$tmp/states" > "$tmp/pr31"
 "$root/kraken/.lake/build/bin/bbu_flat" < "$tmp/states" > "$tmp/flat"
 

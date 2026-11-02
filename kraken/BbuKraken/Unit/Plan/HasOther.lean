@@ -14,7 +14,7 @@ import all ProofKit.CfgBlock
 /-!
 # `Planner::hasOtherRetainedCopy`
 
-`c/bbu/<Names.hasOtherRetainedCopy>.S`: if `m = 0` it returns `false` at once. Else it pushes
+`Names.hasOtherRetainedCopy` in `build/kraken/c/build_bottom_up.S`: if `m = 0` it returns `false` at once. Else it pushes
 `r15` … `rbx`, keeps the bytes `_droppedNow` (`rdx`) in the word at `rsp` and runs the loop over
 the sources `rbx < m`. `r12` is `m`, `r13` the planner, `rbp` the offset, `r14` the offset times 8
 and `r15` the `Mapping`. Each turn of the loop is one unfold of `Flat.otherFrom`, with a call of

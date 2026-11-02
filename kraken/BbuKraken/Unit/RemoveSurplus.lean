@@ -26,7 +26,7 @@ import all ProofKit.Idioms
 /-!
 # `removeSurplus`
 
-`c/bbu/<Names.removeSurplus>.S`: 1 `pushq`, so 4 free words (1, a return slot, and 2 for the calls of
+`Names.removeSurplus` in `build/kraken/c/build_bottom_up.S`: 1 `pushq`, so 4 free words (1, a return slot, and 2 for the calls of
 `swapWith` and `pop`). Each turn of the loop at
 `.LB.Emission.removeSurplus.0` is one pass of `Flat.surplusPass`: the scan at
 `.LB.Emission.removeSurplus.2`, the loop of `equalBelow` at `.LB.Emission.removeSurplus.4`, the

@@ -12,7 +12,7 @@ import all ProofKit.Cfg
 /-!
 # `dup`
 
-`c/bbu/<Names.dup>.S`: one stack word for alignment. If the slot at `copy` is not a return label, it stores
+`Names.dup` in `build/kraken/c/build_bottom_up.S`: one stack word for alignment. If the slot at `copy` is not a return label, it stores
 the operation to record `traceSize`, copies `m_stack[copy]` to `m_stack[size]`, increments the
 two counters, and then binds the new slot to the destination if `m_positionOf[destination]` is
 `-1`.

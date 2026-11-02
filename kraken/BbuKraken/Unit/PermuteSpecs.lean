@@ -8,7 +8,7 @@ import all BbuKraken.Specs
 /-!
 # The `vcgen` specs of `permute` that `BbuKraken.Specs` does not have
 
-`.LB.Emission.permute.5` of `c/bbu/<Names.permute>.S` has `xorq 0(%r13,%rax), %rdx`: an index with scale 1.
+`.LB.Emission.permute.5` of `Names.permute` in `build/kraken/c/build_bottom_up.S` has `xorq 0(%r13,%rax), %rdx`: an index with scale 1.
 `BbuKraken.Specs` has the xor with scale 8 only (`xor_reg_mem_idx8_spec`). The proof is the proof
 of `xor_reg_mem_idx8_spec`, with the address of `AddrExpr.zeroExtend_interp_base_idx`.
 

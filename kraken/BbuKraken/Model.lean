@@ -1,7 +1,7 @@
 module
 
-public import PermuteKraken.Model
-import all PermuteKraken.Model
+public import BbuKraken.Permutation.Model
+import all BbuKraken.Permutation.Model
 
 @[expose] public section
 
@@ -315,14 +315,14 @@ def swapTop (st : St) (depth : Nat) : St :=
 
 -- `permuteDestinations` of the C++: the final permutation with `permute`, which
 -- does not group equal slots. Each slot must have a destination. `IsPerm` is the
--- precondition of `PermuteKraken.permute`; the C `permute` does not check it, and
+-- precondition of `Bbu.Permutation.permute`; the model uses it to construct a permutation, and
 -- `buildBottomUp` keeps it (`Inv.finish`). A block keeps the state before the swaps.
 def finishC (st : St) : M St :=
   if !(List.range st.len).all fun pos => (st.destinationOf pos).isSome then .error .assertion
   else
     let ds := st.slots.map Slot.dest
     if h : IsPerm ds then
-      match PermuteKraken.permute ⟨ds, h.1, fun i j hi hj => h.2 i hi j hj⟩ with
+      match Bbu.Permutation.permute ⟨ds, h.1, fun i j hi hj => h.2 i hi j hj⟩ with
       | .ok swaps => .ok (swaps.foldl swapTop st)
       | .error b => .error (.blocked b.offset b.excess st)
     else .error .assertion
@@ -365,8 +365,8 @@ def swapPos (st : St) (pos : Nat) : St :=
 
 -- `permute.go`: `p` is the permutation that is left. An equal slot at the
 -- position takes the destination of the top, with no swap.
-def go (st : St) (p : PermuteKraken.Perm) : M St :=
-  match h : PermuteKraken.target p.toList with
+def go (st : St) (p : Bbu.Permutation.Perm) : M St :=
+  match h : Bbu.Permutation.target p.toList with
   | none => .ok st
   | some pos =>
     have hp := p.target_lt h
@@ -375,7 +375,7 @@ def go (st : St) (p : PermuteKraken.Perm) : M St :=
     if st.val pos = st.val top then go (swapDestinations st pos top) p'
     else if MAX_SWAP_DEPTH < top - pos then .error (.blocked pos (top - pos - MAX_SWAP_DEPTH) st)
     else go (swapPos st pos) p'
-termination_by PermuteKraken.measure p.toList
+termination_by Bbu.Permutation.measure p.toList
 decreasing_by all_goals exact p.measure_target_lt h _ _
 
 -- `Permute.permute`: the slot at `i` goes to the offset `p[i]`. `normalize` regroups equal

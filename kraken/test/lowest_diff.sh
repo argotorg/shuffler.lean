@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Usage: test/lowest_diff.sh [max]
 # Run the "lowest" cases of Fuzz/lowest_cases.sh [max] (default 4) on the compiled
-# permute_at_lowest_height of build_bottom_up.S (through c/lowest_harness), the PR31 model
+# permute_at_lowest_height of build_bottom_up.S (through build/kraken/c/lowest_harness), the PR31 model
 # Shuffler.PermuteAtLowestHeight.permuteAtLowestHeight (lowest_pr31 of the root project, through
 # Fuzz/Oracle.lean), the flat model Bbu.Flat.permute_at_lowest_height (lowest_flat) and the list
 # model Bbu.lowest (lowest_flat list), and compare the full results: the status with the blocked
@@ -14,12 +14,13 @@ root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-make -C "$root/kraken/c" -s lowest_harness
+cmake -S "$root" -B "$root/build" -G Ninja -DBUILD_TESTING=ON >/dev/null
+cmake --build "$root/build" --target shuffler_lowest_harness >/dev/null
 (cd "$root" && lake build lowest_pr31 >/dev/null)
-(cd "$root" && lake build PermuteKraken/lowest_flat >/dev/null)
+(cd "$root" && lake build ShufflerKraken/lowest_flat >/dev/null)
 
 run() {
-	"$root/kraken/c/lowest_harness" < "$1" > "$2/c"
+	"$root/build/kraken/c/lowest_harness" < "$1" > "$2/c"
 	"$root/.lake/build/bin/lowest_pr31" < "$1" > "$2/pr31"
 	"$root/kraken/.lake/build/bin/lowest_flat" < "$1" > "$2/flat"
 	"$root/kraken/.lake/build/bin/lowest_flat" list < "$1" > "$2/list"

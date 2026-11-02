@@ -8,7 +8,7 @@ import all BbuKraken.Specs
 /-!
 # `vcgen` specs for the planner units
 
-The instruction forms of the planner units (`c/bbu/*.S`) that `BbuKraken.Specs` does not cover.
+The instruction forms of the planner units (`build/kraken/c/build_bottom_up.S`) that `BbuKraken.Specs` does not cover.
 -/
 
 open Std.WP

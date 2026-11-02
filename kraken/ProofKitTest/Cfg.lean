@@ -2,10 +2,8 @@ module
 
 public import ProofKit.Cfg
 import all ProofKit.Cfg
-public import PermuteKraken.Asm
-import all PermuteKraken.Asm
-public import PermuteKraken.Specs
-import all PermuteKraken.Specs
+public import ProofKit.X64Specs
+import all ProofKit.X64Specs
 public import Kraken.X64.Parser
 import all Kraken.X64.Parser
 public import ProofKitTest.Shape
@@ -15,7 +13,7 @@ import all ProofKitTest.Shape
 
 /-! # Tests: `#cfg_skeleton`, `cfg_blocks`, `cfg_goto`, `cfg_stk`
 
-`#cfg_skeleton` on small parsed programs and on `permute`; the printed
+`#cfg_skeleton` on small parsed programs; the printed
 skeleton elaborates; a full proof of a loop from the skeleton. -/
 
 open Std.WP Lean.Order
@@ -127,40 +125,6 @@ case «.L2» t ht => sorry -- 1 directives, jumps to [".L1"]
 -/
 #guard_msgs in
 #cfg_skeleton back
-
--- `permute`: the loops are `.L3`/`.L7` and `.L5`/`.L13`; `permute` jumps into
--- them (as in `PermuteKraken.Var`). `.L12` and `.L1` reach no loop.
-/--
-info: Try this:
-refine Program.WP.cfg (fun
-    | .entry, t => sorry
-    | .label "permute", t => sorry
-    | .label ".L13", t => sorry
-    | .label ".L3", t => sorry
-    | .label ".L7", t => sorry
-    | .label ".L5", t => sorry
-    | .label ".L12", t => sorry
-    | .label ".L1", t => sorry
-    | _, _ => False)
-  (fun
-    | "permute", _ => sorry
-    | ".L13", _ => sorry
-    | ".L3", _ => sorry
-    | ".L7", _ => sorry
-    | ".L5", _ => sorry
-    | _, _ => 0) ?_ sorry
-cfg_blocks
-case «entry» t ht => sorry -- 0 directives, jumps to []
-case «permute» t ht => sorry -- 10 directives, jumps to [".L1", ".L7"]
-case «.L13» t ht => sorry -- 3 directives, jumps to [".L1"]
-case «.L3» t ht => sorry -- 11 directives, jumps to [".L12"]
-case «.L7» t ht => sorry -- 7 directives, jumps to [".L3", ".L1"]
-case «.L5» t ht => sorry -- 7 directives, jumps to [".L5", ".L13"]
-case «.L12» t ht => sorry -- 4 directives, jumps to []
-case «.L1» t ht => sorry -- 3 directives, jumps to []
--/
-#guard_msgs in
-#cfg_skeleton State.permuteAsm
 
 /-! ## A full proof: `cfg_blocks`, `case`, `cfg_goto`, `vc_by_shape` -/
 

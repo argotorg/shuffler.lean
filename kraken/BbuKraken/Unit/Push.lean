@@ -14,7 +14,7 @@ import all ProofKit.Idioms
 /-!
 # `push`
 
-`c/bbu/<Names.push>.S` stores the slot and its trace record, then checks the destination.
+`Names.push` in `build/kraken/c/build_bottom_up.S` stores the slot and its trace record, then checks the destination.
 If the destination is free, it binds the slot and returns `Done`. Otherwise it calls `exit(1)`.
 The exit contract retains the stores made before that check and relates them to `Flat.push`.
 The two free stack words cover alignment and the return address of the external call.

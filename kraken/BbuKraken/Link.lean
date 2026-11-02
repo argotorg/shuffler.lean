@@ -10,7 +10,7 @@ import all ProofKit.ExternalCall
 @[expose] public section
 
 /-!
-The function declarations of the linked program: `c/build_bottom_up.S` at the position `k`
+The function declarations of the linked program: `build/kraken/c/build_bottom_up.S` at the position `k`
 of the host program. The labels are the symbol names of `BbuKraken.Names`. Each function
 starts with its label and then an instruction that is not padding, so distinct function
 labels have distinct addresses, and `FunDecls.at (label f)` is the fragment of `f`.

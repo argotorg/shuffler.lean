@@ -28,7 +28,7 @@ import all BbuKraken.Link
 @[expose] public section
 
 /-!
-`build_bottom_up` in a host program that contains `c/bbu/build_bottom_up.S` returns the result of
+`build_bottom_up` in a host program that contains `build/kraken/c/build_bottom_up.S` returns the result of
 the list model `buildBottomUp`.
 
 The chain: the spec of each callee comes from its unit theorem (`Unit/*.lean`), from the leaves

@@ -10,7 +10,7 @@ import all BbuKraken.Unit.Permute.D3
 /-!
 # `permute`
 
-`c/bbu/<Names.permute>.S`: 6 `pushq` and `subq $8216` (the array `desiredBy` and two
+`Names.permute` in `build/kraken/c/build_bottom_up.S`: 6 `pushq` and `subq $8216` (the array `desiredBy` and two
 words), so 1034 free words (1033 and one for the call of `shallowestCopyPosition`). The array
 `permutation` is the argument `rsi`: the function owns `permW s`.
 It regroups equal slots and then sorts the stack by the destinations with swaps.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Test axioms.sh: it must accept State.permute_spec and a bv_decide proof, and reject
+# Test axioms.sh: it must accept Bbu.buildBottomUp_correct and a bv_decide proof, and reject
 # sorry, native_decide, a user axiom, a forged bv_decide axiom and an unknown name.
 # With no arguments it must accept and report all 19 final theorems.
 set -euo pipefail
@@ -12,7 +12,7 @@ fails=0
 # and THEOREM must pass (ok) or fail (fail).
 check() {
 	{
-		printf 'import BbuKraken.Bin\nimport PermuteKraken.Proof\nimport Std.Tactic.BVDecide\n'
+		printf 'import BbuKraken.Bin\nimport Std.Tactic.BVDecide\n'
 		printf '%s\n' "$3"
 	} > "$tmp/$1.lean"
 	if "$here/axioms.sh" "$tmp/$1.lean" "$4" > "$tmp/out" 2>&1; then got=ok; else got=fail; fi
@@ -82,23 +82,23 @@ if $final_ok && [ "$n" -eq 19 ] && [ -z "$other" ] && ! grep -q sorryAx "$tmp/fi
 else
 	echo "FAIL final"; cat "$tmp/final"; fails=$((fails + 1))
 fi
-check permute ok '' State.permute_spec
+check buildBottomUp ok '' Bbu.buildBottomUp_correct
 
-# A copy of State.L3_eP with each closing step.
+# A bit-vector identity with each closing step.
 eP() {
-	printf 'theorem State.%s (p a : BitVec 64) :\n' "$1"
+	printf 'theorem AuditTest.%s (p a : BitVec 64) :\n' "$1"
 	printf '    p + a * 2#64 + BitVec.ofInt 64 (Int64.toInt 0) = p + .ofNat 64 (2 * a.toNat) := by\n'
 	printf '  %s\n' "$2"
 }
 
-check copy ok "$(eP eP_copy 'simp; bv_omega')" State.eP_copy
+check copy ok "$(eP eP_copy 'simp; bv_omega')" AuditTest.eP_copy
 check bv_decide ok '
 theorem Bbu.mul_lt (x y : BitVec 16) (hx : x < 100#16) (hy : y < 100#16) :
     x * y < 10000#16 := by bv_decide' Bbu.mul_lt
 if ! grep -q '_native.bv_decide.ax_' "$tmp/out"; then
 	echo "FAIL bv_decide: the proof adds no bv_decide axiom"; fails=$((fails + 1))
 fi
-check sorry fail "$(eP eP_sorry 'simp; sorry')" State.eP_sorry
+check sorry fail "$(eP eP_sorry 'simp; sorry')" AuditTest.eP_sorry
 check sorry-final fail '
 open Std.WP Lean.Order
 open scoped Program.WP
@@ -108,9 +108,9 @@ theorem Bbu.bbu_harness_sorry :
       ⦃ (fun _ _ => False); fun a t => a = ra ∧ Bbu.TopPost s t ∧ (Bbu.topMod s).Agree s t ⦄ :=
   sorry' Bbu.bbu_harness_sorry
 check sorry-used fail "$(eP eP_sorry 'simp; sorry')
-theorem State.eP_use (p a : BitVec 64) :
+theorem AuditTest.eP_use (p a : BitVec 64) :
     p + a * 2#64 + BitVec.ofInt 64 (Int64.toInt 0) = p + .ofNat 64 (2 * a.toNat) :=
-  State.eP_sorry p a" State.eP_use
+  AuditTest.eP_sorry p a" AuditTest.eP_use
 check native_decide fail '
 theorem Bbu.sizesOk_nd : Bbu.sizesOk [.label "a"] [1] = false := by native_decide' Bbu.sizesOk_nd
 check user-axiom fail '

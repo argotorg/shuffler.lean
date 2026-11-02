@@ -2,8 +2,8 @@ module
 
 public import BbuKraken.Contracts
 import all BbuKraken.Contracts
-public import PermuteKraken.Proof
-import all PermuteKraken.Proof
+public import ProofKit.Memory
+import all ProofKit.Memory
 public import BbuKraken.Kit
 import all BbuKraken.Kit
 public import BbuKraken.Fn.FinishMem
@@ -13,7 +13,7 @@ import all BbuKraken.Fn.FinishMem
 
 open Std.WP Lean.Order
 open scoped Program.WP
-open PermuteKraken
+open Bbu.Permutation
 
 set_option experimental.vcgen true
 
@@ -23,8 +23,8 @@ open FinishMem
 
 /-! ## Bounds of `permute` -/
 
-theorem target_lt (q : Perm) {pos : Nat} (h : PermuteKraken.target q.toList = some pos) : pos < q.toList.length := by
-  unfold PermuteKraken.target at h
+theorem target_lt (q : Perm) {pos : Nat} (h : Bbu.Permutation.target q.toList = some pos) : pos < q.toList.length := by
+  unfold Bbu.Permutation.target at h
   dsimp only at h
   split at h
   · cases h
@@ -34,9 +34,9 @@ theorem target_lt (q : Perm) {pos : Nat} (h : PermuteKraken.target q.toList = so
       · omega)
   · exact (lastMisplaced_spec _ _ _ h).1
 
-theorem step_blocked_lt (q : Perm) {b : Blocked} (h : PermuteKraken.step q.toList = .blocked b) :
+theorem step_blocked_lt (q : Perm) {b : Blocked} (h : Bbu.Permutation.step q.toList = .blocked b) :
     b.offset < q.toList.length ∧ b.excess < q.toList.length := by
-  unfold PermuteKraken.step at h
+  unfold Bbu.Permutation.step at h
   split at h
   · cases h
   dsimp only at h
@@ -50,7 +50,7 @@ theorem step_blocked_lt (q : Perm) {b : Blocked} (h : PermuteKraken.step q.toLis
       omega
     · cases h
 
-theorem trace_le (p : Perm) : ∀ k ≤ steps p, ∀ x ∈ p.trace k, x ≤ PermuteKraken.MAX_SWAP_DEPTH := by
+theorem trace_le (p : Perm) : ∀ k ≤ steps p, ∀ x ∈ p.trace k, x ≤ Bbu.Permutation.MAX_SWAP_DEPTH := by
   intro k
   induction k with
   | zero => simp [Perm.trace]
@@ -61,10 +61,10 @@ theorem trace_le (p : Perm) : ∀ k ≤ steps p, ∀ x ∈ p.trace k, x ≤ Perm
     · exact ih (by omega) x hx
     · obtain ⟨idx, pos, hs⟩ := Perm.isSwap_iff.mp (p.step_state_lt k (by omega))
       rw [Perm.depth_eq _ hs]
-      exact (PermuteKraken.step_swap hs).2.1
+      exact (Bbu.Permutation.step_swap hs).2.1
 
-theorem permute_ok_bound {p : Perm} {L : List Nat} (h : PermuteKraken.permute p = .ok L) :
-    L.length ≤ 2 * p.toList.length ∧ ∀ x ∈ L, x ≤ PermuteKraken.MAX_SWAP_DEPTH := by
+theorem permute_ok_bound {p : Perm} {L : List Nat} (h : Bbu.Permutation.permute p = .ok L) :
+    L.length ≤ 2 * p.toList.length ∧ ∀ x ∈ L, x ≤ Bbu.Permutation.MAX_SWAP_DEPTH := by
   rw [Perm.permute_eq] at h
   split at h
   · cases h
@@ -75,7 +75,7 @@ theorem permute_ok_bound {p : Perm} {L : List Nat} (h : PermuteKraken.permute p 
     · rw [p.steps_zero h0]; omega
     · have := p.steps_lt h0; omega
 
-theorem permute_err_bound {p : Perm} {b : Blocked} (h : PermuteKraken.permute p = .error b) :
+theorem permute_err_bound {p : Perm} {b : Blocked} (h : Bbu.Permutation.permute p = .error b) :
     b.offset < p.toList.length ∧ b.excess < p.toList.length := by
   rw [Perm.permute_eq] at h
   split at h
@@ -95,6 +95,10 @@ local macro "bvo" : tactic => `(tactic| (
   bv_omega))
 
 namespace FinishProof
+
+-- The byte encodings of the swap depths and destination offsets in these invariants.
+def bytes (l : List Nat) : List UInt8 := l.map Nat.toUInt8
+def words (l : List Nat) : List UInt8 := l.flatMap fun x => [x.toUInt8, (x / 256).toUInt8]
 
 section
 variable (s : MachineData) (ra : Int64)
@@ -131,15 +135,15 @@ def FInv (p0 : Perm) : CfgLabel → MachineData → Prop
   | .label ".LB.Emission.permute.1", t => Fr s ra t ∧ Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem
       ∧ rdi t = rd s.dmem (wordAt (rdi s) 0)
       ∧ Mem.Contains t.dmem (rsp s - 2064#64) (words p0.toList)
-  | .label ".LB.Emission.permute.2", t => Fr s ra t ∧ ∃ L, PermuteKraken.permute p0 = .ok L ∧ ∃ j < L.length,
+  | .label ".LB.Emission.permute.2", t => Fr s ra t ∧ ∃ L, Bbu.Permutation.permute p0 = .ok L ∧ ∃ j < L.length,
       rdx t = rsp s - 4112#64 + BitVec.ofNat 64 j ∧ SwInv s L j t
   | .label ".LB.Emission.permute.3", t => Fr s ra t ∧ Wf t.dmem (rdi s) ∧ finishR s t
       ∧ Mem.UnchangedOutside (frame finishF s :: writable s.dmem (rdi s)) s.dmem t.dmem
   | .label ".LB.Emission.permute.4", t => Fr s ra t ∧ Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem
-      ∧ ∃ b, PermuteKraken.permute p0 = .error b
+      ∧ ∃ b, Bbu.Permutation.permute p0 = .error b
         ∧ Mem.Contains t.dmem (rsp s - 4116#64) (words [b.offset, b.excess])
   | .label ".LB.Emission.permute.5", t => Fr s ra t ∧ Mem.UnchangedOutside [frame finishF s] s.dmem t.dmem
-      ∧ PermuteKraken.permute p0 = .ok []
+      ∧ Bbu.Permutation.permute p0 = .ok []
   | _, _ => False
 
 def FVar (l : Label) (t : MachineData) : Nat :=
@@ -305,7 +309,7 @@ def lb60Mem (m : Mem 64) (x sp : Addr) : Mem 64 :=
 
 -- `finishC` in terms of `permute p0`.
 theorem finish_eq {p0 : Perm} {st0 : St} (hp0 : p0.toList = st0.slots.map Slot.dest) :
-    finishC st0 = (match PermuteKraken.permute p0 with
+    finishC st0 = (match Bbu.Permutation.permute p0 with
       | .ok L => .ok (L.foldl swapTop st0)
       | .error b => .error (.blocked b.offset b.excess st0)) := by
   obtain ⟨l, lt, inj⟩ := p0

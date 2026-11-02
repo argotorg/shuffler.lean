@@ -16,7 +16,7 @@ import all ProofKit.CfgBlock
 /-!
 # `MappingBuilder::closestCopy`
 
-`c/bbu/<Names.closestCopy>.S`: no call, no store. If `m = 0` it returns `-1` at once. Else it
+`Names.closestCopy` in `build/kraken/c/build_bottom_up.S`: no call, no store. If `m = 0` it returns `-1` at once. Else it
 pushes `r15`, `r14`, `rbp`, `rbx` and runs the loop over the source positions `rax < m`. `r11`
 is the best position so far. Each turn of the loop is one unfold of `Flat.closestFrom`.
 `t` is `rsi`, the `CopyLocation` is `dl`.

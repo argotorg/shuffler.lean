@@ -5,13 +5,13 @@ module
 register, so the loop invariants of the proof refer to `state p k` and `trace p k`
 and need no existential.
 -/
-public import PermuteKraken.Model
-import all PermuteKraken.Model
+public import BbuKraken.Permutation.Model
+import all BbuKraken.Permutation.Model
 import all Init.Control.Except
 
 @[expose] public section
 
-namespace PermuteKraken
+namespace Bbu.Permutation
 
 def Step.isSwap : Step → Bool
   | .swap _ _ => true
@@ -117,7 +117,7 @@ theorem step_state_lt (p : Perm) : ∀ k < (steps p), (step (p.state k).toList).
       exact ih p.advance (by omega)
 
 theorem step_state_steps (p : Perm) : (step (p.state (steps p)).toList).isSwap = false := by
-  induction p using PermuteKraken.steps.induct with
+  induction p using Bbu.Permutation.steps.induct with
   | case1 p idx pos h ih =>
     rw [p.steps_eq_succ h]
     exact ih
@@ -131,7 +131,7 @@ theorem permute_eq (p : Perm) : permute p =
     match step (p.state (steps p)).toList with
     | .blocked b => .error b
     | _ => .ok (p.trace (steps p)) := by
-  induction p using PermuteKraken.steps.induct with
+  induction p using Bbu.Permutation.steps.induct with
   | case1 p idx pos h ih =>
     rw [permute, p.steps_eq_succ h]
     split
@@ -164,7 +164,7 @@ theorem measure_le (l : List Nat) : measure l ≤ 2 * (l.length - 1) + 1 := by
   split <;> omega
 
 theorem steps_le_measure (p : Perm) : steps p ≤ measure p.toList := by
-  induction p using PermuteKraken.steps.induct with
+  induction p using Bbu.Permutation.steps.induct with
   | case1 p idx pos h ih =>
     rw [p.steps_eq_succ h]
     have := p.measure_advance h
@@ -186,4 +186,4 @@ theorem steps_zero (p : Perm) (h : p.toList.length = 0) : steps p = 0 := by
 
 end Perm
 
-end PermuteKraken
+end Bbu.Permutation

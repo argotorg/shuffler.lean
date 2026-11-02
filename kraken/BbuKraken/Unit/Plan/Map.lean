@@ -12,7 +12,7 @@ import all ProofKit.Cfg
 /-!
 # `MappingBuilder::map`
 
-`c/bbu/<Names.map>.S`: it reads the byte `m_dropped[p]`, then
+`Names.map` in `build/kraken/c/build_bottom_up.S`: it reads the byte `m_dropped[p]`, then
 `m_destinationOf[p]` and `m_positionOf[t]` of the `Mapping`. If all three are free, it stores
 `t` and `p` (`Mapping::bind`) and returns the byte (0, `DONE`). Else it calls `exit(1)`.
 `p` is `rsi`, `t` is `rdx`. Two free stack words hold the alignment word and the return

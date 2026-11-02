@@ -14,7 +14,7 @@ import all ProofKit.Idioms
 /-!
 # `shallowestCopyPosition`
 
-`c/bbu/<Names.shallowestCopyPosition>.S`: no frame, no call, no store. It compares the low 6
+`Names.shallowestCopyPosition` in `build/kraken/c/build_bottom_up.S`: no frame, no call, no store. It compares the low 6
 bytes of `m_stack[i]` and of the slot, for `i` from `size - 1` down, and returns `-1` if no slot
 is equal.
 

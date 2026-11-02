@@ -5,8 +5,8 @@ The symbol names of the functions of `c/shuffler/test_wrappers.cpp`. The members
 `SpillSet`, `MappingBuilder` and `Planner` have the names that g++ gives them (the Itanium C++ ABI
 mangling); the entries `build_bottom_up`, `emission_pop`, `spill_set`, `remove_surplus`,
 `permute`, `permute_at_lowest_height`, `build_mapping`, `resolve`, `emit` and `plan` are
-`extern "C"`. These are the names in `c/build_bottom_up.S`, in the binary, and in
-`c/bbu/NAME.S`. We do not rename them in the asm: each change to the compiler output is one more
+`extern "C"`. These are the names in `build/kraken/c/build_bottom_up.S` and in the binary.
+We do not rename them in the asm: each change to the compiler output is one more
 step between the proved program and the program that runs. Each name is here once;
 `BbuKraken.Asm`, `BbuKraken.Link` and the specs use these defs.
 -/

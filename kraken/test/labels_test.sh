@@ -4,7 +4,9 @@
 set -euo pipefail
 dir=$(cd "$(dirname "$0")/.." && pwd)
 awkf=$dir/c/labels.awk
-asm=$dir/c/build_bottom_up.S
+asm=$dir/../build/kraken/c/build_bottom_up.S
+cmake -S "$dir/.." -B "$dir/../build" -G Ninja >/dev/null
+cmake --build "$dir/../build" --target shuffler_assembly >/dev/null
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 

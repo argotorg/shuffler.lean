@@ -23,10 +23,10 @@ theorem normalize_eq (vals : List StackSlot) (p : List Nat) :
   rw [normalize, dedup_eq, List.foldlM_map, List.range_eq_range']
 
 -- The measure of a permutation of a nonempty list is below twice its length.
-theorem measure_lt {l : List Nat} (h : 0 < l.length) : PermuteKraken.measure l < 2 * l.length := by
+theorem measure_lt {l : List Nat} (h : 0 < l.length) : Bbu.Permutation.measure l < 2 * l.length := by
   have := List.countP_le_length (p := fun i => decide (l[i]! ≠ i)) (l := List.range (l.length - 1))
   rw [List.length_range] at this
-  unfold PermuteKraken.measure
+  unfold Bbu.Permutation.measure
   split <;> omega
 
 -- The flat `permute` against the list `Bbu.permute`, for a permutation `l` of the slots that

@@ -12,7 +12,7 @@ import all ProofKit.CfgBlock
 /-!
 # `spill_set`
 
-`c/bbu/spill_set.S`: 6 pushes and 40 bytes of locals. `8(%rsp)` holds `spilled`, and `24(%rsp)`
+`build/kraken/c/build_bottom_up.S`: 6 pushes and 40 bytes of locals. `8(%rsp)` holds `spilled`, and `24(%rsp)`
 is the `SpillSet` object that `SpillSet::add` gets in `rdi`. The four loops are:
 
 - `.LB.spill_set.1`: the check of the adds (an id of a variable is below `idCount`);

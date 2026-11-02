@@ -99,8 +99,8 @@ def flatNorm (vals : List StackSlot) (p : List Nat) : Option (List Nat) :=
 /-! ## The fuel of `permuteLoop` -/
 
 #guard (List.range 6).all fun n => n == 0 ||
-  (injections n n).all fun l => PermuteKraken.measure l < 2 * n
+  (injections n n).all fun l => Bbu.Permutation.measure l < 2 * n
 -- The bound needs a nonempty list.
-example : PermuteKraken.measure [] = 1 := by decide
+example : Bbu.Permutation.measure [] = 1 := by decide
 
 end Bbu.Flat.RegroupTest
