@@ -170,7 +170,7 @@ theorem PermV.swap {n : Nat} {v : Vector Word maxStackSize} (p : Perm) (hn : n �
 
 /-! ## The loop -/
 
-theorem permuteLoop_ret {f : Nat} {fs : St} {top : Word} {v : Vector Word maxStackSize} {r : Status × St}
+theorem permuteLoop_ret {f : Nat} {fs : St} {top : Word} {v : Vector Word maxStackSize} {r : EmissionOutcome × St}
     (h : permuteStep fs top v = .ret r) : permuteLoop (f + 1) fs top v = r := by
   simp [permuteLoop, h]
 

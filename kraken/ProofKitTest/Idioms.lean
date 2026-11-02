@@ -283,7 +283,7 @@ theorem tOrb_ok [Host] (hp : tOrb.IsInfix Host.prog) (s : MachineData)
   rw [MachineData.status_mk, setcc_or_nz, cmp_z, cmp_nz] at hj
   simp [h.1, h.2] at hj
 
-/-- `cmpq %r13, 32(%r12); setne %al; addl %eax, %eax` (buildBottomUp:703-705): Status 0 or 2. -/
+/-- `cmpq; setne; addl` gives a low byte of 0 or 2. -/
 def tStat := parse("
     cmpq %r13, %rcx
     setne %al
@@ -351,8 +351,7 @@ theorem tRet_ok [Host] (hp : tRet.IsInfix Host.prog) (s : MachineData)
     rw [cmovne_sub, ite_eq_left h]
     rfl
 
-/-- Status constants and moves: `movl $2,%edx; movl %edx,%eax` (push:75,84),
-`leaq -1(%rsi),%r8` (permuteDest:250), `movl %esi,%esi` (isSpilled:15). -/
+/-- Check a constant, a register copy, an address offset, and a 32-bit move. -/
 def tStat2 := parse("
     movl $2, %edx
     leaq -1(%rsi), %r8

@@ -69,7 +69,7 @@ theorem b_14 [Host] [FunDecls]
       have hbase : loopBase s u = loopBase s t := hu.base.trans h.base.symm
       rw [h15] at h15u
       have hal' := hal
-      change u.regs.rax.toBitVec.setWidth 8 = _ at hal'
+      change some (u.regs.rax.toBitVec.setWidth 8) = _ at hal'
       rw [BitVec.setWidth_eq_extractLsb' (by decide : 8 ≤ 64)] at hal'
       have he := ProofKit.external_call_spec "exit" hexit
       kvcgen64 [he]
@@ -79,8 +79,8 @@ theorem b_14 [Host] [FunDecls]
         rename_i hj
         have hd : (Flat.spillAdd w.spills (Flat.get r.p.fl.source (w.pick r).1)).1 = .done := by
           symexec_norm at hj
-          simp only [BitVec.and_self, hal', beq_iff_eq, BitVec.zero_eq] at hj
-          exact code_eq_zero hj
+          simp only [BitVec.and_self, beq_iff_eq, BitVec.zero_eq] at hj
+          exact code_eq_zero (hal'.symm.trans (congrArg some hj))
         cfg_goto
         · exact hu.bd.kb.stack (by decide)
         · simp only [Inv, loopPhase, dropPhase, Names.resolve,
@@ -98,8 +98,8 @@ theorem b_14 [Host] [FunDecls]
         rename_i af hj exitra
         have hd : (Flat.spillAdd w.spills (Flat.get r.p.fl.source (w.pick r).1)).1 ≠ .done := by
           symexec_norm at hj
-          simp only [BitVec.and_self, hal', beq_eq_false_iff_ne, BitVec.zero_eq] at hj
-          exact code_ne_zero hj
+          simp only [BitVec.and_self, beq_eq_false_iff_ne, BitVec.zero_eq] at hj
+          exact code_ne_zero (fun he => hj (Option.some.inj (hal'.trans he)))
         have hs := spill_failed_unchanged w.spills (Flat.get r.p.fl.source (w.pick r).1) hd
         have hb := hu.bd
         rw [hs] at hb
@@ -112,7 +112,7 @@ theorem b_14 [Host] [FunDecls]
       intro u lo' hlen hmem hf harg
       have hd : (Flat.spillAdd w.spills (Flat.get r.p.fl.source (w.pick r).1)).1 ≠ .done := by
         rw [hf]
-        change Flat.Status.assertionFailed ≠ Flat.Status.done
+        change (Flat.ExecutionControl.assertionExit : Flat.EmissionOutcome) ≠ .done
         decide
       have hmodel := Work.spill_fail h.ok hm hbest hspill hd
       refine Or.inr ⟨Or.inr ⟨rfl, harg, ?_⟩, ?_⟩

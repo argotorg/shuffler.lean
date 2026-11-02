@@ -115,7 +115,7 @@ theorem mapInv_mbMap {b : Flat.Builder} {M : Flat.Mapping} (h : MapInv b.sourceS
           (Classical.byContradiction htp)
 
 theorem mbMap_none (b : Flat.Builder) (M : Flat.Mapping) (t : Word) :
-    Flat.mbMap b M NONE t = (.assertionFailed, M) := by
+    Flat.mbMap b M NONE t = (.assertionExit, M) := by
   have hd : get M.dest NONE = 0#64 := by
     rw [Flat.get, dite_eq_right (by decide : ¬NONE.toNat < maxStackSize)]
     rfl

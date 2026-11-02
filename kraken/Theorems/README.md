@@ -9,7 +9,7 @@ target stack. The proof uses three Lean models of this process:
    matches the target.
 2. **Flat model**: a model of the C++ data and control flow,
    `FlatShuffler.Flat.plannerRun`. It uses words of fixed width and buffers of
-   fixed size. It records buffer updates and assertion failures. Bridge proofs
+   fixed size. It records buffer updates and return or exit outcomes. Bridge proofs
    connect its results to the planner model.
 3. **Assembly model**: a model of the parsed x86-64 instructions for C++
    `Planner::run`. Kraken supplies the Lean definitions of instruction behavior.
@@ -41,7 +41,8 @@ The following sections give the conditions and limits for each claim.
 | Spill set | Variables that the abstract trace can load. The native representation records spill status in bytes. |
 | Done | Planning succeeded. |
 | Blocked | Planning stopped without a complete plan. |
-| Assertion exit | Execution transfers to external `exit` with argument 1. The flat model calls this outcome `.assertionFailed`. |
+| Assertion exit | Execution transfers to external `exit` with argument 1. |
+| `ExecutionOutcome` | A control outcome and its final state. For the planner, the outcome is `.returned` with Done or Blocked, or `.assertionExit` with no return value. |
 | Contract | A rule with entry requirements (the precondition) and guarantees at return or exit (the postcondition). |
 | Agreement | The results satisfy a comparison relation. That relation states which results and data must agree between models. |
 | Host | A parsed program, its address layout, and proofs that the layout satisfies Kraken's rules. |
@@ -83,6 +84,8 @@ overlap. The x86-64 call stack must have 8240 free words plus a return slot.
 Read the fields of this structure for all machine conditions.
 
 Local arrays can have any initial values on each attempt.
+The flat permutation loop has a finite iteration bound. Its contract requires a
+valid permutation, which makes this bound sufficient.
 
 ## Reading order
 

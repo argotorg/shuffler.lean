@@ -479,7 +479,7 @@ theorem b_1 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
       exact e
     case refine_6 =>
       intro t2 g'' L lo' w' _ hmid hQ hok' _
-      obtain ⟨⟨hk2, hfl, hal2⟩, hnormal⟩ := hQ
+      obtain ⟨hk2, hfl, hal2⟩ := hQ
       kvcgen64
       all_goals try symexec_norm
       cfg_goto
@@ -487,7 +487,7 @@ theorem b_1 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
       · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
         exact ⟨g'', u, ⟨x0, L, lo', w', hmid.next rfl rfl rfl, hok', keep_trans hk hk2⟩,
           ⟨keep_trans hk hk2, by rw [hR, Permute.permuteMapping_of hrd]; exact hfl,
-          by rw [hR, Permute.permuteMapping_of hrd]; exact hal2⟩, hnormal⟩
+          by rw [hR, Permute.permuteMapping_of hrd]; exact hal2⟩⟩
       · loop_dec
 
     case refine_7 =>
@@ -541,7 +541,7 @@ theorem b_31 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
     · exact (hM.next rfl rfl rfl).stack
     · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
       exact ⟨g', u, ⟨x0, x2, lo, w, hM.next rfl rfl rfl, hok, hk⟩,
-        ⟨hk, by rw [hR'], by rw [hR']; rfl⟩, by change 0#8 ≠ 2#8; decide⟩
+        ⟨hk, by rw [hR'], by rw [hR']; rfl⟩⟩
     · loop_dec
 
 theorem b_13 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :

@@ -33,7 +33,7 @@ example : (resolve (planner variableSlot false) mapping emptyMapping 0 0 0).1 = 
 
 -- Candidate validation runs before the zero-excess return.
 example : (resolve (planner variableSlot true) { mapping with dest := emptyMapping.dest }
-    mapping 0 2 0).1 = .assertionFailed := by decide +kernel
+    mapping 0 2 0).1 = .assertionExit := by decide +kernel
 
 -- No candidate and no usable class both return stuck.
 example : (resolve (planner variableSlot true) mapping emptyMapping 1 2 0).1 = .stuck :=

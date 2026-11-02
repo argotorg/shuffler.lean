@@ -71,12 +71,12 @@ section
 variable {planned : Vector Word maxStackSize} {l : Locals} {st : St}
 
 theorem lowest_none (h : scan planned st 0 (Scan.init l) = none) :
-    permuteAtLowestHeight planned l st = (.assertionFailed, st) := by
+    permuteAtLowestHeight planned l st = (.assertionExit, st) := by
   rw [permuteAtLowestHeight, h]
 
 theorem lowest_ne {sc : Scan} (h : scan planned st 0 (Scan.init l) = some sc)
     (hne : sc.parkedCount ≠ sc.holeCount) :
-    permuteAtLowestHeight planned l st = (.assertionFailed, st) := by
+    permuteAtLowestHeight planned l st = (.assertionExit, st) := by
   rw [permuteAtLowestHeight, h]; exact ite_eq_left hne
 
 theorem lowest_eq {sc : Scan} (h : scan planned st 0 (Scan.init l) = some sc)
@@ -200,7 +200,7 @@ def I4 (t : MachineData) : Prop :=
 -- `.6`, `.7`: an assertion of the first loop fails.
 def I5 (t : MachineData) : Prop :=
   ∃ L l0, Bs S PM planned g F0 s ra L t ∧
-    Flat.permuteAtLowestHeight planned l0 (flat g) = (.assertionFailed, flat g)
+    Flat.permuteAtLowestHeight planned l0 (flat g) = (.assertionExit, flat g)
 
 -- `.6`: the result.
 def I6 (t : MachineData) : Prop :=
@@ -267,7 +267,7 @@ theorem exit_intercept [Host]
     (hout : ∀ l ∈ Program.labels permuteAtLowestHeightAsm, label l ≠ label "exit")
     (hM : Mid S g (Planned S PM planned ∗ F0) s ra L lo w t) (hok : g.Ok)
     (l0 : Flat.Locals)
-    (hfail : Flat.permuteAtLowestHeight planned l0 (flat g) = (.assertionFailed, flat g))
+    (hfail : Flat.permuteAtLowestHeight planned l0 (flat g) = (.assertionExit, flat g))
     (harg : t.regs.get64 .rdi = 1#64) :
     Program.Intercept (Program.labels permuteAtLowestHeightAsm) (s.pushRa ra) I
       (E S PM planned g F0 s ra) (label "exit") (t.pushRa exitRa) := by

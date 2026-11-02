@@ -18,16 +18,16 @@ set_option experimental.vcgen true
 namespace FlatShuffler.Unit.PlannerRunU
 open FlatShuffler.Sep
 
-theorem status_ne_of_al_eq {t : MachineData} {st : Flat.Status}
-    (ha : al t = code st) (hn : al t ≠ 0#8) : st ≠ .done := by
+theorem status_ne_of_al_eq {t : MachineData} {st : Flat.EmissionOutcome}
+    (ha : some (al t) = code st) (hn : al t ≠ 0#8) : st ≠ .done := by
   apply code_ne_zero
   intro he
-  exact hn (ha.trans he)
+  exact hn (Option.some.inj (ha.trans he))
 
-theorem status_eq_of_al_eq {t : MachineData} {st : Flat.Status}
-    (ha : al t = code st) (hz : al t = 0#8) : st = .done := by
+theorem status_eq_of_al_eq {t : MachineData} {st : Flat.EmissionOutcome}
+    (ha : some (al t) = code st) (hz : al t = 0#8) : st = .done := by
   apply code_eq_zero
-  exact ha.symm.trans hz
+  exact ha.symm.trans (congrArg some hz)
 
 def BuildFailed (P : Addr) (g : PlannerCallMemory) (F : MProp 64) (s : MachineData) (ra : Int64)
     (M0 : Flat.Mapping) (t : MachineData) : Prop :=

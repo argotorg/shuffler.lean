@@ -13,7 +13,7 @@ import all FlatShuffler.FlatSpill
 The flat model of `MappingBuilder`, `Planner`, `Emission::isAvailable`, `Emission::run` and the
 entry `plan` in `c/shuffler/test_wrappers.cpp`, as in `FlatModel.lean`: one function for each function of
 the C++, with the statements in the order of the C++, a loop is a recursive function, and a
-`yulAssert` returns `.assertionFailed`.
+failed `yulAssert` gives `.assertionExit`.
 
 - An `Optional<StackOffset>` is a `Word` with the niche `NONE`, and an `Optional<Class>` a byte
   with the niche `0xff`.
@@ -60,10 +60,10 @@ def absDiff (a c : Word) : Word := if a > c then a - c else c - a
 def commonSize (b : Builder) : Word := if b.sourceSize < b.targetSize then b.sourceSize else b.targetSize
 
 -- `MappingBuilder::map`
-def mbMap (b : Builder) (M : Mapping) (p t : Word) : Status × Mapping :=
-  if !mappable b M p then (.assertionFailed, M)
-  else if get M.dest p ≠ NONE then (.assertionFailed, M)
-  else if get M.pos t ≠ NONE then (.assertionFailed, M)
+def mbMap (b : Builder) (M : Mapping) (p t : Word) : ExecutionOutcome Status Mapping :=
+  if !mappable b M p then (.assertionExit, M)
+  else if get M.dest p ≠ NONE then (.assertionExit, M)
+  else if get M.pos t ≠ NONE then (.assertionExit, M)
   else (.done, M.bind p t)
 
 -- The loop of `closestCopy` from `i` on.
@@ -83,7 +83,7 @@ def closestCopy (b : Builder) (M : Mapping) (t : Word) (inW : Bool) : Word :=
   closestFrom b M t inW 0 NONE
 
 -- The loop of `mapInPlace` from `j` on.
-def inPlaceFrom (b : Builder) (M : Mapping) (j : Word) : Status × Mapping :=
+def inPlaceFrom (b : Builder) (M : Mapping) (j : Word) : ExecutionOutcome Status Mapping :=
   if h : j < commonSize b then
     if get b.source j = get b.target j && mappable b M j then
       let r := mbMap b M j j
@@ -94,10 +94,10 @@ termination_by (commonSize b - j).toNat
 decreasing_by all_goals bv_omega
 
 -- `mapInPlace`
-def mapInPlace (b : Builder) (M : Mapping) : Status × Mapping := inPlaceFrom b M 0
+def mapInPlace (b : Builder) (M : Mapping) : ExecutionOutcome Status Mapping := inPlaceFrom b M 0
 
 -- The loop of `mapClosestCopies` from `j` on.
-def closestCopiesFrom (b : Builder) (M : Mapping) (j : Word) : Status × Mapping :=
+def closestCopiesFrom (b : Builder) (M : Mapping) (j : Word) : ExecutionOutcome Status Mapping :=
   if h : j < b.targetSize then
     if !hasSourceAssigned M j && !isWildcardTarget b j && closestCopy b M j false ≠ NONE then
       let r := mbMap b M (closestCopy b M j false) j
@@ -108,10 +108,10 @@ termination_by (b.targetSize - j).toNat
 decreasing_by all_goals bv_omega
 
 -- `mapClosestCopies`
-def mapClosestCopies (b : Builder) (M : Mapping) : Status × Mapping := closestCopiesFrom b M 0
+def mapClosestCopies (b : Builder) (M : Mapping) : ExecutionOutcome Status Mapping := closestCopiesFrom b M 0
 
 -- The loop of `mapWildcardSlotCopies` from `j` on, with `m_sawWildcardCopy`.
-def wildcardFrom (b : Builder) (M : Mapping) (saw : Bool) (j : Word) : Status × Mapping × Bool :=
+def wildcardFrom (b : Builder) (M : Mapping) (saw : Bool) (j : Word) : ExecutionOutcome Status (Mapping × Bool) :=
   if h : j < b.targetSize then
     if !hasSourceAssigned M j && !isWildcardTarget b j && closestCopy b M j true ≠ NONE then
       let copy := closestCopy b M j true
@@ -128,11 +128,11 @@ termination_by (b.targetSize - j).toNat
 decreasing_by all_goals bv_omega
 
 -- `mapWildcardSlotCopies`
-def mapWildcardSlotCopies (b : Builder) (M : Mapping) (saw : Bool) : Status × Mapping × Bool :=
+def mapWildcardSlotCopies (b : Builder) (M : Mapping) (saw : Bool) : ExecutionOutcome Status (Mapping × Bool) :=
   wildcardFrom b M saw 0
 
 -- The loop of `keepWildcardSlots` from `j` on.
-def keepFrom (b : Builder) (M : Mapping) (j : Word) : Status × Mapping :=
+def keepFrom (b : Builder) (M : Mapping) (j : Word) : ExecutionOutcome Status Mapping :=
   if h : j < commonSize b then
     if isWildcardTarget b j && !hasSourceAssigned M j && mappable b M j then
       let r := mbMap b M j j
@@ -143,7 +143,7 @@ termination_by (commonSize b - j).toNat
 decreasing_by all_goals bv_omega
 
 -- `keepWildcardSlots`
-def keepWildcardSlots (b : Builder) (M : Mapping) : Status × Mapping := keepFrom b M 0
+def keepWildcardSlots (b : Builder) (M : Mapping) : ExecutionOutcome Status Mapping := keepFrom b M 0
 
 -- The inner loop of `absorbSurplus` from `o` on.
 def absorbBest (b : Builder) (M : Mapping) (j o best : Word) : Word :=
@@ -155,7 +155,7 @@ termination_by (b.sourceSize - o).toNat
 decreasing_by bv_omega
 
 -- The outer loop of `absorbSurplus` from `j` on.
-def absorbFrom (b : Builder) (M : Mapping) (j : Word) : Status × Mapping :=
+def absorbFrom (b : Builder) (M : Mapping) (j : Word) : ExecutionOutcome Status Mapping :=
   if h : j < b.targetSize then
     if isWildcardTarget b j && !hasSourceAssigned M j && absorbBest b M j 0 NONE ≠ NONE then
       let r := mbMap b M (absorbBest b M j 0 NONE) j
@@ -166,7 +166,7 @@ termination_by (b.targetSize - j).toNat
 decreasing_by all_goals bv_omega
 
 -- `absorbSurplus`
-def absorbSurplus (b : Builder) (M : Mapping) : Status × Mapping := absorbFrom b M 0
+def absorbSurplus (b : Builder) (M : Mapping) : ExecutionOutcome Status Mapping := absorbFrom b M 0
 
 -- The five phases of `build_mapping` and `Planner::run` on the mapping `M`, with
 -- `m_sawWildcardCopy = false`: the mapping and `sawWildcardCopy()`, or none if a phase fails.
@@ -243,8 +243,12 @@ def classify (pl : Planner) (sp : BitVec 32 → BitVec 8) (M : Mapping)
 inductive Resolution where
   | dropped
   | stuck
-  | assertionFailed
   deriving DecidableEq, Repr
+
+abbrev ResolutionOutcome := ExecutionControl Resolution
+
+@[match_pattern] abbrev ExecutionControl.dropped : ResolutionOutcome := .returned .dropped
+@[match_pattern] abbrev ExecutionControl.stuck : ResolutionOutcome := .returned .stuck
 
 -- The locals of `resolve`: their content before it writes them.
 structure ResolveU where
@@ -298,14 +302,14 @@ structure RState where
 
 -- The passes of `resolve` from `k` on.
 def passFrom (pl : Planner) (M : Mapping) (cand : Vector Word maxStackSize) (count excess k : Word)
-    (s : RState) : Resolution × RState :=
+    (s : RState) : ExecutionOutcome Resolution RState :=
   if h : k < excess then
     let r := pickFrom pl s.spills M s.droppedNow cand count 0 NONE 0
     let best := r.1
     if best = NONE then (.stuck, s)
     else
       let a := spillAdd s.spills (get pl.source best)
-      if r.2 = SPILL ∧ a.1 ≠ .done then (.assertionFailed, s)
+      if r.2 = SPILL ∧ a.1 ≠ .done then (.assertionExit, s)
       else
         let spills := if r.2 = SPILL then a.2 else s.spills
         passFrom pl M cand count excess (k + 1)
@@ -318,10 +322,10 @@ decreasing_by bv_omega
 -- and the slot at `blockedOffset` is blocked by `excess` slots.
 def resolve (pl : Planner) (sp : BitVec 32 → BitVec 8) (dropped : Vector (BitVec 8) maxStackSize)
     (M : Mapping) (blockedOffset excess : Word) (current : Mapping) (currentSize : Word)
-    (u : ResolveU) : Resolution × (BitVec 32 → BitVec 8) × Vector (BitVec 8) maxStackSize :=
+    (u : ResolveU) : ExecutionOutcome Resolution ((BitVec 32 → BitVec 8) × Vector (BitVec 8) maxStackSize) :=
   let dn := zeroFrom pl.sourceSize 0 u.droppedNow
   match candidatesFrom M current currentSize (blockedOffset + 1) u.candidates 0 with
-  | none => (.assertionFailed, sp, dropped)
+  | none => (.assertionExit, sp, dropped)
   | some (cand, count) =>
     let r := passFrom pl M cand count excess 0 ⟨sp, dropped, dn⟩
     (r.1, r.2.spills, r.2.dropped)
@@ -357,16 +361,16 @@ decreasing_by bv_omega
 
 -- `Emission::run`: `planned` is the `m_positionOf` array of the planned mapping, and `l` the
 -- content of the local arrays of `permuteAtLowestHeight`.
-def emissionRun (planned : Vector Word maxStackSize) (l : Locals) (st : St) : Status × St :=
+def emissionRun (planned : Vector Word maxStackSize) (l : Locals) (st : St) : ExecutionOutcome Status St :=
   let r := removeSurplus st
   if r.1 ≠ .done then r else
   let r := permuteAtLowestHeight planned l r.2
   if r.1 ≠ .done then r else
   let st := r.2
-  if st.size + st.pend ≠ st.targetSize then (.assertionFailed, st)
-  else if unmappedFrom st 0 0 ≠ st.pend then (.assertionFailed, st)
-  else if !availableFrom st 0 then (.assertionFailed, st)
-  else if !labelsFrom st 0 then (.assertionFailed, st)
+  if st.size + st.pend ≠ st.targetSize then (.assertionExit, st)
+  else if unmappedFrom st 0 0 ≠ st.pend then (.assertionExit, st)
+  else if !availableFrom st 0 then (.assertionExit, st)
+  else if !labelsFrom st 0 then (.assertionExit, st)
   else buildBottomUp st
 
 /-! ## `Planner::run` -/
@@ -452,10 +456,10 @@ decreasing_by bv_omega
 
 -- The `for (;;)` loop of `Planner::run`, with the content `us k` of the locals of attempt `k`.
 -- Each attempt that does not return drops more slots, up to `pl.sourceSize` slots in total.
-def runLoop (pl : Planner) (take : Bool) (s : PSt) (us : Nat → RunU) : Status × PSt :=
+def runLoop (pl : Planner) (take : Bool) (s : PSt) (us : Nat → RunU) : ExecutionOutcome Status PSt :=
   let M := (us 0).mapping.init pl.sourceSize pl.targetSize
   match buildMapping ⟨pl.source, pl.sourceSize, pl.target, pl.targetSize, s.dropped, take⟩ M with
-  | none => (.assertionFailed, s)
+  | none => (.assertionExit, s)
   | some (M, saw) =>
     let s := { s with saw := s.saw || saw, data := copyFrom pl 0 s.data }
     let r := emissionRun M.pos (us 0).l (ctorP s.data pl.sourceSize pl.target pl.targetSize M s.spills (us 0).u)
@@ -469,17 +473,17 @@ def runLoop (pl : Planner) (take : Bool) (s : PSt) (us : Nat → RunU) : Status 
       let s := { s with spills := q.2.1, dropped := q.2.2 }
       match q.1 with
       | .stuck => (.blocked, s)
-      | .assertionFailed => (.assertionFailed, s)
+      | .assertionExit => (.assertionExit, s)
       | .dropped =>
         if h : droppedCount pl.sourceSize s.dropped > before then runLoop pl take s fun k => us (k + 1)
-        else (.assertionFailed, s)
+        else (.assertionExit, s)
 termination_by (pl.sourceSize - droppedCount pl.sourceSize s.dropped).toNat
 decreasing_by exact sub_lt_sub (droppedCount_le _ _) (droppedCount_le _ _) h
 
 -- `Planner::run`
-def plannerRun (pl : Planner) (take : Bool) (s : PSt) (us : Nat → RunU) : Status × PSt :=
+def plannerRun (pl : Planner) (take : Bool) (s : PSt) (us : Nat → RunU) : ExecutionOutcome Status PSt :=
   let s := { s with saw := false }
-  if !targetsFrom pl s.spills 0 then (.assertionFailed, s)
+  if !targetsFrom pl s.spills 0 then (.assertionExit, s)
   else runLoop pl take s us
 
 /-! ## The entry -/
@@ -491,7 +495,7 @@ def plannerRun (pl : Planner) (take : Bool) (s : PSt) (us : Nat → RunU) : Stat
 def planEntry (m n : Word) (source target : Vector StackSlot maxStackSize) (spilled : BitVec 32 → BitVec 8)
     (idCount : Word) (allowed strategy : BitVec 8) (dropped : Vector (BitVec 8) maxStackSize)
     (data : Vector StackSlot maxStackSize) (sources : Vector Word maxStackSize) (us : Nat → RunU) :
-    Word × Option (Status × PSt) :=
+    Word × Option (ExecutionOutcome Status PSt) :=
   if m > .ofNat 64 maxStackSize ∨ n > .ofNat 64 maxStackSize ∨ allowed > 1 ∨ strategy > 1 then (-2, none)
   else if !((offsets m).all fun i => idOk idCount (get source i)) then (-2, none)
   else if !((offsets n).all fun j => idOk idCount (get target j)) then (-2, none)
@@ -502,6 +506,6 @@ def planEntry (m n : Word) (source target : Vector StackSlot maxStackSize) (spil
     match r.1 with
     | .done => (.ofNat 64 r.2.trace.length, some r)
     | .blocked => (-1, some r)
-    | .assertionFailed => (-2, some r)
+    | .assertionExit => (-2, some r)
 
 end FlatShuffler.Flat

@@ -215,9 +215,9 @@ theorem emissionRun_erel' (data target : Vector FlatShuffler.StackSlot FlatShuff
 
 -- The flat result `r` of `runLoop` and a PR31 result of `Planner.run.loop`. For `.done`, the
 -- flat buffers hold the stack, the trace and the sources of the planned mapping.
-def RunR (pl : FlatShuffler.Flat.Planner) (r : FlatShuffler.Flat.Status × FlatShuffler.Flat.PSt) :
+def RunR (pl : FlatShuffler.Flat.Planner) (r : FlatShuffler.Flat.EmissionOutcome × FlatShuffler.Flat.PSt) :
     Except ShuffleErr (Planner.Result (srcOf pl.source pl.sourceSize) (srcOf pl.target pl.targetSize)) → Prop
-  | .error _ => r.1 = .assertionFailed
+  | .error _ => r.1 = .assertionExit
   | .ok res => SRpl pl r.2.spills r.2.dropped res.state ∧ r.2.saw = res.sawWildcardCopy ∧
     match res.result with
     | none => r.1 = .blocked
@@ -284,7 +284,8 @@ theorem runLoop_corr {pl : FlatShuffler.Flat.Planner} (hm : pl.sourceSize.toNat 
   cases hbl : res.blocked with
   | none =>
     simp only [hbl] at hst ⊢
-    simp only [hst, ne_eq, reduceCtorEq, not_false_eq_true, ↓reduceIte, pure, Except.pure, RunR]
+    simp only [hst, ne_eq, FlatShuffler.Flat.ExecutionControl.returned.injEq,
+      reduceCtorEq, not_false_eq_true, ↓reduceIte, pure, Except.pure, RunR]
     refine ⟨⟨rfl, hal, hdn⟩, by rw [hsaw, hsw], trivial, by rw [hl]; exact hout.stack, hout.trace,
       fun j => ?_⟩
     rw [run_planned her, show (0 : FlatShuffler.Word) = .ofNat 64 0 from rfl,
@@ -309,7 +310,7 @@ theorem runLoop_corr {pl : FlatShuffler.Flat.Planner} (hm : pl.sourceSize.toNat 
     generalize FlatShuffler.Flat.resolve _ _ _ _ _ _ _ _ _ = q at hr ⊢
     generalize Planner.resolve _ _ _ _ = eq at hr ⊢
     rcases q with ⟨qr, qsp, qd⟩
-    rcases eq with _ | ⟨succ, resolved⟩ <;> cases qr <;> simp only [RslvR] at hr
+    rcases eq with _ | ⟨succ, resolved⟩ <;> rcases qr with (⟨_ | _⟩ | _) <;> simp only [RslvR] at hr
     · rw [except_error_bind]
       simp [RunR]
     · obtain ⟨rfl, hR⟩ := hr

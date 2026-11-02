@@ -55,7 +55,7 @@ theorem restoreData_produce (st : St) (t : Word)
       let r := produce st t
       (r.1, restoreData cap old r.2) := by
   have hcopy := restoreData_shallowestCopyPosition cap old st (get st.target t) (Nat.le_of_lt hs)
-  have hfin (r : Status × St) :
+  have hfin (r : EmissionOutcome × St) :
       Unit.ProduceProof.fin (r.1, restoreData cap old r.2) t =
         let out := Unit.ProduceProof.fin r t
         (out.1, restoreData cap old out.2) := by

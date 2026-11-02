@@ -180,16 +180,16 @@ structure AddPre (p S : Addr) (f : BitVec 32 → BitVec 8) (n : Nat) (F : MProp 
     (StackSlot.ofWord (rsi s)).payload.toNat < n
   mem : ∃ x y v, (Wd p S ∗ Spl S f (List.range n) ∗ Stk (rsp s) [x, y] v ∗ F).get s.dmem
 
--- `al` is the `Status` of `Flat.spillAdd`, and the bytes are its bytes.
+-- `al` is the `EmissionOutcome` of `Flat.spillAdd`, and the bytes are its bytes.
 def AddPost (p S : Addr) (f : BitVec 32 → BitVec 8) (n : Nat) (F : MProp 64)
     (s t : MachineData) : Prop :=
-  al t = code (Flat.spillAdd f (StackSlot.ofWord (rsi s))).1
+  some (al t) = code (Flat.spillAdd f (StackSlot.ofWord (rsi s))).1
     ∧ ∃ x y v, (Wd p S ∗ Spl S (Flat.spillAdd f (StackSlot.ofWord (rsi s))).2 (List.range n)
       ∗ Stk (rsp s) [x, y] v ∗ F).get t.dmem
 
 def AddExit (p S : Addr) (f : BitVec 32 → BitVec 8) (n : Nat) (F : MProp 64)
     (s t : MachineData) : Prop :=
-  Flat.spillAdd f (StackSlot.ofWord (rsi s)) = (.assertionFailed, f)
+  Flat.spillAdd f (StackSlot.ofWord (rsi s)) = (.assertionExit, f)
     ∧ ∃ x y v, (Wd p S ∗ Spl S f (List.range n) ∗ Stk (rsp s) [x, y] v ∗ F).get t.dmem
 
 -- The call rule of `SpillSet::add`: the caller gives the object, the bytes and the frame.

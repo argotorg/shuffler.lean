@@ -110,7 +110,7 @@ def isCont : Flat.PNext → Bool
       && st.trace == [Op.swapW 16]
   | .ret _ => false
 -- Negative: `bsu_eq` needs a depth above 16; at depth 16 the excess is 0.
-#guard (Flat.blockSwapUnreachable st19 2).1 == .assertionFailed
+#guard (Flat.blockSwapUnreachable st19 2).1 == .assertionExit
 
 /-! ## `swapDestinations` (`sd_eq`) and `swapD` (`ltB_swapD`) -/
 

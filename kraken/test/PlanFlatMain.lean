@@ -78,7 +78,7 @@ def run (take allowed : Bool) (source target : List StackSlot) (vars : List Nat)
           s!"{head};{" ".intercalate ((below n).map (slotText ∘ get s.data))};" ++
             s!"{" ".intercalate (s.trace.map opText)};" ++
             " ".intercalate ((below n).map (offsetText ∘ get s.sources))
-      | .assertionFailed => s!"invalid: failed with the result {r.toInt}"
+      | .assertionExit => s!"invalid: failed with the result {r.toInt}"
   | (r, none) => if r = -2 then "err" else s!"invalid: no state, the result is {r.toInt}"
 
 def runLine (line : String) : Option String := do

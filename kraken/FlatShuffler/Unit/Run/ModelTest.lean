@@ -28,17 +28,17 @@ private def planned : Vector Word maxStackSize := Vector.replicate maxStackSize 
 
 -- The first check rejects a wrong stack-size/pending-generation sum.
 #guard (Flat.emissionRun planned zeroLocals { empty with pend := 1 }).1 =
-    .assertionFailed
+    .assertionExit
 
 -- A pending generation must have an unmapped target offset.
 #guard (Flat.emissionRun planned zeroLocals
     { empty with targetSize := 1, pend := 1, pos := Vector.replicate maxStackSize 0 }).1 =
-    .assertionFailed
+    .assertionExit
 
 -- A value with no stack copy and no spill cannot be generated.
 #guard (Flat.emissionRun planned zeroLocals
     { empty with targetSize := 1, pend := 1, target := Vector.replicate maxStackSize ⟨7, Value, 5⟩ }).1 =
-    .assertionFailed
+    .assertionExit
 
 -- The label check still rejects an unmapped return label when its opcode passes availability.
 private def labelState : Flat.St :=
@@ -46,7 +46,7 @@ private def labelState : Flat.St :=
 
 #guard Flat.availableFrom labelState 0#64 = true
 #guard Flat.labelsFrom labelState 0#64 = false
-#guard (Flat.emissionRun planned zeroLocals labelState).1 = .assertionFailed
+#guard (Flat.emissionRun planned zeroLocals labelState).1 = .assertionExit
 
 -- A free target with one pending generation reaches the generation loop.
 #guard (Flat.emissionRun planned zeroLocals { empty with targetSize := 1, pend := 1 }).1 =

@@ -55,14 +55,14 @@ def resolveQ (r r' : RG) (s t : MachineData) : Prop :=
   ∀ u : Flat.ResolveU,
     let q := Flat.resolve r.p.fl r.spills r.dropped r.M (rdx s) (rcx s)
       r.current (r9 s) u
-    al t = ResolveU.code q.1 ∧ r' = { r with spills := q.2.1, dropped := q.2.2 } ∧
-      q.1 ≠ .assertionFailed
+    some (al t) = ResolveU.code q.1 ∧ r' = { r with spills := q.2.1, dropped := q.2.2 } ∧
+      q.1 ≠ .assertionExit
 
 def resolveX (r r' : RG) (s _t : MachineData) : Prop :=
   ∀ u : Flat.ResolveU,
     let q := Flat.resolve r.p.fl r.spills r.dropped r.M (rdx s) (rcx s)
       r.current (r9 s) u
-    q.1 = .assertionFailed ∧ r' = { r with spills := q.2.1, dropped := q.2.2 }
+    q.1 = .assertionExit ∧ r' = { r with spills := q.2.1, dropped := q.2.2 }
 
 namespace ResolveU
 
@@ -81,11 +81,11 @@ def addA (a : AddG) (s : MachineData) : Prop :=
     (StackSlot.ofWord (rsi s)).payload.toNat < a.count
 
 def addQ (a a' : AddG) (s t : MachineData) : Prop :=
-  al t = FlatShuffler.Unit.code (Flat.spillAdd a.spills (StackSlot.ofWord (rsi s))).1 ∧
+  some (al t) = FlatShuffler.Unit.code (Flat.spillAdd a.spills (StackSlot.ofWord (rsi s))).1 ∧
     a' = { a with spills := (Flat.spillAdd a.spills (StackSlot.ofWord (rsi s))).2 }
 
 def addX (a a' : AddG) (s _t : MachineData) : Prop :=
-  a' = a ∧ Flat.spillAdd a.spills (StackSlot.ofWord (rsi s)) = (.assertionFailed, a.spills)
+  a' = a ∧ Flat.spillAdd a.spills (StackSlot.ofWord (rsi s)) = (.assertionExit, a.spills)
 
 theorem addVSpec [Host] [FunDecls] (hadd : AddSpec) :
     VSpecWithExit AddView AddG.Ok Names.spillSetAdd addA 2 addQ addX := by

@@ -22,7 +22,7 @@ variable {e : Env} {fs : St} {st : FlatShuffler.St}
 def urgW (n k : Nat) : Word := if k < n then BitVec.ofNat 64 k else NONE
 
 -- The flat result `r` of `urgentFrom` holds the list result `m`.
-def UrgR (e : Env) : Except (Status × St) Word → M Nat → Prop
+def UrgR (e : Env) : Except (EmissionOutcome × St) Word → M Nat → Prop
   | .ok u, .ok k => k ≤ e.n ∧ u = urgW e.n k
   | .error r, .error err => SimR e r (.error err)
   | _, _ => False
@@ -181,12 +181,12 @@ theorem movable_eq (hs : Sim e fs st) {b : Nat} (hb : b < st.len) :
 def NR (e : Env) : Next → M (FlatShuffler.St × FlatShuffler.Next) → Prop
   | .cont fs t', .ok (st, .next k) => t' + 1 = BitVec.ofNat 64 k ∧ Sim e fs st
   | .ret r, .ok (st, .finish) => ∃ fs, Sim e fs st ∧
-      (fs.size ≠ fs.targetSize → r = (.assertionFailed, fs)) ∧
+      (fs.size ≠ fs.targetSize → r = (.assertionExit, fs)) ∧
       (fs.size = fs.targetSize → r = permuteMapping fs)
   | .ret r, .error err => SimR e r (.error err)
   | _, _ => False
 
-theorem NR.bind {r : Status × St} {m : M FlatShuffler.St} {g : St → Next}
+theorem NR.bind {r : EmissionOutcome × St} {m : M FlatShuffler.St} {g : St → Next}
     {f : FlatShuffler.St → M (FlatShuffler.St × FlatShuffler.Next)} (h : SimR e r m)
     (hg : ∀ fs st, Sim e fs st → m = .ok st → NR e (g fs) (f st)) :
     NR e (if r.1 ≠ .done then .ret r else g r.2) (m.bind f) := by
@@ -201,7 +201,7 @@ theorem NR.bind {r : Status × St} {m : M FlatShuffler.St} {g : St → Next}
     rw [ite_eq_left (c := r.1 ≠ .done) (by rw [h1]; decide)]
     exact h1
 
-theorem NR.map {r : Status × St} {m : M FlatShuffler.St} {t' : Word} {k : Nat} (h : SimR e r m)
+theorem NR.map {r : EmissionOutcome × St} {m : M FlatShuffler.St} {t' : Word} {k : Nat} (h : SimR e r m)
     (hk : t' + 1 = BitVec.ofNat 64 k) :
     NR e (if r.1 ≠ .done then .ret r else .cont r.2 t') (m.map (·, .next k)) := by
   match m, h with
@@ -458,7 +458,7 @@ theorem sim_body (hs : Sim e fs st) {t : Word} (hi : InvS e st t.toNat) (ht : t.
       obtain ⟨b, hb⟩ := Option.isSome_iff_exists.mp hC
       exact sim_bound hs ht hb
     rw [ite_eq_right (fun h => hC ((hs.pos_ne_NONE ht).mp h)), ite_eq_right hC]
-    refine NR.bind (g := fun fs' => if ¬t < fs'.size then .ret (.assertionFailed, fs')
+    refine NR.bind (g := fun fs' => if ¬t < fs'.size then .ret (.assertionExit, fs')
       else if isFinal fs' t then .cont fs' t else placeTop fs' t) (sim_generate hs t hlt) ?_
     intro fs' st' hs' _
     have hsz' := hs'.size

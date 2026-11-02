@@ -40,13 +40,13 @@ termination_by pos.toNat
 decreasing_by bv_omega
 
 -- One pass of the loop of `removeSurplus`.
-def surplusPass (st : St) : Except (Status × St) St :=
+def surplusPass (st : St) : Except (ExecutionOutcome Status St) St :=
   let sc := surplusScan st st.size NONE NONE
   if sc.1 = NONE then .error (.done, st)
   else if sc.2 = NONE then .error (blockSwapUnreachable st sc.1)
   else
     let top := st.size - 1
-    let r : Status × St :=
+    let r : ExecutionOutcome Status St :=
       if sc.1 = top then (.done, st)
       else if equalBelow st top ≠ NONE then (.done, swapDestinations st (equalBelow st top) top)
       else swapWith st sc.2
@@ -56,7 +56,7 @@ def surplusPass (st : St) : Except (Status × St) St :=
       if r.1 ≠ .done then .error r else .ok r.2
 
 -- The loop of `removeSurplus`, with at most `fuel` passes.
-def surplusLoop (st : St) : Nat → Status × St
+def surplusLoop (st : St) : Nat → ExecutionOutcome Status St
   | 0 => (.done, st)
   | fuel + 1 =>
     if st.size = 0 then (.done, st)
@@ -65,17 +65,17 @@ def surplusLoop (st : St) : Nat → Status × St
       | .ok st => surplusLoop st fuel
 
 -- `removeSurplus`
-def removeSurplus (st : St) : Status × St := surplusLoop st st.size.toNat
+def removeSurplus (st : St) : ExecutionOutcome Status St := surplusLoop st st.size.toNat
 
 -- `remove_surplus`: the result and the final status and state. `u` and `up` are as in
 -- `emission_pop`. The C++ writes `blocked` (`0` and `0` for `.done`, else the members
 -- `blockedOffset` and `blockedExcess`), the size to `height`, and `dest` below the size.
 def remove_surplus (m n : Word) (data target : Vector StackSlot maxStackSize) (dests : Vector Word maxStackSize)
-    (spilled : BitVec 32 → BitVec 8) (u : Uninit) (up : Mapping) : Word × Option (Status × St) :=
+    (spilled : BitVec 32 → BitVec 8) (u : Uninit) (up : Mapping) : Word × Option (ExecutionOutcome Status St) :=
   if m > .ofNat 64 maxStackSize ∨ n > .ofNat 64 maxStackSize then (-2, none)
   else
     let r := removeSurplus (ctorP data m target n (plan up m n dests) spilled u)
-    if r.1 = .assertionFailed then (-2, some r)
+    if r.1 = .assertionExit then (-2, some r)
     else (.ofNat 64 r.2.trace.length, some r)
 
 end FlatShuffler.Flat

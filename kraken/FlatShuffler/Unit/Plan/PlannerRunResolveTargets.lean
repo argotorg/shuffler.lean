@@ -94,7 +94,7 @@ decreasing_by exact Flat.sub_succ_lt hj
 theorem resolve_targetsFrom (pl : Flat.Planner) (sp : BitVec 32 → BitVec 8)
     (dropped : Vector (BitVec 8) maxStackSize) (M : Flat.Mapping)
     (blockedOffset excess : Word) (current : Flat.Mapping) (currentSize : Word)
-    (u : Flat.ResolveU) {resolution : Flat.Resolution}
+    (u : Flat.ResolveU) {resolution : Flat.ResolutionOutcome}
     {sp' : BitVec 32 → BitVec 8} {dropped' : Vector (BitVec 8) maxStackSize}
     (hr : Flat.resolve pl sp dropped M blockedOffset excess current currentSize u =
       (resolution, sp', dropped'))

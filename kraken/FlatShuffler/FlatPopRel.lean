@@ -32,7 +32,7 @@ def absSt (planned : Map.Mapping) (st : St) : Map.State where
   pend := st.pend.toNat
 
 -- The list result of a flat result.
-def absRes (planned : Map.Mapping) : Status × St → M Map.State
+def absRes (planned : Map.Mapping) : EmissionOutcome × St → M Map.State
   | (.done, st) => .ok (absSt planned st)
   | _ => .error .assertion
 
@@ -209,9 +209,11 @@ theorem popLoop_abs (planned : Map.Mapping) (st : St) (count : Nat)
     obtain ⟨r, st'⟩ := pop st
     intro hsz
     cases r with
-    | done => exact ih st' hsz
-    | blocked => rfl
-    | assertionFailed => rfl
+    | returned status =>
+      cases status with
+      | done => exact ih st' hsz
+      | blocked => rfl
+    | assertionExit => rfl
 
 /-! ## `push` and `dup`: `Mapping::bind` of the new top -/
 

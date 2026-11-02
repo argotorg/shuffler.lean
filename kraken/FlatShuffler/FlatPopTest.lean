@@ -55,7 +55,7 @@ def view (st : St) : List StackSlot × List Word × List Word × Word × List Op
   ((below st.size).map (get st.data), (below st.size).map (get st.dest),
     (below st.targetSize).map (get st.pos), st.pend, st.trace)
 
-def viewR (r : Status × St) := (r.1, view r.2)
+def viewR (r : EmissionOutcome × St) := (r.1, view r.2)
 
 -- All members but `spills` are equal.
 def same (a b : St) : Bool :=
@@ -106,7 +106,7 @@ def viaCtor (m n : Nat) (ds : List (Option Nat)) : St :=
 /-! ## `pop` -/
 
 -- An empty stack: the assertion, and no change.
-#guard viewR (pop (mk [] [x] [])) = (.assertionFailed, view (mk [] [x] []))
+#guard viewR (pop (mk [] [x] [])) = (.assertionExit, view (mk [] [x] []))
 #guard (pop (mk [] [x] [])).2.size = 0
 -- A bound top: the target offset `0` loses its position. The pending count stays.
 #guard viewR (pop (mk [x, y] [y, x] [some 1, some 0]))
@@ -127,9 +127,9 @@ def s3 : St := mk [x, y, var 4] [var 4, y, x] [some 2, some 1, some 0]
 #guard viewR (popLoop s3 2) = (.done, [x], words [2], [NONE, NONE, 0], 0, [Op.pop, Op.pop])
 #guard viewR (popLoop s3 3) = (.done, [], [], [NONE, NONE, NONE], 0, [Op.pop, Op.pop, Op.pop])
 -- One more than the size: the fourth pop fails, after three pops.
-#guard (popLoop s3 4).1 = .assertionFailed
+#guard (popLoop s3 4).1 = .assertionExit
 #guard (popLoop s3 4).2.trace.length = 3
-#guard (popLoop s3 100).1 = .assertionFailed
+#guard (popLoop s3 100).1 = .assertionExit
 
 /-! ## `emission_pop` -/
 

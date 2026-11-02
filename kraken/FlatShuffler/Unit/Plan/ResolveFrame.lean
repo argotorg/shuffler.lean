@@ -144,6 +144,6 @@ theorem post_rax {r r' : RG} {s t u : MachineData} (h : resolveQ r r' s t)
     (ha : rax u = rax t) : resolveQ r r' s u := by
   intro v
   obtain ⟨hal, hq⟩ := h v
-  exact ⟨(congrArg (BitVec.setWidth 8) ha).trans hal, hq⟩
+  exact ⟨(congrArg (fun w : Word => some (w.setWidth 8)) ha).trans hal, hq⟩
 
 end FlatShuffler.Unit.ResolveU

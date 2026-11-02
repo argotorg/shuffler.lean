@@ -404,7 +404,7 @@ theorem produce_grow (h : (Flat.produce st t).1 = .done) : Grow st (Flat.produce
         Flat.push st (Flat.get st.target t) t
       else if Flat.shallowestCopyPosition st (Flat.get st.target t) ≠ Flat.NONE then
         Flat.blockDupUnreachable st (Flat.shallowestCopyPosition st (Flat.get st.target t))
-      else (Flat.Status.assertionFailed, st)) = r at h ⊢
+      else (Flat.ExecutionControl.assertionExit, st)) = r at h ⊢
   have key : r.1 = .done → Grow st r.2 t := by
     subst hr
     split
@@ -428,7 +428,7 @@ theorem produce_grow (h : (Flat.produce st t).1 = .done) : Grow st (Flat.produce
       exact ⟨g.size, g.trace, g.dest, g.tsize⟩
   · simp [h1] at h
 
-theorem gen_fail (h : ¬t < st.targetSize) : Flat.generate st t = (.assertionFailed, st) := by
+theorem gen_fail (h : ¬t < st.targetSize) : Flat.generate st t = (.assertionExit, st) := by
   simp [Flat.generate, h]
 
 theorem gen_prod (h : t < st.targetSize) (hp : (Flat.produce st t).1 ≠ .done) :
@@ -609,8 +609,8 @@ theorem slot_eq_iff {a b : Word} :
   simp only [StackSlot.ofWord, StackSlot.mk.injEq]
   constructor <;> (rintro ⟨h1, h2, h3⟩; exact ⟨h1.symm, h2.symm, h3.symm⟩)
 
-theorem code_eq_zero {st : Flat.Status} (h : code st = 0#8) : st = .done := by
-  cases st <;> revert h <;> decide
+theorem code_eq_zero {st : Flat.EmissionOutcome} (h : code st = some 0#8) : st = .done := by
+  exact (code_eq_done st).mp h
 
 /-! ## `get` and `put` -/
 
@@ -683,13 +683,12 @@ theorem after_prod {g g1 : G} {T : Word} {s : MachineData} (hok : g.Ok) (hok1 : 
 
 
 -- The result of `generate` from the result `r` of the flat model.
-theorem genQ {g g1 : G} {s t : MachineData} {r : Flat.Status × Flat.St} (hK : Keep g g1)
-    (hgen : Flat.generate (flat g) (rsi s) = r) (hf : flat g1 = r.2) (hal : al t = code r.1)
-    (normalStatus : code r.1 ≠ ASSERTION_FAILED) :
+theorem genQ {g g1 : G} {s t : MachineData} {r : Flat.EmissionOutcome × Flat.St} (hK : Keep g g1)
+    (hgen : Flat.generate (flat g) (rsi s) = r) (hf : flat g1 = r.2) (hal : some (al t) = code r.1) :
     generateQ g g1 s t :=
   by
     subst hgen
-    exact ⟨⟨hK, hf, hal⟩, fun failed => normalStatus (hal.symm.trans failed)⟩
+    exact ⟨hK, hf, hal⟩
 
 -- The post of `swapWith` reads `rsi` of the call state. `generate` passes its own `rsi`.
 theorem swapQ_of {g1 g2 : G} {c s t : MachineData} (h : swapWithQ g1 g2 c t) (hc : rsi c = rsi s) :
@@ -873,13 +872,13 @@ theorem lb52_facts {g1 : G} {a b : Word} (hok : g1.Ok) (ha : a.toNat < maxStackS
     rw [get_put_self _ hbN]
     exact hdo a hlt
 
-theorem gen52_none {r : Flat.Status × Flat.St} {g1 : G} {a b : Word}
+theorem gen52_none {r : Flat.EmissionOutcome × Flat.St} {g1 : G} {a b : Word}
     (hgen : r = (.done, Flat.swapDestinations (flat g1) a b))
     (hz : Flat.get (dsw (flat g1) a b).dest a = Flat.NONE) :
     r = (.done, posAt (flat (withDest g1 (dsw (flat g1) a b).dest)) b) := by
   rw [hgen, swapDestinations_eq, posAt_none hz]; rfl
 
-theorem gen52_some {r : Flat.Status × Flat.St} {g1 : G} {a b : Word}
+theorem gen52_some {r : Flat.EmissionOutcome × Flat.St} {g1 : G} {a b : Word}
     (hgen : r = (.done, Flat.swapDestinations (flat g1) a b))
     (hz : Flat.get (dsw (flat g1) a b).dest a ≠ Flat.NONE) :
     r = (.done, posAt (flat (withPos (withDest g1 (dsw (flat g1) a b).dest)
@@ -1040,8 +1039,8 @@ theorem b_fn
         rw [hg]
         exact ⟨hK, hf, hfail⟩)
     intro t g1 fr1 w1 hmid1 hQ1 hok1
-    obtain ⟨hK1, hf1, hal1⟩ : Res (Flat.produce · (rsi s)) g g1 t := hQ1.1
-    have hal : al t = code (Flat.produce (flat g) (rsi s)).1 := hal1
+    obtain ⟨hK1, hf1, hal1⟩ : Res (Flat.produce · (rsi s)) g g1 t := hQ1
+    have hal : some (al t) = code (Flat.produce (flat g) (rsi s)).1 := hal1
     have hbp1 : t.regs.rbp.toBitVec = S := hmid1.bp
     have hbx1 : t.regs.rbx.toBitVec = s.regs.rsi.toBitVec := by rw [hmid1.bx]
     have hTn : (rsi s).toNat < g.h.n.toNat := BitVec.lt_def.mp hlt
@@ -1064,40 +1063,37 @@ theorem b_fn
     case vc1 =>
       have hne : al t ≠ 0#8 := al_ne (by with_reducible assumption)
       have hpn : (Flat.produce (flat g) s.regs.rsi.toBitVec).1 ≠ .done := fun e =>
-        hne (hal.trans ((congrArg code e).trans rfl))
+        hne (Option.some.inj (hal.trans ((congrArg code e).trans rfl)))
       cfg_goto
       · exact (mid_next% hmid1).stack
       · simp only [Inv, Names.generate, String.reduceEq, ↓reduceIte]
         exact ⟨g1, fr1, w1, mid_next% hmid1,
-          genQ hK1 (gen_prod hlt hpn) hf1 hal
-            (fun failed => hQ1.2 (hal.trans failed)), hok1⟩
+          genQ hK1 (gen_prod hlt hpn) hf1 hal, hok1⟩
       · simp [V]
     case vc3 =>
       have hal0 : al t = 0#8 := al_zero (by with_reducible assumption)
-      have hp := code_eq_zero (hal.symm.trans hal0)
+      have hp := code_eq_zero (hal.symm.trans (congrArg some hal0))
       have hnl : ¬s.regs.rsi.toBitVec + 1#64 < g1.h.len := not_lt_of_cf (by with_reducible assumption)
       have hG := gen_done hlt hp hf1 (fun h => hnl h.1)
       cfg_goto
       · exact (mid_next% hmid1).stack
       · simp only [Inv, Names.generate, String.reduceEq, ↓reduceIte]
-        exact ⟨g1, fr1, w1, mid_next% hmid1, genQ hK1 hG rfl ((al_eq (by with_reducible rfl)).trans hal0)
-          (by change 0#8 ≠ 2#8; decide), hok1⟩
+        exact ⟨g1, fr1, w1, mid_next% hmid1, genQ hK1 hG rfl (congrArg some ((al_eq (by with_reducible rfl)).trans hal0)), hok1⟩
       · simp [V]
     case vc5 =>
       have hal0 : al t = 0#8 := al_zero (by with_reducible assumption)
-      have hp := code_eq_zero (hal.symm.trans hal0)
+      have hp := code_eq_zero (hal.symm.trans (congrArg some hal0))
       have hfin : g1.h.dest[s.regs.rsi.toBitVec.toNat] = s.regs.rsi.toBitVec :=
         eq_of_z (by with_reducible assumption)
       have hG := gen_done hlt hp hf1 (not_cond_of hTm hfin)
       cfg_goto
       · exact (mid_next% hmid1).stack
       · simp only [Inv, Names.generate, String.reduceEq, ↓reduceIte]
-        exact ⟨g1, fr1, w1, mid_next% hmid1, genQ hK1 hG rfl ((al_eq (by with_reducible rfl)).trans hal0)
-          (by change 0#8 ≠ 2#8; decide), hok1⟩
+        exact ⟨g1, fr1, w1, mid_next% hmid1, genQ hK1 hG rfl (congrArg some ((al_eq (by with_reducible rfl)).trans hal0)), hok1⟩
       · simp [V]
     case vc10 =>
       have hal0 : al t = 0#8 := al_zero (by with_reducible assumption)
-      have hp := code_eq_zero (hal.symm.trans hal0)
+      have hp := code_eq_zero (hal.symm.trans (congrArg some hal0))
       have h1 : s.regs.rsi.toBitVec + 1#64 < g1.h.len := lt_of_cf (by with_reducible assumption)
       have hfin : g1.h.dest[s.regs.rsi.toBitVec.toNat] ≠ s.regs.rsi.toBitVec :=
         ne_of_z (by with_reducible assumption)
@@ -1115,7 +1111,7 @@ theorem b_fn
       · simp [V]
     case vc11 =>
       have hal0 : al t = 0#8 := al_zero (by with_reducible assumption)
-      have hp := code_eq_zero (hal.symm.trans hal0)
+      have hp := code_eq_zero (hal.symm.trans (congrArg some hal0))
       have h1 : s.regs.rsi.toBitVec + 1#64 < g1.h.len := lt_of_cf (by with_reducible assumption)
       have hfin : g1.h.dest[s.regs.rsi.toBitVec.toNat] ≠ s.regs.rsi.toBitVec :=
         ne_of_z (by with_reducible assumption)
@@ -1132,7 +1128,7 @@ theorem b_fn
       · simp [V]
     case vc12 =>
       have hal0 : al t = 0#8 := al_zero (by with_reducible assumption)
-      have hp := code_eq_zero (hal.symm.trans hal0)
+      have hp := code_eq_zero (hal.symm.trans (congrArg some hal0))
       have h1 : s.regs.rsi.toBitVec + 1#64 < g1.h.len := lt_of_cf (by with_reducible assumption)
       have hfin : g1.h.dest[s.regs.rsi.toBitVec.toNat] ≠ s.regs.rsi.toBitVec :=
         ne_of_z (by with_reducible assumption)
@@ -1142,8 +1138,7 @@ theorem b_fn
         hd ((reach_iff (flat g1) s.regs.rsi.toBitVec).mp h)
       have hG := gen_far hlt hp hf1 (cond_of hTm h1 hfin) he hr
       simp only [Inv, Names.generate, String.reduceEq, ↓reduceIte]
-      exact ⟨g1, fr1, w1, mid_next% hmid1, genQ hK1 hG rfl ((al_eq (by with_reducible rfl)).trans hal0)
-          (by change 0#8 ≠ 2#8; decide), hok1⟩
+      exact ⟨g1, fr1, w1, mid_next% hmid1, genQ hK1 hG rfl (congrArg some ((al_eq (by with_reducible rfl)).trans hal0)), hok1⟩
     all_goals simp [V]
 
 theorem b_exit
@@ -1156,7 +1151,7 @@ theorem b_exit
   intro t ht
   simp only [Inv, Names.generate, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨fr12, w, hlen, hmem, hsp, hfail⟩ := ht
-  have hg : Flat.generate (flat g) (rsi s) = (.assertionFailed, flat g) := gen_fail hfail
+  have hg : Flat.generate (flat g) (rsi s) = (.assertionExit, flat g) := gen_fail hfail
   kvcgen64 [he]
   all_goals symexec_norm
   vc_by_shape
@@ -1200,7 +1195,7 @@ theorem b_ret :
       (E := fun a t => a = ra ∧ Sep.Post S F 16 (fun g' t => generateQ g g' s t) s t
         ∧ Sep.mod.Agree s t) ?_ (fun h => Or.inl h)
     refine Kp.ret (hmid.pop ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_) (by simp [hmid.len]) hok' fun t' _ hax =>
-      NormalResult.of_returnRegister_eq hQ hax
+      NormalResult.of_returnRegister_eq (f := (Flat.generate · (rsi s))) hQ hax
     all_goals with_reducible simp only [rd, BitVec.add_comm (8#64), BitVec.add_assoc, BitVec.reduceAdd]
 
 theorem b_swap
@@ -1236,15 +1231,14 @@ theorem b_swap
   intro t2 g2 fr2 w2 hmid2 hQ2 hok2
   have swapNormal : swapWithQ g1 g2 s t2 :=
     swapQ_of hQ2 (show t.regs.rbx.toBitVec = s.regs.rsi.toBitVec by rw [hmid1.bx])
-  obtain ⟨hK2, hf2, hal2⟩ := swapNormal.1
+  obtain ⟨hK2, hf2, hal2⟩ := swapNormal
   kvcgen64
   vc_by_shape
   | goto ".LB.Emission.generate.0" =>
     cfg_goto
     · exact hmid2.stack
     · simp only [Inv, Names.generate, String.reduceEq, ↓reduceIte]
-      exact ⟨g2, fr2, w2, hmid2, genQ (Keep.trans hK1 hK2) hgen hf2 hal2
-        (fun failed => swapNormal.2 (hal2.trans failed)), hok2⟩
+      exact ⟨g2, fr2, w2, hmid2, genQ (Keep.trans hK1 hK2) hgen hf2 hal2, hok2⟩
     · simp [V]
 
 theorem b_dest1 :
@@ -1318,8 +1312,7 @@ theorem b_dest2 :
       · simp only [Inv, Names.generate, String.reduceEq, ↓reduceIte]
         exact ⟨g2, fr2, w2, mid_next% hmid2,
           genQ hK2 hgen (posAt_none (st := flat g2) hz).symm
-            ((al_eq (t := t) (by with_reducible rfl)).trans hal0)
-            (by change 0#8 ≠ 2#8; decide), hok2⟩
+            (congrArg some ((al_eq (t := t) (by with_reducible rfl)).trans hal0)), hok2⟩
       · simp [V]
     | have hz := ne_none_of_z (by with_reducible assumption)
       have hdn := hd.resolve_left hz
@@ -1329,8 +1322,7 @@ theorem b_dest2 :
         exact ⟨_, fr2, w2, mid_step% hmid2 (store_pos_put hm2 hdn _),
           genQ (Keep.trans hK2 (Keep.withPos _)) hgen
             ((flat_withPos _).trans (posAt_some (st := flat g2) hz).symm)
-            ((al_eq (t := t) (by with_reducible rfl)).trans hal0)
-            (by change 0#8 ≠ 2#8; decide), Ok.withPos hok2 _⟩
+            (congrArg some ((al_eq (t := t) (by with_reducible rfl)).trans hal0)), Ok.withPos hok2 _⟩
       · simp [V]
 
 end

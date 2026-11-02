@@ -14,8 +14,8 @@ namespace FlatShuffler.Unit
 open FlatShuffler.Sep
 
 /-- The model reports an assertion error and gives the memory at the exit boundary. -/
-def ExitRes (f : Flat.St → Flat.Status × Flat.St) (g g' : G) : Prop :=
-  Keep g g' ∧ flat g' = (f (flat g)).2 ∧ (f (flat g)).1 = .assertionFailed
+def ExitRes (f : Flat.St → Flat.EmissionOutcome × Flat.St) (g g' : G) : Prop :=
+  Keep g g' ∧ flat g' = (f (flat g)).2 ∧ (f (flat g)).1 = .assertionExit
 
 abbrev UnitThmWithExit [Host] [FunDecls] (prog : Program) (A : G → MachineData → Prop)
     (d : Nat) (Q X : G → G → MachineData → MachineData → Prop) : Prop :=

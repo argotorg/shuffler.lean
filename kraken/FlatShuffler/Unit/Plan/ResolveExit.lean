@@ -20,27 +20,27 @@ namespace FlatShuffler.Unit.ResolveU
 
 open FlatShuffler.Sep
 
-def modelQ (r r' : RG) (s : MachineData) (st : Flat.Resolution) : Prop :=
+def modelQ (r r' : RG) (s : MachineData) (st : Flat.ResolutionOutcome) : Prop :=
   ∀ u : Flat.ResolveU,
     let q := Flat.resolve r.p.fl r.spills r.dropped r.M (rdx s) (rcx s)
       r.current (r9 s) u
     q.1 = st ∧ r' = { r with spills := q.2.1, dropped := q.2.2 }
 
-theorem model_post {r r' : RG} {s t : MachineData} {st : Flat.Resolution}
-    (hm : modelQ r r' s st) (ha : al t = code st) (hst : st ≠ .assertionFailed) :
+theorem model_post {r r' : RG} {s t : MachineData} {st : Flat.ResolutionOutcome}
+    (hm : modelQ r r' s st) (ha : some (al t) = code st) (hst : st ≠ .assertionExit) :
     resolveQ r r' s t := by
   intro u
   obtain ⟨hres, hout⟩ := hm u
   exact ⟨ha.trans (congrArg code hres).symm, hout, fun he => hst (hres.symm.trans he)⟩
 
 def Return (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
-    (st : Flat.Resolution) (t : MachineData) : Prop :=
+    (st : Flat.ResolutionOutcome) (t : MachineData) : Prop :=
   ∃ r' lo loc, Bd P r' F s ra lo loc t ∧ r'.Ok ∧ modelQ r r' s st
 
 def Result (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (t : MachineData) : Prop :=
   ∃ r' lo loc st, Bd P r' F s ra lo loc t ∧ r'.Ok ∧ modelQ r r' s st ∧
-    al t = code st ∧ st ≠ .assertionFailed
+    some (al t) = code st ∧ st ≠ .assertionExit
 
 def Inv (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (phase : Label → MachineData → Prop) : CfgLabel → MachineData → Prop
@@ -48,7 +48,7 @@ def Inv (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
   | .exit, _ => False
   | .label l, t =>
     if l = Names.resolve then t = s.pushRa ra
-    else if l = ".LB.Planner.resolve.2" then Return P r F s ra .assertionFailed t
+    else if l = ".LB.Planner.resolve.2" then Return P r F s ra .assertionExit t
     else if l = ".LB.Planner.resolve.18" then Result P r F s ra t
     else if l = ".LB.Planner.resolve.15" then Return P r F s ra .stuck t
     else if l = ".LB.Planner.resolve.16" then Return P r F s ra .dropped t
@@ -162,7 +162,7 @@ theorem b_18 : resolveAsm.ForallBlocks fun blk =>
       fun u _ hax => ?_
     · exact hb.pop rfl rfl rfl rfl rfl rfl rfl rfl
     · apply model_post hm
-      · exact (congrArg (BitVec.setWidth 8) hax).trans ha
+      · exact (congrArg (fun w : Word => some (w.setWidth 8)) hax).trans ha
       · exact hst
 
 theorem b_15 : resolveAsm.ForallBlocks fun blk =>

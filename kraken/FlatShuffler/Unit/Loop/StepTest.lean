@@ -52,11 +52,11 @@ def keeps (st : St) (p : Word) : Bool :=
 #guard (swapWith s3 0).1 = .done ∧ keeps s3 0
 #guard (swapWith (deep 18) 1).1 = .done ∧ keeps (deep 18) 1
 -- Each check that fails: no slot, final, too deep, depth 0.
-#guard (swapWith s3 3).1 = .assertionFailed ∧ keeps s3 3
-#guard (swapWith (mk [x, y] [x, y] [0, 1]) 0).1 = .assertionFailed
+#guard (swapWith s3 3).1 = .assertionExit ∧ keeps s3 3
+#guard (swapWith (mk [x, y] [x, y] [0, 1]) 0).1 = .assertionExit
   ∧ keeps (mk [x, y] [x, y] [0, 1]) 0
-#guard (swapWith (deep 18) 0).1 = .assertionFailed ∧ keeps (deep 18) 0
-#guard (swapWith s3 2).1 = .assertionFailed ∧ keeps s3 2
+#guard (swapWith (deep 18) 0).1 = .assertionExit ∧ keeps (deep 18) 0
+#guard (swapWith s3 2).1 = .assertionExit ∧ keeps s3 2
 -- A state with pending generations.
 #guard (swapWith (mk [x, y] [J, x, y] [2, 1]) 0).1 = .done ∧ keeps (mk [x, y] [J, x, y] [2, 1]) 0
 #guard (mk [x, y] [J, x, y] [2, 1]).pend = 1
@@ -80,9 +80,9 @@ def gSd : St := mk [x, y] [x, x, y] [1, 2]
 #guard (generate { s1 with pend := 0 } 0).2.pend = -1
 -- Not done: `t ≥ targetSize`. `generate` keeps `pend`, so the conclusion of `generate_keep`
 -- is false: it needs `done`.
-#guard (generate s1 1).1 = .assertionFailed ∧ !genKeeps s1 1
+#guard (generate s1 1).1 = .assertionExit ∧ !genKeeps s1 1
 #guard (generate s1 1).2.pend = s1.pend
 -- Not done: `produce` fails (an offset with a slot already).
-#guard (generate (mk [x] [x] [0]) 0).1 = .assertionFailed ∧ !genKeeps (mk [x] [x] [0]) 0
+#guard (generate (mk [x] [x] [0]) 0).1 = .assertionExit ∧ !genKeeps (mk [x] [x] [0]) 0
 
 end FlatShuffler.Flat.StepTest

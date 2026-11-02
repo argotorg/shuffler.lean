@@ -11,7 +11,7 @@ import all FlatShuffler.FlatModel
 A model of `struct SpillSet` and of `spill_set` in `c/shuffler/test_wrappers.cpp`, in the style of
 `FlatModel.lean`: one function for each function of the C++, with the statements in the order of
 the C++. The spill set is the buffer `m_spilled`: the byte of the variable id `i` is `sp i`.
-A `yulAssert` returns `.assertionFailed`.
+A failed `yulAssert` gives `.assertionExit`.
 
 The unit theorem `Unit.spillSetAdd_unit` (`Unit/SpillAdd.lean`) gives
 that the asm computes these functions. The root lib `ShufflerBridge.SpillSet` also compiles this file, and
@@ -32,13 +32,13 @@ def setByte (sp : BitVec 32 → BitVec 8) (i : BitVec 32) (b : BitVec 8) : BitVe
   fun j => if j = i then b else sp j
 
 -- `SpillSet::add`
-def spillAdd (sp : BitVec 32 → BitVec 8) (x : StackSlot) : Status × (BitVec 32 → BitVec 8) :=
-  if !isVariable x then (.assertionFailed, sp)
-  else if sp x.payload != 0 then (.assertionFailed, sp)
+def spillAdd (sp : BitVec 32 → BitVec 8) (x : StackSlot) : ExecutionOutcome Status (BitVec 32 → BitVec 8) :=
+  if !isVariable x then (.assertionExit, sp)
+  else if sp x.payload != 0 then (.assertionExit, sp)
   else (.done, setByte sp x.payload 1)
 
 -- The loop of `spill_set` that adds the slots, up to the first add that fails.
-def spillAddAll (sp : BitVec 32 → BitVec 8) : List StackSlot → Status × (BitVec 32 → BitVec 8)
+def spillAddAll (sp : BitVec 32 → BitVec 8) : List StackSlot → ExecutionOutcome Status (BitVec 32 → BitVec 8)
   | [] => (.done, sp)
   | x :: xs =>
     let r := spillAdd sp x

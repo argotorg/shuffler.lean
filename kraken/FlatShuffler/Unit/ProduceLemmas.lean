@@ -450,21 +450,21 @@ theorem split12 {fr : List Word} (h : fr.length = 12) :
 /-! ## The flat model of `produce` -/
 
 -- The last two cases of the action: a free slot or a spilled slot, then a block.
-def tail (st : Flat.St) (x : StackSlot) (cp t : Word) : Flat.Status × Flat.St :=
+def tail (st : Flat.St) (x : StackSlot) (cp t : Word) : Flat.EmissionOutcome × Flat.St :=
   if canBeFreelyGenerated x || Flat.isSpilled st x then Flat.push st x t
   else if cp ≠ Flat.NONE then Flat.blockDupUnreachable st cp
-  else (.assertionFailed, st)
+  else (.assertionExit, st)
 
 -- The action of `produce` for the slot `x` with the copy position `cp`.
-def act (st : Flat.St) (x : StackSlot) (cp t : Word) : Flat.Status × Flat.St :=
+def act (st : Flat.St) (x : StackSlot) (cp t : Word) : Flat.EmissionOutcome × Flat.St :=
   if isJunk x then Flat.push st x t
   else if cp ≠ Flat.NONE ∧ Flat.isDupReachable st cp then Flat.dup st cp t
   else tail st x cp t
 
 -- The check after the action.
-def fin (r : Flat.Status × Flat.St) (t : Word) : Flat.Status × Flat.St :=
+def fin (r : Flat.EmissionOutcome × Flat.St) (t : Word) : Flat.EmissionOutcome × Flat.St :=
   if r.1 ≠ .done then r
-  else if Flat.get r.2.pos t ≠ r.2.size - 1 then (.assertionFailed, r.2)
+  else if Flat.get r.2.pos t ≠ r.2.size - 1 then (.assertionExit, r.2)
   else (.done, { r.2 with pend := r.2.pend - 1 })
 
 theorem produce_eq (st : Flat.St) (t : Word) :
@@ -490,28 +490,28 @@ theorem tail_push (h : (canBeFreelyGenerated x || Flat.isSpilled st x) = true) :
   unfold tail; rw [ite_eq_left h]
 
 theorem tail_none (h : (canBeFreelyGenerated x || Flat.isSpilled st x) = false)
-    (hc : cp = Flat.NONE) : tail st x cp t = (.assertionFailed, st) := by
+    (hc : cp = Flat.NONE) : tail st x cp t = (.assertionExit, st) := by
   unfold tail; rw [ite_eq_right (by rw [h]; decide), ite_eq_right (fun e => e hc)]
 
 theorem tail_block (h : (canBeFreelyGenerated x || Flat.isSpilled st x) = false)
     (hc : cp ≠ Flat.NONE) : tail st x cp t = Flat.blockDupUnreachable st cp := by
   unfold tail; rw [ite_eq_right (by rw [h]; decide), ite_eq_left hc]
 
-theorem block_zero {p e : Word} (h : e = 0) : Flat.block st p e = (.assertionFailed, st) := by
+theorem block_zero {p e : Word} (h : e = 0) : Flat.block st p e = (.assertionExit, st) := by
   unfold Flat.block; rw [ite_eq_left h]
 
 theorem block_ne {p e : Word} (h : e ≠ 0) :
     Flat.block st p e = (.blocked, { st with blockedOffset := p, blockedExcess := e }) := by
   unfold Flat.block; rw [ite_eq_right h]
 
-theorem fin_ne {r : Flat.Status × Flat.St} (h : r.1 ≠ .done) : fin r t = r := by
+theorem fin_ne {r : Flat.EmissionOutcome × Flat.St} (h : r.1 ≠ .done) : fin r t = r := by
   unfold fin; rw [ite_eq_left h]
 
-theorem fin_bad {r : Flat.Status × Flat.St} (h : r.1 = .done) (hp : Flat.get r.2.pos t ≠ r.2.size - 1) :
-    fin r t = (.assertionFailed, r.2) := by
+theorem fin_bad {r : Flat.EmissionOutcome × Flat.St} (h : r.1 = .done) (hp : Flat.get r.2.pos t ≠ r.2.size - 1) :
+    fin r t = (.assertionExit, r.2) := by
   unfold fin; rw [ite_eq_right (fun e => e h), ite_eq_left hp]
 
-theorem fin_ok {r : Flat.Status × Flat.St} (h : r.1 = .done) (hp : Flat.get r.2.pos t = r.2.size - 1) :
+theorem fin_ok {r : Flat.EmissionOutcome × Flat.St} (h : r.1 = .done) (hp : Flat.get r.2.pos t = r.2.size - 1) :
     fin r t = (.done, { r.2 with pend := r.2.pend - 1 }) := by
   unfold fin; rw [ite_eq_right (fun e => e h), ite_eq_right (fun e => e hp)]
 
@@ -567,11 +567,11 @@ theorem spillQ_of {x : Word} (h : isSpilledQ g g' c t) (hx : rsi c = x) :
 
 theorem pushQ_of {x d : Word} (h : pushQ g g' c t) (hx : rsi c = x) (hd : rdx c = d) :
     Res (Flat.push · (StackSlot.ofWord x) d) g g' t := by
-  rw [← hx, ← hd]; exact h.1
+  rw [← hx, ← hd]; exact h
 
 theorem dupQ_of {x d : Word} (h : dupQ g g' c t) (hx : rsi c = x) (hd : rdx c = d) :
     Res (Flat.dup · x d) g g' t := by
-  rw [← hx, ← hd]; exact h.1
+  rw [← hx, ← hd]; exact h
 
 end
 
@@ -674,10 +674,10 @@ theorem al_ne {t : MachineData}
   rw [al, rax, Reg64s.get64_rax, BitVec.setWidth_eq_extractLsb' (by decide)]
   exact h
 
-theorem code_eq_zero {st : Flat.Status} (h : code st = 0#8) : st = .done := by
-  cases st <;> revert h <;> decide
+theorem code_eq_zero {st : Flat.EmissionOutcome} (h : code st = some 0#8) : st = .done := by
+  exact (code_eq_done st).mp h
 
-theorem code_ne_zero {st : Flat.Status} (h : code st ≠ 0#8) : st ≠ .done := by
+theorem code_ne_zero {st : Flat.EmissionOutcome} (h : code st ≠ some 0#8) : st ≠ .done := by
   intro e; subst e; exact h rfl
 
 -- `cmpq b, a; je`.
@@ -788,14 +788,13 @@ theorem not_free {w : Word} (hj : isJunk (StackSlot.ofWord w) = false)
 /-! ## The post -/
 
 -- `produceQ` from the model result `r` of `fin`.
-theorem prodQ {g g1 : G} {s t : MachineData} {r : Flat.Status × Flat.St} (hK : Keep g g1)
-    (hP : Flat.produce (flat g) s.regs.rsi.toBitVec = r) (hf : flat g1 = r.2) (ha : al t = code r.1)
-    (normalStatus : code r.1 ≠ ASSERTION_FAILED) :
+theorem prodQ {g g1 : G} {s t : MachineData} {r : Flat.EmissionOutcome × Flat.St} (hK : Keep g g1)
+    (hP : Flat.produce (flat g) s.regs.rsi.toBitVec = r) (hf : flat g1 = r.2) (ha : some (al t) = code r.1) :
     produceQ g g1 s t := by
   simp only [produceQ, NormalResult, Res, rsi, Reg64s.get64_rsi, hP]
-  exact ⟨⟨hK, hf, ha⟩, fun failed => normalStatus (ha.symm.trans failed)⟩
+  exact ⟨hK, hf, ha⟩
 
-theorem prodX_of {g g1 : G} {s t : MachineData} {f : Flat.St → Flat.Status × Flat.St}
+theorem prodX_of {g g1 : G} {s t : MachineData} {f : Flat.St → Flat.EmissionOutcome × Flat.St}
     (hP : Flat.produce (flat g) (rsi s) = fin (f (flat g)) (rsi s))
     (hX : ExitRes f g g1) : produceX g g1 s t := by
   have hn : (f (flat g)).1 ≠ .done := by rw [hX.2.2]; decide

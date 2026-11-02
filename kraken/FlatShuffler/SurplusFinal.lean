@@ -70,12 +70,12 @@ end Linked
 -- writes do not change, and the status in `al` and the state of `g'` are a flat result `r` whose
 -- list result (`Flat.absOut`) is `Map.State.removeSurplus` of the list state of `g`.
 def SurplusOut (planned : Map.Mapping) (g g' : Sep.G) (t : MachineData) : Prop :=
-  Unit.Keep g g' ∧ al t ≠ ASSERTION_FAILED ∧
-    ∃ r : Flat.Status × Flat.St, al t = Unit.code r.1 ∧ Unit.flat g' = r.2
+  Unit.Keep g g' ∧
+    ∃ r : Flat.EmissionOutcome × Flat.St, some (al t) = Unit.code r.1 ∧ Unit.flat g' = r.2
     ∧ (Flat.absSt planned (Unit.flat g)).removeSurplus = Flat.absOut planned r
 
 def SurplusExit (planned : Map.Mapping) (g g' : Sep.G) : Prop :=
-  Unit.Keep g g' ∧ ∃ r : Flat.Status × Flat.St, r.1 = .assertionFailed ∧ Unit.flat g' = r.2
+  Unit.Keep g g' ∧ ∃ r : Flat.EmissionOutcome × Flat.St, r.1 = .assertionExit ∧ Unit.flat g' = r.2
     ∧ (Flat.absSt planned (Unit.flat g)).removeSurplus = Flat.absOut planned r
 
 theorem removeSurplus_correct [Host] (L : Linked) (X : ExitBoundary) (planned : Map.Mapping) :
@@ -94,9 +94,9 @@ theorem removeSurplus_correct [Host] (L : Linked) (X : ExitBoundary) (planned : 
   have hsz : (Unit.flat g).size.toNat ≤ maxStackSize := Nat.le_trans ht.2.ok.len ht.2.ok.xs
   exact Program.wp_mono (fun _ h => h)
     (fun _ h => h.elim
-      (fun ⟨ha, ⟨g', fr, v, ⟨⟨hk, hf, hal⟩, normalByte⟩, hok, hl, hm⟩, hag⟩ =>
+      (fun ⟨ha, ⟨g', fr, v, ⟨hk, hf, hal⟩, hok, hl, hm⟩, hag⟩ =>
         Or.inl ⟨ha, ⟨g', fr, v,
-          ⟨hk, normalByte, _, hal, hf, Flat.removeSurplus_abs planned _ hsz⟩, hok, hl, hm⟩, hag⟩)
+          ⟨hk, _, hal, hf, Flat.removeSurplus_abs planned _ hsz⟩, hok, hl, hm⟩, hag⟩)
       (fun ⟨ha, harg, ⟨g', fr, v, ⟨hk, hf, hstatus⟩, hok, hl, hm⟩⟩ =>
         Or.inr ⟨ha, harg, ⟨g', fr, v,
           ⟨hk, _, hstatus, hf, Flat.removeSurplus_abs planned _ hsz⟩, hok, hl, hm⟩⟩))

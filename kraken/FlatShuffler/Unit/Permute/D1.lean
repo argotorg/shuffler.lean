@@ -188,7 +188,7 @@ theorem b_16 [Host] [FunDecls] (S g p0 F s ra) (_hpre : Sep.Pre S g (permW s ∗
   all_goals try symexec_norm
   case vc1 =>
     simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
-    refine ⟨g', L, hF.next rfl rfl, hok, ⟨hk, ?_, ?_⟩, by change 0#8 ≠ 2#8; decide⟩
+    refine ⟨g', L, hF.next rfl rfl, hok, ⟨hk, ?_, ?_⟩⟩
     · dsimp only; rw [hp]
     · dsimp only; rw [hp]; rfl
   case vc2 => pm_dec

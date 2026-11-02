@@ -65,7 +65,7 @@ def two : St := mk [x, y, z, x] [x, y, z, x, y, z] [4, 5, 0, 1]
 
 /-! ## `permuteAtLowestHeight` -/
 
-def pl (st : St) (l : Locals := l1) : Status × St := permuteAtLowestHeight st.pos l st
+def pl (st : St) (l : Locals := l1) : EmissionOutcome × St := permuteAtLowestHeight st.pos l st
 
 #guard viewR (pl (mk [] [] [])) = (.done, [], [], [], 0, [])
 #guard viewR (pl (mk [x, y] [x, y] [0, 1])) = (.done, [x, y], words [0, 1], words [0, 1], 0, [])
@@ -78,13 +78,13 @@ def pl (st : St) (l : Locals := l1) : Status × St := permuteAtLowestHeight st.p
 -- two holes and no parked slot.
 #guard (permuteAtLowestHeight (vec []) l1 (mk [x, y] [x, y] [1, 0])).1 = .done
 #guard (permuteAtLowestHeight (Vector.replicate maxStackSize NONE) l1 (mk [x, y] [x, y, z] [2, 0])).1
-  = .assertionFailed
+  = .assertionExit
 #guard (pl { mk [x, y] [x, y] [1, 0] with dest := put (mk [x, y] [x, y] [1, 0]).dest 1 NONE }).1
-  = .assertionFailed
-#guard (pl { mk [x, y] [x, y] [1, 0] with targetSize := 1 }).1 = .assertionFailed
+  = .assertionExit
+#guard (pl { mk [x, y] [x, y] [1, 0] with targetSize := 1 }).1 = .assertionExit
 -- At a failed assertion the state does not change.
 #guard viewR (pl { mk [x, y] [x, y] [1, 0] with targetSize := 1 }) =
-  (.assertionFailed, view { mk [x, y] [x, y] [1, 0] with targetSize := 1 })
+  (.assertionExit, view { mk [x, y] [x, y] [1, 0] with targetSize := 1 })
 
 /-! ## The entry -/
 

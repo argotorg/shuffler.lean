@@ -117,21 +117,22 @@ theorem cfg_30 (hout : ∀ l ∈ plannerRunAsm.labels, label l ≠ label "exit")
       have hres' : rc.resolution ≠ .dropped := by
         change res ≠ .dropped
         rw [hres]; decide
-      have hcode : ResolveU.code res = code (if res = .stuck then .blocked else .assertionFailed) := by
-        cases res with
-        | dropped => cases hres
-        | stuck => rfl
-        | assertionFailed => rfl
+      have hcode : ResolveU.code res = code (if res = .stuck then .blocked else .assertionExit) := by
+        rw [hres]
+        rfl
       have hresult := rc.terminal hres'
       have hq : plannerRunQ g (withResolve current spills dropped) s u := hresult.finish
-        (hal.trans hcode) (by cases res <;> exact ctx.count)
+        (hal.trans hcode) (by
+          have hresolution : rc.resolution = .stuck := hres
+          rw [hresolution]
+          exact ctx.count)
       apply Program.Intercept.intro_label (i := 13)
       · decide
       left
       refine ⟨h1.kb.stack (by decide), ?_, Or.inl ?_⟩
       · simp only [FullRunInv, RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte]
         exact ⟨withResolve current spills dropped, lo', locals,
-          h1.toBd, h1.ok, hq, by rw [hal, hres]; decide⟩
+          h1.toBd, h1.ok, hq⟩
       · simp only [runV, String.reduceEq, or_false, ↓reduceIte]
         omega) (by
       intro spills dropped res lo' u hr h1 hres hm0
@@ -175,10 +176,10 @@ theorem cfg_30 (hout : ∀ l ∈ plannerRunAsm.labels, label l ≠ label "exit")
         rw [hm]
         omega) (by
       intro spills dropped lo' u hlo hmem hr harg
-      let rc := ctx.afterResolve hblocked scratch .assertionFailed spills dropped
+      let rc := ctx.afterResolve hblocked scratch .assertionExit spills dropped
         (hcells.resolved hr scratch)
-      have hresult : RunResult g (withResolve current spills dropped) s .assertionFailed :=
-        rc.terminal (by change Flat.Resolution.assertionFailed ≠ .dropped; decide)
+      have hresult : RunResult g (withResolve current spills dropped) s .assertionExit :=
+        rc.terminal (by change (Flat.ExecutionControl.assertionExit : Flat.ResolutionOutcome) ≠ .dropped; decide)
       have hq := hresult.exit (t := u) ctx.count
       refine Or.inr ⟨Or.inr ⟨rfl, harg, withResolve current spills dropped,
         hq, withResolve_ok h0.ok spills dropped, fr s lo' locals,

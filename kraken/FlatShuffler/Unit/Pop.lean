@@ -47,7 +47,7 @@ open Push
 
 /-! ## The three cases of `Flat.pop` -/
 
-theorem pop_zero (fs : Flat.St) (h : fs.size = 0) : Flat.pop fs = (.assertionFailed, fs) := by
+theorem pop_zero (fs : Flat.St) (h : fs.size = 0) : Flat.pop fs = (.assertionExit, fs) := by
   simp [Flat.pop, Flat.stackPop, h]
 
 theorem pop_none (fs : Flat.St) (h : fs.size ≠ 0) (hd : Flat.get fs.dest (fs.size - 1) = Flat.NONE) :
@@ -299,8 +299,7 @@ theorem pop_unit [Host] [FunDecls]
         (E := fun a t => a = ra ∧ Sep.Post S F 2 (fun g' t => popQ g g' s t) s t
           ∧ Sep.mod.Agree s t) ?_ (fun h => Or.inl h)
       exact Kp.ret (hk.next rfl rfl rfl rfl rfl rfl rfl rfl) rfl hok fun t' _ hax =>
-        ⟨⟨hkeep, hflat, by show (rax t').setWidth 8 = _; rw [hax, hdone]; rfl⟩,
-          by show (rax t').setWidth 8 ≠ 2#8; rw [hax]; change 0#8 ≠ 2#8; decide⟩
+        ⟨hkeep, hflat, by show some ((rax t').setWidth 8) = _; rw [hax, hdone]; rfl⟩
   case «.LB.Emission.pop.1» t ht =>
     obtain ⟨hk, hzero⟩ := ht
     have hmem := Stk.two (rsp s) x y ra.toBitVec _ F ▸ hk.mem

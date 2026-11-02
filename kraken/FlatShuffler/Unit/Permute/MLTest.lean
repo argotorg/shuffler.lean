@@ -145,9 +145,9 @@ def full (st : Flat.St) : Full :=
   ⟨st.target, st.targetSize, st.data, st.size, st.trace, st.dest, st.pos, st.pend,
     st.blockedOffset, st.blockedExcess⟩
 
-def fr (r : Flat.Status × Flat.St) : Flat.Status × Full := (r.1, full r.2)
+def fr (r : Flat.EmissionOutcome × Flat.St) : Flat.EmissionOutcome × Full := (r.1, full r.2)
 
-def nextV : Flat.PNext → Option Flat.Status × Full × Option (Vector Word maxStackSize)
+def nextV : Flat.PNext → Option Flat.EmissionOutcome × Full × Option (Vector Word maxStackSize)
   | .ret r => (some r.1, full r.2, none)
   | .cont st p => (none, full st, some p)
 
@@ -447,10 +447,10 @@ theorem szF : kF.size ≠ 0 := by decide +kernel
 
 example := rg_none (st := kF) (p0 := dF) rgF szF
 #guard Flat.regroup kF 0 (kw [0, 0]) (Flat.clearDesired kF 0 Flat.initial) = none
-#guard fr (Flat.permute kF dF) = fr (.assertionFailed, kF)
+#guard fr (Flat.permute kF dF) = fr (.assertionExit, kF)
 -- Negative: `regroup` of `k3` does not fail, and `permute` does not fail.
 #guard Flat.regroup k3 0 pR dBc ≠ none
-#guard (Flat.permute k3 pR).1 ≠ .assertionFailed
+#guard (Flat.permute k3 pR).1 ≠ .assertionExit
 
 def pG : Vector Word maxStackSize := kw [1, 0, 2]
 
@@ -602,7 +602,7 @@ example := ex_sw (st := k18) (top := 17) (p := p18) (pos := 1) (by decide +kerne
   ≠ nextV (.cont (Flat.swapDestinations (Flat.stackSwap k18 0) 0 17) (swapP p18 17 0))
 
 -- The right side of `bsu_eq`.
-def bsu (st : Flat.St) (pos : Word) : Flat.Status × Flat.St :=
+def bsu (st : Flat.St) (pos : Word) : Flat.EmissionOutcome × Flat.St :=
   (.blocked, { st with blockedOffset := pos, blockedExcess := st.size - pos - 17#64 })
 
 -- The depth `17`: the excess is `1`.
@@ -612,7 +612,7 @@ example := bsu_eq (st := k18) (pos := 0) (by decide +kernel)
 -- Negative: the depth `16`, and `blockSwapUnreachable` fails.
 #guard k18.size - 1 - 1#64 ≤ 16#64
 #guard fr (Flat.blockSwapUnreachable k18 1) ≠ fr (bsu k18 1)
-#guard (Flat.blockSwapUnreachable k18 1).1 = .assertionFailed
+#guard (Flat.blockSwapUnreachable k18 1).1 = .assertionExit
 -- Edge: `pos ≥ size`. The depth wraps, and the excess wraps.
 example := bsu_eq (st := k3) (pos := 5) (by decide +kernel)
 #guard fr (Flat.blockSwapUnreachable k3 5) = fr (bsu k3 5)

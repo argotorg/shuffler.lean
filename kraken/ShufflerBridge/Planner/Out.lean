@@ -26,9 +26,9 @@ structure Out {e : FlatShuffler.Env} {source : Stack} (fs : FlatShuffler.Flat.St
   tsize_le : fs.targetSize.toNat ≤ FlatShuffler.maxStackSize
 
 -- The flat result `r` and the PR31 result.
-def ERel {e : FlatShuffler.Env} {source : Stack} (r : FlatShuffler.Flat.Status × FlatShuffler.Flat.St) :
+def ERel {e : FlatShuffler.Env} {source : Stack} (r : FlatShuffler.Flat.EmissionOutcome × FlatShuffler.Flat.St) :
     Except ShuffleErr (OResult e source) → Prop
-  | .error _ => r.1 = .assertionFailed
+  | .error _ => r.1 = .assertionExit
   | .ok res => Out r.2 res.state ∧ match res.blocked with
     | none => r.1 = .done
     | some b => r.1 = .blocked ∧ r.2.blockedOffset.toNat = b.offset
@@ -103,7 +103,7 @@ theorem out_of (hs : FlatShuffler.Flat.Sim e fs st) (h : Rel e st state) : Out f
   · rw [hs.trace, h.trace]
 
 -- `ERel` from `SimR` and `ResCorr`.
-theorem erel_of {r : FlatShuffler.Flat.Status × FlatShuffler.Flat.St} {m : FlatShuffler.M FlatShuffler.St}
+theorem erel_of {r : FlatShuffler.Flat.EmissionOutcome × FlatShuffler.Flat.St} {m : FlatShuffler.M FlatShuffler.St}
     {x : Except ShuffleErr (OResult e source)} (hs : FlatShuffler.Flat.SimR e r m)
     (hc : ResCorr (Rel e) m x) : ERel r x := by
   rcases m with (_ | ⟨pos, ex, st'⟩) | st' <;> rcases x with x | res <;>

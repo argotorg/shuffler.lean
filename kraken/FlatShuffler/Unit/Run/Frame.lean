@@ -22,22 +22,11 @@ open FlatShuffler.Sep
 def runA (planned : Vector Word maxStackSize) (g : G) (_s : MachineData) : Prop :=
   RunU.Safe planned (flat g) g.xo
 
-def runModelResult (planned : Vector Word maxStackSize) (g g' : G) (_s t : MachineData) : Prop :=
+def runQ (planned : Vector Word maxStackSize) (g g' : G) (_s t : MachineData) : Prop :=
   ∃ l, Res (Flat.emissionRun planned l) g g' t
-
-def runQ (planned : Vector Word maxStackSize) (g g' : G) (s t : MachineData) : Prop :=
-  runModelResult planned g g' s t ∧ al t ≠ ASSERTION_FAILED
 
 def runX (planned : Vector Word maxStackSize) (g g' : G) (_s _t : MachineData) : Prop :=
   ∃ l, ExitRes (Flat.emissionRun planned l) g g'
-
-theorem runX_to_modelResult {planned : Vector Word maxStackSize} {g g' : G} {s t : MachineData}
-    (hX : runX planned g g' s t) :
-    runModelResult planned g g' s { t with regs := { t.regs with rax := ⟨2#64⟩ } } := by
-  obtain ⟨l, hkeep, hflat, hstatus⟩ := hX
-  refine ⟨l, hkeep, hflat, ?_⟩
-  rw [hstatus]
-  rfl
 
 abbrev runD : Nat := lowestD + 4
 

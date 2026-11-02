@@ -119,9 +119,9 @@ theorem isSpilled_corr (sp : BitVec 32 → BitVec 8)
 -- A result of `spillAdd` and a result of `SpillSet.add`: both are done with the spill set of
 -- the bytes, or both fail.
 def SpCorr (S : List FlatShuffler.StackSlot) (n : Nat) (t : Vector FlatShuffler.StackSlot FlatShuffler.maxStackSize) :
-    FlatShuffler.Flat.Status × (BitVec 32 → BitVec 8) → Except ShuffleErr SpillSet → Prop
+    FlatShuffler.Flat.EmissionOutcome × (BitVec 32 → BitVec 8) → Except ShuffleErr SpillSet → Prop
   | (.done, sp), .ok s => s = pSpills S n t sp
-  | (.assertionFailed, _), .error _ => True
+  | (.assertionExit, _), .error _ => True
   | _, _ => False
 
 -- The spill set after `m_spilled[p] = 1` for a variable `x` of the source or the target.
@@ -155,7 +155,7 @@ theorem add_corr (ok : SlotsOk (S ++ t.toList.take n)) (sp : BitVec 32 → BitVe
   have hxl : x ∈ S ++ t.toList.take n := List.mem_append_left _ hx
   have hk := ok.kind x hxl
   cases hv : isVariable x
-  · have hf : spillAdd sp x = (.assertionFailed, sp) := by
+  · have hf : spillAdd sp x = (.assertionExit, sp) := by
       unfold spillAdd; rw [ite_eq_left (by rw [hv]; rfl)]
     rw [hf]
     have hnv : ∀ i, decodeStackSlot x ≠ .Var i := fun i h => by
@@ -182,7 +182,7 @@ theorem add_corr (ok : SlotsOk (S ++ t.toList.take n)) (sp : BitVec 32 → BitVe
       exact (pSpills_setByte ok sp hxl hv).symm
     · have hm : VarId.mk (stackSlotIdentity x) ∈ pSpills S n t sp :=
         (mem_pSpills ok sp).mpr ⟨x, hxl, hv, rfl, hz⟩
-      have hf : spillAdd sp x = (.assertionFailed, sp) := by
+      have hf : spillAdd sp x = (.assertionExit, sp) := by
         unfold spillAdd
         rw [ite_eq_right (by rw [hv]; decide), ite_eq_left (by simpa using hz)]
       rw [hf]

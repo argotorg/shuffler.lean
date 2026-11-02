@@ -7,7 +7,7 @@ import all FlatShuffler.FlatModel
 
 /-!
 Tests of `FlatModel.lean`: each unit on small states, the paths that fail
-(`Status.assertionFailed` and `Status.blocked`), the size_t wraps, the bounds of
+(`assertionExit` and `returned Status.blocked`), the size_t wraps, the bounds of
 `build_bottom_up` (`n = 0`, `m = n`, `n = maxStackSize`, `m > n`, `n > maxStackSize`), and the
 agreement with the list model `FlatShuffler.buildBottomUp` (the solc `permute`) on all inputs with
 `n ≤ 3` (32229) and on 15 deep stacks, with the stack and the operations at a block. The
@@ -59,7 +59,7 @@ def positions (st : St) : List Word := (below st.targetSize).map (get st.pos)
 def view (st : St) : List StackSlot × List Word × List Word × Word × List Op :=
   (slots st, dests st, positions st, st.pend, st.trace)
 
-def viewR (r : Status × St) := (r.1, view r.2)
+def viewR (r : EmissionOutcome × St) := (r.1, view r.2)
 
 /-! ## The constructor -/
 
@@ -114,12 +114,12 @@ def s3 : St := mk [x, y, J] [x, y, J] [2, 0, 1]
 #guard viewR (swapWith s3 0)
   = (.done, [J, y, x], words [1, 0, 2], words [1, 0, 2], 0, [⟨Swap, 2, .junk⟩])
 -- The C++ checks: the offset exists, it is not final, and a swap reaches it.
-#guard (swapWith s3 3).1 = .assertionFailed
-#guard (swapWith (mk [x, y] [x, y] [0, 1]) 0).1 = .assertionFailed
-#guard (swapWith s3 2).1 = .assertionFailed
+#guard (swapWith s3 3).1 = .assertionExit
+#guard (swapWith (mk [x, y] [x, y] [0, 1]) 0).1 = .assertionExit
+#guard (swapWith s3 2).1 = .assertionExit
 def deep (k : Nat) : St :=
   mk ((List.range k).map var) ((List.range k).map var) ((List.range k).reverse)
-#guard (swapWith (deep 18) 0).1 = .assertionFailed
+#guard (swapWith (deep 18) 0).1 = .assertionExit
 #guard (swapWith (deep 18) 1).1 = .done
 #guard ((swapWith (deep 18) 1).2.trace) = [⟨Swap, 16, .junk⟩]
 -- A failed check keeps the state.
@@ -128,22 +128,22 @@ def deep (k : Nat) : St :=
 #guard viewR (push (mk [x] [x, y] [0]) y 1) = (.done, [x, y], words [0, 1], words [0, 1], 1, [.push y])
 -- The C++ pushes before the check: the state keeps the slot and the operation.
 #guard viewR (push (mk [x] [x, y] [0]) y 0)
-  = (.assertionFailed, [x, y], words [0, 12], [0, NONE], 1, [.push y])
+  = (.assertionExit, [x, y], words [0, 12], [0, NONE], 1, [.push y])
 #guard viewR (dup (mk [x] [x, x] [0]) 0 1)
   = (.done, [x, x], words [0, 1], words [0, 1], 1, [⟨Dup, 1, .junk⟩])
-#guard (dup (mk [x] [x, x] [0]) 0 0).1 = .assertionFailed
+#guard (dup (mk [x] [x, x] [0]) 0 0).1 = .assertionExit
 -- A function return label is not DUPed, and the failed check keeps the state.
 def frl : StackSlot := ⟨0, FunctionReturnLabel, Unreachable⟩
 #guard viewR (dup (mk [frl] [frl, frl] [0]) 0 1)
-  = (.assertionFailed, [frl], words [0], [0, NONE], 1, [])
+  = (.assertionExit, [frl], words [0], [0, NONE], 1, [])
 
-#guard (block s3 1 0).1 = .assertionFailed
+#guard (block s3 1 0).1 = .assertionExit
 #guard (block s3 1 3).1 = .blocked
 #guard ((block s3 1 3).2.blockedOffset, (block s3 1 3).2.blockedExcess) = (1, 3)
 #guard ((blockSwapUnreachable (deep 18) 0).2.blockedExcess) = 1
 #guard ((blockDupUnreachable (deep 18) 0).2.blockedExcess) = 2
 -- A slot in reach gives `excess = 0`.
-#guard (blockSwapUnreachable (deep 18) 1).1 = .assertionFailed
+#guard (blockSwapUnreachable (deep 18) 1).1 = .assertionExit
 
 /-! ## `produce` and `generate` -/
 
@@ -161,13 +161,23 @@ def far : St :=
 #guard (produce far 17).1 = .blocked
 #guard ((produce far 17).2.blockedOffset, (produce far 17).2.blockedExcess) = (0, 1)
 -- A variable with no copy that is not spilled.
-#guard (produce (mk [] [var 0] []) 0).1 = .assertionFailed
+#guard (produce (mk [] [var 0] []) 0).1 = .assertionExit
 -- An offset that a slot is bound for already.
-#guard (produce (mk [x] [x] [0]) 0).1 = .assertionFailed
+#guard (produce (mk [x] [x] [0]) 0).1 = .assertionExit
+-- Push changes the stack before the assertion. Produce must not decrement the pending count.
+def occupiedTarget : St := { mk [x] [J, J] [0] with pend := 7 }
+#guard (produce occupiedTarget 0).1 = .assertionExit
+#guard (produce occupiedTarget 0).2.trace = [Op.push J]
+#guard (produce occupiedTarget 0).2.size = 2
+#guard (produce occupiedTarget 0).2.pend = 7
+-- Generate must stop at the same exit boundary.
+#guard (generate occupiedTarget 0).1 = .assertionExit
+#guard view (generate occupiedTarget 0).2 = view (produce occupiedTarget 0).2
+
 -- `--m_pendingGenerations` wraps at 0.
 #guard (produce { mk [] [x] [] with pend := 0 } 0).2.pend = -1
 
-#guard (generate (mk [] [x] []) 1).1 = .assertionFailed
+#guard (generate (mk [] [x] []) 1).1 = .assertionExit
 -- The produced slot goes down to its offset at once.
 #guard viewR (generate (mk [x, y] [J, x, y] [1, 2]) 0)
   = (.done, [J, y, x], words [0, 2, 1], words [0, 2, 1], 0, [.push J, ⟨Swap, 2, .junk⟩])
@@ -178,7 +188,7 @@ def far : St :=
 /-! ## `permute` -/
 
 -- `permute` with the permutation `p` on the stack `source`, whose slots `mk` binds for `p`.
-def pm (source : List StackSlot) (p : List Nat) : Status × St :=
+def pm (source : List StackSlot) (p : List Nat) : EmissionOutcome × St :=
   permute (mk source source p) (vec (words p))
 
 -- An empty stack, and slots in place.
@@ -207,11 +217,11 @@ def pm (source : List StackSlot) (p : List Nat) : Status × St :=
 #guard viewR (permute (mk [x, y] [x, y] [1, 0]) (vec (words [1, 0, 7, 7])))
   = (.done, [y, x], words [0, 1], words [0, 1], 0, [⟨Swap, 1, .junk⟩])
 -- Not a permutation: the C++ loop does not end, and the model fails when the fuel ends.
-#guard (permute (mk [x, y] [x, y] [0, 1]) (vec (words [0, 0]))).1 = .assertionFailed
+#guard (permute (mk [x, y] [x, y] [0, 1]) (vec (words [0, 0]))).1 = .assertionExit
 -- Not a permutation: the group of `x` has two slots and one desired offset.
-#guard (permute (mk [x, x] [x, x] [0, 1]) (vec (words [1, 1]))).1 = .assertionFailed
+#guard (permute (mk [x, x] [x, x] [0, 1]) (vec (words [1, 1]))).1 = .assertionExit
 -- Not a permutation: an entry above the size is not a vacant offset.
-#guard (permute (mk [x, y] [x, y] [0, 1]) (vec (words [5, 0]))).1 = .assertionFailed
+#guard (permute (mk [x, y] [x, y] [0, 1]) (vec (words [5, 0]))).1 = .assertionExit
 -- The slot at 0 is bound for 17: out of swap reach by 1.
 def wideDests : List Nat := [17] ++ (List.range 17).drop 1 ++ [0]
 def wide : St := mk ((List.range 18).map var) ((List.range 18).map var) wideDests
@@ -236,24 +246,24 @@ def latePerm : Vector Word maxStackSize := vec (words lateDests)
 #guard viewR (permuteMapping late) = viewR (permute late latePerm)
 -- A slot with no destination, at the bottom or at the top: the state does not change.
 def noDest (k : Nat) : St := { mk [x, y] [x, y] [1, 0] with dest := put (mk [x, y] [x, y] [1, 0]).dest (.ofNat 64 k) NONE }
-#guard viewR (permuteMapping (noDest 0)) = (.assertionFailed, view (noDest 0))
-#guard viewR (permuteMapping (noDest 1)) = (.assertionFailed, view (noDest 1))
+#guard viewR (permuteMapping (noDest 0)) = (.assertionExit, view (noDest 0))
+#guard viewR (permuteMapping (noDest 1)) = (.assertionExit, view (noDest 1))
 -- A `NONE` above the size is not read.
 #guard (permuteMapping { mk [x] [x] [0] with dest := put (mk [x] [x] [0]).dest 1 NONE }).1 = .done
 -- `body` calls `permuteMapping` when no generation is pending and the sizes agree.
-def bodyIs (n : Next) (r : Status × St) : Bool :=
+def bodyIs (n : Next) (r : EmissionOutcome × St) : Bool :=
   match n with
   | .ret r' => decide (viewR r' = viewR r)
   | .cont .. => false
-#guard bodyIs (body (noDest 1) 1) (.assertionFailed, noDest 1)
-#guard bodyIs (body (noDest 0) 0) (.assertionFailed, noDest 0)
+#guard bodyIs (body (noDest 1) 1) (.assertionExit, noDest 1)
+#guard bodyIs (body (noDest 0) 0) (.assertionExit, noDest 0)
 #guard bodyIs (body (mk [x, y] [x, y] [1, 0]) 0) (pm [x, y] [1, 0])
 -- A final slot at `targetOffset` comes first: no call.
 def finalBottom : St := { mk [x, y] [x, y] [0, 1] with dest := put (mk [x, y] [x, y] [0, 1]).dest 1 NONE }
 #guard match body finalBottom 0 with
   | .cont st t => decide (view st = view finalBottom) && t == 0
   | .ret _ => false
-#guard bodyIs (body finalBottom 1) (.assertionFailed, finalBottom)
+#guard bodyIs (body finalBottom 1) (.assertionExit, finalBottom)
 
 /-! ## The scans of `buildBottomUp` -/
 

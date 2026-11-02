@@ -22,7 +22,7 @@ theorem dup_not_blocked (st : Flat.St) (c t : Word) :
   · simp
   · split <;> simp
 
-theorem produce_fin_blocked {r : Flat.Status × Flat.St} {t : Word} {out : Flat.St}
+theorem produce_fin_blocked {r : Flat.EmissionOutcome × Flat.St} {t : Word} {out : Flat.St}
     (hr : ProduceProof.fin r t = (.blocked, out)) : r = (.blocked, out) := by
   unfold ProduceProof.fin at hr
   split at hr

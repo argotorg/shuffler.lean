@@ -115,14 +115,11 @@ end
 theorem plannerRunQ_rax {g g' : PlannerCallMemory} {s t u : MachineData}
     (h : plannerRunQ g g' s t) (hax : rax u = rax t) : plannerRunQ g g' s u := by
   obtain ⟨us, hcode, hrest⟩ := h
-  exact ⟨us, (congrArg (fun w : Word => w.setWidth 8) hax).trans hcode, hrest⟩
+  exact ⟨us, (congrArg (fun w : Word => some (w.setWidth 8)) hax).trans hcode, hrest⟩
 
 theorem plannerRunNormalReturn_rax {g g' : PlannerCallMemory} {s t u : MachineData}
     (h : plannerRunNormalReturn g g' s t) (hax : rax u = rax t) :
     plannerRunNormalReturn g g' s u := by
-  have sameByte : al u = al t :=
-    congrArg (fun value : Word => value.setWidth 8) hax
-  exact ⟨plannerRunQ_rax h.1 hax,
-    fun failed => h.2 (sameByte.symm.trans failed)⟩
+  exact plannerRunQ_rax h hax
 
 end FlatShuffler.Unit.PlannerRunU

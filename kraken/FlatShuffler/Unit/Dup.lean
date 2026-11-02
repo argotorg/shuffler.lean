@@ -89,7 +89,7 @@ theorem none_eq : Flat.NONE = 18446744073709551615#64 := rfl
 -- `cmpb $3, 4(%rdi,%rsi,8); je .LB.Emission.dup.0`: the copy is a return label.
 theorem dup_frl {g : G} (hok : g.Ok) {c d : Word} (hc : c.toNat < g.h.n.toNat)
     (h : (BitVec.extractLsb' 32 8 g.stk[c.toNat] - 3#8 == BitVec.zero 8) = true) :
-    Flat.dup (flat g) c d = (.assertionFailed, flat g) := by
+    Flat.dup (flat g) c d = (.assertionExit, flat g) := by
   rw [sub_beq_zero, decide_eq_true_iff] at h
   have : (Flat.get (flat g).data c).kind = FunctionReturnLabel := by
     rw [get_data hok hc]; exact h
@@ -99,7 +99,7 @@ theorem dup_nfrl {g : G} (hok : g.Ok) {c d : Word} (hc : c.toNat < g.h.n.toNat)
     (h : (BitVec.extractLsb' 32 8 g.stk[c.toNat] - 3#8 == BitVec.zero 8) = false) :
     Flat.dup (flat g) c d =
       let st := Flat.stackDup (flat g) c
-      if Flat.get st.pos d ≠ Flat.NONE then (.assertionFailed, st)
+      if Flat.get st.pos d ≠ Flat.NONE then (.assertionExit, st)
       else (.done, Flat.bind st (st.size - 1) d) := by
   rw [sub_beq_zero, decide_eq_false_iff_not] at h
   have : ¬(Flat.get (flat g).data c).kind = FunctionReturnLabel := by
@@ -115,7 +115,7 @@ theorem dup_used {g : G} (hok : g.Ok) {c d : Word} (hc : c.toNat < g.h.n.toNat)
     (hd : d.toNat < maxStackSize)
     (h : (BitVec.extractLsb' 32 8 g.stk[c.toNat] - 3#8 == BitVec.zero 8) = false)
     (hp : (!(g.h.pos[d.toNat] - 18446744073709551615#64 == BitVec.zero 64)) = true) :
-    Flat.dup (flat g) c d = (.assertionFailed, Flat.stackDup (flat g) c) := by
+    Flat.dup (flat g) c d = (.assertionExit, Flat.stackDup (flat g) c) := by
   rw [sub_beq_zero, Bool.not_eq_true', decide_eq_false_iff_not, ← none_eq] at hp
   rw [dup_nfrl hok hc h]
   simp only [pos_dup hd, ne_eq, hp, not_false_eq_true, ↓reduceIte]
@@ -129,7 +129,7 @@ theorem dup_done {g : G} (hok : g.Ok) {c d : Word} (hc : c.toNat < g.h.n.toNat)
   rw [sub_beq_zero, Bool.not_eq_false', decide_eq_true_iff, ← none_eq] at hp
   rw [dup_nfrl hok hc h]
   simp only [pos_dup hd, ne_eq, hp, not_true_eq_false, ↓reduceIte]
-  exact congrArg (fun L => (Flat.Status.done, Flat.bind _ L d)) (BitVec.add_sub_cancel _ _)
+  exact congrArg (fun L => (Flat.ExecutionControl.done, Flat.bind _ L d)) (BitVec.add_sub_cancel _ _)
 
 /-! ## The ghosts after the stores -/
 
@@ -299,17 +299,14 @@ theorem dup_unit [Host] [FunDecls]
       refine Kp.ret ⟨hmem2, hsp, hk.bx, hk.bp, hk.r12, hk.r13, hk.r14, hk.r15⟩ rfl
         (Keep.ok (g := g') ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok hok.len hok.nops) ?_
       intro t' _ hax
-      refine ⟨?_, ?_⟩
-      · refine ⟨⟨hkeep.tgtp, hkeep.n, hkeep.splp, hkeep.data, hkeep.ops,
-          hkeep.xs, hkeep.xo, hkeep.tgt, hkeep.spl⟩, ?_, ?_⟩
-        · dsimp only [rsi, rdx, Reg64s.get64_rsi, Reg64s.get64_rdx] at hf ⊢
-          rw [hdone, Dup.flat_bind g' (d := s.regs.rdx.toBitVec) hLM hdN, hf]
-        · dsimp only [rsi, rdx, Reg64s.get64_rsi, Reg64s.get64_rdx] at hf ⊢
-          rw [hdone]
-          show (rax t').setWidth 8 = 0#8
-          rw [hax]; rfl
-      · show (rax t').setWidth 8 ≠ 2#8
-        rw [hax]; change 0#8 ≠ 2#8; decide
+      refine ⟨⟨hkeep.tgtp, hkeep.n, hkeep.splp, hkeep.data, hkeep.ops,
+        hkeep.xs, hkeep.xo, hkeep.tgt, hkeep.spl⟩, ?_, ?_⟩
+      · dsimp only [rsi, rdx, Reg64s.get64_rsi, Reg64s.get64_rdx] at hf ⊢
+        rw [hdone, Dup.flat_bind g' (d := s.regs.rdx.toBitVec) hLM hdN, hf]
+      · dsimp only [rsi, rdx, Reg64s.get64_rsi, Reg64s.get64_rdx] at hf ⊢
+        rw [hdone]
+        show some ((rax t').setWidth 8) = some 0#8
+        rw [hax]; rfl
   case «_ZN12_GLOBAL__N_18Emission3dupE11StackOffsetS1_» t ht =>
     simp only [Names.dup, ↓reduceIte] at ht
     subst ht
@@ -446,7 +443,7 @@ theorem dup_unit [Host] [FunDecls]
         · change ExitRes (Flat.dup · (rsi s) (rdx s)) g gd
           dsimp only [ExitRes]
           change Keep g gd ∧ flat gd = (Flat.dup (flat g) c d).2 ∧
-            (Flat.dup (flat g) c d).1 = .assertionFailed
+            (Flat.dup (flat g) c d).1 = .assertionExit
           rw [Dup.dup_used hok hc hdM hkind (congrArg Bool.not hused')]
           exact ⟨⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩,
             Dup.flat_dup hok hc hL hN, rfl⟩

@@ -18,8 +18,8 @@ def resolvedState (s : Flat.PSt)
   {s with spills := out.1, dropped := out.2}
 
 def emissionNext (pl : Flat.Planner) (take : Bool) (M : Flat.Mapping)
-    (st : Flat.Status) (out : Flat.St) (s : Flat.PSt) (r : Flat.ResolveU)
-    (us : Nat → Flat.RunU) : Flat.Status × Flat.PSt :=
+    (st : Flat.EmissionOutcome) (out : Flat.St) (s : Flat.PSt) (r : Flat.ResolveU)
+    (us : Nat → Flat.RunU) : Flat.EmissionOutcome × Flat.PSt :=
   if st ≠ .blocked then
     if st = .done then (st, {s with sources := Flat.sourcesFrom pl.targetSize 0 M s.sources})
     else (st, s)
@@ -29,15 +29,15 @@ def emissionNext (pl : Flat.Planner) (take : Bool) (M : Flat.Mapping)
     let b := resolvedState s q.2
     match q.1 with
     | .stuck => (.blocked, b)
-    | .assertionFailed => (.assertionFailed, b)
+    | .assertionExit => (.assertionExit, b)
     | .dropped =>
       if Flat.droppedCount pl.sourceSize b.dropped > Flat.droppedCount pl.sourceSize s.dropped then
         Flat.runLoop pl take b us
-      else (.assertionFailed, b)
+      else (.assertionExit, b)
 
 section
 variable {pl : Flat.Planner} {take : Bool} {s : Flat.PSt} {us : Nat → Flat.RunU}
-    {M : Flat.Mapping} {saw : Bool} {st : Flat.Status} {out : Flat.St}
+    {M : Flat.Mapping} {saw : Bool} {st : Flat.EmissionOutcome} {out : Flat.St}
 
 theorem runLoop_step
     (hb : Flat.buildMapping ⟨pl.source, pl.sourceSize, pl.target, pl.targetSize, s.dropped, take⟩
@@ -86,11 +86,11 @@ theorem runLoop_blocked
       let b := resolvedState a q.2
       match q.1 with
       | .stuck => (.blocked, b)
-      | .assertionFailed => (.assertionFailed, b)
+      | .assertionExit => (.assertionExit, b)
       | .dropped =>
         if Flat.droppedCount pl.sourceSize b.dropped > Flat.droppedCount pl.sourceSize a.dropped then
           Flat.runLoop pl take b (fun k => us (k + 1))
-        else (.assertionFailed, b) := by
+        else (.assertionExit, b) := by
   dsimp only [buildState] at he
   rw [Flat.runLoop, hb]
   dsimp only

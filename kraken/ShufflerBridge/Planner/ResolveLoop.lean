@@ -212,12 +212,12 @@ namespace FlatShuffler.Flat
 
 -- One pass of `passFrom`: the resolution if it stops there, and the state.
 def passStep (pl : Planner) (M : Mapping) (cand : Vector Word maxStackSize) (count : Word) (s : RState) :
-    Option Resolution × RState :=
+    Option ResolutionOutcome × RState :=
   let r := pickFrom pl s.spills M s.droppedNow cand count 0 NONE 0
   if r.1 = NONE then (some .stuck, s)
   else
     let a := spillAdd s.spills (get pl.source r.1)
-    if r.2 = SPILL ∧ a.1 ≠ .done then (some .assertionFailed, s)
+    if r.2 = SPILL ∧ a.1 ≠ .done then (some .assertionExit, s)
     else (none, ⟨if r.2 = SPILL then a.2 else s.spills, put s.dropped r.1 1, put s.droppedNow r.1 1⟩)
 
 theorem passFrom_eq (pl : Planner) (M : Mapping) (cand : Vector Word maxStackSize)
@@ -237,42 +237,42 @@ end FlatShuffler.Flat
 
 namespace ShufflerBridge.Planner
 
-open FlatShuffler.Flat (Resolution RState)
+open FlatShuffler.Flat (ResolutionOutcome RState)
 
 -- A flat pass and a PR31 pass: both go on with related states, both stop with related states,
 -- or both fail.
 def PStepR {σ D ε : Type} (SR : (BitVec 32 → BitVec 8) → Vector (BitVec 8) FlatShuffler.maxStackSize → σ → Prop)
     (DR : Vector (BitVec 8) FlatShuffler.maxStackSize → D → Prop) :
-    Option Resolution × RState → Except ε (ForInStep (Option (Bool × σ) × σ × D)) → Prop
+    Option ResolutionOutcome × RState → Except ε (ForInStep (Option (Bool × σ) × σ × D)) → Prop
   | (none, rs), .ok (.yield b) => b.1 = none ∧ SR rs.spills rs.dropped b.2.1 ∧ DR rs.droppedNow b.2.2
   | (some .stuck, rs), .ok (.done b) => b.1 = some (false, b.2.1) ∧ SR rs.spills rs.dropped b.2.1
-  | (some .assertionFailed, _), .error _ => True
+  | (some .assertionExit, _), .error _ => True
   | _, _ => False
 
 -- The flat passes and the PR31 loop.
 def PassR {σ D ε : Type} (SR : (BitVec 32 → BitVec 8) → Vector (BitVec 8) FlatShuffler.maxStackSize → σ → Prop) :
-    Resolution × RState → Except ε (Option (Bool × σ) × σ × D) → Prop
+    ResolutionOutcome × RState → Except ε (Option (Bool × σ) × σ × D) → Prop
   | (.dropped, rs), .ok b => b.1 = none ∧ SR rs.spills rs.dropped b.2.1
   | (.stuck, rs), .ok b => b.1 = some (false, b.2.1) ∧ SR rs.spills rs.dropped b.2.1
-  | (.assertionFailed, _), .error _ => True
+  | (.assertionExit, _), .error _ => True
   | _, _ => False
 
 -- The flat `resolve` and the PR31 `resolve`.
 def RslvR {σ ε : Type} (SR : (BitVec 32 → BitVec 8) → Vector (BitVec 8) FlatShuffler.maxStackSize → σ → Prop) :
-    Resolution × (BitVec 32 → BitVec 8) × Vector (BitVec 8) FlatShuffler.maxStackSize → Except ε (Bool × σ) → Prop
+    ResolutionOutcome × (BitVec 32 → BitVec 8) × Vector (BitVec 8) FlatShuffler.maxStackSize → Except ε (Bool × σ) → Prop
   | (.dropped, sp, d), .ok (b, st) => b = true ∧ SR sp d st
   | (.stuck, sp, d), .ok (b, st) => b = false ∧ SR sp d st
-  | (.assertionFailed, _), .error _ => True
+  | (.assertionExit, _), .error _ => True
   | _, _ => False
 
 theorem pass_corr {σ D ε : Type} {e : Nat}
     (SR : (BitVec 32 → BitVec 8) → Vector (BitVec 8) FlatShuffler.maxStackSize → σ → Prop)
     (DR : Vector (BitVec 8) FlatShuffler.maxStackSize → D → Prop)
-    (step : RState → Option Resolution × RState)
+    (step : RState → Option ResolutionOutcome × RState)
     (f : Fin e → Option (Bool × σ) × σ × D → Except ε (ForInStep (Option (Bool × σ) × σ × D)))
     (hstep : ∀ k (hk : k < e) rs b, b.1 = none → SR rs.spills rs.dropped b.2.1 →
       DR rs.droppedNow b.2.2 → PStepR SR DR (step rs) (f ⟨k, hk⟩ b))
-    (F : FlatShuffler.Word → RState → Resolution × RState)
+    (F : FlatShuffler.Word → RState → ResolutionOutcome × RState)
     (hF : ∀ k rs, k ≤ e → F (.ofNat 64 k) rs =
       if k < e then
         match step rs with
@@ -299,7 +299,7 @@ theorem pass_corr {σ D ε : Type} {e : Nat}
     revert hs
     generalize step rs = r
     generalize f ⟨k, by omega⟩ b = x
-    rcases r with ⟨_ | (_ | _ | _), rs'⟩ <;> rcases x with _ | (b' | b') <;>
+    rcases r with ⟨_ | (⟨_ | _⟩ | _), rs'⟩ <;> rcases x with _ | (b' | b') <;>
       simp only [PStepR, PassR, false_imp_iff, Bind.bind, Except.bind, pure, Except.pure]
     · exact fun ⟨h1, h2, h3⟩ => ih (k + 1) rs' b' (by omega) h1 h2 h3
     · exact id
@@ -315,11 +315,11 @@ theorem forIn_yield_eq {α β ε : Type} (l : List α) (b : β) (f : α → β �
 
 theorem rslv_of_pass {σ D ε : Type}
     {SR : (BitVec 32 → BitVec 8) → Vector (BitVec 8) FlatShuffler.maxStackSize → σ → Prop}
-    {r : Resolution × RState} {x : Except ε (Option (Bool × σ) × σ × D)} (h : PassR SR r x)
+    {r : ResolutionOutcome × RState} {x : Except ε (Option (Bool × σ) × σ × D)} (h : PassR SR r x)
     (K : Option (Bool × σ) × σ × D → Except ε (Bool × σ))
     (hK1 : ∀ c st d, K (some c, st, d) = pure c) (hK2 : ∀ st d, K (none, st, d) = pure (true, st)) :
     RslvR SR (r.1, r.2.spills, r.2.dropped) (x >>= K) := by
-  rcases r with ⟨_ | _ | _, rs⟩ <;> rcases x with _ | ⟨_ | c, st, d⟩ <;>
+  rcases r with ⟨(⟨_ | _⟩ | _), rs⟩ <;> rcases x with _ | ⟨_ | c, st, d⟩ <;>
     simp only [PassR, reduceCtorEq, false_and, Option.some.injEq] at h
   · rw [except_ok_bind, hK2]; exact ⟨rfl, h.2⟩
   · rw [except_ok_bind, hK1, h.1]; exact ⟨rfl, h.2⟩
@@ -550,7 +550,7 @@ theorem resolve_corr (hm : pl.sourceSize.toNat ≤ FlatShuffler.maxStackSize) (h
           (decodeStackSlot (get pl.source (BitVec.ofNat 64 y.val))) = B
         intro hac
         rcases A with ⟨a, sp'⟩
-        cases a <;> cases B <;> simp only [SpCorr] at hac
+        rcases a with (⟨_ | _⟩ | _) <;> cases B <;> simp only [SpCorr] at hac
         · rw [ite_eq_right (fun h => h.2 rfl), ite_eq_left hsp, except_ok_bind]
           exact ⟨rfl, ⟨hac, hsr.2.1, dnR_set hs hsr.2.2 y y.isLt⟩, dnR_set hs hdn y y.isLt⟩
         · rw [ite_eq_left ⟨hsp, by simp⟩]

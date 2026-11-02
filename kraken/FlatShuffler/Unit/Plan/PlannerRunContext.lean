@@ -64,10 +64,10 @@ def LoopContext.next {initial current next : PlannerCallMemory} {s : MachineData
 
 theorem LoopContext.finish {initial current final : PlannerCallMemory} {s t : MachineData}
     (h : LoopContext initial current s) (hm : RunMeta initial final)
-    (us : Nat → Flat.RunU) (st : Flat.Status)
+    (us : Nat → Flat.RunU) (st : Flat.EmissionOutcome)
     (hr : Flat.runLoop current.p.fl ((rsi s).setWidth 8 == 1#8) current.state us =
       (st, final.state))
-    (ha : al t = code st)
+    (ha : some (al t) = code st)
     (hc : final.count = if st = .done then BitVec.ofNat 64 final.state.trace.length
       else initial.count) : plannerRunQ initial final s t := by
   refine ⟨h.plug us, ?_⟩
@@ -83,18 +83,21 @@ theorem PlannerCallMemory.trace_length {g : PlannerCallMemory} (h : g.Ok) :
 theorem LoopContext.mapping_fail {initial current : PlannerCallMemory} {s t : MachineData}
     (h : LoopContext initial current s) (hok : current.Ok) (M : Flat.Mapping)
     (hi : M.init current.p.sourceSize current.p.targetSize = M)
-    (hb : Flat.buildMapping (plannerBuilder current s M 0#8).fl M = none)
-    (ha : al t = code .assertionFailed) : plannerRunQ initial current s t := by
+    (hb : Flat.buildMapping (plannerBuilder current s M 0#8).fl M = none) :
+    plannerRunX initial current s t := by
   let u : Flat.RunU := {emptyRunU with mapping := M}
-  apply h.finish h.stable (fun _ => u) .assertionFailed
-  · apply runLoop_mapping_fail
+  have hr : Flat.runLoop current.p.fl ((rsi s).setWidth 8 == 1#8) current.state
+      (fun _ => u) = (.assertionExit, current.state) := by
+    apply runLoop_mapping_fail
     change Flat.buildMapping
       ⟨current.p.fl.source, current.p.sourceSize, current.p.fl.target, current.p.targetSize,
         current.dropped, (rsi s).setWidth 8 == 1#8⟩
       (M.init current.p.sourceSize current.p.targetSize) = none
     rw [hi]
     exact (builderGhost_buildMapping current hok _ _ _ M).symm.trans hb
-  · exact ha
-  · exact h.count
+  refine ⟨h.plug (fun _ => u), ?_⟩
+  rw [h.model, hr]
+  exact ⟨rfl, rfl, h.stable.planner, h.stable.dataPtr, h.stable.opsPtr,
+    h.stable.sourcesPtr, h.stable.countPtr, h.stable.spillCount, h.count⟩
 
 end FlatShuffler.Unit.PlannerRunU

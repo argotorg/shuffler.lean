@@ -238,7 +238,7 @@ theorem b_6 [Host] [FunDecls] (S g p0 F s ra) :
       (E := fun a t => a = ra ∧ Sep.Post S (permW s ∗ F) 1034
         (fun g' t => permuteQ p0 g g' s t) s t ∧ Sep.mod.Agree s t) ?_ Or.inl
     · refine Kp.ret ((hF.pop ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_).exArr hP) (by simp [Lc.length_toList]) hok
-        fun _ _ hax => hQ.of_returnRegister_eq hax
+        fun _ _ hax => NormalResult.of_returnRegister_eq (f := (Flat.permute · p0)) hQ hax
       all_goals rfl
 
 theorem b_25 [Host] [FunDecls] (S g p0 F s ra) :
@@ -257,9 +257,8 @@ theorem b_25 [Host] [FunDecls] (S g p0 F s ra) :
       (E := fun a t => a = ra ∧ Sep.Post S (permW s ∗ F) 1034
         (fun g' t => permuteQ p0 g g' s t) s t ∧ Sep.mod.Agree s t) ?_ Or.inl
     · exact Kp.ret (hk.next rfl rfl rfl rfl rfl rfl rfl rfl) hfr hok
-        fun t' _ hax => ⟨⟨Keep.refl g, by dsimp only; rw [hp],
-          by dsimp only; rw [hp]; show (rax t').setWidth 8 = _; rw [hax]; rfl⟩,
-          by show (rax t').setWidth 8 ≠ _; rw [hax]; change 0#8 ≠ 2#8; decide⟩
+        fun t' _ hax => ⟨Keep.refl g, by dsimp only; rw [hp],
+          by dsimp only; rw [hp]; show some ((rax t').setWidth 8) = _; rw [hax]; rfl⟩
 
 end Permute
 end FlatShuffler.Unit

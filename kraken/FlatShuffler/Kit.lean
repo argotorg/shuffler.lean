@@ -430,11 +430,11 @@ theorem Res.imp {r : M α} {Q' : α → Prop} (h : Res S r Q t) (hq : ∀ a, Q a
   | error e => cases e <;> exact h
   | ok a => exact hq a h
 
--- An error returns a `Status` that is not `Done`.
+-- A normal blocked return has a byte that is not `Done`.
 theorem Res.not_done {e : Err} (h : Res S (.error e : M α) Q t) : al t ≠ DONE := by
   cases e with
   | blocked p x => rw [h.1]; decide
-  | assertion => rw [h]; decide
+  | assertion => exact False.elim h
 
 theorem Res.err {β : Type} {e : Err} {Q' : β → Prop} (h : Res S (.error e : M α) Q t) :
     Res S (.error e : M β) Q' t := by

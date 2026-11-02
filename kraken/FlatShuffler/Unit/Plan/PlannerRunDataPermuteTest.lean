@@ -58,7 +58,7 @@ example : ¬ Unit.Bij st.size bad := by
 
 private def tailY : St := {st with data := slots [x, y, y]}
 #guard (permuteLoop 1 (restoreData 2 old tailY) 1 bad).1 = .blocked
-#guard (permuteLoop 1 tailY 1 bad).1 = .assertionFailed
+#guard (permuteLoop 1 tailY 1 bad).1 = .assertionExit
 
 -- Arbitrary tail values remain unchanged outside a one-element buffer.
 example (tail : Vector StackSlot maxStackSize) :

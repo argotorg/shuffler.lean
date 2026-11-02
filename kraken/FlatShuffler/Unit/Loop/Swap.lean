@@ -43,11 +43,15 @@ private theorem rd_dest (h : (View S g ∗ F).get m) {i : Nat} (hi : i < maxStac
 end
 
 -- The test of `al` after a call (`testb %al,%al`): zero iff the status is `done`.
-private theorem test_code {x : Word} {st : Flat.Status} (hal : BitVec.setWidth 8 x = code st) :
+private theorem test_code {x : Word} {st : Flat.EmissionOutcome} (hal : some (BitVec.setWidth 8 x) = code st) :
     (BitVec.extractLsb' 0 8 x &&& BitVec.extractLsb' 0 8 x == BitVec.zero 8)
       = decide (st = .done) := by
-  rw [← BitVec.setWidth_eq_extractLsb' (by decide), hal, BitVec.and_self]
-  cases st <;> decide
+  rw [← BitVec.setWidth_eq_extractLsb' (by decide), BitVec.and_self]
+  cases st with
+  | returned status =>
+    cases status <;> simp only [code, returnCode] at hal <;>
+      have h := Option.some.inj hal <;> rw [h] <;> decide
+  | assertionExit => simp [code] at hal
 
 -- `x - 1`: the kernel unfolds `x + BitVec.ofInt 64 (-1)` into a chain of `Nat.succ`.
 private theorem add_ofInt_neg_one (x : BitVec 64) : x + BitVec.ofInt 64 (-1) = x - 1#64 := by
@@ -135,10 +139,10 @@ theorem b_11 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
     · simpa only [rdi, Reg64s.get64_rdi] using hM.r12
     · exact swapWithA_of hok hf hb
     · intro t2 g'' lo' w' hmid hQ hok' hsv
-      obtain ⟨⟨hk2, hfl, hal2⟩, hnormal⟩ := hQ
+      obtain ⟨hk2, hfl, hal2⟩ := hQ
       replace hfl : flat g'' = (Flat.swapWith (flat g') t.regs.rax.toBitVec).2 :=
         hfl.trans (by rw [← hsi]; rfl)
-      replace hal2 : al t2 = code (Flat.swapWith (flat g') t.regs.rax.toBitVec).1 :=
+      replace hal2 : some (al t2) = code (Flat.swapWith (flat g') t.regs.rax.toBitVec).1 :=
         hal2.trans (by rw [← hsi]; rfl)
       have hc := test_code hal2
       have h14 : t2.regs.r14.toBitVec = t.regs.r14.toBitVec := by rw [hsv.r14]
@@ -156,7 +160,7 @@ theorem b_11 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
         · exact hmid.stack
         · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
           refine ⟨g'', u, ⟨x0, x2, lo', w', hmid.next rfl rfl rfl, hok', keep_trans hk hk2⟩,
-            ⟨keep_trans hk hk2, ?_, ?_⟩, hnormal⟩
+            ⟨keep_trans hk hk2, ?_, ?_⟩⟩
           · rw [hfl, ← hR]
           · rw [al, rax, Reg64s.get64_rax, ← hR]; exact hal2
         · loop_dec
@@ -262,7 +266,7 @@ theorem b_12 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
     have hlt : t.regs.r14.toBitVec < (flat g').size := BitVec.lt_def.mpr hj
     have hfin : Flat.isFinal (flat g') t.regs.r14.toBitVec = true := by
       simpa only [Flat.isFinal, beq_iff_eq] using hj'
-    have hR' : Flat.buildBottomUp (flat g) = (.assertionFailed, flat g') := by
+    have hR' : Flat.buildBottomUp (flat g) = (.assertionExit, flat g') := by
       rw [← hR, Flat.placeTop_eq]
       simp only [hlt, hfin, not_true_eq_false, ↓reduceIte, Flat.kfin]
     rw [asm_labels] at hout
@@ -340,9 +344,9 @@ theorem b_17 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
     · simpa only [rdi, Reg64s.get64_rdi] using hM.r12
     · exact swapWithA_of hok hf hb
     · intro t2 g'' lo' w' hmid hQ hok' hsv
-      obtain ⟨⟨hk2, hfl, hal2⟩, hnormal⟩ := hQ
+      obtain ⟨hk2, hfl, hal2⟩ := hQ
       replace hfl : flat g'' = (Flat.swapWith (flat g') t.regs.r14.toBitVec).2 := hfl
-      replace hal2 : al t2 = code (Flat.swapWith (flat g') t.regs.r14.toBitVec).1 := hal2
+      replace hal2 : some (al t2) = code (Flat.swapWith (flat g') t.regs.r14.toBitVec).1 := hal2
       have hc := test_code hal2
       have h14 : t2.regs.r14.toBitVec = t.regs.r14.toBitVec := by rw [hsv.r14]
       have hp2 := hmid.rd_pend
@@ -359,7 +363,7 @@ theorem b_17 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
         · exact hmid.stack_of rfl
         · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
           refine ⟨g'', u, ⟨x0, x2, lo', w', hmid.next rfl rfl rfl, hok', keep_trans hk hk2⟩,
-            ⟨keep_trans hk hk2, ?_, ?_⟩, hnormal⟩
+            ⟨keep_trans hk hk2, ?_, ?_⟩⟩
           · rw [hfl, ← hR]
           · rw [al, rax, Reg64s.get64_rax, ← hR]; exact hal2
         · loop_dec
@@ -424,7 +428,7 @@ theorem b_22 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
     refine ⟨_, u, ⟨x0, x2, lo, w, hM.step hm2 rfl rfl, ?_, ?_⟩, ?_⟩
     · exact ⟨hok.len, hok.n, hok.xs, hok.xo, hok.nops, hok.spl⟩
     · exact ⟨hk.tgtp, hk.n, hk.splp, hk.data, hk.ops, hk.xs, hk.xo, hk.tgt, hk.spl⟩
-    refine ⟨⟨⟨hk.tgtp, hk.n, hk.splp, hk.data, hk.ops, hk.xs, hk.xo, hk.tgt, hk.spl⟩, ?_, ?_⟩, by change 1#8 ≠ 2#8; decide⟩
+    refine ⟨⟨hk.tgtp, hk.n, hk.splp, hk.data, hk.ops, hk.xs, hk.xo, hk.tgt, hk.spl⟩, ?_, ?_⟩
     · simp only [hR, Flat.blockSwapUnreachable, hex, Flat.block, hne, ↓reduceIte]; rfl
     · simp only [hR, Flat.blockSwapUnreachable, hex, Flat.block, hne, ↓reduceIte]; rfl
   · loop_dec
@@ -456,7 +460,7 @@ theorem b_23 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
     refine ⟨_, u, ⟨x0, x2, lo, w, hM.step hm2 rfl rfl, ?_, ?_⟩, ?_⟩
     · exact ⟨hok.len, hok.n, hok.xs, hok.xo, hok.nops, hok.spl⟩
     · exact ⟨hk.tgtp, hk.n, hk.splp, hk.data, hk.ops, hk.xs, hk.xo, hk.tgt, hk.spl⟩
-    refine ⟨⟨⟨hk.tgtp, hk.n, hk.splp, hk.data, hk.ops, hk.xs, hk.xo, hk.tgt, hk.spl⟩, ?_, ?_⟩, by change 1#8 ≠ 2#8; decide⟩
+    refine ⟨⟨hk.tgtp, hk.n, hk.splp, hk.data, hk.ops, hk.xs, hk.xo, hk.tgt, hk.spl⟩, ?_, ?_⟩
     · simp only [hR, Flat.blockSwapUnreachable, hex, Flat.block, hne, ↓reduceIte]; rfl
     · simp only [hR, Flat.blockSwapUnreachable, hex, Flat.block, hne, ↓reduceIte]; rfl
   · loop_dec

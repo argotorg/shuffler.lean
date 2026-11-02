@@ -88,7 +88,7 @@ def asserts (fs : Flat.St) (p : Word) : Bool :=
     ∧ ¬ 15 < (fs.size - p + BitVec.ofInt 64 (-2)).toNat)
 
 example (fs : Flat.St) (p : Word) (h : asserts fs p = false) :
-    Flat.swapWith fs p = (.assertionFailed, fs) :=
+    Flat.swapWith fs p = (.assertionExit, fs) :=
   sw_err fs p (of_decide_eq_false h)
 
 -- The status fails exactly when `asserts` is false: the 3 asserts each fail, and 2 states pass
@@ -96,7 +96,7 @@ example (fs : Flat.St) (p : Word) (h : asserts fs p = false) :
 open Flat.Test in
 #guard ([(s3, 0), (s3, 3), (mk [x, y] [x, y] [0, 1], 0), (s3, 2), (deep 18, 0), (deep 18, 1)]
     : List (Flat.St × Word)).all fun (fs, p) =>
-  ((Flat.swapWith fs p).1 == .assertionFailed) == !asserts fs p
+  ((Flat.swapWith fs p).1 == .assertionExit) == !asserts fs p
 open Flat.Test in
 #guard asserts s3 0 && asserts (deep 18) 1 && !asserts s3 3 && !asserts s3 2
   && !asserts (mk [x, y] [x, y] [0, 1]) 0 && !asserts (deep 18) 0

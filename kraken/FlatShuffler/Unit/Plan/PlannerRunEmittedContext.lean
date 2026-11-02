@@ -16,7 +16,7 @@ structure EmittedContext (initial current : PlannerCallMemory) (s : MachineData)
   loop : LoopContext initial before s
   attempt : Flat.RunU
   out : Flat.St
-  status : Flat.Status
+  status : Flat.EmissionOutcome
   stable : RunMeta initial current
   count : current.count = initial.count
   targets : Flat.targetsFrom current.p.fl current.spills 0 = true
@@ -27,19 +27,20 @@ structure EmittedContext (initial current : PlannerCallMemory) (s : MachineData)
 
 namespace AttemptContext
 
-theorem afterEmission {initial current : PlannerCallMemory} {s t u : MachineData}
+theorem afterEmissionModel {initial current : PlannerCallMemory} {s t : MachineData}
     {P : Addr} {M : Flat.Mapping} {F : MProp 64} {ra : Int64} {lo locals : List Word}
     (ctx : AttemptContext initial current s M) (hd : current.state.data = ctx.wanted)
     (h : EmitCountLI P current M F s ra lo locals t)
     (hp : locals[4115]? = some (Flat.unmappedFrom (countState current M) 0 0))
     (a : G) (hk : Keep (emissionGhost current ctx.ok (localEmissionHdr locals h.localLength)) a)
-    (hq : runModelResult (EmissionLocals.ofList locals h.localLength).planned.pos
-      (emissionGhost current ctx.ok (localEmissionHdr locals h.localLength)) a t u) :
+    (l : Flat.Locals)
+    (he : flat a = (Flat.emissionRun (EmissionLocals.ofList locals h.localLength).planned.pos l
+      (flat (emissionGhost current ctx.ok (localEmissionHdr locals h.localLength)))).2) :
     ∃ ec : EmittedContext initial
       (emissionResult current ctx.ok (localEmissionHdr locals h.localLength) a hk) s M,
-      al u = code ec.status ∧ ec.out =
-        Flat.restoreData current.dataCapacity (current.data.map StackSlot.ofWord) (flat a) := by
-  obtain ⟨l, _, he, hal⟩ := hq
+      ec.status = (Flat.emissionRun (EmissionLocals.ofList locals h.localLength).planned.pos l
+        (flat (emissionGhost current ctx.ok (localEmissionHdr locals h.localLength)))).1 ∧
+      ec.out = Flat.restoreData current.dataCapacity (current.data.map StackSlot.ofWord) (flat a) := by
   let e := Flat.emissionRun (EmissionLocals.ofList locals h.localLength).planned.pos l
     (flat (emissionGhost current ctx.ok (localEmissionHdr locals h.localLength)))
   let result := emissionResult current ctx.ok (localEmissionHdr locals h.localLength) a hk
@@ -120,7 +121,23 @@ theorem afterEmission {initial current : PlannerCallMemory} {s t u : MachineData
         emissionNext current.p.fl _ _ _ _ _ r us
       rw [ctx.planner]
     }
-  exact ⟨ec, hal, rfl⟩
+  exact ⟨ec, rfl, rfl⟩
+
+theorem afterEmission {initial current : PlannerCallMemory} {s t u : MachineData}
+    {P : Addr} {M : Flat.Mapping} {F : MProp 64} {ra : Int64} {lo locals : List Word}
+    (ctx : AttemptContext initial current s M) (hd : current.state.data = ctx.wanted)
+    (h : EmitCountLI P current M F s ra lo locals t)
+    (hp : locals[4115]? = some (Flat.unmappedFrom (countState current M) 0 0))
+    (a : G) (hk : Keep (emissionGhost current ctx.ok (localEmissionHdr locals h.localLength)) a)
+    (hq : runQ (EmissionLocals.ofList locals h.localLength).planned.pos
+      (emissionGhost current ctx.ok (localEmissionHdr locals h.localLength)) a t u) :
+    ∃ ec : EmittedContext initial
+      (emissionResult current ctx.ok (localEmissionHdr locals h.localLength) a hk) s M,
+      some (al u) = code ec.status ∧ ec.out =
+        Flat.restoreData current.dataCapacity (current.data.map StackSlot.ofWord) (flat a) := by
+  obtain ⟨l, _, he, hal⟩ := hq
+  obtain ⟨ec, hs, hout⟩ := ctx.afterEmissionModel hd h hp a hk l he
+  exact ⟨ec, hs.symm ▸ hal, hout⟩
 
 end AttemptContext
 end FlatShuffler.Unit.PlannerRunU

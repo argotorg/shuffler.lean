@@ -23,14 +23,14 @@ theorem b_30_call [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat
     (I' : CfgLabel → Nat → Unit → MachineData → Prop) (E : Int64 → MachineData → Prop)
     (hfinish : ∀ spills dropped res lo' u,
       PostEmitLI P (withResolve g spills dropped) M F s ra lo' locals u →
-      Resolved g M locals hl spills dropped res → al u = ResolveU.code res →
-      res ≠ .assertionFailed →
+      Resolved g M locals hl spills dropped res → some (al u) = ResolveU.code res →
+      res ≠ .assertionExit →
       u.regs.rbp.toBitVec = before →
       WP.wp resolveTail K (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) u)
     (hstop : ∀ spills dropped lo' u, lo'.length = 4113 →
       (Stk (rsp s) (fr s lo' locals) ra.toBitVec ∗
         (plannerCallOwnedMemory P (withResolve g spills dropped) ∗ F)).get u.dmem →
-      Resolved g M locals hl spills dropped .assertionFailed →
+      Resolved g M locals hl spills dropped .assertionExit →
       u.regs.get64 .rdi = 1#64 →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label "exit") u) :
     plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.17" →
@@ -109,7 +109,7 @@ theorem b_30 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
     (hbad : ∀ spills dropped res lo' u,
       Resolved g M locals hl spills dropped res →
       PostEmitLI P (withResolve g spills dropped) M F s ra lo' locals u →
-      res = .stuck → al u = ResolveU.code res →
+      res = .stuck → some (al u) = ResolveU.code res →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
         (label ".LB.Planner.run.12") u)
     (hzero : ∀ spills dropped res lo' u,
@@ -126,7 +126,7 @@ theorem b_30 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
     (hstop : ∀ spills dropped lo' u, lo'.length = 4113 →
       (Stk (rsp s) (fr s lo' locals) ra.toBitVec ∗
         (plannerCallOwnedMemory P (withResolve g spills dropped) ∗ F)).get u.dmem →
-      Resolved g M locals hl spills dropped .assertionFailed →
+      Resolved g M locals hl spills dropped .assertionExit →
       u.regs.get64 .rdi = 1#64 →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label "exit") u) :
     plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.17" →

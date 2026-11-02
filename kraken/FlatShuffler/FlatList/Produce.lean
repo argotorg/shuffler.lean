@@ -15,18 +15,18 @@ namespace FlatShuffler.Flat
 /-! ## The parts of `produce` and `generate` -/
 
 -- The action of `produce`.
-def emitF (fs : St) (t : Word) : Status × St :=
+def emitF (fs : St) (t : Word) : EmissionOutcome × St :=
   let slot := get fs.target t
   let copy := shallowestCopyPosition fs slot
   if isJunk slot then push fs slot t
   else if copy ≠ NONE ∧ isDupReachable fs copy then dup fs copy t
   else if canBeFreelyGenerated slot || isSpilled fs slot then push fs slot t
   else if copy ≠ NONE then blockDupUnreachable fs copy
-  else (.assertionFailed, fs)
+  else (.assertionExit, fs)
 
 -- The end of `produce`, after a done action.
-def produceTail (t : Word) (fs : St) : Status × St :=
-  if get fs.pos t ≠ fs.size - 1 then (.assertionFailed, fs)
+def produceTail (t : Word) (fs : St) : EmissionOutcome × St :=
+  if get fs.pos t ≠ fs.size - 1 then (.assertionExit, fs)
   else (.done, { fs with pend := fs.pend - 1 })
 
 theorem produce_eq (fs : St) (t : Word) :
@@ -34,7 +34,7 @@ theorem produce_eq (fs : St) (t : Word) :
       if (emitF fs t).1 ≠ .done then emitF fs t else produceTail t (emitF fs t).2 := rfl
 
 -- The end of `generate`, after a done `produce`.
-def genTail (t : Word) (fs : St) : Status × St :=
+def genTail (t : Word) (fs : St) : EmissionOutcome × St :=
   if t + 1 < fs.size ∧ ¬isFinal fs t then
     if get fs.data t = get fs.data (fs.size - 1) then
       (.done, swapDestinations fs t (fs.size - 1))
@@ -44,7 +44,7 @@ def genTail (t : Word) (fs : St) : Status × St :=
 
 theorem generate_eq (fs : St) (t : Word) :
     generate fs t =
-      if ¬t < fs.targetSize then (.assertionFailed, fs)
+      if ¬t < fs.targetSize then (.assertionExit, fs)
       else if (produce fs t).1 ≠ .done then produce fs t else genTail t (produce fs t).2 := rfl
 
 /-! ## Results -/
@@ -53,7 +53,7 @@ section
 variable {e : Env} {fs : St} {st : FlatShuffler.St}
 
 -- A flat result that is not done ends the unit, as an error ends a bind of the list model.
-theorem SimR.bind {r : Status × St} {m : M FlatShuffler.St} {g : St → Status × St}
+theorem SimR.bind {r : EmissionOutcome × St} {m : M FlatShuffler.St} {g : St → EmissionOutcome × St}
     {f : FlatShuffler.St → M FlatShuffler.St} (h : SimR e r m)
     (hg : ∀ fs st, Sim e fs st → m = .ok st → SimR e (g fs) (f st)) :
     SimR e (if r.1 ≠ .done then r else g r.2) (m.bind f) := by

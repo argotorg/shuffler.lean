@@ -26,7 +26,7 @@ abbrev cap (s : MachineData) : Nat := 6 * nOf s.dmem (rdi s)
 -- The model state in `t`, for the struct of the call `s`.
 abbrev st' (s t : MachineData) : St := stOf t.dmem (rdi s)
 
--- A function that returns `ok a` in the model: the `Status` is `Done` and the state is `f a`.
+-- A function that returns `ok a` in the model: the status is `Done` and the state is `f a`.
 abbrev Ok {α : Type} (s t : MachineData) (f : α → St) (a : α) : Prop :=
   al t = DONE ∧ st' s t = f a
 
@@ -97,8 +97,8 @@ def finishLocals : Nat := 2 * 8 * maxStackSize + 24
 def finishF : Nat := 8 + 48 + finishLocals + shallowestCopyF
 theorem finishF_eq : finishF = 16472 := rfl
 -- wf: asm changed. `finishA` and `finishR` are of the old asm (`permuteDestinations`) and of the
--- old model `finish`. The C++ `permute` regroups equal slots, and it returns `AssertionFailed` for a
--- slot with no destination and for a group of equal slots with too few vacant offsets.
+-- old model `finish`. The C++ `permute` regroups equal slots. Too few vacant offsets
+-- for a group causes an assertion exit.
 def finishA (s : MachineData) : Prop :=
   IsPerm ((st s).slots.map Slot.dest) ∧ (st s).trace.length + 2 * (st s).len ≤ cap s
 def finishR (s t : MachineData) : Prop :=

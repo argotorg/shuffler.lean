@@ -144,10 +144,12 @@ theorem al_ne {t : MachineData}
   rw [al, rax, Reg64s.get64_rax, BitVec.setWidth_eq_extractLsb' (by decide)]
   exact h
 
-theorem code_eq_zero {st : Flat.Status} (h : code st = 0#8) : st = .done := by
-  cases st <;> revert h <;> decide
+theorem code_eq_zero {st : Flat.EmissionOutcome} (h : code st = some 0#8) : st = .done := by
+  cases st with
+  | returned status => cases status <;> revert h <;> decide
+  | assertionExit => revert h; decide
 
-theorem code_ne_zero {st : Flat.Status} (h : code st ≠ 0#8) : st ≠ .done := by
+theorem code_ne_zero {st : Flat.EmissionOutcome} (h : code st ≠ some 0#8) : st ≠ .done := by
   intro e; subst e; exact h rfl
 
 end FlatShuffler.Unit

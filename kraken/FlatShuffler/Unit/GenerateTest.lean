@@ -106,17 +106,17 @@ example : ((((((16#64 - 16#64).toNat : Int) != ((16#64 : Word).toNat : Int) - 16
     || (16#64 - 16#64 == BitVec.zero 64)) = true) := by decide
 
 -- `code` is `0` only for `done`.
-example : Flat.Status.done = .done := code_eq_zero (by decide)
-example : code .blocked ≠ 0#8 := by decide
-example : code .assertionFailed ≠ 0#8 := by decide
+example : Flat.ExecutionControl.done = .done := code_eq_zero (by decide)
+example : code .blocked ≠ some 0#8 := by decide
+example : code .assertionExit ≠ some 0#8 := by decide
 
 -- The target bound is checked before `produce` can change the state.
-#guard (Flat.generate (st 0 [] []) 4).1 == .assertionFailed
+#guard (Flat.generate (st 0 [] []) 4).1 == .assertionExit
 #guard (Flat.generate (st 0 [] []) 4).2.size == 0
-#guard (Flat.generate (st 0 [] []) N).1 == .assertionFailed
+#guard (Flat.generate (st 0 [] []) N).1 == .assertionExit
 
 example (s : Flat.St) (t : Word) (h : ¬t < s.targetSize) :
-    Flat.generate s t = (.assertionFailed, s) := gen_fail h
+    Flat.generate s t = (.assertionExit, s) := gen_fail h
 
 -- `al` reads only `rax`: a write to `rbx` keeps it.
 example (t : MachineData) (v : UInt64) : al { t with regs := { t.regs with rbx := v } } = al t :=

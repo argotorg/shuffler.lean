@@ -112,7 +112,7 @@ theorem b_4 [Host] [FunDecls]
       have kr := kDest hd ho
       by_cases hr : Flat.get r.M.dest off = Flat.NONE
       · have failed := he.trans (candidates_fail hp hd ho hr)
-        have hmodel : modelQ r r s .assertionFailed := by
+        have hmodel : modelQ r r s .assertionExit := by
           intro u
           rw [resolve_independent r hok s ha u u0]
           have hf := resolve_failed_candidates (p := r.p.fl) (sp := r.spills)

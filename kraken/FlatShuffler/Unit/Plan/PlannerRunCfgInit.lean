@@ -265,9 +265,8 @@ theorem cfg_9
         omega) (by
       intro M0 u hx harg
       obtain ⟨lo, locals, hlo, hlocals, hmem, hinit, hfail⟩ := hx
-      let v : MachineData := {u with regs := {u.regs with rax := ⟨2#64⟩}}
-      have hq := ctx.mapping_fail (t := v) hok M0 hinit hfail rfl
-      refine Or.inr ⟨Or.inr ⟨rfl, harg, current, plannerRunX_of_Q hq rfl, hok,
+      have hx := ctx.mapping_fail (t := u) hok M0 hinit hfail
+      refine Or.inr ⟨Or.inr ⟨rfl, harg, current, hx, hok,
         fr s lo locals, ra.toBitVec, ?_, hmem⟩, ?_⟩
       · simp [fr, saved, hlo, hlocals, plannerRunD]
       · intro l hl heq

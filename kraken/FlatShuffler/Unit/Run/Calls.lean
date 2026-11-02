@@ -98,7 +98,7 @@ theorem b_fn (hp : VPre (RunView PM planned) G.Ok S g F (runA planned) runD s)
       simpa only [fr, saved, List.append_assoc, List.singleton_append, MachineData.pushRa,
         Reg64s.set64_rsp, List.cons_append, List.nil_append] using hm
     · intro u a lo' w' hbd hq hok hag
-      obtain ⟨⟨hkeep, hf, hal⟩, normalByte⟩ := hq
+      obtain ⟨hkeep, hf, hal⟩ := hq
       have hbx : u.regs.rbp.toBitVec = S := by
         rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rbp]
         exact hrdi
@@ -106,8 +106,8 @@ theorem b_fn (hp : VPre (RunView PM planned) G.Ok S g F (runA planned) runD s)
       all_goals try symexec_norm
       vc_by_shape
       | goto ".LB.Emission.run.1" =>
-        have hd := code_eq_zero (hal.symm.trans (al_zero (by
-          rw [Bool.not_eq_false']; with_reducible assumption)))
+        have hd := code_eq_zero (hal.symm.trans (congrArg some (al_zero (by
+          rw [Bool.not_eq_false']; with_reducible assumption))))
         have hres : Flat.removeSurplus (flat g) = (.done, flat a) := Prod.ext hd hf.symm
         cfg_goto
         · exact (hbd.kb.next rfl rfl).stack (by decide)
@@ -117,12 +117,12 @@ theorem b_fn (hp : VPre (RunView PM planned) G.Ok S g F (runA planned) runD s)
         · simp [V, Names.run]
       | other =>
         have hd := code_ne_zero (fun he => al_ne (by
-          rw [Bool.not_eq_true']; with_reducible assumption) (hal.trans he))
+          rw [Bool.not_eq_true']; with_reducible assumption) (Option.some.inj (hal.trans he)))
         have he := emission_surplus_fail (planned := planned) (l := zeroLocals) hd
         first
         | (left; simp [V, Names.run])
         | (simp only [Inv, Names.run, String.reduceEq, ↓reduceIte]
-           refine ⟨a, lo', w', ?_, hok, ⟨zeroLocals, hkeep, ?_, ?_⟩, normalByte⟩
+           refine ⟨a, lo', w', ?_, hok, zeroLocals, hkeep, ?_, ?_⟩
            · apply hbd.next <;> rfl
            · rw [he]; exact hf
            · rw [he]; exact hal)

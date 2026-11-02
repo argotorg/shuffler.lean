@@ -91,7 +91,7 @@ theorem b_28 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
     exact Nat.zero_le _
   · simp only [v, rdi, Reg64s.set64_rdi, Reg64s.get64_rdi]
   · intro a u hq
-    exact hq.1.choose_spec.1
+    exact hq.choose_spec.1
   · intro a u hq
     exact hq.choose_spec.1
   · intro a hk u lo' hb hq ha hag

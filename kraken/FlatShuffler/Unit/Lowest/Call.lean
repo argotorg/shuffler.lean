@@ -56,7 +56,7 @@ theorem b_4 [Host] [FunDecls] (S PM planned g F0 s ra)
     rw [hM.rdPerm hiM (by rw [hM.sp, perm_base]), get_eq _ _ hiw]
     simp only [BitVec.toNat_ofNat, Nat.mod_eq_of_lt (show i < 2 ^ 64 by omega)]
   · intro t2 g'' L' lo' w' hmid hQ hok'
-    obtain ⟨⟨hk2, hfl, hal⟩, hnormal⟩ := hQ
+    obtain ⟨hk2, hfl, hal⟩ := hQ
     kvcgen64
     all_goals symexec_norm
     vc_by_shape
@@ -68,14 +68,12 @@ theorem b_4 [Host] [FunDecls] (S PM planned g F0 s ra)
         (E := fun a t => a = ra ∧ Sep.Post S (Planned S PM planned ∗ F0) lowestD
           (fun g' t => lowestQ planned g g' s t) s t ∧ Sep.mod.Agree s t) ?_ Or.inl
       refine Kp.ret (hmid.pop ?_ ?_) (words_length lo' w' L' hmid.len) hok'
-        fun t' _ hax => ⟨l0, ⟨hk2, ?_, ?_⟩, ?_⟩
+        fun t' _ hax => ⟨l0, hk2, ?_, ?_⟩
       · rfl
       · rfl
       · rw [hlow]; exact hfl
-      · show (rax t').setWidth 8 = _
+      · show some ((rax t').setWidth 8) = _
         rw [hax, hlow]; exact hal
-      · show (rax t').setWidth 8 ≠ _
-        rw [hax]; exact hnormal
   · intro t2 g'' L' lo' w' hm hl hX hok' harg
     refine Or.inr ⟨Or.inr ⟨rfl, harg, ?_⟩, ?_⟩
     · refine frame_post hm hl hok' ⟨l0, ?_⟩

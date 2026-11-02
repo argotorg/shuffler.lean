@@ -34,12 +34,12 @@ def sawB (b : BG) (sw : Bool) : BitVec 8 := bif sw then 1#8 else b.saw
 def mapWildA (_ : BG) (_ : MachineData) : Prop := True
 
 def mapWildQ (b b' : BG) (_ t : MachineData) : Prop :=
-  al t = code (Flat.mapWildcardSlotCopies b.fl b.M false).1
+  some (al t) = code (Flat.mapWildcardSlotCopies b.fl b.M false).1
     ∧ b' = { b with M := (Flat.mapWildcardSlotCopies b.fl b.M false).2.1,
                     saw := sawB b (Flat.mapWildcardSlotCopies b.fl b.M false).2.2 }
 
 def mapWildX (b b' : BG) (_s _t : MachineData) : Prop :=
-  (Flat.mapWildcardSlotCopies b.fl b.M false).1 = .assertionFailed ∧
+  (Flat.mapWildcardSlotCopies b.fl b.M false).1 = .assertionExit ∧
     b' = { b with M := (Flat.mapWildcardSlotCopies b.fl b.M false).2.1,
                     saw := sawB b (Flat.mapWildcardSlotCopies b.fl b.M false).2.2 }
 
@@ -91,7 +91,7 @@ structure LI (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64)
 
 -- The map of target `j` to the copy `c`, then the rest of the loop.
 def step (fb : Flat.Builder) (M : Flat.Mapping) (sw : Bool) (c j : Word) :
-    Flat.Status × Flat.Mapping × Bool :=
+    Flat.EmissionOutcome × Flat.Mapping × Bool :=
   let r := Flat.mbMap fb M c j
   if r.1 ≠ .done then (r.1, r.2, sw) else Flat.wildcardFrom fb r.2 sw (j + 1)
 
@@ -256,7 +256,7 @@ end
 /-! ### The invariant, the variant and the obligation of a block -/
 
 -- The result of the unit.
-abbrev res (b : BG) : Flat.Status × Flat.Mapping × Bool :=
+abbrev res (b : BG) : Flat.EmissionOutcome × Flat.Mapping × Bool :=
   Flat.mapWildcardSlotCopies b.fl b.M false
 
 def Inv (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) (fr₀ : List Word) :
@@ -280,7 +280,7 @@ def Inv (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) (fr₀
     else if l = ".LB.MappingBuilder.mapWildcardSlotCopies.3" then
       ∃ M sw lo w, LI B b F s ra M sw lo w t ∧ res b = (.done, M, sw)
     else if l = ".LB.MappingBuilder.mapWildcardSlotCopies.4" then
-      ∃ M sw lo w, LI B b F s ra M sw lo w t ∧ al t = code (res b).1 ∧ (res b).2 = (M, sw)
+      ∃ M sw lo w, LI B b F s ra M sw lo w t ∧ some (al t) = code (res b).1 ∧ (res b).2 = (M, sw)
     else if l = ".LB.MappingBuilder.mapWildcardSlotCopies.5" then
       Kg (BView B b ∗ F) s ra fr₀ t ∧ res b = (.done, b.M, false)
     else False
@@ -434,14 +434,14 @@ theorem b_0 (hout : ∀ l ∈ Program.labels mapWildcardSlotCopiesAsm, label l �
       intro t3 a'' lo'' w'' hkb3 hl3 hQ3 hok3 hag3
       obtain ⟨hli3, hbx3, -⟩ := LI.after (xs := lo.take 2) hag3 (hli.next rfl rfl rfl rfl rfl) hkb3
         (by simp [List.length_append, hl3, hli.hl]) hQ3.2
-      have hal : al t3 = code (Flat.mbMap b.fl M t.regs.rax.toBitVec t.regs.rbx.toBitVec).1 := hQ3.1
+      have hal : some (al t3) = code (Flat.mbMap b.fl M t.regs.rax.toBitVec t.regs.rbx.toBitVec).1 := hQ3.1
       clear hQ3 hkb3
       kvcgen64
       all_goals try symexec_norm
       vc_by_shape
       | goto ".LB.MappingBuilder.mapWildcardSlotCopies.4" =>
         have hd := code_ne_zero fun e =>
-          al_ne (by with_reducible assumption) (hal.trans e)
+          al_ne (by with_reducible assumption) (Option.some.inj (hal.trans e))
         have hf := hrest.symm.trans (step_fail hd)
         cfg_goto
         · exact hli3.stk rfl rfl
@@ -451,7 +451,7 @@ theorem b_0 (hout : ∀ l ∈ Program.labels mapWildcardSlotCopiesAsm, label l �
         · left; mw_var; omega
       | other =>
         have hd := code_eq_zero (hal.symm.trans
-          (al_zero (by with_reducible assumption)))
+          (congrArg some (al_zero (by with_reducible assumption))))
         first
         | (left; mw_var; rw [hbx3]; omega)
         | (mw_inv
@@ -465,12 +465,12 @@ theorem b_0 (hout : ∀ l ∈ Program.labels mapWildcardSlotCopiesAsm, label l �
       obtain ⟨ha'', hf⟩ := hrel
       subst a''
       change Flat.mbMap b.fl M t.regs.rax.toBitVec t.regs.rbx.toBitVec =
-        (.assertionFailed, M) at hf
+        (.assertionExit, M) at hf
       have hd : (Flat.mbMap b.fl M t.regs.rax.toBitVec t.regs.rbx.toBitVec).1 ≠ .done := by
         rw [hf]
-        change Flat.Status.assertionFailed ≠ Flat.Status.done
+        change (Flat.ExecutionControl.assertionExit : Flat.EmissionOutcome) ≠ .done
         decide
-      have hmodel : res b = (.assertionFailed, M, sw) := by
+      have hmodel : res b = (.assertionExit, M, sw) := by
         change Flat.mapWildcardSlotCopies b.fl b.M false = _
         rw [← hrest, step_fail hd, hf]
       refine Or.inr ⟨Or.inr ⟨rfl, harg, ?_⟩, ?_⟩
@@ -478,7 +478,7 @@ theorem b_0 (hout : ∀ l ∈ Program.labels mapWildcardSlotCopiesAsm, label l �
           lo.take 2 ++ free ++ v :: [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec,
             s.regs.r12.toBitVec, s.regs.r13.toBitVec], ra.toBitVec,
           by simp [hfree, hli.hl], ?_⟩
-        · change (res b).1 = .assertionFailed ∧ bv b M sw =
+        · change (res b).1 = .assertionExit ∧ bv b M sw =
             { b with M := (res b).2.1, saw := sawB b (res b).2.2 }
           rw [hmodel]
           exact ⟨rfl, rfl⟩
@@ -687,17 +687,17 @@ theorem b_2 (hout : ∀ l ∈ Program.labels mapWildcardSlotCopiesAsm, label l �
         intro t3 a'' lo'' w'' hkb3 hl3 hQ3 hok3 hag3
         obtain ⟨hli3, hbx3, -⟩ := LI.after (xs := lo'.take 2) hag3 (hlis.next rfl rfl rfl rfl rfl) hkb3
           (by simp [List.length_append, hl3, hl]) hQ3.2
-        have hal : al t3 = code (Flat.mbMap b.fl M t2.regs.rax.toBitVec t2.regs.rbx.toBitVec).1 := hQ3.1
+        have hal : some (al t3) = code (Flat.mbMap b.fl M t2.regs.rax.toBitVec t2.regs.rbx.toBitVec).1 := hQ3.1
         rw [hrax, hbx] at hal
         clear hQ3 hkb3
         kvcgen64
         all_goals try symexec_norm
         vc_by_shape
         | goto ".LB.MappingBuilder.mapWildcardSlotCopies.1" =>
-          have hd := code_eq_zero (hal.symm.trans (al_zero (by
+          have hd := code_eq_zero (hal.symm.trans (congrArg some (al_zero (by
             first
             | with_reducible assumption
-            | (rw [Bool.not_eq_false']; with_reducible assumption))))
+            | (rw [Bool.not_eq_false']; with_reducible assumption)))))
           cfg_goto
           · exact hli3.stk rfl rfl
           · mw_inv
@@ -711,7 +711,7 @@ theorem b_2 (hout : ∀ l ∈ Program.labels mapWildcardSlotCopiesAsm, label l �
           have hd := code_ne_zero fun e => al_ne (by
             first
             | with_reducible assumption
-            | (rw [Bool.not_eq_true']; with_reducible assumption)) (hal.trans e)
+            | (rw [Bool.not_eq_true']; with_reducible assumption)) (Option.some.inj (hal.trans e))
           have hf := hstep.symm.trans (step_fail hd)
           cfg_goto
           · exact hli3.stk rfl rfl
@@ -724,16 +724,16 @@ theorem b_2 (hout : ∀ l ∈ Program.labels mapWildcardSlotCopiesAsm, label l �
         obtain ⟨ha'', hf⟩ := hrel
         subst a''
         change Flat.mbMap b.fl M t2.regs.rax.toBitVec t2.regs.rbx.toBitVec =
-          (.assertionFailed, M) at hf
+          (.assertionExit, M) at hf
         have hf' : Flat.mbMap b.fl M (Flat.closestCopy b.fl M t.regs.rbx.toBitVec true)
-            t.regs.rbx.toBitVec = (.assertionFailed, M) := by
+            t.regs.rbx.toBitVec = (.assertionExit, M) := by
           simpa only [hrax, hbx] using hf
         have hd : (Flat.mbMap b.fl M (Flat.closestCopy b.fl M t.regs.rbx.toBitVec true)
             t.regs.rbx.toBitVec).1 ≠ .done := by
           rw [hf']
-          change Flat.Status.assertionFailed ≠ Flat.Status.done
+          change (Flat.ExecutionControl.assertionExit : Flat.EmissionOutcome) ≠ .done
           decide
-        have hmodel : res b = (.assertionFailed, M, true) := by
+        have hmodel : res b = (.assertionExit, M, true) := by
           change Flat.mapWildcardSlotCopies b.fl b.M false = _
           rw [← hstep, step_fail hd, hf']
         refine Or.inr ⟨Or.inr ⟨rfl, harg, ?_⟩, ?_⟩
@@ -741,7 +741,7 @@ theorem b_2 (hout : ∀ l ∈ Program.labels mapWildcardSlotCopiesAsm, label l �
             lo'.take 2 ++ free ++ v :: [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec,
               s.regs.r12.toBitVec, s.regs.r13.toBitVec], ra.toBitVec,
             by simp [hfree, hl], ?_⟩
-          · change (res b).1 = .assertionFailed ∧ bv b M true =
+          · change (res b).1 = .assertionExit ∧ bv b M true =
               { b with M := (res b).2.1, saw := sawB b (res b).2.2 }
             rw [hmodel]
             exact ⟨rfl, rfl⟩

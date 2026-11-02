@@ -61,11 +61,10 @@ theorem b_0 : runAsm.ForallBlocks fun blk =>
       (fr_length hbd.len) hok ?_
     · apply hbd.pop <;> rfl
     · intro u _ hax
-      obtain ⟨⟨l, hk, hf, hal⟩, normalByte⟩ := hq
+      obtain ⟨l, hk, hf, hal⟩ := hq
       have sameByte : al u = al t :=
         congrArg (fun value : Word => value.setWidth 8) hax
-      exact ⟨⟨l, hk, hf, sameByte.trans hal⟩,
-        fun failed => normalByte (sameByte.symm.trans failed)⟩
+      exact ⟨l, hk, hf, (congrArg some sameByte).trans hal⟩
 
 theorem b_6 (hexit : FunDecls.at (label "exit") = none)
     (hout : ∀ l ∈ Program.labels runAsm, label l ≠ label "exit") :
@@ -113,7 +112,7 @@ theorem b_8 (hs : Safe planned (flat g) g.xo)
       · rw [he]; exact hf
       · rw [he]; exact hfail)
   intro u a' lo' w' hbd hq hok hag
-  obtain ⟨⟨hk, hf, hal⟩, normalByte⟩ := hq
+  obtain ⟨hk, hf, hal⟩ := hq
   have he : Flat.emissionRun planned l (flat g) = Flat.buildBottomUp (flat a) :=
     (emission_finish h.model).trans (finish_success hc)
   kvcgen64
@@ -121,7 +120,7 @@ theorem b_8 (hs : Safe planned (flat g) g.xo)
   cfg_goto
   · exact (hbd.kb.next rfl rfl).stack (by decide)
   · simp only [Inv, Names.run, String.reduceEq, ↓reduceIte]
-    refine ⟨a', lo', w', ?_, hok, ⟨l, ?_, ?_, ?_⟩, normalByte⟩
+    refine ⟨a', lo', w', ?_, hok, l, ?_, ?_, ?_⟩
     · apply hbd.next <;> rfl
     · exact ⟨hk.tgtp.trans h.keep.tgtp, hk.n.trans h.keep.n,
         hk.splp.trans h.keep.splp, hk.data.trans h.keep.data, hk.ops.trans h.keep.ops,

@@ -48,7 +48,7 @@ theorem b_1 (hs : Safe planned (flat g) g.xo)
       · rw [he]; exact hf
       · rw [he]; exact hfail)
   intro u a' lo' w' hbd' hq hok' hag
-  obtain ⟨l, ⟨hk, hf, hal⟩, normalByte⟩ := hq
+  obtain ⟨l, hk, hf, hal⟩ := hq
   have hkeep' : Keep g a' := ProduceProof.Keep.trans hkeep hk
   have hbx' : u.regs.rbp.toBitVec = S := by
     rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rbp]
@@ -79,20 +79,20 @@ theorem b_1 (hs : Safe planned (flat g) g.xo)
   | load => run_loads [lm0, lm1, lm2]
   | goto ".LB.Emission.run.0" =>
     have hd : (Flat.permuteAtLowestHeight planned l (flat a)).1 ≠ .done :=
-      code_ne_zero (fun he => al_ne (by with_reducible assumption) (hal.trans he))
+      code_ne_zero (fun he => al_ne (by with_reducible assumption) (Option.some.inj (hal.trans he)))
     have he : Flat.emissionRun planned l (flat g) =
         Flat.permuteAtLowestHeight planned l (flat a) := by
       rw [emission_lowest hremove, ite_eq_left hd]
     cfg_goto
     · exact (hbd'.kb.next rfl rfl).stack (by decide)
     · simp only [Inv, Names.run, String.reduceEq, ↓reduceIte]
-      refine ⟨a', lo', w', ?_, hok', ⟨l, hkeep', ?_, ?_⟩, normalByte⟩
+      refine ⟨a', lo', w', ?_, hok', l, hkeep', ?_, ?_⟩
       · apply hbd'.next <;> rfl
       · rw [he]; exact hf
       · rw [he]; exact hal
     · simp [V, Names.run]
   | goto ".LB.Emission.run.3" =>
-    have hd := code_eq_zero (hal.symm.trans (al_zero (by with_reducible assumption)))
+    have hd := code_eq_zero (hal.symm.trans (congrArg some (al_zero (by with_reducible assumption))))
     have hne : a'.h.len + a'.h.pend ≠ a'.h.n := by
       apply Generate.ne_of_z
       rw [← Bool.not_eq_true']
@@ -106,7 +106,7 @@ theorem b_1 (hs : Safe planned (flat g) g.xo)
       apply hbd'.next <;> rfl
     · simp [V, Names.run]
   | goto ".LB.Emission.run.5" =>
-    have hd := code_eq_zero (hal.symm.trans (al_zero (by with_reducible assumption)))
+    have hd := code_eq_zero (hal.symm.trans (congrArg some (al_zero (by with_reducible assumption))))
     have hn0 : a'.h.n ≠ 0#64 := by
       apply ShallowestCopy.zf_false
       rw [← Bool.not_eq_true']
@@ -125,7 +125,7 @@ theorem b_1 (hs : Safe planned (flat g) g.xo)
       · simpa only [BitVec.add_comm] using he
     · simp [V, Names.run, maxStackSize]
   | goto ".LB.Emission.run.9" =>
-    have hd := code_eq_zero (hal.symm.trans (al_zero (by with_reducible assumption)))
+    have hd := code_eq_zero (hal.symm.trans (congrArg some (al_zero (by with_reducible assumption))))
     have hn0 : a'.h.n = 0#64 := by
       apply ShallowestCopy.zf_true
       rw [← Bool.not_eq_false']
@@ -153,7 +153,7 @@ theorem b_1 (hs : Safe planned (flat g) g.xo)
   | other =>
     first
     | (left; simp [V, Names.run])
-    | have hd := code_eq_zero (hal.symm.trans (al_zero (by with_reducible assumption)))
+    | have hd := code_eq_zero (hal.symm.trans (congrArg some (al_zero (by with_reducible assumption))))
       have hn0 : a'.h.n = 0#64 := by
         apply ShallowestCopy.zf_true
         rw [← Bool.not_eq_false']

@@ -21,9 +21,9 @@ def PlannerInput.sourceSlots (input : PlannerInput) : List FlatShuffler.StackSlo
 def PlannerInput.targetSlots (input : PlannerInput) : List FlatShuffler.StackSlot :=
   input.planner.target.toList.take input.planner.targetSize.toNat
 
-/-- The status and final buffers of the flat execution model.
-`.assertionFailed` represents an assertion exit, not a C++ return value. -/
-abbrev PlannerExecutionResult := FlatShuffler.Flat.Status × FlatShuffler.Flat.PSt
+/-- A normal return or an assertion exit, with the final buffers.
+Only `.returned` has a C++ return value. -/
+abbrev PlannerExecutionResult := FlatShuffler.Flat.ExecutionOutcome FlatShuffler.Flat.Status FlatShuffler.Flat.PSt
 
 /-- Each attempt can start with arbitrary values in its local arrays.
 The assembly and model proofs cover every such choice. -/

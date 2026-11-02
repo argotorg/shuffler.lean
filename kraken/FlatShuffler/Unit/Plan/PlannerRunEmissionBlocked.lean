@@ -10,8 +10,10 @@ import all FlatShuffler.Unit.Plan.PlannerRunBlocked
 namespace FlatShuffler.Unit.PlannerRunU
 open FlatShuffler.Sep
 
-theorem code_blocked_iff (st : Flat.Status) : code st = 1#8 ↔ st = .blocked := by
-  cases st <;> decide
+theorem code_blocked_iff (st : Flat.EmissionOutcome) : code st = some 1#8 ↔ st = .blocked := by
+  cases st with
+  | returned status => cases status <;> decide
+  | assertionExit => decide
 
 set_option maxRecDepth 4096 in
 theorem EmitCountLI.blockedBounds {P : Addr} {g : PlannerCallMemory} {M : Flat.Mapping}
@@ -23,8 +25,8 @@ theorem EmitCountLI.blockedBounds {P : Addr} {g : PlannerCallMemory} {M : Flat.M
     (hq : runQ (EmissionLocals.ofList locals h.localLength).planned.pos
       (emissionGhost g hok (localEmissionHdr locals h.localLength)) a t u)
     (hal : al u = 1#8) : BlockedBounds g.p.targetSize (flat a) := by
-  obtain ⟨l, _, he, hc⟩ := hq.1
-  have hs := (code_blocked_iff _).mp (hc.symm.trans hal)
+  obtain ⟨l, _, he, hc⟩ := hq
+  have hs := (code_blocked_iff _).mp (hc.symm.trans (congrArg some hal))
   have hr : Flat.emissionRun (EmissionLocals.ofList locals h.localLength).planned.pos l
       (flat (emissionGhost g hok (localEmissionHdr locals h.localLength))) =
       (.blocked, flat a) := Prod.ext hs he.symm

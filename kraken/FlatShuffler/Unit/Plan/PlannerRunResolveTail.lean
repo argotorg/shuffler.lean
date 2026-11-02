@@ -28,14 +28,14 @@ def resolveTail : Program := parse("
 set_option maxRecDepth 4096 in
 theorem resolve_tail [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory)
     (M : Flat.Mapping) (F : MProp 64) (s : MachineData) (ra : Int64)
-    (lo locals : List Word) (t : MachineData) (res : Flat.Resolution) (before : Word)
+    (lo locals : List Word) (t : MachineData) (res : Flat.ResolutionOutcome) (before : Word)
     (h : PostEmitLI P g M F s ra lo locals t)
-    (hal : al t = ResolveU.code res) (hnormal : res ≠ .assertionFailed)
+    (hal : some (al t) = ResolveU.code res) (hnormal : res ≠ .assertionExit)
     (hbp : t.regs.rbp.toBitVec = before)
     (K : Unit → MachineData → Prop)
     (I' : CfgLabel → Nat → Unit → MachineData → Prop) (E : Int64 → MachineData → Prop)
     (hbad : ∀ u, PostEmitLI P g M F s ra lo locals u → res = .stuck →
-      al u = ResolveU.code res →
+      some (al u) = ResolveU.code res →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
         (label ".LB.Planner.run.12") u)
     (hzero : ∀ u, PostEmitLI P g M F s ra lo locals u → res = .dropped → g.p.sourceSize = 0#64 →
@@ -53,7 +53,7 @@ theorem resolve_tail [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory)
   have rd : FlatShuffler.rd t.dmem (P + 48#64) = g.p.drp :=
     rd_of_eq hp (by unfold plannerObjectOwnedMemory; ecancel)
   unfold FlatShuffler.rd at rm rd
-  have ha : t.regs.rax.toBitVec.extractLsb' 0 8 = ResolveU.code res := by
+  have ha : some (t.regs.rax.toBitVec.extractLsb' 0 8) = ResolveU.code res := by
     simpa only [al, rax, Reg64s.get64_rax,
       BitVec.setWidth_eq_extractLsb' (by decide : 8 ≤ 64)] using hal
   unfold resolveTail
@@ -67,26 +67,32 @@ theorem resolve_tail [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory)
     · exact h.next rfl rfl rfl rfl rfl
     · rename_i hj
       symexec_norm at hj
-      simp only [ha, BitVec.zero_eq, beq_iff_eq] at hj
-      cases res <;> simp_all [ResolveU.code]
+      simp only [BitVec.zero_eq, beq_iff_eq] at hj
+      cases res with
+      | returned status => cases status <;> simp_all [ResolveU.code]
+      | assertionExit => exact False.elim (hnormal rfl)
     · exact hal
   | goto ".LB.Planner.run.13" =>
     rename_i af h1 af' hm
     symexec_norm at h1 hm
-    simp only [ha, BitVec.zero_eq, beq_eq_false_iff_ne] at h1
+    simp only [BitVec.zero_eq, beq_eq_false_iff_ne] at h1
     simp only [h.rbx, rm, BitVec.and_self, BitVec.zero_eq, beq_iff_eq] at hm
     apply hzero
     · exact h.next rfl rfl rfl rfl rfl
-    · cases res <;> simp_all [ResolveU.code]
+    · cases res with
+      | returned status => cases status <;> simp_all [ResolveU.code]
+      | assertionExit => exact False.elim (hnormal rfl)
     · exact hm
   | other =>
     rename_i af h1 af' hm
     symexec_norm at h1 hm
-    simp only [ha, BitVec.zero_eq, beq_eq_false_iff_ne] at h1
+    simp only [BitVec.zero_eq, beq_eq_false_iff_ne] at h1
     simp only [h.rbx, rm, BitVec.and_self, BitVec.zero_eq, beq_eq_false_iff_ne] at hm
     apply hmore
     · exact h.next rfl rfl rfl rfl rfl
-    · cases res <;> simp_all [ResolveU.code]
+    · cases res with
+      | returned status => cases status <;> simp_all [ResolveU.code]
+      | assertionExit => exact False.elim (hnormal rfl)
     · exact hm
     · exact hbp
     · rfl

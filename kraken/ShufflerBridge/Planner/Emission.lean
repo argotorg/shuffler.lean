@@ -199,124 +199,125 @@ theorem emissionRun_erel (data target : Vector FlatShuffler.StackSlot FlatShuffl
   obtain ⟨s1, fs1⟩ := r1
   dsimp only at hfr ⊢
   cases s1 with
-  | assertionFailed => exact hc.elim
-  | blocked =>
-    simp only [FlatShuffler.Flat.absOut, Corr, SurplusRel, Option.map_some] at hc
-    obtain ⟨⟨hb, hpop⟩, -⟩ := hc
-    simp only [hb, Option.isSome_some, ↓reduceIte, ne_eq, reduceCtorEq, not_false_eq_true, pure,
-      Except.pure, ERel]
-    have hs1 : fs1.size.toNat ≤ FlatShuffler.maxStackSize := by have := hfr.size; rw [hf0s] at this; omega
-    have hn1 : fs1.targetSize.toNat ≤ FlatShuffler.maxStackSize := by rw [hfr.tsize, hf0n]; exact hn
-    exact ⟨out_pop hpop hs1 hn1, by simp⟩
-  | done =>
-    simp only [FlatShuffler.Flat.absOut, Corr, SurplusRel, Option.map_none] at hc
-    obtain ⟨⟨hb, hpop⟩, hcan⟩ := hc
-    simp only [hb, Option.isSome_none, Bool.false_eq_true, ↓reduceIte, ne_eq, not_true_eq_false]
-    have hre : removeSurplus initial = .ok ⟨none, removed.state⟩ := by
-      simpa only [← hb] using hr
-    have htotal : ∀ i, (removed.state.mapping.destinationOf i).isSome := by
-      simpa only [State.noSurplus, State.isSurplus, Option.isSome_iff_ne_none] using
-        removeSurplus_noSurplus initial removed.state hre
-    have hrbound' : removed.state.boundValue = initial.boundValue :=
-      funext (removeSurplus_keeps_bindings initial removed.state hre)
-    have hdom : ∀ j, (removed.state.mapping.symm j).isSome =
-        (removed.state.planned_mapping.symm j).isSome := by
-      intro j
-      rw [← boundValue_isSome, hrbound', boundValue_isSome, hrplan]
-    -- The list state of the flat state after `removeSurplus`.
-    have hn1 : fs1.targetSize.toNat ≤ FlatShuffler.maxStackSize := by rw [hfr.tsize, hf0n]; exact hn
-    have hsz1 : fs1.size.toNat ≤ FlatShuffler.maxStackSize := by have := hfr.size; rw [hf0s] at this; omega
-    have he1 : e = FlatShuffler.Flat.listEnv fs1.targetSize.toNat fs1.target fs1.spills := by
-      rw [hfr.tsize, hfr.target, hfr.spills, hf0n, hf0t, hf0p]; exact he
-    have hrel1 := listOf_rel hn1 hsz1 hpop.mapping htotal he1 hpop.stack.symm hpop.trace
-      hpop.pend.symm hcan hct
-    have hs1 := listOf_sim hn1 hsz1 hpop.mapping htotal he1
-    -- The planned mapping as a list.
-    let pl := (M.pos.toList.take n.toNat).map optOf
-    have hpl0 : pl = (absP P).pos := by rw [← hP]; rfl
-    have hplc : PlanCorr removed.state pl := by
-      intro j
-      rw [hpl0, hrplan]
-      simp only [absP, Mapping.positionOf, initial]
-      rw [List.getElem?_eq_getElem (by simpa using j.isLt)]
-      simp
-    have hplr : FlatShuffler.Flat.PlanR fs1.targetSize.toNat M.pos pl := by
-      intro d hd
-      rw [hfr.tsize, hf0n] at hd
-      have hpd : pl[d.toNat]? = some (optOf (get M.pos d)) := by
-        simp [pl, hd, FlatShuffler.Flat.get_toNat _ (show d.toNat < FlatShuffler.maxStackSize by omega)]
-        refine ⟨_, ?_, rfl⟩
-        simp [show d.toNat < FlatShuffler.maxStackSize by omega]
-      rw [hpd, Option.join_some]
-      simp [optOf]
-    have hl1 := hrel1.len
-    have hdist : ∀ p < (listOf fs1).len, ∀ q < (listOf fs1).len,
-        (listOf fs1).dest p = (listOf fs1).dest q → p = q := by
-      intro p hp q hq h
-      have hd := hrel1.dests
-      have hdl := FlatShuffler.St.length_dests (listOf fs1)
-      rw [FlatShuffler.St.dest_eq, FlatShuffler.St.dest_eq, getElem!_pos (listOf fs1).dests p (by omega),
-        getElem!_pos (listOf fs1).dests q (by omega)] at h
-      exact hd.2 p (by omega) q (by omega) h
-    have hbound : ∀ q < (listOf fs1).len, FlatShuffler.isHole pl ((listOf fs1).dest q) = false := by
-      intro q hq
-      obtain ⟨j, hj, hjd⟩ := hrel1.mapping ⟨q, by omega⟩
-      have hs : (removed.state.mapping.symm j).isSome = true := by
-        rw [(removed.state.mapping.eq_some_iff).mpr hj]; rfl
-      have hp := hplc j
-      simp only [Mapping.positionOf] at hp
-      rw [← hdom j, hs] at hp
-      unfold FlatShuffler.isHole
-      rw [show (listOf fs1).dest q = j.val from hjd.symm]
-      simp [hp]
-    have hlow := FlatShuffler.Flat.lowOk_of (pl := pl) hdist hbound hs1 hplr
-    have hsr := FlatShuffler.Flat.sim_lowest hs1 hplr hlow l
-    have hlc := lowest_corr hrel1 hplc
-    obtain ⟨permuted, hp, hlength, hpplan, hppending, hpbound, -⟩ :=
-      PermuteAtLowestHeight.permuteAtLowestHeight_result_spec removed.state htotal hdom
-    rw [hp] at hlc
-    have herel := erel_of hsr hlc
-    rw [hp, except_ok_bind]
-    generalize FlatShuffler.Flat.permuteAtLowestHeight M.pos l fs1 = r2 at hsr herel ⊢
-    generalize FlatShuffler.lowest e.n pl (listOf fs1) = mres at hsr hlc
-    rcases mres with (_ | _) | st2 <;>
-      simp only [ResCorr, FlatShuffler.Flat.SimR] at hsr hlc
-    · simp only [hlc.1, hsr.1, Option.isSome_some, ↓reduceIte, reduceCtorEq,
-        not_false_eq_true]
-      exact herel
-    obtain ⟨hpb, hrel2⟩ := hlc
-    obtain ⟨s2, fs2⟩ := r2
-    obtain ⟨hs2d, hs2⟩ := hsr
-    dsimp only at hs2d hs2
-    subst hs2d
-    simp only [hpb, Option.isSome_none, Bool.false_eq_true, ↓reduceIte, not_true_eq_false]
-    have hbound' : permuted.state.boundValue = initial.boundValue := hpbound.trans hrbound'
-    have hsize : permuted.state.stack.length + permuted.state.pending_generations =
-        (decodedTargetStack e).length := by
-      rw [hlength, hppending, hrpending]
-      have hcount := unmapped_of_boundValue_eq initial removed.state hrbound'
-      simpa only [initial, ← hcount] using Mapping.total_size removed.state.mapping htotal
-    have hpending :
-        permuted.state.mapping.unmapped_target_slots = permuted.state.pending_generations := by
-      rw [unmapped_of_boundValue_eq initial permuted.state hbound', hppending, hrpending]
-    rw [requires_of_true _ hsize, except_ok_bind, requires_of_true _ hpending, except_ok_bind]
-    simp only [size_ok hs2 hrel2 hsize, unmapped_ok hs2 hrel2 hpending, not_true_eq_false,
-      ↓reduceIte]
-    by_cases hav : ∀ i, permuted.state.isAvailable i
-    · rw [requires_of_true _ hav, except_ok_bind]
-      simp only [(avail_iff hs2 hrel2).mpr hav, Bool.not_true, Bool.false_eq_true, ↓reduceIte]
-      by_cases hlab : ∀ j : Fin (decodedTargetStack e).length,
-          ((decodedTargetStack e)[j.val]'j.isLt).isFunctionReturnLabel → (permuted.state.mapping.symm j).isSome
-      · rw [requires_of_true _ hlab, except_ok_bind]
-        simp only [(labels_iff hs2 hrel2).mpr hlab, Bool.not_true, Bool.false_eq_true, ↓reduceIte]
-        exact bbu_erel hs2 hrel2 _
-      · rw [requires_of_false _ hlab, except_error_bind]
-        have hf : FlatShuffler.Flat.labelsFrom fs2 0 = false :=
-          Bool.eq_false_iff.mpr fun h => hlab ((labels_iff hs2 hrel2).mp h)
+  | assertionExit => exact hc.elim
+  | returned status =>
+    cases status with
+    | blocked =>
+      simp only [FlatShuffler.Flat.absOut, Corr, SurplusRel, Option.map_some] at hc
+      obtain ⟨⟨hb, hpop⟩, -⟩ := hc
+      simp only [hb, Option.isSome_some, ↓reduceIte, ne_eq, pure,
+        Except.pure, ERel]
+      have hs1 : fs1.size.toNat ≤ FlatShuffler.maxStackSize := by have := hfr.size; rw [hf0s] at this; omega
+      have hn1 : fs1.targetSize.toNat ≤ FlatShuffler.maxStackSize := by rw [hfr.tsize, hf0n]; exact hn
+      exact ⟨out_pop hpop hs1 hn1, by simp⟩
+    | done =>
+      simp only [FlatShuffler.Flat.absOut, Corr, SurplusRel, Option.map_none] at hc
+      obtain ⟨⟨hb, hpop⟩, hcan⟩ := hc
+      simp only [hb, Option.isSome_none, Bool.false_eq_true, ↓reduceIte, ne_eq, not_true_eq_false]
+      have hre : removeSurplus initial = .ok ⟨none, removed.state⟩ := by
+        simpa only [← hb] using hr
+      have htotal : ∀ i, (removed.state.mapping.destinationOf i).isSome := by
+        simpa only [State.noSurplus, State.isSurplus, Option.isSome_iff_ne_none] using
+          removeSurplus_noSurplus initial removed.state hre
+      have hrbound' : removed.state.boundValue = initial.boundValue :=
+        funext (removeSurplus_keeps_bindings initial removed.state hre)
+      have hdom : ∀ j, (removed.state.mapping.symm j).isSome =
+          (removed.state.planned_mapping.symm j).isSome := by
+        intro j
+        rw [← boundValue_isSome, hrbound', boundValue_isSome, hrplan]
+      -- The list state of the flat state after `removeSurplus`.
+      have hn1 : fs1.targetSize.toNat ≤ FlatShuffler.maxStackSize := by rw [hfr.tsize, hf0n]; exact hn
+      have hsz1 : fs1.size.toNat ≤ FlatShuffler.maxStackSize := by have := hfr.size; rw [hf0s] at this; omega
+      have he1 : e = FlatShuffler.Flat.listEnv fs1.targetSize.toNat fs1.target fs1.spills := by
+        rw [hfr.tsize, hfr.target, hfr.spills, hf0n, hf0t, hf0p]; exact he
+      have hrel1 := listOf_rel hn1 hsz1 hpop.mapping htotal he1 hpop.stack.symm hpop.trace
+        hpop.pend.symm hcan hct
+      have hs1 := listOf_sim hn1 hsz1 hpop.mapping htotal he1
+      -- The planned mapping as a list.
+      let pl := (M.pos.toList.take n.toNat).map optOf
+      have hpl0 : pl = (absP P).pos := by rw [← hP]; rfl
+      have hplc : PlanCorr removed.state pl := by
+        intro j
+        rw [hpl0, hrplan]
+        simp only [absP, Mapping.positionOf, initial]
+        rw [List.getElem?_eq_getElem (by simpa using j.isLt)]
+        simp
+      have hplr : FlatShuffler.Flat.PlanR fs1.targetSize.toNat M.pos pl := by
+        intro d hd
+        rw [hfr.tsize, hf0n] at hd
+        have hpd : pl[d.toNat]? = some (optOf (get M.pos d)) := by
+          simp [pl, hd, FlatShuffler.Flat.get_toNat _ (show d.toNat < FlatShuffler.maxStackSize by omega)]
+          refine ⟨_, ?_, rfl⟩
+          simp [show d.toNat < FlatShuffler.maxStackSize by omega]
+        rw [hpd, Option.join_some]
+        simp [optOf]
+      have hl1 := hrel1.len
+      have hdist : ∀ p < (listOf fs1).len, ∀ q < (listOf fs1).len,
+          (listOf fs1).dest p = (listOf fs1).dest q → p = q := by
+        intro p hp q hq h
+        have hd := hrel1.dests
+        have hdl := FlatShuffler.St.length_dests (listOf fs1)
+        rw [FlatShuffler.St.dest_eq, FlatShuffler.St.dest_eq, getElem!_pos (listOf fs1).dests p (by omega),
+          getElem!_pos (listOf fs1).dests q (by omega)] at h
+        exact hd.2 p (by omega) q (by omega) h
+      have hbound : ∀ q < (listOf fs1).len, FlatShuffler.isHole pl ((listOf fs1).dest q) = false := by
+        intro q hq
+        obtain ⟨j, hj, hjd⟩ := hrel1.mapping ⟨q, by omega⟩
+        have hs : (removed.state.mapping.symm j).isSome = true := by
+          rw [(removed.state.mapping.eq_some_iff).mpr hj]; rfl
+        have hp := hplc j
+        simp only [Mapping.positionOf] at hp
+        rw [← hdom j, hs] at hp
+        unfold FlatShuffler.isHole
+        rw [show (listOf fs1).dest q = j.val from hjd.symm]
+        simp [hp]
+      have hlow := FlatShuffler.Flat.lowOk_of (pl := pl) hdist hbound hs1 hplr
+      have hsr := FlatShuffler.Flat.sim_lowest hs1 hplr hlow l
+      have hlc := lowest_corr hrel1 hplc
+      obtain ⟨permuted, hp, hlength, hpplan, hppending, hpbound, -⟩ :=
+        PermuteAtLowestHeight.permuteAtLowestHeight_result_spec removed.state htotal hdom
+      rw [hp] at hlc
+      have herel := erel_of hsr hlc
+      rw [hp, except_ok_bind]
+      generalize FlatShuffler.Flat.permuteAtLowestHeight M.pos l fs1 = r2 at hsr herel ⊢
+      generalize FlatShuffler.lowest e.n pl (listOf fs1) = mres at hsr hlc
+      rcases mres with (_ | _) | st2 <;>
+        simp only [ResCorr, FlatShuffler.Flat.SimR] at hsr hlc
+      · simp only [hlc.1, hsr.1, Option.isSome_some, ↓reduceIte]
+        exact herel
+      obtain ⟨hpb, hrel2⟩ := hlc
+      obtain ⟨s2, fs2⟩ := r2
+      obtain ⟨hs2d, hs2⟩ := hsr
+      dsimp only at hs2d hs2
+      subst hs2d
+      simp only [hpb, Option.isSome_none, Bool.false_eq_true, ↓reduceIte, not_true_eq_false]
+      have hbound' : permuted.state.boundValue = initial.boundValue := hpbound.trans hrbound'
+      have hsize : permuted.state.stack.length + permuted.state.pending_generations =
+          (decodedTargetStack e).length := by
+        rw [hlength, hppending, hrpending]
+        have hcount := unmapped_of_boundValue_eq initial removed.state hrbound'
+        simpa only [initial, ← hcount] using Mapping.total_size removed.state.mapping htotal
+      have hpending :
+          permuted.state.mapping.unmapped_target_slots = permuted.state.pending_generations := by
+        rw [unmapped_of_boundValue_eq initial permuted.state hbound', hppending, hrpending]
+      rw [requires_of_true _ hsize, except_ok_bind, requires_of_true _ hpending, except_ok_bind]
+      simp only [size_ok hs2 hrel2 hsize, unmapped_ok hs2 hrel2 hpending, not_true_eq_false,
+        ↓reduceIte]
+      by_cases hav : ∀ i, permuted.state.isAvailable i
+      · rw [requires_of_true _ hav, except_ok_bind]
+        simp only [(avail_iff hs2 hrel2).mpr hav, Bool.not_true, Bool.false_eq_true, ↓reduceIte]
+        by_cases hlab : ∀ j : Fin (decodedTargetStack e).length,
+            ((decodedTargetStack e)[j.val]'j.isLt).isFunctionReturnLabel → (permuted.state.mapping.symm j).isSome
+        · rw [requires_of_true _ hlab, except_ok_bind]
+          simp only [(labels_iff hs2 hrel2).mpr hlab, Bool.not_true, Bool.false_eq_true, ↓reduceIte]
+          exact bbu_erel hs2 hrel2 _
+        · rw [requires_of_false _ hlab, except_error_bind]
+          have hf : FlatShuffler.Flat.labelsFrom fs2 0 = false :=
+            Bool.eq_false_iff.mpr fun h => hlab ((labels_iff hs2 hrel2).mp h)
+          simp only [hf, Bool.not_false, ↓reduceIte, ERel]
+      · rw [requires_of_false _ hav, except_error_bind]
+        have hf : FlatShuffler.Flat.availableFrom fs2 0 = false :=
+          Bool.eq_false_iff.mpr fun h => hav ((avail_iff hs2 hrel2).mp h)
         simp only [hf, Bool.not_false, ↓reduceIte, ERel]
-    · rw [requires_of_false _ hav, except_error_bind]
-      have hf : FlatShuffler.Flat.availableFrom fs2 0 = false :=
-        Bool.eq_false_iff.mpr fun h => hav ((avail_iff hs2 hrel2).mp h)
-      simp only [hf, Bool.not_false, ↓reduceIte, ERel]
 
 end ShufflerBridge.Planner

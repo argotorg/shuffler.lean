@@ -464,7 +464,7 @@ theorem nb {b : Bool} (h : (!b) = true) : b = false := by simpa using h
 theorem nb' {b : Bool} (h : (!b) = false) : b = true := by simpa using h
 
 section
-variable {r : Flat.Status × Flat.St} {g1 : G} {q d dp : Word}
+variable {r : Flat.EmissionOutcome × Flat.St} {g1 : G} {q d dp : Word}
 
 -- `jne .LB.Emission.removeSurplus.4` after `cmpq $-1`: slot `q - 1` is not surplus.
 theorem rs283_dest (hrs : r = afterR (eqStep (flat g1) q (g1.h.len - 1#64) dp)) (hq : q ≠ 0#64)
@@ -920,7 +920,7 @@ theorem b_6
     rw [hr8] at hz
     have hz0 : Flat.depthOf (flat g1) t.regs.rdx.toBitVec - Flat.maxSwapDepth = 0 :=
       (Surplus.exc_eq (flat g1) _).symm.trans (beq_iff_eq.mp hz)
-    have hb : Flat.removeSurplus (flat g) = (.assertionFailed, flat g1) := by
+    have hb : Flat.removeSurplus (flat g) = (.assertionExit, flat g1) := by
       rw [hrs, Flat.blockSwapUnreachable, ProduceProof.block_zero hz0]
     cfg_goto
     · exact hr.bx.upd.stack
@@ -949,7 +949,7 @@ theorem b_6
     · simp only
       exact ⟨_, w1, hr.bx.updm hm3, ProduceProof.Ok.withBlk hr.ok _ _,
         ⟨ProduceProof.Keep.trans hr.keep (ProduceProof.Keep.withBlk _ _),
-          by rw [hb], by rw [hb]; rfl⟩, by change 1#8 ≠ 2#8; decide⟩
+          by rw [hb], by rw [hb]; rfl⟩⟩
     · simp only [V]
       left; omega
   | load =>
@@ -989,8 +989,7 @@ theorem b_8
   vc_by_shape
   | other =>
     first
-    | exact ⟨g1, w1, hr.bx.upd, hr.ok, ⟨hr.keep, by rw [hrs], by rw [hrs]; rfl⟩,
-        by change 0#8 ≠ 2#8; decide⟩
+    | exact ⟨g1, w1, hr.bx.upd, hr.ok, ⟨hr.keep, by rw [hrs], by rw [hrs]; rfl⟩⟩
     | (left; simp only [V]; omega)
   | closed => simp
 
@@ -1012,7 +1011,7 @@ theorem b_9
         Sep.Post S (Extras s F) 2 (fun g' t => surplusQ g g' s t) s t ∧
           Sep.mod.Agree s t) ?_ ?_
     · refine Kp.ret (hb.pop ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_) rfl hok1 fun t' _ hax =>
-        NormalResult.of_returnRegister_eq hQ hax
+        NormalResult.of_returnRegister_eq (f := Flat.removeSurplus) hQ hax
       all_goals rfl
     · rintro ⟨ha, hp, hag⟩
       exact Or.inl ⟨ha, extras_post hp, hag⟩
@@ -1030,8 +1029,7 @@ theorem b_10
     cfg_goto
     · exact hr.bx.upd.stack
     · simp only
-      exact ⟨g1, w1, hr.bx.upd, hr.ok, ⟨hr.keep, by rw [hrs], by rw [hrs]; rfl⟩,
-        by change 0#8 ≠ 2#8; decide⟩
+      exact ⟨g1, w1, hr.bx.upd, hr.ok, ⟨hr.keep, by rw [hrs], by rw [hrs]; rfl⟩⟩
     · simp only [V]
       left; omega
 
@@ -1061,7 +1059,7 @@ theorem b_11
     rw [hrs, afterR_ne (by rw [hfail]; decide)]
     exact ⟨Keep.trans hr.keep hK3, hf3, hfail⟩)
   intro t3 g3 w3 hb3 hQ3 hok3
-  obtain ⟨hK3, hf3, hal3⟩ : Res (Flat.swapWith · t.regs.rsi.toBitVec) g1 g3 t3 := hQ3.1
+  obtain ⟨hK3, hf3, hal3⟩ : Res (Flat.swapWith · t.regs.rsi.toBitVec) g1 g3 t3 := hQ3
   have hN : (flat g1).size.toNat ≤ maxStackSize := by
     show g1.h.len.toNat ≤ maxStackSize
     have := hr.ok.len; have := hr.ok.n; have := hr.ok.xs; omega
@@ -1072,20 +1070,20 @@ theorem b_11
     have hz : (!(BitVec.extractLsb' 0 8 t3.regs.rax.toBitVec &&& BitVec.extractLsb' 0 8
         t3.regs.rax.toBitVec == BitVec.zero 8)) = true := by assumption
     have hd : (Flat.swapWith (flat g1) t.regs.rsi.toBitVec).1 ≠ .done :=
-      ProduceProof.code_ne_zero (fun e => ProduceProof.al_ne (t := t3) hz (hal3.trans e))
+      ProduceProof.code_ne_zero (fun e => ProduceProof.al_ne (t := t3) hz (Option.some.inj (hal3.trans e)))
     cfg_goto
     · exact hb3.flags.stack
     · simp only
       exact ⟨g3, w3, hb3.flags, hok3, ⟨ProduceProof.Keep.trans hr.keep hK3,
         by rw [hrs, afterR_ne hd]; exact hf3,
-        by rw [hrs, afterR_ne hd]; exact hal3⟩, hQ3.2⟩
+        by rw [hrs, afterR_ne hd]; exact hal3⟩⟩
     · simp only [V, wB]
       left; omega
   | other =>
     have hz : (!(BitVec.extractLsb' 0 8 t3.regs.rax.toBitVec &&& BitVec.extractLsb' 0 8
         t3.regs.rax.toBitVec == BitVec.zero 8)) = false := by assumption
     have hd : (Flat.swapWith (flat g1) t.regs.rsi.toBitVec).1 = .done :=
-      ProduceProof.code_eq_zero (hal3.symm.trans (ProduceProof.al_zero (t := t3) hz))
+      ProduceProof.code_eq_zero (hal3.symm.trans (congrArg some (ProduceProof.al_zero (t := t3) hz)))
     obtain ⟨e1, e2, e3⟩ := swap_rec hr.ok hok3 hK3 hf3 hd
     first
     | exact ⟨g3, w3, ⟨hb3.flags, hok3, ProduceProof.Keep.trans hr.keep hK3,
@@ -1121,7 +1119,7 @@ theorem b_12
     rw [hrs, afterPop_ne (by rw [hfail]; decide)]
     exact ⟨Keep.trans hr.keep hK3, hf3, hfail⟩)
   intro t3 g3 w3 hb3 hQ3 hok3
-  obtain ⟨hK3, hf3, hal3⟩ := hQ3.1
+  obtain ⟨hK3, hf3, hal3⟩ := hQ3
   kvcgen64
   all_goals try symexec_norm
   vc_by_shape
@@ -1129,7 +1127,7 @@ theorem b_12
     have hz : (BitVec.extractLsb' 0 8 t3.regs.rax.toBitVec &&& BitVec.extractLsb' 0 8
         t3.regs.rax.toBitVec == BitVec.zero 8) = true := by assumption
     have hd : (Flat.pop (flat g2)).1 = .done := ProduceProof.code_eq_zero
-      (hal3.symm.trans (ProduceProof.al_zero (t := t3) (by rw [hz]; rfl)))
+      (hal3.symm.trans (congrArg some (ProduceProof.al_zero (t := t3) (by rw [hz]; rfl))))
     cfg_goto
     · exact hb3.flags.stack
     · simp only
@@ -1144,13 +1142,13 @@ theorem b_12
     have hz : (BitVec.extractLsb' 0 8 t3.regs.rax.toBitVec &&& BitVec.extractLsb' 0 8
         t3.regs.rax.toBitVec == BitVec.zero 8) = false := by assumption
     have hd : (Flat.pop (flat g2)).1 ≠ .done := ProduceProof.code_ne_zero
-      (fun e => ProduceProof.al_ne (t := t3) (by rw [hz]; rfl) (hal3.trans e))
+      (fun e => ProduceProof.al_ne (t := t3) (by rw [hz]; rfl) (Option.some.inj (hal3.trans e)))
     cfg_goto
     · exact hb3.flags.stack
     · simp only
       exact ⟨g3, w3, hb3.flags, hok3, ⟨ProduceProof.Keep.trans hr.keep hK3,
         by rw [hrs, afterPop_ne hd]; exact hf3,
-        by rw [hrs, afterPop_ne hd]; exact hal3⟩, hQ3.2⟩
+        by rw [hrs, afterPop_ne hd]; exact hal3⟩⟩
     · simp only [V, wB]
       left; omega
 

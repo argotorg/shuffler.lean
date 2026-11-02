@@ -36,10 +36,12 @@ theorem cfg_28 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : MProp 6
   have hh := b_28 P current M F s ra ctx.ok ctx.map hrun
     (I' (.label ".LB.Planner.run.16") 18) I' (RunExit P g F s ra) (by
       intro v lo locals hc hp a hk u lo' hpost hq ha hag
-      obtain ⟨ec, hal, hout⟩ := ctx.afterEmission hd hc hp a hk hq.1
-      have statusIsNormal : ec.status ≠ .assertionFailed := by
+      obtain ⟨ec, hal, hout⟩ := ctx.afterEmission hd hc hp a hk hq
+      have statusIsNormal : ec.status ≠ .assertionExit := by
         intro failed
-        exact hq.2 (by rw [hal, failed]; rfl)
+        have impossible := hal
+        rw [failed, code_assertionExit] at impossible
+        contradiction
       let newg := emissionResult current ctx.ok (localEmissionHdr locals hc.localLength) a hk
       let ls := (EmissionLocals.ofList locals hc.localLength).toList a.h
         (v.regs.rsp.toBitVec + 96#64)
@@ -61,18 +63,18 @@ theorem cfg_28 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : MProp 6
         have hnb : ec.status ≠ .blocked := by
           intro he
           apply hn
-          rw [hpres, hal, he]
-          rfl
+          exact Option.some.inj ((congrArg some hpres).trans
+            (hal.trans (congrArg code he)))
         apply Program.Intercept.intro_label (i := 10) (by decide)
         left
         refine ⟨hw.kb.stack (by decide), ?_, Or.inl ?_⟩
         · simp only [FullRunInv, RunInv, Names.plannerRun, String.reduceEq,
             ↓reduceIte, EmittedPhase]
-          exact ⟨newg, M, ec, hpres.trans hal, hnb, statusIsNormal, lo', ls, hw⟩
+          exact ⟨newg, M, ec, (congrArg some hpres).trans hal, hnb, statusIsNormal, lo', ls, hw⟩
         · simp only [runV, String.reduceEq, or_false, ↓reduceIte]
           omega
       · intro w hw he hz hbp
-        have hs : ec.status = .blocked := (code_blocked_iff _).mp (hal.symm.trans he)
+        have hs : ec.status = .blocked := (code_blocked_iff _).mp (hal.symm.trans (congrArg some he))
         have bounds := hc.blockedBounds ctx.ok ctx.map hp a hq he
         have restored : BlockedBounds newg.p.targetSize ec.out := by
           rw [hout]
@@ -96,7 +98,7 @@ theorem cfg_28 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : MProp 6
         · simp only [runV, String.reduceEq, or_false, ↓reduceIte, hb]
           omega
       · intro w hw he hn hbp hax hdx
-        have hs : ec.status = .blocked := (code_blocked_iff _).mp (hal.symm.trans he)
+        have hs : ec.status = .blocked := (code_blocked_iff _).mp (hal.symm.trans (congrArg some he))
         have bounds := hc.blockedBounds ctx.ok ctx.map hp a hq he
         have restored : BlockedBounds newg.p.targetSize ec.out := by
           rw [hout]

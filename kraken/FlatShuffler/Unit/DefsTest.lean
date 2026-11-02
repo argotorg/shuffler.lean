@@ -79,9 +79,9 @@ example : ¬ (ghostX 3 14 w7).Ok := fun h => absurd h.nops (by decide)
 
 /-! ## The codes of the results are distinct -/
 
-#guard code .done == DONE && code .blocked == BLOCKED && code .assertionFailed == ASSERTION_FAILED
-#guard code .done != code .blocked && code .blocked != code .assertionFailed
-  && code .done != code .assertionFailed
+#guard code .done == some DONE && code .blocked == some BLOCKED && code .assertionExit == none
+#guard code .done != code .blocked && code .blocked != code .assertionExit
+  && code .done != code .assertionExit
 
 -- A function that writes nothing keeps the members.
 example (g : G) : Keep g g := ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩

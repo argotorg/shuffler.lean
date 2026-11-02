@@ -85,7 +85,7 @@ example (input : PlannerInput) (validInput : PlannerInputsValidForNormalReturn i
 open ShufflerVerification in
 example (input : PlannerInput) (locals : Nat → FlatShuffler.Flat.RunU)
     (validInput : PlannerInputsValidForNormalReturn input) :
-    (input.execute locals).1 ≠ .assertionFailed :=
+    (input.execute locals).1 ≠ .assertionExit :=
   planner_flat_execution_does_not_assert input locals validInput
 
 open ShufflerVerification in
@@ -201,38 +201,50 @@ import all Theorems.PlannerAssembly
 import all FlatShuffler.Unit.Lowest.Defs
 
 open FlatShuffler FlatShuffler.Unit in
-example {f : Flat.St → Flat.Status × Flat.St} {before after : Sep.G} {returned : MachineData}
-    (result : NormalResult f before after returned) : al returned ≠ ASSERTION_FAILED :=
-  result.2
+example {f : Flat.St → Flat.ExecutionOutcome Flat.Status Flat.St}
+    {before after : Sep.G} {returned : MachineData}
+    (result : NormalResult f before after returned) : (f (flat before)).1 ≠ .assertionExit :=
+  NormalResult.not_assertionExit result
+
+open FlatShuffler FlatShuffler.Unit in
+example {f : Flat.St → Flat.ExecutionOutcome Flat.Status Flat.St}
+    {before after : Sep.G} {returned : MachineData}
+    (result : NormalResult f before after returned) :
+    al returned = DONE ∨ al returned = BLOCKED :=
+  NormalResult.returnByte result
 
 open FlatShuffler FlatShuffler.Unit in
 example {planned : Vector Word maxStackSize} {before after : Sep.G} {entry returned : MachineData}
-    (result : permuteQ planned before after entry returned) : al returned ≠ ASSERTION_FAILED :=
-  result.2
+    (result : permuteQ planned before after entry returned) :
+    (Flat.permute (flat before) planned).1 ≠ .assertionExit :=
+  NormalResult.not_assertionExit (f := (Flat.permute · planned)) result
 
 open FlatShuffler FlatShuffler.Unit in
 example {before after : Sep.G} {entry returned : MachineData}
-    (result : loopQ before after entry returned) : al returned ≠ ASSERTION_FAILED :=
-  result.2
+    (result : loopQ before after entry returned) :
+    (Flat.buildBottomUp (flat before)).1 ≠ .assertionExit :=
+  NormalResult.not_assertionExit (f := Flat.buildBottomUp) result
 
 open FlatShuffler FlatShuffler.Unit in
 example {planned : Vector Word maxStackSize} {before after : Sep.G} {entry returned : MachineData}
-    (result : lowestQ planned before after entry returned) : al returned ≠ ASSERTION_FAILED := by
-  obtain ⟨_, normalReturn⟩ := result
-  exact normalReturn.2
+    (result : lowestQ planned before after entry returned) :
+    ∃ locals, (Flat.permuteAtLowestHeight planned locals (flat before)).1 ≠ .assertionExit := by
+  obtain ⟨locals, normalReturn⟩ := result
+  exact ⟨locals, NormalResult.not_assertionExit normalReturn⟩
 
 open ShufflerVerification FlatShuffler FlatShuffler.Unit in
 example {comparison : PlannerInput → PlannerExecutionResult → Prop}
     {address : Addr} {before : PlannerCallMemory} {frame : MProp 64}
     {entry returned : MachineData}
     (normalReturn : PlannerNormalReturn comparison address before frame entry returned) :
-    al returned ≠ 2#8 := by
-  obtain ⟨after, _, _, _, locals, returnByte, statusIsNormal, _⟩ := normalReturn
-  intro forbiddenByte
-  apply statusIsNormal
-  have codeIsAssertion := returnByte.symm.trans forbiddenByte
-  cases status : ((plannerInputAtEntry before entry).execute locals).1 <;>
-    simp_all [code, DONE, BLOCKED, ASSERTION_FAILED]
+    ∃ locals, ((plannerInputAtEntry before entry).execute locals).1 ≠ .assertionExit := by
+  obtain ⟨after, _, _, _, locals, _, statusIsNormal, _⟩ := normalReturn
+  exact ⟨locals, statusIsNormal⟩
+
+-- An assertion exit has no return byte.
+open FlatShuffler FlatShuffler.Unit in
+example (returned : MachineData) : some (al returned) ≠ code .assertionExit := by simp
+
 EOF
 lean_file "$tmp/NormalReturn.lean"
 
@@ -258,7 +270,7 @@ example (input : PlannerInput) (state : FlatShuffler.Flat.PSt) :
 
 -- An assertion exit cannot satisfy the correctness claim.
 example (input : PlannerInput) (execution : PlannerExecutionResult)
-    (failed : execution.1 = .assertionFailed) :
+    (failed : execution.1 = .assertionExit) :
     ¬ PlannerReturnsCorrectPlanOrBlocked input execution := by
   intro correct
   rcases correct with blocked | ⟨done, _⟩

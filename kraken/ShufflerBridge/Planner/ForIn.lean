@@ -21,15 +21,15 @@ namespace ShufflerBridge.Planner
 open Shuffler FlatShuffler.Flat
 
 -- A flat step and a PR31 step: both go on with related states, or both fail.
-def StepCorr {σ β ε : Type} (R : σ → β → Prop) : Status × σ → Except ε (ForInStep β) → Prop
+def StepCorr {σ β ε : Type} (R : σ → β → Prop) : EmissionOutcome × σ → Except ε (ForInStep β) → Prop
   | (.done, s), .ok (.yield b) => R s b
-  | (.assertionFailed, _), .error _ => True
+  | (.assertionExit, _), .error _ => True
   | _, _ => False
 
 -- A flat loop and a PR31 loop: both end with related states, or both fail.
-def LoopCorr {σ β ε : Type} (R : σ → β → Prop) : Status × σ → Except ε β → Prop
+def LoopCorr {σ β ε : Type} (R : σ → β → Prop) : EmissionOutcome × σ → Except ε β → Prop
   | (.done, s), .ok b => R s b
-  | (.assertionFailed, _), .error _ => True
+  | (.assertionExit, _), .error _ => True
   | _, _ => False
 
 theorem finRange_drop {n k : Nat} (h : k < n) :
@@ -38,7 +38,7 @@ theorem finRange_drop {n k : Nat} (h : k < n) :
   simp
 
 theorem loop_corr {σ β ε : Type} {n : Nat} (_hn : n ≤ FlatShuffler.maxStackSize)
-    (F st : FlatShuffler.Word → σ → Status × σ)
+    (F st : FlatShuffler.Word → σ → EmissionOutcome × σ)
     (hF : ∀ k s, k ≤ n → F (.ofNat 64 k) s =
       if k < n then
         (if (st (.ofNat 64 k) s).1 ≠ .done then st (.ofNat 64 k) s
@@ -63,7 +63,7 @@ theorem loop_corr {σ β ε : Type} {n : Nat} (_hn : n ≤ FlatShuffler.maxStack
     revert hs
     generalize st (.ofNat 64 k) s = r
     generalize f ⟨k, by omega⟩ b = x
-    rcases r with ⟨_ | _ | _, s'⟩ <;> rcases x with _ | (b' | b') <;>
+    rcases r with ⟨(⟨_ | _⟩ | _), s'⟩ <;> rcases x with _ | (b' | b') <;>
       simp [StepCorr, LoopCorr, Bind.bind, Except.bind]
     exact ih (k + 1) s' b' (by omega)
 

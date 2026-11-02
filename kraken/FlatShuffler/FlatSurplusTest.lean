@@ -21,7 +21,7 @@ namespace FlatShuffler.Flat.SurplusTest
 
 open FlatShuffler FlatShuffler.Flat.PopTest
 
-def viewB (r : Status × St) := (r.1, view r.2, r.2.blockedOffset, r.2.blockedExcess)
+def viewB (r : EmissionOutcome × St) := (r.1, view r.2, r.2.blockedOffset, r.2.blockedExcess)
 
 def mkT (source : List StackSlot) (n : Nat) (ds : List (Option Nat)) : St :=
   mk source ((List.range n).map var) ds
@@ -87,7 +87,7 @@ def deep (k : Nat) (us : List Nat) : St :=
 
 /-! ## `remove_surplus` -/
 
-def rs (m n : Word) : Word × Option (Status × St) :=
+def rs (m n : Word) : Word × Option (EmissionOutcome × St) :=
   remove_surplus m n (vec [x, y, x]) (vec [y, x]) (destWords [none, some 1, some 0]) (fun _ => 0) u1 up1
 
 #guard (rs 3 2).1 = 1

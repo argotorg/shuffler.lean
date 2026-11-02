@@ -67,9 +67,9 @@ theorem toNat_succ (x : Word) {k : Nat} (h : x.toNat < k) (hk : k ≤ 10 * maxSt
 
 /-! ## The two cases of `Flat.push` -/
 
--- The destination has a slot: `assertionFailed`, and no `bind`.
+-- The destination has a slot: `assertionExit`, and no `bind`.
 theorem push_fail (fs : Flat.St) (x : StackSlot) (d : Word) (h : Flat.get fs.pos d ≠ Flat.NONE) :
-    Flat.push fs x d = (.assertionFailed, Flat.stackPush fs x) := by
+    Flat.push fs x d = (.assertionExit, Flat.stackPush fs x) := by
   simp [Flat.push, Flat.stackPush, h]
 
 -- The destination has no slot: `done`, and `bind` of the new slot (index `size` before the push).
@@ -331,18 +331,15 @@ theorem push_unit [Host] [FunDecls]
       · exact ⟨h2, hk.sp, hk.bx, hk.bp, hk.r12, hk.r13, hk.r14, hk.r15⟩
       · exact Keep.ok (g := g') ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok hok.len hok.nops
       · intro t' _ hr
-        refine ⟨?_, ?_⟩
-        · refine ⟨⟨hkeep.tgtp, hkeep.n, hkeep.splp, hkeep.data, hkeep.ops,
-            hkeep.xs, hkeep.xo, hkeep.tgt, hkeep.spl⟩, ?_, ?_⟩
-          · dsimp only
-            rw [push_ok (flat g) (StackSlot.ofWord (rsi s)) (rdx s) heq,
-              flat_bind _ _ _ hL hD, hflat]
-            rfl
-          · dsimp only
-            rw [push_ok (flat g) (StackSlot.ofWord (rsi s)) (rdx s) heq]
-            show (rax t').setWidth 8 = 0#8
-            rw [hr]; rfl
-        · show (rax t').setWidth 8 ≠ 2#8
-          rw [hr]; change 0#8 ≠ 2#8; decide
+        refine ⟨⟨hkeep.tgtp, hkeep.n, hkeep.splp, hkeep.data, hkeep.ops,
+          hkeep.xs, hkeep.xo, hkeep.tgt, hkeep.spl⟩, ?_, ?_⟩
+        · dsimp only
+          rw [push_ok (flat g) (StackSlot.ofWord (rsi s)) (rdx s) heq,
+            flat_bind _ _ _ hL hD, hflat]
+          rfl
+        · dsimp only
+          rw [push_ok (flat g) (StackSlot.ofWord (rsi s)) (rdx s) heq]
+          show some ((rax t').setWidth 8) = some 0#8
+          rw [hr]; rfl
 
 end FlatShuffler.Unit

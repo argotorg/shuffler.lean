@@ -70,7 +70,7 @@ theorem pop_size_le (st : St) : (pop st).2.size.toNat ≤ st.size.toNat := by
   unfold pop stackPop mappingPop
   dsimp only
   split
-  · rw [ite_eq_left (show Status.assertionFailed ≠ .done from by decide)]
+  · rw [ite_eq_left (show (ExecutionControl.assertionExit : EmissionOutcome) ≠ .done from by decide)]
     exact Nat.le_refl _
   · rename_i h0
     simp only [ne_eq, not_true_eq_false, ↓reduceIte]
@@ -105,7 +105,7 @@ theorem surplusPass_size_le (st : St) :
     · simp only [hdp, ↓reduceIte]
       have hs := surplus_action_size st sh dp
       generalize ha : (if sh = st.size - 1 then
-          (Status.done, st)
+          (ExecutionControl.done, st)
         else if equalBelow st (st.size - 1) ≠ NONE then
           (.done, swapDestinations st (equalBelow st (st.size - 1)) (st.size - 1))
         else swapWith st dp) = r at hs ⊢
@@ -120,7 +120,7 @@ theorem surplusPass_size_le (st : St) :
         · rw [ite_eq_right he]; exact hp
 
 theorem restoreData_surplusTail (cap : Nat) (old : Vector StackSlot maxStackSize)
-    (r : Status × St) :
+    (r : EmissionOutcome × St) :
     (if r.1 ≠ .done then Except.error (r.1, restoreData cap old r.2) else
       if (pop (restoreData cap old r.2)).1 ≠ .done then
         Except.error (pop (restoreData cap old r.2))
@@ -173,7 +173,7 @@ theorem restoreData_surplusPass (cap : Nat) (old : Vector StackSlot maxStackSize
     · simp only [BitVec.ofNat_eq_ofNat, he, restoreData_swapDestinations] at ha ⊢
       rw [ha]
       generalize (if (surplusScan st st.size NONE NONE).1 = st.size - 1#64 then
-        (Status.done, st)
+        (ExecutionControl.done, st)
         else if equalBelow st (st.size - 1#64) ≠ NONE then
           (.done, swapDestinations st (equalBelow st (st.size - 1#64)) (st.size - 1#64))
         else swapWith st (surplusScan st st.size NONE NONE).2) = r

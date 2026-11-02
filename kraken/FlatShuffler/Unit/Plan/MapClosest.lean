@@ -29,11 +29,11 @@ open FlatShuffler.Sep
 def mapClosestA (_ : BG) (_ : MachineData) : Prop := True
 
 def mapClosestQ (b b' : BG) (_ t : MachineData) : Prop :=
-  al t = code (Flat.mapClosestCopies b.fl b.M).1
+  some (al t) = code (Flat.mapClosestCopies b.fl b.M).1
     ∧ b' = { b with M := (Flat.mapClosestCopies b.fl b.M).2 }
 
 def mapClosestX (b b' : BG) (_s _t : MachineData) : Prop :=
-  (Flat.mapClosestCopies b.fl b.M).1 = .assertionFailed ∧
+  (Flat.mapClosestCopies b.fl b.M).1 = .assertionExit ∧
     b' = { b with M := (Flat.mapClosestCopies b.fl b.M).2 }
 
 namespace CopiesU
@@ -211,7 +211,7 @@ def Inv (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) (fr₀
     else if l = ".LB.MappingBuilder.mapClosestCopies.2" then ∃ M lo w, LI B b F s ra M lo w t
       ∧ Flat.mapClosestCopies b.fl b.M = (.done, M)
     else if l = ".LB.MappingBuilder.mapClosestCopies.3" then ∃ M lo w, LI B b F s ra M lo w t
-      ∧ al t = code (Flat.mapClosestCopies b.fl b.M).1 ∧ (Flat.mapClosestCopies b.fl b.M).2 = M
+      ∧ some (al t) = code (Flat.mapClosestCopies b.fl b.M).1 ∧ (Flat.mapClosestCopies b.fl b.M).2 = M
     else if l = ".LB.MappingBuilder.mapClosestCopies.4" then Kg (BView B b ∗ F) s ra fr₀ t
       ∧ Flat.mapClosestCopies b.fl b.M = (.done, b.M)
     else False
@@ -469,7 +469,7 @@ theorem b_1 (hout : ∀ l ∈ Program.labels mapClosestCopiesAsm, label l ≠ la
         intro t3 a'' lo'' w'' hkb3 hl3 hQ3 hok3 hag3
         obtain ⟨hli3, hbx3⟩ := LI.after (xs := lo'.take 2) hag3 (hli2.next rfl rfl rfl rfl rfl rfl rfl) hkb3
           (by simp [List.length_append, hl3, hl]) hQ3.2
-        have hal : al t3 = code (Flat.mbMap b.fl M t2.regs.rax.toBitVec t2.regs.rbx.toBitVec).1 := hQ3.1
+        have hal : some (al t3) = code (Flat.mbMap b.fl M t2.regs.rax.toBitVec t2.regs.rbx.toBitVec).1 := hQ3.1
         rw [hrax, hbx] at hal
         clear hQ3 hkb3
         kvcgen64
@@ -477,7 +477,7 @@ theorem b_1 (hout : ∀ l ∈ Program.labels mapClosestCopiesAsm, label l ≠ la
         vc_by_shape
         | goto ".LB.MappingBuilder.mapClosestCopies.0" =>
           have hd := code_eq_zero (hal.symm.trans
-            (al_zero (by rw [Bool.not_eq_false']; with_reducible assumption)))
+            (congrArg some (al_zero (by rw [Bool.not_eq_false']; with_reducible assumption))))
           cfg_goto
           · exact hli3.stk rfl rfl
           · mc_inv
@@ -489,7 +489,7 @@ theorem b_1 (hout : ∀ l ∈ Program.labels mapClosestCopiesAsm, label l ≠ la
           · left; mc_var; rw [hbx3, hbx]; omega
         | goto ".LB.MappingBuilder.mapClosestCopies.3" =>
           have hd := code_ne_zero fun e =>
-            al_ne (by rw [Bool.not_eq_true']; with_reducible assumption) (hal.trans e)
+            al_ne (by rw [Bool.not_eq_true']; with_reducible assumption) (Option.some.inj (hal.trans e))
           have hf := hrest.symm.trans (from_fail (BitVec.lt_def.2 hlt) hp hw hne hd)
           cfg_goto
           · exact hli3.stk rfl rfl
@@ -502,14 +502,14 @@ theorem b_1 (hout : ∀ l ∈ Program.labels mapClosestCopiesAsm, label l ≠ la
         obtain ⟨ha'', hf⟩ := hrel
         subst a''
         change Flat.mbMap b.fl M t2.regs.rax.toBitVec t2.regs.rbx.toBitVec =
-          (.assertionFailed, M) at hf
+          (.assertionExit, M) at hf
         have hf' : Flat.mbMap b.fl M (Flat.closestCopy b.fl M t.regs.rbx.toBitVec false)
-            t.regs.rbx.toBitVec = (.assertionFailed, M) := by
+            t.regs.rbx.toBitVec = (.assertionExit, M) := by
           simpa only [hrax, hbx] using hf
         have hd : (Flat.mbMap b.fl M (Flat.closestCopy b.fl M t.regs.rbx.toBitVec false)
             t.regs.rbx.toBitVec).1 ≠ .done := by
           rw [hf']
-          change Flat.Status.assertionFailed ≠ Flat.Status.done
+          change (Flat.ExecutionControl.assertionExit : Flat.EmissionOutcome) ≠ .done
           decide
         have hm := hrest.symm.trans (from_fail (BitVec.lt_def.2 hlt) hp hw hne hd)
         refine Or.inr ⟨Or.inr ⟨rfl, harg, ?_⟩, ?_⟩

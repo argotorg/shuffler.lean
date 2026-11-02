@@ -113,17 +113,17 @@ theorem BuildLI.callPhase {A : BG → MachineData → Prop}
     (h : BuildLI P g F s ra lo l M saw t) (hok : g.Ok) (hk : k ≤ 4112)
     (hdi : rdi t = t.regs.rsp.toBitVec + 32#64)
     (hA : A (plannerBuilder g s M saw) t)
-    (next : Flat.Mapping) (nextSaw : BitVec 8) (st : Flat.Status)
+    (next : Flat.Mapping) (nextSaw : BitVec 8) (st : Flat.EmissionOutcome)
     (hpostshape : ∀ b' u, Q (plannerBuilder g s M saw) b' t u →
-      al u = code st ∧ b' = plannerBuilder g s next nextSaw)
+      some (al u) = code st ∧ b' = plannerBuilder g s next nextSaw)
     (hxpostshape : ∀ b' u, X (plannerBuilder g s M saw) b' t u →
-      st = .assertionFailed ∧ b' = plannerBuilder g s next nextSaw)
+      st = .assertionExit ∧ b' = plannerBuilder g s next nextSaw)
     (hE : ∀ u lo',
       (Stk (rsp s) (fr s lo' (l.toList (plannerBuilder g s next nextSaw)))
           ra.toBitVec ∗ (plannerCallOwnedMemory P g ∗ F)).get u.dmem →
-      lo'.length = 4113 → st = .assertionFailed → u.regs.get64 .rdi = 1#64 → E u)
+      lo'.length = 4113 → st = .assertionExit → u.regs.get64 .rdi = 1#64 → E u)
     (hK : ∀ u lo', BuildLI P g F s ra lo' l next nextSaw u →
-      al u = code st → Sep.mod.Agree t u → K u) :
+      some (al u) = code st → Sep.mod.Agree t u → K u) :
     ∃ B b CF, VPre BView BG.Ok B b CF A k t ∧
       (∀ u, VPost BView BG.Ok B CF k (fun b' u => Q b b' t u) t u →
         Sep.mod.Agree t u → K u) ∧

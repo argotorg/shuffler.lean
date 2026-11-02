@@ -14,7 +14,7 @@ namespace FlatShuffler.Flat
 
 /-! ## Unfolding of the flat `loop` -/
 
-theorem floop_ret {fs : St} {t : Word} {r : Status × St} (ht : t < fs.targetSize)
+theorem floop_ret {fs : St} {t : Word} {r : EmissionOutcome × St} (ht : t < fs.targetSize)
     (h : body fs t = .ret r) : loop fs t = r := by
   rw [loop, ite_eq_left ht]
   split <;> simp_all
@@ -25,7 +25,7 @@ theorem floop_cont {fs fs' : St} {t t' : Word} (ht : t < fs.targetSize)
   split <;> simp_all
 
 theorem floop_ge {fs : St} {t : Word} (ht : ¬t < fs.targetSize) :
-    loop fs t = if fs.size ≠ fs.targetSize then (.assertionFailed, fs) else (.done, fs) := by
+    loop fs t = if fs.size ≠ fs.targetSize then (.assertionExit, fs) else (.done, fs) := by
   rw [loop, ite_eq_right ht]
 
 /-! ## The loop -/
@@ -106,13 +106,13 @@ decreasing_by
 /-! ## The result of `build_bottom_up` -/
 
 -- The word and the state that `build_bottom_up` gives for the result `r` of the loop.
-def outOf (r : Status × St) : Word × Option St :=
+def outOf (r : EmissionOutcome × St) : Word × Option St :=
   match r.1 with
   | .done => (.ofNat 64 r.2.trace.length, some { r.2 with blockedOffset := 0, blockedExcess := 0 })
   | .blocked => (.ofNat 64 r.2.trace.length, some r.2)
-  | .assertionFailed => (-2, some r.2)
+  | .assertionExit => (-2, some r.2)
 
-theorem rel_outOf {e : Env} {r : Status × St} {m : M FlatShuffler.St} (h : SimR e r m) :
+theorem rel_outOf {e : Env} {r : EmissionOutcome × St} {m : M FlatShuffler.St} (h : SimR e r m) :
     Rel (outOf r) m := by
   match m, h with
   | .ok st, ⟨h1, h2⟩ =>

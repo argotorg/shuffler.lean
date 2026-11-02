@@ -163,10 +163,9 @@ abbrev rax (s : MachineData) : Word := s.regs.get64 .rax
 -- bytes of `rax`.
 abbrev al (s : MachineData) : BitVec 8 := (rax s).setWidth 8
 
--- `Status::Done`, `Status::Blocked` and `Status::AssertionFailed`
+-- `Status::Done` and `Status::Blocked`
 abbrev DONE : BitVec 8 := 0#8
 abbrev BLOCKED : BitVec 8 := 1#8
-abbrev ASSERTION_FAILED : BitVec 8 := 2#8
 
 -- The stack frame of a function that uses `F` bytes below `rsp` at the call,
 -- with the return address.
@@ -191,16 +190,15 @@ def mod (F : Nat) (s : MachineData) : Modifies :=
 def Post (F : Nat) (R : MachineData → MachineData → Prop) (s t : MachineData) : Prop :=
   Wf t.dmem (rdi s) ∧ Mem.Mapped [frame F s] t.dmem ∧ R s t
 
--- The `Status` of a function with the model result `r`: `ok a` gives `Q a`,
--- `blocked` writes `m_blocked` and returns `Blocked`, `assertion` returns
--- `AssertionFailed`.
+-- The normal result: `ok a` gives `Q a`. A blocked result writes
+-- `m_blocked` and returns `Blocked`. Assertion failure cannot return.
 def Res {α : Type} (S : Addr) (r : M α) (Q : α → Prop) (t : MachineData) : Prop :=
   match r with
   | .ok a => Q a
   | .error (.blocked pos excess _) =>
     al t = BLOCKED ∧ rd t.dmem (wordAt S BLK) = BitVec.ofNat 64 pos
       ∧ rd t.dmem (wordAt S (BLK + 1)) = BitVec.ofNat 64 excess
-  | .error .assertion => al t = ASSERTION_FAILED
+  | .error .assertion => False
 
 -- `-1` for none
 def encOpt : Option Nat → Word

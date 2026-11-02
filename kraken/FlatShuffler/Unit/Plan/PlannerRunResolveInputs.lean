@@ -80,7 +80,7 @@ theorem EmissionCells.resolveInputs {g : PlannerCallMemory} {M : Flat.Mapping}
 theorem EmissionCells.resolved {g : PlannerCallMemory} {M : Flat.Mapping}
     {locals : List Word} {hl : locals.length = 4121} {out : Flat.St}
     {spills : BitVec 32 → BitVec 8} {dropped : Vector (BitVec 8) maxStackSize}
-    {res : Flat.Resolution} (h : EmissionCells locals hl out)
+    {res : Flat.ResolutionOutcome} (h : EmissionCells locals hl out)
     (hr : Resolved g M locals hl spills dropped res) :
     ∀ scratch : Flat.ResolveU, Flat.resolve g.p.fl g.spills g.dropped M
       out.blockedOffset out.blockedExcess ⟨out.dest, out.pos⟩ out.size scratch =

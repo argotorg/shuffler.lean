@@ -7,17 +7,18 @@ import all FlatShuffler.Model
 
 /-!
 A model of `c/shuffler/stack/Shuffler.cpp` whose state is the image of `class Emission`.
-`Model.lean` is the list model. `FlatModelTest.lean` compares the two by evaluation;
-there is no proof that they agree.
+`Model.lean` is the list model. `FlatModelTest.lean` compares the two by evaluation.
+The correspondence proofs are in `FlatList/`.
 
 - `St` has one field for each member of `Emission`, with the C++ type:
   `std::size_t` and `StackOffset` are `Word`, `Optional<StackOffset>` is a `Word`
   with the niche `NONE`, and an array of `maxStackSize` elements is a
   `Vector _ maxStackSize`. The trace is the list of the operations that `m_trace` holds
   below `m_traceSize`.
-- Each unit returns a `Status` and the state, also when it fails, as the C++ does.
+- Each unit gives a normal return or an assertion exit, with the state at that point.
+  The exit case has no return value.
 - There is one function for each function of the C++, and its statements are in
-  the order of the C++. A `yulAssert` returns `.assertionFailed`. `permuteMapping` holds
+  the order of the C++. A failed `yulAssert` gives `.assertionExit`. `permuteMapping` holds
   statements of `buildBottomUp`: the loop that reads the destinations and the call of `permute`.
 - A loop is a recursive function. The loop of `permute` has no bound in the C++, so
   the model gives it fuel (`permuteLoop`).
@@ -29,12 +30,26 @@ bounds is total: `get` returns `default`, `put` changes nothing.
 
 namespace FlatShuffler.Flat
 
--- `enum class Status`
+-- The C++ return values. Assertion failure does not return a status.
 inductive Status where
   | done
   | blocked
-  | assertionFailed
   deriving DecidableEq, Repr
+
+/-- A normal return value, or a call to `exit(1)`. -/
+inductive ExecutionControl (ReturnValue : Type) where
+  | returned (value : ReturnValue)
+  | assertionExit
+  deriving DecidableEq, Repr
+
+/-- The control outcome and the state at that boundary. -/
+abbrev ExecutionOutcome (ReturnValue State : Type) := ExecutionControl ReturnValue × State
+
+abbrev EmissionOutcome := ExecutionControl Status
+
+-- Short forms for the two normal emission results.
+@[match_pattern] abbrev ExecutionControl.done : EmissionOutcome := .returned .done
+@[match_pattern] abbrev ExecutionControl.blocked : EmissionOutcome := .returned .blocked
 
 -- `Niche<StackOffset>::value`: the empty `Optional<StackOffset>`.
 def NONE : Word := -1
@@ -134,43 +149,43 @@ def shallowestCopyPosition (st : St) (slot : StackSlot) : Word :=
 /-! ## Actions -/
 
 -- `swapWith`
-def swapWith (st : St) (pos : Word) : Status × St :=
-  if ¬pos < st.size then (.assertionFailed, st)
-  else if isFinal st pos then (.assertionFailed, st)
+def swapWith (st : St) (pos : Word) : ExecutionOutcome Status St :=
+  if ¬pos < st.size then (.assertionExit, st)
+  else if isFinal st pos then (.assertionExit, st)
   else
     let depth := depthOf st pos
-    if ¬(1 ≤ depth ∧ depth ≤ maxSwapDepth) then (.assertionFailed, st)
+    if ¬(1 ≤ depth ∧ depth ≤ maxSwapDepth) then (.assertionExit, st)
     else
       let st := stackSwap st pos
       (.done, swapDestinations st pos (st.size - 1))
 
 -- `push`
-def push (st : St) (slot : StackSlot) (destination : Word) : Status × St :=
+def push (st : St) (slot : StackSlot) (destination : Word) : ExecutionOutcome Status St :=
   let st := stackPush st slot
-  if get st.pos destination ≠ NONE then (.assertionFailed, st)
+  if get st.pos destination ≠ NONE then (.assertionExit, st)
   else (.done, bind st (st.size - 1) destination)
 
 -- `dup`, with the check of `Stack.h`'s `dup`.
-def dup (st : St) (copy destination : Word) : Status × St :=
-  if (get st.data copy).kind = FunctionReturnLabel then (.assertionFailed, st)
+def dup (st : St) (copy destination : Word) : ExecutionOutcome Status St :=
+  if (get st.data copy).kind = FunctionReturnLabel then (.assertionExit, st)
   else
     let st := stackDup st copy
-    if get st.pos destination ≠ NONE then (.assertionFailed, st)
+    if get st.pos destination ≠ NONE then (.assertionExit, st)
     else (.done, bind st (st.size - 1) destination)
 
 -- `block`
-def block (st : St) (position excess : Word) : Status × St :=
-  if excess = 0 then (.assertionFailed, st)
+def block (st : St) (position excess : Word) : ExecutionOutcome Status St :=
+  if excess = 0 then (.assertionExit, st)
   else (.blocked, { st with blockedOffset := position, blockedExcess := excess })
 
 -- `blockSwapUnreachable` and `blockDupUnreachable`
-def blockSwapUnreachable (st : St) (position : Word) : Status × St :=
+def blockSwapUnreachable (st : St) (position : Word) : ExecutionOutcome Status St :=
   block st position (depthOf st position - maxSwapDepth)
-def blockDupUnreachable (st : St) (position : Word) : Status × St :=
+def blockDupUnreachable (st : St) (position : Word) : ExecutionOutcome Status St :=
   block st position (depthOf st position - maxDupDepth)
 
 -- `produce`
-def produce (st : St) (targetOffset : Word) : Status × St :=
+def produce (st : St) (targetOffset : Word) : ExecutionOutcome Status St :=
   let slot := get st.target targetOffset
   let copy := shallowestCopyPosition st slot
   let r :=
@@ -178,16 +193,16 @@ def produce (st : St) (targetOffset : Word) : Status × St :=
     else if copy ≠ NONE ∧ isDupReachable st copy then dup st copy targetOffset
     else if canBeFreelyGenerated slot || isSpilled st slot then push st slot targetOffset
     else if copy ≠ NONE then blockDupUnreachable st copy
-    else (.assertionFailed, st)
+    else (.assertionExit, st)
   if r.1 ≠ .done then r
   else
     let st := r.2
-    if get st.pos targetOffset ≠ st.size - 1 then (.assertionFailed, st)
+    if get st.pos targetOffset ≠ st.size - 1 then (.assertionExit, st)
     else (.done, { st with pend := st.pend - 1 })
 
 -- `generate`
-def generate (st : St) (targetOffset : Word) : Status × St :=
-  if ¬targetOffset < st.targetSize then (.assertionFailed, st)
+def generate (st : St) (targetOffset : Word) : ExecutionOutcome Status St :=
+  if ¬targetOffset < st.targetSize then (.assertionExit, st)
   else
     let r := produce st targetOffset
     if r.1 ≠ .done then r
@@ -301,11 +316,11 @@ decreasing_by bv_omega
 -- `return`.
 inductive PNext where
   | cont (st : St) (permutation : Vector Word maxStackSize)
-  | ret (r : Status × St)
+  | ret (r : ExecutionOutcome Status St)
 
 -- The end of an iteration of the loop of `permute`: the slot at `pos` and the top.
 def exchange (st : St) (top : Word) (permutation : Vector Word maxStackSize) (pos : Word) : PNext :=
-  let r : Except (Status × St) St :=
+  let r : Except (ExecutionOutcome Status St) St :=
     if get st.data pos = get st.data (st.size - 1) then .ok (swapDestinations st pos top)
     else if !isSwapReachable st pos then .error (blockSwapUnreachable st pos)
     else .ok (swapDestinations (stackSwap st pos) pos top)
@@ -327,11 +342,12 @@ def permuteStep (st : St) (top : Word) (permutation : Vector Word maxStackSize) 
 
 -- The loop of `permute`, for at most `fuel` iterations. If `permutation` is a permutation
 -- of the offsets below the size, the loop ends after at most `2 * size - 1` iterations
--- (see the C++). Else the C++ loop can run forever, and the model fails when `fuel` is 0.
+-- (see the C++). Else the C++ loop can run forever. The total model uses `.assertionExit` when fuel is 0.
+-- The assembly contract requires a permutation and excludes this fuel case.
 def permuteLoop (fuel : Nat) (st : St) (top : Word) (permutation : Vector Word maxStackSize) :
-    Status × St :=
+    ExecutionOutcome Status St :=
   match fuel with
-  | 0 => (.assertionFailed, st)
+  | 0 => (.assertionExit, st)
   | fuel + 1 =>
     match permuteStep st top permutation with
     | .ret r => r
@@ -340,12 +356,12 @@ def permuteLoop (fuel : Nat) (st : St) (top : Word) (permutation : Vector Word m
 -- `permute(_permutation)`: the slot at each offset `pos` goes to `permutation[pos]`. The C++
 -- changes the caller's array in place; the caller does not read it after the call, so the model
 -- does not return it.
-def permute (st : St) (permutation : Vector Word maxStackSize) : Status × St :=
+def permute (st : St) (permutation : Vector Word maxStackSize) : ExecutionOutcome Status St :=
   if st.size = 0 then (.done, st)
   else
     let desiredBy := clearDesired st 0 initial
     match regroup st 0 permutation desiredBy with
-    | none => (.assertionFailed, st)
+    | none => (.assertionExit, st)
     | some permutation =>
       let top := st.size - 1
       permuteLoop (2 * st.size.toNat) st top permutation
@@ -353,16 +369,16 @@ def permute (st : St) (permutation : Vector Word maxStackSize) : Status × St :=
 -- The end of `buildBottomUp` when no generation is pending: the loop that reads the
 -- destinations into `permutation`, then `permute(permutation)`. The C++ has these statements
 -- in `buildBottomUp`.
-def permuteMapping (st : St) : Status × St :=
+def permuteMapping (st : St) : ExecutionOutcome Status St :=
   match readDestinations st 0 initial with
-  | none => (.assertionFailed, st)
+  | none => (.assertionExit, st)
   | some permutation => permute st permutation
 
 /-! ## `buildBottomUp` -/
 
 -- The `urgentToDup` loop from `offset` on, with the value of `urgentToDup` so far,
 -- or the result of `blockDupUnreachable`.
-def urgentFrom (st : St) (targetOffset offset urgentToDup : Word) : Except (Status × St) Word :=
+def urgentFrom (st : St) (targetOffset offset urgentToDup : Word) : Except (ExecutionOutcome Status St) Word :=
   if h : offset < st.targetSize then
     if get st.pos offset ≠ NONE then urgentFrom st targetOffset (offset + 1) urgentToDup
     else
@@ -395,12 +411,12 @@ decreasing_by bv_omega
 -- `targetOffset`, or `return`.
 inductive Next where
   | cont (st : St) (targetOffset : Word)
-  | ret (r : Status × St)
+  | ret (r : ExecutionOutcome Status St)
 
 -- The end of an iteration: swap the top down into `targetOffset`.
 def placeTop (st : St) (targetOffset : Word) : Next :=
-  if ¬targetOffset < st.size then .ret (.assertionFailed, st)
-  else if isFinal st targetOffset then .ret (.assertionFailed, st)
+  if ¬targetOffset < st.size then .ret (.assertionExit, st)
+  else if isFinal st targetOffset then .ret (.assertionExit, st)
   else if targetOffset ≠ st.size - 1 then
     if !isSwapReachable st targetOffset then .ret (blockSwapUnreachable st targetOffset)
     else
@@ -411,14 +427,14 @@ def placeTop (st : St) (targetOffset : Word) : Next :=
 -- The branch for an offset that a slot is bound for.
 def bound (st : St) (targetOffset : Word) : Next :=
   let boundForTarget := get st.pos targetOffset
-  if ¬(boundForTarget ≠ NONE ∧ boundForTarget ≥ targetOffset) then .ret (.assertionFailed, st)
+  if ¬(boundForTarget ≠ NONE ∧ boundForTarget ≥ targetOffset) then .ret (.assertionExit, st)
   else
     let sourceForTargetOffset := boundForTarget
     let slot := get st.data sourceForTargetOffset
     let pos :=
       if get st.data targetOffset = slot then targetOffset
       else candidateFrom st slot sourceForTargetOffset (st.size - 1)
-    if get st.data pos ≠ get st.data sourceForTargetOffset then .ret (.assertionFailed, st)
+    if get st.data pos ≠ get st.data sourceForTargetOffset then .ret (.assertionExit, st)
     else
       let st := swapDestinations st pos sourceForTargetOffset
       if pos = targetOffset then .cont st targetOffset
@@ -433,7 +449,7 @@ def bound (st : St) (targetOffset : Word) : Next :=
 def body (st : St) (targetOffset : Word) : Next :=
   if targetOffset < st.size ∧ isFinal st targetOffset then .cont st targetOffset
   else if st.pend = 0 then
-    if st.size ≠ st.targetSize then .ret (.assertionFailed, st)
+    if st.size ≠ st.targetSize then .ret (.assertionExit, st)
     else .ret (permuteMapping st)
   else match urgentFrom st targetOffset targetOffset NONE with
   | .error r => .ret r
@@ -453,7 +469,7 @@ def body (st : St) (targetOffset : Word) : Next :=
         if r.1 ≠ .done then .ret r
         else
           let st := r.2
-          if ¬targetOffset < st.size then .ret (.assertionFailed, st)
+          if ¬targetOffset < st.size then .ret (.assertionExit, st)
           else if isFinal st targetOffset then .cont st targetOffset
           else placeTop st targetOffset
 
@@ -489,15 +505,15 @@ theorem block_keep (st : St) (pos excess : Word) : Keep st (block st pos excess)
   unfold block; split <;> exact ⟨rfl, rfl⟩
 
 -- The end of `produce`, after the status of the action is `r.1`.
-theorem produce_tail {st : St} {t : Word} {r : Status × St} (hr : Keep st r.2)
+theorem produce_tail {st : St} {t : Word} {r : ExecutionOutcome Status St} (hr : Keep st r.2)
     (h : (if r.1 ≠ .done then r
-          else if get r.2.pos t ≠ r.2.size - 1 then (.assertionFailed, r.2)
+          else if get r.2.pos t ≠ r.2.size - 1 then (.assertionExit, r.2)
           else (.done, { r.2 with pend := r.2.pend - 1 })).1 = .done) :
     (if r.1 ≠ .done then r
-      else if get r.2.pos t ≠ r.2.size - 1 then (.assertionFailed, r.2)
+      else if get r.2.pos t ≠ r.2.size - 1 then (.assertionExit, r.2)
       else (.done, { r.2 with pend := r.2.pend - 1 })).2.targetSize = st.targetSize ∧
     (if r.1 ≠ .done then r
-      else if get r.2.pos t ≠ r.2.size - 1 then (.assertionFailed, r.2)
+      else if get r.2.pos t ≠ r.2.size - 1 then (.assertionExit, r.2)
       else (.done, { r.2 with pend := r.2.pend - 1 })).2.pend = st.pend - 1 := by
   by_cases hs : r.1 = .done
   · rw [ite_of_neg (fun h' => h' hs)] at h ⊢
@@ -598,12 +614,12 @@ theorem body_cont {st st' : St} {t t' : Word} (h : body st t = .cont st' t') :
     exact ⟨k1.trans g1, .inl k2⟩
 
 -- The loop of `buildBottomUp` from `targetOffset`.
-def loop (st : St) (targetOffset : Word) : Status × St :=
+def loop (st : St) (targetOffset : Word) : ExecutionOutcome Status St :=
   if targetOffset < st.targetSize then
     match h : body st targetOffset with
     | .ret r => r
     | .cont st' targetOffset' => loop st' (targetOffset' + 1)
-  else if st.size ≠ st.targetSize then (.assertionFailed, st)
+  else if st.size ≠ st.targetSize then (.assertionExit, st)
   else (.done, st)
 termination_by ((st.targetSize - targetOffset).toNat, st.pend.toNat)
 decreasing_by
@@ -616,7 +632,7 @@ decreasing_by
     exact Prod.Lex.right _ hp
 
 -- `buildBottomUp`
-def buildBottomUp (st : St) : Status × St := loop st 0
+def buildBottomUp (st : St) : ExecutionOutcome Status St := loop st 0
 
 /-! ## The constructor and the entry -/
 
@@ -653,6 +669,6 @@ def build_bottom_up (m n : Word) (data target : Vector StackSlot maxStackSize) (
     match r.1 with
     | .done => (.ofNat 64 r.2.trace.length, some { r.2 with blockedOffset := 0, blockedExcess := 0 })
     | .blocked => (.ofNat 64 r.2.trace.length, some r.2)
-    | .assertionFailed => (-2, some r.2)
+    | .assertionExit => (-2, some r.2)
 
 end FlatShuffler.Flat

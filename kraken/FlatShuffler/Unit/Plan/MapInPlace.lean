@@ -33,10 +33,10 @@ open FlatShuffler.Sep
 def mapInPlaceA (_ : BG) (_ : MachineData) : Prop := True
 
 def mapInPlaceQ (b b' : BG) (_ t : MachineData) : Prop :=
-  al t = code (Flat.mapInPlace b.fl b.M).1 ∧ b' = { b with M := (Flat.mapInPlace b.fl b.M).2 }
+  some (al t) = code (Flat.mapInPlace b.fl b.M).1 ∧ b' = { b with M := (Flat.mapInPlace b.fl b.M).2 }
 
 def mapInPlaceX (b b' : BG) (_s _t : MachineData) : Prop :=
-  (Flat.mapInPlace b.fl b.M).1 = .assertionFailed ∧
+  (Flat.mapInPlace b.fl b.M).1 = .assertionExit ∧
     b' = { b with M := (Flat.mapInPlace b.fl b.M).2 }
 
 namespace InPlaceU
@@ -241,7 +241,7 @@ def Inv (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) (fr₀
     else if l = ".LB.MappingBuilder.mapInPlace.2" then ∃ M w, LI B b F s ra M w t
       ∧ Flat.mapInPlace b.fl b.M = (.done, M)
     else if l = ".LB.MappingBuilder.mapInPlace.3" then ∃ M w, LI B b F s ra M w t
-      ∧ al t = code (Flat.mapInPlace b.fl b.M).1 ∧ (Flat.mapInPlace b.fl b.M).2 = M
+      ∧ some (al t) = code (Flat.mapInPlace b.fl b.M).1 ∧ (Flat.mapInPlace b.fl b.M).2 = M
     else if l = ".LB.MappingBuilder.mapInPlace.4" then Kg (BView B b ∗ F) s ra fr₀ t
       ∧ Flat.mapInPlace b.fl b.M = (.done, b.M)
     else False
@@ -491,13 +491,13 @@ theorem b_1 (hout : ∀ l ∈ Program.labels mapInPlaceAsm, label l ≠ label "e
     case normal =>
       intro t2 a' lo' w' hkb hl hQ hok' hag
       obtain ⟨w2, hli2, hbx⟩ := LI.after hag (hli.next rfl rfl rfl rfl rfl rfl rfl) hkb hl hQ.2
-      have hal : al t2 = code (Flat.mbMap b.fl M t.regs.rbx.toBitVec t.regs.rbx.toBitVec).1 := hQ.1
+      have hal : some (al t2) = code (Flat.mbMap b.fl M t.regs.rbx.toBitVec t.regs.rbx.toBitVec).1 := hQ.1
       clear hQ hkb
       kvcgen64
       all_goals try symexec_norm
       vc_by_shape
       | goto ".LB.MappingBuilder.mapInPlace.0" =>
-        have hd := code_eq_zero (hal.symm.trans (al_zero (by rw [Bool.not_eq_false']; with_reducible assumption)))
+        have hd := code_eq_zero (hal.symm.trans (congrArg some (al_zero (by rw [Bool.not_eq_false']; with_reducible assumption))))
         cfg_goto
         · exact hli2.stk rfl rfl
         · mi_inv
@@ -508,7 +508,7 @@ theorem b_1 (hout : ∀ l ∈ Program.labels mapInPlaceAsm, label l ≠ label "e
             exact (from_done (BitVec.lt_def.2 hlt) hcand hd).symm.trans hrest
         · left; mi_var; rw [hbx]; omega
       | goto ".LB.MappingBuilder.mapInPlace.3" =>
-        have hd := code_ne_zero fun e => al_ne (by rw [Bool.not_eq_true']; with_reducible assumption) (hal.trans e)
+        have hd := code_ne_zero fun e => al_ne (by rw [Bool.not_eq_true']; with_reducible assumption) (Option.some.inj (hal.trans e))
         have hf := hrest.symm.trans (from_fail (BitVec.lt_def.2 hlt) hcand hd)
         cfg_goto
         · exact hli2.stk rfl rfl
@@ -520,10 +520,10 @@ theorem b_1 (hout : ∀ l ∈ Program.labels mapInPlaceAsm, label l ≠ label "e
       obtain ⟨ha', hf⟩ := hrel
       subst a'
       change Flat.mbMap b.fl M t.regs.rbx.toBitVec t.regs.rbx.toBitVec =
-        (.assertionFailed, M) at hf
+        (.assertionExit, M) at hf
       have hd : (Flat.mbMap b.fl M t.regs.rbx.toBitVec t.regs.rbx.toBitVec).1 ≠ .done := by
         rw [hf]
-        change Flat.Status.assertionFailed ≠ Flat.Status.done
+        change (Flat.ExecutionControl.assertionExit : Flat.EmissionOutcome) ≠ .done
         decide
       have hm := hrest.symm.trans (from_fail (BitVec.lt_def.2 hlt) hcand hd)
       refine Or.inr ⟨Or.inr ⟨rfl, harg, ?_⟩, ?_⟩

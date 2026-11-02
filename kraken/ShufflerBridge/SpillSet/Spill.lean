@@ -84,9 +84,9 @@ theorem abs_setByte {sp : BitVec 32 → BitVec 8} {n : Nat} (hn : n ≤ 2 ^ 32) 
 
 -- A result of `Flat.spillAdd` and a result of `SpillSet.add`: both are done with the spill set
 -- of the bytes, or both fail.
-def AddCorr (n : Nat) : Flat.Status × (BitVec 32 → BitVec 8) → Except ShuffleErr SpillSet → Prop
+def AddCorr (n : Nat) : Flat.EmissionOutcome × (BitVec 32 → BitVec 8) → Except ShuffleErr SpillSet → Prop
   | (.done, sp), .ok s => s = abs sp n
-  | (.assertionFailed, _), .error _ => True
+  | (.assertionExit, _), .error _ => True
   | _, _ => False
 
 theorem add_corr {sp : BitVec 32 → BitVec 8} {n : Nat} {x : StackSlot} (hn : n ≤ 2 ^ 32)
@@ -132,7 +132,7 @@ theorem addAll_corr {n : Nat} (hn : n ≤ 2 ^ 32) (xs : List StackSlot)
       simp only [AddCorr] at h
       subst h
       exact ih (fun y hy => hx y (List.mem_cons_of_mem _ hy)) sp'
-    | .assertionFailed, .error _, _ => trivial
+    | .assertionExit, .error _, _ => trivial
 
 -- The checks pass: the id of each variable is below `ids idCount`.
 theorem lt_ids {idCount : FlatShuffler.Word} {x : StackSlot} (h : Flat.idOk idCount x = true)
@@ -172,7 +172,7 @@ theorem spill_set_corr (idCount : FlatShuffler.Word) (sp : BitVec 32 → BitVec 
     refine ⟨rfl, rfl, List.map_congr_left fun q hm => ?_⟩
     congr 1
     exact Bool.eq_iff_iff.mpr ((isSpilled_iff (hq q hm)).trans decide_eq_true_iff.symm)
-  | .assertionFailed, .error _, _ => exact ⟨rfl, rfl⟩
+  | .assertionExit, .error _, _ => exact ⟨rfl, rfl⟩
 
 -- An id that is not below `idCount`: `spill_set` returns -2 and writes nothing.
 theorem spill_set_bad (idCount : FlatShuffler.Word) (sp : BitVec 32 → BitVec 8)

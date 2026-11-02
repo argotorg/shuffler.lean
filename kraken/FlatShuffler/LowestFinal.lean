@@ -35,14 +35,14 @@ namespace FlatShuffler
 -- function writes do not change, and the status in `al` and the state of `g'` are a flat result `r`
 -- that holds the list result `FlatShuffler.lowest` of each list state that the flat state of `g` holds.
 def LowestOut (planned : Vector Word maxStackSize) (g g' : Sep.G) (t : MachineData) : Prop :=
-  Unit.Keep g g' ∧ al t ≠ ASSERTION_FAILED ∧
-    ∃ r : Flat.Status × Flat.St, al t = Unit.code r.1 ∧ Unit.flat g' = r.2
+  Unit.Keep g g' ∧
+    ∃ r : Flat.EmissionOutcome × Flat.St, some (al t) = Unit.code r.1 ∧ Unit.flat g' = r.2
     ∧ ∀ (e : Env) (st : St) (pl : List (Option Nat)), Flat.Sim e (Unit.flat g) st →
       Flat.PlanR (Unit.flat g).targetSize.toNat planned pl → Flat.SimR e r (lowest e.n pl st)
 
 def LowestExit (planned : Vector Word maxStackSize) (g g' : Sep.G) : Prop :=
-  Unit.Keep g g' ∧ ∃ r : Flat.Status × Flat.St,
-    r.1 = .assertionFailed ∧ Unit.flat g' = r.2 ∧
+  Unit.Keep g g' ∧ ∃ r : Flat.EmissionOutcome × Flat.St,
+    r.1 = .assertionExit ∧ Unit.flat g' = r.2 ∧
     ∀ (e : Env) (st : St) (pl : List (Option Nat)), Flat.Sim e (Unit.flat g) st →
       Flat.PlanR (Unit.flat g).targetSize.toNat planned pl → Flat.SimR e r (lowest e.n pl st)
 
@@ -64,8 +64,8 @@ theorem permuteAtLowestHeight_correct [Host] (L : Linked) (X : ExitBoundary) :
   have hb := ht.2.args.2.2
   exact Program.wp_mono (fun _ h => h)
     (fun _ h => h.elim
-      (fun ⟨ha, ⟨g', fr, v, ⟨l, ⟨hk, hf, hal⟩, normalByte⟩, hok, hl, hm⟩, hag⟩ =>
-        Or.inl ⟨ha, ⟨g', fr, v, ⟨hk, normalByte, _, hal, hf,
+      (fun ⟨ha, ⟨g', fr, v, ⟨l, hk, hf, hal⟩, hok, hl, hm⟩, hag⟩ =>
+        Or.inl ⟨ha, ⟨g', fr, v, ⟨hk, _, hal, hf,
           fun _ _ _ hs hpl => Flat.sim_lowest hs hpl hb l⟩, hok, hl, hm⟩, hag⟩)
       (fun ⟨ha, harg, ⟨g', fr, v, ⟨l, hk, hf, hstatus⟩, hok, hl, hm⟩⟩ =>
         Or.inr ⟨ha, harg, ⟨g', fr, v, ⟨hk, _, hstatus, hf,

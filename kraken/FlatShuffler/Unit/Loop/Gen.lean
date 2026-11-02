@@ -46,11 +46,15 @@ theorem al_test {x u : Word} (hal : BitVec.setWidth 8 x = if u = Flat.NONE then 
   by_cases h : u = Flat.NONE <;> simp [h]
 
 -- `testb %al, %al` after a call with `al = code st`.
-theorem test_code {x : Word} {st : Flat.Status} (hal : BitVec.setWidth 8 x = code st) :
+theorem test_code {x : Word} {st : Flat.EmissionOutcome} (hal : some (BitVec.setWidth 8 x) = code st) :
     (BitVec.extractLsb' 0 8 x &&& BitVec.extractLsb' 0 8 x == BitVec.zero 8)
       = decide (st = .done) := by
-  rw [← BitVec.setWidth_eq_extractLsb' (by decide), hal, BitVec.and_self]
-  cases st <;> decide
+  rw [← BitVec.setWidth_eq_extractLsb' (by decide), BitVec.and_self]
+  cases st with
+  | returned status =>
+    cases status <;> simp only [code, returnCode] at hal <;>
+      have h := Option.some.inj hal <;> rw [h] <;> decide
+  | assertionExit => simp [code] at hal
 
 theorem get_lt {α : Type} [Inhabited α] (v : Vector α maxStackSize) {i : Word} (hi : i.toNat < maxStackSize) :
     Flat.get v i = v[i.toNat] := by
@@ -228,7 +232,7 @@ theorem b_14 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
       (generateA_of hok hHd.2.2.2.1 hHd.2.2.2.2) ?_ ?_
     · exact hM.r12
     · intro t2 g'' lo' w' hmid hQ hok' hsv
-      obtain ⟨⟨hk2, hfl, hal2⟩, hnormal⟩ := hQ
+      obtain ⟨hk2, hfl, hal2⟩ := hQ
       have hc := test_code hal2
       have h14 : t2.regs.r14.toBitVec = t.regs.r14.toBitVec := by rw [hsv.r14]
       kvcgen64
@@ -242,7 +246,7 @@ theorem b_14 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
            simp only [Flat.kGenAt, ne_eq, hz, not_false_eq_true, ↓reduceIte, Flat.kfin] at hR
            simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
            refine ⟨g'', u, ⟨x0, x2, lo', w', hmid.next rfl rfl rfl, hok', keep_trans hk hk2⟩,
-             ⟨keep_trans hk hk2, ?_, ?_⟩, hnormal⟩
+             ⟨keep_trans hk hk2, ?_, ?_⟩⟩
            · rw [hfl, hR]
            · rw [al, rax, Reg64s.get64_rax, ← hR]; exact hal2)
       | closed => loop_dec
@@ -342,10 +346,10 @@ theorem b_15 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
       (generateA_of hok hHd.2.2.2.1 hHd.2.2.2.2) ?_ ?_
     · exact hM.r12
     · intro t2 g'' lo' w' hmid hQ hok' hsv
-      obtain ⟨⟨hk2, hfl, hal2⟩, hnormal⟩ := hQ
+      obtain ⟨hk2, hfl, hal2⟩ := hQ
       replace hfl : flat g'' = (Flat.generate (flat g') g'.h.len).2 :=
         hfl.trans (congrArg (fun x => (Flat.generate (flat g') x).2) hHd.2.1)
-      replace hal2 : al t2 = code (Flat.generate (flat g') g'.h.len).1 :=
+      replace hal2 : some (al t2) = code (Flat.generate (flat g') g'.h.len).1 :=
         hal2.trans (congrArg (fun x => code (Flat.generate (flat g') x).1) hHd.2.1)
       have hc := test_code hal2
       have h14 : t2.regs.r14.toBitVec = t.regs.r14.toBitVec := by rw [hsv.r14]
@@ -361,7 +365,7 @@ theorem b_15 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
         · exact (hmid.next rfl rfl rfl).stack
         · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
           refine ⟨g'', u, ⟨x0, x2, lo', w', hmid.next rfl rfl rfl, hok', keep_trans hk hk2⟩,
-            ⟨keep_trans hk hk2, ?_, ?_⟩, hnormal⟩
+            ⟨keep_trans hk hk2, ?_, ?_⟩⟩
           · rw [hfl, hR]
           · rw [al, rax, Reg64s.get64_rax, ← hR]; exact hal2
         · loop_dec
@@ -421,9 +425,9 @@ theorem b_16 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
       (generateA_of hok hHd.2.2.2.1 hHd.2.2.2.2) ?_ ?_
     · exact hM.r12
     · intro t2 g'' lo' w' hmid hQ hok' hsv
-      obtain ⟨⟨hk2, hfl, hal2⟩, hnormal⟩ := hQ
+      obtain ⟨hk2, hfl, hal2⟩ := hQ
       replace hfl : flat g'' = (Flat.generate (flat g') t.regs.r14.toBitVec).2 := hfl
-      replace hal2 : al t2 = code (Flat.generate (flat g') t.regs.r14.toBitVec).1 := hal2
+      replace hal2 : some (al t2) = code (Flat.generate (flat g') t.regs.r14.toBitVec).1 := hal2
       have hc := test_code hal2
       have h14 : t2.regs.r14.toBitVec = t.regs.r14.toBitVec := by rw [hsv.r14]
       have hbx2 : t2.regs.rbx.toBitVec = t.regs.rbx.toBitVec := by rw [hsv.bx]
@@ -450,7 +454,7 @@ theorem b_16 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
         · exact (hmid.next rfl rfl rfl).stack
         · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
           refine ⟨g'', u, ⟨x0, x2, lo', w', hmid.next rfl rfl rfl, hok', keep_trans hk hk2⟩,
-            ⟨keep_trans hk hk2, ?_, ?_⟩, hnormal⟩
+            ⟨keep_trans hk hk2, ?_, ?_⟩⟩
           · rw [hfl, hR]
           · rw [al, rax, Reg64s.get64_rax, ← hR]; exact hal2
         · loop_dec

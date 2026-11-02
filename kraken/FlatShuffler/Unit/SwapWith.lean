@@ -273,16 +273,16 @@ theorem swapDest_eq (st : Flat.St) (a b : Word) :
     simp only [h1, h2, ne_eq, not_true_eq_false, not_false_eq_true, ↓reduceIte]
 
 theorem sw_err1 (fs : Flat.St) (p : Word) (h : ¬ p.toNat < fs.size.toNat) :
-    Flat.swapWith fs p = (.assertionFailed, fs) := by
+    Flat.swapWith fs p = (.assertionExit, fs) := by
   simp [Flat.swapWith, BitVec.lt_def, h]
 
 theorem sw_err2 (fs : Flat.St) (p : Word) (h1 : p.toNat < fs.size.toNat)
-    (h : Flat.get fs.dest p = p) : Flat.swapWith fs p = (.assertionFailed, fs) := by
+    (h : Flat.get fs.dest p = p) : Flat.swapWith fs p = (.assertionExit, fs) := by
   simp [Flat.swapWith, Flat.isFinal, BitVec.lt_def, h1, h]
 
 theorem sw_err3 (fs : Flat.St) (p : Word) (h1 : p.toNat < fs.size.toNat)
     (h2 : Flat.get fs.dest p ≠ p) (h : 15 < (fs.size - p + BitVec.ofInt 64 (-2)).toNat) :
-    Flat.swapWith fs p = (.assertionFailed, fs) := by
+    Flat.swapWith fs p = (.assertionExit, fs) := by
   have h3 : ¬(1 ≤ fs.size - 1 - p ∧ fs.size - 1 - p ≤ Flat.maxSwapDepth) :=
     fun hc => (depth_iff fs.size p).mp hc h
   simp only [Flat.swapWith, Flat.isFinal, Flat.depthOf, BitVec.lt_def, h1, h2, h3, beq_iff_eq,
@@ -293,7 +293,7 @@ theorem sw_err3 (fs : Flat.St) (p : Word) (h1 : p.toNat < fs.size.toNat)
 theorem sw_err (fs : Flat.St) (p : Word)
     (h : ¬ (p.toNat < fs.size.toNat ∧ Flat.get fs.dest p ≠ p
       ∧ ¬ 15 < (fs.size - p + BitVec.ofInt 64 (-2)).toNat)) :
-    Flat.swapWith fs p = (.assertionFailed, fs) := by
+    Flat.swapWith fs p = (.assertionExit, fs) := by
   by_cases h1 : p.toNat < fs.size.toNat
   · by_cases h2 : Flat.get fs.dest p = p
     · exact sw_err2 fs p h1 h2
@@ -462,7 +462,7 @@ def inv38 (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
 def failed (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
     (fr : List Word) (t : MachineData) : Prop :=
   Kp S g F s ra fr (Dup.unpad t) ∧
-    Flat.swapWith (flat g) (rsi s) = (.assertionFailed, flat g)
+    Flat.swapWith (flat g) (rsi s) = (.assertionExit, flat g)
 
 theorem padded_stack {S : Addr} {g : G} {F : MProp 64} {s t : MachineData}
     {ra : Int64} {fr : List Word} (h : Kp S g F s ra fr (Dup.unpad t)) :
@@ -751,7 +751,7 @@ theorem swapWith_unit [Host] [FunDecls]
           · -- `hres` has `len - 1`, from `flat_swap`; `ofNat_eq_ofNat` gives `len - 1#64`.
             simp only [BitVec.ofNat_eq_ofNat, Vector.getElem_set_self,
               Vector.getElem_set_ne htM hpM' (Nat.ne_of_lt hpt).symm]
-    · have hfail : Flat.swapWith (flat g) (rsi s) = (.assertionFailed, flat g) :=
+    · have hfail : Flat.swapWith (flat g) (rsi s) = (.assertionExit, flat g) :=
         sw_err3 _ _ hp hd (Classical.byContradiction hdep)
       kvcgen64 [notq_spec]
       all_goals symexec_norm
@@ -825,12 +825,10 @@ theorem swapWith_unit [Host] [FunDecls]
         (E := fun a t => a = ra ∧ Sep.Post S F 2 (fun g' t => swapWithQ g g' s t) s t
           ∧ Sep.mod.Agree s t) ?_ (fun h => Or.inl h)
       refine Kp.ret ⟨hk.mem, hsp, hk.bx, hk.bp, hk.r12, hk.r13, hk.r14, hk.r15⟩
-        rfl hok fun t' _ hax => ⟨⟨hkeep, hflat, ?_⟩, ?_⟩
-      · show (rax t').setWidth 8 = _
-        rw [hax, hdone]
-        rfl
-      · show (rax t').setWidth 8 ≠ 2#8
-        rw [hax]; change 0#8 ≠ 2#8; decide
+        rfl hok fun t' _ hax => ⟨hkeep, hflat, ?_⟩
+      show some ((rax t').setWidth 8) = _
+      rw [hax, hdone]
+      rfl
   all_goals
     rename_i t ht
     obtain ⟨hk, hfail⟩ := ht

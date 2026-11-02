@@ -117,13 +117,13 @@ def I13 (t : MachineData) : Prop :=
 
 -- `.28`, `.29`, `.30`: an assertion fails in the state `g'`.
 def IAf (t : MachineData) : Prop :=
-  ∃ g' u, Bs S g F s ra g' u t ∧ Flat.buildBottomUp (flat g) = (.assertionFailed, flat g')
+  ∃ g' u, Bs S g F s ra g' u t ∧ Flat.buildBottomUp (flat g) = (.assertionExit, flat g')
 
 -- `.31`: the loop ends (`¬T < n`).
 def I31 (t : MachineData) : Prop :=
   ∃ g' u, Bs S g F s ra g' u t ∧ t.regs.r13.toBitVec = g'.h.n
     ∧ Flat.buildBottomUp (flat g) = if (flat g').size ≠ (flat g').targetSize
-        then (.assertionFailed, flat g') else (.done, flat g')
+        then (.assertionExit, flat g') else (.done, flat g')
 
 -- `.0`: no pending generation; `permute` if `size = n`. `rdx = 0` and `T < n`: the copy loop
 -- at `.1` starts at 0 and does one step at least.
@@ -132,7 +132,7 @@ def I0 (t : MachineData) : Prop :=
     ∧ t.regs.r15.toBitVec = g'.h.len ∧ Flat.HInv (flat g') T g'.xo ∧ g'.h.pend = 0
     ∧ t.regs.rax.toBitVec = 0#64 ∧ T < g'.h.n
     ∧ Flat.buildBottomUp (flat g) = if (flat g').size ≠ (flat g').targetSize
-        then (.assertionFailed, flat g') else Flat.permuteMapping (flat g')
+        then (.assertionExit, flat g') else Flat.permuteMapping (flat g')
 
 -- `.1`: the copy of `dest` to the local array `A` (the argument of `permute`) at `rdx < n`;
 -- the entries below `rdx` are done.

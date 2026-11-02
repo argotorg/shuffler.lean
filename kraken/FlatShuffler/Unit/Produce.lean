@@ -65,7 +65,7 @@ def Inv (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (w cp :
         = Flat.push (flat g) (StackSlot.ofWord w) s.regs.rsi.toBitVec
     else if l = ".LB.Emission.produce.2" then ∃ g1 y r, Bd S g1 F s ra w y cp t ∧ g1.Ok ∧ Keep g g1
       ∧ Flat.produce (flat g) s.regs.rsi.toBitVec = fin r s.regs.rsi.toBitVec
-      ∧ flat g1 = r.2 ∧ al t = code r.1 ∧ code r.1 ≠ ASSERTION_FAILED
+      ∧ flat g1 = r.2 ∧ some (al t) = code r.1
     else if l = ".LB.Emission.produce.9" then ∃ g1 y, Bd S g1 F s ra w y cp t ∧ g1.Ok ∧ produceQ g g1 s t
     else if l = ".LB.Emission.produce.4" then ∃ y, Bd S g F s ra w y cp t ∧ cp.toNat < g.h.len.toNat
       ∧ act (flat g) (StackSlot.ofWord w) cp s.regs.rsi.toBitVec
@@ -75,7 +75,7 @@ def Inv (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (w cp :
       ∧ act (flat g) (StackSlot.ofWord w) cp s.regs.rsi.toBitVec
         = tail (flat g) (StackSlot.ofWord w) cp s.regs.rsi.toBitVec
     else if l = ".LB.Emission.produce.6" ∨ l = ".LB.Emission.produce.7" then ∃ g1 y, Bd S g1 F s ra w y cp t ∧ g1.Ok ∧ Keep g g1
-      ∧ Flat.produce (flat g) s.regs.rsi.toBitVec = (.assertionFailed, flat g1)
+      ∧ Flat.produce (flat g) s.regs.rsi.toBitVec = (.assertionExit, flat g1)
     else if l = ".LB.Emission.produce.8" then ∃ g1 y, Bd S g1 F s ra w y cp t ∧ g1.Ok ∧ Keep g g1
       ∧ Flat.produce (flat g) s.regs.rsi.toBitVec = (.done, {flat g1 with pend := g1.h.pend - 1})
       ∧ al t = 0#8
@@ -129,7 +129,7 @@ theorem b_9
       (E := fun a t => a = ra ∧ Sep.Post S F 12 (fun g' t => produceQ g g' s t) s t
         ∧ Sep.mod.Agree s t) ?_ (fun h => Or.inl h)
     refine Kp.ret (hbd.pop ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_) (by rfl) hok1 fun t' _ hax =>
-      NormalResult.of_returnRegister_eq hQ hax
+      NormalResult.of_returnRegister_eq (f := (Flat.produce · (rsi s))) hQ hax
     all_goals rfl
 
 set_option linter.unusedSimpArgs false in
@@ -197,7 +197,7 @@ theorem b_2
   cfg_block [Obl, Names.produce]
   intro t ht
   simp only [Inv, Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or] at ht
-  obtain ⟨g1, y, r, hbd, hok1, hK1, hP, hf, hal, normalStatus⟩ := ht
+  obtain ⟨g1, y, r, hbd, hok1, hK1, hP, hf, hal⟩ := ht
   have hTm : s.regs.rsi.toBitVec.toNat < maxStackSize := Nat.lt_of_lt_of_le hTn hpre.ok.n
   have hbx1 := hbd.bx
   have hr14 := hbd.r14
@@ -214,16 +214,16 @@ theorem b_2
     | with_reducible exact hbd.isSome_exit
   | goto ".LB.Emission.produce.9" =>
     have hne : al t ≠ 0#8 := al_ne (by with_reducible assumption)
-    have hr : r.1 ≠ .done := fun e => hne (hal.trans (by rw [e]; rfl))
+    have hr : r.1 ≠ .done := fun e => hne (Option.some.inj (hal.trans (by rw [e]; rfl)))
     cfg_goto
     · exact (bd_next% hbd).stack
     · try simp only [Inv, Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or]
       exact ⟨g1, y, bd_next% hbd, hok1,
-        prodQ hK1 (hP.trans (fin_ne hr)) hf ((al_eq (by with_reducible rfl)).trans hal) normalStatus⟩
+        prodQ hK1 (hP.trans (fin_ne hr)) hf ((congrArg some (al_eq (by with_reducible rfl))).trans hal)⟩
     · simp [V]
   | goto ".LB.Emission.produce.8" =>
     have hal0 : al t = 0#8 := al_zero (by with_reducible assumption)
-    have hd : r.1 = .done := code_eq_zero (hal.symm.trans hal0)
+    have hd : r.1 = .done := code_eq_zero (hal.symm.trans (congrArg some hal0))
     have heq : g1.h.pos[s.regs.rsi.toBitVec.toNat] = g1.h.len - 1#64 :=
       eq_of_z (by with_reducible assumption)
     have hF : Flat.produce (flat g) s.regs.rsi.toBitVec
@@ -240,9 +240,9 @@ theorem b_2
     · simp [V]
   | jumpOut =>
     have hal0 : al t = 0#8 := al_zero (by with_reducible assumption)
-    have hd : r.1 = .done := code_eq_zero (hal.symm.trans hal0)
+    have hd : r.1 = .done := code_eq_zero (hal.symm.trans (congrArg some hal0))
     have hne : g1.h.pos[s.regs.rsi.toBitVec.toNat] ≠ g1.h.len - 1#64 := ne_of_z (by with_reducible assumption)
-    have hF : Flat.produce (flat g) s.regs.rsi.toBitVec = (.assertionFailed, flat g1) := by
+    have hF : Flat.produce (flat g) s.regs.rsi.toBitVec = (.assertionExit, flat g1) := by
       have h2 : Flat.get r.2.pos s.regs.rsi.toBitVec ≠ r.2.size - 1 := by
         rw [← hf]; show Flat.get g1.h.pos _ ≠ g1.h.len - 1; rw [get_eq _ hTm]; exact hne
       rw [hP, fin_bad hd h2, hf]
@@ -277,7 +277,7 @@ theorem b_8
     try simp only [Inv, Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or]
     exact ⟨withPend g1 (g1.h.pend - 1#64), y, bd_step% hbd hm2, Ok.withPend hok1 _,
       prodQ (Keep.trans hK1 (Keep.withPend _)) hF (flat_withPend _)
-        ((al_eq (by with_reducible rfl)).trans hal0) (by change 0#8 ≠ 2#8; decide)⟩
+        (congrArg some ((al_eq (by with_reducible rfl)).trans hal0))⟩
 
 set_option linter.unusedSimpArgs false in
 set_option maxRecDepth 4096 in
@@ -312,12 +312,12 @@ theorem b_1
       · exact (bd_next% hbd2).stack
       · try simp only [Inv, Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or]
         exact ⟨g2, y2, _, bd_next% hbd2, hok2, hK2, hprod.trans (by rw [hact]), hf2,
-          (al_eq (by with_reducible rfl)).trans hal2, fun failed => hQ.2 (hal2.trans failed)⟩
+          (congrArg some (al_eq (by with_reducible rfl))).trans hal2⟩
       · simp [V]
     | other =>
       try simp only [Inv, Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or]
       exact ⟨g2, y2, _, bd_next% hbd2, hok2, hK2, hprod.trans (by rw [hact]), hf2,
-        (al_eq (by with_reducible rfl)).trans hal2, fun failed => hQ.2 (hal2.trans failed)⟩
+        (congrArg some (al_eq (by with_reducible rfl))).trans hal2⟩
   · intro tx hp harg
     apply ProofKit.intercept_exit hout
     refine Or.inr ⟨rfl, harg, hp.imp ?_⟩
@@ -358,12 +358,12 @@ theorem b_3
       · exact (bd_next% hbd2).stack
       · try simp only [Inv, Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or]
         exact ⟨g2, y2, _, bd_next% hbd2, hok2, hK2, hprod.trans (by rw [hact]), hf2,
-          (al_eq (by with_reducible rfl)).trans hal2, fun failed => hQ.2 (hal2.trans failed)⟩
+          (congrArg some (al_eq (by with_reducible rfl))).trans hal2⟩
       · simp [V]
     | other =>
       try simp only [Inv, Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or]
       exact ⟨g2, y2, _, bd_next% hbd2, hok2, hK2, hprod.trans (by rw [hact]), hf2,
-        (al_eq (by with_reducible rfl)).trans hal2, fun failed => hQ.2 (hal2.trans failed)⟩
+        (congrArg some (al_eq (by with_reducible rfl))).trans hal2⟩
   · intro tx hp harg
     apply ProofKit.intercept_exit hout
     refine Or.inr ⟨rfl, harg, hp.imp ?_⟩
@@ -412,7 +412,7 @@ theorem b_4
         · exact (bd_next% hbd2).stack
         · try simp only [Inv, Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or]
           exact ⟨g2, y2, _, bd_next% hbd2, hok2, hK2, hprod.trans (by rw [hact]), hf2,
-            (al_eq (by with_reducible rfl)).trans hal2, fun failed => hQ.2 (hal2.trans failed)⟩
+            (congrArg some (al_eq (by with_reducible rfl))).trans hal2⟩
         · simp [V]
     · intro tx hp harg
       apply ProofKit.intercept_exit hout
@@ -467,7 +467,7 @@ omit [Host] [FunDecls] in
 private theorem fin_tail_zero {st : Flat.St} {x : StackSlot} {cp t : Word}
     (h : (canBeFreelyGenerated x || Flat.isSpilled st x) = false)
     (hc : cp ≠ Flat.NONE) (hz : Flat.depthOf st cp - Flat.maxDupDepth = 0) :
-    fin (tail st x cp t) t = (.assertionFailed, st) := by
+    fin (tail st x cp t) t = (.assertionExit, st) := by
   rw [tail_block h hc, Flat.blockDupUnreachable, block_zero hz, fin_ne (by simp)]
 
 omit [Host] [FunDecls] in
@@ -477,7 +477,7 @@ private theorem fin_tail_blocked {st : Flat.St} {x : StackSlot} {cp t e : Word}
     (he : e = Flat.depthOf st cp - Flat.maxDupDepth) :
     fin (tail st x cp t) t = (.blocked, {st with blockedOffset := cp, blockedExcess := e}) := by
   rw [tail_block h hc, Flat.blockDupUnreachable, block_ne hne, fin_ne (by simp)]
-  exact congrArg (fun v => (Flat.Status.blocked,
+  exact congrArg (fun v => (Flat.ExecutionControl.blocked,
     {st with blockedOffset := cp, blockedExcess := v})) he.symm
 
 omit [Host] [FunDecls] in
@@ -493,7 +493,7 @@ private theorem blockedQ {g : G} {s t : MachineData} {w cp : Word}
     produceQ g (withExc (withOff g cp) (g.h.len + (18446744073709551600#64 - cp))) s t := by
   have hmodel := (congrArg (fun r => fin r s.regs.rsi.toBitVec) hact).trans
     (fin_tail_blocked hns hc hne (exc_eq g cp))
-  exact prodQ (Keep.withBlk _ _) (hprod.trans hmodel) (flat_withBlk _ _) ha (by change 1#8 ≠ 2#8; decide)
+  exact prodQ (Keep.withBlk _ _) (hprod.trans hmodel) (flat_withBlk _ _) (congrArg some ha)
 
 omit [Host] [FunDecls] in
 private theorem inv_result {S : Addr} {g g1 : G} {F : MProp 64} {s t : MachineData}

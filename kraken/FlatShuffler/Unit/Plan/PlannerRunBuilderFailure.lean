@@ -54,9 +54,8 @@ theorem cfg_builder_assert [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) 
   have hh := builder_assertion_block P current F s ra (I' (.label ".LB.Planner.run.7") 9)
     I' (RunExit P g F s ra) hexit hout (by
       intro u hm harg
-      let v : MachineData := {u with regs := {u.regs with rax := ⟨2#64⟩}}
-      have hq := ctx.mapping_fail (t := v) hok M0 hi hb rfl
-      exact Or.inr ⟨rfl, harg, current, plannerRunX_of_Q hq rfl, hok, hm⟩)
+      have hx := ctx.mapping_fail (t := u) hok M0 hi hb
+      exact Or.inr ⟨rfl, harg, current, hx, hok, hm⟩)
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
     String.reduceEq, false_implies, true_implies, and_true, true_and] at hh

@@ -80,8 +80,8 @@ def PlannerNormalReturn (resultMatchesModel : PlannerInput → PlannerExecutionR
     PlannerObjectAndAddressesPreserved before after ∧
     ∃ initialLocalValues,
       let execution := (plannerInputAtEntry before entry).execute initialLocalValues
-      al returned = code execution.1 ∧ execution.1 ≠ .assertionFailed ∧ after.state = execution.2 ∧
-      after.count = (if execution.1 = .done then .ofNat 64 execution.2.trace.length
+      some (al returned) = code execution.1 ∧ execution.1 ≠ .assertionExit ∧ after.state = execution.2 ∧
+      after.count = (if execution.1 = .returned .done then .ofNat 64 execution.2.trace.length
         else before.count) ∧
       resultMatchesModel (plannerInputAtEntry before entry) execution
 
@@ -96,7 +96,7 @@ def PlannerAssertionExit (resultMatchesModel : PlannerInput → PlannerExecution
     PlannerObjectAndAddressesPreserved before after ∧ after.count = before.count ∧
     ∃ initialLocalValues,
       let execution := (plannerInputAtEntry before entry).execute initialLocalValues
-      execution.1 = .assertionFailed ∧ after.state = execution.2 ∧
+      execution.1 = .assertionExit ∧ after.state = execution.2 ∧
       resultMatchesModel (plannerInputAtEntry before entry) execution
 
 /-- Execute the real method with an arbitrary caller return address.
@@ -204,17 +204,18 @@ private theorem reviewReturn_of_nativeReturn
     (post : VPost plannerCallOwnedMemory PlannerCallMemory.Ok plannerAddress frame plannerRunD
       (fun after returned => plannerRunNormalReturn before after entry returned) entry returned) :
     PlannerNormalReturn resultMatchesModel plannerAddress before frame entry returned := by
-  obtain ⟨after, ⟨⟨locals, returnByte, finalState, objectFields, dataAddress,
-    operationsAddress, sourcesAddress, countAddress, spillCount, count⟩, normalByte⟩,
+  obtain ⟨after, ⟨locals, returnByte, finalState, objectFields, dataAddress,
+    operationsAddress, sourcesAddress, countAddress, spillCount, count⟩,
     valid, owned⟩ := post
-  change al returned = code ((plannerInputAtEntry before entry).execute locals).1 at returnByte
-  have modelStatusIsNormal :
-      ((plannerInputAtEntry before entry).execute locals).1 ≠ .assertionFailed := by
+  change some (al returned) = code ((plannerInputAtEntry before entry).execute locals).1 at returnByte
+  have modelOutcomeIsNormal :
+      ((plannerInputAtEntry before entry).execute locals).1 ≠ .assertionExit := by
     intro failed
-    exact normalByte (by rw [returnByte, failed]; rfl)
+    rw [failed] at returnByte
+    simp only [code, reduceCtorEq] at returnByte
   exact ⟨after, valid, owned,
     ⟨objectFields, dataAddress, operationsAddress, sourcesAddress, countAddress, spillCount⟩,
-    locals, returnByte, modelStatusIsNormal, finalState, count, comparison locals⟩
+    locals, returnByte, modelOutcomeIsNormal, finalState, count, comparison locals⟩
 
 private theorem reviewExit_of_nativeExit
     {resultMatchesModel : PlannerInput → PlannerExecutionResult → Prop}
@@ -267,7 +268,7 @@ public theorem planner_assembly_satisfies_normal_return_contract
     (comparison : ∀ input initialLocalValues, inputAssumptions input →
       resultMatchesModel input (input.execute initialLocalValues))
     (doesNotAssert : ∀ input initialLocalValues, inputAssumptions input →
-      (input.execute initialLocalValues).1 ≠ .assertionFailed) :
+      (input.execute initialLocalValues).1 ≠ .assertionExit) :
     PlannerAssemblyNormalReturnContract inputAssumptions resultMatchesModel := by
   intro _ linkedMethods exitBoundary
   let := linkedMethods.plannerDecls
@@ -289,7 +290,7 @@ public theorem planner_binary_satisfies_normal_return_contract
     (comparison : ∀ input initialLocalValues, inputAssumptions input →
       resultMatchesModel input (input.execute initialLocalValues))
     (doesNotAssert : ∀ input initialLocalValues, inputAssumptions input →
-      (input.execute initialLocalValues).1 ≠ .assertionFailed) :
+      (input.execute initialLocalValues).1 ≠ .assertionExit) :
     PlannerBinaryNormalReturnContract inputAssumptions resultMatchesModel :=
   planner_assembly_satisfies_normal_return_contract comparison doesNotAssert binLinked binBoundary
 

@@ -32,21 +32,21 @@ open FlatShuffler.Sep
 def mapA (b : BG) (s : MachineData) : Prop := (rsi s).toNat < b.sourceSize.toNat ∧ (rdx s).toNat < b.targetSize.toNat
 
 def mapQ (b b' : BG) (s t : MachineData) : Prop :=
-  al t = code (Flat.mbMap b.fl b.M (rsi s) (rdx s)).1
+  some (al t) = code (Flat.mbMap b.fl b.M (rsi s) (rdx s)).1
     ∧ b' = { b with M := (Flat.mbMap b.fl b.M (rsi s) (rdx s)).2 }
 
 namespace MapU
 
 theorem failed_of_drp {b : Flat.Builder} {M : Flat.Mapping} {p t : Word}
-    (h : Flat.get b.dropped p ≠ 0#8) : Flat.mbMap b M p t = (.assertionFailed, M) := by
+    (h : Flat.get b.dropped p ≠ 0#8) : Flat.mbMap b M p t = (.assertionExit, M) := by
   simp [Flat.mbMap, Flat.mappable, h]
 
 theorem failed_of_dest {b : Flat.Builder} {M : Flat.Mapping} {p t : Word}
-    (h : Flat.get M.dest p ≠ Flat.NONE) : Flat.mbMap b M p t = (.assertionFailed, M) := by
+    (h : Flat.get M.dest p ≠ Flat.NONE) : Flat.mbMap b M p t = (.assertionExit, M) := by
   simp [Flat.mbMap, Flat.mappable, h]
 
 theorem failed_of_pos {b : Flat.Builder} {M : Flat.Mapping} {p t : Word}
-    (h : Flat.get M.pos t ≠ Flat.NONE) : Flat.mbMap b M p t = (.assertionFailed, M) := by
+    (h : Flat.get M.pos t ≠ Flat.NONE) : Flat.mbMap b M p t = (.assertionExit, M) := by
   simp [Flat.mbMap, Flat.mappable, h]
 
 theorem done_of {b : Flat.Builder} {M : Flat.Mapping} {p t : Word} (h₁ : Flat.get b.dropped p = 0#8)
@@ -57,7 +57,7 @@ theorem done_of {b : Flat.Builder} {M : Flat.Mapping} {p t : Word} (h₁ : Flat.
 end MapU
 
 def mapX (b b' : BG) (s _t : MachineData) : Prop :=
-  b' = b ∧ Flat.mbMap b.fl b.M (rsi s) (rdx s) = (.assertionFailed, b.M)
+  b' = b ∧ Flat.mbMap b.fl b.M (rsi s) (rdx s) = (.assertionExit, b.M)
 
 open MapU in
 set_option linter.unusedSimpArgs false in
@@ -88,7 +88,7 @@ theorem map_unit [Host] [FunDecls]
         if l = Names.map then t = s.pushRa ra
         else if l = ".LB.MappingBuilder.map.0" then
           Kg (BView B b ∗ F) s ra [x, y] (unpad t) ∧
-            Flat.mbMap b.fl b.M (rsi s) (rdx s) = (.assertionFailed, b.M)
+            Flat.mbMap b.fl b.M (rsi s) (rdx s) = (.assertionExit, b.M)
         else if l = ".LB.MappingBuilder.map.1" then
           Kg (BView B b ∗ F) s ra [x, y] (unpad t) ∧ rax t = b.mp ∧
             rsi t = rsi s ∧ rdx t = rdx s ∧
@@ -224,7 +224,7 @@ theorem map_unit [Host] [FunDecls]
       have hpos' : Flat.get b.M.pos (rdx s) ≠ Flat.NONE := by
         simpa only [rax, rdx, Reg64s.get64_rax, Reg64s.get64_rdx, hax, hdx, fold_slot, slot_8192, hpos,
           neg_one_eq_none, BitVec.zero_eq, sub_beq_zero', beq_eq_false_iff_ne] using hc
-      have hf : Flat.mbMap b.fl b.M (rsi s) (rdx s) = (.assertionFailed, b.M) :=
+      have hf : Flat.mbMap b.fl b.M (rsi s) (rdx s) = (.assertionExit, b.M) :=
         failed_of_pos hpos'
       refine Or.inr ⟨Or.inr ⟨rfl, rfl, ?_⟩, ?_⟩
       · refine ⟨b, ⟨rfl, hf⟩, hok, [exitra.toBitVec, y], ra.toBitVec, rfl, ?_⟩
@@ -279,7 +279,7 @@ theorem map_unit [Host] [FunDecls]
             (.done, b.M.bind (rsi s) (rdx s)) := by
           simpa only [rsi, rdx, Reg64s.get64_rsi, Reg64s.get64_rdx] using hdone
         refine ⟨?_, by rw [hd]⟩
-        show (rax t').setWidth 8 = _
+        show some ((rax t').setWidth 8) = _
         rw [hrax, hd]
         rfl
 

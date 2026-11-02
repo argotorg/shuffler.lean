@@ -216,7 +216,7 @@ end
 
 -- `regroup` fails: `permute` fails.
 theorem rg_none {st : Flat.St} {p0 : Vector Word maxStackSize} (h : RG st p0 none) (h0 : st.size ≠ 0) :
-    Flat.permute st p0 = (.assertionFailed, st) := by
+    Flat.permute st p0 = (.assertionExit, st) := by
   rw [Flat.permute, ite_eq_right h0]
   simp only [show Flat.regroup st 0 p0 (Flat.clearDesired st 0 Flat.initial) = none from h]
 

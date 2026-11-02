@@ -77,10 +77,10 @@ structure Blk (e : Env) (fs : St) (st : FlatShuffler.St) (pos excess : Nat) : Pr
   blk1 : fs.blockedExcess.toNat = excess
 
 -- The flat result `r` holds the list result `m`.
-def SimR (e : Env) (r : Status × St) : M FlatShuffler.St → Prop
+def SimR (e : Env) (r : EmissionOutcome × St) : M FlatShuffler.St → Prop
   | .ok st => r.1 = .done ∧ Sim e r.2 st
   | .error (.blocked pos excess st) => r.1 = .blocked ∧ Blk e r.2 st pos excess
-  | .error .assertion => r.1 = .assertionFailed
+  | .error .assertion => r.1 = .assertionExit
 
 section
 variable {e : Env} {fs : St} {st : FlatShuffler.St}

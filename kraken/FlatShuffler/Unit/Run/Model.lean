@@ -17,11 +17,11 @@ def checks (st : Flat.St) : Prop :=
   st.size + st.pend = st.targetSize ∧ Flat.unmappedFrom st 0#64 0#64 = st.pend ∧
     Flat.availableFrom st 0#64 = true ∧ Flat.labelsFrom st 0#64 = true
 
-def finish (st : Flat.St) : Flat.Status × Flat.St :=
-  if st.size + st.pend ≠ st.targetSize then (.assertionFailed, st)
-  else if Flat.unmappedFrom st 0#64 0#64 ≠ st.pend then (.assertionFailed, st)
-  else if !Flat.availableFrom st 0#64 then (.assertionFailed, st)
-  else if !Flat.labelsFrom st 0#64 then (.assertionFailed, st)
+def finish (st : Flat.St) : Flat.EmissionOutcome × Flat.St :=
+  if st.size + st.pend ≠ st.targetSize then (.assertionExit, st)
+  else if Flat.unmappedFrom st 0#64 0#64 ≠ st.pend then (.assertionExit, st)
+  else if !Flat.availableFrom st 0#64 then (.assertionExit, st)
+  else if !Flat.labelsFrom st 0#64 then (.assertionExit, st)
   else Flat.buildBottomUp st
 
 -- These are the memory bounds and mapping conditions of the four callees. They contain
@@ -68,17 +68,17 @@ theorem emission_finish {planned : Vector Word maxStackSize} {l : Flat.Locals} {
   rfl
 
 theorem finish_size {st : Flat.St} (h : st.size + st.pend ≠ st.targetSize) :
-    finish st = (.assertionFailed, st) := by simp only [finish, ite_eq_left h]
+    finish st = (.assertionExit, st) := by simp only [finish, ite_eq_left h]
 
 theorem finish_unmapped {st : Flat.St} (h : Flat.unmappedFrom st 0#64 0#64 ≠ st.pend) :
-    finish st = (.assertionFailed, st) := by
+    finish st = (.assertionExit, st) := by
   unfold finish
   split
   · rfl
   · rfl
 
 theorem finish_available {st : Flat.St} (h : Flat.availableFrom st 0#64 = false) :
-    finish st = (.assertionFailed, st) := by
+    finish st = (.assertionExit, st) := by
   unfold finish
   split
   · rfl
@@ -87,7 +87,7 @@ theorem finish_available {st : Flat.St} (h : Flat.availableFrom st 0#64 = false)
     · rw [h]; rfl
 
 theorem finish_labels {st : Flat.St} (h : Flat.labelsFrom st 0#64 = false) :
-    finish st = (.assertionFailed, st) := by
+    finish st = (.assertionExit, st) := by
   unfold finish
   split
   · rfl

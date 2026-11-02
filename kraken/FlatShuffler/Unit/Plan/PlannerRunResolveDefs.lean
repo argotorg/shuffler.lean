@@ -60,14 +60,14 @@ theorem PostEmitLI.afterResolve (h : PostEmitLI P g M F s ra lo locals t)
 
 def Resolved (g : PlannerCallMemory) (M : Flat.Mapping) (locals : List Word)
     (hl : locals.length = 4121) (spills : BitVec 32 → BitVec 8)
-    (dropped : Vector (BitVec 8) maxStackSize) (res : Flat.Resolution) : Prop :=
+    (dropped : Vector (BitVec 8) maxStackSize) (res : Flat.ResolutionOutcome) : Prop :=
   ∀ scratch : Flat.ResolveU, Flat.resolve g.p.fl g.spills g.dropped M
     (resolveOffset locals hl) (resolveExcess locals hl) (localCurrentMapping locals hl)
     (resolveSize locals hl) scratch = (res, spills, dropped)
 
 theorem resolved_of_resolveQ {r r' : RG} {v : MachineData}
     (hq : resolveQ r r' t v) :
-    ∃ res, al v = ResolveU.code res ∧ res ≠ .assertionFailed ∧
+    ∃ res, some (al v) = ResolveU.code res ∧ res ≠ .assertionExit ∧
       ∀ scratch : Flat.ResolveU, Flat.resolve r.p.fl r.spills r.dropped r.M
         (rdx t) (rcx t) r.current (r9 t) scratch = (res, r'.spills, r'.dropped) := by
   let scratch : Flat.ResolveU := ⟨Vector.replicate maxStackSize 0#8, Vector.replicate maxStackSize 0#64⟩
@@ -85,7 +85,7 @@ theorem resolved_of_resolveQ {r r' : RG} {v : MachineData}
 theorem resolved_of_resolveX {r r' : RG} {v : MachineData}
     (hx : resolveX r r' t v) :
     ∀ scratch : Flat.ResolveU, Flat.resolve r.p.fl r.spills r.dropped r.M
-      (rdx t) (rcx t) r.current (r9 t) scratch = (.assertionFailed, r'.spills, r'.dropped) := by
+      (rdx t) (rcx t) r.current (r9 t) scratch = (.assertionExit, r'.spills, r'.dropped) := by
   intro scratch
   have h := hx scratch
   have hsp := congrArg RG.spills h.2

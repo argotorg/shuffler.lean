@@ -33,21 +33,21 @@ open FlatShuffler.Sep Generate
 /-! ## The flat model -/
 
 -- The rest of `removeSurplus` after the pop.
-def afterPop (st : Flat.St) : Flat.Status × Flat.St :=
+def afterPop (st : Flat.St) : Flat.EmissionOutcome × Flat.St :=
   if (Flat.pop st).1 = .done then Flat.removeSurplus (Flat.pop st).2 else Flat.pop st
 
 -- The rest of `removeSurplus` after the action `r` of a pass.
-def afterR (r : Flat.Status × Flat.St) : Flat.Status × Flat.St :=
+def afterR (r : Flat.EmissionOutcome × Flat.St) : Flat.EmissionOutcome × Flat.St :=
   if r.1 = .done then afterPop r.2 else r
 
 -- The action after the scan of `equalBelow` from `q`. `top` is the top slot.
-def eqStep (st : Flat.St) (q top dp : Word) : Flat.Status × Flat.St :=
+def eqStep (st : Flat.St) (q top dp : Word) : Flat.EmissionOutcome × Flat.St :=
   if Flat.equalBelow st q ≠ Flat.NONE then (.done, Flat.swapDestinations st (Flat.equalBelow st q) top)
   else Flat.swapWith st dp
 
 -- The action of a pass, after the scan: `sh` is the shallowest surplus slot, `dp` the deepest
 -- reachable one.
-def inner (st : Flat.St) (sh dp : Word) : Flat.Status × Flat.St :=
+def inner (st : Flat.St) (sh dp : Word) : Flat.EmissionOutcome × Flat.St :=
   if sh = st.size - 1 then (.done, st) else eqStep st (st.size - 1) (st.size - 1) dp
 
 theorem swapDestinations_size (st : Flat.St) (a b : Word) :
@@ -61,10 +61,10 @@ theorem inner_size (st : Flat.St) (sh dp : Word) : (inner st sh dp).2.size = st.
     · rfl
     · exact Flat.swapWith_size st dp
 
-theorem afterR_ne {r : Flat.Status × Flat.St} (h : r.1 ≠ .done) : afterR r = r := by
+theorem afterR_ne {r : Flat.EmissionOutcome × Flat.St} (h : r.1 ≠ .done) : afterR r = r := by
   unfold afterR; rw [ite_eq_right h]
 
-theorem afterR_done {r : Flat.Status × Flat.St} (h : r.1 = .done) : afterR r = afterPop r.2 := by
+theorem afterR_done {r : Flat.EmissionOutcome × Flat.St} (h : r.1 = .done) : afterR r = afterPop r.2 := by
   unfold afterR; rw [ite_eq_left h]
 
 theorem afterPop_ne {st : Flat.St} (h : (Flat.pop st).1 ≠ .done) : afterPop st = Flat.pop st := by
@@ -91,7 +91,7 @@ theorem rs_zero {st : Flat.St} (h : st.size = 0) : Flat.removeSurplus st = (.don
   rfl
 
 -- The end of a pass: the match of `surplusLoop` on the result of the action `r`.
-theorem loop_tail (r : Flat.Status × Flat.St) (k : Nat)
+theorem loop_tail (r : Flat.EmissionOutcome × Flat.St) (k : Nat)
     (hk : r.1 = .done → (Flat.pop r.2).1 = .done → (Flat.pop r.2).2.size.toNat = k) :
     (match (if r.1 ≠ .done then Except.error r
         else if (Flat.pop r.2).1 ≠ .done then Except.error (Flat.pop r.2)

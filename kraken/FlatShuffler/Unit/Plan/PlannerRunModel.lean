@@ -84,7 +84,7 @@ end
 -- Failed target validation resets `saw` before it returns.
 theorem plannerRun_bad_target (pl : Flat.Planner) (take : Bool) (s : Flat.PSt)
     (us : Nat → Flat.RunU) (h : Flat.targetsFrom pl s.spills 0 = false) :
-    Flat.plannerRun pl take s us = (.assertionFailed, { s with saw := false }) := by
+    Flat.plannerRun pl take s us = (.assertionExit, { s with saw := false }) := by
   simp only [Flat.plannerRun, h, Bool.not_false, ↓reduceIte]
 
 theorem plannerRun_targets_ok (pl : Flat.Planner) (take : Bool) (s : Flat.PSt)
@@ -96,7 +96,7 @@ theorem runLoop_mapping_fail (pl : Flat.Planner) (take : Bool) (s : Flat.PSt)
     (us : Nat → Flat.RunU)
     (h : Flat.buildMapping ⟨pl.source, pl.sourceSize, pl.target, pl.targetSize, s.dropped, take⟩
       ((us 0).mapping.init pl.sourceSize pl.targetSize) = none) :
-    Flat.runLoop pl take s us = (.assertionFailed, s) := by
+    Flat.runLoop pl take s us = (.assertionExit, s) := by
   rw [Flat.runLoop, h]
 
 end FlatShuffler.Unit.PlannerRunU

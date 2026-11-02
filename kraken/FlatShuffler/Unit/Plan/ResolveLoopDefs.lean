@@ -32,12 +32,12 @@ def Work.state (w : Work) : Flat.RState := ⟨w.spills, w.dropped, w.droppedNow�
 def Work.pick (w : Work) (r : RG) : Word × BitVec 8 :=
   picked r.p.fl r.M w.candidates w.count w.state
 
-def packResult (q : Flat.Resolution × Flat.RState) :
-    Flat.Resolution × (BitVec 32 → BitVec 8) × Vector (BitVec 8) maxStackSize :=
+def packResult (q : Flat.ResolutionOutcome × Flat.RState) :
+    Flat.ResolutionOutcome × (BitVec 32 → BitVec 8) × Vector (BitVec 8) maxStackSize :=
   (q.1, q.2.spills, q.2.dropped)
 
 def Work.result (w : Work) (r : RG) (s : MachineData) :
-    Flat.Resolution × (BitVec 32 → BitVec 8) × Vector (BitVec 8) maxStackSize :=
+    Flat.ResolutionOutcome × (BitVec 32 → BitVec 8) × Vector (BitVec 8) maxStackSize :=
   packResult (Flat.passFrom r.p.fl r.M w.candidates w.count (rcx s) w.pass w.state)
 
 def Work.Model (w : Work) (r : RG) (s : MachineData) : Prop :=

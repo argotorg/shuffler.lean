@@ -270,7 +270,7 @@ theorem kind_sel (x y : BitVec 64) (b1 b2 : Bool) :
     BitVec.take_replaceLow_8, ofBool_and]
   cases b1 <;> cases b2 <;> rfl
 
-/-- The Status in `%al`: `setne %al; addl %eax, %eax` gives `0` (Done) or `2` (AssertionFailed). -/
+/-- `setne %al; addl %eax, %eax` gives a low byte of 0 or 2. -/
 theorem status_0_2 (x : BitVec 64) (b : Bool) :
     (BitVec.setWidth 64 ((x.replaceLow (BitVec.ofNat 8 b.toNat)).take 32 +
       (x.replaceLow (BitVec.ofNat 8 b.toNat)).take 32)).take 8 =
@@ -278,7 +278,7 @@ theorem status_0_2 (x : BitVec 64) (b : Bool) :
   simp only [take8_setWidth64, take8_add32, take8_take32, BitVec.take_replaceLow_8]
   cases b <;> rfl
 
-/-- `movl $n, %r32` (Status constants and `bool` returns). -/
+/-- `movl $n, %r32` writes a 32-bit constant and clears the upper bits. -/
 @[simp] theorem movl_imm (n : Nat) :
     BitVec.setWidth 64 ((BitVec.ofNat 64 n).take 32) = BitVec.ofNat 64 (n % 2 ^ 32) := by
   apply BitVec.eq_of_toNat_eq

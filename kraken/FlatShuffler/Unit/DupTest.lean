@@ -73,11 +73,11 @@ example : Flat.NONE = 18446744073709551615#64 := none_eq
 #guard words.all fun w => BitVec.setWidth 8 (BitVec.setWidth 64 (w.take 32)) == w.setWidth 8
 -- Negative: `movl` clears the bytes 4-7, so only `al` is equal.
 #guard BitVec.setWidth 64 (frl.take 32) != frl
--- `movl $2, %edx` and `movl $0, %edx`.
-#guard code .assertionFailed == 2#8
-#guard code .done == 0#8
+-- An assertion exit has no return byte.
+#guard code .assertionExit == none
+#guard code .done == some 0#8
 -- Negative: `dup` does not return `blocked`.
-#guard code .blocked != 2#8 && code .blocked != 0#8
+#guard code .blocked != none && code .blocked != some 0#8
 
 /-! ## The record of `dup` (`dupW_eq`) -/
 
@@ -109,10 +109,10 @@ def used : Vector Word maxStackSize := free.set 1 0
 def parts (st : Flat.St) := (st.data, st.size, st.trace, st.dest, st.pos)
 
 -- The return label: no change.
-#guard (Flat.dup (flat (ghost frl free)) 0 1).1 == .assertionFailed
+#guard (Flat.dup (flat (ghost frl free)) 0 1).1 == .assertionExit
 #guard parts (Flat.dup (flat (ghost frl free)) 0 1).2 == parts (flat (ghost frl free))
 -- A used destination: `Stack::dup`, no bind.
-#guard (Flat.dup (flat (ghost val used)) 0 1).1 == .assertionFailed
+#guard (Flat.dup (flat (ghost val used)) 0 1).1 == .assertionExit
 #guard parts (Flat.dup (flat (ghost val used)) 0 1).2
   == parts (Flat.stackDup (flat (ghost val used)) 0)
 -- A free destination: `Stack::dup` and `Mapping::bind` of the old size.

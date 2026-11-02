@@ -43,11 +43,11 @@ def st (tg ds : List StackSlot) (ps : List Word) (sp : List (BitVec 32)) : Flat.
     dest := vec [] N, pos := vec ps N, pend := 5, blockedOffset := 0, blockedExcess := 0 }
 
 -- The parts of a result that `produce` changes.
-def obs (r : Flat.Status × Flat.St) : Flat.Status × Word × Word × Word × Word × List Op :=
+def obs (r : Flat.EmissionOutcome × Flat.St) : Flat.EmissionOutcome × Word × Word × Word × Word × List Op :=
   (r.1, r.2.size, r.2.pend, r.2.blockedOffset, r.2.blockedExcess, r.2.trace)
 
 -- The split of `Flat.produce` that the proof uses.
-def split (s : Flat.St) (t : Word) : Flat.Status × Flat.St :=
+def split (s : Flat.St) (t : Word) : Flat.EmissionOutcome × Flat.St :=
   let x := Flat.get s.target t
   fin (act s x (Flat.shallowestCopyPosition s x) t) t
 
@@ -76,10 +76,10 @@ def states : List Flat.St := [sJunk, sDup, sBlk, sSpl, sLit, sNone, sLbl, sPos, 
 #guard obs (Flat.produce sBlk 0) == (.blocked, 17, 5, 0, 1, [])
 #guard obs (Flat.produce sSpl 0) == (.done, 18, 4, 0, 0, [Op.push (val 1)])
 #guard obs (Flat.produce sLit 0) == (.done, 18, 4, 0, 0, [Op.push lit])
-#guard obs (Flat.produce sNone 0) == (.assertionFailed, 1, 5, 0, 0, [])
+#guard obs (Flat.produce sNone 0) == (.assertionExit, 1, 5, 0, 0, [])
 #guard obs (Flat.produce sLbl 0) == (.done, 2, 4, 0, 0, [Op.push lbl])
-#guard obs (Flat.produce sPos 0) == (.assertionFailed, 2, 5, 0, 0, [Op.push lbl])
-#guard obs (Flat.produce sFrl 0) == (.assertionFailed, 1, 5, 0, 0, [])
+#guard obs (Flat.produce sPos 0) == (.assertionExit, 2, 5, 0, 0, [Op.push lbl])
+#guard obs (Flat.produce sFrl 0) == (.assertionExit, 1, 5, 0, 0, [])
 
 /-! ## `act`, `tail`, `block` and `fin` on the states -/
 
@@ -90,8 +90,8 @@ example : act sNone (val 1) N 0 = tail sNone (val 1) N 0 := act_tail (by decide)
 example : tail sBlk (val 1) 0 0 = Flat.blockDupUnreachable sBlk 0 := tail_block (by decide) (by decide)
 example : tail sSpl (val 1) 0 0 = Flat.push sSpl (val 1) 0 := tail_push (by decide)
 example : tail sLit lit 0 0 = Flat.push sLit lit 0 := tail_push (by decide)
-example : tail sNone (val 1) N 0 = (.assertionFailed, sNone) := tail_none (by decide) rfl
-example : Flat.block sBlk 0 0 = (.assertionFailed, sBlk) := block_zero rfl
+example : tail sNone (val 1) N 0 = (.assertionExit, sNone) := tail_none (by decide) rfl
+example : Flat.block sBlk 0 0 = (.assertionExit, sBlk) := block_zero rfl
 example : Flat.block sBlk 0 1 = (.blocked, { sBlk with blockedOffset := 0, blockedExcess := 1 }) :=
   block_ne (by decide)
 example : fin (.blocked, sBlk) 0 = (.blocked, sBlk) := fin_ne (by decide)
@@ -101,10 +101,10 @@ def sTop := st [] [val 1, val 2] [1] []
 def sLow := st [] [val 1, val 2] [0] []
 example : fin (.done, sTop) 0 = (.done, { sTop with pend := sTop.pend - 1 }) :=
   fin_ok rfl (by simp [sTop, st, vec, Flat.get, maxStackSize])
-example : fin (.done, sLow) 0 = (.assertionFailed, sLow) :=
+example : fin (.done, sLow) 0 = (.assertionExit, sLow) :=
   fin_bad rfl (by simp [sLow, st, vec, Flat.get, maxStackSize])
 #guard obs (fin (.done, sTop) 0) == (.done, 2, 4, 0, 0, [])
-#guard obs (fin (.done, sLow) 0) == (.assertionFailed, 2, 5, 0, 0, [])
+#guard obs (fin (.done, sLow) 0) == (.assertionExit, 2, 5, 0, 0, [])
 
 -- Negative: the junk slot is not `act_dup` or `tail` even with a copy at depth 0, because the
 -- junk test comes first.

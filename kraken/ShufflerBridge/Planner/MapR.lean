@@ -205,10 +205,10 @@ theorem map_corr (ok : BOk b) (h : BR b M saw mb) {k l : Nat} (p : Fin k) (t : F
   · simp [hmp, LoopCorr, throw, throwThe, MonadExceptOf.throw]
 
 -- A PR31 map that yields its builder.
-theorem step_of_loop {σ β ε : Type} {R : σ → β → Prop} {r : FlatShuffler.Flat.Status × σ} {e : Except ε β}
+theorem step_of_loop {σ β ε : Type} {R : σ → β → Prop} {r : FlatShuffler.Flat.EmissionOutcome × σ} {e : Except ε β}
     (h : LoopCorr R r e) : StepCorr R r (e >>= fun x => pure (ForInStep.yield x)) := by
   obtain ⟨st, s⟩ := r
-  cases st <;> cases e <;> simp_all [LoopCorr, StepCorr, Bind.bind, Except.bind, pure, Except.pure]
+  rcases st with (⟨_ | _⟩ | _) <;> cases e <;> simp_all [LoopCorr, StepCorr, Bind.bind, Except.bind, pure, Except.pure]
 
 -- The slots of a flat builder and of the PR31 stacks.
 theorem slot_eq (ok : BOk b) {i j : Nat} (hi : i < (bsrc b).length) (hj : j < (btgt b).length) :
@@ -339,7 +339,7 @@ theorem closest_corr (ok : BOk b) (h : BR b M saw mb) (t : Fin (btgt b).length)
 /-! ## `buildMapping` -/
 
 -- The flat `buildMapping` as a chain of phases.
-def bindS {σ X : Type} (r : FlatShuffler.Flat.Status × σ) (K : σ → Option X) : Option X :=
+def bindS {σ X : Type} (r : FlatShuffler.Flat.EmissionOutcome × σ) (K : σ → Option X) : Option X :=
   if r.1 ≠ .done then none else K r.2
 
 -- A flat result and a PR31 result: both are related values, or both fail.
@@ -348,11 +348,11 @@ def OptCorr {X Y ε : Type} (Q : X → Y → Prop) : Option X → Except ε Y �
   | none, .error _ => True
   | _, _ => False
 
-theorem chain {σ β X Y ε : Type} {R : σ → β → Prop} {Q : X → Y → Prop} {r : FlatShuffler.Flat.Status × σ}
+theorem chain {σ β X Y ε : Type} {R : σ → β → Prop} {Q : X → Y → Prop} {r : FlatShuffler.Flat.EmissionOutcome × σ}
     {K : σ → Option X} {e : Except ε β} {k : β → Except ε Y} (h : LoopCorr R r e)
     (hk : ∀ s c, R s c → OptCorr Q (K s) (k c)) : OptCorr Q (bindS r K) (e >>= k) := by
   obtain ⟨st, s⟩ := r
-  cases st <;> cases e <;> simp_all [LoopCorr, bindS, OptCorr, Bind.bind, Except.bind]
+  rcases st with (⟨_ | _⟩ | _) <;> cases e <;> simp_all [LoopCorr, bindS, OptCorr, Bind.bind, Except.bind]
 
 theorem buildMapping_eq :
     FlatShuffler.Flat.buildMapping b M =
@@ -398,13 +398,13 @@ theorem optR_cases {s : Nat} (hs : s ≤ FlatShuffler.maxStackSize) {w : FlatShu
     exact FlatShuffler.Flat.ne_none (by rw [FlatShuffler.Flat.toNat_ofNat_lt (by omega)]; omega)
 
 theorem loopCorr_map {σ σ' β ε : Type} {R : σ → β → Prop} {R' : σ' → β → Prop}
-    {r : FlatShuffler.Flat.Status × σ} {e : Except ε β} (g : σ → σ') (h : LoopCorr R r e)
+    {r : FlatShuffler.Flat.EmissionOutcome × σ} {e : Except ε β} (g : σ → σ') (h : LoopCorr R r e)
     (hg : ∀ s c, R s c → R' (g s) c) : LoopCorr R' (r.1, g r.2) e := by
   obtain ⟨st, s⟩ := r
-  cases st <;> cases e <;> simp_all [LoopCorr]
+  rcases st with (⟨_ | _⟩ | _) <;> cases e <;> simp_all [LoopCorr]
 
 -- A PR31 step that first runs a loop without a status.
-theorem step_of_fold {σ β γ ε : Type} {R : σ → β → Prop} {r : FlatShuffler.Flat.Status × σ}
+theorem step_of_fold {σ β γ ε : Type} {R : σ → β → Prop} {r : FlatShuffler.Flat.EmissionOutcome × σ}
     {e : Except ε γ} {k : γ → Except ε (ForInStep β)} (P : γ → Prop)
     (he : ∃ c, e = .ok c ∧ P c) (hk : ∀ c, P c → StepCorr R r (k c)) : StepCorr R r (e >>= k) := by
   obtain ⟨c, rfl, hc⟩ := he

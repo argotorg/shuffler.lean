@@ -40,22 +40,22 @@ def kind4 (p : BitVec 32) : StackSlot := ⟨p, 4, 1⟩
 #guard (spillAdd z (v 5)).2 4 = 0
 #guard (spillAdd z (v 5)).2 6 = 0
 -- The second add of an id fails and keeps the byte.
-#guard (spillAdd (spillAdd z (v 5)).2 (v 5)).1 = .assertionFailed
+#guard (spillAdd (spillAdd z (v 5)).2 (v 5)).1 = .assertionExit
 #guard (spillAdd (spillAdd z (v 5)).2 (v 5)).2 5 = 1
 -- Each byte that is not 0 is spilled.
-#guard (spillAdd (fun _ => 0xff) (v 5)).1 = .assertionFailed
+#guard (spillAdd (fun _ => 0xff) (v 5)).1 = .assertionExit
 #guard (spillAdd (fun _ => 0xff) (v 5)).2 5 = 0xff
-#guard (spillAdd (fun _ => 2) (v 0)).1 = .assertionFailed
+#guard (spillAdd (fun _ => 2) (v 0)).1 = .assertionExit
 -- A slot that is not a variable fails and writes nothing.
-#guard (spillAdd z (lit 5)).1 = .assertionFailed
+#guard (spillAdd z (lit 5)).1 = .assertionExit
 #guard (spillAdd z (lit 5)).2 5 = 0
-#guard (spillAdd z StackSlot.junk).1 = .assertionFailed
-#guard (spillAdd z (fcrl 5)).1 = .assertionFailed
-#guard (spillAdd z frl).1 = .assertionFailed
-#guard (spillAdd z (kind4 5)).1 = .assertionFailed
+#guard (spillAdd z StackSlot.junk).1 = .assertionExit
+#guard (spillAdd z (fcrl 5)).1 = .assertionExit
+#guard (spillAdd z frl).1 = .assertionExit
+#guard (spillAdd z (kind4 5)).1 = .assertionExit
 #guard (spillAdd z (kind4 5)).2 5 = 0
 -- Two variables with one payload and different opcodes have one byte.
-#guard (spillAdd (spillAdd z (v 5)).2 ⟨5, Value, 7⟩).1 = .assertionFailed
+#guard (spillAdd (spillAdd z (v 5)).2 ⟨5, Value, 7⟩).1 = .assertionExit
 -- The largest id.
 #guard (spillAdd z (v 0xffffffff)).2 0xffffffff = 1
 #guard (spillAdd z (v 0xffffffff)).2 0 = 0
@@ -79,7 +79,7 @@ def kind4 (p : BitVec 32) : StackSlot := ⟨p, 4, 1⟩
 #guard (spillAddAll z [v 1, v 2]).1 = .done
 #guard (spillAddAll z [v 1, v 2]).2 1 = 1 && (spillAddAll z [v 1, v 2]).2 2 = 1
 -- The loop stops at the first add that fails: the adds before it stay.
-#guard (spillAddAll z [v 1, v 1, v 2]).1 = .assertionFailed
+#guard (spillAddAll z [v 1, v 1, v 2]).1 = .assertionExit
 #guard (spillAddAll z [v 1, v 1, v 2]).2 1 = 1 && (spillAddAll z [v 1, v 1, v 2]).2 2 = 0
 #guard (spillAddAll z [v 1, lit 2, v 3]).2 3 = 0
 

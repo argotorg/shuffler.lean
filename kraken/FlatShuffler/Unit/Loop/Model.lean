@@ -256,7 +256,7 @@ theorem produce_grow (h : (produce st t).1 = .done) :
         push st (get st.target t) t
       else if shallowestCopyPosition st (get st.target t) ≠ NONE then
         blockDupUnreachable st (shallowestCopyPosition st (get st.target t))
-      else (Status.assertionFailed, st)) = r at h ⊢
+      else (ExecutionControl.assertionExit, st)) = r at h ⊢
   have key : r.1 = .done → Grow st r.2 t := by
     subst hr
     split
@@ -341,7 +341,7 @@ theorem FInv.grow (h : FInv st) (hp : st.pend ≠ 0) {st' : St} (g : Grow st st'
             rw [e] at hl; exact (BitVec.lt_irrefl _ hl)
           rw [get_put_ne _ _ this]; exact he
 
-theorem gen_fail (h : ¬t < st.targetSize) : generate st t = (.assertionFailed, st) := by
+theorem gen_fail (h : ¬t < st.targetSize) : generate st t = (.assertionExit, st) := by
   simp [Flat.generate, h]
 
 theorem gen_prod (h : t < st.targetSize) (hp : (produce st t).1 ≠ .done) :

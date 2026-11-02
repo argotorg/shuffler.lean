@@ -514,7 +514,7 @@ theorem b_3 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) 
     refine ⟨_, u, ⟨x0, x2, lo, w, hM.step hm2 rfl rfl, ?_, ?_⟩, ?_⟩
     · exact ⟨hok.len, hok.n, hok.xs, hok.xo, hok.nops, hok.spl⟩
     · exact ⟨hk.tgtp, hk.n, hk.splp, hk.data, hk.ops, hk.xs, hk.xo, hk.tgt, hk.spl⟩
-    refine ⟨⟨⟨hk.tgtp, hk.n, hk.splp, hk.data, hk.ops, hk.xs, hk.xo, hk.tgt, hk.spl⟩, ?_, ?_⟩, by change 1#8 ≠ 2#8; decide⟩
+    refine ⟨⟨hk.tgtp, hk.n, hk.splp, hk.data, hk.ops, hk.xs, hk.xo, hk.tgt, hk.spl⟩, ?_, ?_⟩
     · simp only [hR, Flat.blockDupUnreachable, hex, Flat.block, hne, ↓reduceIte]; rfl
     · simp only [hR, Flat.blockDupUnreachable, hex, Flat.block, hne, ↓reduceIte]; rfl
   · loop_dec

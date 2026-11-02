@@ -19,7 +19,7 @@ namespace FlatShuffler.Flat
 /-! ## The loop -/
 
 -- The result of the loop after an iteration that ends with `n`.
-def kfin : Next → Status × St
+def kfin : Next → EmissionOutcome × St
   | .ret r => r
   | .cont st T => loop st (T + 1)
 
@@ -29,7 +29,7 @@ theorem loop_lt {st : St} {T : Word} (h : T < st.targetSize) : loop st T = kfin 
   split <;> (rename_i e; rw [e]; rfl)
 
 theorem loop_ge {st : St} {T : Word} (h : ¬T < st.targetSize) :
-    loop st T = if st.size ≠ st.targetSize then (.assertionFailed, st) else (.done, st) := by
+    loop st T = if st.size ≠ st.targetSize then (.assertionExit, st) else (.done, st) := by
   rw [loop]
   simp only [h, ↓reduceIte]
 
@@ -50,8 +50,8 @@ def kTail (st : St) (T : Word) : Next :=
   else .cont st T
 
 theorem placeTop_eq (st : St) (T : Word) :
-    placeTop st T = if ¬T < st.size then .ret (.assertionFailed, st)
-      else if isFinal st T then .ret (.assertionFailed, st) else kTail st T := rfl
+    placeTop st T = if ¬T < st.size then .ret (.assertionExit, st)
+      else if isFinal st T then .ret (.assertionExit, st) else kTail st T := rfl
 
 -- The end of `bound`, after the swap of the destinations of `p` and of the source.
 def kBoundSw (st : St) (T p : Word) : Next :=
@@ -65,11 +65,11 @@ def kBoundSw (st : St) (T p : Word) : Next :=
 
 -- The end of `bound` for the source `b` and the position `p` of the slot to swap.
 def kB (st : St) (T b p : Word) : Next :=
-  if get st.data p ≠ get st.data b then .ret (.assertionFailed, st)
+  if get st.data p ≠ get st.data b then .ret (.assertionExit, st)
   else kBoundSw (swapDestinations st p b) T p
 
 theorem bound_eq (st : St) (T : Word) :
-    bound st T = if ¬(get st.pos T ≠ NONE ∧ get st.pos T ≥ T) then .ret (.assertionFailed, st)
+    bound st T = if ¬(get st.pos T ≠ NONE ∧ get st.pos T ≥ T) then .ret (.assertionExit, st)
       else kB st T (get st.pos T)
         (if get st.data T = get st.data (get st.pos T) then T
          else candidateFrom st (get st.data (get st.pos T)) (get st.pos T) (st.size - 1)) := rfl
@@ -80,7 +80,7 @@ def kGenT (st : St) (T : Word) : Next :=
   if r.1 ≠ .done then .ret r
   else
     let st := r.2
-    if ¬T < st.size then .ret (.assertionFailed, st)
+    if ¬T < st.size then .ret (.assertionExit, st)
     else if isFinal st T then .cont st T
     else placeTop st T
 
@@ -99,14 +99,14 @@ def kU (st : St) (T u : Word) : Next :=
   if u ≠ NONE ∧ u ≠ T ∧ st.size - T < maxSwapDepth then kGenAt st T u else kU2 st T u
 
 -- The result of the loop of `urgentToDup`.
-def kUE (st : St) (T : Word) : Except (Status × St) Word → Next
+def kUE (st : St) (T : Word) : Except (EmissionOutcome × St) Word → Next
   | .error r => .ret r
   | .ok u => kU st T u
 
 -- After the check of `isFinal`.
 def kPend (st : St) (T : Word) : Next :=
   if st.pend = 0 then
-    if st.size ≠ st.targetSize then .ret (.assertionFailed, st) else .ret (permuteMapping st)
+    if st.size ≠ st.targetSize then .ret (.assertionExit, st) else .ret (permuteMapping st)
   else kUE st T (urgentFrom st T T NONE)
 
 theorem body_eq (st : St) (T : Word) :

@@ -36,10 +36,12 @@ theorem cfg_16 : plannerRunAsm.ForallBlocks fun blk =>
     I' (RunExit P g F s ra) (by
       intro u hu ha hz
       obtain ⟨lo, locals, hb⟩ := hu
-      have hs : ctx.status ≠ .done := status_ne_of_al_eq (ha.trans hal) hz
-      cases status : ctx.status <;> simp_all) (by
+      have hs : ctx.status ≠ .done := status_ne_of_al_eq ((congrArg some ha).trans hal) hz
+      cases status : ctx.status with
+      | returned value => cases value <;> simp_all
+      | assertionExit => simp_all) (by
       intro u hu hpres ha hz
-      have hs : ctx.status = .done := status_eq_of_al_eq (hpres.trans hal) ha
+      have hs : ctx.status = .done := status_eq_of_al_eq ((congrArg some hpres).trans hal) ha
       have hend : Flat.sourcesFrom current.p.targetSize 0 M current.sources = current.sources :=
         sources_end (by rw [hz]; decide)
       have rr := ctx.terminal hn
@@ -51,7 +53,7 @@ theorem cfg_16 : plannerRunAsm.ForallBlocks fun blk =>
         exact ⟨current, M, ⟨rr⟩, ha, hu⟩
       · simp [runV]) (by
       intro u hu hpres ha
-      have hs : ctx.status = .done := status_eq_of_al_eq (hpres.trans hal) ha
+      have hs : ctx.status = .done := status_eq_of_al_eq ((congrArg some hpres).trans hal) ha
       have rr := ctx.terminal hn
       simp only [hs, ↓reduceIte] at rr
       refine ⟨?_, Or.inl ?_⟩
@@ -132,10 +134,9 @@ theorem cfg_18 : plannerRunAsm.ForallBlocks fun blk =>
       simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte, RunReturn]
       refine ⟨{current with count := BitVec.ofNat 64 current.traceLength}, lo, locals, hb,
         ⟨hok.planner, hok.spillCount, hok.sourceIds, hok.targetIds, hok.ops, hok.traceLength⟩,
-        (rr.withCount _).finish (hal.trans ha) ?_, ?_⟩
+        (rr.withCount _).finish (by rw [hal, ha]; rfl) ?_⟩
       · change BitVec.ofNat 64 current.traceLength = BitVec.ofNat 64 current.state.trace.length
-        rw [PlannerCallMemory.trace_length hok]
-      · rw [hal, ha]; decide)
+        rw [PlannerCallMemory.trace_length hok])
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
     String.reduceEq, false_implies, true_implies, and_true, true_and] at hh

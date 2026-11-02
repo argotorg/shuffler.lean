@@ -69,7 +69,7 @@ def notBij : Flat.St := mk [x, y] [x, y] [0, 0]
   = some (words [0, 0])
 #guard !bijB 2 (pv [0, 0])
 #guard mu 1 (pv [0, 0]) = 0
-#guard (Flat.permuteMapping notBij).1 = .assertionFailed
+#guard (Flat.permuteMapping notBij).1 = .assertionExit
 -- A destination that is `NONE`: `readDestinations` gives none.
 #guard (Flat.readDestinations (mk [x, y] [x, y] [1, Flat.NONE.toNat]) 0 Flat.initial).isNone
 -- `bijB` is not true for a list of the wrong values.
@@ -110,7 +110,7 @@ def check (s : List StackSlot) (d : List Nat) : Bool :=
     | some p =>
       let ms := mus (st.size - 1) (2 * n) st p
       bijB n p && ms.all (fun m => 1 ≤ m && m ≤ 2 * n - 1) && strictDecreasing ms
-        && ms.length < 2 * n && (Flat.permute st p0).1 != .assertionFailed
+        && ms.length < 2 * n && (Flat.permute st p0).1 != .assertionExit
 
 def inputs : List (List StackSlot × List Nat) :=
   (List.range 4).flatMap fun k =>
@@ -127,7 +127,7 @@ def inputs : List (List StackSlot × List Nat) :=
 -- `readDestinations` gives none, but `permute` takes the bijection `p` and ends. The result
 -- depends on `p`.
 def stN : Flat.St := mk [x, y] [x, y] [1, Flat.NONE.toNat]
-#guard (Flat.permuteMapping stN).1 = .assertionFailed
+#guard (Flat.permuteMapping stN).1 = .assertionExit
 #guard (Flat.permute stN (pv [1, 0])).1 = .done
 #guard (Flat.permute stN (pv [0, 1])).1 = .done
 #guard (Flat.permute stN (pv [1, 0])).2.data != (Flat.permute stN (pv [0, 1])).2.data

@@ -31,7 +31,7 @@ theorem Phase.next (h : Phase S PM planned g a F s ra l lo w t) (hm : u.dmem = t
   ⟨h.bd.next hm hsp h13 h14 h15, by rw [hbx]; exact h.bp, h.ok, h.keep, h.model⟩
 
 theorem Phase.exit (h : Phase S PM planned g a F s ra l lo w t)
-    (hf : finish (flat a) = (.assertionFailed, flat a)) : runX planned g a s u := by
+    (hf : finish (flat a) = (.assertionExit, flat a)) : runX planned g a s u := by
   refine ⟨l, h.keep, ?_, ?_⟩
   · rw [emission_finish h.model, hf]
   · rw [emission_finish h.model, hf]

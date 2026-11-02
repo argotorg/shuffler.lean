@@ -26,7 +26,7 @@ def plannerRunA (g : PlannerCallMemory) (s : MachineData) : Prop :=
 def plannerRunQ (g g' : PlannerCallMemory) (s t : MachineData) : Prop :=
   ∃ us : Nat → Flat.RunU,
     let r := Flat.plannerRun g.p.fl ((rsi s).setWidth 8 == 1#8) g.state us
-    al t = code r.1 ∧ g'.state = r.2 ∧
+    some (al t) = code r.1 ∧ g'.state = r.2 ∧
       g'.p = { g.p with saw := g'.p.saw } ∧ g'.dataPtr = g.dataPtr ∧
       g'.opsPtr = g.opsPtr ∧ g'.sourcesPtr = g.sourcesPtr ∧ g'.countPtr = g.countPtr ∧
       g'.spillCount = g.spillCount ∧
@@ -35,25 +35,12 @@ def plannerRunQ (g g' : PlannerCallMemory) (s t : MachineData) : Prop :=
 def plannerRunX (g g' : PlannerCallMemory) (s _t : MachineData) : Prop :=
   ∃ us : Nat → Flat.RunU,
     let r := Flat.plannerRun g.p.fl ((rsi s).setWidth 8 == 1#8) g.state us
-    r.1 = .assertionFailed ∧ g'.state = r.2 ∧
+    r.1 = .assertionExit ∧ g'.state = r.2 ∧
       g'.p = { g.p with saw := g'.p.saw } ∧ g'.dataPtr = g.dataPtr ∧
       g'.opsPtr = g.opsPtr ∧ g'.sourcesPtr = g.sourcesPtr ∧ g'.countPtr = g.countPtr ∧
       g'.spillCount = g.spillCount ∧ g'.count = g.count
 
-def plannerRunNormalReturn (g g' : PlannerCallMemory) (s t : MachineData) : Prop :=
-  plannerRunQ g g' s t ∧ al t ≠ ASSERTION_FAILED
-
-theorem plannerRunX_of_Q {g g' : PlannerCallMemory} {s t u : MachineData}
-    (h : plannerRunQ g g' s t) (ha : al t = 2#8) : plannerRunX g g' s u := by
-  obtain ⟨us, hcode, hstate, hp, hd, ho, hs, hc, hsp, hn⟩ := h
-  have hr : (Flat.plannerRun g.p.fl ((rsi s).setWidth 8 == 1#8) g.state us).1 =
-      .assertionFailed := by
-    have hstatus : ∀ a : Flat.Status, 2#8 = code a → a = .assertionFailed := by
-      intro a he
-      cases a <;> simp [code, DONE, BLOCKED, ASSERTION_FAILED] at he ⊢
-    exact hstatus _ (ha.symm.trans hcode)
-  exact ⟨us, hr, hstate, hp, hd, ho, hs, hc, hsp,
-    by simpa only [hr, reduceCtorEq, ↓reduceIte] using hn⟩
+abbrev plannerRunNormalReturn := plannerRunQ
 
 abbrev PlannerRunThm [Host] [FunDecls] : Prop :=
   VThmWithExit plannerCallOwnedMemory PlannerCallMemory.Ok plannerRunAsm plannerRunA plannerRunD

@@ -10,14 +10,14 @@ import all FlatShuffler.Unit.Plan.PlannerRunResolveDefs
 namespace FlatShuffler.Unit.PlannerRunU
 open FlatShuffler.Sep
 
-structure RunResult (initial current : PlannerCallMemory) (s : MachineData) (st : Flat.Status) where
+structure RunResult (initial current : PlannerCallMemory) (s : MachineData) (st : Flat.EmissionOutcome) where
   stable : RunMeta initial current
   attempts : Nat → Flat.RunU
   model : Flat.plannerRun initial.p.fl ((rsi s).setWidth 8 == 1#8) initial.state attempts =
     (st, current.state)
 
-theorem RunResult.finish {initial current : PlannerCallMemory} {s t : MachineData} {st : Flat.Status}
-    (h : RunResult initial current s st) (ha : al t = code st)
+theorem RunResult.finish {initial current : PlannerCallMemory} {s t : MachineData} {st : Flat.EmissionOutcome}
+    (h : RunResult initial current s st) (ha : some (al t) = code st)
     (hc : current.count = if st = .done then BitVec.ofNat 64 current.state.trace.length
       else initial.count) : plannerRunQ initial current s t := by
   refine ⟨h.attempts, ?_⟩
@@ -26,14 +26,14 @@ theorem RunResult.finish {initial current : PlannerCallMemory} {s t : MachineDat
     h.stable.sourcesPtr, h.stable.countPtr, h.stable.spillCount, hc⟩
 
 theorem RunResult.exit {initial current : PlannerCallMemory} {s t : MachineData}
-    (h : RunResult initial current s .assertionFailed)
+    (h : RunResult initial current s .assertionExit)
     (hc : current.count = initial.count) : plannerRunX initial current s t := by
   refine ⟨h.attempts, ?_⟩
   rw [h.model]
   exact ⟨rfl, rfl, h.stable.planner, h.stable.dataPtr, h.stable.opsPtr,
     h.stable.sourcesPtr, h.stable.countPtr, h.stable.spillCount, hc⟩
 
-def RunResult.withCount {initial current : PlannerCallMemory} {s : MachineData} {st : Flat.Status}
+def RunResult.withCount {initial current : PlannerCallMemory} {s : MachineData} {st : Flat.EmissionOutcome}
     (h : RunResult initial current s st) (w : Word) :
     RunResult initial {current with count := w} s st :=
   ⟨h.stable.withCount w, h.attempts, h.model⟩
@@ -70,30 +70,29 @@ theorem AttemptContext.afterEmissionExit {initial current : PlannerCallMemory}
       (emissionGhost current ctx.ok (localEmissionHdr locals h.localLength)) a t u) :
     plannerRunX initial
       (emissionResult current ctx.ok (localEmissionHdr locals h.localLength) a hk) s u := by
-  obtain ⟨ec, hal, _⟩ := ctx.afterEmission hd h hp a hk (runX_to_modelResult hx)
-  have hs : ec.status = .assertionFailed := by
-    have he : 2#8 = code ec.status := hal
-    cases hh : ec.status <;> simp [hh, code, DONE, BLOCKED, ASSERTION_FAILED] at he ⊢
+  obtain ⟨l, _, he, hstatus⟩ := hx
+  obtain ⟨ec, hs, _⟩ := ctx.afterEmissionModel hd h hp a hk l he
+  have hs : ec.status = .assertionExit := hs.trans hstatus
   have ht := ec.terminal (by rw [hs]; decide)
   rw [hs] at ht
   have he := ht.exit (t := u) ec.count
   simpa only [hs, reduceCtorEq, ↓reduceIte] using he
 
 def resolvedNext (pl : Flat.Planner) (take : Bool) (before : Word)
-    (res : Flat.Resolution) (s : Flat.PSt) (us : Nat → Flat.RunU) : Flat.Status × Flat.PSt :=
+    (res : Flat.ResolutionOutcome) (s : Flat.PSt) (us : Nat → Flat.RunU) : Flat.EmissionOutcome × Flat.PSt :=
   match res with
   | .stuck => (.blocked, s)
-  | .assertionFailed => (.assertionFailed, s)
+  | .assertionExit => (.assertionExit, s)
   | .dropped =>
     if Flat.droppedCount pl.sourceSize s.dropped > before then Flat.runLoop pl take s us
-    else (.assertionFailed, s)
+    else (.assertionExit, s)
 
 structure ResolvedContext (initial current : PlannerCallMemory) (s : MachineData)
     (before : Word) where
   prior : PlannerCallMemory
   loop : LoopContext initial prior s
   attempt : Flat.RunU
-  resolution : Flat.Resolution
+  resolution : Flat.ResolutionOutcome
   stable : RunMeta initial current
   count : current.count = initial.count
   model : ∀ us, Flat.runLoop prior.p.fl ((rsi s).setWidth 8 == 1#8) prior.state
@@ -102,7 +101,7 @@ structure ResolvedContext (initial current : PlannerCallMemory) (s : MachineData
 
 def EmittedContext.afterResolve {initial current : PlannerCallMemory} {s : MachineData}
     {M : Flat.Mapping} (h : EmittedContext initial current s M) (hb : h.status = .blocked)
-    (r : Flat.ResolveU) (res : Flat.Resolution) (sp : BitVec 32 → BitVec 8)
+    (r : Flat.ResolveU) (res : Flat.ResolutionOutcome) (sp : BitVec 32 → BitVec 8)
     (d : Vector (BitVec 8) maxStackSize)
     (hq : Flat.resolve current.p.fl current.spills current.dropped M
       h.out.blockedOffset h.out.blockedExcess ⟨h.out.dest, h.out.pos⟩ h.out.size r =
@@ -123,7 +122,9 @@ def EmittedContext.afterResolve {initial current : PlannerCallMemory} {s : Machi
     change Flat.resolve current.p.fl current.state.spills current.state.dropped M
       h.out.blockedOffset h.out.blockedExcess ⟨h.out.dest, h.out.pos⟩ h.out.size r = _ at hq
     rw [hq]
-    cases res <;> rfl
+    cases res with
+    | returned status => cases status <;> rfl
+    | assertionExit => rfl
 
 namespace ResolvedContext
 
@@ -140,7 +141,7 @@ def retry {initial current : PlannerCallMemory} {s : MachineData} {before : Word
 def noProgress {initial current : PlannerCallMemory} {s : MachineData} {before : Word}
     (h : ResolvedContext initial current s before) (hr : h.resolution = .dropped)
     (hp : ¬ Flat.droppedCount current.p.sourceSize current.dropped > before) :
-    RunResult initial current s .assertionFailed where
+    RunResult initial current s .assertionExit where
   stable := h.stable
   attempts := h.loop.plug (prependRun h.attempt (fun _ => emptyRunU))
   model := by
@@ -151,12 +152,14 @@ def noProgress {initial current : PlannerCallMemory} {s : MachineData} {before :
 def terminal {initial current : PlannerCallMemory} {s : MachineData} {before : Word}
     (h : ResolvedContext initial current s before) (hr : h.resolution ≠ .dropped) :
     RunResult initial current s
-      (if h.resolution = .stuck then .blocked else .assertionFailed) where
+      (if h.resolution = .stuck then .blocked else .assertionExit) where
   stable := h.stable
   attempts := h.loop.plug (prependRun h.attempt (fun _ => emptyRunU))
   model := by
     rw [h.loop.model, h.model]
-    cases he : h.resolution <;> simp_all [resolvedNext]
+    cases he : h.resolution with
+    | returned status => cases status <;> simp_all [resolvedNext]
+    | assertionExit => simp_all [resolvedNext]
 
 end ResolvedContext
 end FlatShuffler.Unit.PlannerRunU

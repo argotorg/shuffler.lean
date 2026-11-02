@@ -12,7 +12,7 @@ The flat model of `removeSurplus` (`FlatSurplus.lean`) is an instance of the lis
 `Map.State.removeSurplus` (`MapModel.lean`), for a stack of at most `maxStackSize` slots.
 
 `absOut` reads the list result from a flat result: `.done` has no blocked slot, `.blocked` has
-the members `blockedOffset` and `blockedExcess`, and `.assertionFailed` is the assertion.
+the members `blockedOffset` and `blockedExcess`, and `.assertionExit` is the assertion.
 
 The proof follows the passes of the loop: `scan_abs` (the scan), `equalBelow_abs` (the loop of
 `equalSurplus`), `swapDestinations_abs`, `swapWith_abs` and `pop_abs` (`FlatPopRel.lean`). The
@@ -23,10 +23,10 @@ shows that a shallowest slot with no deepest one is out of swap reach, so the tw
 namespace FlatShuffler.Flat
 
 -- The list result of a flat result of `removeSurplus`.
-def absOut (planned : Map.Mapping) : Status × St → M (Option (Nat × Nat) × Map.State)
+def absOut (planned : Map.Mapping) : EmissionOutcome × St → M (Option (Nat × Nat) × Map.State)
   | (.done, st) => .ok (none, absSt planned st)
   | (.blocked, st) => .ok (some (st.blockedOffset.toNat, st.blockedExcess.toNat), absSt planned st)
-  | (.assertionFailed, _) => .error .assertion
+  | (.assertionExit, _) => .error .assertion
 
 /-! ## Lemmas on the arrays and the words -/
 
@@ -266,29 +266,33 @@ theorem equalBelow_abs (planned : Map.Mapping) (st : St) (h : st.size.toNat ≤ 
 theorem tail_abs (planned : Map.Mapping) (fuel : Nat)
     (ih : ∀ st : St, st.size.toNat ≤ maxStackSize →
       (absSt planned st).surplusLoop fuel = absOut planned (surplusLoop st fuel))
-    (r : Status × St) (hb : r.1 ≠ .blocked) (h : r.2.size.toNat ≤ maxStackSize) :
+    (r : EmissionOutcome × St) (hb : r.1 ≠ .blocked) (h : r.2.size.toNat ≤ maxStackSize) :
     ((absRes planned r).bind Map.State.pop).bind (·.surplusLoop fuel)
       = absOut planned (match (if r.1 ≠ .done then .error r
           else if (pop r.2).1 ≠ .done then .error (pop r.2) else .ok (pop r.2).2
-            : Except (Status × St) St) with
+            : Except (EmissionOutcome × St) St) with
         | .error r => r
         | .ok st => surplusLoop st fuel) := by
   obtain ⟨s, st⟩ := r
   cases s with
-  | blocked => exact absurd rfl hb
-  | assertionFailed => rfl
-  | done =>
-    simp only [absRes, Except.bind, ne_eq, not_true_eq_false, ite_false]
-    rw [pop_abs planned st h]
-    have hp := pop_size st h
-    have hs := pop_status st
-    revert hp hs
-    obtain ⟨s', st'⟩ := pop st
-    intro hp hs
-    cases s' with
-    | blocked => exact absurd rfl hs
-    | assertionFailed => rfl
-    | done => exact ih st' hp
+  | assertionExit => rfl
+  | returned status =>
+    cases status with
+    | blocked => exact absurd rfl hb
+    | done =>
+      simp only [absRes, Except.bind, ne_eq, not_true_eq_false, ite_false]
+      rw [pop_abs planned st h]
+      have hp := pop_size st h
+      have hs := pop_status st
+      revert hp hs
+      obtain ⟨s', st'⟩ := pop st
+      intro hp hs
+      cases s' with
+      | assertionExit => rfl
+      | returned status =>
+        cases status with
+        | blocked => exact absurd rfl hs
+        | done => exact ih st' hp
 
 theorem surplusLoop_abs (planned : Map.Mapping) (fuel : Nat) :
     ∀ st : St, st.size.toNat ≤ maxStackSize →

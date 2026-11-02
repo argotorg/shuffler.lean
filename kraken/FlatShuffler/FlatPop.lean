@@ -24,8 +24,8 @@ namespace FlatShuffler.Flat
 /-! ## `pop` -/
 
 -- `Stack::pop`
-def stackPop (st : St) : Status × St :=
-  if st.size = 0 then (.assertionFailed, st)
+def stackPop (st : St) : ExecutionOutcome Status St :=
+  if st.size = 0 then (.assertionExit, st)
   else (.done, { st with size := st.size - 1, trace := st.trace ++ [Op.pop] })
 
 -- `Mapping::pop(top)`
@@ -34,7 +34,7 @@ def mappingPop (st : St) (top : Word) : St :=
   if destination ≠ NONE then { st with pos := put st.pos destination NONE } else st
 
 -- `Emission::pop`
-def pop (st : St) : Status × St :=
+def pop (st : St) : ExecutionOutcome Status St :=
   let top := st.size - 1
   let r := stackPop st
   if r.1 ≠ .done then r
@@ -82,7 +82,7 @@ def ctorP (data : Vector StackSlot maxStackSize) (m : Word) (target : Vector Sta
 /-! ## `emission_pop` -/
 
 -- The loop of `emission_pop`: at most `count` pops, up to the first that fails.
-def popLoop (st : St) : Nat → Status × St
+def popLoop (st : St) : Nat → ExecutionOutcome Status St
   | 0 => (.done, st)
   | count + 1 =>
     let r := pop st

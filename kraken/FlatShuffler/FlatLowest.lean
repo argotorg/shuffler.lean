@@ -8,7 +8,7 @@ import all FlatShuffler.FlatModel
 /-!
 A model of `Emission::permuteAtLowestHeight` and of the entry `permute_at_lowest_height`
 (`c/shuffler/test_wrappers.cpp`), in the style of `FlatModel.lean`: the statements are in the order of
-the C++, a loop is a recursive function, and a `yulAssert` returns `.assertionFailed`.
+the C++, a loop is a recursive function, and a failed `yulAssert` gives `.assertionExit`.
 
 - `St` has no member for `m_plannedMapping`: it is a reference to a `Mapping` out of the struct.
   The model gets the `m_positionOf` array of the planned mapping (`planned`) as an argument.
@@ -68,11 +68,11 @@ termination_by (sc.parkedCount - i).toNat
 decreasing_by bv_omega
 
 -- `permuteAtLowestHeight`
-def permuteAtLowestHeight (planned : Vector Word maxStackSize) (l : Locals) (st : St) : Status × St :=
+def permuteAtLowestHeight (planned : Vector Word maxStackSize) (l : Locals) (st : St) : ExecutionOutcome Status St :=
   match scan planned st 0 (Scan.init l) with
-  | none => (.assertionFailed, st)
+  | none => (.assertionExit, st)
   | some sc =>
-    if sc.parkedCount ≠ sc.holeCount then (.assertionFailed, st)
+    if sc.parkedCount ≠ sc.holeCount then (.assertionExit, st)
     else permute st (fill sc 0 sc.permutation)
 
 -- The condition of the call of `permute`: if the assertions hold, the permutation below the size
@@ -105,6 +105,6 @@ def permute_at_lowest_height (m n : Word) (data target : Vector StackSlot maxSta
     match r.1 with
     | .done => (.ofNat 64 r.2.trace.length, some { r.2 with blockedOffset := 0, blockedExcess := 0 })
     | .blocked => (.ofNat 64 r.2.trace.length, some r.2)
-    | .assertionFailed => (-2, some r.2)
+    | .assertionExit => (-2, some r.2)
 
 end FlatShuffler.Flat

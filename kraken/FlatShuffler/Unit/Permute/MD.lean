@@ -73,7 +73,7 @@ theorem loop_succ (f : Nat) (st : Flat.St) (top : Word) (p : Vector Word maxStac
 theorem after_cont (f : Nat) (top : Word) (st : Flat.St) (p : Vector Word maxStackSize) :
     after f top (.cont st p) = Flat.permuteLoop f st top p := rfl
 
-theorem after_ret (f : Nat) (top : Word) (r : Flat.Status × Flat.St) :
+theorem after_ret (f : Nat) (top : Word) (r : Flat.EmissionOutcome × Flat.St) :
     after f top (.ret r) = r := rfl
 
 -- `permutation[top] != top`: `exchange` of `permutation[top]`.

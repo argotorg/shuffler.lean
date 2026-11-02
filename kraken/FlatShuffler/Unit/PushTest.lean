@@ -123,7 +123,7 @@ def d : Word := 1
 def x : StackSlot := StackSlot.ofWord lit7
 
 -- `m_positionOf[d] = 0`: the destination has a slot.
-#guard (Flat.push (flat (ghost 0)) x d).1 == .assertionFailed
+#guard (Flat.push (flat (ghost 0)) x d).1 == .assertionExit
 #guard key (Flat.push (flat (ghost 0)) x d).2 == key (Flat.stackPush (flat (ghost 0)) x)
 -- `m_positionOf[d] = NONE`: `bind` of the new slot at index `size` before the push.
 #guard (Flat.push (flat (ghost Flat.NONE)) x d).1 == .done

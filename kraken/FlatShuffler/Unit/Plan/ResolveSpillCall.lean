@@ -29,11 +29,11 @@ theorem Bd.callAdd (hb : Bd P r F s ra lo L.toList t) (hok : r.Ok)
     (hK : ∀ (u : MachineData) (lo' : List Word),
       Bd P { r with spills := (Flat.spillAdd r.spills (Flat.get r.p.fl.source off)).2 }
         F s ra lo' L.toList u →
-      al u = FlatShuffler.Unit.code (Flat.spillAdd r.spills (Flat.get r.p.fl.source off)).1 →
+      some (al u) = FlatShuffler.Unit.code (Flat.spillAdd r.spills (Flat.get r.p.fl.source off)).1 →
       Sep.mod.Agree t u → K u)
     (hX : ∀ (u : MachineData) (lo' : List Word), lo'.length = 17 →
       (Stk (rsp s) (fr s lo' L.toList) ra.toBitVec ∗ RView P r ∗ F).get u.dmem →
-      Flat.spillAdd r.spills (Flat.get r.p.fl.source off) = (.assertionFailed, r.spills) →
+      Flat.spillAdd r.spills (Flat.get r.p.fl.source off) = (.assertionExit, r.spills) →
       u.regs.get64 .rdi = 1#64 → E u) :
     ∃ S a CF, VPre AddView AddG.Ok S a CF addA 2 t ∧
       (∀ u, VPost AddView AddG.Ok S CF 2 (fun a' u => addQ a a' t u) t u →
@@ -119,11 +119,11 @@ theorem Core.callAdd (h : Core P r F s ra w lo L t) (hok : r.Ok)
     (hK : ∀ u lo',
       Core P r F s ra { w with spills :=
         (Flat.spillAdd w.spills (Flat.get r.p.fl.source off)).2 } lo' L u →
-      al u = FlatShuffler.Unit.code (Flat.spillAdd w.spills (Flat.get r.p.fl.source off)).1 →
+      some (al u) = FlatShuffler.Unit.code (Flat.spillAdd w.spills (Flat.get r.p.fl.source off)).1 →
       u.regs.r15.toBitVec = t.regs.r15.toBitVec → K u)
     (hX : ∀ u lo', lo'.length = 17 →
       (Stk (rsp s) (fr s lo' L.toList) ra.toBitVec ∗ RView P (w.ghost r) ∗ F).get u.dmem →
-      Flat.spillAdd w.spills (Flat.get r.p.fl.source off) = (.assertionFailed, w.spills) →
+      Flat.spillAdd w.spills (Flat.get r.p.fl.source off) = (.assertionExit, w.spills) →
       u.regs.get64 .rdi = 1#64 → E u) :
     ∃ S a CF, VPre AddView AddG.Ok S a CF addA 2 c ∧
       (∀ u, VPost AddView AddG.Ok S CF 2 (fun a' u => addQ a a' c u) c u →

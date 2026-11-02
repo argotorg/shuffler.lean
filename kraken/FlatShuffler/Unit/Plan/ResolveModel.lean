@@ -188,7 +188,7 @@ theorem pass_stuck (h : k < excess) (hb : (picked p M cand count s).1 = Flat.NON
 theorem pass_fail (h : k < excess) (hb : (picked p M cand count s).1 ≠ Flat.NONE)
     (hc : (picked p M cand count s).2 = Flat.SPILL)
     (ha : (Flat.spillAdd s.spills (Flat.get p.source (picked p M cand count s).1)).1 ≠ .done) :
-    Flat.passFrom p M cand count excess k s = (.assertionFailed, s) := by
+    Flat.passFrom p M cand count excess k s = (.assertionExit, s) := by
   rw [Flat.passFrom, dite_eq_left h]
   simp only [picked] at hb hc ha
   simp [hb, hc, ha]
@@ -228,7 +228,7 @@ variable {p : Flat.Planner} {sp : BitVec 32 → BitVec 8} {M current : Flat.Mapp
 
 theorem resolve_failed_candidates
     (h : Flat.candidatesFrom M current size (blocked + 1) u.candidates 0 = none) :
-    Flat.resolve p sp dropped M blocked excess current size u = (.assertionFailed, sp, dropped) := by
+    Flat.resolve p sp dropped M blocked excess current size u = (.assertionExit, sp, dropped) := by
   rw [Flat.resolve, h]
 
 theorem resolve_zero_excess
@@ -242,17 +242,25 @@ theorem resolve_no_candidates
     (he : 0#64 < excess) :
     Flat.resolve p sp dropped M blocked excess current size u = (.stuck, sp, dropped) := by
   simp only [Flat.resolve, h]
-  exact congrArg (fun q : Flat.Resolution × Flat.RState => (q.1, q.2.spills, q.2.dropped))
+  exact congrArg (fun q : Flat.ResolutionOutcome × Flat.RState => (q.1, q.2.spills, q.2.dropped))
     (pass_empty (k := 0) he)
 end
 
-def code : Flat.Resolution → BitVec 8
-  | .dropped => 0
-  | .stuck => 1
-  | .assertionFailed => 2
+def code : Flat.ResolutionOutcome → Option (BitVec 8)
+  | .dropped => some 0
+  | .stuck => some 1
+  | .assertionExit => none
 
 theorem code_injective : Function.Injective code := by
   intro a b h
-  cases a <;> cases b <;> first | rfl | contradiction
+  cases a with
+  | returned status =>
+    cases status <;> cases b with
+    | returned status => cases status <;> simp_all [code]
+    | assertionExit => simp_all [code]
+  | assertionExit =>
+    cases b with
+    | returned status => cases status <;> simp_all [code]
+    | assertionExit => rfl
 
 end FlatShuffler.Unit.ResolveU

@@ -135,7 +135,7 @@ structure StateRel (m : Word) (a b : RState) : Prop where
   dropped : a.dropped = b.dropped
   droppedNow : SameBelow m a.droppedNow b.droppedNow
 
-def PassRel (m : Word) (a b : Resolution × RState) : Prop :=
+def PassRel (m : Word) (a b : ResolutionOutcome × RState) : Prop :=
   a.1 = b.1 ∧ StateRel m a.2 b.2
 
 theorem passFrom_congr (p : Planner) (M : Mapping) (cand cand' : Vector Word maxStackSize)

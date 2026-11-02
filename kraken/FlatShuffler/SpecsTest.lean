@@ -769,7 +769,7 @@ example (s : MachineData) (ha : s.regs.get64 .rax = 0x100#64)
   kvcgen64
   finish
 
--- `AssertionFailed`
+-- Byte 2 selects -2 in this instruction fragment.
 example (s : MachineData) (ha : s.regs.get64 .rax = 0x102#64)
     (h : Mem.loadInt s.dmem (s.regs.get64 .rsp + 48#64) 8 = some 7) :
     ⦃ fun t => t = s ⦄ parse("cmpb $2, %al

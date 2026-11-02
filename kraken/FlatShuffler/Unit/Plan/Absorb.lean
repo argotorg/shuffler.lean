@@ -30,11 +30,11 @@ open FlatShuffler.Sep
 def absorbA (_ : BG) (_ : MachineData) : Prop := True
 
 def absorbQ (b b' : BG) (_ t : MachineData) : Prop :=
-  al t = code (Flat.absorbSurplus b.fl b.M).1
+  some (al t) = code (Flat.absorbSurplus b.fl b.M).1
     ∧ b' = { b with M := (Flat.absorbSurplus b.fl b.M).2 }
 
 def absorbX (b b' : BG) (_s _t : MachineData) : Prop :=
-  (Flat.absorbSurplus b.fl b.M).1 = .assertionFailed ∧
+  (Flat.absorbSurplus b.fl b.M).1 = .assertionExit ∧
     b' = { b with M := (Flat.absorbSurplus b.fl b.M).2 }
 
 namespace AbsorbU
@@ -197,7 +197,7 @@ def Inv (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) (fr₀
     else if l = ".LB.MappingBuilder.absorbSurplus.6" then ∃ M w, LI B b F s ra M w t
       ∧ Flat.absorbSurplus b.fl b.M = (.done, M)
     else if l = ".LB.MappingBuilder.absorbSurplus.7" then ∃ M w, LI B b F s ra M w t
-      ∧ al t = code (Flat.absorbSurplus b.fl b.M).1 ∧ (Flat.absorbSurplus b.fl b.M).2 = M
+      ∧ some (al t) = code (Flat.absorbSurplus b.fl b.M).1 ∧ (Flat.absorbSurplus b.fl b.M).2 = M
     else if l = ".LB.MappingBuilder.absorbSurplus.8" then Kg (BView B b ∗ F) s ra fr₀ t
       ∧ Flat.absorbSurplus b.fl b.M = (.done, b.M)
     else False
@@ -681,7 +681,7 @@ theorem b_3 (hout : ∀ l ∈ Program.labels absorbSurplusAsm, label l ≠ label
     case normal =>
       intro t2 a' lo' w' hkb hl hQ hok' hag
       obtain ⟨w2, hli2, hbx⟩ := LI.after hag (hli.next rfl rfl rfl rfl rfl rfl rfl) hkb hl hQ.2
-      have hal : al t2 = code (Flat.mbMap b.fl M t.regs.rsi.toBitVec t.regs.rbx.toBitVec).1 := hQ.1
+      have hal : some (al t2) = code (Flat.mbMap b.fl M t.regs.rsi.toBitVec t.regs.rbx.toBitVec).1 := hQ.1
       clear hQ hkb
       kvcgen64
       all_goals try symexec_norm
@@ -690,7 +690,7 @@ theorem b_3 (hout : ∀ l ∈ Program.labels absorbSurplusAsm, label l ≠ label
         have hd := code_ne_zero fun e =>
           al_ne (by first
             | with_reducible assumption
-            | (rw [Bool.not_eq_true']; with_reducible assumption)) (hal.trans e)
+            | (rw [Bool.not_eq_true']; with_reducible assumption)) (Option.some.inj (hal.trans e))
         have hf : Flat.absorbSurplus b.fl b.M = Flat.mbMap b.fl M t.regs.rsi.toBitVec t.regs.rbx.toBitVec := by
           rw [hsi] at hd ⊢
           exact hrest.symm.trans (from_fail (BitVec.lt_def.2 hlt) hw hp hc hd)
@@ -701,9 +701,9 @@ theorem b_3 (hout : ∀ l ∈ Program.labels absorbSurplusAsm, label l ≠ label
         · left; ab_var; omega
       | other =>
         have hd := code_eq_zero (hal.symm.trans
-          (al_zero (by first
+          (congrArg some (al_zero (by first
             | with_reducible assumption
-            | (rw [Bool.not_eq_false']; with_reducible assumption))))
+            | (rw [Bool.not_eq_false']; with_reducible assumption)))))
         have hdn : Flat.absorbFrom b.fl (Flat.mbMap b.fl M t.regs.rsi.toBitVec t.regs.rbx.toBitVec).2
             (t.regs.rbx.toBitVec + 1#64) = Flat.absorbSurplus b.fl b.M := by
           rw [hsi] at hd ⊢
@@ -721,10 +721,10 @@ theorem b_3 (hout : ∀ l ∈ Program.labels absorbSurplusAsm, label l ≠ label
       obtain ⟨ha', hf⟩ := hrel
       subst a'
       change Flat.mbMap b.fl M t.regs.rsi.toBitVec t.regs.rbx.toBitVec =
-        (.assertionFailed, M) at hf
+        (.assertionExit, M) at hf
       have hd : (Flat.mbMap b.fl M t.regs.rsi.toBitVec t.regs.rbx.toBitVec).1 ≠ .done := by
         rw [hf]
-        change Flat.Status.assertionFailed ≠ Flat.Status.done
+        change (Flat.ExecutionControl.assertionExit : Flat.EmissionOutcome) ≠ .done
         decide
       have hm : Flat.absorbSurplus b.fl b.M =
           Flat.mbMap b.fl M t.regs.rsi.toBitVec t.regs.rbx.toBitVec := by

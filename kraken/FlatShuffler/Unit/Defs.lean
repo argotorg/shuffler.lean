@@ -22,9 +22,8 @@ state with a ghost `g'` that satisfies `Q g g' s t` (`Sep.Post`). The callers us
 theorems through `Sep.spec_of_body`.
 
 For status-returning methods that write the struct, the normal result uses
-`NormalResult f`. It requires the state and status comparison in `Res f` and
-excludes assertion failure. The return byte is 0 for Done or 1 for Blocked.
-`Res f` alone is a model relation; it can also describe a failed assertion.
+`NormalResult f`, which is `Res f`. The return byte is 0 for Done or 1 for Blocked.
+An assertion exit cannot satisfy this contract.
 The native assertion outcome uses a separate exit contract, defined in `ExitDefs.lean`.
 
 `flat g` reads only the low 6 bytes of each slot word (`StackSlot.ofWord`), because the C++
@@ -85,28 +84,69 @@ theorem Keep.ok {g g' : G} (hk : Keep g g') (h : g.Ok)
     rw [hk.spl, e]
     exact h.spl i (hk.tgt ▸ hi) k hkn j hj (hk.splp ▸ hk.tgtp ▸ ha)
 
--- The byte `al` of a `Status`.
-def code : Flat.Status → BitVec 8
+-- Only normal C++ statuses have a return byte.
+def returnCode : Flat.Status → BitVec 8
   | .done => DONE
   | .blocked => BLOCKED
-  | .assertionFailed => ASSERTION_FAILED
 
--- The result of a function that writes the struct: the flat model function `f`.
-def Res (f : Flat.St → Flat.Status × Flat.St) (g g' : G) (t : MachineData) : Prop :=
-  Keep g g' ∧ flat g' = (f (flat g)).2 ∧ al t = code (f (flat g)).1
+/-- An assertion exit has no return byte. -/
+def code : Flat.EmissionOutcome → Option (BitVec 8)
+  | .returned status => some (returnCode status)
+  | .assertionExit => none
 
-/-- Compare the state and status with the flat model, and exclude assertion failure on return. -/
-def NormalResult (f : Flat.St → Flat.Status × Flat.St) (g g' : G) (t : MachineData) : Prop :=
-  Res f g g' t ∧ al t ≠ ASSERTION_FAILED
+@[simp] theorem returnCode_done : returnCode .done = DONE := rfl
+@[simp] theorem returnCode_blocked : returnCode .blocked = BLOCKED := rfl
+@[simp] theorem code_done : code .done = some DONE := rfl
+@[simp] theorem code_blocked : code .blocked = some BLOCKED := rfl
+@[simp] theorem code_assertionExit : code .assertionExit = none := rfl
+
+@[simp] theorem code_eq_none (outcome : Flat.EmissionOutcome) :
+    code outcome = none ↔ outcome = .assertionExit := by
+  cases outcome <;> simp [code]
+
+theorem code_eq_done (outcome : Flat.EmissionOutcome) :
+    code outcome = some DONE ↔ outcome = .done := by
+  cases outcome with
+  | assertionExit => simp [code]
+  | returned status => cases status <;> simp [code, returnCode, DONE, BLOCKED]
+
+theorem code_eq_blocked (outcome : Flat.EmissionOutcome) :
+    code outcome = some BLOCKED ↔ outcome = .blocked := by
+  cases outcome with
+  | assertionExit => simp [code]
+  | returned status => cases status <;> simp [code, returnCode, DONE, BLOCKED]
+
+-- Compare the model's normal return and final state with the machine.
+def Res (f : Flat.St → Flat.ExecutionOutcome Flat.Status Flat.St)
+    (g g' : G) (t : MachineData) : Prop :=
+  Keep g g' ∧ flat g' = (f (flat g)).2 ∧ some (al t) = code (f (flat g)).1
+
+abbrev NormalResult := Res
+
+theorem NormalResult.not_assertionExit
+    {f : Flat.St → Flat.ExecutionOutcome Flat.Status Flat.St} {g g' : G} {t : MachineData}
+    (result : NormalResult f g g' t) : (f (flat g)).1 ≠ .assertionExit := by
+  intro exits
+  have returnByte := result.2.2
+  simp [exits] at returnByte
+
+theorem NormalResult.returnByte
+    {f : Flat.St → Flat.ExecutionOutcome Flat.Status Flat.St} {g g' : G} {t : MachineData}
+    (result : NormalResult f g g' t) : al t = DONE ∨ al t = BLOCKED := by
+  have returnByte := result.2.2
+  cases outcome : (f (flat g)).1 with
+  | assertionExit => simp [outcome] at returnByte
+  | returned status =>
+    cases status <;> simp_all [code, returnCode, DONE, BLOCKED]
 
 theorem NormalResult.of_returnRegister_eq
-    {f : Flat.St → Flat.Status × Flat.St} {g g' : G} {before after : MachineData}
+    {f : Flat.St → Flat.ExecutionOutcome Flat.Status Flat.St} {g g' : G}
+    {before after : MachineData}
     (result : NormalResult f g g' before) (sameReturnRegister : rax after = rax before) :
     NormalResult f g g' after := by
   have sameReturnByte : al after = al before :=
     congrArg (fun value : Word => value.setWidth 8) sameReturnRegister
-  exact ⟨⟨result.1.1, result.1.2.1, sameReturnByte.trans result.1.2.2⟩,
-    fun failed => result.2 (sameReturnByte.symm.trans failed)⟩
+  exact ⟨result.1, result.2.1, (congrArg some sameReturnByte).trans result.2.2⟩
 
 -- The destination of each slot is none or a target offset: `swapDestinations` writes
 -- `m_positionOf` at these offsets.

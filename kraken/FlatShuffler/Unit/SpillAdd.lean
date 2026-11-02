@@ -12,7 +12,7 @@ import all FlatShuffler.Unit.IsSpilled
 
 `Names.spillSetAdd` in `build/kraken/c/build_bottom_up.S`: no frame, no call. It tests the kind byte and the opcode byte of
 the slot (as `isSpilled`), reads the byte `m_spilled[payload]` and, if it is 0, stores 1 to it.
-`al` is the `Status`: 0 (`DONE`) or 2 (`ASSERTION_FAILED`).
+`al` is 0 on normal return. A failed assertion calls `exit(1)`.
 -/
 
 open Std.WP Lean.Order
@@ -45,7 +45,7 @@ theorem isVariable_of {x : StackSlot} (hk : (!(x.kind == Value)) = false)
 -- The jumps of `jne` (not a value) or of `je` (a literal) to `.LB.SpillSet.add.1`.
 theorem add_not_var {f : BitVec 32 → BitVec 8} {x : StackSlot}
     (h : (!(x.kind == Value)) = true ∨ (x.valueOpcode == Const) = true) :
-    Flat.spillAdd f x = (.assertionFailed, f) := by
+    Flat.spillAdd f x = (.assertionExit, f) := by
   unfold Flat.spillAdd Flat.isVariable isLiteralValue
   rcases h with h | h <;> simp_all
 
@@ -53,7 +53,7 @@ theorem add_not_var {f : BitVec 32 → BitVec 8} {x : StackSlot}
 theorem add_spilled {f : BitVec 32 → BitVec 8} {x : StackSlot} (hk : (!(x.kind == Value)) = false)
     (ho : (x.valueOpcode == Const) = false)
     (hb : (!(f x.payload &&& f x.payload == BitVec.zero 8)) = true) :
-    Flat.spillAdd f x = (.assertionFailed, f) := by
+    Flat.spillAdd f x = (.assertionExit, f) := by
   rw [BitVec.and_self] at hb
   have hv := isVariable_of hk ho
   simp only [Flat.spillAdd, hv, Bool.not_true, Bool.false_eq_true, ↓reduceIte]
@@ -139,11 +139,11 @@ theorem kg_store (h : Kg (Pm p S f n F) s ra [x, y] t) (hn : n ≤ 2 ^ 32) {q : 
 
 -- The postcondition at `ret`.
 theorem post {f' : BitVec 32 → BitVec 8} (h : Kg (Pm p S f' n F) s ra [x, y] t)
-    {st : Flat.Status}
-    (hf : Flat.spillAdd f (StackSlot.ofWord (rsi s)) = (st, f')) (hal : al t = code st) :
+    {st : Flat.EmissionOutcome}
+    (hf : Flat.spillAdd f (StackSlot.ofWord (rsi s)) = (st, f')) (hal : some (al t) = code st) :
     ∀ t', t'.dmem = t.dmem → rax t' = rax t → AddPost p S f n F s t' := by
   intro t' hm hax
-  refine ⟨by rw [hf]; exact (congrArg (BitVec.setWidth 8) hax).trans hal, x, y, ra.toBitVec, ?_⟩
+  refine ⟨by rw [hf]; exact (congrArg (fun value => some (BitVec.setWidth 8 value)) hax).trans hal, x, y, ra.toBitVec, ?_⟩
   rw [hf, hm]
   have e : Stk (rsp s) [x, y] ra.toBitVec ∗ Pm p S f' n F
       = Wd p S ∗ Spl S f' (List.range n) ∗ Stk (rsp s) [x, y] ra.toBitVec ∗ F := by
@@ -173,9 +173,9 @@ theorem spillSetAdd_unit [Host] [FunDecls]
       | .label l, t =>
         if l = Names.spillSetAdd then t = s.pushRa ra
         else if l = ".LB.SpillSet.add.0" then Kg (Pm p S f n F) s ra [x, y] (unpad t)
-          ∧ Flat.spillAdd f (StackSlot.ofWord (rsi s)) = (.assertionFailed, f)
+          ∧ Flat.spillAdd f (StackSlot.ofWord (rsi s)) = (.assertionExit, f)
         else if l = ".LB.SpillSet.add.1" then Kg (Pm p S f n F) s ra [x, y] (unpad t)
-          ∧ Flat.spillAdd f (StackSlot.ofWord (rsi s)) = (.assertionFailed, f)
+          ∧ Flat.spillAdd f (StackSlot.ofWord (rsi s)) = (.assertionExit, f)
         else False
       | .exit, _ => False)
     (fun _ _ => 0) ?_ rfl
@@ -199,7 +199,7 @@ theorem spillSetAdd_unit [Host] [FunDecls]
     vc_by_shape
     | closed => decide
     | goto ".LB.SpillSet.add.0" =>
-      have hf : Flat.spillAdd f (StackSlot.ofWord (rsi s)) = (.assertionFailed, f) :=
+      have hf : Flat.spillAdd f (StackSlot.ofWord (rsi s)) = (.assertionExit, f) :=
         add_not_var (by first | exact Or.inl ‹_› | exact Or.inr ‹_›)
       cfg_goto
       · exact Kg.padded_stack ⟨hk0.mem, by simp [unpad, MachineData.pushRa], rfl, rfl,

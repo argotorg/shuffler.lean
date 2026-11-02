@@ -59,7 +59,7 @@ theorem b_24 [Host] [FunDecls] (S g p0 F s ra) (_hpre : Sep.Pre S g (permW s ∗
     · exact Fm.stack (hF.step h2 rfl)
     · simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
       refine ⟨_, L, hF.step h2 rfl, ⟨hok.len, hok.n, hok.xs, hok.xo, hok.nops, hok.spl⟩,
-        ⟨Keep.trans hk ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, ?_, ?_⟩, by change 1#8 ≠ 2#8; decide⟩
+        ⟨Keep.trans hk ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, ?_, ?_⟩⟩
       · dsimp only; rw [hp, hr]; rfl
       · dsimp only; rw [hp, hr]; rfl
     · pm_dec

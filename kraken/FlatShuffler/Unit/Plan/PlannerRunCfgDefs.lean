@@ -29,7 +29,7 @@ def AttemptPhase (initial : PlannerCallMemory) (s : MachineData)
 def EmittedPhase (initial : PlannerCallMemory) (s : MachineData)
     (phase : PlannerCallMemory → Flat.Mapping → MachineData → Prop) (t : MachineData) : Prop :=
   ∃ current M, ∃ ctx : EmittedContext initial current s M,
-    al t = code ctx.status ∧ ctx.status ≠ .blocked ∧ ctx.status ≠ .assertionFailed ∧
+    some (al t) = code ctx.status ∧ ctx.status ≠ .blocked ∧ ctx.status ≠ .assertionExit ∧
       phase current M t
 
 def RunReturn (P : Addr) (initial : PlannerCallMemory) (F : MProp 64) (s : MachineData)

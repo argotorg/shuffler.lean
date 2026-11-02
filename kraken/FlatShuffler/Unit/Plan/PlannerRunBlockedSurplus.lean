@@ -55,7 +55,7 @@ theorem surplus_action_not_blocked (st : Flat.St) (sh dp : Word) :
     · simp
     · exact Flat.swapWith_status _ _
 
-theorem surplus_tail_not_blocked {r : Flat.Status × Flat.St} {out : Flat.St}
+theorem surplus_tail_not_blocked {r : Flat.EmissionOutcome × Flat.St} {out : Flat.St}
     (hn : r.1 ≠ .blocked)
     (he : (if r.1 ≠ .done then Except.error r else
       if (Flat.pop r.2).1 ≠ .done then .error (Flat.pop r.2) else .ok (Flat.pop r.2).2) =

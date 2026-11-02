@@ -111,11 +111,11 @@ only the failure outcome; its error value and final high-level state are not com
 
 public def PlannerResultMatchesModel (input : PlannerInput)
     (execution : PlannerExecutionResult) : Prop :=
-  let (status, finalState) := execution
+  let (controlOutcome, finalState) := execution
   match Shuffler.Planner.run input.sourceStack input.targetStack
       (input.spillsFromBytes input.initialState.spills) input.planner.allowed
       (if input.takeWildcardSlots then .Take else .Leave) with
-  | .error _ => status = .assertionFailed
+  | .error _ => controlOutcome = .assertionExit
   | .ok modelResult =>
     modelResult.state.spills = input.spillsFromBytes finalState.spills ∧
     modelResult.state.spillingAllowed = input.planner.allowed ∧
@@ -124,9 +124,9 @@ public def PlannerResultMatchesModel (input : PlannerInput)
         (FlatShuffler.Flat.get finalState.dropped (.ofNat 64 position.val)).toFin) ∧
     finalState.saw = modelResult.sawWildcardCopy ∧
     match modelResult.result with
-    | none => status = .blocked
+    | none => controlOutcome = .returned .blocked
     | some plan =>
-      status = .done ∧
+      controlOutcome = .returned .done ∧
       (finalState.data.toList.take plan.stack.length).map decodeStackSlot = plan.stack ∧
       finalState.trace = (traceOperations plan.trace).map encodeTraceOperation ∧
       ∀ targetPosition : Fin input.targetStack.length,
@@ -139,8 +139,8 @@ Target wildcards accept any value. Loads use the final spill set; this does not
 prove that spill memory contains those values or that EVM execution is correct. -/
 public def PlannerReturnsCorrectPlanOrBlocked (input : PlannerInput)
     (execution : PlannerExecutionResult) : Prop :=
-  execution.1 = .blocked ∨
-    (execution.1 = .done ∧ ∃ stack : Stack,
+  execution.1 = .returned .blocked ∨
+    (execution.1 = .returned .done ∧ ∃ stack : Stack,
       StackMatches stack input.targetStack ∧
       ∃ trace : Trace (input.spillsFromBytes execution.2.spills) input.sourceStack stack,
         (execution.2.data.toList.take input.targetStack.length).map decodeStackSlot = stack ∧
@@ -194,7 +194,7 @@ private theorem resultComparison_iff_bridgeRelation (input : PlannerInput)
           (pSpills input.sourceSlots input.planner.targetSize.toNat input.planner.target
             input.initialState.spills)
           input.planner.allowed (if input.takeWildcardSlots then .Take else .Leave)) := by
-  rcases execution with ⟨status, finalState⟩
+  rcases execution with ⟨controlOutcome, finalState⟩
   simp only [PlannerResultMatchesModel, PlannerInput.sourceStack, PlannerInput.targetStack,
     PlannerInput.spillsFromBytes, PlannerInput.sourceSlots, PlannerInput.targetSlots,
     RunR, SRpl, DnR, srcOf, pSpills, FlatShuffler.Flat.listEnv,
@@ -240,10 +240,10 @@ public theorem planner_model_returns_correct_plan_or_blocked (input : PlannerInp
     input.planner.allowed (if input.takeWildcardSlots then .Take else .Leave)
     validInput.2.1 validInput.2.2
   intro execution comparisonResult
-  rcases execution with ⟨status, finalState⟩
+  rcases execution with ⟨controlOutcome, finalState⟩
   simp only [PlannerResultMatchesModel, modelReturns] at comparisonResult
   obtain ⟨spillsMatch, _, _, _, outcome⟩ := comparisonResult
-  change status = .blocked ∨ _
+  change controlOutcome = .returned .blocked ∨ _
   cases planEquation : modelResult.result with
   | none =>
     simp only [planEquation] at outcome
@@ -258,35 +258,35 @@ public theorem planner_model_returns_correct_plan_or_blocked (input : PlannerInp
 
 private theorem valid_model_result_excludes_assertion (input : PlannerInput)
     (validInput : PlannerInputsValidForNormalReturn input) :
-    PlannerModelPostcondition (fun _ execution => execution.1 ≠ .assertionFailed) input := by
+    PlannerModelPostcondition (fun _ execution => execution.1 ≠ .assertionExit) input := by
   rcases validInput with ⟨_, availableTargets, enoughReturnLabels⟩
   obtain ⟨modelResult, modelReturns, _⟩ := planner_model_correct
     input.sourceStack input.targetStack (input.spillsFromBytes input.initialState.spills)
     input.planner.allowed (if input.takeWildcardSlots then .Take else .Leave)
     availableTargets enoughReturnLabels
   intro execution comparisonResult
-  rcases execution with ⟨status, finalState⟩
+  rcases execution with ⟨controlOutcome, finalState⟩
   simp only [PlannerResultMatchesModel, modelReturns] at comparisonResult
   obtain ⟨_, _, _, _, outcome⟩ := comparisonResult
   cases planEquation : modelResult.result with
   | none =>
     simp only [planEquation] at outcome
     rw [outcome]
-    change FlatShuffler.Flat.Status.blocked ≠ .assertionFailed
+    change FlatShuffler.Flat.ExecutionControl.blocked ≠ .assertionExit
     decide
   | some plan =>
     simp only [planEquation] at outcome
     rw [outcome.1]
-    change FlatShuffler.Flat.Status.done ≠ .assertionFailed
+    change FlatShuffler.Flat.ExecutionControl.done ≠ .assertionExit
     decide
 
 /-- With valid input, the flat execution returns Done or Blocked for every local-array value. -/
 public theorem planner_flat_execution_does_not_assert
     (input : PlannerInput) (initialLocalValues : Nat → FlatShuffler.Flat.RunU)
     (validInput : PlannerInputsValidForNormalReturn input) :
-    (input.execute initialLocalValues).1 ≠ .assertionFailed :=
+    (input.execute initialLocalValues).1 ≠ .assertionExit :=
   planner_flat_execution_transfers_model_postcondition input initialLocalValues validInput.1
-    (fun _ execution => execution.1 ≠ .assertionFailed)
+    (fun _ execution => execution.1 ≠ .assertionExit)
     (valid_model_result_excludes_assertion input validInput)
 
 end ShufflerVerification

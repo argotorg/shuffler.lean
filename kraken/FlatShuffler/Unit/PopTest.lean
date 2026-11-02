@@ -47,10 +47,10 @@ def st (size : Word) (dests pos : List Word) : Flat.St :=
 -- The members that `pop` reads or writes, as lists. (The tests use `==`: `DecidableEq` of the
 -- tuple is above `synthInstance.maxSize` with the imports of `Unit/Pop.lean`.)
 def view (s : Flat.St) := (s.size, s.trace, s.dest.toList, s.pos.toList, s.pend, s.data.toList)
-def viewR (r : Flat.Status × Flat.St) := (r.1, view r.2)
+def viewR (r : Flat.EmissionOutcome × Flat.St) := (r.1, view r.2)
 
 -- `pop_zero`: the assertion, and no change.
-#guard viewR (Flat.pop (st 0 [] [Flat.NONE])) == (.assertionFailed, view (st 0 [] [Flat.NONE]))
+#guard viewR (Flat.pop (st 0 [] [Flat.NONE])) == (.assertionExit, view (st 0 [] [Flat.NONE]))
 -- `pop_none`: the top has no destination.
 #guard viewR (Flat.pop (st 2 [1, Flat.NONE] [Flat.NONE, 0]))
   == (.done, view { st 2 [1, Flat.NONE] [Flat.NONE, 0] with size := 1, trace := [Op.pop] })
@@ -65,6 +65,6 @@ def viewR (r : Flat.Status × Flat.St) := (r.1, view r.2)
 -- The largest size: the top is at `maxStackSize - 1`.
 #guard (Flat.pop (st (.ofNat 64 maxStackSize) [] [])).2.size = .ofNat 64 (maxStackSize - 1)
 
-example : Flat.pop (st 0 [] []) = (.assertionFailed, st 0 [] []) := pop_zero _ rfl
+example : Flat.pop (st 0 [] []) = (.assertionExit, st 0 [] []) := pop_zero _ rfl
 
 end FlatShuffler.Unit.PopTest

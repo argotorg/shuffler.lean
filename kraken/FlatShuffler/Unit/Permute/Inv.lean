@@ -69,7 +69,7 @@ def nv (st : Flat.St) (l : Word) (hl : l < st.size) (σ : StackSlot) (dB : Vecto
   else none
 
 -- The rest of the loop of `permute` after an iteration.
-def after (f : Nat) (top : Word) : Flat.PNext → Flat.Status × Flat.St
+def after (f : Nat) (top : Word) : Flat.PNext → Flat.EmissionOutcome × Flat.St
   | .ret r => r
   | .cont X p => Flat.permuteLoop f X top p
 
@@ -192,7 +192,7 @@ def I7 (t : MachineData) : Prop :=
 
 -- `.LB.Emission.permute.5`: `regroup` fails.
 def I5 (t : MachineData) : Prop :=
-  ∃ L, Fm S g F s ra L t ∧ Flat.permute (flat g) p0 = (.assertionFailed, flat g)
+  ∃ L, Fm S g F s ra L t ∧ Flat.permute (flat g) p0 = (.assertionExit, flat g)
 
 -- `.LB.Emission.permute.12`: `regroup` gives `p`; `rcx` is `n`.
 def I13 (t : MachineData) : Prop :=
