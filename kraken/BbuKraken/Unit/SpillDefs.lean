@@ -4,6 +4,8 @@ public import BbuKraken.Unit.Defs
 import all BbuKraken.Unit.Defs
 public import BbuKraken.FlatSpill
 import all BbuKraken.FlatSpill
+public import BbuKraken.Sep.ExitContract
+import all BbuKraken.Sep.ExitContract
 
 @[expose] public section
 
@@ -78,6 +80,19 @@ theorem Kg.retAddr (h : Kg P s ra fr t) : t.retAddr = some ra := by
 
 theorem Kg.stack (h : Kg P s ra fr t) : t.StackAtOrBelow (s.pushRa ra) :=
   MachineData.stackAtOrBelow_of_toNat_lt (by simp [h.sp])
+
+-- Undo the alignment word for a leaf function that uses `subq $8, %rsp`.
+def unpad (t : MachineData) : MachineData :=
+  { t with regs := t.regs.set64 .rsp (t.regs.get64 .rsp + 8#64) }
+
+theorem Kg.padded_stack (h : Kg P s ra fr (unpad t)) :
+    t.StackAtOrBelow (s.pushRa ra) := by
+  apply MachineData.stackAtOrBelow_of_toNat_lt
+  have hs : t.regs.get64 .rsp + 8#64 = rsp s - 8#64 := h.sp64
+  simp only [MachineData.pushRa, Reg64s.get64_set64, reduceIte]
+  have he : rsp s - 8#64 - t.regs.get64 .rsp = 8#64 := by bv_omega
+  rw [he]
+  decide
 
 -- `ret` from a body in state `t`: the postcondition holds for each state with the memory and
 -- `rax` of `t`.
@@ -178,20 +193,26 @@ structure AddPre (p S : Addr) (f : BitVec 32 → BitVec 8) (n : Nat) (F : MProp 
   n_le : n ≤ 2 ^ 32
   lt : Flat.isVariable (StackSlot.ofWord (rsi s)) = true →
     (StackSlot.ofWord (rsi s)).payload.toNat < n
-  mem : ∃ v, (Wd p S ∗ Spl S f (List.range n) ∗ Stk (rsp s) [] v ∗ F).get s.dmem
+  mem : ∃ x y v, (Wd p S ∗ Spl S f (List.range n) ∗ Stk (rsp s) [x, y] v ∗ F).get s.dmem
 
 -- `al` is the `Status` of `Flat.spillAdd`, and the bytes are its bytes.
 def AddPost (p S : Addr) (f : BitVec 32 → BitVec 8) (n : Nat) (F : MProp 64)
     (s t : MachineData) : Prop :=
   al t = code (Flat.spillAdd f (StackSlot.ofWord (rsi s))).1
-    ∧ ∃ v, (Wd p S ∗ Spl S (Flat.spillAdd f (StackSlot.ofWord (rsi s))).2 (List.range n)
-      ∗ Stk (rsp s) [] v ∗ F).get t.dmem
+    ∧ ∃ x y v, (Wd p S ∗ Spl S (Flat.spillAdd f (StackSlot.ofWord (rsi s))).2 (List.range n)
+      ∗ Stk (rsp s) [x, y] v ∗ F).get t.dmem
+
+def AddExit (p S : Addr) (f : BitVec 32 → BitVec 8) (n : Nat) (F : MProp 64)
+    (s t : MachineData) : Prop :=
+  Flat.spillAdd f (StackSlot.ofWord (rsi s)) = (.assertionFailed, f)
+    ∧ ∃ x y v, (Wd p S ∗ Spl S f (List.range n) ∗ Stk (rsp s) [x, y] v ∗ F).get t.dmem
 
 -- The call rule of `SpillSet::add`: the caller gives the object, the bytes and the frame.
 abbrev AddSpec [Host] [FunDecls] : Prop :=
   ∀ asz osz (K : Unit → MachineData → Prop) (E : Int64 → MachineData → Prop),
     ⦃ fun s => ∃ p S f n F, AddPre p S f n F s
-        ∧ ∀ s', AddPost p S f n F s s' → Sep.mod.Agree s s' → K () s' ⦄
+        ∧ (∀ s', AddPost p S f n F s s' → Sep.mod.Agree s s' → K () s')
+        ∧ (∀ s', AddExit p S f n F s s' → s'.regs.get64 .rdi = 1#64 → E (label "exit") s') ⦄
       (Directive.instr (.regular asz osz
         (.call (.rel (.sub (.label Names.spillSetAdd) .after_current_instruction)))))
     ⦃ K; E ⦄
@@ -199,23 +220,26 @@ abbrev AddSpec [Host] [FunDecls] : Prop :=
 theorem AddPre.isSome {p S : Addr} {f : BitVec 32 → BitVec 8} {n : Nat} {F : MProp 64}
     {s : MachineData} (h : AddPre p S f n F s) :
     (s.dmem.loadInt (s.regs.get64 .rsp - 8#64) 8).isSome = true := by
-  obtain ⟨v, hm⟩ := h.mem
-  obtain ⟨R, e⟩ : ∃ R, Wd p S ∗ Spl S f (List.range n) ∗ Stk (rsp s) [] v ∗ F
+  obtain ⟨x, y, v, hm⟩ := h.mem
+  obtain ⟨R, e⟩ : ∃ R, Wd p S ∗ Spl S f (List.range n) ∗ Stk (rsp s) [x, y] v ∗ F
       = Wd (rsp s - 8#64) v ∗ R := ⟨_, by unfold Stk; ecancel⟩
   exact Wd.isSome (e ▸ hm)
 
 theorem addSpec_of_body [Host] [FunDecls] {g₀ : Fragment}
     (hg : FunDecls.at (label Names.spillSetAdd) = some g₀)
-    (hb : ∀ p S f n F, Body g₀.prog (AddPre p S f n F) (AddPost p S f n F)) : AddSpec := by
+    (hr : ProofKit.ReturnAddressDistinct Names.spillSetAdd "exit")
+    (hb : ∀ p S f n F, BodyWithExit g₀.prog (AddPre p S f n F)
+      (AddPost p S f n F) (AddExit p S f n F)) : AddSpec := by
   intro asz osz K E
-  refine ⟨fun s ⟨p, S, f, n, F, hp, hk⟩ => ?_⟩
-  exact (Program.WP.callSpec_of_triple hg (hb p S f n F) asz osz K E).1 s ⟨hp.isSome, hp, hk⟩
+  refine ⟨fun s ⟨p, S, f, n, F, hp, hk, hx⟩ => ?_⟩
+  exact (ProofKit.callSpecWithExit_of_triple hg hr (hb p S f n F) asz osz K E).1 s
+    ⟨hp.isSome, hp, hk, fun t ⟨harg, hpost⟩ => hx t hpost harg⟩
 
 /-! ## `spill_set` -/
 
--- The free words of the stack of `spill_set`: 6 pushed registers, 3 words of locals and the
--- return slot of `SpillSet::add`.
-def setD : Nat := 10
+-- The free words of `spill_set`: 6 saved registers, 5 locals, the callee return slot
+-- and the 2 scratch words of `SpillSet::add`.
+def setD : Nat := 14
 
 -- The memory of `spill_set(idCount, spilled, adds, addCount, queries, queryCount, results)` in
 -- the state `s` at the call: the bytes `f` of the ids at `spilled`, the words of `adds` and of
@@ -242,6 +266,14 @@ def setRes (s : MachineData) (f : BitVec 32 → BitVec 8) (adds queries : List W
 def SetPost (f : BitVec 32 → BitVec 8) (adds queries : List Word) (r : Addr)
     (res : List (BitVec 8)) (F : MProp 64) (s t : MachineData) : Prop :=
   rax t = (setRes s f adds queries res).1
+    ∧ ∃ fr v, fr.length = setD ∧ (SetMem s (setRes s f adds queries res).2.1 adds queries r
+      (setRes s f adds queries res).2.2 F fr v).get t.dmem
+
+-- The add loop stops at an assertion before the query loop.
+def SetExit (f : BitVec 32 → BitVec 8) (adds queries : List Word) (r : Addr)
+    (res : List (BitVec 8)) (F : MProp 64) (s t : MachineData) : Prop :=
+  (Flat.spillAddAll f (adds.map StackSlot.ofWord)).1 = .assertionFailed
+    ∧ (setRes s f adds queries res).1 = -2#64
     ∧ ∃ fr v, fr.length = setD ∧ (SetMem s (setRes s f adds queries res).2.1 adds queries r
       (setRes s f adds queries res).2.2 F fr v).get t.dmem
 

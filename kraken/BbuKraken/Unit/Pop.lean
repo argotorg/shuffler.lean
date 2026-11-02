@@ -18,8 +18,7 @@ import all ProofKit.Idioms
 /-!
 # `pop`
 
-`c/bbu/<Names.pop>.S`: no frame, no call. If `m_size` is 0, it returns `2`
-(`AssertionFailed`). Else it decrements `m_size`, stores the record `Pop` at `m_traceSize`,
+`c/bbu/<Names.pop>.S`: if `m_size` is 0, it calls `exit(1)`. Else it decrements `m_size`, stores the record `Pop` at `m_traceSize`,
 increments `m_traceSize`, and then stores `-1` to `m_positionOf[d]` if the destination `d` of
 the old top is not `-1`. It returns `0`.
 
@@ -141,33 +140,32 @@ theorem dest_lt (g : G) (hok : g.Ok) (hd : DestOk (flat g)) {w : Word} (hwN : w.
   · exact Nat.lt_of_lt_of_le h hok.n
 
 /-- The state at `.LB.Emission.pop.0`: the stores of `pop` are done, and the status is `done`. -/
-def doneInv (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (t : MachineData) :
+def doneInv (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (fr : List Word) (t : MachineData) :
     Prop :=
-  ∃ g', Kp S g' F s ra [] t ∧ g'.Ok ∧ Keep g g'
+  ∃ g', Kp S g' F s ra fr t ∧ g'.Ok ∧ Keep g g'
     ∧ flat g' = (Flat.pop (flat g)).2 ∧ (Flat.pop (flat g)).1 = .done
-
-/-- The state at `.LB.Emission.pop.1`: `edx` holds the status. -/
-def retInv (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (t : MachineData) :
-    Prop :=
-  ∃ g', Kp S g' F s ra [] t ∧ g'.Ok ∧ Keep g g'
-    ∧ flat g' = (Flat.pop (flat g)).2 ∧ (rdx t).setWidth 8 = code (Flat.pop (flat g)).1
 
 end Pop
 
-set_option maxHeartbeats 60000 in
 open Push Pop in
-theorem pop_unit [Host] [FunDecls] : UnitThm popAsm popA 0 popQ := by
+theorem pop_unit [Host] [FunDecls]
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels popAsm, label l ≠ label "exit") :
+    UnitThmWithExit popAsm popA 2 popQ (fun g g' _ _ => ExitRes Flat.pop g g') := by
   intro S g F s ra
   refine ⟨fun s₀ ⟨h₀, hpre⟩ => ?_⟩
   subst h₀
   obtain ⟨fr, v, hfr, hm⟩ := hpre.mem
-  obtain rfl : fr = [] := List.length_eq_zero_iff.mp hfr
-  have hk0 : Kp S g F s ra [] (s.pushRa ra) := Kp.init hm
+  obtain ⟨x, y, rfl⟩ : ∃ x y, fr = [x, y] := by
+    match fr, hfr with
+    | [x, y], _ => exact ⟨x, y, rfl⟩
+  have hk0 : Kp S g F s ra [x, y] (s.pushRa ra) := Kp.init hm
+  have he := ProofKit.external_call_spec "exit" hexit
   refine Program.WP.cfg (fun
       | .entry, t => t = s.pushRa ra
       | .label "_ZN12_GLOBAL__N_18Emission3popEv", t => t = s.pushRa ra
-      | .label ".LB.Emission.pop.0", t => doneInv S g F s ra t
-      | .label ".LB.Emission.pop.1", t => retInv S g F s ra t
+      | .label ".LB.Emission.pop.0", t => doneInv S g F s ra [x, y] t
+      | .label ".LB.Emission.pop.1", t => Kp S g F s ra [x, y] t ∧ g.h.len = 0
       | _, _ => False)
     (fun | _, _ => 0) ?_ rfl
   cfg_blocks
@@ -180,7 +178,7 @@ theorem pop_unit [Host] [FunDecls] : UnitThm popAsm popA 0 popQ := by
     obtain ⟨hn, hdest⟩ := hpre.args
     have hN := hok.n
     by_cases hl0 : g.h.len = 0
-    · -- `je .LB.Emission.pop.1` with `edx = 2`. The other path has a false condition (`hz`).
+    · -- The empty stack branches to the external exit call.
       have hz : (BitVec.ofInt 64 (Mem.loadInt (s.pushRa ra).dmem
             ((s.pushRa ra).regs.rdi.toBitVec + 32#64) 8).get! &&&
           BitVec.ofInt 64 (Mem.loadInt (s.pushRa ra).dmem
@@ -197,12 +195,8 @@ theorem pop_unit [Host] [FunDecls] : UnitThm popAsm popA 0 popQ := by
       | load => view_load
       | goto ".LB.Emission.pop.1" =>
         cfg_goto
-        · exact Kp.stack (fr := []) ⟨hm0, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
-        · show retInv S g F s ra _
-          refine ⟨g, ⟨hm0, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, hok,
-            ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, ?_, ?_⟩
-          · rw [pop_zero _ hl0]
-          · rw [pop_zero _ hl0]; rfl
+        · exact Kp.stack (fr := [x, y]) ⟨hm0, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+        · exact ⟨⟨hm0, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, hl0⟩
         · simp
     · -- The fall-through: the size `w` is `len - 1`, the slot of the top.
       have hn := hn hl0
@@ -261,8 +255,8 @@ theorem pop_unit [Host] [FunDecls] : UnitThm popAsm popA 0 popQ := by
         have hd : Flat.get (flat g).dest ((flat g).size - 1) = Flat.NONE := by
           rw [size_sub_one hw, get_eq _ _ hwN]; exact hc'
         cfg_goto
-        · exact Kp.stack (fr := []) ⟨h8, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
-        · show doneInv S g F s ra _
+        · exact Kp.stack (fr := [x, y]) ⟨h8, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+        · show doneInv S g F s ra [x, y] _
           refine ⟨_, ⟨h8, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, ?_,
             ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, ?_, ?_⟩
           · exact Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok
@@ -285,7 +279,7 @@ theorem pop_unit [Host] [FunDecls] : UnitThm popAsm popA 0 popQ := by
         have h9 := View.store_pos h8 hdN Flat.NONE
         dsimp only at h9
         rw [none_toInt] at h9
-        show doneInv S g F s ra _
+        show doneInv S g F s ra [x, y] _
         refine ⟨_, ⟨h9, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, ?_,
           ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, ?_, ?_⟩
         · exact Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok
@@ -296,21 +290,39 @@ theorem pop_unit [Host] [FunDecls] : UnitThm popAsm popA 0 popQ := by
           exact flat_pop_pos g hok hn _ (by rfl) w _ hdN
         · rw [pop_some (flat g) hl0 hd]
   case «.LB.Emission.pop.0» t ht =>
-    -- `movl $0, %edx`, then the fall-through to `.LB.Emission.pop.1`.
     obtain ⟨g', hk, hok, hkeep, hflat, hdone⟩ := ht
-    kvcgen64
-    vc_by_shape
-    | closed => decide
-    | other =>
-      exact ⟨g', hk.next rfl rfl rfl rfl rfl rfl rfl rfl, hok, hkeep, hflat, by rw [hdone]; rfl⟩
-  case «.LB.Emission.pop.1» t ht =>
-    -- `movl %edx, %eax; ret`.
-    obtain ⟨g', hk, hok, hkeep, hflat, hcode⟩ := ht
     kvcgen64
     vc_by_shape
     | retAddr => exact (show t.retAddr.isSome = true by simp [hk.retAddr])
     | ret =>
+      refine ProofKit.intercept_mono_exit
+        (E := fun a t => a = ra ∧ Sep.Post S F 2 (fun g' t => popQ g g' s t) s t
+          ∧ Sep.mod.Agree s t) ?_ (fun h => Or.inl h)
       exact Kp.ret (hk.next rfl rfl rfl rfl rfl rfl rfl rfl) rfl hok fun t' _ hax =>
-        ⟨hkeep, hflat, by show (rax t').setWidth 8 = _; rw [hax]; exact (al_movl _).trans hcode⟩
+        ⟨hkeep, hflat, by show (rax t').setWidth 8 = _; rw [hax, hdone]; rfl⟩
+  case «.LB.Emission.pop.1» t ht =>
+    obtain ⟨hk, hzero⟩ := ht
+    have hmem := Stk.two (rsp s) x y ra.toBitVec _ F ▸ hk.mem
+    have haddr : t.regs.rsp.toBitVec - 8#64 - 8#64 = rsp s - 24#64 := by
+      change t.regs.get64 .rsp - 8#64 - 8#64 = rsp s - 24#64
+      rw [hk.sp64]
+      bv_omega
+    kvcgen64 [he]
+    all_goals symexec_norm
+    vc_by_shape
+    | load => simpa only [haddr] using Wd.isSome hmem
+    | jumpOut =>
+      rename_i exitra _
+      refine Or.inr ⟨Or.inr ⟨rfl, rfl, ?_⟩, ?_⟩
+      · refine ⟨g, [exitra.toBitVec, y], ra.toBitVec, ?_, hpre.ok, rfl, ?_⟩
+        · exact ⟨⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩,
+            by rw [pop_zero _ hzero], by rw [pop_zero _ hzero]⟩
+        · rw [Stk.two]
+          change (Wd (rsp s - 24#64) exitra.toBitVec ∗ _).get
+            (Mem.storeInt _ (t.regs.rsp.toBitVec - 8#64 - 8#64) 8 exitra.toBitVec.toInt)
+          rw [haddr]
+          exact Wd.store hmem exitra.toBitVec
+      · intro l hl ha
+        exact False.elim (hout l hl ha)
 
 end Bbu.Unit

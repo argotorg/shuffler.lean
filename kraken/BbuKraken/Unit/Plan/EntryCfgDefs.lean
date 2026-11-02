@@ -65,9 +65,10 @@ def entryV (g : EG) (l : Label) (t : MachineData) : Nat :=
   else if l = ".LB.plan.0" then 10000 + 2 * (g.r.p.m.toNat - (rax t).toNat)
   else 19000
 
-def EntryExit (g : EG) (F : MProp 64) (s : MachineData) (ra : Int64) :
+def EntryExit [Host] (g : EG) (F : MProp 64) (s : MachineData) (ra : Int64) :
     Int64 → MachineData → Prop :=
-  fun a t => a = ra ∧ Post g F s t ∧ Sep.mod.Agree s t
+  fun a t => (a = ra ∧ Post g F s t ∧ Sep.mod.Agree s t) ∨
+    (a = label "exit" ∧ t.regs.get64 .rdi = 1#64 ∧ Exit g F s t)
 
 def EntryObl [Host] [FunDecls] (g : EG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (blk : Program.Block) : Prop :=

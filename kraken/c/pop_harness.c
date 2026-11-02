@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "harness_process.h"
 
 /* the types in shuffler/StackSlot.h and shuffler/ShuffleTrace.h */
 typedef struct {
@@ -122,8 +123,9 @@ static int slots(char *s, StackSlot *out, uint64_t *k)
 	return 1;
 }
 
-static int run_line(char *line)
+static int run_line(void *input)
 {
+	char *line = input;
 	static StackSlot data[N], target[N];
 	static uint64_t dest[N], destinationOf[N + 1], positionOf[N + 1];
 	static struct op ops[N + 2];
@@ -195,8 +197,8 @@ int main(void)
 	static char line[1 << 16];
 	while (fgets(line, sizeof line, stdin)) {
 		line[strcspn(line, "\n")] = 0;
-		if (!run_line(line))
-			printf("bad input\n");
+		if (!run_in_child(run_line, line, "err"))
+			return 1;
 	}
 	return 0;
 }

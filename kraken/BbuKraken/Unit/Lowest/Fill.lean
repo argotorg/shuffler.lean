@@ -10,7 +10,7 @@ set_option experimental.vcgen true
 /-!
 # `permuteAtLowestHeight`: the end of the first loop and the second loop
 
-The blocks `.2` (the end of the step and the checks of the counts) and `.3` (the second loop).
+The blocks `.3` (the end of the step and the checks of the counts) and `.4` (the second loop).
 -/
 
 open Std.WP Lean.Order
@@ -25,7 +25,7 @@ open Permute
 theorem b_2 [Host] [FunDecls] (S PM planned g F0 s ra)
     (hpre : Sep.Pre S g (Planned S PM planned ∗ F0) (lowestA planned) lowestD s) :
     Program.ForallBlocks permuteAtLowestHeightAsm fun blk =>
-      blk.label = .label ".LB.Emission.permuteAtLowestHeight.2" → Obl S PM planned g F0 s ra blk := by
+      blk.label = .label ".LB.Emission.permuteAtLowestHeight.3" → Obl S PM planned g F0 s ra blk := by
   cfg_block [Obl]
   intro t ht
   simp only [LInv, Names.permuteAtLowestHeight, String.reduceEq, ↓reduceIte] at ht
@@ -63,9 +63,7 @@ theorem b_2 [Host] [FunDecls] (S PM planned g F0 s ra)
     cfg_goto
     · exact (hM.next rfl rfl).stack
     · simp only [LInv, Names.permuteAtLowestHeight, String.reduceEq, ↓reduceIte]
-      refine ⟨g, L, lo, w, hM.next rfl rfl, hpre.ok, l0, Keep.refl g, ?_, ?_⟩
-      · rw [Flat.lowest_ne hs hne]
-      · rw [Flat.lowest_ne hs hne]; rfl
+      exact ⟨L, l0, ⟨lo, w, hM.next rfl rfl, hdi⟩, Flat.lowest_ne hs hne⟩
     · lowest_dec
   · rename_i hz hN _ hs0
     simp only [sub_beq_zero, Bool.not_eq_false', beq_iff_eq, hcx] at hz
@@ -113,7 +111,7 @@ theorem last_of {k : Nat} {pc rsi rax : Word} (hz : rsi = 8#64 + rax)
 theorem b_3 [Host] [FunDecls] (S PM planned g F0 s ra)
     (hpre : Sep.Pre S g (Planned S PM planned ∗ F0) (lowestA planned) lowestD s) :
     Program.ForallBlocks permuteAtLowestHeightAsm fun blk =>
-      blk.label = .label ".LB.Emission.permuteAtLowestHeight.3" → Obl S PM planned g F0 s ra blk := by
+      blk.label = .label ".LB.Emission.permuteAtLowestHeight.4" → Obl S PM planned g F0 s ra blk := by
   cfg_block [Obl]
   intro t ht
   simp only [LInv, Names.permuteAtLowestHeight, String.reduceEq, ↓reduceIte] at ht

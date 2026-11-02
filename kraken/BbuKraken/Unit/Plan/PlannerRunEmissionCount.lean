@@ -28,8 +28,8 @@ theorem b_15 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     (E : Int64 → MachineData → Prop)
     (hnext : ∀ u, rax u = rax t → EmitCountNext P g M F s ra u →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-        (label ".LB.Planner.run.14") u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.15" →
+        (label ".LB.Planner.run.15") u) :
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.16" →
       EmitCountHead P g M F s ra t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
@@ -54,7 +54,7 @@ theorem b_15 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   vc_by_shape
   | load =>
     simp only [kpos, kpend]
-  | goto ".LB.Planner.run.14" =>
+  | goto ".LB.Planner.run.15" =>
     first
     | (rename_i hne
        symexec_norm at hne

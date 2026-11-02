@@ -272,7 +272,7 @@ theorem urg_hd {g' : G} {t P : MachineData} (h : Hd g' t) (h13 : P.regs.r13 = t.
 theorem urg_dec {S : Addr} {t P : MachineData}
     (hp : rd P.dmem (Fld.pendingGenerations S) = rd t.dmem (Fld.pendingGenerations S))
     (h14 : P.regs.r14 = t.regs.r14) (hbx : P.regs.rbx = t.regs.rbx) :
-    V S ".LB.Emission.buildBottomUp.4" P < V S ".LB.Emission.buildBottomUp.5" t := by
+    V S ".LB.Emission.buildBottomUp.5" P < V S ".LB.Emission.buildBottomUp.6" t := by
   simp only [V, H, Names.buildBottomUp, String.reduceEq, ↓reduceIte, or_self, hp, h14,
     hbx]
   omega
@@ -280,7 +280,7 @@ theorem urg_dec {S : Addr} {t P : MachineData}
 theorem b_5 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
     (hspill : Sep.Spec Names.isSpilled isSpilledA 0 isSpilledQ)
     (hcopy : Sep.Spec Names.shallowestCopyPosition shallowestCopyA 0 shallowestCopyQ) :
-    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.5" →
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.6" →
       Obl S g F s ra blk := by
   simp only [Names.isSpilled, Names.shallowestCopyPosition] at hspill hcopy
   cfg_block [Obl]
@@ -310,7 +310,7 @@ theorem b_5 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
     | with_reducible exact i4
     | with_reducible exact i5
   | closed => decide
-  | goto ".LB.Emission.buildBottomUp.4" =>
+  | goto ".LB.Emission.buildBottomUp.5" =>
     have hst : Flat.urgentFrom (flat g') t.regs.r14.toBitVec t.regs.rbx.toBitVec u
         = Flat.urgentFrom (flat g') t.regs.r14.toBitVec (t.regs.rbx.toBitVec + 1) u := by
       first
@@ -340,7 +340,7 @@ theorem b_5 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
     kvcgen64 [hcopy]
     all_goals try symexec_norm
     vc_by_shape
-    | goto ".LB.Emission.buildBottomUp.4" =>
+    | goto ".LB.Emission.buildBottomUp.5" =>
       rename_i hz
       have hsp := urg_spill_true hal hz
       have hst : Flat.urgentFrom (flat g2) t.regs.r14.toBitVec t.regs.rbx.toBitVec u
@@ -454,7 +454,7 @@ theorem b_5 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
           · exact fbx
 
 theorem b_4 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :
-    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.4" →
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.5" →
       Obl S g F s ra blk := by
   cfg_block [Obl]
   intro t ht
@@ -488,7 +488,7 @@ theorem b_4 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) 
     omega
 
 theorem b_3 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :
-    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.3" →
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.4" →
       Obl S g F s ra blk := by
   cfg_block [Obl]
   intro t ht

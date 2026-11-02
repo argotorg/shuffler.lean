@@ -14,5 +14,7 @@ public import ProofKit.CfgBlock
 import all ProofKit.CfgBlock
 public import ProofKit.Assembly
 import all ProofKit.Assembly
+public import ProofKit.ExternalCall
+import all ProofKit.ExternalCall
 
 @[expose] public section

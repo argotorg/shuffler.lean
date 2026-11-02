@@ -21,29 +21,29 @@ variable [Host] [FunDecls] (S PM : Addr) (planned : Vector Word MAX_N)
 theorem b_10
     (hav : VSpec (RunView PM planned) G.Ok Names.isAvailable isAvailableA 3 isAvailableQ) :
     runAsm.ForallBlocks fun blk =>
-      blk.label = .label ".LB.Emission.run.10" → Obl S PM planned g F s ra blk := by
+      blk.label = .label ".LB.Emission.run.11" → Obl S PM planned g F s ra blk := by
   simp only [Names.isAvailable] at hav
   cfg_block [Obl]
   intro t ht
   simp only [Inv, Names.run, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨a, l, lo, w, h, h12, hi, hsize, hcount, hscan⟩ := ht
-  have hin : t.regs.rbp.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hi h.ok.n
+  have hin : t.regs.rbx.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hi h.ok.n
   have hsuc := succ_nat hi
   kvcgen64 [hav]
   all_goals try symexec_norm at ⊢
-  refine Bd.call (h.bd.next rfl rfl rfl rfl rfl) (by decide) h.bx h.ok hi ?_
+  refine Bd.call (h.bd.next rfl rfl rfl rfl rfl) (by decide) h.bp h.ok hi ?_
   intro u a' lo' w' hbd hq hok hag
   obtain ⟨he, hq⟩ := hq
   subst a'
-  have hq' : al u = if Flat.isAvailable (flat a) t.regs.rbp.toBitVec then 1#8 else 0#8 := hq
-  have hbp : u.regs.rbp.toBitVec = t.regs.rbp.toBitVec := by
-    rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rbp]
+  have hq' : al u = if Flat.isAvailable (flat a) t.regs.rbx.toBitVec then 1#8 else 0#8 := hq
+  have hbp : u.regs.rbx.toBitVec = t.regs.rbx.toBitVec := by
+    rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rbx]
   have h12' : u.regs.r12.toBitVec = a.h.n := by
     rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r12]
     exact h12
-  have hbx : u.regs.rbx.toBitVec = S := by
-    rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rbx]
-    exact h.bx
+  have hbx : u.regs.rbp.toBitVec = S := by
+    rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rbp]
+    exact h.bp
   have hu : Phase S PM planned g a F s ra l lo' w' u :=
     ⟨hbd, hbx, hok, h.keep, h.model⟩
   have hrd : rd u.dmem S = a.h.tgt := rd_of_eq hbd.mem (by unfold View Em; ecancel)
@@ -71,7 +71,7 @@ theorem b_10
       apply hu.next <;> rfl
     · simp [V, Names.run]
       omega
-  | goto ".LB.Emission.run.10" =>
+  | goto ".LB.Emission.run.11" =>
     rename_i hjal hjn
     simp only [hbp, h12', BitVec.add_comm 1#64] at hjn
     have hz : al u ≠ 0#8 := by
@@ -79,11 +79,11 @@ theorem b_10
       rw [Bool.not_eq_true']
       with_reducible assumption
     have htrue := bit_ne_zero hq' hz
-    have hrest : Flat.availableFrom (flat a) (t.regs.rbp.toBitVec + 1#64) =
+    have hrest : Flat.availableFrom (flat a) (t.regs.rbx.toBitVec + 1#64) =
         Flat.availableFrom (flat a) 0#64 := by
       rw [available_step hi, htrue, Bool.true_and] at hscan
       exact hscan
-    have hne : a.h.n ≠ t.regs.rbp.toBitVec + 1#64 := by
+    have hne : a.h.n ≠ t.regs.rbx.toBitVec + 1#64 := by
       apply Generate.ne_of_z
       rw [← Bool.not_eq_true']
       with_reducible assumption
@@ -98,7 +98,7 @@ theorem b_10
       simp only [V, Names.run, String.reduceEq, ↓reduceIte]
       rw [BitVec.add_comm 1#64, hsuc]
       omega
-  | goto ".LB.Emission.run.5" =>
+  | goto ".LB.Emission.run.8" =>
     rename_i hjal hjn
     simp only [hbp, h12', BitVec.add_comm 1#64] at hjn
     have hz : al u ≠ 0#8 := by
@@ -106,11 +106,11 @@ theorem b_10
       rw [Bool.not_eq_true']
       with_reducible assumption
     have htrue := bit_ne_zero hq' hz
-    have hrest : Flat.availableFrom (flat a) (t.regs.rbp.toBitVec + 1#64) =
+    have hrest : Flat.availableFrom (flat a) (t.regs.rbx.toBitVec + 1#64) =
         Flat.availableFrom (flat a) 0#64 := by
       rw [available_step hi, htrue, Bool.true_and] at hscan
       exact hscan
-    have he : a.h.n = t.regs.rbp.toBitVec + 1#64 := by
+    have he : a.h.n = t.regs.rbx.toBitVec + 1#64 := by
       apply Generate.eq_of_z
       rw [← Bool.not_eq_false']
       with_reducible assumption

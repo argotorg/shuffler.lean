@@ -21,10 +21,10 @@ theorem b_7 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
     (I' : CfgLabel → Nat → Unit → MachineData → Prop) (E : Int64 → MachineData → Prop)
     (hempty : ∀ u, InitDone P g F s ra u →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-        (label ".LB.Planner.run.9") u)
+        (label ".LB.Planner.run.10") u)
     (hinit : ∀ u, rax u = u.regs.rsp.toBitVec + 96#64 →
       InitPosHead P g F s ra u → K () u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.7" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.8" →
       ∀ t, InitDestDone P g F s ra t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
@@ -32,7 +32,7 @@ theorem b_7 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
   kvcgen64
   all_goals try symexec_norm at ⊢
   vc_by_shape
-  | goto ".LB.Planner.run.9" =>
+  | goto ".LB.Planner.run.10" =>
     rename_i af hz
     symexec_norm at hz
     simp only [hc.rsi, BitVec.and_self, BitVec.zero_eq, beq_iff_eq] at hz

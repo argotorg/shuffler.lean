@@ -18,7 +18,7 @@ theorem b_27 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     (K : Unit → MachineData → Prop) (I' : CfgLabel → Nat → Unit → MachineData → Prop)
     (E : Int64 → MachineData → Prop)
     (hdone : ∀ u, EmitReady P g M F s ra u → K () u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.27" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.26" →
       ∀ t, EmitMapped P g M F s ra t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block

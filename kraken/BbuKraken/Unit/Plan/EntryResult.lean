@@ -86,4 +86,19 @@ theorem result_rejected (g : EG) (w : Word) (h : ∀ us, model g us = (w, none))
   rw [h]
   exact ⟨rfl, rfl⟩
 
+theorem assertion_of_runX (g g' : EG) (s t : MachineData) (hok : g.Ok) (hs : Sizes g)
+    (hsrc : idsFrom g.r.p.sw g.idCount 0 = true)
+    (htgt : idsFrom g.r.p.tw g.idCount 0 = true)
+    (ha : g.r.p.allowed = g.allowed.setWidth 8) (ht : g.r.traceLength = 0)
+    (hx : RunX (withDropped g (Flat.zeroFrom g.r.p.m 0 g.r.dropped)) g' s t)
+    (hsaw : g'.saw = g.saw) : AssertionResult g g' := by
+  obtain ⟨us, hstatus, hstate, _⟩ := hx.1
+  have hm := model_run g hok hs hsrc htgt ha ht us
+  have hr : Flat.plannerRun g.r.p.fl (g.strategy.setWidth 8 == 1#8)
+      (withDropped g (Flat.zeroFrom g.r.p.m 0 g.r.dropped)).r.state us =
+        (.assertionFailed, g'.r.state) := Prod.ext hstatus hstate.symm
+  dsimp only at hm
+  rw [hr] at hm
+  exact ⟨us, hm, (dropped_keep g _).trans hx.2, hsaw⟩
+
 end Bbu.Unit.EntryValidU

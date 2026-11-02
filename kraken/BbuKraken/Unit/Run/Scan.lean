@@ -22,7 +22,7 @@ variable [Host] [FunDecls] (S PM : Addr) (planned : Vector Word MAX_N)
     (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
 
 theorem b_3 : runAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Emission.run.3" → Obl S PM planned g F s ra blk := by
+    blk.label = .label ".LB.Emission.run.5" → Obl S PM planned g F s ra blk := by
   cfg_block [Obl]
   intro t ht
   simp only [Inv, Names.run, String.reduceEq, ↓reduceIte] at ht
@@ -33,10 +33,10 @@ theorem b_3 : runAsm.ForallBlocks fun blk =>
   have lm := View.isSome_pos h.bd.mem hiM
   kvcgen64
   all_goals try symexec_norm
-  all_goals try simp only [h.bx, Fld.fold_mapping_positionOf, hpos, neg_one_eq_none] at *
+  all_goals try simp only [h.bp, Fld.fold_mapping_positionOf, hpos, neg_one_eq_none] at *
   vc_by_shape
   | load => exact lm
-  | goto ".LB.Emission.run.2" =>
+  | goto ".LB.Emission.run.4" =>
     have hstep := (unmapped_step (st := flat a) hi (c := t.regs.rdx.toBitVec)).symm.trans hscan
     cfg_goto
     · exact (h.bd.kb.next rfl rfl).stack (by decide)
@@ -58,7 +58,7 @@ theorem b_3 : runAsm.ForallBlocks fun blk =>
       omega
 
 theorem b_2 : runAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Emission.run.2" → Obl S PM planned g F s ra blk := by
+    blk.label = .label ".LB.Emission.run.4" → Obl S PM planned g F s ra blk := by
   cfg_block [Obl]
   intro t ht
   simp only [Inv, Names.run, String.reduceEq, ↓reduceIte] at ht
@@ -68,7 +68,7 @@ theorem b_2 : runAsm.ForallBlocks fun blk =>
   kvcgen64
   all_goals try symexec_norm
   vc_by_shape
-  | goto ".LB.Emission.run.9" =>
+  | goto ".LB.Emission.run.10" =>
     rename_i hj
     have he : a.h.n = t.regs.rax.toBitVec + 1#64 := by
       apply Generate.eq_of_z

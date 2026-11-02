@@ -1,7 +1,7 @@
 module
 
-public import BbuKraken.Unit.Defs
-import all BbuKraken.Unit.Defs
+public import BbuKraken.Unit.ExitDefs
+import all BbuKraken.Unit.ExitDefs
 public import BbuKraken.Sep.Stores
 import all BbuKraken.Sep.Stores
 public import ProofKit.Cfg
@@ -14,17 +14,10 @@ import all ProofKit.Idioms
 /-!
 # `push`
 
-`c/bbu/<Names.push>.S`: no frame, no call. It stores the slot word to `m_stack[size]` and the
-operation to record `traceSize`, increments the two counters, and then binds the new slot to
-the destination if `m_positionOf[destination]` is `-1`.
-
-The caller is `produce`, with the destination `t` and `len < n`, `nops < 6n` (`produceA`), so
-the stores are in the view (`pushA`). `produce` uses the flat result (`pushQ`).
-
-The proof makes the chain of `View` hypotheses for the stores before `kvcgen64` (`h1` … `h10`),
-so each load VC and each loaded value has a hypothesis with the same memory term. The block
-ends at `.LB.Emission.push.0` with the status in `edx`: `2` from the `jne` (the destination has a slot), `0`
-from the fall-through (the two `bind` stores). `.LB.Emission.push.0` copies `edx` to `eax` and returns.
+`c/bbu/<Names.push>.S` stores the slot and its trace record, then checks the destination.
+If the destination is free, it binds the slot and returns `Done`. Otherwise it calls `exit(1)`.
+The exit contract retains the stores made before that check and relates them to `Flat.push`.
+The two free stack words cover alignment and the return address of the external call.
 -/
 
 open Std.WP Lean.Order
@@ -176,27 +169,34 @@ theorem al_movl (x : Word) : (BitVec.setWidth 64 (x.take 32)).setWidth 8 = x.set
   simp only [BitVec.toNat_setWidth, BitVec.take, BitVec.extractLsb'_toNat, Nat.shiftRight_zero]
   omega
 
-/-- The state at `.LB.Emission.push.0`: the stores of `push` are done, and `edx` holds the status. -/
-def lbInv (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (t : MachineData) :
-    Prop :=
-  ∃ g', Kp S g' F s ra [] t ∧ g'.Ok ∧ Keep g g'
-    ∧ flat g' = (Flat.push (flat g) (StackSlot.ofWord (rsi s)) (rdx s)).2
-    ∧ (rdx t).setWidth 8 = code (Flat.push (flat g) (StackSlot.ofWord (rsi s)) (rdx s)).1
+/-- The stores before the destination test are complete. -/
+def lbInv (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
+    (fr : List Word) (t : MachineData) : Prop :=
+  ∃ g', Kp S g' F s ra fr t ∧ g'.Ok ∧ Keep g g'
+    ∧ flat g' = Flat.stackPush (flat g) (StackSlot.ofWord (rsi s))
+    ∧ g'.h.len = g.h.len + 1#64 ∧ rax t = S ∧ rdi t = rdx s
+    ∧ Flat.get (flat g).pos (rdx s) = Flat.NONE
 
 end Push
 
 open Push in
-theorem push_unit [Host] [FunDecls] : UnitThm pushAsm pushA 0 pushQ := by
+theorem push_unit [Host] [FunDecls]
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels pushAsm, label l ≠ label "exit") :
+    UnitThmWithExit pushAsm pushA 2 pushQ pushX := by
   intro S g F s ra
   refine ⟨fun s₀ ⟨h₀, hpre⟩ => ?_⟩
   subst h₀
   obtain ⟨fr, v, hfr, hm⟩ := hpre.mem
-  obtain rfl : fr = [] := List.length_eq_zero_iff.mp hfr
-  have hk0 : Kp S g F s ra [] (s.pushRa ra) := Kp.init hm
+  obtain ⟨x, y, rfl⟩ : ∃ x y, fr = [x, y] := by
+    match fr, hfr with
+    | [x, y], _ => exact ⟨x, y, rfl⟩
+  have hk0 : Kp S g F s ra [x, y] (s.pushRa ra) := Kp.init hm
+  have he := ProofKit.external_call_spec "exit" hexit
   refine Program.WP.cfg (fun
       | .entry, t => t = s.pushRa ra
       | .label "_ZN12_GLOBAL__N_18Emission4pushE9StackSlot11StackOffset", t => t = s.pushRa ra
-      | .label ".LB.Emission.push.0", t => lbInv S g F s ra t
+      | .label ".LB.Emission.push.0", t => lbInv S g F s ra [x, y] t
       | _, _ => False)
     (fun | _, _ => 0) ?_ rfl
   cfg_blocks
@@ -213,7 +213,6 @@ theorem push_unit [Host] [FunDecls] : UnitThm pushAsm pushA 0 pushQ := by
     have hlN : g.h.len.toNat < MAX_N := Nat.lt_of_lt_of_le hl hN
     have hl1 : (g.h.len + 1#64).toNat = g.h.len.toNat + 1 := toNat_succ _ hl (by omega)
     have hn1 : (g.h.nops + 1#64).toNat = g.h.nops.toNat + 1 := toNat_succ _ hn (by omega)
-    -- The view after each store of the asm, in the order of the asm.
     have h1 := View.store_len hm0 (g.h.len + 1#64)
     have h2 := View.store_stk h1 (i := g.h.len.toNat)
       (Nat.lt_add_right _ hl) (s.pushRa ra).regs.rsi.toBitVec
@@ -226,45 +225,32 @@ theorem push_unit [Host] [FunDecls] : UnitThm pushAsm pushA 0 pushQ := by
     have hr4 := OpM.store_skind hr3 ((s.pushRa ra).regs.rsi.toBitVec.extractLsb' 32 8).toInt
     have hr5 := OpM.store_sop hr4 ((s.pushRa ra).regs.rsi.toBitVec.extractLsb' 40 8).toInt
     have h8 := View.unfocus hr5 hn
-    have h9 := View.store_dest h8 hlN (s.pushRa ra).regs.rdx.toBitVec
-    have h10 := View.store_pos h9 hd' g.h.len
-    dsimp only at h2 h3 hf hr1 hr2 hr3 hr4 hr5 h8 h9 h10
-    kvcgen64
-    -- The addresses and the loaded values in the terms of the ghost, so that the memory of each
-    -- goal is the memory of one hypothesis of the chain.
+    dsimp only at h2 h3 hf hr1 hr2 hr3 hr4 hr5 h8
+    simp only [BitVec.ofInt_toInt, show BitVec.ofInt 8 0 = (0 : BitVec 8) by decide] at h8
+    let gp : G := { g with
+      h := { g.h with len := g.h.len + 1#64, nops := g.h.nops + 1#64 },
+      stk := g.stk.set g.h.len.toNat (rsi s) (Nat.lt_add_right _ hl),
+      ops := g.ops.set g.h.nops.toNat
+        ⟨Op.push (StackSlot.ofWord (rsi s)), g.ops[g.h.nops.toNat].pad2,
+          g.ops[g.h.nops.toNat].pad10⟩ hn }
+    have h8x := Stk.two (rsp s) x y ra.toBitVec _ F ▸ h8
+    have haddr : (s.pushRa ra).regs.rsp.toBitVec - 8#64 - 8#64 = rsp s - 24#64 := by
+      change rsp s - 8#64 - 8#64 - 8#64 = rsp s - 24#64
+      bv_omega
+    kvcgen64 [he]
     all_goals symexec_norm
     all_goals try simp only [hS, rd_eq, ext_ushr, ↓Fld.fold_mapping_positionOf,
-      ↓Fld.fold_mapping_destinationOf, Fld.fold_stack_size, Fld.fold_stack_data,
+      Fld.fold_stack_size, Fld.fold_stack_data,
       Fld.fold_stack_trace, Fld.fold_stack_traceSize, fold_slot, fold_op,
       View.rd_len hm0, View.rd_data hm0, View.rd_nops h2, View.rd_ops h3, push_kind,
-      View.rd_len h8, View.rd_pos h8 hd', add_one_sub]
+      View.rd_pos h8 hd']
     vc_by_shape
     | closed => decide
-    | load => view_load
+    | load =>
+      first
+      | view_load
+      | simpa only [haddr] using Wd.isSome h8x
     | goto ".LB.Emission.push.0" =>
-      -- `jne`: `m_positionOf[d] ≠ -1`, `edx = 2`, the view `h8` (no `bind`).
-      rename_i hc
-      simp only [hS, rd_eq, ext_ushr, ↓Fld.fold_mapping_positionOf,
-        Fld.fold_stack_size, Fld.fold_stack_data,
-        Fld.fold_stack_trace, Fld.fold_stack_traceSize, fold_slot, fold_op,
-        View.rd_len hm0, View.rd_data hm0, View.rd_nops h2, View.rd_ops h3, push_kind,
-        View.rd_pos h8 hd', cmp_none] at hc
-      have hc' : g.h.pos[(s.pushRa ra).regs.rdx.toBitVec.toNat] ≠ Flat.NONE := by simpa using hc
-      have hne : Flat.get (flat g).pos (rdx s) ≠ Flat.NONE := by
-        rw [get_eq _ (rdx s) hd']; exact hc'
-      cfg_goto
-      · exact Kp.stack (fr := []) ⟨h8, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
-      · show lbInv S g F s ra _
-        refine ⟨_, ⟨h8, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, ?_,
-          ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, ?_, ?_⟩
-        · exact Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok
-            (by show (g.h.len + 1#64).toNat ≤ g.h.n.toNat + g.xs; omega)
-            (by show (g.h.nops + 1#64).toNat ≤ 6 * g.h.n.toNat + g.xo; omega)
-        · rw [push_fail _ _ _ hne]; exact flat_push g hok hl hn _ _ (by rfl)
-        · rw [push_fail _ _ _ hne]; rfl
-      · simp
-    | other =>
-      -- The fall-through to `.LB.Emission.push.0`: `m_positionOf[d] = -1`, `edx = 0`, the view `h10`.
       rename_i hc
       simp only [hS, rd_eq, ext_ushr, ↓Fld.fold_mapping_positionOf,
         Fld.fold_stack_size, Fld.fold_stack_data,
@@ -274,23 +260,86 @@ theorem push_unit [Host] [FunDecls] : UnitThm pushAsm pushA 0 pushQ := by
       have hc' : g.h.pos[(s.pushRa ra).regs.rdx.toBitVec.toNat] = Flat.NONE := by simpa using hc
       have heq : Flat.get (flat g).pos (rdx s) = Flat.NONE := by
         rw [get_eq _ (rdx s) hd']; exact hc'
-      show lbInv S g F s ra _
-      refine ⟨_, ⟨h10, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, ?_,
-        ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, ?_, ?_⟩
-      · exact Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok
+      cfg_goto
+      · exact Kp.stack (fr := [x, y]) ⟨h8, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+      · refine ⟨_, ⟨h8, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, ?_,
+          ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩,
+          flat_push g hok hl hn _ _ (by rfl), rfl, hS, rfl, heq⟩
+        exact Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok
           (by show (g.h.len + 1#64).toNat ≤ g.h.n.toNat + g.xs; omega)
           (by show (g.h.nops + 1#64).toNat ≤ 6 * g.h.n.toNat + g.xo; omega)
-      · rw [push_ok _ _ _ heq]
-        exact flat_push_bind g hok hl hn _ _ (by rfl) _ hlN hd'
-      · rw [push_ok _ _ _ heq]; rfl
+      · simp
+    | jumpOut =>
+      rename_i exitra _ hc
+      simp only [hS, rd_eq, ext_ushr, ↓Fld.fold_mapping_positionOf,
+        Fld.fold_stack_size, Fld.fold_stack_data,
+        Fld.fold_stack_trace, Fld.fold_stack_traceSize, fold_slot, fold_op,
+        View.rd_len hm0, View.rd_data hm0, View.rd_nops h2, View.rd_ops h3, push_kind,
+        View.rd_pos h8 hd', cmp_none] at hc
+      have hc' : g.h.pos[(s.pushRa ra).regs.rdx.toBitVec.toNat] ≠ Flat.NONE := by simpa using hc
+      have hne : Flat.get (flat g).pos (rdx s) ≠ Flat.NONE := by
+        rw [get_eq _ (rdx s) hd']; exact hc'
+      refine Or.inr ⟨Or.inr ⟨rfl, rfl, ?_⟩, ?_⟩
+      · refine ⟨gp, [exitra.toBitVec, y], ra.toBitVec, ?_, ?_, rfl, ?_⟩
+        · show pushX g _ s _
+          refine ⟨⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, ?_, ?_⟩
+          · dsimp only
+            rw [push_fail (flat g) (StackSlot.ofWord (rsi s)) (rdx s) hne]
+            exact flat_push g hok hl hn _ _ (by rfl)
+          · dsimp only
+            rw [push_fail (flat g) (StackSlot.ofWord (rsi s)) (rdx s) hne]
+        · exact Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok
+            (by show (g.h.len + 1#64).toNat ≤ g.h.n.toNat + g.xs; omega)
+            (by show (g.h.nops + 1#64).toNat ≤ 6 * g.h.n.toNat + g.xo; omega)
+        · rw [Stk.two]
+          change (Wd (rsp s - 24#64) exitra.toBitVec ∗ _).get
+            (Mem.storeInt _ ((s.pushRa ra).regs.rsp.toBitVec - 8#64 - 8#64) 8 exitra.toBitVec.toInt)
+          rw [haddr]
+          have hstored := Wd.store h8x exitra.toBitVec
+          dsimp only [gp, Op.push, StackSlot.ofWord, MachineData.pushRa,
+            Reg64s.set64_rsp, rsi, rsp, Reg64s.get64_rsi, Reg64s.get64_rsp] at hstored ⊢
+          exact hstored
+      · intro l hl ha
+        exact False.elim (hout l hl ha)
   case «.LB.Emission.push.0» t ht =>
-    -- `movl %edx, %eax; ret`.
-    obtain ⟨g', hk, hok, hkeep, hflat, hcode⟩ := ht
+    obtain ⟨g', hk, hok, hkeep, hflat, hlen, hax, hdi, heq⟩ := ht
+    obtain ⟨hl, hn, hd⟩ := hpre.args
+    have hL : g.h.len.toNat < MAX_N := Nat.lt_of_lt_of_le hl hpre.ok.n
+    have hD : (rdx s).toNat < MAX_N := Nat.lt_of_lt_of_le hd hpre.ok.n
+    have hidx : g'.h.len + BitVec.ofInt 64 (-1) = g.h.len := by rw [hlen]; bv_omega
+    have hm0 := hk.mem
+    have h1 := View.store_dest hm0 hL (rdx s)
+    have h2 := View.store_pos h1 hD g.h.len
+    dsimp only at h1 h2
     kvcgen64
+    all_goals symexec_norm
+    all_goals try simp only [hax, hdi, rd_eq, Fld.fold_stack_size, View.rd_len hm0,
+      hidx, ↓Fld.fold_mapping_destinationOf, ↓Fld.fold_mapping_positionOf]
     vc_by_shape
-    | retAddr => exact (show t.retAddr.isSome = true by simp [hk.retAddr])
+    | load => view_load
+    | retAddr =>
+      exact Option.isSome_iff_exists.mpr
+        ⟨ra, Kp.retAddr (S := S) (g := _) (F := F) (s := s) (fr := [x,y])
+          ⟨h2, hk.sp, hk.bx, hk.bp, hk.r12, hk.r13, hk.r14, hk.r15⟩⟩
     | ret =>
-      exact Kp.ret (hk.next rfl rfl rfl rfl rfl rfl rfl rfl) rfl hok fun t' _ hax =>
-        ⟨hkeep, hflat, by show (rax t').setWidth 8 = _; rw [hax]; exact (al_movl _).trans hcode⟩
+      refine ProofKit.intercept_mono_exit
+        (E := fun a t => a = ra ∧ Sep.Post S F 2 (fun g' t => pushQ g g' s t) s t
+          ∧ Sep.mod.Agree s t) ?_ (fun h => Or.inl h)
+      refine Kp.ret (S := S) (F := F) (s := s) (fr := [x, y]) (g := { g' with h := { g'.h with
+          dest := g'.h.dest.set g.h.len.toNat (rdx s) hL,
+          pos := g'.h.pos.set (rdx s).toNat g.h.len hD } }) ?_ rfl ?_ ?_
+      · exact ⟨h2, hk.sp, hk.bx, hk.bp, hk.r12, hk.r13, hk.r14, hk.r15⟩
+      · exact Keep.ok (g := g') ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok hok.len hok.nops
+      · intro t' _ hr
+        refine ⟨⟨hkeep.tgtp, hkeep.n, hkeep.splp, hkeep.data, hkeep.ops,
+          hkeep.xs, hkeep.xo, hkeep.tgt, hkeep.spl⟩, ?_, ?_⟩
+        · dsimp only
+          rw [push_ok (flat g) (StackSlot.ofWord (rsi s)) (rdx s) heq,
+            flat_bind _ _ _ hL hD, hflat]
+          rfl
+        · dsimp only
+          rw [push_ok (flat g) (StackSlot.ofWord (rsi s)) (rdx s) heq]
+          show (rax t').setWidth 8 = 0#8
+          rw [hr]; rfl
 
 end Bbu.Unit

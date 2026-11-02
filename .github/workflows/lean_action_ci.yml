@@ -38,6 +38,8 @@ jobs:
       - name: Compare assembly and models
         run: |
           nice kraken/test/diff.sh
+          nice kraken/test/assertions_test.sh
+          ASAN_OPTIONS=detect_leaks=0:quarantine_size_mb=8 nice kraken/c/unit_test
           nice kraken/test/bbu_diff.sh
           nice kraken/test/pop_diff.sh
           nice kraken/test/surplus_diff.sh

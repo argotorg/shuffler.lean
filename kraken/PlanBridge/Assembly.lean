@@ -31,17 +31,25 @@ private def EntryPost (post : Input → FlatResult → Prop) (g : EG) (F : MProp
   ∃ g', g'.Ok ∧ EntryResult post g g' (rax t) ∧
     StkMem entryD (View (rsp s) g' ∗ F) s t.dmem
 
+private def EntryExit (post : Input → FlatResult → Prop) (g : EG) (F : MProp 64)
+    (s t : MachineData) : Prop :=
+  ∃ g', g'.Ok ∧ AssertionResult g g' ∧
+    post (inputOf g) (-2#64, some (.assertionFailed, g'.r.state)) ∧
+    StkMem entryD (View (rsp s) g' ∗ F) s t.dmem
+
 public def AssemblyContract (valid : Input → Prop) (post : Input → FlatResult → Prop) : Prop :=
-  ∀ [Host] (L : Linked),
+  ∀ [Host] (L : Linked) (_X : ExitBoundary),
     letI := L.plannerDecls
     ∀ (g : EG) (F : MProp 64), valid (inputOf g) →
-      Sep.Body planAsm (EntryValidU.Pre g F) (EntryPost post g F)
+      Sep.BodyWithExit planAsm (EntryValidU.Pre g F) (EntryPost post g F)
+        (EntryExit post g F)
 
 public def AssemblyHarnessContract (valid : Input → Prop)
     (post : Input → FlatResult → Prop) : Prop :=
   letI := binLinked.plannerDecls
   ∀ (g : EG) (F : MProp 64), valid (inputOf g) →
-    Sep.Body planAsm (EntryValidU.Pre g F) (EntryPost post g F)
+    Sep.BodyWithExit planAsm (EntryValidU.Pre g F) (EntryPost post g F)
+        (EntryExit post g F)
 
 private theorem entryResult_of_result {post : Input → FlatResult → Prop}
     {g g' : EG} {w : Bbu.Word}
@@ -63,23 +71,34 @@ private theorem entryPost_of_post {post : Input → FlatResult → Prop}
   obtain ⟨g', hg', hr, hm⟩ := h
   exact ⟨g', hg', entryResult_of_result hc hr, hm⟩
 
+private theorem entryExit_of_exit {post : Input → FlatResult → Prop}
+    {g : EG} {F : MProp 64} {s t : MachineData}
+    (hc : ∀ us, post (inputOf g) ((inputOf g).run us))
+    (h : EntryValidU.Exit g F s t) : EntryExit post g F s t := by
+  obtain ⟨g', hg', hresult, hm⟩ := h
+  obtain ⟨us, hmodel, hk, hsaw⟩ := hresult
+  have hp := hc us
+  change post (inputOf g) (model g us) at hp
+  rw [hmodel] at hp
+  exact ⟨g', hg', ⟨us, hmodel, hk, hsaw⟩, hp, hm⟩
+
 public theorem kraken_to_flat {valid : Input → Prop} {post : Input → FlatResult → Prop}
     (hc : ∀ i us, valid i → post i (i.run us)) : AssemblyContract valid post := by
-  intro _ L
+  intro _ L X
   let := L.plannerDecls
   intro g F ok s ra
   refine ⟨fun t ht => ?_⟩
-  have he : (fun (a : Int64) (u : MachineData) =>
-      a = ra ∧ EntryValidU.Post g F s u ∧ Sep.mod.Agree s u) ⊑
-      (fun a u => a = ra ∧ EntryPost post g F s u ∧ Sep.mod.Agree s u) :=
-    fun _ _ ⟨ha, hp, hm⟩ => ⟨ha, entryPost_of_post (fun us => hc _ us ok) hp, hm⟩
-  exact WP.wp_monotone_epost (x := planAsm)
-    (post := fun (_ : Unit) (_ : MachineData) => False) he
-    t ((Bbu.plan_correct L g F s ra).le_wp t ht)
+  exact Program.wp_mono (fun _ h => h)
+    (fun _ h => h.elim
+      (fun ⟨ha, hp, hm⟩ => Or.inl
+        ⟨ha, entryPost_of_post (fun us => hc _ us ok) hp, hm⟩)
+      (fun ⟨ha, harg, hx⟩ => Or.inr
+        ⟨ha, harg, entryExit_of_exit (fun us => hc _ us ok) hx⟩))
+    ((Bbu.plan_correct L X g F s ra).le_wp t ht)
 
 public theorem kraken_to_flat_harness {valid : Input → Prop}
     {post : Input → FlatResult → Prop}
     (hc : ∀ i us, valid i → post i (i.run us)) : AssemblyHarnessContract valid post :=
-  kraken_to_flat hc binLinked
+  kraken_to_flat hc binLinked binBoundary
 
 end PlanBridge

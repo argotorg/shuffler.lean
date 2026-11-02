@@ -1,7 +1,7 @@
 module
 
-public import BbuKraken.Unit.Defs
-import all BbuKraken.Unit.Defs
+public import BbuKraken.Unit.Dup
+import all BbuKraken.Unit.Dup
 public import BbuKraken.Sep.Stores
 import all BbuKraken.Sep.Stores
 public import ProofKit.Cfg
@@ -14,10 +14,10 @@ import all ProofKit.Idioms
 /-!
 # `swapWith`
 
-`c/bbu/<Names.swapWith>.S`: no frame, no call. It asserts `pos < size`, that `pos` is not
+`c/bbu/<Names.swapWith>.S`: one alignment word. It asserts `pos < size`, that `pos` is not
 final, and `1 ≤ depth ≤ 16`. Then it swaps the two slots (the top slot gets the 6 low bytes of
 the other slot), stores the operation, swaps the two destinations, and writes `m_positionOf` at
-each destination that is not `-1`.
+each destination that is not `-1`. A failed assertion calls `exit(1)`.
 
 `DestOk` gives that each such destination is below `n ≤ MAX_N`, so the stores to `m_positionOf`
 are in the view. The callers are `generate` (`nops + 1 < 6n` after `produce`, and `produce`
@@ -423,64 +423,208 @@ elab "mem_load " "[" ls:term,* "]" : tactic => withMainContext do
 
 /-! ## The invariants of the labels -/
 
-/-- `.LB.Emission.swapWith.0`: the stores before the `m_positionOf` store of the top slot `b` are done. -/
-def inv37 (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (t : MachineData) :
-    Prop :=
-  ∃ g' b, Kp S g' F s ra [] t ∧ g'.Ok ∧ Keep g g' ∧ t.regs.rax.toBitVec = S
-    ∧ t.regs.rcx.toBitVec = b ∧ b.toNat < MAX_N
+-- The state after the first two assertion checks.
+noncomputable def headState (s : MachineData) : MachineData :=
+  let v1 := BitVec.ofInt 64 (Mem.loadInt s.dmem (s.regs.rdi.toBitVec + s.regs.rsi.toBitVec * 8#64 + 56#64) 8).get!;
+  {
+    regs :=
+      { rax := s.regs.rdi, rbx := s.regs.rbx, rcx := { toBitVec := s.regs.rsi.toBitVec * 8#64 : UInt64 },
+        rdx := s.regs.rsi,
+        rsi := { toBitVec := BitVec.ofInt 64 (Mem.loadInt s.dmem (s.regs.rdi.toBitVec + 32#64) 8).get! : UInt64 },
+        rdi := s.regs.rdi, rsp := { toBitVec := s.regs.rsp.toBitVec - 8#64 : UInt64 }, rbp := s.regs.rbp, r8 := s.regs.r8,
+        r9 := s.regs.r9, r10 := s.regs.r10, r11 := s.regs.r11, r12 := s.regs.r12, r13 := s.regs.r13, r14 := s.regs.r14,
+        r15 := s.regs.r15 : Reg64s },
+    zmms := s.zmms,
+    status :=
+      StatusFlags.from_result (s.regs.rsi.toBitVec - v1)
+        { cf := Int.ofNat (s.regs.rsi.toBitVec - v1).toNat != Int.ofNat s.regs.rsi.toBitVec.toNat - Int.ofNat v1.toNat,
+          af :=
+            Int.ofNat (BitVec.extractLsb' 0 4 (s.regs.rsi.toBitVec - v1)).toNat !=
+              Int.ofNat (BitVec.extractLsb' 0 4 s.regs.rsi.toBitVec).toNat - Int.ofNat (BitVec.extractLsb' 0 4 v1).toNat,
+          of := (s.regs.rsi.toBitVec - v1).signed != s.regs.rsi.toBitVec.signed - v1.signed :
+          StatusFlags.from_result.Remaining },
+    dmem := s.dmem : MachineData }
+
+-- The body keeps one alignment word below the caller's return slot.
+def inv37 (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
+    (fr : List Word) (t : MachineData) : Prop :=
+  ∃ g' b, Kp S g' F s ra fr (Dup.unpad t) ∧ g'.Ok ∧ Keep g g'
+    ∧ t.regs.rax.toBitVec = S ∧ t.regs.rcx.toBitVec = b ∧ b.toNat < MAX_N
     ∧ (Flat.get g'.h.dest b = Flat.NONE ∨ (Flat.get g'.h.dest b).toNat < MAX_N)
     ∧ Flat.swapWith (flat g) (rsi s) = (.done, posFix (flat g') b)
 
-/-- `.LB.Emission.swapWith.1`: all the stores are done, and the status is `done`. -/
-def inv38 (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (t : MachineData) :
-    Prop :=
-  ∃ g', Kp S g' F s ra [] t ∧ g'.Ok ∧ Keep g g'
-    ∧ flat g' = (Flat.swapWith (flat g) (rsi s)).2 ∧ (Flat.swapWith (flat g) (rsi s)).1 = .done
-
-/-- `.LB.Emission.swapWith.2`: `ecx` holds the status. -/
-def inv35 (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (t : MachineData) :
-    Prop :=
-  ∃ g', Kp S g' F s ra [] t ∧ g'.Ok ∧ Keep g g'
+def inv38 (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
+    (fr : List Word) (t : MachineData) : Prop :=
+  ∃ g', Kp S g' F s ra fr (Dup.unpad t) ∧ g'.Ok ∧ Keep g g'
     ∧ flat g' = (Flat.swapWith (flat g) (rsi s)).2
-    ∧ t.regs.rcx.toBitVec.setWidth 8 = code (Flat.swapWith (flat g) (rsi s)).1
+    ∧ (Flat.swapWith (flat g) (rsi s)).1 = .done
+
+def failed (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
+    (fr : List Word) (t : MachineData) : Prop :=
+  Kp S g F s ra fr (Dup.unpad t) ∧
+    Flat.swapWith (flat g) (rsi s) = (.assertionFailed, flat g)
+
+theorem padded_stack {S : Addr} {g : G} {F : MProp 64} {s t : MachineData}
+    {ra : Int64} {fr : List Word} (h : Kp S g F s ra fr (Dup.unpad t)) :
+    t.StackAtOrBelow (s.pushRa ra) := by
+  have hsp := congrArg UInt64.toBitVec h.sp
+  change t.regs.rsp.toBitVec + 8#64 = (s.pushRa ra).regs.rsp.toBitVec at hsp
+  apply MachineData.stackAtOrBelow_of_toNat_lt
+  change ((s.pushRa ra).regs.rsp.toBitVec - t.regs.rsp.toBitVec).toNat < 2 ^ 63
+  have he : ∀ a : Word, a + 8#64 - a = 8#64 := by intro a; bv_omega
+  rw [← hsp, he]
+  decide
 
 end SwapWith
 
 open SwapWith in
-theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWithQ := by
+theorem swapWith_unit [Host] [FunDecls]
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels swapWithAsm, label l ≠ label "exit") :
+    UnitThmWithExit swapWithAsm swapWithA 2 swapWithQ
+      (fun g g' s _ => ExitRes (Flat.swapWith · (rsi s)) g g') := by
   intro S g F s ra
   refine ⟨fun s₀ ⟨h₀, hpre⟩ => ?_⟩
   subst h₀
   obtain ⟨fr, v, hfr, hm⟩ := hpre.mem
-  obtain rfl : fr = [] := List.length_eq_zero_iff.mp hfr
-  have hk0 : Kp S g F s ra [] (s.pushRa ra) := Kp.init hm
+  obtain ⟨x, y, rfl⟩ : ∃ x y, fr = [x, y] := by
+    match fr, hfr with
+    | [x, y], _ => exact ⟨x, y, rfl⟩
+  have hk0 : Kp S g F s ra [x, y] (s.pushRa ra) := Kp.init hm
+  have he := ProofKit.external_call_spec "exit" hexit
+  have hS : (s.pushRa ra).regs.rdi.toBitVec = S := hpre.rdi
+  have hok := hpre.ok
+  have hm0 := hk0.mem
+  obtain ⟨hn, hdok⟩ := hpre.args
+  have hN := hok.n
+  have hx := hok.xo
+  have hX := hok.xs
+  have hLn := hok.len
+  have hpM {x : Word} (h : x.toNat < g.h.len.toNat) : x.toNat < MAX_N :=
+    Nat.lt_of_lt_of_le (Nat.lt_of_lt_of_le h hLn) hX
+  have hs : UInt64.ofBitVec ((s.pushRa ra).regs.rsp.toBitVec - 8#64 + 8#64) =
+      (s.pushRa ra).regs.rsp := by
+    rw [BitVec.sub_add_cancel, UInt64.ofBitVec_toBitVec]
   refine Program.WP.cfg (fun
       | .entry, t => t = s.pushRa ra
       | .label "_ZN12_GLOBAL__N_18Emission8swapWithE11StackOffset", t => t = s.pushRa ra
-      | .label ".LB.Emission.swapWith.0", t => inv37 S g F s ra t
-      | .label ".LB.Emission.swapWith.1", t => inv38 S g F s ra t
-      | .label ".LB.Emission.swapWith.2", t => inv35 S g F s ra t
+      | .label ".LB.Emission.swapWith.0", t => failed S g F s ra [x, y] t
+      | .label ".LB.Emission.swapWith.1", t =>
+          t = headState (s.pushRa ra) ∧
+          (rsi s).toNat < g.h.len.toNat ∧ Flat.get g.h.dest (rsi s) ≠ rsi s
+      | .label ".LB.Emission.swapWith.2", t => inv37 S g F s ra [x, y] t
+      | .label ".LB.Emission.swapWith.3", t => inv38 S g F s ra [x, y] t
+      | .label ".LB.Emission.swapWith.4", t => failed S g F s ra [x, y] t
       | _, _ => False)
     (fun | _, _ => 0) ?_ rfl
   cfg_blocks
   case entry t ht => subst ht; kvcgen64
   case «_ZN12_GLOBAL__N_18Emission8swapWithE11StackOffset» t ht =>
     subst ht
-    have hS : (s.pushRa ra).regs.rdi.toBitVec = S := hpre.rdi
-    have hok := hpre.ok
-    have hm0 := hk0.mem
-    obtain ⟨hn, hdok⟩ := hpre.args
-    have hN := hok.n
-    have hx := hok.xo
-    have hX := hok.xs
-    have hLn := hok.len
-    have hpM {x : Word} (h : x.toNat < g.h.len.toNat) : x.toNat < MAX_N :=
-      Nat.lt_of_lt_of_le (Nat.lt_of_lt_of_le h hLn) hX
-    by_cases c : (s.pushRa ra).regs.rsi.toBitVec.toNat < g.h.len.toNat
-        ∧ Flat.get g.h.dest (s.pushRa ra).regs.rsi.toBitVec ≠ (s.pushRa ra).regs.rsi.toBitVec
-        ∧ ¬ 15 < (g.h.len - (s.pushRa ra).regs.rsi.toBitVec + BitVec.ofInt 64 (-2)).toNat
-    · -- The three asserts pass.
-      obtain ⟨hp, hd, hdep⟩ := c
+    have haddr : (s.pushRa ra).regs.rsp.toBitVec - 8#64 - 8#64 = rsp s - 24#64 := by
+      change rsp s - 8#64 - 8#64 - 8#64 = rsp s - 24#64
+      bv_omega
+    have hmem := Stk.two (rsp s) x y ra.toBitVec _ F ▸ hm0
+    by_cases hp : (s.pushRa ra).regs.rsi.toBitVec.toNat < g.h.len.toNat
+    · have hpM' := hpM hp
+      by_cases hd : Flat.get g.h.dest (s.pushRa ra).regs.rsi.toBitVec = (s.pushRa ra).regs.rsi.toBitVec
+      · have hdval : g.h.dest[(s.pushRa ra).regs.rsi.toBitVec.toNat] = (s.pushRa ra).regs.rsi.toBitVec := by
+          simpa only [get_eq _ _ hpM'] using hd
+        have hfail := sw_err2 (flat g) (rsi s) hp hd
+        kvcgen64 [he]
+        all_goals symexec_norm at ⊢
+        all_goals try simp only [hS, rd_eq, Fld.fold_stack_size,
+          ↓Fld.fold_mapping_destinationOf, View.rd_len hm0, rd_dest hm0 hpM']
+        vc_by_shape
+        | load => first
+          | view_load
+          | rw [haddr]; exact Wd.isSome hmem
+        | closed => decide
+        | goto ".LB.Emission.swapWith.0" =>
+          rename_i hc
+          try symexec_norm at hc
+          simp only [hS, rd_eq, Fld.fold_stack_size, View.rd_len hm0, Idioms.cf_sub,
+            Bool.not_eq_true', decide_eq_false_iff_not] at hc
+          exact False.elim (hc hp)
+        | goto ".LB.Emission.swapWith.1" =>
+          rename_i _ hc
+          try symexec_norm at hc
+          simp only [hS, rd_eq, ↓Fld.fold_mapping_destinationOf, rd_dest hm0 hpM',
+            sub_beq_zero, Bool.not_eq_true', beq_eq_false_iff_ne] at hc
+          exact False.elim (hc hdval.symm)
+        | jumpOut =>
+          rename_i exitra
+          refine Or.inr ⟨Or.inr ⟨rfl, rfl, ?_⟩, ?_⟩
+          · refine ⟨g, [exitra.toBitVec, y], ra.toBitVec, ?_, hpre.ok, rfl, ?_⟩
+            · change ExitRes (Flat.swapWith · (rsi s)) g g
+              dsimp only [ExitRes, rsi, Reg64s.get64_rsi] at hfail ⊢
+              rw [hfail]
+              exact ⟨⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, rfl, rfl⟩
+            · rw [Stk.two]
+              change (Wd (rsp s - 24#64) exitra.toBitVec ∗ _).get
+                (Mem.storeInt _ ((s.pushRa ra).regs.rsp.toBitVec - 8#64 - 8#64) 8 exitra.toBitVec.toInt)
+              rw [haddr]
+              exact Wd.store hmem exitra.toBitVec
+          · intro l hl ha
+            exact False.elim (hout l hl ha)
+      · have hdval : (s.pushRa ra).regs.rsi.toBitVec ≠ g.h.dest[(s.pushRa ra).regs.rsi.toBitVec.toNat] := by
+          rw [get_eq _ _ hpM'] at hd
+          exact Ne.symm hd
+        kvcgen64 [he]
+        all_goals symexec_norm at ⊢
+        all_goals try simp only [hS, rd_eq, Fld.fold_stack_size,
+          ↓Fld.fold_mapping_destinationOf, View.rd_len hm0, rd_dest hm0 hpM']
+        vc_by_shape
+        | load => first
+          | view_load
+          | rw [haddr]; exact Wd.isSome hmem
+        | closed => decide
+        | goto ".LB.Emission.swapWith.0" =>
+          rename_i hc
+          try symexec_norm at hc
+          simp only [hS, rd_eq, Fld.fold_stack_size, View.rd_len hm0, Idioms.cf_sub,
+            Bool.not_eq_true', decide_eq_false_iff_not] at hc
+          exact False.elim (hc hp)
+        | goto ".LB.Emission.swapWith.1" =>
+          cfg_goto
+          · exact padded_stack (fr := [x, y]) ⟨hm0, hs, rfl, rfl, rfl, rfl, rfl, rfl⟩
+          · refine ⟨?_, hp, hd⟩
+            dsimp only [headState]
+            try symexec_norm at ⊢
+            simp only [hS, rd_eq, Fld.fold_stack_size, ↓Fld.fold_mapping_destinationOf,
+              View.rd_len hm0, rd_dest hm0 hpM']
+            rfl
+          · simp
+        | jumpOut =>
+          rename_i _ hc _
+          try symexec_norm at hc
+          simp only [hS, rd_eq, ↓Fld.fold_mapping_destinationOf, rd_dest hm0 hpM',
+            sub_beq_zero, Bool.not_eq_false', beq_iff_eq] at hc
+          exact False.elim (hdval hc)
+    · have hfail := sw_err1 (flat g) (rsi s) hp
+      kvcgen64 [he]
+      all_goals symexec_norm
+      all_goals try simp only [hS, rd_eq, Fld.fold_stack_size, View.rd_len hm0,
+        Idioms.cf_sub, Bool.not_eq_true', Bool.not_eq_false', decide_eq_true_eq,
+        decide_eq_false_iff_not] at *
+      all_goals try
+        exfalso
+        exact hp (by with_reducible assumption)
+      vc_by_shape
+      | closed => decide
+      | load => view_load
+      | goto ".LB.Emission.swapWith.0" =>
+        cfg_goto
+        · exact padded_stack (fr := [x, y]) ⟨hm0, hs, rfl, rfl, rfl, rfl, rfl, rfl⟩
+        · exact ⟨⟨hm0, hs, rfl, rfl, rfl, rfl, rfl, rfl⟩, hfail⟩
+        · simp
+  case «.LB.Emission.swapWith.1» t ht =>
+    obtain ⟨rfl, hp, hd⟩ := ht
+    change (s.pushRa ra).regs.rsi.toBitVec.toNat < g.h.len.toNat at hp
+    change Flat.get g.h.dest (s.pushRa ra).regs.rsi.toBitVec ≠ (s.pushRa ra).regs.rsi.toBitVec at hd
+    dsimp only [headState]
+    by_cases hdep : ¬ 15 < (g.h.len - (s.pushRa ra).regs.rsi.toBitVec + BitVec.ofInt 64 (-2)).toNat
+    ·
       have hpn : (s.pushRa ra).regs.rsi.toBitVec.toNat < g.h.n.toNat + g.xs :=
         Nat.lt_of_lt_of_le hp hLn
       have hpM' := hpM hp
@@ -535,7 +679,7 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
         Fld.fold_stack_trace, Fld.fold_stack_traceSize, ↓Fld.fold_mapping_destinationOf,
         ↓Fld.fold_mapping_positionOf, fold_slot, fold_op, top_slot, add_neg_one, byte_rt,
         View.rd_len hm0, View.rd_data hm0, rd_dest hm0 hpM', rd_slot hm0 ht, rd32_slot hm0 hpn,
-        rdb4_slot hm0 hpn, rdb5_slot hm0 hpn, Idioms.cf_sub, BitVec.ofNat_eq_ofNat,
+        rdb4_slot hm0 hpn, rdb5_slot hm0 hpn, BitVec.ofNat_eq_ofNat,
         View.rd_len h1, View.rd_data h1, View.rd_len h2, View.rd_nops h2, View.rd_ops h3,
         View.rd_len h8, rd_dest h8 hpM', rd_dest h8 htM, rd_dest h10 hpM',
         Vector.getElem_set_self, Vector.getElem_set_ne htM hpM' (Nat.ne_of_lt hpt).symm]
@@ -547,15 +691,13 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
             OpM.isSome_depth, OpM.isSome_payload, OpM.isSome_skind, OpM.isSome_sop,
             isSome32_slot, isSome4_slot, isSome5_slot, isSome4_411, isSome5_411]
         | skip
-      | goto ".LB.Emission.swapWith.2" =>
+      | goto ".LB.Emission.swapWith.4" =>
         -- The paths of a failed assert: the branch hypothesis contradicts `c`. The big
         -- hypotheses go first, else `simp at *` runs out of heartbeats.
         clear hres h10 h9 h8 hr5 hr4 hr3 hr2 hr1 hf h3 h2 h1
         symexec_norm
-        simp only [hS, rd_eq, Fld.fold_stack_size, ↓Fld.fold_mapping_destinationOf,
-          View.rd_len hm0, rd_dest hm0 hpM', Idioms.cf_sub, sub_beq_zero, ↓ja15, hp, hd', hdep,
-          not_true_eq_false, Bool.not_eq_false', Bool.not_eq_true', decide_eq_true_eq,
-          decide_eq_false_iff_not, beq_iff_eq, beq_eq_false_iff_ne] at *
+        simp only [hS, rd_eq, Fld.fold_stack_size, View.rd_len hm0, ↓ja15, hp, hd', hdep,
+          decide_eq_true_eq] at *
       -- The three paths after `cmpq $-1` on the new `dest[pos]`, that is the old `dest[top]`. The
       -- last hypothesis is the branch.
       all_goals
@@ -571,11 +713,11 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
           Vector.getElem_set_ne htM hpM' (Nat.ne_of_lt hpt).symm, beq_iff_eq,
           beq_eq_false_iff_ne] at hc
       vc_by_shape
-      | goto ".LB.Emission.swapWith.0" =>
+      | goto ".LB.Emission.swapWith.2" =>
         -- `je .LB.Emission.swapWith.0`: the new `dest[pos]` is `NONE`, no store.
         cfg_goto
-        · exact Kp.stack (fr := []) ⟨h10, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
-        · refine ⟨_, _, ⟨h10, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩,
+        · exact padded_stack (fr := [x, y]) ⟨h10, hs, rfl, rfl, rfl, rfl, rfl, rfl⟩
+        · refine ⟨_, _, ⟨h10, hs, rfl, rfl, rfl, rfl, rfl, rfl⟩,
             Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok hLn hnops,
             ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, hS, rfl, htM, ?_, ?_⟩
           · simp only [get_eq _ _ htM, Vector.getElem_set_self]
@@ -598,7 +740,7 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
         have hdtM : g.h.dest[(g.h.len - 1#64).toNat].toNat < MAX_N :=
           Nat.lt_of_lt_of_le (hdt.resolve_left hc) hN
         have h11 := View.store_pos h10 hdtM (s.pushRa ra).regs.rsi.toBitVec
-        refine ⟨_, _, ⟨h11, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩,
+        refine ⟨_, _, ⟨h11, hs, rfl, rfl, rfl, rfl, rfl, rfl⟩,
           Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok hLn hnops,
           ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, hS, rfl, htM, ?_, ?_⟩
         · simp only [get_eq _ _ htM, Vector.getElem_set_self]
@@ -609,39 +751,28 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
           · -- `hres` has `len - 1`, from `flat_swap`; `ofNat_eq_ofNat` gives `len - 1#64`.
             simp only [BitVec.ofNat_eq_ofNat, Vector.getElem_set_self,
               Vector.getElem_set_ne htM hpM' (Nat.ne_of_lt hpt).symm]
-    · -- An assert fails: `ecx = 2` and no store.
+    · have hfail : Flat.swapWith (flat g) (rsi s) = (.assertionFailed, flat g) :=
+        sw_err3 _ _ hp hd (Classical.byContradiction hdep)
       kvcgen64 [notq_spec]
       all_goals symexec_norm
-      all_goals try simp only [hS, rd_eq, Fld.fold_stack_size, ↓Fld.fold_mapping_destinationOf,
-        View.rd_len hm0, Idioms.cf_sub, sub_beq_zero, ↓ja15, Bool.not_eq_false', Bool.not_eq_true',
-        decide_eq_true_eq, decide_eq_false_iff_not, beq_iff_eq, beq_eq_false_iff_ne] at *
-      -- The paths that pass the three asserts: the branch hypotheses contradict `c`.
+      all_goals try simp only [hS, rd_eq, Fld.fold_stack_size, View.rd_len hm0,
+        ↓ja15, decide_eq_true_eq,
+        decide_eq_false_iff_not] at *
       all_goals try
         exfalso
-        have h1 : (s.pushRa ra).regs.rsi.toBitVec.toNat < g.h.len.toNat := by
-          with_reducible assumption
-        refine c ⟨h1, ?_, by with_reducible assumption⟩
-        rw [get_eq _ _ (hpM h1), ← rd_dest hm0 (hpM h1)]
-        exact Ne.symm (by with_reducible assumption)
+        exact hdep (by with_reducible assumption)
       vc_by_shape
-      | load => first
-        | view_load
-        | -- `m_destinationOf[pos]`, after `pos < size`.
-          have := hpM (x := (s.pushRa ra).regs.rsi.toBitVec) (by with_reducible assumption)
-          view_load
-      | goto ".LB.Emission.swapWith.2" =>
-        -- `jnb`, `je` or `ja`: `c` gives the result. (`symexec_norm at *` unfolds `rsi s`, so `e`
-        -- comes after it.)
-        have e : Flat.swapWith (flat g) (rsi s) = (.assertionFailed, flat g) := sw_err _ _ c
+      | closed => decide
+      | goto ".LB.Emission.swapWith.4" =>
         cfg_goto
-        · exact Kp.stack (fr := []) ⟨hm0, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
-        · exact ⟨g, ⟨hm0, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, hok,
-            ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, by rw [e], by rw [e]; rfl⟩
+        · exact padded_stack (fr := [x, y]) ⟨hm0, hs, rfl, rfl, rfl, rfl, rfl, rfl⟩
+        · exact ⟨⟨hm0, hs, rfl, rfl, rfl, rfl, rfl, rfl⟩, hfail⟩
         · simp
-  case «.LB.Emission.swapWith.0» t ht =>
-    -- `movq dest[b], %rdx; cmpq $-1, %rdx; je .LB.Emission.swapWith.1; movq %rcx, pos[dest[b]]`.
+  case «.LB.Emission.swapWith.2» t ht =>
+    -- `movq dest[b], %rdx; cmpq $-1, %rdx; je .LB.Emission.swapWith.3; movq %rcx, pos[dest[b]]`.
     obtain ⟨g', b, hk, hok, hkeep, hax, hcx, hb, hdb, hres⟩ := ht
     have hm := hk.mem
+    dsimp only [Dup.unpad] at hm
     rw [get_eq _ _ hb] at hdb
     kvcgen64
     all_goals symexec_norm
@@ -658,10 +789,10 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
       simp only [hax, hcx, rd_eq, ↓Fld.fold_mapping_destinationOf, rd_dest hm hb, cmp_none,
         beq_iff_eq, beq_eq_false_iff_ne] at hc
     vc_by_shape
-    | goto ".LB.Emission.swapWith.1" =>
-      -- `je .LB.Emission.swapWith.1`: `dest[b] = -1`, no store.
+    | goto ".LB.Emission.swapWith.3" =>
+      -- `je .LB.Emission.swapWith.3`: `dest[b] = -1`, no store.
       cfg_goto
-      · exact Kp.stack (hk.next rfl rfl rfl rfl rfl rfl rfl rfl)
+      · exact padded_stack (hk.next rfl rfl rfl rfl rfl rfl rfl rfl)
       · exact ⟨g', hk.next rfl rfl rfl rfl rfl rfl rfl rfl, hok, hkeep,
           by rw [rsi_eq, hres, posFix_none _ _ hb hc], by rw [rsi_eq, hres]⟩
       · simp
@@ -678,21 +809,52 @@ theorem swapWith_unit [Host] [FunDecls] : UnitThm swapWithAsm swapWithA 0 swapWi
         ⟨hkeep.tgtp, hkeep.n, hkeep.splp, hkeep.data, hkeep.ops, hkeep.xs, hkeep.xo, hkeep.tgt, hkeep.spl⟩, ?_, ?_⟩
       · rw [rsi_eq, hres, posFix_some _ _ hb hdM]
       · rw [rsi_eq, hres]
-  case «.LB.Emission.swapWith.1» t ht =>
-    -- `movl $0, %ecx`, then `.LB.Emission.swapWith.2`.
+  case «.LB.Emission.swapWith.3» t ht =>
     obtain ⟨g', hk, hok, hkeep, hflat, hdone⟩ := ht
+    have hsp : UInt64.ofBitVec (8#64 + t.regs.rsp.toBitVec) = (s.pushRa ra).regs.rsp := by
+      rw [BitVec.add_comm]
+      exact hk.sp
     kvcgen64
+    all_goals symexec_norm at ⊢
     vc_by_shape
-    | other =>
-      exact ⟨g', hk.next rfl rfl rfl rfl rfl rfl rfl rfl, hok, hkeep, hflat, by rw [hdone]; rfl⟩
-    | closed => simp
-  case «.LB.Emission.swapWith.2» t ht =>
-    obtain ⟨g', hk, hok, hkeep, hflat, hcode⟩ := ht
-    kvcgen64
-    vc_by_shape
-    | retAddr => exact (show t.retAddr.isSome = true by simp [hk.retAddr])
+    | retAddr =>
+      exact Option.isSome_iff_exists.mpr
+        ⟨ra, Kp.retAddr ⟨hk.mem, hsp, hk.bx, hk.bp, hk.r12, hk.r13, hk.r14, hk.r15⟩⟩
     | ret =>
-      exact Kp.ret (hk.next rfl rfl rfl rfl rfl rfl rfl rfl) rfl hok fun t' _ hax =>
-        ⟨hkeep, hflat, by show (rax t').setWidth 8 = _; rw [hax]; exact (al_movl _).trans hcode⟩
+      refine ProofKit.intercept_mono_exit
+        (E := fun a t => a = ra ∧ Sep.Post S F 2 (fun g' t => swapWithQ g g' s t) s t
+          ∧ Sep.mod.Agree s t) ?_ (fun h => Or.inl h)
+      refine Kp.ret ⟨hk.mem, hsp, hk.bx, hk.bp, hk.r12, hk.r13, hk.r14, hk.r15⟩
+        rfl hok fun t' _ hax => ⟨hkeep, hflat, ?_⟩
+      show (rax t').setWidth 8 = _
+      rw [hax, hdone]
+      rfl
+  all_goals
+    rename_i t ht
+    obtain ⟨hk, hfail⟩ := ht
+    have hsp : t.regs.rsp.toBitVec + 8#64 = rsp s - 8#64 :=
+      congrArg UInt64.toBitVec hk.sp
+    have haddr : t.regs.rsp.toBitVec - 8#64 = rsp s - 24#64 := by bv_omega
+    have hmem := Stk.two (rsp s) x y ra.toBitVec _ F ▸ hk.mem
+    dsimp only [Dup.unpad] at hmem
+    kvcgen64 [he]
+    all_goals symexec_norm
+    vc_by_shape
+    | load => simpa only [haddr] using Wd.isSome hmem
+    | jumpOut =>
+      rename_i exitra _
+      refine Or.inr ⟨Or.inr ⟨rfl, rfl, ?_⟩, ?_⟩
+      · refine ⟨g, [exitra.toBitVec, y], ra.toBitVec, ?_, hpre.ok, rfl, ?_⟩
+        · change ExitRes (Flat.swapWith · (rsi s)) g g
+          dsimp only [ExitRes, rsi, Reg64s.get64_rsi]
+          rw [hfail]
+          exact ⟨⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, rfl, rfl⟩
+        · rw [Stk.two]
+          change (Wd (rsp s - 24#64) exitra.toBitVec ∗ _).get
+            (Mem.storeInt _ (t.regs.rsp.toBitVec - 8#64) 8 exitra.toBitVec.toInt)
+          rw [haddr]
+          exact Wd.store hmem exitra.toBitVec
+      · intro l hl ha
+        exact False.elim (hout l hl ha)
 
 end Bbu.Unit

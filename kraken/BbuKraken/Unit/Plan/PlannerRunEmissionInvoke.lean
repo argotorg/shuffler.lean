@@ -20,11 +20,11 @@ def EmissionCont [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mappin
     (I' : CfgLabel → Nat → Unit → MachineData → Prop) (E : Int64 → MachineData → Prop) : Prop :=
   (∀ u, PostEmitLI P g M F s ra lo locals u → al u = al t → al u ≠ 1#8 →
     Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-      (label ".LB.Planner.run.16") u) ∧
+      (label ".LB.Planner.run.17") u) ∧
   (∀ u, PostEmitLI P g M F s ra lo locals u → al t = 1#8 → g.p.m = 0#64 →
     u.regs.rbp.toBitVec = 0#64 →
     Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-      (label ".LB.Planner.run.30") u) ∧
+      (label ".LB.Planner.run.29") u) ∧
   (∀ u, PostEmitLI P g M F s ra lo locals u → al t = 1#8 → g.p.m ≠ 0#64 →
     u.regs.rbp.toBitVec = 0#64 → rax u = g.p.drp → rdx u = g.p.drp + g.p.m → K () u)
 
@@ -32,8 +32,8 @@ set_option maxRecDepth 16384 in
 theorem b_28 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     (F : MProp 64) (s : MachineData) (ra : Int64) (hok : g.Ok)
     (hm : MapInv g.p.m g.p.n M)
-    (hrun : ∀ PM planned, VSpec (RunView PM planned) G.Ok Names.run
-      (runA planned) runD (runQ planned))
+    (hrun : ∀ PM planned, VSpecWithExit (RunView PM planned) G.Ok Names.run
+      (runA planned) runD (runQ planned) (runX planned))
     (K : Unit → MachineData → Prop)
     (I' : CfgLabel → Nat → Unit → MachineData → Prop) (E : Int64 → MachineData → Prop)
     (hnext : ∀ (t : MachineData) (lo locals : List Word)
@@ -49,8 +49,21 @@ theorem b_28 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
       a.Ok → Sep.mod.Agree t u →
       EmissionCont P (emissionResult g hok (localEmissionHdr locals hc.localLength) a hk)
         M F s ra lo' ((EmissionLocals.ofList locals hc.localLength).toList a.h
-          (t.regs.rsp.toBitVec + 96#64)) u K I' E) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.28" →
+          (t.regs.rsp.toBitVec + 96#64)) u K I' E)
+    (hstop : ∀ (t : MachineData) (lo locals : List Word)
+      (hc : EmitCountLI P g M F s ra lo locals t),
+      locals[4115]? = some (Flat.unmappedFrom (countState g M) 0 0) →
+      ∀ (a : G) (hk : Keep (emissionGhost g hok (localEmissionHdr locals hc.localLength)) a)
+        (u : MachineData) (lo' : List Word), lo'.length = 4113 →
+      (Stk (rsp s) (fr s lo' ((EmissionLocals.ofList locals hc.localLength).toList a.h
+          (t.regs.rsp.toBitVec + 96#64))) ra.toBitVec ∗
+        (PlannerRunView P (emissionResult g hok (localEmissionHdr locals hc.localLength) a hk)
+          ∗ F)).get u.dmem →
+      runX (EmissionLocals.ofList locals hc.localLength).planned.pos
+        (emissionGhost g hok (localEmissionHdr locals hc.localLength)) a t u →
+      a.Ok → u.regs.get64 .rdi = 1#64 →
+      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label "exit") u) :
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.27" →
       ∀ t, EmitReady P g M F s ra t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
@@ -67,7 +80,7 @@ theorem b_28 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   all_goals try symexec_norm at ⊢
   refine Bd.callEmission (P := P) (F := F) (s := s) (ra := ra) (lo := lo)
     (t := v) (l := l) (h := h) (g := g) (hok := hok) ?_ ?_ ?_ ?_
-    (hv.runA hok hm hp) ?_ ?_
+    (hv.runA hok hm hp) ?_ ?_ ?_ ?_
   · have he := hv.callLocals
     change l.toList (emissionHdr g h) (v.regs.rsp.toBitVec + 96#64) = locals at he
     rw [he]
@@ -79,9 +92,13 @@ theorem b_28 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   · simp only [v, rdi, Reg64s.set64_rdi, Reg64s.get64_rdi]
   · intro a u hq
     exact hq.choose_spec.1
+  · intro a u hq
+    exact hq.choose_spec.1
   · intro a hk u lo' hb hq ha hag
     have hpost := hv.postEmission hok a hk hb ha hag
     obtain ⟨hother, hzero, hmore⟩ := hnext v lo locals hv hp a hk u lo' hpost hq ha hag
     exact emission_tail P _ M F s ra lo' _ u hpost K I' E hother hzero hmore
+  · intro a hk u lo' hlo hmem hx ha harg
+    exact hstop v lo locals hv hp a hk u lo' hlo hmem hx ha harg
 
 end Bbu.Unit.PlannerRunU

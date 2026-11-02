@@ -81,28 +81,28 @@ theorem b_20 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
   have htl : g.h.len - 1#64 < g.h.len := by bv_omega
   have htM := lt_max hok htl
   have hpM := lt_max hok hmis.1
-  have haA : t.regs.r14.toBitVec + t.regs.rax.toBitVec * 8#64
-      = rsi s + BitVec.ofNat 64 (8 * pos.toNat) := by rw [hax, idx8, hD.r14]
-  have haB : t.regs.r14.toBitVec + t.regs.rsi.toBitVec * 8#64
+  have haA : t.regs.r15.toBitVec + t.regs.rax.toBitVec * 8#64
+      = rsi s + BitVec.ofNat 64 (8 * pos.toNat) := by rw [hax, idx8, hD.r15]
+  have haB : t.regs.r15.toBitVec + t.regs.rsi.toBitVec * 8#64
       = rsi s + BitVec.ofNat 64 (8 * (g.h.len - 1#64).toNat) := by
-    rw [idx8, hD.r14, hD.si]; rfl
+    rw [idx8, hD.r15, hD.si]; rfl
   have eA : BitVec.ofInt 64
-      (Mem.loadInt t.dmem (t.regs.r14.toBitVec + t.regs.rax.toBitVec * 8#64) 8).get!
+      (Mem.loadInt t.dmem (t.regs.r15.toBitVec + t.regs.rax.toBitVec * 8#64) 8).get!
       = L.P[pos.toNat] := by rw [rd_eq, hF.rdP hpM haA]
   have eB : BitVec.ofInt 64
-      (Mem.loadInt t.dmem (t.regs.r14.toBitVec + t.regs.rsi.toBitVec * 8#64) 8).get!
+      (Mem.loadInt t.dmem (t.regs.r15.toBitVec + t.regs.rsi.toBitVec * 8#64) 8).get!
       = L.P[(g.h.len - 1#64).toNat] := by rw [rd_eq, hF.rdP htM haB]
   have hF1 := hF.storeP hpM haA _ (P := { t with dmem := (Mem.storeInt t.dmem
-      (t.regs.r14.toBitVec + t.regs.rax.toBitVec * 8#64) 8 (BitVec.ofInt 64
-        (Mem.loadInt t.dmem (t.regs.r14.toBitVec + t.regs.rsi.toBitVec * 8#64)
+      (t.regs.r15.toBitVec + t.regs.rax.toBitVec * 8#64) 8 (BitVec.ofInt 64
+        (Mem.loadInt t.dmem (t.regs.r15.toBitVec + t.regs.rsi.toBitVec * 8#64)
           8).get!).toInt) })
     rfl rfl
   have hF2 := hF1.storeP htM haB _ (P := { t with dmem := (Mem.storeInt (Mem.storeInt t.dmem
-      (t.regs.r14.toBitVec + t.regs.rax.toBitVec * 8#64) 8 (BitVec.ofInt 64
-        (Mem.loadInt t.dmem (t.regs.r14.toBitVec + t.regs.rsi.toBitVec * 8#64)
+      (t.regs.r15.toBitVec + t.regs.rax.toBitVec * 8#64) 8 (BitVec.ofInt 64
+        (Mem.loadInt t.dmem (t.regs.r15.toBitVec + t.regs.rsi.toBitVec * 8#64)
           8).get!).toInt)
-      (t.regs.r14.toBitVec + t.regs.rsi.toBitVec * 8#64) 8 (BitVec.ofInt 64
-        (Mem.loadInt t.dmem (t.regs.r14.toBitVec + t.regs.rax.toBitVec * 8#64)
+      (t.regs.r15.toBitVec + t.regs.rsi.toBitVec * 8#64) 8 (BitVec.ofInt 64
+        (Mem.loadInt t.dmem (t.regs.r15.toBitVec + t.regs.rax.toBitVec * 8#64)
           8).get!).toInt) })
     rfl rfl
   have hag := agB_swap hD.agP htl hmis.1 htM hpM
@@ -116,7 +116,7 @@ theorem b_20 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
   case vc4 => exact hF1.isSomeP htM haB
   case vc5 =>
     simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
-    exact ⟨g', _, _, f, ⟨hF2.next rfl rfl, hD.ok, hD.keep, hD.len, h0, hD.dl, hD.r13, hD.r14,
+    exact ⟨g', _, _, f, ⟨hF2.next rfl rfl, hD.ok, hD.keep, hD.len, h0, hD.dl, hD.r13, hD.r15,
       hD.cx, hD.si, hag, hbij⟩, hperm, Nat.le_of_lt_succ (Nat.lt_of_lt_of_le hlt hmu), hnops⟩
   case vc6 =>
     pd_dec
@@ -155,7 +155,7 @@ theorem b_19 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
       · exact Fm.stack (hF.next rfl rfl)
       · simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
         exact ⟨g', L, p, f, pos, ⟨hF.next rfl rfl, hD.ok, hD.keep, hD.len, h0, hD.dl, hD.r13,
-          hD.r14, hD.cx, hD.si, hD.agP, hD.bij⟩, hax, hmis, hp, hmu, hnops⟩
+          hD.r15, hD.cx, hD.si, hD.agP, hD.bij⟩, hax, hmis, hp, hmu, hnops⟩
       · pd_dec
     all_goals
       rename_i hz
@@ -187,7 +187,7 @@ theorem b_19 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
     simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
     exact ⟨_, L, p, f, pos, ⟨hF1.next rfl rfl, Ok.withPos hD.ok _,
       Keep.trans hD.keep (Keep.withPos _),
-      hD.len, h0, hD.dl, hD.r13, hD.r14, hD.cx, hD.si, hD.agP, hD.bij⟩, hax, hmis, hp, hmu,
+      hD.len, h0, hD.dl, hD.r13, hD.r15, hD.cx, hD.si, hD.agP, hD.bij⟩, hax, hmis, hp, hmu,
       hnops⟩
   case vc5 =>
     pd_dec
@@ -226,7 +226,7 @@ theorem b_23 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
       · exact Fm.stack (hF.next rfl rfl)
       · simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
         exact ⟨g', L, p, f, pos, ⟨hF.next rfl rfl, hD.ok, hD.keep, hD.len, h0, hD.dl, hD.r13,
-          hD.r14, hD.cx, hD.si, hD.agP, hD.bij⟩, hax, hmis, hp, hmu, hnops⟩
+          hD.r15, hD.cx, hD.si, hD.agP, hD.bij⟩, hax, hmis, hp, hmu, hnops⟩
       · pd_dec
     all_goals
       rename_i hz
@@ -259,7 +259,7 @@ theorem b_23 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
     · exact Fm.stack (hF1.next rfl rfl)
     · simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
       exact ⟨_, L, p, f, pos, ⟨hF1.next rfl rfl, Ok.withPos hD.ok _,
-        Keep.trans hD.keep (Keep.withPos _), hD.len, h0, hD.dl, hD.r13, hD.r14, hD.cx, hD.si,
+        Keep.trans hD.keep (Keep.withPos _), hD.len, h0, hD.dl, hD.r13, hD.r15, hD.cx, hD.si,
         hD.agP,
         hD.bij⟩, hax, hmis, hp, hmu, hnops⟩
     · pd_dec
@@ -337,7 +337,7 @@ theorem b_18 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
       · simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
         exact ⟨_, L, p, f, pos, ⟨hF2.next rfl rfl, Ok.withDest hD.ok _,
           Keep.trans hD.keep (Keep.withDest _), hD.len, h0, hdl, hD.r13,
-          hD.r14, hD.cx, hD.si, hD.agP, hD.bij⟩, hax, hmis, hp, hmu, hnops⟩
+          hD.r15, hD.cx, hD.si, hD.agP, hD.bij⟩, hax, hmis, hp, hmu, hnops⟩
       · pd_dec
         rw [mD_eq hF h0 hD.agP, mD_dmem t, mD_eq hF2 h0 hD.agP]
         omega
@@ -382,7 +382,7 @@ theorem b_18 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
     simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
     exact ⟨_, L, p, f, pos, ⟨hF3.next rfl rfl, Ok.withPos (Ok.withDest hD.ok _) _,
       Keep.trans (Keep.trans hD.keep (Keep.withDest _)) (Keep.withPos _), hD.len, h0, hdl, hD.r13,
-      hD.r14, hD.cx, hD.si, hD.agP, hD.bij⟩, hax, hmis, hp, hmu, hnops⟩
+      hD.r15, hD.cx, hD.si, hD.agP, hD.bij⟩, hax, hmis, hp, hmu, hnops⟩
   case vc9 =>
     pd_dec
     rw [mD_eq hF h0 hD.agP, mD_dmem t, mD_eq hF3 h0 hD.agP]

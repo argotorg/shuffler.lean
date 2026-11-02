@@ -67,8 +67,9 @@ theorem var_commute (s : MachineData) (rest : Label → MachineData → Nat) :
 end ResolveU
 
 theorem resolve_unit [Host] [FunDecls]
+    (hout : ∀ l ∈ Program.labels resolveAsm, label l ≠ label "exit")
     (hclass : VSpec CView CG.Ok Names.classify classifyA 16 classifyQ)
-    (hadd : AddSpec) : VThm RView RG.Ok resolveAsm resolveA 1182 resolveQ := by
+    (hadd : AddSpec) : VThmWithExit RView RG.Ok resolveAsm resolveA 1182 resolveQ resolveX := by
   intro P r F s ra
   refine ⟨fun t ⟨ht, hp⟩ => ?_⟩
   subst ht
@@ -118,7 +119,7 @@ theorem resolve_unit [Host] [FunDecls]
   · exact ResolveU.b_12 P r F s ra _ _ hp.ok hclass
   · exact ResolveU.b_13 P r F s ra _ _ hp.ok
   · exact ResolveU.b_14 P r F s ra _ _ hp.ok
-  · exact ResolveU.b_15 P r F s ra _ _ hp.ok (ResolveU.addVSpec hadd)
+  · exact ResolveU.b_15 P r F s ra _ _ hout hp.ok (ResolveU.addVSpec hadd)
   · exact ResolveU.b_16 P r F s ra _ _
   · exact ResolveU.b_17 P r F s ra _ _
   · exact ResolveU.b_18 P r F s ra _ _

@@ -183,6 +183,30 @@ theorem words_length (lo : List Word) (w : Word) (L : Lc) (hlo : lo.length = 103
   simp only [Lc.words, List.length_append, Vector.length_toList, List.length_cons,
     List.length_nil, hlo]; rfl
 
+theorem Mid.pushExit {t : MachineData} (h : Mid S g F s ra L lo w t) (exitRa : Int64) :
+    (View S g ∗ Stk (rsp s - 24592#64) lo exitRa.toBitVec ∗ Fr s ra L F).get
+      (t.pushRa exitRa).dmem := by
+  have he : View S g ∗ Stk (rsp s - 24592#64) lo w ∗ Fr s ra L F =
+      Wd (rsp s - 24592#64 - 8#64) w ∗
+        (View S g ∗ Arr (rsp s - 24592#64 - 8#64 - BitVec.ofNat 64 (8 * lo.length)) lo ∗
+          Fr s ra L F) := by
+    unfold Stk; ac_rfl
+  have he' : View S g ∗ Stk (rsp s - 24592#64) lo exitRa.toBitVec ∗ Fr s ra L F =
+      Wd (rsp s - 24592#64 - 8#64) exitRa.toBitVec ∗
+        (View S g ∗ Arr (rsp s - 24592#64 - 8#64 - BitVec.ofNat 64 (8 * lo.length)) lo ∗
+          Fr s ra L F) := by
+    unfold Stk; ac_rfl
+  rw [he']
+  simpa only [MachineData.pushRa, Reg64s.get64_rsp, h.sp] using Wd.store (he ▸ h.mem) exitRa.toBitVec
+
+theorem frame_post {t : MachineData}
+    (hm : (View S g ∗ Stk (rsp s - 24592#64) lo w ∗ Fr s ra L F).get t.dmem)
+    (hlo : lo.length = 1034) {Q : G → MachineData → Prop} (hok : g.Ok) (hq : Q g t) :
+    Sep.Post S F lowestD Q s t := by
+  refine ⟨g, lo ++ w :: L.words, ra.toBitVec, hq, hok, words_length lo w L hlo, ?_⟩
+  rw [stk_frame]
+  exact hm
+
 /-! ## The local arrays -/
 
 theorem arr_rd {P R : MProp 64} {m : Mem 64} {a : Addr} (l : List Word) (h : P.get m)
@@ -335,6 +359,45 @@ theorem Mid.callW {A : G → MachineData → Prop} {Q : G → G → MachineData 
     · rw [mid_perm]
       exact hm
     · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rsp]; exact h.sp
+
+theorem Mid.callWWithExit {A : G → MachineData → Prop}
+    {Q X : G → G → MachineData → MachineData → Prop}
+    {c : MachineData} {K E : MachineData → Prop} (h : Mid S g F s ra L lo w c)
+    (hdi : rdi c = S) (hsi : rsi c = rsp s - 8208#64) (hok : g.Ok) (hA : A g c)
+    (hK : ∀ t g' (L' : Lc) lo' w', Mid S g' F s ra L' lo' w' t → Q g g' c t → g'.Ok → K t)
+    (hE : ∀ t g' (L' : Lc) lo' w',
+      (View S g' ∗ Stk (rsp s - 24592#64) lo' w' ∗ Fr s ra L' F).get t.dmem →
+      lo'.length = 1034 → X g g' c t → g'.Ok → t.regs.get64 .rdi = 1#64 → E t) :
+    ∃ S' g' F', Sep.Pre S' g' (permW c ∗ F') A 1034 c
+      ∧ (∀ t, Sep.Post S' (permW c ∗ F') 1034 (fun g'' t => Q g' g'' c t) c t →
+        Sep.mod.Agree c t → K t)
+      ∧ (∀ t, Sep.Post S' (permW c ∗ F') 1034 (fun g'' t => X g' g'' c t) c t →
+        t.regs.get64 .rdi = 1#64 → E t) := by
+  have e : ∀ (X : MProp 64) (g' : G) (lo' : List Word) (w' : Word),
+      View S g' ∗ Stk (rsp s - 24592#64) lo' w' ∗ (X ∗ FrR s ra L F) =
+        X ∗ (View S g' ∗ Stk (rsp s - 24592#64) lo' w' ∗ FrR s ra L F) := by
+    intros; ac_rfl
+  have hsp : rsp c = rsp s - 24592#64 := by
+    show c.regs.get64 .rsp = _
+    rw [Reg64s.get64_rsp, h.sp]
+  refine ⟨S, g, FrR s ra L F, ⟨hdi, hok, ⟨lo, w, h.len, ?_⟩, hA⟩, ?_, ?_⟩
+  · have hm := h.mem
+    rw [mid_perm] at hm
+    rw [hsp, permW, hsi, e]
+    exact ExArr.intro (n := MAX_N) (by simp) hm
+  · rintro t ⟨g', lo', w', hQ, hok', hl, hm⟩ hag
+    rw [hsp, permW, hsi, e] at hm
+    obtain ⟨vs, hvs, hm⟩ := ExArr.elim hm
+    refine hK t g' { L with perm := ⟨vs.toArray, by simp [hvs]⟩ } lo' w'
+      ⟨hl, ?_, ?_, h.sv.trans (Saved.of_agree hag)⟩ hQ hok'
+    · rw [mid_perm]; exact hm
+    · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rsp]; exact h.sp
+  · rintro t ⟨g', lo', w', hX, hok', hl, hm⟩ harg
+    rw [hsp, permW, hsi, e] at hm
+    obtain ⟨vs, hvs, hm⟩ := ExArr.elim hm
+    refine hE t g' { L with perm := ⟨vs.toArray, by simp [hvs]⟩ } lo' w'
+      ?_ hl hX hok' harg
+    rw [mid_perm]; exact hm
 
 end
 

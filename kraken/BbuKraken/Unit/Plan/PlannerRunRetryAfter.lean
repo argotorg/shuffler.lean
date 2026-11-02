@@ -19,13 +19,12 @@ theorem b_31 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     (K : Unit → MachineData → Prop) (I' : CfgLabel → Nat → Unit → MachineData → Prop)
     (E : Int64 → MachineData → Prop)
     (hloop : ∀ u, rax u = 1#64 + rax t → DropAfterHead P g M F s ra before u →
-      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.31") u)
+      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.30") u)
     (hretry : ∀ u, Flat.droppedCount g.p.m g.dropped > before → PrepareHead P g F s ra u →
-      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.5") u)
+      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.6") u)
     (hfail : ∀ u, ¬ Flat.droppedCount g.p.m g.dropped > before →
-      (∃ lo locals, Bd P g F s ra lo locals u) → al u = 2#8 →
-      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.26") u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.31" →
+      (∃ lo locals, Bd P g F s ra lo locals u) → K () u) :
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.30" →
       DropAfterHead P g M F s ra before t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
@@ -43,7 +42,7 @@ theorem b_31 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   all_goals try simp only [hax', rd, count_byte] at ⊢
   vc_by_shape
   | load => exact ks
-  | goto ".LB.Planner.run.31" =>
+  | goto ".LB.Planner.run.30" =>
     rename_i hj
     symexec_norm at hj
     simp only [hax', hcx', BitVec.zero_eq, Bool.not_eq_true', beq_eq_false_iff_ne] at hj
@@ -56,7 +55,7 @@ theorem b_31 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     · exact h.next rfl rfl rfl rfl rfl rfl rfl
     · change 1#64 + (g.p.drp + i) = g.p.drp + (i + 1#64)
       bv_omega
-  | goto ".LB.Planner.run.5" =>
+  | goto ".LB.Planner.run.6" =>
     rename_i he hj
     symexec_norm at he hj
     simp only [hax', hcx', BitVec.zero_eq, Bool.not_eq_false', beq_iff_eq] at he
@@ -70,7 +69,7 @@ theorem b_31 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
       simpa only [hcount] using hj
     · refine ⟨lo, locals, ?_, h.r13, h.count, h.targets⟩
       exact h.toLoopLI.next rfl rfl rfl rfl rfl rfl rfl
-  | goto ".LB.Planner.run.26" =>
+  | other =>
     rename_i he hj
     symexec_norm at he hj
     simp only [hax', hcx', BitVec.zero_eq, Bool.not_eq_false', beq_iff_eq] at he
@@ -83,6 +82,5 @@ theorem b_31 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     · change ¬ before.toNat < (Flat.droppedCount g.p.m g.dropped).toNat
       simpa only [hcount] using hj
     · exact ⟨lo, locals, h.toBd.next rfl rfl⟩
-    · rfl
 
 end Bbu.Unit.PlannerRunU

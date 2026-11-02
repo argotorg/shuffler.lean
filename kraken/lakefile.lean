@@ -11,7 +11,16 @@ require Kraken from git "https://github.com/AeneasVerif/kraken.git" @
   "2fd79ae53504b5db4407de57efa9d4bd4fbc3e2b"
 
 @[default_target] lean_lib PermuteKraken
-@[default_target] lean_lib BbuKraken
+input_dir bbuAssembly where
+  path := "c/bbu"
+  text := true
+
+input_file bbuCombinedAssembly where
+  path := "c/build_bottom_up.S"
+  text := true
+
+@[default_target] lean_lib BbuKraken where
+  extraDepTargets := #[`bbuAssembly, `bbuCombinedAssembly]
 @[default_target] lean_lib ProofKit
 @[default_target] lean_lib ProofKitTest
 

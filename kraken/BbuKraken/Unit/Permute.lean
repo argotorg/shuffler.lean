@@ -31,8 +31,10 @@ The proof is `Program.WP.cfg` with the invariant `Permute.LInv` and the variant 
 namespace Bbu.Unit
 
 theorem permute_unit [Host] [FunDecls]
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels finishAsm, label l ≠ label "exit")
     (hcopy : Sep.Spec Names.shallowestCopyPosition shallowestCopyA 0 shallowestCopyQ) :
-    ∀ p0, UnitThmW finishAsm permW (permuteA p0) 1034 (permuteQ p0) :=
-  fun p0 => Permute.permute_of_b22 p0 hcopy Permute.b_22
+    ∀ p0, UnitThmWWithExit finishAsm permW (permuteA p0) 1034 (permuteQ p0) (permuteX p0) :=
+  fun p0 => Permute.permute_of_b22 p0 hexit hout hcopy Permute.b_22
 
 end Bbu.Unit

@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "harness_process.h"
+#include <sys/mman.h>
 
 /* the types in shuffler/StackSlot.h and shuffler/ShuffleTrace.h */
 typedef struct {
@@ -462,18 +464,140 @@ static int gen(void)
  * - on ok, if each source slot is bound for junk or its own value, a slot of
  *   data differs from a target slot that is not junk.
  */
+struct bbu_output {
+	StackSlot data[1025];
+	struct op ops[6 * 1024];
+	uint64_t blocked[2];
+	struct call_outcome outcome;
+};
+
+struct bbu_call {
+	uint64_t m, n;
+	const StackSlot *target;
+	const uint64_t *dest;
+	const uint8_t *spilled;
+	struct bbu_output *output;
+};
+
+static int64_t call_build_bottom_up(void *input)
+{
+	const struct bbu_call *in = input;
+	return build_bottom_up(in->m, in->n, in->output->data, in->target, in->dest, in->spilled,
+		in->output->ops, in->output->blocked);
+}
+
+struct run_input {
+	uint64_t m, n;
+	const uint64_t *source, *target, *dest;
+	const uint8_t *spilled;
+	struct bbu_output *output;
+};
+
+static int run_case(void *input)
+{
+	const struct run_input *in = input;
+	uint64_t const m = in->m, n = in->n;
+	const uint64_t *source = in->source, *target = in->target, *dest = in->dest;
+	const uint8_t *spilled = in->spilled;
+	static StackSlot targetSlots[2][1024], replayed[1024];
+	struct bbu_output *out = in->output;
+	int64_t j[2];
+	StackSlot guard;
+	memset(&guard, 0xa5, sizeof guard);
+	int overrun = 0;
+	for (int r = 0; r < 2; r++) {
+		for (uint64_t i = 0; i < m; i++)
+			out[r].data[i] = slot_of(source[i], r ? next() : 0);
+		out[r].data[n] = guard;
+		for (uint64_t i = 0; i < n; i++)
+			targetSlots[r][i] = slot_of(target[i], r ? next() : 0);
+		memset(out[r].blocked, 0xa5, sizeof out[r].blocked);
+		struct bbu_call call = { m, n, targetSlots[r], dest, spilled, &out[r] };
+		if (!call_in_child(call_build_bottom_up, &call, &out[r].outcome))
+			return 0;
+		j[r] = out[r].outcome.returned ? out[r].outcome.value : -2;
+		overrun |= memcmp(&out[r].data[n], &guard, sizeof guard) != 0;
+	}
+	if (overrun) {
+		printf("invalid: data[n] is written\n");
+		return 1;
+	}
+	if (out[0].outcome.returned != out[1].outcome.returned || j[0] != j[1] || (j[0] >= 0 && memcmp(out[0].blocked, out[1].blocked, sizeof out[0].blocked))) {
+		printf("invalid: the padding changes the result\n");
+		return 1;
+	}
+	if (j[0] == -2) {
+		printf("assertion\n");
+		return 1;
+	}
+	if (j[0] < 0 || j[0] > (int64_t)(6 * n)) {
+		printf("invalid: the result is %ld\n", j[0]);
+		return 1;
+	}
+	int64_t bad = -1;
+	for (int64_t i = 0; i < j[0] && bad < 0; i++)
+		if (!op_ok(out[0].ops[i], spilled) || out[0].ops[i].kind != out[1].ops[i].kind
+		    || out[0].ops[i].depth != out[1].ops[i].depth || !slot_eq(out[0].ops[i].slot, out[1].ops[i].slot))
+			bad = i;
+	if (bad >= 0) {
+		printf("invalid: operation %ld\n", bad);
+		return 1;
+	}
+	for (uint64_t i = 0; i < m; i++)
+		replayed[i] = slot_of(source[i], 0);
+	uint64_t const size = replay(replayed, m, n, out[0].ops, j[0]);
+	/* the excess of a block is positive, so 0 means not blocked */
+	int const isBlocked = out[0].blocked[1] != 0;
+	if (size == UINT64_MAX || (!isBlocked && size != n)) {
+		printf("invalid: the ops do not give n slots\n");
+		return 1;
+	}
+	if (!isBlocked && out[0].blocked[0] != 0) {
+		printf("invalid: the offset of a result that is not blocked is %lu\n", out[0].blocked[0]);
+		return 1;
+	}
+	/* as from MappingBuilder: each source slot is bound for junk or its own value */
+	int bound_equal = !isBlocked;
+	for (uint64_t i = 0; i < m; i++)
+		bound_equal &= target[dest[i]] == 0 || target[dest[i]] == source[i];
+	for (uint64_t i = 0; i < size && bad < 0; i++)
+		if (!slot_eq(out[0].data[i], replayed[i]) || !slot_eq(out[1].data[i], replayed[i])
+		    || (bound_equal && target[i] != 0 && !slot_eq(out[0].data[i], targetSlots[0][i])))
+			bad = i;
+	if (bad >= 0) {
+		printf("invalid: data slot %ld\n", bad);
+		return 1;
+	}
+	if (isBlocked)
+		printf("blocked %lu %lu", out[0].blocked[0], out[0].blocked[1]);
+	else
+		printf("ok");
+	for (int64_t i = 0; i < j[0]; i++) {
+		struct op const o = out[0].ops[i];
+		if (o.kind == Push || o.kind == Load)
+			printf(" p %lu", code_of(o.slot));
+		else
+			printf(" %c %u", "sd"[o.kind], o.depth);
+	}
+	printf(" |");
+	for (uint64_t i = 0; i < size; i++)
+		printf(" %lu", code_of(out[0].data[i]));
+	printf("\n");
+	return 1;
+}
+
 static int run(void)
 {
 	uint64_t m, n, k;
 	static uint64_t source[1024], target[1024], dest[1024];
-	static StackSlot data[2][1025], targetSlots[2][1024], replayed[1024];
-	static struct op ops[2][6 * 1024];
-	StackSlot guard;
-	memset(&guard, 0xa5, sizeof guard);
+	struct bbu_output *out = mmap(NULL, 2 * sizeof *out, PROT_READ | PROT_WRITE,
+		MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+	if (out == MAP_FAILED) {
+		perror("mmap");
+		return 1;
+	}
 	while (scanf("%lu %lu", &m, &n) == 2) {
 		uint8_t spilled[1024] = { 0 };
-		uint64_t blocked[2][2];
-		int64_t j[2];
 		for (uint64_t i = 0; i < m; i++)
 			if (scanf("%lu", &source[i]) != 1)
 				return 1;
@@ -491,83 +615,11 @@ static int run(void)
 				return 1;
 			spilled[v] = 1;
 		}
-		int overrun = 0;
-		for (int r = 0; r < 2; r++) {
-			for (uint64_t i = 0; i < m; i++)
-				data[r][i] = slot_of(source[i], r ? next() : 0);
-			data[r][n] = guard;
-			for (uint64_t i = 0; i < n; i++)
-				targetSlots[r][i] = slot_of(target[i], r ? next() : 0);
-			memset(blocked[r], 0xa5, sizeof blocked[r]);
-			j[r] = build_bottom_up(m, n, data[r], targetSlots[r], dest, spilled, ops[r], blocked[r]);
-			overrun |= memcmp(&data[r][n], &guard, sizeof guard) != 0;
-		}
-		if (overrun) {
-			printf("invalid: data[n] is written\n");
-			continue;
-		}
-		if (j[0] != j[1] || (j[0] >= 0 && memcmp(blocked[0], blocked[1], sizeof blocked[0]))) {
-			printf("invalid: the padding changes the result\n");
-			continue;
-		}
-		if (j[0] == -2) {
-			printf("assertion\n");
-			continue;
-		}
-		if (j[0] < 0 || j[0] > (int64_t)(6 * n)) {
-			printf("invalid: the result is %ld\n", j[0]);
-			continue;
-		}
-		int64_t bad = -1;
-		for (int64_t i = 0; i < j[0] && bad < 0; i++)
-			if (!op_ok(ops[0][i], spilled) || ops[0][i].kind != ops[1][i].kind
-			    || ops[0][i].depth != ops[1][i].depth || !slot_eq(ops[0][i].slot, ops[1][i].slot))
-				bad = i;
-		if (bad >= 0) {
-			printf("invalid: operation %ld\n", bad);
-			continue;
-		}
-		for (uint64_t i = 0; i < m; i++)
-			replayed[i] = slot_of(source[i], 0);
-		uint64_t const size = replay(replayed, m, n, ops[0], j[0]);
-		/* the excess of a block is positive, so 0 means not blocked */
-		int const isBlocked = blocked[0][1] != 0;
-		if (size == UINT64_MAX || (!isBlocked && size != n)) {
-			printf("invalid: the ops do not give n slots\n");
-			continue;
-		}
-		if (!isBlocked && blocked[0][0] != 0) {
-			printf("invalid: the offset of a result that is not blocked is %lu\n", blocked[0][0]);
-			continue;
-		}
-		/* as from MappingBuilder: each source slot is bound for junk or its own value */
-		int bound_equal = !isBlocked;
-		for (uint64_t i = 0; i < m; i++)
-			bound_equal &= target[dest[i]] == 0 || target[dest[i]] == source[i];
-		for (uint64_t i = 0; i < size && bad < 0; i++)
-			if (!slot_eq(data[0][i], replayed[i]) || !slot_eq(data[1][i], replayed[i])
-			    || (bound_equal && target[i] != 0 && !slot_eq(data[0][i], targetSlots[0][i])))
-				bad = i;
-		if (bad >= 0) {
-			printf("invalid: data slot %ld\n", bad);
-			continue;
-		}
-		if (isBlocked)
-			printf("blocked %lu %lu", blocked[0][0], blocked[0][1]);
-		else
-			printf("ok");
-		for (int64_t i = 0; i < j[0]; i++) {
-			struct op const o = ops[0][i];
-			if (o.kind == Push || o.kind == Load)
-				printf(" p %lu", code_of(o.slot));
-			else
-				printf(" %c %u", "sd"[o.kind], o.depth);
-		}
-		printf(" |");
-		for (uint64_t i = 0; i < size; i++)
-			printf(" %lu", code_of(data[0][i]));
-		printf("\n");
+		struct run_input input = { m, n, source, target, dest, spilled, out };
+		if (!run_case(&input))
+			return 1;
 	}
+	munmap(out, 2 * sizeof *out);
 	return 0;
 }
 

@@ -27,7 +27,7 @@ variable [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
 
 set_option maxRecDepth 4096 in
 theorem cfg_29 : plannerRunAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.run.29" → FullRunObl P g F s ra blk := by
+    blk.label = .label ".LB.Planner.run.28" → FullRunObl P g F s ra blk := by
   cfg_view as hv
   cfg_block [FullRunObl, RunObl]
   intro t ht
@@ -45,8 +45,8 @@ theorem cfg_29 : plannerRunAsm.ForallBlocks fun blk =>
     rw [he]
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     FullRunInv P g F s ra b u ∧
-      Program.Decreases (runV g) (.label ".LB.Planner.run.29") 31 t b j u
-  have hh := b_29_fixed P current M F s t ra locals (I' (.label ".LB.Planner.run.30") 32)
+      Program.Decreases (runV g) (.label ".LB.Planner.run.28") 30 t b j u
+  have hh := b_29_fixed P current M F s t ra locals (I' (.label ".LB.Planner.run.29") 31)
     I' (RunExit P g F s ra) (by
       intro u ha hu
       obtain ⟨lo', i', h1, hi', hax', hrest'⟩ := hu
@@ -56,7 +56,7 @@ theorem cfg_29 : plannerRunAsm.ForallBlocks fun blk =>
         rw [he]
       have hs : i'.toNat = i.toNat + 1 := by rw [hax, hax'] at ha; bv_omega
       have hb := same_budget ctx.stable h0.toBd h1.toBd
-      apply Program.Intercept.intro_label (i := 30)
+      apply Program.Intercept.intro_label (i := 29)
       · decide
       left
       refine ⟨h1.kb.stack (by decide), ?_, Or.inl ?_⟩
@@ -87,9 +87,10 @@ theorem cfg_29 : plannerRunAsm.ForallBlocks fun blk =>
   exact hh ⟨lo, i, h0, hi, hax, hrest⟩
 
 set_option maxRecDepth 4096 in
-theorem cfg_30 (hresolve : VSpec RView RG.Ok Names.resolve resolveA 1182 resolveQ) :
+theorem cfg_30 (hout : ∀ l ∈ plannerRunAsm.labels, label l ≠ label "exit")
+    (hresolve : VSpecWithExit RView RG.Ok Names.resolve resolveA 1182 resolveQ resolveX) :
     plannerRunAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.run.30" → FullRunObl P g F s ra blk := by
+    blk.label = .label ".LB.Planner.run.29" → FullRunObl P g F s ra blk := by
   cfg_view as hv
   cfg_block [FullRunObl, RunObl]
   intro t ht
@@ -107,9 +108,9 @@ theorem cfg_30 (hresolve : VSpec RView RG.Ok Names.resolve resolveA 1182 resolve
   have hb := dropBudget_eq ctx.stable h0.kb.vmem
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     FullRunInv P g F s ra b u ∧
-      Program.Decreases (runV g) (.label ".LB.Planner.run.30") 32 t b j u
+      Program.Decreases (runV g) (.label ".LB.Planner.run.29") 31 t b j u
   have hh := b_30 P current M F s ra locals hl hin before hresolve
-    (I' (.label ".LB.Planner.run.31") 33) I' (RunExit P g F s ra) (by
+    (I' (.label ".LB.Planner.run.30") 32) I' (RunExit P g F s ra) (by
       intro spills dropped res lo' u hr h1 hres hal
       have hmodel := hcells.resolved hr scratch
       let rc := ctx.afterResolve hblocked scratch res spills dropped hmodel
@@ -122,7 +123,7 @@ theorem cfg_30 (hresolve : VSpec RView RG.Ok Names.resolve resolveA 1182 resolve
       have hresult := rc.terminal hres'
       have hq : plannerRunQ g (withResolve current spills dropped) s u := hresult.finish
         (hal.trans hcode) (by cases res <;> exact ctx.count)
-      apply Program.Intercept.intro_label (i := 27)
+      apply Program.Intercept.intro_label (i := 22)
       · decide
       left
       refine ⟨h1.kb.stack (by decide), ?_, Or.inl ?_⟩
@@ -139,7 +140,7 @@ theorem cfg_30 (hresolve : VSpec RView RG.Ok Names.resolve resolveA 1182 resolve
         change ¬ Flat.droppedCount current.p.m dropped > Flat.droppedCount current.p.m current.dropped
         simp only [hm0, Flat.droppedCount, dropped_end (by decide : ¬ (0 : Word) < 0#64)]
         decide
-      apply Program.Intercept.intro_label (i := 25)
+      apply Program.Intercept.intro_label (i := 32)
       · decide
       left
       refine ⟨h1.kb.stack (by decide), ?_, Or.inl ?_⟩
@@ -170,7 +171,19 @@ theorem cfg_30 (hresolve : VSpec RView RG.Ok Names.resolve resolveA 1182 resolve
         change (g.p.m - before).toNat * 65536 + 4096 + g.p.m.toNat <
           (current.p.m - before).toNat * 65536 + 8000
         rw [hm]
-        omega)
+        omega) (by
+      intro spills dropped lo' u hlo hmem hr harg
+      let rc := ctx.afterResolve hblocked scratch .assertionFailed spills dropped
+        (hcells.resolved hr scratch)
+      have hresult : RunResult g (withResolve current spills dropped) s .assertionFailed :=
+        rc.terminal (by change Flat.Resolution.assertionFailed ≠ .dropped; decide)
+      have hq := hresult.exit (t := u) ctx.count
+      refine Or.inr ⟨Or.inr ⟨rfl, harg, withResolve current spills dropped,
+        hq, withResolve_ok h0.ok spills dropped, fr s lo' (resolveLocals locals hl),
+        ra.toBitVec, ?_, hmem⟩, ?_⟩
+      · simp [fr, saved, hlo, resolveLocals, hl, plannerRunD]
+      · intro l hl heq
+        exact False.elim (hout l hl heq))
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
     String.reduceEq, false_implies, true_implies, and_true, true_and] at hh

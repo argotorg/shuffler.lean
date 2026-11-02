@@ -23,12 +23,15 @@ the preconditions of the callees (see the callee files). The caller is `build_bo
 namespace Bbu.Unit
 
 theorem loop_unit [Host] [FunDecls]
-    (hperm : ∀ p, Sep.SpecW Names.permute permW (permuteA p) 1034 (permuteQ p))
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels loopAsm, label l ≠ label "exit")
+    (hperm : ∀ p, Sep.SpecWWithExit Names.permute permW (permuteA p) 1034 (permuteQ p) (permuteX p))
     (hspill : Sep.Spec Names.isSpilled isSpilledA 0 isSpilledQ)
     (hcopy : Sep.Spec Names.shallowestCopyPosition shallowestCopyA 0 shallowestCopyQ)
-    (hgen : Sep.Spec Names.generate generateA 11 generateQ)
-    (hswap : Sep.Spec Names.swapWith swapWithA 0 swapWithQ) :
-    UnitThm loopAsm loopA 2068 loopQ := by
-  exact Loop.loop_of_blocks hperm hspill hcopy hgen hswap
+    (hgen : Sep.SpecWithExit Names.generate generateA 16 generateQ generateX)
+    (hswap : Sep.SpecWithExit Names.swapWith swapWithA 2 swapWithQ
+      (fun g g' s _ => ExitRes (Flat.swapWith · (rsi s)) g g')) :
+    UnitThmWithExit loopAsm loopA 2068 loopQ loopX := by
+  exact Loop.loop_of_blocks hexit hout hperm hspill hcopy hgen hswap
 
 end Bbu.Unit

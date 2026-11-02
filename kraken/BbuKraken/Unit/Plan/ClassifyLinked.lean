@@ -10,11 +10,11 @@ import all BbuKraken.PlannerHelpers
 namespace Bbu
 open Bbu.Unit
 
-theorem planner_classify_correct [Host] (L : Linked) :
+theorem planner_classify_correct [Host] (L : Linked) (X : ExitBoundary) :
     letI := L.plannerDecls
     VThm CView CG.Ok classifyAsm classifyA 16 classifyQ := by
   letI := L.plannerDecls
-  have hs := planner_helpers_correct L
+  have hs := planner_helpers_correct L X
   exact classify_unit hs.hasOtherRetainedCopy hs.isDemanded
 
 end Bbu

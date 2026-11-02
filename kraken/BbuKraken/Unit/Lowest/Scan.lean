@@ -10,8 +10,8 @@ set_option experimental.vcgen true
 /-!
 # `permuteAtLowestHeight`: the entry, the prologue and the head of the first loop
 
-The blocks of the entry, `Names.permuteAtLowestHeight` (prologue) and `.0` (the assertions and
-the loads of the step at `rax`).
+The blocks of the entry, `Names.permuteAtLowestHeight` (prologue), `.0` (the destination
+assertion), and `.1` (the scan loads and the target bound).
 -/
 
 open Std.WP Lean.Order
@@ -105,6 +105,8 @@ theorem b_fn [Host] [FunDecls] (S PM planned g F0 s ra)
   · lowest_dec
 
 theorem b_0 [Host] [FunDecls] (S PM planned g F0 s ra)
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels permuteAtLowestHeightAsm, label l ≠ label "exit")
     (hpre : Sep.Pre S g (Planned S PM planned ∗ F0) (lowestA planned) lowestD s) :
     Program.ForallBlocks permuteAtLowestHeightAsm fun blk =>
       blk.label = .label ".LB.Emission.permuteAtLowestHeight.0" → Obl S PM planned g F0 s ra blk := by
@@ -114,12 +116,50 @@ theorem b_0 [Host] [FunDecls] (S PM planned g F0 s ra)
   obtain ⟨L, l0, ⟨lo, w, hM, hdi⟩, hSc, hsc⟩ := ht
   have ⟨hcx, hlt, _, _, _⟩ := hSc
   have hr : t.regs.rax.toBitVec.toNat < MAX_N := by
+    have := BitVec.lt_def.mp hlt
+    have := len_le hpre.ok
+    show _ < 1024
+    omega
+  have hd : BitVec.ofInt 64 (Mem.loadInt t.dmem
+      (t.regs.rdi.toBitVec + t.regs.rax.toBitVec * 8#64 + 56#64) 8).get! =
+      Flat.get g.h.dest t.regs.rax.toBitVec := by
+    rw [hdi, rd_dest' hM.mem hr]
+    exact (get_eq _ _ hr).symm
+  have he := external_call_spec "exit" hexit
+  kvcgen64 [he]
+  all_goals symexec_norm
+  all_goals try simp only [hd, cmp_none, Bool.not_eq_true', Bool.not_eq_false',
+    beq_iff_eq, beq_eq_false_iff_ne] at *
+  vc_by_shape
+  | load =>
+    first
+    | rw [hdi]; exact isSome_dest' hM.mem hr
+    | rw [hM.sp]; exact isSome_of_eq w hM.mem (by unfold Stk; ecancel)
+  | goto ".LB.Emission.permuteAtLowestHeight.1" =>
+    have hne : Flat.get (flat g).dest t.regs.rax.toBitVec ≠ Flat.NONE := by assumption
+    cfg_goto
+    · exact (hM.next rfl rfl).stack
+    · simp only [LInv, Names.permuteAtLowestHeight, String.reduceEq, ↓reduceIte]
+      exact ⟨L, l0, ⟨lo, w, hM.next rfl rfl, hdi⟩, hSc, rfl, hne, hsc⟩
+    · lowest_dec
+  | jumpOut =>
+    have hnone : Flat.get (flat g).dest t.regs.rax.toBitVec = Flat.NONE := by assumption
+    exact exit_intercept hout (hM.next rfl rfl) hpre.ok l0
+      (Flat.lowest_none (hsc.symm.trans (Flat.scan_none_dest hlt hnone))) rfl
+
+theorem b_head [Host] [FunDecls] (S PM planned g F0 s ra)
+    (hpre : Sep.Pre S g (Planned S PM planned ∗ F0) (lowestA planned) lowestD s) :
+    Program.ForallBlocks permuteAtLowestHeightAsm fun blk =>
+      blk.label = .label ".LB.Emission.permuteAtLowestHeight.1" → Obl S PM planned g F0 s ra blk := by
+  cfg_block [Obl]
+  intro t ht
+  simp only [LInv, Names.permuteAtLowestHeight, String.reduceEq, ↓reduceIte] at ht
+  obtain ⟨L, l0, ⟨lo, w, hM, hdi⟩, hSc, hdx, hN, hsc⟩ := ht
+  have ⟨hcx, hlt, _, _, _⟩ := hSc
+  have hr : t.regs.rax.toBitVec.toNat < MAX_N := by
     have := BitVec.lt_def.mp hlt; have := len_le hpre.ok
     show _ < 1024; omega
-  have hd : BitVec.ofInt 64 (Mem.loadInt t.dmem
-      (t.regs.rdi.toBitVec + t.regs.rax.toBitVec * 8#64 + 56#64) 8).get!
-      = Flat.get g.h.dest t.regs.rax.toBitVec := by
-    rw [hdi, rd_dest' hM.mem hr]; exact (get_eq _ _ hr).symm
+  have hd := hdx
   have hn : BitVec.ofInt 64 (Mem.loadInt t.dmem (t.regs.rdi.toBitVec + 8#64) 8).get! = g.h.n := by
     rw [hdi]; exact rd_n' hM.mem
   have hpm : BitVec.ofInt 64 (Mem.loadInt t.dmem (t.regs.rdi.toBitVec + 16464#64) 8).get! = PM := by
@@ -133,32 +173,21 @@ theorem b_0 [Host] [FunDecls] (S PM planned g F0 s ra)
     rw [hpm, rd_eq, hM.rdPlanned hr hpa]; exact (get_eq _ _ hr).symm
   kvcgen64
   all_goals try symexec_norm
-  · rw [hdi]; exact isSome_dest' hM.mem hr
-  · rename_i hN
-    rw [hd, cmp_none, beq_iff_eq] at hN
-    cfg_goto
-    · exact (hM.next rfl rfl).stack
-    · simp only [LInv, Names.permuteAtLowestHeight, String.reduceEq, ↓reduceIte]
-      refine ⟨L, l0, ⟨lo, w, hM.next rfl rfl, hdi⟩, ?_⟩
-      exact hsc.symm.trans (Flat.scan_none_dest hlt hN)
-    · lowest_dec
   · rw [hdi]; exact isSome_n' hM.mem
-  · rename_i hc hN
+  · rename_i hc
     rw [hn] at hc
     have hc := not_lt_of_cf hc
-    rw [hd, cmp_none, beq_eq_false_iff_ne] at hN
     cfg_goto
     · exact (hM.next rfl rfl).stack
     · simp only [LInv, Names.permuteAtLowestHeight, String.reduceEq, ↓reduceIte]
       refine ⟨L, l0, ⟨lo, w, hM.next rfl rfl, hdi⟩, ?_⟩
-      exact hsc.symm.trans (Flat.scan_none_tgt hlt hN hc)
+      exact Flat.lowest_none (hsc.symm.trans (Flat.scan_none_tgt hlt hN hc))
     · lowest_dec
   · rw [hdi]; exact hM.isSomePM
   · rw [hpm]; exact hM.isSomePlanned hr hpa
-  · rename_i hc hz hN
+  · rename_i hc hz
     rw [hn] at hc
     have hc := lt_of_cf hc
-    rw [hd, cmp_none, beq_eq_false_iff_ne] at hN
     rw [hd, hcx] at hz
     have hz := eq_of_z hz
     cfg_goto
@@ -168,10 +197,9 @@ theorem b_0 [Host] [FunDecls] (S PM planned g F0 s ra)
       · dsimp only; rw [hd, hz]; exact BitVec.lt_irrefl _
       · dsimp only; rw [hd]; exact (Flat.scan_lt hlt hN hc).symm.trans hsc
     · lowest_dec
-  · rename_i hc _ hcf hN
+  · rename_i hc _ hcf
     rw [hn] at hc
     have hc := lt_of_cf hc
-    rw [hd, cmp_none, beq_eq_false_iff_ne] at hN
     rw [hd, hcx] at hcf
     have hcf := lt_of_cf' hcf
     cfg_goto
@@ -181,10 +209,9 @@ theorem b_0 [Host] [FunDecls] (S PM planned g F0 s ra)
       · dsimp only; rw [hd]; exact hcf
       · dsimp only; rw [hd]; exact (Flat.scan_lt hlt hN hc).symm.trans hsc
     · lowest_dec
-  · rename_i hc _ hcf hN
+  · rename_i hc _ hcf
     rw [hn] at hc
     have hc := lt_of_cf hc
-    rw [hd, cmp_none, beq_eq_false_iff_ne] at hN
     rw [hd, hcx] at hcf
     have hcf := not_lt_of_cf' hcf
     simp only [LInv, Names.permuteAtLowestHeight, String.reduceEq, ↓reduceIte]

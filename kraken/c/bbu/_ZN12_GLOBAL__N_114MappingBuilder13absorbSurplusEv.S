@@ -3,6 +3,7 @@ _ZN12_GLOBAL__N_114MappingBuilder13absorbSurplusEv:
 	je	.LB.MappingBuilder.absorbSurplus.8
 	pushq	%rbp
 	pushq	%rbx
+	subq	$8, %rsp
 	movq	%rdi, %rbp
 	movl	$0, %ebx
 	jmp	.LB.MappingBuilder.absorbSurplus.5
@@ -67,6 +68,7 @@ _ZN12_GLOBAL__N_114MappingBuilder13absorbSurplusEv:
 .LB.MappingBuilder.absorbSurplus.6:
 	movl	$0, %eax
 .LB.MappingBuilder.absorbSurplus.7:
+	addq	$8, %rsp
 	popq	%rbx
 	popq	%rbp
 	ret

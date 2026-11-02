@@ -10,7 +10,8 @@ namespace Bbu
 The output of `g++ -O1` for `c/shuffler/test_wrappers.cpp`, one program for each function, in
 the order of the file. Each Lean name is that of the model function that the C++
 function implements; `BbuKraken.Names` gives the symbol name. `positionOf` is inline: it
-is a load of `m_positionOf`. The phases of `MappingBuilder` are the loops of
+is a load of `m_positionOf`. Failed assertions call the external symbol `exit` with status 1.
+The phases of `MappingBuilder` are the loops of
 `buildMapping`, and have the C++ names.
 -/
 

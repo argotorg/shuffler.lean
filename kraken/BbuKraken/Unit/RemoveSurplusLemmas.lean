@@ -19,7 +19,7 @@ The model part splits `Flat.removeSurplus` at the points of the asm: `afterR r` 
 action of a pass, and `eqStep` is the action after the scan of `equalBelow` from `q`.
 
 The stack part: `removeSurplus` pushes `rbx` and keeps the struct in `rbx`. `Bx` is the state
-between the push and the pop. The callees (`swapWith`, `pop`) have no free word.
+between the push and the pop. `Extras` owns the two free words for `swapWith` and `pop`.
 -/
 
 open Std.WP Lean.Order
@@ -291,6 +291,54 @@ theorem exc_eq (st : Flat.St) (x : Word) :
 def Fr (s : MachineData) (ra : Int64) (F : MProp 64) : MProp 64 :=
   Wd (rsp s - 16#64) s.regs.rbx.toBitVec ∗ Wd (rsp s - 8#64) ra.toBitVec ∗ F
 
+-- The callees use two words below their return slot.
+def Extras (s : MachineData) (F : MProp 64) : MProp 64 :=
+  ExArr (rsp s - 40#64) 2 ∗ F
+
+theorem stk2_free (P : MProp 64) (sp : Addr) (fr : List Word) (w x v : Word)
+    (F : MProp 64) :
+    P ∗ Stk sp (fr ++ [w, x]) v ∗ F =
+      P ∗ Stk (sp - 16#64) fr w ∗ (Wd (sp - 16#64) x ∗ Wd (sp - 8#64) v ∗ F) := by
+  rw [show fr ++ [w, x] = (fr ++ [w]) ++ [x] by simp,
+    Stk.call, Stk.call, show sp - 8#64 - 8#64 = sp - 16#64 by bv_omega]
+
+theorem extras_pre {S : Addr} {g : G} {F : MProp 64} {s : MachineData}
+    {A : G → MachineData → Prop} (hp : Sep.Pre S g F A 4 s) :
+    Sep.Pre S g (Extras s F) A 2 s := by
+  obtain ⟨fr, v, hl, hm⟩ := hp.mem
+  have htake : (fr.take 2).length = 2 := by simp [hl]
+  have hdrop : (fr.drop 2).length = 2 := by simp [hl]
+  rw [← List.take_append_drop 2 fr, Stk.frame_below] at hm
+  have ha : rsp s - 8#64 - BitVec.ofNat 64 (8 * ((fr.take 2).length + (fr.drop 2).length)) =
+      rsp s - 40#64 := by rw [htake, hdrop]; bv_omega
+  rw [ha] at hm
+  have he : View S g ∗ Stk (rsp s) (fr.drop 2) v ∗ (Arr (rsp s - 40#64) (fr.take 2) ∗ F) =
+      Arr (rsp s - 40#64) (fr.take 2) ∗ (View S g ∗ Stk (rsp s) (fr.drop 2) v ∗ F) := by ac_rfl
+  have hm' := ExArr.intro htake (he ▸ hm)
+  refine ⟨hp.rdi, hp.ok, ⟨fr.drop 2, v, hdrop, ?_⟩, hp.args⟩
+  unfold Extras
+  have he' : ExArr (rsp s - 40#64) 2 ∗ (View S g ∗ Stk (rsp s) (fr.drop 2) v ∗ F) =
+      View S g ∗ Stk (rsp s) (fr.drop 2) v ∗ (ExArr (rsp s - 40#64) 2 ∗ F) := by ac_rfl
+  exact he' ▸ hm'
+
+theorem extras_post {S : Addr} {F : MProp 64} {s t : MachineData}
+    {Q : G → MachineData → Prop} (hp : Sep.Post S (Extras s F) 2 Q s t) :
+    Sep.Post S F 4 Q s t := by
+  obtain ⟨g, fr, v, hq, hok, hl, hm⟩ := hp
+  have he : View S g ∗ Stk (rsp s) fr v ∗ Extras s F =
+      ExArr (rsp s - 40#64) 2 ∗ (View S g ∗ Stk (rsp s) fr v ∗ F) := by
+    unfold Extras
+    ac_rfl
+  obtain ⟨lo, hlo, hm⟩ := ExArr.elim (he ▸ hm)
+  refine ⟨g, lo ++ fr, v, hq, hok, by simp [hlo, hl], ?_⟩
+  rw [Stk.frame_below]
+  have ha : rsp s - 8#64 - BitVec.ofNat 64 (8 * (lo.length + fr.length)) =
+      rsp s - 40#64 := by rw [hlo, hl]; bv_omega
+  rw [ha]
+  have he' : Arr (rsp s - 40#64) lo ∗ (View S g ∗ Stk (rsp s) fr v ∗ F) =
+      View S g ∗ Stk (rsp s) fr v ∗ (Arr (rsp s - 40#64) lo ∗ F) := by ac_rfl
+  exact he' ▸ hm
+
 -- The two free words: the return address of a callee and `rbx`.
 theorem stk2 (P : MProp 64) (sp : Addr) (w x v : Word) (F : MProp 64) :
     P ∗ Stk sp [w, x] v ∗ F
@@ -381,6 +429,71 @@ theorem Bx.call0 {A : G → MachineData → Prop} {Q : G → G → MachineData �
       ∧ ∀ s', Sep.Post S' F' 0 (fun g'' t => Q g' g'' c t) c s' → Sep.mod.Agree c s' → K s' :=
   ⟨S, g, Fr s ra F, h.pre0 hdi hok hA, fun s' ⟨g', _, v', hQ, hok', hl, hm⟩ hag =>
     hK s' g' v' (h.agree0 hag hl hm) hQ hok'⟩
+
+-- Expose the two free words only at the callee boundary.
+theorem Bx.call2 {A : G → MachineData → Prop}
+    {Q X : G → G → MachineData → MachineData → Prop}
+    {c : MachineData} {K E : MachineData → Prop}
+    (h : Bx S g (Extras s F) s ra w c) (hdi : rdi c = S) (hok : g.Ok) (hA : A g c)
+    (hK : ∀ t g' w', Bx S g' (Extras s F) s ra w' t → Q g g' c t → g'.Ok → K t)
+    (hX : ∀ t, Sep.Post S F 4 (fun g' t => X g g' c t) s t →
+      t.regs.get64 .rdi = 1#64 → E t) :
+    ∃ S' g' F', Sep.Pre S' g' F' A 2 c
+      ∧ (∀ t, Sep.Post S' F' 2 (fun g'' t => Q g' g'' c t) c t →
+        Sep.mod.Agree c t → K t)
+      ∧ (∀ t, Sep.Post S' F' 2 (fun g'' t => X g' g'' c t) c t →
+        t.regs.get64 .rdi = 1#64 → E t) := by
+  have split : ∀ (g' : G) (fr : List Word) (w' : Word), fr.length = 2 →
+      View S g' ∗ Stk (rsp s - 16#64) fr w' ∗ Fr s ra F =
+        Arr (rsp s - 40#64) fr ∗
+          (View S g' ∗ Stk (rsp s - 16#64) [] w' ∗ Fr s ra F) := by
+    intro g' fr w' hl
+    rw [Stk.frame]
+    have ha : rsp s - 16#64 - 8#64 - BitVec.ofNat 64 (8 * fr.length) =
+        rsp s - 40#64 := by rw [hl]; bv_omega
+    rw [ha]
+    ac_rfl
+  have packed : ∀ (g' : G) (w' : Word),
+      View S g' ∗ Stk (rsp s - 16#64) [] w' ∗ Fr s ra (Extras s F) =
+        ExArr (rsp s - 40#64) 2 ∗
+          (View S g' ∗ Stk (rsp s - 16#64) [] w' ∗ Fr s ra F) := by
+    intro g' w'
+    unfold Fr Extras
+    ac_rfl
+  obtain ⟨fr, hl, hm⟩ := ExArr.elim ((packed g w) ▸ h.mem)
+  have hsp : rsp c = rsp s - 16#64 := h.sp
+  have hm' : (View S g ∗ Stk (rsp c) fr w ∗ Fr s ra F).get c.dmem := by
+    rw [hsp, split g fr w hl]
+    exact hm
+  refine ⟨S, g, Fr s ra F, ⟨hdi, hok, ⟨fr, w, hl, hm'⟩, hA⟩, ?_, ?_⟩
+  · rintro t ⟨g', fr', w', hq, hok', hl', hm⟩ hag
+    have hm' : (Arr (rsp s - 40#64) fr' ∗
+        (View S g' ∗ Stk (rsp s - 16#64) [] w' ∗ Fr s ra F)).get t.dmem := by
+      rw [hsp, split g' fr' w' hl'] at hm
+      exact hm
+    have hpack := ExArr.intro hl' hm'
+    apply hK t g' w' (h.agree0 (fr' := []) hag rfl ?_) hq hok'
+    rw [hsp, packed]
+    exact hpack
+  · rintro t ⟨g', fr', w', hx, hok', hl', hm⟩ harg
+    apply hX t ?_ harg
+    refine ⟨g', fr' ++ [w', s.regs.rbx.toBitVec], ra.toBitVec, hx, hok', by simp [hl'], ?_⟩
+    rw [stk2_free]
+    change (View S g' ∗ Stk (rsp s - 16#64) fr' w' ∗ Fr s ra F).get t.dmem
+    simpa only [rsp, Reg64s.get64_rsp, h.sp] using hm
+
+theorem Bx.exitPost {t u : MachineData} (h : Bx S g (Extras s F) s ra w t)
+    (hok : g.Ok) (exitra : Int64) {X : G → MachineData → Prop}
+    (hm : u.dmem = t.dmem.storeInt (t.regs.rsp.toBitVec - 8#64) 8 exitra.toBitVec.toInt)
+    (hx : X g u) : Sep.Post S F 4 X s u := by
+  apply extras_post
+  refine ⟨g, [exitra.toBitVec, s.regs.rbx.toBitVec], ra.toBitVec, hx, hok, rfl, ?_⟩
+  rw [hm, stk2]
+  change (View S g ∗ Stk (rsp s - 16#64) [] exitra.toBitVec ∗
+    Fr s ra (Extras s F)).get
+      (t.dmem.storeInt (t.regs.rsp.toBitVec - 8#64) 8 exitra.toBitVec.toInt)
+  have hs := Generate.stk_store h.mem exitra.toBitVec
+  simpa only [h.sp] using hs
 
 -- A step that keeps the stack registers: the struct is now `g'`.
 theorem Bx.step {t P : MachineData} {g' : G} (h : Bx S g F s ra w t)

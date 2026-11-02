@@ -59,14 +59,15 @@ end
 
 set_option maxRecDepth 4096 in
 theorem b_9 [Host] [FunDecls] (g : EG) (F : MProp 64) (s t : MachineData)
-    (ra : Int64) (Q : MachineData → Prop)
+    (ra : Int64) (Q X : MachineData → Prop)
     (K : Unit → MachineData → Prop) (I' : CfgLabel → Nat → Unit → MachineData → Prop)
     (hq : ∀ lo locals u, Bd g F s ra lo locals t →
       StkMem entryD (View (rsp s) g ∗ F) s u.dmem → rax u = rdx t → Q u) :
     planAsm.ForallBlocks fun blk => blk.label = .label ".LB.plan.9" →
       (∃ lo locals, Bd g F s ra lo locals t) → WP.wp blk.body K
         (Program.Intercept planAsm.labels (s.pushRa ra) I'
-          (fun a u => a = ra ∧ Q u ∧ Sep.mod.Agree s u)) t := by
+          (fun a u => (a = ra ∧ Q u ∧ Sep.mod.Agree s u) ∨
+            (a = label "exit" ∧ u.regs.get64 .rdi = 1#64 ∧ X u))) t := by
   cfg_block
   intro ⟨lo, locals, hb⟩
   have kp := hb.popSome
@@ -79,6 +80,9 @@ theorem b_9 [Host] [FunDecls] (g : EG) (F : MProp 64) (s t : MachineData)
       (P := View (rsp s) g ∗ F) (s := s) (fr := fr s lo locals) ?_⟩
     exact hb.pop rfl rfl rfl rfl rfl rfl rfl rfl
   | ret =>
+    refine ProofKit.intercept_mono_exit
+      (E := fun a u => a = ra ∧ Q u ∧ Sep.mod.Agree s u)
+      ?_ (fun h => Or.inl h)
     refine Kg.ret (post := fun _ u => Q u) (P := View (rsp s) g ∗ F) (fr := fr s lo locals) ?_
       fun u hmem hax => ?_
     · exact hb.pop rfl rfl rfl rfl rfl rfl rfl rfl

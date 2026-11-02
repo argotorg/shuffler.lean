@@ -25,7 +25,7 @@ awk -f "$dir/test/bin_check.awk" "$tmp/host" "$tmp/dis" >/dev/null
 # The addresses and the displacement come from the listings: the layout of the
 # binary changes with the code.
 hex() { printf '%x' $((0x$1 + $2)); }
-read -r first size _ < <(sed -n 2p "$tmp/host")
+read -r firstLine first size < <(awk '$2 != 0 { print NR, $1, $2; exit }' "$tmp/host")
 lb1=$(awk '$3 == ".LB.Emission.isSpilled.0:" { print $1; exit }' "$tmp/host")
 jbe=$(grep -m1 -o 'jbe  *[0-9a-f]*' "$tmp/dis" | awk '{ print $2 }')
 push=_ZN12_GLOBAL__N_18Emission4pushE9StackSlot11StackOffset
@@ -52,11 +52,13 @@ expect_fail last dis '$d'
 expect_fail extra dis "\$a $stop 1 instr ret"
 expect_fail start dis "s/^start .*/start $(hex "$start" 1)/"
 expect_fail stop dis "s/^stop .*/stop $(hex "$stop" 1)/"
-expect_fail size host "2s/^\([0-9a-f]*\) $size /\1 $((size + 1)) /"
-expect_fail address host "2s/^$first /$(hex "$first" 1) /"
+expect_fail size host "${firstLine}s/^\([0-9a-f]*\) $size /\1 $((size + 1)) /"
+expect_fail address host "${firstLine}s/^$first /$(hex "$first" 1) /"
 expect_fail label host "s/^$lb1 0 \\.LB\\.Emission\\.isSpilled\\.0:/$(hex "$lb1" -1) 0 .LB.Emission.isSpilled.0:/"
 expect_fail text host '0,/cmpb \$1, %dl/s//cmpb $1, %bl/'
 expect_fail width host '0,/movq \$-1, %rax/s//movl $-1, %eax/'
+expect_fail external-address dis 's/^external exit .*/external exit 0/'
+expect_fail missing-external-label host '/ exit:$/d'
 expect_fail unknown-label host '0,/jbe \.LB[A-Za-z0-9_.]*/s//jbe .LBX/'
 
 if [ "$fails" -ne 0 ]; then exit 1; fi

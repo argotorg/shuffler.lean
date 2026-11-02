@@ -156,6 +156,18 @@ def TopFlatPost (t : MachineData) : Prop :=
     ∃ u, FlatOut s t
       (Flat.build_bottom_up (rdi s) (rsi s) (flatData s) (flatTgt s) (flatDest s) (topSpill s) u)
 
+-- At an assertion exit, the buffers hold the stores made before the assertion.
+-- The caller's blocked output is written only after a normal return from the loop.
+def TopFlatExit (t : MachineData) : Prop :=
+  TopGuard s ∧ Mem.Mapped [frame topF s] t.dmem ∧
+    Mem.UnchangedOutside (frame topF s :: topOut s) s.dmem t.dmem ∧
+    ∃ u fs,
+      Flat.build_bottom_up (rdi s) (rsi s) (flatData s) (flatTgt s) (flatDest s)
+        (topSpill s) u = (-2, some fs) ∧
+      fs.trace.length ≤ 6 * nArg s ∧
+      (List.range fs.trace.length).map (topOp s t) = fs.trace ∧
+      (List.range fs.size.toNat).map (topData s t) = Flat.slotsOf fs
+
 /-! ## The result of the list model -/
 
 -- The memory of `t` holds the list state `st`, the blocked slot `pos` and the excess `excess`.
@@ -178,6 +190,9 @@ def TopPost (t : MachineData) : Prop :=
   Mem.Mapped [frame topF s] t.dmem ∧
   if TopGuard s then TopOut s t (buildBottomUp (topEnv s) (topSource s) (topDests s))
   else rax t = -2#64
+
+def TopModelExit (t : MachineData) : Prop :=
+  TopFlatExit s t ∧ buildBottomUp (topEnv s) (topSource s) (topDests s) = .error .assertion
 
 end
 

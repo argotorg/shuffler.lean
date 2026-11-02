@@ -29,10 +29,8 @@ theorem b_3 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
         (label ".LB.Planner.run.0") u)
     (hbad : ∀ u, rcx u = rcx t → CheckBad P g F s ra u →
       Program.Intercept (Program.labels plannerRunAsm) (s.pushRa ra) I' E
-        (label ".LB.Planner.run.25") u)
-    (hret : ∀ u, rcx u = rcx t → CheckBad P g F s ra u → al u = 2#8 →
-      Program.Intercept (Program.labels plannerRunAsm) (s.pushRa ra) I' E
-        (label ".LB.Planner.run.26") u) :
+        (label ".LB.Planner.run.4") u)
+    (hfall : ∀ u, rcx u = rcx t → CheckBad P g F s ra u → K () u) :
     plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.3" →
       CheckMissing P g F s ra t → WP.wp blk.body K
         (Program.Intercept (Program.labels plannerRunAsm) (s.pushRa ra) I' E) t := by
@@ -67,7 +65,7 @@ theorem b_3 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
            Bool.not_eq_false', beq_iff_eq] using hz
        obtain ⟨_, hs⟩ := hspill hk
        simpa only [rcx, Reg64s.get64_rcx, BitVec.ofNat_toNat] using B8.isSome hs)
-  | goto ".LB.Planner.run.25" =>
+  | goto ".LB.Planner.run.4" =>
     rename_i hz
     symexec_norm at hz
     have hk : (Flat.get g.p.fl.target (rcx t)).kind ≠ 0#8 := by
@@ -100,7 +98,7 @@ theorem b_3 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
       simp only [Flat.spillIsSpilled, hvar, Bool.true_and, bne_iff_ne]
       exact hsp
     simp only [hfree, hsp', Bool.false_or, Bool.or_true]
-  | goto ".LB.Planner.run.26" =>
+  | other =>
     rename_i hz hsp
     symexec_norm at hz hsp
     have hk : (Flat.get g.p.fl.target (rcx t)).kind = 0#8 := by
@@ -112,12 +110,11 @@ theorem b_3 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
     simp only [Reg64s.get64_rcx, BitVec.ofNat_toNat] at hb
     simp only [hc.r10, hc.rbx, fold_slot, hpay, hptr, hb, BitVec.sub_zero,
       BitVec.zero_eq, Bool.not_eq_false', beq_iff_eq] at hsp
-    apply hret
+    apply hfall
     · rfl
     · refine ⟨lo, locals, hc.toEarlyLI.next rfl rfl rfl rfl rfl rfl rfl, ?_⟩
       rw [he]
       apply target_missing_bad hi hfree hcontains
       simp [Flat.spillIsSpilled, Reg64s.get64_rcx, hsp]
-    · rfl
 
 end Bbu.Unit.PlannerRunU

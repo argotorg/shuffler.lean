@@ -61,7 +61,7 @@ theorem cfg_0 : plannerRunAsm.ForallBlocks fun blk =>
         simp only [Nat.add_mul, Nat.one_mul]
         omega) (by
       intro u he hu
-      apply Program.Intercept.intro_label (i := 5)
+      apply Program.Intercept.intro_label (i := 6)
       · decide
       left
       refine ⟨?_, ?_, Or.inl ?_⟩
@@ -98,21 +98,16 @@ theorem cfg_3 (hok : g.Ok) : plannerRunAsm.ForallBlocks fun blk =>
       · simp only [runV, String.reduceEq, or_false, ↓reduceIte, he]
         omega) (by
       intro u he hu
-      apply Program.Intercept.intro_label (i := 26) (by decide)
+      apply Program.Intercept.intro_label (i := 5) (by decide)
       left
       refine ⟨hu.choose_spec.choose_spec.1.toBd.kb.stack (by decide), ?_, Or.inl ?_⟩
       · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, or_true, ↓reduceIte] using hu
       · simp only [runV, String.reduceEq, or_false, or_true, ↓reduceIte]
         omega) (by
-      intro u he hu ha
-      obtain ⟨lo, locals, hb, htgt⟩ := hu
-      apply Program.Intercept.intro_label (i := 27) (by decide)
-      left
-      refine ⟨hb.toBd.kb.stack (by decide), ?_, Or.inl ?_⟩
-      · simp only [RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte, RunReturn]
-        exact ⟨withSaw g 0#8, lo, locals, hb.toBd, withSaw_ok hok _,
-          plannerRunQ_bad_target g s u htgt ha⟩
-      · simp only [runV, String.reduceEq, or_false, ↓reduceIte]
+      intro u he hu
+      refine ⟨?_, Or.inl ?_⟩
+      · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte] using hu
+      · simp only [runV, String.reduceEq, or_false, or_true, ↓reduceIte]
         omega)
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
@@ -121,15 +116,15 @@ theorem cfg_3 (hok : g.Ok) : plannerRunAsm.ForallBlocks fun blk =>
 
 set_option maxRecDepth 4096 in
 theorem cfg_4 (hok : g.Ok) : plannerRunAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.run.4" → RunObl P g F s ra resolvePhase blk := by
+    blk.label = .label ".LB.Planner.run.5" → RunObl P g F s ra resolvePhase blk := by
   cfg_view as hv
   cfg_block [RunObl]
   intro t ht
   simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
-      Program.Decreases (runV g) (.label ".LB.Planner.run.4") 6 t b j u
-  have hh := b_4 P (withSaw g 0#8) F s ra (I' (.label ".LB.Planner.run.5") 7)
+      Program.Decreases (runV g) (.label ".LB.Planner.run.5") 7 t b j u
+  have hh := b_4 P (withSaw g 0#8) F s ra (I' (.label ".LB.Planner.run.6") 8)
     I' (RunExit P g F s ra) (by
       intro u hu
       let ctx := LoopContext.start g s hu.choose_spec.choose_spec.2.2.2
@@ -149,31 +144,33 @@ theorem cfg_4 (hok : g.Ok) : plannerRunAsm.ForallBlocks fun blk =>
   exact hh t ht
 
 set_option maxRecDepth 4096 in
-theorem cfg_25 (hok : g.Ok) : plannerRunAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.run.25" → RunObl P g F s ra resolvePhase blk := by
+theorem cfg_25 (hok : g.Ok)
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ plannerRunAsm.labels, label l ≠ label "exit") :
+    plannerRunAsm.ForallBlocks fun blk =>
+    blk.label = .label ".LB.Planner.run.4" → RunObl P g F s ra resolvePhase blk := by
   cfg_view as hv
   cfg_block [RunObl]
   intro t ht
   simp only [RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte] at ht
+  obtain ⟨lo, locals, hb, htgt⟩ := ht
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
-      Program.Decreases (runV g) (.label ".LB.Planner.run.25") 27 t b j u
-  have hh := b_25 P (withSaw g 0#8) F s ra (I' (.label ".LB.Planner.run.26") 28)
-    I' (RunExit P g F s ra) (by
-      intro u hu ha
-      obtain ⟨lo, locals, hb, htgt⟩ := hu
-      refine ⟨?_, Or.inl (by simp [runV])⟩
-      simp only [RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte, RunReturn]
-      exact ⟨withSaw g 0#8, lo, locals, hb.toBd, withSaw_ok hok _,
-        plannerRunQ_bad_target g s u htgt ha⟩)
+      Program.Decreases (runV g) (.label ".LB.Planner.run.4") 6 t b j u
+  have hh := assertion_block P (withSaw g 0#8) F s ra
+    (I' (.label ".LB.Planner.run.5") 7) I' (RunExit P g F s ra) hexit hout (by
+      intro u hm ha
+      exact Or.inr ⟨rfl, ha, withSaw g 0#8,
+        plannerRunX_bad_target g s u htgt, withSaw_ok hok _, hm⟩)
   rw [Program.ForallBlocks, hv] at hh
-  simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
-    String.reduceEq, false_implies, true_implies, and_true, true_and] at hh
-  exact hh t ht
+  simp only [Program.forallBlocksFrom, List.mem_cons, List.not_mem_nil, or_false, or_true,
+    CfgLabel.label.injEq, reduceCtorEq, String.reduceEq, false_implies,
+    true_implies, and_true, true_and, and_self] at hh
+  exact hh t ⟨lo, locals, hb.toBd⟩
 
 set_option maxRecDepth 4096 in
 theorem cfg_26 : plannerRunAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Planner.run.26" → RunObl P g F s ra resolvePhase blk := by
+    blk.label = .label ".LB.Planner.run.21" → RunObl P g F s ra resolvePhase blk := by
   cfg_view as hv
   cfg_block [RunObl]
   intro t ht
@@ -181,8 +178,8 @@ theorem cfg_26 : plannerRunAsm.ForallBlocks fun blk =>
   obtain ⟨current, lo, locals, hb, hok, hq⟩ := ht
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
-      Program.Decreases (runV g) (.label ".LB.Planner.run.26") 28 t b j u
-  have hh := b_26 P g current F s ra hok (I' (.label ".LB.Planner.run.27") 29) I'
+      Program.Decreases (runV g) (.label ".LB.Planner.run.21") 23 t b j u
+  have hh := b_26 P g current F s ra hok (I' (.label ".LB.Planner.run.22") 24) I'
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
     String.reduceEq, false_implies, true_implies, and_true, true_and] at hh
@@ -220,7 +217,7 @@ theorem cfg_fn (hp : VPre PlannerRunView PlannerRunG.Ok P g F plannerRunA planne
         simp only [Nat.add_mul, Nat.one_mul]
         omega) (by
       intro u hu
-      apply Program.Intercept.intro_label (i := 5) (by decide)
+      apply Program.Intercept.intro_label (i := 6) (by decide)
       left
       refine ⟨hu.choose_spec.choose_spec.1.toBd.kb.stack (by decide), ?_, Or.inl ?_⟩
       · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, or_true, ↓reduceIte] using hu

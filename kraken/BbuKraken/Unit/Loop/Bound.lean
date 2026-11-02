@@ -193,7 +193,7 @@ theorem H_eq {S : Addr} {T : Word} {t t' : MachineData}
 end Bound
 
 theorem b_8 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :
-    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.8" →
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.9" →
       Obl S g F s ra blk := by
   cfg_block [Obl]
   intro t ht
@@ -289,7 +289,7 @@ theorem b_8 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) 
     simp only [H]; omega
 
 theorem b_18 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :
-    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.18" →
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.21" →
       Obl S g F s ra blk := by
   cfg_block [Obl]
   intro t ht
@@ -331,7 +331,7 @@ theorem b_18 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
       simp only [H]; omega
 
 theorem b_19 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :
-    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.19" →
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.22" →
       Obl S g F s ra blk := by
   cfg_block [Obl]
   intro t ht
@@ -355,8 +355,9 @@ theorem b_19 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
     have : (t.regs.rax.toBitVec - 1#64).toNat + 1 = t.regs.rax.toBitVec.toNat := by bv_omega
     omega
 
-theorem b_20 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :
-    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.20" →
+theorem b_20 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
+    (hexit : FunDecls.at (label "exit") = none) :
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.23" →
       Obl S g F s ra blk := by
   cfg_block [Obl]
   intro t ht
@@ -373,8 +374,10 @@ theorem b_20 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
       (t.regs.r12.toBitVec + t.regs.rax.toBitVec * 8#64 + 56#64) 8).get!
         = Flat.get (flat g').dest t.regs.rax.toBitVec := by
     rw [hM.r12]; exact Bound.rd_dest_get hM.mem hmax
-  kvcgen64
+  have he := ProofKit.external_call_spec "exit" hexit
+  kvcgen64 [he]
   all_goals try symexec_norm
+  all_goals try (exfalso; rename_i h1 h2; idioms at h1 h2; exact absurd h1 h2)
   · rw [hcx]; exact Bound.isSome_data hM.mem hrn
   · decide
   · -- `.19`: the slot at `rax` is not the slot of the source.
@@ -423,13 +426,8 @@ theorem b_20 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
         BitVec.lt_trans hda hax, hI.f, Flat.HInv.bud hI hH.2.2.1, hR⟩
     · loop_dec
       simp only [H]; omega
-  · -- `.13`: not reachable, the second compare is the first.
-    rename_i h1 h2
-    idioms at h1 h2
-    exact absurd h1 h2
-
 theorem b_21 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :
-    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.21" →
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.24" →
       Obl S g F s ra blk := by
   cfg_block [Obl]
   intro t ht
@@ -448,7 +446,7 @@ theorem b_21 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
     simp only [H]; omega
 
 theorem b_9 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :
-    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.9" →
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.10" →
       Obl S g F s ra blk := by
   cfg_block [Obl]
   intro t ht
@@ -507,7 +505,7 @@ theorem b_9 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) 
     exact congrArg (· + 10) (Bound.H_eq ((rd_pend hm3).trans (Mid.rd_pend hM).symm))
 
 theorem b_10 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :
-    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.10" →
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.11" →
       Obl S g F s ra blk := by
   cfg_block [Obl]
   intro t ht

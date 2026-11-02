@@ -59,13 +59,15 @@ example : ¬ Program.ForallBlocks finishAsm fun blk => blk.label ∈ labels.eras
 -- The unit theorem from `hcopy` and an obligation for `.LB.Emission.permute.22`. The lemma of another block
 -- (`.LB.Emission.permute.24`) does not take the place of `h22`.
 example [Host] [FunDecls] (p0 : Vector Word MAX_N)
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels finishAsm, label l ≠ label "exit")
     (hcopy : Sep.Spec Names.shallowestCopyPosition shallowestCopyA 0 shallowestCopyQ)
     (h22 : ∀ S g p0 F s ra, Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s →
       Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.22" →
         Obl S g p0 F s ra blk) :
-    UnitThmW finishAsm permW (permuteA p0) 1034 (permuteQ p0) := by
-  fail_if_success (exact permute_of_b22 p0 hcopy fun S g p F s ra hpre => b_24 S g p F s ra hpre)
-  exact permute_of_b22 p0 hcopy h22
+    UnitThmWWithExit finishAsm permW (permuteA p0) 1034 (permuteQ p0) (permuteX p0) := by
+  fail_if_success (exact permute_of_b22 p0 hexit hout hcopy fun S g p F s ra hpre => b_24 S g p F s ra hpre)
+  exact permute_of_b22 p0 hexit hout hcopy h22
 
 -- The lemma of `.LB.Emission.permute.24` has the shape of `h22` with its own label. Thus the failure above is
 -- only from the label.

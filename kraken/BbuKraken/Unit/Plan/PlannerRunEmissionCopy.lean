@@ -24,10 +24,10 @@ theorem b_10 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     (E : Int64 → MachineData → Prop)
     (hnext : ∀ data u, rax u = 1#64 + rax t →
       EmitDataHead P {g with data := data} M F s ra wanted u →
-      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.10") u)
+      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.11") u)
     (hdone : ∀ data u, data.map StackSlot.ofWord = wanted →
       EmitDestHead P {g with data := data} M F s ra u → K () u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.10" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.11" →
       EmitDataHead P g M F s ra wanted t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
@@ -96,7 +96,7 @@ theorem b_10 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   all_goals try simp only [hbx, h12, h15, hsrc, slot_addr, hraw, hm, ht, hn, hs] at ⊢
   vc_by_shape
   | load => simp only [ksrc, kslot, kd, km, kt, kn, ks, k0, k1, k2, k3, k4, k5, k6]
-  | goto ".LB.Planner.run.10" =>
+  | goto ".LB.Planner.run.11" =>
     rename_i hb
     symexec_norm at hb
     simp only [hbx, h12, hsrc, slot_addr, hraw, hm, Idioms.cf_sub, decide_eq_true_eq] at hb
@@ -106,7 +106,7 @@ theorem b_10 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     refine ⟨lo, locals, hc1.next ?_ rfl rfl rfl rfl rfl rfl rfl, hlt, ?_⟩
     · rfl
     · simpa only [g1, i, rax, Reg64s.get64_rax, BitVec.add_comm 1#64 t.regs.rax.toBitVec] using hstep
-  | goto ".LB.Planner.run.12" =>
+  | goto ".LB.Planner.run.13" =>
     rename_i hb af hz
     symexec_norm at hz
     simp only [hbx, h12, hsrc, slot_addr, hraw, hm, BitVec.and_self, BitVec.zero_eq,

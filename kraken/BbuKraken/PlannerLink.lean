@@ -84,6 +84,47 @@ theorem plannerHeads : ∀ x ∈ L.plannerFunctions, Head x.2 x.1 := by
   rcases hx with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
   all_goals exact head_of_isInfixAt _ rfl (by rintro ⟨⟩)
 
+theorem planner_external (X : ExitBoundary) :
+    ∀ x ∈ L.plannerFunctions, label x.1 ≠ label "exit" := by
+  intro x hx
+  simp only [plannerFunctions, List.mem_cons, List.not_mem_nil, or_false] at hx
+  rcases hx with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+  · exact X.head isSpilled_at rfl
+  · exact X.head shallowestCopy_at rfl
+  · exact X.head push_at rfl
+  · exact X.head dup_at rfl
+  · exact X.head produce_at rfl
+  · exact X.head swapWith_at rfl
+  · exact X.head generate_at rfl
+  · exact X.head finish_at rfl
+  · exact X.head loop_at rfl
+  · exact X.head pop_at rfl
+  · exact X.head spillSetAdd_at rfl
+  · exact X.head removeSurplus_at rfl
+  · exact X.head permuteAtLowestHeight_at rfl
+  · exact X.head map_at rfl
+  · exact X.head closestCopy_at rfl
+  · exact X.head mapInPlace_at rfl
+  · exact X.head mapClosestCopies_at rfl
+  · exact X.head mapWildcardSlotCopies_at rfl
+  · exact X.head keepWildcardSlots_at rfl
+  · exact X.head absorbSurplus_at rfl
+  · exact X.head isRetained_at rfl
+  · exact X.head hasOtherRetainedCopy_at rfl
+  · exact X.head isDemanded_at rfl
+  · exact X.head classify_at rfl
+  · exact X.head resolve_at rfl
+  · exact X.head isAvailable_at rfl
+  · exact X.head run_at rfl
+  · exact X.head plannerRun_at rfl
+
+theorem planner_exit_decl (X : ExitBoundary) : L.plannerDecls.at (label "exit") = none := by
+  show (L.plannerFunctions.map Prod.snd).find? _ = none
+  apply List.find?_eq_none.mpr
+  intro f hf he
+  obtain ⟨x, hx, rfl⟩ := List.mem_map.mp hf
+  exact L.planner_external X x hx ((L.plannerHeads x hx).1.symm.trans (beq_iff_eq.mp he))
+
 theorem planner_lookup {l : Label} {f : Fragment} (hf : L.plannerFunctions.lookup l = some f) :
     L.plannerDecls.at (label l) = some f :=
   decl_of_lookup L.plannerHeads hf

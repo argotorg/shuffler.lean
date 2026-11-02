@@ -47,11 +47,16 @@ theorem b_8_call [Host] [FunDecls] (g : EG) (F : MProp 64) (s : MachineData)
     (hfinish : ∀ (r : PlannerRunG) (u : MachineData) (lo' : List Word) (l : CallLocals),
       Bd (withRun g r) F s ra lo' (l.toList (withRun g r).r) u →
       (withRun g r).Ok → RunQ g (withRun g r) s u →
-      WP.wp entryTail K (Program.Intercept planAsm.labels (s.pushRa ra) I' E) u) :
+      WP.wp entryTail K (Program.Intercept planAsm.labels (s.pushRa ra) I' E) u)
+    (hstop : ∀ (r : PlannerRunG) (u : MachineData), (withRun g r).Ok →
+      RunX g (withRun g r) s u →
+      StkMem entryD (View (rsp s) (withRun g r) ∗ F) s u.dmem →
+      u.regs.get64 .rdi = 1#64 →
+      Program.Intercept planAsm.labels (s.pushRa ra) I' E (label "exit") u) :
     planAsm.ForallBlocks fun blk => blk.label = .label ".LB.plan.8" →
       ∀ t, Ready g F s ra t → WP.wp blk.body K
         (Program.Intercept planAsm.labels (s.pushRa ra) I' E) t := by
-  simp only [PlannerRunSpec, VSpec, Names.plannerRun] at hrun
+  simp only [PlannerRunSpec, VSpecWithExit, Names.plannerRun] at hrun
   cfg_block
   intro t ⟨lo, locals, hc⟩
   let pref (j : Nat) : MachineData := {t with
@@ -114,7 +119,7 @@ theorem b_8_call [Host] [FunDecls] (g : EG) (F : MProp 64) (s : MachineData)
   | other =>
     obtain ⟨l, saw, hl⟩ := entrySetLocals_layout g hc0 locals hc.localLength
     refine Bd.callPlanner (g := g) (F := F) (s := s) (ra := ra) (lo := lo) (l := l) (saw := saw)
-      ?_ hok heok hcount ?_ ?_ ?_ ?_
+      ?_ hok heok hcount ?_ ?_ ?_ ?_ hstop
     · have hb := hp 8
       change Bd g F s ra lo (entrySetLocals locals (entryStores g)) (pref 8) at hb
       rw [hl] at hb

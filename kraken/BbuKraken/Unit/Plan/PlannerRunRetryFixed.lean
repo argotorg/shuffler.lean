@@ -29,9 +29,9 @@ theorem b_29_fixed [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapp
     (K : Unit → MachineData → Prop) (I' : CfgLabel → Nat → Unit → MachineData → Prop)
     (E : Int64 → MachineData → Prop)
     (hloop : ∀ u, rax u = 1#64 + rax t → DropBeforeFixed P g M F s ra locals u →
-      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.29") u)
+      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.28") u)
     (hdone : ∀ u, ResolveFixed P g M F s ra locals u → K () u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.29" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.28" →
       DropBeforeFixed P g M F s ra locals t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
@@ -49,7 +49,7 @@ theorem b_29_fixed [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapp
   all_goals try simp only [hax', rd, count_byte] at ⊢
   vc_by_shape
   | load => exact ks
-  | goto ".LB.Planner.run.29" =>
+  | goto ".LB.Planner.run.28" =>
     rename_i hj
     symexec_norm at hj
     simp only [hax', hdx', BitVec.zero_eq, Bool.not_eq_true', beq_eq_false_iff_ne] at hj

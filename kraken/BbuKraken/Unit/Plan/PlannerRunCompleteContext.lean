@@ -25,6 +25,14 @@ theorem RunResult.finish {initial current : PlannerRunG} {s t : MachineData} {st
   exact ⟨ha, rfl, h.stable.planner, h.stable.dataPtr, h.stable.opsPtr,
     h.stable.sourcesPtr, h.stable.countPtr, h.stable.spillCount, hc⟩
 
+theorem RunResult.exit {initial current : PlannerRunG} {s t : MachineData}
+    (h : RunResult initial current s .assertionFailed)
+    (hc : current.count = initial.count) : plannerRunX initial current s t := by
+  refine ⟨h.attempts, ?_⟩
+  rw [h.model]
+  exact ⟨rfl, rfl, h.stable.planner, h.stable.dataPtr, h.stable.opsPtr,
+    h.stable.sourcesPtr, h.stable.countPtr, h.stable.spillCount, hc⟩
+
 def RunResult.withCount {initial current : PlannerRunG} {s : MachineData} {st : Flat.Status}
     (h : RunResult initial current s st) (w : Word) :
     RunResult initial {current with count := w} s st :=
@@ -50,6 +58,26 @@ def EmittedContext.terminal {initial current : PlannerRunG} {s : MachineData}
     · rw [ite_eq_left hd, ite_eq_left hd]
       rfl
     · rw [ite_eq_right hd, ite_eq_right hd]
+
+theorem AttemptContext.afterEmissionExit {initial current : PlannerRunG}
+    {s t u : MachineData} {P : Addr} {M : Flat.Mapping} {F : MProp 64}
+    {ra : Int64} {lo locals : List Word}
+    (ctx : AttemptContext initial current s M) (hd : current.state.data = ctx.wanted)
+    (h : EmitCountLI P current M F s ra lo locals t)
+    (hp : locals[4115]? = some (Flat.unmappedFrom (countState current M) 0 0))
+    (a : G) (hk : Keep (emissionGhost current ctx.ok (localEmissionHdr locals h.localLength)) a)
+    (hx : runX (EmissionLocals.ofList locals h.localLength).planned.pos
+      (emissionGhost current ctx.ok (localEmissionHdr locals h.localLength)) a t u) :
+    plannerRunX initial
+      (emissionResult current ctx.ok (localEmissionHdr locals h.localLength) a hk) s u := by
+  obtain ⟨ec, hal, _⟩ := ctx.afterEmission hd h hp a hk (runX_to_Q hx)
+  have hs : ec.status = .assertionFailed := by
+    have he : 2#8 = code ec.status := hal
+    cases hh : ec.status <;> simp [hh, code, DONE, BLOCKED, ASSERTION_FAILED] at he ⊢
+  have ht := ec.terminal (by rw [hs]; decide)
+  rw [hs] at ht
+  have he := ht.exit (t := u) ec.count
+  simpa only [hs, reduceCtorEq, ↓reduceIte] using he
 
 def resolvedNext (pl : Flat.Planner) (take : Bool) (before : Word)
     (res : Flat.Resolution) (s : Flat.PSt) (us : Nat → Flat.RunU) : Flat.Status × Flat.PSt :=

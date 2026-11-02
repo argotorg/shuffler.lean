@@ -9,7 +9,7 @@ import all BbuKraken.Unit.Permute.Inv
 # `permute`: facts of the model for the blocks
 
 * The destinations of `DestOk` are `NONE` or below `MAX_N`.
-* `start`: the model vectors at `.LB.Emission.permute.12`, from the locals at the end of the
+* `start`: the model vectors at `.LB.Emission.permute.11`, from the locals at the end of the
   loop `.LB.Emission.permute.0`.
 -/
 
@@ -78,7 +78,7 @@ theorem AgB.trans {k : Word} {u v w : Vector Word MAX_N} (h1 : AgB k u v) (h2 : 
 theorem AgB.symm {k : Word} {u v : Vector Word MAX_N} (h : AgB k u v) : AgB k v u :=
   fun i hi => (h i hi).symm
 
--- `.LB.Emission.permute.12` at the start: `permutation` agrees with `p0` and `desiredBy` is `NONE`.
+-- `.LB.Emission.permute.11` at the start: `permutation` agrees with `p0` and `desiredBy` is `NONE`.
 theorem start {g : G} (hok : g.Ok) {p0 P D : Vector Word MAX_N} (hb : Bij g.h.len p0)
     (hP : AgB g.h.len P p0) (hD : ∀ i < g.h.len, Flat.get D i = Flat.NONE) :
     RG (flat g) p0 (Flat.regroup (flat g) 0 p0 (Flat.clearDesired (flat g) 0 Flat.initial))
@@ -234,13 +234,13 @@ theorem rg_some {st : Flat.St} {p0 p : Vector Word MAX_N} (h : RG st p0 (some p)
 -- `GC` for a state with the same leader registers.
 theorem GC.step {S : Addr} {g : G} {F : MProp 64} {s : MachineData} {ra : Int64} {L L' : Lc}
     {l : Word} {t P : MachineData} (hG : GC S g F s ra L l t) (hF : Fm S g F s ra L' P)
-    (h0 : L'.c0 = L.c0) (h1 : L'.c1 = L.c1) (hbp : P.regs.rbp = t.regs.rbp)
+    (_h0 : L'.c0 = L.c0) (h1 : L'.c1 = L.c1) (hbp : P.regs.rbp = t.regs.rbp)
     (h12 : P.regs.r12 = t.regs.r12) (h13 : P.regs.r13 = t.regs.r13)
-    (h14 : P.regs.r14 = t.regs.r14) (h15 : P.regs.r15 = t.regs.r15)
+    (h14 : P.regs.r15 = t.regs.r15) (h15 : P.regs.r14 = t.regs.r14)
     (hbx : P.regs.rbx = t.regs.rbx) : GC S g F s ra L' l P :=
-  ⟨⟨hF, hG.cc.lt, by rw [hbx]; exact hG.cc.bx, by rw [h15]; exact hG.cc.r15,
-    by rw [h0]; exact hG.cc.c0, by rw [hbp]; exact hG.cc.bp, by rw [h13]; exact hG.cc.r13,
-    by rw [h14]; exact hG.cc.r14⟩, by rw [h1]; exact hG.c1, by rw [h12]; exact hG.r12⟩
+  ⟨⟨hF, hG.cc.lt, by rw [hbx]; exact hG.cc.bx, by rw [h15]; exact hG.cc.r14,
+    by rw [hbp]; exact hG.cc.bp, by rw [h13]; exact hG.cc.r13,
+    by rw [h14]; exact hG.cc.r15⟩, by rw [h1]; exact hG.c1, by rw [h12]; exact hG.r12⟩
 
 end Permute
 end Bbu.Unit

@@ -15,8 +15,11 @@ from the block lemmas in `Lowest/Assemble.lean`.
 namespace Bbu.Unit
 
 theorem permuteAtLowestHeight_unit [Host] [FunDecls]
-    (hperm : ∀ p, Sep.SpecW Names.permute permW (permuteA p) 1034 (permuteQ p)) :
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels permuteAtLowestHeightAsm, label l ≠ label "exit")
+    (hperm : ∀ p, Sep.SpecWWithExit Names.permute permW (permuteA p) 1034
+      (permuteQ p) (permuteX p)) :
     LowestThm permuteAtLowestHeightAsm :=
-  Lowest.lowest_of_blocks hperm
+  Lowest.lowest_of_blocks hexit hout hperm
 
 end Bbu.Unit

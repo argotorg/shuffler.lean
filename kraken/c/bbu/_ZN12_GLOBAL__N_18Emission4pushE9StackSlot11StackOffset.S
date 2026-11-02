@@ -28,15 +28,16 @@ _ZN12_GLOBAL__N_18Emission4pushE9StackSlot11StackOffset:
 	movl	%ecx, 4(%rdx)
 	movb	%r9b, 8(%rdx)
 	movb	%r8b, 9(%rdx)
-	movl	$2, %edx
 	cmpq	$-1, 8248(%rax,%rdi,8)
-	jne	.LB.Emission.push.0
+	je	.LB.Emission.push.0
+	subq	$8, %rsp
+	movl	$1, %edi
+	call	exit
+.LB.Emission.push.0:
 	movq	32(%rax), %rcx
 	leaq	-1(%rcx), %rdx
 	movq	%rdi, 56(%rax,%rdx,8)
 	movq	%rdx, 8248(%rax,%rdi,8)
-	movl	$0, %edx
-.LB.Emission.push.0:
-	movl	%edx, %eax
+	movl	$0, %eax
 	ret
 	.size	_ZN12_GLOBAL__N_18Emission4pushE9StackSlot11StackOffset, .-_ZN12_GLOBAL__N_18Emission4pushE9StackSlot11StackOffset

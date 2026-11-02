@@ -24,9 +24,9 @@ theorem b_5 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
     (I' : CfgLabel → Nat → Unit → MachineData → Prop) (E : Int64 → MachineData → Prop)
     (hempty : ∀ u, InitDestDone P g F s ra u →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-        (label ".LB.Planner.run.7") u)
+        (label ".LB.Planner.run.8") u)
     (hinit : ∀ u, rax u = 0#64 → InitDestHead P g F s ra u → K () u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.5" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.6" →
       ∀ t, PrepareHead P g F s ra t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
@@ -45,7 +45,7 @@ theorem b_5 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
   all_goals try simp only [hc.rbx, hm, hn] at ⊢
   vc_by_shape
   | load => first | exact km | exact kn
-  | goto ".LB.Planner.run.7" =>
+  | goto ".LB.Planner.run.8" =>
     rename_i af hz
     symexec_norm at hz
     simp only [hc.rbx, hm, BitVec.and_self, BitVec.zero_eq, beq_iff_eq] at hz

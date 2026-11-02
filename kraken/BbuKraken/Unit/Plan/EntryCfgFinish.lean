@@ -19,7 +19,8 @@ section
 variable [Host] [FunDecls] (g : EG) (F : MProp 64) (s : MachineData) (ra : Int64)
 
 set_option maxRecDepth 8192 in
-theorem cfg_8 (hp : Pre g F s) (hs : Sizes g) (hrun : PlannerRunSpec) :
+theorem cfg_8 (hp : Pre g F s) (hs : Sizes g)
+    (hout : ∀ l ∈ planAsm.labels, label l ≠ label "exit") (hrun : PlannerRunSpec) :
     planAsm.ForallBlocks fun blk => blk.label = .label ".LB.plan.8" → EntryObl g F s ra blk := by
   cfg_view as hv
   cfg_block [EntryObl]
@@ -61,7 +62,12 @@ theorem cfg_8 (hp : Pre g F s) (hs : Sizes g) (hrun : PlannerRunSpec) :
         · simp only [EntryInv, Names.plan, String.reduceEq, ↓reduceIte]
           exact ⟨withRun cg r, lo, l.toList (withRun cg r).r, hv, hrok,
             hdx ▸ result_failed hran h2⟩
-        · simp [entryV])
+        · simp [entryV]) (by
+      intro r u hrok hx hm harg
+      refine Or.inr ⟨Or.inr ⟨rfl, harg, withRun cg r, hrok, ?_, hm⟩, ?_⟩
+      · exact assertion_of_runX g (withRun cg r) s u hok hs hsrc htgt ha htr hx rfl
+      · intro l hl heq
+        exact False.elim (hout l hl heq))
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
     String.reduceEq, false_implies, true_implies, and_true, true_and] at hh
@@ -78,7 +84,7 @@ theorem cfg_9 : planAsm.ForallBlocks fun blk =>
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     EntryInv g F s ra b u ∧
       Program.Decreases (entryV g) (.label ".LB.plan.9") 11 t b j u
-  have hh := b_9 g' F s t ra (Post g F s)
+  have hh := b_9 g' F s t ra (Post g F s) (Exit g F s)
     (I' (.label ".LB.plan.10") 12) I' (by
       intro lo' locals' u hb' hm hax
       refine ⟨g', hok, ?_, hm⟩

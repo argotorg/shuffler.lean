@@ -5,8 +5,8 @@ spill_set:
 	pushq	%r12
 	pushq	%rbp
 	pushq	%rbx
-	subq	$24, %rsp
-	movq	%rsi, (%rsp)
+	subq	$40, %rsp
+	movq	%rsi, 8(%rsp)
 	movq	%rdx, %rbx
 	movq	%rcx, %r12
 	movq	%r8, %rbp
@@ -46,13 +46,13 @@ spill_set:
 	movq	$-2, %rax
 	jmp	.LB.spill_set.12
 .LB.spill_set.4:
-	movq	(%rsp), %rax
-	movq	%rax, 16(%rsp)
+	movq	8(%rsp), %rax
+	movq	%rax, 24(%rsp)
 	testq	%r12, %r12
 	je	.LB.spill_set.7
 .LB.spill_set.5:
 	movl	$0, %r14d
-	leaq	16(%rsp), %r15
+	leaq	24(%rsp), %r15
 .LB.spill_set.6:
 	movq	(%rbx), %rsi
 	movq	%r15, %rdi
@@ -70,7 +70,7 @@ spill_set:
 	jmp	.LB.spill_set.9
 	.p2align 6
 .LB.spill_set.8:
-	movq	80(%rsp), %rcx
+	movq	96(%rsp), %rcx
 	movb	%dl, (%rcx,%rax)
 	addq	$1, %rax
 	cmpq	%rax, %r13
@@ -83,7 +83,7 @@ spill_set:
 	andb	%cl, %dl
 	je	.LB.spill_set.8
 	movl	0(%rbp,%rax,8), %edx
-	movq	(%rsp), %rcx
+	movq	8(%rsp), %rcx
 	cmpb	$0, (%rcx,%rdx)
 	setne	%dl
 	jmp	.LB.spill_set.8
@@ -93,7 +93,7 @@ spill_set:
 .LB.spill_set.11:
 	movq	$-2, %rax
 .LB.spill_set.12:
-	addq	$24, %rsp
+	addq	$40, %rsp
 	popq	%rbx
 	popq	%rbp
 	popq	%r12
@@ -114,7 +114,7 @@ spill_set:
 	movl	$0, %eax
 	testq	%r13, %r13
 	jne	.LB.spill_set.3
-	movq	(%rsp), %rax
-	movq	%rax, 16(%rsp)
+	movq	8(%rsp), %rax
+	movq	%rax, 24(%rsp)
 	jmp	.LB.spill_set.5
 	.size	spill_set, .-spill_set

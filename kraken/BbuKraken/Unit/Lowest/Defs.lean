@@ -1,7 +1,7 @@
 module
 
-public import BbuKraken.Unit.Defs
-import all BbuKraken.Unit.Defs
+public import BbuKraken.Unit.ExitDefs
+import all BbuKraken.Unit.ExitDefs
 public import BbuKraken.FlatLowest
 import all BbuKraken.FlatLowest
 
@@ -39,13 +39,18 @@ def lowestA (planned : Vector Word MAX_N) (g : G) (_s : MachineData) : Prop :=
 def lowestQ (planned : Vector Word MAX_N) (g g' : G) (_s t : MachineData) : Prop :=
   ∃ l, Res (Flat.permuteAtLowestHeight planned l) g g' t
 
+def lowestX (planned : Vector Word MAX_N) (g g' : G) (_s _t : MachineData) : Prop :=
+  ∃ l, ExitRes (Flat.permuteAtLowestHeight planned l) g g'
+
 abbrev lowestD : Nat := 3073 + 1 + 1034
 
 -- The unit theorem of `permuteAtLowestHeight`: `Planned` is in the frame.
 abbrev LowestThm [Host] [FunDecls] (prog : Program) : Prop :=
   ∀ S PM planned g F,
-    Sep.Body prog (Sep.Pre S g (Planned S PM planned ∗ F) (lowestA planned) lowestD)
+    Sep.BodyWithExit prog (Sep.Pre S g (Planned S PM planned ∗ F) (lowestA planned) lowestD)
       (fun s t => Sep.Post S (Planned S PM planned ∗ F) lowestD
         (fun g' t => lowestQ planned g g' s t) s t)
+      (fun s t => Sep.Post S (Planned S PM planned ∗ F) lowestD
+        (fun g' t => lowestX planned g g' s t) s t)
 
 end Bbu.Unit

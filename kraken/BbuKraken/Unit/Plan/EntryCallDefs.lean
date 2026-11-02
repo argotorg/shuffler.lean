@@ -29,6 +29,9 @@ def strategyState (g : EG) (s : MachineData) : MachineData :=
 def RunQ (g g' : EG) (s t : MachineData) : Prop :=
   plannerRunQ g.r g'.r (strategyState g s) t ∧ Keep g g'
 
+def RunX (g g' : EG) (s t : MachineData) : Prop :=
+  plannerRunX g.r g'.r (strategyState g s) t ∧ Keep g g'
+
 structure CallLocals where
   unused : Word
   allowedPad : BitVec 56
@@ -101,6 +104,13 @@ theorem withRun_keep (g : EG) (r : PlannerRunG) : Keep g (withRun g r) := by
 theorem run_shape (g : EG) (saw : BitVec 8) (r : PlannerRunG) (s t : MachineData)
     (hq : plannerRunQ (PlannerRunU.withSaw g.r saw) r s t) : r = (withRun g r).r := by
   obtain ⟨us, ha, hstate, hp, hd, ho, hsrc, hc, hi, hcount⟩ := hq
+  cases r
+  simp only [withRun, PlannerRunU.withSaw] at hp hd ho hsrc hc hi ⊢
+  congr 1 <;> first | rfl | exact hp | exact hd | exact ho | exact hsrc | exact hc | exact hi
+
+theorem run_shapeX (g : EG) (saw : BitVec 8) (r : PlannerRunG) (s t : MachineData)
+    (hx : plannerRunX (PlannerRunU.withSaw g.r saw) r s t) : r = (withRun g r).r := by
+  obtain ⟨us, ha, hstate, hp, hd, ho, hsrc, hc, hi, hcount⟩ := hx
   cases r
   simp only [withRun, PlannerRunU.withSaw] at hp hd ho hsrc hc hi ⊢
   congr 1 <;> first | rfl | exact hp | exact hd | exact ho | exact hsrc | exact hc | exact hi

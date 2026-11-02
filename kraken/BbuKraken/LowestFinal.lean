@@ -39,22 +39,37 @@ def LowestOut (planned : Vector Word MAX_N) (g g' : Sep.G) (t : MachineData) : P
     ∧ ∀ (e : Env) (st : St) (pl : List (Option Nat)), Flat.Sim e (Unit.flat g) st →
       Flat.PlanR (Unit.flat g).targetSize.toNat planned pl → Flat.SimR e r (lowest e.n pl st)
 
-theorem permuteAtLowestHeight_correct [Host] (L : Linked) :
+def LowestExit (planned : Vector Word MAX_N) (g g' : Sep.G) : Prop :=
+  Unit.Keep g g' ∧ ∃ r : Flat.Status × Flat.St,
+    r.1 = .assertionFailed ∧ Unit.flat g' = r.2 ∧
+    ∀ (e : Env) (st : St) (pl : List (Option Nat)), Flat.Sim e (Unit.flat g) st →
+      Flat.PlanR (Unit.flat g).targetSize.toNat planned pl → Flat.SimR e r (lowest e.n pl st)
+
+theorem permuteAtLowestHeight_correct [Host] (L : Linked) (X : ExitBoundary) :
     letI := L.decls
-    ∀ S PM planned g F, Sep.Body permuteAtLowestHeightAsm
+    ∀ S PM planned g F, Sep.BodyWithExit permuteAtLowestHeightAsm
       (Sep.Pre S g (Unit.Planned S PM planned ∗ F) (Unit.lowestA planned) Unit.lowestD)
       (fun s t => Sep.Post S (Unit.Planned S PM planned ∗ F) Unit.lowestD
-        (fun g' t => LowestOut planned g g' t) s t) := by
+        (fun g' t => LowestOut planned g g' t) s t)
+      (fun s t => Sep.Post S (Unit.Planned S PM planned ∗ F) Unit.lowestD
+        (fun g' _ => LowestExit planned g g') s t) := by
   letI := L.decls
+  have hexit := L.exit_decl X
   have hcopy := Sep.spec_of_body L.shallowestCopy_decl Unit.shallowestCopy_unit
-  have hperm := fun p => Sep.spec_of_bodyW L.finish_decl (Unit.permute_unit hcopy p)
+  have hperm := fun p => Sep.specWithExit_of_bodyW L.finish_decl (X.returnDistinct _)
+    (Unit.permute_unit hexit (X.outside finish_at) hcopy p)
   intro S PM planned g F s ra
   refine ⟨fun t ht => ?_⟩
   have hb := ht.2.args.2.2
   exact Program.wp_mono (fun _ h => h)
-    (fun _ ⟨ha, ⟨g', fr, v, ⟨l, hk, hf, hal⟩, hok, hl, hm⟩, hag⟩ =>
-      ⟨ha, ⟨g', fr, v, ⟨hk, _, hal, hf, fun _ _ _ hs hpl => Flat.sim_lowest hs hpl hb l⟩,
-        hok, hl, hm⟩, hag⟩)
-    ((Unit.permuteAtLowestHeight_unit hperm S PM planned g F s ra).1 t ht)
+    (fun _ h => h.elim
+      (fun ⟨ha, ⟨g', fr, v, ⟨l, hk, hf, hal⟩, hok, hl, hm⟩, hag⟩ =>
+        Or.inl ⟨ha, ⟨g', fr, v, ⟨hk, _, hal, hf,
+          fun _ _ _ hs hpl => Flat.sim_lowest hs hpl hb l⟩, hok, hl, hm⟩, hag⟩)
+      (fun ⟨ha, harg, ⟨g', fr, v, ⟨l, hk, hf, hstatus⟩, hok, hl, hm⟩⟩ =>
+        Or.inr ⟨ha, harg, ⟨g', fr, v, ⟨hk, _, hstatus, hf,
+          fun _ _ _ hs hpl => Flat.sim_lowest hs hpl hb l⟩, hok, hl, hm⟩⟩))
+    ((Unit.permuteAtLowestHeight_unit hexit (X.outside permuteAtLowestHeight_at)
+      hperm S PM planned g F s ra).1 t ht)
 
 end Bbu

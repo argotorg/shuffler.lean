@@ -2,6 +2,8 @@ module
 
 public import BbuKraken.Unit.Plan.ResolveModel
 import all BbuKraken.Unit.Plan.ResolveModel
+public import BbuKraken.Unit.Plan.ExitCall
+import all BbuKraken.Unit.Plan.ExitCall
 public import BbuKraken.Unit.TopGhost
 import all BbuKraken.Unit.TopGhost
 
@@ -54,6 +56,12 @@ def resolveQ (r r' : RG) (s t : MachineData) : Prop :=
       r.current (r9 s) u
     al t = ResolveU.code q.1 ∧ r' = { r with spills := q.2.1, dropped := q.2.2 }
 
+def resolveX (r r' : RG) (s _t : MachineData) : Prop :=
+  ∀ u : Flat.ResolveU,
+    let q := Flat.resolve r.p.fl r.spills r.dropped r.M (rdx s) (rcx s)
+      r.current (r9 s) u
+    q.1 = .assertionFailed ∧ r' = { r with spills := q.2.1, dropped := q.2.2 }
+
 namespace ResolveU
 
 structure AddG where
@@ -74,33 +82,46 @@ def addQ (a a' : AddG) (s t : MachineData) : Prop :=
   al t = Bbu.Unit.code (Flat.spillAdd a.spills (StackSlot.ofWord (rsi s))).1 ∧
     a' = { a with spills := (Flat.spillAdd a.spills (StackSlot.ofWord (rsi s))).2 }
 
+def addX (a a' : AddG) (s _t : MachineData) : Prop :=
+  a' = a ∧ Flat.spillAdd a.spills (StackSlot.ofWord (rsi s)) = (.assertionFailed, a.spills)
+
 theorem addVSpec [Host] [FunDecls] (hadd : AddSpec) :
-    VSpec AddView AddG.Ok Names.spillSetAdd addA 0 addQ := by
+    VSpecWithExit AddView AddG.Ok Names.spillSetAdd addA 2 addQ addX := by
   intro asz osz K E
-  refine ⟨fun s ⟨P, a, F, hp, hk⟩ => ?_⟩
+  refine ⟨fun s ⟨P, a, F, hp, hk, hx⟩ => ?_⟩
   obtain ⟨fr, v, hl, hm⟩ := hp.mem
-  obtain rfl : fr = [] := List.eq_nil_of_length_eq_zero hl
+  obtain ⟨x, y, rfl⟩ : ∃ x y, fr = [x, y] := by
+    match fr, hl with
+    | [x, y], _ => exact ⟨x, y, rfl⟩
   have hpre : AddPre P a.ptr a.spills a.count F s :=
-    ⟨hp.rdi, hp.ok, hp.args, v, by
-      have e : Stk (rsp s) [] v ∗ (AddView P a ∗ F) =
-          Wd P a.ptr ∗ Spl a.ptr a.spills (List.range a.count) ∗ Stk (rsp s) [] v ∗ F := by
+    ⟨hp.rdi, hp.ok, hp.args, x, y, v, by
+      have e : Stk (rsp s) [x, y] v ∗ (AddView P a ∗ F) =
+          Wd P a.ptr ∗ Spl a.ptr a.spills (List.range a.count) ∗ Stk (rsp s) [x, y] v ∗ F := by
         unfold AddView
         ecancel
       exact e ▸ hm⟩
   apply (hadd asz osz K E).1 s
-  refine ⟨P, a.ptr, a.spills, a.count, F, hpre, fun t ht hag => ?_⟩
-  obtain ⟨hal, v', hm'⟩ := ht
-  apply hk t ?_ hag
-  refine ⟨{ a with spills := (Flat.spillAdd a.spills (StackSlot.ofWord (rsi s))).2 },
-    ⟨hal, rfl⟩, hp.ok, [], v', rfl, ?_⟩
-  have e : Wd P a.ptr ∗ Spl a.ptr
-      (Flat.spillAdd a.spills (StackSlot.ofWord (rsi s))).2 (List.range a.count) ∗
-        Stk (rsp s) [] v' ∗ F =
-      Stk (rsp s) [] v' ∗
-        (AddView P { a with spills := (Flat.spillAdd a.spills (StackSlot.ofWord (rsi s))).2 } ∗ F) := by
-    unfold AddView
-    ecancel
-  exact e ▸ hm'
+  refine ⟨P, a.ptr, a.spills, a.count, F, hpre, ?_, ?_⟩
+  · rintro t ⟨hal, x', y', v', hm'⟩ hag
+    apply hk t ?_ hag
+    refine ⟨{ a with spills := (Flat.spillAdd a.spills (StackSlot.ofWord (rsi s))).2 },
+      ⟨hal, rfl⟩, hp.ok, [x', y'], v', rfl, ?_⟩
+    have e : Wd P a.ptr ∗ Spl a.ptr
+        (Flat.spillAdd a.spills (StackSlot.ofWord (rsi s))).2 (List.range a.count) ∗
+          Stk (rsp s) [x', y'] v' ∗ F =
+        Stk (rsp s) [x', y'] v' ∗
+          (AddView P { a with spills := (Flat.spillAdd a.spills (StackSlot.ofWord (rsi s))).2 } ∗ F) := by
+      unfold AddView
+      ecancel
+    exact e ▸ hm'
+  · rintro t ⟨hf, x', y', v', hm'⟩ harg
+    apply hx t ?_ harg
+    refine ⟨a, ⟨rfl, hf⟩, hp.ok, [x', y'], v', rfl, ?_⟩
+    have e : Wd P a.ptr ∗ Spl a.ptr a.spills (List.range a.count) ∗
+          Stk (rsp s) [x', y'] v' ∗ F = Stk (rsp s) [x', y'] v' ∗ (AddView P a ∗ F) := by
+      unfold AddView
+      ecancel
+    exact e ▸ hm'
 
 theorem update_ok {r : RG} (h : r.Ok) (sp : BitVec 32 → BitVec 8)
     (d : Vector (BitVec 8) MAX_N) : { r with spills := sp, dropped := d }.Ok :=

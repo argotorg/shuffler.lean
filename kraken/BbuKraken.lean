@@ -4,6 +4,8 @@ public import BbuKraken.Asm
 import all BbuKraken.Asm
 public import BbuKraken.AsmTest
 import all BbuKraken.AsmTest
+public import BbuKraken.Exit
+import all BbuKraken.Exit
 public import BbuKraken.Bin
 import all BbuKraken.Bin
 public import BbuKraken.BinLayout

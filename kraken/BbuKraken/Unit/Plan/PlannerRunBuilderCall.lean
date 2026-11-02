@@ -2,8 +2,8 @@ module
 
 public import BbuKraken.Unit.Plan.PlannerRunBuilderView
 import all BbuKraken.Unit.Plan.PlannerRunBuilderView
-public import BbuKraken.Unit.Plan.Call
-import all BbuKraken.Unit.Plan.Call
+public import BbuKraken.Unit.Plan.ExitCall
+import all BbuKraken.Unit.Plan.ExitCall
 
 @[expose] public section
 
@@ -62,8 +62,8 @@ theorem splitBuilderStack (lo : List Word) (hl : lo.length = 4113)
 section
 variable {P : Addr} {g : PlannerRunG} {F : MProp 64} {s t : MachineData} {ra : Int64}
     {lo : List Word} {l : BuilderLocals} {strat saw : BitVec 8} {M : Flat.Mapping}
-    {A : BG → MachineData → Prop} {Q : BG → BG → MachineData → MachineData → Prop}
-    {K : MachineData → Prop} {k : Nat}
+    {A : BG → MachineData → Prop} {Q X : BG → BG → MachineData → MachineData → Prop}
+    {K E : MachineData → Prop} {k : Nat}
 
 theorem Bd.callBuilder
     (hb : Bd P g F s ra lo
@@ -74,15 +74,28 @@ theorem Bd.callBuilder
     (hshape : ∀ b' u,
       Q (builderGhost g (t.regs.rsp.toBitVec + 96#64) strat saw M) b' t u →
       b' = builderGhost g (t.regs.rsp.toBitVec + 96#64) strat b'.saw b'.M)
+    (hxshape : ∀ b' u,
+      X (builderGhost g (t.regs.rsp.toBitVec + 96#64) strat saw M) b' t u →
+      b' = builderGhost g (t.regs.rsp.toBitVec + 96#64) strat b'.saw b'.M)
     (hK : ∀ (M' : Flat.Mapping) (saw' : BitVec 8) (u : MachineData) (lo' : List Word),
       Bd P g F s ra lo'
         (l.toList (builderGhost g (t.regs.rsp.toBitVec + 96#64) strat saw' M')) u →
       Q (builderGhost g (t.regs.rsp.toBitVec + 96#64) strat saw M)
         (builderGhost g (t.regs.rsp.toBitVec + 96#64) strat saw' M') t u →
-      Sep.mod.Agree t u → K u) :
+      Sep.mod.Agree t u → K u)
+    (hE : ∀ (M' : Flat.Mapping) (saw' : BitVec 8) (u : MachineData) (lo' : List Word),
+      (Stk (rsp s) (fr s lo'
+        (l.toList (builderGhost g (t.regs.rsp.toBitVec + 96#64) strat saw' M')))
+          ra.toBitVec ∗ (PlannerRunView P g ∗ F)).get u.dmem →
+      lo'.length = 4113 →
+      X (builderGhost g (t.regs.rsp.toBitVec + 96#64) strat saw M)
+        (builderGhost g (t.regs.rsp.toBitVec + 96#64) strat saw' M') t u →
+      u.regs.get64 .rdi = 1#64 → E u) :
     ∃ B b CF, VPre BView BG.Ok B b CF A k t ∧
-      ∀ u, VPost BView BG.Ok B CF k (fun b' u => Q b b' t u) t u →
-        Sep.mod.Agree t u → K u := by
+      (∀ u, VPost BView BG.Ok B CF k (fun b' u => Q b b' t u) t u →
+        Sep.mod.Agree t u → K u) ∧
+      (∀ u, VPost BView BG.Ok B CF k (fun b' u => X b b' t u) t u →
+        u.regs.get64 .rdi = 1#64 → E u) := by
   obtain ⟨unused, xs, w, he, hunused, hxs⟩ := splitBuilderStack lo hb.low k hk
   obtain ⟨CF, hf⟩ := builder_call_frame P g hok s ra l strat F
   have hsp : rsp t = rsp s - 8#64 - 33016#64 := hb.kb.sp
@@ -96,7 +109,7 @@ theorem Bd.callBuilder
   refine ⟨t.regs.rsp.toBitVec + 32#64,
     builderGhost g (t.regs.rsp.toBitVec + 96#64) strat saw M,
     Arr (rsp t - 8#64 - BitVec.ofNat 64 (8 * (unused.length + k))) unused ∗ CF,
-    ⟨hdi, builderGhost_ok g hok _ strat saw M, hA, xs, w, hxs, ?_⟩, ?_⟩
+    ⟨hdi, builderGhost_ok g hok _ strat saw M, hA, xs, w, hxs, ?_⟩, ?_, ?_⟩
   · rw [sep_lc (Arr _ unused) (BView _ _)] at hm
     exact hm
   · intro u hpost hag
@@ -118,6 +131,20 @@ theorem Bd.callBuilder
         omega
     · exact hQ
     · exact hag
+  · intro u hpost harg
+    obtain ⟨b', hX, _, xs', w', hxs', hm'⟩ := hpost
+    have heq := hxshape b' u hX
+    rw [heq] at hX hm'
+    apply hE b'.M b'.saw u (unused ++ xs' ++ [w']) ?_ ?_ hX harg
+    · change (Stk (rsp s) ((unused ++ xs' ++ [w']) ++
+          (l.toList (builderGhost g (t.regs.rsp.toBitVec + 96#64) strat b'.saw b'.M) ++ saved s))
+            ra.toBitVec ∗ (PlannerRunView P g ∗ F)).get u.dmem
+      rw [List.append_assoc, List.singleton_append, hsp,
+        hf (unused ++ xs') w' b'.M b'.saw, ← hsp, Stk.split, hxs']
+      rw [sep_lc (BView _ _) (Arr _ unused)] at hm'
+      exact hm'
+    · simp only [List.length_append, List.length_singleton, hunused, hxs']
+      omega
 
 end
 

@@ -1,6 +1,5 @@
 _ZN12_GLOBAL__N_18Emission3popEv:
 	movq	32(%rdi), %rax
-	movl	$2, %edx
 	testq	%rax, %rax
 	je	.LB.Emission.pop.1
 	leaq	-1(%rax), %rdx
@@ -21,8 +20,10 @@ _ZN12_GLOBAL__N_18Emission3popEv:
 	je	.LB.Emission.pop.0
 	movq	$-1, 8248(%rdi,%rax,8)
 .LB.Emission.pop.0:
-	movl	$0, %edx
-.LB.Emission.pop.1:
-	movl	%edx, %eax
+	movl	$0, %eax
 	ret
+.LB.Emission.pop.1:
+	subq	$8, %rsp
+	movl	$1, %edi
+	call	exit
 	.size	_ZN12_GLOBAL__N_18Emission3popEv, .-_ZN12_GLOBAL__N_18Emission3popEv

@@ -45,6 +45,27 @@ theorem Bd.next (h : Bd P g F s ra lo locals t) (hm : u.dmem = t.dmem)
 theorem Bd.length (h : Bd P g F s ra lo locals t) : (fr s lo locals).length = plannerRunD := by
   simp [fr, saved, h.low, h.localLength, plannerRunD]
 
+theorem Bd.exit_mem (h : Bd P g F s ra lo locals t) (exitra : Int64) :
+    (t.dmem.loadInt (t.regs.rsp.toBitVec - 8#64) 8).isSome = true ∧
+      StkMem plannerRunD (PlannerRunView P g ∗ F) s
+        (t.dmem.storeInt (t.regs.rsp.toBitVec - 8#64) 8 exitra.toBitVec.toInt) := by
+  obtain ⟨xs, w, he⟩ : ∃ xs w, lo = xs ++ [w] :=
+    ⟨lo.dropLast, lo.getLast (by intro hn; have hl := h.low; rw [hn] at hl; contradiction),
+      (List.dropLast_concat_getLast _).symm⟩
+  have hm := h.kb.mem
+  rw [fr, he, List.append_assoc, List.singleton_append] at hm
+  have ha : t.regs.rsp.toBitVec - 8#64 =
+      rsp s - 8#64 - BitVec.ofNat 64 (8 * ((locals ++ saved s).length + 1)) := by
+    rw [h.kb.sp]
+    simp only [List.length_append, h.localLength, saved, List.length_cons,
+      List.length_nil, Nat.reduceAdd, Nat.reduceMul]
+    bv_omega
+  refine ⟨Stk.wd_isSome hm ha, xs ++ exitra.toBitVec :: (locals ++ saved s),
+    ra.toBitVec, ?_, Stk.wd_store hm ha exitra.toBitVec⟩
+  have hl := h.length
+  simpa only [fr, he, List.length_append, List.length_cons, List.length_nil,
+    Nat.zero_add, Nat.add_assoc, Nat.add_left_comm, Nat.add_comm] using hl
+
 theorem Bd.popSome (h : Bd P g F s ra lo locals t) (i : Nat) (hi : i < 6) :
     (t.dmem.loadInt (t.regs.rsp.toBitVec + 32968#64 + BitVec.ofNat 64 (8 * i)) 8).isSome = true := by
   have ha : t.regs.rsp.toBitVec + 32968#64 + BitVec.ofNat 64 (8 * i) =

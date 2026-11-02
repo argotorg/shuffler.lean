@@ -3,6 +3,7 @@ _ZN12_GLOBAL__N_114MappingBuilder16mapClosestCopiesEv:
 	je	.LB.MappingBuilder.mapClosestCopies.4
 	pushq	%rbp
 	pushq	%rbx
+	subq	$8, %rsp
 	movq	%rdi, %rbp
 	movl	$0, %ebx
 	jmp	.LB.MappingBuilder.mapClosestCopies.1
@@ -35,6 +36,7 @@ _ZN12_GLOBAL__N_114MappingBuilder16mapClosestCopiesEv:
 .LB.MappingBuilder.mapClosestCopies.2:
 	movl	$0, %eax
 .LB.MappingBuilder.mapClosestCopies.3:
+	addq	$8, %rsp
 	popq	%rbx
 	popq	%rbp
 	ret

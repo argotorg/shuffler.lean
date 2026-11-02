@@ -29,6 +29,10 @@ def keepWildQ (b b' : BG) (_ t : MachineData) : Prop :=
   al t = code (Flat.keepWildcardSlots b.fl b.M).1
     ∧ b' = { b with M := (Flat.keepWildcardSlots b.fl b.M).2 }
 
+def keepWildX (b b' : BG) (_s _t : MachineData) : Prop :=
+  (Flat.keepWildcardSlots b.fl b.M).1 = .assertionFailed ∧
+    b' = { b with M := (Flat.keepWildcardSlots b.fl b.M).2 }
+
 namespace KeepU
 
 open InPlaceU
@@ -124,10 +128,12 @@ def V (b : BG) (l : Label) (t : MachineData) : Nat :=
     2 * ((Flat.commonSize b.fl).toNat - t.regs.rbx.toBitVec.toNat) + 1
   else 0
 
-def E (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) :
+def E [Labels] (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) :
     Int64 → MachineData → Prop :=
-  fun a t => a = ra ∧ VPost BView BG.Ok B F 3 (fun a' t => keepWildQ b a' s t) s t
+  fun a t => a = ra ∧ VPost BView BG.Ok B F 6 (fun a' t => keepWildQ b a' s t) s t
     ∧ Sep.mod.Agree s t
+    ∨ a = label "exit" ∧ t.regs.get64 .rdi = 1#64 ∧
+      VPost BView BG.Ok B F 6 (fun a' t => keepWildX b a' s t) s t
 
 def Obl [Host] [FunDecls] (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (fr₀ : List Word) (blk : Program.Block) : Prop :=
@@ -172,10 +178,10 @@ theorem b_entry : keepWildcardSlotsAsm.ForallBlocks fun blk =>
   exact ht
 
 set_option maxHeartbeats 100000 in
-theorem b_fn (hpre : VPre BView BG.Ok B b F keepWildA 3 s) (w₀ w₁ w₂ : Word)
-    (hk0 : Kg (BView B b ∗ F) s ra [w₀, w₁, w₂] (s.pushRa ra)) :
+theorem b_fn (hpre : VPre BView BG.Ok B b F keepWildA 6 s) (w₀ w₁ w₂ w₃ w₄ w₅ : Word)
+    (hk0 : Kg (BView B b ∗ F) s ra [w₀, w₁, w₂, w₃, w₄, w₅] (s.pushRa ra)) :
     keepWildcardSlotsAsm.ForallBlocks fun blk =>
-      blk.label = .label Names.keepWildcardSlots → Obl B b F s ra [w₀, w₁, w₂] blk := by
+      blk.label = .label Names.keepWildcardSlots → Obl B b F s ra [w₀, w₁, w₂, w₃, w₄, w₅] blk := by
   cfg_block [Obl, Names.keepWildcardSlots]
   intro t ht
   kw_inv at ht
@@ -185,12 +191,12 @@ theorem b_fn (hpre : VPre BView BG.Ok B b F keepWildA 3 s) (w₀ w₁ w₂ : Wor
   have hm0 := hk0.vmem
   have hq : (s.pushRa ra).regs.rsp.toBitVec = rsp s - 8#64 := by
     rw [← Reg64s.get64_rsp, hk0.sp64]
-  have hsp2 : (s.pushRa ra).regs.rsp.toBitVec - 8#64 - 8#64 = rsp s - 8#64 - 16#64 := by
+  have hsp2 : (s.pushRa ra).regs.rsp.toBitVec - 8#64 - 8#64 - 8#64 = rsp s - 8#64 - 24#64 := by
     rw [hq]; bv_omega
   obtain ⟨hpo, hpm⟩ := hk0.pushes (xs := [(s.pushRa ra).regs.rbp.toBitVec,
     (s.pushRa ra).regs.rbx.toBitVec]) (by simp)
   simp only [pushes] at hpm
-  change (Stk (rsp s) (fr s w₀) ra.toBitVec ∗ BView B b ∗ F).get _ at hpm
+  change (Stk (rsp s) (fr s ⟨w₀, w₁, w₂, w₃⟩) ra.toBitVec ∗ BView B b ∗ F).get _ at hpm
   simp only [PushOk] at hpo
   obtain ⟨p1, p2, -⟩ := hpo
   have h_m := BView.rd_m hm0
@@ -228,7 +234,7 @@ theorem b_fn (hpre : VPre BView BG.Ok B b F keepWildA 3 s) (w₀ w₁ w₂ : Wor
     cfg_goto
     · exact Kb.stack ⟨hpm, hsp2⟩ (by decide)
     · kw_inv
-      exact ⟨b.M, w₀, ⟨⟨hpm, hsp2⟩, by simpa [MachineData.pushRa] using hpre.rdi, rfl, rfl, rfl, rfl⟩,
+      exact ⟨b.M, ⟨w₀, w₁, w₂, w₃⟩, ⟨⟨hpm, hsp2⟩, by simpa [MachineData.pushRa] using hpre.rdi, rfl, rfl, rfl, rfl⟩,
         hcs, rfl⟩
     · left; have := (Flat.commonSize b.fl).isLt; simp [V, Names.keepWildcardSlots]; omega
 
@@ -278,7 +284,8 @@ theorem b_0 : keepWildcardSlotsAsm.ForallBlocks fun blk =>
        rw [BitVec.add_comm]
        exact hrest)
 
-theorem b_1 (hmap : BSpec Names.map mapA 0 mapQ) (hok : b.Ok) :
+theorem b_1 (hout : ∀ l ∈ Program.labels keepWildcardSlotsAsm, label l ≠ label "exit")
+    (hmap : BSpecWithExit Names.map mapA 2 mapQ mapX) (hok : b.Ok) :
     keepWildcardSlotsAsm.ForallBlocks fun blk =>
     blk.label = .label ".LB.MappingBuilder.keepWildcardSlots.1" → Obl B b F s ra fr₀ blk := by
   cfg_block [Obl]
@@ -352,40 +359,64 @@ theorem b_1 (hmap : BSpec Names.map mapA 0 mapQ) (hok : b.Ok) :
     have hcand := cand_of (fb := b.fl) (M := M) (j := t.regs.rbx.toBitVec) hw
       (by with_reducible assumption) (by with_reducible assumption) (by with_reducible assumption)
     clear hw h_kind
-    refine Kb.vcall (V := BView) (A := mapA) (Q := mapQ) (S := B) (s := s) (ra := ra) (w := w)
-      (F := F) (lo := []) (hi := [s.regs.rbx.toBitVec, s.regs.rbp.toBitVec]) (k := 0)
-      ?kb rfl rfl ?rdi hokM ?A ?_
+    refine Kb.vcallWithExit (V := BView) (A := mapA) (Q := mapQ) (X := mapX) (S := B) (s := s) (ra := ra) (w := w.ret)
+      (F := F) (lo := [w.low0, w.low1])
+      (hi := [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec]) (k := 2)
+      ?kb rfl rfl ?rdi hokM ?A ?normal ?abort
     case kb => exact Kb.next hli.kb rfl rfl
     case rdi => exact hli.rbp
     case A => exact ⟨hm, hn⟩
-    intro t2 a' lo' w' hkb hl hQ hok' hag
-    obtain ⟨hli2, hbx⟩ := LI.after hag (hli.next rfl rfl rfl rfl rfl rfl rfl) hkb hl hQ.2
-    have hal : al t2 = code (Flat.mbMap b.fl M t.regs.rbx.toBitVec t.regs.rbx.toBitVec).1 := hQ.1
-    clear hQ hkb
-    kvcgen64
-    all_goals try symexec_norm
-    vc_by_shape
-    | goto ".LB.MappingBuilder.keepWildcardSlots.0" =>
-      have hd := code_eq_zero (hal.symm.trans
-        (al_zero (by rw [Bool.not_eq_false']; with_reducible assumption)))
-      cfg_goto
-      · exact hli2.stk rfl rfl
-      · kw_inv
-        refine ⟨_, w', hli2.next rfl rfl rfl rfl rfl rfl rfl, ?_, ?_⟩
-        · show t2.regs.rbx.toBitVec.toNat < _; rw [hbx]; exact hlt
-        · show Flat.keepFrom _ _ (t2.regs.rbx.toBitVec + 1#64) = _
-          rw [hbx]
-          exact (from_done (BitVec.lt_def.2 hlt) hcand hd).symm.trans hrest
-      · left; kw_var; rw [hbx]; omega
-    | goto ".LB.MappingBuilder.keepWildcardSlots.3" =>
-      have hd := code_ne_zero fun e =>
-        al_ne (by rw [Bool.not_eq_true']; with_reducible assumption) (hal.trans e)
-      have hf := hrest.symm.trans (from_fail (BitVec.lt_def.2 hlt) hcand hd)
-      cfg_goto
-      · exact hli2.stk rfl rfl
-      · kw_inv
-        exact ⟨_, w', hli2.next rfl rfl rfl rfl rfl rfl rfl, by rw [hf]; exact hal, by rw [hf]; rfl⟩
-      · left; kw_var; omega
+    case normal =>
+      intro t2 a' lo' w' hkb hl hQ hok' hag
+      obtain ⟨w2, hli2, hbx⟩ := LI.after hag (hli.next rfl rfl rfl rfl rfl rfl rfl) hkb hl hQ.2
+      have hal : al t2 = code (Flat.mbMap b.fl M t.regs.rbx.toBitVec t.regs.rbx.toBitVec).1 := hQ.1
+      clear hQ hkb
+      kvcgen64
+      all_goals try symexec_norm
+      vc_by_shape
+      | goto ".LB.MappingBuilder.keepWildcardSlots.0" =>
+        have hd := code_eq_zero (hal.symm.trans
+          (al_zero (by rw [Bool.not_eq_false']; with_reducible assumption)))
+        cfg_goto
+        · exact hli2.stk rfl rfl
+        · kw_inv
+          refine ⟨_, w2, hli2.next rfl rfl rfl rfl rfl rfl rfl, ?_, ?_⟩
+          · show t2.regs.rbx.toBitVec.toNat < _; rw [hbx]; exact hlt
+          · show Flat.keepFrom _ _ (t2.regs.rbx.toBitVec + 1#64) = _
+            rw [hbx]
+            exact (from_done (BitVec.lt_def.2 hlt) hcand hd).symm.trans hrest
+        · left; kw_var; rw [hbx]; omega
+      | goto ".LB.MappingBuilder.keepWildcardSlots.3" =>
+        have hd := code_ne_zero fun e =>
+          al_ne (by rw [Bool.not_eq_true']; with_reducible assumption) (hal.trans e)
+        have hf := hrest.symm.trans (from_fail (BitVec.lt_def.2 hlt) hcand hd)
+        cfg_goto
+        · exact hli2.stk rfl rfl
+        · kw_inv
+          exact ⟨_, w2, hli2.next rfl rfl rfl rfl rfl rfl rfl, by rw [hf]; exact hal, by rw [hf]; rfl⟩
+        · left; kw_var; omega
+    case abort =>
+      intro t2 a' lo' w' hmem hl hrel hok' harg
+      obtain ⟨ha', hf⟩ := hrel
+      subst a'
+      change Flat.mbMap b.fl M t.regs.rbx.toBitVec t.regs.rbx.toBitVec =
+        (.assertionFailed, M) at hf
+      have hd : (Flat.mbMap b.fl M t.regs.rbx.toBitVec t.regs.rbx.toBitVec).1 ≠ .done := by
+        rw [hf]
+        change Flat.Status.assertionFailed ≠ Flat.Status.done
+        decide
+      have hm := hrest.symm.trans (from_fail (BitVec.lt_def.2 hlt) hcand hd)
+      refine Or.inr ⟨Or.inr ⟨rfl, harg, ?_⟩, ?_⟩
+      · refine ⟨{ b with M := M }, ?_, hokM,
+          lo' ++ w' :: [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec], ra.toBitVec,
+          by simp [hl], ?_⟩
+        · constructor
+          · rw [hm, hf]
+          · rw [hm, hf]
+        · simpa only [MProp.sep_assoc] using hmem
+      · intro l hl ha
+        exact False.elim (hout l hl ha)
+
 set_option maxHeartbeats 100000 in
 theorem b_2 : keepWildcardSlotsAsm.ForallBlocks fun blk =>
     blk.label = .label ".LB.MappingBuilder.keepWildcardSlots.2" → Obl B b F s ra fr₀ blk := by
@@ -422,6 +453,10 @@ theorem b_3 (hok : b.Ok) : keepWildcardSlotsAsm.ForallBlocks fun blk =>
     refine Option.isSome_iff_exists.mpr ⟨ra, Kg.retAddr (P := BView B { b with M := M } ∗ F) (s := s) (fr := fr s w) ?_⟩
     exact hli.pop_kg rfl (by bv_omega) rfl rfl rfl rfl rfl rfl
   | ret =>
+    refine ProofKit.intercept_mono_exit
+      (E := fun a t => a = ra ∧
+        VPost BView BG.Ok B F 6 (fun a' t => keepWildQ b a' s t) s t ∧
+          Sep.mod.Agree s t) ?_ (fun h => Or.inl h)
     refine Kg.vret (ok := BG.Ok) (a' := { b with M := M })
       (hli.pop_kg rfl (by bv_omega) rfl rfl rfl rfl rfl rfl) rfl hokM
       fun t' _ hax => ⟨?_, by rw [hM]⟩
@@ -430,7 +465,7 @@ theorem b_3 (hok : b.Ok) : keepWildcardSlotsAsm.ForallBlocks fun blk =>
     exact hal
 
 set_option maxHeartbeats 100000 in
-theorem b_4 (hok : b.Ok) (hfr : fr₀.length = 3) : keepWildcardSlotsAsm.ForallBlocks fun blk =>
+theorem b_4 (hok : b.Ok) (hfr : fr₀.length = 6) : keepWildcardSlotsAsm.ForallBlocks fun blk =>
     blk.label = .label ".LB.MappingBuilder.keepWildcardSlots.4" → Obl B b F s ra fr₀ blk := by
   cfg_block [Obl]
   intro t ht
@@ -442,6 +477,10 @@ theorem b_4 (hok : b.Ok) (hfr : fr₀.length = 3) : keepWildcardSlotsAsm.ForallB
   | retAddr =>
     exact Option.isSome_iff_exists.mpr ⟨ra, (hk.next rfl rfl rfl rfl rfl rfl rfl rfl).retAddr⟩
   | ret =>
+    refine ProofKit.intercept_mono_exit
+      (E := fun a t => a = ra ∧
+        VPost BView BG.Ok B F 6 (fun a' t => keepWildQ b a' s t) s t ∧
+          Sep.mod.Agree s t) ?_ (fun h => Or.inl h)
     refine Kg.vret (ok := BG.Ok) (a' := b) (hk.next rfl rfl rfl rfl rfl rfl rfl rfl) hfr hok
       fun t' _ hax => ⟨?_, by rw [hd]⟩
     simp only [al]
@@ -453,22 +492,23 @@ end
 end KeepU
 
 open KeepU in
-theorem keepWildcardSlots_unit [Host] [FunDecls] (hmap : BSpec Names.map mapA 0 mapQ) :
-    BThm keepWildcardSlotsAsm keepWildA 3 keepWildQ := by
+theorem keepWildcardSlots_unit [Host] [FunDecls]
+    (hout : ∀ l ∈ Program.labels keepWildcardSlotsAsm, label l ≠ label "exit") (hmap : BSpecWithExit Names.map mapA 2 mapQ mapX) :
+    BThmWithExit keepWildcardSlotsAsm keepWildA 6 keepWildQ keepWildX := by
   intro B b F s ra
   refine ⟨fun s₀ ⟨h₀, hpre⟩ => ?_⟩
   subst h₀
   obtain ⟨fr₀, hfr, hk0⟩ := hpre.kg ra
   match fr₀, hfr, hk0 with
-  | [w₀, w₁, w₂], hfr, hk0 =>
-  refine Program.WP.cfg (KeepU.Inv B b F s ra [w₀, w₁, w₂]) (KeepU.V b) ?_ rfl
+  | [w₀, w₁, w₂, w₃, w₄, w₅], hfr, hk0 =>
+  refine Program.WP.cfg (KeepU.Inv B b F s ra [w₀, w₁, w₂, w₃, w₄, w₅]) (KeepU.V b) ?_ rfl
   refine forallBlocks_cases labels labels_cover fun l hl => ?_
   simp only [labels, List.mem_cons, List.not_mem_nil, or_false] at hl
   rcases hl with rfl | rfl | rfl | rfl | rfl | rfl | rfl
   · exact b_entry B b F s ra _
-  · exact b_fn B b F s ra hpre w₀ w₁ w₂ hk0
+  · exact b_fn B b F s ra hpre w₀ w₁ w₂ w₃ w₄ w₅ hk0
   · exact b_0 B b F s ra _
-  · exact b_1 B b F s ra _ hmap hpre.ok
+  · exact b_1 B b F s ra _ hout hmap hpre.ok
   · exact b_2 B b F s ra _
   · exact b_3 B b F s ra _ hpre.ok
   · exact b_4 B b F s ra _ hpre.ok hfr

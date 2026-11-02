@@ -2,6 +2,8 @@ module
 
 public import BbuKraken.Unit.TopPos
 import all BbuKraken.Unit.TopPos
+public import BbuKraken.Unit.TopAssert
+import all BbuKraken.Unit.TopAssert
 
 @[expose] public section
 
@@ -79,6 +81,53 @@ theorem b_16 [Host] [FunDecls] (s ra) (hpre : TopPre s)
     simp only [LInv, Names.build_bottom_up, String.reduceEq, ↓reduceIte]
     exact hq.fail rfl rfl rfl rfl rfl rfl rfl rfl
   case vc4 => top_dec
+
+theorem b_16WithExit [Host] [FunDecls] (s ra) (hpre : TopPre s)
+    (hout : ∀ l ∈ Program.labels buildBottomUpAsm, label l ≠ label "exit")
+    (hloop : Sep.SpecWithExit Names.buildBottomUp loopA 2068 loopQ loopX) :
+    Program.ForallBlocks buildBottomUpAsm fun blk => blk.label = .label ".LB.build_bottom_up.16" →
+      OblWithExit s ra blk := by
+  simp only [Names.buildBottomUp] at hloop
+  pm_block [OblWithExit]
+  intro t ht
+  simp only [LInv, Names.build_bottom_up, String.reduceEq, ↓reduceIte] at ht
+  obtain ⟨L, hs⟩ := ht
+  let c : MachineData := {t with regs := t.regs.set64 .rdi t.regs.rsp.toBitVec}
+  kvcgen64 [hloop]
+  all_goals try symexec_norm
+  refine ⟨topS s, topG s ra, FL s ra L, topPre hs hpre rfl rfl rfl, ?_, ?_⟩
+  · intro u hpost hag
+    obtain ⟨hq, hal⟩ := topPost hs hpre (c := c) rfl rfl rfl rfl rfl rfl rfl hpost hag
+    kvcgen64
+    all_goals try symexec_norm
+    case vc1 =>
+      rename_i hc
+      have hst := st_blocked hal hc
+      rw [hst] at hq
+      cfg_goto
+      · exact hq.stack_of rfl
+      · simp only [LInv, Names.build_bottom_up, String.reduceEq, ↓reduceIte]
+        exact ⟨_, hq.next rfl rfl rfl rfl rfl rfl rfl rfl⟩
+      · top_dec
+    case vc2 =>
+      rename_i hc1 hc2
+      have hst := st_done hal hc1 hc2
+      rw [hst] at hq
+      cfg_goto
+      · exact hq.stack_of rfl
+      · simp only [LInv, Names.build_bottom_up, String.reduceEq, ↓reduceIte]
+        exact ⟨_, hq.next rfl rfl rfl rfl rfl rfl rfl rfl⟩
+      · top_dec
+    case vc3 =>
+      rename_i hc1 hc2
+      have hst := st_fail hal hc1 hc2
+      rw [hst] at hq
+      simp only [LInv, Names.build_bottom_up, String.reduceEq, ↓reduceIte]
+      exact hq.fail rfl rfl rfl rfl rfl rfl rfl rfl
+    case vc4 => top_dec
+  · intro u hpost harg
+    apply ProofKit.intercept_exit hout
+    exact Or.inr ⟨rfl, harg, topAssert hs hpre rfl rfl rfl rfl rfl rfl rfl hpost⟩
 
 end Top
 end Bbu.Unit

@@ -151,6 +151,9 @@ def after (g : G) (d : Word) : G :=
 
 /-! ## The statement -/
 
-example [Host] [FunDecls] : UnitThm dupAsm dupA 0 dupQ := dup_unit
+example [Host] [FunDecls]
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels dupAsm, label l ≠ label "exit") :
+    UnitThmWithExit dupAsm dupA 2 dupQ dupX := dup_unit hexit hout
 
 end Bbu.Unit.DupTest

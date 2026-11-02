@@ -30,8 +30,10 @@ section
 variable [Host] [FunDecls] (S PM : Addr) (planned : Vector Word MAX_N)
     (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
 
-theorem b_5 : runAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Emission.run.5" → Obl S PM planned g F s ra blk := by
+theorem b_5 (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels runAsm, label l ≠ label "exit") : runAsm.ForallBlocks fun blk =>
+    blk.label = .label ".LB.Emission.run.8" → Obl S PM planned g F s ra blk := by
+  have he := ProofKit.external_call_spec "exit" hexit
   cfg_block [Obl]
   intro t ht
   simp only [Inv, Names.run, String.reduceEq, ↓reduceIte] at ht
@@ -44,15 +46,15 @@ theorem b_5 : runAsm.ForallBlocks fun blk =>
   have lm0 := View.isSome_pos h.bd.mem hiM
   obtain ⟨_, hbyte⟩ := View.b8_tgt h.bd.mem hi (j := 4) (by decide)
   have lm1 := B8.isSome hbyte
-  kvcgen64
+  kvcgen64 [he]
   all_goals try symexec_norm
-  all_goals try simp only [h.bx, hdx, Fld.fold_mapping_positionOf] at ⊢
+  all_goals try simp only [h.bp, hdx, Fld.fold_mapping_positionOf] at ⊢
   all_goals try simp only [fold_slot, hpos, hkind, neg_one_eq_none] at ⊢
   vc_by_shape
-  | load => run_loads [lm0, lm1]
-  | goto ".LB.Emission.run.4" =>
+  | load => first | run_loads [lm0, lm1] | exact h.bd.isSome_exit
+  | goto ".LB.Emission.run.7" =>
     rename_i hj
-    simp only [h.bx, hdx, Fld.fold_mapping_positionOf] at hj
+    simp only [h.bp, hdx, Fld.fold_mapping_positionOf] at hj
     simp only [fold_slot, hpos, hkind, neg_one_eq_none] at hj
     have hpass : (Flat.get (flat a).target t.regs.rax.toBitVec).kind ≠ FunctionReturnLabel ∨
         Flat.get (flat a).pos t.regs.rax.toBitVec ≠ Flat.NONE := by
@@ -73,10 +75,10 @@ theorem b_5 : runAsm.ForallBlocks fun blk =>
         (labels_pass (st := flat a) hi hpass).symm.trans hscan⟩
       apply h.next <;> rfl
     · simp [V, Names.run]
-  | goto ".LB.Emission.run.0" =>
-    rename_i hjkind hjpos
-    simp only [h.bx, hdx, Fld.fold_mapping_positionOf] at hjkind hjpos
-    simp only [fold_slot, hpos, hkind, neg_one_eq_none] at hjkind hjpos
+  | jumpOut =>
+    rename_i exitra hkindFlag hposFlag
+    simp only [h.bp, hdx, Fld.fold_mapping_positionOf] at hkindFlag hposFlag
+    simp only [fold_slot, hpos, hkind, neg_one_eq_none] at hkindFlag hposFlag
     have hk : (Flat.get (flat a).target t.regs.rax.toBitVec).kind = FunctionReturnLabel := by
       change (Flat.get (flat a).target t.regs.rax.toBitVec).kind = 3#8
       apply eq_of_z8
@@ -88,16 +90,12 @@ theorem b_5 : runAsm.ForallBlocks fun blk =>
       with_reducible assumption
     have hfail : Flat.labelsFrom (flat a) 0#64 = false :=
       hscan.symm.trans (labels_fail (st := flat a) hi hk hp)
-    cfg_goto
-    · exact (h.bd.kb.next rfl rfl).stack (by decide)
-    · simp only [Inv, Names.run, String.reduceEq, ↓reduceIte]
-      refine ⟨a, lo, w, ?_, h.ok, h.result (finish_labels hfail) rfl⟩
-      apply h.bd.next <;> rfl
-    · simp [V, Names.run]
-      omega
+    apply ProofKit.intercept_exit (E := E S PM planned g F s ra) hout
+    refine Or.inr ⟨rfl, rfl, h.bd.exitPost h.ok exitra rfl ?_⟩
+    exact h.exit (finish_labels hfail)
 
 theorem b_4 : runAsm.ForallBlocks fun blk =>
-    blk.label = .label ".LB.Emission.run.4" → Obl S PM planned g F s ra blk := by
+    blk.label = .label ".LB.Emission.run.7" → Obl S PM planned g F s ra blk := by
   cfg_block [Obl]
   intro t ht
   simp only [Inv, Names.run, String.reduceEq, ↓reduceIte] at ht
@@ -107,7 +105,7 @@ theorem b_4 : runAsm.ForallBlocks fun blk =>
   kvcgen64
   all_goals try symexec_norm
   vc_by_shape
-  | goto ".LB.Emission.run.8" =>
+  | goto ".LB.Emission.run.9" =>
     rename_i hj
     have he : a.h.n = t.regs.rax.toBitVec + 1#64 := by
       apply Generate.eq_of_z

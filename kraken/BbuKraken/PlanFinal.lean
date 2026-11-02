@@ -12,17 +12,19 @@ import all BbuKraken.Bin
 namespace Bbu
 open Bbu.Unit
 
-theorem plan_correct [Host] (L : Linked) :
+theorem plan_correct [Host] (L : Linked) (X : ExitBoundary) :
     letI := L.plannerDecls
     ∀ (g : EntryValidU.EG) (F : MProp 64),
-      Sep.Body planAsm (EntryValidU.Pre g F) (EntryValidU.Post g F) := by
+      Sep.BodyWithExit planAsm (EntryValidU.Pre g F) (EntryValidU.Post g F)
+        (EntryValidU.Exit g F) := by
   letI := L.plannerDecls
-  exact EntryValidU.plan_unit (planner_run_spec L)
+  exact EntryValidU.plan_unit (X.outside plan_at) (planner_run_spec L X)
 
 theorem plan_harness_correct :
     letI := binLinked.plannerDecls
     ∀ (g : EntryValidU.EG) (F : MProp 64),
-      Sep.Body planAsm (EntryValidU.Pre g F) (EntryValidU.Post g F) :=
-  plan_correct binLinked
+      Sep.BodyWithExit planAsm (EntryValidU.Pre g F) (EntryValidU.Post g F)
+        (EntryValidU.Exit g F) :=
+  plan_correct binLinked binBoundary
 
 end Bbu

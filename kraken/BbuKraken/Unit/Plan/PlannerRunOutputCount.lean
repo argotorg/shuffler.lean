@@ -23,8 +23,8 @@ theorem b_18 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
       Bd P {g with count := BitVec.ofNat 64 g.traceLength} F s ra lo locals u →
       al u = al t →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-        (label ".LB.Planner.run.26") u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.18" →
+        (label ".LB.Planner.run.21") u) :
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.19" →
       SourcesDone P g M F s ra t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
@@ -43,7 +43,7 @@ theorem b_18 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   all_goals try simp only [hbp, hr] at ⊢
   vc_by_shape
   | load => run_loads [kn, kc]
-  | goto ".LB.Planner.run.26" =>
+  | goto ".LB.Planner.run.21" =>
     apply hret _ lo locals
     · exact hc.storeCount _ rfl rfl
     · rfl

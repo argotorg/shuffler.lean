@@ -1,7 +1,7 @@
 module
 
-public import BbuKraken.Unit.Defs
-import all BbuKraken.Unit.Defs
+public import BbuKraken.Unit.ExitDefs
+import all BbuKraken.Unit.ExitDefs
 public import BbuKraken.Sep.Stores
 import all BbuKraken.Sep.Stores
 public import ProofKit.Cfg
@@ -18,7 +18,7 @@ The prologue pushes `r15`, `r14`, `r13`, `r12`, `rbp`, `rbx` and subtracts 8216 
 The body `rsp` is `base s = rsp s - 8272`. The locals (`Lc`) are, from `base s - 8` up:
 
 * `w`: the return slot of the callee `shallowestCopyPosition` (at `base s - 8`);
-* `c0` at `(%rsp)` and `c1` at `8(%rsp)`: the ends of the loops of `regroup`;
+* `c0` at `(%rsp)`: an unused word; `c1` at `8(%rsp)`: the stack pointer in `regroup`;
 * `D`, 1024 words at `16(%rsp)`: the array `desiredBy`;
 * `pad`, one word at `8208(%rsp)`.
 
@@ -289,6 +289,45 @@ theorem Fm.stack {t : MachineData} (h : Fm S g F s ra L t) : t.StackAtOrBelow (s
     rw [Reg64s.get64_rsp, Reg64s.get64_rsp, h.sp]
     simp only [MachineData.pushRa, base, rsp, Reg64s.get64_rsp, Reg64s.set64_rsp]
     bv_omega)
+
+-- An external call writes only its return slot below the body frame.
+theorem Fm.pushExit {t : MachineData} (h : Fm S g F s ra L t) (exitRa : Int64) :
+    (View S g ∗ Loc (base s) { L with w := exitRa.toBitVec } ∗ Fr s ra L F).get
+      (t.pushRa exitRa).dmem := by
+  have hm := h.mem
+  have he : View S g ∗ Loc (base s) L ∗ Fr s ra L F =
+      Wd (base s - 8#64) L.w ∗ (View S g ∗ Bd (base s) L ∗ Fr s ra L F) := by
+    unfold Loc; ac_rfl
+  have he' : View S g ∗ Loc (base s) { L with w := exitRa.toBitVec } ∗ Fr s ra L F =
+      Wd (base s - 8#64) exitRa.toBitVec ∗ (View S g ∗ Bd (base s) L ∗ Fr s ra L F) := by
+    unfold Loc Bd; ac_rfl
+  rw [he']
+  simpa only [MachineData.pushRa, Reg64s.get64_rsp, h.sp] using Wd.store (he ▸ hm) exitRa.toBitVec
+
+-- A body frame gives the memory postcondition at an external boundary.
+theorem frame_post {t : MachineData}
+    (hm : (View S g ∗ Loc (base s) L ∗ Fr s ra L F).get t.dmem)
+    {Q : G → MachineData → Prop} (hok : g.Ok) (hq : Q g t) :
+    Sep.Post S (permW s ∗ F) 1034 Q s t := by
+  have he : View S g ∗ Loc (base s) L ∗ Fr s ra L F =
+      View S g ∗ Stk (rsp s)
+        (L.toList ++ [s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec,
+          s.regs.r13.toBitVec, s.regs.r14.toBitVec, s.regs.r15.toBitVec]) ra.toBitVec ∗
+        (Arr (rsi s) L.P.toList ∗ F) := by
+    rw [stk_frame]; rfl
+  rw [he] at hm
+  have he' : ∀ X : MProp 64, View S g ∗ Stk (rsp s)
+      (L.toList ++ [s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec,
+        s.regs.r13.toBitVec, s.regs.r14.toBitVec, s.regs.r15.toBitVec]) ra.toBitVec ∗ (X ∗ F) =
+      X ∗ (View S g ∗ Stk (rsp s)
+        (L.toList ++ [s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec,
+          s.regs.r13.toBitVec, s.regs.r14.toBitVec, s.regs.r15.toBitVec]) ra.toBitVec ∗ F) := by
+    intro X; ac_rfl
+  refine ⟨g, L.toList ++ [s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec,
+    s.regs.r13.toBitVec, s.regs.r14.toBitVec, s.regs.r15.toBitVec],
+    ra.toBitVec, hq, hok, by simp [Lc.length_toList], ?_⟩
+  rw [he'] at hm ⊢
+  exact ExArr.intro (by simp) hm
 
 /-! ## The call of `shallowestCopyPosition` -/
 

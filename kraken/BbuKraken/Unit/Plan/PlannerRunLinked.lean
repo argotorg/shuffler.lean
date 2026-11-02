@@ -19,39 +19,46 @@ open scoped Program.WP
 namespace Bbu
 open Bbu.Unit
 
-theorem planner_resolve_correct [Host] (L : Linked) :
+theorem planner_resolve_correct [Host] (L : Linked) (X : ExitBoundary) :
     letI := L.plannerDecls
-    VThm RView RG.Ok resolveAsm resolveA 1182 resolveQ := by
+    VThmWithExit RView RG.Ok resolveAsm resolveA 1182 resolveQ resolveX := by
   letI := L.plannerDecls
-  have hclass := vspec_of_body L.planner_classify_decl (planner_classify_correct L)
-  have hadd := addSpec_of_body L.planner_spillSetAdd_decl spillSetAdd_unit
-  exact resolve_unit hclass hadd
+  have hclass := vspec_of_body L.planner_classify_decl (planner_classify_correct L X)
+  have hadd := addSpec_of_body L.planner_spillSetAdd_decl (X.returnDistinct _)
+    (spillSetAdd_unit (L.planner_exit_decl X) (X.outside spillSetAdd_at))
+  exact resolve_unit (X.outside resolve_at) hclass hadd
 
-theorem emission_run_vthm [Host] (L : Linked) (PM : Addr) (planned : Vector Word MAX_N) :
+theorem emission_run_vthm [Host] (L : Linked) (X : ExitBoundary) (PM : Addr) (planned : Vector Word MAX_N) :
     letI := L.plannerDecls
-    VThm (RunView PM planned) Sep.G.Ok runAsm (runA planned) runD (runQ planned) := by
+    VThmWithExit (RunView PM planned) Sep.G.Ok runAsm (runA planned) runD
+      (runQ planned) (runX planned) := by
   letI := L.plannerDecls
-  have h := emission_run_correct L
+  have h := emission_run_correct L X
   intro S g F s ra
   refine ⟨fun t ⟨ht, hp⟩ => ?_⟩
   exact Program.wp_mono (fun _ h => h)
-    (fun _ ⟨ha, hq, hag⟩ => ⟨ha, RunU.post_iff.mpr hq, hag⟩)
+    (fun _ h => h.elim
+      (fun ⟨ha, hq, hag⟩ => Or.inl ⟨ha, RunU.post_iff.mpr hq, hag⟩)
+      (fun ⟨ha, harg, hx⟩ => Or.inr ⟨ha, harg, RunU.post_iff.mpr hx⟩))
     ((h S PM planned g F s ra).1 t ⟨ht, RunU.pre_iff.mp hp⟩)
 
-theorem planner_run_correct [Host] (L : Linked) :
+theorem planner_run_correct [Host] (L : Linked) (X : ExitBoundary) :
     letI := L.plannerDecls
     PlannerRunThm := by
   letI := L.plannerDecls
-  have hs := planner_helpers_correct L
-  exact plannerRun_unit hs.mapInPlace hs.mapClosestCopies hs.mapWildcardSlotCopies
+  have hs := planner_helpers_correct L X
+  exact plannerRun_unit (L.planner_exit_decl X) (X.outside plannerRun_at) hs.mapInPlace hs.mapClosestCopies hs.mapWildcardSlotCopies
     hs.keepWildcardSlots hs.absorbSurplus
-    (fun PM planned => vspec_of_body L.planner_run_decl (emission_run_vthm L PM planned))
-    (vspec_of_body L.planner_resolve_decl (planner_resolve_correct L))
+    (fun PM planned => vspecWithExit_of_body L.planner_run_decl (X.returnDistinct _)
+      (emission_run_vthm L X PM planned))
+    (vspecWithExit_of_body L.planner_resolve_decl (X.returnDistinct _)
+      (planner_resolve_correct L X))
 
-theorem planner_run_spec [Host] (L : Linked) :
+theorem planner_run_spec [Host] (L : Linked) (X : ExitBoundary) :
     letI := L.plannerDecls
     PlannerRunSpec := by
   letI := L.plannerDecls
-  exact vspec_of_body L.planner_plannerRun_decl (planner_run_correct L)
+  exact vspecWithExit_of_body L.planner_plannerRun_decl (X.returnDistinct _)
+    (planner_run_correct L X)
 
 end Bbu

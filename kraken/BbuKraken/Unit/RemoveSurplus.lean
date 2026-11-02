@@ -16,6 +16,8 @@ public import BbuKraken.Sep.Stores
 import all BbuKraken.Sep.Stores
 public import ProofKit.Cfg
 import all ProofKit.Cfg
+public import ProofKit.CfgBlock
+import all ProofKit.CfgBlock
 public import ProofKit.Idioms
 import all ProofKit.Idioms
 
@@ -24,8 +26,8 @@ import all ProofKit.Idioms
 /-!
 # `removeSurplus`
 
-`c/bbu/<Names.removeSurplus>.S`: 1 `pushq`, so 2 free words (1, and 1 for the calls of
-`swapWith` and `pop`, which have no free word). Each turn of the loop at
+`c/bbu/<Names.removeSurplus>.S`: 1 `pushq`, so 4 free words (1, a return slot, and 2 for the calls of
+`swapWith` and `pop`). Each turn of the loop at
 `.LB.Emission.removeSurplus.0` is one pass of `Flat.surplusPass`: the scan at
 `.LB.Emission.removeSurplus.2`, the loop of `equalBelow` at `.LB.Emission.removeSurplus.4`, the
 inline `swapDestinations`, the call of `swapWith`, and the call of `pop`.
@@ -119,12 +121,12 @@ def At289 : Prop :=
       ∨ (Flat.get g2.h.dest t.regs.rdi.toBitVec).toNat < MAX_N)
     ∧ Flat.removeSurplus (flat g) = afterPop (posAt (flat g2) t.regs.rdi.toBitVec)
 
--- `.LB.Emission.removeSurplus.10`: the call of `swapWith`.
+-- `.LB.Emission.removeSurplus.11`: the call of `swapWith`.
 def At301 : Prop :=
   ∃ g1 w, Run S g F s ra g1 w t ∧ Budget g1 ∧ g1.h.len ≠ 0#64
     ∧ Flat.removeSurplus (flat g) = afterR (Flat.swapWith (flat g1) t.regs.rsi.toBitVec)
 
--- `.LB.Emission.removeSurplus.11`: the call of `pop`. A swap is done, so the budget has one more
+-- `.LB.Emission.removeSurplus.12`: the call of `pop`. A swap is done, so the budget has one more
 -- record.
 def At282 : Prop :=
   ∃ g2 w, Run S g F s ra g2 w t
@@ -136,13 +138,18 @@ def At281 : Prop :=
   ∃ g1 w, Run S g F s ra g1 w t ∧ t.regs.r8.toBitVec = g1.h.len
     ∧ Flat.removeSurplus (flat g) = Flat.blockSwapUnreachable (flat g1) t.regs.rdx.toBitVec
 
--- `.LB.Emission.removeSurplus.7` and `.LB.Emission.removeSurplus.9`: no surplus slot.
+-- `.LB.Emission.removeSurplus.8` and `.LB.Emission.removeSurplus.10`: no surplus slot.
 def AtDone : Prop :=
   ∃ g1 w, Run S g F s ra g1 w t ∧ Flat.removeSurplus (flat g) = (.done, flat g1)
 
--- `.LB.Emission.removeSurplus.8`: the result.
+-- `.LB.Emission.removeSurplus.9`: the result.
 def At275 : Prop :=
   ∃ g1 w, Bx S g1 F s ra w t ∧ g1.Ok ∧ surplusQ g g1 s t
+
+
+-- `.LB.Emission.removeSurplus.7`: the block excess is zero.
+def AtFail : Prop :=
+  ∃ g1 w, Bx S g1 F s ra w t ∧ g1.Ok ∧ surplusX g g1 s t
 
 end
 
@@ -384,7 +391,7 @@ theorem at279_mk {t : MachineData} {a : Word} {z : RegZmms} {f : StatusFlags}
   ⟨g1, w, hr.upd, hsc, hlt, hs⟩
 
 
--- The precondition of `pop` at `.LB.Emission.removeSurplus.11`.
+-- The precondition of `pop` at `.LB.Emission.removeSurplus.12`.
 theorem popA_of {g2 : G} {c : MachineData}
     (hb : g2.h.nops.toNat + 2 * g2.h.len.toNat ≤ 6 * g2.h.n.toNat + g2.xo + 1)
     (hd : DestOk (flat g2)) : popA g2 c :=
@@ -412,7 +419,7 @@ theorem len_pop {g2 g3 : G} (hf : flat g3 = (Flat.pop (flat g2)).2)
   change g2.h.len ≠ 0 at h0
   rw [e3]; bv_omega
 
--- The precondition of `swapWith` at `.LB.Emission.removeSurplus.10`.
+-- The precondition of `swapWith` at `.LB.Emission.removeSurplus.11`.
 theorem swapA_of {g1 : G} {c : MachineData} (hb : Budget g1) (h0 : g1.h.len ≠ 0#64)
     (hd : DestOk (flat g1)) : swapWithA g1 c :=
   ⟨by unfold Budget at hb; bv_omega, hd⟩
@@ -516,487 +523,672 @@ local macro "bx_step% " h:term:max hm:term:max : term =>
     (by with_reducible rfl) (by with_reducible rfl) (by with_reducible rfl) (by with_reducible rfl)
     (by with_reducible rfl))
 
-set_option maxRecDepth 100000 in
-open Surplus Generate in
-theorem removeSurplus_unit [Host] [FunDecls]
-    (hswap : Sep.Spec Names.swapWith swapWithA 0 swapWithQ)
-    (hpop : Sep.Spec Names.pop popA 0 popQ) :
-    UnitThm removeSurplusAsm surplusA 2 surplusQ := by
-  simp only [Names.swapWith, Names.pop] at hswap hpop
-  intro S g F s ra
-  refine ⟨fun s₀ ⟨h₀, hpre⟩ => ?_⟩
-  subst h₀
-  obtain ⟨fr, v, hfr, hm⟩ := hpre.mem
+namespace Surplus
+open Generate
+
+def Inv (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) :
+    CfgLabel → MachineData → Prop
+  | .entry, t => t = s.pushRa ra
+  | .label "_ZN12_GLOBAL__N_18Emission13removeSurplusEv", t => t = s.pushRa ra
+  | .label ".LB.Emission.removeSurplus.0", t => At276 S g (Extras s F) s ra t
+  | .label ".LB.Emission.removeSurplus.1", t => At277 S g (Extras s F) s ra t
+  | .label ".LB.Emission.removeSurplus.2", t => At279 S g (Extras s F) s ra t
+  | .label ".LB.Emission.removeSurplus.3", t => At300 S g (Extras s F) s ra t
+  | .label ".LB.Emission.removeSurplus.4", t => At283 S g (Extras s F) s ra t
+  | .label ".LB.Emission.removeSurplus.5", t => At289 S g (Extras s F) s ra t
+  | .label ".LB.Emission.removeSurplus.6", t => At281 S g (Extras s F) s ra t
+  | .label ".LB.Emission.removeSurplus.7", t => AtFail S g (Extras s F) s ra t
+  | .label ".LB.Emission.removeSurplus.8", t => AtDone S g (Extras s F) s ra t
+  | .label ".LB.Emission.removeSurplus.9", t => At275 S g (Extras s F) s ra t
+  | .label ".LB.Emission.removeSurplus.10", t => AtDone S g (Extras s F) s ra t
+  | .label ".LB.Emission.removeSurplus.11", t => At301 S g (Extras s F) s ra t
+  | .label ".LB.Emission.removeSurplus.12", t => At282 S g (Extras s F) s ra t
+  | _, _ => False
+
+def V (S : Addr) (l : Label) (t : MachineData) : Nat :=
+  match l with
+  | "_ZN12_GLOBAL__N_18Emission13removeSurplusEv" => 2 ^ 200
+  | ".LB.Emission.removeSurplus.0" => lenAt S t * wB + (wB - 1)
+  | ".LB.Emission.removeSurplus.1" => lenAt S t * wB + wH + 2 * t.regs.rax.toBitVec.toNat + 2
+  | ".LB.Emission.removeSurplus.2" => lenAt S t * wB + wH + 2 * t.regs.rax.toBitVec.toNat + 3
+  | ".LB.Emission.removeSurplus.3" => lenAt S t * wB + wH
+  | ".LB.Emission.removeSurplus.4" => lenAt S t * wB + t.regs.rax.toBitVec.toNat + 2
+  | ".LB.Emission.removeSurplus.5" => lenAt S t * wB + 2
+  | ".LB.Emission.removeSurplus.6" => 1
+  | ".LB.Emission.removeSurplus.7" => 0
+  | ".LB.Emission.removeSurplus.8" => 1
+  | ".LB.Emission.removeSurplus.9" => 0
+  | ".LB.Emission.removeSurplus.10" => 1
+  | ".LB.Emission.removeSurplus.11" => lenAt S t * wB + 1
+  | ".LB.Emission.removeSurplus.12" => lenAt S t * wB + 1
+  | _ => 0
+
+def E [Host] (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
+    (a : Int64) (t : MachineData) : Prop :=
+  (a = ra ∧ Sep.Post S F 4 (fun g' t => surplusQ g g' s t) s t ∧ Sep.mod.Agree s t) ∨
+    (a = label "exit" ∧ t.regs.get64 .rdi = 1#64 ∧
+      Sep.Post S F 4 (fun g' t => surplusX g g' s t) s t)
+
+def Obl [Host] [FunDecls] (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
+    (blk : Program.Block) : Prop :=
+  ∀ t, Inv S g F s ra blk.label t →
+    let I' (c : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
+      Inv S g F s ra c u ∧ Program.Decreases (V S) blk.label blk.idx t c j u
+    WP.wp blk.body (I' blk.next (blk.idx + 1))
+      (Program.Intercept (Program.labels removeSurplusAsm) (s.pushRa ra) I' (E S g F s ra)) t
+
+section
+variable [Host] [FunDecls] (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
+
+
+theorem b_entry
+    : removeSurplusAsm.ForallBlocks fun blk =>
+      blk.label = .entry → Obl S g F s ra blk := by
+  cfg_block [Obl, Inv, V, Names.removeSurplus]
+  intro t ht
+  subst ht; kvcgen64
+
+theorem b_fn
+    (hpre : Sep.Pre S g F surplusA 4 s)
+    : removeSurplusAsm.ForallBlocks fun blk =>
+      blk.label = .label Names.removeSurplus → Obl S g F s ra blk := by
+  cfg_block [Obl, Inv, V, Names.removeSurplus]
+  intro t ht
+  have hpre2 := extras_pre hpre
+  obtain ⟨fr, v, hfr, hm⟩ := hpre2.mem
   obtain ⟨w, x, rfl⟩ := split2 hfr
-  have hk0 : Kp S g F s ra [w, x] (s.pushRa ra) := Kp.init hm
-  refine Program.WP.cfg (fun
-      | .entry, t => t = s.pushRa ra
-      | .label "_ZN12_GLOBAL__N_18Emission13removeSurplusEv", t => t = s.pushRa ra
-      | .label ".LB.Emission.removeSurplus.0", t => At276 S g F s ra t
-      | .label ".LB.Emission.removeSurplus.1", t => At277 S g F s ra t
-      | .label ".LB.Emission.removeSurplus.2", t => At279 S g F s ra t
-      | .label ".LB.Emission.removeSurplus.3", t => At300 S g F s ra t
-      | .label ".LB.Emission.removeSurplus.4", t => At283 S g F s ra t
-      | .label ".LB.Emission.removeSurplus.5", t => At289 S g F s ra t
-      | .label ".LB.Emission.removeSurplus.6", t => At281 S g F s ra t
-      | .label ".LB.Emission.removeSurplus.7", t => AtDone S g F s ra t
-      | .label ".LB.Emission.removeSurplus.8", t => At275 S g F s ra t
-      | .label ".LB.Emission.removeSurplus.9", t => AtDone S g F s ra t
-      | .label ".LB.Emission.removeSurplus.10", t => At301 S g F s ra t
-      | .label ".LB.Emission.removeSurplus.11", t => At282 S g F s ra t
-      | _, _ => False)
-    (fun
-      | "_ZN12_GLOBAL__N_18Emission13removeSurplusEv", _ => 2 ^ 200
-      | ".LB.Emission.removeSurplus.0", t => lenAt S t * wB + (wB - 1)
-      | ".LB.Emission.removeSurplus.1", t => lenAt S t * wB + wH + 2 * t.regs.rax.toBitVec.toNat + 2
-      | ".LB.Emission.removeSurplus.2", t => lenAt S t * wB + wH + 2 * t.regs.rax.toBitVec.toNat + 3
-      | ".LB.Emission.removeSurplus.3", t => lenAt S t * wB + wH
-      | ".LB.Emission.removeSurplus.4", t => lenAt S t * wB + t.regs.rax.toBitVec.toNat + 2
-      | ".LB.Emission.removeSurplus.5", t => lenAt S t * wB + 2
-      | ".LB.Emission.removeSurplus.6", _ => 1
-      | ".LB.Emission.removeSurplus.7", _ => 1
-      | ".LB.Emission.removeSurplus.8", _ => 0
-      | ".LB.Emission.removeSurplus.9", _ => 1
-      | ".LB.Emission.removeSurplus.10", t => lenAt S t * wB + 1
-      | ".LB.Emission.removeSurplus.11", t => lenAt S t * wB + 1
-      | _, _ => 0) ?_ rfl
-  cfg_blocks
-  case «entry» t ht =>
-    subst ht; kvcgen64
-  case «_ZN12_GLOBAL__N_18Emission13removeSurplusEv» t ht =>
-    subst ht
-    clear hswap hpop
-    have hS : (s.pushRa ra).regs.rdi.toBitVec = S := by simpa [MachineData.pushRa] using hpre.rdi
-    have hsp : (s.pushRa ra).regs.rsp.toBitVec = rsp s - 8#64 := by simp [MachineData.pushRa]
-    kvcgen64
-    all_goals try symexec_norm
-    vc_by_shape
-    | load => exact push_isSome hk0.mem hsp
-    | other =>
+  have hk0 : Kp S g (Extras s F) s ra [w, x] (s.pushRa ra) := Kp.init hm
+  subst ht
+  have hS : (s.pushRa ra).regs.rdi.toBitVec = S := by simpa [MachineData.pushRa] using hpre.rdi
+  have hsp : (s.pushRa ra).regs.rsp.toBitVec = rsp s - 8#64 := by simp [MachineData.pushRa]
+  kvcgen64
+  all_goals try symexec_norm
+  vc_by_shape
+  | load => exact push_isSome hk0.mem hsp
+  | other =>
+    first
+    | exact ⟨g, w, ⟨Bx.push hk0.mem hsp (by rw [hk0.bx]) rfl hS hk0.bp hk0.r12 hk0.r13 hk0.r14
+        hk0.r15, hpre.ok, Keep.refl g, hpre.args.2⟩, hpre.args.1, rfl⟩
+    | (left; simp only [V, wB]; unfold lenAt; omega)
+
+theorem b_0
+    : removeSurplusAsm.ForallBlocks fun blk =>
+      blk.label = .label ".LB.Emission.removeSurplus.0" → Obl S g F s ra blk := by
+  cfg_block [Obl, Inv, V, Names.removeSurplus]
+  intro t ht
+  obtain ⟨g1, w1, hr, hbud, hrs⟩ := ht
+  have hm1 := hr.bx.mem
+  have hl1 : lenAt S t = g1.h.len.toNat := hr.bx.lenAt
+  kvcgen64
+  all_goals try symexec_norm
+  all_goals simp only [hr.bx.bx, rd_len' hm1] at *
+  vc_by_shape
+  | load => exact isSome_len' hm1
+  | goto ".LB.Emission.removeSurplus.10" =>
+    have h0 := ShallowestCopy.zf_true (by with_reducible assumption)
+    cfg_goto
+    · exact hr.bx.upd.stack
+    · simp only
+      exact ⟨g1, w1, hr.upd, hrs.trans (rs_zero (st := flat g1) h0)⟩
+    · simp only [V, wB]
+      left; omega
+  | goto ".LB.Emission.removeSurplus.2" =>
+    have h0 := ShallowestCopy.zf_false (by with_reducible assumption)
+    cfg_goto
+    · exact hr.bx.upd.stack
+    · simp only
+      refine ⟨g1, w1, hr.upd, ⟨hbud, hrs, rfl, Generate.add_neg_one _⟩, ?_, ?_⟩
+      · exact pred_lt h0
+      · show Flat.surplusScan (flat g1) (g1.h.len + BitVec.ofInt 64 (-1) + 1#64)
+          18446744073709551615#64 18446744073709551615#64 = _
+        rw [pred_succ, none_lit]; rfl
+    · simp only [V, wB, wH]
+      rw [lenAt_mk]
+      left
+      have := (g1.h.len + BitVec.ofInt 64 (-1)).isLt
+      omega
+
+theorem b_1
+    : removeSurplusAsm.ForallBlocks fun blk =>
+      blk.label = .label ".LB.Emission.removeSurplus.1" → Obl S g F s ra blk := by
+  cfg_block [Obl, Inv, V, Names.removeSurplus]
+  intro t ht
+  obtain ⟨g1, w1, hr, hsc, hlt, hs⟩ := ht
+  kvcgen64
+  all_goals try symexec_norm
+  vc_by_shape
+  | goto ".LB.Emission.removeSurplus.3" =>
+    rename_i hz
+    have h0 := sub1_none hz
+    cfg_goto
+    · exact hr.bx.upd.stack
+    · simp only
+      exact at300_mk hr hsc (ne_zero_of_lt hlt) (scan_end h0 hs)
+    · simp only [V, wB, wH]
+      rw [lenAt_mk]
+      left; omega
+  | other =>
+    rename_i hz
+    have h0 := sub1_ne hz
+    first
+    | exact at279_mk hr hsc (sub1_lt h0 hlt) (scan_pred hs)
+    | (left; simp only [V, wB, wH]; rw [lenAt_mk]; have := ShallowestCopy.pred_toNat h0; omega)
+
+theorem b_2
+    : removeSurplusAsm.ForallBlocks fun blk =>
+      blk.label = .label ".LB.Emission.removeSurplus.2" → Obl S g F s ra blk := by
+  cfg_block [Obl, Inv, V, Names.removeSurplus]
+  intro t ht
+  obtain ⟨g1, w1, hr, ⟨hbud, hrs, hr8, hdi⟩, hlt, hsc⟩ := ht
+  have hm1 := hr.bx.mem
+  have hl1 : lenAt S t = g1.h.len.toNat := hr.bx.lenAt
+  have hax : t.regs.rax.toBitVec.toNat < MAX_N := by
+    have := hr.ok.len; have := hr.ok.n; have := hr.ok.xs; have := BitVec.lt_def.mp hlt; omega
+  kvcgen64
+  all_goals try symexec_norm
+  all_goals simp only [hr.bx.bx, rd_dest_get hm1 hax] at *
+  vc_by_shape
+  | load => exact isSome_dest' hm1 hax
+  | goto ".LB.Emission.removeSurplus.1" =>
+    rename_i hd
+    cfg_goto
+    · first | exact hr.bx.flags.stack | exact hr.bx.upd.stack
+    · simp only
       first
-      | exact ⟨g, w, ⟨Bx.push hk0.mem hsp (by rw [hk0.bx]) rfl hS hk0.bp hk0.r12 hk0.r13 hk0.r14
-          hk0.r15, hpre.ok, Keep.refl g, hpre.args.2⟩, hpre.args.1, rfl⟩
-      | (left; unfold lenAt; omega)
-  case «.LB.Emission.removeSurplus.0» t ht =>
-    clear hswap hpop hm hfr hk0
-    obtain ⟨g1, w1, hr, hbud, hrs⟩ := ht
-    have hm1 := hr.bx.mem
-    have hl1 : lenAt S t = g1.h.len.toNat := hr.bx.lenAt
-    kvcgen64
-    all_goals try symexec_norm
-    all_goals simp only [hr.bx.bx, rd_len' hm1] at *
-    vc_by_shape
-    | load => exact isSome_len' hm1
-    | goto ".LB.Emission.removeSurplus.9" =>
-      have h0 := ShallowestCopy.zf_true (by with_reducible assumption)
+      | exact at277_flags hr ⟨hbud, hrs, hr8, hdi⟩ hlt
+          (scan279_ne hlt hd hsc)
+      | exact at277_mk hr ⟨hbud, hrs, hr8, hdi⟩ hlt
+          (scan279_hit hlt hdi hd hsc)
+    · simp only [V, wB, wH]
+      rw [lenAt_mk]
+      left
+      omega
+
+theorem b_3
+    : removeSurplusAsm.ForallBlocks fun blk =>
+      blk.label = .label ".LB.Emission.removeSurplus.3" → Obl S g F s ra blk := by
+  cfg_block [Obl, Inv, V, Names.removeSurplus]
+  intro t ht
+  obtain ⟨g1, w1, hr, ⟨hbud, hrs, hr8, hdi⟩, h0, hs⟩ := ht
+  kvcgen64
+  all_goals try symexec_norm
+  vc_by_shape
+  | goto ".LB.Emission.removeSurplus.8" =>
+    have hz : (t.regs.rdx.toBitVec - 18446744073709551615#64 == BitVec.zero 64) = true := by
+      assumption
+    cfg_goto
+    · exact hr.bx.flags.stack
+    · simp only
+      exact ⟨g1, w1, hr.flags, rs300_none hrs h0 hs hz⟩
+    · simp only [V, wB, wH]
+      left; omega
+  | goto ".LB.Emission.removeSurplus.6" =>
+    have hz1 : (t.regs.rdx.toBitVec - 18446744073709551615#64 == BitVec.zero 64) = false := by
+      assumption
+    have hz2 : (t.regs.rsi.toBitVec - 18446744073709551615#64 == BitVec.zero 64) = true := by
+      assumption
+    cfg_goto
+    · exact hr.bx.flags.stack
+    · simp only
+      exact ⟨g1, w1, hr.flags, hr8, rs300_block hrs h0 hs hz1 hz2⟩
+    · simp only [V, wB, wH]
+      left; omega
+  | goto ".LB.Emission.removeSurplus.12" =>
+    have hz1 : (t.regs.rdx.toBitVec - 18446744073709551615#64 == BitVec.zero 64) = false := by
+      assumption
+    have hz2 : (t.regs.rsi.toBitVec - 18446744073709551615#64 == BitVec.zero 64) = false := by
+      assumption
+    have he : (t.regs.rdi.toBitVec - t.regs.rdx.toBitVec == BitVec.zero 64) = true := by
+      have hz : (t.regs.rdx.toBitVec - t.regs.rdi.toBitVec == BitVec.zero 64) = true := by
+        assumption
+      rw [BitVec.zero_eq, Idioms.sub_beq_zero, beq_iff_eq]
+      exact (eq_of_z hz).symm
+    cfg_goto
+    · exact hr.bx.flags.stack
+    · simp only
+      exact ⟨g1, w1, hr.flags, Nat.le_succ_of_le hbud, rs300_top hrs h0 hs hz1 hz2 he hdi⟩
+    · simp only [V, wB, wH]
+      rw [lenAt_mk]
+      left; omega
+  | other =>
+    have hz1 : (t.regs.rdx.toBitVec - 18446744073709551615#64 == BitVec.zero 64) = false := by
+      assumption
+    have hz2 : (t.regs.rsi.toBitVec - 18446744073709551615#64 == BitVec.zero 64) = false := by
+      assumption
+    have he : (t.regs.rdi.toBitVec - t.regs.rdx.toBitVec == BitVec.zero 64) = false := by
+      have hz : (t.regs.rdx.toBitVec - t.regs.rdi.toBitVec == BitVec.zero 64) = false := by
+        assumption
+      rw [BitVec.zero_eq, Idioms.sub_beq_zero, beq_eq_false_iff_ne]
+      exact (ne_of_z hz).symm
+    first
+    | exact at283_mk hr hbud h0 hdi rfl (BitVec.le_refl _) (rs300_eq hrs h0 hs hz1 hz2 he hdi)
+    | (left; simp only [V, wB, wH]; rw [lenAt_mk]; have := t.regs.rdi.toBitVec.isLt; omega)
+
+theorem b_4
+    : removeSurplusAsm.ForallBlocks fun blk =>
+      blk.label = .label ".LB.Emission.removeSurplus.4" → Obl S g F s ra blk := by
+  cfg_block [Obl, Inv, V, Names.removeSurplus]
+  intro t ht
+  obtain ⟨g1, w1, hr, hbud, h0, hdi, hr8, hax, hrs⟩ := ht
+  have hm1 := hr.bx.mem
+  kvcgen64
+  all_goals try symexec_norm
+  all_goals try simp only [hr.bx.bx, rd_data' hm1] at *
+  all_goals try (
+    have hq : t.regs.rax.toBitVec ≠ 0#64 := ShallowestCopy.zf_false (by with_reducible assumption)
+    obtain ⟨ha, han, hb, hbn, h1, hqN, hal, hbl, hN⟩ := at283_facts hr.ok h0 hq hax hdi
+    obtain ⟨-, -, hda, hdb⟩ := lb52_facts hr.ok ha h1 hdi hr.dok
+    have h1' := store_dest_put hm1 ha (Flat.get g1.h.dest t.regs.rdi.toBitVec)
+    have h2' : (View S (withDest g1
+        (dsw (flat g1) (t.regs.rax.toBitVec - 1#64) t.regs.rdi.toBitVec).dest) ∗ _).get _ :=
+      store_dest_put h1' hb (Flat.get g1.h.dest (t.regs.rax.toBitVec - 1#64)))
+  all_goals try simp only [rd_dest_get hm1 ha, rd_dest_get hm1 hb] at *
+  all_goals try simp only [rd_dest_get h2' ha, withDest_dest] at *
+  vc_by_shape
+  | load =>
+    first
+    | with_reducible exact isSome_dest' hm1 ha
+    | with_reducible exact isSome_data' hm1
+    | with_reducible exact isSome_slot' hm1 han
+    | (rw [hr8]; with_reducible exact isSome_slot' hm1 hbn)
+    | with_reducible exact isSome_dest' hm1 hb
+    | with_reducible exact isSome_dest' h1' hb
+    | with_reducible exact isSome_dest' h2' ha
+    | with_reducible exact isSome_pos' h2' (hda.resolve_left (ne_none_of_z (by with_reducible assumption)))
+  | goto ".LB.Emission.removeSurplus.11" =>
+    have hq0 := ShallowestCopy.zf_true (by with_reducible assumption)
+    cfg_goto
+    · exact hr.bx.flags.stack
+    · simp only
+      exact ⟨g1, w1, hr.flags, hbud, h0, by rw [hrs, hq0, eqStep_zero]⟩
+    · simp only [V, wB]
+      left; rw [lenAt_mk]; omega
+  | goto ".LB.Emission.removeSurplus.4" =>
+    first
+    | have hne := ne_none_of_z (nb (by with_reducible assumption))
       cfg_goto
       · exact hr.bx.upd.stack
       · simp only
-        exact ⟨g1, w1, hr.upd, hrs.trans (rs_zero (st := flat g1) h0)⟩
-      · simp only
-        left; omega
-    | goto ".LB.Emission.removeSurplus.2" =>
-      have h0 := ShallowestCopy.zf_false (by with_reducible assumption)
+        exact at283_mk hr hbud h0 hdi hr8 (by bv_omega) (rs283_dest hrs hq hne)
+      · simp only [V, wB]
+        left; rw [lenAt_mk]; have := ShallowestCopy.pred_toNat hq; omega
+    | have hne := data_ne hm1 hr.ok hbn han (nb (by rw [← hr8]; with_reducible assumption))
       cfg_goto
       · exact hr.bx.upd.stack
       · simp only
-        refine ⟨g1, w1, hr.upd, ⟨hbud, hrs, rfl, Generate.add_neg_one _⟩, ?_, ?_⟩
-        · exact pred_lt h0
-        · show Flat.surplusScan (flat g1) (g1.h.len + BitVec.ofInt 64 (-1) + 1#64)
-            18446744073709551615#64 18446744073709551615#64 = _
-          rw [pred_succ, none_lit]; rfl
-      · simp only
-        rw [lenAt_mk]
-        left
-        have := (g1.h.len + BitVec.ofInt 64 (-1)).isLt
-        omega
-  case «.LB.Emission.removeSurplus.1» t ht =>
-    clear hswap hpop hm hfr hk0
-    obtain ⟨g1, w1, hr, hsc, hlt, hs⟩ := ht
-    kvcgen64
-    all_goals try symexec_norm
-    vc_by_shape
-    | goto ".LB.Emission.removeSurplus.3" =>
-      rename_i hz
-      have h0 := sub1_none hz
-      cfg_goto
-      · exact hr.bx.upd.stack
-      · simp only
-        exact at300_mk hr hsc (ne_zero_of_lt hlt) (scan_end h0 hs)
-      · simp only
-        rw [lenAt_mk]
-        left; omega
-    | other =>
-      rename_i hz
-      have h0 := sub1_ne hz
-      first
-      | exact at279_mk hr hsc (sub1_lt h0 hlt) (scan_pred hs)
-      | (left; rw [lenAt_mk]; have := ShallowestCopy.pred_toNat h0; omega)
-  case «.LB.Emission.removeSurplus.2» t ht =>
-    clear hswap hpop hm hfr hk0
-    obtain ⟨g1, w1, hr, ⟨hbud, hrs, hr8, hdi⟩, hlt, hsc⟩ := ht
-    have hm1 := hr.bx.mem
-    have hl1 : lenAt S t = g1.h.len.toNat := hr.bx.lenAt
-    have hax : t.regs.rax.toBitVec.toNat < MAX_N := by
-      have := hr.ok.len; have := hr.ok.n; have := hr.ok.xs; have := BitVec.lt_def.mp hlt; omega
-    kvcgen64
-    all_goals try symexec_norm
-    all_goals simp only [hr.bx.bx, rd_dest_get hm1 hax] at *
-    vc_by_shape
-    | load => exact isSome_dest' hm1 hax
-    | goto ".LB.Emission.removeSurplus.1" =>
-      rename_i hd
-      cfg_goto
-      · first | exact hr.bx.flags.stack | exact hr.bx.upd.stack
-      · simp only
-        first
-        | exact at277_flags hr ⟨hbud, hrs, hr8, hdi⟩ hlt
-            (scan279_ne hlt hd hsc)
-        | exact at277_mk hr ⟨hbud, hrs, hr8, hdi⟩ hlt
-            (scan279_hit hlt hdi hd hsc)
-      · simp only
-        rw [lenAt_mk]
-        left
-        omega
-  case «.LB.Emission.removeSurplus.3» t ht =>
-    clear hswap hpop hm hfr hk0
-    obtain ⟨g1, w1, hr, ⟨hbud, hrs, hr8, hdi⟩, h0, hs⟩ := ht
-    kvcgen64
-    all_goals try symexec_norm
-    vc_by_shape
-    | goto ".LB.Emission.removeSurplus.7" =>
-      have hz : (t.regs.rdx.toBitVec - 18446744073709551615#64 == BitVec.zero 64) = true := by
-        assumption
-      cfg_goto
-      · exact hr.bx.flags.stack
-      · simp only
-        exact ⟨g1, w1, hr.flags, rs300_none hrs h0 hs hz⟩
-      · simp only
-        left; omega
-    | goto ".LB.Emission.removeSurplus.6" =>
-      have hz1 : (t.regs.rdx.toBitVec - 18446744073709551615#64 == BitVec.zero 64) = false := by
-        assumption
-      have hz2 : (t.regs.rsi.toBitVec - 18446744073709551615#64 == BitVec.zero 64) = true := by
-        assumption
-      cfg_goto
-      · exact hr.bx.flags.stack
-      · simp only
-        exact ⟨g1, w1, hr.flags, hr8, rs300_block hrs h0 hs hz1 hz2⟩
-      · simp only
-        left; omega
-    | goto ".LB.Emission.removeSurplus.11" =>
-      have hz1 : (t.regs.rdx.toBitVec - 18446744073709551615#64 == BitVec.zero 64) = false := by
-        assumption
-      have hz2 : (t.regs.rsi.toBitVec - 18446744073709551615#64 == BitVec.zero 64) = false := by
-        assumption
-      have he : (t.regs.rdi.toBitVec - t.regs.rdx.toBitVec == BitVec.zero 64) = true := by
-        assumption
-      cfg_goto
-      · exact hr.bx.flags.stack
-      · simp only
-        exact ⟨g1, w1, hr.flags, Nat.le_succ_of_le hbud, rs300_top hrs h0 hs hz1 hz2 he hdi⟩
-      · simp only
-        rw [lenAt_mk]
-        left; omega
-    | other =>
-      have hz1 : (t.regs.rdx.toBitVec - 18446744073709551615#64 == BitVec.zero 64) = false := by
-        assumption
-      have hz2 : (t.regs.rsi.toBitVec - 18446744073709551615#64 == BitVec.zero 64) = false := by
-        assumption
-      have he : (t.regs.rdi.toBitVec - t.regs.rdx.toBitVec == BitVec.zero 64) = false := by
-        assumption
-      first
-      | exact at283_mk hr hbud h0 hdi rfl (BitVec.le_refl _) (rs300_eq hrs h0 hs hz1 hz2 he hdi)
-      | (left; rw [lenAt_mk]; have := t.regs.rdi.toBitVec.isLt; omega)
-  case «.LB.Emission.removeSurplus.4» t ht =>
-    clear hswap hpop hm hfr hk0
-    obtain ⟨g1, w1, hr, hbud, h0, hdi, hr8, hax, hrs⟩ := ht
-    have hm1 := hr.bx.mem
-    kvcgen64
-    all_goals try symexec_norm
-    all_goals try simp only [hr.bx.bx, rd_data' hm1] at *
-    all_goals try (
-      have hq : t.regs.rax.toBitVec ≠ 0#64 := ShallowestCopy.zf_false (by with_reducible assumption)
-      obtain ⟨ha, han, hb, hbn, h1, hqN, hal, hbl, hN⟩ := at283_facts hr.ok h0 hq hax hdi
-      obtain ⟨-, -, hda, hdb⟩ := lb52_facts hr.ok ha h1 hdi hr.dok
-      have h1' := store_dest_put hm1 ha (Flat.get g1.h.dest t.regs.rdi.toBitVec)
-      have h2' : (View S (withDest g1
-          (dsw (flat g1) (t.regs.rax.toBitVec - 1#64) t.regs.rdi.toBitVec).dest) ∗ _).get _ :=
-        store_dest_put h1' hb (Flat.get g1.h.dest (t.regs.rax.toBitVec - 1#64)))
-    all_goals try simp only [rd_dest_get hm1 ha, rd_dest_get hm1 hb] at *
-    all_goals try simp only [rd_dest_get h2' ha, withDest_dest] at *
-    vc_by_shape
-    | load =>
-      first
-      | with_reducible exact isSome_dest' hm1 ha
-      | with_reducible exact isSome_data' hm1
-      | with_reducible exact isSome_slot' hm1 han
-      | (rw [hr8]; with_reducible exact isSome_slot' hm1 hbn)
-      | with_reducible exact isSome_dest' hm1 hb
-      | with_reducible exact isSome_dest' h1' hb
-      | with_reducible exact isSome_dest' h2' ha
-      | with_reducible exact isSome_pos' h2' (hda.resolve_left (ne_none_of_z (by with_reducible assumption)))
-    | goto ".LB.Emission.removeSurplus.10" =>
-      have hq0 := ShallowestCopy.zf_true (by with_reducible assumption)
-      cfg_goto
-      · exact hr.bx.flags.stack
-      · simp only
-        exact ⟨g1, w1, hr.flags, hbud, h0, by rw [hrs, hq0, eqStep_zero]⟩
-      · simp only
-        left; rw [lenAt_mk]; omega
-    | goto ".LB.Emission.removeSurplus.4" =>
-      first
-      | have hne := ne_none_of_z (nb (by with_reducible assumption))
-        cfg_goto
-        · exact hr.bx.upd.stack
-        · simp only
-          exact at283_mk hr hbud h0 hdi hr8 (by bv_omega) (rs283_dest hrs hq hne)
-        · simp only
-          left; rw [lenAt_mk]; have := ShallowestCopy.pred_toNat hq; omega
-      | have hne := data_ne hm1 hr.ok hbn han (nb (by rw [← hr8]; with_reducible assumption))
-        cfg_goto
-        · exact hr.bx.upd.stack
-        · simp only
-          exact at283_mk hr hbud h0 hdi hr8 (by bv_omega) (rs283_data hrs hq hdi hne)
-        · simp only
-          left; rw [lenAt_mk]; have := ShallowestCopy.pred_toNat hq; omega
-    | goto ".LB.Emission.removeSurplus.5" =>
-      have hs := none_of_z (nb' (by with_reducible assumption))
+        exact at283_mk hr hbud h0 hdi hr8 (by bv_omega) (rs283_data hrs hq hdi hne)
+      · simp only [V, wB]
+        left; rw [lenAt_mk]; have := ShallowestCopy.pred_toNat hq; omega
+  | goto ".LB.Emission.removeSurplus.5" =>
+    have hs := none_of_z (nb' (by with_reducible assumption))
+    have he := data_eq hm1 hr.ok hbn han (nb' (by rw [← hr8]; with_reducible assumption))
+    have hz := none_of_z (by with_reducible assumption)
+    have hh := rs283_hit hrs hq hqN hdi hs he
+    cfg_goto
+    · exact (hr.bx.updm h2').stack
+    · simp only
+      exact ⟨_, w1, ⟨hr.bx.updm h2', Ok.withDest hr.ok _,
+        ProduceProof.Keep.trans hr.keep (Keep.withDest _),
+        destOk_withDest (destOk_dsw hr.dok hN hal hbl)⟩,
+        hbud, hb, hdb, by rw [hh, sd_none hz]⟩
+    · simp only [V, wB]
+      left
+      rw [(hr.bx.updm h2').lenAt, hr.bx.lenAt]
+      have := ShallowestCopy.pred_toNat hq
+      show g1.h.len.toNat * wB + 2 < g1.h.len.toNat * wB + t.regs.rax.toBitVec.toNat + 2
+      omega
+  | closed => simp
+  | other =>
+    first
+    | decide
+    | have hs := none_of_z (nb' (by with_reducible assumption))
       have he := data_eq hm1 hr.ok hbn han (nb' (by rw [← hr8]; with_reducible assumption))
-      have hz := none_of_z (by with_reducible assumption)
+      have hz := ne_none_of_z (by with_reducible assumption)
       have hh := rs283_hit hrs hq hqN hdi hs he
+      have h3' : (View S (withPos (withDest g1
+          (dsw (flat g1) (t.regs.rax.toBitVec - 1#64) t.regs.rdi.toBitVec).dest)
+          (Flat.put g1.h.pos (Flat.get (dsw (flat g1) (t.regs.rax.toBitVec - 1#64)
+            t.regs.rdi.toBitVec).dest (t.regs.rax.toBitVec - 1#64)) (t.regs.rax.toBitVec - 1#64)))
+          ∗ _).get _ :=
+        store_pos_put h2' (hda.resolve_left hz) (t.regs.rax.toBitVec - 1#64)
+      first
+      | exact ⟨_, w1, ⟨hr.bx.updm h3', Ok.withPos (Ok.withDest hr.ok _) _,
+          ProduceProof.Keep.trans hr.keep (ProduceProof.Keep.trans (Keep.withDest _) (Keep.withPos _)),
+          destOk_withPos (destOk_withDest (destOk_dsw hr.dok hN hal hbl))⟩, hbud, hb, hdb, by rw [hh, sd_some hz]⟩
+      | (left
+         simp only [V, wB]
+         rw [(hr.bx.updm h3').lenAt, hr.bx.lenAt]
+         have := ShallowestCopy.pred_toNat hq
+         show g1.h.len.toNat * wB + 2 < g1.h.len.toNat * wB + t.regs.rax.toBitVec.toNat + 2
+         omega)
+
+theorem b_5
+    : removeSurplusAsm.ForallBlocks fun blk =>
+      blk.label = .label ".LB.Emission.removeSurplus.5" → Obl S g F s ra blk := by
+  cfg_block [Obl, Inv, V, Names.removeSurplus]
+  intro t ht
+  obtain ⟨g2, w2, hr, hbud, hi, hd, hrs⟩ := ht
+  have hm2 := hr.bx.mem
+  have hl2 : lenAt S t = g2.h.len.toNat := hr.bx.lenAt
+  unfold Budget at hbud
+  kvcgen64
+  all_goals try symexec_norm
+  all_goals simp only [hr.bx.bx, rd_dest_get hm2 hi] at *
+  vc_by_shape
+  | load =>
+    first
+    | with_reducible exact isSome_dest' hm2 hi
+    | with_reducible exact isSome_pos' hm2 (hd.resolve_left (ne_none_of_z (by with_reducible assumption)))
+  | goto ".LB.Emission.removeSurplus.12" =>
+    first
+    | have hz := none_of_z (by with_reducible assumption)
       cfg_goto
-      · exact (hr.bx.updm h2').stack
+      · exact (bx_next% hr.bx).stack
       · simp only
-        exact ⟨_, w1, ⟨hr.bx.updm h2', Ok.withDest hr.ok _,
-          ProduceProof.Keep.trans hr.keep (Keep.withDest _),
-          destOk_withDest (destOk_dsw hr.dok hN hal hbl)⟩,
-          hbud, hb, hdb, by rw [hh, sd_none hz]⟩
-      · simp only
+        exact ⟨g2, w2, run_next% hr, Nat.le_succ_of_le hbud, by rw [hrs, posAt_none hz]⟩
+      · simp only [V, wB]
         left
-        rw [(hr.bx.updm h2').lenAt, hr.bx.lenAt]
-        have := ShallowestCopy.pred_toNat hq
-        show g1.h.len.toNat * wB + 2 < g1.h.len.toNat * wB + t.regs.rax.toBitVec.toNat + 2
+        rw [lenAt_mk, hl2]
         omega
-    | closed => simp
-    | other =>
-      first
-      | decide
-      | have hs := none_of_z (nb' (by with_reducible assumption))
-        have he := data_eq hm1 hr.ok hbn han (nb' (by rw [← hr8]; with_reducible assumption))
-        have hz := ne_none_of_z (by with_reducible assumption)
-        have hh := rs283_hit hrs hq hqN hdi hs he
-        have h3' : (View S (withPos (withDest g1
-            (dsw (flat g1) (t.regs.rax.toBitVec - 1#64) t.regs.rdi.toBitVec).dest)
-            (Flat.put g1.h.pos (Flat.get (dsw (flat g1) (t.regs.rax.toBitVec - 1#64)
-              t.regs.rdi.toBitVec).dest (t.regs.rax.toBitVec - 1#64)) (t.regs.rax.toBitVec - 1#64)))
-            ∗ _).get _ :=
-          store_pos_put h2' (hda.resolve_left hz) (t.regs.rax.toBitVec - 1#64)
-        first
-        | exact ⟨_, w1, ⟨hr.bx.updm h3', Ok.withPos (Ok.withDest hr.ok _) _,
-            ProduceProof.Keep.trans hr.keep (ProduceProof.Keep.trans (Keep.withDest _) (Keep.withPos _)),
-            destOk_withPos (destOk_withDest (destOk_dsw hr.dok hN hal hbl))⟩, hbud, hb, hdb, by rw [hh, sd_some hz]⟩
-        | (left
-           rw [(hr.bx.updm h3').lenAt, hr.bx.lenAt]
-           have := ShallowestCopy.pred_toNat hq
-           show g1.h.len.toNat * wB + 2 < g1.h.len.toNat * wB + t.regs.rax.toBitVec.toNat + 2
-           omega)
-  case «.LB.Emission.removeSurplus.5» t ht =>
-    clear hswap hpop hm hfr hk0
-    obtain ⟨g2, w2, hr, hbud, hi, hd, hrs⟩ := ht
-    have hm2 := hr.bx.mem
-    have hl2 : lenAt S t = g2.h.len.toNat := hr.bx.lenAt
-    unfold Budget at hbud
-    kvcgen64
-    all_goals try symexec_norm
-    all_goals simp only [hr.bx.bx, rd_dest_get hm2 hi] at *
-    vc_by_shape
-    | load =>
-      first
-      | with_reducible exact isSome_dest' hm2 hi
-      | with_reducible exact isSome_pos' hm2 (hd.resolve_left (ne_none_of_z (by with_reducible assumption)))
-    | goto ".LB.Emission.removeSurplus.11" =>
-      first
-      | have hz := none_of_z (by with_reducible assumption)
-        cfg_goto
-        · exact (bx_next% hr.bx).stack
-        · simp only
-          exact ⟨g2, w2, run_next% hr, Nat.le_succ_of_le hbud, by rw [hrs, posAt_none hz]⟩
-        · simp only
-          left
-          rw [lenAt_mk, hl2]
-          omega
-      | have hz := ne_none_of_z (by with_reducible assumption)
-        have hdn := hd.resolve_left hz
-        have hm3 := store_pos_put hm2 hdn t.regs.rdi.toBitVec
-        cfg_goto
-        · exact (hr.bx.updm hm3).stack
-        · simp only
-          exact ⟨_, w2, ⟨hr.bx.updm hm3, Ok.withPos hr.ok _, ProduceProof.Keep.trans hr.keep (Keep.withPos _),
-            hr.dok⟩, Nat.le_succ_of_le hbud, by rw [hrs, posAt_some hz]; rfl⟩
-        · simp only
-          left
-          rw [(hr.bx.updm hm3).lenAt, hr.bx.lenAt]
-          exact Nat.add_lt_add_left (by decide) _
-  case «.LB.Emission.removeSurplus.6» t ht =>
-    clear hswap hpop hm hfr hk0
-    obtain ⟨g1, w1, hr, hr8, hrs⟩ := ht
-    have hm1 := hr.bx.mem
-    kvcgen64
-    all_goals try symexec_norm
-    all_goals try simp only [hr.bx.bx] at ⊢
-    vc_by_shape
-    | goto ".LB.Emission.removeSurplus.8" =>
-      first
-      | have hz : (t.regs.r8.toBitVec - 17#64 - t.regs.rdx.toBitVec == BitVec.zero 64) = true := by
-          assumption
-        rw [hr8] at hz
-        have hz0 : Flat.depthOf (flat g1) t.regs.rdx.toBitVec - Flat.maxSwapDepth = 0 :=
-          (Surplus.exc_eq (flat g1) _).symm.trans (beq_iff_eq.mp hz)
-        have hb : Flat.removeSurplus (flat g) = (.assertionFailed, flat g1) := by
-          rw [hrs, Flat.blockSwapUnreachable, ProduceProof.block_zero hz0]
-        cfg_goto
-        · exact hr.bx.upd.stack
-        · simp only
-          exact ⟨g1, w1, hr.bx.upd, hr.ok, hr.keep, by rw [hb], by rw [hb]; rfl⟩
-        · simp only
-          left; omega
-      | have hz : (t.regs.r8.toBitVec - 17#64 - t.regs.rdx.toBitVec == BitVec.zero 64) = false := by
-          assumption
-        rw [hr8] at hz
-        have hne : Flat.depthOf (flat g1) t.regs.rdx.toBitVec - Flat.maxSwapDepth ≠ 0 := by
-          rw [← Surplus.exc_eq]; exact beq_eq_false_iff_ne.mp hz
-        have hm3 := ProduceProof.store_exc' (ProduceProof.store_off' hm1 t.regs.rdx.toBitVec)
-          (g1.h.len - 17#64 - t.regs.rdx.toBitVec)
-        have hb : Flat.removeSurplus (flat g) = (.blocked, flat (ProduceProof.withExc
-            (ProduceProof.withOff g1 t.regs.rdx.toBitVec) (g1.h.len - 17#64 - t.regs.rdx.toBitVec))) := by
-          rw [hrs, Flat.blockSwapUnreachable, ProduceProof.block_ne hne, ProduceProof.flat_withBlk,
-            ← Surplus.exc_eq]
-          rfl
-        simp only [hr8]
-        cfg_goto
-        · exact (hr.bx.updm hm3).stack
-        · simp only
-          exact ⟨_, w1, hr.bx.updm hm3, ProduceProof.Ok.withBlk hr.ok _ _,
-            ProduceProof.Keep.trans hr.keep (ProduceProof.Keep.withBlk _ _), by rw [hb], by rw [hb]; rfl⟩
-        · simp only
-          left; omega
-    | load =>
-      first
-      | with_reducible exact ProduceProof.isSome_off' hm1
-      | with_reducible exact ProduceProof.isSome_exc' (ProduceProof.store_off' hm1 _)
-  case «.LB.Emission.removeSurplus.7» t ht =>
-    clear hswap hpop hm hfr hk0
-    obtain ⟨g1, w1, hr, hrs⟩ := ht
-    kvcgen64
-    all_goals try symexec_norm
-    vc_by_shape
-    | other =>
-      exact ⟨g1, w1, hr.bx.upd, hr.ok, hr.keep, by rw [hrs], by rw [hrs]; rfl⟩
-    | closed => simp
-  case «.LB.Emission.removeSurplus.8» t ht =>
-    clear hswap hpop hm hk0
-    obtain ⟨g1, w1, hb, hok1, hQ⟩ := ht
-    kvcgen64
-    vc_by_shape
-    | load => exact hb.isSome_bx
-    | retAddr =>
-      refine (congrArg Option.isSome (hb.pop ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_).retAddr).trans rfl
-      all_goals rfl
-    | ret =>
-      refine Kp.ret (hb.pop ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_) rfl hok1 fun t' _ hax =>
+    | have hz := ne_none_of_z (by with_reducible assumption)
+      have hdn := hd.resolve_left hz
+      have hm3 := store_pos_put hm2 hdn t.regs.rdi.toBitVec
+      cfg_goto
+      · exact (hr.bx.updm hm3).stack
+      · simp only
+        exact ⟨_, w2, ⟨hr.bx.updm hm3, Ok.withPos hr.ok _, ProduceProof.Keep.trans hr.keep (Keep.withPos _),
+          hr.dok⟩, Nat.le_succ_of_le hbud, by rw [hrs, posAt_some hz]; rfl⟩
+      · simp only [V, wB]
+        left
+        rw [(hr.bx.updm hm3).lenAt, hr.bx.lenAt]
+        exact Nat.add_lt_add_left (by decide) _
+
+theorem b_6
+    : removeSurplusAsm.ForallBlocks fun blk =>
+      blk.label = .label ".LB.Emission.removeSurplus.6" → Obl S g F s ra blk := by
+  cfg_block [Obl, Inv, V, Names.removeSurplus]
+  intro t ht
+  obtain ⟨g1, w1, hr, hr8, hrs⟩ := ht
+  have hm1 := hr.bx.mem
+  kvcgen64
+  all_goals try symexec_norm
+  all_goals try simp only [hr.bx.bx] at ⊢
+  vc_by_shape
+  | goto ".LB.Emission.removeSurplus.7" =>
+    have hz : (t.regs.r8.toBitVec - 17#64 - t.regs.rdx.toBitVec == BitVec.zero 64) = true := by
+      assumption
+    rw [hr8] at hz
+    have hz0 : Flat.depthOf (flat g1) t.regs.rdx.toBitVec - Flat.maxSwapDepth = 0 :=
+      (Surplus.exc_eq (flat g1) _).symm.trans (beq_iff_eq.mp hz)
+    have hb : Flat.removeSurplus (flat g) = (.assertionFailed, flat g1) := by
+      rw [hrs, Flat.blockSwapUnreachable, ProduceProof.block_zero hz0]
+    cfg_goto
+    · exact hr.bx.upd.stack
+    · simp only
+      refine ⟨g1, w1, hr.bx.upd, hr.ok, hr.keep, ?_, ?_⟩
+      · rw [hb]
+      · rw [hb]
+    · simp only [V]
+      left; omega
+  | goto ".LB.Emission.removeSurplus.9" =>
+    have hz : (t.regs.r8.toBitVec - 17#64 - t.regs.rdx.toBitVec == BitVec.zero 64) = false := by
+      assumption
+    rw [hr8] at hz
+    have hne : Flat.depthOf (flat g1) t.regs.rdx.toBitVec - Flat.maxSwapDepth ≠ 0 := by
+      rw [← Surplus.exc_eq]; exact beq_eq_false_iff_ne.mp hz
+    have hm3 := ProduceProof.store_exc' (ProduceProof.store_off' hm1 t.regs.rdx.toBitVec)
+      (g1.h.len - 17#64 - t.regs.rdx.toBitVec)
+    have hb : Flat.removeSurplus (flat g) = (.blocked, flat (ProduceProof.withExc
+        (ProduceProof.withOff g1 t.regs.rdx.toBitVec) (g1.h.len - 17#64 - t.regs.rdx.toBitVec))) := by
+      rw [hrs, Flat.blockSwapUnreachable, ProduceProof.block_ne hne, ProduceProof.flat_withBlk,
+        ← Surplus.exc_eq]
+      rfl
+    simp only [hr8]
+    cfg_goto
+    · exact (hr.bx.updm hm3).stack
+    · simp only
+      exact ⟨_, w1, hr.bx.updm hm3, ProduceProof.Ok.withBlk hr.ok _ _,
+        ProduceProof.Keep.trans hr.keep (ProduceProof.Keep.withBlk _ _), by rw [hb], by rw [hb]; rfl⟩
+    · simp only [V]
+      left; omega
+  | load =>
+    first
+    | with_reducible exact ProduceProof.isSome_off' hm1
+    | with_reducible exact ProduceProof.isSome_exc' (ProduceProof.store_off' hm1 _)
+
+theorem b_7
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels removeSurplusAsm, label l ≠ label "exit")
+    : removeSurplusAsm.ForallBlocks fun blk =>
+      blk.label = .label ".LB.Emission.removeSurplus.7" → Obl S g F s ra blk := by
+  have he := ProofKit.external_call_spec "exit" hexit
+  cfg_block [Obl, Inv, V, Names.removeSurplus]
+  intro t ht
+  obtain ⟨g1, w1, hb, hok1, hx⟩ := ht
+  kvcgen64 [he]
+  all_goals symexec_norm
+  vc_by_shape
+  | load =>
+    rw [hb.sp]
+    exact isSome_of_eq w1 hb.mem (by unfold Stk; ecancel)
+  | jumpOut =>
+    rename_i exitra
+    apply ProofKit.intercept_exit (E := E S g F s ra) hout
+    refine Or.inr ⟨rfl, rfl, hb.exitPost hok1 exitra rfl ?_⟩
+    exact hx
+
+theorem b_8
+    : removeSurplusAsm.ForallBlocks fun blk =>
+      blk.label = .label ".LB.Emission.removeSurplus.8" → Obl S g F s ra blk := by
+  cfg_block [Obl, Inv, V, Names.removeSurplus]
+  intro t ht
+  obtain ⟨g1, w1, hr, hrs⟩ := ht
+  kvcgen64
+  all_goals try symexec_norm
+  vc_by_shape
+  | other =>
+    first
+    | exact ⟨g1, w1, hr.bx.upd, hr.ok, hr.keep, by rw [hrs], by rw [hrs]; rfl⟩
+    | (left; simp only [V]; omega)
+  | closed => simp
+
+theorem b_9
+    : removeSurplusAsm.ForallBlocks fun blk =>
+      blk.label = .label ".LB.Emission.removeSurplus.9" → Obl S g F s ra blk := by
+  cfg_block [Obl, Inv, V, Names.removeSurplus]
+  intro t ht
+  obtain ⟨g1, w1, hb, hok1, hQ⟩ := ht
+  kvcgen64
+  vc_by_shape
+  | load => exact hb.isSome_bx
+  | retAddr =>
+    refine (congrArg Option.isSome (hb.pop ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_).retAddr).trans rfl
+    all_goals rfl
+  | ret =>
+    refine ProofKit.intercept_mono_exit
+      (E := fun a t => a = ra ∧
+        Sep.Post S (Extras s F) 2 (fun g' t => surplusQ g g' s t) s t ∧
+          Sep.mod.Agree s t) ?_ ?_
+    · refine Kp.ret (hb.pop ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_) rfl hok1 fun t' _ hax =>
         ⟨hQ.1, hQ.2.1, by show (rax t').setWidth 8 = _; rw [hax]; exact hQ.2.2⟩
       all_goals rfl
-  case «.LB.Emission.removeSurplus.9» t ht =>
-    clear hswap hpop hm hfr hk0
-    obtain ⟨g1, w1, hr, hrs⟩ := ht
-    kvcgen64
-    all_goals try symexec_norm
-    vc_by_shape
-    | goto ".LB.Emission.removeSurplus.8" =>
-      cfg_goto
-      · exact hr.bx.upd.stack
-      · simp only
-        exact ⟨g1, w1, hr.bx.upd, hr.ok, hr.keep, by rw [hrs], by rw [hrs]; rfl⟩
-      · simp only
-        left; omega
-  case «.LB.Emission.removeSurplus.10» t ht =>
-    clear hpop hm hfr hk0
-    obtain ⟨g1, w1, hr, hbud, h0, hrs⟩ := ht
-    kvcgen64 [hswap]
-    all_goals try symexec_norm
-    refine Bx.call0 (bx_next% hr.bx) hr.bx.bx hr.ok (swapA_of hbud h0 hr.dok) ?_
-    intro t3 g3 w3 hb3 hQ3 hok3
-    obtain ⟨hK3, hf3, hal3⟩ : Res (Flat.swapWith · t.regs.rsi.toBitVec) g1 g3 t3 := hQ3
-    have hN : (flat g1).size.toNat ≤ MAX_N := by
-      show g1.h.len.toNat ≤ MAX_N
-      have := hr.ok.len; have := hr.ok.n; have := hr.ok.xs; omega
-    kvcgen64
-    all_goals try symexec_norm
-    vc_by_shape
-    | goto ".LB.Emission.removeSurplus.8" =>
-      have hz : (!(BitVec.extractLsb' 0 8 t3.regs.rax.toBitVec &&& BitVec.extractLsb' 0 8
-          t3.regs.rax.toBitVec == BitVec.zero 8)) = true := by assumption
-      have hd : (Flat.swapWith (flat g1) t.regs.rsi.toBitVec).1 ≠ .done :=
-        ProduceProof.code_ne_zero (fun e => ProduceProof.al_ne (t := t3) hz (hal3.trans e))
-      cfg_goto
-      · exact hb3.flags.stack
-      · simp only
-        exact ⟨g3, w3, hb3.flags, hok3, ProduceProof.Keep.trans hr.keep hK3,
-          by rw [hrs, afterR_ne hd]; exact hf3, by rw [hrs, afterR_ne hd]; exact hal3⟩
-      · simp only
-        left; omega
-    | other =>
-      have hz : (!(BitVec.extractLsb' 0 8 t3.regs.rax.toBitVec &&& BitVec.extractLsb' 0 8
-          t3.regs.rax.toBitVec == BitVec.zero 8)) = false := by assumption
-      have hd : (Flat.swapWith (flat g1) t.regs.rsi.toBitVec).1 = .done :=
-        ProduceProof.code_eq_zero (hal3.symm.trans (ProduceProof.al_zero (t := t3) hz))
-      obtain ⟨e1, e2, e3⟩ := swap_rec hr.ok hok3 hK3 hf3 hd
-      first
-      | exact ⟨g3, w3, ⟨hb3.flags, hok3, ProduceProof.Keep.trans hr.keep hK3,
-          by rw [hf3]; exact destOk_swapWith hr.dok hN _⟩,
-          by unfold Budget at hbud; have := hK3.xo; rw [e1, e2, e3]; omega, by rw [hrs, afterR_done hd, ← hf3]⟩
-      | (try simp only
-         right
-         refine ⟨?_, by decide⟩
-         rw [lenAt_mk, hb3.lenAt, hr.bx.lenAt, e2])
-  case «.LB.Emission.removeSurplus.11» t ht =>
-    clear hswap hm hfr hk0
-    obtain ⟨g2, w2, hr, hbud, hrs⟩ := ht
-    kvcgen64 [hpop]
-    all_goals try symexec_norm
-    refine Bx.call0 (bx_next% hr.bx) hr.bx.bx hr.ok (popA_of hbud hr.dok) ?_
-    intro t3 g3 w3 hb3 hQ3 hok3
-    obtain ⟨hK3, hf3, hal3⟩ := hQ3
-    kvcgen64
-    all_goals try symexec_norm
-    vc_by_shape
-    | goto ".LB.Emission.removeSurplus.0" =>
-      have hz : (BitVec.extractLsb' 0 8 t3.regs.rax.toBitVec &&& BitVec.extractLsb' 0 8
-          t3.regs.rax.toBitVec == BitVec.zero 8) = true := by assumption
-      have hd : (Flat.pop (flat g2)).1 = .done := ProduceProof.code_eq_zero
-        (hal3.symm.trans (ProduceProof.al_zero (t := t3) (by rw [hz]; rfl)))
-      cfg_goto
-      · exact hb3.flags.stack
-      · simp only
-        exact ⟨g3, w3, ⟨hb3.flags, hok3, ProduceProof.Keep.trans hr.keep hK3,
-          by rw [hf3]; exact destOk_pop hr.dok⟩, budget_pop hr.ok hok3 hK3 hf3 hd hbud,
-          by rw [hrs, afterPop_done hd, ← hf3]⟩
-      · simp only
-        left
-        rw [lenAt_mk, hb3.lenAt, hr.bx.lenAt, ← len_pop hf3 hd]
-        omega
-    | goto ".LB.Emission.removeSurplus.8" =>
-      have hz : (BitVec.extractLsb' 0 8 t3.regs.rax.toBitVec &&& BitVec.extractLsb' 0 8
-          t3.regs.rax.toBitVec == BitVec.zero 8) = false := by assumption
-      have hd : (Flat.pop (flat g2)).1 ≠ .done := ProduceProof.code_ne_zero
-        (fun e => ProduceProof.al_ne (t := t3) (by rw [hz]; rfl) (hal3.trans e))
-      cfg_goto
-      · exact hb3.flags.stack
-      · simp only
-        exact ⟨g3, w3, hb3.flags, hok3, ProduceProof.Keep.trans hr.keep hK3,
-          by rw [hrs, afterPop_ne hd]; exact hf3, by rw [hrs, afterPop_ne hd]; exact hal3⟩
-      · simp only
-        left; omega
+    · rintro ⟨ha, hp, hag⟩
+      exact Or.inl ⟨ha, extras_post hp, hag⟩
+
+theorem b_10
+    : removeSurplusAsm.ForallBlocks fun blk =>
+      blk.label = .label ".LB.Emission.removeSurplus.10" → Obl S g F s ra blk := by
+  cfg_block [Obl, Inv, V, Names.removeSurplus]
+  intro t ht
+  obtain ⟨g1, w1, hr, hrs⟩ := ht
+  kvcgen64
+  all_goals try symexec_norm
+  vc_by_shape
+  | goto ".LB.Emission.removeSurplus.9" =>
+    cfg_goto
+    · exact hr.bx.upd.stack
+    · simp only
+      exact ⟨g1, w1, hr.bx.upd, hr.ok, hr.keep, by rw [hrs], by rw [hrs]; rfl⟩
+    · simp only [V]
+      left; omega
+
+theorem b_11
+    (hout : ∀ l ∈ Program.labels removeSurplusAsm, label l ≠ label "exit")
+    (hswap : Sep.SpecWithExit Names.swapWith swapWithA 2 swapWithQ
+      (fun g g' s _ => ExitRes (Flat.swapWith · (rsi s)) g g'))
+    : removeSurplusAsm.ForallBlocks fun blk =>
+      blk.label = .label ".LB.Emission.removeSurplus.11" → Obl S g F s ra blk := by
+  simp only [Names.swapWith] at hswap
+  cfg_block [Obl, Inv, V, Names.removeSurplus]
+  intro t ht
+  obtain ⟨g1, w1, hr, hbud, h0, hrs⟩ := ht
+  kvcgen64 [hswap]
+  all_goals try symexec_norm
+  refine Bx.call2 (Q := swapWithQ)
+    (X := fun g g' s _ => ExitRes (Flat.swapWith · (rsi s)) g g')
+    (c := { t with regs := { t.regs with rdi := t.regs.rbx } })
+    (bx_next% hr.bx) hr.bx.bx hr.ok (swapA_of hbud h0 hr.dok) ?_ (by
+    intro tx hp harg
+    apply ProofKit.intercept_exit (E := E S g F s ra) hout
+    refine Or.inr ⟨rfl, harg, Post.imp hp ?_⟩
+    intro g3 hx
+    change ExitRes (Flat.swapWith · t.regs.rsi.toBitVec) g1 g3 at hx
+    obtain ⟨hK3, hf3, hfail⟩ := hx
+    dsimp only [surplusX, ExitRes]
+    rw [hrs, afterR_ne (by rw [hfail]; decide)]
+    exact ⟨Keep.trans hr.keep hK3, hf3, hfail⟩)
+  intro t3 g3 w3 hb3 hQ3 hok3
+  obtain ⟨hK3, hf3, hal3⟩ : Res (Flat.swapWith · t.regs.rsi.toBitVec) g1 g3 t3 := hQ3
+  have hN : (flat g1).size.toNat ≤ MAX_N := by
+    show g1.h.len.toNat ≤ MAX_N
+    have := hr.ok.len; have := hr.ok.n; have := hr.ok.xs; omega
+  kvcgen64
+  all_goals try symexec_norm
+  vc_by_shape
+  | goto ".LB.Emission.removeSurplus.9" =>
+    have hz : (!(BitVec.extractLsb' 0 8 t3.regs.rax.toBitVec &&& BitVec.extractLsb' 0 8
+        t3.regs.rax.toBitVec == BitVec.zero 8)) = true := by assumption
+    have hd : (Flat.swapWith (flat g1) t.regs.rsi.toBitVec).1 ≠ .done :=
+      ProduceProof.code_ne_zero (fun e => ProduceProof.al_ne (t := t3) hz (hal3.trans e))
+    cfg_goto
+    · exact hb3.flags.stack
+    · simp only
+      exact ⟨g3, w3, hb3.flags, hok3, ProduceProof.Keep.trans hr.keep hK3,
+        by rw [hrs, afterR_ne hd]; exact hf3, by rw [hrs, afterR_ne hd]; exact hal3⟩
+    · simp only [V, wB]
+      left; omega
+  | other =>
+    have hz : (!(BitVec.extractLsb' 0 8 t3.regs.rax.toBitVec &&& BitVec.extractLsb' 0 8
+        t3.regs.rax.toBitVec == BitVec.zero 8)) = false := by assumption
+    have hd : (Flat.swapWith (flat g1) t.regs.rsi.toBitVec).1 = .done :=
+      ProduceProof.code_eq_zero (hal3.symm.trans (ProduceProof.al_zero (t := t3) hz))
+    obtain ⟨e1, e2, e3⟩ := swap_rec hr.ok hok3 hK3 hf3 hd
+    first
+    | exact ⟨g3, w3, ⟨hb3.flags, hok3, ProduceProof.Keep.trans hr.keep hK3,
+        by rw [hf3]; exact destOk_swapWith hr.dok hN _⟩,
+        by unfold Budget at hbud; have := hK3.xo; rw [e1, e2, e3]; omega, by rw [hrs, afterR_done hd, ← hf3]⟩
+    | (simp only [V, wB]
+       right
+       refine ⟨?_, by decide⟩
+       rw [lenAt_mk, hb3.lenAt, hr.bx.lenAt, e2])
+
+theorem b_12
+    (hout : ∀ l ∈ Program.labels removeSurplusAsm, label l ≠ label "exit")
+    (hpop : Sep.SpecWithExit Names.pop popA 2 popQ
+      (fun g g' _s _t => ExitRes Flat.pop g g'))
+    : removeSurplusAsm.ForallBlocks fun blk =>
+      blk.label = .label ".LB.Emission.removeSurplus.12" → Obl S g F s ra blk := by
+  simp only [Names.pop] at hpop
+  cfg_block [Obl, Inv, V, Names.removeSurplus]
+  intro t ht
+  obtain ⟨g2, w2, hr, hbud, hrs⟩ := ht
+  kvcgen64 [hpop]
+  all_goals try symexec_norm
+  refine Bx.call2 (Q := popQ) (X := fun g g' _s _t => ExitRes Flat.pop g g')
+    (c := { t with regs := { t.regs with rdi := t.regs.rbx } })
+    (bx_next% hr.bx) hr.bx.bx hr.ok (popA_of hbud hr.dok) ?_ (by
+    intro tx hp harg
+    apply ProofKit.intercept_exit (E := E S g F s ra) hout
+    refine Or.inr ⟨rfl, harg, Post.imp hp ?_⟩
+    intro g3 hx
+    change ExitRes Flat.pop g2 g3 at hx
+    obtain ⟨hK3, hf3, hfail⟩ := hx
+    dsimp only [surplusX, ExitRes]
+    rw [hrs, afterPop_ne (by rw [hfail]; decide)]
+    exact ⟨Keep.trans hr.keep hK3, hf3, hfail⟩)
+  intro t3 g3 w3 hb3 hQ3 hok3
+  obtain ⟨hK3, hf3, hal3⟩ := hQ3
+  kvcgen64
+  all_goals try symexec_norm
+  vc_by_shape
+  | goto ".LB.Emission.removeSurplus.0" =>
+    have hz : (BitVec.extractLsb' 0 8 t3.regs.rax.toBitVec &&& BitVec.extractLsb' 0 8
+        t3.regs.rax.toBitVec == BitVec.zero 8) = true := by assumption
+    have hd : (Flat.pop (flat g2)).1 = .done := ProduceProof.code_eq_zero
+      (hal3.symm.trans (ProduceProof.al_zero (t := t3) (by rw [hz]; rfl)))
+    cfg_goto
+    · exact hb3.flags.stack
+    · simp only
+      exact ⟨g3, w3, ⟨hb3.flags, hok3, ProduceProof.Keep.trans hr.keep hK3,
+        by rw [hf3]; exact destOk_pop hr.dok⟩, budget_pop hr.ok hok3 hK3 hf3 hd hbud,
+        by rw [hrs, afterPop_done hd, ← hf3]⟩
+    · simp only [V, wB]
+      left
+      rw [lenAt_mk, hb3.lenAt, hr.bx.lenAt, ← len_pop hf3 hd]
+      omega
+  | goto ".LB.Emission.removeSurplus.9" =>
+    have hz : (BitVec.extractLsb' 0 8 t3.regs.rax.toBitVec &&& BitVec.extractLsb' 0 8
+        t3.regs.rax.toBitVec == BitVec.zero 8) = false := by assumption
+    have hd : (Flat.pop (flat g2)).1 ≠ .done := ProduceProof.code_ne_zero
+      (fun e => ProduceProof.al_ne (t := t3) (by rw [hz]; rfl) (hal3.trans e))
+    cfg_goto
+    · exact hb3.flags.stack
+    · simp only
+      exact ⟨g3, w3, hb3.flags, hok3, ProduceProof.Keep.trans hr.keep hK3,
+        by rw [hrs, afterPop_ne hd]; exact hf3, by rw [hrs, afterPop_ne hd]; exact hal3⟩
+    · simp only [V, wB]
+      left; omega
+
+end
+end Surplus
+
+theorem removeSurplus_unit [Host] [FunDecls]
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels removeSurplusAsm, label l ≠ label "exit")
+    (hswap : Sep.SpecWithExit Names.swapWith swapWithA 2 swapWithQ
+      (fun g g' s _ => ExitRes (Flat.swapWith · (rsi s)) g g'))
+    (hpop : Sep.SpecWithExit Names.pop popA 2 popQ
+      (fun g g' _s _t => ExitRes Flat.pop g g')) :
+    UnitThmWithExit removeSurplusAsm surplusA 4 surplusQ surplusX := by
+  intro S g F s ra
+  refine ⟨fun t ⟨ht, hp⟩ => ?_⟩
+  subst ht
+  refine Program.WP.cfg (Surplus.Inv S g F s ra) (Surplus.V S) ?_ rfl
+  refine forallBlocks_cases [.entry, .label Names.removeSurplus,
+    .label ".LB.Emission.removeSurplus.0", .label ".LB.Emission.removeSurplus.1",
+    .label ".LB.Emission.removeSurplus.2", .label ".LB.Emission.removeSurplus.3",
+    .label ".LB.Emission.removeSurplus.4", .label ".LB.Emission.removeSurplus.5",
+    .label ".LB.Emission.removeSurplus.6", .label ".LB.Emission.removeSurplus.7",
+    .label ".LB.Emission.removeSurplus.8", .label ".LB.Emission.removeSurplus.9",
+    .label ".LB.Emission.removeSurplus.10", .label ".LB.Emission.removeSurplus.11",
+    .label ".LB.Emission.removeSurplus.12"] (by simp only [Names.removeSurplus]; cfg_labels) ?_
+  intro q hq
+  simp only [List.mem_cons, List.not_mem_nil, or_false] at hq
+  rcases hq with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+  · exact Surplus.b_entry S g F s ra
+  · exact Surplus.b_fn S g F s ra hp
+  · exact Surplus.b_0 S g F s ra
+  · exact Surplus.b_1 S g F s ra
+  · exact Surplus.b_2 S g F s ra
+  · exact Surplus.b_3 S g F s ra
+  · exact Surplus.b_4 S g F s ra
+  · exact Surplus.b_5 S g F s ra
+  · exact Surplus.b_6 S g F s ra
+  · exact Surplus.b_7 S g F s ra hexit hout
+  · exact Surplus.b_8 S g F s ra
+  · exact Surplus.b_9 S g F s ra
+  · exact Surplus.b_10 S g F s ra
+  · exact Surplus.b_11 S g F s ra hout hswap
+  · exact Surplus.b_12 S g F s ra hout hpop
 
 end Bbu.Unit

@@ -31,9 +31,9 @@ theorem b_11 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     (E : Int64 → MachineData → Prop)
     (hnext : ∀ u, rax u = 1#64 + rax t → EmitDestHead P g M F s ra u →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-        (label ".LB.Planner.run.11") u)
+        (label ".LB.Planner.run.12") u)
     (hdone : ∀ u, rax u = g.p.m → EmitDestDone P g M F s ra u → K () u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.11" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.12" →
       EmitDestHead P g M F s ra t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
@@ -60,7 +60,7 @@ theorem b_11 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     first
     | (rw [source_addr]; exact hc.localSome hsrc)
     | (rw [dest_addr]; exact hc.localSome hidx)
-  | goto ".LB.Planner.run.11" =>
+  | goto ".LB.Planner.run.12" =>
     rename_i heq
     symexec_norm at heq
     simp only [show t.regs.rdx.toBitVec = g.p.m from hdx,

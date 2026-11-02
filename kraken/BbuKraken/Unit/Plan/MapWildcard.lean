@@ -38,6 +38,11 @@ def mapWildQ (b b' : BG) (_ t : MachineData) : Prop :=
     ∧ b' = { b with M := (Flat.mapWildcardSlotCopies b.fl b.M false).2.1,
                     saw := sawB b (Flat.mapWildcardSlotCopies b.fl b.M false).2.2 }
 
+def mapWildX (b b' : BG) (_s _t : MachineData) : Prop :=
+  (Flat.mapWildcardSlotCopies b.fl b.M false).1 = .assertionFailed ∧
+    b' = { b with M := (Flat.mapWildcardSlotCopies b.fl b.M false).2.1,
+                    saw := sawB b (Flat.mapWildcardSlotCopies b.fl b.M false).2.2 }
+
 /-! ## The members `m_strategy` and `m_sawWildcardCopy` -/
 
 section
@@ -67,16 +72,16 @@ namespace WildU
 
 -- The frame of the body: the free words of `closestCopy`, the return slot of the callees, then
 -- the saved `rbx`, `rbp`, `r12` and `r13`.
-def fr (s : MachineData) (lo : List Word) (w : Word) : List Word :=
-  lo ++ w :: [s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec, s.regs.r13.toBitVec]
+def fr (s : MachineData) (lo : List Word) (w : CopiesU.CallWords) : List Word :=
+  lo ++ w.ret :: [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec, s.regs.r13.toBitVec]
 
 -- The view in the loop: the `Mapping` so far and the flat `saw` so far.
 abbrev bv (b : BG) (M : Flat.Mapping) (sw : Bool) : BG := { b with M := M, saw := sawB b sw }
 
 -- The registers in the loop.
 structure LI (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64)
-    (M : Flat.Mapping) (sw : Bool) (lo : List Word) (w : Word) (t : MachineData) : Prop where
-  kb : Kb (BView B (bv b M sw) ∗ F) s ra (fr s lo w) 32#64 t
+    (M : Flat.Mapping) (sw : Bool) (lo : List Word) (w : CopiesU.CallWords) (t : MachineData) : Prop where
+  kb : Kb (BView B (bv b M sw) ∗ F) s ra (fr s lo w) 40#64 t
   hl : lo.length = 4
   rbp : t.regs.rbp.toBitVec = B
   r14 : t.regs.r14 = s.regs.r14
@@ -166,7 +171,7 @@ end
 
 section
 variable {B : Addr} {b : BG} {F : MProp 64} {s t t' : MachineData} {ra : Int64}
-  {M : Flat.Mapping} {sw : Bool} {lo : List Word} {w : Word}
+  {M : Flat.Mapping} {sw : Bool} {lo : List Word} {w : CopiesU.CallWords}
 
 theorem LI.next (h : LI B b F s ra M sw lo w t) (hm : t'.dmem = t.dmem)
     (hsp : t'.regs.rsp = t.regs.rsp) (hbp : t'.regs.rbp = t.regs.rbp)
@@ -194,9 +199,9 @@ theorem LI.saw (h : LI B b F s ra M sw lo w t) {x : Int} (hx : BitVec.ofInt 8 x 
 theorem LI.after {c : MachineData} {M' : Flat.Mapping} {a' : BG} {xs lo' : List Word} {w' : Word}
     (hag : Sep.mod.Agree c t) (h : LI B b F s ra M sw lo w c)
     (hkb : Kb (BView B a' ∗ F) s ra (xs ++ lo' ++ w' ::
-      [s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec, s.regs.r13.toBitVec]) 32#64 t)
+      [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec, s.regs.r13.toBitVec]) 40#64 t)
     (hl : (xs ++ lo').length = 4) (ha : a' = bv b M' sw) :
-    LI B b F s ra M' sw (xs ++ lo') w' t ∧ t.regs.rbx = c.regs.rbx ∧ t.regs.r12 = c.regs.r12 := by
+    LI B b F s ra M' sw (xs ++ lo') ⟨w', w.pad⟩ t ∧ t.regs.rbx = c.regs.rbx ∧ t.regs.r12 = c.regs.r12 := by
   subst ha
   refine ⟨⟨by rw [fr]; exact hkb, hl, ?_, ?_, ?_⟩,
     mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rbx,
@@ -206,22 +211,23 @@ theorem LI.after {c : MachineData} {M' : Flat.Mapping} {a' : BG} {xs lo' : List 
   · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r15]; exact h.r15
 
 theorem pop_addr (a : Word) :
-    a = a + BitVec.ofNat 64 (8 * 0) ∧ a + 8#64 = a + BitVec.ofNat 64 (8 * 1)
-      ∧ a + 8#64 + 8#64 = a + BitVec.ofNat 64 (8 * 2)
-      ∧ a + 8#64 + 8#64 + 8#64 = a + BitVec.ofNat 64 (8 * 3) := by
+    8#64 + a = a + BitVec.ofNat 64 (8 * 1) ∧
+      8#64 + a + 8#64 = a + BitVec.ofNat 64 (8 * 2) ∧
+      8#64 + a + 8#64 + 8#64 = a + BitVec.ofNat 64 (8 * 3) ∧
+      8#64 + a + 8#64 + 8#64 + 8#64 = a + BitVec.ofNat 64 (8 * 4) := by
   refine ⟨?_, ?_, ?_, ?_⟩ <;> bv_omega
 
 theorem LI.kb' (h : LI B b F s ra M sw lo w t) :
-    Kb (BView B (bv b M sw) ∗ F) s ra ((lo ++ [w]) ++
-      [s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec, s.regs.r13.toBitVec])
-      32#64 t := by
+    Kb (BView B (bv b M sw) ∗ F) s ra ((lo ++ [w.ret]) ++
+      [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec, s.regs.r13.toBitVec])
+      40#64 t := by
   simpa [fr] using h.kb
 
 theorem LI.pop_isSome (h : LI B b F s ra M sw lo w t) :
-    (t.dmem.loadInt t.regs.rsp.toBitVec 8).isSome = true
-      ∧ (t.dmem.loadInt (t.regs.rsp.toBitVec + 8#64) 8).isSome = true
-      ∧ (t.dmem.loadInt (t.regs.rsp.toBitVec + 8#64 + 8#64) 8).isSome = true
-      ∧ (t.dmem.loadInt (t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64) 8).isSome = true := by
+    (t.dmem.loadInt (8#64 + t.regs.rsp.toBitVec) 8).isSome = true
+      ∧ (t.dmem.loadInt (8#64 + t.regs.rsp.toBitVec + 8#64) 8).isSome = true
+      ∧ (t.dmem.loadInt (8#64 + t.regs.rsp.toBitVec + 8#64 + 8#64) 8).isSome = true
+      ∧ (t.dmem.loadInt (8#64 + t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64) 8).isSome = true := by
   obtain ⟨e0, e1, e2, e3⟩ := pop_addr t.regs.rsp.toBitVec
   refine ⟨?_, ?_, ?_, ?_⟩
   · rw [e0]; exact Kb.isSome_hi h.kb' rfl (by simp)
@@ -229,23 +235,22 @@ theorem LI.pop_isSome (h : LI B b F s ra M sw lo w t) :
   · rw [e2]; exact Kb.isSome_hi h.kb' rfl (by simp)
   · rw [e3]; exact Kb.isSome_hi h.kb' rfl (by simp)
 
--- The state after the pops.
 theorem LI.pop_kg (h : LI B b F s ra M sw lo w t) (hm : t'.dmem = t.dmem)
-    (hsp : t'.regs.rsp.toBitVec = t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64 + 8#64)
-    (hbx : t'.regs.rbx.toBitVec = rd t.dmem t.regs.rsp.toBitVec)
-    (hbp : t'.regs.rbp.toBitVec = rd t.dmem (t.regs.rsp.toBitVec + 8#64))
-    (h12 : t'.regs.r12.toBitVec = rd t.dmem (t.regs.rsp.toBitVec + 8#64 + 8#64))
-    (h13 : t'.regs.r13.toBitVec = rd t.dmem (t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64))
+    (hsp : t'.regs.rsp.toBitVec = t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64 + 8#64 + 8#64)
+    (hbx : t'.regs.rbx.toBitVec = rd t.dmem (8#64 + t.regs.rsp.toBitVec))
+    (hbp : t'.regs.rbp.toBitVec = rd t.dmem (8#64 + t.regs.rsp.toBitVec + 8#64))
+    (h12 : t'.regs.r12.toBitVec = rd t.dmem (8#64 + t.regs.rsp.toBitVec + 8#64 + 8#64))
+    (h13 : t'.regs.r13.toBitVec = rd t.dmem (8#64 + t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64))
     (h14 : t'.regs.r14 = t.regs.r14) (h15 : t'.regs.r15 = t.regs.r15) :
     Kg (BView B (bv b M sw) ∗ F) s ra (fr s lo w) t' := by
   obtain ⟨e0, e1, e2, e3⟩ := pop_addr t.regs.rsp.toBitVec
   refine h.kb.kg hm ?_ ?_ ?_ ?_ ?_ (h14.trans h.r14) (h15.trans h.r15)
     <;> (try apply UInt64.toBitVec_inj.mp)
   · rw [hsp, h.kb.sp]; bv_omega
-  · rw [hbx, e0]; exact Kb.rd_hi h.kb' rfl (i := 0) (by simp)
-  · rw [hbp, e1]; exact Kb.rd_hi h.kb' rfl (i := 1) (by simp)
-  · rw [h12, e2]; exact Kb.rd_hi h.kb' rfl (i := 2) (by simp)
-  · rw [h13, e3]; exact Kb.rd_hi h.kb' rfl (i := 3) (by simp)
+  · rw [hbx, e0]; exact Kb.rd_hi h.kb' rfl (i := 1) (by simp)
+  · rw [hbp, e1]; exact Kb.rd_hi h.kb' rfl (i := 2) (by simp)
+  · rw [h12, e2]; exact Kb.rd_hi h.kb' rfl (i := 3) (by simp)
+  · rw [h13, e3]; exact Kb.rd_hi h.kb' rfl (i := 4) (by simp)
 end
 
 /-! ### The invariant, the variant and the obligation of a block -/
@@ -291,10 +296,12 @@ def V (b : BG) (l : Label) (t : MachineData) : Nat :=
     3 * (b.n.toNat - t.regs.rbx.toBitVec.toNat) + 1
   else 0
 
-def E (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) :
+def E [Labels] (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) :
     Int64 → MachineData → Prop :=
-  fun a t => a = ra ∧ VPost BView BG.Ok B F 9 (fun a' t => mapWildQ b a' s t) s t
+  fun a t => a = ra ∧ VPost BView BG.Ok B F 10 (fun a' t => mapWildQ b a' s t) s t
     ∧ Sep.mod.Agree s t
+    ∨ a = label "exit" ∧ t.regs.get64 .rdi = 1#64 ∧
+      VPost BView BG.Ok B F 10 (fun a' t => mapWildX b a' s t) s t
 
 def Obl [Host] [FunDecls] (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (fr₀ : List Word) (blk : Program.Block) : Prop :=
@@ -343,11 +350,11 @@ theorem b_entry : mapWildcardSlotCopiesAsm.ForallBlocks fun blk =>
   exact ht
 
 set_option maxHeartbeats 100000 in
-theorem b_fn (hpre : VPre BView BG.Ok B b F mapWildA 9 s) (w₀ w₁ w₂ w₃ w₄ w₅ w₆ w₇ w₈ : Word)
-    (hk0 : Kg (BView B b ∗ F) s ra [w₀, w₁, w₂, w₃, w₄, w₅, w₆, w₇, w₈] (s.pushRa ra)) :
+theorem b_fn (hpre : VPre BView BG.Ok B b F mapWildA 10 s) (w₀ w₁ w₂ w₃ w₄ w₅ w₆ w₇ w₈ w₉ : Word)
+    (hk0 : Kg (BView B b ∗ F) s ra [w₀, w₁, w₂, w₃, w₄, w₅, w₆, w₇, w₈, w₉] (s.pushRa ra)) :
     mapWildcardSlotCopiesAsm.ForallBlocks fun blk =>
       blk.label = .label Names.mapWildcardSlotCopies
-        → Obl B b F s ra [w₀, w₁, w₂, w₃, w₄, w₅, w₆, w₇, w₈] blk := by
+        → Obl B b F s ra [w₀, w₁, w₂, w₃, w₄, w₅, w₆, w₇, w₈, w₉] blk := by
   cfg_block [Obl, Names.mapWildcardSlotCopies]
   intro t ht
   mw_inv at ht
@@ -357,13 +364,13 @@ theorem b_fn (hpre : VPre BView BG.Ok B b F mapWildA 9 s) (w₀ w₁ w₂ w₃ w
   have hm0 := hk0.vmem
   have hq : (s.pushRa ra).regs.rsp.toBitVec = rsp s - 8#64 := by
     rw [← Reg64s.get64_rsp, hk0.sp64]
-  have hsp4 : (s.pushRa ra).regs.rsp.toBitVec - 8#64 - 8#64 - 8#64 - 8#64 = rsp s - 8#64 - 32#64 := by
+  have hsp4 : (s.pushRa ra).regs.rsp.toBitVec - 8#64 - 8#64 - 8#64 - 8#64 - 8#64 = rsp s - 8#64 - 40#64 := by
     rw [hq]; bv_omega
   obtain ⟨hpo, hpm⟩ := hk0.pushes (xs := [(s.pushRa ra).regs.r13.toBitVec,
     (s.pushRa ra).regs.r12.toBitVec, (s.pushRa ra).regs.rbp.toBitVec,
     (s.pushRa ra).regs.rbx.toBitVec]) (by simp)
   simp only [pushes] at hpm
-  change (Stk (rsp s) (fr s [w₀, w₁, w₂, w₃] w₄) ra.toBitVec ∗ BView B b ∗ F).get _ at hpm
+  change (Stk (rsp s) (fr s [w₀, w₁, w₂, w₃] ⟨w₄, w₅⟩) ra.toBitVec ∗ BView B b ∗ F).get _ at hpm
   simp only [PushOk] at hpo
   obtain ⟨p1, p2, p3, p4, -⟩ := hpo
   have h_n := BView.rd_n hm0
@@ -397,12 +404,13 @@ theorem b_fn (hpre : VPre BView BG.Ok B b F mapWildA 9 s) (w₀ w₁ w₂ w₃ w
     cfg_goto
     · exact Kb.stack ⟨hpm, hsp4⟩ (by decide)
     · mw_inv
-      exact ⟨b.M, false, [w₀, w₁, w₂, w₃], w₄, ⟨⟨hpm, hsp4⟩, rfl,
+      exact ⟨b.M, false, [w₀, w₁, w₂, w₃], ⟨w₄, w₅⟩, ⟨⟨hpm, hsp4⟩, rfl,
         by simpa [MachineData.pushRa] using hpre.rdi, rfl, rfl⟩, hpos, rfl⟩
     · left; have := b.n.isLt; simp [V, Names.mapWildcardSlotCopies]; omega
 
 set_option maxHeartbeats 100000 in
-theorem b_0 (hmap : BSpec Names.map mapA 0 mapQ) (hok : b.Ok) :
+theorem b_0 (hout : ∀ l ∈ Program.labels mapWildcardSlotCopiesAsm, label l ≠ label "exit")
+    (hmap : BSpecWithExit Names.map mapA 2 mapQ mapX) (hok : b.Ok) :
     mapWildcardSlotCopiesAsm.ForallBlocks fun blk =>
     blk.label = .label ".LB.MappingBuilder.mapWildcardSlotCopies.0" → Obl B b F s ra fr₀ blk := by
   cfg_block [Obl]
@@ -415,42 +423,68 @@ theorem b_0 (hmap : BSpec Names.map mapA 0 mapQ) (hok : b.Ok) :
   all_goals try symexec_norm
   vc_by_shape
   | other =>
-    refine Kb.vcall_above (V := BView) (A := mapA) (Q := mapQ) (S := B) (s := s) (ra := ra)
-      (F := F) (a := bv b M sw) (xs := lo) (lo := []) (w := w)
-      (hi := [s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec, s.regs.r13.toBitVec])
-      (k := 0) ?kb rfl rfl ?rdi hokM ?A ?_
-    case kb => rw [List.append_nil]; exact Kb.next hli.kb rfl rfl
+    refine Kb.vcallWithExit_above (V := BView) (A := mapA) (Q := mapQ) (X := mapX) (S := B) (s := s) (ra := ra)
+      (F := F) (a := bv b M sw) (xs := lo.take 2) (lo := lo.drop 2) (w := w.ret)
+      (hi := [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec, s.regs.r13.toBitVec])
+      (k := 2) ?kb rfl (by simp [hli.hl]) ?rdi hokM ?A ?normal ?abort
+    case kb => rw [List.take_append_drop]; exact Kb.next hli.kb rfl rfl
     case rdi => exact hli.rbp
     case A => exact ⟨hcm, hlt⟩
-    intro t3 a'' lo'' w'' hkb3 hl3 hQ3 hok3 hag3
-    obtain ⟨hli3, hbx3, -⟩ := LI.after (xs := lo) hag3 (hli.next rfl rfl rfl rfl rfl) hkb3
-      (by simpa [hl3] using hli.hl) hQ3.2
-    have hal : al t3 = code (Flat.mbMap b.fl M t.regs.rax.toBitVec t.regs.rbx.toBitVec).1 := hQ3.1
-    clear hQ3 hkb3
-    kvcgen64
-    all_goals try symexec_norm
-    vc_by_shape
-    | goto ".LB.MappingBuilder.mapWildcardSlotCopies.4" =>
-      have hd := code_ne_zero fun e =>
-        al_ne (by with_reducible assumption) (hal.trans e)
-      have hf := hrest.symm.trans (step_fail hd)
-      cfg_goto
-      · exact hli3.stk rfl rfl
-      · mw_inv
-        exact ⟨_, sw, _, w'', hli3.next rfl rfl rfl rfl rfl, by simp only [res, hf]; exact hal,
-          by simp only [res, hf]; rfl⟩
-      · left; mw_var; omega
-    | other =>
-      have hd := code_eq_zero (hal.symm.trans
-        (al_zero (by with_reducible assumption)))
-      first
-      | (left; mw_var; rw [hbx3]; omega)
-      | (mw_inv
-         refine ⟨_, sw, _, w'', hli3.next rfl rfl rfl rfl rfl, ?_, ?_⟩
-         · show t3.regs.rbx.toBitVec.toNat < _; rw [hbx3]; exact hlt
-         · show Flat.wildcardFrom _ _ _ (t3.regs.rbx.toBitVec + 1#64) = _
-           rw [hbx3]
-           exact (step_done hd).symm.trans hrest)
+    case normal =>
+      intro t3 a'' lo'' w'' hkb3 hl3 hQ3 hok3 hag3
+      obtain ⟨hli3, hbx3, -⟩ := LI.after (xs := lo.take 2) hag3 (hli.next rfl rfl rfl rfl rfl) hkb3
+        (by simp [List.length_append, hl3, hli.hl]) hQ3.2
+      have hal : al t3 = code (Flat.mbMap b.fl M t.regs.rax.toBitVec t.regs.rbx.toBitVec).1 := hQ3.1
+      clear hQ3 hkb3
+      kvcgen64
+      all_goals try symexec_norm
+      vc_by_shape
+      | goto ".LB.MappingBuilder.mapWildcardSlotCopies.4" =>
+        have hd := code_ne_zero fun e =>
+          al_ne (by with_reducible assumption) (hal.trans e)
+        have hf := hrest.symm.trans (step_fail hd)
+        cfg_goto
+        · exact hli3.stk rfl rfl
+        · mw_inv
+          exact ⟨_, sw, _, ⟨w'', w.pad⟩, hli3.next rfl rfl rfl rfl rfl, by simp only [res, hf]; exact hal,
+            by simp only [res, hf]; rfl⟩
+        · left; mw_var; omega
+      | other =>
+        have hd := code_eq_zero (hal.symm.trans
+          (al_zero (by with_reducible assumption)))
+        first
+        | (left; mw_var; rw [hbx3]; omega)
+        | (mw_inv
+           refine ⟨_, sw, _, ⟨w'', w.pad⟩, hli3.next rfl rfl rfl rfl rfl, ?_, ?_⟩
+           · show t3.regs.rbx.toBitVec.toNat < _; rw [hbx3]; exact hlt
+           · show Flat.wildcardFrom _ _ _ (t3.regs.rbx.toBitVec + 1#64) = _
+             rw [hbx3]
+             exact (step_done hd).symm.trans hrest)
+    case abort =>
+      intro t3 a'' free v hmem hfree hrel hok3 harg
+      obtain ⟨ha'', hf⟩ := hrel
+      subst a''
+      change Flat.mbMap b.fl M t.regs.rax.toBitVec t.regs.rbx.toBitVec =
+        (.assertionFailed, M) at hf
+      have hd : (Flat.mbMap b.fl M t.regs.rax.toBitVec t.regs.rbx.toBitVec).1 ≠ .done := by
+        rw [hf]
+        change Flat.Status.assertionFailed ≠ Flat.Status.done
+        decide
+      have hmodel : res b = (.assertionFailed, M, sw) := by
+        change Flat.mapWildcardSlotCopies b.fl b.M false = _
+        rw [← hrest, step_fail hd, hf]
+      refine Or.inr ⟨Or.inr ⟨rfl, harg, ?_⟩, ?_⟩
+      · refine ⟨bv b M sw, ?_, hokM,
+          lo.take 2 ++ free ++ v :: [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec,
+            s.regs.r12.toBitVec, s.regs.r13.toBitVec], ra.toBitVec,
+          by simp [hfree, hli.hl], ?_⟩
+        · change (res b).1 = .assertionFailed ∧ bv b M sw =
+            { b with M := (res b).2.1, saw := sawB b (res b).2.2 }
+          rw [hmodel]
+          exact ⟨rfl, rfl⟩
+        · simpa only [MProp.sep_assoc] using hmem
+      · intro l hl ha
+        exact False.elim (hout l hl ha)
 
 set_option maxHeartbeats 100000 in
 theorem b_1 : mapWildcardSlotCopiesAsm.ForallBlocks fun blk =>
@@ -493,7 +527,8 @@ theorem b_1 : mapWildcardSlotCopiesAsm.ForallBlocks fun blk =>
        exact hrest)
 
 set_option maxHeartbeats 100000 in
-theorem b_2 (hcc : BSpec Names.closestCopy closestA 4 closestQ) (hmap : BSpec Names.map mapA 0 mapQ)
+theorem b_2 (hout : ∀ l ∈ Program.labels mapWildcardSlotCopiesAsm, label l ≠ label "exit")
+    (hcc : BSpec Names.closestCopy closestA 4 closestQ) (hmap : BSpecWithExit Names.map mapA 2 mapQ mapX)
     (hok : b.Ok) : mapWildcardSlotCopiesAsm.ForallBlocks fun blk =>
     blk.label = .label ".LB.MappingBuilder.mapWildcardSlotCopies.2" → Obl B b F s ra fr₀ blk := by
   cfg_block [Obl]
@@ -547,8 +582,8 @@ theorem b_2 (hcc : BSpec Names.closestCopy closestA 4 closestQ) (hmap : BSpec Na
       (junk_flag (fb := b.fl) hlt h_kind).symm.trans hj
     clear hj
     refine Kb.vcall_above (V := BView) (A := closestA) (Q := closestQ) (S := B) (s := s) (ra := ra)
-      (F := F) (a := bv b M sw) (xs := []) (lo := lo) (w := w)
-      (hi := [s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec, s.regs.r13.toBitVec])
+      (F := F) (a := bv b M sw) (xs := []) (lo := lo) (w := w.ret)
+      (hi := [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec, s.regs.r13.toBitVec])
       (k := 4) ?kb rfl hli.hl ?rdi hokM ?A ?_
     case kb => exact Kb.next hli.kb rfl rfl
     case rdi => exact hli.rbp
@@ -592,7 +627,7 @@ theorem b_2 (hcc : BSpec Names.closestCopy closestA 4 closestQ) (hmap : BSpec Na
       cfg_goto
       · exact hli2.stk rfl rfl
       · mw_inv
-        refine ⟨M, sw, _, w', hli2.next rfl rfl rfl rfl rfl, ?_, ?_, ?_⟩
+        refine ⟨M, sw, _, ⟨w', w.pad⟩, hli2.next rfl rfl rfl rfl rfl, ?_, ?_, ?_⟩
         · show t2.regs.rbx.toBitVec.toNat < _; rw [hbx]; exact hlt
         · show t2.regs.rax.toBitVec.toNat < _; rw [hrax]; exact BitVec.lt_def.1 (closestCopy_lt hne)
         · show step _ _ _ t2.regs.rax.toBitVec t2.regs.rbx.toBitVec = _
@@ -606,7 +641,7 @@ theorem b_2 (hcc : BSpec Names.closestCopy closestA 4 closestQ) (hmap : BSpec Na
          cfg_goto
          · exact hli2.stk rfl rfl
          · mw_inv
-           refine ⟨M, sw, _, w', hli2.next rfl rfl rfl rfl rfl, ?_, ?_⟩
+           refine ⟨M, sw, _, ⟨w', w.pad⟩, hli2.next rfl rfl rfl rfl rfl, ?_, ?_⟩
            · show t2.regs.rbx.toBitVec.toNat < _; rw [hbx]; exact hlt
            · show Flat.wildcardFrom _ _ _ (t2.regs.rbx.toBitVec + 1#64) = _
              rw [hbx]
@@ -623,7 +658,7 @@ theorem b_2 (hcc : BSpec Names.closestCopy closestA 4 closestQ) (hmap : BSpec Na
          cfg_goto
          · exact hlis.stk rfl rfl
          · mw_inv
-           refine ⟨M, true, _, w', hlis.next rfl rfl rfl rfl rfl, ?_, ?_⟩
+           refine ⟨M, true, _, ⟨w', w.pad⟩, hlis.next rfl rfl rfl rfl rfl, ?_, ?_⟩
            · show t2.regs.rbx.toBitVec.toNat < _; rw [hbx]; exact hlt
            · show Flat.wildcardFrom _ _ _ (t2.regs.rbx.toBitVec + 1#64) = _
              rw [hbx]
@@ -639,50 +674,80 @@ theorem b_2 (hcc : BSpec Names.closestCopy closestA 4 closestQ) (hmap : BSpec Na
       have hk : (Flat.get b.fl.target t.regs.rbx.toBitVec).kind ≠ FunctionReturnLabel :=
         fun e => by simp [e] at hr
       have hstep := (from_take (BitVec.lt_def.2 hlt) hp hw hne hk ht).symm.trans hrest
-      refine Kb.vcall_above (V := BView) (A := mapA) (Q := mapQ) (S := B) (s := s) (ra := ra)
-        (F := F) (a := bv b M true) (xs := lo') (lo := []) (w := w')
-        (hi := [s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec, s.regs.r13.toBitVec])
-        (k := 0) ?kb rfl rfl ?rdi hokT ?A ?_
-      case kb => rw [List.append_nil]; exact Kb.next hlis.kb rfl rfl
+      refine Kb.vcallWithExit_above (V := BView) (A := mapA) (Q := mapQ) (X := mapX) (S := B) (s := s) (ra := ra)
+        (F := F) (a := bv b M true) (xs := lo'.take 2) (lo := lo'.drop 2) (w := w')
+        (hi := [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec, s.regs.r13.toBitVec])
+        (k := 2) ?kb rfl (by simp [hl]) ?rdi hokT ?A ?normal ?abort
+      case kb => rw [List.take_append_drop]; exact Kb.next hlis.kb rfl rfl
       case rdi => exact hli2.rbp
       case A =>
         exact ⟨by show t2.regs.rax.toBitVec.toNat < _; rw [hrax]; exact BitVec.lt_def.1 (closestCopy_lt hne),
           by show t2.regs.rbx.toBitVec.toNat < _; rw [hbx]; exact hlt⟩
-      intro t3 a'' lo'' w'' hkb3 hl3 hQ3 hok3 hag3
-      obtain ⟨hli3, hbx3, -⟩ := LI.after (xs := lo') hag3 (hlis.next rfl rfl rfl rfl rfl) hkb3
-        (by simpa [hl3] using hli2.hl) hQ3.2
-      have hal : al t3 = code (Flat.mbMap b.fl M t2.regs.rax.toBitVec t2.regs.rbx.toBitVec).1 := hQ3.1
-      rw [hrax, hbx] at hal
-      clear hQ3 hkb3
-      kvcgen64
-      all_goals try symexec_norm
-      vc_by_shape
-      | goto ".LB.MappingBuilder.mapWildcardSlotCopies.1" =>
-        have hd := code_eq_zero (hal.symm.trans (al_zero (by
-          first
-          | with_reducible assumption
-          | (rw [Bool.not_eq_false']; with_reducible assumption))))
-        cfg_goto
-        · exact hli3.stk rfl rfl
-        · mw_inv
-          refine ⟨_, true, _, w'', hli3.next rfl rfl rfl rfl rfl, ?_, ?_⟩
-          · show t3.regs.rbx.toBitVec.toNat < _; rw [hbx3, hbx]; exact hlt
-          · show Flat.wildcardFrom _ _ _ (t3.regs.rbx.toBitVec + 1#64) = _
-            rw [hbx3, hbx, hrax]
-            exact (step_done hd).symm.trans hstep
-        · left; mw_var; rw [hbx3, hbx]; omega
-      | goto ".LB.MappingBuilder.mapWildcardSlotCopies.4" =>
-        have hd := code_ne_zero fun e => al_ne (by
-          first
-          | with_reducible assumption
-          | (rw [Bool.not_eq_true']; with_reducible assumption)) (hal.trans e)
-        have hf := hstep.symm.trans (step_fail hd)
-        cfg_goto
-        · exact hli3.stk rfl rfl
-        · mw_inv
-          exact ⟨_, true, _, w'', hli3.next rfl rfl rfl rfl rfl, by simp only [res, hf]; exact hal,
-            by rw [hrax, hbx]; simp only [res, hf]; try rfl⟩
-        · left; mw_var; omega
+      case normal =>
+        intro t3 a'' lo'' w'' hkb3 hl3 hQ3 hok3 hag3
+        obtain ⟨hli3, hbx3, -⟩ := LI.after (xs := lo'.take 2) hag3 (hlis.next rfl rfl rfl rfl rfl) hkb3
+          (by simp [List.length_append, hl3, hl]) hQ3.2
+        have hal : al t3 = code (Flat.mbMap b.fl M t2.regs.rax.toBitVec t2.regs.rbx.toBitVec).1 := hQ3.1
+        rw [hrax, hbx] at hal
+        clear hQ3 hkb3
+        kvcgen64
+        all_goals try symexec_norm
+        vc_by_shape
+        | goto ".LB.MappingBuilder.mapWildcardSlotCopies.1" =>
+          have hd := code_eq_zero (hal.symm.trans (al_zero (by
+            first
+            | with_reducible assumption
+            | (rw [Bool.not_eq_false']; with_reducible assumption))))
+          cfg_goto
+          · exact hli3.stk rfl rfl
+          · mw_inv
+            refine ⟨_, true, _, ⟨w'', w.pad⟩, hli3.next rfl rfl rfl rfl rfl, ?_, ?_⟩
+            · show t3.regs.rbx.toBitVec.toNat < _; rw [hbx3, hbx]; exact hlt
+            · show Flat.wildcardFrom _ _ _ (t3.regs.rbx.toBitVec + 1#64) = _
+              rw [hbx3, hbx, hrax]
+              exact (step_done hd).symm.trans hstep
+          · left; mw_var; rw [hbx3, hbx]; omega
+        | goto ".LB.MappingBuilder.mapWildcardSlotCopies.4" =>
+          have hd := code_ne_zero fun e => al_ne (by
+            first
+            | with_reducible assumption
+            | (rw [Bool.not_eq_true']; with_reducible assumption)) (hal.trans e)
+          have hf := hstep.symm.trans (step_fail hd)
+          cfg_goto
+          · exact hli3.stk rfl rfl
+          · mw_inv
+            exact ⟨_, true, _, ⟨w'', w.pad⟩, hli3.next rfl rfl rfl rfl rfl, by simp only [res, hf]; exact hal,
+              by rw [hrax, hbx]; simp only [res, hf]; try rfl⟩
+          · left; mw_var; omega
+      case abort =>
+        intro t3 a'' free v hmem hfree hrel hok3 harg
+        obtain ⟨ha'', hf⟩ := hrel
+        subst a''
+        change Flat.mbMap b.fl M t2.regs.rax.toBitVec t2.regs.rbx.toBitVec =
+          (.assertionFailed, M) at hf
+        have hf' : Flat.mbMap b.fl M (Flat.closestCopy b.fl M t.regs.rbx.toBitVec true)
+            t.regs.rbx.toBitVec = (.assertionFailed, M) := by
+          simpa only [hrax, hbx] using hf
+        have hd : (Flat.mbMap b.fl M (Flat.closestCopy b.fl M t.regs.rbx.toBitVec true)
+            t.regs.rbx.toBitVec).1 ≠ .done := by
+          rw [hf']
+          change Flat.Status.assertionFailed ≠ Flat.Status.done
+          decide
+        have hmodel : res b = (.assertionFailed, M, true) := by
+          change Flat.mapWildcardSlotCopies b.fl b.M false = _
+          rw [← hstep, step_fail hd, hf']
+        refine Or.inr ⟨Or.inr ⟨rfl, harg, ?_⟩, ?_⟩
+        · refine ⟨bv b M true, ?_, hokT,
+            lo'.take 2 ++ free ++ v :: [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec,
+              s.regs.r12.toBitVec, s.regs.r13.toBitVec], ra.toBitVec,
+            by simp [hfree, hl], ?_⟩
+          · change (res b).1 = .assertionFailed ∧ bv b M true =
+              { b with M := (res b).2.1, saw := sawB b (res b).2.2 }
+            rw [hmodel]
+            exact ⟨rfl, rfl⟩
+          · simpa only [MProp.sep_assoc] using hmem
+        · intro l hl ha
+          exact False.elim (hout l hl ha)
 
 set_option maxHeartbeats 100000 in
 theorem b_3 : mapWildcardSlotCopiesAsm.ForallBlocks fun blk =>
@@ -710,7 +775,7 @@ theorem b_4 (hok : b.Ok) : mapWildcardSlotCopiesAsm.ForallBlocks fun blk =>
   obtain ⟨M, sw, lo, w, hli, hal, hM⟩ := ht
   obtain ⟨p0, p1, p2, p3⟩ := hli.pop_isSome
   have hokM : BG.Ok (bv b M sw) := ⟨hok.m, hok.n, hok.sw, hok.tw, hok.db⟩
-  have hfl : (fr s lo w).length = 9 := by simp [fr, hli.hl]
+  have hfl : (fr s lo w).length = 10 := by simp [fr, hli.hl]
   kvcgen64
   all_goals try symexec_norm
   vc_by_shape
@@ -725,6 +790,10 @@ theorem b_4 (hok : b.Ok) : mapWildcardSlotCopiesAsm.ForallBlocks fun blk =>
       ⟨ra, Kg.retAddr (P := BView B (bv b M sw) ∗ F) (s := s) (fr := fr s lo w) ?_⟩
     exact hli.pop_kg rfl (by bv_omega) rfl rfl rfl rfl rfl rfl
   | ret =>
+    refine ProofKit.intercept_mono_exit
+      (E := fun a t => a = ra ∧
+        VPost BView BG.Ok B F 10 (fun a' t => mapWildQ b a' s t) s t ∧
+          Sep.mod.Agree s t) ?_ (fun h => Or.inl h)
     refine Kg.vret (ok := BG.Ok) (a' := bv b M sw)
       (hli.pop_kg rfl (by bv_omega) rfl rfl rfl rfl rfl rfl) hfl hokM
       fun t' _ hax => ⟨?_, by rw [hM]⟩
@@ -733,7 +802,7 @@ theorem b_4 (hok : b.Ok) : mapWildcardSlotCopiesAsm.ForallBlocks fun blk =>
     exact hal
 
 set_option maxHeartbeats 100000 in
-theorem b_5 (hok : b.Ok) (hfr : fr₀.length = 9) : mapWildcardSlotCopiesAsm.ForallBlocks fun blk =>
+theorem b_5 (hok : b.Ok) (hfr : fr₀.length = 10) : mapWildcardSlotCopiesAsm.ForallBlocks fun blk =>
     blk.label = .label ".LB.MappingBuilder.mapWildcardSlotCopies.5" → Obl B b F s ra fr₀ blk := by
   cfg_block [Obl]
   intro t ht
@@ -745,6 +814,10 @@ theorem b_5 (hok : b.Ok) (hfr : fr₀.length = 9) : mapWildcardSlotCopiesAsm.For
   | retAddr =>
     exact Option.isSome_iff_exists.mpr ⟨ra, (hk.next rfl rfl rfl rfl rfl rfl rfl rfl).retAddr⟩
   | ret =>
+    refine ProofKit.intercept_mono_exit
+      (E := fun a t => a = ra ∧
+        VPost BView BG.Ok B F 10 (fun a' t => mapWildQ b a' s t) s t ∧
+          Sep.mod.Agree s t) ?_ (fun h => Or.inl h)
     refine Kg.vret (ok := BG.Ok) (a' := b) (hk.next rfl rfl rfl rfl rfl rfl rfl rfl) hfr hok
       fun t' _ hax => ⟨?_, by rw [hd]; rfl⟩
     simp only [al]
@@ -757,24 +830,25 @@ end WildU
 
 open WildU in
 theorem mapWildcardSlotCopies_unit [Host] [FunDecls]
-    (hcc : BSpec Names.closestCopy closestA 4 closestQ) (hmap : BSpec Names.map mapA 0 mapQ) :
-    BThm mapWildcardSlotCopiesAsm mapWildA 9 mapWildQ := by
+    (hout : ∀ l ∈ Program.labels mapWildcardSlotCopiesAsm, label l ≠ label "exit")
+    (hcc : BSpec Names.closestCopy closestA 4 closestQ) (hmap : BSpecWithExit Names.map mapA 2 mapQ mapX) :
+    BThmWithExit mapWildcardSlotCopiesAsm mapWildA 10 mapWildQ mapWildX := by
   intro B b F s ra
   refine ⟨fun s₀ ⟨h₀, hpre⟩ => ?_⟩
   subst h₀
   obtain ⟨fr₀, hfr, hk0⟩ := hpre.kg ra
   match fr₀, hfr, hk0 with
-  | [w₀, w₁, w₂, w₃, w₄, w₅, w₆, w₇, w₈], hfr, hk0 =>
-  refine Program.WP.cfg (WildU.Inv B b F s ra [w₀, w₁, w₂, w₃, w₄, w₅, w₆, w₇, w₈]) (WildU.V b)
+  | [w₀, w₁, w₂, w₃, w₄, w₅, w₆, w₇, w₈, w₉], hfr, hk0 =>
+  refine Program.WP.cfg (WildU.Inv B b F s ra [w₀, w₁, w₂, w₃, w₄, w₅, w₆, w₇, w₈, w₉]) (WildU.V b)
     ?_ rfl
   refine forallBlocks_cases labels labels_cover fun l hl => ?_
   simp only [labels, List.mem_cons, List.not_mem_nil, or_false] at hl
   rcases hl with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
   · exact b_entry B b F s ra _
-  · exact b_fn B b F s ra hpre w₀ w₁ w₂ w₃ w₄ w₅ w₆ w₇ w₈ hk0
-  · exact b_0 B b F s ra _ hmap hpre.ok
+  · exact b_fn B b F s ra hpre w₀ w₁ w₂ w₃ w₄ w₅ w₆ w₇ w₈ w₉ hk0
+  · exact b_0 B b F s ra _ hout hmap hpre.ok
   · exact b_1 B b F s ra _
-  · exact b_2 B b F s ra _ hcc hmap hpre.ok
+  · exact b_2 B b F s ra _ hout hcc hmap hpre.ok
   · exact b_3 B b F s ra _
   · exact b_4 B b F s ra _ hpre.ok
   · exact b_5 B b F s ra _ hpre.ok hfr

@@ -32,26 +32,29 @@ build_bottom_up.S: $(BBU_SOURCES) labels.awk
 harness: harness.c permute.S
 	$(CC) -O1 -o $@ harness.c permute.S
 
-bbu_harness: bbu_harness.c build_bottom_up.S
+bbu_harness: bbu_harness.c harness_process.h build_bottom_up.S
 	$(CC) -O1 -no-pie -o $@ bbu_harness.c build_bottom_up.S
 
-pop_harness: pop_harness.c build_bottom_up.S
+pop_harness: pop_harness.c harness_process.h build_bottom_up.S
 	$(CC) -O1 -no-pie -o $@ pop_harness.c build_bottom_up.S
 
-surplus_harness: surplus_harness.c build_bottom_up.S
+surplus_harness: surplus_harness.c harness_process.h build_bottom_up.S
 	$(CC) -O1 -no-pie -o $@ surplus_harness.c build_bottom_up.S
 
-lowest_harness: lowest_harness.c build_bottom_up.S
+lowest_harness: lowest_harness.c harness_process.h build_bottom_up.S
 	$(CC) -O1 -no-pie -o $@ lowest_harness.c build_bottom_up.S
 
 # The unit tests, hosted and with the sanitizers. They include test_wrappers.cpp. Run them with
 # ASAN_OPTIONS=detect_leaks=0 where LeakSanitizer cannot run (under ptrace).
-unit_test: shuffler/unit_test.cpp $(BBU_SOURCES)
+unit_test: shuffler/unit_test.cpp shuffler/process_test.h $(BBU_SOURCES)
 	$(CXX) -std=c++20 -O1 -g -Wall -Wextra -fsanitize=address,undefined -fno-sanitize-recover=all -o $@ $<
+
+assertions_test: shuffler/assertion_test.cpp build_bottom_up.S $(BBU_SOURCES)
+	CXX="$(CXX)" ../test/assertions_test.sh
 
 clean:
 	rm -f harness bbu_harness pop_harness surplus_harness lowest_harness unit_test
 
 .DELETE_ON_ERROR:
 
-.PHONY: all clean
+.PHONY: all clean assertions_test

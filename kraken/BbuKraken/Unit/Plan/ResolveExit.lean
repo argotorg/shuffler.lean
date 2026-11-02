@@ -59,10 +59,12 @@ def V (phase : Label → MachineData → Nat) (l : Label) (t : MachineData) : Na
       l = ".LB.Planner.resolve.17" ∨ l = ".LB.Planner.resolve.18" then 1
   else phase l t + 2
 
-def E (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64) :
+def E [Labels] (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64) :
     Int64 → MachineData → Prop :=
   fun a t => a = ra ∧ VPost RView RG.Ok P F resolveD (fun r' t => resolveQ r r' s t) s t
     ∧ Sep.mod.Agree s t
+    ∨ a = label "exit" ∧ t.regs.get64 .rdi = 1#64 ∧
+      VPost RView RG.Ok P F resolveD (fun r' t => resolveX r r' s t) s t
 
 def Obl [Host] [FunDecls] (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (phase : Label → MachineData → Prop) (var : Label → MachineData → Nat)
@@ -145,6 +147,10 @@ theorem b_3 : resolveAsm.ForallBlocks fun blk =>
       ⟨ra, Kg.retAddr (P := RView P r' ∗ F) (s := s) (fr := fr s lo loc) ?_⟩
     exact hb.pop rfl rfl rfl rfl rfl rfl rfl rfl
   | ret =>
+    refine ProofKit.intercept_mono_exit
+      (E := fun a t => a = ra ∧
+        VPost RView RG.Ok P F resolveD (fun r' t => resolveQ r r' s t) s t ∧
+          Sep.mod.Agree s t) ?_ (fun h => Or.inl h)
     refine Kg.vret (ok := RG.Ok) (a' := r') (fr := fr s lo loc) ?_ hb.fr_len hok
       fun u _ hax => ?_
     · exact hb.pop rfl rfl rfl rfl rfl rfl rfl rfl

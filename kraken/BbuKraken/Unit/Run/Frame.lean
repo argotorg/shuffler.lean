@@ -2,6 +2,10 @@ module
 
 public import BbuKraken.Unit.Run.Model
 import all BbuKraken.Unit.Run.Model
+public import BbuKraken.Unit.StackCall
+import all BbuKraken.Unit.StackCall
+public import BbuKraken.Unit.Plan.ExitCall
+import all BbuKraken.Unit.Plan.ExitCall
 public import BbuKraken.Unit.IsAvailable
 import all BbuKraken.Unit.IsAvailable
 public import ProofKit.CfgBlock
@@ -21,6 +25,17 @@ def runA (planned : Vector Word MAX_N) (g : G) (_s : MachineData) : Prop :=
 def runQ (planned : Vector Word MAX_N) (g g' : G) (_s t : MachineData) : Prop :=
   ∃ l, Res (Flat.emissionRun planned l) g g' t
 
+def runX (planned : Vector Word MAX_N) (g g' : G) (_s _t : MachineData) : Prop :=
+  ∃ l, ExitRes (Flat.emissionRun planned l) g g'
+
+theorem runX_to_Q {planned : Vector Word MAX_N} {g g' : G} {s t : MachineData}
+    (hX : runX planned g g' s t) :
+    runQ planned g g' s { t with regs := { t.regs with rax := ⟨2#64⟩ } } := by
+  obtain ⟨l, hkeep, hflat, hstatus⟩ := hX
+  refine ⟨l, hkeep, hflat, ?_⟩
+  rw [hstatus]
+  rfl
+
 abbrev runD : Nat := lowestD + 4
 
 def RunView (PM : Addr) (planned : Vector Word MAX_N) (S : Addr) (g : G) : MProp 64 :=
@@ -28,11 +43,20 @@ def RunView (PM : Addr) (planned : Vector Word MAX_N) (S : Addr) (g : G) : MProp
 
 abbrev RunThm [Host] [FunDecls] (p : Program) : Prop :=
   ∀ S PM planned g F,
-    Sep.Body p (Sep.Pre S g (Planned S PM planned ∗ F) (runA planned) runD)
+    Sep.BodyWithExit p (Sep.Pre S g (Planned S PM planned ∗ F) (runA planned) runD)
       (fun s t => Sep.Post S (Planned S PM planned ∗ F) runD
         (fun g' t => runQ planned g g' s t) s t)
+      (fun s t => Sep.Post S (Planned S PM planned ∗ F) runD
+        (fun g' t => runX planned g g' s t) s t)
 
 namespace RunU
+
+theorem post_imp {V : Addr → G → MProp 64} {S : Addr} {F : MProp 64}
+    {d : Nat} {s t : MachineData} {Q R : G → MachineData → Prop}
+    (hp : VPost V G.Ok S F d Q s t) (h : ∀ g', Q g' t → R g' t) :
+    VPost V G.Ok S F d R s t := by
+  obtain ⟨g', hq, hok, fr, v, hl, hm⟩ := hp
+  exact ⟨g', h g' hq, hok, fr, v, hl, hm⟩
 
 theorem pre_iff {S PM : Addr} {planned : Vector Word MAX_N} {g : G} {F : MProp 64}
     {A : G → MachineData → Prop} {d : Nat} {s : MachineData} :
@@ -72,14 +96,26 @@ theorem frame_spec [Host] [FunDecls] {PM : Addr} {planned : Vector Word MAX_N}
   exact (h asz osz K E).1 s ⟨S, g, Planned S PM planned ∗ F, pre_iff.mp hp,
     fun t ht ha => hk t (post_iff.mpr ht) ha⟩
 
+theorem frame_specWithExit [Host] [FunDecls] {PM : Addr} {planned : Vector Word MAX_N}
+    {f : Label} {A : G → MachineData → Prop} {d : Nat}
+    {Q X : G → G → MachineData → MachineData → Prop} (h : Sep.SpecWithExit f A d Q X) :
+    VSpecWithExit (RunView PM planned) G.Ok f A d Q X := by
+  intro asz osz K E
+  refine ⟨fun s ⟨S, g, F, hp, hn, hx⟩ => ?_⟩
+  exact (h asz osz K E).1 s ⟨S, g, Planned S PM planned ∗ F, pre_iff.mp hp,
+    (fun t ht ha => hn t (post_iff.mpr ht) ha), fun t ht ha => hx t (post_iff.mpr ht) ha⟩
+
 theorem lowest_vthm [Host] [FunDecls] {p : Program} (h : LowestThm p)
     (PM : Addr) (planned : Vector Word MAX_N) :
-    VThm (RunView PM planned) G.Ok p (lowestA planned) lowestD (lowestQ planned) := by
+    VThmWithExit (RunView PM planned) G.Ok p (lowestA planned) lowestD
+      (lowestQ planned) (lowestX planned) := by
   intro S g F s ra
   refine ⟨fun t ⟨ht, hp⟩ => ?_⟩
-  exact Program.wp_mono (fun _ h => h)
-    (fun _ ⟨ha, hq, hag⟩ => ⟨ha, post_iff.mpr hq, hag⟩)
+  apply Program.wp_mono (fun _ h => h) ?_
     ((h S PM planned g F s ra).1 t ⟨ht, pre_iff.mp hp⟩)
+  rintro u (⟨ha, hq, hag⟩ | ⟨ha, harg, hx⟩)
+  · exact Or.inl ⟨ha, post_iff.mpr hq, hag⟩
+  · exact Or.inr ⟨ha, harg, post_iff.mpr hx⟩
 
 def saved (s : MachineData) : List Word :=
   [s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec]
@@ -169,6 +205,79 @@ theorem Bd.call {k : Nat} {A : G → MachineData → Prop}
   have hlen : (xs ++ lo').length = lowestD := by
     rw [List.length_append, hx, hl]; omega
   exact hK u g' (xs ++ lo') w' (h.after hkb hlen hag) hq hok' hag
+
+theorem Bd.callWithExit {k : Nat} {A : G → MachineData → Prop}
+    {Q X : G → G → MachineData → MachineData → Prop} {K E : MachineData → Prop}
+    (h : Bd S PM planned g F s ra lo w t) (hk : k ≤ lowestD)
+    (hdi : rdi t = S) (hok : g.Ok) (hA : A g t)
+    (hK : ∀ u g' lo' w', Bd S PM planned g' F s ra lo' w' u →
+      Q g g' t u → g'.Ok → Sep.mod.Agree t u → K u)
+    (hX : ∀ u, VPost (RunView PM planned) G.Ok S F runD
+      (fun g' u => X g g' t u) s u → u.regs.get64 .rdi = 1#64 → E u) :
+    ∃ S' g' F', VPre (RunView PM planned) G.Ok S' g' F' A k t ∧
+      (∀ u, VPost (RunView PM planned) G.Ok S' F' k (fun g'' u => Q g' g'' t u) t u →
+        Sep.mod.Agree t u → K u) ∧
+      (∀ u, VPost (RunView PM planned) G.Ok S' F' k (fun g'' u => X g' g'' t u) t u →
+        u.regs.get64 .rdi = 1#64 → E u) := by
+  let xs := lo.take (lowestD - k)
+  let ys := lo.drop (lowestD - k)
+  have he : xs ++ ys = lo := List.take_append_drop _ _
+  have hx : xs.length = lowestD - k := by simp only [xs, List.length_take, h.len]; omega
+  have hy : ys.length = k := by simp only [ys, List.length_drop, h.len]; omega
+  have hkb : Kb (RunView PM planned S g ∗ F) s ra
+      (xs ++ ys ++ w :: saved s) 24#64 t := by rw [he]; exact h.kb
+  refine Kb.vcallWithExit_above hkb (by rfl) hy hdi hok hA ?_ ?_
+  · intro u g' lo' w' hkb hl hq hok' hag
+    have hlen : (xs ++ lo').length = lowestD := by
+      rw [List.length_append, hx, hl]; omega
+    exact hK u g' (xs ++ lo') w' (h.after hkb hlen hag) hq hok' hag
+  · intro u g' lo' w' hm hl hq hok' harg
+    have hlen : (xs ++ lo').length = lowestD := by
+      rw [List.length_append, hx, hl]; omega
+    apply hX u ⟨g', hq, hok', fr s (xs ++ lo') w', ra.toBitVec, fr_length hlen, ?_⟩ harg
+    simpa only [fr, List.append_assoc] using hm
+
+theorem Bd.callee_mem (h : Bd S PM planned g F s ra lo w t) :
+    (RunView PM planned S g ∗ Stk (rsp t) lo w ∗
+      (Arr (rsp t) (saved s) ∗ Wd (rsp s - 8#64) ra.toBitVec ∗ F)).get t.dmem := by
+  have hm := h.kb.mem
+  change (Stk (rsp s) (lo ++ w :: saved s) ra.toBitVec ∗ (RunView PM planned S g ∗ F)).get
+    t.dmem at hm
+  rw [Stk.callee] at hm
+  have hsp : rsp s - 8#64 - BitVec.ofNat 64 (8 * (saved s).length) = rsp t := by
+    simp only [saved, List.length_cons, List.length_nil]
+    exact h.kb.sp.symm
+  rw [hsp] at hm
+  have he : Stk (rsp t) lo w ∗ (RunView PM planned S g ∗
+      (Arr (rsp t) (saved s) ∗ Wd (rsp s - 8#64) ra.toBitVec ∗ F)) =
+      RunView PM planned S g ∗ Stk (rsp t) lo w ∗
+        (Arr (rsp t) (saved s) ∗ Wd (rsp s - 8#64) ra.toBitVec ∗ F) := by ac_rfl
+  exact he ▸ hm
+
+theorem Bd.isSome_exit (h : Bd S PM planned g F s ra lo w t) :
+    (t.dmem.loadInt (t.regs.rsp.toBitVec - 8#64) 8).isSome = true := by
+  apply isSome_of_eq (R := RunView PM planned S g ∗
+    Arr (rsp t - 8#64 - BitVec.ofNat 64 (8 * lo.length)) lo ∗
+    Arr (rsp t) (saved s) ∗ Wd (rsp s - 8#64) ra.toBitVec ∗ F) w h.callee_mem
+  unfold Stk
+  ac_rfl
+
+theorem Bd.exitPost (h : Bd S PM planned g F s ra lo w t) (hok : g.Ok)
+    (exitra : Int64) {X : G → MachineData → Prop}
+    (hm : u.dmem = t.dmem.storeInt (rsp t - 8#64) 8 exitra.toBitVec.toInt)
+    (hx : X g u) : VPost (RunView PM planned) G.Ok S F runD X s u := by
+  refine ⟨g, hx, hok, fr s lo exitra.toBitVec, ra.toBitVec, fr_length h.len, ?_⟩
+  rw [hm, fr, Stk.callee]
+  have hsp : rsp s - 8#64 - BitVec.ofNat 64 (8 * (saved s).length) = rsp t := by
+    simp only [saved, List.length_cons, List.length_nil]
+    exact h.kb.sp.symm
+  rw [hsp]
+  have hs := Generate.stk_store h.callee_mem exitra.toBitVec
+  have he : RunView PM planned S g ∗ Stk (rsp t) lo exitra.toBitVec ∗
+      (Arr (rsp t) (saved s) ∗ Wd (rsp s - 8#64) ra.toBitVec ∗ F) =
+      Stk (rsp t) lo exitra.toBitVec ∗ (RunView PM planned S g ∗
+        (Arr (rsp t) (saved s) ∗ Wd (rsp s - 8#64) ra.toBitVec ∗ F)) := by ac_rfl
+  exact he ▸ hs
 
 theorem Bd.pop (h : Bd S PM planned g F s ra lo w t) (hm : u.dmem = t.dmem)
     (hsp : u.regs.rsp.toBitVec = t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64)

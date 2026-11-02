@@ -110,6 +110,14 @@ example : Flat.Status.done = .done := code_eq_zero (by decide)
 example : code .blocked ≠ 0#8 := by decide
 example : code .assertionFailed ≠ 0#8 := by decide
 
+-- The target bound is checked before `produce` can change the state.
+#guard (Flat.generate (st 0 [] []) 4).1 == .assertionFailed
+#guard (Flat.generate (st 0 [] []) 4).2.size == 0
+#guard (Flat.generate (st 0 [] []) N).1 == .assertionFailed
+
+example (s : Flat.St) (t : Word) (h : ¬t < s.targetSize) :
+    Flat.generate s t = (.assertionFailed, s) := gen_fail h
+
 -- `al` reads only `rax`: a write to `rbx` keeps it.
 example (t : MachineData) (v : UInt64) : al { t with regs := { t.regs with rbx := v } } = al t :=
   al_eq rfl

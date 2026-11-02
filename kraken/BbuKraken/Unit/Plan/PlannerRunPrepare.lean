@@ -26,7 +26,7 @@ theorem b_4 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
     (s : MachineData) (ra : Int64) (K : Unit → MachineData → Prop)
     (I' : CfgLabel → Nat → Unit → MachineData → Prop) (E : Int64 → MachineData → Prop)
     (hprepare : ∀ t, PrepareHead P g F s ra t → K () t) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.4" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.5" →
       ∀ t, CheckDone P g F s ra t → WP.wp blk.body K
         (Program.Intercept (Program.labels plannerRunAsm) (s.pushRa ra) I' E) t := by
   cfg_block

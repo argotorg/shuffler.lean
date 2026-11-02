@@ -271,7 +271,7 @@ theorem b_22 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
     cfg_goto
     · exact Fm.stack (hF.step h10 rfl)
     · simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
-      refine ⟨_, L, p, f, pos, ⟨hF.step h10 rfl, ?_, ?_, hlen, h0, ?_, hD.r13, hD.r14, hD.cx,
+      refine ⟨_, L, p, f, pos, ⟨hF.step h10 rfl, ?_, ?_, hlen, h0, ?_, hD.r13, hD.r15, hD.cx,
         hD.si, hD.agP, hD.bij⟩, hax, hmis, ?_, hmu, ?_⟩
       · exact Keep.ok (g := g') ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok' hok'.len
           (by show (g'.h.nops + 1#64).toNat ≤ 6 * g'.h.n.toNat + g'.xo; rw [hs]; omega)
@@ -316,7 +316,7 @@ theorem b_22 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
     have hs : (g'.h.nops + 1#64).toNat = g'.h.nops.toNat + 1 := by
       rw [BitVec.toNat_add, BitVec.toNat_ofNat]; simp only [MAX_N] at hN hx; omega
     simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
-    refine ⟨_, L, p, f, pos, ⟨hF.step h11 rfl, ?_, ?_, hlen, h0, ?_, hD.r13, hD.r14, hD.cx,
+    refine ⟨_, L, p, f, pos, ⟨hF.step h11 rfl, ?_, ?_, hlen, h0, ?_, hD.r13, hD.r15, hD.cx,
       hD.si, hD.agP, hD.bij⟩, hax, hmis, ?_, hmu, ?_⟩
     · exact Keep.ok (g := g') ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok' hok'.len
         (by show (g'.h.nops + 1#64).toNat ≤ 6 * g'.h.n.toNat + g'.xo; rw [hs]; omega)

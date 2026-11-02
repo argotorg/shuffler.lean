@@ -21,8 +21,9 @@ open Bbu.Sep
 
 set_option maxRecDepth 16384 in
 theorem plan_valid_unit [Host] [FunDecls] (g : EG) (F : MProp 64)
-    (hs : Sizes g) (hrun : PlannerRunSpec) :
-    Sep.Body planAsm (Pre g F) (Post g F) := by
+    (hs : Sizes g) (hout : ∀ l ∈ planAsm.labels, label l ≠ label "exit")
+    (hrun : PlannerRunSpec) :
+    BodyWithExit planAsm (Pre g F) (Post g F) (Exit g F) := by
   intro s ra
   refine ⟨fun t ⟨ht, hp⟩ => ?_⟩
   subst t
@@ -41,7 +42,7 @@ theorem plan_valid_unit [Host] [FunDecls] (g : EG) (F : MProp 64)
   · exact cfg_5 g F s ra
   · exact cfg_6 g F s ra hs
   · exact cfg_7 g F s ra hs
-  · exact cfg_8 g F s ra hp hs hrun
+  · exact cfg_8 g F s ra hp hs hout hrun
   · exact cfg_9 g F s ra
   · exact cfg_10 g F s ra
   · exact cfg_11 g F s ra
@@ -53,12 +54,15 @@ theorem plan_valid_unit [Host] [FunDecls] (g : EG) (F : MProp 64)
     simp only [EntryInv, Names.plan, String.reduceEq, ↓reduceIte] at ht
   · exact cfg_14 g F s ra hp.1 hs
 
-theorem plan_unit [Host] [FunDecls] (hrun : PlannerRunSpec) (g : EG) (F : MProp 64) :
-    Sep.Body planAsm (Pre g F) (Post g F) := by
+theorem plan_unit [Host] [FunDecls]
+    (hout : ∀ l ∈ planAsm.labels, label l ≠ label "exit")
+    (hrun : PlannerRunSpec) (g : EG) (F : MProp 64) :
+    BodyWithExit planAsm (Pre g F) (Post g F) (Exit g F) := by
   by_cases hs : Sizes g
-  · exact plan_valid_unit g F hs hrun
+  · exact plan_valid_unit g F hs hout hrun
   · intro s ra
     refine ⟨fun t ⟨ht, hp⟩ => ?_⟩
-    exact ((plan_reject_full g F) s ra).1 t ⟨ht, hp, hs⟩
+    exact Program.wp_mono (fun _ h => h) (fun _ h => Or.inl h)
+      (((plan_reject_full g F) s ra).1 t ⟨ht, hp, hs⟩)
 
 end Bbu.Unit.EntryValidU

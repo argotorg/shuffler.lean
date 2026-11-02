@@ -7,7 +7,7 @@
 // Shuffler/Planner/Run/Defs.lean.
 // The differences from Shuffler.cpp:
 //
-// - There are no exceptions, so a failed yulAssert returns Status::AssertionFailed.
+// - There are no exceptions, so a failed yulAssert calls exit(1).
 // - The source stack of build_bottom_up has no surplus, so every slot has a destination.
 // - The checks marked `Lean` come from the Lean model; Shuffler.cpp does not have them.
 // - The MappingBuilder constructor of Shuffler.cpp is five functions, one for each phase, and the mapping is the

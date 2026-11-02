@@ -51,7 +51,9 @@ variable [Host] [FunDecls] (S PM : Addr) (planned : Vector Word MAX_N)
 theorem b_fn (hp : VPre (RunView PM planned) G.Ok S g F (runA planned) runD s)
     (lo : List Word) (w x y z : Word) (hl : lo.length = lowestD)
     (hk0 : Kg (RunView PM planned S g ∗ F) s ra (lo ++ [w, x, y, z]) (s.pushRa ra))
-    (hsur : VSpec (RunView PM planned) G.Ok Names.removeSurplus surplusA 2 surplusQ) :
+    (hout : ∀ l ∈ Program.labels runAsm, label l ≠ label "exit")
+    (hsur : VSpecWithExit (RunView PM planned) G.Ok Names.removeSurplus surplusA 4
+      surplusQ surplusX) :
     runAsm.ForallBlocks fun blk =>
       blk.label = .label Names.run → Obl S PM planned g F s ra blk := by
   simp only [Names.removeSurplus] at hsur
@@ -77,16 +79,28 @@ theorem b_fn (hp : VPre (RunView PM planned) G.Ok S g F (runA planned) runD s)
   vc_by_shape
   | load => run_loads [p0, p1, p2]
   | other =>
-    refine Bd.call (S := S) (PM := PM) (planned := planned) (g := g) (F := F)
+    refine Bd.callWithExit (k := 4) (A := surplusA) (Q := surplusQ) (X := surplusX)
+      (S := S) (PM := PM) (planned := planned) (g := g) (F := F)
       (s := s) (ra := ra) (lo := lo) (w := w) ?_ (by decide)
-      hrdi hp.ok (surplus_pre hp.ok hp.args) ?_
+      hrdi hp.ok (surplus_pre hp.ok hp.args) ?_ (by
+        intro tx hp harg
+        apply ProofKit.intercept_exit (E := E S PM planned g F s ra) hout
+        refine Or.inr ⟨rfl, harg, post_imp hp ?_⟩
+        intro a hx
+        change ExitRes Flat.removeSurplus g a at hx
+        obtain ⟨hkeep, hf, hfail⟩ := hx
+        have he := emission_surplus_fail (planned := planned) (l := zeroLocals)
+          (by rw [hfail]; decide)
+        refine ⟨zeroLocals, hkeep, ?_, ?_⟩
+        · rw [he]; exact hf
+        · rw [he]; exact hfail)
     · refine ⟨⟨?_, hsp⟩, hl, rfl, rfl, rfl⟩
       simpa only [fr, saved, List.append_assoc, List.singleton_append, MachineData.pushRa,
         Reg64s.set64_rsp, List.cons_append, List.nil_append] using hm
     · intro u a lo' w' hbd hq hok hag
       obtain ⟨hkeep, hf, hal⟩ := hq
-      have hbx : u.regs.rbx.toBitVec = S := by
-        rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rbx]
+      have hbx : u.regs.rbp.toBitVec = S := by
+        rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rbp]
         exact hrdi
       kvcgen64
       all_goals try symexec_norm

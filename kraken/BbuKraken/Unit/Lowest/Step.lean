@@ -10,7 +10,7 @@ set_option experimental.vcgen true
 /-!
 # `permuteAtLowestHeight`: the step of the first loop
 
-The blocks `.1`, `.7` and `.8` (the stores of the step at `rax`).
+The blocks `.2`, `.8` and `.9` (the stores of the step at `rax`).
 -/
 
 open Std.WP Lean.Order
@@ -29,7 +29,7 @@ theorem le_succ {a p n : Word} (ha : a ≤ p) (hp : p < n) (hn : n.toNat ≤ 102
 theorem b_1 [Host] [FunDecls] (S PM planned g F0 s ra)
     (hpre : Sep.Pre S g (Planned S PM planned ∗ F0) (lowestA planned) lowestD s) :
     Program.ForallBlocks permuteAtLowestHeightAsm fun blk =>
-      blk.label = .label ".LB.Emission.permuteAtLowestHeight.1" → Obl S PM planned g F0 s ra blk := by
+      blk.label = .label ".LB.Emission.permuteAtLowestHeight.2" → Obl S PM planned g F0 s ra blk := by
   cfg_block [Obl]
   intro t ht
   simp only [LInv, Names.permuteAtLowestHeight, String.reduceEq, ↓reduceIte] at ht
@@ -63,7 +63,7 @@ theorem b_1 [Host] [FunDecls] (S PM planned g F0 s ra)
 theorem b_7 [Host] [FunDecls] (S PM planned g F0 s ra)
     (hpre : Sep.Pre S g (Planned S PM planned ∗ F0) (lowestA planned) lowestD s) :
     Program.ForallBlocks permuteAtLowestHeightAsm fun blk =>
-      blk.label = .label ".LB.Emission.permuteAtLowestHeight.7" → Obl S PM planned g F0 s ra blk := by
+      blk.label = .label ".LB.Emission.permuteAtLowestHeight.8" → Obl S PM planned g F0 s ra blk := by
   cfg_block [Obl]
   intro t ht
   simp only [LInv, Names.permuteAtLowestHeight, String.reduceEq, ↓reduceIte] at ht
@@ -117,7 +117,7 @@ theorem b_7 [Host] [FunDecls] (S PM planned g F0 s ra)
 theorem b_8 [Host] [FunDecls] (S PM planned g F0 s ra)
     (hpre : Sep.Pre S g (Planned S PM planned ∗ F0) (lowestA planned) lowestD s) :
     Program.ForallBlocks permuteAtLowestHeightAsm fun blk =>
-      blk.label = .label ".LB.Emission.permuteAtLowestHeight.8" → Obl S PM planned g F0 s ra blk := by
+      blk.label = .label ".LB.Emission.permuteAtLowestHeight.9" → Obl S PM planned g F0 s ra blk := by
   cfg_block [Obl]
   intro t ht
   simp only [LInv, Names.permuteAtLowestHeight, String.reduceEq, ↓reduceIte] at ht

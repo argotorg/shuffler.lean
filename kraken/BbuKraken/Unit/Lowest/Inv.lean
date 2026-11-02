@@ -18,12 +18,13 @@ call of `permute`. `l0` is the content of the local arrays at the entry, and `sc
 
 * `.0`: the first loop at `pos = rax < size`; `scan` from `rax` with the locals in memory gives
   `scan0`. `r8` is `holeCount` and `rsi` is `parkedCount`.
-* `.1`, `.7`, `.8`: the step of the first loop at `rax`, after the assertions.
-* `.2`: the end of the step: `scan` from `rax + 1` gives `scan0`.
-* `.3`: the second loop at `i` with `rax = 8 * i`; `fill` from `i` gives the argument of
+* `.1`: the scan loads after the destination assertion.
+* `.2`, `.8`, `.9`: the step of the first loop at `rax`, after the assertions.
+* `.3`: the end of the step: `scan` from `rax + 1` gives `scan0`.
+* `.4`: the second loop at `i` with `rax = 8 * i`; `fill` from `i` gives the argument of
   `permute`.
-* `.4`: the array `permutation` is the argument of `permute`.
-* `.5`: an assertion of the first loop fails. `.6`: the result.
+* `.5`: the call of `permute` and the return.
+* `.6`, `.7`: an assertion of the first loop fails.
 
 The variant: `2 * (1024 - rax)` and a constant in the first loop, `1024 - i` in the second loop.
 -/
@@ -99,21 +100,21 @@ def Lc.scan (L : Lc) (hc pc : Word) : Flat.Scan := ⟨L.perm, L.holes, L.parked,
 section
 variable {planned : Vector Word MAX_N} {st : Flat.St} {pos d hc pc : Word} {L : Lc}
 
--- `.1`: a parked slot and a hole: `permutation[pos] = pos`.
+-- `.2`: a parked slot and a hole: `permutation[pos] = pos`.
 theorem step_ph (hp : ¬d < st.size) (hh : Flat.get planned pos = Flat.NONE) :
     Flat.scanStep planned st pos d (L.scan hc pc)
       = Lc.scan { L with perm := Flat.put L.perm pos pos } hc pc := by
   have hp' : st.size ≤ d := by bv_omega
   simp [Flat.scanStep, Lc.scan, hp', hh]
 
--- `.8`: a parked slot that is not a hole: `parked[pc] = pos`.
+-- `.9`: a parked slot that is not a hole: `parked[pc] = pos`.
 theorem step_pn (hp : ¬d < st.size) (hh : Flat.get planned pos ≠ Flat.NONE) :
     Flat.scanStep planned st pos d (L.scan hc pc)
       = Lc.scan { L with parked := Flat.put L.parked pc pos } hc (pc + 1) := by
   have hp' : st.size ≤ d := by bv_omega
   simp [Flat.scanStep, Lc.scan, hp', hh]
 
--- `.7`: a slot that is not parked and a hole: `permutation[pos] = d`, `holes[hc] = pos`.
+-- `.8`: a slot that is not parked and a hole: `permutation[pos] = d`, `holes[hc] = pos`.
 theorem step_uh (hp : d < st.size) (hh : Flat.get planned pos = Flat.NONE) :
     Flat.scanStep planned st pos d (L.scan hc pc)
       = Lc.scan { L with perm := Flat.put L.perm pos d, holes := Flat.put L.holes hc pos }
@@ -121,7 +122,7 @@ theorem step_uh (hp : d < st.size) (hh : Flat.get planned pos = Flat.NONE) :
   have hp' : ¬st.size ≤ d := by bv_omega
   simp [Flat.scanStep, Lc.scan, hp', hh]
 
--- `.7`: a slot that is not parked and not a hole: `permutation[pos] = d`.
+-- `.8`: a slot that is not parked and not a hole: `permutation[pos] = d`.
 theorem step_un (hp : d < st.size) (hh : Flat.get planned pos ≠ Flat.NONE) :
     Flat.scanStep planned st pos d (L.scan hc pc)
       = Lc.scan { L with perm := Flat.put L.perm pos d } hc pc := by
@@ -156,7 +157,15 @@ def I0 (t : MachineData) : Prop :=
     ∧ Flat.scan planned (flat g) t.regs.rax.toBitVec (L.scan t.regs.r8.toBitVec t.regs.rsi.toBitVec)
       = scan0 planned g l0
 
--- `.1`, `.7`, `.8`: the step at `rax`: `rdx` is the destination and `r9` the planned position.
+-- `.1`: the destination assertion has passed.
+def IHead (t : MachineData) : Prop :=
+  ∃ L l0, Bs S PM planned g F0 s ra L t ∧ Sc g L t.regs.rax.toBitVec t
+    ∧ t.regs.rdx.toBitVec = Flat.get (flat g).dest t.regs.rax.toBitVec
+    ∧ Flat.get (flat g).dest t.regs.rax.toBitVec ≠ Flat.NONE
+    ∧ Flat.scan planned (flat g) t.regs.rax.toBitVec
+        (L.scan t.regs.r8.toBitVec t.regs.rsi.toBitVec) = scan0 planned g l0
+
+-- `.2`, `.8`, `.9`: the step at `rax`: `rdx` is the destination and `r9` the planned position.
 def IStep (c : Word → Word → Prop) (t : MachineData) : Prop :=
   ∃ L l0, Bs S PM planned g F0 s ra L t ∧ Sc g L t.regs.rax.toBitVec t
     ∧ t.regs.rdx.toBitVec = Flat.get (flat g).dest t.regs.rax.toBitVec
@@ -167,14 +176,14 @@ def IStep (c : Word → Word → Prop) (t : MachineData) : Prop :=
           (L.scan t.regs.r8.toBitVec t.regs.rsi.toBitVec))
       = scan0 planned g l0
 
--- `.2`: the end of the step at `rax`.
+-- `.3`: the end of the step at `rax`.
 def I2 (t : MachineData) : Prop :=
   ∃ L l0, Bs S PM planned g F0 s ra L t ∧ Sc g L (t.regs.rax.toBitVec + 1#64) t
     ∧ Flat.scan planned (flat g) (t.regs.rax.toBitVec + 1#64)
         (L.scan t.regs.r8.toBitVec t.regs.rsi.toBitVec)
       = scan0 planned g l0
 
--- `.3`: the second loop at `i` with `rax = 8 * i < rsi = 8 * parkedCount`.
+-- `.4`: the second loop at `i` with `rax = 8 * i < rsi = 8 * parkedCount`.
 def I3 (t : MachineData) : Prop :=
   ∃ L l0 sc k, Bs S PM planned g F0 s ra L t ∧ scan0 planned g l0 = some sc
     ∧ sc.parkedCount = sc.holeCount ∧ L.parked = sc.parked ∧ L.holes = sc.holes
@@ -183,14 +192,15 @@ def I3 (t : MachineData) : Prop :=
     ∧ (∀ j (hj : j < MAX_N), j < sc.parkedCount.toNat → sc.parked[j] < g.h.len)
     ∧ Flat.fill sc (BitVec.ofNat 64 k) L.perm = Flat.fill sc 0 sc.permutation
 
--- `.4`: the array `permutation` is the argument of `permute`.
+-- `.5`: the array `permutation` is the argument of `permute`.
 def I4 (t : MachineData) : Prop :=
   ∃ L l0 sc, Bs S PM planned g F0 s ra L t ∧ scan0 planned g l0 = some sc
     ∧ sc.parkedCount = sc.holeCount ∧ L.perm = Flat.fill sc 0 sc.permutation
 
--- `.5`: an assertion of the first loop fails.
+-- `.6`, `.7`: an assertion of the first loop fails.
 def I5 (t : MachineData) : Prop :=
-  ∃ L l0, Bs S PM planned g F0 s ra L t ∧ scan0 planned g l0 = none
+  ∃ L l0, Bs S PM planned g F0 s ra L t ∧
+    Flat.permuteAtLowestHeight planned l0 (flat g) = (.assertionFailed, flat g)
 
 -- `.6`: the result.
 def I6 (t : MachineData) : Prop :=
@@ -204,16 +214,17 @@ def LInv : CfgLabel → MachineData → Prop
   | .label l, t =>
     if l = Names.permuteAtLowestHeight then t = s.pushRa ra
     else if l = ".LB.Emission.permuteAtLowestHeight.0" then I0 S PM planned g F0 s ra t
-    else if l = ".LB.Emission.permuteAtLowestHeight.1" then
+    else if l = ".LB.Emission.permuteAtLowestHeight.1" then IHead S PM planned g F0 s ra t
+    else if l = ".LB.Emission.permuteAtLowestHeight.2" then
       IStep S PM planned g F0 s ra (fun d _ => ¬d < g.h.len) t
-    else if l = ".LB.Emission.permuteAtLowestHeight.2" then I2 S PM planned g F0 s ra t
-    else if l = ".LB.Emission.permuteAtLowestHeight.3" then I3 S PM planned g F0 s ra t
-    else if l = ".LB.Emission.permuteAtLowestHeight.4" then I4 S PM planned g F0 s ra t
-    else if l = ".LB.Emission.permuteAtLowestHeight.5" then I5 S PM planned g F0 s ra t
-    else if l = ".LB.Emission.permuteAtLowestHeight.6" then I6 S PM planned g F0 s ra t
-    else if l = ".LB.Emission.permuteAtLowestHeight.7" then
-      IStep S PM planned g F0 s ra (fun d _ => d < g.h.len) t
+    else if l = ".LB.Emission.permuteAtLowestHeight.3" then I2 S PM planned g F0 s ra t
+    else if l = ".LB.Emission.permuteAtLowestHeight.4" then I3 S PM planned g F0 s ra t
+    else if l = ".LB.Emission.permuteAtLowestHeight.5" then I4 S PM planned g F0 s ra t
+    else if l = ".LB.Emission.permuteAtLowestHeight.6" then I5 S PM planned g F0 s ra t
+    else if l = ".LB.Emission.permuteAtLowestHeight.7" then I5 S PM planned g F0 s ra t
     else if l = ".LB.Emission.permuteAtLowestHeight.8" then
+      IStep S PM planned g F0 s ra (fun d _ => d < g.h.len) t
+    else if l = ".LB.Emission.permuteAtLowestHeight.9" then
       IStep S PM planned g F0 s ra (fun d p => ¬d < g.h.len ∧ p ≠ Flat.NONE) t
     else False
 
@@ -224,11 +235,12 @@ end
 def V (l : Label) (t : MachineData) : Nat :=
   if l = Names.permuteAtLowestHeight then 2 ^ 20
   else if l = ".LB.Emission.permuteAtLowestHeight.0" ∨ l = ".LB.Emission.permuteAtLowestHeight.1"
-      ∨ l = ".LB.Emission.permuteAtLowestHeight.7" ∨ l = ".LB.Emission.permuteAtLowestHeight.8" then
+      ∨ l = ".LB.Emission.permuteAtLowestHeight.2"
+      ∨ l = ".LB.Emission.permuteAtLowestHeight.8" ∨ l = ".LB.Emission.permuteAtLowestHeight.9" then
     2049 + 2 * (1024 - t.regs.rax.toBitVec.toNat)
-  else if l = ".LB.Emission.permuteAtLowestHeight.2" then
+  else if l = ".LB.Emission.permuteAtLowestHeight.3" then
     2048 + 2 * (1024 - t.regs.rax.toBitVec.toNat)
-  else if l = ".LB.Emission.permuteAtLowestHeight.3" then 1024 - t.regs.rax.toBitVec.toNat / 8
+  else if l = ".LB.Emission.permuteAtLowestHeight.4" then 1024 - t.regs.rax.toBitVec.toNat / 8
   else 0
 
 /-- The variant goal of `cfg_goto`: `V` at the two literal labels, then `omega` if it can. -/
@@ -240,10 +252,32 @@ macro "lowest_dec" : tactic => `(tactic| (
 /-! ## The obligation of a block -/
 
 -- The exception continuation of the body triple.
-def E (S PM : Addr) (planned : Vector Word MAX_N) (g : G) (F0 : MProp 64) (s : MachineData)
+def E [Host] (S PM : Addr) (planned : Vector Word MAX_N) (g : G) (F0 : MProp 64) (s : MachineData)
     (ra : Int64) : Int64 → MachineData → Prop :=
-  fun a t => a = ra ∧ Sep.Post S (Planned S PM planned ∗ F0) lowestD
-    (fun g' t => lowestQ planned g g' s t) s t ∧ Sep.mod.Agree s t
+  fun a t => (a = ra ∧ Sep.Post S (Planned S PM planned ∗ F0) lowestD
+    (fun g' t => lowestQ planned g g' s t) s t ∧ Sep.mod.Agree s t) ∨
+    (a = label "exit" ∧ t.regs.get64 .rdi = 1#64 ∧
+      Sep.Post S (Planned S PM planned ∗ F0) lowestD
+        (fun g' t => lowestX planned g g' s t) s t)
+
+theorem exit_intercept [Host]
+    {S PM : Addr} {planned : Vector Word MAX_N} {g : G} {F0 : MProp 64}
+    {s t : MachineData} {ra exitRa : Int64} {L : Lc} {lo : List Word} {w : Word}
+    {I : CfgLabel → Nat → Unit → MachineData → Prop}
+    (hout : ∀ l ∈ Program.labels permuteAtLowestHeightAsm, label l ≠ label "exit")
+    (hM : Mid S g (Planned S PM planned ∗ F0) s ra L lo w t) (hok : g.Ok)
+    (l0 : Flat.Locals)
+    (hfail : Flat.permuteAtLowestHeight planned l0 (flat g) = (.assertionFailed, flat g))
+    (harg : t.regs.get64 .rdi = 1#64) :
+    Program.Intercept (Program.labels permuteAtLowestHeightAsm) (s.pushRa ra) I
+      (E S PM planned g F0 s ra) (label "exit") (t.pushRa exitRa) := by
+  refine Or.inr ⟨Or.inr ⟨rfl, harg, ?_⟩, ?_⟩
+  · refine frame_post (hM.pushExit exitRa) hM.len hok ⟨l0, ?_⟩
+    dsimp only [ExitRes]
+    rw [hfail]
+    exact ⟨Permute.Keep.refl g, rfl, rfl⟩
+  · intro l hl ha
+    exact False.elim (hout l hl ha)
 
 -- The obligation of `Program.WP.cfg` for the block `blk`.
 def Obl [Host] [FunDecls] (S PM : Addr) (planned : Vector Word MAX_N) (g : G) (F0 : MProp 64)
@@ -266,7 +300,8 @@ def labels : List CfgLabel :=
     .label ".LB.Emission.permuteAtLowestHeight.5",
     .label ".LB.Emission.permuteAtLowestHeight.6",
     .label ".LB.Emission.permuteAtLowestHeight.7",
-    .label ".LB.Emission.permuteAtLowestHeight.8"]
+    .label ".LB.Emission.permuteAtLowestHeight.8",
+    .label ".LB.Emission.permuteAtLowestHeight.9"]
 
 end Lowest
 end Bbu.Unit

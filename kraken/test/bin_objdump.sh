@@ -18,6 +18,12 @@ read -r start _ < <(sym _ZNK12_GLOBAL__N_18Emission9isSpilledE9StackSlot)
 read -r last lsize < <(sym plan)
 start=$(printf '%x' $((16#$start)))
 stop=$(printf '%x' $((16#$last + 16#$lsize)))
+exitaddr=$(objdump -d "$bin" | awk '/^[0-9a-f]+ <exit@plt>:/ { print $1 }')
+if [ -z "$exitaddr" ]; then
+	echo "bin_objdump: no exit@plt symbol in $bin" >&2
+	exit 1
+fi
+echo "external exit $exitaddr"
 echo "start $start"
 echo "stop $stop"
 objdump -d -M suffix --insn-width=16 --start-address=0x"$start" --stop-address=0x"$stop" "$bin" \

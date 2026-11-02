@@ -7,6 +7,7 @@ _ZN12_GLOBAL__N_114MappingBuilder17keepWildcardSlotsEv:
 	je	.LB.MappingBuilder.keepWildcardSlots.4
 	pushq	%rbp
 	pushq	%rbx
+	subq	$8, %rsp
 	movq	%rdi, %rbp
 	movl	$0, %ebx
 	jmp	.LB.MappingBuilder.keepWildcardSlots.1
@@ -42,6 +43,7 @@ _ZN12_GLOBAL__N_114MappingBuilder17keepWildcardSlotsEv:
 .LB.MappingBuilder.keepWildcardSlots.2:
 	movl	$0, %eax
 .LB.MappingBuilder.keepWildcardSlots.3:
+	addq	$8, %rsp
 	popq	%rbx
 	popq	%rbp
 	ret

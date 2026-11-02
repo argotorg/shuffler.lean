@@ -1,7 +1,7 @@
 module
 
-public import BbuKraken.Unit.Defs
-import all BbuKraken.Unit.Defs
+public import BbuKraken.Unit.StackCall
+import all BbuKraken.Unit.StackCall
 public import BbuKraken.Sep.Stores
 import all BbuKraken.Sep.Stores
 public import ProofKit.Cfg
@@ -327,6 +327,31 @@ theorem Mid.stack_of {t P : MachineData} (h : Mid S g F s ra x0 x2 lo w u t)
     simp only [MachineData.pushRa, rsp, Reg64s.get64_rsp, Reg64s.set64_rsp]
     bv_omega)
 
+theorem Mid.isSome_exit {t : MachineData} (h : Mid S g F s ra x0 x2 lo w u t) :
+    (t.dmem.loadInt (t.regs.rsp.toBitVec - 8#64) 8).isSome = true := by
+  rw [h.sp]
+  exact isSome_of_eq w h.mem (by unfold Stk; ecancel)
+
+theorem Mid.mem_exit {t : MachineData} (h : Mid S g F s ra x0 x2 lo w u t) (exitra : Int64) :
+    (View S g ∗ Stk (rsp s) (lo ++ exitra.toBitVec :: x0 :: u :: (x2.A.toList ++ [x2.pad,
+      s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec,
+      s.regs.r13.toBitVec, s.regs.r14.toBitVec, s.regs.r15.toBitVec])) ra.toBitVec ∗ F).get
+      (t.dmem.storeInt (t.regs.rsp.toBitVec - 8#64) 8 exitra.toBitVec.toInt) := by
+  rw [stk_frame, h.sp]
+  exact wd_store h.mem (by unfold Stk; ecancel) (by unfold Stk; ecancel)
+
+theorem Mid.directExitPost {t v : MachineData} {X : G → MachineData → Prop}
+    (h : Mid S g F s ra x0 x2 lo w u t) (hok : g.Ok) (exitra : Int64)
+    (hm : v.dmem = t.dmem.storeInt (t.regs.rsp.toBitVec - 8#64) 8 exitra.toBitVec.toInt)
+    (hx : X g v) : Sep.Post S F 2068 X s v := by
+  refine ⟨g, lo ++ exitra.toBitVec :: x0 :: u :: (x2.A.toList ++ [x2.pad,
+      s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec,
+      s.regs.r13.toBitVec, s.regs.r14.toBitVec, s.regs.r15.toBitVec]), ra.toBitVec,
+    hx, hok, by simp only [List.length_append, List.length_cons, List.length_nil,
+      Vector.length_toList, h.len]; rfl, ?_⟩
+  rw [hm]
+  exact h.mem_exit exitra
+
 -- `8(%rsp)`: the local `u`.
 theorem Mid.u_addr {t : MachineData} (h : Mid S g F s ra x0 x2 lo w u t) :
     t.regs.rsp.toBitVec + 8#64 = rsp s - 8264#64 := by
@@ -411,6 +436,59 @@ theorem Mid.call {d : Nat} (hd : d ≤ 1034) {A : G → MachineData → Prop}
     · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rsp]; exact h.sp
     · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r12]; exact h.r12
 
+-- The caller owns the saved registers and locals when a callee exits.
+theorem Mid.exitPost {d : Nat} (hd : d ≤ 1034) {c t : MachineData}
+    {X : G → MachineData → Prop} (h : Mid S g F s ra x0 x2 lo w u c)
+    (hp : Sep.Post S
+      (Arr (rsp s - 8272#64 - 8#64 - BitVec.ofNat 64 (8 * 1034)) (lo.take (1034 - d))
+        ∗ Fr s ra x0 u x2 F) d X c t) : Sep.Post S F 2068 X s t := by
+  obtain ⟨g', fr', w', hx, hok, hlen, hm⟩ := hp
+  let lo' := lo.take (1034 - d) ++ fr'
+  have hlo' : lo'.length = 1034 := by simp [lo', h.len, hlen]; omega
+  refine ⟨g', lo' ++ w' :: x0 :: u :: (x2.A.toList ++ [x2.pad,
+      s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec,
+      s.regs.r13.toBitVec, s.regs.r14.toBitVec, s.regs.r15.toBitVec]), ra.toBitVec,
+    hx, hok, by simp only [List.length_append, List.length_cons, List.length_nil,
+      Vector.length_toList, hlo']; rfl, ?_⟩
+  rw [stk_frame]
+  change (View S g' ∗ Stk (rsp s - 8272#64) lo' w' ∗ Fr s ra x0 u x2 F).get t.dmem
+  have e := stk_split (rsp s - 8272#64) (lo.take (1034 - d)) fr' w'
+    (Fr s ra x0 u x2 F) (k := 1034) (by simpa only [lo', List.length_append] using hlo')
+  rw [show lo' = lo.take (1034 - d) ++ fr' from rfl, e]
+  simpa only [rsp, Reg64s.get64_rsp, h.sp] using hm
+
+-- A callee with an exit contract uses the same frame as a normal callee.
+theorem Mid.callExit {d : Nat} (hd : d ≤ 1034) {A : G → MachineData → Prop}
+    {Q X : G → G → MachineData → MachineData → Prop} {c : MachineData}
+    {K E : MachineData → Prop} (h : Mid S g F s ra x0 x2 lo w u c)
+    (hdi : rdi c = S) (hok : g.Ok) (hA : A g c)
+    (hK : ∀ t g' lo' w', Mid S g' F s ra x0 x2 lo' w' u t →
+      Q g g' c t → g'.Ok → Saved c t → K t)
+    (hX : ∀ t, Sep.Post S F 2068 (fun g' t => X g g' c t) s t →
+      t.regs.get64 .rdi = 1#64 → E t) :
+    ∃ S' g' F', Sep.Pre S' g' F' A d c
+      ∧ (∀ t, Sep.Post S' F' d (fun g'' t => Q g' g'' c t) c t → Sep.mod.Agree c t → K t)
+      ∧ (∀ t, Sep.Post S' F' d (fun g'' t => X g' g'' c t) c t →
+        t.regs.get64 .rdi = 1#64 → E t) := by
+  have hl := h.len
+  have e := stk_split (rsp s - 8272#64) (lo.take (1034 - d)) (lo.drop (1034 - d)) w
+    (Fr s ra x0 u x2 F) (k := 1034) (by simp [hl])
+  refine ⟨S, g, Arr (rsp s - 8272#64 - 8#64 - BitVec.ofNat 64 (8 * 1034)) (lo.take (1034 - d))
+    ∗ Fr s ra x0 u x2 F, ⟨hdi, hok, ⟨lo.drop (1034 - d), w, by simp [hl]; omega, ?_⟩, hA⟩, ?_, ?_⟩
+  · have hm := h.mem
+    rw [← List.take_append_drop (1034 - d) lo, e] at hm
+    simpa only [rsp, Reg64s.get64_rsp, h.sp] using hm
+  · rintro t ⟨g', fr', v', hQ, hok', hfl, hm⟩ hag
+    have e' := stk_split (rsp s - 8272#64) (lo.take (1034 - d)) fr' v'
+      (Fr s ra x0 u x2 F) (k := 1034) (by simp [hl, hfl]; omega)
+    refine hK t g' (lo.take (1034 - d) ++ fr') v' ⟨by simp [hl, hfl]; omega, ?_, ?_, ?_⟩ hQ hok'
+      (Saved.of_agree hag)
+    · rw [e']; simpa only [rsp, Reg64s.get64_rsp, h.sp] using hm
+    · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rsp]; exact h.sp
+    · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r12]; exact h.r12
+  · intro t hp harg
+    exact hX t (h.exitPost hd hp) harg
+
 -- The call of `permute`: the callee gets all 1034 free words and owns the array at `rsi`. After
 -- the call the array has new values.
 theorem Mid.callW {A : G → MachineData → Prop} {Q : G → G → MachineData → MachineData → Prop}
@@ -442,6 +520,56 @@ theorem Mid.callW {A : G → MachineData → Prop} {Q : G → G → MachineData 
       exact hm
     · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rsp]; exact h.sp
     · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r12]; exact h.r12
+
+-- The permutation array can change before the callee exits.
+theorem Mid.callWExit {A : G → MachineData → Prop}
+    {Q X : G → G → MachineData → MachineData → Prop} {c : MachineData}
+    {K E : MachineData → Prop} (h : Mid S g F s ra x0 x2 lo w u c)
+    (hdi : rdi c = S) (hsi : rsi c = rsp s - 8256#64) (hok : g.Ok) (hA : A g c)
+    (hK : ∀ t g' (L : Lc) lo' w', L.pad = x2.pad → Mid S g' F s ra x0 L lo' w' u t →
+      Q g g' c t → g'.Ok → Saved c t → K t)
+    (hX : ∀ t, Sep.Post S F 2068 (fun g' t => X g g' c t) s t →
+      t.regs.get64 .rdi = 1#64 → E t) :
+    ∃ S' g' F', Sep.Pre S' g' (permW c ∗ F') A 1034 c
+      ∧ (∀ t, Sep.Post S' (permW c ∗ F') 1034 (fun g'' t => Q g' g'' c t) c t →
+        Sep.mod.Agree c t → K t)
+      ∧ (∀ t, Sep.Post S' (permW c ∗ F') 1034 (fun g'' t => X g' g'' c t) c t →
+        t.regs.get64 .rdi = 1#64 → E t) := by
+  have e : ∀ (X : MProp 64) (g' : G) (lo' : List Word) (w' : Word),
+      View S g' ∗ Stk (rsp s - 8272#64) lo' w' ∗ (X ∗ FrR s ra x0 u x2.pad F)
+        = X ∗ (View S g' ∗ Stk (rsp s - 8272#64) lo' w' ∗ FrR s ra x0 u x2.pad F) :=
+    fun _ _ _ _ => by ac_rfl
+  have hsp : rsp c = rsp s - 8272#64 := by
+    show c.regs.get64 .rsp = _
+    rw [Reg64s.get64_rsp, h.sp]
+  refine ⟨S, g, FrR s ra x0 u x2.pad F, ⟨hdi, hok, ⟨lo, w, h.len, ?_⟩, hA⟩, ?_, ?_⟩
+  · have hm := h.mem
+    rw [mid_A] at hm
+    rw [hsp, permW, hsi, e]
+    exact ExArr.intro (n := MAX_N) (by simp) hm
+  · rintro t ⟨g', fr', v', hQ, hok', hfl, hm⟩ hag
+    rw [hsp, permW, hsi, e] at hm
+    obtain ⟨vs, hvs, hm⟩ := ExArr.elim hm
+    refine hK t g' ⟨⟨vs.toArray, by simp [hvs]⟩, x2.pad⟩ fr' v' rfl ⟨hfl, ?_, ?_, ?_⟩ hQ hok'
+      (Saved.of_agree hag)
+    · rw [mid_A]
+      exact hm
+    · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rsp]; exact h.sp
+    · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r12]; exact h.r12
+  · rintro t ⟨g', fr', v', hx, hok', hfl, hm⟩ harg
+    rw [hsp, permW, hsi, e] at hm
+    obtain ⟨vs, hvs, hm⟩ := ExArr.elim hm
+    let L : Lc := ⟨⟨vs.toArray, by simp [hvs]⟩, x2.pad⟩
+    apply hX t ?_ harg
+    refine ⟨g', fr' ++ v' :: x0 :: u :: (L.A.toList ++ [L.pad,
+        s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec,
+        s.regs.r13.toBitVec, s.regs.r14.toBitVec, s.regs.r15.toBitVec]), ra.toBitVec,
+      hx, hok', by simp only [List.length_append, List.length_cons, List.length_nil,
+        Vector.length_toList, hfl]; rfl, ?_⟩
+    rw [stk_frame]
+    change (View S g' ∗ Stk (rsp s - 8272#64) fr' v' ∗ Fr s ra x0 u L F).get t.dmem
+    rw [mid_A]
+    exact hm
 
 end
 

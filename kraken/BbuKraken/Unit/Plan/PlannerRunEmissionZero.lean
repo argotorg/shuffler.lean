@@ -18,7 +18,7 @@ theorem b_32 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     (K : Unit → MachineData → Prop) (I' : CfgLabel → Nat → Unit → MachineData → Prop)
     (E : Int64 → MachineData → Prop)
     (hdone : ∀ u, EmitDestDone P g M F s ra u →
-      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.12") u) :
+      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.13") u) :
     plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.32" →
       ∀ t, (∃ lo locals, AttemptLI P g M F s ra lo locals t) → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
@@ -54,7 +54,7 @@ theorem b_32 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   all_goals try simp only [hbx, h12, h15, ht, hn, hs] at ⊢
   vc_by_shape
   | load => simp only [kt, kn, ks, k0, k1, k2, k3, k4, k5, k6]
-  | goto ".LB.Planner.run.12" =>
+  | goto ".LB.Planner.run.13" =>
     apply hdone
     refine ⟨lo, headerLocals g locals, hd.next ?_ rfl rfl rfl rfl rfl rfl rfl, rfl, ?_⟩
     · simp only [headerWrites, storeLocalWords, List.foldl_cons, List.foldl_nil,

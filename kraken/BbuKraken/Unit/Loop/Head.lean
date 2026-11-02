@@ -213,7 +213,7 @@ theorem b_fn [Host] [FunDecls] (S g F s ra) (hpre : Sep.Pre S g F loopA 2068 s) 
       exact Or.inl (fn_V (Mid.push hk0.mem hlo hsp rfl rfl hS) hpre.ok hpre.args rfl)
 
 theorem b_26 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :
-    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.26" →
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.31" →
       Obl S g F s ra blk := by
   cfg_block [Obl]
   intro t ht
@@ -272,7 +272,7 @@ theorem b_26 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
     exact Or.inr ⟨trivial, by decide⟩
 
 theorem b_25 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :
-    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.25" →
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.30" →
       Obl S g F s ra blk := by
   cfg_block [Obl]
   intro t ht
@@ -318,7 +318,7 @@ private theorem rdA_store {S : Addr} {g' : G} {F : MProp 64} {s : MachineData} {
   (h.storeA (P := { t with dmem := t.dmem.storeInt a 8 v.toInt }) hi ha v rfl rfl rfl).rdA hj hb
 
 theorem b_27 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :
-    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.27" →
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.32" →
       Obl S g F s ra blk := by
   cfg_block [Obl]
   intro t ht
@@ -382,24 +382,24 @@ theorem b_0 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) 
     cfg_goto
     · exact (hM.next rfl rfl rfl).stack
     · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
-      exact ⟨g', u, ⟨x0, x2, lo, w, hM.next rfl rfl rfl, hok, hk⟩, hk, by rw [hR, ite_eq_left hc'],
-        by rw [hR, ite_eq_left hc']; rfl⟩
+      exact ⟨g', u, ⟨x0, x2, lo, w, hM.next rfl rfl rfl, hok, hk⟩, by rw [hR, ite_eq_left hc']⟩
     · loop_dec
   · rename_i hc
     simp only [BitVec.zero_eq, Idioms.sub_beq_zero, Bool.not_eq_false', beq_iff_eq, h13, h15] at hc
     have hc' : (flat g').size = (flat g').targetSize := hc
     simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
     refine ⟨g', u, T, x0, x2, lo, w, hM.next rfl rfl rfl, hok, hk, h13, hc, ?_, hH, hp, ?_, ?_⟩
-    · show t.regs.rdx.toBitVec < g'.h.n
+    · show t.regs.rax.toBitVec < g'.h.n
       rw [hdx]; bv_omega
     · intro j _ hj
-      change j < t.regs.rdx.toBitVec.toNat at hj
+      change j < t.regs.rax.toBitVec.toNat at hj
       simp [hdx] at hj
     · rw [hR, ite_eq_right (fun h => h hc')]
   · loop_dec
 
 theorem b_1 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
-    (hperm : ∀ p, Sep.SpecW Names.permute permW (permuteA p) 1034 (permuteQ p)) :
+    (hout : ∀ l ∈ Program.labels loopAsm, label l ≠ label "exit")
+    (hperm : ∀ p, Sep.SpecWWithExit Names.permute permW (permuteA p) 1034 (permuteQ p) (permuteX p)) :
     Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.1" →
       Obl S g F s ra blk := by
   cfg_block [Obl]
@@ -407,21 +407,21 @@ theorem b_1 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
   simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨g', u, T, x0, x2, lo, w, hM, hok, hk, h13, hln, hdx, hH, hp, hA, hR⟩ := ht
   have hn : g'.h.n.toNat ≤ 1024 := hok.n
-  have hr : t.regs.rdx.toBitVec.toNat < 1024 := by bv_omega
-  have hi : t.regs.rdx.toBitVec.toNat < MAX_N := by rw [Flat.max_n]; exact hr
+  have hr : t.regs.rax.toBitVec.toNat < 1024 := by bv_omega
+  have hi : t.regs.rax.toBitVec.toNat < MAX_N := by rw [Flat.max_n]; exact hr
   have hd : BitVec.ofInt 64 (Mem.loadInt t.dmem
-      (t.regs.r12.toBitVec + t.regs.rdx.toBitVec * 8#64 + 56#64) 8).get!
-      = Flat.get g'.h.dest t.regs.rdx.toBitVec := by
+      (t.regs.r12.toBitVec + t.regs.rax.toBitVec * 8#64 + 56#64) 8).get!
+      = Flat.get g'.h.dest t.regs.rax.toBitVec := by
     rw [hM.r12]; exact rd_dest' hM.mem hi
-  have ha : t.regs.rsp.toBitVec + t.regs.rdx.toBitVec * 8#64 + 16#64
-      = rsp s - 8256#64 + BitVec.ofNat 64 (8 * t.regs.rdx.toBitVec.toNat) := by
+  have ha : t.regs.rsp.toBitVec + t.regs.rax.toBitVec * 8#64 + 16#64
+      = rsp s - 8256#64 + BitVec.ofNat 64 (8 * t.regs.rax.toBitVec.toNat) := by
     rw [hM.sp]; bv_omega
-  have hlt : Flat.get g'.h.dest t.regs.rdx.toBitVec < g'.h.n :=
-    hH.f.dest _ (show t.regs.rdx.toBitVec < g'.h.len by rw [hln]; exact hdx)
+  have hlt : Flat.get g'.h.dest t.regs.rax.toBitVec < g'.h.n :=
+    hH.f.dest _ (show t.regs.rax.toBitVec < g'.h.len by rw [hln]; exact hdx)
   -- The new entry at `rdx` and the old entries below `rdx`.
-  have hset : ∀ j (hj : j < MAX_N), j < t.regs.rdx.toBitVec.toNat + 1 →
-      (x2.A.set t.regs.rdx.toBitVec.toNat (BitVec.ofInt 64 (Mem.loadInt t.dmem
-        (t.regs.r12.toBitVec + t.regs.rdx.toBitVec * 8#64 + 56#64) 8).get!) hi)[j]
+  have hset : ∀ j (hj : j < MAX_N), j < t.regs.rax.toBitVec.toNat + 1 →
+      (x2.A.set t.regs.rax.toBitVec.toNat (BitVec.ofInt 64 (Mem.loadInt t.dmem
+        (t.regs.r12.toBitVec + t.regs.rax.toBitVec * 8#64 + 56#64) 8).get!) hi)[j]
         = Flat.get g'.h.dest (BitVec.ofNat 64 j) := by
     intro j hj hjl
     rw [Vector.getElem_set]
@@ -444,25 +444,26 @@ theorem b_1 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
   · rename_i hc _
     simp only [BitVec.zero_eq, Idioms.sub_beq_zero, Bool.not_eq_true', beq_eq_false_iff_ne,
       h13] at hc
-    have e1 : (1#64 + t.regs.rdx.toBitVec).toNat = t.regs.rdx.toBitVec.toNat + 1 := by bv_omega
+    have e1 : (1#64 + t.regs.rax.toBitVec).toNat = t.regs.rax.toBitVec.toNat + 1 := by bv_omega
     cfg_goto
     · exact hM.stack
     · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
       refine ⟨g', u, T, x0, _, lo, w, hM.storeA hi ha _ rfl rfl rfl, hok, hk, h13, hln, ?_, hH, hp,
         ?_, hR⟩
-      · show 1#64 + t.regs.rdx.toBitVec < g'.h.n
+      · show 1#64 + t.regs.rax.toBitVec < g'.h.n
         bv_omega
       · intro j hj hjl
-        change j < (1#64 + t.regs.rdx.toBitVec).toNat at hjl
+        change j < (1#64 + t.regs.rax.toBitVec).toNat at hjl
         exact hset j hj (by omega)
     · loop_dec
   · rename_i hc _
     simp only [BitVec.zero_eq, Idioms.sub_beq_zero, Bool.not_eq_false', beq_iff_eq, h13] at hc
-    have e1 : g'.h.len.toNat = t.regs.rdx.toBitVec.toNat + 1 := by rw [hln, hc]; bv_omega
+    have e1 : g'.h.len.toNat = t.regs.rax.toBitVec.toNat + 1 := by rw [hln, hc]; bv_omega
     have hs0 : t.regs.rsp.toBitVec + 16#64 = rsp s - 8256#64 := by rw [hM.sp]; bv_omega
-    refine Mid.callW (hM.storeA hi ha ?v ?_ ?_ ?_) hM.r12 ?_ hok ?_ ?_
+    refine Mid.callWExit (Q := permuteQ p0) (X := permuteX p0)
+      (hM.storeA hi ha ?v ?_ ?_ ?_) hM.r12 ?_ hok ?_ ?_ ?_
     case v => exact BitVec.ofInt 64 (Mem.loadInt t.dmem
-      (t.regs.r12.toBitVec + t.regs.rdx.toBitVec * 8#64 + 56#64) 8).get!
+      (t.regs.r12.toBitVec + t.regs.rax.toBitVec * 8#64 + 56#64) 8).get!
     case refine_1 => exact rfl
     case refine_2 => exact rfl
     case refine_3 => exact rfl
@@ -473,7 +474,7 @@ theorem b_1 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
       have ea : t.regs.rsp.toBitVec + 16#64 + BitVec.ofNat 64 (8 * j)
           = rsp s - 8256#64 + BitVec.ofNat 64 (8 * j) := by rw [hs0]
       have e := (rdA_store hM hi ha (BitVec.ofInt 64 (Mem.loadInt t.dmem
-        (t.regs.r12.toBitVec + t.regs.rdx.toBitVec * 8#64 + 56#64) 8).get!) hj' ea).trans
+        (t.regs.r12.toBitVec + t.regs.rax.toBitVec * 8#64 + 56#64) 8).get!) hj' ea).trans
         (hset j hj' (by omega))
       exact e
     case refine_6 =>
@@ -489,15 +490,27 @@ theorem b_1 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
           by rw [hR, Permute.permuteMapping_of hrd]; exact hal2⟩
       · loop_dec
 
+    case refine_7 =>
+      intro tx hp harg
+      rw [asm_labels] at hout
+      apply ProofKit.intercept_exit (ls := codeLabels) (E := E S g F s ra) hout
+      apply E_exit harg
+      refine hp.imp ?_
+      intro g'' hx
+      obtain ⟨hk2, hfl, hfail⟩ := hx
+      dsimp only [loopX, ExitRes]
+      rw [hR, Permute.permuteMapping_of hrd]
+      exact ⟨keep_trans hk hk2, hfl, hfail⟩
+
 theorem b_2 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :
-    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.2" →
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.3" →
       Obl S g F s ra blk := by
   cfg_block [Obl]
   intro t ht
   simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte] at ht
 
 theorem b_31 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :
-    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.31" →
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.33" →
       Obl S g F s ra blk := by
   cfg_block [Obl]
   intro t ht
@@ -505,20 +518,34 @@ theorem b_31 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
   obtain ⟨g', u, ⟨x0, x2, lo, w, hM, hok, hk⟩, h13, hR⟩ := ht
   kvcgen64
   all_goals try symexec_norm
-  · rw [hM.r12]; exact isSome_len' hM.mem
-  · cfg_goto
+  vc_by_shape
+  | load => rw [hM.r12]; exact isSome_len' hM.mem
+  | goto ".LB.Emission.buildBottomUp.34" =>
+    rename_i hc
+    simp only [hM.r12, rd_len' hM.mem, h13, BitVec.zero_eq, Idioms.sub_beq_zero,
+      Bool.not_eq_true', beq_eq_false_iff_ne] at hc
+    cfg_goto
     · exact (hM.next rfl rfl rfl).stack
     · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
-      refine ⟨g', u, ⟨x0, x2, lo, w, hM.next rfl rfl rfl, hok, hk⟩, hk, by rw [hR]; split <;> rfl, ?_⟩
+      exact ⟨g', u, ⟨x0, x2, lo, w, hM.next rfl rfl rfl, hok, hk⟩,
+        by rw [hR]; exact ite_eq_left (show (flat g').size ≠ (flat g').targetSize from hc)⟩
+    · loop_dec
+  | goto ".LB.Emission.buildBottomUp.15" =>
+    rename_i hc
+    simp only [hM.r12, rd_len' hM.mem, h13, BitVec.zero_eq, Idioms.sub_beq_zero,
+      Bool.not_eq_false', beq_iff_eq] at hc
+    have hR' : Flat.buildBottomUp (flat g) = (.done, flat g') := by
       rw [hR]
-      simp only [hM.r12, rd_len' hM.mem, h13, al, rax]
-      by_cases hc : g'.h.len = g'.h.n
-      · simp [hc, flat, code, al_add_self]
-      · simp [hc, flat, code, al_add_self, beq_false_of_ne hc]
+      exact ite_eq_right (fun h => h (show (flat g').size = (flat g').targetSize from hc))
+    cfg_goto
+    · exact (hM.next rfl rfl rfl).stack
+    · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
+      exact ⟨g', u, ⟨x0, x2, lo, w, hM.next rfl rfl rfl, hok, hk⟩,
+        hk, by rw [hR'], by rw [hR']; rfl⟩
     · loop_dec
 
 theorem b_13 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :
-    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.13" →
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.15" →
       Obl S g F s ra blk := by
   cfg_block [Obl]
   intro t ht
@@ -534,59 +561,137 @@ theorem b_13 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
   · exact isSome_pop' hM (k := 5) (by decide) (by bv_omega)
   · refine (congrArg Option.isSome (hM.pop ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_).retAddr).trans rfl
     all_goals rfl
-  · refine Kp.ret (hM.pop ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_) (by
+  · refine ProofKit.intercept_mono_exit
+      (E := fun a t => a = ra ∧ Sep.Post S F 2068 (fun g' t => loopQ g g' s t) s t
+        ∧ Sep.mod.Agree s t) ?_ (fun h => Or.inl h)
+    refine Kp.ret (hM.pop ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_) (by
       simp only [List.length_cons, List.length_append, Vector.length_toList, List.length_nil, hM.len]
       rfl) hok fun t' _ hax =>
       ⟨hQ.1, hQ.2.1, by show (rax t').setWidth 8 = _; rw [hax]; exact hQ.2.2⟩
     all_goals rfl
 
-theorem b_28 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :
-    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.28" →
+theorem b_28 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels loopAsm, label l ≠ label "exit") :
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.20" →
       Obl S g F s ra blk := by
   cfg_block [Obl]
   intro t ht
   simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨g', u, ⟨x0, x2, lo, w, hM, hok, hk⟩, hR⟩ := ht
-  kvcgen64
-  all_goals try symexec_norm
-  cfg_goto
-  · exact (hM.next rfl rfl rfl).stack
-  · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
-    exact ⟨g', u, ⟨x0, x2, lo, w, hM.next rfl rfl rfl, hok, hk⟩, hk, by rw [hR], by rw [hR]; rfl⟩
-  · loop_dec
+  have he := ProofKit.external_call_spec "exit" hexit
+  kvcgen64 [he]
+  all_goals symexec_norm
+  vc_by_shape
+  | load => with_reducible exact hM.isSome_exit
+  | jumpOut =>
+    rename_i exitra
+    rw [asm_labels] at hout
+    apply ProofKit.intercept_exit (ls := codeLabels) (E := E S g F s ra) hout
+    apply E_exit rfl
+    apply hM.directExitPost hok exitra rfl
+    dsimp only [loopX, ExitRes]
+    rw [hR]
+    exact ⟨hk, rfl, rfl⟩
 
-theorem b_29 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :
-    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.29" →
+theorem b_29 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels loopAsm, label l ≠ label "exit") :
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.26" →
       Obl S g F s ra blk := by
   cfg_block [Obl]
   intro t ht
   simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨g', u, ⟨x0, x2, lo, w, hM, hok, hk⟩, hR⟩ := ht
-  kvcgen64
-  all_goals try symexec_norm
-  cfg_goto
-  · exact (hM.next rfl rfl rfl).stack
-  · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
-    exact ⟨g', u, ⟨x0, x2, lo, w, hM.next rfl rfl rfl, hok, hk⟩, hk, by rw [hR], by rw [hR]; rfl⟩
-  · loop_dec
+  have he := ProofKit.external_call_spec "exit" hexit
+  kvcgen64 [he]
+  all_goals symexec_norm
+  vc_by_shape
+  | load => with_reducible exact hM.isSome_exit
+  | jumpOut =>
+    rename_i exitra
+    rw [asm_labels] at hout
+    apply ProofKit.intercept_exit (ls := codeLabels) (E := E S g F s ra) hout
+    apply E_exit rfl
+    apply hM.directExitPost hok exitra rfl
+    dsimp only [loopX, ExitRes]
+    rw [hR]
+    exact ⟨hk, rfl, rfl⟩
 
-theorem b_30 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :
-    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.30" →
+theorem b_30 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels loopAsm, label l ≠ label "exit") :
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.27" →
       Obl S g F s ra blk := by
   cfg_block [Obl]
   intro t ht
   simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨g', u, ⟨x0, x2, lo, w, hM, hok, hk⟩, hR⟩ := ht
-  kvcgen64
-  all_goals try symexec_norm
-  cfg_goto
-  · exact (hM.next rfl rfl rfl).stack
-  · simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte]
-    exact ⟨g', u, ⟨x0, x2, lo, w, hM.next rfl rfl rfl, hok, hk⟩, hk, by rw [hR], by rw [hR]; rfl⟩
-  · loop_dec
+  have he := ProofKit.external_call_spec "exit" hexit
+  kvcgen64 [he]
+  all_goals symexec_norm
+  vc_by_shape
+  | load => with_reducible exact hM.isSome_exit
+  | jumpOut =>
+    rename_i exitra
+    rw [asm_labels] at hout
+    apply ProofKit.intercept_exit (ls := codeLabels) (E := E S g F s ra) hout
+    apply E_exit rfl
+    apply hM.directExitPost hok exitra rfl
+    dsimp only [loopX, ExitRes]
+    rw [hR]
+    exact ⟨hk, rfl, rfl⟩
+
+theorem b_size_initial [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels loopAsm, label l ≠ label "exit") :
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.2" →
+      Obl S g F s ra blk := by
+  cfg_block [Obl]
+  intro t ht
+  simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte] at ht
+  obtain ⟨g', u, ⟨x0, x2, lo, w, hM, hok, hk⟩, hR⟩ := ht
+  have he := ProofKit.external_call_spec "exit" hexit
+  kvcgen64 [he]
+  all_goals symexec_norm
+  vc_by_shape
+  | load => with_reducible exact hM.isSome_exit
+  | jumpOut =>
+    rename_i exitra
+    rw [asm_labels] at hout
+    apply ProofKit.intercept_exit (ls := codeLabels) (E := E S g F s ra) hout
+    apply E_exit rfl
+    apply hM.directExitPost hok exitra rfl
+    dsimp only [loopX, ExitRes]
+    rw [hR]
+    exact ⟨hk, rfl, rfl⟩
+
+theorem b_size_final [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels loopAsm, label l ≠ label "exit") :
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.34" →
+      Obl S g F s ra blk := by
+  cfg_block [Obl]
+  intro t ht
+  simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte] at ht
+  obtain ⟨g', u, ⟨x0, x2, lo, w, hM, hok, hk⟩, hR⟩ := ht
+  have he := ProofKit.external_call_spec "exit" hexit
+  kvcgen64 [he]
+  all_goals symexec_norm
+  vc_by_shape
+  | load => with_reducible exact hM.isSome_exit
+  | jumpOut =>
+    rename_i exitra
+    rw [asm_labels] at hout
+    apply ProofKit.intercept_exit (ls := codeLabels) (E := E S g F s ra) hout
+    apply E_exit rfl
+    apply hM.directExitPost hok exitra rfl
+    dsimp only [loopX, ExitRes]
+    rw [hR]
+    exact ⟨hk, rfl, rfl⟩
 
 theorem b_24 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s) :
-    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.24" →
+    Program.ForallBlocks loopAsm fun blk => blk.label = .label ".LB.Emission.buildBottomUp.29" →
       Obl S g F s ra blk := by
   cfg_block [Obl]
   intro t ht

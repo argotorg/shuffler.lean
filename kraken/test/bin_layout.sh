@@ -20,14 +20,30 @@ make -C "$dir/c" -s bbu_harness
 "$dir/test/bin_objdump.sh" "$bin" > "$tmp/dis"
 
 awk -v src="c/bbu_harness" '
+	function labelcode(s,   h, i) {
+		h = 0
+		for (i = 1; i <= length(s); i++) h = (h * 257 + code[substr(s, i, 1)]) % 4294967296
+		return h
+	}
+	BEGIN { for (i = 1; i < 128; i++) code[sprintf("%c", i)] = i }
 	FNR == 1 { file++ }
 	# The Kraken program: a label ends with ":", all else is an instruction.
-	file == 1 { kind[nk++] = /:$/ ? "label" : "instr"; if (!/:$/) ni++; next }
+	file == 1 {
+		kind[nk++] = /:$/ ? "label" : "instr"
+		if (/:$/) labels[nlabels++] = substr($0, 1, length($0) - 1)
+		else ni++
+		next
+	}
 	# The disassembly: "start ADDR", "stop ADDR", then "ADDR SIZE pad|instr TEXT".
 	$1 == "start" { start = $2; next }
 	$1 == "stop" { stop = $2; next }
+	$1 == "external" && $2 == "exit" { exitaddr = $3; next }
 	$3 == "instr" { addr[na++] = strtonum("0x" $1) }
 	END {
+		if (exitaddr == "" || strtonum("0x" exitaddr) >= strtonum("0x" start)) {
+			print "bin_layout: exit@plt must be below the shuffler code" > "/dev/stderr"
+			exit 1
+		}
 		if (na != ni) {
 			printf "bin_layout: %d instructions in Kraken, %d in %s\n", ni, na, src > "/dev/stderr"
 			exit 1
@@ -47,6 +63,19 @@ awk -v src="c/bbu_harness" '
 		print ""
 		print "/-- The address of the first directive. -/"
 		print "def start : Nat := 0x" start
+		print ""
+		print "/-- The external exit entry in the procedure linkage table. -/"
+		print "def exit : Nat := 0x" exitaddr
+		print ""
+		print "/-- The labels, in directive order, with the external exit entry first. -/"
+		print "def labels : List String := [\"exit\","
+		for (i = 0; i < nlabels; i++)
+			printf "  \"%s\"%s\n", labels[i], (i + 1 < nlabels ? "," : "]")
+		print ""
+		print "/-- Codes used for the label distinctness check. Lean checks each code. -/"
+		printf "def labelCodes : List Nat := [%.0f", labelcode("exit")
+		for (i = 0; i < nlabels; i++) printf ",%s%.0f", (i % 8 ? " " : "\n  "), labelcode(labels[i])
+		print "]"
 		print ""
 		print "/-- The byte size of each directive. -/"
 		printf "def sizes : List Nat := ["

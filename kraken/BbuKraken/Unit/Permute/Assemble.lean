@@ -16,10 +16,9 @@ import all BbuKraken.Unit.Permute.D2
 /-!
 # `permute`: the unit theorem from the block lemmas
 
-`permute_of_b22 p0` gives `UnitThmW finishAsm permW (permuteA p0) 1034 (permuteQ p0)` from
-`Program.WP.cfg` with `LInv` and `V`, and one block lemma for each label of `labels`. The
-obligation of `.LB.Emission.permute.22` is the hypothesis `h22` (it has the type of `b_22`).
-Thus `permute_unit hcopy p0` is `Permute.permute_of_b22 p0 hcopy Permute.b_22`.
+`permute_of_b22 p0` gives the normal and exit contracts from `Program.WP.cfg` with `LInv`
+and `V`, and one block lemma for each label of `labels`. The obligation of
+`.LB.Emission.permute.22` is the hypothesis `h22` (it has the type of `b_22`).
 -/
 
 open Std.WP Lean.Order
@@ -35,11 +34,13 @@ theorem labels_cover : finishAsm.ForallBlocks fun blk => blk.label ∈ labels :=
   pm_labels
 
 theorem permute_of_b22 [Host] [FunDecls] (p0 : Vector Word MAX_N)
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels finishAsm, label l ≠ label "exit")
     (hcopy : Sep.Spec Names.shallowestCopyPosition shallowestCopyA 0 shallowestCopyQ)
     (h22 : ∀ S g p0 F s ra, Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s →
       Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.22" →
         Obl S g p0 F s ra blk) :
-    UnitThmW finishAsm permW (permuteA p0) 1034 (permuteQ p0) := by
+    UnitThmWWithExit finishAsm permW (permuteA p0) 1034 (permuteQ p0) (permuteX p0) := by
   intro S g F s ra
   refine ⟨fun s₀ ⟨h₀, hpre⟩ => ?_⟩
   subst h₀
@@ -55,7 +56,7 @@ theorem permute_of_b22 [Host] [FunDecls] (p0 : Vector Word MAX_N)
   · exact b_2 S g p0 F s ra hpre
   · exact b_3 S g p0 F s ra hpre
   · exact b_4 S g p0 F s ra hpre
-  · exact b_5 S g p0 F s ra hpre
+  · exact b_5 S g p0 F s ra hexit hout hpre
   · exact b_6 S g p0 F s ra
   · exact b_7 S g p0 F s ra hpre
   · exact b_8 S g p0 F s ra hpre

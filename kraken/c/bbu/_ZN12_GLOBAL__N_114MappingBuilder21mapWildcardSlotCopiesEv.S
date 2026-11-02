@@ -5,6 +5,7 @@ _ZN12_GLOBAL__N_114MappingBuilder21mapWildcardSlotCopiesEv:
 	pushq	%r12
 	pushq	%rbp
 	pushq	%rbx
+	subq	$8, %rsp
 	movq	%rdi, %rbp
 	movl	$0, %ebx
 	jmp	.LB.MappingBuilder.mapWildcardSlotCopies.2
@@ -50,6 +51,7 @@ _ZN12_GLOBAL__N_114MappingBuilder21mapWildcardSlotCopiesEv:
 .LB.MappingBuilder.mapWildcardSlotCopies.3:
 	movl	$0, %eax
 .LB.MappingBuilder.mapWildcardSlotCopies.4:
+	addq	$8, %rsp
 	popq	%rbx
 	popq	%rbp
 	popq	%r12

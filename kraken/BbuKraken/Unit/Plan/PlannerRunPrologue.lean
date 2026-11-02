@@ -32,7 +32,7 @@ theorem b_fn [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
         (label ".LB.Planner.run.1") t)
     (hdone : ∀ t, CheckDone P (withSaw g 0#8) F s ra t →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-        (label ".LB.Planner.run.4") t) :
+        (label ".LB.Planner.run.5") t) :
     plannerRunAsm.ForallBlocks fun blk => blk.label = .label Names.plannerRun →
       WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) (s.pushRa ra) := by
@@ -86,7 +86,7 @@ theorem b_fn [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
   vc_by_shape
   | load =>
     simp only [k0, k1, k2, k3, k4, k5, ksource, ksaw, kn, ktgt]
-  | goto ".LB.Planner.run.4" =>
+  | goto ".LB.Planner.run.5" =>
     rename_i af hz
     symexec_norm at hz
     simp only [hregs, hdi, hsrc, BitVec.sub_sub,

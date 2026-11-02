@@ -10,15 +10,15 @@ import all BbuKraken.Bin
 namespace Bbu
 
 -- The helper specifications are closed over the assembly in the host program.
-example [Host] (L : Linked) :
+example [Host] (L : Linked) (X : ExitBoundary) :
     letI := L.plannerDecls
     PlannerHelperSpecs :=
-  planner_helpers_correct L
+  planner_helpers_correct L X
 
 example :
     letI := binLinked.plannerDecls
     PlannerHelperSpecs :=
-  planner_helpers_correct binLinked
+  planner_helpers_correct binLinked binBoundary
 
 -- Only function entries are declarations. An internal block and the public entry
 -- cannot be used as a callee in this table.

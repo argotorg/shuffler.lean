@@ -63,18 +63,28 @@ theorem BuildLI.afterCall (h : BuildLI P g F s ra lo l M saw t)
   · exact (l.sameHead _ _ 3 (by decide)).trans h.count
 
 theorem BuildLI.call {A : BG → MachineData → Prop}
-    {Q : BG → BG → MachineData → MachineData → Prop} {K : MachineData → Prop} {k : Nat}
+    {Q X : BG → BG → MachineData → MachineData → Prop} {K E : MachineData → Prop} {k : Nat}
     (h : BuildLI P g F s ra lo l M saw t) (hok : g.Ok) (hk : k ≤ 4112)
     (hdi : rdi t = t.regs.rsp.toBitVec + 32#64)
     (hA : A (plannerBuilder g s M saw) t)
     (hshape : ∀ b' u, Q (plannerBuilder g s M saw) b' t u →
       b' = plannerBuilder g s b'.M b'.saw)
+    (hxshape : ∀ b' u, X (plannerBuilder g s M saw) b' t u →
+      b' = plannerBuilder g s b'.M b'.saw)
     (hK : ∀ M' saw' u lo', BuildLI P g F s ra lo' l M' saw' u →
       Q (plannerBuilder g s M saw) (plannerBuilder g s M' saw') t u →
-      Sep.mod.Agree t u → K u) :
+      Sep.mod.Agree t u → K u)
+    (hE : ∀ M' saw' u lo',
+      (Stk (rsp s) (fr s lo' (l.toList (plannerBuilder g s M' saw')))
+          ra.toBitVec ∗ (PlannerRunView P g ∗ F)).get u.dmem →
+      lo'.length = 4113 →
+      X (plannerBuilder g s M saw) (plannerBuilder g s M' saw') t u →
+      u.regs.get64 .rdi = 1#64 → E u) :
     ∃ B b CF, VPre BView BG.Ok B b CF A k t ∧
-      ∀ u, VPost BView BG.Ok B CF k (fun b' u => Q b b' t u) t u →
-        Sep.mod.Agree t u → K u := by
+      (∀ u, VPost BView BG.Ok B CF k (fun b' u => Q b b' t u) t u →
+        Sep.mod.Agree t u → K u) ∧
+      (∀ u, VPost BView BG.Ok B CF k (fun b' u => X b b' t u) t u →
+        u.regs.get64 .rdi = 1#64 → E u) := by
   have hb : Bd P g F s ra lo
       (l.toList (builderGhost g (t.regs.rsp.toBitVec + 96#64)
         ((rsi s).setWidth 8) saw M)) t := by
@@ -84,28 +94,46 @@ theorem BuildLI.call {A : BG → MachineData → Prop}
   · intro b' u hq
     simpa only [h.kb.sp, plannerBuilder, builderSp] using
       hshape b' u (by simpa only [h.kb.sp, plannerBuilder, builderSp] using hq)
+  · intro b' u hx
+    simpa only [h.kb.sp, plannerBuilder, builderSp] using
+      hxshape b' u (by simpa only [h.kb.sp, plannerBuilder, builderSp] using hx)
   · intro M' saw' u lo' hb' hq hag
     have hb'' : Bd P g F s ra lo' (l.toList (plannerBuilder g s M' saw')) u := by
       simpa only [h.kb.sp, plannerBuilder, builderSp] using hb'
     exact hK M' saw' u lo' (h.afterCall hb'' hag)
       (by simpa only [h.kb.sp, plannerBuilder, builderSp] using hq) hag
+  · intro M' saw' u lo' hm hl hx harg
+    exact hE M' saw' u lo'
+      (by simpa only [h.kb.sp, plannerBuilder, builderSp] using hm) hl
+      (by simpa only [h.kb.sp, plannerBuilder, builderSp] using hx) harg
 
 theorem BuildLI.callPhase {A : BG → MachineData → Prop}
-    {Q : BG → BG → MachineData → MachineData → Prop} {K : MachineData → Prop} {k : Nat}
+    {Q X : BG → BG → MachineData → MachineData → Prop} {K E : MachineData → Prop} {k : Nat}
     (h : BuildLI P g F s ra lo l M saw t) (hok : g.Ok) (hk : k ≤ 4112)
     (hdi : rdi t = t.regs.rsp.toBitVec + 32#64)
     (hA : A (plannerBuilder g s M saw) t)
     (next : Flat.Mapping) (nextSaw : BitVec 8) (st : Flat.Status)
     (hpostshape : ∀ b' u, Q (plannerBuilder g s M saw) b' t u →
       al u = code st ∧ b' = plannerBuilder g s next nextSaw)
+    (hxpostshape : ∀ b' u, X (plannerBuilder g s M saw) b' t u →
+      st = .assertionFailed ∧ b' = plannerBuilder g s next nextSaw)
+    (hE : ∀ u lo',
+      (Stk (rsp s) (fr s lo' (l.toList (plannerBuilder g s next nextSaw)))
+          ra.toBitVec ∗ (PlannerRunView P g ∗ F)).get u.dmem →
+      lo'.length = 4113 → st = .assertionFailed → u.regs.get64 .rdi = 1#64 → E u)
     (hK : ∀ u lo', BuildLI P g F s ra lo' l next nextSaw u →
       al u = code st → Sep.mod.Agree t u → K u) :
     ∃ B b CF, VPre BView BG.Ok B b CF A k t ∧
-      ∀ u, VPost BView BG.Ok B CF k (fun b' u => Q b b' t u) t u →
-        Sep.mod.Agree t u → K u := by
+      (∀ u, VPost BView BG.Ok B CF k (fun b' u => Q b b' t u) t u →
+        Sep.mod.Agree t u → K u) ∧
+      (∀ u, VPost BView BG.Ok B CF k (fun b' u => X b b' t u) t u →
+        u.regs.get64 .rdi = 1#64 → E u) := by
   apply h.call hok hk hdi hA
   · intro b' u hq
     rw [(hpostshape b' u hq).2]
+    rfl
+  · intro b' u hx
+    rw [(hxpostshape b' u hx).2]
     rfl
   · intro M' saw' u lo' hb hq hag
     obtain ⟨hal, he⟩ := hpostshape (plannerBuilder g s M' saw') u hq
@@ -114,6 +142,13 @@ theorem BuildLI.callPhase {A : BG → MachineData → Prop}
     subst M'
     subst saw'
     exact hK u lo' hb hal hag
+  · intro M' saw' u lo' hm hl hx harg
+    obtain ⟨hst, he⟩ := hxpostshape (plannerBuilder g s M' saw') u hx
+    have hM : M' = next := congrArg BG.M he
+    have hsaw : saw' = nextSaw := congrArg BG.saw he
+    subst M'
+    subst saw'
+    exact hE u lo' hm hl hst harg
 
 theorem InitLI.builderSetup (h : InitLI P g F s ra lo locals t) :
     ∃ l : BuilderLocals,

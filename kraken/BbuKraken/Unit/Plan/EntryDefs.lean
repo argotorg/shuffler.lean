@@ -83,6 +83,14 @@ def Result (g g' : EG) (t : MachineData) : Prop := ResultWord g g' (rax t)
 def Post (g : EG) (F : MProp 64) (s t : MachineData) : Prop :=
   ∃ g', g'.Ok ∧ Result g g' t ∧ StkMem entryD (View (rsp s) g' ∗ F) s t.dmem
 
+def AssertionResult (g g' : EG) : Prop :=
+  ∃ us, model g us = (-2#64, some (.assertionFailed, g'.r.state)) ∧
+    Keep g g' ∧ g'.saw = g.saw
+
+def Exit (g : EG) (F : MProp 64) (s t : MachineData) : Prop :=
+  ∃ g', g'.Ok ∧ AssertionResult g g' ∧
+    StkMem entryD (View (rsp s) g' ∗ F) s t.dmem
+
 def fr (s : MachineData) (lo locals : List Word) : List Word :=
   lo ++ (locals ++ [s.regs.rbx.toBitVec])
 

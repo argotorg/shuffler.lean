@@ -4,6 +4,8 @@ public import BbuKraken.Asm
 import all BbuKraken.Asm
 public import BbuKraken.Names
 import all BbuKraken.Names
+public import ProofKit.ExternalCall
+import all ProofKit.ExternalCall
 
 @[expose] public section
 
@@ -20,7 +22,7 @@ open scoped Program.WP
 namespace Bbu
 
 set_option maxRecDepth 100000 in
-theorem bbuAsm_eq : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm
+theorem bbuAsm_eq : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ dupAsm ++ pushAsm
     ++ produceAsm ++ swapWithAsm ++ generateAsm ++ finishAsm
     ++ loopAsm ++ spillSetAddAsm ++ mapAsm ++ closestCopyAsm
     ++ mapInPlaceAsm ++ mapClosestCopiesAsm ++ mapWildcardSlotCopiesAsm ++ keepWildcardSlotsAsm
@@ -37,43 +39,43 @@ set_option maxRecDepth 100000
 theorem isSpilled_at : isSpilledAsm.IsInfixAt bbuAsm 0 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 theorem shallowestCopy_at : shallowestCopyAsm.IsInfixAt bbuAsm 16 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem swapWith_at : swapWithAsm.IsInfixAt bbuAsm 203 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem push_at : pushAsm.IsInfixAt bbuAsm 33 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem dup_at : dupAsm.IsInfixAt bbuAsm 74 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem produce_at : produceAsm.IsInfixAt bbuAsm 110 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem generate_at : generateAsm.IsInfixAt bbuAsm 266 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem finish_at : finishAsm.IsInfixAt bbuAsm 319 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem loop_at : loopAsm.IsInfixAt bbuAsm 528 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem buildBottomUp_at : buildBottomUpAsm.IsInfixAt bbuAsm 2143 := by
+theorem swapWith_at : swapWithAsm.IsInfixAt bbuAsm 212 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem push_at : pushAsm.IsInfixAt bbuAsm 72 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem dup_at : dupAsm.IsInfixAt bbuAsm 33 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem produce_at : produceAsm.IsInfixAt bbuAsm 114 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem generate_at : generateAsm.IsInfixAt bbuAsm 282 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem finish_at : finishAsm.IsInfixAt bbuAsm 337 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem loop_at : loopAsm.IsInfixAt bbuAsm 545 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem buildBottomUp_at : buildBottomUpAsm.IsInfixAt bbuAsm 2184 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem pop_at : popAsm.IsInfixAt bbuAsm 1211 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem removeSurplus_at : removeSurplusAsm.IsInfixAt bbuAsm 1238 := by
+theorem pop_at : popAsm.IsInfixAt bbuAsm 1248 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem removeSurplus_at : removeSurplusAsm.IsInfixAt bbuAsm 1276 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem permuteAtLowestHeight_at : permuteAtLowestHeightAsm.IsInfixAt bbuAsm 1326 := by
+theorem permuteAtLowestHeight_at : permuteAtLowestHeightAsm.IsInfixAt bbuAsm 1366 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem map_at : mapAsm.IsInfixAt bbuAsm 843 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem closestCopy_at : closestCopyAsm.IsInfixAt bbuAsm 865 := by
+theorem map_at : mapAsm.IsInfixAt bbuAsm 870 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem closestCopy_at : closestCopyAsm.IsInfixAt bbuAsm 892 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem mapInPlace_at : mapInPlaceAsm.IsInfixAt bbuAsm 939 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem mapClosestCopies_at : mapClosestCopiesAsm.IsInfixAt bbuAsm 988 := by
+theorem mapInPlace_at : mapInPlaceAsm.IsInfixAt bbuAsm 966 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem mapClosestCopies_at : mapClosestCopiesAsm.IsInfixAt bbuAsm 1017 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem mapWildcardSlotCopies_at : mapWildcardSlotCopiesAsm.IsInfixAt bbuAsm 1030 := by
+theorem mapWildcardSlotCopies_at : mapWildcardSlotCopiesAsm.IsInfixAt bbuAsm 1061 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem keepWildcardSlots_at : keepWildcardSlotsAsm.IsInfixAt bbuAsm 1089 := by
+theorem keepWildcardSlots_at : keepWildcardSlotsAsm.IsInfixAt bbuAsm 1122 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem absorbSurplus_at : absorbSurplusAsm.IsInfixAt bbuAsm 1138 := by
+theorem absorbSurplus_at : absorbSurplusAsm.IsInfixAt bbuAsm 1173 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem isRetained_at : isRetainedAsm.IsInfixAt bbuAsm 1495 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem hasOtherRetainedCopy_at : hasOtherRetainedCopyAsm.IsInfixAt bbuAsm 1499 := by
+theorem isRetained_at : isRetainedAsm.IsInfixAt bbuAsm 1540 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem hasOtherRetainedCopy_at : hasOtherRetainedCopyAsm.IsInfixAt bbuAsm 1544 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem isDemanded_at : isDemandedAsm.IsInfixAt bbuAsm 1552 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem classify_at : classifyAsm.IsInfixAt bbuAsm 1578 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem resolve_at : resolveAsm.IsInfixAt bbuAsm 1714 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem isAvailable_at : isAvailableAsm.IsInfixAt bbuAsm 1387 := by
+theorem isDemanded_at : isDemandedAsm.IsInfixAt bbuAsm 1597 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem classify_at : classifyAsm.IsInfixAt bbuAsm 1623 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem resolve_at : resolveAsm.IsInfixAt bbuAsm 1759 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem isAvailable_at : isAvailableAsm.IsInfixAt bbuAsm 1431 := by
   rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem run_at : runAsm.IsInfixAt bbuAsm 1417 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem plannerRun_at : plannerRunAsm.IsInfixAt bbuAsm 1852 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
-theorem plan_at : planAsm.IsInfixAt bbuAsm 3437 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem run_at : runAsm.IsInfixAt bbuAsm 1461 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem plannerRun_at : plannerRunAsm.IsInfixAt bbuAsm 1897 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
+theorem plan_at : planAsm.IsInfixAt bbuAsm 3478 := by rw [bbuAsm_eq]; exact ⟨_, rfl⟩
 end
 
 section
@@ -101,6 +103,27 @@ end
 end Bbu
 
 namespace Bbu
+
+-- The external symbol has a different address from each shuffler label and call return.
+structure ExitBoundary [Host] : Prop where
+  labels : ∀ l ∈ Program.labels bbuAsm, label l ≠ label "exit"
+  returns : ∀ i asz osz f, Host.prog[i]? = some (.instr (.regular asz osz
+    (.call (.rel (.sub (.label f) .after_current_instruction))))) →
+    label "exit" ≠ Host.addrOf (i + 1)
+
+theorem ExitBoundary.outside [Host] (X : ExitBoundary) {p : Program} {o : Nat}
+    (hp : p.IsInfixAt bbuAsm o) : ∀ l ∈ Program.labels p, label l ≠ label "exit" := by
+  intro l hl
+  exact X.labels l (Program.mem_labels.mpr (hp.isInfix.subset (Program.mem_labels.mp hl)))
+
+theorem ExitBoundary.returnDistinct [Host] (X : ExitBoundary) (f : Label) :
+    ProofKit.ReturnAddressDistinct f "exit" :=
+  fun i asz osz hi => X.returns i asz osz f hi
+
+theorem ExitBoundary.head [Host] (X : ExitBoundary) {p : Program} {o : Nat}
+    (hp : p.IsInfixAt bbuAsm o) {l : Label} (hl : p[0]? = some (.label l)) :
+    label l ≠ label "exit" :=
+  X.outside hp l (Program.mem_labels.mpr (List.mem_of_getElem? hl))
 
 -- The position of the program in the host program.
 structure Linked [Host] where
@@ -221,6 +244,24 @@ theorem finish_decl : L.decls.at (label Names.permute)
     = some (L.frag finishAsm finish_at) := by at_tac h8
 theorem loop_decl :
     L.decls.at (label Names.buildBottomUp) = some (L.frag loopAsm loop_at) := by at_tac h9
+
+theorem exit_decl (X : ExitBoundary) : L.decls.at (label "exit") = none := by
+  obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9⟩ := L.heads
+  show List.find? _ [_, _, _, _, _, _, _, _, _] = none
+  apply List.find?_eq_none.mpr
+  intro f hf he
+  have ha : f.startAddr = label "exit" := beq_iff_eq.mp he
+  simp only [List.mem_cons, List.not_mem_nil, or_false] at hf
+  rcases hf with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+  · exact X.head isSpilled_at rfl (h1.1.symm.trans ha)
+  · exact X.head shallowestCopy_at rfl (h2.1.symm.trans ha)
+  · exact X.head swapWith_at rfl (h3.1.symm.trans ha)
+  · exact X.head push_at rfl (h4.1.symm.trans ha)
+  · exact X.head dup_at rfl (h5.1.symm.trans ha)
+  · exact X.head produce_at rfl (h6.1.symm.trans ha)
+  · exact X.head generate_at rfl (h7.1.symm.trans ha)
+  · exact X.head finish_at rfl (h8.1.symm.trans ha)
+  · exact X.head loop_at rfl (h9.1.symm.trans ha)
 
 end Linked
 

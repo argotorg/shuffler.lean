@@ -8,8 +8,8 @@ import all BbuKraken.Unit.Permute.MD
 /-!
 # `permute`: the blocks of phase D without stores
 
-`.LB.Emission.permute.13`, `.LB.Emission.permute.21`, `.LB.Emission.permute.14`,
-`.LB.Emission.permute.15`, `.LB.Emission.permute.16` and `.LB.Emission.permute.17`.
+`.LB.Emission.permute.12`, `.LB.Emission.permute.21`, `.LB.Emission.permute.13`,
+`.LB.Emission.permute.14`, `.LB.Emission.permute.15` and `.LB.Emission.permute.17`.
 -/
 
 open Std.WP Lean.Order
@@ -22,7 +22,7 @@ open Bbu.Sep
 namespace Permute
 
 theorem b_13 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.13" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.12" →
       Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -56,10 +56,10 @@ theorem b_21 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
   have hcx := hD.si
   have htl : t.regs.rsi.toBitVec < g.h.len := by rw [hD.si]; have := hD.pos; bv_omega
   have htM := lt_max hok htl
-  have haP : t.regs.r14.toBitVec + t.regs.rsi.toBitVec * 8#64
-      = rsi s + BitVec.ofNat 64 (8 * t.regs.rsi.toBitVec.toNat) := by rw [idx8, hD.r14]
+  have haP : t.regs.r15.toBitVec + t.regs.rsi.toBitVec * 8#64
+      = rsi s + BitVec.ofNat 64 (8 * t.regs.rsi.toBitVec.toNat) := by rw [idx8, hD.r15]
   have ePt : BitVec.ofInt 64
-      (Mem.loadInt t.dmem (t.regs.r14.toBitVec + t.regs.rsi.toBitVec * 8#64) 8).get!
+      (Mem.loadInt t.dmem (t.regs.r15.toBitVec + t.regs.rsi.toBitVec * 8#64) 8).get!
       = Flat.get p t.regs.rsi.toBitVec := by
     rw [rd_eq, hF.rdP htM haP, ← get_eq _ _ htM, hD.agP _ htl]
   obtain ⟨f', rfl⟩ := fuel_pos hD.bij hD.pos hmu
@@ -93,7 +93,7 @@ theorem b_21 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
     pd_dec
 
 theorem b_14 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.14" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.13" →
       Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -112,7 +112,7 @@ theorem b_14 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
     pd_dec
 
 theorem b_15 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.15" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.14" →
       Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -120,7 +120,7 @@ theorem b_15 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
   obtain ⟨g', L, p, f, c, hD, hperm, hmu, hnops, hpt, hdx, hc, hmb⟩ := ht
   have hF := hD.fm
   have hok := hpre.ok
-  have hsi := hD.r14
+  have hsi := hD.r15
   have h0 := hD.pos
   have hcl : c < g.h.len := by bv_omega
   have hcM : c ≠ 0#64 → (c - 1#64).toNat < MAX_N := fun h => lt_max hok (by bv_omega)
@@ -178,7 +178,7 @@ theorem b_15 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
       pd_dec
 
 theorem b_16 [Host] [FunDecls] (S g p0 F s ra) (_hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.16" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.15" →
       Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -187,13 +187,11 @@ theorem b_16 [Host] [FunDecls] (S g p0 F s ra) (_hpre : Sep.Pre S g (permW s ∗
   kvcgen64
   all_goals try symexec_norm
   case vc1 =>
-    cfg_goto
-    · exact Fm.stack (hF.next rfl rfl)
-    · simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
-      refine ⟨g', L, hF.next rfl rfl, hok, hk, ?_, ?_⟩
-      · dsimp only; rw [hp]
-      · dsimp only; rw [hp]; rfl
-    · pm_dec
+    simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
+    refine ⟨g', L, hF.next rfl rfl, hok, hk, ?_, ?_⟩
+    · dsimp only; rw [hp]
+    · dsimp only; rw [hp]; rfl
+  case vc2 => pm_dec
 
 theorem b_17 [Host] [FunDecls] (S g p0 F s ra) (_hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.17" →

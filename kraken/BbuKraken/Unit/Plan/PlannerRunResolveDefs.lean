@@ -133,5 +133,15 @@ theorem resolved_of_resolveQ {r r' : RG} {v : MachineData}
   have hd := congrArg RG.dropped hu.2
   exact Prod.ext hs (Prod.ext hsp.symm hd.symm)
 
+theorem resolved_of_resolveX {r r' : RG} {v : MachineData}
+    (hx : resolveX r r' t v) :
+    ∀ scratch : Flat.ResolveU, Flat.resolve r.p.fl r.spills r.dropped r.M
+      (rdx t) (rcx t) r.current (r9 t) scratch = (.assertionFailed, r'.spills, r'.dropped) := by
+  intro scratch
+  have h := hx scratch
+  have hsp := congrArg RG.spills h.2
+  have hd := congrArg RG.dropped h.2
+  exact Prod.ext h.1 (Prod.ext hsp.symm hd.symm)
+
 end
 end Bbu.Unit.PlannerRunU

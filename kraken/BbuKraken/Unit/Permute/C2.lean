@@ -8,9 +8,9 @@ import all BbuKraken.Unit.Permute.ML
 /-!
 # `permute`: the blocks of phase C (`placeGroup` and the `vacant` loop)
 
-`.LB.Emission.permute.10`, `.LB.Emission.permute.9`, `.LB.Emission.permute.4`,
-`.LB.Emission.permute.8`, `.LB.Emission.permute.7` and `.LB.Emission.permute.5`.
-The stores of `.LB.Emission.permute.10` and `.LB.Emission.permute.8` go through `Fm.storeP`.
+`.LB.Emission.permute.9`, `.LB.Emission.permute.8`, `.LB.Emission.permute.4`,
+`.LB.Emission.permute.7`, `.LB.Emission.permute.6` and `.LB.Emission.permute.5`.
+The stores of `.LB.Emission.permute.9` and `.LB.Emission.permute.7` go through `Fm.storeP`.
 -/
 
 open Std.WP Lean.Order
@@ -23,7 +23,7 @@ open Bbu.Sep
 namespace Permute
 
 theorem b_10 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.10" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.9" →
       Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -49,10 +49,10 @@ theorem b_10 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
   have eD : BitVec.ofInt 64 (Mem.loadInt t.dmem (base s + 16#64 + pos * 8#64) 8).get!
       = Flat.get dB pos := by
     rw [rd_eq, hF.rdD hpM haD, ← get_eq _ _ hpM, hD pos hposl]
-  have haP : t.regs.r14.toBitVec + pos * 8#64 = rsi s + BitVec.ofNat 64 (8 * pos.toNat) := by
-    rw [idx8, hC.r14]
+  have haP : t.regs.r15.toBitVec + pos * 8#64 = rsi s + BitVec.ofNat 64 (8 * pos.toNat) := by
+    rw [idx8, hC.r15]
   have hF1 : Fm S g F s ra { L with P := L.P.set pos.toNat pos hpM }
-      { t with dmem := Mem.storeInt t.dmem (t.regs.r14.toBitVec + pos * 8#64) 8 pos.toInt } :=
+      { t with dmem := Mem.storeInt t.dmem (t.regs.r15.toBitVec + pos * 8#64) 8 pos.toInt } :=
     hF.storeP hpM haP pos rfl rfl
   kvcgen64
   all_goals try symexec_norm
@@ -103,7 +103,7 @@ theorem b_10 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
     · pm_dec
 
 theorem b_9 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.9" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.8" →
       Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -117,11 +117,11 @@ theorem b_9 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F
   have hr := congrArg BitVec.toNat hcx
   kvcgen64
   all_goals try symexec_norm
-  all_goals try rw [hC.r15]
+  all_goals try rw [hC.r14]
   all_goals try rw [hcx]
   case vc1 =>
     rename_i hz
-    rw [hC.r15, hcx, beq_iff_eq, BitVec.zero_eq] at hz
+    rw [hC.r14, hcx, beq_iff_eq, BitVec.zero_eq] at hz
     have hnot : ¬(pos + 1#64 ≤ l) := by bv_omega
     cfg_goto
     · exact Fm.stack (hF.next rfl rfl)
@@ -132,14 +132,14 @@ theorem b_9 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F
       pm_dec
   case vc2 =>
     rename_i hz
-    rw [hC.r15, hcx, beq_eq_false_iff_ne, BitVec.zero_eq] at hz
+    rw [hC.r14, hcx, beq_eq_false_iff_ne, BitVec.zero_eq] at hz
     simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
     exact ⟨_, l, hl, dB, pos + 1#64, vac, pc,
       hG.step (hF.next rfl rfl) rfl rfl rfl rfl rfl rfl rfl rfl, by bv_omega, hvac,
       by show (1#64 + pos : Word) = pos + 1#64; bv_omega, hax, hrg, hP, hD, hlt⟩
   case vc3 =>
     rename_i hz
-    rw [hC.r15, hcx, beq_eq_false_iff_ne, BitVec.zero_eq] at hz
+    rw [hC.r14, hcx, beq_eq_false_iff_ne, BitVec.zero_eq] at hz
     have h1 : (1#64 + pos).toNat = pos.toNat + 1 := by bv_omega
     have h2 : pos.toNat < 1024 := by bv_omega
     pm_dec
@@ -182,7 +182,7 @@ theorem b_4 [Host] [FunDecls] (S g p0 F s ra) (_hpre : Sep.Pre S g (permW s ∗ 
   case vc4 => pm_dec
 
 theorem b_7 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.7" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.6" →
       Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -222,7 +222,7 @@ theorem b_7 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F
     pm_dec
 
 theorem b_8 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.8" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.7" →
       Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -249,10 +249,10 @@ theorem b_8 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F
   have eD : BitVec.ofInt 64 (Mem.loadInt t.dmem (base s + 16#64 + x * 8#64) 8).get!
       = Flat.get dB x := by
     rw [rd_eq, hF.rdD hxM haD, ← get_eq _ _ hxM, hD x hx]
-  have haP : t.regs.r14.toBitVec + pos * 8#64 = rsi s + BitVec.ofNat 64 (8 * pos.toNat) := by
-    rw [idx8, hC.r14]
+  have haP : t.regs.r15.toBitVec + pos * 8#64 = rsi s + BitVec.ofNat 64 (8 * pos.toNat) := by
+    rw [idx8, hC.r15]
   have hF1 : Fm S g F s ra { L with P := L.P.set pos.toNat x hpM }
-      { t with dmem := Mem.storeInt t.dmem (t.regs.r14.toBitVec + pos * 8#64) 8 x.toInt } :=
+      { t with dmem := Mem.storeInt t.dmem (t.regs.r15.toBitVec + pos * 8#64) 8 x.toInt } :=
     hF.storeP hpM haP x rfl rfl
   kvcgen64
   all_goals try symexec_norm
@@ -307,21 +307,35 @@ theorem b_8 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F
       ltB_put hlt pos hx⟩
   case vc9 => pm_dec
 
-theorem b_5 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
+theorem b_5 [Host] [FunDecls] (S g p0 F s ra)
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels finishAsm, label l ≠ label "exit")
+    (hpre : Sep.Pre S g (permW s ∗ F) (permuteA p0) 1034 s) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.5" →
       Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨L, hF, hp⟩ := ht
-  kvcgen64
-  all_goals try symexec_norm
-  case vc1 =>
-    simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
-    refine ⟨g, L, hF.next rfl rfl, hpre.ok, Keep.refl g, ?_, ?_⟩
-    · dsimp only; rw [hp]
-    · dsimp only; rw [hp]; rfl
-  case vc2 => pm_dec
+  have he := external_call_spec "exit" hexit
+  kvcgen64 [he]
+  all_goals symexec_norm
+  vc_by_shape
+  | load =>
+    rw [hF.sp]
+    exact isSome_of_eq L.w hF.mem (by unfold Loc; ecancel)
+  | jumpOut =>
+    rename_i exitra
+    refine Or.inr ⟨Or.inr ⟨rfl, rfl, ?_⟩, ?_⟩
+    · refine frame_post
+        (t := ({ t with regs := t.regs.set64 .rdi 1#64 }.pushRa exitra))
+        (L := { L with w := exitra.toBitVec }) (hF.pushExit exitra)
+        hpre.ok ?_
+      dsimp only [permuteX, ExitRes]
+      rw [hp]
+      exact ⟨Keep.refl g, rfl, rfl⟩
+    · intro l hl ha
+      exact False.elim (hout l hl ha)
 
 end Permute
 end Bbu.Unit

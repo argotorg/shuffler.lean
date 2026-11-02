@@ -32,10 +32,10 @@ theorem b_17 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     (hnext : ∀ sources u, rdx u = 1#64 + rdx t →
       SourcesHead P {g with sources := sources} M F s ra wanted u → al u = al t →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-        (label ".LB.Planner.run.17") u)
+        (label ".LB.Planner.run.18") u)
     (hdone : ∀ sources u, SourcesDone P {g with sources := sources} M F s ra u →
       sources = wanted → al u = al t → K () u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.17" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.18" →
       SourcesHead P g M F s ra wanted t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
@@ -79,7 +79,7 @@ theorem b_17 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   all_goals try simp only [sources_addr, hn] at ⊢
   vc_by_shape
   | load => run_loads [kp, kl, ks, kn]
-  | goto ".LB.Planner.run.17" =>
+  | goto ".LB.Planner.run.18" =>
     rename_i hb
     symexec_norm at hb
     simp only [planned_pos_addr, hr, hp, hbx] at hb

@@ -1,7 +1,7 @@
 module
 
-public import BbuKraken.Unit.Defs
-import all BbuKraken.Unit.Defs
+public import BbuKraken.Unit.StackCall
+import all BbuKraken.Unit.StackCall
 public import BbuKraken.Sep.Stores
 import all BbuKraken.Sep.Stores
 public import ProofKit.Cfg
@@ -11,33 +11,33 @@ import all ProofKit.Idioms
 
 @[expose] public section
 
-/-!
-# Lemmas for the `produce` unit proof
-
-`produce` pushes 6 registers and subtracts 8 from `rsp`: 8 free words. The word at `(%rsp)` (`k`)
-holds the result of `shallowestCopyPosition`. A callee gets the view, a stack with no free word
-(`y` is its return slot) and the frame `Fr` (`k`, the 6 pushed registers, the return address and
-`F`). `Bd` is the state between the pushes and the pops.
-
-The model part splits `Flat.produce` into the action (`act`) and the check after it (`fin`).
--/
-
+/-! The stack frame of `produce`: six saved registers, three local words,
+plus a return slot and two free words for its callees. -/
 namespace Bbu.Unit.ProduceProof
-
 open Bbu.Sep
 
-/-! ## The stack frame -/
+structure Scratch where
+  a : Word
+  b : Word
+  ret : Word
+  lo : Word
+  hi : Word
 
--- The 8 free words and the return slot as word atoms.
-theorem stk8 (sp : Addr) (x0 x1 x2 x3 x4 x5 x6 x7 v : Word) :
-    Stk sp [x0, x1, x2, x3, x4, x5, x6, x7] v
-      = Wd (sp - 72#64) x0 ∗ Wd (sp - 64#64) x1 ∗ Wd (sp - 56#64) x2 ∗ Wd (sp - 48#64) x3
-        ∗ Wd (sp - 40#64) x4 ∗ Wd (sp - 32#64) x5 ∗ Wd (sp - 24#64) x6 ∗ Wd (sp - 16#64) x7
+def saved (s : MachineData) (y : Scratch) (k : Word) : List Word :=
+  [y.a, y.b, y.ret, y.lo, k, y.hi, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec,
+    s.regs.r12.toBitVec, s.regs.r13.toBitVec, s.regs.r14.toBitVec, s.regs.r15.toBitVec]
+
+theorem stk12 (sp : Addr) (x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 v : Word) :
+    Stk sp [x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11] v
+      = Wd (sp - 104#64) x0 ∗ Wd (sp - 96#64) x1 ∗ Wd (sp - 88#64) x2 ∗ Wd (sp - 80#64) x3 ∗ Wd (sp - 72#64) x4 ∗ Wd (sp - 64#64) x5 ∗ Wd (sp - 56#64) x6 ∗ Wd (sp - 48#64) x7 ∗ Wd (sp - 40#64) x8 ∗ Wd (sp - 32#64) x9 ∗ Wd (sp - 24#64) x10 ∗ Wd (sp - 16#64) x11
         ∗ Wd (sp - 8#64) v := by
   unfold Stk
   simp only [Arr, List.length_cons, List.length_nil, MProp.sep_emp, MProp.sep_assoc]
-  rw [show sp - 8#64 - BitVec.ofNat 64 (8 * (0 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1)) = sp - 72#64 by
-        bv_omega,
+  rw [show sp - 8#64 - BitVec.ofNat 64 (8 * (0 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1 + 1)) = sp - 104#64 by bv_omega,
+    show sp - 104#64 + 8#64 = sp - 96#64 by bv_omega,
+    show sp - 96#64 + 8#64 = sp - 88#64 by bv_omega,
+    show sp - 88#64 + 8#64 = sp - 80#64 by bv_omega,
+    show sp - 80#64 + 8#64 = sp - 72#64 by bv_omega,
     show sp - 72#64 + 8#64 = sp - 64#64 by bv_omega,
     show sp - 64#64 + 8#64 = sp - 56#64 by bv_omega,
     show sp - 56#64 + 8#64 = sp - 48#64 by bv_omega,
@@ -46,26 +46,28 @@ theorem stk8 (sp : Addr) (x0 x1 x2 x3 x4 x5 x6 x7 v : Word) :
     show sp - 32#64 + 8#64 = sp - 24#64 by bv_omega,
     show sp - 24#64 + 8#64 = sp - 16#64 by bv_omega]
 
--- The stack of a callee: no free word, the return slot at `sp - 72`.
-theorem stk0 (sp q : Addr) (hq : q = sp - 64#64) (y : Word) : Stk q [] y = Wd (sp - 72#64) y := by
-  unfold Stk
-  simp only [Arr, MProp.emp_sep]
-  rw [show q - 8#64 = sp - 72#64 by subst hq; bv_omega]
-
--- The frame of the callees: `k` at `(%rsp)`, the pushed registers, the return address and `F`.
-def Fr (s : MachineData) (ra : Int64) (k : Word) (F : MProp 64) : MProp 64 :=
-  Wd (rsp s - 64#64) k ∗ Wd (rsp s - 56#64) s.regs.rbx.toBitVec
+def Fr (s : MachineData) (ra : Int64) (y : Scratch) (k : Word) (F : MProp 64) : MProp 64 :=
+  Wd (rsp s - 80#64) y.lo ∗ Wd (rsp s - 72#64) k ∗ Wd (rsp s - 64#64) y.hi
+    ∗ Wd (rsp s - 56#64) s.regs.rbx.toBitVec
     ∗ Wd (rsp s - 48#64) s.regs.rbp.toBitVec ∗ Wd (rsp s - 40#64) s.regs.r12.toBitVec
     ∗ Wd (rsp s - 32#64) s.regs.r13.toBitVec ∗ Wd (rsp s - 24#64) s.regs.r14.toBitVec
     ∗ Wd (rsp s - 16#64) s.regs.r15.toBitVec ∗ Wd (rsp s - 8#64) ra.toBitVec ∗ F
 
--- The memory of the body as the memory of the entry with the 8 free words.
-theorem frame_eq (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (y k : Word) :
-    View S g ∗ Stk (rsp s - 64#64) [] y ∗ Fr s ra k F
-      = View S g ∗ Stk (rsp s) [y, k, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec,
-          s.regs.r12.toBitVec, s.regs.r13.toBitVec, s.regs.r14.toBitVec, s.regs.r15.toBitVec]
-          ra.toBitVec ∗ F := by
-  rw [stk8, stk0 (rsp s) _ rfl]
+theorem stk2 (sp : Addr) (y : Scratch) :
+    Stk (sp - 80#64) [y.a, y.b] y.ret =
+      Wd (sp - 104#64) y.a ∗ Wd (sp - 96#64) y.b ∗ Wd (sp - 88#64) y.ret := by
+  unfold Stk
+  simp only [Arr, List.length_cons, List.length_nil, MProp.sep_emp, MProp.sep_assoc]
+  rw [show sp - 80#64 - 8#64 - BitVec.ofNat 64 (8 * (0 + 1 + 1)) = sp - 104#64 by bv_omega,
+    show sp - 104#64 + 8#64 = sp - 96#64 by bv_omega,
+    show sp - 80#64 - 8#64 = sp - 88#64 by bv_omega]
+
+theorem frame_eq (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
+    (y : Scratch) (k : Word) :
+    View S g ∗ Stk (rsp s - 80#64) [y.a, y.b] y.ret ∗ Fr s ra y k F =
+      View S g ∗ Stk (rsp s) (saved s y k) ra.toBitVec ∗ F := by
+  unfold saved
+  rw [stk12, stk2]
   unfold Fr
   ecancel
 
@@ -79,13 +81,18 @@ theorem st_at {P R : MProp 64} {m : Mem 64} (a : Addr) (v : Word) (h : P.get m)
     (e : P = Wd a v ∗ R) (w : Word) : (Wd a w ∗ R).get (m.storeInt a 8 w.toInt) :=
   Wd.store (e ▸ h) w
 
+theorem store_all {P P' R : MProp 64} {m : Mem 64} {a : Addr} {v : Word}
+    (h : P.get m) (e : P = Wd a v ∗ R) (w : Word) (e' : P' = Wd a w ∗ R) :
+    P'.get (m.storeInt a 8 w.toInt) :=
+  e'.symm ▸ Wd.store (e ▸ h) w
+
 section
 variable {S : Addr} {g : G} {F : MProp 64} {s : MachineData} {ra : Int64}
 
 -- The 6 `pushq` from the entry stack (`r` is `rsp` after the call): the loads before the stores,
 -- and the memory after them.
-theorem pushes {m : Mem 64} {x0 x1 x2 x3 x4 x5 x6 x7 : Word}
-    (hm : (View S g ∗ Stk (rsp s) [x0, x1, x2, x3, x4, x5, x6, x7] ra.toBitVec ∗ F).get m)
+theorem pushes {m : Mem 64} {x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 : Word}
+    (hm : (View S g ∗ Stk (rsp s) [x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11] ra.toBitVec ∗ F).get m)
     {r a b c d e f : Word} (hr : r = rsp s - 8#64) (ha : a = s.regs.r15.toBitVec)
     (hb : b = s.regs.r14.toBitVec) (hc : c = s.regs.r13.toBitVec) (hd : d = s.regs.r12.toBitVec)
     (he : e = s.regs.rbp.toBitVec) (hf : f = s.regs.rbx.toBitVec) :
@@ -102,40 +109,44 @@ theorem pushes {m : Mem 64} {x0 x1 x2 x3 x4 x5 x6 x7 : Word}
         (r - 8#64 - 8#64 - 8#64) 8 c.toInt).storeInt (r - 8#64 - 8#64 - 8#64 - 8#64) 8 d.toInt).storeInt
         (r - 8#64 - 8#64 - 8#64 - 8#64 - 8#64) 8 e.toInt).loadInt
         (r - 8#64 - 8#64 - 8#64 - 8#64 - 8#64 - 8#64) 8).isSome = true
-    ∧ (View S g ∗ Stk (rsp s - 64#64) [] x0 ∗ Fr s ra x1 F).get
+    ∧ (View S g ∗ Stk (rsp s - 80#64) [x0, x1] x2 ∗ Fr s ra ⟨x0, x1, x2, x3, x5⟩ x4 F).get
         ((((((m.storeInt (r - 8#64) 8 a.toInt).storeInt (r - 8#64 - 8#64) 8 b.toInt).storeInt
         (r - 8#64 - 8#64 - 8#64) 8 c.toInt).storeInt (r - 8#64 - 8#64 - 8#64 - 8#64) 8 d.toInt).storeInt
         (r - 8#64 - 8#64 - 8#64 - 8#64 - 8#64) 8 e.toInt).storeInt
         (r - 8#64 - 8#64 - 8#64 - 8#64 - 8#64 - 8#64) 8 f.toInt) := by
   subst hr ha hb hc hd he hf
-  rw [stk8] at hm
+  rw [stk12] at hm
   rw [show rsp s - 8#64 - 8#64 = rsp s - 16#64 by bv_omega,
     show rsp s - 16#64 - 8#64 = rsp s - 24#64 by bv_omega,
     show rsp s - 24#64 - 8#64 = rsp s - 32#64 by bv_omega,
     show rsp s - 32#64 - 8#64 = rsp s - 40#64 by bv_omega,
     show rsp s - 40#64 - 8#64 = rsp s - 48#64 by bv_omega,
     show rsp s - 48#64 - 8#64 = rsp s - 56#64 by bv_omega]
-  have h1 := st_at (rsp s - 16#64) x7 hm (by ecancel) s.regs.r15.toBitVec
-  have h2 := st_at (rsp s - 24#64) x6 h1 (by ecancel) s.regs.r14.toBitVec
-  have h3 := st_at (rsp s - 32#64) x5 h2 (by ecancel) s.regs.r13.toBitVec
-  have h4 := st_at (rsp s - 40#64) x4 h3 (by ecancel) s.regs.r12.toBitVec
-  have h5 := st_at (rsp s - 48#64) x3 h4 (by ecancel) s.regs.rbp.toBitVec
-  have h6 := st_at (rsp s - 56#64) x2 h5 (by ecancel) s.regs.rbx.toBitVec
-  refine ⟨isSome_at _ x7 hm (by ecancel), isSome_at _ x6 h1 (by ecancel),
-    isSome_at _ x5 h2 (by ecancel), isSome_at _ x4 h3 (by ecancel), isSome_at _ x3 h4 (by ecancel),
-    isSome_at _ x2 h5 (by ecancel), ?_⟩
-  rw [stk0 (rsp s) _ rfl]
+  have h1 := st_at (rsp s - 16#64) x11 hm (by ecancel) s.regs.r15.toBitVec
+  have h2 := st_at (rsp s - 24#64) x10 h1 (by ecancel) s.regs.r14.toBitVec
+  have h3 := st_at (rsp s - 32#64) x9 h2 (by ecancel) s.regs.r13.toBitVec
+  have h4 := st_at (rsp s - 40#64) x8 h3 (by ecancel) s.regs.r12.toBitVec
+  have h5 := st_at (rsp s - 48#64) x7 h4 (by ecancel) s.regs.rbp.toBitVec
+  have h6 := st_at (rsp s - 56#64) x6 h5 (by ecancel) s.regs.rbx.toBitVec
+  refine ⟨isSome_at _ x11 hm (by ecancel), isSome_at _ x10 h1 (by ecancel),
+    isSome_at _ x9 h2 (by ecancel), isSome_at _ x8 h3 (by ecancel), isSome_at _ x7 h4 (by ecancel),
+    isSome_at _ x6 h5 (by ecancel), ?_⟩
+  rw [stk2 (rsp s) ⟨x0, x1, x2, x3, x5⟩]
   unfold Fr
-  have e : Wd (rsp s - 56#64) s.regs.rbx.toBitVec ∗ Wd (rsp s - 48#64) s.regs.rbp.toBitVec
+  simp only [MProp.sep_assoc]
+  have he : Wd (rsp s - 56#64) s.regs.rbx.toBitVec ∗ Wd (rsp s - 48#64) s.regs.rbp.toBitVec
       ∗ Wd (rsp s - 40#64) s.regs.r12.toBitVec ∗ Wd (rsp s - 32#64) s.regs.r13.toBitVec
       ∗ Wd (rsp s - 24#64) s.regs.r14.toBitVec ∗ Wd (rsp s - 16#64) s.regs.r15.toBitVec
-      ∗ View S g ∗ Wd (rsp s - 72#64) x0 ∗ Wd (rsp s - 64#64) x1 ∗ Wd (rsp s - 8#64) ra.toBitVec ∗ F
-      = View S g ∗ Wd (rsp s - 72#64) x0 ∗ Wd (rsp s - 64#64) x1
-        ∗ Wd (rsp s - 56#64) s.regs.rbx.toBitVec ∗ Wd (rsp s - 48#64) s.regs.rbp.toBitVec
-        ∗ Wd (rsp s - 40#64) s.regs.r12.toBitVec ∗ Wd (rsp s - 32#64) s.regs.r13.toBitVec
-        ∗ Wd (rsp s - 24#64) s.regs.r14.toBitVec ∗ Wd (rsp s - 16#64) s.regs.r15.toBitVec
-        ∗ Wd (rsp s - 8#64) ra.toBitVec ∗ F := by ecancel
-  exact e ▸ h6
+      ∗ View S g ∗ Wd (rsp s - 104#64) x0 ∗ Wd (rsp s - 96#64) x1
+      ∗ Wd (rsp s - 88#64) x2 ∗ Wd (rsp s - 80#64) x3 ∗ Wd (rsp s - 72#64) x4
+      ∗ Wd (rsp s - 64#64) x5 ∗ Wd (rsp s - 8#64) ra.toBitVec ∗ F =
+      View S g ∗ Wd (rsp s - 104#64) x0 ∗ Wd (rsp s - 96#64) x1
+      ∗ Wd (rsp s - 88#64) x2 ∗ Wd (rsp s - 80#64) x3 ∗ Wd (rsp s - 72#64) x4
+      ∗ Wd (rsp s - 64#64) x5 ∗ Wd (rsp s - 56#64) s.regs.rbx.toBitVec
+      ∗ Wd (rsp s - 48#64) s.regs.rbp.toBitVec ∗ Wd (rsp s - 40#64) s.regs.r12.toBitVec
+      ∗ Wd (rsp s - 32#64) s.regs.r13.toBitVec ∗ Wd (rsp s - 24#64) s.regs.r14.toBitVec
+      ∗ Wd (rsp s - 16#64) s.regs.r15.toBitVec ∗ Wd (rsp s - 8#64) ra.toBitVec ∗ F := by ecancel
+  exact he ▸ h6
 
 end
 
@@ -144,16 +155,16 @@ end
 -- A state between the pushes and the pops: `rbx` is the struct, `rbp` is the slot word `w`,
 -- `r12` is the argument `T`, `r14` is `8 T`, and the low bytes of `r13` and `r15` are the kind
 -- and the value opcode of `w`. The stack holds the return slot `y` of a callee and `Fr` with `k`.
-structure Bd (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (w y k : Word)
+structure Bd (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) (w : Word) (y : Scratch) (k : Word)
     (t : MachineData) : Prop where
-  mem : (View S g ∗ Stk (rsp s - 64#64) [] y ∗ Fr s ra k F).get t.dmem
-  sp : t.regs.rsp.toBitVec = rsp s - 64#64
+  mem : (View S g ∗ Stk (rsp s - 80#64) [y.a, y.b] y.ret ∗ Fr s ra y k F).get t.dmem
+  sp : t.regs.rsp.toBitVec = rsp s - 80#64
   bx : t.regs.rbx.toBitVec = S
   bp : t.regs.rbp.toBitVec = w
   r12 : t.regs.r12.toBitVec = s.regs.rsi.toBitVec
-  r13 : t.regs.r13.toBitVec.extractLsb' 0 8 = w.extractLsb' 32 8
+  kind : t.regs.r15.toBitVec.extractLsb' 0 8 = w.extractLsb' 32 8
   r14 : t.regs.r14.toBitVec = s.regs.rsi.toBitVec * 8#64
-  r15 : t.regs.r15.toBitVec.extractLsb' 0 8 = w.extractLsb' 40 8
+  opcode : t.regs.r13.toBitVec.extractLsb' 0 8 = w.extractLsb' 40 8
 
 -- `movzbl` and `movb`: the low byte of a byte that is zero-extended.
 theorem byte_zext (b : BitVec 8) : (BitVec.setWidth 64 (BitVec.setWidth 32 b)).extractLsb' 0 8 = b := by
@@ -166,7 +177,7 @@ theorem pack (w : Word) :
   bv_decide
 
 section
-variable {S : Addr} {g : G} {F : MProp 64} {s : MachineData} {ra : Int64} {w y k : Word}
+variable {S : Addr} {g : G} {F : MProp 64} {s : MachineData} {ra : Int64} {w k : Word} {y : Scratch}
 
 -- The loads of the slot word `T` of the target, from the struct at `d`.
 theorem tgt_loads {m : Mem 64} {R : MProp 64} (hm : (View S g ∗ R).get m) {d T : Word} (hd : d = S)
@@ -197,10 +208,10 @@ theorem tgt_isSome {m : Mem 64} {R : MProp 64} (hm : (View S g ∗ R).get m) {d 
 
 -- The state at the call of `shallowestCopyPosition`, in the form of the asm (`r` is `rsp` after
 -- the call of `produce`, `d` is `rdi`, `T` is `rsi`).
-theorem Bd.entry {c : MachineData} {x0 x1 r d T : Word}
-    (hm : (View S g ∗ Stk (rsp s - 64#64) [] x0 ∗ Fr s ra x1 F).get c.dmem)
+theorem Bd.entry {c : MachineData} {r d T k : Word} {y : Scratch}
+    (hm : (View S g ∗ Stk (rsp s - 80#64) [y.a, y.b] y.ret ∗ Fr s ra y k F).get c.dmem)
     (hT : T.toNat < g.h.n.toNat) (hd : d = S) (hTs : T = s.regs.rsi.toBitVec) (hr : r = rsp s - 8#64)
-    (hsp : c.regs.rsp.toBitVec = r - 8#64 - 8#64 - 8#64 - 8#64 - 8#64 - 8#64 - 8#64)
+    (hsp : c.regs.rsp.toBitVec = r - 8#64 - 8#64 - 8#64 - 8#64 - 8#64 - 8#64 - 24#64)
     (hbx : c.regs.rbx.toBitVec = d)
     (hbp : c.regs.rbp.toBitVec = 18446463698244468735#64 &&& BitVec.ofInt 64
         (c.dmem.loadInt (BitVec.ofInt 64 (c.dmem.loadInt d 8).get! + T * 8#64) 8).get!
@@ -208,12 +219,12 @@ theorem Bd.entry {c : MachineData} {x0 x1 r d T : Word}
         (BitVec.setWidth 32 (BitVec.ofInt 8 (c.dmem.loadInt
           (BitVec.ofInt 64 (c.dmem.loadInt d 8).get! + T * 8#64 + 5#64) 1).get!)))))).shiftLeft 40)
     (h12 : c.regs.r12.toBitVec = T)
-    (h13 : c.regs.r13.toBitVec = BitVec.setWidth 64 (BitVec.setWidth 32 (BitVec.ofInt 8
+    (h13 : c.regs.r15.toBitVec = BitVec.setWidth 64 (BitVec.setWidth 32 (BitVec.ofInt 8
       (c.dmem.loadInt (BitVec.ofInt 64 (c.dmem.loadInt d 8).get! + T * 8#64 + 4#64) 1).get!)))
     (h14 : c.regs.r14.toBitVec = T * 8#64)
-    (h15 : c.regs.r15.toBitVec = BitVec.setWidth 64 (BitVec.setWidth 32 (BitVec.ofInt 8
+    (h15 : c.regs.r13.toBitVec = BitVec.setWidth 64 (BitVec.setWidth 32 (BitVec.ofInt 8
       (c.dmem.loadInt (BitVec.ofInt 64 (c.dmem.loadInt d 8).get! + T * 8#64 + 5#64) 1).get!)))
-    (hw : g.tgt[T.toNat] = w) : Bd S g F s ra w x0 x1 c := by
+    (hw : g.tgt[T.toNat] = w) : Bd S g F s ra w y k c := by
   subst hw
   obtain ⟨e0, e1, e4, e5⟩ := tgt_loads hm hd hT
   rw [e0, fold_slot] at hbp h13 h15
@@ -224,47 +235,81 @@ theorem Bd.entry {c : MachineData} {x0 x1 r d T : Word}
   · rw [h13]; exact byte_zext _
   · rw [h15]; exact byte_zext _
 
--- The precondition of a callee with no free word.
-theorem Bd.pre {A : G → MachineData → Prop} {c : MachineData} (h : Bd S g F s ra w y k c)
-    (hdi : rdi c = S) (hok : g.Ok) (hA : A g c) : Sep.Pre S g (Fr s ra k F) A 0 c :=
-  ⟨hdi, hok, ⟨[], y, rfl, by simpa only [rsp, Reg64s.get64_rsp, h.sp] using h.mem⟩, hA⟩
 
--- After a callee with no free word.
-theorem Bd.agree {c t : MachineData} {g' : G} {fr' : List Word} {y' : Word}
-    (h : Bd S g F s ra w y k c) (hag : Sep.mod.Agree c t) (hl : fr'.length = 0)
-    (hm : (View S g' ∗ Stk (rsp c) fr' y' ∗ Fr s ra k F).get t.dmem) : Bd S g' F s ra w y' k t := by
-  obtain rfl := List.eq_nil_of_length_eq_zero hl
+theorem Bd.pre {A : G → MachineData → Prop} {c : MachineData} (h : Bd S g F s ra w y k c)
+    (hdi : rdi c = S) (hok : g.Ok) (hA : A g c) : Sep.Pre S g (Fr s ra y k F) A 2 c :=
+  ⟨hdi, hok, ⟨[y.a, y.b], y.ret, rfl,
+    by simpa only [rsp, Reg64s.get64_rsp, h.sp] using h.mem⟩, hA⟩
+
+theorem Bd.agree {c t : MachineData} {g' : G} {fr' : List Word} {v' : Word}
+    (h : Bd S g F s ra w y k c) (hag : Sep.mod.Agree c t) (hl : fr'.length = 2)
+    (hm : (View S g' ∗ Stk (rsp c) fr' v' ∗ Fr s ra y k F).get t.dmem) :
+    ∃ y', Bd S g' F s ra w y' k t := by
+  obtain ⟨a, b, rfl⟩ : ∃ a b, fr' = [a, b] := by
+    match fr', hl with
+    | [a, b], _ => exact ⟨a, b, rfl⟩
+  refine ⟨{y with a := a, b := b, ret := v'}, ?_⟩
   exact {
-    mem := by simpa only [rsp, Reg64s.get64_rsp, h.sp] using hm
+    mem := by simpa only [rsp, Reg64s.get64_rsp, h.sp, Fr] using hm
     sp := by rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rsp]; exact h.sp
     bx := by rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rbx]; exact h.bx
     bp := by rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rbp]; exact h.bp
     r12 := by rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r12]; exact h.r12
-    r13 := by rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r13]; exact h.r13
+    kind := by rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r15]; exact h.kind
     r14 := by rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r14]; exact h.r14
-    r15 := by rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r15]; exact h.r15 }
+    opcode := by rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r13]; exact h.opcode }
 
--- The call rule of a callee with no free word, from a `Bd` state. `hK` also gets the state `c`
--- of the call: the post of the callee reads its argument registers.
 theorem Bd.call {A : G → MachineData → Prop} {Q : G → G → MachineData → MachineData → Prop}
     {c : MachineData} {K : MachineData → Prop} (h : Bd S g F s ra w y k c) (hdi : rdi c = S)
     (hok : g.Ok) (hA : A g c)
     (hK : Bd S g F s ra w y k c → ∀ t g' y', Bd S g' F s ra w y' k t → Q g g' c t → g'.Ok → K t) :
-    ∃ S' g' F', Sep.Pre S' g' F' A 0 c
-      ∧ ∀ s', Sep.Post S' F' 0 (fun g'' t => Q g' g'' c t) c s' → Sep.mod.Agree c s' → K s' :=
-  ⟨S, g, _, h.pre hdi hok hA, fun s' ⟨g', _, v', hQ, hok', hl, hm⟩ hag =>
-    hK h s' g' v' (h.agree hag hl hm) hQ hok'⟩
+    ∃ S' g' F', Sep.Pre S' g' F' A 2 c
+      ∧ ∀ t, Sep.Post S' F' 2 (fun g'' t => Q g' g'' c t) c t → Sep.mod.Agree c t → K t := by
+  refine ⟨S, g, _, h.pre hdi hok hA, ?_⟩
+  intro t ⟨g', fr', v', hQ, hok', hl, hm⟩ hag
+  obtain ⟨y', hbd⟩ := h.agree hag hl hm
+  exact hK h t g' y' hbd hQ hok'
+
+theorem Bd.post {Q : G → MachineData → Prop} {c t : MachineData}
+    (h : Bd S g F s ra w y k c)
+    (hp : Sep.Post S (Fr s ra y k F) 2 Q c t) : Sep.Post S F 12 Q s t := by
+  obtain ⟨g', fr', v', hQ, hok', hl, hm⟩ := hp
+  obtain ⟨a, b, rfl⟩ : ∃ a b, fr' = [a, b] := by
+    match fr', hl with
+    | [a, b], _ => exact ⟨a, b, rfl⟩
+  refine ⟨g', saved s {y with a := a, b := b, ret := v'} k, ra.toBitVec, hQ, hok', rfl, ?_⟩
+  rw [← frame_eq]
+  simpa only [rsp, Reg64s.get64_rsp, h.sp, Fr] using hm
+
+theorem Bd.callX [Host] {A : G → MachineData → Prop}
+    {Q X : G → G → MachineData → MachineData → Prop}
+    {c : MachineData} {K : MachineData → Prop} {E : Int64 → MachineData → Prop}
+    (h : Bd S g F s ra w y k c) (hdi : rdi c = S) (hok : g.Ok) (hA : A g c)
+    (hK : Bd S g F s ra w y k c → ∀ t g' y', Bd S g' F s ra w y' k t → Q g g' c t → g'.Ok → K t)
+    (hX : ∀ t, Sep.Post S F 12 (fun g' t => X g g' c t) s t →
+      t.regs.get64 .rdi = 1#64 → E (label "exit") t) :
+    ∃ S' g' F', Sep.Pre S' g' F' A 2 c
+      ∧ (∀ t, Sep.Post S' F' 2 (fun g'' t => Q g' g'' c t) c t → Sep.mod.Agree c t → K t)
+      ∧ (∀ t, Sep.Post S' F' 2 (fun g'' t => X g' g'' c t) c t →
+        t.regs.get64 .rdi = 1#64 → E (label "exit") t) := by
+  refine ⟨S, g, _, h.pre hdi hok hA, ?_, ?_⟩
+  · intro t hp hag
+    obtain ⟨g', fr', v', hQ, hok', hl, hm⟩ := hp
+    obtain ⟨y', hbd⟩ := h.agree hag hl hm
+    exact hK h t g' y' hbd hQ hok'
+  · intro t hp harg
+    exact hX t (h.post hp) harg
 
 -- A step that keeps the stack registers: the struct is now `g'` and `(%rsp)` holds `k'`.
 theorem Bd.step {t P : MachineData} {g' : G} {k' : Word} (h : Bd S g F s ra w y k t)
-    (hm : (View S g' ∗ Stk (rsp s - 64#64) [] y ∗ Fr s ra k' F).get P.dmem)
+    (hm : (View S g' ∗ Stk (rsp s - 80#64) [y.a, y.b] y.ret ∗ Fr s ra y k' F).get P.dmem)
     (hsp : P.regs.rsp = t.regs.rsp) (hbx : P.regs.rbx = t.regs.rbx)
     (hbp : P.regs.rbp = t.regs.rbp) (h12 : P.regs.r12 = t.regs.r12)
     (h13 : P.regs.r13 = t.regs.r13) (h14 : P.regs.r14 = t.regs.r14)
     (h15 : P.regs.r15 = t.regs.r15) : Bd S g' F s ra w y k' P :=
   ⟨hm, by rw [hsp]; exact h.sp, by rw [hbx]; exact h.bx, by rw [hbp]; exact h.bp,
-    by rw [h12]; exact h.r12, by rw [h13]; exact h.r13, by rw [h14]; exact h.r14,
-    by rw [h15]; exact h.r15⟩
+    by rw [h12]; exact h.r12, by rw [h15]; exact h.kind, by rw [h14]; exact h.r14,
+    by rw [h13]; exact h.opcode⟩
 
 -- A step that keeps the memory and the stack registers.
 theorem Bd.next {t P : MachineData} (h : Bd S g F s ra w y k t) (hm : P.dmem = t.dmem)
@@ -282,50 +327,56 @@ theorem Bd.stack {t : MachineData} (h : Bd S g F s ra w y k t) : t.StackAtOrBelo
 
 -- `(%rsp)`: the word `k`.
 theorem Bd.rd_k {t : MachineData} (h : Bd S g F s ra w y k t) :
-    BitVec.ofInt 64 (t.dmem.loadInt t.regs.rsp.toBitVec 8).get! = k := by
-  rw [h.sp]; exact rd_of_eq h.mem (by unfold Fr; ecancel)
+    BitVec.ofInt 64 (t.dmem.loadInt (t.regs.rsp.toBitVec + 8#64) 8).get! = k := by
+  rw [h.sp, show rsp s - 80#64 + 8#64 = rsp s - 72#64 by bv_omega]; exact rd_of_eq h.mem (by unfold Fr; ecancel)
 
 theorem Bd.isSome_k {t : MachineData} (h : Bd S g F s ra w y k t) :
-    (t.dmem.loadInt t.regs.rsp.toBitVec 8).isSome = true := by
-  rw [h.sp]; exact isSome_of_eq k h.mem (by unfold Fr; ecancel)
+    (t.dmem.loadInt (t.regs.rsp.toBitVec + 8#64) 8).isSome = true := by
+  rw [h.sp, show rsp s - 80#64 + 8#64 = rsp s - 72#64 by bv_omega]; exact isSome_of_eq k h.mem (by unfold Fr; ecancel)
 
 -- `movq %rax, (%rsp)`: the memory with `k'` at `(%rsp)`.
 theorem Bd.mem_k {t : MachineData} (h : Bd S g F s ra w y k t) (k' : Word) :
-    (View S g ∗ Stk (rsp s - 64#64) [] y ∗ Fr s ra k' F).get
-      (t.dmem.storeInt t.regs.rsp.toBitVec 8 k'.toInt) := by
-  rw [h.sp]
-  have e (x : Word) : View S g ∗ Stk (rsp s - 64#64) [] y ∗ Fr s ra x F
-      = Wd (rsp s - 64#64) x ∗ (View S g ∗ Stk (rsp s - 64#64) [] y
-        ∗ Wd (rsp s - 56#64) s.regs.rbx.toBitVec ∗ Wd (rsp s - 48#64) s.regs.rbp.toBitVec
-        ∗ Wd (rsp s - 40#64) s.regs.r12.toBitVec ∗ Wd (rsp s - 32#64) s.regs.r13.toBitVec
-        ∗ Wd (rsp s - 24#64) s.regs.r14.toBitVec ∗ Wd (rsp s - 16#64) s.regs.r15.toBitVec
-        ∗ Wd (rsp s - 8#64) ra.toBitVec ∗ F) := by unfold Fr; ecancel
-  exact (e k').symm ▸ Wd.store (e k ▸ h.mem) k'
+    (View S g ∗ Stk (rsp s - 80#64) [y.a, y.b] y.ret ∗ Fr s ra y k' F).get
+      (t.dmem.storeInt (t.regs.rsp.toBitVec + 8#64) 8 k'.toInt) := by
+  rw [h.sp, show rsp s - 80#64 + 8#64 = rsp s - 72#64 by bv_omega]
+  exact store_all h.mem (by unfold Fr; ecancel) k' (by unfold Fr; ecancel)
+
+theorem Bd.isSome_exit {t : MachineData} (h : Bd S g F s ra w y k t) :
+    (t.dmem.loadInt (t.regs.rsp.toBitVec - 8#64) 8).isSome = true := by
+  rw [h.sp, show rsp s - 80#64 - 8#64 = rsp s - 88#64 by bv_omega]
+  exact isSome_of_eq y.ret h.mem (by rw [stk2]; ecancel)
+
+theorem Bd.mem_exit {t : MachineData} (h : Bd S g F s ra w y k t) (exitra : Int64) :
+    (View S g ∗ Stk (rsp s) (saved s {y with ret := exitra.toBitVec} k) ra.toBitVec ∗ F).get
+      (t.dmem.storeInt (t.regs.rsp.toBitVec - 8#64) 8 exitra.toBitVec.toInt) := by
+  rw [← frame_eq, h.sp, show rsp s - 80#64 - 8#64 = rsp s - 88#64 by bv_omega]
+  exact store_all h.mem (by rw [stk2]; ecancel) exitra.toBitVec
+    (by rw [stk2]; unfold Fr; ecancel)
 
 end
 
 /-! ## The stack words of the body -/
 
 section
-variable {S : Addr} {g : G} {F : MProp 64} {s : MachineData} {ra : Int64} {w y k : Word}
+variable {S : Addr} {g : G} {F : MProp 64} {s : MachineData} {ra : Int64} {w k : Word} {y : Scratch}
 
 -- `movq (%rsp), …` after `movq x, (%rsp)`.
 theorem Bd.rd_st {t : MachineData} (h : Bd S g F s ra w y k t) (x : Word) :
-    BitVec.ofInt 64 ((t.dmem.storeInt t.regs.rsp.toBitVec 8 x.toInt).loadInt t.regs.rsp.toBitVec 8).get!
+    BitVec.ofInt 64 ((t.dmem.storeInt (t.regs.rsp.toBitVec + 8#64) 8 x.toInt).loadInt (t.regs.rsp.toBitVec + 8#64) 8).get!
       = x := by
   have hm := h.mem_k x
-  rw [h.sp] at hm ⊢
+  rw [h.sp, show rsp s - 80#64 + 8#64 = rsp s - 72#64 by bv_omega] at hm ⊢
   exact rd_of_eq hm (by unfold Fr; ecancel)
 
 theorem Bd.isSome_st {t : MachineData} (h : Bd S g F s ra w y k t) (x : Word) :
-    ((t.dmem.storeInt t.regs.rsp.toBitVec 8 x.toInt).loadInt t.regs.rsp.toBitVec 8).isSome = true := by
+    ((t.dmem.storeInt (t.regs.rsp.toBitVec + 8#64) 8 x.toInt).loadInt (t.regs.rsp.toBitVec + 8#64) 8).isSome = true := by
   have hm := h.mem_k x
-  rw [h.sp] at hm ⊢
+  rw [h.sp, show rsp s - 80#64 + 8#64 = rsp s - 72#64 by bv_omega] at hm ⊢
   exact isSome_of_eq x hm (by unfold Fr; ecancel)
 
 -- `movq x, (%rsp)` with `x = k'`.
 theorem Bd.store_k {t P : MachineData} {x k' : Word} (h : Bd S g F s ra w y k t) (hx : x = k')
-    (hm : P.dmem = t.dmem.storeInt t.regs.rsp.toBitVec 8 x.toInt)
+    (hm : P.dmem = t.dmem.storeInt (t.regs.rsp.toBitVec + 8#64) 8 x.toInt)
     (hsp : P.regs.rsp = t.regs.rsp) (hbx : P.regs.rbx = t.regs.rbx)
     (hbp : P.regs.rbp = t.regs.rbp) (h12 : P.regs.r12 = t.regs.r12)
     (h13 : P.regs.r13 = t.regs.r13) (h14 : P.regs.r14 = t.regs.r14)
@@ -335,15 +386,15 @@ theorem Bd.store_k {t P : MachineData} {x k' : Word} (h : Bd S g F s ra w y k t)
 
 -- The 6 `popq` read the words of `Fr` above `(%rsp)`.
 theorem Bd.isSome_pops {t : MachineData} (h : Bd S g F s ra w y k t) :
-    (t.dmem.loadInt (8#64 + t.regs.rsp.toBitVec) 8).isSome = true
-    ∧ (t.dmem.loadInt (8#64 + t.regs.rsp.toBitVec + 8#64) 8).isSome = true
-    ∧ (t.dmem.loadInt (8#64 + t.regs.rsp.toBitVec + 8#64 + 8#64) 8).isSome = true
-    ∧ (t.dmem.loadInt (8#64 + t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64) 8).isSome = true
-    ∧ (t.dmem.loadInt (8#64 + t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64 + 8#64) 8).isSome = true
-    ∧ (t.dmem.loadInt (8#64 + t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64 + 8#64 + 8#64) 8).isSome
+    (t.dmem.loadInt (24#64 + t.regs.rsp.toBitVec) 8).isSome = true
+    ∧ (t.dmem.loadInt (24#64 + t.regs.rsp.toBitVec + 8#64) 8).isSome = true
+    ∧ (t.dmem.loadInt (24#64 + t.regs.rsp.toBitVec + 8#64 + 8#64) 8).isSome = true
+    ∧ (t.dmem.loadInt (24#64 + t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64) 8).isSome = true
+    ∧ (t.dmem.loadInt (24#64 + t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64 + 8#64) 8).isSome = true
+    ∧ (t.dmem.loadInt (24#64 + t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64 + 8#64 + 8#64) 8).isSome
       = true := by
   have hm := h.mem
-  rw [h.sp, show 8#64 + (rsp s - 64#64) = rsp s - 56#64 by bv_omega,
+  rw [h.sp, show 24#64 + (rsp s - 80#64) = rsp s - 56#64 by bv_omega,
     show rsp s - 56#64 + 8#64 = rsp s - 48#64 by bv_omega,
     show rsp s - 48#64 + 8#64 = rsp s - 40#64 by bv_omega,
     show rsp s - 40#64 + 8#64 = rsp s - 32#64 by bv_omega,
@@ -356,19 +407,18 @@ theorem Bd.isSome_pops {t : MachineData} (h : Bd S g F s ra w y k t) :
 -- `addq $8, %rsp` and the 6 `popq`: the state `P` before the `ret` is a `Kp` state.
 theorem Bd.pop {t P : MachineData} (h : Bd S g F s ra w y k t) (hm : P.dmem = t.dmem)
     (hsp : P.regs.rsp.toBitVec
-      = 8#64 + t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64 + 8#64 + 8#64 + 8#64)
-    (hbx : P.regs.rbx.toBitVec = rd t.dmem (8#64 + t.regs.rsp.toBitVec))
-    (hbp : P.regs.rbp.toBitVec = rd t.dmem (8#64 + t.regs.rsp.toBitVec + 8#64))
-    (h12 : P.regs.r12.toBitVec = rd t.dmem (8#64 + t.regs.rsp.toBitVec + 8#64 + 8#64))
-    (h13 : P.regs.r13.toBitVec = rd t.dmem (8#64 + t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64))
+      = 24#64 + t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64 + 8#64 + 8#64 + 8#64)
+    (hbx : P.regs.rbx.toBitVec = rd t.dmem (24#64 + t.regs.rsp.toBitVec))
+    (hbp : P.regs.rbp.toBitVec = rd t.dmem (24#64 + t.regs.rsp.toBitVec + 8#64))
+    (h12 : P.regs.r12.toBitVec = rd t.dmem (24#64 + t.regs.rsp.toBitVec + 8#64 + 8#64))
+    (h13 : P.regs.r13.toBitVec = rd t.dmem (24#64 + t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64))
     (h14 : P.regs.r14.toBitVec
-      = rd t.dmem (8#64 + t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64 + 8#64))
+      = rd t.dmem (24#64 + t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64 + 8#64))
     (h15 : P.regs.r15.toBitVec
-      = rd t.dmem (8#64 + t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64 + 8#64 + 8#64)) :
-    Kp S g F s ra [y, k, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec, s.regs.r12.toBitVec,
-      s.regs.r13.toBitVec, s.regs.r14.toBitVec, s.regs.r15.toBitVec] P := by
+      = rd t.dmem (24#64 + t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64 + 8#64 + 8#64)) :
+    Kp S g F s ra (saved s y k) P := by
   have hmem := h.mem
-  have a1 : 8#64 + (rsp s - 64#64) = rsp s - 56#64 := by bv_omega
+  have a1 : 24#64 + (rsp s - 80#64) = rsp s - 56#64 := by bv_omega
   have a2 : rsp s - 56#64 + 8#64 = rsp s - 48#64 := by bv_omega
   have a3 : rsp s - 48#64 + 8#64 = rsp s - 40#64 := by bv_omega
   have a4 : rsp s - 40#64 + 8#64 = rsp s - 32#64 := by bv_omega
@@ -390,10 +440,12 @@ theorem Bd.pop {t P : MachineData} (h : Bd S g F s ra w y k t) (hm : P.dmem = t.
 
 end
 
-theorem split8 {fr : List Word} (h : fr.length = 8) :
-    ∃ x0 x1 x2 x3 x4 x5 x6 x7, fr = [x0, x1, x2, x3, x4, x5, x6, x7] :=
+theorem split12 {fr : List Word} (h : fr.length = 12) :
+    ∃ x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11,
+      fr = [x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11] :=
   match fr, h with
-  | [x0, x1, x2, x3, x4, x5, x6, x7], _ => ⟨x0, x1, x2, x3, x4, x5, x6, x7, rfl⟩
+  | [x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11], _ =>
+    ⟨x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, rfl⟩
 
 /-! ## The flat model of `produce` -/
 
@@ -741,6 +793,14 @@ theorem prodQ {g g1 : G} {s t : MachineData} {r : Flat.Status × Flat.St} (hK : 
     produceQ g g1 s t := by
   simp only [produceQ, Res, rsi, Reg64s.get64_rsi, hP]
   exact ⟨hK, hf, ha⟩
+
+theorem prodX_of {g g1 : G} {s t : MachineData} {f : Flat.St → Flat.Status × Flat.St}
+    (hP : Flat.produce (flat g) (rsi s) = fin (f (flat g)) (rsi s))
+    (hX : ExitRes f g g1) : produceX g g1 s t := by
+  have hn : (f (flat g)).1 ≠ .done := by rw [hX.2.2]; decide
+  dsimp only [produceX, ExitRes]
+  rw [hP, fin_ne hn]
+  exact hX
 
 -- `Flat.get` in the bound is the vector index.
 theorem get_eq {α : Type} [Inhabited α] (v : Vector α MAX_N) {i : Word}

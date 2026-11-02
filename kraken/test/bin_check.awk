@@ -97,12 +97,19 @@ file == 1 {
 }
 $1 == "start" { start = strtonum("0x" $2); next }
 $1 == "stop" { stop = strtonum("0x" $2); next }
+$1 == "external" {
+	if (NF != 3 || $2 in ext) fail("invalid external symbol " $2)
+	ext[$2] = strtonum("0x" $3); next
+}
 {
 	oa[no] = strtonum("0x" $1); os[no] = $2 + 0; ok[no] = $3
 	text = $0; sub(/^[^ ]+ [^ ]+ [^ ]+ /, "", text); ot[no] = text; no++
 }
 END {
 	if (failed) exit 1
+	for (symbol in ext)
+		if (!(symbol in lab) || lab[symbol] != ext[symbol])
+			fail("external symbol " symbol " has a different address")
 	if (nh == 0 || ha[0] != start) fail("the program does not start at " hex(start))
 	j = 0; pad = 0
 	for (k = 0; k < nh; k++) {

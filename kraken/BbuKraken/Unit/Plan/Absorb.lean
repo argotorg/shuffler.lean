@@ -33,6 +33,10 @@ def absorbQ (b b' : BG) (_ t : MachineData) : Prop :=
   al t = code (Flat.absorbSurplus b.fl b.M).1
     ∧ b' = { b with M := (Flat.absorbSurplus b.fl b.M).2 }
 
+def absorbX (b b' : BG) (_s _t : MachineData) : Prop :=
+  (Flat.absorbSurplus b.fl b.M).1 = .assertionFailed ∧
+    b' = { b with M := (Flat.absorbSurplus b.fl b.M).2 }
+
 namespace AbsorbU
 
 open InPlaceU
@@ -215,10 +219,12 @@ def V (b : BG) (l : Label) (t : MachineData) : Nat :=
     (b.n.toNat - t.regs.rbx.toBitVec.toNat - 1) * 2 ^ 68 + 2 ^ 67 + 1
   else 0
 
-def E (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) :
+def E [Labels] (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) :
     Int64 → MachineData → Prop :=
-  fun a t => a = ra ∧ VPost BView BG.Ok B F 3 (fun a' t => absorbQ b a' s t) s t
+  fun a t => a = ra ∧ VPost BView BG.Ok B F 6 (fun a' t => absorbQ b a' s t) s t
     ∧ Sep.mod.Agree s t
+    ∨ a = label "exit" ∧ t.regs.get64 .rdi = 1#64 ∧
+      VPost BView BG.Ok B F 6 (fun a' t => absorbX b a' s t) s t
 
 def Obl [Host] [FunDecls] (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (fr₀ : List Word) (blk : Program.Block) : Prop :=
@@ -265,10 +271,10 @@ theorem b_entry : absorbSurplusAsm.ForallBlocks fun blk =>
   exact ht
 
 set_option maxHeartbeats 100000 in
-theorem b_fn (hpre : VPre BView BG.Ok B b F absorbA 3 s) (w₀ w₁ w₂ : Word)
-    (hk0 : Kg (BView B b ∗ F) s ra [w₀, w₁, w₂] (s.pushRa ra)) :
+theorem b_fn (hpre : VPre BView BG.Ok B b F absorbA 6 s) (w₀ w₁ w₂ w₃ w₄ w₅ : Word)
+    (hk0 : Kg (BView B b ∗ F) s ra [w₀, w₁, w₂, w₃, w₄, w₅] (s.pushRa ra)) :
     absorbSurplusAsm.ForallBlocks fun blk =>
-      blk.label = .label Names.absorbSurplus → Obl B b F s ra [w₀, w₁, w₂] blk := by
+      blk.label = .label Names.absorbSurplus → Obl B b F s ra [w₀, w₁, w₂, w₃, w₄, w₅] blk := by
   cfg_block [Obl, Names.absorbSurplus]
   intro t ht
   ab_inv at ht
@@ -278,12 +284,12 @@ theorem b_fn (hpre : VPre BView BG.Ok B b F absorbA 3 s) (w₀ w₁ w₂ : Word)
   have hm0 := hk0.vmem
   have hq : (s.pushRa ra).regs.rsp.toBitVec = rsp s - 8#64 := by
     rw [← Reg64s.get64_rsp, hk0.sp64]
-  have hsp2 : (s.pushRa ra).regs.rsp.toBitVec - 8#64 - 8#64 = rsp s - 8#64 - 16#64 := by
+  have hsp2 : (s.pushRa ra).regs.rsp.toBitVec - 8#64 - 8#64 - 8#64 = rsp s - 8#64 - 24#64 := by
     rw [hq]; bv_omega
   obtain ⟨hpo, hpm⟩ := hk0.pushes (xs := [(s.pushRa ra).regs.rbp.toBitVec,
     (s.pushRa ra).regs.rbx.toBitVec]) (by simp)
   simp only [pushes] at hpm
-  change (Stk (rsp s) (fr s w₀) ra.toBitVec ∗ BView B b ∗ F).get _ at hpm
+  change (Stk (rsp s) (fr s ⟨w₀, w₁, w₂, w₃⟩) ra.toBitVec ∗ BView B b ∗ F).get _ at hpm
   simp only [PushOk] at hpo
   obtain ⟨p1, p2, -⟩ := hpo
   have h_n := BView.rd_n hm0
@@ -315,7 +321,7 @@ theorem b_fn (hpre : VPre BView BG.Ok B b F absorbA 3 s) (w₀ w₁ w₂ : Word)
     cfg_goto
     · exact Kb.stack ⟨hpm, hsp2⟩ (by decide)
     · ab_inv
-      exact ⟨b.M, w₀, ⟨⟨hpm, hsp2⟩, by simpa [MachineData.pushRa] using hpre.rdi, rfl, rfl, rfl, rfl⟩,
+      exact ⟨b.M, ⟨w₀, w₁, w₂, w₃⟩, ⟨⟨hpm, hsp2⟩, by simpa [MachineData.pushRa] using hpre.rdi, rfl, rfl, rfl, rfl⟩,
         hpos, rfl⟩
     · left; have := b.n.isLt; ab_var; simp; omega
 
@@ -396,6 +402,10 @@ theorem b_7 (hok : b.Ok) : absorbSurplusAsm.ForallBlocks fun blk =>
       ⟨ra, Kg.retAddr (P := BView B { b with M := M } ∗ F) (s := s) (fr := fr s w) ?_⟩
     exact hli.pop_kg rfl (by bv_omega) rfl rfl rfl rfl rfl rfl
   | ret =>
+    refine ProofKit.intercept_mono_exit
+      (E := fun a t => a = ra ∧
+        VPost BView BG.Ok B F 6 (fun a' t => absorbQ b a' s t) s t ∧
+          Sep.mod.Agree s t) ?_ (fun h => Or.inl h)
     refine Kg.vret (ok := BG.Ok) (a' := { b with M := M })
       (hli.pop_kg rfl (by bv_omega) rfl rfl rfl rfl rfl rfl) rfl hokM
       fun t' _ hax => ⟨?_, by rw [hM]⟩
@@ -404,7 +414,7 @@ theorem b_7 (hok : b.Ok) : absorbSurplusAsm.ForallBlocks fun blk =>
     exact hal
 
 set_option maxHeartbeats 100000 in
-theorem b_8 (hok : b.Ok) (hfr : fr₀.length = 3) : absorbSurplusAsm.ForallBlocks fun blk =>
+theorem b_8 (hok : b.Ok) (hfr : fr₀.length = 6) : absorbSurplusAsm.ForallBlocks fun blk =>
     blk.label = .label ".LB.MappingBuilder.absorbSurplus.8" → Obl B b F s ra fr₀ blk := by
   cfg_block [Obl]
   intro t ht
@@ -416,6 +426,10 @@ theorem b_8 (hok : b.Ok) (hfr : fr₀.length = 3) : absorbSurplusAsm.ForallBlock
   | retAddr =>
     exact Option.isSome_iff_exists.mpr ⟨ra, (hk.next rfl rfl rfl rfl rfl rfl rfl rfl).retAddr⟩
   | ret =>
+    refine ProofKit.intercept_mono_exit
+      (E := fun a t => a = ra ∧
+        VPost BView BG.Ok B F 6 (fun a' t => absorbQ b a' s t) s t ∧
+          Sep.mod.Agree s t) ?_ (fun h => Or.inl h)
     refine Kg.vret (ok := BG.Ok) (a' := b) (hk.next rfl rfl rfl rfl rfl rfl rfl rfl) hfr hok
       fun t' _ hax => ⟨?_, by rw [hd]⟩
     simp only [al]
@@ -625,7 +639,8 @@ theorem b_0 : absorbSurplusAsm.ForallBlocks fun blk =>
          Or.inr (BitVec.lt_def.2 hi.om), hbest, hrest⟩)
 
 set_option maxHeartbeats 100000 in
-theorem b_3 (hmap : BSpec Names.map mapA 0 mapQ) (hok : b.Ok) :
+theorem b_3 (hout : ∀ l ∈ Program.labels absorbSurplusAsm, label l ≠ label "exit")
+    (hmap : BSpecWithExit Names.map mapA 2 mapQ mapX) (hok : b.Ok) :
     absorbSurplusAsm.ForallBlocks fun blk =>
     blk.label = .label ".LB.MappingBuilder.absorbSurplus.3" → Obl B b F s ra fr₀ blk := by
   cfg_block [Obl]
@@ -656,49 +671,75 @@ theorem b_3 (hmap : BSpec Names.map mapA 0 mapQ) (hok : b.Ok) :
         with h | h
       · exact absurd (hsi.trans h) hne
       · rw [hsi]; exact BitVec.lt_def.1 h
-    refine Kb.vcall (V := BView) (A := mapA) (Q := mapQ) (S := B) (s := s) (ra := ra) (w := w)
-      (F := F) (lo := []) (hi := [s.regs.rbx.toBitVec, s.regs.rbp.toBitVec]) (k := 0)
-      ?kb rfl rfl ?rdi hokM ?A ?_
+    refine Kb.vcallWithExit (V := BView) (A := mapA) (Q := mapQ) (X := mapX) (S := B) (s := s) (ra := ra) (w := w.ret)
+      (F := F) (lo := [w.low0, w.low1])
+      (hi := [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec]) (k := 2)
+      ?kb rfl rfl ?rdi hokM ?A ?normal ?abort
     case kb => exact Kb.next hli.kb rfl rfl
     case rdi => exact hli.rbp
     case A => exact ⟨hsm, hlt⟩
-    intro t2 a' lo' w' hkb hl hQ hok' hag
-    obtain ⟨hli2, hbx⟩ := LI.after hag (hli.next rfl rfl rfl rfl rfl rfl rfl) hkb hl hQ.2
-    have hal : al t2 = code (Flat.mbMap b.fl M t.regs.rsi.toBitVec t.regs.rbx.toBitVec).1 := hQ.1
-    clear hQ hkb
-    kvcgen64
-    all_goals try symexec_norm
-    vc_by_shape
-    | goto ".LB.MappingBuilder.absorbSurplus.7" =>
-      have hd := code_ne_zero fun e =>
-        al_ne (by first
-          | with_reducible assumption
-          | (rw [Bool.not_eq_true']; with_reducible assumption)) (hal.trans e)
-      have hf : Flat.absorbSurplus b.fl b.M = Flat.mbMap b.fl M t.regs.rsi.toBitVec t.regs.rbx.toBitVec := by
+    case normal =>
+      intro t2 a' lo' w' hkb hl hQ hok' hag
+      obtain ⟨w2, hli2, hbx⟩ := LI.after hag (hli.next rfl rfl rfl rfl rfl rfl rfl) hkb hl hQ.2
+      have hal : al t2 = code (Flat.mbMap b.fl M t.regs.rsi.toBitVec t.regs.rbx.toBitVec).1 := hQ.1
+      clear hQ hkb
+      kvcgen64
+      all_goals try symexec_norm
+      vc_by_shape
+      | goto ".LB.MappingBuilder.absorbSurplus.7" =>
+        have hd := code_ne_zero fun e =>
+          al_ne (by first
+            | with_reducible assumption
+            | (rw [Bool.not_eq_true']; with_reducible assumption)) (hal.trans e)
+        have hf : Flat.absorbSurplus b.fl b.M = Flat.mbMap b.fl M t.regs.rsi.toBitVec t.regs.rbx.toBitVec := by
+          rw [hsi] at hd ⊢
+          exact hrest.symm.trans (from_fail (BitVec.lt_def.2 hlt) hw hp hc hd)
+        cfg_goto
+        · exact hli2.stk rfl rfl
+        · ab_inv
+          exact ⟨_, w2, hli2.next rfl rfl rfl rfl rfl rfl rfl, by rw [hf]; exact hal, by rw [hf]; rfl⟩
+        · left; ab_var; omega
+      | other =>
+        have hd := code_eq_zero (hal.symm.trans
+          (al_zero (by first
+            | with_reducible assumption
+            | (rw [Bool.not_eq_false']; with_reducible assumption))))
+        have hdn : Flat.absorbFrom b.fl (Flat.mbMap b.fl M t.regs.rsi.toBitVec t.regs.rbx.toBitVec).2
+            (t.regs.rbx.toBitVec + 1#64) = Flat.absorbSurplus b.fl b.M := by
+          rw [hsi] at hd ⊢
+          exact (from_done (BitVec.lt_def.2 hlt) hw hp hc hd).symm.trans hrest
+        first
+        | (left; ab_var; rw [hbx]; omega)
+        | (ab_inv
+           refine ⟨_, w2, hli2.next rfl rfl rfl rfl rfl rfl rfl, ?_, ?_⟩
+           · show t2.regs.rbx.toBitVec.toNat < _; rw [hbx]; exact hlt
+           · show Flat.absorbFrom _ _ (t2.regs.rbx.toBitVec + 1#64) = _
+             rw [hbx]
+             exact hdn)
+    case abort =>
+      intro t2 a' lo' w' hmem hl hrel hok' harg
+      obtain ⟨ha', hf⟩ := hrel
+      subst a'
+      change Flat.mbMap b.fl M t.regs.rsi.toBitVec t.regs.rbx.toBitVec =
+        (.assertionFailed, M) at hf
+      have hd : (Flat.mbMap b.fl M t.regs.rsi.toBitVec t.regs.rbx.toBitVec).1 ≠ .done := by
+        rw [hf]
+        change Flat.Status.assertionFailed ≠ Flat.Status.done
+        decide
+      have hm : Flat.absorbSurplus b.fl b.M =
+          Flat.mbMap b.fl M t.regs.rsi.toBitVec t.regs.rbx.toBitVec := by
         rw [hsi] at hd ⊢
         exact hrest.symm.trans (from_fail (BitVec.lt_def.2 hlt) hw hp hc hd)
-      cfg_goto
-      · exact hli2.stk rfl rfl
-      · ab_inv
-        exact ⟨_, w', hli2.next rfl rfl rfl rfl rfl rfl rfl, by rw [hf]; exact hal, by rw [hf]; rfl⟩
-      · left; ab_var; omega
-    | other =>
-      have hd := code_eq_zero (hal.symm.trans
-        (al_zero (by first
-          | with_reducible assumption
-          | (rw [Bool.not_eq_false']; with_reducible assumption))))
-      have hdn : Flat.absorbFrom b.fl (Flat.mbMap b.fl M t.regs.rsi.toBitVec t.regs.rbx.toBitVec).2
-          (t.regs.rbx.toBitVec + 1#64) = Flat.absorbSurplus b.fl b.M := by
-        rw [hsi] at hd ⊢
-        exact (from_done (BitVec.lt_def.2 hlt) hw hp hc hd).symm.trans hrest
-      first
-      | (left; ab_var; rw [hbx]; omega)
-      | (ab_inv
-         refine ⟨_, w', hli2.next rfl rfl rfl rfl rfl rfl rfl, ?_, ?_⟩
-         · show t2.regs.rbx.toBitVec.toNat < _; rw [hbx]; exact hlt
-         · show Flat.absorbFrom _ _ (t2.regs.rbx.toBitVec + 1#64) = _
-           rw [hbx]
-           exact hdn)
+      refine Or.inr ⟨Or.inr ⟨rfl, harg, ?_⟩, ?_⟩
+      · refine ⟨{ b with M := M }, ?_, hokM,
+          lo' ++ w' :: [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec], ra.toBitVec,
+          by simp [hl], ?_⟩
+        · constructor
+          · rw [hm, hf]
+          · rw [hm, hf]
+        · simpa only [MProp.sep_assoc] using hmem
+      · intro l hl ha
+        exact False.elim (hout l hl ha)
 
 end
 
@@ -709,24 +750,25 @@ end Bbu.Unit
 namespace Bbu.Unit
 
 open AbsorbU in
-theorem absorbSurplus_unit [Host] [FunDecls] (hmap : BSpec Names.map mapA 0 mapQ) :
-    BThm absorbSurplusAsm absorbA 3 absorbQ := by
+theorem absorbSurplus_unit [Host] [FunDecls]
+    (hout : ∀ l ∈ Program.labels absorbSurplusAsm, label l ≠ label "exit") (hmap : BSpecWithExit Names.map mapA 2 mapQ mapX) :
+    BThmWithExit absorbSurplusAsm absorbA 6 absorbQ absorbX := by
   intro B b F s ra
   refine ⟨fun s₀ ⟨h₀, hpre⟩ => ?_⟩
   subst h₀
   obtain ⟨fr₀, hfr, hk0⟩ := hpre.kg ra
   match fr₀, hfr, hk0 with
-  | [w₀, w₁, w₂], hfr, hk0 =>
-  refine Program.WP.cfg (AbsorbU.Inv B b F s ra [w₀, w₁, w₂]) (AbsorbU.V b) ?_ rfl
+  | [w₀, w₁, w₂, w₃, w₄, w₅], hfr, hk0 =>
+  refine Program.WP.cfg (AbsorbU.Inv B b F s ra [w₀, w₁, w₂, w₃, w₄, w₅]) (AbsorbU.V b) ?_ rfl
   refine forallBlocks_cases labels labels_cover fun l hl => ?_
   simp only [labels, List.mem_cons, List.not_mem_nil, or_false] at hl
   rcases hl with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
   · exact b_entry B b F s ra _
-  · exact b_fn B b F s ra hpre w₀ w₁ w₂ hk0
+  · exact b_fn B b F s ra hpre w₀ w₁ w₂ w₃ w₄ w₅ hk0
   · exact b_0 B b F s ra _
   · exact b_1 B b F s ra _
   · exact b_2 B b F s ra _ hpre.ok
-  · exact b_3 B b F s ra _ hmap hpre.ok
+  · exact b_3 B b F s ra _ hout hmap hpre.ok
   · exact b_4 B b F s ra _
   · exact b_5 B b F s ra _ hpre.ok
   · exact b_6 B b F s ra _

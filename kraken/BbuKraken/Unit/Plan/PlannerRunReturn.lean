@@ -20,12 +20,16 @@ set_option maxRecDepth 4096 in
 theorem b_26 [Host] [FunDecls] (P : Addr) (g g' : PlannerRunG) (F : MProp 64)
     (s : MachineData) (ra : Int64) (hok : g'.Ok)
     (K : Unit → MachineData → Prop) (I' : CfgLabel → Nat → Unit → MachineData → Prop) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.26" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.21" →
       ∀ t, (∃ lo locals, Bd P g' F s ra lo locals t ∧ plannerRunQ g g' s t) →
         WP.wp blk.body K
           (Program.Intercept (Program.labels plannerRunAsm) (s.pushRa ra) I'
-            (fun a u => a = ra ∧ VPost PlannerRunView PlannerRunG.Ok P F plannerRunD
-              (fun g'' u => plannerRunQ g g'' s u) s u ∧ Sep.mod.Agree s u)) t := by
+            (fun a u =>
+              (a = ra ∧ VPost PlannerRunView PlannerRunG.Ok P F plannerRunD
+                (fun g'' u => plannerRunQ g g'' s u) s u ∧ Sep.mod.Agree s u) ∨
+              (a = label "exit" ∧ u.regs.get64 .rdi = 1#64 ∧
+                VPost PlannerRunView PlannerRunG.Ok P F plannerRunD
+                  (fun g'' u => plannerRunX g g'' s u) s u))) t := by
   cfg_block
   intro t ⟨lo, locals, hb, hq⟩
   let u : MachineData := { t with
@@ -71,6 +75,10 @@ theorem b_26 [Host] [FunDecls] (P : Addr) (g g' : PlannerRunG) (F : MProp 64)
     refine ⟨ra, ?_⟩
     simpa only [u, rd, BitVec.add_assoc] using hu.retAddr
   | ret =>
+    refine ProofKit.intercept_mono_exit
+      (E := fun a u => a = ra ∧ VPost PlannerRunView PlannerRunG.Ok P F plannerRunD
+        (fun g'' u => plannerRunQ g g'' s u) s u ∧ Sep.mod.Agree s u)
+      ?_ (fun h => Or.inl h)
     have hr := Kg.vret (V := PlannerRunView) (ok := PlannerRunG.Ok) (S := P)
       (a' := g') (F := F) (d := plannerRunD) (s := s) (ra := ra)
       (t := u) (ls := plannerRunAsm.labels) (I' := I')

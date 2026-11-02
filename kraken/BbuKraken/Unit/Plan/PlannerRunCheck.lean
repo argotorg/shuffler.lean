@@ -25,7 +25,7 @@ theorem b_0 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
     (hnext : ∀ u, rcx u = 1#64 + rcx t → CheckHead P g F s ra u → K () u)
     (hdone : ∀ u, rcx u = 1#64 + rcx t → CheckDone P g F s ra u →
       Program.Intercept (Program.labels plannerRunAsm) (s.pushRa ra) I' E
-        (label ".LB.Planner.run.4") u) :
+        (label ".LB.Planner.run.5") u) :
     plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.0" →
       CheckNext P g F s ra t → WP.wp blk.body K
         (Program.Intercept (Program.labels plannerRunAsm) (s.pushRa ra) I' E) t := by
@@ -34,7 +34,7 @@ theorem b_0 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (F : MProp 64)
   kvcgen64
   all_goals try symexec_norm at ⊢
   vc_by_shape
-  | goto ".LB.Planner.run.4" =>
+  | goto ".LB.Planner.run.5" =>
     rename_i hj
     symexec_norm at hj
     simp only [sub_beq_zero, hc.r11, beq_iff_eq] at hj

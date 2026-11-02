@@ -674,7 +674,7 @@ these examples are symbolic: `pm_dec` (the tactic of the proofs) unfolds `V`. -/
 
 example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.22" t = 2048 * mD s g t + 2 := by pm_dec
 example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.23" t = 2048 * mD s g t + 1 := by pm_dec
-example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.13" t = 2048 * mD s g t + 1101 := by pm_dec
+example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.12" t = 2048 * mD s g t + 1101 := by pm_dec
 example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.20" t = 2048 * mD s g t := by pm_dec
 example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.21" t = 2048 * mD s g t + 1101 := by pm_dec
 

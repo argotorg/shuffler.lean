@@ -21,4 +21,11 @@ theorem plannerRunQ_bad_target (g : PlannerRunG) (s t : MachineData)
   rw [plannerRun_bad_target _ _ _ _ h]
   exact ⟨hal, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
+theorem plannerRunX_bad_target (g : PlannerRunG) (s t : MachineData)
+    (h : Flat.targetsFrom g.p.fl g.spills 0 = false) :
+    plannerRunX g (withSaw g 0#8) s t := by
+  refine ⟨fun _ => emptyRunU, ?_⟩
+  rw [plannerRun_bad_target _ _ _ _ h]
+  exact ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
+
 end Bbu.Unit.PlannerRunU

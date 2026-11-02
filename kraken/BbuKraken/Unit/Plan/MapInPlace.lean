@@ -1,7 +1,7 @@
 module
 
-public import BbuKraken.Unit.Plan.Call
-import all BbuKraken.Unit.Plan.Call
+public import BbuKraken.Unit.Plan.ExitCall
+import all BbuKraken.Unit.Plan.ExitCall
 public import BbuKraken.Unit.Plan.ClosestCopy
 import all BbuKraken.Unit.Plan.ClosestCopy
 public import BbuKraken.Unit.Plan.Map
@@ -16,7 +16,8 @@ import all BbuKraken.Unit.Plan.Map
 `rbp`, `rbx` and runs the loop over the positions `rbx < commonSize`. `rbp` is the builder. Each
 turn of the loop is one unfold of `Flat.inPlaceFrom`: a position with the same slot in the source
 and the target that `map` can take is given to `map`. A status other than `DONE` stops the loop.
-The frame of the loop is the return slot of `map` and the saved `rbx`, `rbp`.
+The frame of the loop has two scratch words, the return slot of `map`, an alignment word,
+and the saved `rbx`, `rbp`.
 -/
 
 open Std.WP Lean.Order
@@ -34,15 +35,26 @@ def mapInPlaceA (_ : BG) (_ : MachineData) : Prop := True
 def mapInPlaceQ (b b' : BG) (_ t : MachineData) : Prop :=
   al t = code (Flat.mapInPlace b.fl b.M).1 ∧ b' = { b with M := (Flat.mapInPlace b.fl b.M).2 }
 
+def mapInPlaceX (b b' : BG) (_s _t : MachineData) : Prop :=
+  (Flat.mapInPlace b.fl b.M).1 = .assertionFailed ∧
+    b' = { b with M := (Flat.mapInPlace b.fl b.M).2 }
+
 namespace InPlaceU
 
--- The frame of the body: the return slot of `map`, then the saved `rbx` and `rbp`.
-def fr (s : MachineData) (w : Word) : List Word := [w, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec]
+structure Temps where
+  low0 : Word
+  low1 : Word
+  ret : Word
+  pad : Word
+
+-- The frame of the body includes the scratch words and the alignment word for `map`.
+def fr (s : MachineData) (w : Temps) : List Word :=
+  [w.low0, w.low1, w.ret, w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec]
 
 -- The registers in the loop. `M` is the `Mapping` so far.
 structure LI (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64)
-    (M : Flat.Mapping) (w : Word) (t : MachineData) : Prop where
-  kb : Kb (BView B { b with M := M } ∗ F) s ra (fr s w) 16#64 t
+    (M : Flat.Mapping) (w : Temps) (t : MachineData) : Prop where
+  kb : Kb (BView B { b with M := M } ∗ F) s ra (fr s w) 24#64 t
   rbp : t.regs.rbp.toBitVec = B
   r12 : t.regs.r12 = s.regs.r12
   r13 : t.regs.r13 = s.regs.r13
@@ -143,7 +155,7 @@ end
 
 section
 variable {B : Addr} {b : BG} {F : MProp 64} {s t t' : MachineData} {ra : Int64}
-  {M : Flat.Mapping} {w : Word}
+  {M : Flat.Mapping} {w : Temps}
 
 theorem LI.next (h : LI B b F s ra M w t) (hm : t'.dmem = t.dmem) (hsp : t'.regs.rsp = t.regs.rsp)
     (hbp : t'.regs.rbp = t.regs.rbp) (h12 : t'.regs.r12 = t.regs.r12)
@@ -159,12 +171,16 @@ theorem LI.stk (h : LI B b F s ra M w t) (hm : t'.dmem = t.dmem) (hsp : t'.regs.
 -- The state after `call map`: `map` keeps `rbx`, `rbp` and `r12`…`r15`.
 theorem LI.after {c : MachineData} {M' : Flat.Mapping} {a' : BG} {lo' : List Word} {w' : Word}
     (hag : Sep.mod.Agree c t) (h : LI B b F s ra M w c)
-    (hkb : Kb (BView B a' ∗ F) s ra (lo' ++ w' :: [s.regs.rbx.toBitVec, s.regs.rbp.toBitVec]) 16#64 t)
-    (hl : lo'.length = 0) (ha : a' = { b with M := M' }) :
-    LI B b F s ra M' w' t ∧ t.regs.rbx = c.regs.rbx := by
-  obtain rfl := List.eq_nil_of_length_eq_zero hl
+    (hkb : Kb (BView B a' ∗ F) s ra
+      (lo' ++ w' :: [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec]) 24#64 t)
+    (hl : lo'.length = 2) (ha : a' = { b with M := M' }) :
+    ∃ v, LI B b F s ra M' v t ∧ t.regs.rbx = c.regs.rbx := by
+  obtain ⟨a, b, rfl⟩ : ∃ a b, lo' = [a, b] := by
+    match lo', hl with
+    | [a, b], _ => exact ⟨a, b, rfl⟩
   subst ha
-  refine ⟨⟨hkb, ?_, ?_, ?_, ?_, ?_⟩, mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rbx⟩
+  refine ⟨{ w with low0 := a, low1 := b, ret := w' },
+    ⟨hkb, ?_, ?_, ?_, ?_, ?_⟩, mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rbx⟩
   · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rbp]; exact h.rbp
   · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r12]; exact h.r12
   · rw [mod_keep hag (by simp [Sep.mod]) Reg64s.get64_r13]; exact h.r13
@@ -173,24 +189,26 @@ theorem LI.after {c : MachineData} {M' : Flat.Mapping} {a' : BG} {lo' : List Wor
 
 -- The addresses of `popq %rbx; popq %rbp`.
 theorem pop_addr (a : Word) :
-    a = a + BitVec.ofNat 64 (8 * 0) ∧ a + 8#64 = a + BitVec.ofNat 64 (8 * 1) := by
+    8#64 + a = a + BitVec.ofNat 64 (8 * 1) ∧
+      8#64 + a + 8#64 = a + BitVec.ofNat 64 (8 * 2) := by
   constructor <;> bv_omega
 
 theorem LI.pop_isSome (h : LI B b F s ra M w t) :
-    (t.dmem.loadInt t.regs.rsp.toBitVec 8).isSome = true
-      ∧ (t.dmem.loadInt (t.regs.rsp.toBitVec + 8#64) 8).isSome = true := by
+    (t.dmem.loadInt (8#64 + t.regs.rsp.toBitVec) 8).isSome = true
+      ∧ (t.dmem.loadInt (8#64 + t.regs.rsp.toBitVec + 8#64) 8).isSome = true := by
   obtain ⟨e0, e1⟩ := pop_addr t.regs.rsp.toBitVec
   refine ⟨?_, ?_⟩
-  · rw [e0]; exact Kb.isSome_hi (lo := [w]) (hi := [s.regs.rbx.toBitVec, s.regs.rbp.toBitVec])
-      h.kb rfl (by simp)
-  · rw [e1]; exact Kb.isSome_hi (lo := [w]) (hi := [s.regs.rbx.toBitVec, s.regs.rbp.toBitVec])
-      h.kb rfl (by simp)
+  · rw [e0]
+    exact Kb.isSome_hi (lo := [w.low0, w.low1, w.ret])
+      (hi := [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec]) h.kb rfl (by simp)
+  · rw [e1]
+    exact Kb.isSome_hi (lo := [w.low0, w.low1, w.ret])
+      (hi := [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec]) h.kb rfl (by simp)
 
--- The state after the pops.
 theorem LI.pop_kg (h : LI B b F s ra M w t) (hm : t'.dmem = t.dmem)
-    (hsp : t'.regs.rsp.toBitVec = t.regs.rsp.toBitVec + 8#64 + 8#64)
-    (hbx : t'.regs.rbx.toBitVec = rd t.dmem t.regs.rsp.toBitVec)
-    (hbp : t'.regs.rbp.toBitVec = rd t.dmem (t.regs.rsp.toBitVec + 8#64))
+    (hsp : t'.regs.rsp.toBitVec = t.regs.rsp.toBitVec + 8#64 + 8#64 + 8#64)
+    (hbx : t'.regs.rbx.toBitVec = rd t.dmem (8#64 + t.regs.rsp.toBitVec))
+    (hbp : t'.regs.rbp.toBitVec = rd t.dmem (8#64 + t.regs.rsp.toBitVec + 8#64))
     (h12 : t'.regs.r12 = t.regs.r12) (h13 : t'.regs.r13 = t.regs.r13)
     (h14 : t'.regs.r14 = t.regs.r14) (h15 : t'.regs.r15 = t.regs.r15) :
     Kg (BView B { b with M := M } ∗ F) s ra (fr s w) t' := by
@@ -199,11 +217,11 @@ theorem LI.pop_kg (h : LI B b F s ra M w t) (hm : t'.dmem = t.dmem)
     (h15.trans h.r15) <;> (try apply UInt64.toBitVec_inj.mp)
   · rw [hsp, h.kb.sp]; bv_omega
   · rw [hbx, e0]
-    exact Kb.rd_hi (lo := [w]) (hi := [s.regs.rbx.toBitVec, s.regs.rbp.toBitVec]) h.kb rfl
-      (i := 0) (by simp)
+    exact Kb.rd_hi (lo := [w.low0, w.low1, w.ret])
+      (hi := [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec]) h.kb rfl (i := 1) (by simp)
   · rw [hbp, e1]
-    exact Kb.rd_hi (lo := [w]) (hi := [s.regs.rbx.toBitVec, s.regs.rbp.toBitVec]) h.kb rfl
-      (i := 1) (by simp)
+    exact Kb.rd_hi (lo := [w.low0, w.low1, w.ret])
+      (hi := [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec]) h.kb rfl (i := 2) (by simp)
 end
 
 /-! ### The invariant, the variant and the obligation of a block -/
@@ -237,10 +255,12 @@ def V (b : BG) (l : Label) (t : MachineData) : Nat :=
     2 * ((Flat.commonSize b.fl).toNat - t.regs.rbx.toBitVec.toNat) + 1
   else 0
 
-def E (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) :
+def E [Labels] (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) :
     Int64 → MachineData → Prop :=
-  fun a t => a = ra ∧ VPost BView BG.Ok B F 3 (fun a' t => mapInPlaceQ b a' s t) s t
+  fun a t => a = ra ∧ VPost BView BG.Ok B F 6 (fun a' t => mapInPlaceQ b a' s t) s t
     ∧ Sep.mod.Agree s t
+    ∨ a = label "exit" ∧ t.regs.get64 .rdi = 1#64 ∧
+      VPost BView BG.Ok B F 6 (fun a' t => mapInPlaceX b a' s t) s t
 
 def Obl [Host] [FunDecls] (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (fr₀ : List Word) (blk : Program.Block) : Prop :=
@@ -285,10 +305,10 @@ theorem b_entry : mapInPlaceAsm.ForallBlocks fun blk =>
   exact ht
 
 set_option maxHeartbeats 100000 in
-theorem b_fn (hpre : VPre BView BG.Ok B b F mapInPlaceA 3 s) (w₀ w₁ w₂ : Word)
-    (hk0 : Kg (BView B b ∗ F) s ra [w₀, w₁, w₂] (s.pushRa ra)) :
+theorem b_fn (hpre : VPre BView BG.Ok B b F mapInPlaceA 6 s) (w₀ w₁ w₂ w₃ w₄ w₅ : Word)
+    (hk0 : Kg (BView B b ∗ F) s ra [w₀, w₁, w₂, w₃, w₄, w₅] (s.pushRa ra)) :
     mapInPlaceAsm.ForallBlocks fun blk =>
-      blk.label = .label Names.mapInPlace → Obl B b F s ra [w₀, w₁, w₂] blk := by
+      blk.label = .label Names.mapInPlace → Obl B b F s ra [w₀, w₁, w₂, w₃, w₄, w₅] blk := by
   cfg_block [Obl, Names.mapInPlace]
   intro t ht
   mi_inv at ht
@@ -298,12 +318,12 @@ theorem b_fn (hpre : VPre BView BG.Ok B b F mapInPlaceA 3 s) (w₀ w₁ w₂ : W
   have hm0 := hk0.vmem
   have hq : (s.pushRa ra).regs.rsp.toBitVec = rsp s - 8#64 := by
     rw [← Reg64s.get64_rsp, hk0.sp64]
-  have hsp2 : (s.pushRa ra).regs.rsp.toBitVec - 8#64 - 8#64 = rsp s - 8#64 - 16#64 := by
+  have hsp2 : (s.pushRa ra).regs.rsp.toBitVec - 8#64 - 8#64 - 8#64 = rsp s - 8#64 - 24#64 := by
     rw [hq]; bv_omega
   obtain ⟨hpo, hpm⟩ := hk0.pushes (xs := [(s.pushRa ra).regs.rbp.toBitVec,
     (s.pushRa ra).regs.rbx.toBitVec]) (by simp)
   simp only [pushes] at hpm
-  change (Stk (rsp s) (fr s w₀) ra.toBitVec ∗ BView B b ∗ F).get _ at hpm
+  change (Stk (rsp s) (fr s ⟨w₀, w₁, w₂, w₃⟩) ra.toBitVec ∗ BView B b ∗ F).get _ at hpm
   simp only [PushOk] at hpo
   obtain ⟨p1, p2, -⟩ := hpo
   have h_m := BView.rd_m hm0
@@ -341,7 +361,7 @@ theorem b_fn (hpre : VPre BView BG.Ok B b F mapInPlaceA 3 s) (w₀ w₁ w₂ : W
     cfg_goto
     · exact Kb.stack ⟨hpm, hsp2⟩ (by decide)
     · mi_inv
-      exact ⟨b.M, w₀, ⟨⟨hpm, hsp2⟩, by simpa [MachineData.pushRa] using hpre.rdi, rfl, rfl, rfl, rfl⟩,
+      exact ⟨b.M, ⟨w₀, w₁, w₂, w₃⟩, ⟨⟨hpm, hsp2⟩, by simpa [MachineData.pushRa] using hpre.rdi, rfl, rfl, rfl, rfl⟩,
         hcs, rfl⟩
     · left; have := (Flat.commonSize b.fl).isLt; simp [V, Names.mapInPlace]; omega
 
@@ -391,7 +411,8 @@ theorem b_0 : mapInPlaceAsm.ForallBlocks fun blk =>
        rw [BitVec.add_comm]
        exact hrest)
 
-theorem b_1 (hmap : BSpec Names.map mapA 0 mapQ) (hok : b.Ok) : mapInPlaceAsm.ForallBlocks fun blk =>
+theorem b_1 (hout : ∀ l ∈ Program.labels mapInPlaceAsm, label l ≠ label "exit")
+    (hmap : BSpecWithExit Names.map mapA 2 mapQ mapX) (hok : b.Ok) : mapInPlaceAsm.ForallBlocks fun blk =>
     blk.label = .label ".LB.MappingBuilder.mapInPlace.1" → Obl B b F s ra fr₀ blk := by
   cfg_block [Obl]
   intro t ht
@@ -461,37 +482,60 @@ theorem b_1 (hmap : BSpec Names.map mapA 0 mapQ) (hok : b.Ok) : mapInPlaceAsm.Fo
     have hcand := cand_of (fb := b.fl) (M := M) (j := t.regs.rbx.toBitVec)
       (ClosestU.slot_eq h_tw h_sw (jne_false (by with_reducible assumption)))
       (by with_reducible assumption) (by with_reducible assumption)
-    refine Kb.vcall (V := BView) (A := mapA) (Q := mapQ) (S := B) (s := s) (ra := ra) (w := w) (F := F) (lo := []) (hi := [s.regs.rbx.toBitVec, s.regs.rbp.toBitVec]) (k := 0)
-      ?kb rfl rfl ?rdi hokM ?A ?_
+    refine Kb.vcallWithExit (V := BView) (A := mapA) (Q := mapQ) (X := mapX) (S := B) (s := s) (ra := ra) (w := w.ret) (F := F) (lo := [w.low0, w.low1])
+      (hi := [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec]) (k := 2)
+      ?kb rfl rfl ?rdi hokM ?A ?normal ?abort
     case kb => exact Kb.next hli.kb rfl rfl
     case rdi => exact hli.rbp
     case A => exact ⟨hm, hn⟩
-    intro t2 a' lo' w' hkb hl hQ hok' hag
-    obtain ⟨hli2, hbx⟩ := LI.after hag (hli.next rfl rfl rfl rfl rfl rfl rfl) hkb hl hQ.2
-    have hal : al t2 = code (Flat.mbMap b.fl M t.regs.rbx.toBitVec t.regs.rbx.toBitVec).1 := hQ.1
-    clear hQ hkb
-    kvcgen64
-    all_goals try symexec_norm
-    vc_by_shape
-    | goto ".LB.MappingBuilder.mapInPlace.0" =>
-      have hd := code_eq_zero (hal.symm.trans (al_zero (by rw [Bool.not_eq_false']; with_reducible assumption)))
-      cfg_goto
-      · exact hli2.stk rfl rfl
-      · mi_inv
-        refine ⟨_, w', hli2.next rfl rfl rfl rfl rfl rfl rfl, ?_, ?_⟩
-        · show t2.regs.rbx.toBitVec.toNat < _; rw [hbx]; exact hlt
-        · show Flat.inPlaceFrom _ _ (t2.regs.rbx.toBitVec + 1#64) = _
-          rw [hbx]
-          exact (from_done (BitVec.lt_def.2 hlt) hcand hd).symm.trans hrest
-      · left; mi_var; rw [hbx]; omega
-    | goto ".LB.MappingBuilder.mapInPlace.3" =>
-      have hd := code_ne_zero fun e => al_ne (by rw [Bool.not_eq_true']; with_reducible assumption) (hal.trans e)
-      have hf := hrest.symm.trans (from_fail (BitVec.lt_def.2 hlt) hcand hd)
-      cfg_goto
-      · exact hli2.stk rfl rfl
-      · mi_inv
-        exact ⟨_, w', hli2.next rfl rfl rfl rfl rfl rfl rfl, by rw [hf]; exact hal, by rw [hf]; rfl⟩
-      · left; mi_var; omega
+    case normal =>
+      intro t2 a' lo' w' hkb hl hQ hok' hag
+      obtain ⟨w2, hli2, hbx⟩ := LI.after hag (hli.next rfl rfl rfl rfl rfl rfl rfl) hkb hl hQ.2
+      have hal : al t2 = code (Flat.mbMap b.fl M t.regs.rbx.toBitVec t.regs.rbx.toBitVec).1 := hQ.1
+      clear hQ hkb
+      kvcgen64
+      all_goals try symexec_norm
+      vc_by_shape
+      | goto ".LB.MappingBuilder.mapInPlace.0" =>
+        have hd := code_eq_zero (hal.symm.trans (al_zero (by rw [Bool.not_eq_false']; with_reducible assumption)))
+        cfg_goto
+        · exact hli2.stk rfl rfl
+        · mi_inv
+          refine ⟨_, w2, hli2.next rfl rfl rfl rfl rfl rfl rfl, ?_, ?_⟩
+          · show t2.regs.rbx.toBitVec.toNat < _; rw [hbx]; exact hlt
+          · show Flat.inPlaceFrom _ _ (t2.regs.rbx.toBitVec + 1#64) = _
+            rw [hbx]
+            exact (from_done (BitVec.lt_def.2 hlt) hcand hd).symm.trans hrest
+        · left; mi_var; rw [hbx]; omega
+      | goto ".LB.MappingBuilder.mapInPlace.3" =>
+        have hd := code_ne_zero fun e => al_ne (by rw [Bool.not_eq_true']; with_reducible assumption) (hal.trans e)
+        have hf := hrest.symm.trans (from_fail (BitVec.lt_def.2 hlt) hcand hd)
+        cfg_goto
+        · exact hli2.stk rfl rfl
+        · mi_inv
+          exact ⟨_, w2, hli2.next rfl rfl rfl rfl rfl rfl rfl, by rw [hf]; exact hal, by rw [hf]; rfl⟩
+        · left; mi_var; omega
+    case abort =>
+      intro t2 a' lo' w' hmem hl hrel hok' harg
+      obtain ⟨ha', hf⟩ := hrel
+      subst a'
+      change Flat.mbMap b.fl M t.regs.rbx.toBitVec t.regs.rbx.toBitVec =
+        (.assertionFailed, M) at hf
+      have hd : (Flat.mbMap b.fl M t.regs.rbx.toBitVec t.regs.rbx.toBitVec).1 ≠ .done := by
+        rw [hf]
+        change Flat.Status.assertionFailed ≠ Flat.Status.done
+        decide
+      have hm := hrest.symm.trans (from_fail (BitVec.lt_def.2 hlt) hcand hd)
+      refine Or.inr ⟨Or.inr ⟨rfl, harg, ?_⟩, ?_⟩
+      · refine ⟨{ b with M := M }, ?_, hokM,
+          lo' ++ w' :: [w.pad, s.regs.rbx.toBitVec, s.regs.rbp.toBitVec], ra.toBitVec,
+          by simp [hl], ?_⟩
+        · constructor
+          · rw [hm, hf]
+          · rw [hm, hf]
+        · simpa only [MProp.sep_assoc] using hmem
+      · intro l hl ha
+        exact False.elim (hout l hl ha)
 
 set_option maxHeartbeats 100000 in
 theorem b_2 : mapInPlaceAsm.ForallBlocks fun blk =>
@@ -529,6 +573,10 @@ theorem b_3 (hok : b.Ok) : mapInPlaceAsm.ForallBlocks fun blk =>
     refine Option.isSome_iff_exists.mpr ⟨ra, Kg.retAddr (P := BView B { b with M := M } ∗ F) (s := s) (fr := fr s w) ?_⟩
     exact hli.pop_kg rfl (by bv_omega) rfl rfl rfl rfl rfl rfl
   | ret =>
+    refine ProofKit.intercept_mono_exit
+      (E := fun a t => a = ra ∧
+        VPost BView BG.Ok B F 6 (fun a' t => mapInPlaceQ b a' s t) s t ∧
+          Sep.mod.Agree s t) ?_ (fun h => Or.inl h)
     refine Kg.vret (ok := BG.Ok) (a' := { b with M := M })
       (hli.pop_kg rfl (by bv_omega) rfl rfl rfl rfl rfl rfl) rfl hokM
       fun t' _ hax => ⟨?_, by rw [hM]⟩
@@ -537,7 +585,7 @@ theorem b_3 (hok : b.Ok) : mapInPlaceAsm.ForallBlocks fun blk =>
     exact hal
 
 set_option maxHeartbeats 100000 in
-theorem b_4 (hok : b.Ok) (hfr : fr₀.length = 3) : mapInPlaceAsm.ForallBlocks fun blk =>
+theorem b_4 (hok : b.Ok) (hfr : fr₀.length = 6) : mapInPlaceAsm.ForallBlocks fun blk =>
     blk.label = .label ".LB.MappingBuilder.mapInPlace.4" → Obl B b F s ra fr₀ blk := by
   cfg_block [Obl]
   intro t ht
@@ -549,6 +597,10 @@ theorem b_4 (hok : b.Ok) (hfr : fr₀.length = 3) : mapInPlaceAsm.ForallBlocks f
   | retAddr =>
     exact Option.isSome_iff_exists.mpr ⟨ra, (hk.next rfl rfl rfl rfl rfl rfl rfl rfl).retAddr⟩
   | ret =>
+    refine ProofKit.intercept_mono_exit
+      (E := fun a t => a = ra ∧
+        VPost BView BG.Ok B F 6 (fun a' t => mapInPlaceQ b a' s t) s t ∧
+          Sep.mod.Agree s t) ?_ (fun h => Or.inl h)
     refine Kg.vret (ok := BG.Ok) (a' := b) (hk.next rfl rfl rfl rfl rfl rfl rfl rfl) hfr hok
       fun t' _ hax => ⟨?_, by rw [hd]⟩
     simp only [al]
@@ -560,22 +612,23 @@ end
 end InPlaceU
 
 open InPlaceU in
-theorem mapInPlace_unit [Host] [FunDecls] (hmap : BSpec Names.map mapA 0 mapQ) :
-    BThm mapInPlaceAsm mapInPlaceA 3 mapInPlaceQ := by
+theorem mapInPlace_unit [Host] [FunDecls]
+    (hout : ∀ l ∈ Program.labels mapInPlaceAsm, label l ≠ label "exit") (hmap : BSpecWithExit Names.map mapA 2 mapQ mapX) :
+    BThmWithExit mapInPlaceAsm mapInPlaceA 6 mapInPlaceQ mapInPlaceX := by
   intro B b F s ra
   refine ⟨fun s₀ ⟨h₀, hpre⟩ => ?_⟩
   subst h₀
   obtain ⟨fr₀, hfr, hk0⟩ := hpre.kg ra
   match fr₀, hfr, hk0 with
-  | [w₀, w₁, w₂], hfr, hk0 =>
-  refine Program.WP.cfg (InPlaceU.Inv B b F s ra [w₀, w₁, w₂]) (InPlaceU.V b) ?_ rfl
+  | [w₀, w₁, w₂, w₃, w₄, w₅], hfr, hk0 =>
+  refine Program.WP.cfg (InPlaceU.Inv B b F s ra [w₀, w₁, w₂, w₃, w₄, w₅]) (InPlaceU.V b) ?_ rfl
   refine forallBlocks_cases labels labels_cover fun l hl => ?_
   simp only [labels, List.mem_cons, List.not_mem_nil, or_false] at hl
   rcases hl with rfl | rfl | rfl | rfl | rfl | rfl | rfl
   · exact b_entry B b F s ra _
-  · exact b_fn B b F s ra hpre w₀ w₁ w₂ hk0
+  · exact b_fn B b F s ra hpre w₀ w₁ w₂ w₃ w₄ w₅ hk0
   · exact b_0 B b F s ra _
-  · exact b_1 B b F s ra _ hmap hpre.ok
+  · exact b_1 B b F s ra _ hout hmap hpre.ok
   · exact b_2 B b F s ra _
   · exact b_3 B b F s ra _ hpre.ok
   · exact b_4 B b F s ra _ hpre.ok hfr

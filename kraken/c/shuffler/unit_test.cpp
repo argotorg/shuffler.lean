@@ -2,8 +2,10 @@
 // pop, and the entries. test_wrappers.cpp includes the production code, compiled hosted here.
 // `make unit_test` builds it; Shuffler/Mapping.lean is the model of the mapping checks.
 #include "test_wrappers.cpp"
+#include "process_test.h"
 
 #include <algorithm>
+#include <array>
 #include <cstdio>
 #include <cstdlib>
 #include <optional>
@@ -23,6 +25,69 @@ void expect(bool const _ok, char const* const _what, unsigned long const _contex
 		std::fprintf(stderr, "FAIL: %s (%lu)\n", _what, _context);
 		++failures;
 	}
+}
+
+// This value records process exit. It is not a return code from the shuffler.
+constexpr std::int64_t assertionExit = -3;
+enum class Failure { Assertion, Rejected };
+
+using process_test::buffer;
+
+struct EmissionSample
+{
+	std::size_t size;
+	std::size_t traceSize;
+	std::size_t pending;
+	std::size_t targetSize;
+	std::array<std::uint64_t, maxStackSize> destinations{};
+	std::array<std::uint64_t, maxStackSize> positions{};
+};
+
+EmissionSample sample(Emission const& emission, std::size_t targetSize = 0)
+{
+	EmissionSample state{emission.stackSize(), emission.traceSize(), emission.pendingGenerations(), targetSize};
+	for (std::size_t i = 0; i < state.size; ++i)
+		state.destinations[i] = std::bit_cast<std::uint64_t>(emission.mapping().destinationOf(StackOffset{i}));
+	for (std::size_t i = 0; i < targetSize; ++i)
+		state.positions[i] = std::bit_cast<std::uint64_t>(emission.mapping().positionOf(StackOffset{i}));
+	return state;
+}
+
+process_test::Buffer sampleBuffer(Emission const& emission, EmissionSample& state)
+{
+	return process_test::sample(state, [&emission, &state] { return sample(emission, state.targetSize); });
+}
+
+template<class F>
+std::int64_t observed(F const& operation, std::initializer_list<process_test::Buffer> const buffers = {})
+{
+	auto const result = process_test::call(operation, buffers);
+	if (result.returned)
+	{
+		expect(result.exitStatus == 0, "a returned call exits with status 0");
+		expect(*result.returned != assertionExit, "a returned call does not use the exit marker");
+		return *result.returned;
+	}
+	expect(result.exitStatus == 1, "an assertion exits with status 1");
+	return assertionExit;
+}
+
+template<class F>
+bool exits(F const& operation, std::initializer_list<process_test::Buffer> const buffers = {})
+{
+	auto const result = process_test::call(operation, buffers);
+	return !result.returned && result.exitStatus == 1;
+}
+
+void processCalls()
+{
+	int value = 0;
+	auto const result = process_test::call([&] { value = 7; return assertionExit; }, {buffer(value)});
+	expect(result.returned == assertionExit && result.exitStatus == 0 && value == 7,
+		"a child returns its value and buffer writes");
+	expect(!exits([] { return assertionExit; }), "a returned value is not an assertion exit");
+	expect(exits([] { std::exit(1); return 0; }), "exit status 1 is an assertion exit");
+	expect(!exits([] { std::exit(2); return 0; }), "exit status 2 is not an assertion exit");
 }
 
 using Opt = std::optional<std::size_t>;
@@ -108,7 +173,7 @@ void stackPop()
 	ShuffleOp trace[3];
 
 	Stack empty{data, 0, trace};
-	expect(empty.pop() == Status::AssertionFailed, "pop of an empty stack fails");
+	expect(exits([&] { return empty.pop(); }, {buffer(empty)}), "pop of an empty stack fails");
 	expect(empty.size() == 0 && empty.traceSize() == 0, "a failed pop changes nothing");
 
 	Stack stack{data, 2, trace};
@@ -117,7 +182,7 @@ void stackPop()
 	expect(sameSlot(data[0], variable(0)) && sameSlot(data[1], variable(1)), "pop writes no slot");
 	expect(stack.pop() == Status::Done && stack.size() == 0 && stack.traceSize() == 2 && isPop(trace[1]),
 		"pop of the last slot");
-	expect(stack.pop() == Status::AssertionFailed && stack.size() == 0 && stack.traceSize() == 2,
+	expect(exits([&] { return stack.pop(); }, {buffer(stack)}) && stack.size() == 0 && stack.traceSize() == 2,
 		"pop after the last slot fails");
 }
 
@@ -271,9 +336,12 @@ void emission()
 	expect(emission.pop() == Status::Done, "pop of the last slot");
 	model.pop();
 	agrees(emission.mapping(), model, 3);
-	expect(emission.pop() == Status::AssertionFailed, "pop of an empty stack fails");
-	agrees(emission.mapping(), model, 4);
-	expect(emission.traceSize() == 3 && emission.pendingGenerations() == 2, "a failed pop changes nothing");
+	auto state = sample(emission, 4);
+	expect(exits([&] { return emission.pop(); }, {sampleBuffer(emission, state), buffer(ops)}), "pop of an empty stack fails");
+	expect(state.size == model.destinationOf.size(), "failed pop: mapping size");
+	for (std::size_t i = 0; i < model.positionOf.size(); ++i)
+		expect(state.positions[i] == model.positionOf[i].value_or(SIZE_MAX), "failed pop: positionOf", i);
+	expect(state.traceSize == 3 && state.pending == 2, "a failed pop changes nothing");
 
 	// pending at the bounds: no slot, and every offset bound
 	Mapping none{0, 1024};
@@ -310,14 +378,14 @@ void spillSet()
 	expect(spills.add(variable(2)) == Status::Done, "add of a new variable");
 	expect(bytes({0, 0, 1, 0}), "add sets the byte of the variable");
 	expect(spills.isSpilled(variable(2)) && isSpilled(variable(2), spills), "isSpilled after add");
-	expect(spills.add(variable(2)) == Status::AssertionFailed, "add of a spilled variable fails");
+	expect(exits([&] { return spills.add(variable(2)); }, {buffer(spilled)}), "add of a spilled variable fails");
 	expect(bytes({0, 0, 1, 0}), "a failed add changes nothing");
 
 	// a slot that is not a variable, with the payload of a variable that is not spilled (1) and of one that is (2)
 	for (std::uint32_t const payload: {1u, 2u})
 		for (StackSlot const slot: nonVariables(payload))
 		{
-			expect(spills.add(slot) == Status::AssertionFailed, "add of a slot that is not a variable fails", payload);
+			expect(exits([&] { return spills.add(slot); }, {buffer(spilled)}), "add of a slot that is not a variable fails", payload);
 			expect(bytes({0, 0, 1, 0}), "a failed add of a slot that is not a variable changes nothing", payload);
 			expect(!spills.isSpilled(slot) && !isSpilled(slot, spills), "a slot that is not a variable is not spilled",
 				payload);
@@ -332,7 +400,7 @@ void spillSet()
 	// each byte that is not 0 is a spill
 	spilled[0] = 0xff;
 	expect(spills.isSpilled(variable(0)), "a byte 0xff is a spill");
-	expect(spills.add(variable(0)) == Status::AssertionFailed && bytes({0xff, 0, 1, 1}), "add on a byte 0xff fails");
+	expect(exits([&] { return spills.add(variable(0)); }, {buffer(spilled)}) && bytes({0xff, 0, 1, 1}), "add on a byte 0xff fails");
 	expect(spills.add(variable(1)) == Status::Done && bytes({0xff, 1, 1, 1}), "add of the last free variable");
 }
 
@@ -358,7 +426,8 @@ void spillSetOperations()
 			bool const isVariable = slot.isValue() && !slot.isLiteralValue();
 			std::vector<std::uint8_t> const before = spilled;
 			bool const inserted = isVariable && model.insert(id).second;
-			expect(spills.add(slot) == (inserted ? Status::Done : Status::AssertionFailed), "add result", run);
+			expect(inserted ? spills.add(slot) == Status::Done :
+				exits([&] { return spills.add(slot); }, {buffer(spilled)}), "add result", run);
 			for (std::size_t other = 0; other < idCount; ++other)
 				expect(spilled[other] == (inserted && other == id ? 1 : before[other]), "add changes only its byte", run);
 			for (std::uint32_t other = 0; other < idCount; ++other)
@@ -385,7 +454,7 @@ void spillSetEntry()
 
 	// the add of the literal fails, after the add of variable 2
 	std::uint8_t spilled[3] = {};
-	expect(spill_set(3, spilled, adds, 3, queries, 5, results) == -2, "spill_set: add of a literal fails");
+	expect(exits([&] { return spill_set(3, spilled, adds, 3, queries, 5, results); }, {buffer(spilled), buffer(results)}), "spill_set: add of a literal fails");
 	expect(spilled[0] == 0 && spilled[1] == 0 && spilled[2] == 1, "spill_set: the adds before the failed add");
 	expect(unwritten(), "spill_set: no result after a failed add");
 
@@ -406,7 +475,7 @@ void spillSetEntry()
 	expect(fresh[0] == 1 && fresh[1] == 0 && fresh[2] == 1, "spill_set: the bytes");
 	expect(results[0] == 1 && results[1] == 0 && results[2] == 1 && results[3] == 0 && results[4] == 0 &&
 		results[5] == 7, "spill_set: the query results");
-	expect(spill_set(3, fresh, good + 1, 1, queries, 0, results) == -2, "spill_set: add of a spilled variable fails");
+	expect(exits([&] { return spill_set(3, fresh, good + 1, 1, queries, 0, results); }, {buffer(fresh), buffer(results)}), "spill_set: add of a spilled variable fails");
 	expect(spill_set(3, fresh, good, 0, queries, 0, results) == 0, "spill_set: nothing");
 
 	std::uint8_t none[1] = {7};
@@ -415,7 +484,7 @@ void spillSetEntry()
 		"spill_set: no ids, the payload of a literal is not an id");
 	expect(spill_set(0, none, queries + 4, 0, queries + 3, 2, results) == 0 && results[0] == 0 && results[1] == 0,
 		"spill_set: no ids, a literal and junk");
-	expect(spill_set(0, none, queries + 3, 1, queries, 0, results) == -2 && none[0] == 7,
+	expect(exits([&] { return spill_set(0, none, queries + 3, 1, queries, 0, results); }, {buffer(none), buffer(results)}) && none[0] == 7,
 		"spill_set: no ids, add of a literal fails");
 }
 
@@ -461,9 +530,9 @@ void emissionPopEntry()
 	expect(emission_pop(3, 2, data, target, dest, spills, 3, ops, destinationOf, positionOf, &pending) == 3,
 		"emission_pop: every slot");
 	expect(positionOf[0] == none && positionOf[1] == none && pending == 0, "emission_pop: every slot, positionOf");
-	expect(emission_pop(3, 2, data, target, dest, spills, 4, ops, destinationOf, positionOf, &pending) == -2,
+	expect(exits([&] { return emission_pop(3, 2, data, target, dest, spills, 4, ops, destinationOf, positionOf, &pending); }, {buffer(data), buffer(ops), buffer(destinationOf), buffer(positionOf), buffer(pending)}),
 		"emission_pop: a pop of an empty stack fails");
-	expect(emission_pop(0, 0, data, target, dest, spills, 1, ops, destinationOf, positionOf, &pending) == -2,
+	expect(exits([&] { return emission_pop(0, 0, data, target, dest, spills, 1, ops, destinationOf, positionOf, &pending); }, {buffer(data), buffer(ops), buffer(destinationOf), buffer(positionOf), buffer(pending)}),
 		"emission_pop: a pop of no slot fails");
 	expect(emission_pop(0, 0, data, target, dest, spills, 0, ops, destinationOf, positionOf, &pending) == 0,
 		"emission_pop: nothing");
@@ -729,8 +798,9 @@ Permuted permuted(std::vector<StackSlot> const& _stack, std::vector<std::uint64_
 {
 	Permuted result{0, _stack, _perm, std::vector<ShuffleOp>(2 * _stack.size()), {7, 7},
 		std::vector<Optional<StackOffset>>(_stack.size(), offset(7))};
-	result.count = permute(_stack.size(), result.data.data(), result.perm.data(), result.ops.data(), result.blocked,
-		result.dest.data());
+	result.count = observed([&] { return permute(_stack.size(), result.data.data(), result.perm.data(), result.ops.data(), result.blocked,
+		result.dest.data()); },
+		{buffer(result.data), buffer(result.perm), buffer(result.ops), buffer(result.blocked), buffer(result.dest)});
 	return result;
 }
 
@@ -989,8 +1059,9 @@ Lowest atLowestHeight(std::vector<StackSlot> const& _stack, std::vector<Optional
 	Lowest result{0, _stack, _dest, std::vector<ShuffleOp>(2 * _stack.size()), {7, 7}};
 	std::vector<StackSlot> const target(_n, variable(0));
 	std::uint8_t const spills[1] = {};
-	result.count = permute_at_lowest_height(_stack.size(), _n, result.data.data(), target.data(), result.dest.data(),
-		spills, 1, result.ops.data(), result.blocked);
+	result.count = observed([&] { return permute_at_lowest_height(_stack.size(), _n, result.data.data(), target.data(), result.dest.data(),
+		spills, 1, result.ops.data(), result.blocked); },
+		{buffer(result.data), buffer(result.dest), buffer(result.ops), buffer(result.blocked)});
 	return result;
 }
 
@@ -1005,10 +1076,11 @@ bool swapsAre(Lowest const& _result, std::vector<std::size_t> const& _depths)
 	return true;
 }
 
-/// The result of a call that fails: -2, and nothing is written
-bool failed(Lowest const& _result, std::vector<StackSlot> const& _stack, std::vector<Optional<StackOffset>> const& _dest)
+/// A failed assertion exits with status 1; an argument outside the entry contract returns -2.
+bool failed(Lowest const& _result, std::vector<StackSlot> const& _stack,
+	std::vector<Optional<StackOffset>> const& _dest, Failure const _failure = Failure::Assertion)
 {
-	return _result.count == -2 && sameSlots(_result.data, _stack) && _result.dest == _dest && _result.blocked[0] == 7 &&
+	return _result.count == (_failure == Failure::Assertion ? assertionExit : -2) && sameSlots(_result.data, _stack) && _result.dest == _dest && _result.blocked[0] == 7 &&
 		_result.blocked[1] == 7;
 }
 
@@ -1108,8 +1180,8 @@ void permuteAtLowestHeightEntry()
 	expect(rotated.count == 0 && rotated.blocked[0] == 0 && rotated.blocked[1] == 1007,
 		"permute_at_lowest_height: the rotation of 1024 slots");
 	expect(failed(atLowestHeight(variables(0, 1025), offsets(naturals(0, 1024)), 1025), variables(0, 1025),
-		offsets(naturals(0, 1024))), "permute_at_lowest_height: 1025 slots");
-	expect(failed(atLowestHeight({variable(0)}, {offset(0)}, 1025), {variable(0)}, {offset(0)}),
+		offsets(naturals(0, 1024)), Failure::Rejected), "permute_at_lowest_height: 1025 slots");
+	expect(failed(atLowestHeight({variable(0)}, {offset(0)}, 1025), {variable(0)}, {offset(0)}, Failure::Rejected),
 		"permute_at_lowest_height: 1025 offsets");
 
 	// A mapping that binds both slots for offset 0, and a target of 1 slot: the slot at offset 1 is above the target,
@@ -1128,7 +1200,9 @@ void permuteAtLowestHeightEntry()
 		expect(opt(planned.destinationOf(StackOffset{1})) == 0 && opt(planned.positionOf(StackOffset{1})) == 1,
 			"permuteAtLowestHeight: a slot above the target, the planned mapping");
 		Emission emission{Stack{data, 2, ops}, target, 1, planned, spills};
-		expect(emission.permuteAtLowestHeight() == Status::AssertionFailed && emission.traceSize() == 0,
+		auto state = sample(emission);
+		expect(exits([&] { return emission.permuteAtLowestHeight(); }, {sampleBuffer(emission, state), buffer(ops)}) &&
+			state.traceSize == 0,
 			"permuteAtLowestHeight: a slot above the target");
 	}
 
@@ -1141,7 +1215,7 @@ void permuteAtLowestHeightEntry()
 		ShuffleOp ops[2];
 		StackSlot const target[2] = {variable(0), variable(0)};
 		std::uint8_t const spills[1] = {};
-		Status const expected = change ? Status::AssertionFailed : Status::Done;
+
 
 		// the slot is parked; the change makes offset 0 planned, so the slot is not in a hole, and there is no hole
 		Mapping parked{1, 2};
@@ -1149,7 +1223,10 @@ void permuteAtLowestHeightEntry()
 		Emission parkedEmission{Stack{data, 1, ops}, target, 2, parked, spills};
 		if (change)
 			parked.bind(StackOffset{0}, StackOffset{0});
-		expect(parkedEmission.permuteAtLowestHeight() == expected && parkedEmission.traceSize() == 0,
+		auto parkedEmissionState = sample(parkedEmission);
+		expect((change ? exits([&] { return parkedEmission.permuteAtLowestHeight(); },
+			{sampleBuffer(parkedEmission, parkedEmissionState), buffer(ops)}) && parkedEmissionState.traceSize == 0 :
+			parkedEmission.permuteAtLowestHeight() == Status::Done && parkedEmission.traceSize() == 0),
 			"permuteAtLowestHeight: more parked slots than holes", change);
 
 		// the slot is final; the change unbinds offset 0, so it is a hole, and no slot is parked
@@ -1158,7 +1235,10 @@ void permuteAtLowestHeightEntry()
 		Emission holeEmission{Stack{data, 1, ops}, target, 1, hole, spills};
 		if (change)
 			hole.pop(StackOffset{0});
-		expect(holeEmission.permuteAtLowestHeight() == expected && holeEmission.traceSize() == 0,
+		auto holeEmissionState = sample(holeEmission);
+		expect((change ? exits([&] { return holeEmission.permuteAtLowestHeight(); },
+			{sampleBuffer(holeEmission, holeEmissionState), buffer(ops)}) && holeEmissionState.traceSize == 0 :
+			holeEmission.permuteAtLowestHeight() == Status::Done && holeEmission.traceSize() == 0),
 			"permuteAtLowestHeight: more holes than parked slots", change);
 	}
 }
@@ -1415,8 +1495,16 @@ void mappingBuilderPhases()
 	Mapping bound{2, 2};
 	bound.bind(StackOffset{1}, StackOffset{0});
 	MappingBuilder builder{inPlace.data(), 2, inPlace.data(), 2, kept, Strategy::Leave, bound};
-	expect(builder.mapInPlace() == Status::AssertionFailed, "MappingBuilder: map of a bound target offset fails");
-	expect(positions(bound, 2) == std::vector<Opt>{1, {}} && bound.destinationOf(StackOffset{0}) == none,
+	std::array<std::uint64_t, 3> state{};
+	auto const readMapping = [&] {
+		return std::array{
+			std::bit_cast<std::uint64_t>(bound.positionOf(StackOffset{0})),
+			std::bit_cast<std::uint64_t>(bound.positionOf(StackOffset{1})),
+			std::bit_cast<std::uint64_t>(bound.destinationOf(StackOffset{0}))};
+	};
+	expect(exits([&] { return builder.mapInPlace(); }, {process_test::sample(state, readMapping)}),
+		"MappingBuilder: map of a bound target offset fails");
+	expect(state == std::array<std::uint64_t, 3>{1, SIZE_MAX, SIZE_MAX},
 		"MappingBuilder: a failed map does not bind");
 }
 
@@ -1654,9 +1742,10 @@ Resolved resolveOn(Resolve const& _in)
 	spilled.push_back(guardResolve);
 	std::vector<std::uint8_t> dropped = _in.dropped;
 	dropped.push_back(guardResolve);
-	std::int64_t const result = resolve(_in.source.size(), _in.target.size(), _in.source.data(), _in.target.data(),
+	std::int64_t const result = observed([&] { return resolve(_in.source.size(), _in.target.size(), _in.source.data(), _in.target.data(),
 		_in.plan.data(), _in.current.size(), _in.current.data(), _in.offset, _in.excess, spilled.data(),
-		_in.spilled.size(), _in.allowed, dropped.data());
+		_in.spilled.size(), _in.allowed, dropped.data()); },
+		{buffer(spilled), buffer(dropped)});
 	expect(spilled.back() == guardResolve && dropped.back() == guardResolve, "resolve: writes past the buffers");
 	spilled.pop_back();
 	dropped.pop_back();
@@ -1734,7 +1823,7 @@ Resolve parseResolve(std::string const& _line)
 /// the dropped bytes; or "err" for -2. An output outside the contract of resolve is in angle brackets.
 std::string show(Resolved const& _out)
 {
-	if (_out.result == -2)
+	if (_out.result == -2 || _out.result == assertionExit)
 		return "err";
 	if (_out.result != 0 && _out.result != -1)
 		return "<result " + std::to_string(_out.result) + ">";
@@ -2117,8 +2206,9 @@ Emitted emitted(std::vector<StackSlot> const& _stack, std::vector<Optional<Stack
 	std::size_t const room = std::max(m, n);
 	Emitted result{0, filled(_stack, room, unwrittenSlot), filled(_dest, room, unwritten),
 		std::vector<ShuffleOp>(4 * m + 6 * n), {7, 7}, 7};
-	result.count = emit(m, n, result.data.data(), _target.data(), result.dest.data(), _spilled.data(), _spilled.size(),
-		result.ops.data(), result.blocked, &result.height);
+	result.count = observed([&] { return emit(m, n, result.data.data(), _target.data(), result.dest.data(), _spilled.data(), _spilled.size(),
+		result.ops.data(), result.blocked, &result.height); },
+		{buffer(result.data), buffer(result.dest), buffer(result.ops), buffer(result.blocked), buffer(result.height)});
 	return result;
 }
 
@@ -2149,10 +2239,11 @@ bool emits(Emitted const& _result, std::vector<ShuffleOp> const& _ops, std::uint
 		std::equal(_result.dest.begin() + height, _result.dest.end(), before.begin() + height);
 }
 
-/// The result of a call that fails: -2, and blocked, height and dest (`_dest`, then unwritten) are not written
-bool emitFailed(Emitted const& _result, std::vector<Optional<StackOffset>> const& _dest)
+/// Check the failure kind and the entry outputs that are not written on failure.
+bool emitFailed(Emitted const& _result, std::vector<Optional<StackOffset>> const& _dest,
+	Failure const _failure = Failure::Assertion)
 {
-	return _result.count == -2 && _result.blocked[0] == 7 && _result.blocked[1] == 7 && _result.height == 7 &&
+	return _result.count == (_failure == Failure::Assertion ? assertionExit : -2) && _result.blocked[0] == 7 && _result.blocked[1] == 7 && _result.height == 7 &&
 		_result.dest == filled(_dest, _result.dest.size(), unwritten);
 }
 
@@ -2240,16 +2331,16 @@ void emitEntry()
 	std::vector<StackSlot> const tooMany(1025, literal(0));
 	std::vector<Optional<StackOffset>> const tooManyDest(1025, none);
 	Emitted const tooHigh = emitted(tooMany, tooManyDest, {}, {});
-	expect(emitFailed(tooHigh, tooManyDest) && sameSlots(tooHigh.data, tooMany), "emit: 1025 slots");
+	expect(emitFailed(tooHigh, tooManyDest, Failure::Rejected) && sameSlots(tooHigh.data, tooMany), "emit: 1025 slots");
 	Emitted const tooWide = emitted({}, {}, tooMany, {});
-	expect(emitFailed(tooWide, {}) && sameSlots(tooWide.data, std::vector<StackSlot>(1025, unwrittenSlot)),
+	expect(emitFailed(tooWide, {}, Failure::Rejected) && sameSlots(tooWide.data, std::vector<StackSlot>(1025, unwrittenSlot)),
 		"emit: 1025 target slots");
 
 	// idCount: a variable of the target needs an id below it, also if it is not read; a stack variable does not
 	std::vector<std::uint8_t> spilledFive(6, 0);
 	spilledFive[5] = 1;
 	Emitted const unknown = emitted({}, {}, {variable(5)}, std::vector<std::uint8_t>(5, 1));
-	expect(emitFailed(unknown, {}) && sameSlot(unknown.data[0], unwrittenSlot), "emit: a target id not below idCount");
+	expect(emitFailed(unknown, {}, Failure::Rejected) && sameSlot(unknown.data[0], unwrittenSlot), "emit: a target id not below idCount");
 	expect(emits(emitted({}, {}, {variable(5)}, spilledFive), {load(variable(5))}, 0, 0, {variable(5)}, {offset(0)}, {}),
 		"emit: a spilled variable");
 	expect(emitFailed(emitted({}, {}, {variable(5)}, std::vector<std::uint8_t>(6)), {}),
@@ -2287,7 +2378,9 @@ void emitEntry()
 		planned.bind(StackOffset{16}, StackOffset{16});
 		Emission emission{Stack{data.data(), 17, ops.data()}, target.data(), 19, planned, spills};
 		expect(emission.pendingGenerations() == 1, "run: one offset is pending");
-		expect(emission.run() == Status::AssertionFailed && emission.traceSize() == 0, "run: the first check fails");
+		auto state = sample(emission);
+		expect(exits([&] { return emission.run(); }, {sampleBuffer(emission, state), buffer(data), buffer(ops)}) &&
+			state.traceSize == 0, "run: the first check fails");
 	}
 	// The second check fails: slots 0 to 15 are final. Slot 16 is bound for offset 18, with the stale position 16 of
 	// offset 19, then the binding of offset 18 is removed with Mapping::pop; slot 17 is bound for offset 16. Offsets
@@ -2309,7 +2402,9 @@ void emitEntry()
 		planned.bind(StackOffset{17}, StackOffset{16});
 		Emission emission{Stack{data.data(), 18, ops.data()}, target.data(), 20, planned, spills};
 		expect(emission.pendingGenerations() == 2, "run: two offsets are pending");
-		expect(emission.run() == Status::AssertionFailed && emission.traceSize() == 1 && isSwap(ops[0], 1),
+		auto state = sample(emission);
+		expect(exits([&] { return emission.run(); }, {sampleBuffer(emission, state), buffer(data), buffer(ops)}) &&
+			state.traceSize == 1 && isSwap(ops[0], 1),
 			"run: the second check fails");
 	}
 }
@@ -2574,8 +2669,9 @@ Planned planOn(Plan const& _in)
 	std::vector<StackSlot> data(std::max(m, n), unwrittenSlot);
 	std::vector<ShuffleOp> ops(4 * m + 6 * n, ShuffleOp{ShuffleOp::Kind::Store, 0, StackSlot::makeJunk()});
 	std::vector<Optional<StackOffset>> sources(n, unwritten);
-	std::int64_t const result = plan(m, n, _in.source.data(), _in.target.data(), spilled.data(), _in.spilled.size(),
-		_in.allowed, _in.strategy, dropped.data(), saw, data.data(), ops.data(), sources.data());
+	std::int64_t const result = observed([&] { return plan(m, n, _in.source.data(), _in.target.data(), spilled.data(), _in.spilled.size(),
+		_in.allowed, _in.strategy, dropped.data(), saw, data.data(), ops.data(), sources.data()); },
+		{buffer(spilled), buffer(dropped), buffer(saw), buffer(data), buffer(ops), buffer(sources)});
 	expect(spilled.back() == guardPlan && dropped.back() == guardPlan && saw[1] == guardPlan,
 		"plan: writes past the buffers");
 	bool const noSources = sources == std::vector<Optional<StackOffset>>(n, unwritten);
@@ -2609,7 +2705,7 @@ std::string wordOf(StackSlot const _slot)
 /// "err" for -2. An output outside the contract of plan is in angle brackets.
 std::string show(Planned const& _out)
 {
-	if (_out.result == -2)
+	if (_out.result == -2 || _out.result == assertionExit)
 		return "err";
 	if (_out.result < -2)
 		return "<result " + std::to_string(_out.result) + ">";
@@ -2787,7 +2883,10 @@ Composed composed(Plan const& _in)
 		if (!(canBeFreelyGenerated(slot) ||
 				std::any_of(_in.source.begin(), _in.source.end(), [&](StackSlot const _s) { return _s == slot; }) ||
 				(isVariable(slot) && _in.spilled.at(slot.payload) != 0)))
+		{
+			out.result = assertionExit;
 			return {out, 0, 0};
+		}
 	for (std::size_t attempt = 1;; ++attempt)
 	{
 		Built const built = buildMapping(_in.source, _in.target, out.dropped, _in.strategy);
@@ -2799,8 +2898,11 @@ Composed composed(Plan const& _in)
 			if (Opt const source = built.sources[j])
 				dest[*source] = offset(j);
 		Emitted const e = emitted(_in.source, dest, _in.target, out.spilled);
-		if (e.count == -2)
+		if (e.count == -2 || e.count == assertionExit)
+		{
+			out.result = e.count;
 			return {out, attempt, built.saw};
+		}
 		if (e.blocked[0] == 0 && e.blocked[1] == 0)
 		{
 			out.result = e.count;
@@ -2818,8 +2920,11 @@ Composed composed(Plan const& _in)
 		};
 		std::ptrdiff_t const before = droppedCount(out.dropped);
 		Resolved const resolved = resolveOn(r);
-		if (resolved.result == -2)
+		if (resolved.result == -2 || resolved.result == assertionExit)
+		{
+			out.result = resolved.result;
 			return {out, attempt, built.saw};
+		}
 		out.spilled = resolved.spilled;
 		out.dropped = resolved.dropped;
 		if (resolved.result == -1)
@@ -2875,13 +2980,14 @@ void planProperties()
 
 		Planned const out = planOn(in);
 		Composed const reference = composed(in);
-		expect(show(out) == show(reference.out), "plan: the composition of the entries", run);
+		expect(out.result == reference.out.result && show(out) == show(reference.out),
+			"plan: the composition of the entries", run);
 		targetRuns += reference.attempts == 0;
-		failedRuns += reference.attempts > 0 && out.result == -2;
+		failedRuns += reference.attempts > 0 && out.result == assertionExit;
 		stuckRuns += out.result == -1;
 		retryRuns += out.result >= 0 && reference.attempts >= 2;
 		sawRuns += out.saw == 1 && reference.lastSaw == 0;
-		if (out.result == -2)
+		if (out.result == -2 || out.result == assertionExit)
 			continue;
 		for (std::size_t id = 0; id < in.spilled.size(); ++id)
 			if (out.spilled[id] != in.spilled[id])
@@ -2915,35 +3021,59 @@ void planProperties()
 		"plan: the generator reaches each case");
 }
 
-int main()
+int main(int argc, char** argv)
 {
-	stackPop();
-	mappingConstructor();
-	mappingPop();
-	mappingOperations();
-	emission();
-	emissionPopEntry();
-	spillSet();
-	spillSetOperations();
-	spillSetEntry();
-	removeSurplusEntry();
-	removeSurplusProperties();
-	permuteEntry();
-	permuteProperties();
-	permuteAtLowestHeightEntry();
-	permuteAtLowestHeightProperties();
-	mappingBuilderPhases();
-	buildMappingEntry();
-	buildMappingProperties();
-	resolveCases();
-	resolveSharedSpills();
-	resolveEntry();
-	resolveProperties();
-	emitEntry();
-	emitProperties();
-	planCases();
-	planEntry();
-	planProperties();
+	struct Test { char const* name; void (*run)(); };
+	Test const tests[] = {
+		{"processCalls", processCalls},
+		{"stackPop", stackPop},
+		{"mappingConstructor", mappingConstructor},
+		{"mappingPop", mappingPop},
+		{"mappingOperations", mappingOperations},
+		{"emission", emission},
+		{"emissionPopEntry", emissionPopEntry},
+		{"spillSet", spillSet},
+		{"spillSetOperations", spillSetOperations},
+		{"spillSetEntry", spillSetEntry},
+		{"removeSurplusEntry", removeSurplusEntry},
+		{"removeSurplusProperties", removeSurplusProperties},
+		{"permuteEntry", permuteEntry},
+		{"permuteProperties", permuteProperties},
+		{"permuteAtLowestHeightEntry", permuteAtLowestHeightEntry},
+		{"permuteAtLowestHeightProperties", permuteAtLowestHeightProperties},
+		{"mappingBuilderPhases", mappingBuilderPhases},
+		{"buildMappingEntry", buildMappingEntry},
+		{"buildMappingProperties", buildMappingProperties},
+		{"resolveCases", resolveCases},
+		{"resolveSharedSpills", resolveSharedSpills},
+		{"resolveEntry", resolveEntry},
+		{"resolveProperties", resolveProperties},
+		{"emitEntry", emitEntry},
+		{"emitProperties", emitProperties},
+		{"planCases", planCases},
+		{"planEntry", planEntry},
+		{"planProperties", planProperties},
+	};
+	bool found = false;
+	for (auto const& test: tests)
+		if (argc == 1 || (argc == 2 && std::strcmp(argv[1], test.name) == 0))
+		{
+			found = true;
+			std::fprintf(stderr, "%s\n", test.name);
+			if (argc == 1)
+			{
+				auto const result = process_test::call([&] {
+					failures = 0;
+					test.run();
+					return failures;
+				});
+				expect(result.returned == 0 && result.exitStatus == 0, test.name);
+			}
+			else
+				test.run();
+		}
+	if (!found)
+		return 2;
 	if (failures > 0)
 	{
 		std::fprintf(stderr, "%d failures\n", failures);

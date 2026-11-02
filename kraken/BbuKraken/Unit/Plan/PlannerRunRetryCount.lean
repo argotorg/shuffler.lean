@@ -42,9 +42,9 @@ theorem b_29 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     (K : Unit → MachineData → Prop) (I' : CfgLabel → Nat → Unit → MachineData → Prop)
     (E : Int64 → MachineData → Prop)
     (hloop : ∀ u, DropBeforeHead P g M F s ra u →
-      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.29") u)
+      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.28") u)
     (hdone : ∀ u, ResolveHead P g M F s ra u → K () u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.29" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.28" →
       ∀ t, DropBeforeHead P g M F s ra t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
@@ -62,7 +62,7 @@ theorem b_29 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   all_goals try simp only [hax', rd, count_byte] at ⊢
   vc_by_shape
   | load => exact ks
-  | goto ".LB.Planner.run.29" =>
+  | goto ".LB.Planner.run.28" =>
     rename_i hj
     symexec_norm at hj
     simp only [hax', hdx', BitVec.zero_eq,

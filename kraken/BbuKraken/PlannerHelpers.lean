@@ -26,33 +26,40 @@ namespace Bbu
 open Bbu.Unit
 
 structure PlannerHelperSpecs [Host] [FunDecls] : Prop where
-  map : BSpec Names.map mapA 0 mapQ
+  map : BSpecWithExit Names.map mapA 2 mapQ mapX
   closestCopy : BSpec Names.closestCopy closestA 4 closestQ
-  mapInPlace : BSpec Names.mapInPlace mapInPlaceA 3 mapInPlaceQ
-  mapClosestCopies : BSpec Names.mapClosestCopies mapClosestA 7 mapClosestQ
-  mapWildcardSlotCopies : BSpec Names.mapWildcardSlotCopies mapWildA 9 mapWildQ
-  keepWildcardSlots : BSpec Names.keepWildcardSlots keepWildA 3 keepWildQ
-  absorbSurplus : BSpec Names.absorbSurplus absorbA 3 absorbQ
+  mapInPlace : BSpecWithExit Names.mapInPlace mapInPlaceA 6 mapInPlaceQ mapInPlaceX
+  mapClosestCopies : BSpecWithExit Names.mapClosestCopies mapClosestA 8 mapClosestQ mapClosestX
+  mapWildcardSlotCopies : BSpecWithExit Names.mapWildcardSlotCopies mapWildA 10 mapWildQ mapWildX
+  keepWildcardSlots : BSpecWithExit Names.keepWildcardSlots keepWildA 6 keepWildQ keepWildX
+  absorbSurplus : BSpecWithExit Names.absorbSurplus absorbA 6 absorbQ absorbX
   isRetained : VSpec MapM (fun _ => True) Names.isRetained isRetainedA 0 isRetainedQ
   hasOtherRetainedCopy : VSpec HView HG.Ok Names.hasOtherRetainedCopy hasOtherA 8 hasOtherQ
   isDemanded : VSpec PView PG.Ok Names.isDemanded isDemandedA 0 isDemandedQ
   isAvailable : Sep.Spec Names.isAvailable isAvailableA 3 isAvailableQ
 
-theorem planner_helpers_correct [Host] (L : Linked) :
+theorem planner_helpers_correct [Host] (L : Linked) (X : ExitBoundary) :
     letI := L.plannerDecls
     PlannerHelperSpecs := by
   letI := L.plannerDecls
-  have hm := vspec_of_body L.planner_map_decl map_unit
+  have hm := vspecWithExit_of_body L.planner_map_decl (X.returnDistinct Names.map)
+    (map_unit (L.planner_exit_decl X) (X.outside map_at))
   have hc := vspec_of_body L.planner_closestCopy_decl closestCopy_unit
   have hr := vspec_of_body L.planner_isRetained_decl isRetained_unit
   have hs := Sep.spec_of_body L.planner_isSpilled_decl isSpilled_unit
   have hcopy := Sep.spec_of_body L.planner_shallowestCopyPosition_decl shallowestCopy_unit
   exact ⟨hm, hc,
-    vspec_of_body L.planner_mapInPlace_decl (mapInPlace_unit hm),
-    vspec_of_body L.planner_mapClosestCopies_decl (mapClosestCopies_unit hc hm),
-    vspec_of_body L.planner_mapWildcardSlotCopies_decl (mapWildcardSlotCopies_unit hc hm),
-    vspec_of_body L.planner_keepWildcardSlots_decl (keepWildcardSlots_unit hm),
-    vspec_of_body L.planner_absorbSurplus_decl (absorbSurplus_unit hm), hr,
+    vspecWithExit_of_body L.planner_mapInPlace_decl (X.returnDistinct Names.mapInPlace)
+      (mapInPlace_unit (X.outside mapInPlace_at) hm),
+    vspecWithExit_of_body L.planner_mapClosestCopies_decl (X.returnDistinct Names.mapClosestCopies)
+      (mapClosestCopies_unit (X.outside mapClosestCopies_at) hc hm),
+    vspecWithExit_of_body L.planner_mapWildcardSlotCopies_decl
+      (X.returnDistinct Names.mapWildcardSlotCopies)
+      (mapWildcardSlotCopies_unit (X.outside mapWildcardSlotCopies_at) hc hm),
+    vspecWithExit_of_body L.planner_keepWildcardSlots_decl (X.returnDistinct Names.keepWildcardSlots)
+      (keepWildcardSlots_unit (X.outside keepWildcardSlots_at) hm),
+    vspecWithExit_of_body L.planner_absorbSurplus_decl (X.returnDistinct Names.absorbSurplus)
+      (absorbSurplus_unit (X.outside absorbSurplus_at) hm), hr,
     vspec_of_body L.planner_hasOtherRetainedCopy_decl (hasOtherRetainedCopy_unit hr),
     vspec_of_body L.planner_isDemanded_decl isDemanded_unit,
     Sep.spec_of_body L.planner_isAvailable_decl (isAvailable_unit hs hcopy)⟩

@@ -1,7 +1,7 @@
 module
 
-public import BbuKraken.Unit.Defs
-import all BbuKraken.Unit.Defs
+public import BbuKraken.Unit.ExitDefs
+import all BbuKraken.Unit.ExitDefs
 public import BbuKraken.Sep.Stores
 import all BbuKraken.Sep.Stores
 public import ProofKit.Cfg
@@ -12,7 +12,7 @@ import all ProofKit.Cfg
 /-!
 # `dup`
 
-`c/bbu/<Names.dup>.S`: no frame, no call. If the slot at `copy` is not a return label, it stores
+`c/bbu/<Names.dup>.S`: one stack word for alignment. If the slot at `copy` is not a return label, it stores
 the operation to record `traceSize`, copies `m_stack[copy]` to `m_stack[size]`, increments the
 two counters, and then binds the new slot to the destination if `m_positionOf[destination]` is
 `-1`.
@@ -21,11 +21,8 @@ The caller is `produce`. The copy is a result of `shallowestCopyPosition` that i
 is below `size ≤ n`; the destination is `t < n`; `produceA` gives `len < n` and `nops < 6n`
 (`dupA`). `produce` uses the flat result (`dupQ`).
 
-The proof has one block for the body and one for `.LB.Emission.dup.0` (`movl %edx, %eax; ret`). The invariant
-of `.LB.Emission.dup.0` is the result: a ghost `g'` in the memory, `edx` the code of the `Status`. The three
-jumps to `.LB.Emission.dup.0` are the return label (`g' = g`), a used destination (`g'` after `Stack::dup`) and
-the fall-through (`g'` after `Stack::dup` and `Mapping::bind`). The body names each store of the
-view (`View.store_*`, `OpM.store_*`) before `kvcgen64`, so each load and each exit has its view.
+The two assertion paths call `exit(1)`. A used destination retains the record and stack
+copy made before the check. The two free stack words cover alignment and the call return slot.
 -/
 
 open Std.WP Lean.Order
@@ -188,22 +185,53 @@ theorem flat_dup_bind {g : G} (hok : g.Ok) {c d : Word} (hc : c.toNat < g.h.n.to
       = Flat.bind (Flat.stackDup (flat g) c) g.h.len d := by
   rw [← flat_dup hok hc hL hN, ← flat_bind _ hLM hd]
 
+-- The slot address fold can occur before the field address fold.
+theorem slot_pos (S : Addr) (i : Nat) :
+    slotAt S i + 8248#64 = Fld.mapping_positionOf S i := by
+  unfold slotAt Fld.mapping_positionOf
+  ac_rfl
+
+-- The size reload before `leaq 1` is the size in the view.
+theorem bump_len {m : Mem 64} {a : Addr} {v : Word} (h : rd m a = v) :
+    Mem.storeInt m a 8 (rd m a + 1#64).toInt = Mem.storeInt m a 8 (v + 1#64).toInt :=
+  congrArg (fun w : Word => Mem.storeInt m a 8 (w + 1#64).toInt) h
+
+-- Undo the alignment word in a state used by `Kp`.
+def unpad (t : MachineData) : MachineData :=
+  { t with regs := t.regs.set64 .rsp (t.regs.get64 .rsp + 8#64) }
+
 end Dup
 
-theorem dup_unit [Host] [FunDecls] : UnitThm dupAsm dupA 0 dupQ := by
+set_option maxRecDepth 4096 in
+set_option maxHeartbeats 400000 in
+theorem dup_unit [Host] [FunDecls]
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels dupAsm, label l ≠ label "exit") :
+    UnitThmWithExit dupAsm dupA 2 dupQ dupX := by
   intro S g F s ra
   refine ⟨fun s₀ ⟨h₀, hpre⟩ => ?_⟩
   subst h₀
   obtain ⟨fr, v, hfr, hm⟩ := hpre.mem
-  obtain rfl : fr = [] := List.eq_nil_of_length_eq_zero hfr
-  have hk0 : Kp S g F s ra [] (s.pushRa ra) := Kp.init hm
+  obtain ⟨x, y, rfl⟩ : ∃ x y, fr = [x, y] := by
+    match fr, hfr with
+    | [x, y], _ => exact ⟨x, y, rfl⟩
+  have hk0 : Kp S g F s ra [x, y] (s.pushRa ra) := Kp.init hm
+  have he := ProofKit.external_call_spec "exit" hexit
+  have hcN : s.regs.rsi.toBitVec.toNat < g.h.n.toNat + g.xs := Nat.lt_add_right _ hpre.args.1
+  have hdN : s.regs.rdx.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hpre.args.2.2.2 hpre.ok.n
   refine Program.WP.cfg (fun
       | .entry, t => t = s.pushRa ra
       | .label l, t =>
         if l = Names.dup then t = s.pushRa ra
-        else if l = ".LB.Emission.dup.0" then ∃ g', Kp S g' F s ra [] t ∧ g'.Ok ∧ Keep g g'
-          ∧ flat g' = (Flat.dup (flat g) (rsi s) (rdx s)).2
-          ∧ (rdx t).setWidth 8 = code (Flat.dup (flat g) (rsi s) (rdx s)).1
+        else if l = ".LB.Emission.dup.0" then
+          Kp S g F s ra [x, y] (Dup.unpad t) ∧
+          ((g.stk[(rsi s).toNat]'hcN |>.extractLsb' 32 8) - 3#8 == BitVec.zero 8) = true
+        else if l = ".LB.Emission.dup.1" then
+          ∃ g', Kp S g' F s ra [x, y] (Dup.unpad t) ∧ g'.Ok ∧ Keep g g'
+            ∧ flat g' = Flat.stackDup (flat g) (rsi s)
+            ∧ rax t = S ∧ rdx t = rdx s ∧ rcx t = g.h.len
+            ∧ ((g.stk[(rsi s).toNat]'hcN |>.extractLsb' 32 8) - 3#8 == BitVec.zero 8) = false
+            ∧ (g.h.pos[(rdx s).toNat]'hdN - 18446744073709551615#64 == BitVec.zero 64) = true
         else False
       | .exit, _ => False)
     (fun _ _ => 0) ?_ rfl
@@ -214,21 +242,79 @@ theorem dup_unit [Host] [FunDecls] : UnitThm dupAsm dupA 0 dupQ := by
     simp only [Names.dup, ↓reduceIte]
   case «.LB.Emission.dup.0» t ht =>
     simp only [Names.dup, String.reduceEq, ↓reduceIte] at ht
-    obtain ⟨g', hk, hok', hkeep, hflat, hcode⟩ := ht
-    kvcgen64
+    obtain ⟨hk, hkind⟩ := ht
+    have hsp : t.regs.rsp.toBitVec + 8#64 = rsp s - 8#64 := by
+      exact congrArg UInt64.toBitVec hk.sp
+    have haddr : t.regs.rsp.toBitVec - 8#64 = rsp s - 24#64 := by bv_omega
+    have hmem := Stk.two (rsp s) x y ra.toBitVec _ F ▸ hk.mem
+    dsimp only [Dup.unpad] at hmem
+    kvcgen64 [he]
+    all_goals symexec_norm
     vc_by_shape
+    | load => simpa only [haddr] using Wd.isSome hmem
+    | jumpOut =>
+      rename_i exitra _
+      refine Or.inr ⟨Or.inr ⟨rfl, rfl, ?_⟩, ?_⟩
+      · refine ⟨g, [exitra.toBitVec, y], ra.toBitVec, ?_, hpre.ok, rfl, ?_⟩
+        · change ExitRes (Flat.dup · (rsi s) (rdx s)) g g
+          dsimp only [ExitRes]
+          rw [Dup.dup_frl hpre.ok hpre.args.1 hkind]
+          exact ⟨⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, rfl, rfl⟩
+        · rw [Stk.two]
+          change (Wd (rsp s - 24#64) exitra.toBitVec ∗ _).get
+            (Mem.storeInt _ (t.regs.rsp.toBitVec - 8#64) 8 exitra.toBitVec.toInt)
+          rw [haddr]
+          exact Wd.store hmem exitra.toBitVec
+      · intro l hl ha
+        exact False.elim (hout l hl ha)
+  case «.LB.Emission.dup.1» t ht =>
+    simp only [Names.dup, String.reduceEq, ↓reduceIte] at ht
+    obtain ⟨g', hk, hok, hkeep, hf, ha, hd, hc, hkind, hpos⟩ := ht
+    have hLM := Nat.lt_of_lt_of_le hpre.args.2.1 hpre.ok.n
+    have hdM := Nat.lt_of_lt_of_le hpre.args.2.2.2 hpre.ok.n
+    have hsp : UInt64.ofBitVec (8#64 + t.regs.rsp.toBitVec) = (s.pushRa ra).regs.rsp := by
+      rw [BitVec.add_comm]
+      exact hk.sp
+    have hdone := Dup.dup_done hpre.ok hpre.args.1 hdN hkind
+      (show (!(g.h.pos[(rdx s).toNat]'hdN - 18446744073709551615#64 == BitVec.zero 64)) = false from
+        congrArg Bool.not hpos)
+    have hmem0 := hk.mem
+    dsimp only [Dup.unpad] at hmem0
+    have hmem1 := View.store_dest hmem0 hLM s.regs.rdx.toBitVec
+    have hmem2 := View.store_pos hmem1 hdN g.h.len
+    dsimp only at hmem1 hmem2
+    kvcgen64
+    all_goals symexec_norm
+    all_goals try simp only [ha, hd, hc, Fld.fold_mapping_destinationOf,
+      Fld.fold_mapping_positionOf]
+    vc_by_shape
+    | load => view_load
     | retAddr =>
       exact Option.isSome_iff_exists.mpr
-        ⟨ra, Kp.retAddr (hk.next rfl rfl rfl rfl rfl rfl rfl rfl)⟩
+        ⟨ra, Kp.retAddr ⟨hmem2, hsp, hk.bx, hk.bp, hk.r12, hk.r13, hk.r14, hk.r15⟩⟩
     | ret =>
-      exact Kp.ret (hk.next rfl rfl rfl rfl rfl rfl rfl rfl) rfl hok' fun t' _ hax =>
-        ⟨hkeep, hflat, by show (rax t').setWidth 8 = _; rw [hax]; exact (Dup.al_movl _).trans hcode⟩
+      refine ProofKit.intercept_mono_exit
+        (E := fun a t => a = ra ∧ Sep.Post S F 2 (fun g' t => dupQ g g' s t) s t
+          ∧ Sep.mod.Agree s t) ?_ (fun h => Or.inl h)
+      refine Kp.ret ⟨hmem2, hsp, hk.bx, hk.bp, hk.r12, hk.r13, hk.r14, hk.r15⟩ rfl
+        (Keep.ok (g := g') ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok hok.len hok.nops) ?_
+      intro t' _ hax
+      refine ⟨⟨hkeep.tgtp, hkeep.n, hkeep.splp, hkeep.data, hkeep.ops,
+        hkeep.xs, hkeep.xo, hkeep.tgt, hkeep.spl⟩, ?_, ?_⟩
+      · dsimp only [rsi, rdx, Reg64s.get64_rsi, Reg64s.get64_rdx] at hf ⊢
+        rw [hdone, Dup.flat_bind g' (d := s.regs.rdx.toBitVec) hLM hdN, hf]
+      · dsimp only [rsi, rdx, Reg64s.get64_rsi, Reg64s.get64_rdx] at hf ⊢
+        rw [hdone]
+        show (rax t').setWidth 8 = 0#8
+        rw [hax]; rfl
   case «_ZN12_GLOBAL__N_18Emission3dupE11StackOffsetS1_» t ht =>
     simp only [Names.dup, ↓reduceIte] at ht
     subst ht
     have hS : (s.pushRa ra).regs.rdi.toBitVec = S := by simpa [MachineData.pushRa] using hpre.rdi
-    obtain ⟨c, hC⟩ : ∃ c, (s.pushRa ra).regs.rsi.toBitVec = c := ⟨_, rfl⟩
-    obtain ⟨d, hD⟩ : ∃ d, (s.pushRa ra).regs.rdx.toBitVec = d := ⟨_, rfl⟩
+    let c := (s.pushRa ra).regs.rsi.toBitVec
+    let d := (s.pushRa ra).regs.rdx.toBitVec
+    have hC : (s.pushRa ra).regs.rsi.toBitVec = c := rfl
+    have hD : (s.pushRa ra).regs.rdx.toBitVec = d := rfl
     have hcs : rsi s = c := hC
     have hds : rdx s = d := hD
     obtain ⟨hc, hL, hN, hd⟩ := hpre.args
@@ -275,40 +361,98 @@ theorem dup_unit [Host] [FunDecls] : UnitThm dupAsm dupA 0 dupQ := by
     have rP9 := View.rd_pos h9 hdM
     dsimp only [rd] at rP9
     -- `bind`.
-    have h10 := View.store_dest h9 hLM d
-    have h11 := View.store_pos h10 hdM g.h.len
-    kvcgen64
+    have hmlen := Dup.bump_len rL7
+    have h9actual := hmlen.symm ▸ h9
+    have rP9actual := hmlen.symm ▸ rP9
+    have h9x := Stk.two (rsp s) x y ra.toBitVec _ F ▸ h9actual
+    have haddr : (s.pushRa ra).regs.rsp.toBitVec - 8#64 - 8#64 = rsp s - 24#64 := by
+      change rsp s - 8#64 - 8#64 - 8#64 = rsp s - 24#64
+      bv_omega
+    let gd : G := { g with
+      h := { g.h with len := g.h.len + 1#64, nops := g.h.nops + 1#64 },
+      stk := g.stk.set g.h.len.toNat (g.stk[c.toNat]'(Nat.lt_add_right _ hc)) (Nat.lt_add_right _ hL),
+      ops := g.ops.set g.h.nops.toNat
+        ⟨⟨1#8, BitVec.extractLsb' 0 8 (g.h.len - c), ⟨0#32, 1#8, 5#8⟩⟩,
+          (g.ops[g.h.nops.toNat]'hN).pad2, (g.ops[g.h.nops.toNat]'hN).pad10⟩ hN }
+    have hgdok : gd.Ok := Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok
+      (Nat.le_add_right_of_le (Dup.succ_le hL)) (Dup.succ_le hN)
+    kvcgen64 [he]
     all_goals try symexec_norm
-    all_goals try simp only [hS, hC, hD, Fld.fold_mapping_destinationOf,
-      Fld.fold_mapping_positionOf] at *
+    all_goals try simp only [hS, hC, hD,
+      Fld.fold_mapping_positionOf]
     all_goals try simp only [Fld.fold_stack_data, Fld.fold_stack_size, Fld.fold_stack_trace,
-      Fld.fold_stack_traceSize, fold_slot, fold_op, rD, rL, rN, rK, rO, rD4, rL4, rC4, rL7,
-      rP9] at *
+      Fld.fold_stack_traceSize, fold_slot, fold_op, rD, rL, rN, rK, rO, rD4, rL4, rC4]
+    all_goals try rw [Dup.slot_pos]
     vc_by_shape
     | load =>
       first
       | view_load
+      | with_reducible exact View.isSome_len h7
       | with_reducible exact View.isSome_slot_byte h0 (Nat.lt_add_right _ hc) (j := 4) (by decide)
+      | rw [haddr]; exact Wd.isSome h9x
+      | exact View.isSome_pos h9actual hdM
     | closed => decide
     | goto ".LB.Emission.dup.0" =>
+      rename_i hkind
+      simp only [hS, hC, Fld.fold_stack_data, fold_slot, rD, rK] at hkind
       cfg_goto
-      · exact hk0.stack
-      · simp only [Names.dup, String.reduceEq, ↓reduceIte, hcs, hds]
-        first
-        | rw [Dup.dup_frl hok hc ‹_›]
-          exact ⟨g, hk0.next rfl rfl rfl rfl rfl rfl rfl rfl, hok,
-            ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, rfl, rfl⟩
-        | rw [Dup.dup_used hok hc hdM ‹_› ‹_›]
-          exact ⟨_, ⟨h9, hk0.sp, hk0.bx, hk0.bp, hk0.r12, hk0.r13, hk0.r14, hk0.r15⟩,
-            Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok (Nat.le_add_right_of_le (Dup.succ_le hL))
-              (Dup.succ_le hN),
-            ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, Dup.flat_dup hok hc hL hN, rfl⟩
+      · apply MachineData.stackAtOrBelow_of_toNat_lt
+        symexec_norm
+        have hs : ∀ a : Word, a - (a - 8#64) = 8#64 := by intro a; bv_omega
+        rw [hs]
+        decide
+      · simp only [Names.dup, String.reduceEq, ↓reduceIte]
+        refine ⟨⟨h0, ?_, rfl, rfl, rfl, rfl, rfl, rfl⟩, ?_⟩
+        · change UInt64.ofBitVec (_ - 8#64 + 8#64) = _
+          rw [BitVec.sub_add_cancel]
+        · exact ‹_›
       · simp
-    | other =>
-      simp only [Names.dup, String.reduceEq, ↓reduceIte, hcs, hds]
-      rw [Dup.dup_done hok hc hdM ‹_› ‹_›]
-      exact ⟨_, ⟨h11, hk0.sp, hk0.bx, hk0.bp, hk0.r12, hk0.r13, hk0.r14, hk0.r15⟩,
-        Keep.ok (g := g) ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok (Nat.le_add_right_of_le (Dup.succ_le hL)) (Dup.succ_le hN),
-        ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩, Dup.flat_dup_bind hok hc hL hN hLM hdM, rfl⟩
+    | goto ".LB.Emission.dup.1" =>
+      rename_i hkind hpos
+      simp only [hS, hC, hD,
+        Fld.fold_stack_data, Fld.fold_stack_size, Fld.fold_stack_trace,
+        Fld.fold_stack_traceSize, fold_slot, fold_op, rD, rL, rN, rK, rO, rD4, rL4,
+        rC4] at hkind hpos
+      simp only [Dup.slot_pos] at hpos
+      have hpos' := (congrArg
+        (fun v : Word => v - 18446744073709551615#64 == BitVec.zero 64) rP9actual).symm.trans hpos
+      cfg_goto
+      · apply MachineData.stackAtOrBelow_of_toNat_lt
+        symexec_norm
+        have hs : ∀ a : Word, a - (a - 8#64) = 8#64 := by intro a; bv_omega
+        rw [hs]
+        decide
+      · simp only [Names.dup, String.reduceEq, ↓reduceIte, hcs, hds]
+        refine ⟨gd, ⟨h9actual, ?_, rfl, rfl, rfl, rfl, rfl, rfl⟩, hgdok,
+          ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩,
+          Dup.flat_dup hok hc hL hN, hpre.rdi, rfl, rL7, ‹_›, hpos' ⟩
+        change UInt64.ofBitVec (_ - 8#64 + 8#64) = _
+        rw [BitVec.sub_add_cancel]
+      · simp
+    | jumpOut =>
+      rename_i exitra _ hkind hused
+      simp only [hS, hC, hD,
+        Fld.fold_stack_data, Fld.fold_stack_size, Fld.fold_stack_trace,
+        Fld.fold_stack_traceSize, fold_slot, fold_op, rD, rL, rN, rK, rO, rD4, rL4,
+        rC4] at hkind hused
+      simp only [Dup.slot_pos] at hused
+      have hused' := (congrArg
+        (fun v : Word => v - 18446744073709551615#64 == BitVec.zero 64) rP9actual).symm.trans hused
+      refine Or.inr ⟨Or.inr ⟨rfl, rfl, ?_⟩, ?_⟩
+      · refine ⟨gd, [exitra.toBitVec, y], ra.toBitVec, ?_, hgdok, rfl, ?_⟩
+        · change ExitRes (Flat.dup · (rsi s) (rdx s)) g gd
+          dsimp only [ExitRes]
+          change Keep g gd ∧ flat gd = (Flat.dup (flat g) c d).2 ∧
+            (Flat.dup (flat g) c d).1 = .assertionFailed
+          rw [Dup.dup_used hok hc hdM hkind (congrArg Bool.not hused')]
+          exact ⟨⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩,
+            Dup.flat_dup hok hc hL hN, rfl⟩
+        · rw [Stk.two]
+          change (Wd (rsp s - 24#64) exitra.toBitVec ∗ _).get
+            (Mem.storeInt _ ((s.pushRa ra).regs.rsp.toBitVec - 8#64 - 8#64) 8 exitra.toBitVec.toInt)
+          rw [haddr]
+          exact Wd.store h9x exitra.toBitVec
+      · intro l hl ha
+        exact False.elim (hout l hl ha)
 
 end Bbu.Unit

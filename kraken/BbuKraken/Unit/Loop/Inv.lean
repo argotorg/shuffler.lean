@@ -108,6 +108,10 @@ def Bs (g' : G) (u : Word) (t : MachineData) : Prop :=
   ∃ x0 x2 lo w, Mid S g' F s ra x0 x2 lo w u t ∧ g'.Ok ∧ Keep g g'
 
 -- `.13`: the result.
+def IRepeat (t : MachineData) : Prop :=
+  ∃ g' u, Bs S g F s ra g' u t ∧ Flat.HInv (flat g') t.regs.r14.toBitVec g'.xo
+    ∧ Flat.loop (flat g') t.regs.r14.toBitVec = Flat.buildBottomUp (flat g)
+
 def I13 (t : MachineData) : Prop :=
   ∃ g' u, Bs S g F s ra g' u t ∧ loopQ g g' s t
 
@@ -126,7 +130,7 @@ def I31 (t : MachineData) : Prop :=
 def I0 (t : MachineData) : Prop :=
   ∃ g' u T, Bs S g F s ra g' u t ∧ t.regs.r13.toBitVec = g'.h.n
     ∧ t.regs.r15.toBitVec = g'.h.len ∧ Flat.HInv (flat g') T g'.xo ∧ g'.h.pend = 0
-    ∧ t.regs.rdx.toBitVec = 0#64 ∧ T < g'.h.n
+    ∧ t.regs.rax.toBitVec = 0#64 ∧ T < g'.h.n
     ∧ Flat.buildBottomUp (flat g) = if (flat g').size ≠ (flat g').targetSize
         then (.assertionFailed, flat g') else Flat.permuteMapping (flat g')
 
@@ -134,9 +138,9 @@ def I0 (t : MachineData) : Prop :=
 -- the entries below `rdx` are done.
 def I1 (t : MachineData) : Prop :=
   ∃ g' u T x0 x2 lo w, Mid S g' F s ra x0 x2 lo w u t ∧ g'.Ok ∧ Keep g g'
-    ∧ t.regs.r13.toBitVec = g'.h.n ∧ g'.h.len = g'.h.n ∧ t.regs.rdx.toBitVec < g'.h.n
+    ∧ t.regs.r13.toBitVec = g'.h.n ∧ g'.h.len = g'.h.n ∧ t.regs.rax.toBitVec < g'.h.n
     ∧ Flat.HInv (flat g') T g'.xo ∧ g'.h.pend = 0
-    ∧ (∀ j (hj : j < MAX_N), j < t.regs.rdx.toBitVec.toNat →
+    ∧ (∀ j (hj : j < MAX_N), j < t.regs.rax.toBitVec.toNat →
         x2.A[j] = Flat.get g'.h.dest (BitVec.ofNat 64 j))
     ∧ Flat.buildBottomUp (flat g) = Flat.permuteMapping (flat g')
 
@@ -320,36 +324,39 @@ def LInv : CfgLabel → MachineData → Prop
     if l = Names.buildBottomUp then t = s.pushRa ra
     else if l = ".LB.Emission.buildBottomUp.0" then I0 S g F s ra t
     else if l = ".LB.Emission.buildBottomUp.1" then I1 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.2" then False
-    else if l = ".LB.Emission.buildBottomUp.3" then I3 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.4" then I4 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.5" then I5 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.6" then I6 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.7" then I7 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.8" then I8 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.9" then I9 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.10" then I10 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.11" then I11 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.12" then I12 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.13" then I13 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.2" then IAf S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.3" then False
+    else if l = ".LB.Emission.buildBottomUp.4" then I3 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.5" then I4 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.6" then I5 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.7" then I6 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.8" then I7 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.9" then I8 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.10" then I9 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.11" then I10 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.12" then I11 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.13" then I12 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.15" then I13 S g F s ra t
     else if l = ".LB.Emission.buildBottomUp.14" then I14 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.15" then I15 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.16" then I16 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.17" then I17 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.18" then I18 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.19" then I19 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.20" then I20 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.21" then I21 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.22" then I22 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.23" then I23 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.24" then I24 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.25" then I25 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.26" then I26 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.27" then I27 S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.28" then IAf S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.29" then IAf S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.30" then IAf S g F s ra t
-    else if l = ".LB.Emission.buildBottomUp.31" then I31 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.16" then IRepeat S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.17" then I15 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.18" then I16 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.19" then I17 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.21" then I18 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.22" then I19 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.23" then I20 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.24" then I21 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.25" then I22 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.28" then I23 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.29" then I24 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.30" then I25 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.31" then I26 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.32" then I27 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.20" then IAf S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.26" then IAf S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.27" then IAf S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.33" then I31 S g F s ra t
+    else if l = ".LB.Emission.buildBottomUp.34" then IAf S g F s ra t
     else False
 
 end
@@ -363,24 +370,25 @@ def H (S : Addr) (T : Word) (t : MachineData) : Nat :=
 
 def V (S : Addr) (l : Label) (t : MachineData) : Nat :=
   if l = Names.buildBottomUp then 2 ^ 36
-  else if l = ".LB.Emission.buildBottomUp.26" ∨ l = ".LB.Emission.buildBottomUp.27" then H S t.regs.r14.toBitVec t + 4200
-  else if l = ".LB.Emission.buildBottomUp.25" then H S (t.regs.r14.toBitVec + 1#64) t + 4200
-  else if l = ".LB.Emission.buildBottomUp.5" then
+  else if l = ".LB.Emission.buildBottomUp.31" ∨ l = ".LB.Emission.buildBottomUp.32" then H S t.regs.r14.toBitVec t + 4200
+  else if l = ".LB.Emission.buildBottomUp.30" then H S (t.regs.r14.toBitVec + 1#64) t + 4200
+  else if l = ".LB.Emission.buildBottomUp.6" then
     H S t.regs.r14.toBitVec t + 2103 + 2 * (1024 - t.regs.rbx.toBitVec.toNat)
-  else if l = ".LB.Emission.buildBottomUp.4" then
+  else if l = ".LB.Emission.buildBottomUp.5" then
     H S t.regs.r14.toBitVec t + 2102 + 2 * (1024 - t.regs.rbx.toBitVec.toNat)
-  else if l = ".LB.Emission.buildBottomUp.6" ∨ l = ".LB.Emission.buildBottomUp.7" ∨ l = ".LB.Emission.buildBottomUp.14" ∨ l = ".LB.Emission.buildBottomUp.15" then
+  else if l = ".LB.Emission.buildBottomUp.7" ∨ l = ".LB.Emission.buildBottomUp.8" ∨ l = ".LB.Emission.buildBottomUp.14" ∨ l = ".LB.Emission.buildBottomUp.17" then
     H S t.regs.r14.toBitVec t + 2102
-  else if l = ".LB.Emission.buildBottomUp.8" then H S t.regs.r14.toBitVec t + 2101
-  else if l = ".LB.Emission.buildBottomUp.18" then H S t.regs.r14.toBitVec t + 2100
-  else if l = ".LB.Emission.buildBottomUp.20" then H S t.regs.r14.toBitVec t + 12 + 2 * t.regs.rax.toBitVec.toNat
-  else if l = ".LB.Emission.buildBottomUp.19" then H S t.regs.r14.toBitVec t + 11 + 2 * t.regs.rax.toBitVec.toNat
-  else if l = ".LB.Emission.buildBottomUp.21" then H S t.regs.r14.toBitVec t + 11
-  else if l = ".LB.Emission.buildBottomUp.9" ∨ l = ".LB.Emission.buildBottomUp.10" ∨ l = ".LB.Emission.buildBottomUp.11" ∨ l = ".LB.Emission.buildBottomUp.12" ∨ l = ".LB.Emission.buildBottomUp.17"
-      ∨ l = ".LB.Emission.buildBottomUp.24" ∨ l = ".LB.Emission.buildBottomUp.16" then H S t.regs.r14.toBitVec t + 10
+  else if l = ".LB.Emission.buildBottomUp.9" then H S t.regs.r14.toBitVec t + 2101
+  else if l = ".LB.Emission.buildBottomUp.21" then H S t.regs.r14.toBitVec t + 2100
+  else if l = ".LB.Emission.buildBottomUp.23" then H S t.regs.r14.toBitVec t + 12 + 2 * t.regs.rax.toBitVec.toNat
+  else if l = ".LB.Emission.buildBottomUp.22" then H S t.regs.r14.toBitVec t + 11 + 2 * t.regs.rax.toBitVec.toNat
+  else if l = ".LB.Emission.buildBottomUp.24" then H S t.regs.r14.toBitVec t + 11
+  else if l = ".LB.Emission.buildBottomUp.10" ∨ l = ".LB.Emission.buildBottomUp.11" ∨ l = ".LB.Emission.buildBottomUp.12" ∨ l = ".LB.Emission.buildBottomUp.13" ∨ l = ".LB.Emission.buildBottomUp.19"
+      ∨ l = ".LB.Emission.buildBottomUp.29" ∨ l = ".LB.Emission.buildBottomUp.18" then H S t.regs.r14.toBitVec t + 10
+  else if l = ".LB.Emission.buildBottomUp.16" then H S t.regs.r14.toBitVec t + 4201
   else if l = ".LB.Emission.buildBottomUp.0" then 1026
-  else if l = ".LB.Emission.buildBottomUp.1" then 1 + (1024 - t.regs.rdx.toBitVec.toNat)
-  else if l = ".LB.Emission.buildBottomUp.13" then 0
+  else if l = ".LB.Emission.buildBottomUp.1" then 1 + (1024 - t.regs.rax.toBitVec.toNat)
+  else if l = ".LB.Emission.buildBottomUp.15" then 0
   else 1
 /-- The variant goal of `cfg_goto`: `V` at the two literal labels, then `omega` if it can. -/
 macro "loop_dec" : tactic => `(tactic| (
@@ -391,9 +399,17 @@ macro "loop_dec" : tactic => `(tactic| (
 /-! ## The obligation of a block -/
 
 -- The exception continuation of the body triple.
-def E (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) :
+def E [Labels] (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64) :
     Int64 → MachineData → Prop :=
-  fun a t => a = ra ∧ Sep.Post S F 2068 (fun g' t => loopQ g g' s t) s t ∧ Sep.mod.Agree s t
+  fun a t => (a = ra ∧ Sep.Post S F 2068 (fun g' t => loopQ g g' s t) s t ∧ Sep.mod.Agree s t)
+    ∨ (a = label "exit" ∧ t.regs.get64 .rdi = 1#64 ∧
+      Sep.Post S F 2068 (fun g' t => loopX g g' s t) s t)
+
+theorem E_exit [Labels] {S : Addr} {g : G} {F : MProp 64}
+    {s t : MachineData} {ra : Int64} (harg : t.regs.get64 .rdi = 1#64)
+    (hp : Sep.Post S F 2068 (fun g' t => loopX g g' s t) s t) :
+    E S g F s ra (label "exit") t :=
+  Or.inr ⟨rfl, harg, hp⟩
 
 -- The obligation of `Program.WP.cfg` for the block `blk`.
 def Obl [Host] [FunDecls] (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
@@ -421,24 +437,46 @@ def labels : List CfgLabel :=
     .label ".LB.Emission.buildBottomUp.11",
     .label ".LB.Emission.buildBottomUp.12",
     .label ".LB.Emission.buildBottomUp.13",
-    .label ".LB.Emission.buildBottomUp.14",
     .label ".LB.Emission.buildBottomUp.15",
     .label ".LB.Emission.buildBottomUp.16",
+    .label ".LB.Emission.buildBottomUp.14",
     .label ".LB.Emission.buildBottomUp.17",
     .label ".LB.Emission.buildBottomUp.18",
     .label ".LB.Emission.buildBottomUp.19",
-    .label ".LB.Emission.buildBottomUp.20",
     .label ".LB.Emission.buildBottomUp.21",
     .label ".LB.Emission.buildBottomUp.22",
     .label ".LB.Emission.buildBottomUp.23",
     .label ".LB.Emission.buildBottomUp.24",
     .label ".LB.Emission.buildBottomUp.25",
-    .label ".LB.Emission.buildBottomUp.26",
-    .label ".LB.Emission.buildBottomUp.27",
     .label ".LB.Emission.buildBottomUp.28",
     .label ".LB.Emission.buildBottomUp.29",
     .label ".LB.Emission.buildBottomUp.30",
-    .label ".LB.Emission.buildBottomUp.31"]
+    .label ".LB.Emission.buildBottomUp.31",
+    .label ".LB.Emission.buildBottomUp.32",
+    .label ".LB.Emission.buildBottomUp.20",
+    .label ".LB.Emission.buildBottomUp.26",
+    .label ".LB.Emission.buildBottomUp.27",
+    .label ".LB.Emission.buildBottomUp.33",
+    .label ".LB.Emission.buildBottomUp.34"]
+
+def codeLabels : List Label :=
+  [Names.buildBottomUp,
+    ".LB.Emission.buildBottomUp.0", ".LB.Emission.buildBottomUp.1", ".LB.Emission.buildBottomUp.2",
+    ".LB.Emission.buildBottomUp.3", ".LB.Emission.buildBottomUp.4", ".LB.Emission.buildBottomUp.5",
+    ".LB.Emission.buildBottomUp.6", ".LB.Emission.buildBottomUp.7", ".LB.Emission.buildBottomUp.8",
+    ".LB.Emission.buildBottomUp.9", ".LB.Emission.buildBottomUp.10", ".LB.Emission.buildBottomUp.11",
+    ".LB.Emission.buildBottomUp.12", ".LB.Emission.buildBottomUp.13", ".LB.Emission.buildBottomUp.14",
+    ".LB.Emission.buildBottomUp.15", ".LB.Emission.buildBottomUp.16", ".LB.Emission.buildBottomUp.17",
+    ".LB.Emission.buildBottomUp.18", ".LB.Emission.buildBottomUp.19", ".LB.Emission.buildBottomUp.20",
+    ".LB.Emission.buildBottomUp.21", ".LB.Emission.buildBottomUp.22", ".LB.Emission.buildBottomUp.23",
+    ".LB.Emission.buildBottomUp.24", ".LB.Emission.buildBottomUp.25", ".LB.Emission.buildBottomUp.26",
+    ".LB.Emission.buildBottomUp.27", ".LB.Emission.buildBottomUp.28", ".LB.Emission.buildBottomUp.29",
+    ".LB.Emission.buildBottomUp.30", ".LB.Emission.buildBottomUp.31", ".LB.Emission.buildBottomUp.32",
+    ".LB.Emission.buildBottomUp.33", ".LB.Emission.buildBottomUp.34"]
+
+set_option maxRecDepth 4096 in
+theorem asm_labels : Program.labels loopAsm = codeLabels := by
+  rfl
 
 end Loop
 end Bbu.Unit

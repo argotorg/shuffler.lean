@@ -182,7 +182,7 @@ theorem store_blkExc (h : (View S g ∗ F).get m) (w : Word) :
 
 end
 
-/-! ## The struct at `r15`: the address forms of the asm -/
+/-! ## The struct at `r14`: the address forms of the asm -/
 
 section
 variable {S : Addr} {g : G} {R : MProp 64} {m : Mem 64}

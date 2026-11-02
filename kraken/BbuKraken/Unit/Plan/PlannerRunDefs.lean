@@ -2,6 +2,8 @@ module
 
 public import BbuKraken.Unit.Plan.HasOther
 import all BbuKraken.Unit.Plan.HasOther
+public import BbuKraken.Unit.Plan.ExitDefs
+import all BbuKraken.Unit.Plan.ExitDefs
 
 @[expose] public section
 
@@ -67,10 +69,32 @@ def plannerRunQ (g g' : PlannerRunG) (s t : MachineData) : Prop :=
       g'.spillCount = g.spillCount ∧
       g'.count = if r.1 = .done then BitVec.ofNat 64 r.2.trace.length else g.count
 
+def plannerRunX (g g' : PlannerRunG) (s _t : MachineData) : Prop :=
+  ∃ us : Nat → Flat.RunU,
+    let r := Flat.plannerRun g.p.fl ((rsi s).setWidth 8 == 1#8) g.state us
+    r.1 = .assertionFailed ∧ g'.state = r.2 ∧
+      g'.p = { g.p with saw := g'.p.saw } ∧ g'.dataPtr = g.dataPtr ∧
+      g'.opsPtr = g.opsPtr ∧ g'.sourcesPtr = g.sourcesPtr ∧ g'.countPtr = g.countPtr ∧
+      g'.spillCount = g.spillCount ∧ g'.count = g.count
+
+theorem plannerRunX_of_Q {g g' : PlannerRunG} {s t u : MachineData}
+    (h : plannerRunQ g g' s t) (ha : al t = 2#8) : plannerRunX g g' s u := by
+  obtain ⟨us, hcode, hstate, hp, hd, ho, hs, hc, hsp, hn⟩ := h
+  have hr : (Flat.plannerRun g.p.fl ((rsi s).setWidth 8 == 1#8) g.state us).1 =
+      .assertionFailed := by
+    have hstatus : ∀ a : Flat.Status, 2#8 = code a → a = .assertionFailed := by
+      intro a he
+      cases a <;> simp [code, DONE, BLOCKED, ASSERTION_FAILED] at he ⊢
+    exact hstatus _ (ha.symm.trans hcode)
+  exact ⟨us, hr, hstate, hp, hd, ho, hs, hc, hsp,
+    by simpa only [hr, reduceCtorEq, ↓reduceIte] using hn⟩
+
 abbrev PlannerRunThm [Host] [FunDecls] : Prop :=
-  VThm PlannerRunView PlannerRunG.Ok plannerRunAsm plannerRunA plannerRunD plannerRunQ
+  VThmWithExit PlannerRunView PlannerRunG.Ok plannerRunAsm plannerRunA plannerRunD
+    plannerRunQ plannerRunX
 
 abbrev PlannerRunSpec [Host] [FunDecls] : Prop :=
-  VSpec PlannerRunView PlannerRunG.Ok Names.plannerRun plannerRunA plannerRunD plannerRunQ
+  VSpecWithExit PlannerRunView PlannerRunG.Ok Names.plannerRun plannerRunA plannerRunD
+    plannerRunQ plannerRunX
 
 end Bbu.Unit

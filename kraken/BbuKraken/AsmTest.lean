@@ -14,7 +14,7 @@ namespace Bbu
 set_option maxRecDepth 100000
 
 -- The function programs make up the linked file.
-example : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm ++ produceAsm
+example : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ dupAsm ++ pushAsm ++ produceAsm
     ++ swapWithAsm ++ generateAsm ++ finishAsm ++ loopAsm ++ spillSetAddAsm ++ mapAsm
     ++ closestCopyAsm ++ mapInPlaceAsm ++ mapClosestCopiesAsm ++ mapWildcardSlotCopiesAsm
     ++ keepWildcardSlotsAsm ++ absorbSurplusAsm ++ popAsm ++ removeSurplusAsm
@@ -27,23 +27,24 @@ example : bbuAsm = isSpilledAsm ++ shallowestCopyAsm ++ pushAsm ++ dupAsm ++ pro
 
 -- `bbuParseFile` reads `leaq disp(,%i,8), %r` as the operand with no base.
 example : swapWithAsm[7]? = some (.instr (.regular .W64 .W64
-    (.lea (.low .rdi .W64) ⟨none, some ⟨.rdx, .W64⟩, .int64 0⟩))) := by rfl
+    (.lea (.low .rcx .W64) ⟨none, some ⟨.rdx, .W64⟩, .int64 0⟩))) := by rfl
 
 -- The other lines are as `parse` reads them.
 example : swapWithAsm.take 7 = parse("_ZN12_GLOBAL__N_18Emission8swapWithE11StackOffset:
-	movq	%rdi, %rax
+	subq	$8, %rsp
 	movq	%rsi, %rdx
 	movq	32(%rdi), %rsi
-	movl	$2, %ecx
 	cmpq	%rsi, %rdx
-	jnb	.LB.Emission.swapWith.2") := by rfl
+	jnb	.LB.Emission.swapWith.0
+	movq	%rdi, %rax") := by rfl
 
 -- Each line with an operand with no base.
 example : (bbuAsm.filter fun
     | .instr (.regular _ _ (.lea _ a)) => a.base.isNone
     | _ => false) =
     [.instr (.regular .W64 .W64 (.lea (.low .r14 .W64) ⟨none, some ⟨.rsi, .W64⟩, .int64 0⟩)),
-     .instr (.regular .W64 .W64 (.lea (.low .rdi .W64) ⟨none, some ⟨.rdx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rcx .W64) ⟨none, some ⟨.rdx, .W64⟩, .int64 0⟩)),
+     .instr (.regular .W64 .W64 (.lea (.low .rcx .W64) ⟨none, some ⟨.r14, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rbx .W64) ⟨none, some ⟨.r14, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),
      .instr (.regular .W64 .W64 (.lea (.low .rdx .W64) ⟨none, some ⟨.rbx, .W64⟩, .int64 0⟩)),

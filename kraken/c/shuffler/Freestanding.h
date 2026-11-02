@@ -3,6 +3,7 @@
 // Storage, status and compiler support for the freestanding shuffler.
 #include "StackSlot.h"
 
+#include <cstdlib>
 #include <optional>
 #include <type_traits>
 
@@ -82,9 +83,9 @@ private:
 	union { T m_elements[maxStackSize]; };
 };
 
-/// What a step of the emission ends with: Shuffler.cpp's std::nullopt or Blocked, or a failed yulAssert
+/// The result of an emission step. A failed yulAssert ends the process.
 enum class [[nodiscard]] Status : std::uint8_t { Done, Blocked, AssertionFailed };
 
-#define yulAssert(_condition, ...) do { if (!(_condition)) return Status::AssertionFailed; } while (false)
+#define yulAssert(_condition, ...) do { if (!(_condition)) std::exit(1); } while (false)
 
 }

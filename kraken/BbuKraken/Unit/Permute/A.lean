@@ -9,8 +9,8 @@ import all BbuKraken.Unit.Permute.ML
 # `permute`: the prologue, the loop `.LB.Emission.permute.0` and the epilogue
 
 `entry`, the prologue, `.LB.Emission.permute.0` (`desiredBy[i] = NONE`), the epilogue
-`.LB.Emission.permute.6` and the `ret` `.LB.Emission.permute.25` if the size is 0. The fall of
-`.LB.Emission.permute.0` makes the model vectors of `.LB.Emission.permute.12` (`start`).
+`.LB.Emission.permute.16` and the `ret` `.LB.Emission.permute.25` if the size is 0. The fall of
+`.LB.Emission.permute.0` makes the model vectors of `.LB.Emission.permute.11` (`start`).
 -/
 
 open Std.WP Lean.Order
@@ -134,9 +134,7 @@ theorem b_fn [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
     cfg_goto
     · exact hk25.stack
     · simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
-      refine ⟨_, hk25.next rfl rfl rfl rfl rfl rfl rfl rfl, hfr, hpre.ok, Keep.refl g, ?_, ?_⟩
-      · dsimp only; rw [hp]
-      · dsimp only; rw [hp]; rfl
+      exact ⟨_, hk25.next rfl rfl rfl rfl rfl rfl rfl rfl, hfr, hpre.ok, hp⟩
     · left; simp [V, Names.permute]
   case vc9 _ hz =>
     simp only [hS, rd_len' hk0.mem, BitVec.and_self, BitVec.zero_eq, beq_eq_false_iff_ne, LInv,
@@ -163,18 +161,15 @@ theorem b_0 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F
   have hn := Nat.le_trans hpre.ok.len hpre.ok.xs
   simp only [MAX_N] at hn
   have hk' : k < MAX_N := by simp only [MAX_N]; omega
-  -- The stores `desiredBy[k]` and `c0`.
+  -- The store `desiredBy[k]`.
   have hF1 : Fm S g F s ra { L with D := L.D.set k Flat.NONE hk' }
       { t with dmem := Mem.storeInt t.dmem t.regs.rax.toBitVec 8 (-1) } :=
     hF.storeD hk' hax Flat.NONE (by rw [none_toInt]) rfl
-  have h8 : (8#64).toInt = 8 := by decide
   kvcgen64
   all_goals try symexec_norm
   vc_by_shape
   | load =>
-    first
-    | with_reducible exact hF.isSomeD hk' hax
-    | with_reducible exact hF1.isSomeC0 hF.sp
+    with_reducible exact hF.isSomeD hk' hax
   case vc2 _ hz =>
     simp only [Bool.not_eq_true', beq_eq_false_iff_ne, BitVec.zero_eq] at hz
     have hd1 : (t.regs.rdx.toBitVec - (8#64 + t.regs.rax.toBitVec)).toNat
@@ -188,21 +183,17 @@ theorem b_0 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F
       show 8#64 + t.regs.rax.toBitVec = _
       rw [hax]; bv_omega
     · pm_dec
-  case vc4 _ hz =>
+  case vc3 _ hz =>
     simp only [Bool.not_eq_false', beq_iff_eq, BitVec.zero_eq] at hz
     rw [hax, hdx] at hz
     have hlen : g.h.len.toNat = k + 1 := by bv_omega
     obtain ⟨hrg, hP0, hD0, hlt0⟩ := start hpre.ok hpre.args.2.2.1 hag
       (fun i hi => none_step hk' hD i (by rw [← hlen]; exact BitVec.lt_def.mp hi))
-    have hF2 : Fm S g F s ra { L with D := L.D.set k Flat.NONE hk', c0 := 8#64 }
-        { t with dmem := ((Mem.storeInt t.dmem t.regs.rax.toBitVec 8 (-1)).storeInt
-          t.regs.rsp.toBitVec 8 8) } :=
-      hF1.storeC0 hF.sp 8#64 (by rw [h8]) rfl
     cfg_goto
-    · exact Fm.stack (hF2.next rfl rfl)
+    · exact Fm.stack (hF1.next rfl rfl)
     · simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
-      refine ⟨_, 0, p0, _, ⟨hF2.next rfl rfl, by bv_omega, rfl,
-        by show (1#64 : Word) = 0 + 1; decide, by show (8#64 : Word) = (0 + 1) * 8#64; decide,
+      refine ⟨_, 0, p0, _, ⟨hF1.next rfl rfl, by bv_omega, rfl,
+        by show (1#64 : Word) = 0 + 1; decide,
         by show t.regs.rsp.toBitVec + 16#64 = _; rw [hF.sp], h13, h14⟩, hrg, hP0, hD0, hlt0⟩
     · pm_dec
 
@@ -224,7 +215,7 @@ theorem Fm.isSome_pops {S : Addr} {g : G} {F : MProp 64} {s : MachineData} {ra :
     e 4 _ (by bv_omega) (by decide), e 5 _ (by bv_omega) (by decide)⟩
 
 theorem b_6 [Host] [FunDecls] (S g p0 F s ra) :
-    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.6" →
+    Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.16" →
       Obl S g p0 F s ra blk := by
   pm_block [Obl]
   intro t ht
@@ -243,9 +234,12 @@ theorem b_6 [Host] [FunDecls] (S g p0 F s ra) :
     refine (congrArg Option.isSome (hF.pop ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_).retAddr).trans rfl
     all_goals rfl
   | ret =>
-    refine Kp.ret ((hF.pop ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_).exArr hP) (by simp [Lc.length_toList]) hok
-      fun t' _ hax => ⟨hQ.1, hQ.2.1, by show (rax t').setWidth 8 = _; rw [hax]; exact hQ.2.2⟩
-    all_goals rfl
+    refine intercept_mono_exit
+      (E := fun a t => a = ra ∧ Sep.Post S (permW s ∗ F) 1034
+        (fun g' t => permuteQ p0 g g' s t) s t ∧ Sep.mod.Agree s t) ?_ Or.inl
+    · refine Kp.ret ((hF.pop ?_ ?_ ?_ ?_ ?_ ?_ ?_ ?_).exArr hP) (by simp [Lc.length_toList]) hok
+        fun t' _ hax => ⟨hQ.1, hQ.2.1, by show (rax t').setWidth 8 = _; rw [hax]; exact hQ.2.2⟩
+      all_goals rfl
 
 theorem b_25 [Host] [FunDecls] (S g p0 F s ra) :
     Program.ForallBlocks finishAsm fun blk => blk.label = .label ".LB.Emission.permute.25" →
@@ -253,14 +247,18 @@ theorem b_25 [Host] [FunDecls] (S g p0 F s ra) :
   pm_block [Obl]
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
-  obtain ⟨fr, hk, hfr, hok, hQ⟩ := ht
+  obtain ⟨fr, hk, hfr, hok, hp⟩ := ht
   kvcgen64
   all_goals try symexec_norm
   vc_by_shape
   | retAddr => exact (congrArg Option.isSome hk.retAddr).trans rfl
   | ret =>
-    exact Kp.ret hk hfr hok
-      fun t' _ hax => ⟨hQ.1, hQ.2.1, by show (rax t').setWidth 8 = _; rw [hax]; exact hQ.2.2⟩
+    refine intercept_mono_exit
+      (E := fun a t => a = ra ∧ Sep.Post S (permW s ∗ F) 1034
+        (fun g' t => permuteQ p0 g g' s t) s t ∧ Sep.mod.Agree s t) ?_ Or.inl
+    · exact Kp.ret (hk.next rfl rfl rfl rfl rfl rfl rfl rfl) hfr hok
+        fun t' _ hax => ⟨Keep.refl g, by dsimp only; rw [hp],
+          by dsimp only; rw [hp]; show (rax t').setWidth 8 = _; rw [hax]; rfl⟩
 
 end Permute
 end Bbu.Unit

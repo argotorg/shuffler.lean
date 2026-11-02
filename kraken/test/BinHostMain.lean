@@ -1,4 +1,4 @@
-import BbuKraken.Bin
+import BbuKraken.BinHost
 import Kraken.X64.PrintATT
 
 /-!
@@ -14,4 +14,4 @@ open Bbu
 def main : IO Unit :=
   for d in Host.prog, i in [0:Host.prog.length] do
     let addr := String.ofList (Nat.toDigits 16 (Host.addrOf i).toUInt64.toNat)
-    IO.println s!"{addr} {Kraken.Layout.size Directive i} {Kraken.X64.ATT.directive d}"
+    if i != 1 then IO.println s!"{addr} {Kraken.Layout.size Directive i} {Kraken.X64.ATT.directive d}"

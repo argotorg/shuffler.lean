@@ -1,11 +1,12 @@
 // C entry points for the test harnesses and their assembly contracts.
 // Include the implementation to test its internal classes in the same translation unit.
+// A failed yulAssert exits with status 1. A returned assertion-error Status becomes -2.
 #include "stack/Shuffler.cpp"
 
 /// The Emission constructor and Emission::buildBottomUp for a source stack of m slots without surplus: data holds
 /// the source slots and dest[i] is the target offset of source slot i. Writes the operations to ops and returns their
 /// number, also when a slot is out of reach. Then blocked gets its offset and its excess, which is positive, else
-/// 0 and 0. Returns -2 for a failed assertion. If the result is not -2, data holds the slots of the working stack
+/// 0 and 0. A failed yulAssert exits with status 1. If the result is not -2, data holds the slots of the working stack
 /// after the operations: the n slots of the target if blocked[1] is 0.
 ///
 /// dest holds distinct offsets below n (none, SIZE_MAX, is a slot without a destination), every variable id in
@@ -50,8 +51,7 @@ extern "C" std::int64_t build_bottom_up(
 /// slots: data holds the source slots and dest[i] is the target offset of source slot i, or none (SIZE_MAX).
 /// Writes the operations to ops and returns their number, count. Writes the destination of each of the m - count
 /// slots that stay to destinationOf, the position of the slot bound for each of the n target offsets, or none, to
-/// positionOf, and the number of target offsets that no slot of the source stack is bound for to pending. Returns
-/// -2 for a failed assertion: a pop of an empty stack.
+/// positionOf, and the number of target offsets that no slot of the source stack is bound for to pending. A pop of an empty stack exits with status 1.
 ///
 /// dest holds distinct offsets below n, and ops has room for count entries. m, n <= 1024, else the result is -2.
 extern "C" std::int64_t emission_pop(
@@ -89,8 +89,8 @@ extern "C" std::int64_t emission_pop(
 }
 
 /// SpillSet::add for each of the addCount slots of adds, in order, on the spill set in spilled: the variable id is
-/// spilled if spilled[id] is not 0. Then results[i] is 1 if the slot queries[i] is spilled, else 0. Returns 0, or -2
-/// for a failed assertion: an add of a slot that is not a variable, or of a variable that is spilled. Then spilled
+/// spilled if spilled[id] is not 0. Then results[i] is 1 if the slot queries[i] is spilled, else 0. Returns 0.
+/// An add of a slot that is not a variable, or of a variable that is spilled, exits with status 1. Then spilled
 /// holds the adds before it, and results is not written.
 ///
 /// spilled has idCount bytes, and results has room for queryCount entries. The id of each variable in adds and
@@ -123,7 +123,7 @@ extern "C" std::int64_t spill_set(
 /// The Emission constructor and Emission::removeSurplus for a stack of m slots and a target of n slots: data holds the
 /// slots and dest[i] is the target offset of slot i, or none (SIZE_MAX) for a surplus slot. Writes the operations to
 /// ops and returns their number, also when a surplus slot is out of reach. Then blocked gets its offset and its
-/// excess, which is positive, else 0 and 0. Returns -2 for a failed assertion. If the result is not -2, height gets
+/// excess, which is positive, else 0 and 0. A failed yulAssert exits with status 1. If the result is not -2, height gets
 /// the height of the working stack, data holds its slots, and the first height entries of dest hold their
 /// destinations; the other entries of dest are not written.
 ///
@@ -174,7 +174,7 @@ extern "C" std::int64_t remove_surplus(
 /// the offset perm[i]. The state is the state of Fuzz/Oracle.lean's runPermute: the target is the permuted stack, the
 /// mapping binds slot i to perm[i], and the spill set is empty. permute reads neither the target nor the spill set,
 /// so spilled is null. Writes the operations to ops and returns their number, also when a slot is out of reach. Then
-/// blocked gets its offset and its excess, which is positive, else 0 and 0. Returns -2 for a failed assertion. If the
+/// blocked gets its offset and its excess, which is positive, else 0 and 0. A failed yulAssert exits with status 1. If the
 /// result is not -2, data holds the slots of the working stack, and dest the destination of each of its h slots.
 /// permute does not write perm.
 ///
@@ -223,7 +223,7 @@ extern "C" std::int64_t permute(
 /// The Emission constructor and Emission::permuteAtLowestHeight for a stack of m slots and a target of n slots: data
 /// holds the slots and dest[i] is the target offset of slot i, or none (SIZE_MAX); the planned mapping is this
 /// mapping. Writes the operations to ops and returns their number, also when a slot is out of reach. Then blocked gets
-/// its offset and its excess, which is positive, else 0 and 0. Returns -2 for a failed assertion. If the result is not
+/// its offset and its excess, which is positive, else 0 and 0. A failed yulAssert exits with status 1. If the result is not
 /// -2, data holds the slots of the working stack, and dest the destination of each of its m slots: a permutation does
 /// not change the height.
 ///
@@ -271,8 +271,7 @@ extern "C" std::int64_t permute_at_lowest_height(
 /// Shuffler.cpp's MappingBuilder constructor, the Lean model's buildMapping, for a source stack of m slots and a target
 /// of n slots: dropped[i] is not 0 if source slot i is scheduled to be popped, and strategy is the
 /// WildcardSlotsStrategy, 0 (Leave) or 1 (Take). Writes the position of the source slot bound for each of the n target
-/// offsets, or none (SIZE_MAX), to sources, and sawWildcardCopy, 0 or 1, to saw. Returns 0, or -2 for a failed
-/// assertion; then nothing is written.
+/// offsets, or none (SIZE_MAX), to sources, and sawWildcardCopy, 0 or 1, to saw. Returns 0. A failed yulAssert exits with status 1 before the outputs are written.
 ///
 /// dropped has m bytes, and sources has room for n entries. m, n <= 1024 and strategy <= 1, else the result is -2 and
 /// nothing is written.
@@ -308,7 +307,8 @@ extern "C" std::int64_t build_mapping(
 /// slot at offset is blocked by excess slots. The variable id is spilled if spilled[id] is not 0, allowed is
 /// spillingAllowed, 0 or 1, and dropped[i] is not 0 if source slot i is scheduled to be popped. Sets the dropped byte of
 /// each victim to 1, and the spill byte of each new spill to 1. Returns 0 when it dropped excess slots, -1 when no slot
-/// is left to drop, or -2 for a failed assertion. Then the drops and spills of the passes before stay.
+/// is left to drop, or -2 for a returned assertion-error status. A failed yulAssert exits with status 1.
+/// The drops and spills of the passes before the error stay.
 ///
 /// plan holds m and current h distinct offsets below n, spilled has idCount bytes, and dropped has m bytes. m, n, h <=
 /// 1024, offset < h, allowed <= 1 and the id of each variable of the source is below idCount, else the result is -2 and
@@ -360,7 +360,7 @@ extern "C" std::int64_t resolve(
 /// Emission::run, Shuffler.cpp's Emission::run and emit, for a source stack of m slots and a target of n slots: data
 /// holds the source slots and dest[i] is the target offset of source slot i, or none (SIZE_MAX); the planned mapping is
 /// this mapping. Writes the operations to ops and returns their number, also when a slot is out of reach. Then blocked
-/// gets its offset and its excess, which is positive, else 0 and 0. Returns -2 for a failed assertion, also of a check
+/// gets its offset and its excess, which is positive, else 0 and 0. A failed yulAssert exits with status 1, including a check
 /// of State.Valid before buildBottomUp; then data and ops can hold the operations before it, and blocked, height and
 /// dest are not written. If the result is not -2, height gets the height of the working stack, data holds its slots,
 /// and the first height entries of dest hold their destinations; the other entries of dest are not written.
@@ -377,9 +377,6 @@ extern "C" std::int64_t resolve(
 ///   2 pendingGenerations + 2(n - targetOffset), first 4n - 2h, by at least the number of operations it adds
 ///   (Inv.ops_le, kraken/BbuKraken/ModelLemmas.lean), and the final permute of n slots adds at most 2n - 1: at most
 ///   6n - 2h.
-///
-/// Stack use in bbu/*.S: at most 65784 bytes below the stack pointer before the call, with the return address
-/// (emit, Emission::run, permuteAtLowestHeight, permute, shallowestCopyPosition).
 extern "C" std::int64_t emit(
 	std::uint64_t const m,
 	std::uint64_t const n,
@@ -429,16 +426,13 @@ extern "C" std::int64_t emit(
 /// WildcardSlotsStrategy, 0 (Leave) or 1 (Take). Sets the dropped byte of each source slot to 0 or 1 (dropped) and the
 /// spill byte of each new spill to 1, and writes sawWildcardCopy, 0 or 1, to saw. Returns the number of operations of
 /// the plan, or -1 when resolve finds nothing left to drop. After a plan, data holds its n slots, ops its operations,
-/// and sources[j] the source offset bound for target offset j in its mapping, or none (SIZE_MAX). Returns -2 for a
-/// failed assertion, also of the check of each target slot; then saw and sources are not written, and spilled,
+/// and sources[j] the source offset bound for target offset j in its mapping, or none (SIZE_MAX). A failed yulAssert exits with status 1,
+/// including the check of each target slot; then saw and sources are not written, and spilled,
 /// dropped, data and ops can be.
 ///
 /// spilled has idCount bytes and dropped m. m, n <= 1024, allowed <= 1, strategy <= 1 and the id of each variable of
 /// the source and the target is below idCount, else the result is -2 and nothing is written. data has room for
 /// max(m, n) entries, ops for 4m + 6n (see emit; each attempt starts again at ops[0]), and sources for n.
-///
-/// Stack use in bbu/*.S: at most 66024 bytes below the stack pointer before the call, with the return address
-/// (plan, Planner::run, then the chain of emit from Emission::run).
 extern "C" std::int64_t plan(
 	std::uint64_t const m,
 	std::uint64_t const n,

@@ -18,9 +18,9 @@ theorem b_12 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     (K : Unit → MachineData → Prop) (I' : CfgLabel → Nat → Unit → MachineData → Prop)
     (E : Int64 → MachineData → Prop)
     (hzero : ∀ u, g.p.n = 0#64 → EmitMapped P g M F s ra u →
-      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.27") u)
+      Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.26") u)
     (hcopy : ∀ u, EmitPosHead P g M F s ra u → K () u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.12" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.13" →
       ∀ t, EmitDestDone P g M F s ra t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
@@ -29,7 +29,7 @@ theorem b_12 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   kvcgen64
   all_goals try symexec_norm at ⊢
   vc_by_shape
-  | goto ".LB.Planner.run.27" =>
+  | goto ".LB.Planner.run.26" =>
     rename_i af hz
     symexec_norm at hz
     simp only [hcx', BitVec.and_self, BitVec.zero_eq, beq_iff_eq] at hz

@@ -12,6 +12,6 @@ namespace Bbu
 theorem planner_run_harness_correct :
     letI := binLinked.plannerDecls
     Unit.PlannerRunThm :=
-  planner_run_correct binLinked
+  planner_run_correct binLinked binBoundary
 
 end Bbu

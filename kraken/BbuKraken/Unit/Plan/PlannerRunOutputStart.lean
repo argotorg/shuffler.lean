@@ -21,14 +21,14 @@ theorem b_16 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     (E : Int64 → MachineData → Prop)
     (hfail : ∀ u, PostEmitHead P g M F s ra u → al u = al t → al u ≠ 0#8 →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-        (label ".LB.Planner.run.26") u)
+        (label ".LB.Planner.run.21") u)
     (hempty : ∀ u, SourcesDone P g M F s ra u → al u = al t → al u = 0#8 → g.p.n = 0#64 →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
-        (label ".LB.Planner.run.18") u)
+        (label ".LB.Planner.run.19") u)
     (hstart : ∀ u,
       SourcesHead P g M F s ra (Flat.sourcesFrom g.p.n 0 M g.sources) u →
       al u = al t → al u = 0#8 → K () u) :
-    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.16" →
+    plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.17" →
       PostEmitHead P g M F s ra t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
@@ -51,7 +51,7 @@ theorem b_16 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
   all_goals try simp only [hbx, hcRead, hn] at ⊢
   vc_by_shape
   | load => run_loads [kc, kn]
-  | goto ".LB.Planner.run.26" =>
+  | goto ".LB.Planner.run.21" =>
     rename_i hz
     symexec_norm at hz
     simp only [BitVec.and_self, BitVec.zero_eq, Bool.not_eq_true',
@@ -61,7 +61,7 @@ theorem b_16 [Host] [FunDecls] (P : Addr) (g : PlannerRunG) (M : Flat.Mapping)
     · rfl
     · simpa only [al, rax, Reg64s.get64_rax,
         BitVec.setWidth_eq_extractLsb' (by decide : 8 ≤ 64)] using hz
-  | goto ".LB.Planner.run.18" =>
+  | goto ".LB.Planner.run.19" =>
     rename_i hz hn0
     symexec_norm at hz hn0
     simp only [BitVec.and_self, BitVec.zero_eq, Bool.not_eq_false', beq_iff_eq] at hz

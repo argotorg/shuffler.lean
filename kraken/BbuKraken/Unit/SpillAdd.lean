@@ -73,25 +73,25 @@ theorem add_done {f : BitVec 32 → BitVec 8} {x : StackSlot} (hk : (!(x.kind ==
 /-! ## The states -/
 
 variable {p S : Addr} {f : BitVec 32 → BitVec 8} {n : Nat} {F : MProp 64} {s t : MachineData}
-  {ra : Int64}
+  {ra : Int64} {x y : Word}
 
 abbrev Pm (p S : Addr) (f : BitVec 32 → BitVec 8) (n : Nat) (F : MProp 64) : MProp 64 :=
   Wd p S ∗ Spl S f (List.range n) ∗ F
 
-theorem rd_S (h : Kg (Pm p S f n F) s ra [] t) :
+theorem rd_S (h : Kg (Pm p S f n F) s ra [x, y] t) :
     BitVec.ofInt 64 (Mem.loadInt t.dmem p 8).get! = S := by
-  obtain ⟨R, e⟩ : ∃ R, Stk (rsp s) [] ra.toBitVec ∗ Pm p S f n F = Wd p S ∗ R :=
+  obtain ⟨R, e⟩ : ∃ R, Stk (rsp s) [x, y] ra.toBitVec ∗ Pm p S f n F = Wd p S ∗ R :=
     ⟨_, by unfold Pm; ecancel⟩
   exact Wd.rd (e ▸ h.mem)
 
-theorem isSome_S (h : Kg (Pm p S f n F) s ra [] t) : (Mem.loadInt t.dmem p 8).isSome = true := by
-  obtain ⟨R, e⟩ : ∃ R, Stk (rsp s) [] ra.toBitVec ∗ Pm p S f n F = Wd p S ∗ R :=
+theorem isSome_S (h : Kg (Pm p S f n F) s ra [x, y] t) : (Mem.loadInt t.dmem p 8).isSome = true := by
+  obtain ⟨R, e⟩ : ∃ R, Stk (rsp s) [x, y] ra.toBitVec ∗ Pm p S f n F = Wd p S ∗ R :=
     ⟨_, by unfold Pm; ecancel⟩
   exact Wd.isSome (e ▸ h.mem)
 
-theorem spl (h : Kg (Pm p S f n F) s ra [] t) :
+theorem spl (h : Kg (Pm p S f n F) s ra [x, y] t) :
     ∃ R, (Spl S f (List.range n) ∗ R).get t.dmem := by
-  obtain ⟨R, e⟩ : ∃ R, Stk (rsp s) [] ra.toBitVec ∗ Pm p S f n F
+  obtain ⟨R, e⟩ : ∃ R, Stk (rsp s) [x, y] ra.toBitVec ∗ Pm p S f n F
       = Spl S f (List.range n) ∗ R := ⟨_, by unfold Pm; ecancel⟩
   exact ⟨R, e ▸ h.mem⟩
 
@@ -101,14 +101,14 @@ theorem payload_lt (hpre : AddPre p S f n F s)
     (StackSlot.ofWord (rsi s)).payload.toNat ∈ List.range n :=
   List.mem_range.mpr (hpre.lt (isVariable_of hk ho))
 
-theorem isSome_byte (h : Kg (Pm p S f n F) s ra [] t) (hpre : AddPre p S f n F s)
+theorem isSome_byte (h : Kg (Pm p S f n F) s ra [x, y] t) (hpre : AddPre p S f n F s)
     (hk : (!((StackSlot.ofWord (rsi s)).kind == Value)) = false)
     (ho : ((StackSlot.ofWord (rsi s)).valueOpcode == Const) = false) :
     (Mem.loadInt t.dmem (S + BitVec.ofNat 64 (StackSlot.ofWord (rsi s)).payload.toNat) 1).isSome
       = true :=
   let ⟨_, hs⟩ := spl h; Spl.isSome hs (payload_lt hpre hk ho)
 
-theorem rdb_byte (h : Kg (Pm p S f n F) s ra [] t) (hpre : AddPre p S f n F s)
+theorem rdb_byte (h : Kg (Pm p S f n F) s ra [x, y] t) (hpre : AddPre p S f n F s)
     (hk : (!((StackSlot.ofWord (rsi s)).kind == Value)) = false)
     (ho : ((StackSlot.ofWord (rsi s)).valueOpcode == Const) = false) :
     BitVec.ofInt 8 (Mem.loadInt t.dmem
@@ -119,15 +119,15 @@ theorem rdb_byte (h : Kg (Pm p S f n F) s ra [] t) (hpre : AddPre p S f n F s)
   rwa [show ∀ x : BitVec 32, BitVec.ofNat 32 x.toNat = x by simp] at this
 
 -- `movb $1, (%rsi)`.
-theorem kg_store (h : Kg (Pm p S f n F) s ra [] t) (hn : n ≤ 2 ^ 32) {q : BitVec 32}
+theorem kg_store (h : Kg (Pm p S f n F) s ra [x, y] t) (hn : n ≤ 2 ^ 32) {q : BitVec 32}
     (hi : q.toNat ∈ List.range n) {t' : MachineData}
     (hm : t'.dmem = t.dmem.storeInt (S + BitVec.ofNat 64 q.toNat) 1 1)
     (hsp : t'.regs.rsp = t.regs.rsp) (hbx : t'.regs.rbx = t.regs.rbx)
     (hbp : t'.regs.rbp = t.regs.rbp) (h12 : t'.regs.r12 = t.regs.r12)
     (h13 : t'.regs.r13 = t.regs.r13) (h14 : t'.regs.r14 = t.regs.r14)
     (h15 : t'.regs.r15 = t.regs.r15) :
-    Kg (Pm p S (Flat.setByte f q 1) n F) s ra [] t' := by
-  obtain ⟨R, e⟩ : ∃ R, ∀ g, Stk (rsp s) [] ra.toBitVec ∗ Pm p S g n F
+    Kg (Pm p S (Flat.setByte f q 1) n F) s ra [x, y] t' := by
+  obtain ⟨R, e⟩ : ∃ R, ∀ g, Stk (rsp s) [x, y] ra.toBitVec ∗ Pm p S g n F
       = Spl S g (List.range n) ∗ R := ⟨_, fun g => by unfold Pm; ecancel⟩
   have hs := Spl.store List.nodup_range (fun j hj => by have := List.mem_range.mp hj; omega)
     (e f ▸ h.mem) hi 1
@@ -138,40 +138,44 @@ theorem kg_store (h : Kg (Pm p S f n F) s ra [] t) (hn : n ≤ 2 ^ 32) {q : BitV
   exact hs
 
 -- The postcondition at `ret`.
-theorem post {f' : BitVec 32 → BitVec 8} (h : Kg (Pm p S f' n F) s ra [] t)
+theorem post {f' : BitVec 32 → BitVec 8} (h : Kg (Pm p S f' n F) s ra [x, y] t)
     {st : Flat.Status}
     (hf : Flat.spillAdd f (StackSlot.ofWord (rsi s)) = (st, f')) (hal : al t = code st) :
     ∀ t', t'.dmem = t.dmem → rax t' = rax t → AddPost p S f n F s t' := by
   intro t' hm hax
-  refine ⟨by rw [hf]; exact (congrArg (BitVec.setWidth 8) hax).trans hal, ra.toBitVec, ?_⟩
+  refine ⟨by rw [hf]; exact (congrArg (BitVec.setWidth 8) hax).trans hal, x, y, ra.toBitVec, ?_⟩
   rw [hf, hm]
-  have e : Stk (rsp s) [] ra.toBitVec ∗ Pm p S f' n F
-      = Wd p S ∗ Spl S f' (List.range n) ∗ Stk (rsp s) [] ra.toBitVec ∗ F := by
+  have e : Stk (rsp s) [x, y] ra.toBitVec ∗ Pm p S f' n F
+      = Wd p S ∗ Spl S f' (List.range n) ∗ Stk (rsp s) [x, y] ra.toBitVec ∗ F := by
     unfold Pm; ecancel
   exact e ▸ h.mem
 
 end SpillAdd
 
 open SpillAdd in
-theorem spillSetAdd_unit [Host] [FunDecls] :
-    ∀ p S f n F, Body spillSetAddAsm (AddPre p S f n F) (AddPost p S f n F) := by
+theorem spillSetAdd_unit [Host] [FunDecls]
+    (hexit : FunDecls.at (label "exit") = none)
+    (hout : ∀ l ∈ Program.labels spillSetAddAsm, label l ≠ label "exit") :
+    ∀ p S f n F, BodyWithExit spillSetAddAsm (AddPre p S f n F)
+      (AddPost p S f n F) (AddExit p S f n F) := by
   intro p S f n F s ra
   refine ⟨fun s₀ ⟨h₀, hpre⟩ => ?_⟩
   subst h₀
-  obtain ⟨v, hm⟩ := hpre.mem
-  have hk0 : Kg (Pm p S f n F) s ra [] (s.pushRa ra) :=
+  obtain ⟨x, y, v, hm⟩ := hpre.mem
+  have hk0 : Kg (Pm p S f n F) s ra [x, y] (s.pushRa ra) :=
     Kg.init (v := v) (by
-      have e : Wd p S ∗ Spl S f (List.range n) ∗ Stk (rsp s) [] v ∗ F
-          = Stk (rsp s) [] v ∗ Pm p S f n F := by unfold Pm; ecancel
+      have e : Wd p S ∗ Spl S f (List.range n) ∗ Stk (rsp s) [x, y] v ∗ F
+          = Stk (rsp s) [x, y] v ∗ Pm p S f n F := by unfold Pm; ecancel
       exact e ▸ hm)
+  have he := ProofKit.external_call_spec "exit" hexit
   refine Program.WP.cfg (fun
       | .entry, t => t = s.pushRa ra
       | .label l, t =>
         if l = Names.spillSetAdd then t = s.pushRa ra
-        else if l = ".LB.SpillSet.add.0" then Kg (Pm p S f n F) s ra [] t
+        else if l = ".LB.SpillSet.add.0" then Kg (Pm p S f n F) s ra [x, y] (unpad t)
           ∧ Flat.spillAdd f (StackSlot.ofWord (rsi s)) = (.assertionFailed, f)
-        else if l = ".LB.SpillSet.add.1" then Kg (Pm p S f n F) s ra [] t
-          ∧ al t = 2#8 ∧ Flat.spillAdd f (StackSlot.ofWord (rsi s)) = (.assertionFailed, f)
+        else if l = ".LB.SpillSet.add.1" then Kg (Pm p S f n F) s ra [x, y] (unpad t)
+          ∧ Flat.spillAdd f (StackSlot.ofWord (rsi s)) = (.assertionFailed, f)
         else False
       | .exit, _ => False)
     (fun _ _ => 0) ?_ rfl
@@ -180,21 +184,6 @@ theorem spillSetAdd_unit [Host] [FunDecls] :
     subst ht
     kvcgen64
     simp only [Names.spillSetAdd, ↓reduceIte]
-  case «.LB.SpillSet.add.0» t ht =>
-    simp only [Names.spillSetAdd, String.reduceEq, ↓reduceIte] at ht
-    obtain ⟨hk, hf⟩ := ht
-    kvcgen64
-    all_goals try symexec_norm
-    · simp only [Names.spillSetAdd, String.reduceEq, ↓reduceIte]
-      exact ⟨hk.next rfl rfl rfl rfl rfl rfl rfl rfl, trivial, hf⟩
-    · decide
-  case «.LB.SpillSet.add.1» t ht =>
-    simp only [Names.spillSetAdd, String.reduceEq, ↓reduceIte] at ht
-    obtain ⟨hk, hal, hf⟩ := ht
-    kvcgen64
-    vc_by_shape
-    | retAddr => simp [hk.retAddr]
-    | ret => exact Kg.ret hk (post hk hf hal)
   case «_ZN12_GLOBAL__N_18SpillSet3addE9StackSlot» t ht =>
     simp only [Names.spillSetAdd, ↓reduceIte] at ht
     subst ht
@@ -206,28 +195,30 @@ theorem spillSetAdd_unit [Host] [FunDecls] :
     kvcgen64
     all_goals try symexec_norm
     all_goals try simp only [IsSpilled.kind_flag, IsSpilled.op_flag, hrdi, hrsi, hS,
-      IsSpilled.payload_word, byte_zext] at *
+      IsSpilled.payload_word, BitVec.sub_zero] at *
     vc_by_shape
     | closed => decide
-    | goto ".LB.SpillSet.add.1" =>
-      -- `jne` (not a value) or `je` (a literal): `al = 2`.
+    | goto ".LB.SpillSet.add.0" =>
       have hf : Flat.spillAdd f (StackSlot.ofWord (rsi s)) = (.assertionFailed, f) :=
         add_not_var (by first | exact Or.inl ‹_› | exact Or.inr ‹_›)
       cfg_goto
-      · exact (hk0.next rfl rfl rfl rfl rfl rfl rfl rfl).stack
+      · exact Kg.padded_stack ⟨hk0.mem, by simp [unpad, MachineData.pushRa], rfl, rfl,
+          rfl, rfl, rfl, rfl⟩
       · simp only [Names.spillSetAdd, String.reduceEq, ↓reduceIte]
-        exact ⟨hk0.next rfl rfl rfl rfl rfl rfl rfl rfl, rfl, hf⟩
+        exact ⟨⟨hk0.mem, by simp [unpad, MachineData.pushRa], rfl, rfl, rfl, rfl, rfl, rfl⟩, hf⟩
       · simp
-    | goto ".LB.SpillSet.add.0" =>
-      -- `jne .LB.SpillSet.add.0`: the byte is not 0.
+    | goto ".LB.SpillSet.add.1" =>
       have hk : (!((StackSlot.ofWord (rsi s)).kind == Value)) = false := ‹_›
       have ho : ((StackSlot.ofWord (rsi s)).valueOpcode == Const) = false := ‹_›
       have hb := rdb_byte hk0 hpre hk ho
-      have hf := add_spilled (f := f) hk ho (by rw [← hb]; assumption)
+      have hf := add_spilled (f := f) hk ho (by
+        rw [← hb, BitVec.and_self]
+        simpa only [BitVec.sub_zero] using (show _ from ‹_›))
       cfg_goto
-      · exact (hk0.next rfl rfl rfl rfl rfl rfl rfl rfl).stack
+      · exact Kg.padded_stack ⟨hk0.mem, by simp [unpad, MachineData.pushRa], rfl, rfl,
+          rfl, rfl, rfl, rfl⟩
       · simp only [Names.spillSetAdd, String.reduceEq, ↓reduceIte]
-        exact ⟨hk0.next rfl rfl rfl rfl rfl rfl rfl rfl, hf⟩
+        exact ⟨⟨hk0.mem, by simp [unpad, MachineData.pushRa], rfl, rfl, rfl, rfl, rfl, rfl⟩, hf⟩
       · simp
     | load =>
       first
@@ -238,22 +229,92 @@ theorem spillSetAdd_unit [Host] [FunDecls] :
       have ho : ((StackSlot.ofWord (rsi s)).valueOpcode == Const) = false := ‹_›
       refine Option.isSome_iff_exists.mpr ⟨ra, Kg.retAddr
         (P := Pm p S (Flat.setByte f (StackSlot.ofWord (rsi s)).payload 1) n F) (s := s)
-        (fr := []) ?_⟩
-      exact kg_store hk0 hpre.n_le (payload_lt hpre hk ho) rfl rfl rfl rfl rfl rfl rfl rfl
+        (fr := [x, y]) ?_⟩
+      exact kg_store hk0 hpre.n_le (payload_lt hpre hk ho) rfl
+        (by
+          apply UInt64.toBitVec_inj.mp
+          change 8#64 + (s.regs.rsp.toBitVec - 8#64 - 8#64) = s.regs.rsp.toBitVec - 8#64
+          bv_omega) rfl rfl rfl rfl rfl rfl
     | ret =>
-      -- The fall-through: `m_spilled[payload] = 1` and `al = 0`.
       have hk : (!((StackSlot.ofWord (rsi s)).kind == Value)) = false := ‹_›
       have ho : ((StackSlot.ofWord (rsi s)).valueOpcode == Const) = false := ‹_›
       have hb := rdb_byte hk0 hpre hk ho
-      have hd := add_done (f := f) hk ho (by rw [← hb]; assumption)
+      have hd := add_done (f := f) hk ho (by
+        rw [← hb, BitVec.and_self]
+        simpa only [BitVec.sub_zero] using (show _ from ‹_›))
       simp only [rsi, Reg64s.get64_rsi] at hb hd
+      refine ProofKit.intercept_mono_exit
+        (E := fun a t => a = ra ∧ AddPost p S f n F s t ∧ Sep.mod.Agree s t)
+        ?_ (fun h => Or.inl h)
       refine Kg.ret (P := Pm p S (Flat.setByte f (StackSlot.ofWord (rsi s)).payload 1) n F)
-        (s := s) (fr := [])
-        (kg_store hk0 hpre.n_le (payload_lt hpre hk ho) rfl rfl rfl rfl rfl rfl rfl rfl)
-        ?_
-      refine post (kg_store hk0 hpre.n_le (payload_lt hpre hk ho) rfl rfl rfl rfl rfl rfl rfl rfl)
-        hd.1 ?_
-      simp only [al, rax, Reg64s.get64_rax, al_zext, hb, hd.2]
+        (s := s) (fr := [x, y])
+        (kg_store hk0 hpre.n_le (payload_lt hpre hk ho) rfl
+          (by
+          apply UInt64.toBitVec_inj.mp
+          change 8#64 + (s.regs.rsp.toBitVec - 8#64 - 8#64) = s.regs.rsp.toBitVec - 8#64
+          bv_omega) rfl rfl rfl rfl rfl rfl) ?_
+      refine post (kg_store hk0 hpre.n_le (payload_lt hpre hk ho) rfl
+        (by
+          apply UInt64.toBitVec_inj.mp
+          change 8#64 + (s.regs.rsp.toBitVec - 8#64 - 8#64) = s.regs.rsp.toBitVec - 8#64
+          bv_omega) rfl rfl rfl rfl rfl rfl) hd.1 ?_
+      simp only [al, rax, Reg64s.get64_rax]
       rfl
+  case «.LB.SpillSet.add.0» t ht =>
+    simp only [Names.spillSetAdd, String.reduceEq, ↓reduceIte] at ht
+    obtain ⟨hk, hf⟩ := ht
+    have hsp : t.regs.rsp.toBitVec + 8#64 = rsp s - 8#64 := hk.sp64
+    have haddr : t.regs.rsp.toBitVec - 8#64 = rsp s - 24#64 := by bv_omega
+    have hmem := Stk.two (rsp s) x y ra.toBitVec (Wd p S ∗ Spl S f (List.range n)) F ▸
+      (show ((Wd p S ∗ Spl S f (List.range n)) ∗ Stk (rsp s) [x, y] ra.toBitVec ∗ F).get t.dmem from
+        (by
+          have hbase := hk.mem
+          dsimp only [unpad] at hbase
+          have heq : Stk (rsp s) [x, y] ra.toBitVec ∗ Pm p S f n F =
+              (Wd p S ∗ Spl S f (List.range n)) ∗ Stk (rsp s) [x, y] ra.toBitVec ∗ F := by
+            unfold Pm; ecancel
+          exact heq ▸ hbase))
+    kvcgen64 [he]
+    all_goals symexec_norm
+    vc_by_shape
+    | load => simpa only [haddr] using Wd.isSome hmem
+    | jumpOut =>
+      rename_i exitra _
+      refine Or.inr ⟨Or.inr ⟨rfl, rfl, hf, exitra.toBitVec, y, ra.toBitVec, ?_⟩, ?_⟩
+      · rw [← MProp.sep_assoc, Stk.two]
+        change (Wd (rsp s - 24#64) exitra.toBitVec ∗ _).get
+          (Mem.storeInt _ (t.regs.rsp.toBitVec - 8#64) 8 exitra.toBitVec.toInt)
+        rw [haddr]
+        exact Wd.store hmem exitra.toBitVec
+      · intro l hl ha
+        exact False.elim (hout l hl ha)
+  case «.LB.SpillSet.add.1» t ht =>
+    simp only [Names.spillSetAdd, String.reduceEq, ↓reduceIte] at ht
+    obtain ⟨hk, hf⟩ := ht
+    have hsp : t.regs.rsp.toBitVec + 8#64 = rsp s - 8#64 := hk.sp64
+    have haddr : t.regs.rsp.toBitVec - 8#64 = rsp s - 24#64 := by bv_omega
+    have hmem := Stk.two (rsp s) x y ra.toBitVec (Wd p S ∗ Spl S f (List.range n)) F ▸
+      (show ((Wd p S ∗ Spl S f (List.range n)) ∗ Stk (rsp s) [x, y] ra.toBitVec ∗ F).get t.dmem from
+        (by
+          have hbase := hk.mem
+          dsimp only [unpad] at hbase
+          have heq : Stk (rsp s) [x, y] ra.toBitVec ∗ Pm p S f n F =
+              (Wd p S ∗ Spl S f (List.range n)) ∗ Stk (rsp s) [x, y] ra.toBitVec ∗ F := by
+            unfold Pm; ecancel
+          exact heq ▸ hbase))
+    kvcgen64 [he]
+    all_goals symexec_norm
+    vc_by_shape
+    | load => simpa only [haddr] using Wd.isSome hmem
+    | jumpOut =>
+      rename_i exitra _
+      refine Or.inr ⟨Or.inr ⟨rfl, rfl, hf, exitra.toBitVec, y, ra.toBitVec, ?_⟩, ?_⟩
+      · rw [← MProp.sep_assoc, Stk.two]
+        change (Wd (rsp s - 24#64) exitra.toBitVec ∗ _).get
+          (Mem.storeInt _ (t.regs.rsp.toBitVec - 8#64) 8 exitra.toBitVec.toInt)
+        rw [haddr]
+        exact Wd.store hmem exitra.toBitVec
+      · intro l hl ha
+        exact False.elim (hout l hl ha)
 
 end Bbu.Unit
