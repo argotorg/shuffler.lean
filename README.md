@@ -4,6 +4,8 @@ This repo contains a work in progress formalization of the new plan based shuffl
 
 ## Proof audit
 
+See the [proof guide](kraken/Theorems/README.md) for the proof layers and theorem structure.
+
 Read these Lean files in order:
 
 1. [PlannerModel.lean](kraken/Theorems/PlannerModel.lean): correctness of the actual
