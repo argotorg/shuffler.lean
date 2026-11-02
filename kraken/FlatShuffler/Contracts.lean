@@ -92,7 +92,7 @@ def generateR (s t : MachineData) : Prop :=
 -- `permute(e)`: the solc permute of the stack to the destinations
 -- The locals of `permute` after `subq $16408, %rsp`: the `OffsetArray`s `permutation` and
 -- `desiredBy` (8 bytes for each offset) and 24 bytes.
-def finishLocals : Nat := 2 * 8 * MAX_N + 24
+def finishLocals : Nat := 2 * 8 * maxStackSize + 24
 -- The return address, six `pushq`, the locals and the frame of `shallowestCopyPosition`.
 def finishF : Nat := 8 + 48 + finishLocals + shallowestCopyF
 theorem finishF_eq : finishF = 16472 := rfl

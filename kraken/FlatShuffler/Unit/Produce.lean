@@ -198,7 +198,7 @@ theorem b_2
   intro t ht
   simp only [Inv, Names.produce, String.reduceEq, ↓reduceIte, or_self, or_false, false_or] at ht
   obtain ⟨g1, y, r, hbd, hok1, hK1, hP, hf, hal, normalStatus⟩ := ht
-  have hTm : s.regs.rsi.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hTn hpre.ok.n
+  have hTm : s.regs.rsi.toBitVec.toNat < maxStackSize := Nat.lt_of_lt_of_le hTn hpre.ok.n
   have hbx1 := hbd.bx
   have hr14 := hbd.r14
   have hm1 := hbd.mem

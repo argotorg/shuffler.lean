@@ -29,7 +29,7 @@ theorem b_13 [Host] [FunDecls]
   simp only [Inv, loopPhase, dropPhase, Names.resolve, String.reduceEq,
     ↓reduceIte, DropReady] at ht
   obtain ⟨w, lo, L, best, h, h15, hbest, hm⟩ := ht
-  have ho := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hbest) hok.planner.m
+  have ho := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hbest) hok.planner.sourceSizeFitsBuffer
   have hi : best.toNat / 8 < 128 := by have hh : best.toNat < 1024 := ho; omega
   let t1 : MachineData := { t with dmem := (t.dmem.storeInt
     (t.regs.rsp.toBitVec + 8240#64 + best) 1 1) }

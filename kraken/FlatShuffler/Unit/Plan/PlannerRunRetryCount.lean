@@ -28,7 +28,7 @@ theorem count_byte (c : Word) (b : BitVec 8) :
     simp [hn, byteCount, hb]
     bv_omega
 
-theorem dropped_step {m i c : Word} {d : Vector (BitVec 8) MAX_N} (hi : i < m) :
+theorem dropped_step {m i c : Word} {d : Vector (BitVec 8) maxStackSize} (hi : i < m) :
     Flat.droppedFrom m d i c = Flat.droppedFrom m d (i + 1#64) (byteCount c (get d i)) := by
   by_cases hz : get d i = 0#8
   · rw [byteCount, ite_eq_left hz]
@@ -49,13 +49,13 @@ theorem b_29 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
   intro t ⟨lo, locals, i, h, hi, hax, hdx, hmodel⟩
-  have hiN := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) h.ok.planner.m
+  have hiN := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) h.ok.planner.sourceSizeFitsBuffer
   obtain ⟨R, hb⟩ := dropped_read h.kb.vmem hiN (BitVec.lt_def.mp hi)
   have ks := B8.isSome hb
   have rd := B8.rdb hb
   unfold rdb at rd
   have hax' : t.regs.rax.toBitVec = g.p.drp + i := hax
-  have hdx' : t.regs.rdx.toBitVec = g.p.drp + g.p.m := hdx
+  have hdx' : t.regs.rdx.toBitVec = g.p.drp + g.p.sourceSize := hdx
   have hmodel' := (dropped_step hi).symm.trans hmodel
   kvcgen64
   all_goals try symexec_norm at ⊢
@@ -67,8 +67,8 @@ theorem b_29 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
     symexec_norm at hj
     simp only [hax', hdx', BitVec.zero_eq,
       Bool.not_eq_true', beq_eq_false_iff_ne] at hj
-    have hne : i + 1#64 ≠ g.p.m := by intro he; apply hj; bv_omega
-    have hin : i + 1#64 < g.p.m := by bv_omega
+    have hne : i + 1#64 ≠ g.p.sourceSize := by intro he; apply hj; bv_omega
+    have hin : i + 1#64 < g.p.sourceSize := by bv_omega
     apply hloop
     refine ⟨lo, locals, i + 1#64, ?_, hin, ?_, hdx, hmodel'⟩
     · exact h.next rfl rfl rfl rfl rfl
@@ -79,11 +79,11 @@ theorem b_29 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
     symexec_norm at hj
     simp only [hax', hdx', BitVec.zero_eq,
       Bool.not_eq_false', beq_iff_eq] at hj
-    have he : i + 1#64 = g.p.m := by bv_omega
+    have he : i + 1#64 = g.p.sourceSize := by bv_omega
     apply hdone
     refine ⟨lo, locals, ?_, ?_⟩
     · exact h.next rfl rfl rfl rfl rfl
-    · have hend := dropped_end (m := g.p.m) (d := g.dropped)
+    · have hend := dropped_end (m := g.p.sourceSize) (d := g.dropped)
         (i := i + 1#64) (count := byteCount t.regs.rbp.toBitVec (get g.dropped i)) (by bv_omega)
       exact hend.symm.trans hmodel'
 

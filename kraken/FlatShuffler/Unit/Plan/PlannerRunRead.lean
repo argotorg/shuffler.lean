@@ -10,16 +10,16 @@ import all FlatShuffler.Unit.Plan.IsDemanded
 namespace FlatShuffler.Unit.PlannerRunU
 open FlatShuffler.Sep
 
-theorem target_slot {g : PlannerCallMemory} (hok : g.Ok) {i : Word} (hi : i < g.p.n) :
+theorem target_slot {g : PlannerCallMemory} (hok : g.Ok) {i : Word} (hi : i < g.p.targetSize) :
     StackSlot.ofWord g.p.tw[i.toNat]! = Flat.get g.p.fl.target i := by
   have hi' : i.toNat < g.p.tw.length := hok.planner.tw ▸ BitVec.lt_def.mp hi
   simp only [PlannerObjectMemory.fl]
-  rw [get_vecL (by simpa using hi') (by simpa [hok.planner.tw] using hok.planner.n),
+  rw [get_vecL (by simpa using hi') (by simpa [hok.planner.tw] using hok.planner.targetSizeFitsBuffer),
     List.getElem_map]
   simp only [List.getElem!_eq_getElem?_getD, List.getElem?_eq_getElem hi', Option.getD_some]
 
 theorem target_word {P : Addr} {g : PlannerCallMemory} {F : MProp 64} {m : Mem 64}
-    (h : (plannerCallOwnedMemory P g ∗ F).get m) (hok : g.Ok) {i : Word} (hi : i < g.p.n) :
+    (h : (plannerCallOwnedMemory P g ∗ F).get m) (hok : g.Ok) {i : Word} (hi : i < g.p.targetSize) :
     ∃ R, (Wd (slotAt g.p.tgt i.toNat) g.p.tw[i.toNat]! ∗ R).get m := by
   obtain ⟨R, hm⟩ := pv h
   obtain ⟨Q, hm⟩ := plannerObjectOwnedMemory.arr_tgt hm
@@ -30,7 +30,7 @@ theorem target_word {P : Addr} {g : PlannerCallMemory} {F : MProp 64} {m : Mem 6
     List.getElem?_eq_getElem hi', Option.getD_some] using hm⟩
 
 theorem target_opcode {P : Addr} {g : PlannerCallMemory} {F : MProp 64} {m : Mem 64}
-    (h : (plannerCallOwnedMemory P g ∗ F).get m) (hok : g.Ok) {i : Word} (hi : i < g.p.n) :
+    (h : (plannerCallOwnedMemory P g ∗ F).get m) (hok : g.Ok) {i : Word} (hi : i < g.p.targetSize) :
     ∃ R, (B8 (slotAt g.p.tgt i.toNat + 5#64)
       (Flat.get g.p.fl.target i).valueOpcode ∗ R).get m := by
   obtain ⟨R, hm⟩ := target_word h hok hi
@@ -44,7 +44,7 @@ theorem target_opcode {P : Addr} {g : PlannerCallMemory} {F : MProp 64} {m : Mem
   exact ⟨_, hv ▸ hm⟩
 
 theorem target_payload {P : Addr} {g : PlannerCallMemory} {F : MProp 64} {m : Mem 64}
-    (h : (plannerCallOwnedMemory P g ∗ F).get m) (hok : g.Ok) {i : Word} (hi : i < g.p.n) :
+    (h : (plannerCallOwnedMemory P g ∗ F).get m) (hok : g.Ok) {i : Word} (hi : i < g.p.targetSize) :
     ∃ R, (B32 (slotAt g.p.tgt i.toNat) (Flat.get g.p.fl.target i).payload ∗ R).get m := by
   obtain ⟨R, hm⟩ := target_word h hok hi
   rw [Wd.split, MProp.sep_assoc] at hm
@@ -54,7 +54,7 @@ theorem target_payload {P : Addr} {g : PlannerCallMemory} {F : MProp 64} {m : Me
     rfl
   exact ⟨_, hv ▸ hm⟩
 
-theorem target_id_lt {g : PlannerCallMemory} (hok : g.Ok) {i : Word} (hi : i < g.p.n)
+theorem target_id_lt {g : PlannerCallMemory} (hok : g.Ok) {i : Word} (hi : i < g.p.targetSize)
     (hv : Flat.isVariable (Flat.get g.p.fl.target i) = true) :
     (Flat.get g.p.fl.target i).payload.toNat < g.spillCount := by
   have hi' : i.toNat < g.p.tw.length := hok.planner.tw ▸ BitVec.lt_def.mp hi
@@ -72,7 +72,7 @@ theorem target_id_lt {g : PlannerCallMemory} (hok : g.Ok) {i : Word} (hi : i < g
   exact List.getElem_mem hi'
 
 theorem target_spill {P : Addr} {g : PlannerCallMemory} {F : MProp 64} {m : Mem 64}
-    (h : (plannerCallOwnedMemory P g ∗ F).get m) (hok : g.Ok) {i : Word} (hi : i < g.p.n)
+    (h : (plannerCallOwnedMemory P g ∗ F).get m) (hok : g.Ok) {i : Word} (hi : i < g.p.targetSize)
     (hv : Flat.isVariable (Flat.get g.p.fl.target i) = true) :
     ∃ R, (B8 (g.p.spl + BitVec.ofNat 64 (Flat.get g.p.fl.target i).payload.toNat)
       (g.spills (Flat.get g.p.fl.target i).payload) ∗ R).get m := by

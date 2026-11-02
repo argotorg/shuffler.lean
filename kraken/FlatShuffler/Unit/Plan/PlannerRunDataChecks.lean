@@ -9,7 +9,7 @@ import all FlatShuffler.Unit.Run.Model
 
 namespace FlatShuffler.Flat
 
-theorem restoreData_unmappedFrom (cap : Nat) (old : Vector StackSlot MAX_N)
+theorem restoreData_unmappedFrom (cap : Nat) (old : Vector StackSlot maxStackSize)
     (st : St) (o count : Word) :
     unmappedFrom (restoreData cap old st) o count = unmappedFrom st o count := by
   conv => lhs; rw [unmappedFrom]
@@ -21,13 +21,13 @@ theorem restoreData_unmappedFrom (cap : Nat) (old : Vector StackSlot MAX_N)
 termination_by (st.targetSize - o).toNat
 decreasing_by bv_omega
 
-theorem restoreData_isAvailable (cap : Nat) (old : Vector StackSlot MAX_N)
+theorem restoreData_isAvailable (cap : Nat) (old : Vector StackSlot maxStackSize)
     (st : St) (o : Word) (hs : st.size.toNat ≤ cap) :
     isAvailable (restoreData cap old st) o = isAvailable st o := by
   simp only [isAvailable, restoreData_target, isSpilled, restoreData_spills,
     restoreData_shallowestCopyPosition cap old st _ hs]
 
-theorem restoreData_availableFrom (cap : Nat) (old : Vector StackSlot MAX_N)
+theorem restoreData_availableFrom (cap : Nat) (old : Vector StackSlot maxStackSize)
     (st : St) (o : Word) (hs : st.size.toNat ≤ cap) :
     availableFrom (restoreData cap old st) o = availableFrom st o := by
   conv => lhs; rw [availableFrom]
@@ -39,7 +39,7 @@ theorem restoreData_availableFrom (cap : Nat) (old : Vector StackSlot MAX_N)
 termination_by (st.targetSize - o).toNat
 decreasing_by bv_omega
 
-theorem restoreData_labelsFrom (cap : Nat) (old : Vector StackSlot MAX_N)
+theorem restoreData_labelsFrom (cap : Nat) (old : Vector StackSlot maxStackSize)
     (st : St) (o : Word) :
     labelsFrom (restoreData cap old st) o = labelsFrom st o := by
   conv => lhs; rw [labelsFrom]

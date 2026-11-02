@@ -62,7 +62,7 @@ theorem relB_sound {r : Word × Option St} : ∀ {res : M FlatShuffler.St}, relB
 
 -- The inputs of `build_bottom_up` for a case of `FlatModelTest.lean`: the data above `m` is
 -- `junkSlots`.
-def dataOf (source : List StackSlot) : Vector StackSlot MAX_N :=
+def dataOf (source : List StackSlot) : Vector StackSlot maxStackSize :=
   Vector.ofFn fun i => source[i.val]?.getD junkSlots[i]
 
 def flatR (u : Uninit) (source target : List StackSlot) (dests spilled : List Nat) :

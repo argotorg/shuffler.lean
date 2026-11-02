@@ -17,7 +17,7 @@ def SpillReady (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
 def DropReady (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (t : MachineData) : Prop :=
   ∃ w lo L best, Core P r F s ra w lo L t ∧ t.regs.r15.toBitVec = best ∧
-    best < r.p.m ∧ (w.drop best).Model r s
+    best < r.p.sourceSize ∧ (w.drop best).Model r s
 
 def dropPhase (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (rest : Label → MachineData → Prop) (l : Label) (t : MachineData) : Prop :=

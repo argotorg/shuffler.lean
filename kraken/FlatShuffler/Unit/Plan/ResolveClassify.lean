@@ -36,7 +36,7 @@ theorem b_11 (hclass : VSpec CView CG.Ok Names.classify classifyA 16 classifyQ) 
   simp only [Inv, loopPhase, Names.resolve, String.reduceEq, ↓reduceIte, Pick] at ht
   obtain ⟨w, lo, L, i, best, cls, h, hm, heq⟩ := ht
   have hiN := Nat.lt_of_lt_of_le (BitVec.lt_def.mp h.index) h.ok.count
-  have hoN := Nat.lt_of_lt_of_le (BitVec.lt_def.mp (h.ok.bounded i h.index)) hok.planner.m
+  have hoN := Nat.lt_of_lt_of_le (BitVec.lt_def.mp (h.ok.bounded i h.index)) hok.planner.sourceSizeFitsBuffer
   have hb := h.pendingBd
   have hd := hb.droppedRead hoN
   change Flat.get L.droppedNow (Flat.get w.candidates i) =

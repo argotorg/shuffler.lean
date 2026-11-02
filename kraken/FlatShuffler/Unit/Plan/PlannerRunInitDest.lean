@@ -27,14 +27,14 @@ theorem b_6 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : MProp 64)
     (hnext : ∀ u, rax u = 1#64 + rax t → InitDestHead P g F s ra u →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
         (label ".LB.Planner.run.20") u)
-    (hdone : ∀ u, rax u = g.p.m → InitDestDone P g F s ra u → K () u) :
+    (hdone : ∀ u, rax u = g.p.sourceSize → InitDestDone P g F s ra u → K () u) :
     plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.20" →
       InitDestHead P g F s ra t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
   intro ⟨lo, locals, hc, hi, hp⟩
-  have hm := hok.planner.m
-  have hiN : (rax t).toNat < MAX_N := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) hm
+  have hm := hok.planner.sourceSizeFitsBuffer
+  have hiN : (rax t).toNat < maxStackSize := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) hm
   have hidx : 12 + (rax t).toNat < 4121 := by change (rax t).toNat < 1024 at hiN; omega
   have hsucc : (1#64 + rax t).toNat = (rax t).toNat + 1 := by
     change (rax t).toNat < 1024 at hiN

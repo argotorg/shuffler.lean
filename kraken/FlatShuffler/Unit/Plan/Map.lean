@@ -29,7 +29,7 @@ namespace FlatShuffler.Unit
 
 open FlatShuffler.Sep
 
-def mapA (b : BG) (s : MachineData) : Prop := (rsi s).toNat < b.m.toNat ∧ (rdx s).toNat < b.n.toNat
+def mapA (b : BG) (s : MachineData) : Prop := (rsi s).toNat < b.sourceSize.toNat ∧ (rdx s).toNat < b.targetSize.toNat
 
 def mapQ (b b' : BG) (s t : MachineData) : Prop :=
   al t = code (Flat.mbMap b.fl b.M (rsi s) (rdx s)).1
@@ -79,8 +79,8 @@ theorem map_unit [Host] [FunDecls]
   have hm := hk0.vmem
   have hok := hpre.ok
   obtain ⟨hp, ht⟩ := hpre.args
-  have hpN : (rsi s).toNat < MAX_N := Nat.lt_of_lt_of_le hp hok.m
-  have htN : (rdx s).toNat < MAX_N := Nat.lt_of_lt_of_le ht hok.n
+  have hpN : (rsi s).toNat < maxStackSize := Nat.lt_of_lt_of_le hp hok.sourceSizeFitsBuffer
+  have htN : (rdx s).toNat < maxStackSize := Nat.lt_of_lt_of_le ht hok.targetSizeFitsBuffer
   have he := ProofKit.external_call_spec "exit" hexit
   refine Program.WP.cfg (fun
       | .entry, t => t = s.pushRa ra
@@ -268,7 +268,7 @@ theorem map_unit [Host] [FunDecls]
       refine Kg.vret (ok := BG.Ok) (a' := { b with M := b.M.bind (rsi s) (rdx s) })
         (fr := [x, y])
         ⟨?_, ?_, hk.bx, hk.bp, hk.r12, hk.r13, hk.r14, hk.r15⟩ rfl
-        ⟨hok.m, hok.n, hok.sw, hok.tw, hok.db⟩ fun t' _ hrax => ?_
+        ⟨hok.sourceSizeFitsBuffer, hok.targetSizeFitsBuffer, hok.sw, hok.tw, hok.db⟩ fun t' _ hrax => ?_
       · rw [sep_lc]
         simpa only [rsi, rdx, rsp, Reg64s.get64_rsi, Reg64s.get64_rdx,
           Reg64s.get64_rsp] using hbound

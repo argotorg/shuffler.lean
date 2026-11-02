@@ -26,7 +26,7 @@ def finish (st : Flat.St) : Flat.Status × Flat.St :=
 
 -- These are the memory bounds and mapping conditions of the four callees. They contain
 -- no machine execution predicate. A caller must prove them for its constructed mapping.
-structure Safe (planned : Vector Word MAX_N) (st : Flat.St) (x : Nat) : Prop where
+structure Safe (planned : Vector Word maxStackSize) (st : Flat.St) (x : Nat) : Prop where
   surplus : st.trace.length + 2 * st.size.toNat ≤ 6 * st.targetSize.toNat + x ∧ DestOk st
   lowest : (Flat.removeSurplus st).1 = .done →
     let a := (Flat.removeSurplus st).2
@@ -36,21 +36,21 @@ structure Safe (planned : Vector Word MAX_N) (st : Flat.St) (x : Nat) : Prop whe
     let r := Flat.permuteAtLowestHeight planned l (Flat.removeSurplus st).2
     r.1 = .done → checks r.2 → Flat.HInv r.2 0 x
 
-def afterLowest (planned : Vector Word MAX_N) (l : Flat.Locals)
+def afterLowest (planned : Vector Word maxStackSize) (l : Flat.Locals)
     (st current : Flat.St) : Prop :=
   (Flat.removeSurplus st).1 = .done ∧
     Flat.permuteAtLowestHeight planned l (Flat.removeSurplus st).2 = (.done, current)
 
 def zeroLocals : Flat.Locals :=
-  ⟨Vector.replicate MAX_N 0, Vector.replicate MAX_N 0, Vector.replicate MAX_N 0⟩
+  ⟨Vector.replicate maxStackSize 0, Vector.replicate maxStackSize 0, Vector.replicate maxStackSize 0⟩
 
-theorem emission_surplus_fail {planned : Vector Word MAX_N} {l : Flat.Locals} {st : Flat.St}
+theorem emission_surplus_fail {planned : Vector Word maxStackSize} {l : Flat.Locals} {st : Flat.St}
     (h : (Flat.removeSurplus st).1 ≠ .done) :
     Flat.emissionRun planned l st = Flat.removeSurplus st := by
   unfold Flat.emissionRun
   rw [ite_eq_left h]
 
-theorem emission_lowest {planned : Vector Word MAX_N} {l : Flat.Locals} {st a : Flat.St}
+theorem emission_lowest {planned : Vector Word maxStackSize} {l : Flat.Locals} {st a : Flat.St}
     (h : Flat.removeSurplus st = (.done, a)) :
     Flat.emissionRun planned l st =
       if (Flat.permuteAtLowestHeight planned l a).1 ≠ .done then
@@ -60,7 +60,7 @@ theorem emission_lowest {planned : Vector Word MAX_N} {l : Flat.Locals} {st a : 
   rw [h]
   rfl
 
-theorem emission_finish {planned : Vector Word MAX_N} {l : Flat.Locals} {st a : Flat.St}
+theorem emission_finish {planned : Vector Word maxStackSize} {l : Flat.Locals} {st a : Flat.St}
     (h : afterLowest planned l st a) :
     Flat.emissionRun planned l st = finish a := by
   unfold Flat.emissionRun

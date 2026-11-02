@@ -26,8 +26,8 @@ def listOf (fs : FlatShuffler.Flat.St) : FlatShuffler.St where
   trace := fs.trace
 
 -- The entries of an array that holds a list.
-theorem abs_get {v : Vector FlatShuffler.Word FlatShuffler.MAX_N} {k a : Nat} {f : Fin a → Option Nat}
-    (hk : k ≤ FlatShuffler.MAX_N) (h : (v.toList.take k).map optOf = (List.finRange a).map f) :
+theorem abs_get {v : Vector FlatShuffler.Word FlatShuffler.maxStackSize} {k a : Nat} {f : Fin a → Option Nat}
+    (hk : k ≤ FlatShuffler.maxStackSize) (h : (v.toList.take k).map optOf = (List.finRange a).map f) :
     k = a ∧ ∀ i : Fin a, optOf (get v (BitVec.ofNat 64 i.val)) = f i := by
   have hl := congrArg List.length h
   simp only [List.length_map, List.length_take, Vector.length_toList, List.length_finRange] at hl
@@ -62,7 +62,7 @@ theorem listOf_dests_iff {i d : Nat} :
       i < fs.size.toNat ∧ (get fs.dest (BitVec.ofNat 64 i)).toNat = d := by
   simp [listOf, FlatShuffler.St.dests]
 
-theorem listOf_posOf {d : Nat} (hn : fs.targetSize.toNat ≤ FlatShuffler.MAX_N)
+theorem listOf_posOf {d : Nat} (hn : fs.targetSize.toNat ≤ FlatShuffler.maxStackSize)
     (hd : d < fs.targetSize.toNat) :
     FlatShuffler.positionOf (listOf fs) d = optOf (get fs.pos (BitVec.ofNat 64 d)) := by
   simp only [FlatShuffler.positionOf, listOf, List.getElem?_map, List.getElem?_take, ite_eq_left hd,
@@ -76,7 +76,7 @@ theorem listOf_posOf_ge {d : Nat} (hd : ¬d < fs.targetSize.toNat) :
 
 section
 variable {e : FlatShuffler.Env} {source : Stack} {state : OState e source}
-  (hn : fs.targetSize.toNat ≤ FlatShuffler.MAX_N) (hsz : fs.size.toNat ≤ FlatShuffler.MAX_N)
+  (hn : fs.targetSize.toNat ≤ FlatShuffler.maxStackSize) (hsz : fs.size.toNat ≤ FlatShuffler.maxStackSize)
   (hmap : absMapping fs.dest fs.pos fs.size fs.targetSize = absP state.mapping)
   (htot : ∀ i, (state.mapping i).isSome)
 include hn hsz hmap htot

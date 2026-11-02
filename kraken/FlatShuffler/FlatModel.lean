@@ -13,7 +13,7 @@ there is no proof that they agree.
 - `St` has one field for each member of `Emission`, with the C++ type:
   `std::size_t` and `StackOffset` are `Word`, `Optional<StackOffset>` is a `Word`
   with the niche `NONE`, and an array of `maxStackSize` elements is a
-  `Vector _ MAX_N`. The trace is the list of the operations that `m_trace` holds
+  `Vector _ maxStackSize`. The trace is the list of the operations that `m_trace` holds
   below `m_traceSize`.
 - Each unit returns a `Status` and the state, also when it fails, as the C++ does.
 - There is one function for each function of the C++, and its statements are in
@@ -44,23 +44,23 @@ def maxSwapDepth : Word := 16
 def maxDupDepth : Word := 15
 
 -- `a[i]` for an array of `maxStackSize` elements.
-def get {α : Type} [Inhabited α] (v : Vector α MAX_N) (i : Word) : α :=
-  if h : i.toNat < MAX_N then v[i.toNat] else default
+def get {α : Type} [Inhabited α] (v : Vector α maxStackSize) (i : Word) : α :=
+  if h : i.toNat < maxStackSize then v[i.toNat] else default
 
 -- `a[i] = x` for an array of `maxStackSize` elements.
-def put {α : Type} (v : Vector α MAX_N) (i : Word) (x : α) : Vector α MAX_N :=
+def put {α : Type} (v : Vector α maxStackSize) (i : Word) (x : α) : Vector α maxStackSize :=
   v.setIfInBounds i.toNat x
 
 -- The members of `Emission`, in the order of the C++.
 structure St where
-  target : Vector StackSlot MAX_N  -- m_target[0 .. m_targetSize)
+  target : Vector StackSlot maxStackSize  -- m_target[0 .. m_targetSize)
   targetSize : Word                -- m_targetSize
   spills : BitVec 32 → BitVec 8    -- m_spills
-  data : Vector StackSlot MAX_N    -- m_stack.m_data
+  data : Vector StackSlot maxStackSize    -- m_stack.m_data
   size : Word                      -- m_stack.m_size
   trace : List Op                  -- m_stack.m_trace[0 .. m_stack.m_traceSize)
-  dest : Vector Word MAX_N         -- m_mapping.m_destinationOf
-  pos : Vector Word MAX_N          -- m_mapping.m_positionOf
+  dest : Vector Word maxStackSize         -- m_mapping.m_destinationOf
+  pos : Vector Word maxStackSize          -- m_mapping.m_positionOf
   pend : Word                      -- m_pendingGenerations
   blockedOffset : Word             -- m_blocked.offset
   blockedExcess : Word             -- m_blocked.excess
@@ -207,7 +207,7 @@ The array `permutation` of `buildBottomUp` and the local array `desiredBy` of `p
 the start does not matter: the model starts with `initial`. -/
 
 -- The content of the local arrays at the start.
-def initial : Vector Word MAX_N := Vector.replicate MAX_N 0
+def initial : Vector Word maxStackSize := Vector.replicate maxStackSize 0
 
 -- The measure of a loop `for (i = a; i < b; ++i)`.
 theorem sub_succ_lt {a b : Word} (h : a < b) : (b - (a + 1)).toNat < (b - a).toNat := by
@@ -215,8 +215,8 @@ theorem sub_succ_lt {a b : Word} (h : a < b) : (b - (a + 1)).toNat < (b - a).toN
 
 -- The loop that reads the destinations into `permutation`, from `pos` on; none if a slot
 -- has no destination.
-def readDestinations (st : St) (pos : Word) (permutation : Vector Word MAX_N) :
-    Option (Vector Word MAX_N) :=
+def readDestinations (st : St) (pos : Word) (permutation : Vector Word maxStackSize) :
+    Option (Vector Word maxStackSize) :=
   if h : pos < st.size then
     let destination := get st.dest pos
     if destination = NONE then none
@@ -226,7 +226,7 @@ termination_by (st.size - pos).toNat
 decreasing_by bv_omega
 
 -- The loop that sets `desiredBy` to none, from `offset` on.
-def clearDesired (st : St) (offset : Word) (desiredBy : Vector Word MAX_N) : Vector Word MAX_N :=
+def clearDesired (st : St) (offset : Word) (desiredBy : Vector Word maxStackSize) : Vector Word maxStackSize :=
   if h : offset < st.size then clearDesired st (offset + 1) (put desiredBy offset NONE)
   else desiredBy
 termination_by (st.size - offset).toNat
@@ -235,8 +235,8 @@ decreasing_by bv_omega
 -- The loop that marks the desired offsets of the group of `leader`, whose slot is
 -- `slot`, from `pos` up to `leader`.
 def markDesired (st : St) (leader : Word) (hl : leader < st.size) (slot : StackSlot)
-    (permutation : Vector Word MAX_N) (pos : Word) (desiredBy : Vector Word MAX_N) :
-    Vector Word MAX_N :=
+    (permutation : Vector Word maxStackSize) (pos : Word) (desiredBy : Vector Word maxStackSize) :
+    Vector Word maxStackSize :=
   if h : pos ≤ leader then
     let desiredBy :=
       if get st.data pos = slot then put desiredBy (get permutation pos) leader else desiredBy
@@ -247,7 +247,7 @@ decreasing_by bv_omega
 
 -- The `vacant` loop: from `vacant` on, the first offset that the group of `leader`
 -- desires and that does not hold `slot`, or the size.
-def nextVacant (st : St) (leader : Word) (slot : StackSlot) (desiredBy : Vector Word MAX_N)
+def nextVacant (st : St) (leader : Word) (slot : StackSlot) (desiredBy : Vector Word maxStackSize)
     (vacant : Word) : Word :=
   if h : vacant < st.size ∧ ¬(get desiredBy vacant = leader ∧ ¬get st.data vacant = slot) then
     nextVacant st leader slot desiredBy (vacant + 1)
@@ -258,8 +258,8 @@ decreasing_by bv_omega
 -- The loop that gives each slot of the group of `leader` an offset in `permutation`, from
 -- `pos` up to `leader`; none if no vacant offset is left.
 def placeGroup (st : St) (leader : Word) (hl : leader < st.size) (slot : StackSlot)
-    (desiredBy : Vector Word MAX_N) (pos vacant : Word) (permutation : Vector Word MAX_N) :
-    Option (Vector Word MAX_N) :=
+    (desiredBy : Vector Word maxStackSize) (pos vacant : Word) (permutation : Vector Word maxStackSize) :
+    Option (Vector Word maxStackSize) :=
   if h : pos ≤ leader then
     if ¬get st.data pos = slot then
       placeGroup st leader hl slot desiredBy (pos + 1) vacant permutation
@@ -274,8 +274,8 @@ termination_by (leader + 1 - pos).toNat
 decreasing_by all_goals bv_omega
 
 -- The `leader` loop, from `leader` on; none if a group has no vacant offset left.
-def regroup (st : St) (leader : Word) (permutation desiredBy : Vector Word MAX_N) :
-    Option (Vector Word MAX_N) :=
+def regroup (st : St) (leader : Word) (permutation desiredBy : Vector Word maxStackSize) :
+    Option (Vector Word maxStackSize) :=
   if h : leader < st.size then
     let slot := get st.data leader
     if shallowestCopyPosition st slot ≠ leader then regroup st (leader + 1) permutation desiredBy
@@ -290,7 +290,7 @@ decreasing_by all_goals exact sub_succ_lt h
 
 -- The `candidate` loop of `permute`: the shallowest offset below `candidate` whose slot is
 -- misplaced, or `top`.
-def misplacedBelow (permutation : Vector Word MAX_N) (top candidate : Word) : Word :=
+def misplacedBelow (permutation : Vector Word maxStackSize) (top candidate : Word) : Word :=
   if h : candidate = 0 then top
   else if get permutation (candidate - 1) ≠ candidate - 1 then candidate - 1
   else misplacedBelow permutation top (candidate - 1)
@@ -300,11 +300,11 @@ decreasing_by bv_omega
 -- How an iteration of the loop of `permute` ends: the next state and `permutation`, or
 -- `return`.
 inductive PNext where
-  | cont (st : St) (permutation : Vector Word MAX_N)
+  | cont (st : St) (permutation : Vector Word maxStackSize)
   | ret (r : Status × St)
 
 -- The end of an iteration of the loop of `permute`: the slot at `pos` and the top.
-def exchange (st : St) (top : Word) (permutation : Vector Word MAX_N) (pos : Word) : PNext :=
+def exchange (st : St) (top : Word) (permutation : Vector Word maxStackSize) (pos : Word) : PNext :=
   let r : Except (Status × St) St :=
     if get st.data pos = get st.data (st.size - 1) then .ok (swapDestinations st pos top)
     else if !isSwapReachable st pos then .error (blockSwapUnreachable st pos)
@@ -317,7 +317,7 @@ def exchange (st : St) (top : Word) (permutation : Vector Word MAX_N) (pos : Wor
     .cont st (put permutation top desired)
 
 -- An iteration of the loop of `permute`.
-def permuteStep (st : St) (top : Word) (permutation : Vector Word MAX_N) : PNext :=
+def permuteStep (st : St) (top : Word) (permutation : Vector Word maxStackSize) : PNext :=
   let pos := get permutation top
   if pos = top then
     let pos := misplacedBelow permutation top top
@@ -328,7 +328,7 @@ def permuteStep (st : St) (top : Word) (permutation : Vector Word MAX_N) : PNext
 -- The loop of `permute`, for at most `fuel` iterations. If `permutation` is a permutation
 -- of the offsets below the size, the loop ends after at most `2 * size - 1` iterations
 -- (see the C++). Else the C++ loop can run forever, and the model fails when `fuel` is 0.
-def permuteLoop (fuel : Nat) (st : St) (top : Word) (permutation : Vector Word MAX_N) :
+def permuteLoop (fuel : Nat) (st : St) (top : Word) (permutation : Vector Word maxStackSize) :
     Status × St :=
   match fuel with
   | 0 => (.assertionFailed, st)
@@ -340,7 +340,7 @@ def permuteLoop (fuel : Nat) (st : St) (top : Word) (permutation : Vector Word M
 -- `permute(_permutation)`: the slot at each offset `pos` goes to `permutation[pos]`. The C++
 -- changes the caller's array in place; the caller does not read it after the call, so the model
 -- does not return it.
-def permute (st : St) (permutation : Vector Word MAX_N) : Status × St :=
+def permute (st : St) (permutation : Vector Word maxStackSize) : Status × St :=
   if st.size = 0 then (.done, st)
   else
     let desiredBy := clearDesired st 0 initial
@@ -622,8 +622,8 @@ def buildBottomUp (st : St) : Status × St := loop st 0
 
 -- The members that the constructor does not initialize: their content before it.
 structure Uninit where
-  dest : Vector Word MAX_N
-  pos : Vector Word MAX_N
+  dest : Vector Word maxStackSize
+  pos : Vector Word maxStackSize
   blockedOffset : Word
   blockedExcess : Word
 
@@ -632,8 +632,8 @@ def offsets (k : Word) : List Word := (List.range k.toNat).map (BitVec.ofNat 64)
 
 -- The constructor of `Emission`, with the constructor of `Mapping`: `data` holds the
 -- `m` slots of the source stack, and the source slot at `i` is bound for `dests[i]`.
-def ctor (data : Vector StackSlot MAX_N) (m : Word) (target : Vector StackSlot MAX_N) (n : Word)
-    (dests : Vector Word MAX_N) (spills : BitVec 32 → BitVec 8) (u : Uninit) : St :=
+def ctor (data : Vector StackSlot maxStackSize) (m : Word) (target : Vector StackSlot maxStackSize) (n : Word)
+    (dests : Vector Word maxStackSize) (spills : BitVec 32 → BitVec 8) (u : Uninit) : St :=
   let st : St := { target, targetSize := n, spills, data, size := m, trace := [],
                    dest := u.dest, pos := u.pos, pend := 0,
                    blockedOffset := u.blockedOffset, blockedExcess := u.blockedExcess }
@@ -645,9 +645,9 @@ def ctor (data : Vector StackSlot MAX_N) (m : Word) (target : Vector StackSlot M
 -- below `size`, `trace` the operations, and `blockedOffset` and `blockedExcess` the
 -- words that it writes to `blocked` (0 and 0 if not blocked). `u` is the content of the
 -- members that the constructor does not initialize.
-def build_bottom_up (m n : Word) (data target : Vector StackSlot MAX_N) (dest : Vector Word MAX_N)
+def build_bottom_up (m n : Word) (data target : Vector StackSlot maxStackSize) (dest : Vector Word maxStackSize)
     (spilled : BitVec 32 → BitVec 8) (u : Uninit) : Word × Option St :=
-  if m > n ∨ n > .ofNat 64 MAX_N then (-2, none)
+  if m > n ∨ n > .ofNat 64 maxStackSize then (-2, none)
   else
     let r := buildBottomUp (ctor data m target n dest spilled u)
     match r.1 with

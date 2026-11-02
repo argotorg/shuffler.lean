@@ -35,13 +35,13 @@ def Inputs.eval (x : Inputs) : BitVec 8 :=
   else x.rank
 
 def inputs (p : Flat.Planner) (sp : BitVec 32 → BitVec 8) (M : Flat.Mapping)
-    (dn : Vector (BitVec 8) MAX_N) (off : Word) : Inputs :=
+    (dn : Vector (BitVec 8) maxStackSize) (off : Word) : Inputs :=
   let slot := Flat.get p.source off
   ⟨slot, sp slot.payload, isJunk (Flat.get p.target (Flat.get M.dest off)),
     Flat.hasOtherRetainedCopy p M dn off, Flat.isDemanded p slot, p.allowed⟩
 
 theorem eval_eq_classify (p : Flat.Planner) (sp : BitVec 32 → BitVec 8) (M : Flat.Mapping)
-    (dn : Vector (BitVec 8) MAX_N) (off : Word) :
+    (dn : Vector (BitVec 8) maxStackSize) (off : Word) :
     (inputs p sp M dn off).eval = Flat.classify p sp M dn off := by
   simp only [inputs, Inputs.eval, Inputs.rank, Inputs.free, Inputs.spill,
     Flat.classify, Flat.spillIsSpilled]

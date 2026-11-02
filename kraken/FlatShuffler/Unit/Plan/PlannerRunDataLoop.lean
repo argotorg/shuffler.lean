@@ -20,34 +20,34 @@ local macro "data_norm" : tactic => `(tactic|
     Bool.false_eq_true, not_false_eq_true, not_true_eq_false, ↓reduceIte]))
 
 -- Restore the data tail in each return or continuation of the bottom-up loop.
-def restoreNext (cap : Nat) (old : Vector StackSlot MAX_N) : Next → Next
+def restoreNext (cap : Nat) (old : Vector StackSlot maxStackSize) : Next → Next
   | .ret r => .ret (r.1, restoreData cap old r.2)
   | .cont st t => .cont (restoreData cap old st) t
 
-@[simp] theorem restoreData_isFinal (cap : Nat) (old : Vector StackSlot MAX_N)
+@[simp] theorem restoreData_isFinal (cap : Nat) (old : Vector StackSlot maxStackSize)
     (st : St) (p : Word) : isFinal (restoreData cap old st) p = isFinal st p := by
   simp only [isFinal, restoreData_dest]
 
-@[simp] theorem restoreData_isSpilled (cap : Nat) (old : Vector StackSlot MAX_N)
+@[simp] theorem restoreData_isSpilled (cap : Nat) (old : Vector StackSlot maxStackSize)
     (st : St) (slot : StackSlot) : isSpilled (restoreData cap old st) slot = isSpilled st slot := by
   simp only [isSpilled, restoreData_spills]
 
-@[simp] theorem restoreData_depthOf (cap : Nat) (old : Vector StackSlot MAX_N)
+@[simp] theorem restoreData_depthOf (cap : Nat) (old : Vector StackSlot maxStackSize)
     (st : St) (p : Word) : depthOf (restoreData cap old st) p = depthOf st p := by
   simp only [depthOf, restoreData_size]
 
-@[simp] theorem restoreData_isSwapReachable (cap : Nat) (old : Vector StackSlot MAX_N)
+@[simp] theorem restoreData_isSwapReachable (cap : Nat) (old : Vector StackSlot maxStackSize)
     (st : St) (p : Word) :
     isSwapReachable (restoreData cap old st) p = isSwapReachable st p := by
   simp only [isSwapReachable, restoreData_depthOf]
 
-@[simp] theorem restoreData_isDupReachable (cap : Nat) (old : Vector StackSlot MAX_N)
+@[simp] theorem restoreData_isDupReachable (cap : Nat) (old : Vector StackSlot maxStackSize)
     (st : St) (p : Word) :
     isDupReachable (restoreData cap old st) p = isDupReachable st p := by
   simp only [isDupReachable, restoreData_depthOf]
 
 section
-variable (cap : Nat) (old : Vector StackSlot MAX_N)
+variable (cap : Nat) (old : Vector StackSlot maxStackSize)
 
 theorem restoreData_produce (st : St) (t : Word)
     (hs : st.size.toNat < cap) :
@@ -116,7 +116,7 @@ theorem restoreData_generate (st : St) (t : Word) (hf : FInv st)
         rw [hg.size]
         have hm := hf.n
         have hsN := hf.size_le
-        have hN : MAX_N = 1024 := rfl
+        have hN : maxStackSize = 1024 := rfl
         rw [hN] at hm
         bv_omega
       simp only [restoreData_size, restoreData_isFinal]

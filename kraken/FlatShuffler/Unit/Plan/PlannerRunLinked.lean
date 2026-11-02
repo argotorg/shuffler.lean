@@ -28,7 +28,7 @@ theorem planner_resolve_correct [Host] (L : Linked) (X : ExitBoundary) :
     (spillSetAdd_unit (L.planner_exit_decl X) (X.outside spillSetAdd_at))
   exact resolve_unit (L.planner_exit_decl X) (X.outside resolve_at) hclass hadd
 
-theorem emission_run_vthm [Host] (L : Linked) (X : ExitBoundary) (PM : Addr) (planned : Vector Word MAX_N) :
+theorem emission_run_vthm [Host] (L : Linked) (X : ExitBoundary) (PM : Addr) (planned : Vector Word maxStackSize) :
     letI := L.plannerDecls
     VThmWithExit (RunView PM planned) Sep.G.Ok runAsm (runA planned) runD
       (runQ planned) (runX planned) := by

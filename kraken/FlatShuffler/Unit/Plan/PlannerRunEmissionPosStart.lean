@@ -17,7 +17,7 @@ theorem b_12 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
     (F : MProp 64) (s : MachineData) (ra : Int64)
     (K : Unit → MachineData → Prop) (I' : CfgLabel → Nat → Unit → MachineData → Prop)
     (E : Int64 → MachineData → Prop)
-    (hzero : ∀ u, g.p.n = 0#64 → EmitMapped P g M F s ra u →
+    (hzero : ∀ u, g.p.targetSize = 0#64 → EmitMapped P g M F s ra u →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.14") u)
     (hcopy : ∀ u, EmitPosHead P g M F s ra u → K () u) :
     plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.26" →
@@ -25,7 +25,7 @@ theorem b_12 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
   intro t ⟨lo, locals, hc, hcx, hd⟩
-  have hcx' : t.regs.rcx.toBitVec = g.p.n := hcx
+  have hcx' : t.regs.rcx.toBitVec = g.p.targetSize := hcx
   kvcgen64
   all_goals try symexec_norm at ⊢
   vc_by_shape

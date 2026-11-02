@@ -14,7 +14,7 @@ def withSaw (g : PlannerCallMemory) (x : BitVec 8) : PlannerCallMemory :=
   { g with p := { g.p with saw := x } }
 
 theorem withSaw_ok {g : PlannerCallMemory} (h : g.Ok) (x : BitVec 8) : (withSaw g x).Ok := by
-  exact ⟨⟨h.planner.m, h.planner.n, h.planner.sw, h.planner.tw⟩,
+  exact ⟨⟨h.planner.sourceSizeFitsBuffer, h.planner.targetSizeFitsBuffer, h.planner.sw, h.planner.tw⟩,
     h.spillCount, h.sourceIds, h.targetIds, h.ops, h.traceLength⟩
 
 theorem withSaw_state (g : PlannerCallMemory) (x : BitVec 8) :
@@ -34,14 +34,14 @@ theorem data (h : (plannerCallOwnedMemory P g ∗ F).get m) :
     plannerCallOwnedMemory P g ∗ F = Arr g.dataPtr (g.data.toList.take g.dataCapacity) ∗ _) ▸ h⟩
 
 theorem sources (h : (plannerCallOwnedMemory P g ∗ F).get m) :
-    ∃ R, (Arr g.sourcesPtr (g.sources.toList.take g.p.n.toNat) ∗ R).get m := by
+    ∃ R, (Arr g.sourcesPtr (g.sources.toList.take g.p.targetSize.toNat) ∗ R).get m := by
   exact ⟨_, (by unfold plannerCallOwnedMemory; ecancel :
-    plannerCallOwnedMemory P g ∗ F = Arr g.sourcesPtr (g.sources.toList.take g.p.n.toNat) ∗ _) ▸ h⟩
+    plannerCallOwnedMemory P g ∗ F = Arr g.sourcesPtr (g.sources.toList.take g.p.targetSize.toNat) ∗ _) ▸ h⟩
 
 theorem dropped (h : (plannerCallOwnedMemory P g ∗ F).get m) :
-    ∃ R, (Bs g.p.drp (g.dropped.toList.take g.p.m.toNat) ∗ R).get m := by
+    ∃ R, (Bs g.p.drp (g.dropped.toList.take g.p.sourceSize.toNat) ∗ R).get m := by
   exact ⟨_, (by unfold plannerCallOwnedMemory; ecancel :
-    plannerCallOwnedMemory P g ∗ F = Bs g.p.drp (g.dropped.toList.take g.p.m.toNat) ∗ _) ▸ h⟩
+    plannerCallOwnedMemory P g ∗ F = Bs g.p.drp (g.dropped.toList.take g.p.sourceSize.toNat) ∗ _) ▸ h⟩
 
 theorem store_saw (h : (plannerCallOwnedMemory P g ∗ F).get m) (x : Int) :
     (plannerCallOwnedMemory P (withSaw g (BitVec.ofInt 8 x)) ∗ F).get
@@ -59,25 +59,25 @@ theorem isSome_saw (h : (plannerCallOwnedMemory P g ∗ F).get m) :
   exact B8.isSome (e ▸ h)
 
 theorem store_data (h : (plannerCallOwnedMemory P g ∗ F).get m) {i : Word}
-    (hi : i.toNat < MAX_N) (hcap : i.toNat < g.dataCapacity) (w : Word) :
+    (hi : i.toNat < maxStackSize) (hcap : i.toNat < g.dataCapacity) (w : Word) :
     (plannerCallOwnedMemory P { g with data := Flat.put g.data i w } ∗ F).get
       (m.storeInt (slotAt g.dataPtr i.toNat) 8 w.toInt) := by
-  obtain ⟨R, e⟩ : ∃ R, ∀ v : Vector Word MAX_N,
+  obtain ⟨R, e⟩ : ∃ R, ∀ v : Vector Word maxStackSize,
       plannerCallOwnedMemory P { g with data := v } ∗ F = Arr g.dataPtr (v.toList.take g.dataCapacity) ∗ R :=
     ⟨_, fun v => by simp only [PlannerCallMemory.dataCapacity, plannerCallOwnedMemory]; ecancel⟩
   rw [e]
   simpa [Flat.put, slotAt, PlannerCallMemory.dataCapacity, List.take_set] using
     Arr.store (e g.data ▸ h) (by
       simp only [List.length_take, Vector.length_toList]
-      change i.toNat < min g.dataCapacity MAX_N
+      change i.toNat < min g.dataCapacity maxStackSize
       omega) w
 
 theorem store_sources (h : (plannerCallOwnedMemory P g ∗ F).get m) {i : Word}
-    (hi : i.toNat < MAX_N) (hn : i.toNat < g.p.n.toNat) (w : Word) :
+    (hi : i.toNat < maxStackSize) (hn : i.toNat < g.p.targetSize.toNat) (w : Word) :
     (plannerCallOwnedMemory P { g with sources := Flat.put g.sources i w } ∗ F).get
       (m.storeInt (slotAt g.sourcesPtr i.toNat) 8 w.toInt) := by
-  obtain ⟨R, e⟩ : ∃ R, ∀ v : Vector Word MAX_N,
-      plannerCallOwnedMemory P { g with sources := v } ∗ F = Arr g.sourcesPtr (v.toList.take g.p.n.toNat) ∗ R :=
+  obtain ⟨R, e⟩ : ∃ R, ∀ v : Vector Word maxStackSize,
+      plannerCallOwnedMemory P { g with sources := v } ∗ F = Arr g.sourcesPtr (v.toList.take g.p.targetSize.toNat) ∗ R :=
     ⟨_, fun v => by simp only [PlannerCallMemory.dataCapacity, plannerCallOwnedMemory]; ecancel⟩
   rw [e]
   simpa [Flat.put, slotAt, List.take_set] using

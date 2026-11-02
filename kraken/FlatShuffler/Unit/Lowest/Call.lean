@@ -49,8 +49,8 @@ theorem b_4 [Host] [FunDecls] (S PM planned g F0 s ra)
     rw [hM.sp]; exact perm_base _
   · rw [hpe]; exact hpre.args.2.2 l0 sc hs heq
   · intro i hi
-    have hiM : i < MAX_N := by show i < 1024; omega
-    have hiw : (BitVec.ofNat 64 i).toNat < MAX_N := by
+    have hiM : i < maxStackSize := by show i < 1024; omega
+    have hiw : (BitVec.ofNat 64 i).toNat < maxStackSize := by
       rw [BitVec.toNat_ofNat, Nat.mod_eq_of_lt (by omega)]; exact hiM
     show rd t.dmem (t.regs.rsp.toBitVec + 16384#64 + BitVec.ofNat 64 (8 * i)) = _
     rw [hM.rdPerm hiM (by rw [hM.sp, perm_base]), get_eq _ _ hiw]

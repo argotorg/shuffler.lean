@@ -21,18 +21,18 @@ the fuel sufficient and that keep the reads and writes of the asm below the size
   place). `mu` is at least 1 (`mu_pos`) and at most `2 * size - 1` (`mu_start`), so the fuel
   `2 * size` is sufficient (`fuel_pos`).
 
-All indices are words below the size, and the size is at most `MAX_N`.
+All indices are words below the size, and the size is at most `maxStackSize`.
 -/
 
 namespace FlatShuffler.Unit.Permute
 
 /-! ## `get` and `put` -/
 
-theorem get_put_self {α : Type} [Inhabited α] (v : Vector α MAX_N) {i : Word} (hi : i.toNat < MAX_N)
+theorem get_put_self {α : Type} [Inhabited α] (v : Vector α maxStackSize) {i : Word} (hi : i.toNat < maxStackSize)
     (x : α) : Flat.get (Flat.put v i x) i = x := by
   simp [Flat.get, Flat.put, hi]
 
-theorem get_put_ne {α : Type} [Inhabited α] (v : Vector α MAX_N) {i j : Word} (x : α) (h : j ≠ i) :
+theorem get_put_ne {α : Type} [Inhabited α] (v : Vector α maxStackSize) {i j : Word} (x : α) (h : j ≠ i) :
     Flat.get (Flat.put v i x) j = Flat.get v j := by
   unfold Flat.get Flat.put
   split
@@ -41,7 +41,7 @@ theorem get_put_ne {α : Type} [Inhabited α] (v : Vector α MAX_N) {i j : Word}
     exact fun e => h (BitVec.eq_of_toNat_eq e.symm)
   · rfl
 
-theorem get_put {α : Type} [Inhabited α] (v : Vector α MAX_N) {i : Word} (hi : i.toNat < MAX_N)
+theorem get_put {α : Type} [Inhabited α] (v : Vector α maxStackSize) {i : Word} (hi : i.toNat < maxStackSize)
     (x : α) (j : Word) : Flat.get (Flat.put v i x) j = if j = i then x else Flat.get v j := by
   split
   · next h => subst h; exact get_put_self v hi x
@@ -113,8 +113,8 @@ theorem lead_eq (st : Flat.St) {i j : Word} (h : Flat.get st.data i = Flat.get s
 theorem succ_le_iff {pos i n : Word} (hlt : pos < n) (e : i ≠ pos) : pos + 1 ≤ i ↔ pos ≤ i := by
   constructor <;> intro <;> bv_omega
 
-theorem readDestinations_spec (st : Flat.St) (hn : st.size.toNat ≤ MAX_N) (pos : Word)
-    (v p : Vector Word MAX_N) (h : Flat.readDestinations st pos v = some p) :
+theorem readDestinations_spec (st : Flat.St) (hn : st.size.toNat ≤ maxStackSize) (pos : Word)
+    (v p : Vector Word maxStackSize) (h : Flat.readDestinations st pos v = some p) :
     ∀ i < st.size, Flat.get p i = if pos ≤ i then Flat.get st.dest i else Flat.get v i := by
   fun_induction Flat.readDestinations st pos v with
   | case1 pos v hlt d hd => simp at h
@@ -129,8 +129,8 @@ theorem readDestinations_spec (st : Flat.St) (hn : st.size.toNat ≤ MAX_N) (pos
     cases h
     rw [ite_eq_right (by bv_omega)]
 
-theorem clearDesired_spec (st : Flat.St) (hn : st.size.toNat ≤ MAX_N) (pos : Word)
-    (v : Vector Word MAX_N) :
+theorem clearDesired_spec (st : Flat.St) (hn : st.size.toNat ≤ maxStackSize) (pos : Word)
+    (v : Vector Word maxStackSize) :
     ∀ i < st.size, Flat.get (Flat.clearDesired st pos v) i
       = if pos ≤ i then Flat.NONE else Flat.get v i := by
   fun_induction Flat.clearDesired st pos v with
@@ -147,8 +147,8 @@ theorem clearDesired_spec (st : Flat.St) (hn : st.size.toNat ≤ MAX_N) (pos : W
 section
 variable (st : Flat.St) (L : Word) (hl : L < st.size) (σ : StackSlot)
 
-theorem markDesired_spec (p : Vector Word MAX_N) (pos : Word) (dB : Vector Word MAX_N) :
-    (∀ j, pos ≤ j → j ≤ L → Flat.get st.data j = σ → (Flat.get p j).toNat < MAX_N →
+theorem markDesired_spec (p : Vector Word maxStackSize) (pos : Word) (dB : Vector Word maxStackSize) :
+    (∀ j, pos ≤ j → j ≤ L → Flat.get st.data j = σ → (Flat.get p j).toNat < maxStackSize →
         Flat.get (Flat.markDesired st L hl σ p pos dB) (Flat.get p j) = L)
       ∧ ∀ x, (∀ j, pos ≤ j → j ≤ L → Flat.get st.data j = σ → Flat.get p j ≠ x) →
         Flat.get (Flat.markDesired st L hl σ p pos dB) x = Flat.get dB x := by
@@ -173,7 +173,7 @@ theorem markDesired_spec (p : Vector Word MAX_N) (pos : Word) (dB : Vector Word 
   | case2 pos dB hgt =>
     exact ⟨fun j hj hjl => absurd (BitVec.le_trans hj hjl) hgt, fun _ _ => rfl⟩
 
-theorem nextVacant_spec (dB : Vector Word MAX_N) (vac : Word) :
+theorem nextVacant_spec (dB : Vector Word maxStackSize) (vac : Word) :
     vac ≤ Flat.nextVacant st L σ dB vac
       ∧ (Flat.nextVacant st L σ dB vac < st.size →
         Flat.get dB (Flat.nextVacant st L σ dB vac) = L
@@ -190,8 +190,8 @@ end
 -- the group below `pos` has its own offset in `pc`, its own offset if `dB` gives it to the
 -- group, else an offset below `vac` that `dB` gives to the group and that holds no slot of the
 -- group. The other offsets keep the offsets of `p`.
-structure PInv (st : Flat.St) (L : Word) (σ : StackSlot) (dB p : Vector Word MAX_N) (pos vac : Word)
-    (pc : Vector Word MAX_N) : Prop where
+structure PInv (st : Flat.St) (L : Word) (σ : StackSlot) (dB p : Vector Word maxStackSize) (pos vac : Word)
+    (pc : Vector Word maxStackSize) : Prop where
   place : ∀ i < pos, Flat.get st.data i = σ →
     (Flat.get pc i = i ∧ Flat.get dB i = L)
       ∨ (Flat.get pc i < vac ∧ Flat.get pc i < st.size ∧ Flat.get dB (Flat.get pc i) = L
@@ -200,8 +200,8 @@ structure PInv (st : Flat.St) (L : Word) (σ : StackSlot) (dB p : Vector Word MA
     Flat.get pc i = Flat.get pc k → i = k
   keep : ∀ i, (pos ≤ i ∨ Flat.get st.data i ≠ σ) → Flat.get pc i = Flat.get p i
 
-theorem placeGroup_spec (st : Flat.St) (hn : st.size.toNat ≤ MAX_N) (L : Word) (hl : L < st.size)
-    (σ : StackSlot) (dB p : Vector Word MAX_N) (pos vac : Word) (pc p' : Vector Word MAX_N)
+theorem placeGroup_spec (st : Flat.St) (hn : st.size.toNat ≤ maxStackSize) (L : Word) (hl : L < st.size)
+    (σ : StackSlot) (dB p : Vector Word maxStackSize) (pos vac : Word) (pc p' : Vector Word maxStackSize)
     (hpos : pos ≤ L + 1) (hinv : PInv st L σ dB p pos vac pc)
     (h : Flat.placeGroup st L hl σ dB pos vac pc = some p') : ∃ vac', PInv st L σ dB p (L + 1) vac' p' := by
   have hlN : L.toNat < st.size.toNat := hl
@@ -220,7 +220,7 @@ theorem placeGroup_spec (st : Flat.St) (hn : st.size.toNat ≤ MAX_N) (L : Word)
       · exact Or.inr hi
   | case2 pos vac pc hle hd hdB ih =>
     have hd : Flat.get st.data pos = σ := Classical.not_not.mp hd
-    have hpm : pos.toNat < MAX_N := by bv_omega
+    have hpm : pos.toNat < maxStackSize := by bv_omega
     have hget : ∀ i, i ≠ pos → Flat.get (Flat.put pc pos pos) i = Flat.get pc i :=
       fun i e => get_put_ne _ _ e
     refine ih (by bv_omega) ⟨fun i hi hdi => ?_, fun i hi k hk hdi hdk he => ?_, fun i hi => ?_⟩ h
@@ -253,7 +253,7 @@ theorem placeGroup_spec (st : Flat.St) (hn : st.size.toNat ≤ MAX_N) (L : Word)
       nextVacant_spec st L σ dB vac
     clear_value v
     obtain ⟨hv1, hv2, hv3⟩ := And.intro hvs.1 (hvs.2 hv)
-    have hpm : pos.toNat < MAX_N := by bv_omega
+    have hpm : pos.toNat < maxStackSize := by bv_omega
     have hget : ∀ i, i ≠ pos → Flat.get (Flat.put pc pos v) i = Flat.get pc i :=
       fun i e => get_put_ne _ _ e
     refine ih (by bv_omega) ⟨fun i hi hdi => ?_, fun i hi k hk hdi hdk he => ?_, fun i hi => ?_⟩ h
@@ -294,8 +294,8 @@ theorem ofNat_toNat (w : Word) : BitVec.ofNat 64 w.toNat = w := by
   apply BitVec.eq_of_toNat_eq; simp
 
 -- The destinations of `PermOk` are a bijection.
-theorem permOk_bij {st : Flat.St} (hn : st.size.toNat ≤ MAX_N) (hp : PermOk st)
-    {p0 : Vector Word MAX_N} (h : Flat.readDestinations st 0 Flat.initial = some p0) :
+theorem permOk_bij {st : Flat.St} (hn : st.size.toNat ≤ maxStackSize) (hp : PermOk st)
+    {p0 : Vector Word maxStackSize} (h : Flat.readDestinations st 0 Flat.initial = some p0) :
     Bij st.size p0 := by
   have hr := readDestinations_spec st hn 0 _ _ h
   have hd : ∀ i < st.size, Flat.get p0 i = Flat.get st.dest i := fun i hi => by
@@ -310,7 +310,7 @@ theorem permOk_bij {st : Flat.St} (hn : st.size.toNat ≤ MAX_N) (hp : PermOk st
 
 -- `readDestinations` gives a result if no destination below the size is `NONE`.
 theorem rd_some (st : Flat.St) (hne : ∀ i < st.size, Flat.get st.dest i ≠ Flat.NONE)
-    (pos : Word) (v : Vector Word MAX_N) : ∃ p, Flat.readDestinations st pos v = some p := by
+    (pos : Word) (v : Vector Word maxStackSize) : ∃ p, Flat.readDestinations st pos v = some p := by
   fun_induction Flat.readDestinations st pos v with
   | case1 pos v hlt d hd => exact absurd hd (hne pos hlt)
   | case2 pos v hlt d hd ih => exact ih
@@ -318,17 +318,17 @@ theorem rd_some (st : Flat.St) (hne : ∀ i < st.size, Flat.get st.dest i ≠ Fl
 
 -- The destinations of `PermOk` are below the size, so not `NONE`: `readDestinations` gives a
 -- result.
-theorem rd_some_of_permOk {st : Flat.St} (hn : st.size.toNat ≤ MAX_N) (hp : PermOk st) :
+theorem rd_some_of_permOk {st : Flat.St} (hn : st.size.toNat ≤ maxStackSize) (hp : PermOk st) :
     ∃ p, Flat.readDestinations st 0 Flat.initial = some p := by
   refine rd_some st (fun i hi e => ?_) 0 _
   have := hp.lt i.toNat (BitVec.lt_def.mp hi)
   rw [ofNat_toNat, e] at this
   have h1 : Flat.NONE.toNat = 2 ^ 64 - 1 := by decide
-  simp only [MAX_N] at hn
+  simp only [maxStackSize] at hn
   omega
 
 -- `permuteMapping` is `permute` with the result of `readDestinations`.
-theorem permuteMapping_of {st : Flat.St} {p : Vector Word MAX_N}
+theorem permuteMapping_of {st : Flat.St} {p : Vector Word maxStackSize}
     (h : Flat.readDestinations st 0 Flat.initial = some p) :
     Flat.permuteMapping st = Flat.permute st p := by
   rw [Flat.permuteMapping, h]
@@ -337,7 +337,7 @@ theorem permuteMapping_of {st : Flat.St} {p : Vector Word MAX_N}
 -- destinations. An offset whose leader is below `L` has the destination of an offset with its
 -- slot, and the offsets of two such offsets with the same slot are different. The other offsets
 -- keep their destinations. `dB` marks no offset with a leader from `L` on.
-structure RInv (st : Flat.St) (p0 : Vector Word MAX_N) (L : Word) (p dB : Vector Word MAX_N) :
+structure RInv (st : Flat.St) (p0 : Vector Word maxStackSize) (L : Word) (p dB : Vector Word maxStackSize) :
     Prop where
   src : ∀ i < st.size, lead st i < L →
     ∃ j < st.size, Flat.get st.data j = Flat.get st.data i ∧ Flat.get p0 j = Flat.get p i
@@ -346,7 +346,7 @@ structure RInv (st : Flat.St) (p0 : Vector Word MAX_N) (L : Word) (p dB : Vector
   keep : ∀ i < st.size, L ≤ lead st i → Flat.get p i = Flat.get p0 i
   mark : ∀ x < st.size, Flat.get dB x = Flat.NONE ∨ Flat.get dB x < L
 
-theorem RInv.init (st : Flat.St) (hn : st.size.toNat ≤ MAX_N) (p0 : Vector Word MAX_N) :
+theorem RInv.init (st : Flat.St) (hn : st.size.toNat ≤ maxStackSize) (p0 : Vector Word maxStackSize) :
     RInv st p0 0 p0 (Flat.clearDesired st 0 Flat.initial) where
   src _ _ h := absurd h (by bv_omega)
   inj _ _ _ _ _ h := absurd h (by bv_omega)
@@ -354,7 +354,7 @@ theorem RInv.init (st : Flat.St) (hn : st.size.toNat ≤ MAX_N) (p0 : Vector Wor
   mark x hx := Or.inl (by rw [clearDesired_spec st hn 0 _ x hx, ite_eq_left (by bv_omega)])
 
 -- An offset that is not a leader.
-theorem RInv.skip {st : Flat.St} {p0 p dB : Vector Word MAX_N} {L : Word}
+theorem RInv.skip {st : Flat.St} {p0 p dB : Vector Word maxStackSize} {L : Word}
     (hr : RInv st p0 L p dB) (hl : L < st.size)
     (hlead : lead st L ≠ L) : RInv st p0 (L + 1) p dB := by
   have hLN : L.toNat < st.size.toNat := hl
@@ -365,15 +365,15 @@ theorem RInv.skip {st : Flat.St} {p0 p dB : Vector Word MAX_N} {L : Word}
   exact ⟨fun i hi h => hr.src i hi (hlt i hi h), fun i hi k hk hd h => hr.inj i hi k hk hd (hlt i hi h),
     fun i hi h => hr.keep i hi (by bv_omega), fun x hx => (hr.mark x hx).imp_right fun h => by bv_omega⟩
 
-theorem PInv.init (st : Flat.St) (L : Word) (σ : StackSlot) (dB p : Vector Word MAX_N) :
+theorem PInv.init (st : Flat.St) (L : Word) (σ : StackSlot) (dB p : Vector Word maxStackSize) :
     PInv st L σ dB p 0 0 p :=
   ⟨fun _ hi => absurd hi (by bv_omega), fun _ hi => absurd hi (by bv_omega), fun _ _ => rfl⟩
 
 -- The group of the leader `L`, with the slot `σ`.
-theorem RInv.group {st : Flat.St} {p0 p dB : Vector Word MAX_N} {L : Word}
-    (hn : st.size.toNat ≤ MAX_N) (hb : Bij st.size p0) (hr : RInv st p0 L p dB) (hl : L < st.size)
+theorem RInv.group {st : Flat.St} {p0 p dB : Vector Word maxStackSize} {L : Word}
+    (hn : st.size.toNat ≤ maxStackSize) (hb : Bij st.size p0) (hr : RInv st p0 L p dB) (hl : L < st.size)
     {σ : StackSlot} (hσ : Flat.get st.data L = σ) (hlead : lead st L = L) {vac : Word}
-    {p' : Vector Word MAX_N} (hp : PInv st L σ (Flat.markDesired st L hl σ p 0 dB) p (L + 1) vac p') :
+    {p' : Vector Word maxStackSize} (hp : PInv st L σ (Flat.markDesired st L hl σ p 0 dB) p (L + 1) vac p') :
     RInv st p0 (L + 1) p' (Flat.markDesired st L hl σ p 0 dB) := by
   have hLN : L.toNat < st.size.toNat := hl
   obtain ⟨m1, m2⟩ := markDesired_spec st L hl σ p 0 dB
@@ -424,7 +424,7 @@ theorem RInv.group {st : Flat.St} {p0 p dB : Vector Word MAX_N} {L : Word}
     exact hr.keep i hi (by bv_omega)
   · by_cases hw : ∃ j, 0 ≤ j ∧ j ≤ L ∧ Flat.get st.data j = σ ∧ Flat.get p j = x
     · obtain ⟨j, h0, hjl, hdj, hpj⟩ := hw
-      have hlt : (Flat.get p j).toNat < MAX_N := by
+      have hlt : (Flat.get p j).toNat < maxStackSize := by
         have := hb.1 j (by bv_omega); rw [hp0 j hjl hdj]; bv_omega
       rw [← hpj, m1 j h0 hjl hdj hlt]
       exact Or.inr (by bv_omega)
@@ -432,7 +432,7 @@ theorem RInv.group {st : Flat.St} {p0 p dB : Vector Word MAX_N} {L : Word}
       exact (hr.mark x hx).imp_right fun h => by bv_omega
 
 -- At the end, `p` is a bijection.
-theorem RInv.bij {st : Flat.St} {p0 p dB : Vector Word MAX_N} {L : Word} (hb : Bij st.size p0)
+theorem RInv.bij {st : Flat.St} {p0 p dB : Vector Word maxStackSize} {L : Word} (hb : Bij st.size p0)
     (hr : RInv st p0 L p dB) (hL : st.size ≤ L) : Bij st.size p := by
   have hall : ∀ i < st.size, lead st i < L := fun i hi => by
     have := (lead_spec st hi).2.1; bv_omega
@@ -446,7 +446,7 @@ theorem RInv.bij {st : Flat.St} {p0 p dB : Vector Word MAX_N} {L : Word} (hb : B
     exact hr.inj i hi k hk (hdj.symm.trans hdj') (hall i hi) he
 
 -- During `regroup`, the offsets are below the size.
-theorem RInv.lt {st : Flat.St} {p0 p dB : Vector Word MAX_N} {L : Word} (hb : Bij st.size p0)
+theorem RInv.lt {st : Flat.St} {p0 p dB : Vector Word maxStackSize} {L : Word} (hb : Bij st.size p0)
     (hr : RInv st p0 L p dB) : ∀ i < st.size, Flat.get p i < st.size := by
   intro i hi
   by_cases h : lead st i < L
@@ -455,7 +455,7 @@ theorem RInv.lt {st : Flat.St} {p0 p dB : Vector Word MAX_N} {L : Word} (hb : Bi
   · rw [hr.keep i hi (by bv_omega)]; exact hb.1 i hi
 
 -- During `placeGroup`, the offsets are below the size.
-theorem PInv.lt {st : Flat.St} {L : Word} {σ : StackSlot} {dB p pc : Vector Word MAX_N}
+theorem PInv.lt {st : Flat.St} {L : Word} {σ : StackSlot} {dB p pc : Vector Word maxStackSize}
     {pos vac : Word} (hlt : ∀ i < st.size, Flat.get p i < st.size)
     (hp : PInv st L σ dB p pos vac pc) : ∀ i < st.size, Flat.get pc i < st.size := by
   intro i hi
@@ -469,8 +469,8 @@ theorem PInv.lt {st : Flat.St} {L : Word} {σ : StackSlot} {dB p pc : Vector Wor
     · rw [e]; exact hi
     · exact e
 
-theorem regroup_spec (st : Flat.St) (hn : st.size.toNat ≤ MAX_N) (p0 : Vector Word MAX_N)
-    (hb : Bij st.size p0) (L : Word) (p dB pf : Vector Word MAX_N) (hr : RInv st p0 L p dB)
+theorem regroup_spec (st : Flat.St) (hn : st.size.toNat ≤ maxStackSize) (p0 : Vector Word maxStackSize)
+    (hb : Bij st.size p0) (L : Word) (p dB pf : Vector Word maxStackSize) (hr : RInv st p0 L p dB)
     (h : Flat.regroup st L p dB = some pf) : Bij st.size pf := by
   fun_induction Flat.regroup st L p dB with
   | case1 L p dB hl slot hne ih => exact ih (hr.skip hl hne) h
@@ -484,7 +484,7 @@ theorem regroup_spec (st : Flat.St) (hn : st.size.toNat ≤ MAX_N) (p0 : Vector 
     exact hr.bij hb (by bv_omega)
 
 -- The permutation of `permute` after `regroup` is a bijection, for a bijection `p0`.
-theorem regroup_bij {st : Flat.St} (hn : st.size.toNat ≤ MAX_N) {p0 p : Vector Word MAX_N}
+theorem regroup_bij {st : Flat.St} (hn : st.size.toNat ≤ maxStackSize) {p0 p : Vector Word maxStackSize}
     (hb : Bij st.size p0)
     (h : Flat.regroup st 0 p0 (Flat.clearDesired st 0 Flat.initial) = some p) : Bij st.size p :=
   regroup_spec st hn p0 hb 0 p0 _ p (RInv.init st hn p0) h
@@ -516,21 +516,21 @@ theorem countP_congr {n : Nat} {f g : Nat → Bool} (h : ∀ i < n, f i = g i) :
   List.countP_congr (fun i hi => by rw [h i (List.mem_range.mp hi)])
 
 -- The number of offsets below `top` that are not in place.
-def misplaced (top : Word) (p : Vector Word MAX_N) : Nat :=
+def misplaced (top : Word) (p : Vector Word maxStackSize) : Nat :=
   (List.range top.toNat).countP fun i => Flat.get p (BitVec.ofNat 64 i) != BitVec.ofNat 64 i
 
 -- The measure of the loop of `permute`: 2 for each offset below `top` that is not in place, and
 -- 1 if `top` is in place.
-def mu (top : Word) (p : Vector Word MAX_N) : Nat :=
+def mu (top : Word) (p : Vector Word maxStackSize) : Nat :=
   2 * misplaced top p + if Flat.get p top = top then 1 else 0
 
-theorem mu_le (top : Word) (p : Vector Word MAX_N) : mu top p ≤ 2 * top.toNat + 1 := by
+theorem mu_le (top : Word) (p : Vector Word maxStackSize) : mu top p ≤ 2 * top.toNat + 1 := by
   have : misplaced top p ≤ top.toNat := by
     unfold misplaced
     exact Nat.le_trans List.countP_le_length (by simp)
   unfold mu; split <;> omega
 
-theorem mu_pos {n : Word} {p : Vector Word MAX_N} (hb : Bij n p) (h0 : 0 < n) : 1 ≤ mu (n - 1) p := by
+theorem mu_pos {n : Word} {p : Vector Word maxStackSize} (hb : Bij n p) (h0 : 0 < n) : 1 ≤ mu (n - 1) p := by
   unfold mu
   split
   · omega
@@ -548,11 +548,11 @@ theorem mu_pos {n : Word} {p : Vector Word MAX_N} (hb : Bij n p) (h0 : 0 < n) : 
     omega
 
 -- The permutation after `exchange` at `pos`.
-def swapP (p : Vector Word MAX_N) (top pos : Word) : Vector Word MAX_N :=
+def swapP (p : Vector Word maxStackSize) (top pos : Word) : Vector Word maxStackSize :=
   Flat.put (Flat.put p pos (Flat.get p top)) top (Flat.get p pos)
 
-theorem get_swapP (p : Vector Word MAX_N) {top pos : Word} (ht : top.toNat < MAX_N)
-    (hpos : pos.toNat < MAX_N) (i : Word) :
+theorem get_swapP (p : Vector Word maxStackSize) {top pos : Word} (ht : top.toNat < maxStackSize)
+    (hpos : pos.toNat < maxStackSize) (i : Word) :
     Flat.get (swapP p top pos) i
       = if i = top then Flat.get p pos else if i = pos then Flat.get p top else Flat.get p i := by
   unfold swapP; rw [get_put _ ht, get_put _ hpos]
@@ -565,8 +565,8 @@ theorem tr_inj (top pos : Word) {i k : Word} (h : tr top pos i = tr top pos k) :
   by_cases h1 : i = top <;> by_cases h3 : k = top <;> by_cases h2 : i = pos <;> by_cases h4 : k = pos
     <;> simp_all
 
-theorem get_swapP' (p : Vector Word MAX_N) {top pos : Word} (ht : top.toNat < MAX_N)
-    (hpos : pos.toNat < MAX_N) (i : Word) : Flat.get (swapP p top pos) i = Flat.get p (tr top pos i) := by
+theorem get_swapP' (p : Vector Word maxStackSize) {top pos : Word} (ht : top.toNat < maxStackSize)
+    (hpos : pos.toNat < maxStackSize) (i : Word) : Flat.get (swapP p top pos) i = Flat.get p (tr top pos i) := by
   rw [get_swapP p ht hpos]; unfold tr
   by_cases h1 : i = top
   · simp [h1]
@@ -574,7 +574,7 @@ theorem get_swapP' (p : Vector Word MAX_N) {top pos : Word} (ht : top.toNat < MA
     · subst h2; simp [h1]
     · simp [h1, h2]
 
-theorem swapP_bij {n top pos : Word} {p : Vector Word MAX_N} (hn : n.toNat ≤ MAX_N) (hb : Bij n p)
+theorem swapP_bij {n top pos : Word} {p : Vector Word maxStackSize} (hn : n.toNat ≤ maxStackSize) (hb : Bij n p)
     (ht : top < n) (hpos : pos < n) : Bij n (swapP p top pos) := by
   have hg := get_swapP' p (top := top) (pos := pos) (by bv_omega) (by bv_omega)
   have hs : ∀ i < n, tr top pos i < n := by
@@ -587,7 +587,7 @@ theorem swapP_bij {n top pos : Word} {p : Vector Word MAX_N} (hn : n.toNat ≤ M
   · rw [hg]; exact hb.1 _ (hs i hi)
   · rw [hg, hg] at he; exact tr_inj top pos (hb.2 _ (hs i hi) _ (hs k hk) he)
 
-theorem swapP_mu {n pos : Word} {p : Vector Word MAX_N} (hn : n.toNat ≤ MAX_N) (hb : Bij n p)
+theorem swapP_mu {n pos : Word} {p : Vector Word maxStackSize} (hn : n.toNat ≤ maxStackSize) (hb : Bij n p)
     (hpos : pos < n) (hne : pos ≠ n - 1)
     (hc : Flat.get p (n - 1) = pos ∨ (Flat.get p (n - 1) = n - 1 ∧ Flat.get p pos ≠ pos)) :
     mu (n - 1) (swapP p (n - 1) pos) < mu (n - 1) p := by
@@ -624,7 +624,7 @@ theorem swapP_mu {n pos : Word} {p : Vector Word MAX_N} (hn : n.toNat ≤ MAX_N)
     unfold mu; rw [heq]; simp only [ht', hc, ite_false, ite_true]; omega
 
 -- `misplacedBelow p top c` is `top`, or an offset below `c` that is not in place.
-theorem misplacedBelow_spec (p : Vector Word MAX_N) (top c : Word) :
+theorem misplacedBelow_spec (p : Vector Word maxStackSize) (top c : Word) :
     Flat.misplacedBelow p top c = top
       ∨ (Flat.misplacedBelow p top c < c
         ∧ Flat.get p (Flat.misplacedBelow p top c) ≠ Flat.misplacedBelow p top c) := by
@@ -637,14 +637,14 @@ theorem misplacedBelow_spec (p : Vector Word MAX_N) (top c : Word) :
     · exact Or.inr ⟨by bv_omega, h2⟩
 
 -- `exchange` swaps the offsets of `pos` and `top`.
-theorem exchange_cont {st st' : Flat.St} {top pos : Word} {p p' : Vector Word MAX_N}
+theorem exchange_cont {st st' : Flat.St} {top pos : Word} {p p' : Vector Word maxStackSize}
     (h : Flat.exchange st top p pos = .cont st' p') : p' = swapP p top pos := by
   unfold Flat.exchange at h
   split at h <;> (try split at h) <;> first | (cases h; rfl) | cases h
 
 -- An iteration of the loop of `permute` that continues keeps `Bij` and makes `mu` smaller.
-theorem permuteStep_cont {n : Word} {st st' : Flat.St} {p p' : Vector Word MAX_N}
-    (hn : n.toNat ≤ MAX_N) (h0 : 0 < n) (hb : Bij n p)
+theorem permuteStep_cont {n : Word} {st st' : Flat.St} {p p' : Vector Word maxStackSize}
+    (hn : n.toNat ≤ maxStackSize) (h0 : 0 < n) (hb : Bij n p)
     (h : Flat.permuteStep st (n - 1) p = .cont st' p') : Bij n p' ∧ mu (n - 1) p' < mu (n - 1) p := by
   have ht : n - 1 < n := by bv_omega
   unfold Flat.permuteStep at h
@@ -664,12 +664,12 @@ theorem permuteStep_cont {n : Word} {st st' : Flat.St} {p p' : Vector Word MAX_N
     exact ⟨swapP_bij hn hb ht (hb.1 _ ht), swapP_mu hn hb (hb.1 _ ht) hpt (Or.inl rfl)⟩
 
 -- With `mu ≤ fuel`, the loop of `permute` has fuel for one more iteration.
-theorem fuel_pos {n : Word} {p : Vector Word MAX_N} {f : Nat} (hb : Bij n p) (h0 : 0 < n)
+theorem fuel_pos {n : Word} {p : Vector Word maxStackSize} {f : Nat} (hb : Bij n p) (h0 : 0 < n)
     (hf : mu (n - 1) p ≤ f) : ∃ f', f = f' + 1 :=
   ⟨f - 1, by have := mu_pos hb h0; omega⟩
 
 -- The fuel of `permute` is sufficient at the start.
-theorem mu_start {n : Word} (p : Vector Word MAX_N) (h0 : 0 < n) : mu (n - 1) p ≤ 2 * n.toNat := by
+theorem mu_start {n : Word} (p : Vector Word maxStackSize) (h0 : 0 < n) : mu (n - 1) p ≤ 2 * n.toNat := by
   have := mu_le (n - 1) p
   have : (n - 1).toNat + 1 = n.toNat := by bv_omega
   omega

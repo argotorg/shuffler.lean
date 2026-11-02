@@ -48,8 +48,8 @@ theorem b_fn [Host] [FunDecls]
   have hm := hv.kb.mem
   rw [sep_lc] at hm
   obtain ⟨_, hp⟩ := RView.pv hm
-  have km := plannerObjectOwnedMemory.isSome_m hp
-  have rm := plannerObjectOwnedMemory.rd_m hp
+  have km := plannerObjectOwnedMemory.isSome_sourceSize hp
+  have rm := plannerObjectOwnedMemory.rd_sourceSize hp
   unfold rd at rm
   simp only [pushWords, PushOk] at hps
   rcases hps with ⟨k0, k1, k2, k3, k4, k5, _⟩
@@ -69,7 +69,7 @@ theorem b_fn [Host] [FunDecls]
     symexec_norm at hj
     rw [prologue_sp] at hj
     simp only [hdi', rm, BitVec.and_self, beq_iff_eq] at hj
-    have hx : r.p.m = 0#64 := hj
+    have hx : r.p.sourceSize = 0#64 := hj
     cfg_goto
     · exact hv.kb.stack (by decide)
     · simp only [Inv, initFullPhase, zphase, Names.resolve,
@@ -89,16 +89,16 @@ theorem b_fn [Host] [FunDecls]
     symexec_norm at hj
     rw [prologue_sp] at hj
     simp only [hdi', rm, BitVec.and_self, beq_eq_false_iff_ne, BitVec.zero_eq] at hj
-    have hx : 0#64 < r.p.m := by bv_omega
+    have hx : 0#64 < r.p.sourceSize := by bv_omega
     first
     | (left
        simp only [V, initFullVar, zvar, initVar, Names.resolve, String.reduceEq,
          ↓reduceIte, or_false]
        simp only [rcx, rax, Reg64s.get64_rcx, Reg64s.get64_rax]
-       have hsmall := hok.planner.m
-       change r.p.m.toNat ≤ 1024 at hsmall
-       have heq : (base + 8240#64 + r.p.m) - (base + 8240#64) = r.p.m := by bv_omega
-       change ((base + 8240#64 + r.p.m) - (base + 8240#64)).toNat + 67113864 + 1 + 2 <
+       have hsmall := hok.planner.sourceSizeFitsBuffer
+       change r.p.sourceSize.toNat ≤ 1024 at hsmall
+       have heq : (base + 8240#64 + r.p.sourceSize) - (base + 8240#64) = r.p.sourceSize := by bv_omega
+       change ((base + 8240#64 + r.p.sourceSize) - (base + 8240#64)).toNat + 67113864 + 1 + 2 <
          67120000 + 2
        rw [heq]
        omega)

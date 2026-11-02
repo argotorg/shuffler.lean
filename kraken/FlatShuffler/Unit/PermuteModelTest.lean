@@ -20,14 +20,14 @@ namespace FlatShuffler.Unit.Permute.Test
 
 open FlatShuffler FlatShuffler.Flat.Test
 
-def pv (l : List Nat) : Vector Word MAX_N := vec (words l)
+def pv (l : List Nat) : Vector Word maxStackSize := vec (words l)
 
 -- The first `n` entries of `p`.
-def entries (n : Nat) (p : Vector Word MAX_N) : List Word :=
+def entries (n : Nat) (p : Vector Word maxStackSize) : List Word :=
   (List.range n).map fun i => Flat.get p (.ofNat 64 i)
 
 -- `p` is a bijection of the offsets below `n`: `n` entries below `n` that contain each offset.
-def bijB (n : Nat) (p : Vector Word MAX_N) : Bool :=
+def bijB (n : Nat) (p : Vector Word maxStackSize) : Bool :=
   let l := entries n p
   l.all (·.toNat < n) && (List.range n).all fun j => l.contains (.ofNat 64 j)
 
@@ -87,7 +87,7 @@ def slotLists : Nat → List (List StackSlot)
   | n + 1 => (slotLists n).flatMap fun l => [x :: l, y :: l]
 
 -- The values of `mu` in the run of the last loop of `permute`, for at most `fuel` iterations.
-def mus (top : Word) : Nat → Flat.St → Vector Word MAX_N → List Nat
+def mus (top : Word) : Nat → Flat.St → Vector Word maxStackSize → List Nat
   | 0, _, _ => []
   | f + 1, st, p => mu top p :: match Flat.permuteStep st top p with
     | .ret _ => []

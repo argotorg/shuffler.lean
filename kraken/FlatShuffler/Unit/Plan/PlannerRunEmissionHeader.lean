@@ -15,8 +15,8 @@ def storeLocalWords (m : Mem 64) (sp : Addr) (xs : List (Nat × Word)) : Mem 64 
   xs.foldl (fun a p => a.storeInt (sp + BitVec.ofNat 64 (8 * p.1)) 8 p.2.toInt) m
 
 def headerWrites (g : PlannerCallMemory) : List (Nat × Word) :=
-  [(2060, g.p.tgt), (2061, g.p.n), (2062, g.p.spl), (2063, g.dataPtr),
-    (2064, g.p.m), (2065, g.opsPtr), (2066, 0#64)]
+  [(2060, g.p.tgt), (2061, g.p.targetSize), (2062, g.p.spl), (2063, g.dataPtr),
+    (2064, g.p.sourceSize), (2065, g.opsPtr), (2066, 0#64)]
 
 def headerLocals (g : PlannerCallMemory) (locals : List Word) : List Word :=
   setLocalWords locals (headerWrites g)

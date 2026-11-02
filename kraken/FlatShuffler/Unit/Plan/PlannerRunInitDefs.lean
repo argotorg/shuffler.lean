@@ -13,8 +13,8 @@ structure InitLI (P : Addr) (g : PlannerCallMemory) (F : MProp 64) (s : MachineD
   r15 : t.regs.r15.toBitVec = t.regs.rsp.toBitVec + 32#64
   count : locals[3]? = some g.countPtr
   targets : Flat.targetsFrom g.p.fl g.spills 0 = true
-  rdx : t.regs.rdx.toBitVec = g.p.m
-  rsi : t.regs.rsi.toBitVec = g.p.n
+  rdx : t.regs.rdx.toBitVec = g.p.sourceSize
+  rsi : t.regs.rsi.toBitVec = g.p.targetSize
 
 section
 variable {P : Addr} {g : PlannerCallMemory} {F : MProp 64} {s t u : MachineData}
@@ -61,24 +61,24 @@ def InitPrefix (locals : List Word) (base count : Nat) : Prop :=
 
 def InitDestHead (P : Addr) (g : PlannerCallMemory) (F : MProp 64) (s : MachineData) (ra : Int64)
     (t : MachineData) : Prop :=
-  ∃ lo locals, InitLI P g F s ra lo locals t ∧ rax t < g.p.m ∧
+  ∃ lo locals, InitLI P g F s ra lo locals t ∧ rax t < g.p.sourceSize ∧
     InitPrefix locals 12 (rax t).toNat
 
 def InitDestDone (P : Addr) (g : PlannerCallMemory) (F : MProp 64) (s : MachineData) (ra : Int64)
     (t : MachineData) : Prop :=
-  ∃ lo locals, InitLI P g F s ra lo locals t ∧ InitPrefix locals 12 g.p.m.toNat
+  ∃ lo locals, InitLI P g F s ra lo locals t ∧ InitPrefix locals 12 g.p.sourceSize.toNat
 
 def InitPosHead (P : Addr) (g : PlannerCallMemory) (F : MProp 64) (s : MachineData) (ra : Int64)
     (t : MachineData) : Prop :=
-  ∃ lo locals i, InitLI P g F s ra lo locals t ∧ i < g.p.n ∧
+  ∃ lo locals i, InitLI P g F s ra lo locals t ∧ i < g.p.targetSize ∧
     rax t = t.regs.rsp.toBitVec + 96#64 + i * 8#64 ∧
-    rcx t = t.regs.rsp.toBitVec + 96#64 + g.p.n * 8#64 ∧
-    InitPrefix locals 12 g.p.m.toNat ∧ InitPrefix locals 1036 i.toNat
+    rcx t = t.regs.rsp.toBitVec + 96#64 + g.p.targetSize * 8#64 ∧
+    InitPrefix locals 12 g.p.sourceSize.toNat ∧ InitPrefix locals 1036 i.toNat
 
 def InitDone (P : Addr) (g : PlannerCallMemory) (F : MProp 64) (s : MachineData) (ra : Int64)
     (t : MachineData) : Prop :=
   ∃ lo locals, InitLI P g F s ra lo locals t ∧
-    InitPrefix locals 12 g.p.m.toNat ∧ InitPrefix locals 1036 g.p.n.toNat
+    InitPrefix locals 12 g.p.sourceSize.toNat ∧ InitPrefix locals 1036 g.p.targetSize.toNat
 
 theorem InitPrefix.zero (locals : List Word) (base : Nat) : InitPrefix locals base 0 := by
   intro i hi

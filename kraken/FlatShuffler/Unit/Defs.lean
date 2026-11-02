@@ -36,8 +36,8 @@ namespace FlatShuffler.Unit
 
 open FlatShuffler.Sep (G)
 
--- A buffer of `MAX_N` elements that holds `l` from offset 0, and `default` above it.
-def vec {α : Type} [Inhabited α] (l : List α) : Vector α MAX_N :=
+-- A buffer of `maxStackSize` elements that holds `l` from offset 0, and `default` above it.
+def vec {α : Type} [Inhabited α] (l : List α) : Vector α maxStackSize :=
   Vector.ofFn fun i => l[i.val]?.getD default
 
 -- The flat state of the ghost `g`. The trace is the records below `m_traceSize`.
@@ -176,18 +176,18 @@ def generateA (g : G) (_s : MachineData) : Prop :=
 def generateQ (g g' : G) (s t : MachineData) : Prop := NormalResult (Flat.generate · (rsi s)) g g' t
 
 -- `p` is a bijection of the offsets below `n`.
-def Bij (n : Word) (p : Vector Word MAX_N) : Prop :=
+def Bij (n : Word) (p : Vector Word maxStackSize) : Prop :=
   (∀ i < n, Flat.get p i < n) ∧ ∀ i < n, ∀ k < n, Flat.get p i = Flat.get p k → i = k
 
 -- `permute(permutation)` for the ghost `p`: room for `2 * size` swaps, the destinations are none
 -- or target offsets, `p` is a bijection of the offsets below the size, and `permutation` (the
 -- array at `rsi`, in the frame `permW`) holds `p` below the size.
-def permuteA (p : Vector Word MAX_N) (g : G) (s : MachineData) : Prop :=
+def permuteA (p : Vector Word maxStackSize) (g : G) (s : MachineData) : Prop :=
   g.h.nops.toNat + 2 * g.h.len.toNat ≤ 6 * g.h.n.toNat + g.xo ∧ DestOk (flat g) ∧ Bij g.h.len p
     ∧ ∀ i < g.h.len.toNat,
       rd s.dmem (rsi s + BitVec.ofNat 64 (8 * i)) = Flat.get p (BitVec.ofNat 64 i)
-def permW (s : MachineData) : MProp 64 := Sep.ExArr (rsi s) MAX_N
-def permuteQ (p : Vector Word MAX_N) (g g' : G) (_s t : MachineData) : Prop :=
+def permW (s : MachineData) : MProp 64 := Sep.ExArr (rsi s) maxStackSize
+def permuteQ (p : Vector Word maxStackSize) (g g' : G) (_s t : MachineData) : Prop :=
   NormalResult (Flat.permute · p) g g' t
 
 -- `buildBottomUp()`: the invariant of the loop head at `T = 0`. `xo` is the room of the trace

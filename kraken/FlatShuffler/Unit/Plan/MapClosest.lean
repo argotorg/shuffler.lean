@@ -65,8 +65,8 @@ variable {fb : Flat.Builder} {M : Flat.Mapping} {t inW : Bool} {j i best : Word}
 
 -- The result of `closestCopy` is `NONE` or a source position.
 theorem closestFrom_lt {t : Word} {inW : Bool} :
-    ∀ i best, (best = Flat.NONE ∨ best < fb.m) →
-      Flat.closestFrom fb M t inW i best = Flat.NONE ∨ Flat.closestFrom fb M t inW i best < fb.m := by
+    ∀ i best, (best = Flat.NONE ∨ best < fb.sourceSize) →
+      Flat.closestFrom fb M t inW i best = Flat.NONE ∨ Flat.closestFrom fb M t inW i best < fb.sourceSize := by
   intro i best hb
   fun_induction Flat.closestFrom fb M t inW i best with
   | case1 i best h best' ih =>
@@ -80,29 +80,29 @@ theorem closestFrom_lt {t : Word} {inW : Bool} :
   | case2 i best h => exact hb
 
 theorem closestCopy_lt {t : Word} {inW : Bool} (h : Flat.closestCopy fb M t inW ≠ Flat.NONE) :
-    Flat.closestCopy fb M t inW < fb.m :=
+    Flat.closestCopy fb M t inW < fb.sourceSize :=
   (closestFrom_lt 0 Flat.NONE (Or.inl rfl)).resolve_left h
 
-theorem from_ge (h : ¬ j < fb.n) : Flat.closestCopiesFrom fb M j = (.done, M) := by
+theorem from_ge (h : ¬ j < fb.targetSize) : Flat.closestCopiesFrom fb M j = (.done, M) := by
   rw [Flat.closestCopiesFrom, dite_eq_right h]
 
-theorem skip_pos (h : j < fb.n) (hp : (!(Flat.get M.pos j == Flat.NONE)) = true) :
+theorem skip_pos (h : j < fb.targetSize) (hp : (!(Flat.get M.pos j == Flat.NONE)) = true) :
     Flat.closestCopiesFrom fb M j = Flat.closestCopiesFrom fb M (j + 1) := by
   rw [Flat.closestCopiesFrom, dite_eq_left h]
   simp only [Bool.not_eq_true', beq_eq_false_iff_ne, ne_eq] at hp
   simp [Flat.hasSourceAssigned, hp]
 
-theorem skip_junk (h : j < fb.n) (hw : Flat.isWildcardTarget fb j = true) :
+theorem skip_junk (h : j < fb.targetSize) (hw : Flat.isWildcardTarget fb j = true) :
     Flat.closestCopiesFrom fb M j = Flat.closestCopiesFrom fb M (j + 1) := by
   rw [Flat.closestCopiesFrom, dite_eq_left h]
   simp [hw]
 
-theorem skip_none (h : j < fb.n) (hc : Flat.closestCopy fb M j false = Flat.NONE) :
+theorem skip_none (h : j < fb.targetSize) (hc : Flat.closestCopy fb M j false = Flat.NONE) :
     Flat.closestCopiesFrom fb M j = Flat.closestCopiesFrom fb M (j + 1) := by
   rw [Flat.closestCopiesFrom, dite_eq_left h]
   simp [hc]
 
-theorem from_done (h : j < fb.n) (hp : (!(Flat.get M.pos j == Flat.NONE)) = false)
+theorem from_done (h : j < fb.targetSize) (hp : (!(Flat.get M.pos j == Flat.NONE)) = false)
     (hw : Flat.isWildcardTarget fb j = false) (hc : Flat.closestCopy fb M j false ≠ Flat.NONE)
     (hd : (Flat.mbMap fb M (Flat.closestCopy fb M j false) j).1 = .done) :
     Flat.closestCopiesFrom fb M j
@@ -111,7 +111,7 @@ theorem from_done (h : j < fb.n) (hp : (!(Flat.get M.pos j == Flat.NONE)) = fals
   simp only [Bool.not_eq_false', beq_iff_eq] at hp
   simp [Flat.hasSourceAssigned, hp, hw, hc, hd]
 
-theorem from_fail (h : j < fb.n) (hp : (!(Flat.get M.pos j == Flat.NONE)) = false)
+theorem from_fail (h : j < fb.targetSize) (hp : (!(Flat.get M.pos j == Flat.NONE)) = false)
     (hw : Flat.isWildcardTarget fb j = false) (hc : Flat.closestCopy fb M j false ≠ Flat.NONE)
     (hd : (Flat.mbMap fb M (Flat.closestCopy fb M j false) j).1 ≠ .done) :
     Flat.closestCopiesFrom fb M j = Flat.mbMap fb M (Flat.closestCopy fb M j false) j := by
@@ -120,7 +120,7 @@ theorem from_fail (h : j < fb.n) (hp : (!(Flat.get M.pos j == Flat.NONE)) = fals
   simp [Flat.hasSourceAssigned, hp, hw, hc, hd]
 
 -- `cmpb $1, 4(%rax,%rdx)`: target slot `j` is a wildcard.
-theorem junk_flag {x : BitVec 8} (hn : j.toNat < fb.n.toNat) (hk : x = (Flat.get fb.target j).kind) :
+theorem junk_flag {x : BitVec 8} (hn : j.toNat < fb.targetSize.toNat) (hk : x = (Flat.get fb.target j).kind) :
     (x - 1#8 == BitVec.zero 8) = Flat.isWildcardTarget fb j := by
   rw [ClosestU.kind_flag hn hk]
   simp [Flat.inWildcardSlot, BitVec.lt_def, hn]
@@ -202,11 +202,11 @@ def Inv (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) (fr₀
   | .label l, t =>
     if l = Names.mapClosestCopies then t = s.pushRa ra
     else if l = ".LB.MappingBuilder.mapClosestCopies.0" then ∃ M lo w, LI B b F s ra M lo w t
-      ∧ t.regs.rbx.toBitVec.toNat < b.n.toNat
+      ∧ t.regs.rbx.toBitVec.toNat < b.targetSize.toNat
       ∧ Flat.closestCopiesFrom b.fl M (t.regs.rbx.toBitVec + 1#64)
         = Flat.mapClosestCopies b.fl b.M
     else if l = ".LB.MappingBuilder.mapClosestCopies.1" then ∃ M lo w, LI B b F s ra M lo w t
-      ∧ t.regs.rbx.toBitVec.toNat < b.n.toNat
+      ∧ t.regs.rbx.toBitVec.toNat < b.targetSize.toNat
       ∧ Flat.closestCopiesFrom b.fl M t.regs.rbx.toBitVec = Flat.mapClosestCopies b.fl b.M
     else if l = ".LB.MappingBuilder.mapClosestCopies.2" then ∃ M lo w, LI B b F s ra M lo w t
       ∧ Flat.mapClosestCopies b.fl b.M = (.done, M)
@@ -220,9 +220,9 @@ def Inv (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) (fr₀
 def V (b : BG) (l : Label) (t : MachineData) : Nat :=
   if l = Names.mapClosestCopies then 2 ^ 70
   else if l = ".LB.MappingBuilder.mapClosestCopies.0" then
-    2 * (b.n.toNat - t.regs.rbx.toBitVec.toNat)
+    2 * (b.targetSize.toNat - t.regs.rbx.toBitVec.toNat)
   else if l = ".LB.MappingBuilder.mapClosestCopies.1" then
-    2 * (b.n.toNat - t.regs.rbx.toBitVec.toNat) + 1
+    2 * (b.targetSize.toNat - t.regs.rbx.toBitVec.toNat) + 1
   else 0
 
 def E [Labels] (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) :
@@ -297,9 +297,9 @@ theorem b_fn (hpre : VPre BView BG.Ok B b F mapClosestA 8 s) (w₀ w₁ w₂ w�
   change (Stk (rsp s) (fr s [w₀, w₁, w₂, w₃] ⟨w₄, w₅⟩) ra.toBitVec ∗ BView B b ∗ F).get _ at hpm
   simp only [PushOk] at hpo
   obtain ⟨p1, p2, -⟩ := hpo
-  have h_n := BView.rd_n hm0
+  have h_n := BView.rd_targetSize hm0
   unfold rd at h_n
-  have k_n := BView.isSome_n hm0
+  have k_n := BView.isSome_targetSize hm0
   clear hm0
   kvcgen64
   all_goals try symexec_norm
@@ -317,18 +317,18 @@ theorem b_fn (hpre : VPre BView BG.Ok B b F mapClosestA 8 s) (w₀ w₁ w₂ w�
     · exact (hk0.next rfl rfl rfl rfl rfl rfl rfl rfl).stack
     · mc_inv
       exact ⟨hk0.next rfl rfl rfl rfl rfl rfl rfl rfl,
-        from_ge (by show ¬ (0 : Word) < b.n; rw [h0]; decide)⟩
+        from_ge (by show ¬ (0 : Word) < b.targetSize; rw [h0]; decide)⟩
     · simp [V, Names.mapClosestCopies]
   | goto ".LB.MappingBuilder.mapClosestCopies.1" =>
     rename_i hc
-    have h0 : b.n ≠ 0#64 := by simpa using hc
-    have hpos : 0 < b.n.toNat := Nat.pos_of_ne_zero fun h => h0 (BitVec.eq_of_toNat_eq h)
+    have h0 : b.targetSize ≠ 0#64 := by simpa using hc
+    have hpos : 0 < b.targetSize.toNat := Nat.pos_of_ne_zero fun h => h0 (BitVec.eq_of_toNat_eq h)
     cfg_goto
     · exact Kb.stack ⟨hpm, hsp2⟩ (by decide)
     · mc_inv
       exact ⟨b.M, [w₀, w₁, w₂, w₃], ⟨w₄, w₅⟩, ⟨⟨hpm, hsp2⟩, rfl,
         by simpa [MachineData.pushRa] using hpre.rdi, rfl, rfl, rfl, rfl⟩, hpos, rfl⟩
-    · left; have := b.n.isLt; simp [V, Names.mapClosestCopies]; omega
+    · left; have := b.targetSize.isLt; simp [V, Names.mapClosestCopies]; omega
 
 set_option maxHeartbeats 100000 in
 theorem b_0 : mapClosestCopiesAsm.ForallBlocks fun blk =>
@@ -340,9 +340,9 @@ theorem b_0 : mapClosestCopiesAsm.ForallBlocks fun blk =>
   have hb := hli.kb.mem
   rw [sep_lc] at hb
   have hbp := hli.rbp
-  have h_n := BView.rd_n hb
+  have h_n := BView.rd_targetSize hb
   unfold rd at h_n
-  have k_n := BView.isSome_n hb
+  have k_n := BView.isSome_targetSize hb
   clear hb
   kvcgen64
   all_goals try symexec_norm
@@ -378,11 +378,11 @@ theorem b_1 (hout : ∀ l ∈ Program.labels mapClosestCopiesAsm, label l ≠ la
   intro t ht
   mc_inv at ht
   obtain ⟨M, lo, w, hli, hlt, hrest⟩ := ht
-  have hokM : BG.Ok { b with M := M } := ⟨hok.m, hok.n, hok.sw, hok.tw, hok.db⟩
+  have hokM : BG.Ok { b with M := M } := ⟨hok.sourceSizeFitsBuffer, hok.targetSizeFitsBuffer, hok.sw, hok.tw, hok.db⟩
   have hb := hli.kb.mem
   rw [sep_lc] at hb
   have hbp := hli.rbp
-  have hmax : t.regs.rbx.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hlt hok.n
+  have hmax : t.regs.rbx.toBitVec.toNat < maxStackSize := Nat.lt_of_lt_of_le hlt hok.targetSizeFitsBuffer
   obtain ⟨_, hM⟩ := BView.mapM hb
   have h_tgt := BView.rd_tgt hb
   have h_mp := BView.rd_mp hb
@@ -547,7 +547,7 @@ theorem b_3 (hok : b.Ok) : mapClosestCopiesAsm.ForallBlocks fun blk =>
   mc_inv at ht
   obtain ⟨M, lo, w, hli, hal, hM⟩ := ht
   obtain ⟨p0, p1⟩ := hli.pop_isSome
-  have hokM : BG.Ok { b with M := M } := ⟨hok.m, hok.n, hok.sw, hok.tw, hok.db⟩
+  have hokM : BG.Ok { b with M := M } := ⟨hok.sourceSizeFitsBuffer, hok.targetSizeFitsBuffer, hok.sw, hok.tw, hok.db⟩
   have hfl : (fr s lo w).length = 8 := by simp [fr, hli.hl]
   kvcgen64
   all_goals try symexec_norm

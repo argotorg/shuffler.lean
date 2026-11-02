@@ -124,7 +124,7 @@ theorem Sw.dest_a (h : Sw m S x st1) : (rd m (S + x * 8#64 + 56#64)).toNat < nOf
 
 theorem Sw.ld_pos (h : Sw m S x st1) {y : Word} (hy : y.toNat < nOf m S) :
     (m.loadInt (S + y * 8#64 + 8248#64) 8).isSome = true := by
-  have := h.wf.n_le; simp only [MAX_N] at this
+  have := h.wf.n_le; simp only [maxStackSize] at this
   rw [addr_pos]; exact h.wf.word_isSome h.wf.mapped (by simp only [POS_eq, WORDS_eq]; omega)
 
 -- The words of the working stack.
@@ -134,7 +134,7 @@ theorem Sw.ld_val (h : Sw m S x st1) : (m.loadInt (rd m (S + 24#64) + x * 8#64) 
   have hn := h.wf.n_le
   have := h.lt
   rw [len_stOf.symm.trans (congrArg St.len h.st)] at hl
-  simp only [MAX_N] at hn
+  simp only [maxStackSize] at hn
   refine Mem.Mapped.loadInt_isSome (fun y hy => h.wf.mapped y (inside_append.mpr (Or.inl hy)))
     (inside_writable (Or.inr (Or.inr (Or.inl ?_))))
   rw [show rd m (S + 24#64) = dataOf m S from rfl]; bv_omega
@@ -336,7 +336,7 @@ theorem Ap.bx (h : Ap s ra t st1) : t.regs.rbx.toBitVec = rsi s := by
 theorem Ap.len_le (h : Ap s ra t st1) : st1.len ≤ 1024 := by
   have h1 := h.fm.wf.len_le
   have h2 := h.fm.wf.n_le
-  simp only [MAX_N] at h2
+  simp only [maxStackSize] at h2
   rw [← h.hst, st', len_stOf]; omega
 
 theorem Ap.d_lt (hpre : Pre 96 A s) (h : Ap s ra t st1) : (rsi s).toNat < 1024 := by

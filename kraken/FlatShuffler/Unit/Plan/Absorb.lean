@@ -47,8 +47,8 @@ section
 variable {fb : Flat.Builder} {M : Flat.Mapping} {j o best : Word}
 
 -- The result of `absorbBest` is `NONE` or a source position.
-theorem best_lt : ∀ o best, (best = Flat.NONE ∨ best < fb.m) →
-    Flat.absorbBest fb M j o best = Flat.NONE ∨ Flat.absorbBest fb M j o best < fb.m := by
+theorem best_lt : ∀ o best, (best = Flat.NONE ∨ best < fb.sourceSize) →
+    Flat.absorbBest fb M j o best = Flat.NONE ∨ Flat.absorbBest fb M j o best < fb.sourceSize := by
   intro o best hb
   fun_induction Flat.absorbBest fb M j o best with
   | case1 o best h best' ih =>
@@ -59,31 +59,31 @@ theorem best_lt : ∀ o best, (best = Flat.NONE ∨ best < fb.m) →
     · exact hb
   | case2 o best h => exact hb
 
-theorem best_ge (h : ¬ o < fb.m) : Flat.absorbBest fb M j o best = best := by
+theorem best_ge (h : ¬ o < fb.sourceSize) : Flat.absorbBest fb M j o best = best := by
   rw [Flat.absorbBest, dite_eq_right h]
 
-theorem best_skip (h : o < fb.m) (hc : Flat.mappable fb M o = false) :
+theorem best_skip (h : o < fb.sourceSize) (hc : Flat.mappable fb M o = false) :
     Flat.absorbBest fb M j o best = Flat.absorbBest fb M j (o + 1) best := by
   rw [Flat.absorbBest, dite_eq_left h]
   simp [hc]
 
-theorem best_drop (h : o < fb.m) (hd : (!(Flat.get fb.dropped o == 0)) = true) :
+theorem best_drop (h : o < fb.sourceSize) (hd : (!(Flat.get fb.dropped o == 0)) = true) :
     Flat.absorbBest fb M j o best = Flat.absorbBest fb M j (o + 1) best := by
   rw [Bool.not_eq_true'] at hd
   exact best_skip h (by simp only [Flat.mappable, hd, Bool.false_and])
 
-theorem best_dest (h : o < fb.m) (hd : (!(Flat.get M.dest o == Flat.NONE)) = true) :
+theorem best_dest (h : o < fb.sourceSize) (hd : (!(Flat.get M.dest o == Flat.NONE)) = true) :
     Flat.absorbBest fb M j o best = Flat.absorbBest fb M j (o + 1) best := by
   rw [Bool.not_eq_true'] at hd
   exact best_skip h (by simp only [Flat.mappable, hd, Bool.and_false])
 
-theorem best_none (h : o < fb.m) (hd : (!(Flat.get fb.dropped o == 0)) = false)
+theorem best_none (h : o < fb.sourceSize) (hd : (!(Flat.get fb.dropped o == 0)) = false)
     (hm : (!(Flat.get M.dest o == Flat.NONE)) = false) :
     Flat.absorbBest fb M j o Flat.NONE = Flat.absorbBest fb M j (o + 1) o := by
   rw [Flat.absorbBest, dite_eq_left h]
   simp [ClosestU.mappable_of hd hm]
 
-theorem best_cmp (h : o < fb.m) (hd : (!(Flat.get fb.dropped o == 0)) = false)
+theorem best_cmp (h : o < fb.sourceSize) (hd : (!(Flat.get fb.dropped o == 0)) = false)
     (hm : (!(Flat.get M.dest o == Flat.NONE)) = false) (hb : best ≠ Flat.NONE) :
     Flat.absorbBest fb M j o best = Flat.absorbBest fb M j (o + 1)
       (if Flat.absDiff o j < Flat.absDiff best j then o else best) := by
@@ -91,31 +91,31 @@ theorem best_cmp (h : o < fb.m) (hd : (!(Flat.get fb.dropped o == 0)) = false)
   simp only [ClosestU.mappable_of hd hm, hb, decide_false, Bool.false_or, Bool.true_and]
   by_cases hl : Flat.absDiff o j < Flat.absDiff best j <;> simp [hl]
 
-theorem from_ge (h : ¬ j < fb.n) : Flat.absorbFrom fb M j = (.done, M) := by
+theorem from_ge (h : ¬ j < fb.targetSize) : Flat.absorbFrom fb M j = (.done, M) := by
   rw [Flat.absorbFrom, dite_eq_right h]
 
-theorem skip_junk (h : j < fb.n) (hw : Flat.isWildcardTarget fb j = false) :
+theorem skip_junk (h : j < fb.targetSize) (hw : Flat.isWildcardTarget fb j = false) :
     Flat.absorbFrom fb M j = Flat.absorbFrom fb M (j + 1) := by
   rw [Flat.absorbFrom, dite_eq_left h]
   simp [hw]
 
-theorem skip_pos (h : j < fb.n) (hp : (!(Flat.get M.pos j == Flat.NONE)) = true) :
+theorem skip_pos (h : j < fb.targetSize) (hp : (!(Flat.get M.pos j == Flat.NONE)) = true) :
     Flat.absorbFrom fb M j = Flat.absorbFrom fb M (j + 1) := by
   rw [Flat.absorbFrom, dite_eq_left h]
   simp only [Bool.not_eq_true', beq_eq_false_iff_ne, ne_eq] at hp
   simp [Flat.hasSourceAssigned, hp]
 
-theorem skip_none (h : j < fb.n) (hc : Flat.absorbBest fb M j 0 Flat.NONE = Flat.NONE) :
+theorem skip_none (h : j < fb.targetSize) (hc : Flat.absorbBest fb M j 0 Flat.NONE = Flat.NONE) :
     Flat.absorbFrom fb M j = Flat.absorbFrom fb M (j + 1) := by
   rw [Flat.absorbFrom, dite_eq_left h]
   have hc0 : Flat.absorbBest fb M j 0#64 Flat.NONE = Flat.NONE := hc
   simp [hc0]
 
-theorem skip_m0 (h : j < fb.n) (hm : fb.m = 0#64) :
+theorem skip_m0 (h : j < fb.targetSize) (hm : fb.sourceSize = 0#64) :
     Flat.absorbFrom fb M j = Flat.absorbFrom fb M (j + 1) :=
   skip_none h (best_ge (by rw [hm]; decide))
 
-theorem from_done (h : j < fb.n) (hw : Flat.isWildcardTarget fb j = true)
+theorem from_done (h : j < fb.targetSize) (hw : Flat.isWildcardTarget fb j = true)
     (hp : (!(Flat.get M.pos j == Flat.NONE)) = false)
     (hc : Flat.absorbBest fb M j 0 Flat.NONE ≠ Flat.NONE)
     (hd : (Flat.mbMap fb M (Flat.absorbBest fb M j 0 Flat.NONE) j).1 = .done) :
@@ -127,7 +127,7 @@ theorem from_done (h : j < fb.n) (hw : Flat.isWildcardTarget fb j = true)
   have hd0 : (Flat.mbMap fb M (Flat.absorbBest fb M j 0#64 Flat.NONE) j).1 = .done := hd
   simp [Flat.hasSourceAssigned, hp, hw, hc0, hd0]
 
-theorem from_fail (h : j < fb.n) (hw : Flat.isWildcardTarget fb j = true)
+theorem from_fail (h : j < fb.targetSize) (hw : Flat.isWildcardTarget fb j = true)
     (hp : (!(Flat.get M.pos j == Flat.NONE)) = false)
     (hc : Flat.absorbBest fb M j 0 Flat.NONE ≠ Flat.NONE)
     (hd : (Flat.mbMap fb M (Flat.absorbBest fb M j 0 Flat.NONE) j).1 ≠ .done) :
@@ -143,11 +143,11 @@ end
 
 -- `rbx` is a wildcard target without a source, `rax` a source position.
 structure IS (b : BG) (M : Flat.Mapping) (t : MachineData) : Prop where
-  jn : t.regs.rbx.toBitVec.toNat < b.n.toNat
+  jn : t.regs.rbx.toBitVec.toNat < b.targetSize.toNat
   hw : Flat.isWildcardTarget b.fl t.regs.rbx.toBitVec = true
   hp : (!(Flat.get M.pos t.regs.rbx.toBitVec == Flat.NONE)) = false
-  om : t.regs.rax.toBitVec.toNat < b.m.toNat
-  rcx : t.regs.rcx.toBitVec = b.m
+  om : t.regs.rax.toBitVec.toNat < b.sourceSize.toNat
+  rcx : t.regs.rcx.toBitVec = b.sourceSize
   rdi : t.regs.rdi.toBitVec = b.drp
   r8 : t.regs.r8.toBitVec = b.mp
   rdx : t.regs.rdx.toBitVec = t.regs.rax.toBitVec - t.regs.rbx.toBitVec
@@ -173,26 +173,26 @@ def Inv (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) (fr₀
         = Flat.absorbBest b.fl M t.regs.rbx.toBitVec 0 Flat.NONE
       ∧ Flat.absorbFrom b.fl M t.regs.rbx.toBitVec = Flat.absorbSurplus b.fl b.M
     else if l = ".LB.MappingBuilder.absorbSurplus.1" then ∃ M w, LI B b F s ra M w t ∧ IS b M t
-      ∧ (t.regs.rsi.toBitVec = Flat.NONE ∨ t.regs.rsi.toBitVec < b.m)
+      ∧ (t.regs.rsi.toBitVec = Flat.NONE ∨ t.regs.rsi.toBitVec < b.sourceSize)
       ∧ Flat.absorbBest b.fl M t.regs.rbx.toBitVec (t.regs.rax.toBitVec + 1#64) t.regs.rsi.toBitVec
         = Flat.absorbBest b.fl M t.regs.rbx.toBitVec 0 Flat.NONE
       ∧ Flat.absorbFrom b.fl M t.regs.rbx.toBitVec = Flat.absorbSurplus b.fl b.M
     else if l = ".LB.MappingBuilder.absorbSurplus.2" then ∃ M w, LI B b F s ra M w t ∧ IS b M t
-      ∧ (t.regs.rsi.toBitVec = Flat.NONE ∨ t.regs.rsi.toBitVec < b.m)
+      ∧ (t.regs.rsi.toBitVec = Flat.NONE ∨ t.regs.rsi.toBitVec < b.sourceSize)
       ∧ Flat.absorbBest b.fl M t.regs.rbx.toBitVec t.regs.rax.toBitVec t.regs.rsi.toBitVec
         = Flat.absorbBest b.fl M t.regs.rbx.toBitVec 0 Flat.NONE
       ∧ Flat.absorbFrom b.fl M t.regs.rbx.toBitVec = Flat.absorbSurplus b.fl b.M
     else if l = ".LB.MappingBuilder.absorbSurplus.3" then ∃ M w, LI B b F s ra M w t
-      ∧ t.regs.rbx.toBitVec.toNat < b.n.toNat
+      ∧ t.regs.rbx.toBitVec.toNat < b.targetSize.toNat
       ∧ Flat.isWildcardTarget b.fl t.regs.rbx.toBitVec = true
       ∧ (!(Flat.get M.pos t.regs.rbx.toBitVec == Flat.NONE)) = false
       ∧ t.regs.rsi.toBitVec = Flat.absorbBest b.fl M t.regs.rbx.toBitVec 0 Flat.NONE
       ∧ Flat.absorbFrom b.fl M t.regs.rbx.toBitVec = Flat.absorbSurplus b.fl b.M
     else if l = ".LB.MappingBuilder.absorbSurplus.4" then ∃ M w, LI B b F s ra M w t
-      ∧ t.regs.rbx.toBitVec.toNat < b.n.toNat
+      ∧ t.regs.rbx.toBitVec.toNat < b.targetSize.toNat
       ∧ Flat.absorbFrom b.fl M (t.regs.rbx.toBitVec + 1#64) = Flat.absorbSurplus b.fl b.M
     else if l = ".LB.MappingBuilder.absorbSurplus.5" then ∃ M w, LI B b F s ra M w t
-      ∧ t.regs.rbx.toBitVec.toNat < b.n.toNat
+      ∧ t.regs.rbx.toBitVec.toNat < b.targetSize.toNat
       ∧ Flat.absorbFrom b.fl M t.regs.rbx.toBitVec = Flat.absorbSurplus b.fl b.M
     else if l = ".LB.MappingBuilder.absorbSurplus.6" then ∃ M w, LI B b F s ra M w t
       ∧ Flat.absorbSurplus b.fl b.M = (.done, M)
@@ -206,17 +206,17 @@ def Inv (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) (fr₀
 def V (b : BG) (l : Label) (t : MachineData) : Nat :=
   if l = Names.absorbSurplus then 2 ^ 140
   else if l = ".LB.MappingBuilder.absorbSurplus.5" then
-    (b.n.toNat - t.regs.rbx.toBitVec.toNat) * 2 ^ 68 + 2 ^ 67
+    (b.targetSize.toNat - t.regs.rbx.toBitVec.toNat) * 2 ^ 68 + 2 ^ 67
   else if l = ".LB.MappingBuilder.absorbSurplus.2" then
-    (b.n.toNat - t.regs.rbx.toBitVec.toNat) * 2 ^ 68 + 4 * (b.m.toNat - t.regs.rax.toBitVec.toNat) + 3
+    (b.targetSize.toNat - t.regs.rbx.toBitVec.toNat) * 2 ^ 68 + 4 * (b.sourceSize.toNat - t.regs.rax.toBitVec.toNat) + 3
   else if l = ".LB.MappingBuilder.absorbSurplus.0" then
-    (b.n.toNat - t.regs.rbx.toBitVec.toNat) * 2 ^ 68 + 4 * (b.m.toNat - t.regs.rax.toBitVec.toNat) + 2
+    (b.targetSize.toNat - t.regs.rbx.toBitVec.toNat) * 2 ^ 68 + 4 * (b.sourceSize.toNat - t.regs.rax.toBitVec.toNat) + 2
   else if l = ".LB.MappingBuilder.absorbSurplus.1" then
-    (b.n.toNat - t.regs.rbx.toBitVec.toNat) * 2 ^ 68 + 4 * (b.m.toNat - t.regs.rax.toBitVec.toNat) + 1
+    (b.targetSize.toNat - t.regs.rbx.toBitVec.toNat) * 2 ^ 68 + 4 * (b.sourceSize.toNat - t.regs.rax.toBitVec.toNat) + 1
   else if l = ".LB.MappingBuilder.absorbSurplus.3" then
-    (b.n.toNat - t.regs.rbx.toBitVec.toNat) * 2 ^ 68
+    (b.targetSize.toNat - t.regs.rbx.toBitVec.toNat) * 2 ^ 68
   else if l = ".LB.MappingBuilder.absorbSurplus.4" then
-    (b.n.toNat - t.regs.rbx.toBitVec.toNat - 1) * 2 ^ 68 + 2 ^ 67 + 1
+    (b.targetSize.toNat - t.regs.rbx.toBitVec.toNat - 1) * 2 ^ 68 + 2 ^ 67 + 1
   else 0
 
 def E [Labels] (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) :
@@ -292,9 +292,9 @@ theorem b_fn (hpre : VPre BView BG.Ok B b F absorbA 6 s) (w₀ w₁ w₂ w₃ w�
   change (Stk (rsp s) (fr s ⟨w₀, w₁, w₂, w₃⟩) ra.toBitVec ∗ BView B b ∗ F).get _ at hpm
   simp only [PushOk] at hpo
   obtain ⟨p1, p2, -⟩ := hpo
-  have h_n := BView.rd_n hm0
+  have h_n := BView.rd_targetSize hm0
   unfold rd at h_n
-  have k_n := BView.isSome_n hm0
+  have k_n := BView.isSome_targetSize hm0
   clear hm0
   kvcgen64
   all_goals try symexec_norm
@@ -312,18 +312,18 @@ theorem b_fn (hpre : VPre BView BG.Ok B b F absorbA 6 s) (w₀ w₁ w₂ w₃ w�
     · exact (hk0.next rfl rfl rfl rfl rfl rfl rfl rfl).stack
     · ab_inv
       exact ⟨hk0.next rfl rfl rfl rfl rfl rfl rfl rfl,
-        from_ge (by show ¬ (0 : Word) < b.n; rw [h0]; decide)⟩
+        from_ge (by show ¬ (0 : Word) < b.targetSize; rw [h0]; decide)⟩
     · simp [V, Names.absorbSurplus]
   | goto ".LB.MappingBuilder.absorbSurplus.5" =>
     rename_i hc
-    have h0 : b.n ≠ 0#64 := by simpa using hc
-    have hpos : 0 < b.n.toNat := Nat.pos_of_ne_zero fun h => h0 (BitVec.eq_of_toNat_eq h)
+    have h0 : b.targetSize ≠ 0#64 := by simpa using hc
+    have hpos : 0 < b.targetSize.toNat := Nat.pos_of_ne_zero fun h => h0 (BitVec.eq_of_toNat_eq h)
     cfg_goto
     · exact Kb.stack ⟨hpm, hsp2⟩ (by decide)
     · ab_inv
       exact ⟨b.M, ⟨w₀, w₁, w₂, w₃⟩, ⟨⟨hpm, hsp2⟩, by simpa [MachineData.pushRa] using hpre.rdi, rfl, rfl, rfl, rfl⟩,
         hpos, rfl⟩
-    · left; have := b.n.isLt; ab_var; simp; omega
+    · left; have := b.targetSize.isLt; ab_var; simp; omega
 
 set_option maxHeartbeats 100000 in
 theorem b_4 : absorbSurplusAsm.ForallBlocks fun blk =>
@@ -335,9 +335,9 @@ theorem b_4 : absorbSurplusAsm.ForallBlocks fun blk =>
   have hb := hli.kb.mem
   rw [sep_lc] at hb
   have hbp := hli.rbp
-  have h_n := BView.rd_n hb
+  have h_n := BView.rd_targetSize hb
   unfold rd at h_n
-  have k_n := BView.isSome_n hb
+  have k_n := BView.isSome_targetSize hb
   clear hb
   kvcgen64
   all_goals try symexec_norm
@@ -389,7 +389,7 @@ theorem b_7 (hok : b.Ok) : absorbSurplusAsm.ForallBlocks fun blk =>
   ab_inv at ht
   obtain ⟨M, w, hli, hal, hM⟩ := ht
   obtain ⟨p0, p1⟩ := hli.pop_isSome
-  have hokM : BG.Ok { b with M := M } := ⟨hok.m, hok.n, hok.sw, hok.tw, hok.db⟩
+  have hokM : BG.Ok { b with M := M } := ⟨hok.sourceSizeFitsBuffer, hok.targetSizeFitsBuffer, hok.sw, hok.tw, hok.db⟩
   kvcgen64
   all_goals try symexec_norm
   vc_by_shape
@@ -443,16 +443,16 @@ theorem b_5 (hok : b.Ok) : absorbSurplusAsm.ForallBlocks fun blk =>
   intro t ht
   ab_inv at ht
   obtain ⟨M, w, hli, hlt, hrest⟩ := ht
-  have hokM : BG.Ok { b with M := M } := ⟨hok.m, hok.n, hok.sw, hok.tw, hok.db⟩
+  have hokM : BG.Ok { b with M := M } := ⟨hok.sourceSizeFitsBuffer, hok.targetSizeFitsBuffer, hok.sw, hok.tw, hok.db⟩
   have hb := hli.kb.mem
   rw [sep_lc] at hb
   have hbp := hli.rbp
-  have hmax : t.regs.rbx.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hlt hok.n
+  have hmax : t.regs.rbx.toBitVec.toNat < maxStackSize := Nat.lt_of_lt_of_le hlt hok.targetSizeFitsBuffer
   obtain ⟨_, hM⟩ := BView.mapM hb
   have h_tgt := BView.rd_tgt hb
   have h_drp := BView.rd_drp hb
   have h_mp := BView.rd_mp hb
-  have h_m := BView.rd_m hb
+  have h_m := BView.rd_sourceSize hb
   have h_kind := BView.rdb_kind hb hokM hlt
   have h_pos := MapM.rd_pos hM hmax
   unfold rd at h_tgt h_drp h_mp h_m h_pos
@@ -460,7 +460,7 @@ theorem b_5 (hok : b.Ok) : absorbSurplusAsm.ForallBlocks fun blk =>
   have k_tgt := BView.isSome_tgt hb
   have k_drp := BView.isSome_drp hb
   have k_mp := BView.isSome_mp hb
-  have k_m := BView.isSome_m hb
+  have k_m := BView.isSome_sourceSize hb
   have k_kind := BView.isSome_kind hb hokM hlt
   have k_pos := MapM.isSome_pos hM hmax
   clear hb hM
@@ -482,7 +482,7 @@ theorem b_5 (hok : b.Ok) : absorbSurplusAsm.ForallBlocks fun blk =>
         = Flat.absorbFrom b.fl M (t.regs.rbx.toBitVec + 1#64) := by
       first
       | (refine skip_m0 (BitVec.lt_def.2 hlt) ?_
-         have h := beq_iff_eq.1 ‹(b.m &&& b.m == BitVec.zero 64) = true›
+         have h := beq_iff_eq.1 ‹(b.sourceSize &&& b.sourceSize == BitVec.zero 64) = true›
          rw [BitVec.and_self] at h
          exact h)
       | (refine skip_pos (BitVec.lt_def.2 hlt) ?_; with_reducible assumption)
@@ -500,8 +500,8 @@ theorem b_5 (hok : b.Ok) : absorbSurplusAsm.ForallBlocks fun blk =>
         (by rw [← Bool.not_eq_false']; with_reducible assumption)
     have hp : (!(Flat.get M.pos t.regs.rbx.toBitVec == Flat.NONE)) = false := by
       with_reducible assumption
-    have hm0 : 0 < b.m.toNat := by
-      have h : (b.m &&& b.m == BitVec.zero 64) = false := by with_reducible assumption
+    have hm0 : 0 < b.sourceSize.toNat := by
+      have h : (b.sourceSize &&& b.sourceSize == BitVec.zero 64) = false := by with_reducible assumption
       rw [BitVec.and_self, beq_eq_false_iff_ne] at h
       exact Nat.pos_of_ne_zero fun e => h (BitVec.eq_of_toNat_eq e)
     have hpn : Flat.get M.pos t.regs.rbx.toBitVec = Flat.NONE := by simpa using hp
@@ -512,7 +512,7 @@ theorem b_5 (hok : b.Ok) : absorbSurplusAsm.ForallBlocks fun blk =>
         ⟨hlt, hw, hp, hm0, rfl, rfl, rfl, (BitVec.zero_sub _).symm⟩, Or.inl hpn, ?_, hrest⟩
       simp only [hpn]
       rfl
-    · left; ab_var; have := b.m.isLt; simp; omega
+    · left; ab_var; have := b.sourceSize.isLt; simp; omega
 
 set_option maxHeartbeats 100000 in
 theorem b_2 (hok : b.Ok) : absorbSurplusAsm.ForallBlocks fun blk =>
@@ -521,13 +521,13 @@ theorem b_2 (hok : b.Ok) : absorbSurplusAsm.ForallBlocks fun blk =>
   intro t ht
   ab_inv at ht
   obtain ⟨M, w, hli, hi, hbd, hbest, hrest⟩ := ht
-  have hokM : BG.Ok { b with M := M } := ⟨hok.m, hok.n, hok.sw, hok.tw, hok.db⟩
+  have hokM : BG.Ok { b with M := M } := ⟨hok.sourceSizeFitsBuffer, hok.targetSizeFitsBuffer, hok.sw, hok.tw, hok.db⟩
   have hb := hli.kb.mem
   rw [sep_lc] at hb
   have hdi := hi.rdi
   have h8 := hi.r8
-  have hlt' : t.regs.rax.toBitVec < b.fl.m := BitVec.lt_def.2 hi.om
-  have hmax : t.regs.rax.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hi.om hok.m
+  have hlt' : t.regs.rax.toBitVec < b.fl.sourceSize := BitVec.lt_def.2 hi.om
+  have hmax : t.regs.rax.toBitVec.toNat < maxStackSize := Nat.lt_of_lt_of_le hi.om hok.sourceSizeFitsBuffer
   obtain ⟨_, hM⟩ := BView.mapM hb
   have h_db : rdb t.dmem (b.drp + t.regs.rax.toBitVec) = Flat.get b.fl.dropped t.regs.rax.toBitVec :=
     BView.rdb_drp (b := { b with M := M }) hb hokM hi.om
@@ -592,7 +592,7 @@ theorem b_1 : absorbSurplusAsm.ForallBlocks fun blk =>
   all_goals try simp only [hcx, sub_beq_zero] at *
   vc_by_shape
   | goto ".LB.MappingBuilder.absorbSurplus.3" =>
-    have he : 1#64 + t.regs.rax.toBitVec = b.m := beq_iff_eq.1 ‹_›
+    have he : 1#64 + t.regs.rax.toBitVec = b.sourceSize := beq_iff_eq.1 ‹_›
     cfg_goto
     · exact hli.stk rfl rfl
     · ab_inv
@@ -601,14 +601,14 @@ theorem b_1 : absorbSurplusAsm.ForallBlocks fun blk =>
       exact (best_ge fun h => absurd h (BitVec.lt_irrefl _)).symm.trans hbest
     · left; ab_var; omega
   | other =>
-    have hne : 1#64 + t.regs.rax.toBitVec ≠ b.m := by
-      simpa using ‹(1#64 + t.regs.rax.toBitVec == b.m) = false›
-    have hne' : (1#64 + t.regs.rax.toBitVec).toNat ≠ b.m.toNat :=
+    have hne : 1#64 + t.regs.rax.toBitVec ≠ b.sourceSize := by
+      simpa using ‹(1#64 + t.regs.rax.toBitVec == b.sourceSize) = false›
+    have hne' : (1#64 + t.regs.rax.toBitVec).toNat ≠ b.sourceSize.toNat :=
       fun e => hne (BitVec.eq_of_toNat_eq e)
     have e1 : (1#64 + t.regs.rax.toBitVec).toNat = t.regs.rax.toBitVec.toNat + 1 := by
-      have := b.m.isLt
+      have := b.sourceSize.isLt
       bv_omega
-    have hom' : (1#64 + t.regs.rax.toBitVec).toNat < b.m.toNat := by omega
+    have hom' : (1#64 + t.regs.rax.toBitVec).toNat < b.sourceSize.toNat := by omega
     first
     | (left; ab_var; omega)
     | (ab_inv
@@ -647,7 +647,7 @@ theorem b_3 (hout : ∀ l ∈ Program.labels absorbSurplusAsm, label l ≠ label
   intro t ht
   ab_inv at ht
   obtain ⟨M, w, hli, hlt, hw, hp, hsi, hrest⟩ := ht
-  have hokM : BG.Ok { b with M := M } := ⟨hok.m, hok.n, hok.sw, hok.tw, hok.db⟩
+  have hokM : BG.Ok { b with M := M } := ⟨hok.sourceSizeFitsBuffer, hok.targetSizeFitsBuffer, hok.sw, hok.tw, hok.db⟩
   simp only [Names.map] at hmap
   kvcgen64 [hmap]
   all_goals try symexec_norm
@@ -666,7 +666,7 @@ theorem b_3 (hout : ∀ l ∈ Program.labels absorbSurplusAsm, label l ≠ label
       simpa using ‹(t.regs.rsi.toBitVec == Flat.NONE) = false›
     have hc : Flat.absorbBest b.fl M t.regs.rbx.toBitVec 0 Flat.NONE ≠ Flat.NONE :=
       fun e => hne (hsi.trans e)
-    have hsm : t.regs.rsi.toBitVec.toNat < b.m.toNat := by
+    have hsm : t.regs.rsi.toBitVec.toNat < b.sourceSize.toNat := by
       rcases best_lt (fb := b.fl) (M := M) (j := t.regs.rbx.toBitVec) 0 Flat.NONE (Or.inl rfl)
         with h | h
       · exact absurd (hsi.trans h) hne

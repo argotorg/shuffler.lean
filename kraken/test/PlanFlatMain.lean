@@ -40,15 +40,15 @@ def offsetText (w : Word) : String := if w = NONE then "-" else toString w.toNat
 def words (s : String) : List String := (s.splitOn " ").filter (· ≠ "")
 
 -- `l` from offset 0, and `d` above it.
-def vecOf {α : Type} (l : List α) (d : α) : Vector α MAX_N := Vector.ofFn fun i => l[i.val]?.getD d
+def vecOf {α : Type} (l : List α) (d : α) : Vector α maxStackSize := Vector.ofFn fun i => l[i.val]?.getD d
 
 -- Content for the caller's buffers and for the locals of each attempt, which the C++ does not
 -- initialize. The content differs from attempt to attempt.
 def junkSlot : StackSlot := ⟨0xdeadbeef, 0xee, 0xee⟩
 def uninit (k : Nat) : RunU :=
-  let w (x : Nat) : Vector Word MAX_N := Vector.replicate MAX_N (.ofNat 64 (x + k))
+  let w (x : Nat) : Vector Word maxStackSize := Vector.replicate maxStackSize (.ofNat 64 (x + k))
   ⟨⟨w 7, w 9⟩, ⟨w 11, w 13, .ofNat 64 (77 + k), .ofNat 64 (99 + k)⟩, ⟨w 5, w 6, w 8⟩,
-    ⟨Vector.replicate MAX_N (.ofNat 8 (1 + k)), w 3⟩⟩
+    ⟨Vector.replicate maxStackSize (.ofNat 8 (1 + k)), w 3⟩⟩
 
 def below (k : Word) : List Word := (List.range k.toNat).map (BitVec.ofNat 64)
 
@@ -60,8 +60,8 @@ def run (take allowed : Bool) (source target : List StackSlot) (vars : List Nat)
   let m : Word := .ofNat 64 source.length
   let n : Word := .ofNat 64 target.length
   match planEntry m n (vecOf source .junk) (vecOf target .junk) spilled (.ofNat 64 idCount)
-      (if allowed then 1 else 0) (if take then 1 else 0) (Vector.replicate MAX_N 0xee)
-      (Vector.replicate MAX_N junkSlot) (Vector.replicate MAX_N 0xeeee) uninit with
+      (if allowed then 1 else 0) (if take then 1 else 0) (Vector.replicate maxStackSize 0xee)
+      (Vector.replicate maxStackSize junkSlot) (Vector.replicate maxStackSize 0xeeee) uninit with
   | (r, some (status, s)) =>
     let spilledIds := (List.range idCount).filter fun i => s.spills (.ofNat 32 i) ≠ 0
     if r = -2 then "err"
@@ -89,7 +89,7 @@ def runLine (line : String) : Option String := do
   let source ← (words source).mapM slotOf?
   let target ← (words target).mapM slotOf?
   let vars ← (words vars).mapM String.toNat?
-  guard (source.length ≤ MAX_N ∧ target.length ≤ MAX_N)
+  guard (source.length ≤ maxStackSize ∧ target.length ≤ maxStackSize)
   return run take allowed source target vars
 
 partial def loop (stdin stdout : IO.FS.Stream) : IO Unit := do

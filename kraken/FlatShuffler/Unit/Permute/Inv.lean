@@ -44,25 +44,25 @@ namespace Permute
 /-! ## The model vectors -/
 
 -- `v` and `w` agree below `k`.
-def AgB (k : Word) (v w : Vector Word MAX_N) : Prop := ∀ i < k, Flat.get v i = Flat.get w i
+def AgB (k : Word) (v w : Vector Word maxStackSize) : Prop := ∀ i < k, Flat.get v i = Flat.get w i
 
 -- The elements below `n` are below `n`.
-def LtB (n : Word) (p : Vector Word MAX_N) : Prop := ∀ i < n, Flat.get p i < n
+def LtB (n : Word) (p : Vector Word maxStackSize) : Prop := ∀ i < n, Flat.get p i < n
 
 -- The `regroup` of `permute` with the permutation `p0` gives `X`.
-def RG (st : Flat.St) (p0 : Vector Word MAX_N) (X : Option (Vector Word MAX_N)) : Prop :=
+def RG (st : Flat.St) (p0 : Vector Word maxStackSize) (X : Option (Vector Word maxStackSize)) : Prop :=
   Flat.regroup st 0 p0 (Flat.clearDesired st 0 Flat.initial) = X
 
 -- `placeGroup` from `pos`, then `regroup` from the next leader.
-def pg (st : Flat.St) (l : Word) (hl : l < st.size) (σ : StackSlot) (dB : Vector Word MAX_N)
-    (pos vac : Word) (pc : Vector Word MAX_N) : Option (Vector Word MAX_N) :=
+def pg (st : Flat.St) (l : Word) (hl : l < st.size) (σ : StackSlot) (dB : Vector Word maxStackSize)
+    (pos vac : Word) (pc : Vector Word maxStackSize) : Option (Vector Word maxStackSize) :=
   match Flat.placeGroup st l hl σ dB pos vac pc with
   | none => none
   | some p => Flat.regroup st (l + 1) p dB
 
 -- The `vacant` loop from `x` for the slot `pos`, then the rest of `pg`.
-def nv (st : Flat.St) (l : Word) (hl : l < st.size) (σ : StackSlot) (dB : Vector Word MAX_N)
-    (pos x : Word) (pc : Vector Word MAX_N) : Option (Vector Word MAX_N) :=
+def nv (st : Flat.St) (l : Word) (hl : l < st.size) (σ : StackSlot) (dB : Vector Word maxStackSize)
+    (pos x : Word) (pc : Vector Word maxStackSize) : Option (Vector Word maxStackSize) :=
   if Flat.nextVacant st l σ dB x < st.size then
     pg st l hl σ dB (pos + 1) (Flat.nextVacant st l σ dB x + 1)
       (Flat.put pc pos (Flat.nextVacant st l σ dB x))
@@ -74,13 +74,13 @@ def after (f : Nat) (top : Word) : Flat.PNext → Flat.Status × Flat.St
   | .cont X p => Flat.permuteLoop f X top p
 
 -- The array `permutation` at the argument `rsi s`.
-def memVec (s t : MachineData) : Vector Word MAX_N :=
+def memVec (s t : MachineData) : Vector Word maxStackSize :=
   Vector.ofFn fun i => rd t.dmem (rsi s + BitVec.ofNat 64 (8 * i.val))
 
 /-! ## The invariants -/
 
 section
-variable (S : Addr) (g : G) (p0 : Vector Word MAX_N) (F : MProp 64) (s : MachineData)
+variable (S : Addr) (g : G) (p0 : Vector Word maxStackSize) (F : MProp 64) (s : MachineData)
   (ra : Int64)
 
 -- `.LB.Emission.permute.16`: the result.
@@ -202,7 +202,7 @@ def I13 (t : MachineData) : Prop :=
 
 -- Phase D: the struct `g'`, the locals `L` and the permutation `p`. `rcx` is `n` and `rsi`
 -- is `top`.
-structure DC (g' : G) (L : Lc) (p : Vector Word MAX_N) (t : MachineData) : Prop where
+structure DC (g' : G) (L : Lc) (p : Vector Word maxStackSize) (t : MachineData) : Prop where
   fm : Fm S g' F s ra L t
   ok : g'.Ok
   keep : Keep g g'
@@ -250,7 +250,7 @@ def I17 (t : MachineData) : Prop :=
     ∧ Flat.misplacedBelow p (g.h.len - 1) (g.h.len - 1) = c - 1
 
 -- The condition of `swapP_mu` for `pos`.
-def Mis (n pos : Word) (p : Vector Word MAX_N) : Prop :=
+def Mis (n pos : Word) (p : Vector Word maxStackSize) : Prop :=
   pos < n ∧ pos ≠ n - 1
     ∧ (Flat.get p (n - 1) = pos ∨ (Flat.get p (n - 1) = n - 1 ∧ Flat.get p pos ≠ pos))
 
@@ -366,7 +366,7 @@ def V (s : MachineData) (g : G) (l : Label) (t : MachineData) : Nat :=
 /-! ## The obligation of a block -/
 
 -- The exception continuation of the body triple.
-def E [Host] (S : Addr) (g : G) (p0 : Vector Word MAX_N) (F : MProp 64) (s : MachineData) (ra : Int64) :
+def E [Host] (S : Addr) (g : G) (p0 : Vector Word maxStackSize) (F : MProp 64) (s : MachineData) (ra : Int64) :
     Int64 → MachineData → Prop :=
   fun a t => (a = ra ∧ Sep.Post S (permW s ∗ F) 1034 (fun g' t => permuteQ p0 g g' s t) s t
     ∧ Sep.mod.Agree s t) ∨
@@ -374,7 +374,7 @@ def E [Host] (S : Addr) (g : G) (p0 : Vector Word MAX_N) (F : MProp 64) (s : Mac
       Sep.Post S (permW s ∗ F) 1034 (fun g' t => permuteX p0 g g' s t) s t)
 
 -- The obligation of `Program.WP.cfg` for the block `blk`.
-def Obl [Host] [FunDecls] (S : Addr) (g : G) (p0 : Vector Word MAX_N) (F : MProp 64)
+def Obl [Host] [FunDecls] (S : Addr) (g : G) (p0 : Vector Word maxStackSize) (F : MProp 64)
     (s : MachineData) (ra : Int64) (blk : Program.Block) : Prop :=
   ∀ t, LInv S g p0 F s ra blk.label t →
     let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=

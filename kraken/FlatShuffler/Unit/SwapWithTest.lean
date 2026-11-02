@@ -19,7 +19,7 @@ namespace FlatShuffler.Unit.SwapWithTest
 open FlatShuffler.Sep
 open FlatShuffler.Unit.SwapWith
 
--- Edge words: the small values, the bounds of the depth test, `MAX_N`, and the high bits.
+-- Edge words: the small values, the bounds of the depth test, `maxStackSize`, and the high bits.
 def ws : List Word :=
   [0, 1, 2, 14, 15, 16, 17, 18, 19, 1023, 1024, BitVec.allOnes 64, 1#64 <<< 63, (1#64 <<< 63) - 1]
 

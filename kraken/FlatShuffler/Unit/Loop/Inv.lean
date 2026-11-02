@@ -140,7 +140,7 @@ def I1 (t : MachineData) : Prop :=
   ∃ g' u T x0 x2 lo w, Mid S g' F s ra x0 x2 lo w u t ∧ g'.Ok ∧ Keep g g'
     ∧ t.regs.r13.toBitVec = g'.h.n ∧ g'.h.len = g'.h.n ∧ t.regs.rax.toBitVec < g'.h.n
     ∧ Flat.HInv (flat g') T g'.xo ∧ g'.h.pend = 0
-    ∧ (∀ j (hj : j < MAX_N), j < t.regs.rax.toBitVec.toNat →
+    ∧ (∀ j (hj : j < maxStackSize), j < t.regs.rax.toBitVec.toNat →
         x2.A[j] = Flat.get g'.h.dest (BitVec.ofNat 64 j))
     ∧ Flat.buildBottomUp (flat g) = Flat.permuteMapping (flat g')
 

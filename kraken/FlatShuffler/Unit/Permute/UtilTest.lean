@@ -10,7 +10,7 @@ import all FlatShuffler.Unit.Permute.Inv
 
 For each lemma: a positive `example` that applies the lemma to concrete values (this shows that
 the hypotheses can be satisfied), negative cases (a false hypothesis and a false conclusion, or a
-hypothesis that the conclusion needs), and the edges `0`, `2^64 - 1`, `MAX_N - 1` and `MAX_N`.
+hypothesis that the conclusion needs), and the edges `0`, `2^64 - 1`, `maxStackSize - 1` and `maxStackSize`.
 The `BitVec` facts also get a `#guard` over a list of edge values (both sides of the fact), or a
 property test with `bv_decide` that applies the lemma to free words.
 
@@ -30,7 +30,7 @@ open FlatShuffler FlatShuffler.Sep
 
 /-! ## Edge values -/
 
--- `0`, `1`, `MAX_N - 1`, `MAX_N`, the depths `15`, `16`, `17`, the sign bit, `2^64 - 2`,
+-- `0`, `1`, `maxStackSize - 1`, `maxStackSize`, the depths `15`, `16`, `17`, the sign bit, `2^64 - 2`,
 -- `2^64 - 1`.
 def E : List Word :=
   [0#64, 1#64, 15#64, 16#64, 17#64, 1023#64, 1024#64, 0x8000000000000000#64,
@@ -203,7 +203,7 @@ example : slotAt 0x1000#64 (5#64 : Word).toNat + BitVec.ofInt 64 (-8)
 -- The value: slot 4 of the array at `0x1000`.
 example : slotAt 0x1000#64 (5#64 : Word).toNat + BitVec.ofInt 64 (-8) = 0x1020#64 := by
   rw [top_slot]; decide
--- Edge: size `MAX_N`, the top slot `MAX_N - 1`.
+-- Edge: size `maxStackSize`, the top slot `maxStackSize - 1`.
 example : slotAt 0x1000#64 (1024#64 : Word).toNat + BitVec.ofInt 64 (-8) = 0x2FF8#64 := by
   rw [top_slot]; decide
 -- Edge: size `0`. `0 - 1` is `2^64 - 1`, and the address wraps to `d - 8`.
@@ -283,7 +283,7 @@ example : (asmOp 5#64 4#64).depth = 0#8 := by rw [asmOp_eq]; decide
 -- Edge: `l - 1 - p = 16`, the deepest swap.
 example : asmOp 21#64 4#64 = Op.swapW 16#64 := (op_eq _ _).trans (by decide)
 example : (asmOp 1024#64 1007#64).depth = 16#8 := by rw [asmOp_eq]; decide
--- Edge: the size `MAX_N` and the top position `MAX_N - 1`.
+-- Edge: the size `maxStackSize` and the top position `maxStackSize - 1`.
 example : (asmOp 1024#64 1023#64).depth = 0#8 := by rw [asmOp_eq]; decide
 -- The record is `Swap`, with a junk slot.
 example : (asmOp 21#64 4#64).kind = Swap ∧ (asmOp 21#64 4#64).slot = StackSlot.junk := by
@@ -306,8 +306,8 @@ example (l p : Word) (h : p < l) (hd : l - 1 - p ≤ 16#64) :
 
 example : Flat.NONE.toNat = 2 ^ 64 - 1 := none_toNat
 example : Flat.NONE.toNat = 18446744073709551615 := none_toNat
--- Negative: `NONE` is not an offset below `MAX_N`, and `NONE + 1` wraps to `0`.
-example : ¬Flat.NONE.toNat < MAX_N := by rw [none_toNat]; decide
+-- Negative: `NONE` is not an offset below `maxStackSize`, and `NONE + 1` wraps to `0`.
+example : ¬Flat.NONE.toNat < maxStackSize := by rw [none_toNat]; decide
 #guard Flat.NONE + 1 == 0#64
 #guard Flat.NONE == 18446744073709551615#64
 
@@ -315,10 +315,10 @@ example : ¬Flat.NONE.toNat < MAX_N := by rw [none_toNat]; decide
 
 -- A flat state of size `n`. The other members are not read.
 def stN (n : Word) : Flat.St where
-  target := Vector.replicate MAX_N StackSlot.junk
+  target := Vector.replicate maxStackSize StackSlot.junk
   targetSize := 0
   spills := fun _ => 0
-  data := Vector.replicate MAX_N StackSlot.junk
+  data := Vector.replicate maxStackSize StackSlot.junk
   size := n
   trace := []
   dest := Flat.initial
@@ -356,16 +356,16 @@ example (X : Flat.St) (t : Word) (h : t < X.size) :
 
 /-! ## `put_eq_set`, `get_eq` -/
 
-def v0 : Vector Word MAX_N := Vector.ofFn fun i => BitVec.ofNat 64 (i.val + 1)
+def v0 : Vector Word maxStackSize := Vector.ofFn fun i => BitVec.ofNat 64 (i.val + 1)
 
 example : Flat.put v0 0#64 7#64 = v0.set 0 7#64 (by decide) := put_eq_set _ _ _ _
--- Edge: `MAX_N - 1`.
+-- Edge: `maxStackSize - 1`.
 example : Flat.put v0 1023#64 7#64 = v0.set 1023 7#64 (by decide) := put_eq_set _ _ _ _
 #guard Flat.put v0 1023#64 7#64 == v0.set 1023 7#64 (by decide)
 #guard Flat.get (Flat.put v0 1023#64 7#64) 1023#64 == 7#64
--- Negative: `MAX_N` and `2^64 - 1` are not in bounds, and `put` does nothing.
-example : ¬(1024#64 : Word).toNat < MAX_N := by decide
-example : ¬(18446744073709551615#64 : Word).toNat < MAX_N := by decide
+-- Negative: `maxStackSize` and `2^64 - 1` are not in bounds, and `put` does nothing.
+example : ¬(1024#64 : Word).toNat < maxStackSize := by decide
+example : ¬(18446744073709551615#64 : Word).toNat < maxStackSize := by decide
 #guard Flat.put v0 1024#64 7#64 == v0
 #guard Flat.put v0 18446744073709551615#64 7#64 == v0
 
@@ -384,9 +384,9 @@ def l3 : List Word := [10#64, 20#64, 30#64]
 example : vec (l3.set 1 9#64) = (vec l3).set 1 9#64 (by decide) :=
   vec_set _ _ _ (by decide) (by decide)
 #guard vec (l3.set 1 9#64) == (vec l3).set 1 9#64 (by decide)
--- Edge: the last element of a list of `MAX_N` elements.
-def lMax : List Word := (List.range MAX_N).map (BitVec.ofNat 64)
-theorem lMax_length : lMax.length = MAX_N := by rw [lMax, List.length_map, List.length_range]
+-- Edge: the last element of a list of `maxStackSize` elements.
+def lMax : List Word := (List.range maxStackSize).map (BitVec.ofNat 64)
+theorem lMax_length : lMax.length = maxStackSize := by rw [lMax, List.length_map, List.length_range]
 example : vec (lMax.set 1023 9#64) = (vec lMax).set 1023 9#64 (by decide) :=
   vec_set _ _ _ (by rw [lMax_length]; decide) (by decide)
 #guard vec (lMax.set 1023 9#64) == (vec lMax).set 1023 9#64 (by decide)
@@ -395,11 +395,11 @@ example : vec (lMax.set 1023 9#64) = (vec lMax).set 1023 9#64 (by decide) :=
 
 example : Flat.get (vec l3) 2#64 = 30#64 := (get_vec _ _ (by decide) (by decide)).trans rfl
 example : Flat.get (vec l3) 0#64 = 10#64 := (get_vec _ _ (by decide) (by decide)).trans rfl
--- Edge: index `MAX_N - 1` of a list of `MAX_N` elements.
+-- Edge: index `maxStackSize - 1` of a list of `maxStackSize` elements.
 #guard Flat.get (vec lMax) 1023#64 == lMax[1023]!
 -- Negative: the index is the length of the list. `get` gives the default `0`.
 #guard Flat.get (vec l3) 3#64 == 0#64
--- Negative: the index `MAX_N` of a list of `MAX_N + 1` elements is not in the buffer.
+-- Negative: the index `maxStackSize` of a list of `maxStackSize + 1` elements is not in the buffer.
 def lMax1 : List Word := lMax ++ [7#64]
 #guard Flat.get (vec lMax1) 1024#64 == 0#64 && lMax1[1024]! == 7#64
 
@@ -415,7 +415,7 @@ example : (l3.set 2 9#64).take 3 = l3.take 2 ++ [9#64] := take_set_succ _ _ _ (b
 /-! ## `swapDestinations_eq`, `posAt_none`, `posAt_some` -/
 
 -- `dest`: `0 ↦ 2`, `1 ↦ NONE`, `2 ↦ 0`. `pos`: all `0`.
-def dD : Vector Word MAX_N :=
+def dD : Vector Word maxStackSize :=
   Flat.put (Flat.put (Flat.put Flat.initial 0#64 2#64) 1#64 Flat.NONE) 2#64 0#64
 
 def stD : Flat.St := { stN 3#64 with dest := dD }
@@ -490,7 +490,7 @@ def g0 : G := ⟨h0, 0, 0, Vector.replicate _ 7#64, Vector.replicate _ ⟨Op.swa
 def g3 : G := ⟨{ h0 with n := 3#64 }, 0, 0, Vector.replicate _ 7#64,
   Vector.replicate _ ⟨Op.swapW 0#64, 0, 0⟩, Vector.replicate _ 8#64, fun _ => 0⟩
 
-def d1 : Vector Word MAX_N := Flat.put Flat.initial 1#64 5#64
+def d1 : Vector Word maxStackSize := Flat.put Flat.initial 1#64 5#64
 
 example : flat (withDest g0 d1) = { flat g0 with dest := d1 } := flat_withDest d1
 example : flat (withPos g0 d1) = { flat g0 with pos := d1 } := flat_withPos d1
@@ -579,7 +579,7 @@ example : L0.toList.length = 1028 := Lc.length_toList L0
 #guard L0.toList[3]! == 1000#64 && L0.toList[1026]! == 2023#64
 #guard L0.toList[1027]! == 9#64
 -- Negative: `P` (the array `permutation` at `rsi`) is not a word of the locals.
-#guard (List.range MAX_N).all fun i => !L0.toList.contains (BitVec.ofNat 64 (5000 + i))
+#guard (List.range maxStackSize).all fun i => !L0.toList.contains (BitVec.ofNat 64 (5000 + i))
 
 example : ∃ L : Lc, L.P = L0.P ∧ ∃ x0 x1 x2 x3 x4 x5,
     List.replicate 1034 (0#64 : Word) = L.toList ++ [x0, x1, x2, x3, x4, x5] :=

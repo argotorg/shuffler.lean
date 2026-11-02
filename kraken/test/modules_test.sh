@@ -89,9 +89,14 @@ example (input : PlannerInput) (locals : Nat → FlatShuffler.Flat.RunU)
   planner_flat_execution_does_not_assert input locals validInput
 
 open ShufflerVerification in
-example (input : PlannerInput) (oversized : FlatShuffler.MAX_N < input.planner.m.toNat) :
+example (input : PlannerInput) (oversized : FlatShuffler.maxStackSize < input.planner.sourceSize.toNat) :
     ¬ PlannerInputAssumptions input := fun assumptions =>
   Nat.not_le_of_lt oversized assumptions.sourceSizeFitsBuffer
+
+open ShufflerVerification in
+example (input : PlannerInput) (oversized : FlatShuffler.maxStackSize < input.planner.targetSize.toNat) :
+    ¬ PlannerInputAssumptions input := fun assumptions =>
+  Nat.not_le_of_lt oversized assumptions.targetSizeFitsBuffer
 
 open ShufflerVerification in
 example (input : PlannerInput) (slot : FlatShuffler.StackSlot)
@@ -137,6 +142,45 @@ example (input : PlannerInput) (locals : Nat → FlatShuffler.Flat.RunU)
 EOF
 lean_file "$tmp/ModelReview.lean"
 
+cat > "$tmp/PlannerSizeFields.lean" <<'EOF'
+module
+import Theorems.PlannerInput
+
+open FlatShuffler FlatShuffler.Flat ShufflerVerification
+
+example : maxStackSize = 1024 := rfl
+
+private def inputWithSizes (sourceSize targetSize : Word) : PlannerInput :=
+  { planner :=
+      { source := Vector.replicate maxStackSize .junk
+        sourceSize := sourceSize
+        target := Vector.replicate maxStackSize .junk
+        targetSize := targetSize
+        allowed := false }
+    takeWildcardSlots := false
+    initialState :=
+      { spills := fun _ => 0
+        dropped := Vector.replicate maxStackSize 0
+        saw := false
+        data := Vector.replicate maxStackSize .junk
+        trace := []
+        sources := Vector.replicate maxStackSize 0 } }
+
+-- Each size selects the active prefix of its own input buffer.
+example : (inputWithSizes 0 (.ofNat 64 maxStackSize)).sourceSlots = [] ∧
+    (inputWithSizes 0 (.ofNat 64 maxStackSize)).targetSlots.length = maxStackSize := by
+  change (Vector.replicate maxStackSize (.junk : StackSlot)).toList.take 0 = [] ∧
+    ((Vector.replicate maxStackSize (.junk : StackSlot)).toList.take maxStackSize).length = maxStackSize
+  simp only [List.take_zero, List.length_take, Vector.length_toList, Nat.min_self, and_self]
+
+example : (inputWithSizes (.ofNat 64 maxStackSize) 0).sourceSlots.length = maxStackSize ∧
+    (inputWithSizes (.ofNat 64 maxStackSize) 0).targetSlots = [] := by
+  change ((Vector.replicate maxStackSize (.junk : StackSlot)).toList.take maxStackSize).length = maxStackSize ∧
+    (Vector.replicate maxStackSize (.junk : StackSlot)).toList.take 0 = []
+  simp only [List.take_zero, List.length_take, Vector.length_toList, Nat.min_self, and_self]
+EOF
+lean_file "$tmp/PlannerSizeFields.lean"
+
 cat > "$tmp/AssemblyReview.lean" <<'EOF'
 module
 import Theorems.PlannerAssembly
@@ -162,7 +206,7 @@ example {f : Flat.St → Flat.Status × Flat.St} {before after : Sep.G} {returne
   result.2
 
 open FlatShuffler FlatShuffler.Unit in
-example {planned : Vector Word MAX_N} {before after : Sep.G} {entry returned : MachineData}
+example {planned : Vector Word maxStackSize} {before after : Sep.G} {entry returned : MachineData}
     (result : permuteQ planned before after entry returned) : al returned ≠ ASSERTION_FAILED :=
   result.2
 
@@ -172,7 +216,7 @@ example {before after : Sep.G} {entry returned : MachineData}
   result.2
 
 open FlatShuffler FlatShuffler.Unit in
-example {planned : Vector Word MAX_N} {before after : Sep.G} {entry returned : MachineData}
+example {planned : Vector Word maxStackSize} {before after : Sep.G} {entry returned : MachineData}
     (result : lowestQ planned before after entry returned) : al returned ≠ ASSERTION_FAILED := by
   obtain ⟨_, normalReturn⟩ := result
   exact normalReturn.2

@@ -17,10 +17,10 @@ open FlatShuffler.Sep
 theorem candidate_initial {P : Addr} {r : RG} {F : MProp 64}
     {s t : MachineData} {ra : Int64} {lo : List Word} {L : Lc}
     (hb : Bd P r F s ra lo L.toList t) (he : L.excess = rcx s)
-    (hr : InputRegs P r s t) (hz : ZeroPrefix r.p.m t) (hok : r.Ok) :
+    (hr : InputRegs P r s t) (hz : ZeroPrefix r.p.sourceSize t) (hok : r.Ok) :
     CandidateState P r F s ra lo L ⟨L.droppedNow, L.candidates⟩ 0#64 t := by
   refine ⟨hb, he, hr.r12, hr.r14, hr.r8, hr.r9, by decide,
-    ?_, ?_, hb.droppedZero hz hok.planner.m, rfl⟩
+    ?_, ?_, hb.droppedZero hz hok.planner.sourceSizeFitsBuffer, rfl⟩
   · intro i hi; exact False.elim (by bv_omega)
   · intro i hi; exact False.elim (by bv_omega)
 
@@ -38,8 +38,8 @@ theorem b_1 [Host] [FunDecls]
   have hc := candidate_initial hb hL hr hz hok
   have hblocked := ha.2.2.2.1
   have hsize := ha.2.2.1
-  have hpos : (rdx s + 1#64).toNat ≤ MAX_N := by
-    change (rdx s + 1).toNat ≤ MAX_N
+  have hpos : (rdx s + 1#64).toNat ≤ maxStackSize := by
+    change (rdx s + 1).toNat ≤ maxStackSize
     rw [small_succ _ ha.2.2.2.1]
     omega
   have hdx : 1#64 + rdx t = rdx s + 1#64 := by rw [hr.rdx]; bv_omega

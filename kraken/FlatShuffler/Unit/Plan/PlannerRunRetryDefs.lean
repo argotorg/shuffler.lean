@@ -33,10 +33,10 @@ theorem RetryLI.prepare (h : RetryLI P g M F s ra lo locals t) :
   ⟨lo, locals, h.toLoopLI, h.r15, h.count, h.targets⟩
 
 theorem dropped_read (h : (plannerCallOwnedMemory P g ∗ F).get t.dmem)
-    {i : Word} (hi : i.toNat < MAX_N) (hm : i.toNat < g.p.m.toNat) :
+    {i : Word} (hi : i.toNat < maxStackSize) (hm : i.toNat < g.p.sourceSize.toNat) :
     ∃ R, (B8 (g.p.drp + i) (get g.dropped i) ∗ R).get t.dmem := by
   obtain ⟨R, hd⟩ := dropped h
-  obtain ⟨Q, he, _⟩ := Bs.focus g.p.drp (g.dropped.toList.take g.p.m.toNat) (i := i.toNat)
+  obtain ⟨Q, he, _⟩ := Bs.focus g.p.drp (g.dropped.toList.take g.p.sourceSize.toNat) (i := i.toNat)
     (by simp only [List.length_take, Vector.length_toList]; omega) 0#8
   rw [he, MProp.sep_assoc] at hd
   refine ⟨Q ∗ R, ?_⟩
@@ -47,19 +47,19 @@ end
 
 def DropBeforeHead (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapping) (F : MProp 64)
     (s : MachineData) (ra : Int64) (t : MachineData) : Prop :=
-  ∃ lo locals i, RetryLI P g M F s ra lo locals t ∧ i < g.p.m ∧
-    rax t = g.p.drp + i ∧ rdx t = g.p.drp + g.p.m ∧
-    Flat.droppedFrom g.p.m g.dropped i t.regs.rbp.toBitVec = Flat.droppedCount g.p.m g.dropped
+  ∃ lo locals i, RetryLI P g M F s ra lo locals t ∧ i < g.p.sourceSize ∧
+    rax t = g.p.drp + i ∧ rdx t = g.p.drp + g.p.sourceSize ∧
+    Flat.droppedFrom g.p.sourceSize g.dropped i t.regs.rbp.toBitVec = Flat.droppedCount g.p.sourceSize g.dropped
 
 def ResolveHead (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapping) (F : MProp 64)
     (s : MachineData) (ra : Int64) (t : MachineData) : Prop :=
   ∃ lo locals, RetryLI P g M F s ra lo locals t ∧
-    t.regs.rbp.toBitVec = Flat.droppedCount g.p.m g.dropped
+    t.regs.rbp.toBitVec = Flat.droppedCount g.p.sourceSize g.dropped
 
 def DropAfterHead (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapping) (F : MProp 64)
     (s : MachineData) (ra : Int64) (before : Word) (t : MachineData) : Prop :=
-  ∃ lo locals i, RetryLI P g M F s ra lo locals t ∧ i < g.p.m ∧
-    rax t = g.p.drp + i ∧ rcx t = g.p.drp + g.p.m ∧ t.regs.rbp.toBitVec = before ∧
-    Flat.droppedFrom g.p.m g.dropped i (rdx t) = Flat.droppedCount g.p.m g.dropped
+  ∃ lo locals i, RetryLI P g M F s ra lo locals t ∧ i < g.p.sourceSize ∧
+    rax t = g.p.drp + i ∧ rcx t = g.p.drp + g.p.sourceSize ∧ t.regs.rbp.toBitVec = before ∧
+    Flat.droppedFrom g.p.sourceSize g.dropped i (rdx t) = Flat.droppedCount g.p.sourceSize g.dropped
 
 end FlatShuffler.Unit.PlannerRunU

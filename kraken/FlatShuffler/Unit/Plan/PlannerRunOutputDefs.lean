@@ -33,14 +33,14 @@ theorem PostEmitLI.next (h : PostEmitLI P g M F s ra lo locals t)
     by rw [h15, hsp]; exact h.r15⟩
 
 theorem PostEmitLI.posRead (h : PostEmitLI P g M F s ra lo locals t)
-    {i : Word} (hi : i.toNat < MAX_N) :
+    {i : Word} (hi : i.toNat < maxStackSize) :
     rd t.dmem (t.regs.rsp.toBitVec + BitVec.ofNat 64 (8 * (1036 + i.toNat))) =
       get M.pos i := by
   have hidx : 1036 + i.toNat < 4121 := by change i.toNat < 1024 at hi; omega
   rw [h.localRead hidx, ← localMapping_pos locals h.localLength hi, h.mappingEq]
 
 theorem PostEmitLI.storeSources (h : PostEmitLI P g M F s ra lo locals t)
-    {i : Word} (hi : i.toNat < MAX_N) (hn : i.toNat < g.p.n.toNat) (w : Word)
+    {i : Word} (hi : i.toNat < maxStackSize) (hn : i.toNat < g.p.targetSize.toNat) (w : Word)
     (hm : u.dmem = t.dmem.storeInt (slotAt g.sourcesPtr i.toNat) 8 w.toInt)
     (hsp : u.regs.rsp = t.regs.rsp)
     (hbx : u.regs.rbx = t.regs.rbx) (h14 : u.regs.r14 = t.regs.r14)
@@ -72,10 +72,10 @@ def PostEmitHead (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapping) (F : MPro
   ∃ lo locals, PostEmitLI P g M F s ra lo locals t
 
 def SourcesHead (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapping) (F : MProp 64)
-    (s : MachineData) (ra : Int64) (wanted : Vector Word MAX_N) (t : MachineData) : Prop :=
+    (s : MachineData) (ra : Int64) (wanted : Vector Word maxStackSize) (t : MachineData) : Prop :=
   ∃ lo locals, PostEmitLI P g M F s ra lo locals t ∧
-    t.regs.rbp.toBitVec = g.countPtr ∧ r8 t = g.sourcesPtr ∧ rdx t < g.p.n ∧
-    Flat.sourcesFrom g.p.n (rdx t) M g.sources = wanted
+    t.regs.rbp.toBitVec = g.countPtr ∧ r8 t = g.sourcesPtr ∧ rdx t < g.p.targetSize ∧
+    Flat.sourcesFrom g.p.targetSize (rdx t) M g.sources = wanted
 
 def SourcesDone (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapping) (F : MProp 64)
     (s : MachineData) (ra : Int64) (t : MachineData) : Prop :=

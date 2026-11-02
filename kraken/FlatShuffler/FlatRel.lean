@@ -20,14 +20,14 @@ with the same stack and the same operations; or `r` is `-2` and `res` is an asse
 namespace FlatShuffler.Flat
 
 -- The environment: the first `n` slots of `target` and the bytes of `spills`.
-def listEnv (n : Nat) (target : Vector StackSlot MAX_N) (spills : BitVec 32 → BitVec 8) : Env :=
+def listEnv (n : Nat) (target : Vector StackSlot maxStackSize) (spills : BitVec 32 → BitVec 8) : Env :=
   ⟨target.toList.take n, fun i => UInt8.ofBitVec (spills (BitVec.ofNat 32 i))⟩
 
 -- The source stack: the first `m` slots of `data`.
-def listSource (m : Nat) (data : Vector StackSlot MAX_N) : List StackSlot := data.toList.take m
+def listSource (m : Nat) (data : Vector StackSlot maxStackSize) : List StackSlot := data.toList.take m
 
 -- The destination of each source slot: the first `m` words of `dest`.
-def listDests (m : Nat) (dest : Vector Word MAX_N) : List Nat := (dest.toList.take m).map BitVec.toNat
+def listDests (m : Nat) (dest : Vector Word maxStackSize) : List Nat := (dest.toList.take m).map BitVec.toNat
 
 -- The stack of a flat state: the slots below `size`.
 def slotsOf (fs : St) : List StackSlot :=

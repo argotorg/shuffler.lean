@@ -77,7 +77,7 @@ theorem b_20 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
   have hF := hD.fm
   have hok := hpre.ok
   have h0 := hD.pos
-  have hn : g.h.len.toNat ≤ MAX_N := Nat.le_trans hok.len hok.xs
+  have hn : g.h.len.toNat ≤ maxStackSize := Nat.le_trans hok.len hok.xs
   have htl : g.h.len - 1#64 < g.h.len := by bv_omega
   have htM := lt_max hok htl
   have hpM := lt_max hok hmis.1
@@ -290,7 +290,7 @@ theorem b_18 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
   have htl : g.h.len - 1#64 < g.h.len := by bv_omega
   have htM := lt_max hok htl
   have hpM := lt_max hok hmis.1
-  have hN : (flat g').size.toNat ≤ MAX_N := Nat.le_trans hD.ok.len hD.ok.xs
+  have hN : (flat g').size.toNat ≤ maxStackSize := Nat.le_trans hD.ok.len hD.ok.xs
   have hpl' : pos < (flat g').size := by show pos < g'.h.len; rw [hD.len]; exact hmis.1
   have htl' : g.h.len - 1#64 < (flat g').size := by show _ < g'.h.len; rw [hD.len]; exact htl
   have hdl : DestOk (flat (withDest g' (swapD g'.h.dest pos (g.h.len - 1#64)))) :=

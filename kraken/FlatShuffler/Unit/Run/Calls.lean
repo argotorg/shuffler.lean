@@ -18,14 +18,14 @@ set_option experimental.vcgen true
 namespace FlatShuffler.Unit.RunU
 open FlatShuffler.Sep
 
-theorem surplus_pre {planned : Vector Word MAX_N} {g : G} {t : MachineData}
+theorem surplus_pre {planned : Vector Word maxStackSize} {g : G} {t : MachineData}
     (hok : g.Ok) (hs : Safe planned (flat g) g.xo) : surplusA g t := by
   refine ⟨?_, hs.surplus.2⟩
   have hb := hs.surplus.1
   rw [Surplus.trace_len hok] at hb
   exact hb
 
-theorem lowest_pre {planned : Vector Word MAX_N} {g a : G} {t : MachineData}
+theorem lowest_pre {planned : Vector Word maxStackSize} {g a : G} {t : MachineData}
     (hok : a.Ok) (hk : Keep g a) (hs : Safe planned (flat g) g.xo)
     (hm : Flat.removeSurplus (flat g) = (.done, flat a)) : lowestA planned a t := by
   have hd : (Flat.removeSurplus (flat g)).1 = .done := congrArg Prod.fst hm
@@ -45,7 +45,7 @@ theorem take_frame (lo : List Word) (w x y z : Word) :
   exact List.take_of_length_le (by omega)
 
 section
-variable [Host] [FunDecls] (S PM : Addr) (planned : Vector Word MAX_N)
+variable [Host] [FunDecls] (S PM : Addr) (planned : Vector Word maxStackSize)
     (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
 
 theorem b_fn (hp : VPre (RunView PM planned) G.Ok S g F (runA planned) runD s)

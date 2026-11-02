@@ -52,8 +52,8 @@ structure Lc where
   w : Word
   c0 : Word
   c1 : Word
-  D : Vector Word MAX_N
-  P : Vector Word MAX_N
+  D : Vector Word maxStackSize
+  P : Vector Word maxStackSize
   pad : Word
 
 -- The words of the locals, from `base - 8` up.
@@ -74,7 +74,7 @@ def Loc (b : Addr) (L : Lc) : MProp 64 := Wd (b - 8#64) L.w ∗ Bd b L
 theorem arr_loc (b : Addr) (L : Lc) : Arr (b - 8#64) L.toList = Loc b L := by
   simp only [Lc.toList, Arr, Arr.append, Vector.length_toList, Loc, Bd, MProp.sep_emp]
   rw [show b - 8#64 + 8#64 = b by bv_omega, show b + 8#64 + 8#64 = b + 16#64 by bv_omega,
-    show b + 16#64 + BitVec.ofNat 64 (8 * MAX_N) = b + 8208#64 by simp [MAX_N]; bv_omega]
+    show b + 16#64 + BitVec.ofNat 64 (8 * maxStackSize) = b + 8208#64 by simp [maxStackSize]; bv_omega]
 
 /-! ## The pushed registers -/
 
@@ -106,7 +106,7 @@ theorem stk_frame (sp : Addr) (L : Lc) (x0 x1 x2 x3 x4 x5 v : Word) (F : MProp 6
 
 -- The 1034 free words of the entry: the locals and the six words of the pushes. `P` is the
 -- ghost of the array `permutation`.
-theorem split1034 {fr : List Word} (h : fr.length = 1034) (P : Vector Word MAX_N) :
+theorem split1034 {fr : List Word} (h : fr.length = 1034) (P : Vector Word maxStackSize) :
     ∃ L : Lc, L.P = P ∧ ∃ x0 x1 x2 x3 x4 x5, fr = L.toList ++ [x0, x1, x2, x3, x4, x5] := by
   match fr, h with
   | w :: c0 :: c1 :: r, h =>
@@ -114,7 +114,7 @@ theorem split1034 {fr : List Word} (h : fr.length = 1034) (P : Vector Word MAX_N
     have hd : (r.drop 1024).length = 7 := by simp [hr]
     match e : r.drop 1024, hd with
     | [pad, x0, x1, x2, x3, x4, x5], _ =>
-      refine ⟨⟨w, c0, c1, ⟨(r.take 1024).toArray, by simp [hr, MAX_N]⟩, P, pad⟩, rfl,
+      refine ⟨⟨w, c0, c1, ⟨(r.take 1024).toArray, by simp [hr, maxStackSize]⟩, P, pad⟩, rfl,
         x0, x1, x2, x3, x4, x5, ?_⟩
       have hr' : r = r.take 1024 ++ [pad, x0, x1, x2, x3, x4, x5] := by
         conv => lhs; rw [← List.take_append_drop 1024 r, e]
@@ -368,14 +368,14 @@ theorem loc_D (P : MProp 64) (b : Addr) (L : Lc) (X : MProp 64) :
       ∗ Wd (b + 8#64) L.c1 ∗ Wd (b + 8208#64) L.pad ∗ X) := by
   unfold Loc Bd; ac_rfl
 
-theorem Fm.rdP {t : MachineData} (h : Fm S g F s ra L t) {i : Nat} (hi : i < MAX_N) {a : Addr}
+theorem Fm.rdP {t : MachineData} (h : Fm S g F s ra L t) {i : Nat} (hi : i < maxStackSize) {a : Addr}
     (ha : a = rsi s + BitVec.ofNat 64 (8 * i)) : rd t.dmem a = L.P[i] := by
   have hm := h.mem
   rw [fm_P] at hm
   rw [ha]
   exact (Arr.rd hm (by simpa using hi)).trans (by simp)
 
-theorem Fm.isSomeP {t : MachineData} (h : Fm S g F s ra L t) {i : Nat} (hi : i < MAX_N)
+theorem Fm.isSomeP {t : MachineData} (h : Fm S g F s ra L t) {i : Nat} (hi : i < maxStackSize)
     {a : Addr} (ha : a = rsi s + BitVec.ofNat 64 (8 * i)) :
     (t.dmem.loadInt a 8).isSome = true := by
   have hm := h.mem
@@ -383,7 +383,7 @@ theorem Fm.isSomeP {t : MachineData} (h : Fm S g F s ra L t) {i : Nat} (hi : i <
   rw [ha]
   exact Arr.isSome hm (by simpa using hi)
 
-theorem Fm.storeP {t P : MachineData} (h : Fm S g F s ra L t) {i : Nat} (hi : i < MAX_N)
+theorem Fm.storeP {t P : MachineData} (h : Fm S g F s ra L t) {i : Nat} (hi : i < maxStackSize)
     {a : Addr} (ha : a = rsi s + BitVec.ofNat 64 (8 * i)) (w : Word)
     (hm : P.dmem = t.dmem.storeInt a 8 w.toInt) (hsp : P.regs.rsp = t.regs.rsp) :
     Fm S g F s ra { L with P := L.P.set i w hi } P := by
@@ -395,14 +395,14 @@ theorem Fm.storeP {t P : MachineData} (h : Fm S g F s ra L t) {i : Nat} (hi : i 
   rw [← Vector.toList_set hi] at h2
   exact h2
 
-theorem Fm.rdD {t : MachineData} (h : Fm S g F s ra L t) {i : Nat} (hi : i < MAX_N) {a : Addr}
+theorem Fm.rdD {t : MachineData} (h : Fm S g F s ra L t) {i : Nat} (hi : i < maxStackSize) {a : Addr}
     (ha : a = base s + 16#64 + BitVec.ofNat 64 (8 * i)) : rd t.dmem a = L.D[i] := by
   have hm := h.mem
   rw [loc_D] at hm
   rw [ha]
   exact (Arr.rd hm (by simpa using hi)).trans (by simp)
 
-theorem Fm.isSomeD {t : MachineData} (h : Fm S g F s ra L t) {i : Nat} (hi : i < MAX_N)
+theorem Fm.isSomeD {t : MachineData} (h : Fm S g F s ra L t) {i : Nat} (hi : i < maxStackSize)
     {a : Addr} (ha : a = base s + 16#64 + BitVec.ofNat 64 (8 * i)) :
     (t.dmem.loadInt a 8).isSome = true := by
   have hm := h.mem
@@ -410,7 +410,7 @@ theorem Fm.isSomeD {t : MachineData} (h : Fm S g F s ra L t) {i : Nat} (hi : i <
   rw [ha]
   exact Arr.isSome hm (by simpa using hi)
 
-theorem Fm.storeD {t P : MachineData} (h : Fm S g F s ra L t) {i : Nat} (hi : i < MAX_N)
+theorem Fm.storeD {t P : MachineData} (h : Fm S g F s ra L t) {i : Nat} (hi : i < maxStackSize)
     {a : Addr} (ha : a = base s + 16#64 + BitVec.ofNat 64 (8 * i)) (w : Word)
     (hm : P.dmem = t.dmem.storeInt a 8 w.toInt) (hsp : P.regs.rsp = t.regs.rsp) :
     Fm S g F s ra { L with D := L.D.set i w hi } P := by

@@ -11,7 +11,7 @@ open scoped Program.WP
 namespace FlatShuffler.Unit.RunU
 open FlatShuffler.Sep ProofKit
 
-structure Phase (S PM : Addr) (planned : Vector Word MAX_N) (g a : G) (F : MProp 64)
+structure Phase (S PM : Addr) (planned : Vector Word maxStackSize) (g a : G) (F : MProp 64)
     (s : MachineData) (ra : Int64) (l : Flat.Locals) (lo : List Word) (w : Word)
     (t : MachineData) : Prop where
   bd : Bd S PM planned a F s ra lo w t
@@ -21,7 +21,7 @@ structure Phase (S PM : Addr) (planned : Vector Word MAX_N) (g a : G) (F : MProp
   model : afterLowest planned l (flat g) (flat a)
 
 section
-variable {S PM : Addr} {planned : Vector Word MAX_N} {g a : G} {F : MProp 64}
+variable {S PM : Addr} {planned : Vector Word maxStackSize} {g a : G} {F : MProp 64}
     {s t u : MachineData} {ra : Int64} {l : Flat.Locals} {lo : List Word} {w : Word}
 
 theorem Phase.next (h : Phase S PM planned g a F s ra l lo w t) (hm : u.dmem = t.dmem)
@@ -47,11 +47,11 @@ theorem Phase.loopA (h : Phase S PM planned g a F s ra l lo w t)
 
 end
 
-def Failed (S PM : Addr) (planned : Vector Word MAX_N) (g : G) (F : MProp 64)
+def Failed (S PM : Addr) (planned : Vector Word maxStackSize) (g : G) (F : MProp 64)
     (s : MachineData) (ra : Int64) (t : MachineData) : Prop :=
   ∃ a lo w, Bd S PM planned a F s ra lo w t ∧ a.Ok ∧ runX planned g a s t
 
-def Inv (S PM : Addr) (planned : Vector Word MAX_N) (g : G) (F : MProp 64)
+def Inv (S PM : Addr) (planned : Vector Word maxStackSize) (g : G) (F : MProp 64)
     (s : MachineData) (ra : Int64) : CfgLabel → MachineData → Prop
   | .entry, t => t = s.pushRa ra
   | .label q, t =>
@@ -108,23 +108,23 @@ def Inv (S PM : Addr) (planned : Vector Word MAX_N) (g : G) (F : MProp 64)
 def V (q : Label) (t : MachineData) : Nat :=
   if q = Names.run then 15000
   else if q = ".LB.Emission.run.1" then 14000
-  else if q = ".LB.Emission.run.5" then 10001 + 2 * (MAX_N - t.regs.rax.toBitVec.toNat)
-  else if q = ".LB.Emission.run.4" then 10000 + 2 * (MAX_N - t.regs.rax.toBitVec.toNat)
+  else if q = ".LB.Emission.run.5" then 10001 + 2 * (maxStackSize - t.regs.rax.toBitVec.toNat)
+  else if q = ".LB.Emission.run.4" then 10000 + 2 * (maxStackSize - t.regs.rax.toBitVec.toNat)
   else if q = ".LB.Emission.run.10" then 9000
-  else if q = ".LB.Emission.run.11" then 6000 + (MAX_N - t.regs.rbx.toBitVec.toNat)
-  else if q = ".LB.Emission.run.8" then 2001 + 2 * (MAX_N - t.regs.rax.toBitVec.toNat)
-  else if q = ".LB.Emission.run.7" then 2000 + 2 * (MAX_N - t.regs.rax.toBitVec.toNat)
+  else if q = ".LB.Emission.run.11" then 6000 + (maxStackSize - t.regs.rbx.toBitVec.toNat)
+  else if q = ".LB.Emission.run.8" then 2001 + 2 * (maxStackSize - t.regs.rax.toBitVec.toNat)
+  else if q = ".LB.Emission.run.7" then 2000 + 2 * (maxStackSize - t.regs.rax.toBitVec.toNat)
   else if q = ".LB.Emission.run.6" ∨ q = ".LB.Emission.run.9" then 1
   else 0
 
-def E [Labels] (S PM : Addr) (planned : Vector Word MAX_N) (g : G) (F : MProp 64)
+def E [Labels] (S PM : Addr) (planned : Vector Word maxStackSize) (g : G) (F : MProp 64)
     (s : MachineData) (ra : Int64) : Int64 → MachineData → Prop :=
   fun a t => (a = ra ∧
     VPost (RunView PM planned) G.Ok S F runD (fun g' t => runQ planned g g' s t) s t ∧
       Sep.mod.Agree s t) ∨ (a = label "exit" ∧ t.regs.get64 .rdi = 1#64 ∧
         VPost (RunView PM planned) G.Ok S F runD (fun g' t => runX planned g g' s t) s t)
 
-def Obl [Host] [FunDecls] (S PM : Addr) (planned : Vector Word MAX_N) (g : G) (F : MProp 64)
+def Obl [Host] [FunDecls] (S PM : Addr) (planned : Vector Word maxStackSize) (g : G) (F : MProp 64)
     (s : MachineData) (ra : Int64) (blk : Program.Block) : Prop :=
   ∀ t, Inv S PM planned g F s ra blk.label t →
     let I' (c : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=

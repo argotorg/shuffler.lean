@@ -78,7 +78,7 @@ theorem entry_mem {fr : List Word} {v : Word} (hfr : fr.length = 1034)
     (hm : (View S g ∗ Stk (rsp s) fr v ∗ (permW s ∗ F)).get s.dmem) :
     ∃ L : Lc, ∃ x0 x1 x2 x3 x4 x5, fr = L.toList ++ [x0, x1, x2, x3, x4, x5]
       ∧ (View S g ∗ Stk (rsp s) fr v ∗ (Arr (rsi s) L.P.toList ∗ F)).get s.dmem
-      ∧ ∀ i < MAX_N, rd s.dmem (rsi s + BitVec.ofNat 64 (8 * i)) = L.P.toList[i]! := by
+      ∧ ∀ i < maxStackSize, rd s.dmem (rsi s + BitVec.ofNat 64 (8 * i)) = L.P.toList[i]! := by
   have e : ∀ X : MProp 64, View S g ∗ Stk (rsp s) fr v ∗ (X ∗ F)
       = X ∗ (View S g ∗ Stk (rsp s) fr v ∗ F) := fun X => by ac_rfl
   rw [e] at hm
@@ -159,8 +159,8 @@ theorem b_0 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨L, k, hF, h13, h14, hk, hax, hdx, hD, hag⟩ := ht
   have hn := Nat.le_trans hpre.ok.len hpre.ok.xs
-  simp only [MAX_N] at hn
-  have hk' : k < MAX_N := by simp only [MAX_N]; omega
+  simp only [maxStackSize] at hn
+  have hk' : k < maxStackSize := by simp only [maxStackSize]; omega
   -- The store `desiredBy[k]`.
   have hF1 : Fm S g F s ra { L with D := L.D.set k Flat.NONE hk' }
       { t with dmem := Mem.storeInt t.dmem t.regs.rax.toBitVec 8 (-1) } :=
@@ -222,7 +222,7 @@ theorem b_6 [Host] [FunDecls] (S g p0 F s ra) :
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨g', L, hF, hok, hQ⟩ := ht
   obtain ⟨p1, p2, p3, p4, p5, p6⟩ := hF.isSome_pops
-  have hP : L.P.toList.length = MAX_N := by simp
+  have hP : L.P.toList.length = maxStackSize := by simp
   kvcgen64
   all_goals try symexec_norm
   vc_by_shape

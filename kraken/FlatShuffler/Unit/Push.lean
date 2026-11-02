@@ -37,17 +37,17 @@ namespace Push
 `Flat.get` and `Flat.put` take a `Word` index and do nothing out of bounds. The ghost uses
 `Vector.set` with a proof of the bound. -/
 
-theorem put_eq_set {α : Type} (v : Vector α MAX_N) (i : Word) (x : α) (h : i.toNat < MAX_N) :
+theorem put_eq_set {α : Type} (v : Vector α maxStackSize) (i : Word) (x : α) (h : i.toNat < maxStackSize) :
     Flat.put v i x = v.set i.toNat x h := by
   apply Vector.ext; intro j hj
   simp only [Flat.put, Vector.getElem_setIfInBounds hj, Vector.getElem_set h hj]
 
-theorem get_eq {α : Type} [Inhabited α] (v : Vector α MAX_N) (i : Word) (h : i.toNat < MAX_N) :
+theorem get_eq {α : Type} [Inhabited α] (v : Vector α maxStackSize) (i : Word) (h : i.toNat < maxStackSize) :
     Flat.get v i = v[i.toNat] := by
   simp [Flat.get, h]
 
 theorem vec_set {α : Type} [Inhabited α] (l : List α) (i : Nat) (x : α) (hi : i < l.length)
-    (hn : i < MAX_N) : vec (l.set i x) = (vec l).set i x hn := by
+    (hn : i < maxStackSize) : vec (l.set i x) = (vec l).set i x hn := by
   apply Vector.ext; intro j hj
   simp only [vec, Vector.getElem_ofFn, Vector.getElem_set, List.getElem?_set]
   by_cases e : i = j
@@ -59,10 +59,10 @@ theorem take_set_succ {α : Type} (l : List α) (i : Nat) (r : α) (hi : i < l.l
   rw [List.take_add_one, List.getElem?_set_self hi, List.take_set_of_le (Nat.le_refl i)]
   rfl
 
-theorem toNat_succ (x : Word) {k : Nat} (h : x.toNat < k) (hk : k ≤ 10 * MAX_N) :
+theorem toNat_succ (x : Word) {k : Nat} (h : x.toNat < k) (hk : k ≤ 10 * maxStackSize) :
     (x + 1#64).toNat = x.toNat + 1 := by
   rw [BitVec.toNat_add, BitVec.toNat_ofNat]
-  simp only [MAX_N] at hk
+  simp only [maxStackSize] at hk
   omega
 
 /-! ## The two cases of `Flat.push` -/
@@ -90,7 +90,7 @@ theorem flat_push (g : G) (hok : g.Ok) (hl : g.h.len.toNat < g.h.n.toNat)
       = Flat.stackPush (flat g) (StackSlot.ofWord w) := by
   have hN := hok.n
   have hx := hok.xo
-  have hlN : g.h.len.toNat < MAX_N := by omega
+  have hlN : g.h.len.toNat < maxStackSize := by omega
   have hd : vec ((g.stk.set g.h.len.toNat w (Nat.lt_add_right _ hl)).toList.map StackSlot.ofWord)
       = Flat.put (vec (g.stk.toList.map StackSlot.ofWord)) g.h.len (StackSlot.ofWord w) := by
     rw [Vector.toList_set, List.map_set,
@@ -104,7 +104,7 @@ theorem flat_push (g : G) (hok : g.Ok) (hl : g.h.len.toNat < g.h.n.toNat)
   rfl
 
 -- The two stores of `bind`.
-theorem flat_bind (g : G) (p d : Word) (hp : p.toNat < MAX_N) (hd : d.toNat < MAX_N) :
+theorem flat_bind (g : G) (p d : Word) (hp : p.toNat < maxStackSize) (hd : d.toNat < maxStackSize) :
     flat { g with h := { g.h with dest := g.h.dest.set p.toNat d hp,
                                   pos := g.h.pos.set d.toNat p hd } }
       = Flat.bind (flat g) p d := by
@@ -114,7 +114,7 @@ theorem flat_bind (g : G) (p d : Word) (hp : p.toNat < MAX_N) (hd : d.toNat < MA
 theorem flat_push_bind (g : G) (hok : g.Ok) (hl : g.h.len.toNat < g.h.n.toNat)
     (hn : g.h.nops.toNat < 6 * g.h.n.toNat + g.xo) (w : Word) (r : OpR)
     (hr : r.op = Op.push (StackSlot.ofWord w)) (d : Word)
-    (hp : g.h.len.toNat < MAX_N) (hd : d.toNat < MAX_N) :
+    (hp : g.h.len.toNat < maxStackSize) (hd : d.toNat < maxStackSize) :
     flat { h := { g.h with len := g.h.len + 1#64, nops := g.h.nops + 1#64,
                            dest := g.h.dest.set g.h.len.toNat d hp,
                            pos := g.h.pos.set d.toNat g.h.len hd },
@@ -209,8 +209,8 @@ theorem push_unit [Host] [FunDecls]
     obtain ⟨hl, hn, hdn⟩ := hpre.args
     have hN := hok.n
     have hx := hok.xo
-    have hd' : (s.pushRa ra).regs.rdx.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hdn hN
-    have hlN : g.h.len.toNat < MAX_N := Nat.lt_of_lt_of_le hl hN
+    have hd' : (s.pushRa ra).regs.rdx.toBitVec.toNat < maxStackSize := Nat.lt_of_lt_of_le hdn hN
+    have hlN : g.h.len.toNat < maxStackSize := Nat.lt_of_lt_of_le hl hN
     have hl1 : (g.h.len + 1#64).toNat = g.h.len.toNat + 1 := toNat_succ _ hl (by omega)
     have hn1 : (g.h.nops + 1#64).toNat = g.h.nops.toNat + 1 := toNat_succ _ hn (by omega)
     have h1 := View.store_len hm0 (g.h.len + 1#64)
@@ -304,8 +304,8 @@ theorem push_unit [Host] [FunDecls]
   case «.LB.Emission.push.0» t ht =>
     obtain ⟨g', hk, hok, hkeep, hflat, hlen, hax, hdi, heq⟩ := ht
     obtain ⟨hl, hn, hd⟩ := hpre.args
-    have hL : g.h.len.toNat < MAX_N := Nat.lt_of_lt_of_le hl hpre.ok.n
-    have hD : (rdx s).toNat < MAX_N := Nat.lt_of_lt_of_le hd hpre.ok.n
+    have hL : g.h.len.toNat < maxStackSize := Nat.lt_of_lt_of_le hl hpre.ok.n
+    have hD : (rdx s).toNat < maxStackSize := Nat.lt_of_lt_of_le hd hpre.ok.n
     have hidx : g'.h.len + BitVec.ofInt 64 (-1) = g.h.len := by rw [hlen]; bv_omega
     have hm0 := hk.mem
     have h1 := View.store_dest hm0 hL (rdx s)

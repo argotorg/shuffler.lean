@@ -15,7 +15,7 @@ namespace FlatShuffler.Unit.ResolveU
 open FlatShuffler.Sep
 
 theorem cursor_distance (a : Addr) (count i : Word)
-    (hc : count.toNat ≤ MAX_N) (hi : i ≤ count) :
+    (hc : count.toNat ≤ maxStackSize) (hi : i ≤ count) :
     ((a + 48#64 + 8#64 * count) - (a + 48#64 + 8#64 * i)).toNat =
       8 * (count.toNat - i.toNat) := by
   change count.toNat ≤ 1024 at hc

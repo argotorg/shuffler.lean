@@ -339,25 +339,25 @@ theorem Wd.cut_rng {m : Mem 64} {S : Addr} {o N : Nat} {v : Word} (hm : Mem.Mapp
     simp; omega)))) (by omega)
 
 -- An array at offset `o` of a mapped block of `N` bytes.
-theorem Arr.cut_rng {m : Mem 64} {S : Addr} {o N : Nat} {vs : Vector Word MAX_N}
-    (hm : Mem.Mapped [(S, N)] m) (ho : o + 8 * MAX_N ≤ N)
-    (hv : ∀ i (hi : i < MAX_N), FlatShuffler.rd m (S + BitVec.ofNat 64 o + BitVec.ofNat 64 (8 * i)) = vs[i])
+theorem Arr.cut_rng {m : Mem 64} {S : Addr} {o N : Nat} {vs : Vector Word maxStackSize}
+    (hm : Mem.Mapped [(S, N)] m) (ho : o + 8 * maxStackSize ≤ N)
+    (hv : ∀ i (hi : i < maxStackSize), FlatShuffler.rd m (S + BitVec.ofNat 64 o + BitVec.ofNat 64 (8 * i)) = vs[i])
     (hN : N ≤ 2 ^ 64 := by decide) :
-    (Arr (S + BitVec.ofNat 64 o) vs.toList).get (Sep.cut m (Rng S o (8 * MAX_N))) := by
+    (Arr (S + BitVec.ofNat 64 o) vs.toList).get (Sep.cut m (Rng S o (8 * maxStackSize))) := by
   have := Arr.cut (m := m) (a := S + BitVec.ofNat 64 o) vs.toList (by rw [Vector.length_toList]; decide) fun i hi => by
     simp only [Vector.length_toList] at hi
     refine ⟨hm.loadInt_isSome (Mem.Blocks.Inside.base_add_add ?_), by simpa using hv i hi⟩
-    simp only [MAX_N] at ho hi ⊢; simp; omega
+    simp only [maxStackSize] at ho hi ⊢; simp; omega
   simp only [Vector.length_toList] at this
-  exact rng_of_in this (by simp only [MAX_N] at ho ⊢; omega)
+  exact rng_of_in this (by simp only [maxStackSize] at ho ⊢; omega)
 
 theorem Em.cut {m : Mem 64} {S : Addr} {h : Hdr} (hm : Mem.Mapped [(S, EmSize)] m)
     (h0 : FlatShuffler.rd m (Fld.target S) = h.tgt) (h1 : FlatShuffler.rd m (Fld.targetSize S) = h.n)
     (h2 : FlatShuffler.rd m (Fld.spills S) = h.spl) (h3 : FlatShuffler.rd m (Fld.stack_data S) = h.data)
     (h4 : FlatShuffler.rd m (Fld.stack_size S) = h.len) (h5 : FlatShuffler.rd m (Fld.stack_trace S) = h.ops)
     (h6 : FlatShuffler.rd m (Fld.stack_traceSize S) = h.nops)
-    (hd : ∀ i (hi : i < MAX_N), FlatShuffler.rd m (Fld.mapping_destinationOf S i) = h.dest[i])
-    (hp : ∀ i (hi : i < MAX_N), FlatShuffler.rd m (Fld.mapping_positionOf S i) = h.pos[i])
+    (hd : ∀ i (hi : i < maxStackSize), FlatShuffler.rd m (Fld.mapping_destinationOf S i) = h.dest[i])
+    (hp : ∀ i (hi : i < maxStackSize), FlatShuffler.rd m (Fld.mapping_positionOf S i) = h.pos[i])
     (h9 : FlatShuffler.rd m (Fld.pendingGenerations S) = h.pend)
     (h10 : FlatShuffler.rd m (Fld.blocked_offset S) = h.blkOff)
     (h11 : FlatShuffler.rd m (Fld.blocked_excess S) = h.blkExc) :
@@ -522,8 +522,8 @@ theorem Wd.own_rng (S : Addr) {o : Nat} (v : Word) (ho : o + 8 ≤ 2 ^ 64) :
     Own (Wd (S + BitVec.ofNat 64 o) v) (Rng S o 8) :=
   (Wd.own _ v).congr fun _ => in_ofNat ho
 
-theorem Arr.own_rng (S : Addr) {o : Nat} (vs : Vector Word MAX_N) (ho : o + 8 * MAX_N ≤ 2 ^ 64) :
-    Own (Arr (S + BitVec.ofNat 64 o) vs.toList) (Rng S o (8 * MAX_N)) := by
+theorem Arr.own_rng (S : Addr) {o : Nat} (vs : Vector Word maxStackSize) (ho : o + 8 * maxStackSize ≤ 2 ^ 64) :
+    Own (Arr (S + BitVec.ofNat 64 o) vs.toList) (Rng S o (8 * maxStackSize)) := by
   have := Arr.own (S + BitVec.ofNat 64 o) vs.toList (by rw [Vector.length_toList]; decide)
   rw [Vector.length_toList] at this
   exact this.congr fun _ => in_ofNat ho

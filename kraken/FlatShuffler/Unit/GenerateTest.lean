@@ -8,7 +8,7 @@ import all FlatShuffler.Unit.Generate
 /-!
 Tests of the model lemmas of `Unit/Generate.lean`: the swap of two destinations (`dsw`, `posAt`,
 `swapDestinations_eq`), the depth bound of `isSwapReachable` (`reach_iff`), the flag lemmas at
-their edges, `get` and `put` at the bound `MAX_N`, and the facts of `.LB.Emission.generate.1` (`lb52_facts`).
+their edges, `get` and `put` at the bound `maxStackSize`, and the facts of `.LB.Emission.generate.1` (`lb52_facts`).
 The negative cases show that each hypothesis is necessary.
 -/
 
@@ -20,14 +20,14 @@ open FlatShuffler.Sep (G)
 abbrev N : Word := Flat.NONE
 
 -- A buffer that holds `l` from offset 0, and `d` above it.
-def vec (l : List Word) (d : Word) : Vector Word MAX_N :=
+def vec (l : List Word) (d : Word) : Vector Word maxStackSize :=
   Vector.ofFn fun i => l[i.val]?.getD d
 
 -- A state with `size` slots, the destinations `ds` (`NONE` above) and the positions `ps`
 -- (`7` above). Only `dest` and `pos` change in a swap of destinations.
 def st (size : Nat) (ds ps : List Word) : Flat.St :=
-  { target := Vector.replicate MAX_N default, targetSize := 4, spills := fun _ => 0,
-    data := Vector.replicate MAX_N default, size := .ofNat 64 size, trace := [],
+  { target := Vector.replicate maxStackSize default, targetSize := 4, spills := fun _ => 0,
+    data := Vector.replicate maxStackSize default, size := .ofNat 64 size, trace := [],
     dest := vec ds N, pos := vec ps 7, pend := 0, blockedOffset := 0, blockedExcess := 0 }
 
 def dests (s : Flat.St) (k : Nat) : List Word := (List.range k).map fun i => Flat.get s.dest (.ofNat 64 i)
@@ -122,33 +122,33 @@ example (s : Flat.St) (t : Word) (h : ¬t < s.targetSize) :
 example (t : MachineData) (v : UInt64) : al { t with regs := { t.regs with rbx := v } } = al t :=
   al_eq rfl
 
-/-! ## `get` and `put` at the bound `MAX_N` -/
+/-! ## `get` and `put` at the bound `maxStackSize` -/
 
 #guard Flat.get (Flat.put (vec [] 0) 1023 5) 1023 == 5
 #guard Flat.get (Flat.put (vec [] 0) 1023 5) 1022 == 0
 -- Out of bounds: `put` keeps the buffer and `get` gives `default`, thus `get_put_self` needs
--- `i < MAX_N`.
+-- `i < maxStackSize`.
 #guard Flat.get (Flat.put (vec [] 9) 1024 5) 1024 == 0
 #guard Flat.get (Flat.put (vec [] 9) N 5) N == 0
 #guard Flat.get (Flat.put (vec [] 9) 1024 5) 0 == 9
 
-example (v : Vector Word MAX_N) : Flat.get (Flat.put v 1023 5) 1023 = 5 := get_put_self v (by decide) 5
-example (v : Vector Word MAX_N) : Flat.get (Flat.put v 1023 5) 0 = Flat.get v 0 :=
+example (v : Vector Word maxStackSize) : Flat.get (Flat.put v 1023 5) 1023 = 5 := get_put_self v (by decide) 5
+example (v : Vector Word maxStackSize) : Flat.get (Flat.put v 1023 5) 0 = Flat.get v 0 :=
   get_put_ne v 5 (by decide)
 
 /-! ## `lb52_facts` -/
 
 -- The edge `a = len - 2`: `a` and the top slot `b = len - 1` are next to each other.
-example (g1 : G) (hok : g1.Ok) (hd : DestOk (flat g1)) (ha : (g1.h.len - 2#64).toNat < MAX_N)
+example (g1 : G) (hok : g1.Ok) (hd : DestOk (flat g1)) (ha : (g1.h.len - 2#64).toNat < maxStackSize)
     (h1 : g1.h.len - 2#64 + 1#64 < g1.h.len) : g1.h.len - 2#64 ≠ g1.h.len - 1#64 :=
   (lb52_facts hok ha h1 rfl hd).2.1
 
 -- With no `a + 1 < len`, `a` can be the top slot: then `a = b`.
 #guard (4#64 : Word) == 5#64 - 1#64
 
--- With no `DestOk`, a destination of the swap can be `MAX_N` or more: `dest[a] = 2000` goes
+-- With no `DestOk`, a destination of the swap can be `maxStackSize` or more: `dest[a] = 2000` goes
 -- to `b`, and `posAt` writes out of bounds.
-#guard (Flat.get (dsw (st 2 [2000, N] []) 0 1).dest 1).toNat ≥ MAX_N
+#guard (Flat.get (dsw (st 2 [2000, N] []) 0 1).dest 1).toNat ≥ maxStackSize
 #guard Flat.get (dsw (st 2 [2000, N] []) 0 1).dest 1 != N
 
 end FlatShuffler.Unit.GenerateTest

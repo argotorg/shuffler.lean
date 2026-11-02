@@ -12,7 +12,7 @@ import all FlatShuffler.FlatModelTest
 /-!
 Tests of `FlatLowest.lean`: the two loops (`scan`, `fill`), the paths of
 `permuteAtLowestHeight` that fail (a slot without a destination, a slot above the target, counts
-that differ), the bounds of the entry (`m = 0`, `m > n`, `m` or `n` above `MAX_N`), and the
+that differ), the bounds of the entry (`m = 0`, `m > n`, `m` or `n` above `maxStackSize`), and the
 agreement of the entry with the list model `FlatShuffler.lowest` on all inputs with `m ≤ n ≤ 4`, for two
 contents of the memory that the C++ does not initialize. `test/lowest_diff.sh` compares the
 entry with the PR31 model and the C++.
@@ -77,7 +77,7 @@ def pl (st : St) (l : Locals := l1) : Status × St := permuteAtLowestHeight st.p
 -- The planned mapping, not the mapping, gives the holes: a planned mapping without slots makes
 -- two holes and no parked slot.
 #guard (permuteAtLowestHeight (vec []) l1 (mk [x, y] [x, y] [1, 0])).1 = .done
-#guard (permuteAtLowestHeight (Vector.replicate MAX_N NONE) l1 (mk [x, y] [x, y, z] [2, 0])).1
+#guard (permuteAtLowestHeight (Vector.replicate maxStackSize NONE) l1 (mk [x, y] [x, y, z] [2, 0])).1
   = .assertionFailed
 #guard (pl { mk [x, y] [x, y] [1, 0] with dest := put (mk [x, y] [x, y] [1, 0]).dest 1 NONE }).1
   = .assertionFailed
@@ -89,7 +89,7 @@ def pl (st : St) (l : Locals := l1) : Status × St := permuteAtLowestHeight st.p
 /-! ## The entry -/
 
 def entry (m n : Word) (source target : List StackSlot) (dests : List Word) (u : Uninit := u1)
-    (up : Vector Word MAX_N := junkWords 19) (l : Locals := l1) : Word × Option St :=
+    (up : Vector Word maxStackSize := junkWords 19) (l : Locals := l1) : Word × Option St :=
   permute_at_lowest_height m n (vec source) (vec target) (vec dests) (spillsOf []) u up l
 
 #guard (entry 0 0 [] [] []).1 = 0
@@ -122,7 +122,7 @@ def listOut (source target : List StackSlot) (dests : List Nat) : Out :=
     .blocked pos excess (st.slots.map Slot.val) (st.slots.map Slot.dest) st.trace
   | .error .assertion => .assertion
 
-def flatOut (u : Uninit) (up : Vector Word MAX_N) (l : Locals) (source target : List StackSlot)
+def flatOut (u : Uninit) (up : Vector Word maxStackSize) (l : Locals) (source target : List StackSlot)
     (dests : List Nat) : Out :=
   match entry (.ofNat 64 source.length) (.ofNat 64 target.length) source target (words dests) u up l with
   | (r, some st) =>
@@ -191,7 +191,7 @@ def lst (source target : List StackSlot) (dests : List Nat) : FlatShuffler.St :=
   init ⟨target, fun _ => 0⟩ source dests
 
 -- `LowOk` for the locals `l`, by evaluation.
-def lowOkB (planned : Vector Word MAX_N) (st : St) (l : Locals) : Bool :=
+def lowOkB (planned : Vector Word maxStackSize) (st : St) (l : Locals) : Bool :=
   match scan planned st 0 (Scan.init l) with
   | none => true
   | some sc =>
@@ -199,7 +199,7 @@ def lowOkB (planned : Vector Word MAX_N) (st : St) (l : Locals) : Bool :=
     sc.parkedCount != sc.holeCount || (vs.all (· < st.size) && vs.eraseDups.length == vs.length)
 
 -- The planned mapping of the entry.
-def plannedOf (source target : List StackSlot) (dests : List Nat) : Vector Word MAX_N :=
+def plannedOf (source target : List StackSlot) (dests : List Nat) : Vector Word maxStackSize :=
   plannedPos (.ofNat 64 source.length) (.ofNat 64 target.length) (vec (words dests)) (junkWords 19)
 
 def six : List StackSlot := [z, z, z, z, z, z]

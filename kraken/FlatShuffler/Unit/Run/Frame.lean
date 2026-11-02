@@ -19,19 +19,19 @@ open scoped Program.WP
 namespace FlatShuffler.Unit
 open FlatShuffler.Sep
 
-def runA (planned : Vector Word MAX_N) (g : G) (_s : MachineData) : Prop :=
+def runA (planned : Vector Word maxStackSize) (g : G) (_s : MachineData) : Prop :=
   RunU.Safe planned (flat g) g.xo
 
-def runModelResult (planned : Vector Word MAX_N) (g g' : G) (_s t : MachineData) : Prop :=
+def runModelResult (planned : Vector Word maxStackSize) (g g' : G) (_s t : MachineData) : Prop :=
   ∃ l, Res (Flat.emissionRun planned l) g g' t
 
-def runQ (planned : Vector Word MAX_N) (g g' : G) (s t : MachineData) : Prop :=
+def runQ (planned : Vector Word maxStackSize) (g g' : G) (s t : MachineData) : Prop :=
   runModelResult planned g g' s t ∧ al t ≠ ASSERTION_FAILED
 
-def runX (planned : Vector Word MAX_N) (g g' : G) (_s _t : MachineData) : Prop :=
+def runX (planned : Vector Word maxStackSize) (g g' : G) (_s _t : MachineData) : Prop :=
   ∃ l, ExitRes (Flat.emissionRun planned l) g g'
 
-theorem runX_to_modelResult {planned : Vector Word MAX_N} {g g' : G} {s t : MachineData}
+theorem runX_to_modelResult {planned : Vector Word maxStackSize} {g g' : G} {s t : MachineData}
     (hX : runX planned g g' s t) :
     runModelResult planned g g' s { t with regs := { t.regs with rax := ⟨2#64⟩ } } := by
   obtain ⟨l, hkeep, hflat, hstatus⟩ := hX
@@ -41,7 +41,7 @@ theorem runX_to_modelResult {planned : Vector Word MAX_N} {g g' : G} {s t : Mach
 
 abbrev runD : Nat := lowestD + 4
 
-def RunView (PM : Addr) (planned : Vector Word MAX_N) (S : Addr) (g : G) : MProp 64 :=
+def RunView (PM : Addr) (planned : Vector Word maxStackSize) (S : Addr) (g : G) : MProp 64 :=
   View S g ∗ Planned S PM planned
 
 abbrev RunThm [Host] [FunDecls] (p : Program) : Prop :=
@@ -61,7 +61,7 @@ theorem post_imp {V : Addr → G → MProp 64} {S : Addr} {F : MProp 64}
   obtain ⟨g', hq, hok, fr, v, hl, hm⟩ := hp
   exact ⟨g', h g' hq, hok, fr, v, hl, hm⟩
 
-theorem pre_iff {S PM : Addr} {planned : Vector Word MAX_N} {g : G} {F : MProp 64}
+theorem pre_iff {S PM : Addr} {planned : Vector Word maxStackSize} {g : G} {F : MProp 64}
     {A : G → MachineData → Prop} {d : Nat} {s : MachineData} :
     VPre (RunView PM planned) G.Ok S g F A d s ↔
       Sep.Pre S g (Planned S PM planned ∗ F) A d s := by
@@ -75,7 +75,7 @@ theorem pre_iff {S PM : Addr} {planned : Vector Word MAX_N} {g : G} {F : MProp 6
       View S g ∗ Stk (rsp s) fr v ∗ (Planned S PM planned ∗ F) =
         Stk (rsp s) fr v ∗ RunView PM planned S g ∗ F) ▸ hm⟩
 
-theorem post_iff {S PM : Addr} {planned : Vector Word MAX_N} {F : MProp 64} {d : Nat}
+theorem post_iff {S PM : Addr} {planned : Vector Word maxStackSize} {F : MProp 64} {d : Nat}
     {Q : G → MachineData → Prop} {s t : MachineData} :
     VPost (RunView PM planned) G.Ok S F d Q s t ↔
       Sep.Post S (Planned S PM planned ∗ F) d Q s t := by
@@ -90,7 +90,7 @@ theorem post_iff {S PM : Addr} {planned : Vector Word MAX_N} {F : MProp 64} {d :
         Stk (rsp s) fr v ∗ RunView PM planned S g ∗ F) ▸ hm⟩
 
 -- A callee that uses `View` keeps `Planned` as part of its frame.
-theorem frame_spec [Host] [FunDecls] {PM : Addr} {planned : Vector Word MAX_N}
+theorem frame_spec [Host] [FunDecls] {PM : Addr} {planned : Vector Word maxStackSize}
     {f : Label} {A : G → MachineData → Prop} {d : Nat}
     {Q : G → G → MachineData → MachineData → Prop} (h : Sep.Spec f A d Q) :
     VSpec (RunView PM planned) G.Ok f A d Q := by
@@ -99,7 +99,7 @@ theorem frame_spec [Host] [FunDecls] {PM : Addr} {planned : Vector Word MAX_N}
   exact (h asz osz K E).1 s ⟨S, g, Planned S PM planned ∗ F, pre_iff.mp hp,
     fun t ht ha => hk t (post_iff.mpr ht) ha⟩
 
-theorem frame_specWithExit [Host] [FunDecls] {PM : Addr} {planned : Vector Word MAX_N}
+theorem frame_specWithExit [Host] [FunDecls] {PM : Addr} {planned : Vector Word maxStackSize}
     {f : Label} {A : G → MachineData → Prop} {d : Nat}
     {Q X : G → G → MachineData → MachineData → Prop} (h : Sep.SpecWithExit f A d Q X) :
     VSpecWithExit (RunView PM planned) G.Ok f A d Q X := by
@@ -109,7 +109,7 @@ theorem frame_specWithExit [Host] [FunDecls] {PM : Addr} {planned : Vector Word 
     (fun t ht ha => hn t (post_iff.mpr ht) ha), fun t ht ha => hx t (post_iff.mpr ht) ha⟩
 
 theorem lowest_vthm [Host] [FunDecls] {p : Program} (h : LowestThm p)
-    (PM : Addr) (planned : Vector Word MAX_N) :
+    (PM : Addr) (planned : Vector Word maxStackSize) :
     VThmWithExit (RunView PM planned) G.Ok p (lowestA planned) lowestD
       (lowestQ planned) (lowestX planned) := by
   intro S g F s ra
@@ -137,7 +137,7 @@ theorem fr_length {s : MachineData} {lo : List Word} {w : Word}
     (h : lo.length = lowestD) : (fr s lo w).length = runD := by
   simp [fr, saved, h, runD]
 
-structure Bd (S PM : Addr) (planned : Vector Word MAX_N) (g : G) (F : MProp 64)
+structure Bd (S PM : Addr) (planned : Vector Word maxStackSize) (g : G) (F : MProp 64)
     (s : MachineData) (ra : Int64) (lo : List Word) (w : Word) (t : MachineData) : Prop where
   kb : Kb (RunView PM planned S g ∗ F) s ra (fr s lo w) 24#64 t
   len : lo.length = lowestD
@@ -146,7 +146,7 @@ structure Bd (S PM : Addr) (planned : Vector Word MAX_N) (g : G) (F : MProp 64)
   r15 : t.regs.r15 = s.regs.r15
 
 section
-variable {S PM : Addr} {planned : Vector Word MAX_N} {g : G} {F : MProp 64}
+variable {S PM : Addr} {planned : Vector Word maxStackSize} {g : G} {F : MProp 64}
     {s t u : MachineData} {ra : Int64} {lo : List Word} {w : Word}
 
 theorem Bd.next (h : Bd S PM planned g F s ra lo w t) (hm : u.dmem = t.dmem)
@@ -166,7 +166,7 @@ theorem Bd.mem (h : Bd S PM planned g F s ra lo w t) :
 theorem Bd.rd_pos (h : Bd S PM planned g F s ra lo w t) {i : Word}
     (hok : g.Ok) (hi : i < g.h.n) :
     rd t.dmem (Fld.mapping_positionOf S i.toNat) = Flat.get (flat g).pos i := by
-  have hiM : i.toNat < MAX_N := Nat.lt_of_lt_of_le hi hok.n
+  have hiM : i.toNat < maxStackSize := Nat.lt_of_lt_of_le hi hok.n
   rw [View.rd_pos h.mem hiM]
   simp only [flat, Flat.get, dite_eq_left hiM]
 

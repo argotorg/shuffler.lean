@@ -34,7 +34,7 @@ theorem spillAdd_extends (sp : BitVec 32 → BitVec 8) (x : StackSlot) :
       · exact hi
 
 theorem passFrom_spills_extends (pl : Flat.Planner) (M : Flat.Mapping)
-    (cand : Vector Word MAX_N) (count excess k : Word) (s : Flat.RState) :
+    (cand : Vector Word maxStackSize) (count excess k : Word) (s : Flat.RState) :
     SpillExtends s.spills (Flat.passFrom pl M cand count excess k s).2.spills := by
   rw [Flat.passFrom]
   split
@@ -60,7 +60,7 @@ termination_by (excess - k).toNat
 decreasing_by exact Flat.sub_succ_lt ‹k < excess›
 
 theorem resolve_spills_extends (pl : Flat.Planner) (sp : BitVec 32 → BitVec 8)
-    (dropped : Vector (BitVec 8) MAX_N) (M : Flat.Mapping)
+    (dropped : Vector (BitVec 8) maxStackSize) (M : Flat.Mapping)
     (blockedOffset excess : Word) (current : Flat.Mapping) (currentSize : Word)
     (u : Flat.ResolveU) :
     SpillExtends sp (Flat.resolve pl sp dropped M blockedOffset excess current currentSize u).2.1 := by
@@ -80,7 +80,7 @@ theorem targetsFrom_mono (pl : Flat.Planner) {sp sp' : BitVec 32 → BitVec 8}
     (h : SpillExtends sp sp') (j : Word)
     (ht : Flat.targetsFrom pl sp j = true) : Flat.targetsFrom pl sp' j = true := by
   rw [Flat.targetsFrom] at ht ⊢
-  by_cases hj : j < pl.n
+  by_cases hj : j < pl.targetSize
   · simp only [dite_eq_left hj] at ht ⊢
     simp only [Bool.and_eq_true, Bool.or_eq_true] at ht ⊢
     refine ⟨?_, targetsFrom_mono pl h (j + 1) ht.2⟩
@@ -88,14 +88,14 @@ theorem targetsFrom_mono (pl : Flat.Planner) {sp sp' : BitVec 32 → BitVec 8}
     · exact Or.inl h0
     · exact Or.inr (spillIsSpilled_mono h _ hsp)
   · simp only [dite_eq_right hj]
-termination_by (pl.n - j).toNat
+termination_by (pl.targetSize - j).toNat
 decreasing_by exact Flat.sub_succ_lt hj
 
 theorem resolve_targetsFrom (pl : Flat.Planner) (sp : BitVec 32 → BitVec 8)
-    (dropped : Vector (BitVec 8) MAX_N) (M : Flat.Mapping)
+    (dropped : Vector (BitVec 8) maxStackSize) (M : Flat.Mapping)
     (blockedOffset excess : Word) (current : Flat.Mapping) (currentSize : Word)
     (u : Flat.ResolveU) {resolution : Flat.Resolution}
-    {sp' : BitVec 32 → BitVec 8} {dropped' : Vector (BitVec 8) MAX_N}
+    {sp' : BitVec 32 → BitVec 8} {dropped' : Vector (BitVec 8) maxStackSize}
     (hr : Flat.resolve pl sp dropped M blockedOffset excess current currentSize u =
       (resolution, sp', dropped'))
     (ht : Flat.targetsFrom pl sp 0 = true) : Flat.targetsFrom pl sp' 0 = true := by

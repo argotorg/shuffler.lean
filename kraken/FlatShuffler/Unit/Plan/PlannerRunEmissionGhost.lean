@@ -13,15 +13,15 @@ namespace FlatShuffler.Unit.PlannerRunU
 open FlatShuffler.Sep
 
 def emissionHdr (g : PlannerCallMemory) (h : Hdr) : Hdr :=
-  { h with tgt := g.p.tgt, n := g.p.n, spl := g.p.spl, data := g.dataPtr, ops := g.opsPtr }
+  { h with tgt := g.p.tgt, n := g.p.targetSize, spl := g.p.spl, data := g.dataPtr, ops := g.opsPtr }
 
 def emissionGhost (g : PlannerCallMemory) (hok : g.Ok) (h : Hdr) : G where
   h := emissionHdr g h
-  xs := g.dataCapacity - g.p.n.toNat
-  xo := 4 * g.p.m.toNat
+  xs := g.dataCapacity - g.p.targetSize.toNat
+  xo := 4 * g.p.sourceSize.toNat
   stk := ⟨(g.data.toList.take g.dataCapacity).toArray, by
-    have hm := hok.planner.m
-    have hn := hok.planner.n
+    have hm := hok.planner.sourceSizeFitsBuffer
+    have hn := hok.planner.targetSizeFitsBuffer
     simp only [List.size_toArray, List.length_take, Vector.length_toList,
       emissionHdr, PlannerCallMemory.dataCapacity]
     omega⟩

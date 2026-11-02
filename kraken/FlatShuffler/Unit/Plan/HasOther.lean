@@ -44,25 +44,25 @@ theorem plannerObjectOwnedMemory.rd_src (h : (plannerObjectOwnedMemory P p ∗ F
   rd_of_eq h (by unfold plannerObjectOwnedMemory; ecancel)
 theorem plannerObjectOwnedMemory.isSome_src (h : (plannerObjectOwnedMemory P p ∗ F).get m) : (m.loadInt P 8).isSome = true :=
   isSome_of_eq p.src h (by unfold plannerObjectOwnedMemory; ecancel)
-theorem plannerObjectOwnedMemory.rd_m (h : (plannerObjectOwnedMemory P p ∗ F).get m) : rd m (P + 8#64) = p.m :=
+theorem plannerObjectOwnedMemory.rd_sourceSize (h : (plannerObjectOwnedMemory P p ∗ F).get m) : rd m (P + 8#64) = p.sourceSize :=
   rd_of_eq h (by unfold plannerObjectOwnedMemory; ecancel)
-theorem plannerObjectOwnedMemory.isSome_m (h : (plannerObjectOwnedMemory P p ∗ F).get m) : (m.loadInt (P + 8#64) 8).isSome = true :=
-  isSome_of_eq p.m h (by unfold plannerObjectOwnedMemory; ecancel)
+theorem plannerObjectOwnedMemory.isSome_sourceSize (h : (plannerObjectOwnedMemory P p ∗ F).get m) : (m.loadInt (P + 8#64) 8).isSome = true :=
+  isSome_of_eq p.sourceSize h (by unfold plannerObjectOwnedMemory; ecancel)
 
 theorem plannerObjectOwnedMemory.arr_src (h : (plannerObjectOwnedMemory P p ∗ F).get m) : ∃ R, (Arr p.src p.sw ∗ R).get m :=
   ⟨_, (by unfold plannerObjectOwnedMemory; ecancel : plannerObjectOwnedMemory P p ∗ F = Arr p.src p.sw ∗ _) ▸ h⟩
 
-theorem plannerObjectOwnedMemory.isSome_sw (h : (plannerObjectOwnedMemory P p ∗ F).get m) (hok : p.Ok) (hi : i.toNat < p.m.toNat) :
+theorem plannerObjectOwnedMemory.isSome_sw (h : (plannerObjectOwnedMemory P p ∗ F).get m) (hok : p.Ok) (hi : i.toNat < p.sourceSize.toNat) :
     (m.loadInt (slotAt p.src i.toNat) 8).isSome = true :=
   let ⟨_, h⟩ := plannerObjectOwnedMemory.arr_src h; Arr.isSome h (hok.sw ▸ hi)
 
 -- Slot `i < m` of the source.
-theorem plannerObjectOwnedMemory.rd_sw (h : (plannerObjectOwnedMemory P p ∗ F).get m) (hok : p.Ok) (hi : i.toNat < p.m.toNat) :
+theorem plannerObjectOwnedMemory.rd_sw (h : (plannerObjectOwnedMemory P p ∗ F).get m) (hok : p.Ok) (hi : i.toNat < p.sourceSize.toNat) :
     StackSlot.ofWord (rd m (slotAt p.src i.toNat)) = Flat.get p.fl.source i := by
   obtain ⟨_, h⟩ := plannerObjectOwnedMemory.arr_src h
   have hi' : i.toNat < p.sw.length := hok.sw ▸ hi
   show _ = Flat.get (vec (p.sw.map StackSlot.ofWord)) i
-  rw [get_vecL (by simpa using hi') (by simpa [hok.sw] using hok.m), List.getElem_map]
+  rw [get_vecL (by simpa using hi') (by simpa [hok.sw] using hok.sourceSizeFitsBuffer), List.getElem_map]
   exact congrArg StackSlot.ofWord (Arr.rd h hi')
 end
 
@@ -74,7 +74,7 @@ structure HG where
   mp : Addr
   M : Flat.Mapping
   dn : Addr
-  dv : Vector (BitVec 8) MAX_N
+  dv : Vector (BitVec 8) maxStackSize
 
 def HView (P : Addr) (h : HG) : MProp 64 :=
   plannerObjectOwnedMemory P h.p ∗ MapM h.mp h.M ∗ Bs h.dn h.dv.toList
@@ -82,7 +82,7 @@ def HView (P : Addr) (h : HG) : MProp 64 :=
 def HG.Ok (h : HG) : Prop := h.p.Ok
 
 def hasOtherA (h : HG) (s : MachineData) : Prop :=
-  rsi s = h.mp ∧ rdx s = h.dn ∧ (rcx s).toNat < h.p.m.toNat
+  rsi s = h.mp ∧ rdx s = h.dn ∧ (rcx s).toNat < h.p.sourceSize.toNat
 
 def hasOtherQ (h h' : HG) (s t : MachineData) : Prop :=
   h' = h ∧ al t = if Flat.hasOtherRetainedCopy h.p.fl h.M h.dv (rcx s) then 1#8 else 0#8
@@ -98,7 +98,7 @@ theorem HView.split (P : Addr) (h : HG) (F : MProp 64) :
   unfold HView; ecancel
 
 -- Byte `i` of `_droppedNow`.
-theorem HView.rdb_dn (hm : (HView P h ∗ F).get m) (hi : i.toNat < MAX_N) :
+theorem HView.rdb_dn (hm : (HView P h ∗ F).get m) (hi : i.toNat < maxStackSize) :
     rdb m (h.dn + i) = Flat.get h.dv i := by
   obtain ⟨R, e⟩ : ∃ R, HView P h ∗ F = Bs h.dn h.dv.toList ∗ R := ⟨_, by unfold HView; ecancel⟩
   have := Bs.rdb (e ▸ hm) (by simpa using hi)
@@ -106,7 +106,7 @@ theorem HView.rdb_dn (hm : (HView P h ∗ F).get m) (hi : i.toNat < MAX_N) :
   rw [this, get_eq _ hi]
   simp
 
-theorem HView.isSome_dn (hm : (HView P h ∗ F).get m) (hi : i.toNat < MAX_N) :
+theorem HView.isSome_dn (hm : (HView P h ∗ F).get m) (hi : i.toNat < maxStackSize) :
     (m.loadInt (h.dn + i) 1).isSome = true := by
   obtain ⟨R, e⟩ : ∃ R, HView P h ∗ F = Bs h.dn h.dv.toList ∗ R := ⟨_, by unfold HView; ecancel⟩
   have := Bs.isSome (e ▸ hm) (by simpa using hi)
@@ -118,32 +118,32 @@ namespace OtherU
 /-! ### One turn of the loop -/
 
 section
-variable {pl : Flat.Planner} {M : Flat.Mapping} {dn : Vector (BitVec 8) MAX_N} {off o : Word}
+variable {pl : Flat.Planner} {M : Flat.Mapping} {dn : Vector (BitVec 8) maxStackSize} {off o : Word}
 
-theorem from_ge (h : ¬ o < pl.m) : Flat.otherFrom pl M dn off o = false := by
+theorem from_ge (h : ¬ o < pl.sourceSize) : Flat.otherFrom pl M dn off o = false := by
   rw [Flat.otherFrom, dite_eq_right h]
 
-theorem skip_off (h : o < pl.m) (ho : o = off) :
+theorem skip_off (h : o < pl.sourceSize) (ho : o = off) :
     Flat.otherFrom pl M dn off o = Flat.otherFrom pl M dn off (o + 1) := by
   rw [Flat.otherFrom, dite_eq_left h]
   simp [ho]
 
-theorem skip_slot (h : o < pl.m) (hs : Flat.get pl.source o ≠ Flat.get pl.source off) :
+theorem skip_slot (h : o < pl.sourceSize) (hs : Flat.get pl.source o ≠ Flat.get pl.source off) :
     Flat.otherFrom pl M dn off o = Flat.otherFrom pl M dn off (o + 1) := by
   rw [Flat.otherFrom, dite_eq_left h]
   simp [hs]
 
-theorem skip_ret (h : o < pl.m) (hr : Flat.isRetained M o = false) :
+theorem skip_ret (h : o < pl.sourceSize) (hr : Flat.isRetained M o = false) :
     Flat.otherFrom pl M dn off o = Flat.otherFrom pl M dn off (o + 1) := by
   rw [Flat.otherFrom, dite_eq_left h]
   simp [hr]
 
-theorem skip_dn (h : o < pl.m) (hd : Flat.get dn o ≠ 0#8) :
+theorem skip_dn (h : o < pl.sourceSize) (hd : Flat.get dn o ≠ 0#8) :
     Flat.otherFrom pl M dn off o = Flat.otherFrom pl M dn off (o + 1) := by
   rw [Flat.otherFrom, dite_eq_left h]
   simp [hd]
 
-theorem found (h : o < pl.m) (ho : o ≠ off) (hs : Flat.get pl.source o = Flat.get pl.source off)
+theorem found (h : o < pl.sourceSize) (ho : o ≠ off) (hs : Flat.get pl.source o = Flat.get pl.source off)
     (hr : Flat.isRetained M o = true) (hd : Flat.get dn o = 0#8) :
     Flat.otherFrom pl M dn off o = true := by
   rw [Flat.otherFrom, dite_eq_left h]
@@ -162,7 +162,7 @@ def fr (s : MachineData) (w : Word) : List Word :=
 structure LI (P : Addr) (h : HG) (F : MProp 64) (s : MachineData) (ra : Int64) (w : Word)
     (t : MachineData) : Prop where
   kb : Kb (HView P h ∗ F) s ra (fr s w) 56#64 t
-  r12 : t.regs.r12.toBitVec = h.p.m
+  r12 : t.regs.r12.toBitVec = h.p.sourceSize
   r13 : t.regs.r13.toBitVec = P
   rbp : t.regs.rbp.toBitVec = rcx s
   r14 : t.regs.r14.toBitVec = rcx s * 8#64
@@ -280,10 +280,10 @@ def Inv (P : Addr) (h : HG) (F : MProp 64) (s : MachineData) (ra : Int64) :
   | .label l, t =>
     if l = Names.hasOtherRetainedCopy then t = s.pushRa ra
     else if l = ".LB.Planner.hasOtherRetainedCopy.0" then
-      ∃ w, LI P h F s ra w t ∧ t.regs.rbx.toBitVec.toNat < h.p.m.toNat
+      ∃ w, LI P h F s ra w t ∧ t.regs.rbx.toBitVec.toNat < h.p.sourceSize.toNat
       ∧ Flat.otherFrom h.p.fl h.M h.dv (rcx s) (t.regs.rbx.toBitVec + 1#64) = res h s
     else if l = ".LB.Planner.hasOtherRetainedCopy.1" then
-      ∃ w, LI P h F s ra w t ∧ t.regs.rbx.toBitVec.toNat < h.p.m.toNat
+      ∃ w, LI P h F s ra w t ∧ t.regs.rbx.toBitVec.toNat < h.p.sourceSize.toNat
       ∧ Flat.otherFrom h.p.fl h.M h.dv (rcx s) t.regs.rbx.toBitVec = res h s
     else if l = ".LB.Planner.hasOtherRetainedCopy.2" then
       ∃ w, Kb (HView P h ∗ F) s ra (fr s w) 56#64 t ∧ res h s = false
@@ -297,9 +297,9 @@ def Inv (P : Addr) (h : HG) (F : MProp 64) (s : MachineData) (ra : Int64) :
 def V (h : HG) (l : Label) (t : MachineData) : Nat :=
   if l = Names.hasOtherRetainedCopy then 2 ^ 70
   else if l = ".LB.Planner.hasOtherRetainedCopy.0" then
-    2 * (h.p.m.toNat - t.regs.rbx.toBitVec.toNat) - 1
+    2 * (h.p.sourceSize.toNat - t.regs.rbx.toBitVec.toNat) - 1
   else if l = ".LB.Planner.hasOtherRetainedCopy.1" then
-    2 * (h.p.m.toNat - t.regs.rbx.toBitVec.toNat)
+    2 * (h.p.sourceSize.toNat - t.regs.rbx.toBitVec.toNat)
   else if l = ".LB.Planner.hasOtherRetainedCopy.4" then 1
   else 0
 
@@ -416,8 +416,8 @@ theorem b_fn (hpre : VPre HView HG.Ok P h F hasOtherA 8 s) (w₀ w₁ w₂ w₃ 
   have hv := hst
   rw [sep_lc] at hv
   obtain ⟨_, hR⟩ := HView.pv hv
-  have h_m := plannerObjectOwnedMemory.rd_m hR
-  have k_m := plannerObjectOwnedMemory.isSome_m hR
+  have h_m := plannerObjectOwnedMemory.rd_sourceSize hR
+  have k_m := plannerObjectOwnedMemory.isSome_sourceSize hR
   unfold rd at h_m
   clear hv hR
   kvcgen64
@@ -441,13 +441,13 @@ theorem b_fn (hpre : VPre HView HG.Ok P h F hasOtherA 8 s) (w₀ w₁ w₂ w₃ 
     cfg_goto
     · exact Kb.stack ⟨hst, hsp⟩ (by decide)
     · ho_inv
-      exact ⟨w₀, ⟨hst, hsp⟩, from_ge (by show ¬ (0 : Word) < h.p.m; rw [h0]; decide)⟩
+      exact ⟨w₀, ⟨hst, hsp⟩, from_ge (by show ¬ (0 : Word) < h.p.sourceSize; rw [h0]; decide)⟩
     · simp [V, Names.hasOtherRetainedCopy]
   | goto ".LB.Planner.hasOtherRetainedCopy.1" =>
     rename_i hc
     simp only [hrdi, h_m, BitVec.and_self] at hc
-    have h0 : h.p.m ≠ 0#64 := by simpa using hc
-    have hpos : 0 < h.p.m.toNat := Nat.pos_of_ne_zero fun e => h0 (BitVec.eq_of_toNat_eq e)
+    have h0 : h.p.sourceSize ≠ 0#64 := by simpa using hc
+    have hpos : 0 < h.p.sourceSize.toNat := Nat.pos_of_ne_zero fun e => h0 (BitVec.eq_of_toNat_eq e)
     cfg_goto
     · exact Kb.stack ⟨hst, hsp⟩ (by decide)
     · ho_inv
@@ -456,7 +456,7 @@ theorem b_fn (hpre : VPre HView HG.Ok P h F hasOtherA 8 s) (w₀ w₁ w₂ w₃ 
       · first | rfl | simp [MachineData.pushRa]
       · first | rfl | simp [MachineData.pushRa]
       · simpa [MachineData.pushRa] using hpre.args.1
-    · left; have := h.p.m.isLt; simp [V, Names.hasOtherRetainedCopy]; omega
+    · left; have := h.p.sourceSize.isLt; simp [V, Names.hasOtherRetainedCopy]; omega
 
 set_option maxHeartbeats 100000 in
 theorem b_0 : hasOtherRetainedCopyAsm.ForallBlocks fun blk =>
@@ -472,7 +472,7 @@ theorem b_0 : hasOtherRetainedCopyAsm.ForallBlocks fun blk =>
   vc_by_shape
   | goto ".LB.Planner.hasOtherRetainedCopy.2" =>
     rename_i hc
-    have he : t.regs.rbx.toBitVec + 1#64 = h.p.m := by
+    have he : t.regs.rbx.toBitVec + 1#64 = h.p.sourceSize := by
       rw [BitVec.add_comm, ← h12]; exact beq_iff_eq.mp hc
     cfg_goto
     · exact hli.stk rfl rfl
@@ -481,11 +481,11 @@ theorem b_0 : hasOtherRetainedCopyAsm.ForallBlocks fun blk =>
     · left; ho_var; omega
   | other =>
     rename_i hc
-    have hne : 1#64 + t.regs.rbx.toBitVec ≠ h.p.m := by
+    have hne : 1#64 + t.regs.rbx.toBitVec ≠ h.p.sourceSize := by
       rw [← h12]; simpa using hc
     have e : (1#64 + t.regs.rbx.toBitVec).toNat = t.regs.rbx.toBitVec.toNat + 1 := by bv_omega
-    have hlt' : (1#64 + t.regs.rbx.toBitVec).toNat < h.p.m.toNat := by
-      have : (1#64 + t.regs.rbx.toBitVec).toNat ≠ h.p.m.toNat :=
+    have hlt' : (1#64 + t.regs.rbx.toBitVec).toNat < h.p.sourceSize.toNat := by
+      have : (1#64 + t.regs.rbx.toBitVec).toNat ≠ h.p.sourceSize.toNat :=
         fun x => hne (BitVec.eq_of_toNat_eq x)
       omega
     first
@@ -590,7 +590,7 @@ theorem b_1 (hret : VSpec MapM (fun _ => True) Names.isRetained isRetainedA 0 is
   clear hb hR
   simp only [Names.isRetained] at hret
   unfold rd at h_x h_o
-  have hmax : t.regs.rbx.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hlt hok.m
+  have hmax : t.regs.rbx.toBitVec.toNat < maxStackSize := Nat.lt_of_lt_of_le hlt hok.sourceSizeFitsBuffer
   kvcgen64 [hret, xor_reg_mem_idx_spec]
   all_goals try symexec_norm
   all_goals try simp only [h13, h14, h_src, fold_slot] at ⊢
@@ -652,7 +652,7 @@ theorem b_1 (hret : VSpec MapM (fun _ => True) Names.isRetained isRetainedA 0 is
          rw [← e0]; exact hk2.isSome_hi rfl (i := 0) (by simp)
        have hb2 := hli2.kb.mem
        rw [sep_lc] at hb2
-       have hmax2 : t2.regs.rbx.toBitVec.toNat < MAX_N := hbx' ▸ hmax
+       have hmax2 : t2.regs.rbx.toBitVec.toNat < maxStackSize := hbx' ▸ hmax
        have h_b := HView.rdb_dn hb2 hmax2
        have k_b := HView.isSome_dn hb2 hmax2
        unfold rd at h_dn

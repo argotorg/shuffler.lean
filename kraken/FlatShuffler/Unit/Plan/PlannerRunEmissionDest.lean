@@ -32,13 +32,13 @@ theorem b_11 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
     (hnext : ∀ u, rax u = 1#64 + rax t → EmitDestHead P g M F s ra u →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
         (label ".LB.Planner.run.25") u)
-    (hdone : ∀ u, rax u = g.p.m → EmitDestDone P g M F s ra u → K () u) :
+    (hdone : ∀ u, rax u = g.p.sourceSize → EmitDestDone P g M F s ra u → K () u) :
     plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.25" →
       EmitDestHead P g M F s ra t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
   intro ⟨lo, locals, hc, hi, hdx, hcx, hp⟩
-  have hiN := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) hok.planner.m
+  have hiN := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) hok.planner.sourceSizeFitsBuffer
   have hidx : 2067 + (rax t).toNat < 4121 := by change (rax t).toNat < 1024 at hiN; omega
   have hsrc : 12 + (rax t).toNat < 4121 := by omega
   have hsucc : (1#64 + rax t).toNat = (rax t).toNat + 1 := by
@@ -63,7 +63,7 @@ theorem b_11 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
   | goto ".LB.Planner.run.25" =>
     rename_i heq
     symexec_norm at heq
-    simp only [show t.regs.rdx.toBitVec = g.p.m from hdx,
+    simp only [show t.regs.rdx.toBitVec = g.p.sourceSize from hdx,
       sub_beq_zero, Bool.not_eq_true', beq_eq_false_iff_ne] at heq
     apply hnext
     · rfl
@@ -79,7 +79,7 @@ theorem b_11 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
   | other =>
     rename_i heq
     symexec_norm at heq
-    simp only [show t.regs.rdx.toBitVec = g.p.m from hdx,
+    simp only [show t.regs.rdx.toBitVec = g.p.sourceSize from hdx,
       sub_beq_zero, Bool.not_eq_false', beq_iff_eq] at heq
     apply hdone
     · exact heq.symm

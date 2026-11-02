@@ -86,7 +86,7 @@ def bytes : List (BitVec 8) := (List.range 256).map (BitVec.ofNat 8)
 /-! ## `Flat.isSpilled` and `spillId` -/
 
 def hdr0 : Hdr :=
-  ⟨0, 0, 0, 0, 0, 0, 0, Vector.replicate MAX_N 0, Vector.replicate MAX_N 0, 0, 0, 0⟩
+  ⟨0, 0, 0, 0, 0, 0, 0, Vector.replicate maxStackSize 0, Vector.replicate maxStackSize 0, 0, 0, 0⟩
 
 -- A ghost with `n = 0` and the spilled bytes `spl`.
 def ghost (spl : BitVec 32 → BitVec 8) : G :=

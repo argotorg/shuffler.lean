@@ -43,14 +43,14 @@ def words (s : String) : List String := (s.splitOn " ").filter (· ≠ "")
 def destOf? (w : String) : Option (Option Nat) := if w = "-" then some none else w.toNat?.map some
 
 -- `l` from offset 0, and `d` above it.
-def vecOf {α : Type} (l : List α) (d : α) : Vector α MAX_N := Vector.ofFn fun i => l[i.val]?.getD d
+def vecOf {α : Type} (l : List α) (d : α) : Vector α maxStackSize := Vector.ofFn fun i => l[i.val]?.getD d
 
 -- Content for the members that the constructor does not initialize, for the `m_positionOf` array
 -- of the planned mapping before its constructor, and for the local arrays.
-def uninit : Uninit := ⟨Vector.replicate MAX_N 7, Vector.replicate MAX_N 7, 77, 99⟩
-def uninitPlanned : Vector Word MAX_N := Vector.replicate MAX_N 9
+def uninit : Uninit := ⟨Vector.replicate maxStackSize 7, Vector.replicate maxStackSize 7, 77, 99⟩
+def uninitPlanned : Vector Word maxStackSize := Vector.replicate maxStackSize 9
 def uninitLocals : Locals :=
-  ⟨Vector.replicate MAX_N 5, Vector.replicate MAX_N 6, Vector.replicate MAX_N 8⟩
+  ⟨Vector.replicate maxStackSize 5, Vector.replicate maxStackSize 6, Vector.replicate maxStackSize 8⟩
 
 def word? (d : Option Nat) : Word := match d with
   | some d => .ofNat 64 d
@@ -104,7 +104,7 @@ def runLine (list : Bool) (line : String) : Option String := do
   let target ← (words target).mapM slotOf?
   let ds ← (words ds).mapM destOf?
   let vars ← (words vars).mapM String.toNat?
-  guard (ds.length = stack.length ∧ stack.length ≤ MAX_N ∧ target.length ≤ MAX_N)
+  guard (ds.length = stack.length ∧ stack.length ≤ maxStackSize ∧ target.length ≤ maxStackSize)
   let bound := ds.filterMap id
   guard (bound.all (· < target.length) ∧ bound.eraseDups.length = bound.length)
   return if list then runList stack target ds vars else runFlat stack target ds vars

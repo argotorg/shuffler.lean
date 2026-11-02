@@ -9,7 +9,7 @@ import all FlatShuffler.FlatPopRel
 
 /-!
 The flat model of `removeSurplus` (`FlatSurplus.lean`) is an instance of the list model
-`Map.State.removeSurplus` (`MapModel.lean`), for a stack of at most `MAX_N` slots.
+`Map.State.removeSurplus` (`MapModel.lean`), for a stack of at most `maxStackSize` slots.
 
 `absOut` reads the list result from a flat result: `.done` has no blocked slot, `.blocked` has
 the members `blockedOffset` and `blockedExcess`, and `.assertionFailed` is the assertion.
@@ -30,30 +30,30 @@ def absOut (planned : Map.Mapping) : Status × St → M (Option (Nat × Nat) × 
 
 /-! ## Lemmas on the arrays and the words -/
 
-theorem take_put {α : Type} (v : Vector α MAX_N) (i : Word) (x : α) (n : Nat) :
+theorem take_put {α : Type} (v : Vector α maxStackSize) (i : Word) (x : α) (n : Nat) :
     (put v i x).toList.take n = (v.toList.take n).set i.toNat x := by
   simp only [put, Vector.toList_setIfInBounds, List.take_set]
 
-theorem getD_take {α : Type} (v : Vector α MAX_N) {k p : Nat} (hk : k ≤ MAX_N) (hp : p < k)
+theorem getD_take {α : Type} (v : Vector α maxStackSize) {k p : Nat} (hk : k ≤ maxStackSize) (hp : p < k)
     (d : α) : (v.toList.take k).getD p d = v[p]'(by omega) := by
-  simp [List.getD_eq_getElem?_getD, hp, show p < MAX_N by omega]
+  simp [List.getD_eq_getElem?_getD, hp, show p < maxStackSize by omega]
 
-theorem getD_abs (v : Vector Word MAX_N) {k p : Nat} (hk : k ≤ MAX_N) (hp : p < k) :
+theorem getD_abs (v : Vector Word maxStackSize) {k p : Nat} (hk : k ≤ maxStackSize) (hp : p < k) :
     ((v.toList.take k).map optOf).getD p none = optOf (v[p]'(by omega)) := by
-  simp [List.getD_eq_getElem?_getD, hp, show p < MAX_N by omega]
+  simp [List.getD_eq_getElem?_getD, hp, show p < maxStackSize by omega]
 
-theorem length_take_data {α : Type} (v : Vector α MAX_N) {k : Nat} (hk : k ≤ MAX_N) :
+theorem length_take_data {α : Type} (v : Vector α maxStackSize) {k : Nat} (hk : k ≤ maxStackSize) :
     (v.toList.take k).length = k := by
   simp [hk]
 
-theorem stack_abs {planned : Map.Mapping} (st : St) (h : st.size.toNat ≤ MAX_N) :
+theorem stack_abs {planned : Map.Mapping} (st : St) (h : st.size.toNat ≤ maxStackSize) :
     (absSt planned st).stack.length = st.size.toNat := length_take_data _ h
 
-theorem get_eq {α : Type} [Inhabited α] (v : Vector α MAX_N) {w : Word} {p : Nat}
-    (hw : w.toNat = p) (hp : p < MAX_N) : get v w = v[p] := by
+theorem get_eq {α : Type} [Inhabited α] (v : Vector α maxStackSize) {w : Word} {p : Nat}
+    (hw : w.toNat = p) (hp : p < maxStackSize) : get v w = v[p] := by
   subst hw; exact get_toNat v hp
 
-theorem optOf_eq_some {w : Word} {k : Word} (hk : k.toNat < MAX_N) :
+theorem optOf_eq_some {w : Word} {k : Word} (hk : k.toNat < maxStackSize) :
     optOf w = some k.toNat ↔ w = k := by
   by_cases hw : w = NONE
   · subst hw; simp only [optOf_none, reduceCtorEq, false_iff]; exact (ne_none hk).symm
@@ -73,12 +73,12 @@ theorem swapDestinations_eq (st : St) (a b : Word) :
     swapDestinations st a b = { st with dest := (swapDestinations st a b).dest,
                                         pos := (swapDestinations st a b).pos } := rfl
 
-theorem swapDestinations_abs (st : St) {a b : Word} (h : st.size.toNat ≤ MAX_N)
+theorem swapDestinations_abs (st : St) {a b : Word} (h : st.size.toNat ≤ maxStackSize)
     (ha : a.toNat < st.size.toNat) (hb : b.toNat < st.size.toNat) :
     absMapping (swapDestinations st a b).dest (swapDestinations st a b).pos st.size st.targetSize
       = (absMapping st.dest st.pos st.size st.targetSize).swapDestinations a.toNat b.toNat := by
-  have haN : a.toNat < MAX_N := by omega
-  have hbN : b.toNat < MAX_N := by omega
+  have haN : a.toNat < maxStackSize := by omega
+  have hbN : b.toNat < maxStackSize := by omega
   unfold swapDestinations Map.Mapping.swapDestinations absMapping
   simp only [getD_abs _ h ha, getD_abs _ h hb, ← get_toNat _ haN, ← get_toNat _ hbN]
   rw [← abs_put, ← abs_put, getD_abs _ h ha, getD_abs _ h hb, ← get_toNat _ haN,
@@ -101,13 +101,13 @@ theorem swapW_of_eq {w : Word} {k : Nat} (h : w.toNat = k) : Op.swapW w = Op.swa
   apply BitVec.eq_of_toNat_eq
   simp [BitVec.toNat_setWidth]
 
-theorem swapWith_abs (planned : Map.Mapping) (st : St) (pos : Word) (h : st.size.toNat ≤ MAX_N) :
+theorem swapWith_abs (planned : Map.Mapping) (st : St) (pos : Word) (h : st.size.toNat ≤ maxStackSize) :
     (absSt planned st).swapWith pos.toNat = absRes planned (swapWith st pos) := by
   unfold Map.State.swapWith swapWith
   rw [stack_abs st h]
   by_cases hp : pos < st.size
   · have hpn : pos.toNat < st.size.toNat := hp
-    have hpN : pos.toNat < MAX_N := by omega
+    have hpN : pos.toNat < maxStackSize := by omega
     have hg : (absSt planned st).mapping.dest.getD pos.toNat none = optOf (get st.dest pos) := by
       rw [get_toNat _ hpN]; exact getD_abs _ h hpn
     simp only [hg, optOf_eq_some hpN]
@@ -164,7 +164,7 @@ theorem reach_iff (st : St) {q : Word} (hq : q.toNat < st.size.toNat) :
   rfl
 
 -- The scan below `pos`.
-theorem scan_abs (planned : Map.Mapping) (st : St) (h : st.size.toNat ≤ MAX_N) (p : Nat) :
+theorem scan_abs (planned : Map.Mapping) (st : St) (h : st.size.toNat ≤ maxStackSize) (p : Nat) :
     ∀ (pos : Word), pos.toNat = p → p ≤ st.size.toNat → ∀ sh dp : Word,
       (absSt planned st).surplusScan p (optOf sh) (optOf dp)
         = (optOf (surplusScan st pos sh dp).1, optOf (surplusScan st pos sh dp).2) := by
@@ -177,7 +177,7 @@ theorem scan_abs (planned : Map.Mapping) (st : St) (h : st.size.toNat ≤ MAX_N)
   | succ p ih =>
     intro pos hp hle sh dp
     have hq := pos_sub_one hp
-    have hpN : p < MAX_N := by omega
+    have hpN : p < maxStackSize := by omega
     have hq' : (pos - 1).toNat < st.size.toNat := by omega
     have hg : (absSt planned st).mapping.dest.getD p none = optOf (get st.dest (pos - 1)) := by
       rw [get_eq _ hq hpN]; exact getD_abs _ h (by omega)
@@ -227,7 +227,7 @@ theorem scan_inv (s : Map.State) (p : Nat) (hp : p ≤ s.stack.length) :
     · exact ih (by omega) sh dp hi
 
 -- The loop of `equalSurplus` below `pos`. The result is below `pos`.
-theorem equalBelow_abs (planned : Map.Mapping) (st : St) (h : st.size.toNat ≤ MAX_N)
+theorem equalBelow_abs (planned : Map.Mapping) (st : St) (h : st.size.toNat ≤ maxStackSize)
     (_hk : st.size.toNat ≠ 0) (p : Nat) :
     ∀ pos : Word, pos.toNat = p → p ≤ st.size.toNat →
       (absSt planned st).equalBelow (st.size.toNat - 1) p = optOf (equalBelow st pos)
@@ -242,7 +242,7 @@ theorem equalBelow_abs (planned : Map.Mapping) (st : St) (h : st.size.toNat ≤ 
   | succ p ih =>
     intro pos hp hle
     have hq := pos_sub_one hp
-    have hpN : p < MAX_N := by omega
+    have hpN : p < maxStackSize := by omega
     have hs1 : (st.size - 1).toNat = st.size.toNat - 1 := by bv_omega
     have hg : (absSt planned st).mapping.dest.getD p none = optOf (get st.dest (pos - 1)) := by
       rw [get_eq _ hq hpN]; exact getD_abs _ h (by omega)
@@ -264,9 +264,9 @@ theorem equalBelow_abs (planned : Map.Mapping) (st : St) (h : st.size.toNat ≤ 
 
 -- The pop at the end of a pass, then the next passes.
 theorem tail_abs (planned : Map.Mapping) (fuel : Nat)
-    (ih : ∀ st : St, st.size.toNat ≤ MAX_N →
+    (ih : ∀ st : St, st.size.toNat ≤ maxStackSize →
       (absSt planned st).surplusLoop fuel = absOut planned (surplusLoop st fuel))
-    (r : Status × St) (hb : r.1 ≠ .blocked) (h : r.2.size.toNat ≤ MAX_N) :
+    (r : Status × St) (hb : r.1 ≠ .blocked) (h : r.2.size.toNat ≤ maxStackSize) :
     ((absRes planned r).bind Map.State.pop).bind (·.surplusLoop fuel)
       = absOut planned (match (if r.1 ≠ .done then .error r
           else if (pop r.2).1 ≠ .done then .error (pop r.2) else .ok (pop r.2).2
@@ -291,7 +291,7 @@ theorem tail_abs (planned : Map.Mapping) (fuel : Nat)
     | done => exact ih st' hp
 
 theorem surplusLoop_abs (planned : Map.Mapping) (fuel : Nat) :
-    ∀ st : St, st.size.toNat ≤ MAX_N →
+    ∀ st : St, st.size.toNat ≤ maxStackSize →
       (absSt planned st).surplusLoop fuel = absOut planned (surplusLoop st fuel) := by
   induction fuel with
   | zero => intro st _; rfl
@@ -359,7 +359,7 @@ theorem surplusLoop_abs (planned : Map.Mapping) (fuel : Nat) :
 
 /-! ## `removeSurplus` -/
 
-theorem removeSurplus_abs (planned : Map.Mapping) (st : St) (h : st.size.toNat ≤ MAX_N) :
+theorem removeSurplus_abs (planned : Map.Mapping) (st : St) (h : st.size.toNat ≤ maxStackSize) :
     (absSt planned st).removeSurplus = absOut planned (removeSurplus st) := by
   unfold Map.State.removeSurplus removeSurplus
   rw [stack_abs st h]

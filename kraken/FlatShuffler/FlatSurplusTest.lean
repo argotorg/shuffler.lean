@@ -96,14 +96,14 @@ def rs (m n : Word) : Word × Option (Status × St) :=
   | none => false
 #guard (rs 0 0).1 = 0
 -- A block is not a failure: the result is the number of operations.
-#guard (rs (.ofNat 64 MAX_N) 2).1 = 0
-#guard ((rs (.ofNat 64 MAX_N) 2).2.map fun r => (r.1, r.2.blockedOffset, r.2.blockedExcess))
-  = some (.blocked, 0, .ofNat 64 (MAX_N - 1 - 16))
--- The bounds: `m, n ≤ MAX_N`, with no state.
-#guard (rs (.ofNat 64 (MAX_N + 1)) 2).1 = -2 ∧ (rs (.ofNat 64 (MAX_N + 1)) 2).2.isNone
-#guard (rs 3 (.ofNat 64 (MAX_N + 1))).1 = -2 ∧ (rs 3 (.ofNat 64 (MAX_N + 1))).2.isNone
+#guard (rs (.ofNat 64 maxStackSize) 2).1 = 0
+#guard ((rs (.ofNat 64 maxStackSize) 2).2.map fun r => (r.1, r.2.blockedOffset, r.2.blockedExcess))
+  = some (.blocked, 0, .ofNat 64 (maxStackSize - 1 - 16))
+-- The bounds: `m, n ≤ maxStackSize`, with no state.
+#guard (rs (.ofNat 64 (maxStackSize + 1)) 2).1 = -2 ∧ (rs (.ofNat 64 (maxStackSize + 1)) 2).2.isNone
+#guard (rs 3 (.ofNat 64 (maxStackSize + 1))).1 = -2 ∧ (rs 3 (.ofNat 64 (maxStackSize + 1))).2.isNone
 #guard (rs (-1) 2).1 = -2
-#guard (rs 3 (.ofNat 64 MAX_N)).1 = 1
+#guard (rs 3 (.ofNat 64 maxStackSize)).1 = 1
 
 /-! ## The list model -/
 

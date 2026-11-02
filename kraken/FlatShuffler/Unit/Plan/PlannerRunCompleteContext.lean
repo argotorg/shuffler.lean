@@ -43,7 +43,7 @@ def EmittedContext.terminal {initial current : PlannerCallMemory} {s : MachineDa
     (hn : h.status ≠ .blocked) :
     RunResult initial
       {current with sources := if h.status = .done then
-        Flat.sourcesFrom current.p.n 0 M current.sources else current.sources} s h.status where
+        Flat.sourcesFrom current.p.targetSize 0 M current.sources else current.sources} s h.status where
   stable := h.stable.withSources _
   attempts := h.loop.plug (prependRun h.attempt (fun _ => emptyRunU))
   model := by
@@ -85,7 +85,7 @@ def resolvedNext (pl : Flat.Planner) (take : Bool) (before : Word)
   | .stuck => (.blocked, s)
   | .assertionFailed => (.assertionFailed, s)
   | .dropped =>
-    if Flat.droppedCount pl.m s.dropped > before then Flat.runLoop pl take s us
+    if Flat.droppedCount pl.sourceSize s.dropped > before then Flat.runLoop pl take s us
     else (.assertionFailed, s)
 
 structure ResolvedContext (initial current : PlannerCallMemory) (s : MachineData)
@@ -103,12 +103,12 @@ structure ResolvedContext (initial current : PlannerCallMemory) (s : MachineData
 def EmittedContext.afterResolve {initial current : PlannerCallMemory} {s : MachineData}
     {M : Flat.Mapping} (h : EmittedContext initial current s M) (hb : h.status = .blocked)
     (r : Flat.ResolveU) (res : Flat.Resolution) (sp : BitVec 32 → BitVec 8)
-    (d : Vector (BitVec 8) MAX_N)
+    (d : Vector (BitVec 8) maxStackSize)
     (hq : Flat.resolve current.p.fl current.spills current.dropped M
       h.out.blockedOffset h.out.blockedExcess ⟨h.out.dest, h.out.pos⟩ h.out.size r =
         (res, sp, d)) :
     ResolvedContext initial (withResolve current sp d) s
-      (Flat.droppedCount current.p.m current.dropped) where
+      (Flat.droppedCount current.p.sourceSize current.dropped) where
   prior := h.before
   loop := h.loop
   attempt := {h.attempt with r := r}
@@ -129,23 +129,23 @@ namespace ResolvedContext
 
 def retry {initial current : PlannerCallMemory} {s : MachineData} {before : Word}
     (h : ResolvedContext initial current s before) (hr : h.resolution = .dropped)
-    (hp : Flat.droppedCount current.p.m current.dropped > before) :
+    (hp : Flat.droppedCount current.p.sourceSize current.dropped > before) :
     LoopContext initial current s :=
   h.loop.next h.attempt h.stable h.count (by
     intro us
     rw [h.model us]
-    change Flat.droppedCount current.p.fl.m current.state.dropped > before at hp
+    change Flat.droppedCount current.p.fl.sourceSize current.state.dropped > before at hp
     simp only [resolvedNext, hr, hp, ↓reduceIte])
 
 def noProgress {initial current : PlannerCallMemory} {s : MachineData} {before : Word}
     (h : ResolvedContext initial current s before) (hr : h.resolution = .dropped)
-    (hp : ¬ Flat.droppedCount current.p.m current.dropped > before) :
+    (hp : ¬ Flat.droppedCount current.p.sourceSize current.dropped > before) :
     RunResult initial current s .assertionFailed where
   stable := h.stable
   attempts := h.loop.plug (prependRun h.attempt (fun _ => emptyRunU))
   model := by
     rw [h.loop.model, h.model]
-    change ¬ Flat.droppedCount current.p.fl.m current.state.dropped > before at hp
+    change ¬ Flat.droppedCount current.p.fl.sourceSize current.state.dropped > before at hp
     simp only [resolvedNext, hr, hp, ↓reduceIte]
 
 def terminal {initial current : PlannerCallMemory} {s : MachineData} {before : Word}

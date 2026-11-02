@@ -28,13 +28,13 @@ def ZeroPrefix (o : Word) (t : MachineData) : Prop :=
 
 def Zero (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (R : List Word → List Word → Prop) (t : MachineData) : Prop :=
-  ∃ lo loc o, Bd P r F s ra lo loc t ∧ R lo loc ∧ InputRegs P r s t ∧ o < r.p.m ∧
+  ∃ lo loc o, Bd P r F s ra lo loc t ∧ R lo loc ∧ InputRegs P r s t ∧ o < r.p.sourceSize ∧
     rax t = t.regs.rsp.toBitVec + 8240#64 + o ∧
-    rcx t = t.regs.rsp.toBitVec + 8240#64 + r.p.m ∧ ZeroPrefix o t
+    rcx t = t.regs.rsp.toBitVec + 8240#64 + r.p.sourceSize ∧ ZeroPrefix o t
 
 def AfterZero (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (R : List Word → List Word → Prop) (t : MachineData) : Prop :=
-  ∃ lo loc, Bd P r F s ra lo loc t ∧ R lo loc ∧ InputRegs P r s t ∧ ZeroPrefix r.p.m t
+  ∃ lo loc, Bd P r F s ra lo loc t ∧ R lo loc ∧ InputRegs P r s t ∧ ZeroPrefix r.p.sourceSize t
 
 def zphase (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (R : List Word → List Word → Prop) (phase : Label → MachineData → Prop)
@@ -69,11 +69,11 @@ theorem zeroPrefix_next {t u : MachineData} {o : Word} (h : ZeroPrefix o t)
 theorem zero_continue {P : Addr} {r : RG} {F : MProp 64} {s t u : MachineData}
     {ra : Int64} {R : List Word → List Word → Prop} {lo loc : List Word} {o : Word}
     (hb : Bd P r F s ra lo loc t) (hz : ZeroPrefix o t)
-    (hoN : o.toNat < MAX_N)
+    (hoN : o.toNat < maxStackSize)
     (hR : ∀ w, R lo (loc.set (1030 + o.toNat / 8) w))
-    (ho : o + 1 < r.p.m) (hregs : InputRegs P r s u)
+    (ho : o + 1 < r.p.sourceSize) (hregs : InputRegs P r s u)
     (ha : rax u = u.regs.rsp.toBitVec + 8240#64 + (o + 1))
-    (hc : rcx u = u.regs.rsp.toBitVec + 8240#64 + r.p.m)
+    (hc : rcx u = u.regs.rsp.toBitVec + 8240#64 + r.p.sourceSize)
     (hm : u.dmem = t.dmem.storeInt (t.regs.rsp.toBitVec + 8240#64 + o) 1 0)
     (hsp : u.regs.rsp = t.regs.rsp) : Zero P r F s ra R u := by
   obtain ⟨w, hbu⟩ := hb.storeZeroByte (u := u) hoN hm hsp
@@ -82,9 +82,9 @@ theorem zero_continue {P : Addr} {r : RG} {F : MProp 64} {s t u : MachineData}
 theorem zero_end {P : Addr} {r : RG} {F : MProp 64} {s t u : MachineData}
     {ra : Int64} {R : List Word → List Word → Prop} {lo loc : List Word} {o : Word}
     (hb : Bd P r F s ra lo loc t) (hz : ZeroPrefix o t)
-    (hoN : o.toNat < MAX_N)
+    (hoN : o.toNat < maxStackSize)
     (hR : ∀ w, R lo (loc.set (1030 + o.toNat / 8) w))
-    (he : o + 1 = r.p.m) (hregs : InputRegs P r s u)
+    (he : o + 1 = r.p.sourceSize) (hregs : InputRegs P r s u)
     (hm : u.dmem = t.dmem.storeInt (t.regs.rsp.toBitVec + 8240#64 + o) 1 0)
     (hsp : u.regs.rsp = t.regs.rsp) : AfterZero P r F s ra R u := by
   obtain ⟨w, hbu⟩ := hb.storeZeroByte (u := u) hoN hm hsp
@@ -98,7 +98,7 @@ variable [Host] [FunDecls]
   (R : List Word → List Word → Prop) (phase : Label → MachineData → Prop)
   (var : Label → MachineData → Nat) (C : Nat)
   (hok : r.Ok)
-  (hR : ∀ lo loc (o : Word) w, o.toNat < MAX_N → R lo loc → R lo (loc.set (1030 + o.toNat / 8) w))
+  (hR : ∀ lo loc (o : Word) w, o.toNat < maxStackSize → R lo loc → R lo (loc.set (1030 + o.toNat / 8) w))
   (hV : ∀ t, var ".LB.Planner.resolve.1" t ≤ C)
 
 include hok hR hV
@@ -110,10 +110,10 @@ theorem b_0 : resolveAsm.ForallBlocks fun blk =>
   intro t ht
   simp only [Inv, zphase, Names.resolve, String.reduceEq, ↓reduceIte, Zero] at ht
   obtain ⟨lo, loc, o, hb, hrel, hregs, ho, hax, hcx, hz⟩ := ht
-  have hoN : o.toNat < MAX_N := Nat.lt_of_lt_of_le (BitVec.lt_def.mp ho) hok.planner.m
+  have hoN : o.toNat < maxStackSize := Nat.lt_of_lt_of_le (BitVec.lt_def.mp ho) hok.planner.sourceSizeFitsBuffer
   have hsome := hb.zeroByteSome hoN
-  have e0 : rcx t - rax t = r.p.m - o := by rw [hax, hcx]; bv_omega
-  have e1 : rcx t - (1#64 + rax t) = r.p.m - (o + 1) := by rw [hax, hcx]; bv_omega
+  have e0 : rcx t - rax t = r.p.sourceSize - o := by rw [hax, hcx]; bv_omega
+  have e1 : rcx t - (1#64 + rax t) = r.p.sourceSize - (o + 1) := by rw [hax, hcx]; bv_omega
   simp only [Reg64s.get64_rax, Reg64s.get64_rcx] at hax hcx e0 e1
   kvcgen64
   all_goals try symexec_norm at ⊢
@@ -122,11 +122,11 @@ theorem b_0 : resolveAsm.ForallBlocks fun blk =>
   | goto ".LB.Planner.resolve.0" =>
     rename_i hj
     symexec_norm at hj
-    have hn : o + 1 ≠ r.p.m := by
+    have hn : o + 1 ≠ r.p.sourceSize := by
       intro he
       simp only [hax, hcx] at hj
       have hh : 1#64 + (t.regs.rsp.toBitVec + 8240#64 + o) =
-          t.regs.rsp.toBitVec + 8240#64 + r.p.m := by rw [← he]; bv_omega
+          t.regs.rsp.toBitVec + 8240#64 + r.p.sourceSize := by rw [← he]; bv_omega
       simp only [hh, sub_beq_zero, beq_self_eq_true, Bool.not_true, Bool.false_eq_true] at hj
     cfg_goto
     · exact hb.kb.stack (by decide)
@@ -148,7 +148,7 @@ theorem b_0 : resolveAsm.ForallBlocks fun blk =>
   | other =>
     rename_i hj
     symexec_norm at hj
-    have he : o + 1 = r.p.m := by
+    have he : o + 1 = r.p.sourceSize := by
       have hh : 1#64 + t.regs.rax.toBitVec = t.regs.rcx.toBitVec := by
         simpa only [Bool.not_eq_false', sub_beq_zero, beq_iff_eq] using hj
       rw [hax, hcx] at hh
@@ -164,7 +164,7 @@ theorem b_0 : resolveAsm.ForallBlocks fun blk =>
        symexec_norm at ⊢
        rw [e0]
        have bound (u : MachineData) : var ".LB.Planner.resolve.1" u + 2 <
-           (r.p.m - o).toNat + C + 1 + 2 := by
+           (r.p.sourceSize - o).toNat + C + 1 + 2 := by
          have hv := hV u
          omega
        apply bound)

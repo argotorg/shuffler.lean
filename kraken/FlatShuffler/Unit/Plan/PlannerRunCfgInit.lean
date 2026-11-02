@@ -46,9 +46,9 @@ theorem cfg_5 : plannerRunAsm.ForallBlocks fun blk =>
   simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨current, hok, ⟨ctx⟩, ht⟩ := ht
   have h0 := ht.choose_spec.choose_spec.1
-  have hm := congrArg PlannerObjectMemory.m ctx.stable.planner
-  change current.p.m = g.p.m at hm
-  have hmb : g.p.m.toNat ≤ 1024 := by rw [← hm]; exact hok.planner.m
+  have hm := congrArg PlannerObjectMemory.sourceSize ctx.stable.planner
+  change current.p.sourceSize = g.p.sourceSize at hm
+  have hmb : g.p.sourceSize.toNat ≤ 1024 := by rw [← hm]; exact hok.planner.sourceSizeFitsBuffer
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
       Program.Decreases (runV g) (.label ".LB.Planner.run.19") 21 t b j u
@@ -90,9 +90,9 @@ theorem cfg_8 : plannerRunAsm.ForallBlocks fun blk =>
   obtain ⟨current, hok, ⟨ctx⟩, ht⟩ := ht
   obtain ⟨lo, locals, i, h0, hi, ha, rest⟩ := ht
   have ht : InitPosHead P current F s ra t := ⟨lo, locals, i, h0, hi, ha, rest⟩
-  have hn := congrArg PlannerObjectMemory.n ctx.stable.planner
-  change current.p.n = g.p.n at hn
-  have hiN : i.toNat < 1024 := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) hok.planner.n
+  have hn := congrArg PlannerObjectMemory.targetSize ctx.stable.planner
+  change current.p.targetSize = g.p.targetSize at hn
+  have hiN : i.toNat < 1024 := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) hok.planner.targetSizeFitsBuffer
   have hix := index_at (by omega : i.toNat ≤ 1024) ha
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
@@ -103,7 +103,7 @@ theorem cfg_8 : plannerRunAsm.ForallBlocks fun blk =>
       obtain ⟨lo', locals', j, h1, hj, haj, rest'⟩ := hu
       have hu : InitPosHead P current F s ra u := ⟨lo', locals', j, h1, hj, haj, rest'⟩
       have hb := same_budget ctx.stable h0.toBd h1.toBd
-      have hjN : j.toNat < 1024 := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hj) hok.planner.n
+      have hjN : j.toNat < 1024 := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hj) hok.planner.targetSizeFitsBuffer
       have hjx := index_at (by omega : j.toNat ≤ 1024) haj
       have hs : u.regs.rsp.toBitVec = t.regs.rsp.toBitVec := h1.kb.sp.trans h0.kb.sp.symm
       have hij : j.toNat = i.toNat + 1 := by
@@ -145,8 +145,8 @@ theorem cfg_6 : plannerRunAsm.ForallBlocks fun blk =>
   obtain ⟨current, hok, ⟨ctx⟩, ht⟩ := ht
   have h0 := ht.choose_spec.choose_spec.1
   have hi := ht.choose_spec.choose_spec.2.1
-  have hm := congrArg PlannerObjectMemory.m ctx.stable.planner
-  change current.p.m = g.p.m at hm
+  have hm := congrArg PlannerObjectMemory.sourceSize ctx.stable.planner
+  change current.p.sourceSize = g.p.sourceSize at hm
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
       Program.Decreases (runV g) (.label ".LB.Planner.run.20") 22 t b j u
@@ -164,12 +164,12 @@ theorem cfg_6 : plannerRunAsm.ForallBlocks fun blk =>
           (show LoopPhase g s (fun a => InitDestHead P a F s ra) u from
             ⟨current, hok, ⟨ctx⟩, hu⟩)
       · have hiN : (rax t).toNat < 1024 :=
-          Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) hok.planner.m
+          Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) hok.planner.sourceSizeFitsBuffer
         have hs : (rax u).toNat = (rax t).toNat + 1 := by rw [ha]; bv_omega
         simp only [runV, String.reduceEq, or_false, ↓reduceIte, hb, hs]
         rw [hm] at hi hui
-        change (rax t).toNat < g.p.m.toNat at hi
-        change (rax u).toNat < g.p.m.toNat at hui
+        change (rax t).toNat < g.p.sourceSize.toNat at hi
+        change (rax u).toNat < g.p.sourceSize.toNat at hui
         omega) (by
       intro u ha hu
       have h1 := hu.choose_spec.choose_spec.1
@@ -194,9 +194,9 @@ theorem cfg_7 : plannerRunAsm.ForallBlocks fun blk =>
   simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨current, hok, ⟨ctx⟩, ht⟩ := ht
   have h0 := ht.choose_spec.choose_spec.1
-  have hn := congrArg PlannerObjectMemory.n ctx.stable.planner
-  change current.p.n = g.p.n at hn
-  have hnb : g.p.n.toNat ≤ 1024 := by rw [← hn]; exact hok.planner.n
+  have hn := congrArg PlannerObjectMemory.targetSize ctx.stable.planner
+  change current.p.targetSize = g.p.targetSize at hn
+  have hnb : g.p.targetSize.toNat ≤ 1024 := by rw [← hn]; exact hok.planner.targetSizeFitsBuffer
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
       Program.Decreases (runV g) (.label ".LB.Planner.run.21") 23 t b j u
@@ -245,9 +245,9 @@ theorem cfg_9
   simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨current, hok, ⟨ctx⟩, ht⟩ := ht
   have h0 := ht.choose_spec.choose_spec.1
-  have hsize := congrArg PlannerObjectMemory.m ctx.stable.planner
-  change current.p.m = g.p.m at hsize
-  have hmb : g.p.m.toNat ≤ 1024 := by rw [← hsize]; exact hok.planner.m
+  have hsize := congrArg PlannerObjectMemory.sourceSize ctx.stable.planner
+  change current.p.sourceSize = g.p.sourceSize at hsize
+  have hmb : g.p.sourceSize.toNat ≤ 1024 := by rw [← hsize]; exact hok.planner.sourceSizeFitsBuffer
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
       Program.Decreases (runV g) (.label ".LB.Planner.run.23") 25 t b j u
@@ -281,8 +281,8 @@ theorem cfg_9
         rfl
       have hd : (withSaw current (mergeSaw current.p.saw saw)).state.data = ctx'.wanted := by
         change current.state.data = Flat.copyFrom current.p.fl 0 current.state.data
-        have hn : ¬ (0 : Word) < current.p.fl.m := by
-          change ¬ (0 : Word) < current.p.m
+        have hn : ¬ (0 : Word) < current.p.fl.sourceSize := by
+          change ¬ (0 : Word) < current.p.sourceSize
           rw [hz]
           exact BitVec.lt_irrefl _
         rw [Flat.copyFrom]
@@ -294,7 +294,7 @@ theorem cfg_9
       left
       refine ⟨h1.kb.stack (by decide), ?_, Or.inl ?_⟩
       · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte] using
-          (show AttemptPhase g s (fun a M u => a.p.m = 0#64 ∧
+          (show AttemptPhase g s (fun a M u => a.p.sourceSize = 0#64 ∧
             ∃ lo locals, AttemptLI P a M F s ra lo locals u) u from
             ⟨withSaw current (mergeSaw current.p.saw saw), M, ctx', hd, hz,
               lo, locals, h1⟩)
@@ -312,7 +312,7 @@ theorem cfg_9
         refine ⟨withSaw current (mergeSaw current.p.saw saw), M, ctx', lo, locals,
           h1, ?_, ?_⟩
         · rw [ha]
-          change 0#64 < current.p.m
+          change 0#64 < current.p.sourceSize
           bv_omega
         · rw [ha]
           rfl

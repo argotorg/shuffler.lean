@@ -91,7 +91,7 @@ theorem removeSurplus_correct [Host] (L : Linked) (X : ExitBoundary) (planned : 
     (Unit.pop_unit hexit (X.outside pop_at))
   intro S g F s ra
   refine ⟨fun t ht => ?_⟩
-  have hsz : (Unit.flat g).size.toNat ≤ MAX_N := Nat.le_trans ht.2.ok.len ht.2.ok.xs
+  have hsz : (Unit.flat g).size.toNat ≤ maxStackSize := Nat.le_trans ht.2.ok.len ht.2.ok.xs
   exact Program.wp_mono (fun _ h => h)
     (fun _ h => h.elim
       (fun ⟨ha, ⟨g', fr, v, ⟨⟨hk, hf, hal⟩, normalByte⟩, hok, hl, hm⟩, hag⟩ =>

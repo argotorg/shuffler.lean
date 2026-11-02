@@ -8,7 +8,7 @@ import all FlatShuffler.Unit.Plan.PlannerRunSurplus
 namespace FlatShuffler.Unit.PlannerRunU
 open Flat
 
-theorem ofNat_lt_word {i : Nat} {n : Word} (hn : n.toNat ≤ MAX_N) (hi : i < n.toNat) :
+theorem ofNat_lt_word {i : Nat} {n : Word} (hn : n.toNat ≤ maxStackSize) (hi : i < n.toNat) :
     BitVec.ofNat 64 i < n := by
   rw [BitVec.lt_def, Flat.toNat_ofNat_small (Nat.lt_of_lt_of_le hi hn)]
   exact hi
@@ -46,10 +46,10 @@ theorem lowShape_dest (fs : Flat.St) {i : Nat} (hi : i < fs.size.toNat) :
     (lowShape fs).dest i = (get fs.dest (BitVec.ofNat 64 i)).toNat := by
   simp [FlatShuffler.St.dest, lowShape, List.getElem?_range hi]
 
-def lowPlan (planned : Vector Word MAX_N) : List (Option Nat) :=
+def lowPlan (planned : Vector Word maxStackSize) : List (Option Nat) :=
   planned.toList.map Flat.optOf
 
-theorem lowPlanR (planned : Vector Word MAX_N) {n : Word} (hn : n.toNat ≤ MAX_N) :
+theorem lowPlanR (planned : Vector Word maxStackSize) {n : Word} (hn : n.toNat ≤ maxStackSize) :
     Flat.PlanR n.toNat planned (lowPlan planned) := by
   intro d hd
   have hm := Nat.lt_of_lt_of_le hd hn
@@ -60,12 +60,12 @@ theorem lowPlanR (planned : Vector Word MAX_N) {n : Word} (hn : n.toNat ≤ MAX_
     rw [Flat.get_toNat planned hm]
   rw [he, Flat.optOf_eq_none]
 
-theorem low_scan_step {planned : Vector Word MAX_N} {fs : Flat.St}
-    (hm : fs.size.toNat ≤ MAX_N) {k : Nat} (hk : k < fs.size.toNat)
+theorem low_scan_step {planned : Vector Word maxStackSize} {fs : Flat.St}
+    (hm : fs.size.toNat ≤ maxStackSize) {k : Nat} (hk : k < fs.size.toNat)
     {sc : Flat.Scan} (h : Flat.ScanInv (lowPlan planned) (lowShape fs) k sc) :
     Flat.ScanInv (lowPlan planned) (lowShape fs) (k + 1)
       (Flat.scanStep planned fs (.ofNat 64 k) (get fs.dest (.ofNat 64 k)) sc) := by
-  have hkN : k < MAX_N := Nat.lt_of_lt_of_le hk hm
+  have hkN : k < maxStackSize := Nat.lt_of_lt_of_le hk hm
   have hkw := Flat.toNat_ofNat_small hkN
   have hdk := lowShape_dest fs hk
   have hH : (get planned (.ofNat 64 k) == NONE) = FlatShuffler.isHole (lowPlan planned) k := by
@@ -84,7 +84,7 @@ theorem low_scan_step {planned : Vector Word MAX_N} {fs : Flat.St}
     simp
   all_goals first | exact ⟨_, hdk.symm, rfl⟩ | exact ⟨_, hkw, rfl⟩
 
-theorem low_scan_spec {planned : Vector Word MAX_N} {fs : Flat.St}
+theorem low_scan_spec {planned : Vector Word maxStackSize} {fs : Flat.St}
     (h : MapInv fs.size fs.targetSize ⟨fs.dest, fs.pos⟩) (hn : HasNoSurplus fs) :
     ∀ d k sc, k + d = fs.size.toNat →
       Flat.ScanInv (lowPlan planned) (lowShape fs) k sc →
@@ -93,9 +93,9 @@ theorem low_scan_spec {planned : Vector Word MAX_N} {fs : Flat.St}
   | 0, k, sc, hd, hs => by
     refine ⟨sc, ?_, by simpa only [Nat.add_zero] using hd ▸ hs⟩
     rw [Flat.scan, dite_eq_right]
-    have hkN : k ≤ MAX_N := by have hm := h.m_bound; omega
+    have hkN : k ≤ maxStackSize := by have hm := h.m_bound; omega
     have hkw : (BitVec.ofNat 64 k).toNat = k :=
-      Flat.toNat_ofNat_of_lt (by have hN : MAX_N = 1024 := rfl; omega)
+      Flat.toNat_ofNat_of_lt (by have hN : maxStackSize = 1024 := rfl; omega)
     rw [BitVec.lt_def, hkw]
     omega
   | d + 1, k, sc, hd, hs => by
@@ -112,16 +112,16 @@ theorem low_scan_spec {planned : Vector Word MAX_N} {fs : Flat.St}
     have hnext : BitVec.ofNat 64 k + 1#64 = BitVec.ofNat 64 (k + 1) := by
       apply BitVec.eq_of_toNat_eq
       rw [BitVec.toNat_add, hkw, Flat.toNat_ofNat_of_lt
-        (show k + 1 < 2 ^ 64 by have hN : MAX_N = 1024 := rfl; omega)]
+        (show k + 1 < 2 ^ 64 by have hN : maxStackSize = 1024 := rfl; omega)]
       simp only [BitVec.toNat_ofNat]
-      have hN : MAX_N = 1024 := rfl
+      have hN : maxStackSize = 1024 := rfl
       omega
     rw [Flat.scan, dite_eq_left hlt]
     simp only [hn _ hlt, htk, not_true_eq_false, ↓reduceIte,
       BitVec.ofNat_eq_ofNat, hnext]
     exact he
 
-theorem lowOk_of_map {planned : Vector Word MAX_N} {fs : Flat.St}
+theorem lowOk_of_map {planned : Vector Word maxStackSize} {fs : Flat.St}
     (h : MapInv fs.size fs.targetSize ⟨fs.dest, fs.pos⟩)
     (hn : HasNoSurplus fs) (hp : PlannedSupport planned fs) : Flat.LowOk planned fs := by
   have hw : ∀ p, p < fs.size.toNat → (BitVec.ofNat 64 p).toNat = p :=

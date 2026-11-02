@@ -30,7 +30,7 @@ theorem finish_blocked {st out : Flat.St} (hf : RunU.checks st → FInv st)
             (by simpa only [Bool.not_eq_true', Bool.not_eq_false] using hav),
             (by simpa only [Bool.not_eq_true', Bool.not_eq_false] using hlab)⟩
 
-theorem prep_emission_blocked {planned : Vector Word MAX_N} {m : Nat}
+theorem prep_emission_blocked {planned : Vector Word maxStackSize} {m : Nat}
     {st out : Flat.St} (h : Prep planned m st) (hs : RunU.Safe planned st (4 * m))
     (l : Flat.Locals) (he : Flat.emissionRun planned l st = (.blocked, out)) :
     BlockedBounds st.targetSize out := by
@@ -56,7 +56,7 @@ theorem prep_emission_blocked {planned : Vector Word MAX_N} {m : Nat}
     exact h.removeSurplus_blocked he
 
 theorem ctorP_emission_blocked {m n : Word} {M : Flat.Mapping} (h : MapInv m n M)
-    (data target : Vector StackSlot MAX_N) (spills : BitVec 32 → BitVec 8)
+    (data target : Vector StackSlot maxStackSize) (spills : BitVec 32 → BitVec 8)
     (u : Flat.Uninit) (l : Flat.Locals) {out : Flat.St}
     (he : Flat.emissionRun M.pos l (Flat.ctorP data m target n M spills u) = (.blocked, out)) :
     BlockedBounds n out := by

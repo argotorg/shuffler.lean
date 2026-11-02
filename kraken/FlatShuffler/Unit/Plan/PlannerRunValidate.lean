@@ -21,9 +21,9 @@ theorem spill_false_of_kind {x : StackSlot} {sp : BitVec 32 → BitVec 8}
   simp [Flat.spillIsSpilled, Flat.isVariable, Value, hk]
 
 theorem target_missing_bad {pl : Flat.Planner} {sp : BitVec 32 → BitVec 8} {i : Word}
-    (hi : i < pl.n)
+    (hi : i < pl.targetSize)
     (hf : (isJunk (Flat.get pl.target i) || canBeFreelyGenerated (Flat.get pl.target i)) = false)
-    (hc : Flat.containsFrom pl.source pl.m (Flat.get pl.target i) 0 = false)
+    (hc : Flat.containsFrom pl.source pl.sourceSize (Flat.get pl.target i) 0 = false)
     (hs : Flat.spillIsSpilled sp (Flat.get pl.target i) = false) :
     Flat.targetsFrom pl sp i = false := by
   apply targets_fail hi

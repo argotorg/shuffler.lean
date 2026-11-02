@@ -44,18 +44,18 @@ theorem MapInv.finv {st : Flat.St}
     · exact Or.inr ⟨(h.pos d hd).resolve_left hp, h.pos_inv d hd hp⟩
 
 theorem copy_dest {m n : Word} {M : Flat.Mapping} (u : Flat.Mapping)
-    (hm : m.toNat ≤ MAX_N) {p : Word} (hp : p < m) :
+    (hm : m.toNat ≤ maxStackSize) {p : Word} (hp : p < m) :
     get (u.copy M m n).dest p = get M.dest p := by
-  have hpN : p.toNat < MAX_N := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hp) hm
+  have hpN : p.toNat < maxStackSize := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hp) hm
   simp only [Flat.Mapping.copy]
   rw [get_toNat _ hpN, Flat.copy_get _ _ _ hm hpN,
     ite_eq_left (BitVec.lt_def.mp hp)]
   exact (get_toNat _ hpN).symm
 
 theorem copy_pos {m n : Word} {M : Flat.Mapping} (u : Flat.Mapping)
-    (hn : n.toNat ≤ MAX_N) {t : Word} (ht : t < n) :
+    (hn : n.toNat ≤ maxStackSize) {t : Word} (ht : t < n) :
     get (u.copy M m n).pos t = get M.pos t := by
-  have htN : t.toNat < MAX_N := Nat.lt_of_lt_of_le (BitVec.lt_def.mp ht) hn
+  have htN : t.toNat < maxStackSize := Nat.lt_of_lt_of_le (BitVec.lt_def.mp ht) hn
   simp only [Flat.Mapping.copy]
   rw [get_toNat _ htN, Flat.copy_get _ _ _ hn htN,
     ite_eq_left (BitVec.lt_def.mp ht)]
@@ -80,22 +80,22 @@ theorem MapInv.copy {m n : Word} {M : Flat.Mapping} (h : MapInv m n M)
     exact h.pos_inv t ht hne
 
 theorem ctorP_destOk {m n : Word} {M : Flat.Mapping} (h : MapInv m n M)
-    (data target : Vector StackSlot MAX_N) (spills : BitVec 32 → BitVec 8)
+    (data target : Vector StackSlot maxStackSize) (spills : BitVec 32 → BitVec 8)
     (u : Flat.Uninit) : DestOk (Flat.ctorP data m target n M spills u) := by
   simp only [Flat.ctorP, Flat.pend_fold]
   intro i hi
-  have hiN : i < MAX_N := Nat.lt_of_lt_of_le hi h.m_bound
+  have hiN : i < maxStackSize := Nat.lt_of_lt_of_le hi h.m_bound
   have hi64 : (BitVec.ofNat 64 i).toNat = i := by
     simp only [BitVec.toNat_ofNat]
     apply Nat.mod_eq_of_lt
-    simp only [MAX_N] at hiN
+    simp only [maxStackSize] at hiN
     omega
   have hip : BitVec.ofNat 64 i < m := by simpa only [BitVec.lt_def, hi64] using hi
   rw [copy_dest ⟨u.dest, u.pos⟩ h.m_bound hip]
   exact (h.dest _ hip).imp_right BitVec.lt_def.mp
 
 theorem ctorP_budget (m n : Word) (M : Flat.Mapping)
-    (data target : Vector StackSlot MAX_N) (spills : BitVec 32 → BitVec 8)
+    (data target : Vector StackSlot maxStackSize) (spills : BitVec 32 → BitVec 8)
     (u : Flat.Uninit) :
     (Flat.ctorP data m target n M spills u).trace.length +
         2 * (Flat.ctorP data m target n M spills u).size.toNat ≤ 6 * n.toNat + 4 * m.toNat := by

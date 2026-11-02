@@ -9,7 +9,7 @@ namespace FlatShuffler.Unit.PlannerRunU
 open FlatShuffler.Sep
 
 theorem withResolve_ok {g : PlannerCallMemory} (h : g.Ok)
-    (sp : BitVec 32 → BitVec 8) (d : Vector (BitVec 8) MAX_N) : (withResolve g sp d).Ok :=
+    (sp : BitVec 32 → BitVec 8) (d : Vector (BitVec 8) maxStackSize) : (withResolve g sp d).Ok :=
   ⟨h.planner, h.spillCount, h.sourceIds, h.targetIds, h.ops, h.traceLength⟩
 
 section
@@ -32,7 +32,7 @@ theorem Bd.callResolve (hb : Bd P g F s ra lo locals t)
       (localMapping locals hb.localLength) (localCurrentMapping locals hb.localLength)) r' t u →
       r' = plannerResolve (withResolve g r'.spills r'.dropped) t.regs.rsp.toBitVec
         (localMapping locals hb.localLength) (localCurrentMapping locals hb.localLength))
-    (hK : ∀ (sp : BitVec 32 → BitVec 8) (d : Vector (BitVec 8) MAX_N)
+    (hK : ∀ (sp : BitVec 32 → BitVec 8) (d : Vector (BitVec 8) maxStackSize)
       (u : MachineData) (lo' : List Word),
       Bd P (withResolve g sp d) F s ra lo' locals u →
       Q (plannerResolve g t.regs.rsp.toBitVec (localMapping locals hb.localLength)
@@ -40,7 +40,7 @@ theorem Bd.callResolve (hb : Bd P g F s ra lo locals t)
         (plannerResolve (withResolve g sp d) t.regs.rsp.toBitVec
           (localMapping locals hb.localLength) (localCurrentMapping locals hb.localLength)) t u →
       Sep.mod.Agree t u → K u)
-    (hX : ∀ (sp : BitVec 32 → BitVec 8) (d : Vector (BitVec 8) MAX_N)
+    (hX : ∀ (sp : BitVec 32 → BitVec 8) (d : Vector (BitVec 8) maxStackSize)
       (u : MachineData) (lo' : List Word), lo'.length = 4113 →
       (Stk (rsp s) (fr s lo' locals) ra.toBitVec ∗
         (plannerCallOwnedMemory P (withResolve g sp d) ∗ F)).get u.dmem →

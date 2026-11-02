@@ -35,29 +35,29 @@ theorem plannerObjectOwnedMemory.rd_tgt (h : (plannerObjectOwnedMemory P p ∗ F
 theorem plannerObjectOwnedMemory.isSome_tgt (h : (plannerObjectOwnedMemory P p ∗ F).get m) :
     (m.loadInt (P + 16#64) 8).isSome = true :=
   isSome_of_eq p.tgt h (by unfold plannerObjectOwnedMemory; ecancel)
-theorem plannerObjectOwnedMemory.rd_n (h : (plannerObjectOwnedMemory P p ∗ F).get m) : rd m (P + 24#64) = p.n :=
+theorem plannerObjectOwnedMemory.rd_targetSize (h : (plannerObjectOwnedMemory P p ∗ F).get m) : rd m (P + 24#64) = p.targetSize :=
   rd_of_eq h (by unfold plannerObjectOwnedMemory; ecancel)
-theorem plannerObjectOwnedMemory.isSome_n (h : (plannerObjectOwnedMemory P p ∗ F).get m) : (m.loadInt (P + 24#64) 8).isSome = true :=
-  isSome_of_eq p.n h (by unfold plannerObjectOwnedMemory; ecancel)
+theorem plannerObjectOwnedMemory.isSome_targetSize (h : (plannerObjectOwnedMemory P p ∗ F).get m) : (m.loadInt (P + 24#64) 8).isSome = true :=
+  isSome_of_eq p.targetSize h (by unfold plannerObjectOwnedMemory; ecancel)
 
 theorem plannerObjectOwnedMemory.arr_tgt (h : (plannerObjectOwnedMemory P p ∗ F).get m) : ∃ R, (Arr p.tgt p.tw ∗ R).get m :=
   ⟨_, (by unfold plannerObjectOwnedMemory; ecancel : plannerObjectOwnedMemory P p ∗ F = Arr p.tgt p.tw ∗ _) ▸ h⟩
 
-theorem plannerObjectOwnedMemory.isSome_tw (h : (plannerObjectOwnedMemory P p ∗ F).get m) (hok : p.Ok) (hi : i.toNat < p.n.toNat) :
+theorem plannerObjectOwnedMemory.isSome_tw (h : (plannerObjectOwnedMemory P p ∗ F).get m) (hok : p.Ok) (hi : i.toNat < p.targetSize.toNat) :
     (m.loadInt (slotAt p.tgt i.toNat) 8).isSome = true :=
   let ⟨_, h⟩ := plannerObjectOwnedMemory.arr_tgt h; Arr.isSome h (hok.tw ▸ hi)
 
 -- Slot `i < n` of the target.
-theorem plannerObjectOwnedMemory.rd_tw (h : (plannerObjectOwnedMemory P p ∗ F).get m) (hok : p.Ok) (hi : i.toNat < p.n.toNat) :
+theorem plannerObjectOwnedMemory.rd_tw (h : (plannerObjectOwnedMemory P p ∗ F).get m) (hok : p.Ok) (hi : i.toNat < p.targetSize.toNat) :
     StackSlot.ofWord (rd m (slotAt p.tgt i.toNat)) = Flat.get p.fl.target i := by
   obtain ⟨_, h⟩ := plannerObjectOwnedMemory.arr_tgt h
   have hi' : i.toNat < p.tw.length := hok.tw ▸ hi
   show _ = Flat.get (vec (p.tw.map StackSlot.ofWord)) i
-  rw [get_vecL (by simpa using hi') (by simpa [hok.tw] using hok.n), List.getElem_map]
+  rw [get_vecL (by simpa using hi') (by simpa [hok.tw] using hok.targetSizeFitsBuffer), List.getElem_map]
   exact congrArg StackSlot.ofWord (Arr.rd h hi')
 
 -- Byte 4 of the target word `i < n`.
-theorem plannerObjectOwnedMemory.b8_kind (h : (plannerObjectOwnedMemory P p ∗ F).get m) (hok : p.Ok) (hi : i.toNat < p.n.toNat) :
+theorem plannerObjectOwnedMemory.b8_kind (h : (plannerObjectOwnedMemory P p ∗ F).get m) (hok : p.Ok) (hi : i.toNat < p.targetSize.toNat) :
     ∃ R, (B8 (slotAt p.tgt i.toNat + 4#64) (Flat.get p.fl.target i).kind ∗ R).get m := by
   obtain ⟨R, h⟩ := plannerObjectOwnedMemory.arr_tgt h
   have hi' : i.toNat < p.tw.length := hok.tw ▸ hi
@@ -65,18 +65,18 @@ theorem plannerObjectOwnedMemory.b8_kind (h : (plannerObjectOwnedMemory P p ∗ 
   obtain ⟨P, e'⟩ := Wd.focus_byte (slotAt p.tgt i.toNat) p.tw[i.toNat] (j := 4) (by decide)
   have hk : (Flat.get p.fl.target i).kind = p.tw[i.toNat].extractLsb' (8 * 4) 8 := by
     show (Flat.get (vec (p.tw.map StackSlot.ofWord)) i).kind = _
-    rw [get_vecL (by simpa using hi') (by simpa [hok.tw] using hok.n), List.getElem_map]
+    rw [get_vecL (by simpa using hi') (by simpa [hok.tw] using hok.targetSizeFitsBuffer), List.getElem_map]
     rfl
   rw [e] at h
   change ((Wd (slotAt p.tgt i.toNat) p.tw[i.toNat] ∗ Q) ∗ R).get m at h
   rw [e', MProp.sep_assoc, MProp.sep_assoc] at h
   exact ⟨_, hk ▸ h⟩
 
-theorem plannerObjectOwnedMemory.rdb_kind (h : (plannerObjectOwnedMemory P p ∗ F).get m) (hok : p.Ok) (hi : i.toNat < p.n.toNat) :
+theorem plannerObjectOwnedMemory.rdb_kind (h : (plannerObjectOwnedMemory P p ∗ F).get m) (hok : p.Ok) (hi : i.toNat < p.targetSize.toNat) :
     rdb m (slotAt p.tgt i.toNat + 4#64) = (Flat.get p.fl.target i).kind :=
   let ⟨_, h⟩ := plannerObjectOwnedMemory.b8_kind h hok hi; B8.rdb h
 
-theorem plannerObjectOwnedMemory.isSome_kind (h : (plannerObjectOwnedMemory P p ∗ F).get m) (hok : p.Ok) (hi : i.toNat < p.n.toNat) :
+theorem plannerObjectOwnedMemory.isSome_kind (h : (plannerObjectOwnedMemory P p ∗ F).get m) (hok : p.Ok) (hi : i.toNat < p.targetSize.toNat) :
     (m.loadInt (slotAt p.tgt i.toNat + 4#64) 1).isSome = true :=
   let ⟨_, h⟩ := plannerObjectOwnedMemory.b8_kind h hok hi; B8.isSome h
 end
@@ -95,20 +95,20 @@ namespace DemandU
 section
 variable {pl : Flat.Planner} {x : StackSlot} {j : Word}
 
-theorem from_ge (h : ¬ j < pl.n) : Flat.demandedFrom pl x j = false := by
+theorem from_ge (h : ¬ j < pl.targetSize) : Flat.demandedFrom pl x j = false := by
   rw [Flat.demandedFrom, dite_eq_right h]
 
-theorem skip_junk (h : j < pl.n) (hj : isJunk (Flat.get pl.target j) = true) :
+theorem skip_junk (h : j < pl.targetSize) (hj : isJunk (Flat.get pl.target j) = true) :
     Flat.demandedFrom pl x j = Flat.demandedFrom pl x (j + 1) := by
   rw [Flat.demandedFrom, dite_eq_left h]
   simp [hj]
 
-theorem skip_ne (h : j < pl.n) (hs : Flat.get pl.target j ≠ x) :
+theorem skip_ne (h : j < pl.targetSize) (hs : Flat.get pl.target j ≠ x) :
     Flat.demandedFrom pl x j = Flat.demandedFrom pl x (j + 1) := by
   rw [Flat.demandedFrom, dite_eq_left h]
   simp [hs]
 
-theorem found (h : j < pl.n) (hj : isJunk (Flat.get pl.target j) = false)
+theorem found (h : j < pl.targetSize) (hj : isJunk (Flat.get pl.target j) = false)
     (hs : Flat.get pl.target j = x) : Flat.demandedFrom pl x j = true := by
   rw [Flat.demandedFrom, dite_eq_left h]
   subst hs; simp [hj]
@@ -131,7 +131,7 @@ structure LI (P : Addr) (p : PlannerObjectMemory) (F : MProp 64) (s : MachineDat
   kg : Kg (plannerObjectOwnedMemory P p ∗ F) s ra [] t
   rsi : t.regs.rsi.toBitVec = s.regs.rsi.toBitVec
   rcx : t.regs.rcx.toBitVec = p.tgt
-  r8 : t.regs.r8.toBitVec = p.n
+  r8 : t.regs.r8.toBitVec = p.targetSize
 
 section
 variable {P : Addr} {p : PlannerObjectMemory} {F : MProp 64} {s t t' : MachineData} {ra : Int64}
@@ -169,10 +169,10 @@ def Inv (P : Addr) (p : PlannerObjectMemory) (F : MProp 64) (s : MachineData) (r
   | .label l, t =>
     if l = Names.isDemanded then t = s.pushRa ra
     else if l = ".LB.Planner.isDemanded.0" then
-      LI P p F s ra t ∧ t.regs.rax.toBitVec.toNat < p.n.toNat
+      LI P p F s ra t ∧ t.regs.rax.toBitVec.toNat < p.targetSize.toNat
       ∧ Flat.demandedFrom p.fl (StackSlot.ofWord (rsi s)) (t.regs.rax.toBitVec + 1#64) = res p s
     else if l = ".LB.Planner.isDemanded.1" then
-      LI P p F s ra t ∧ t.regs.rax.toBitVec.toNat < p.n.toNat
+      LI P p F s ra t ∧ t.regs.rax.toBitVec.toNat < p.targetSize.toNat
       ∧ Flat.demandedFrom p.fl (StackSlot.ofWord (rsi s)) t.regs.rax.toBitVec = res p s
     else if l = ".LB.Planner.isDemanded.2" then
       Kg (plannerObjectOwnedMemory P p ∗ F) s ra [] t ∧ res p s = false
@@ -184,9 +184,9 @@ def Inv (P : Addr) (p : PlannerObjectMemory) (F : MProp 64) (s : MachineData) (r
 def V (p : PlannerObjectMemory) (l : Label) (t : MachineData) : Nat :=
   if l = Names.isDemanded then 2 ^ 70
   else if l = ".LB.Planner.isDemanded.0" then
-    2 * (p.n.toNat - t.regs.rax.toBitVec.toNat) - 1
+    2 * (p.targetSize.toNat - t.regs.rax.toBitVec.toNat) - 1
   else if l = ".LB.Planner.isDemanded.1" then
-    2 * (p.n.toNat - t.regs.rax.toBitVec.toNat)
+    2 * (p.targetSize.toNat - t.regs.rax.toBitVec.toNat)
   else 0
 
 def E (P : Addr) (p : PlannerObjectMemory) (F : MProp 64) (s : MachineData) (ra : Int64) :
@@ -248,8 +248,8 @@ theorem b_fn (hpre : VPre plannerObjectOwnedMemory PlannerObjectMemory.Ok P p F 
   have hrdi : (s.pushRa ra).regs.rdi.toBitVec = P := by
     simpa [MachineData.pushRa] using hpre.rdi
   have hm := hk0.vmem
-  have h_n := plannerObjectOwnedMemory.rd_n hm
-  have k_n := plannerObjectOwnedMemory.isSome_n hm
+  have h_n := plannerObjectOwnedMemory.rd_targetSize hm
+  have k_n := plannerObjectOwnedMemory.isSome_targetSize hm
   have h_t := plannerObjectOwnedMemory.rd_tgt hm
   have k_t := plannerObjectOwnedMemory.isSome_tgt hm
   unfold rd at h_n h_t
@@ -270,18 +270,18 @@ theorem b_fn (hpre : VPre plannerObjectOwnedMemory PlannerObjectMemory.Ok P p F 
     · exact (hk0.next rfl rfl rfl rfl rfl rfl rfl rfl).stack
     · dm_inv
       exact ⟨hk0.next rfl rfl rfl rfl rfl rfl rfl rfl,
-        from_ge (by show ¬ (0 : Word) < p.n; rw [h0]; decide)⟩
+        from_ge (by show ¬ (0 : Word) < p.targetSize; rw [h0]; decide)⟩
     · simp [V, Names.isDemanded]
   | goto ".LB.Planner.isDemanded.1" =>
     rename_i hc
     simp only [hrdi, h_n, BitVec.and_self] at hc
-    have h0 : p.n ≠ 0#64 := by simpa using hc
-    have hpos : 0 < p.n.toNat := Nat.pos_of_ne_zero fun e => h0 (BitVec.eq_of_toNat_eq e)
+    have h0 : p.targetSize ≠ 0#64 := by simpa using hc
+    have hpos : 0 < p.targetSize.toNat := Nat.pos_of_ne_zero fun e => h0 (BitVec.eq_of_toNat_eq e)
     cfg_goto
     · exact (hk0.next rfl rfl rfl rfl rfl rfl rfl rfl).stack
     · dm_inv
       exact ⟨⟨hk0.next rfl rfl rfl rfl rfl rfl rfl rfl, rfl, rfl, rfl⟩, hpos, rfl⟩
-    · left; have := p.n.isLt; simp [V, Names.isDemanded]; omega
+    · left; have := p.targetSize.isLt; simp [V, Names.isDemanded]; omega
 
 
 set_option maxHeartbeats 100000 in
@@ -298,7 +298,7 @@ theorem b_0 : isDemandedAsm.ForallBlocks fun blk =>
   vc_by_shape
   | goto ".LB.Planner.isDemanded.2" =>
     rename_i hc
-    have he : t.regs.rax.toBitVec + 1#64 = p.n := by
+    have he : t.regs.rax.toBitVec + 1#64 = p.targetSize := by
       rw [BitVec.add_comm, ← h8]; exact beq_iff_eq.mp hc
     cfg_goto
     · exact hli.stk rfl rfl
@@ -308,11 +308,11 @@ theorem b_0 : isDemandedAsm.ForallBlocks fun blk =>
     · left; dm_var; omega
   | other =>
     rename_i hc
-    have hne : 1#64 + t.regs.rax.toBitVec ≠ p.n := by
+    have hne : 1#64 + t.regs.rax.toBitVec ≠ p.targetSize := by
       rw [← h8]; simpa using hc
     have e : (1#64 + t.regs.rax.toBitVec).toNat = t.regs.rax.toBitVec.toNat + 1 := by bv_omega
-    have hlt' : (1#64 + t.regs.rax.toBitVec).toNat < p.n.toNat := by
-      have : (1#64 + t.regs.rax.toBitVec).toNat ≠ p.n.toNat :=
+    have hlt' : (1#64 + t.regs.rax.toBitVec).toNat < p.targetSize.toNat := by
+      have : (1#64 + t.regs.rax.toBitVec).toNat ≠ p.targetSize.toNat :=
         fun x => hne (BitVec.eq_of_toNat_eq x)
       omega
     first
@@ -328,7 +328,7 @@ theorem b_1 (hok : PlannerObjectMemory.Ok p) : isDemandedAsm.ForallBlocks fun bl
   intro t ht
   dm_inv at ht
   obtain ⟨hli, hlt, hrest⟩ := ht
-  have hlt' : t.regs.rax.toBitVec < p.fl.n := BitVec.lt_def.2 hlt
+  have hlt' : t.regs.rax.toBitVec < p.fl.targetSize := BitVec.lt_def.2 hlt
   have hcx := hli.rcx
   have hsi := hli.rsi
   have hm := hli.kg.vmem

@@ -97,13 +97,13 @@ def depths : List (Word × Word) :=
 def op0 : OpR := ⟨⟨0#8, 0#8, ⟨0#32, 0#8, 0#8⟩⟩, 0x1234#16, 0x5678#16⟩
 
 -- A ghost with `n = 2`: the slot `s0` at 0, `size = 1`, no records, `m_positionOf = pos`.
-def hdr (pos : Vector Word MAX_N) : Hdr :=
-  ⟨0, 2, 0, 0, 1, 0, 0, Vector.replicate MAX_N Flat.NONE, pos, 0, 0, 0⟩
-def ghost (s0 : Word) (pos : Vector Word MAX_N) : G :=
+def hdr (pos : Vector Word maxStackSize) : Hdr :=
+  ⟨0, 2, 0, 0, 1, 0, 0, Vector.replicate maxStackSize Flat.NONE, pos, 0, 0, 0⟩
+def ghost (s0 : Word) (pos : Vector Word maxStackSize) : G :=
   ⟨hdr pos, 0, 0, ⟨#[s0, 0], rfl⟩, ⟨Array.replicate 12 op0, rfl⟩, ⟨#[0, 0], rfl⟩, fun _ => 0⟩
 
-def free : Vector Word MAX_N := Vector.replicate MAX_N Flat.NONE
-def used : Vector Word MAX_N := free.set 1 0
+def free : Vector Word maxStackSize := Vector.replicate maxStackSize Flat.NONE
+def used : Vector Word maxStackSize := free.set 1 0
 
 -- The parts of a flat state that `dup` writes.
 def parts (st : Flat.St) := (st.data, st.size, st.trace, st.dest, st.pos)

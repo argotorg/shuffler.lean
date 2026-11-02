@@ -72,8 +72,8 @@ theorem b_1 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : MProp 64)
   have kop := B8.isSome ho
   have hword := plannerObjectOwnedMemory.rd_tw hp hok.planner (BitVec.lt_def.mp hi)
   have kword := plannerObjectOwnedMemory.isSome_tw hp hok.planner (BitVec.lt_def.mp hi)
-  have hm := plannerObjectOwnedMemory.rd_m hp
-  have km := plannerObjectOwnedMemory.isSome_m hp
+  have hm := plannerObjectOwnedMemory.rd_sourceSize hp
+  have km := plannerObjectOwnedMemory.isSome_sourceSize hp
   have hsrc := plannerObjectOwnedMemory.rd_src hp
   have ksrc := plannerObjectOwnedMemory.isSome_src hp
   simp only [rcx, Reg64s.get64_rcx] at hkind kkind hop kop hword kword

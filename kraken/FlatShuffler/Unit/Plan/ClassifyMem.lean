@@ -20,7 +20,7 @@ def CView (P : Addr) (c : CG) : MProp 64 :=
   HView P c.h ∗ Spl c.h.p.spl c.spills (splIds c.h.p.sw)
 
 def classifyA (c : CG) (s : MachineData) : Prop :=
-  hasOtherA c.h s ∧ (Flat.get c.h.M.dest (rcx s)).toNat < c.h.p.n.toNat
+  hasOtherA c.h s ∧ (Flat.get c.h.M.dest (rcx s)).toNat < c.h.p.targetSize.toNat
 
 def classifyQ (c c' : CG) (s t : MachineData) : Prop :=
   c' = c ∧ al t = Flat.classify c.h.p.fl c.spills c.h.M c.h.dv (rcx s)
@@ -43,7 +43,7 @@ theorem slot_eq (c : CG) (s : MachineData) (hok : c.Ok) (ha : classifyA c s) :
   have hi : (rcx s).toNat < c.h.p.sw.length := hok.sw ▸ ha.1.2.2
   simp only [inp, inputs, PlannerObjectMemory.fl, sw]
   rw [List.getElem!_eq_getElem?_getD, List.getElem?_eq_getElem hi, Option.getD_some,
-    get_vecL (by simpa using hi) (by simpa [hok.sw] using hok.m),
+    get_vecL (by simpa using hi) (by simpa [hok.sw] using hok.sourceSizeFitsBuffer),
     List.getElem_map]
 
 section
@@ -61,7 +61,7 @@ theorem CView.map (h : (CView P c ∗ F).get m) : ∃ R, (MapM c.h.mp c.h.M ∗ 
   exact ⟨_, h⟩
 
 theorem plannerObjectOwnedMemory.wd_sw {p : PlannerObjectMemory} (h : (plannerObjectOwnedMemory P p ∗ F).get m) (hok : p.Ok)
-    {i : Word} (hi : i.toNat < p.m.toNat) :
+    {i : Word} (hi : i.toNat < p.sourceSize.toNat) :
     ∃ R, (Wd (slotAt p.src i.toNat) p.sw[i.toNat]! ∗ R).get m := by
   obtain ⟨R, h⟩ := plannerObjectOwnedMemory.arr_src h
   have hi' : i.toNat < p.sw.length := hok.sw ▸ hi

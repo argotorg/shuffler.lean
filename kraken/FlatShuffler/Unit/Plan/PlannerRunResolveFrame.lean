@@ -12,8 +12,8 @@ open FlatShuffler.Sep Flat
 set_option maxRecDepth 4096
 
 def localCurrentMapping (locals : List Word) (hl : locals.length = 4121) : Flat.Mapping where
-  dest := ⟨((locals.drop 2067).take 1024).toArray, by simp [hl, MAX_N]⟩
-  pos := ⟨((locals.drop 3091).take 1024).toArray, by simp [hl, MAX_N]⟩
+  dest := ⟨((locals.drop 2067).take 1024).toArray, by simp [hl, maxStackSize]⟩
+  pos := ⟨((locals.drop 3091).take 1024).toArray, by simp [hl, maxStackSize]⟩
 
 theorem current_partition (locals : List Word) :
     locals.drop 2060 = (locals.drop 2060).take 7 ++ (locals.drop 2067).take 1024 ++
@@ -40,7 +40,7 @@ theorem local_current_mapping (sp : Addr) (locals : List Word) (hl : locals.leng
   ecancel
 
 def withResolve (g : PlannerCallMemory) (spills : BitVec 32 → BitVec 8)
-    (dropped : Vector (BitVec 8) MAX_N) : PlannerCallMemory :=
+    (dropped : Vector (BitVec 8) maxStackSize) : PlannerCallMemory :=
   {g with spills := spills, dropped := dropped}
 
 def plannerResolve (g : PlannerCallMemory) (sp : Addr) (M current : Flat.Mapping) : RG where
@@ -57,7 +57,7 @@ theorem resolve_call_frame (P : Addr) (g : PlannerCallMemory) (s : MachineData) 
     (locals : List Word) (hl : locals.length = 4121) (F : MProp 64) :
     let sp := rsp s - 8#64 - 33016#64
     ∃ CF, ∀ (lo : List Word) (w : Word) (spills : BitVec 32 → BitVec 8)
-        (dropped : Vector (BitVec 8) MAX_N),
+        (dropped : Vector (BitVec 8) maxStackSize),
       let g' := withResolve g spills dropped
       Stk (rsp s) (lo ++ w :: (locals ++ saved s)) ra.toBitVec ∗
           (plannerCallOwnedMemory P g' ∗ F) =
@@ -68,7 +68,7 @@ theorem resolve_call_frame (P : Addr) (g : PlannerCallMemory) (s : MachineData) 
   refine ⟨Arr sp (locals.take 12) ∗ Arr (sp + 16480#64) ((locals.drop 2060).take 7) ∗
     Arr (sp + 32920#64) (locals.drop 4115 ++ saved s) ∗
     Arr g.dataPtr (g.data.toList.take g.dataCapacity) ∗ Ops g.opsPtr 0 g.ops ∗
-    Arr g.sourcesPtr (g.sources.toList.take g.p.n.toNat) ∗ Wd g.countPtr g.count ∗
+    Arr g.sourcesPtr (g.sources.toList.take g.p.targetSize.toNat) ∗ Wd g.countPtr g.count ∗
     Wd (rsp s - 8#64) ra.toBitVec ∗ F, ?_⟩
   intro lo w spills dropped
   rw [Stk.callee]

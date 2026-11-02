@@ -48,7 +48,7 @@ theorem not_lt_of_cf' {a n : Word}
   rw [Idioms.cf_sub] at h
   simpa [BitVec.lt_def] using h
 
--- The size is at most `MAX_N`.
+-- The size is at most `maxStackSize`.
 theorem len_le {g : G} (hok : g.Ok) : g.h.len.toNat ≤ 1024 := Nat.le_trans hok.len hok.xs
 
 /-! ## The blocks -/
@@ -115,7 +115,7 @@ theorem b_0 [Host] [FunDecls] (S PM planned g F0 s ra)
   simp only [LInv, Names.permuteAtLowestHeight, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨L, l0, ⟨lo, w, hM, hdi⟩, hSc, hsc⟩ := ht
   have ⟨hcx, hlt, _, _, _⟩ := hSc
-  have hr : t.regs.rax.toBitVec.toNat < MAX_N := by
+  have hr : t.regs.rax.toBitVec.toNat < maxStackSize := by
     have := BitVec.lt_def.mp hlt
     have := len_le hpre.ok
     show _ < 1024
@@ -156,7 +156,7 @@ theorem b_head [Host] [FunDecls] (S PM planned g F0 s ra)
   simp only [LInv, Names.permuteAtLowestHeight, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨L, l0, ⟨lo, w, hM, hdi⟩, hSc, hdx, hN, hsc⟩ := ht
   have ⟨hcx, hlt, _, _, _⟩ := hSc
-  have hr : t.regs.rax.toBitVec.toNat < MAX_N := by
+  have hr : t.regs.rax.toBitVec.toNat < maxStackSize := by
     have := BitVec.lt_def.mp hlt; have := len_le hpre.ok
     show _ < 1024; omega
   have hd := hdx

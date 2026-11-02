@@ -80,7 +80,7 @@ theorem sim_blockDup (hs : Sim e fs st) {c : Word} (hc : c.toNat < st.len)
       (.error (.blocked c.toNat (st.len - 1 - c.toNat - MAX_DUP_DEPTH) st)) := by
   have hsz := hs.size
   have hl := hs.len_lt
-  unfold MAX_N at hl
+  unfold maxStackSize at hl
   unfold MAX_DUP_DEPTH at hx ⊢
   have hw : (depthOf fs c - maxDupDepth).toNat = st.len - 1 - c.toNat - 15 := by
     unfold depthOf maxDupDepth; bv_omega
@@ -96,7 +96,7 @@ theorem sim_blockSwap (hs : Sim e fs st) {c : Word} (hc : c.toNat < st.len)
       (.error (.blocked c.toNat (st.len - 1 - c.toNat - MAX_SWAP_DEPTH) st)) := by
   have hsz := hs.size
   have hl := hs.len_lt
-  unfold MAX_N at hl
+  unfold maxStackSize at hl
   unfold MAX_SWAP_DEPTH at hx ⊢
   have hw : (depthOf fs c - maxSwapDepth).toNat = st.len - 1 - c.toNat - 16 := by
     unfold depthOf maxSwapDepth; bv_omega
@@ -117,7 +117,7 @@ theorem sim_emit (hs : Sim e fs st) {t : Word} (ht : t.toNat < e.n) (hlt : st.le
     SimR e (emitF fs t) (emit e st t.toNat) := by
   have hsz := hs.size
   have hl := hs.len_lt
-  unfold MAX_N at hl
+  unfold maxStackSize at hl
   unfold emitF emit
   dsimp only
   rw [hs.target ht, sim_copy hs, ← hs.isSpilled]
@@ -141,7 +141,7 @@ theorem sim_emit (hs : Sim e fs st) {t : Word} (ht : t.toNat < e.n) (hlt : st.le
     have hp := shallowestCopy_lt hc
     have hv := find_val hc
     have hw : (BitVec.ofNat 64 p).toNat = p := toNat_ofNat_of_lt (by omega)
-    have hn : BitVec.ofNat 64 p ≠ NONE := lt_NONE (by rw [hw]; unfold MAX_N; omega)
+    have hn : BitVec.ofNat 64 p ≠ NONE := lt_NONE (by rw [hw]; unfold maxStackSize; omega)
     have hdr : isDupReachable fs (BitVec.ofNat 64 p) = true ↔ st.len - 1 - p ≤ MAX_DUP_DEPTH := by
       unfold isDupReachable depthOf maxDupDepth MAX_DUP_DEPTH
       rw [decide_eq_true_iff]
@@ -197,7 +197,7 @@ theorem sim_produceTail (hs : Sim e fs st) {t : Word} (ht : t.toNat < e.n) (h1 :
        else .ok { st with pendingGenerations := sizeDec st.pendingGenerations }) := by
   have hsz := hs.size
   have hl := hs.len_lt
-  unfold MAX_N at hl
+  unfold maxStackSize at hl
   have hT : fs.size - 1 = BitVec.ofNat 64 (st.len - 1) := by
     apply eq_of_toNat; rw [toNat_ofNat_of_lt (by omega)]; bv_omega
   have hq : get fs.pos t = fs.size - 1 ↔ positionOf st t.toNat = some (st.len - 1) := by
@@ -234,7 +234,7 @@ theorem sim_genTail (hs : Sim e fs st) {t : Word} (ht : t.toNat < e.n) :
   have hl := hs.len_lt
   have hn := hs.n
   have hle := hs.n_le
-  unfold MAX_N at hl hle
+  unfold maxStackSize at hl hle
   unfold genTail
   by_cases h1 : ¬t.toNat + 1 < st.len
   · rw [ite_eq_right (c := t + 1 < fs.size ∧ ¬isFinal fs t = true) (fun h => h1 (by have := h.1; bv_omega)),

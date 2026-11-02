@@ -66,7 +66,7 @@ theorem surplus_tail_not_blocked {r : Flat.Status × Flat.St} {out : Flat.St}
     · exact Flat.pop_status _ (congrArg Prod.fst (Except.error.inj he))
     · cases he
 
-theorem Prep.surplusPass_blocked {planned : Vector Word MAX_N} {m : Nat}
+theorem Prep.surplusPass_blocked {planned : Vector Word maxStackSize} {m : Nat}
     {st out : Flat.St} (h : Prep planned m st)
     (he : Flat.surplusPass st = .error (.blocked, out)) :
     BlockedBounds st.targetSize out := by
@@ -121,7 +121,7 @@ theorem surplusPass_ok_target {st mid : Flat.St}
             · cases ha
               exact (Flat.swapWith_keep _ _).1
 
-theorem Prep.surplusLoop_blocked {planned : Vector Word MAX_N} {m : Nat}
+theorem Prep.surplusLoop_blocked {planned : Vector Word maxStackSize} {m : Nat}
     (fuel : Nat) {st out : Flat.St} (h : Prep planned m st)
     (he : Flat.surplusLoop st fuel = (.blocked, out)) :
     BlockedBounds st.targetSize out := by
@@ -144,7 +144,7 @@ theorem Prep.surplusLoop_blocked {planned : Vector Word MAX_N} {m : Nat}
         simpa only [ht] using hp.1.surplusLoop_blocked fuel he
 termination_by fuel
 
-theorem Prep.removeSurplus_blocked {planned : Vector Word MAX_N} {m : Nat}
+theorem Prep.removeSurplus_blocked {planned : Vector Word maxStackSize} {m : Nat}
     {st out : Flat.St} (h : Prep planned m st)
     (he : Flat.removeSurplus st = (.blocked, out)) :
     BlockedBounds st.targetSize out :=

@@ -21,7 +21,7 @@ theorem swapDestinations_noSurplus {st : Flat.St}
   exact hn _ (exchangeAt_lt ha hb hi)
 
 theorem exchange_cont_state {st st' : Flat.St} {top pos : Word}
-    {p p' : Vector Word MAX_N} (he : Flat.exchange st top p pos = .cont st' p') :
+    {p p' : Vector Word maxStackSize} (he : Flat.exchange st top p pos = .cont st' p') :
     st' = Flat.swapDestinations st pos top ∨
       st' = Flat.swapDestinations (Flat.stackSwap st pos) pos top := by
   unfold Flat.exchange at he
@@ -32,7 +32,7 @@ theorem exchange_cont_state {st st' : Flat.St} {top pos : Word}
     · cases he; exact Or.inr rfl
 
 theorem exchange_cont_safe {st st' : Flat.St} {top pos : Word}
-    {p p' : Vector Word MAX_N}
+    {p p' : Vector Word maxStackSize}
     (hm : MapInv st.size st.targetSize ⟨st.dest, st.pos⟩) (hn : HasNoSurplus st)
     (ht : top < st.size) (hp : pos < st.size)
     (he : Flat.exchange st top p pos = .cont st' p') :
@@ -50,7 +50,7 @@ theorem exchange_cont_safe {st st' : Flat.St} {top pos : Word}
     change (st.trace ++ [_]).length ≤ st.trace.length + 1
     simp only [List.length_append, List.length_singleton, Nat.le_refl]
 
-theorem permuteStep_done {st st' : Flat.St} {top : Word} {p : Vector Word MAX_N}
+theorem permuteStep_done {st st' : Flat.St} {top : Word} {p : Vector Word maxStackSize}
     (he : Flat.permuteStep st top p = .ret (.done, st')) : st' = st := by
   unfold Flat.permuteStep at he
   dsimp only at he
@@ -72,7 +72,7 @@ theorem permuteStep_done {st st' : Flat.St} {top : Word} {p : Vector Word MAX_N}
         split at he <;> cases he
       · cases he
 
-theorem permuteStep_cont_safe {st st' : Flat.St} {p p' : Vector Word MAX_N}
+theorem permuteStep_cont_safe {st st' : Flat.St} {p p' : Vector Word maxStackSize}
     (hm : MapInv st.size st.targetSize ⟨st.dest, st.pos⟩) (hn : HasNoSurplus st)
     (h0 : 0#64 < st.size) (hb : Bij st.size p)
     (he : Flat.permuteStep st (st.size - 1#64) p = .cont st' p') :
@@ -91,7 +91,7 @@ theorem permuteStep_cont_safe {st st' : Flat.St} {p p' : Vector Word MAX_N}
       · exact exchange_cont_safe hm hn ht (by bv_omega) he
   · exact exchange_cont_safe hm hn ht (hb.1 _ ht) he
 
-theorem permuteLoop_safe {fuel : Nat} {st st' : Flat.St} {p : Vector Word MAX_N}
+theorem permuteLoop_safe {fuel : Nat} {st st' : Flat.St} {p : Vector Word maxStackSize}
     (hm : MapInv st.size st.targetSize ⟨st.dest, st.pos⟩) (hn : HasNoSurplus st)
     (h0 : 0#64 < st.size) (hb : Bij st.size p)
     (he : Flat.permuteLoop fuel st (st.size - 1#64) p = (.done, st')) :
@@ -124,7 +124,7 @@ theorem permuteLoop_safe {fuel : Nat} {st st' : Flat.St} {p : Vector Word MAX_N}
       obtain ⟨hm'', hn'', hsz', hnt', hpend', htrace'⟩ := ih hm' hn' h0' hb' he'
       exact ⟨hm'', hn'', hsz'.trans hsz, hnt'.trans hnt, hpend'.trans hpend, by omega⟩
 
-theorem permute_safe {st st' : Flat.St} {p : Vector Word MAX_N}
+theorem permute_safe {st st' : Flat.St} {p : Vector Word maxStackSize}
     (hm : MapInv st.size st.targetSize ⟨st.dest, st.pos⟩) (hn : HasNoSurplus st)
     (hb : Bij st.size p) (he : Flat.permute st p = (.done, st')) :
     MapInv st'.size st'.targetSize ⟨st'.dest, st'.pos⟩ ∧ HasNoSurplus st' ∧
@@ -142,7 +142,7 @@ theorem permute_safe {st st' : Flat.St} {p : Vector Word MAX_N}
       exact permuteLoop_safe hm hn (by bv_omega)
         (Permute.regroup_bij hm.m_bound hb hp') he
 
-theorem lowest_preserves {planned : Vector Word MAX_N} {l : Flat.Locals}
+theorem lowest_preserves {planned : Vector Word maxStackSize} {l : Flat.Locals}
     {st st' : Flat.St}
     (hm : MapInv st.size st.targetSize ⟨st.dest, st.pos⟩) (hn : HasNoSurplus st)
     (hlow : Flat.LowOk planned st)

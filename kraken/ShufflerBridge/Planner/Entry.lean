@@ -18,8 +18,8 @@ open FlatShuffler.Flat (get put optOf NONE ofNat_succ)
 
 /-! ## The check of the target slots -/
 
-theorem mem_take_iff {α : Type} [Inhabited α] (v : Vector α FlatShuffler.MAX_N) {k : Nat}
-    (hk : k ≤ FlatShuffler.MAX_N) (x : α) :
+theorem mem_take_iff {α : Type} [Inhabited α] (v : Vector α FlatShuffler.maxStackSize) {k : Nat}
+    (hk : k ≤ FlatShuffler.maxStackSize) (x : α) :
     x ∈ v.toList.take k ↔ ∃ i, i < k ∧ get v (.ofNat 64 i) = x := by
   rw [List.mem_iff_getElem]
   constructor
@@ -29,8 +29,8 @@ theorem mem_take_iff {α : Type} [Inhabited α] (v : Vector α FlatShuffler.MAX_
   · rintro ⟨i, hi, rfl⟩
     exact ⟨i, by simp; omega, by rw [FlatShuffler.Flat.get_ofNat v (by omega)]; simp⟩
 
-theorem containsFrom_iff (stack : Vector FlatShuffler.StackSlot FlatShuffler.MAX_N) {size : FlatShuffler.Word}
-    (hs : size.toNat ≤ FlatShuffler.MAX_N) (slot : FlatShuffler.StackSlot) :
+theorem containsFrom_iff (stack : Vector FlatShuffler.StackSlot FlatShuffler.maxStackSize) {size : FlatShuffler.Word}
+    (hs : size.toNat ≤ FlatShuffler.maxStackSize) (slot : FlatShuffler.StackSlot) :
     ∀ j k, k + j = size.toNat →
       (FlatShuffler.Flat.containsFrom stack size slot (.ofNat 64 k) = true ↔
         ∃ i, k ≤ i ∧ i < size.toNat ∧ get stack (.ofNat 64 i) = slot) := by
@@ -57,8 +57,8 @@ theorem containsFrom_iff (stack : Vector FlatShuffler.StackSlot FlatShuffler.MAX
         · omega
         · exact absurd h3 hg
 
-theorem containsFrom_mem (stack : Vector FlatShuffler.StackSlot FlatShuffler.MAX_N) {size : FlatShuffler.Word}
-    (hs : size.toNat ≤ FlatShuffler.MAX_N) (slot : FlatShuffler.StackSlot) :
+theorem containsFrom_mem (stack : Vector FlatShuffler.StackSlot FlatShuffler.maxStackSize) {size : FlatShuffler.Word}
+    (hs : size.toNat ≤ FlatShuffler.maxStackSize) (slot : FlatShuffler.StackSlot) :
     FlatShuffler.Flat.containsFrom stack size slot 0 = true ↔ slot ∈ stack.toList.take size.toNat := by
   rw [show (0 : FlatShuffler.Word) = .ofNat 64 0 from rfl,
     containsFrom_iff stack hs slot size.toNat 0 (by omega), mem_take_iff stack hs]
@@ -66,12 +66,12 @@ theorem containsFrom_mem (stack : Vector FlatShuffler.StackSlot FlatShuffler.MAX
 
 -- The check of one target slot.
 def tOk (pl : FlatShuffler.Flat.Planner) (sp : BitVec 32 → BitVec 8) (v : FlatShuffler.StackSlot) : Bool :=
-  FlatShuffler.isJunk v || FlatShuffler.canBeFreelyGenerated v || FlatShuffler.Flat.containsFrom pl.source pl.m v 0 ||
+  FlatShuffler.isJunk v || FlatShuffler.canBeFreelyGenerated v || FlatShuffler.Flat.containsFrom pl.source pl.sourceSize v 0 ||
     FlatShuffler.Flat.spillIsSpilled sp v
 
-theorem targetsFrom_iff (pl : FlatShuffler.Flat.Planner) (hn : pl.n.toNat ≤ FlatShuffler.MAX_N)
+theorem targetsFrom_iff (pl : FlatShuffler.Flat.Planner) (hn : pl.targetSize.toNat ≤ FlatShuffler.maxStackSize)
     (sp : BitVec 32 → BitVec 8) :
-    FlatShuffler.Flat.targetsFrom pl sp 0 = true ↔ ∀ v ∈ pl.target.toList.take pl.n.toNat, tOk pl sp v = true := by
+    FlatShuffler.Flat.targetsFrom pl sp 0 = true ↔ ∀ v ∈ pl.target.toList.take pl.targetSize.toNat, tOk pl sp v = true := by
   rw [FlatShuffler.Flat.allFrom_iff hn (fun o => tOk pl sp (get pl.target o)) (FlatShuffler.Flat.targetsFrom pl sp)
     (fun o => by rw [FlatShuffler.Flat.targetsFrom]; simp only [dite_eq_ite]; rfl)]
   constructor
@@ -81,13 +81,13 @@ theorem targetsFrom_iff (pl : FlatShuffler.Flat.Planner) (hn : pl.n.toNat ≤ Fl
   · intro h d hd
     exact h _ ((mem_take_iff _ hn _).mpr ⟨d, hd, rfl⟩)
 
-theorem tOk_iff {pl : FlatShuffler.Flat.Planner} (hm : pl.m.toNat ≤ FlatShuffler.MAX_N)
-    (ok : SlotsOk (pl.source.toList.take pl.m.toNat ++ pl.target.toList.take pl.n.toNat))
-    (sp : BitVec 32 → BitVec 8) {v : FlatShuffler.StackSlot} (hv : v ∈ pl.target.toList.take pl.n.toNat) :
+theorem tOk_iff {pl : FlatShuffler.Flat.Planner} (hm : pl.sourceSize.toNat ≤ FlatShuffler.maxStackSize)
+    (ok : SlotsOk (pl.source.toList.take pl.sourceSize.toNat ++ pl.target.toList.take pl.targetSize.toNat))
+    (sp : BitVec 32 → BitVec 8) {v : FlatShuffler.StackSlot} (hv : v ∈ pl.target.toList.take pl.targetSize.toNat) :
     tOk pl sp v = true ↔ ((decodeStackSlot v).is_junk ∨ (decodeStackSlot v).can_be_freely_generated ∨
-      decodeStackSlot v ∈ srcOf pl.source pl.m ∨
-      (pSpills (pl.source.toList.take pl.m.toNat) pl.n.toNat pl.target sp).is_spilled (decodeStackSlot v)) := by
-  have hs : v ∈ pl.source.toList.take pl.m.toNat ↔ decodeStackSlot v ∈ srcOf pl.source pl.m := by
+      decodeStackSlot v ∈ srcOf pl.source pl.sourceSize ∨
+      (pSpills (pl.source.toList.take pl.sourceSize.toNat) pl.targetSize.toNat pl.target sp).is_spilled (decodeStackSlot v)) := by
+  have hs : v ∈ pl.source.toList.take pl.sourceSize.toNat ↔ decodeStackSlot v ∈ srcOf pl.source pl.sourceSize := by
     simp only [srcOf, List.mem_map]
     constructor
     · intro h; exact ⟨v, h, rfl⟩
@@ -97,7 +97,7 @@ theorem tOk_iff {pl : FlatShuffler.Flat.Planner} (hm : pl.m.toNat ≤ FlatShuffl
       exact hw
   simp only [tOk, Bool.or_eq_true]
   rw [← isJunk_iff, isFree_iff, containsFrom_mem _ hm, hs,
-    isSpilled_corr (S := pl.source.toList.take pl.m.toNat) sp (List.mem_append_right _ hv), or_assoc,
+    isSpilled_corr (S := pl.source.toList.take pl.sourceSize.toNat) sp (List.mem_append_right _ hv), or_assoc,
     or_assoc]
 
 /-! ## `run` -/
@@ -119,14 +119,14 @@ theorem forIn_check {α ε : Type} (P : α → Prop) [dP : DecidablePred P] (err
     · rw [hF a ha, except_error_bind]
       simp only [List.forall_mem_cons, ha, false_and, ite_false]
 
-theorem plannerRun_corr {pl : FlatShuffler.Flat.Planner} (hm : pl.m.toNat ≤ FlatShuffler.MAX_N)
-    (hn : pl.n.toNat ≤ FlatShuffler.MAX_N)
-    (ok : SlotsOk (pl.source.toList.take pl.m.toNat ++ pl.target.toList.take pl.n.toNat))
+theorem plannerRun_corr {pl : FlatShuffler.Flat.Planner} (hm : pl.sourceSize.toNat ≤ FlatShuffler.maxStackSize)
+    (hn : pl.targetSize.toNat ≤ FlatShuffler.maxStackSize)
+    (ok : SlotsOk (pl.source.toList.take pl.sourceSize.toNat ++ pl.target.toList.take pl.targetSize.toNat))
     (take : Bool) (s : FlatShuffler.Flat.PSt) (us : Nat → FlatShuffler.Flat.RunU)
-    (hd : DnR (Vector.replicate (srcOf pl.source pl.m).length (0 : Byte)) s.dropped) :
+    (hd : DnR (Vector.replicate (srcOf pl.source pl.sourceSize).length (0 : Byte)) s.dropped) :
     RunR pl (FlatShuffler.Flat.plannerRun pl take s us)
-      (Planner.run (srcOf pl.source pl.m) (srcOf pl.target pl.n)
-        (pSpills (pl.source.toList.take pl.m.toNat) pl.n.toNat pl.target s.spills) pl.allowed
+      (Planner.run (srcOf pl.source pl.sourceSize) (srcOf pl.target pl.targetSize)
+        (pSpills (pl.source.toList.take pl.sourceSize.toNat) pl.targetSize.toNat pl.target s.spills) pl.allowed
         (if take then .Take else .Leave)) := by
   classical
   rw [FlatShuffler.Flat.plannerRun, Planner.run.eq_1]
@@ -134,9 +134,9 @@ theorem plannerRun_corr {pl : FlatShuffler.Flat.Planner} (hm : pl.m.toNat ≤ Fl
   rw [forIn_check (dP := fun _ => Classical.propDecidable _) _ (.assertion "target slot neither on the stack nor generatable") _
     (fun x hx => by rw [requires_of_true _ hx]; rfl)
     (fun x hx => by rw [requires_of_false _ hx]; rfl)]
-  have hall : (∀ x ∈ srcOf pl.target pl.n, x.is_junk ∨ x.can_be_freely_generated ∨
-      x ∈ srcOf pl.source pl.m ∨
-      (pSpills (pl.source.toList.take pl.m.toNat) pl.n.toNat pl.target s.spills).is_spilled x) ↔
+  have hall : (∀ x ∈ srcOf pl.target pl.targetSize, x.is_junk ∨ x.can_be_freely_generated ∨
+      x ∈ srcOf pl.source pl.sourceSize ∨
+      (pSpills (pl.source.toList.take pl.sourceSize.toNat) pl.targetSize.toNat pl.target s.spills).is_spilled x) ↔
       FlatShuffler.Flat.targetsFrom pl s.spills 0 = true := by
     rw [targetsFrom_iff pl hn, srcOf, List.forall_mem_map]
     exact forall₂_congr fun v hv => (tOk_iff hm ok s.spills hv).symm

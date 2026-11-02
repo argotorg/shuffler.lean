@@ -34,11 +34,11 @@ theorem urgW_of_lt {n k : Nat} (h : k < n) : urgW n k = BitVec.ofNat 64 k := by 
 theorem urgW_toNat {n : Nat} {o : Word} (h : o.toNat < n) : urgW n o.toNat = o := by
   rw [urgW_of_lt h]; exact eq_of_toNat (toNat_ofNat_of_lt o.isLt)
 
-theorem urgW_eq_NONE {n k : Nat} (hn : n ≤ MAX_N) (hk : k ≤ n) : urgW n k = NONE ↔ k = n := by
+theorem urgW_eq_NONE {n k : Nat} (hn : n ≤ maxStackSize) (hk : k ≤ n) : urgW n k = NONE ↔ k = n := by
   unfold urgW
   by_cases h : k < n
   · rw [ite_eq_left h]
-    have hw : (BitVec.ofNat 64 k).toNat = k := toNat_ofNat_of_lt (by unfold MAX_N at hn; omega)
+    have hw : (BitVec.ofNat 64 k).toNat = k := toNat_ofNat_of_lt (by unfold maxStackSize at hn; omega)
     refine ⟨fun he => absurd he (lt_NONE (by rw [hw]; omega)), fun he => by omega⟩
   · rw [ite_eq_right h]; exact ⟨fun _ => by omega, fun _ => rfl⟩
 
@@ -51,8 +51,8 @@ theorem sim_urgentFrom (hs : Sim e fs st) (t : Word) (ht : t.toNat < e.n) (o : W
   have hl := hs.len_lt
   rw [urgentFrom, FlatShuffler.urgentFrom]
   by_cases h0 : o.toNat < e.n
-  · have ho' : o < fs.targetSize := by unfold MAX_N at hle; bv_omega
-    have h1 : (o + 1).toNat = o.toNat + 1 := by unfold MAX_N at hle; bv_omega
+  · have ho' : o < fs.targetSize := by unfold maxStackSize at hle; bv_omega
+    have h1 : (o + 1).toNat = o.toNat + 1 := by unfold maxStackSize at hle; bv_omega
     rw [dite_eq_left ho', ite_eq_left h0, ← h1]
     by_cases hp : (positionOf st o.toNat).isSome
     · rw [ite_eq_left (c := get fs.pos o ≠ NONE) ((hs.pos_ne_NONE h0).mpr hp), ite_eq_left hp]
@@ -72,10 +72,10 @@ theorem sim_urgentFrom (hs : Sim e fs st) (t : Word) (ht : t.toNat < e.n) (o : W
       rw [show optW none = NONE from rfl, ite_eq_right (c := NONE ≠ NONE) (fun h => h rfl)]
       exact sim_urgentFrom hs t ht (o + 1) (by omega) k hk
     | some p =>
-      unfold MAX_N at hl hle
+      unfold maxStackSize at hl hle
       have hp := shallowestCopy_lt hc
       have hw : (BitVec.ofNat 64 p).toNat = p := toNat_ofNat_of_lt (by omega)
-      have hnn : BitVec.ofNat 64 p ≠ NONE := lt_NONE (by rw [hw]; unfold MAX_N; omega)
+      have hnn : BitVec.ofNat 64 p ≠ NONE := lt_NONE (by rw [hw]; unfold maxStackSize; omega)
       have hdr : isDupReachable fs (BitVec.ofNat 64 p) = true ↔ st.len - 1 - p ≤ MAX_DUP_DEPTH := by
         unfold isDupReachable depthOf maxDupDepth MAX_DUP_DEPTH
         rw [decide_eq_true_iff]
@@ -95,7 +95,7 @@ theorem sim_urgentFrom (hs : Sim e fs st) (t : Word) (ht : t.toNat < e.n) (o : W
         ite_eq_right hr]
       have hcond : (depthOf fs (BitVec.ofNat 64 p) = maxDupDepth ∧ BitVec.ofNat 64 p ≠ t ∧
           urgW e.n k = NONE) ↔ (st.len - 1 - p = MAX_DUP_DEPTH ∧ p ≠ t.toNat ∧ k = e.n) := by
-        rw [urgW_eq_NONE (by unfold MAX_N; omega) hk]
+        rw [urgW_eq_NONE (by unfold maxStackSize; omega) hk]
         unfold depthOf maxDupDepth MAX_DUP_DEPTH
         constructor
         · rintro ⟨a, b, c⟩
@@ -124,7 +124,7 @@ theorem candidate_eq (hs : Sim e fs st) {b : Word} (hb : b.toNat < st.len) :
         BitVec.ofNat 64 ((((List.range (b.toNat + k + 1)).reverse.take k).find?
           (fun c => st.val c == st.val b.toNat && st.dest c != c)).getD b.toNat) := by
   have hl := hs.len_lt
-  unfold MAX_N at hl
+  unfold maxStackSize at hl
   intro k
   induction k with
   | zero =>
@@ -165,7 +165,7 @@ theorem movable_eq (hs : Sim e fs st) {b : Nat} (hb : b < st.len) :
       BitVec.ofNat 64 ((movableCopy st b).getD b) := by
   have hl := hs.len_lt
   have hsz := hs.size
-  unfold MAX_N at hl
+  unfold maxStackSize at hl
   have hbw : (BitVec.ofNat 64 b).toNat = b := toNat_ofNat_of_lt (by omega)
   have := candidate_eq hs (b := BitVec.ofNat 64 b) (by rw [hbw]; exact hb) (st.len - 1 - b)
     (by rw [hbw]; omega)
@@ -215,19 +215,19 @@ theorem NR.map {r : Status × St} {m : M FlatShuffler.St} {t' : Word} {k : Nat} 
     rw [ite_eq_left (c := r.1 ≠ .done) (by rw [h1]; decide)]
     exact h1
 
-theorem succ_eq {t : Word} {n : Nat} (hn : n ≤ MAX_N) (ht : t.toNat < n) :
+theorem succ_eq {t : Word} {n : Nat} (hn : n ≤ maxStackSize) (ht : t.toNat < n) :
     t + 1 = BitVec.ofNat 64 (t.toNat + 1) := by
-  unfold MAX_N at hn
+  unfold maxStackSize at hn
   apply eq_of_toNat; rw [toNat_ofNat_of_lt (by omega)]; bv_omega
 
 theorem sim_placeTop (hs : Sim e fs st) {t : Word} (ht : t.toNat < e.n) :
     NR e (placeTop fs t) (FlatShuffler.placeTop st t.toNat) := by
   have hsz := hs.size
   have hl := hs.len_lt
-  have hle : e.n ≤ MAX_N := hs.n ▸ hs.n_le
+  have hle : e.n ≤ maxStackSize := hs.n ▸ hs.n_le
   have h1 := succ_eq hle ht
   have hn := hs.n
-  unfold MAX_N at hl hle
+  unfold maxStackSize at hl hle
   unfold placeTop FlatShuffler.placeTop
   by_cases h2 : st.len ≤ t.toNat
   · rw [ite_eq_left (c := ¬t < fs.size) (by bv_omega),
@@ -275,9 +275,9 @@ theorem sim_bound (hs : Sim e fs st) {t : Word} (ht : t.toNat < e.n) {b : Nat}
   have hsz := hs.size
   have hl := hs.len_lt
   have hn := hs.n
-  have hle : e.n ≤ MAX_N := hs.n ▸ hs.n_le
+  have hle : e.n ≤ maxStackSize := hs.n ▸ hs.n_le
   have h1 := succ_eq hle ht
-  unfold MAX_N at hl hle
+  unfold maxStackSize at hl hle
   have hbl : b < st.len := positionOf_some hs.hpos hb
   have hbw : (BitVec.ofNat 64 b).toNat = b := toNat_ofNat_of_lt (by omega)
   have hpos : get fs.pos t = BitVec.ofNat 64 b := by rw [hs.pos t (hn ▸ ht), hb]; rfl
@@ -290,7 +290,7 @@ theorem sim_bound (hs : Sim e fs st) {t : Word} (ht : t.toNat < e.n) {b : Nat}
       ite_eq_left h2]
     exact rfl
   rw [ite_eq_right (c := ¬(BitVec.ofNat 64 b ≠ NONE ∧ BitVec.ofNat 64 b ≥ t))
-      (fun h => h ⟨lt_NONE (by rw [hbw]; unfold MAX_N; omega), by bv_omega⟩),
+      (fun h => h ⟨lt_NONE (by rw [hbw]; unfold maxStackSize; omega), by bv_omega⟩),
     ite_eq_right h2]
   have htl : t.toNat < st.len := by omega
   rw [hs.data (BitVec.ofNat 64 b) (by rw [hbw]; exact hbl), hbw, hs.data t htl, movable_eq hs hbl]
@@ -364,10 +364,10 @@ theorem sim_body (hs : Sim e fs st) {t : Word} (hi : InvS e st t.toNat) (ht : t.
   have hl := hs.len_lt
   have hn := hs.n
   have hpd := hs.pend
-  have hle : e.n ≤ MAX_N := hs.n ▸ hs.n_le
+  have hle : e.n ≤ maxStackSize := hs.n ▸ hs.n_le
   have h1 := succ_eq hle ht
   have hlp := hi.len_pending
-  unfold MAX_N at hl hle
+  unfold maxStackSize at hl hle
   have hdec : t - 1 + 1 = BitVec.ofNat 64 t.toNat := eq_of_toNat (by rw [toNat_ofNat_of_lt t.isLt]; bv_omega)
   unfold body step
   dsimp only
@@ -404,7 +404,7 @@ theorem sim_body (hs : Sim e fs st) {t : Word} (hi : InvS e st t.toNat) (ht : t.
   | .ok u, .ok k, ⟨hk, hu⟩ =>
     subst hu
     dsimp only [Except.bind]
-    have hU : urgW e.n k = NONE ↔ k = e.n := urgW_eq_NONE (by unfold MAX_N; omega) hk
+    have hU : urgW e.n k = NONE ↔ k = e.n := urgW_eq_NONE (by unfold maxStackSize; omega) hk
     have hA : (urgW e.n k ≠ NONE ∧ urgW e.n k ≠ t ∧ fs.size - t < maxSwapDepth) ↔
         (k ≠ e.n ∧ k ≠ t.toNat ∧ st.len < t.toNat + MAX_SWAP_DEPTH) := by
       unfold maxSwapDepth MAX_SWAP_DEPTH

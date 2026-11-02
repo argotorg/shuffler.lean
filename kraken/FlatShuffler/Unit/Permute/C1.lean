@@ -101,7 +101,7 @@ theorem b_11 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
   have hF := hC.fm
   have hm := hF.mem
   have hn := Nat.le_trans hpre.ok.len hpre.ok.xs
-  simp only [MAX_N] at hn
+  simp only [maxStackSize] at hn
   have hlt' := BitVec.lt_def.mp hC.lt
   kvcgen64
   all_goals try symexec_norm
@@ -217,7 +217,7 @@ theorem b_1 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F
   have hC := hG.cc
   have hF := hC.fm
   have hn := Nat.le_trans hpre.ok.len hpre.ok.xs
-  simp only [MAX_N] at hn
+  simp only [maxStackSize] at hn
   have hlt' := BitVec.lt_def.mp hC.lt
   kvcgen64
   all_goals try symexec_norm

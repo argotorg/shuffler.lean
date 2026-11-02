@@ -11,8 +11,8 @@ namespace FlatShuffler.Unit.PlannerRunU
 open FlatShuffler.Sep Flat
 
 def localMapping (locals : List Word) (hl : locals.length = 4121) : Flat.Mapping where
-  dest := ⟨((locals.drop 12).take 1024).toArray, by simp [hl, MAX_N]⟩
-  pos := ⟨((locals.drop 1036).take 1024).toArray, by simp [hl, MAX_N]⟩
+  dest := ⟨((locals.drop 12).take 1024).toArray, by simp [hl, maxStackSize]⟩
+  pos := ⟨((locals.drop 1036).take 1024).toArray, by simp [hl, maxStackSize]⟩
 
 theorem local_partition (locals : List Word) :
     locals = locals.take 12 ++ (locals.drop 12).take 1024 ++
@@ -38,23 +38,23 @@ theorem local_mapping (sp : Addr) (locals : List Word) (hl : locals.length = 412
   ecancel
 
 theorem localMapping_dest (locals : List Word) (hl : locals.length = 4121)
-    {p : Word} (hp : p.toNat < MAX_N) :
+    {p : Word} (hp : p.toNat < maxStackSize) :
     get (localMapping locals hl).dest p =
       locals[12 + p.toNat]'(by change p.toNat < 1024 at hp; omega) := by
   rw [get_eq _ hp]
-  change ((locals.drop 12).take 1024)[p.toNat]'(by simpa [hl, MAX_N] using hp) = _
+  change ((locals.drop 12).take 1024)[p.toNat]'(by simpa [hl, maxStackSize] using hp) = _
   simp only [List.getElem_take, List.getElem_drop]
 
 theorem localMapping_pos (locals : List Word) (hl : locals.length = 4121)
-    {p : Word} (hp : p.toNat < MAX_N) :
+    {p : Word} (hp : p.toNat < maxStackSize) :
     get (localMapping locals hl).pos p =
       locals[1036 + p.toNat]'(by change p.toNat < 1024 at hp; omega) := by
   rw [get_eq _ hp]
-  change ((locals.drop 1036).take 1024)[p.toNat]'(by simpa [hl, MAX_N] using hp) = _
+  change ((locals.drop 1036).take 1024)[p.toNat]'(by simpa [hl, maxStackSize] using hp) = _
   simp only [List.getElem_take, List.getElem_drop]
 
 theorem localMapping_inv (locals : List Word) (hl : locals.length = 4121)
-    {m n : Word} (hm : m.toNat ≤ MAX_N) (hn : n.toNat ≤ MAX_N)
+    {m n : Word} (hm : m.toNat ≤ maxStackSize) (hn : n.toNat ≤ maxStackSize)
     (hd : InitPrefix locals 12 m.toNat) (hp : InitPrefix locals 1036 n.toNat) :
     MapInv m n (localMapping locals hl) := by
   have hd' : ∀ p, p < m → get (localMapping locals hl).dest p = NONE := by
@@ -78,10 +78,10 @@ theorem localMapping_inv (locals : List Word) (hl : locals.length = 4121)
     exact False.elim (hne (hp' p h))
 
 theorem mapping_init_eq {M : Flat.Mapping} {m n : Word}
-    (hm : m.toNat ≤ MAX_N) (hn : n.toNat ≤ MAX_N)
+    (hm : m.toNat ≤ maxStackSize) (hn : n.toNat ≤ maxStackSize)
     (hd : ∀ p, p < m → get M.dest p = NONE)
     (hp : ∀ p, p < n → get M.pos p = NONE) : M.init m n = M := by
-  have fill_eq (v : Vector Word MAX_N) (k : Word) (hk : k.toNat ≤ MAX_N)
+  have fill_eq (v : Vector Word maxStackSize) (k : Word) (hk : k.toNat ≤ maxStackSize)
       (hv : ∀ p, p < k → get v p = NONE) :
       (offsets k).foldl (fun v p => put v p NONE) v = v := by
     apply Vector.ext
@@ -98,7 +98,7 @@ theorem mapping_init_eq {M : Flat.Mapping} {m n : Word}
   simp only [Mapping.init, fill_eq _ _ hm hd, fill_eq _ _ hn hp]
 
 theorem localMapping_init (locals : List Word) (hl : locals.length = 4121)
-    {m n : Word} (hm : m.toNat ≤ MAX_N) (hn : n.toNat ≤ MAX_N)
+    {m n : Word} (hm : m.toNat ≤ maxStackSize) (hn : n.toNat ≤ maxStackSize)
     (hd : InitPrefix locals 12 m.toNat) (hp : InitPrefix locals 1036 n.toNat) :
     (localMapping locals hl).init m n = localMapping locals hl := by
   apply mapping_init_eq hm hn

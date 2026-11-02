@@ -31,7 +31,7 @@ abbrev Word := BitVec 64
 def MAX_SWAP_DEPTH : Nat := 16
 def MAX_DUP_DEPTH : Nat := 15
 -- `maxStackSize` in `c/shuffler/Freestanding.h`: the EVM stack limit.
-def MAX_N : Nat := 1024
+def maxStackSize : Nat := 1024
 
 -- `StackSlot::Kind`
 def Value : BitVec 8 := 0

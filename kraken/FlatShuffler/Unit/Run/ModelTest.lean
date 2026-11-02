@@ -9,19 +9,19 @@ namespace FlatShuffler.Unit.RunU.Test
 open FlatShuffler
 
 private def empty : Flat.St where
-  target := Vector.replicate MAX_N StackSlot.junk
+  target := Vector.replicate maxStackSize StackSlot.junk
   targetSize := 0
   spills := fun _ => 0
-  data := Vector.replicate MAX_N StackSlot.junk
+  data := Vector.replicate maxStackSize StackSlot.junk
   size := 0
   trace := []
-  dest := Vector.replicate MAX_N Flat.NONE
-  pos := Vector.replicate MAX_N Flat.NONE
+  dest := Vector.replicate maxStackSize Flat.NONE
+  pos := Vector.replicate maxStackSize Flat.NONE
   pend := 0
   blockedOffset := 0
   blockedExcess := 0
 
-private def planned : Vector Word MAX_N := Vector.replicate MAX_N Flat.NONE
+private def planned : Vector Word maxStackSize := Vector.replicate maxStackSize Flat.NONE
 
 -- The empty target goes directly to `buildBottomUp`.
 #guard (Flat.emissionRun planned zeroLocals empty).1 = .done
@@ -32,17 +32,17 @@ private def planned : Vector Word MAX_N := Vector.replicate MAX_N Flat.NONE
 
 -- A pending generation must have an unmapped target offset.
 #guard (Flat.emissionRun planned zeroLocals
-    { empty with targetSize := 1, pend := 1, pos := Vector.replicate MAX_N 0 }).1 =
+    { empty with targetSize := 1, pend := 1, pos := Vector.replicate maxStackSize 0 }).1 =
     .assertionFailed
 
 -- A value with no stack copy and no spill cannot be generated.
 #guard (Flat.emissionRun planned zeroLocals
-    { empty with targetSize := 1, pend := 1, target := Vector.replicate MAX_N ⟨7, Value, 5⟩ }).1 =
+    { empty with targetSize := 1, pend := 1, target := Vector.replicate maxStackSize ⟨7, Value, 5⟩ }).1 =
     .assertionFailed
 
 -- The label check still rejects an unmapped return label when its opcode passes availability.
 private def labelState : Flat.St :=
-  { empty with targetSize := 1, pend := 1, target := Vector.replicate MAX_N ⟨7, FunctionReturnLabel, Const⟩ }
+  { empty with targetSize := 1, pend := 1, target := Vector.replicate maxStackSize ⟨7, FunctionReturnLabel, Const⟩ }
 
 #guard Flat.availableFrom labelState 0#64 = true
 #guard Flat.labelsFrom labelState 0#64 = false

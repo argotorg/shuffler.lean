@@ -82,16 +82,16 @@ theorem PlannerCallMemory.trace_length {g : PlannerCallMemory} (h : g.Ok) :
 
 theorem LoopContext.mapping_fail {initial current : PlannerCallMemory} {s t : MachineData}
     (h : LoopContext initial current s) (hok : current.Ok) (M : Flat.Mapping)
-    (hi : M.init current.p.m current.p.n = M)
+    (hi : M.init current.p.sourceSize current.p.targetSize = M)
     (hb : Flat.buildMapping (plannerBuilder current s M 0#8).fl M = none)
     (ha : al t = code .assertionFailed) : plannerRunQ initial current s t := by
   let u : Flat.RunU := {emptyRunU with mapping := M}
   apply h.finish h.stable (fun _ => u) .assertionFailed
   · apply runLoop_mapping_fail
     change Flat.buildMapping
-      ⟨current.p.fl.source, current.p.m, current.p.fl.target, current.p.n,
+      ⟨current.p.fl.source, current.p.sourceSize, current.p.fl.target, current.p.targetSize,
         current.dropped, (rsi s).setWidth 8 == 1#8⟩
-      (M.init current.p.m current.p.n) = none
+      (M.init current.p.sourceSize current.p.targetSize) = none
     rw [hi]
     exact (builderGhost_buildMapping current hok _ _ _ M).symm.trans hb
   · exact ha

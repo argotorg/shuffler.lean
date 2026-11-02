@@ -17,7 +17,7 @@ theorem emission_call_frame (P : Addr) (g : PlannerCallMemory) (hok : g.Ok)
     (s : MachineData) (ra : Int64) (l : EmissionLocals) (F : MProp 64) :
     let sp := rsp s - 8#64 - 33016#64
     ∃ EF CF,
-      (∀ (data : Vector Word MAX_N) (ops : List OpR),
+      (∀ (data : Vector Word maxStackSize) (ops : List OpR),
         plannerCallOwnedMemory P { g with data := data, ops := ops } =
           Ev g (data.toList.take g.dataCapacity) ops ∗ EF) ∧
       ∀ (lo : List Word) (w : Word) (h : Hdr) (data : List Word) (ops : List OpR),

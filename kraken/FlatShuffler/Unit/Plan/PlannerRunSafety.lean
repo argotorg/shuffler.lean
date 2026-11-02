@@ -36,14 +36,14 @@ theorem exchangeAt_lt {a b i n : Word} (ha : a < n) (hb : b < n) (hi : i < n) :
     · exact hi
 
 theorem swap_dest_read {st : Flat.St} {a b : Word}
-    (ha : a.toNat < MAX_N) (hb : b.toNat < MAX_N) (i : Word) :
+    (ha : a.toNat < maxStackSize) (hb : b.toNat < maxStackSize) (i : Word) :
     get (Flat.swapDestinations st a b).dest i = get st.dest (exchangeAt a b i) := by
   change get (put (put st.dest a (get st.dest b)) b (get st.dest a)) i = _
   rw [get_put _ _ _ hb, get_put _ _ _ ha]
   by_cases hia : i = a <;> by_cases hib : i = b <;> simp_all [exchangeAt]
 
-theorem optional_pos_read (v : Vector Word MAX_N) (key value d : Word)
-    (hk : key = NONE ∨ key.toNat < MAX_N) :
+theorem optional_pos_read (v : Vector Word maxStackSize) (key value d : Word)
+    (hk : key = NONE ∨ key.toNat < maxStackSize) :
     get (if key ≠ NONE then put v key value else v) d =
       if d = key ∧ key ≠ NONE then value else get v d := by
   by_cases hn : key = NONE
@@ -149,7 +149,7 @@ theorem MapInv.pop_none {st : Flat.St}
       ⟨(Flat.pop st).2.dest, (Flat.pop st).2.pos⟩ := by
   rw [Pop.pop_none st h0 hn]
   refine ⟨?_, h.n_bound, ?_, ?_, ?_, ?_⟩
-  · change (st.size - 1#64).toNat ≤ MAX_N
+  · change (st.size - 1#64).toNat ≤ maxStackSize
     have hm := h.m_bound
     bv_omega
   · intro i hi

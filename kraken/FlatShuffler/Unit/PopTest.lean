@@ -33,7 +33,7 @@ def words : List Word :=
 
 /-! ## The three cases of `Flat.pop` -/
 
-def vec {α : Type} [Inhabited α] (l : List α) : Vector α MAX_N :=
+def vec {α : Type} [Inhabited α] (l : List α) : Vector α maxStackSize :=
   Vector.ofFn fun i => l[i.val]?.getD default
 
 def x : StackSlot := ⟨1, Value, Const⟩
@@ -41,7 +41,7 @@ def x : StackSlot := ⟨1, Value, Const⟩
 -- A state with `size` slots of `x`, the destinations `dests` and the positions `pos`.
 def st (size : Word) (dests pos : List Word) : Flat.St :=
   { target := vec [], targetSize := .ofNat 64 pos.length, spills := fun _ => 0,
-    data := Vector.replicate MAX_N x, size, trace := [], dest := vec dests, pos := vec pos,
+    data := Vector.replicate maxStackSize x, size, trace := [], dest := vec dests, pos := vec pos,
     pend := 3, blockedOffset := 0, blockedExcess := 0 }
 
 -- The members that `pop` reads or writes, as lists. (The tests use `==`: `DecidableEq` of the
@@ -58,12 +58,12 @@ def viewR (r : Flat.Status × Flat.St) := (r.1, view r.2)
 #guard viewR (Flat.pop (st 2 [Flat.NONE, 1] [Flat.NONE, 1]))
   == (.done, view { st 2 [Flat.NONE, 1] [Flat.NONE, 1] with
                    size := 1, trace := [Op.pop], pos := vec [Flat.NONE, Flat.NONE] })
--- The destination `MAX_N - 1` of the top: the store is at the end of `m_positionOf`.
-#guard (Flat.pop (st 1 [.ofNat 64 (MAX_N - 1)] [])).2.pos[MAX_N - 1] = Flat.NONE
--- A destination at or above `MAX_N` (not `DestOk`): `Flat.put` writes nothing.
-#guard (Flat.pop (st 1 [.ofNat 64 MAX_N] [])).2.pos = (st 1 [.ofNat 64 MAX_N] []).pos
--- The largest size: the top is at `MAX_N - 1`.
-#guard (Flat.pop (st (.ofNat 64 MAX_N) [] [])).2.size = .ofNat 64 (MAX_N - 1)
+-- The destination `maxStackSize - 1` of the top: the store is at the end of `m_positionOf`.
+#guard (Flat.pop (st 1 [.ofNat 64 (maxStackSize - 1)] [])).2.pos[maxStackSize - 1] = Flat.NONE
+-- A destination at or above `maxStackSize` (not `DestOk`): `Flat.put` writes nothing.
+#guard (Flat.pop (st 1 [.ofNat 64 maxStackSize] [])).2.pos = (st 1 [.ofNat 64 maxStackSize] []).pos
+-- The largest size: the top is at `maxStackSize - 1`.
+#guard (Flat.pop (st (.ofNat 64 maxStackSize) [] [])).2.size = .ofNat 64 (maxStackSize - 1)
 
 example : Flat.pop (st 0 [] []) = (.assertionFailed, st 0 [] []) := pop_zero _ rfl
 

@@ -46,8 +46,8 @@ theorem planner_model_correct (source target : Stack) (spills : SpillSet)
 They permit unavailable targets and excess function return labels. The general
 comparison therefore includes model errors. -/
 public structure PlannerInputAssumptions (input : PlannerInput) : Prop where
-  sourceSizeFitsBuffer : input.planner.m.toNat ≤ FlatShuffler.MAX_N
-  targetSizeFitsBuffer : input.planner.n.toNat ≤ FlatShuffler.MAX_N
+  sourceSizeFitsBuffer : input.planner.sourceSize.toNat ≤ FlatShuffler.maxStackSize
+  targetSizeFitsBuffer : input.planner.targetSize.toNat ≤ FlatShuffler.maxStackSize
   slotsHaveCanonicalEncoding :
     ∀ slot ∈ input.sourceSlots ++ input.targetSlots,
       (slot.kind = FlatShuffler.Junk → slot = .junk) ∧
@@ -157,10 +157,10 @@ public def PlannerModelPostcondition
 
 private theorem inputAssumptions_iff_bridgeAssumptions (input : PlannerInput) :
     PlannerInputAssumptions input ↔
-      input.planner.m.toNat ≤ FlatShuffler.MAX_N ∧
-      input.planner.n.toNat ≤ FlatShuffler.MAX_N ∧
+      input.planner.sourceSize.toNat ≤ FlatShuffler.maxStackSize ∧
+      input.planner.targetSize.toNat ≤ FlatShuffler.maxStackSize ∧
       SlotsOk (input.sourceSlots ++ input.targetSlots) ∧
-      DnR (Vector.replicate (srcOf input.planner.source input.planner.m).length
+      DnR (Vector.replicate (srcOf input.planner.source input.planner.sourceSize).length
         (0 : Byte)) input.initialState.dropped := by
   constructor
   · intro assumptions
@@ -177,7 +177,7 @@ private theorem inputAssumptions_iff_bridgeAssumptions (input : PlannerInput) :
   · rintro ⟨sourceSize, targetSize, slots, dropped⟩
     exact ⟨sourceSize, targetSize, slots.canon, slots.kind, slots.inj,
       fun position => by
-        have positionBound : position.val < (srcOf input.planner.source input.planner.m).length := by
+        have positionBound : position.val < (srcOf input.planner.source input.planner.sourceSize).length := by
           simpa only [srcOf, PlannerInput.sourceSlots, List.length_map] using position.isLt
         have byteEquality : (0 : Byte) =
             (FlatShuffler.Flat.get input.initialState.dropped (.ofNat 64 position.val)).toFin := by
@@ -189,9 +189,9 @@ private theorem resultComparison_iff_bridgeRelation (input : PlannerInput)
     (execution : PlannerExecutionResult) :
     PlannerResultMatchesModel input execution ↔
       RunR input.planner execution
-        (Shuffler.Planner.run (srcOf input.planner.source input.planner.m)
-          (srcOf input.planner.target input.planner.n)
-          (pSpills input.sourceSlots input.planner.n.toNat input.planner.target
+        (Shuffler.Planner.run (srcOf input.planner.source input.planner.sourceSize)
+          (srcOf input.planner.target input.planner.targetSize)
+          (pSpills input.sourceSlots input.planner.targetSize.toNat input.planner.target
             input.initialState.spills)
           input.planner.allowed (if input.takeWildcardSlots then .Take else .Leave)) := by
   rcases execution with ⟨status, finalState⟩

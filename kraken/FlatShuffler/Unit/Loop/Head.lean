@@ -32,7 +32,7 @@ private theorem H_succ {S : Addr} {T : Word} {t t' : MachineData} {c d : Nat}
   simp only [H, hm, BitVec.toNat_add, BitVec.toNat_ofNat]
   omega
 
--- A slot offset is below `MAX_N = 1024`.
+-- A slot offset is below `maxStackSize = 1024`.
 private theorem lt_1024 {g' : G} {T : Word} (h : Flat.FInv (flat g')) (hT : T < g'.h.len) :
     T.toNat < 1024 :=
   h.lt_max_of_size hT
@@ -58,12 +58,12 @@ private theorem rd_pend' (h : (View S g ∗ R).get m) :
 private theorem isSome_pend' (h : (View S g ∗ R).get m) :
     (m.loadInt (S + 16440#64) 8).isSome = true := by
   rw [Fld.fold_pendingGenerations]; exact isSome_pend h
-private theorem rd_dest' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < MAX_N) :
+private theorem rd_dest' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < maxStackSize) :
     BitVec.ofInt 64 (m.loadInt (S + x * 8#64 + 56#64) 8).get! = Flat.get g.h.dest x := by
   rw [Fld.fold_mapping_destinationOf]; simp only [Flat.get, hx, ↓reduceDIte]
   obtain ⟨_, h'⟩ := View.arr_dest h
   exact (Arr.rd h' (by simpa using hx)).trans (by simp)
-private theorem isSome_dest' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < MAX_N) :
+private theorem isSome_dest' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < maxStackSize) :
     (m.loadInt (S + x * 8#64 + 56#64) 8).isSome = true := by
   rw [Fld.fold_mapping_destinationOf]; exact View.isSome_dest h hx
 
@@ -219,7 +219,7 @@ theorem b_26 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
   intro t ht
   simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨g', u, ⟨x0, x2, lo, w, hM, hok, hk⟩, h13, hlt, hH, hL⟩ := ht
-  have hT : t.regs.r14.toBitVec.toNat < MAX_N := hH.f.lt_max hlt
+  have hT : t.regs.r14.toBitVec.toNat < maxStackSize := hH.f.lt_max hlt
   have hlen : BitVec.ofInt 64 (Mem.loadInt t.dmem (t.regs.r12.toBitVec + 32#64) 8).get!
       = g'.h.len := by
     rw [hM.r12]; exact rd_len' hM.mem
@@ -311,8 +311,8 @@ theorem b_25 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
 -- A load of the local array `A` after the store of `v` at the slot `i`.
 private theorem rdA_store {S : Addr} {g' : G} {F : MProp 64} {s : MachineData} {ra : Int64}
     {x0 : Word} {x2 : Lc} {lo : List Word} {w u : Word} {t : MachineData}
-    (h : Mid S g' F s ra x0 x2 lo w u t) {i : Nat} (hi : i < MAX_N) {a : Addr}
-    (ha : a = rsp s - 8256#64 + BitVec.ofNat 64 (8 * i)) (v : Word) {j : Nat} (hj : j < MAX_N)
+    (h : Mid S g' F s ra x0 x2 lo w u t) {i : Nat} (hi : i < maxStackSize) {a : Addr}
+    (ha : a = rsp s - 8256#64 + BitVec.ofNat 64 (8 * i)) (v : Word) {j : Nat} (hj : j < maxStackSize)
     {b : Addr} (hb : b = rsp s - 8256#64 + BitVec.ofNat 64 (8 * j)) :
     rd (t.dmem.storeInt a 8 v.toInt) b = (x2.A.set i v hi)[j] :=
   (h.storeA (P := { t with dmem := t.dmem.storeInt a 8 v.toInt }) hi ha v rfl rfl rfl).rdA hj hb
@@ -408,7 +408,7 @@ theorem b_1 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
   obtain ⟨g', u, T, x0, x2, lo, w, hM, hok, hk, h13, hln, hdx, hH, hp, hA, hR⟩ := ht
   have hn : g'.h.n.toNat ≤ 1024 := hok.n
   have hr : t.regs.rax.toBitVec.toNat < 1024 := by bv_omega
-  have hi : t.regs.rax.toBitVec.toNat < MAX_N := by rw [Flat.max_n]; exact hr
+  have hi : t.regs.rax.toBitVec.toNat < maxStackSize := by rw [Flat.max_n]; exact hr
   have hd : BitVec.ofInt 64 (Mem.loadInt t.dmem
       (t.regs.r12.toBitVec + t.regs.rax.toBitVec * 8#64 + 56#64) 8).get!
       = Flat.get g'.h.dest t.regs.rax.toBitVec := by
@@ -419,7 +419,7 @@ theorem b_1 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
   have hlt : Flat.get g'.h.dest t.regs.rax.toBitVec < g'.h.n :=
     hH.f.dest _ (show t.regs.rax.toBitVec < g'.h.len by rw [hln]; exact hdx)
   -- The new entry at `rdx` and the old entries below `rdx`.
-  have hset : ∀ j (hj : j < MAX_N), j < t.regs.rax.toBitVec.toNat + 1 →
+  have hset : ∀ j (hj : j < maxStackSize), j < t.regs.rax.toBitVec.toNat + 1 →
       (x2.A.set t.regs.rax.toBitVec.toNat (BitVec.ofInt 64 (Mem.loadInt t.dmem
         (t.regs.r12.toBitVec + t.regs.rax.toBitVec * 8#64 + 56#64) 8).get!) hi)[j]
         = Flat.get g'.h.dest (BitVec.ofNat 64 j) := by
@@ -470,7 +470,7 @@ theorem b_1 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
     case refine_4 => exact hs0
     case refine_5 =>
       refine permuteA_of hok hH hp hrd fun j hj => ?_
-      have hj' : j < MAX_N := by rw [Flat.max_n]; omega
+      have hj' : j < maxStackSize := by rw [Flat.max_n]; omega
       have ea : t.regs.rsp.toBitVec + 16#64 + BitVec.ofNat 64 (8 * j)
           = rsp s - 8256#64 + BitVec.ofNat 64 (8 * j) := by rw [hs0]
       have e := (rdA_store hM hi ha (BitVec.ofInt 64 (Mem.loadInt t.dmem

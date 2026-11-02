@@ -35,7 +35,7 @@ private theorem isSome_blkExc (h : (View S g ∗ F).get m) :
     (m.loadInt (Fld.blocked_excess S) 8).isSome = true :=
   isSome_of_eq g.h.blkExc h (by unfold View Em; ecancel)
 
-private theorem rd_dest (h : (View S g ∗ F).get m) {i : Nat} (hi : i < MAX_N) :
+private theorem rd_dest (h : (View S g ∗ F).get m) {i : Nat} (hi : i < maxStackSize) :
     rd m (Fld.mapping_destinationOf S i) = g.h.dest[i] := by
   obtain ⟨R, h'⟩ := View.arr_dest h
   exact (Arr.rd h' (by simpa using hi)).trans (by simp)

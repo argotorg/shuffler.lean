@@ -47,7 +47,7 @@ theorem copyBelow_ne (st : Flat.St) (x : StackSlot) {p : Word} (h : p ≠ 0#64) 
   rw [Flat.copyBelow]; exact dite_eq_right h
 
 -- Slot `i < n + xs` of the flat data is word `i` of the ghost stack.
-theorem get_flat_data {g : G} (hn : g.h.n.toNat + g.xs ≤ MAX_N) {i : Word}
+theorem get_flat_data {g : G} (hn : g.h.n.toNat + g.xs ≤ maxStackSize) {i : Word}
     (hi : i.toNat < g.h.n.toNat + g.xs) :
     Flat.get (flat g).data i = StackSlot.ofWord g.stk[i.toNat] := by
   simp [Flat.get, flat, vec, Nat.lt_of_lt_of_le hi hn, hi]

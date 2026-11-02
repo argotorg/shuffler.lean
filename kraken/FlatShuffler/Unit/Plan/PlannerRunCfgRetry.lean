@@ -30,11 +30,11 @@ theorem cfg_31 : plannerRunAsm.ForallBlocks fun blk =>
   obtain ⟨lo, locals, i, h0, hi, ha, hc, hbp, hmodel⟩ := ht
   have ht : DropAfterHead P current M F s ra before t :=
     ⟨lo, locals, i, h0, hi, ha, hc, hbp, hmodel⟩
-  have hsize := congrArg PlannerObjectMemory.m ctx.stable.planner
-  change current.p.m = g.p.m at hsize
+  have hsize := congrArg PlannerObjectMemory.sourceSize ctx.stable.planner
+  change current.p.sourceSize = g.p.sourceSize at hsize
   have hdrp := congrArg PlannerObjectMemory.drp ctx.stable.planner
   change current.p.drp = g.p.drp at hdrp
-  have hiN : i.toNat < 1024 := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) h0.ok.planner.m
+  have hiN : i.toNat < 1024 := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) h0.ok.planner.sourceSizeFitsBuffer
   have hix : (rax t - g.p.drp).toNat = i.toNat := by rw [ha, hdrp]; bv_omega
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
@@ -45,7 +45,7 @@ theorem cfg_31 : plannerRunAsm.ForallBlocks fun blk =>
       obtain ⟨lo', locals', j, h1, hj, haj, hcj, hbpj, hmodelj⟩ := hu
       have hu : DropAfterHead P current M F s ra before u :=
         ⟨lo', locals', j, h1, hj, haj, hcj, hbpj, hmodelj⟩
-      have hjN : j.toNat < 1024 := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hj) h1.ok.planner.m
+      have hjN : j.toNat < 1024 := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hj) h1.ok.planner.sourceSizeFitsBuffer
       have hjx : (rax u - g.p.drp).toNat = j.toNat := by rw [haj, hdrp]; bv_omega
       have hij : j.toNat = i.toNat + 1 := by
         rw [haj, ha] at hau
@@ -63,10 +63,10 @@ theorem cfg_31 : plannerRunAsm.ForallBlocks fun blk =>
       intro u hp hu
       have h1 := hu.choose_spec.choose_spec.1
       have hb := dropBudget_eq ctx.stable h1.kb.vmem
-      have hdec : (current.p.m - Flat.droppedCount current.p.m current.dropped).toNat <
-          (current.p.m - before).toNat :=
+      have hdec : (current.p.sourceSize - Flat.droppedCount current.p.sourceSize current.dropped).toNat <
+          (current.p.sourceSize - before).toNat :=
         Flat.sub_lt_sub (Flat.droppedCount_le _ _) (by
-          have hle := Flat.droppedCount_le current.p.m current.dropped
+          have hle := Flat.droppedCount_le current.p.sourceSize current.dropped
           have hlt := BitVec.lt_def.mp hp
           omega) hp
       refine ⟨?_, Or.inl ?_⟩

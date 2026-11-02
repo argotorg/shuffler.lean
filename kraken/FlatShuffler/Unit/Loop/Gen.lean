@@ -52,7 +52,7 @@ theorem test_code {x : Word} {st : Flat.Status} (hal : BitVec.setWidth 8 x = cod
   rw [← BitVec.setWidth_eq_extractLsb' (by decide), hal, BitVec.and_self]
   cases st <;> decide
 
-theorem get_lt {α : Type} [Inhabited α] (v : Vector α MAX_N) {i : Word} (hi : i.toNat < MAX_N) :
+theorem get_lt {α : Type} [Inhabited α] (v : Vector α maxStackSize) {i : Word} (hi : i.toNat < maxStackSize) :
     Flat.get v i = v[i.toNat] := by
   simp [Flat.get, hi]
 
@@ -60,11 +60,11 @@ section
 variable {S : Addr} {g : G} {R : MProp 64} {m : Mem 64}
 
 -- `8248(%r12,%x,8)`: `pos[x]`.
-theorem rd_pos' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < MAX_N) :
+theorem rd_pos' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < maxStackSize) :
     BitVec.ofInt 64 (m.loadInt (S + x * 8#64 + 8248#64) 8).get! = g.h.pos[x.toNat] := by
   rw [Fld.fold_mapping_positionOf]; exact View.rd_pos h hx
 
-theorem isSome_pos' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < MAX_N) :
+theorem isSome_pos' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < maxStackSize) :
     (m.loadInt (S + x * 8#64 + 8248#64) 8).isSome = true := by
   rw [Fld.fold_mapping_positionOf]; exact View.isSome_pos h hx
 
@@ -77,13 +77,13 @@ theorem isSome_len' (h : (View S g ∗ R).get m) : (m.loadInt (S + 32#64) 8).isS
   rw [Fld.fold_stack_size]; exact View.isSome_len h
 
 -- `56(%r12,%rbx)` with `rbx = 8*x`: `dest[x]`.
-theorem rd_dest8 (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < MAX_N) :
+theorem rd_dest8 (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < maxStackSize) :
     BitVec.ofInt 64 (m.loadInt (S + 8#64 * x + 56#64) 8).get! = g.h.dest[x.toNat] := by
   rw [BitVec.mul_comm, Fld.fold_mapping_destinationOf]
   obtain ⟨R, h'⟩ := View.arr_dest h
   exact (Arr.rd h' (by simpa using hx)).trans (by simp)
 
-theorem isSome_dest8 (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < MAX_N) :
+theorem isSome_dest8 (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < maxStackSize) :
     (m.loadInt (S + 8#64 * x + 56#64) 8).isSome = true := by
   rw [BitVec.mul_comm, Fld.fold_mapping_destinationOf]; exact View.isSome_dest h hx
 
@@ -293,7 +293,7 @@ theorem b_15 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
   intro t ht
   simp only [LInv, Names.buildBottomUp, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨g', u, ⟨x0, x2, lo, w, hM, hok, hk⟩, hHd, hN, hTl, hln, hR⟩ := ht
-  have hlN : g'.h.len.toNat < MAX_N := by
+  have hlN : g'.h.len.toNat < maxStackSize := by
     have := hok.n; have := BitVec.lt_def.mp hln; omega
   have hp : BitVec.ofInt 64
       (Mem.loadInt t.dmem (t.regs.r12.toBitVec + t.regs.r15.toBitVec * 8#64 + 8248#64) 8).get!
@@ -427,7 +427,7 @@ theorem b_16 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
       have hc := test_code hal2
       have h14 : t2.regs.r14.toBitVec = t.regs.r14.toBitVec := by rw [hsv.r14]
       have hbx2 : t2.regs.rbx.toBitVec = t.regs.rbx.toBitVec := by rw [hsv.bx]
-      have hTN : t.regs.r14.toBitVec.toNat < MAX_N := by
+      have hTN : t.regs.r14.toBitVec.toNat < maxStackSize := by
         have := hok.n; have := BitVec.lt_def.mp hHd.2.2.1; omega
       have hlen : BitVec.ofInt 64 (Mem.loadInt t2.dmem (t2.regs.r12.toBitVec + 32#64) 8).get!
           = g''.h.len := by
@@ -504,7 +504,7 @@ theorem b_16 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
           · simp only [h14]; exact hHn
           · simp only [h14]; exact hR
         · have hpd : g''.h.pend.toNat + 1 = g'.h.pend.toNat := hG.2.2.2
-          have h1024 : MAX_N = 1024 := rfl
+          have h1024 : maxStackSize = 1024 := rfl
           have hT1 : (t.regs.r14.toBitVec + 1#64).toNat = t.regs.r14.toBitVec.toNat + 1 := by
             rw [BitVec.toNat_add, BitVec.toNat_ofNat]; omega
           loop_dec

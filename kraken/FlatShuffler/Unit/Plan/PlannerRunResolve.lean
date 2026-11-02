@@ -78,11 +78,11 @@ theorem b_30_call [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat
       · exact hin.excess
       · exact hin.current
     · intro r' u hq
-      have hr := (hq ⟨Vector.replicate MAX_N 0#8, Vector.replicate MAX_N 0#64⟩).2.1
+      have hr := (hq ⟨Vector.replicate maxStackSize 0#8, Vector.replicate maxStackSize 0#64⟩).2.1
       rw [hr]
       rfl
     · intro r' u hq
-      have hr := (hq ⟨Vector.replicate MAX_N 0#8, Vector.replicate MAX_N 0#64⟩).2
+      have hr := (hq ⟨Vector.replicate maxStackSize 0#8, Vector.replicate maxStackSize 0#64⟩).2
       rw [hr]
       rfl
     · intro spills dropped u lo' hb hq hag
@@ -115,14 +115,14 @@ theorem b_30 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
     (hzero : ∀ spills dropped res lo' u,
       Resolved g M locals hl spills dropped res →
       PostEmitLI P (withResolve g spills dropped) M F s ra lo' locals u →
-      res = .dropped → g.p.m = 0#64 →
+      res = .dropped → g.p.sourceSize = 0#64 →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
         (label ".LB.Planner.run.13") u)
     (hmore : ∀ spills dropped res lo' u,
       Resolved g M locals hl spills dropped res →
       PostEmitLI P (withResolve g spills dropped) M F s ra lo' locals u →
-      res = .dropped → g.p.m ≠ 0#64 → u.regs.rbp.toBitVec = before →
-      rax u = g.p.drp → rcx u = g.p.drp + g.p.m → rdx u = 0#64 → K () u)
+      res = .dropped → g.p.sourceSize ≠ 0#64 → u.regs.rbp.toBitVec = before →
+      rax u = g.p.drp → rcx u = g.p.drp + g.p.sourceSize → rdx u = 0#64 → K () u)
     (hstop : ∀ spills dropped lo' u, lo'.length = 4113 →
       (Stk (rsp s) (fr s lo' locals) ra.toBitVec ∗
         (plannerCallOwnedMemory P (withResolve g spills dropped) ∗ F)).get u.dmem →

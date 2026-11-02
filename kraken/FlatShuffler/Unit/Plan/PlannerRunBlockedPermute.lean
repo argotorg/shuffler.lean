@@ -25,7 +25,7 @@ theorem noSurplus_of_finv {st : Flat.St} (hf : Flat.FInv st) : HasNoSurplus st :
   exact Flat.ne_none (Nat.lt_of_lt_of_le (BitVec.lt_def.mp (hf.dest i hi)) hf.n)
 
 theorem exchange_blocked {st out : Flat.St} {top pos : Word}
-    {p : Vector Word MAX_N} (hm : MapInv st.size st.targetSize ⟨st.dest, st.pos⟩)
+    {p : Vector Word maxStackSize} (hm : MapInv st.size st.targetSize ⟨st.dest, st.pos⟩)
     (hp : pos < st.size) (hr : Flat.exchange st top p pos = .ret (.blocked, out)) :
     BlockedBounds st.targetSize out := by
   unfold Flat.exchange at hr
@@ -37,7 +37,7 @@ theorem exchange_blocked {st out : Flat.St} {top pos : Word}
         (by simpa only [Bool.not_eq_true'] using hu) (Flat.PNext.ret.inj hr)
     · cases hr
 
-theorem permuteStep_blocked {st out : Flat.St} {p : Vector Word MAX_N}
+theorem permuteStep_blocked {st out : Flat.St} {p : Vector Word maxStackSize}
     (hm : MapInv st.size st.targetSize ⟨st.dest, st.pos⟩)
     (h0 : 0#64 < st.size) (hb : Bij st.size p)
     (hr : Flat.permuteStep st (st.size - 1#64) p = .ret (.blocked, out)) :
@@ -54,7 +54,7 @@ theorem permuteStep_blocked {st out : Flat.St} {p : Vector Word MAX_N}
       · exact exchange_blocked hm (by bv_omega) hr
   · exact exchange_blocked hm (hb.1 _ ht) hr
 
-theorem permuteLoop_blocked {fuel : Nat} {st out : Flat.St} {p : Vector Word MAX_N}
+theorem permuteLoop_blocked {fuel : Nat} {st out : Flat.St} {p : Vector Word maxStackSize}
     (hm : MapInv st.size st.targetSize ⟨st.dest, st.pos⟩) (hn : HasNoSurplus st)
     (h0 : 0#64 < st.size) (hb : Bij st.size p)
     (he : Flat.permuteLoop fuel st (st.size - 1#64) p = (.blocked, out)) :
@@ -79,7 +79,7 @@ theorem permuteLoop_blocked {fuel : Nat} {st out : Flat.St} {p : Vector Word MAX
         simpa only [hsz] using he
       simpa only [hnt] using ih hm' hn' h0' hb' he'
 
-theorem permute_blocked {st out : Flat.St} {p : Vector Word MAX_N}
+theorem permute_blocked {st out : Flat.St} {p : Vector Word maxStackSize}
     (hm : MapInv st.size st.targetSize ⟨st.dest, st.pos⟩) (hn : HasNoSurplus st)
     (hb : Bij st.size p) (he : Flat.permute st p = (.blocked, out)) :
     BlockedBounds st.targetSize out := by
@@ -94,7 +94,7 @@ theorem permute_blocked {st out : Flat.St} {p : Vector Word MAX_N}
       exact permuteLoop_blocked hm hn (by bv_omega)
         (Permute.regroup_bij hm.m_bound hb hp') he
 
-theorem lowest_blocked {planned : Vector Word MAX_N} {l : Flat.Locals}
+theorem lowest_blocked {planned : Vector Word maxStackSize} {l : Flat.Locals}
     {st out : Flat.St}
     (hm : MapInv st.size st.targetSize ⟨st.dest, st.pos⟩) (hn : HasNoSurplus st)
     (hlow : Flat.LowOk planned st)

@@ -17,7 +17,7 @@ open FlatShuffler.Unit.ShallowestCopy
 
 -- A ghost with `n = 3`, the stack `ws` and the size `len`.
 def hdr (len : Word) : Hdr :=
-  ⟨0, 3#64, 0, 0, len, 0, 0, Vector.replicate MAX_N 0, Vector.replicate MAX_N 0, 0, 0, 0⟩
+  ⟨0, 3#64, 0, 0, len, 0, 0, Vector.replicate maxStackSize 0, Vector.replicate maxStackSize 0, 0, 0, 0⟩
 
 def ghost (len : Word) (ws : Vector Word 3) : G :=
   ⟨hdr len, 0, 0, ws, Vector.replicate 18 ⟨⟨0, 0, ⟨0, 0, 0⟩⟩, 0, 0⟩, Vector.replicate 3 0, fun _ => 0⟩

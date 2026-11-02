@@ -21,17 +21,17 @@ def EmissionCont [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.
   (∀ u, PostEmitLI P g M F s ra lo locals u → al u = al t → al u ≠ 1#8 →
     Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
       (label ".LB.Planner.run.9") u) ∧
-  (∀ u, PostEmitLI P g M F s ra lo locals u → al t = 1#8 → g.p.m = 0#64 →
+  (∀ u, PostEmitLI P g M F s ra lo locals u → al t = 1#8 → g.p.sourceSize = 0#64 →
     u.regs.rbp.toBitVec = 0#64 →
     Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
       (label ".LB.Planner.run.17") u) ∧
-  (∀ u, PostEmitLI P g M F s ra lo locals u → al t = 1#8 → g.p.m ≠ 0#64 →
-    u.regs.rbp.toBitVec = 0#64 → rax u = g.p.drp → rdx u = g.p.drp + g.p.m → K () u)
+  (∀ u, PostEmitLI P g M F s ra lo locals u → al t = 1#8 → g.p.sourceSize ≠ 0#64 →
+    u.regs.rbp.toBitVec = 0#64 → rax u = g.p.drp → rdx u = g.p.drp + g.p.sourceSize → K () u)
 
 set_option maxRecDepth 16384 in
 theorem b_28 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapping)
     (F : MProp 64) (s : MachineData) (ra : Int64) (hok : g.Ok)
-    (hm : MapInv g.p.m g.p.n M)
+    (hm : MapInv g.p.sourceSize g.p.targetSize M)
     (hrun : ∀ PM planned, VSpecWithExit (RunView PM planned) G.Ok Names.run
       (runA planned) runD (runQ planned) (runX planned))
     (K : Unit → MachineData → Prop)

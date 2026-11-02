@@ -23,13 +23,13 @@ of the list model in `FlatShuffler`.
 
 namespace FlatShuffler.Flat
 
-theorem max_n : MAX_N = 1024 := rfl
+theorem max_n : maxStackSize = 1024 := rfl
 
--- A word below `MAX_N` is not `NONE`.
-theorem ne_none {x : Word} (h : x.toNat < MAX_N) : x ≠ NONE := by
+-- A word below `maxStackSize` is not `NONE`.
+theorem ne_none {x : Word} (h : x.toNat < maxStackSize) : x ≠ NONE := by
   intro e; subst e; simp [NONE, max_n] at h
 
-theorem toNat_ofNat_lt {i : Nat} (h : i < MAX_N) : (BitVec.ofNat 64 i).toNat = i := by
+theorem toNat_ofNat_lt {i : Nat} (h : i < maxStackSize) : (BitVec.ofNat 64 i).toNat = i := by
   rw [BitVec.toNat_ofNat]; rw [max_n] at h; exact Nat.mod_eq_of_lt (by omega)
 
 section
@@ -46,10 +46,10 @@ theorem FInv.of_eq {st' : St} (h : FInv st) (e1 : st'.targetSize = st.targetSize
 theorem FInv.size_le (h : FInv st) : st.size.toNat ≤ st.targetSize.toNat := by
   have := h.cnt; omega
 
-theorem FInv.lt_max (h : FInv st) {i : Word} (hi : i < st.targetSize) : i.toNat < MAX_N := by
+theorem FInv.lt_max (h : FInv st) {i : Word} (hi : i < st.targetSize) : i.toNat < maxStackSize := by
   have := h.n; rw [BitVec.lt_def] at hi; omega
 
-theorem FInv.lt_max_of_size (h : FInv st) {i : Word} (hi : i < st.size) : i.toNat < MAX_N := by
+theorem FInv.lt_max_of_size (h : FInv st) {i : Word} (hi : i < st.size) : i.toNat < maxStackSize := by
   have := h.n; have := h.size_le; rw [BitVec.lt_def] at hi; omega
 
 -- A pending generation leaves a free slot.

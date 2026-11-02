@@ -98,27 +98,27 @@ def step (fb : Flat.Builder) (M : Flat.Mapping) (sw : Bool) (c j : Word) :
 section
 variable {fb : Flat.Builder} {M : Flat.Mapping} {sw : Bool} {j c : Word}
 
-theorem from_ge (h : ¬ j < fb.n) : Flat.wildcardFrom fb M sw j = (.done, M, sw) := by
+theorem from_ge (h : ¬ j < fb.targetSize) : Flat.wildcardFrom fb M sw j = (.done, M, sw) := by
   rw [Flat.wildcardFrom, dite_eq_right h]
 
-theorem skip_pos (h : j < fb.n) (hp : (!(Flat.get M.pos j == Flat.NONE)) = true) :
+theorem skip_pos (h : j < fb.targetSize) (hp : (!(Flat.get M.pos j == Flat.NONE)) = true) :
     Flat.wildcardFrom fb M sw j = Flat.wildcardFrom fb M sw (j + 1) := by
   rw [Flat.wildcardFrom, dite_eq_left h]
   simp only [Bool.not_eq_true', beq_eq_false_iff_ne, ne_eq] at hp
   simp [Flat.hasSourceAssigned, hp]
 
-theorem skip_junk (h : j < fb.n) (hw : Flat.isWildcardTarget fb j = true) :
+theorem skip_junk (h : j < fb.targetSize) (hw : Flat.isWildcardTarget fb j = true) :
     Flat.wildcardFrom fb M sw j = Flat.wildcardFrom fb M sw (j + 1) := by
   rw [Flat.wildcardFrom, dite_eq_left h]
   simp [hw]
 
-theorem skip_none (h : j < fb.n) (hc : Flat.closestCopy fb M j true = Flat.NONE) :
+theorem skip_none (h : j < fb.targetSize) (hc : Flat.closestCopy fb M j true = Flat.NONE) :
     Flat.wildcardFrom fb M sw j = Flat.wildcardFrom fb M sw (j + 1) := by
   rw [Flat.wildcardFrom, dite_eq_left h]
   simp [hc]
 
 -- A return label: `map` at once.
-theorem from_ret (h : j < fb.n) (hp : (!(Flat.get M.pos j == Flat.NONE)) = false)
+theorem from_ret (h : j < fb.targetSize) (hp : (!(Flat.get M.pos j == Flat.NONE)) = false)
     (hw : Flat.isWildcardTarget fb j = false) (hc : Flat.closestCopy fb M j true ≠ Flat.NONE)
     (hk : (Flat.get fb.target j).kind = FunctionReturnLabel) :
     Flat.wildcardFrom fb M sw j = step fb M sw (Flat.closestCopy fb M j true) j := by
@@ -127,7 +127,7 @@ theorem from_ret (h : j < fb.n) (hp : (!(Flat.get M.pos j == Flat.NONE)) = false
   simp [Flat.hasSourceAssigned, hp, hw, hc, hk, step]
 
 -- Another kind with `TakeWildcardCopies`.
-theorem from_take (h : j < fb.n) (hp : (!(Flat.get M.pos j == Flat.NONE)) = false)
+theorem from_take (h : j < fb.targetSize) (hp : (!(Flat.get M.pos j == Flat.NONE)) = false)
     (hw : Flat.isWildcardTarget fb j = false) (hc : Flat.closestCopy fb M j true ≠ Flat.NONE)
     (hk : (Flat.get fb.target j).kind ≠ FunctionReturnLabel) (ht : fb.take = true) :
     Flat.wildcardFrom fb M sw j = step fb M true (Flat.closestCopy fb M j true) j := by
@@ -136,7 +136,7 @@ theorem from_take (h : j < fb.n) (hp : (!(Flat.get M.pos j == Flat.NONE)) = fals
   simp [Flat.hasSourceAssigned, hp, hw, hc, hk, ht, step]
 
 -- Another kind without `TakeWildcardCopies`.
-theorem from_skip (h : j < fb.n) (hp : (!(Flat.get M.pos j == Flat.NONE)) = false)
+theorem from_skip (h : j < fb.targetSize) (hp : (!(Flat.get M.pos j == Flat.NONE)) = false)
     (hw : Flat.isWildcardTarget fb j = false) (hc : Flat.closestCopy fb M j true ≠ Flat.NONE)
     (hk : (Flat.get fb.target j).kind ≠ FunctionReturnLabel) (ht : fb.take = false) :
     Flat.wildcardFrom fb M sw j = Flat.wildcardFrom fb M true (j + 1) := by
@@ -267,15 +267,15 @@ def Inv (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) (fr₀
     if l = Names.mapWildcardSlotCopies then t = s.pushRa ra
     else if l = ".LB.MappingBuilder.mapWildcardSlotCopies.0" then
       ∃ M sw lo w, LI B b F s ra M sw lo w t
-      ∧ t.regs.rbx.toBitVec.toNat < b.n.toNat ∧ t.regs.rax.toBitVec.toNat < b.m.toNat
+      ∧ t.regs.rbx.toBitVec.toNat < b.targetSize.toNat ∧ t.regs.rax.toBitVec.toNat < b.sourceSize.toNat
       ∧ step b.fl M sw t.regs.rax.toBitVec t.regs.rbx.toBitVec = res b
     else if l = ".LB.MappingBuilder.mapWildcardSlotCopies.1" then
       ∃ M sw lo w, LI B b F s ra M sw lo w t
-      ∧ t.regs.rbx.toBitVec.toNat < b.n.toNat
+      ∧ t.regs.rbx.toBitVec.toNat < b.targetSize.toNat
       ∧ Flat.wildcardFrom b.fl M sw (t.regs.rbx.toBitVec + 1#64) = res b
     else if l = ".LB.MappingBuilder.mapWildcardSlotCopies.2" then
       ∃ M sw lo w, LI B b F s ra M sw lo w t
-      ∧ t.regs.rbx.toBitVec.toNat < b.n.toNat
+      ∧ t.regs.rbx.toBitVec.toNat < b.targetSize.toNat
       ∧ Flat.wildcardFrom b.fl M sw t.regs.rbx.toBitVec = res b
     else if l = ".LB.MappingBuilder.mapWildcardSlotCopies.3" then
       ∃ M sw lo w, LI B b F s ra M sw lo w t ∧ res b = (.done, M, sw)
@@ -289,11 +289,11 @@ def Inv (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) (fr₀
 def V (b : BG) (l : Label) (t : MachineData) : Nat :=
   if l = Names.mapWildcardSlotCopies then 2 ^ 70
   else if l = ".LB.MappingBuilder.mapWildcardSlotCopies.0" then
-    3 * (b.n.toNat - t.regs.rbx.toBitVec.toNat)
+    3 * (b.targetSize.toNat - t.regs.rbx.toBitVec.toNat)
   else if l = ".LB.MappingBuilder.mapWildcardSlotCopies.1" then
-    3 * (b.n.toNat - t.regs.rbx.toBitVec.toNat) - 1
+    3 * (b.targetSize.toNat - t.regs.rbx.toBitVec.toNat) - 1
   else if l = ".LB.MappingBuilder.mapWildcardSlotCopies.2" then
-    3 * (b.n.toNat - t.regs.rbx.toBitVec.toNat) + 1
+    3 * (b.targetSize.toNat - t.regs.rbx.toBitVec.toNat) + 1
   else 0
 
 def E [Labels] (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) :
@@ -373,9 +373,9 @@ theorem b_fn (hpre : VPre BView BG.Ok B b F mapWildA 10 s) (w₀ w₁ w₂ w₃ 
   change (Stk (rsp s) (fr s [w₀, w₁, w₂, w₃] ⟨w₄, w₅⟩) ra.toBitVec ∗ BView B b ∗ F).get _ at hpm
   simp only [PushOk] at hpo
   obtain ⟨p1, p2, p3, p4, -⟩ := hpo
-  have h_n := BView.rd_n hm0
+  have h_n := BView.rd_targetSize hm0
   unfold rd at h_n
-  have k_n := BView.isSome_n hm0
+  have k_n := BView.isSome_targetSize hm0
   clear hm0
   kvcgen64
   all_goals try symexec_norm
@@ -395,18 +395,18 @@ theorem b_fn (hpre : VPre BView BG.Ok B b F mapWildA 10 s) (w₀ w₁ w₂ w₃ 
     · exact (hk0.next rfl rfl rfl rfl rfl rfl rfl rfl).stack
     · mw_inv
       exact ⟨hk0.next rfl rfl rfl rfl rfl rfl rfl rfl,
-        from_ge (by show ¬ (0 : Word) < b.n; rw [h0]; decide)⟩
+        from_ge (by show ¬ (0 : Word) < b.targetSize; rw [h0]; decide)⟩
     · simp [V, Names.mapWildcardSlotCopies]
   | goto ".LB.MappingBuilder.mapWildcardSlotCopies.2" =>
     rename_i hc
-    have h0 : b.n ≠ 0#64 := by simpa using hc
-    have hpos : 0 < b.n.toNat := Nat.pos_of_ne_zero fun h => h0 (BitVec.eq_of_toNat_eq h)
+    have h0 : b.targetSize ≠ 0#64 := by simpa using hc
+    have hpos : 0 < b.targetSize.toNat := Nat.pos_of_ne_zero fun h => h0 (BitVec.eq_of_toNat_eq h)
     cfg_goto
     · exact Kb.stack ⟨hpm, hsp4⟩ (by decide)
     · mw_inv
       exact ⟨b.M, false, [w₀, w₁, w₂, w₃], ⟨w₄, w₅⟩, ⟨⟨hpm, hsp4⟩, rfl,
         by simpa [MachineData.pushRa] using hpre.rdi, rfl, rfl⟩, hpos, rfl⟩
-    · left; have := b.n.isLt; simp [V, Names.mapWildcardSlotCopies]; omega
+    · left; have := b.targetSize.isLt; simp [V, Names.mapWildcardSlotCopies]; omega
 
 set_option maxHeartbeats 100000 in
 theorem b_0 (hout : ∀ l ∈ Program.labels mapWildcardSlotCopiesAsm, label l ≠ label "exit")
@@ -417,7 +417,7 @@ theorem b_0 (hout : ∀ l ∈ Program.labels mapWildcardSlotCopiesAsm, label l �
   intro t ht
   mw_inv at ht
   obtain ⟨M, sw, lo, w, hli, hlt, hcm, hrest⟩ := ht
-  have hokM : BG.Ok (bv b M sw) := ⟨hok.m, hok.n, hok.sw, hok.tw, hok.db⟩
+  have hokM : BG.Ok (bv b M sw) := ⟨hok.sourceSizeFitsBuffer, hok.targetSizeFitsBuffer, hok.sw, hok.tw, hok.db⟩
   simp only [Names.map] at hmap
   kvcgen64 [hmap]
   all_goals try symexec_norm
@@ -496,9 +496,9 @@ theorem b_1 : mapWildcardSlotCopiesAsm.ForallBlocks fun blk =>
   have hb := hli.kb.mem
   rw [sep_lc] at hb
   have hbp := hli.rbp
-  have h_n := BView.rd_n hb
+  have h_n := BView.rd_targetSize hb
   unfold rd at h_n
-  have k_n := BView.isSome_n hb
+  have k_n := BView.isSome_targetSize hb
   clear hb
   kvcgen64
   all_goals try symexec_norm
@@ -535,11 +535,11 @@ theorem b_2 (hout : ∀ l ∈ Program.labels mapWildcardSlotCopiesAsm, label l �
   intro t ht
   mw_inv at ht
   obtain ⟨M, sw, lo, w, hli, hlt, hrest⟩ := ht
-  have hokM : BG.Ok (bv b M sw) := ⟨hok.m, hok.n, hok.sw, hok.tw, hok.db⟩
+  have hokM : BG.Ok (bv b M sw) := ⟨hok.sourceSizeFitsBuffer, hok.targetSizeFitsBuffer, hok.sw, hok.tw, hok.db⟩
   have hb := hli.kb.mem
   rw [sep_lc] at hb
   have hbp := hli.rbp
-  have hmax : t.regs.rbx.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hlt hok.n
+  have hmax : t.regs.rbx.toBitVec.toNat < maxStackSize := Nat.lt_of_lt_of_le hlt hok.targetSizeFitsBuffer
   obtain ⟨_, hM⟩ := BView.mapM hb
   have h_tgt := BView.rd_tgt hb
   have h_mp := BView.rd_mp hb
@@ -607,7 +607,7 @@ theorem b_2 (hout : ∀ l ∈ Program.labels mapWildcardSlotCopiesAsm, label l �
     clear hb2 hs
     have hlis := LI.saw hli2 (x := 1) (t' := { t2 with dmem := t2.dmem.storeInt (B + 56#64) 1 1 })
       rfl rfl rfl rfl rfl rfl
-    have hokT : BG.Ok (bv b M true) := ⟨hok.m, hok.n, hok.sw, hok.tw, hok.db⟩
+    have hokT : BG.Ok (bv b M true) := ⟨hok.sourceSizeFitsBuffer, hok.targetSizeFitsBuffer, hok.sw, hok.tw, hok.db⟩
     simp only [Names.map] at hmap
     kvcgen64 [hmap]
     all_goals try symexec_norm
@@ -774,7 +774,7 @@ theorem b_4 (hok : b.Ok) : mapWildcardSlotCopiesAsm.ForallBlocks fun blk =>
   mw_inv at ht
   obtain ⟨M, sw, lo, w, hli, hal, hM⟩ := ht
   obtain ⟨p0, p1, p2, p3⟩ := hli.pop_isSome
-  have hokM : BG.Ok (bv b M sw) := ⟨hok.m, hok.n, hok.sw, hok.tw, hok.db⟩
+  have hokM : BG.Ok (bv b M sw) := ⟨hok.sourceSizeFitsBuffer, hok.targetSizeFitsBuffer, hok.sw, hok.tw, hok.db⟩
   have hfl : (fr s lo w).length = 10 := by simp [fr, hli.hl]
   kvcgen64
   all_goals try symexec_norm

@@ -27,7 +27,7 @@ theorem ne_of_z8 {a b : BitVec 8} (h : (a - b == BitVec.zero 8) = false) : a ≠
   bv_omega
 
 section
-variable [Host] [FunDecls] (S PM : Addr) (planned : Vector Word MAX_N)
+variable [Host] [FunDecls] (S PM : Addr) (planned : Vector Word maxStackSize)
     (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
 
 theorem b_5 (hexit : FunDecls.at (label "exit") = none)
@@ -38,7 +38,7 @@ theorem b_5 (hexit : FunDecls.at (label "exit") = none)
   intro t ht
   simp only [Inv, Names.run, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨a, l, lo, w, h, h12, hdx, hi, hsize, hcount, havail, hscan⟩ := ht
-  have hiM : t.regs.rax.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hi h.ok.n
+  have hiM : t.regs.rax.toBitVec.toNat < maxStackSize := Nat.lt_of_lt_of_le hi h.ok.n
   have hpos := h.bd.rd_pos h.ok hi
   have hkind := h.bd.kind h.ok hi
   unfold rd at hpos
@@ -100,7 +100,7 @@ theorem b_4 : runAsm.ForallBlocks fun blk =>
   intro t ht
   simp only [Inv, Names.run, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨a, l, lo, w, h, h12, hdx, hi, hsize, hcount, havail, hscan⟩ := ht
-  have hin : t.regs.rax.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hi h.ok.n
+  have hin : t.regs.rax.toBitVec.toNat < maxStackSize := Nat.lt_of_lt_of_le hi h.ok.n
   have hn := succ_nat hi
   kvcgen64
   all_goals try symexec_norm

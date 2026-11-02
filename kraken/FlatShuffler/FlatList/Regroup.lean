@@ -15,14 +15,14 @@ loop gives the result of `FlatShuffler.normalize` (`PermList.lean`).
 
 namespace FlatShuffler.Flat
 
-theorem toNat_succ {a : Word} (h : a.toNat < MAX_N) : (a + 1).toNat = a.toNat + 1 := by
+theorem toNat_succ {a : Word} (h : a.toNat < maxStackSize) : (a + 1).toNat = a.toNat + 1 := by
   rw [MAX_N_eq] at h; bv_omega
 
 /-! ## `readDestinations` and `clearDesired` -/
 
-theorem readDestinations_spec (fs : St) (hn : fs.size.toNat ≤ MAX_N)
+theorem readDestinations_spec (fs : St) (hn : fs.size.toNat ≤ maxStackSize)
     (hd : ∀ i : Word, i.toNat < fs.size.toNat → get fs.dest i ≠ NONE) :
-    ∀ m (pos : Word) (perm : Vector Word MAX_N), fs.size.toNat - pos.toNat = m →
+    ∀ m (pos : Word) (perm : Vector Word maxStackSize), fs.size.toNat - pos.toNat = m →
       pos.toNat ≤ fs.size.toNat →
       ∃ v, readDestinations fs pos perm = some v ∧ ∀ i : Word,
         get v i = if pos.toNat ≤ i.toNat ∧ i.toNat < fs.size.toNat then get fs.dest i
@@ -55,8 +55,8 @@ theorem readDestinations_spec (fs : St) (hn : fs.size.toNat ≤ MAX_N)
       · rw [ite_eq_left hc1, ite_eq_left ⟨by omega, hc1.2⟩]
       · rw [ite_eq_right hc1, ite_eq_right (fun h => hc1 ⟨by omega, h.2⟩)]
 
-theorem clearDesired_spec (fs : St) (hn : fs.size.toNat ≤ MAX_N) :
-    ∀ m (off : Word) (dB : Vector Word MAX_N), fs.size.toNat - off.toNat = m →
+theorem clearDesired_spec (fs : St) (hn : fs.size.toNat ≤ maxStackSize) :
+    ∀ m (off : Word) (dB : Vector Word maxStackSize), fs.size.toNat - off.toNat = m →
       off.toNat ≤ fs.size.toNat → ∀ w : Word,
         get (clearDesired fs off dB) w =
           if off.toNat ≤ w.toNat ∧ w.toNat < fs.size.toNat then NONE else get dB w := by
@@ -86,9 +86,9 @@ theorem clearDesired_spec (fs : St) (hn : fs.size.toNat ≤ MAX_N) :
 /-! ## `markDesired` -/
 
 theorem markDesired_spec (fs : St) {leader : Word} (hl : leader < fs.size) (slot : StackSlot)
-    (perm : Vector Word MAX_N) (hn : fs.size.toNat ≤ MAX_N)
-    (hp : ∀ y : Word, y.toNat ≤ leader.toNat → (get perm y).toNat < MAX_N) :
-    ∀ m (pos : Word) (dB : Vector Word MAX_N), leader.toNat + 1 - pos.toNat = m →
+    (perm : Vector Word maxStackSize) (hn : fs.size.toNat ≤ maxStackSize)
+    (hp : ∀ y : Word, y.toNat ≤ leader.toNat → (get perm y).toNat < maxStackSize) :
+    ∀ m (pos : Word) (dB : Vector Word maxStackSize), leader.toNat + 1 - pos.toNat = m →
       pos.toNat ≤ leader.toNat + 1 → ∀ w : Word,
         (get (markDesired fs leader hl slot perm pos dB) w = leader ↔
           get dB w = leader ∨ ∃ y : Word, pos.toNat ≤ y.toNat ∧ y.toNat ≤ leader.toNat ∧
@@ -144,8 +144,8 @@ theorem markDesired_spec (fs : St) {leader : Word} (hl : leader < fs.size) (slot
 
 /-! ## `nextVacant` and `placeGroup` -/
 
-theorem nextVacant_spec (fs : St) (leader : Word) (slot : StackSlot) (dB : Vector Word MAX_N)
-    {P : Nat → Bool} (hn : fs.size.toNat ≤ MAX_N)
+theorem nextVacant_spec (fs : St) (leader : Word) (slot : StackSlot) (dB : Vector Word maxStackSize)
+    {P : Nat → Bool} (hn : fs.size.toNat ≤ maxStackSize)
     (hP : ∀ w : Word, w.toNat < fs.size.toNat →
       (P w.toNat = true ↔ get dB w = leader ∧ ¬get fs.data w = slot)) :
     ∀ m (v : Word), fs.size.toNat - v.toNat = m → v.toNat ≤ fs.size.toNat →
@@ -184,12 +184,12 @@ theorem nextVacant_spec (fs : St) (leader : Word) (slot : StackSlot) (dB : Vecto
 -- else to the next vacant offset in order. `vacant` is past as many vacant offsets as
 -- there are movers below `pos`.
 theorem placeGroup_spec (fs : St) {leader : Word} (hl : leader < fs.size) (slot : StackSlot)
-    (dB : Vector Word MAX_N) {g d : Nat → Bool} (hn : fs.size.toNat ≤ MAX_N)
+    (dB : Vector Word maxStackSize) {g d : Nat → Bool} (hn : fs.size.toNat ≤ maxStackSize)
     (hg : ∀ w : Word, w.toNat < fs.size.toNat → (get fs.data w = slot ↔ g w.toNat = true))
     (hd : ∀ w : Word, w.toNat < fs.size.toNat → (get dB w = leader ↔ d w.toNat = true))
     (hc : (List.range fs.size.toNat).countP (fun y => g y && !d y) ≤
       (List.range fs.size.toNat).countP (fun w => d w && !g w)) :
-    ∀ m (pos vacant : Word) (perm : Vector Word MAX_N), leader.toNat + 1 - pos.toNat = m →
+    ∀ m (pos vacant : Word) (perm : Vector Word maxStackSize), leader.toNat + 1 - pos.toNat = m →
       pos.toNat ≤ leader.toNat + 1 → vacant.toNat ≤ fs.size.toNat →
       (List.range vacant.toNat).countP (fun w => d w && !g w) =
         (List.range pos.toNat).countP (fun y => g y && !d y) →
@@ -216,14 +216,14 @@ theorem placeGroup_spec (fs : St) {leader : Word} (hl : leader < fs.size) (slot 
     have hp1 : (pos + 1).toNat = pos.toNat + 1 := toNat_succ (by omega)
     have hcs := countP_range_succ (fun y => g y && !d y) pos.toNat
     -- the frame: the positions above `pos`
-    have frame : ∀ (perm' : Vector Word MAX_N) (out : Vector Word MAX_N) (a : Nat),
+    have frame : ∀ (perm' : Vector Word maxStackSize) (out : Vector Word maxStackSize) (a : Nat),
         (∀ x : Word, (get out x).toNat =
           if (pos + 1).toNat ≤ x.toNat ∧ x.toNat ≤ leader.toNat ∧ g x.toNat = true then
             (if d x.toNat = true then x.toNat else
               ((List.range fs.size.toNat).filter fun w => d w && !g w)[
                 (List.range x.toNat).countP fun y => g y && !d y]!)
           else (get perm' x).toNat) →
-        perm' = put perm pos (BitVec.ofNat 64 a) → a < MAX_N →
+        perm' = put perm pos (BitVec.ofNat 64 a) → a < maxStackSize →
         (g pos.toNat = true → a = if d pos.toNat = true then pos.toNat else
               ((List.range fs.size.toNat).filter fun w => d w && !g w)[
                 (List.range pos.toNat).countP fun y => g y && !d y]!) →
@@ -324,7 +324,7 @@ theorem _root_.FlatShuffler.St.val_eq (st : FlatShuffler.St) (i : Nat) : st.val 
   cases st.slots[i]? <;> rfl
 
 -- The word of an offset below `n` is `k` if and only if the offset is `k`.
-theorem optW_eq_iff {o : Option Nat} {k : Word} {n : Nat} (hn : n ≤ MAX_N) (hk : k.toNat < n)
+theorem optW_eq_iff {o : Option Nat} {k : Word} {n : Nat} (hn : n ≤ maxStackSize) (hk : k.toNat < n)
     (ho : ∀ p, o = some p → p < n) : optW o = k ↔ o = some k.toNat := by
   cases o with
   | none =>
@@ -350,13 +350,13 @@ theorem leader_iff {e : Env} {fs : St} {st : FlatShuffler.St} (hs : Sim e fs st)
   simp only [List.length_map, ← FlatShuffler.St.val_eq]
   exact Iff.rfl
 
-theorem fregroup_skip {fs : St} {k : Word} {perm dB : Vector Word MAX_N} (hk : k < fs.size)
+theorem fregroup_skip {fs : St} {k : Word} {perm dB : Vector Word maxStackSize} (hk : k < fs.size)
     (h : shallowestCopyPosition fs (get fs.data k) ≠ k) :
     regroup fs k perm dB = regroup fs (k + 1) perm dB := by
   rw [regroup, dite_eq_left hk]
   exact ite_eq_left h
 
-theorem fregroup_lead {fs : St} {k : Word} {perm dB out : Vector Word MAX_N} (hk : k < fs.size)
+theorem fregroup_lead {fs : St} {k : Word} {perm dB out : Vector Word maxStackSize} (hk : k < fs.size)
     (h : shallowestCopyPosition fs (get fs.data k) = k)
     (hp : placeGroup fs k hk (get fs.data k) (markDesired fs k hk (get fs.data k) perm 0 dB) 0 0
       perm = some out) :
@@ -366,12 +366,12 @@ theorem fregroup_lead {fs : St} {k : Word} {perm dB out : Vector Word MAX_N} (hk
   rw [ite_eq_right (fun h' => h' h), hp]
 
 -- The offsets below `n` that `desiredBy` marks: none, or a leader below `k`.
-def DInv (n : Nat) (k : Word) (dB : Vector Word MAX_N) : Prop :=
+def DInv (n : Nat) (k : Word) (dB : Vector Word maxStackSize) : Prop :=
   ∀ w : Word, w.toNat < n → get dB w = NONE ∨ (get dB w).toNat < k.toNat
 
 -- The `leader` loop from `k` is the fold of the list `regroup` over the last copies from `k`.
 theorem sim_regroup {e : Env} {fs : St} {st : FlatShuffler.St} (hs : Sim e fs st) :
-    ∀ m (k : Word) (perm dB : Vector Word MAX_N) (q : List Nat), st.len - k.toNat = m →
+    ∀ m (k : Word) (perm dB : Vector Word maxStackSize) (q : List Nat), st.len - k.toNat = m →
       k.toNat ≤ st.len → PermV st.len perm q → IsPerm q → DInv st.len k dB →
       ∃ r, ((List.range' k.toNat m).filter (isLast (st.slots.map Slot.val))).foldlM
           (fun q l => FlatShuffler.regroup (st.slots.map Slot.val) q (st.slots.map Slot.val)[l]!) q =
@@ -379,7 +379,7 @@ theorem sim_regroup {e : Env} {fs : St} {st : FlatShuffler.St} (hs : Sim e fs st
         ∃ out, regroup fs k perm dB = some out ∧ PermV st.len out r ∧ IsPerm r := by
   have hN := hs.len_lt
   have hsz := hs.size
-  have hn : fs.size.toNat ≤ MAX_N := by rw [hsz]; exact hN
+  have hn : fs.size.toNat ≤ maxStackSize := by rw [hsz]; exact hN
   have hvl : (st.slots.map Slot.val).length = st.len := by simp [FlatShuffler.St.len]
   intro m
   induction m with
@@ -400,7 +400,7 @@ theorem sim_regroup {e : Env} {fs : St} {st : FlatShuffler.St} (hs : Sim e fs st
       obtain ⟨r1, hr1, hr1l, hr1p, hr1x⟩ :=
         regroup_ok (st.slots.map Slot.val)[k.toNat]! (hpv.1.trans hvl.symm) hq
       -- the flat side
-      have hpm : ∀ y : Word, y.toNat ≤ k.toNat → (get perm y).toNat < MAX_N := fun y hy => by
+      have hpm : ∀ y : Word, y.toNat ≤ k.toNat → (get perm y).toNat < maxStackSize := fun y hy => by
         rw [hpv.2 y (by omega)]
         have := hq.1 y.toNat (by rw [hpv.1]; omega)
         rw [getElem!_pos q y.toNat (by rw [hpv.1]; omega)]

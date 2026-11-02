@@ -58,7 +58,7 @@ example : ¬ Program.ForallBlocks finishAsm fun blk => blk.label ∈ labels.eras
 
 -- The unit theorem from `hcopy` and an obligation for `.LB.Emission.permute.22`. The lemma of another block
 -- (`.LB.Emission.permute.24`) does not take the place of `h22`.
-example [Host] [FunDecls] (p0 : Vector Word MAX_N)
+example [Host] [FunDecls] (p0 : Vector Word maxStackSize)
     (hexit : FunDecls.at (label "exit") = none)
     (hout : ∀ l ∈ Program.labels finishAsm, label l ≠ label "exit")
     (hcopy : Sep.Spec Names.shallowestCopyPosition shallowestCopyA 0 shallowestCopyQ)

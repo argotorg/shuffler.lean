@@ -26,28 +26,28 @@ open FlatShuffler.Flat (get put optOf NONE ofNat_lt_iff ofNat_succ)
 /-! ## Stacks -/
 
 -- The PR31 stack of the first `m` slots of `v`.
-def srcOf (v : Vector FlatShuffler.StackSlot FlatShuffler.MAX_N) (m : FlatShuffler.Word) : Stack :=
+def srcOf (v : Vector FlatShuffler.StackSlot FlatShuffler.maxStackSize) (m : FlatShuffler.Word) : Stack :=
   (v.toList.take m.toNat).map decodeStackSlot
 
-theorem srcOf_length {v : Vector FlatShuffler.StackSlot FlatShuffler.MAX_N} {m : FlatShuffler.Word} (hm : m.toNat ≤ FlatShuffler.MAX_N) :
+theorem srcOf_length {v : Vector FlatShuffler.StackSlot FlatShuffler.maxStackSize} {m : FlatShuffler.Word} (hm : m.toNat ≤ FlatShuffler.maxStackSize) :
     (srcOf v m).length = m.toNat := by
   simp [srcOf]; omega
 
-theorem srcOf_get {v : Vector FlatShuffler.StackSlot FlatShuffler.MAX_N} {m : FlatShuffler.Word} {i : Nat}
+theorem srcOf_get {v : Vector FlatShuffler.StackSlot FlatShuffler.maxStackSize} {m : FlatShuffler.Word} {i : Nat}
     (h : i < (srcOf v m).length) : (srcOf v m)[i] = decodeStackSlot (get v (.ofNat 64 i)) := by
   simp only [srcOf, List.length_map, List.length_take, Vector.length_toList] at h
   simp only [srcOf, List.getElem_map, List.getElem_take, Vector.getElem_toList]
   rw [FlatShuffler.Flat.get_ofNat v (by omega)]
 
 -- The PR31 dropped bytes of the first `m` bytes of `d`.
-def drops (d : Vector (BitVec 8) FlatShuffler.MAX_N) (m : FlatShuffler.Word) : List Byte :=
+def drops (d : Vector (BitVec 8) FlatShuffler.maxStackSize) (m : FlatShuffler.Word) : List Byte :=
   (d.toList.take m.toNat).map BitVec.toFin
 
-theorem drops_length {d : Vector (BitVec 8) FlatShuffler.MAX_N} {m : FlatShuffler.Word} (hm : m.toNat ≤ FlatShuffler.MAX_N) :
+theorem drops_length {d : Vector (BitVec 8) FlatShuffler.maxStackSize} {m : FlatShuffler.Word} (hm : m.toNat ≤ FlatShuffler.maxStackSize) :
     (drops d m).length = m.toNat := by
   simp [drops]; omega
 
-theorem drops_get_eq_zero {d : Vector (BitVec 8) FlatShuffler.MAX_N} {m : FlatShuffler.Word} {i : Nat}
+theorem drops_get_eq_zero {d : Vector (BitVec 8) FlatShuffler.maxStackSize} {m : FlatShuffler.Word} {i : Nat}
     (h : i < (drops d m).length) : (drops d m)[i] = 0 ↔ get d (.ofNat 64 i) = 0 := by
   simp only [drops, List.length_map, List.length_take, Vector.length_toList] at h
   simp only [drops, List.getElem_map, List.getElem_take, Vector.getElem_toList]
@@ -69,38 +69,38 @@ theorem bind_apply {s t : Nat} (P : Mapping s t) (p : Fin s) (d : Fin t) (hp hd)
 theorem bind_symm {s t : Nat} (P : Mapping s t) (p : Fin s) (d : Fin t) (hp hd) (j : Fin t) :
     (P.bind p d hp hd).symm j = Function.update P.symm d (some p) j := rfl
 
-theorem optOf_ofNat {i : Nat} (h : i < FlatShuffler.MAX_N) : optOf (.ofNat 64 i) = some i := by
+theorem optOf_ofNat {i : Nat} (h : i < FlatShuffler.maxStackSize) : optOf (.ofNat 64 i) = some i := by
   rw [FlatShuffler.Flat.optOf_some (FlatShuffler.Flat.ne_none (by rw [FlatShuffler.Flat.toNat_ofNat_lt h]; exact h)),
     FlatShuffler.Flat.toNat_ofNat_lt h]
 
--- `get` of a `put` at an offset below `MAX_N`.
-theorem get_put {α : Type} [Inhabited α] (v : Vector α FlatShuffler.MAX_N) {p i : Nat} (hp : p < FlatShuffler.MAX_N)
-    (hi : i < FlatShuffler.MAX_N) (x : α) :
+-- `get` of a `put` at an offset below `maxStackSize`.
+theorem get_put {α : Type} [Inhabited α] (v : Vector α FlatShuffler.maxStackSize) {p i : Nat} (hp : p < FlatShuffler.maxStackSize)
+    (hi : i < FlatShuffler.maxStackSize) (x : α) :
     get (put v (.ofNat 64 p) x) (.ofNat 64 i) = if i = p then x else get v (.ofNat 64 i) := by
   rw [FlatShuffler.Flat.get_ofNat _ hi, FlatShuffler.Flat.get_ofNat _ hi, FlatShuffler.Flat.getElem_put _ hp _ hi]
   by_cases h : i = p
   · subst h; simp
   · simp [h, Ne.symm h]
 
-theorem mapR_bind {M : FlatShuffler.Flat.Mapping} {s t : Nat} {P : Mapping s t} (hs : s ≤ FlatShuffler.MAX_N)
-    (ht : t ≤ FlatShuffler.MAX_N) (hR : MapR M P) (p : Fin s) (d : Fin t) (hp hd) :
+theorem mapR_bind {M : FlatShuffler.Flat.Mapping} {s t : Nat} {P : Mapping s t} (hs : s ≤ FlatShuffler.maxStackSize)
+    (ht : t ≤ FlatShuffler.maxStackSize) (hR : MapR M P) (p : Fin s) (d : Fin t) (hp hd) :
     MapR (M.bind (.ofNat 64 p.val) (.ofNat 64 d.val)) (P.bind p d hp hd) := by
   constructor
   · intro i
     simp only [FlatShuffler.Flat.Mapping.bind, bind_apply, Function.update_apply]
     rw [get_put _ (by omega) (by omega)]
     by_cases h : i = p
-    · subst h; simp [optOf_ofNat (show d.val < FlatShuffler.MAX_N by omega)]
+    · subst h; simp [optOf_ofNat (show d.val < FlatShuffler.maxStackSize by omega)]
     · simp [Fin.val_ne_of_ne h, h, hR.dest i]
   · intro j
     simp only [FlatShuffler.Flat.Mapping.bind, bind_symm, Function.update_apply]
     rw [get_put _ (by omega) (by omega)]
     by_cases h : j = d
-    · subst h; simp [optOf_ofNat (show p.val < FlatShuffler.MAX_N by omega)]
+    · subst h; simp [optOf_ofNat (show p.val < FlatShuffler.maxStackSize by omega)]
     · simp [Fin.val_ne_of_ne h, h, hR.pos j]
 
-theorem mapR_init (u : FlatShuffler.Flat.Mapping) {m n : FlatShuffler.Word} (hm : m.toNat ≤ FlatShuffler.MAX_N)
-    (hn : n.toNat ≤ FlatShuffler.MAX_N) {s t : Nat} (hs : s = m.toNat) (ht : t = n.toNat) :
+theorem mapR_init (u : FlatShuffler.Flat.Mapping) {m n : FlatShuffler.Word} (hm : m.toNat ≤ FlatShuffler.maxStackSize)
+    (hn : n.toNat ≤ FlatShuffler.maxStackSize) {s t : Nat} (hs : s = m.toNat) (ht : t = n.toNat) :
     MapR (u.init m n) (⊥ : Mapping s t) := by
   subst hs ht
   constructor
@@ -113,8 +113,8 @@ theorem mapR_init (u : FlatShuffler.Flat.Mapping) {m n : FlatShuffler.Word} (hm 
     rw [FlatShuffler.Flat.get_ofNat _ (by omega), FlatShuffler.Flat.fill_get _ _ hn (by omega)]
     simp [j.isLt, FlatShuffler.Flat.optOf_none]
 
-theorem mapR_abs {M : FlatShuffler.Flat.Mapping} {m n : FlatShuffler.Word} (hm : m.toNat ≤ FlatShuffler.MAX_N)
-    (hn : n.toNat ≤ FlatShuffler.MAX_N) {s t : Nat} (hs : s = m.toNat) (ht : t = n.toNat) {P : Mapping s t}
+theorem mapR_abs {M : FlatShuffler.Flat.Mapping} {m n : FlatShuffler.Word} (hm : m.toNat ≤ FlatShuffler.maxStackSize)
+    (hn : n.toNat ≤ FlatShuffler.maxStackSize) {s t : Nat} (hs : s = m.toNat) (ht : t = n.toNat) {P : Mapping s t}
     (hR : MapR M P) : FlatShuffler.Flat.absMapping M.dest M.pos m n = absP P := by
   subst hs ht
   simp only [FlatShuffler.Flat.absMapping, absP, FlatShuffler.Map.Mapping.mk.injEq]
@@ -134,21 +134,21 @@ theorem mapR_abs {M : FlatShuffler.Flat.Mapping} {m n : FlatShuffler.Word} (hm :
 
 /-! ## Builders -/
 
--- The sizes of the flat builder are at most `MAX_N`, and its slots are canonical.
+-- The sizes of the flat builder are at most `maxStackSize`, and its slots are canonical.
 structure BOk (b : FlatShuffler.Flat.Builder) : Prop where
-  hm : b.m.toNat ≤ FlatShuffler.MAX_N
-  hn : b.n.toNat ≤ FlatShuffler.MAX_N
-  cs : ∀ i < b.m.toNat, StackSlotHasCanonicalEncoding (get b.source (.ofNat 64 i))
-  ct : ∀ j < b.n.toNat, StackSlotHasCanonicalEncoding (get b.target (.ofNat 64 j))
+  hm : b.sourceSize.toNat ≤ FlatShuffler.maxStackSize
+  hn : b.targetSize.toNat ≤ FlatShuffler.maxStackSize
+  cs : ∀ i < b.sourceSize.toNat, StackSlotHasCanonicalEncoding (get b.source (.ofNat 64 i))
+  ct : ∀ j < b.targetSize.toNat, StackSlotHasCanonicalEncoding (get b.target (.ofNat 64 j))
 
 -- The PR31 source and target of a flat builder.
-abbrev bsrc (b : FlatShuffler.Flat.Builder) : Stack := srcOf b.source b.m
-abbrev btgt (b : FlatShuffler.Flat.Builder) : Stack := srcOf b.target b.n
+abbrev bsrc (b : FlatShuffler.Flat.Builder) : Stack := srcOf b.source b.sourceSize
+abbrev btgt (b : FlatShuffler.Flat.Builder) : Stack := srcOf b.target b.targetSize
 
 -- The flat builder `b` with the mapping `M` and `saw`, and the PR31 builder `mb`.
 structure BR (b : FlatShuffler.Flat.Builder) (M : FlatShuffler.Flat.Mapping) (saw : Bool)
     (mb : MappingBuilder (bsrc b) (btgt b)) : Prop where
-  dropped : mb.dropped = drops b.dropped b.m
+  dropped : mb.dropped = drops b.dropped b.sourceSize
   map : MapR M mb.mapping
   saw : mb.sawWildcardCopy = saw
 
@@ -166,13 +166,13 @@ theorem pos_eq_none (h : MapR M mb.mapping) (j : Fin (btgt b).length) :
 theorem mappable_eq (ok : BOk b) (h : BR b M saw mb) {k : Nat} (i : Fin k)
     (hk : k ≤ (bsrc b).length) :
     mb.mappable i hk = .ok (FlatShuffler.Flat.mappable b M (.ofNat 64 i.val)) := by
-  have hs : (bsrc b).length = b.m.toNat := srcOf_length ok.hm
+  have hs : (bsrc b).length = b.sourceSize.toNat := srcOf_length ok.hm
   have hl : (Fin.castLE hk i).val < mb.dropped.length := by
     rw [h.dropped, drops_length ok.hm]; simp; omega
   simp only [MappingBuilder.mappable, requires, hl, dite_true]
   change Except.ok _ = _
   congr 1
-  have h0 := drops_get_eq_zero (d := b.dropped) (m := b.m) (i := i.val)
+  have h0 := drops_get_eq_zero (d := b.dropped) (m := b.sourceSize) (i := i.val)
     (by rw [drops_length ok.hm]; omega)
   rw [Bool.eq_iff_iff]
   simp only [decide_eq_true_eq, FlatShuffler.Flat.mappable, Bool.and_eq_true, beq_iff_eq]
@@ -183,8 +183,8 @@ theorem map_corr (ok : BOk b) (h : BR b M saw mb) {k l : Nat} (p : Fin k) (t : F
     (hs : k ≤ (bsrc b).length) (ht : l ≤ (btgt b).length) :
     LoopCorr (fun M' mb' => BR b M' saw mb')
       (FlatShuffler.Flat.mbMap b M (.ofNat 64 p.val) (.ofNat 64 t.val)) (mb.map p t hs ht) := by
-  have hsl : (bsrc b).length = b.m.toNat := srcOf_length ok.hm
-  have htl : (btgt b).length = b.n.toNat := srcOf_length ok.hn
+  have hsl : (bsrc b).length = b.sourceSize.toNat := srcOf_length ok.hm
+  have htl : (btgt b).length = b.targetSize.toNat := srcOf_length ok.hn
   simp only [MappingBuilder.map, mappable_eq ok h, Fin.val_castLE, Bind.bind, Except.bind,
     requires, FlatShuffler.Flat.mbMap]
   by_cases hmp : FlatShuffler.Flat.mappable b M (.ofNat 64 p.val) = true
@@ -213,13 +213,13 @@ theorem step_of_loop {σ β ε : Type} {R : σ → β → Prop} {r : FlatShuffle
 -- The slots of a flat builder and of the PR31 stacks.
 theorem slot_eq (ok : BOk b) {i j : Nat} (hi : i < (bsrc b).length) (hj : j < (btgt b).length) :
     (bsrc b)[i] = (btgt b)[j] ↔ get b.source (.ofNat 64 i) = get b.target (.ofNat 64 j) := by
-  have hsl : (bsrc b).length = b.m.toNat := srcOf_length ok.hm
-  have htl : (btgt b).length = b.n.toNat := srcOf_length ok.hn
+  have hsl : (bsrc b).length = b.sourceSize.toNat := srcOf_length ok.hm
+  have htl : (btgt b).length = b.targetSize.toNat := srcOf_length ok.hn
   rw [srcOf_get, srcOf_get, decode_eq_iff (ok.cs i (by omega)) (ok.ct j (by omega))]
 
 theorem src_eq_src (ok : BOk b) {i j : Nat} (hi : i < (bsrc b).length) (hj : j < (bsrc b).length) :
     (bsrc b)[i] = (bsrc b)[j] ↔ get b.source (.ofNat 64 i) = get b.source (.ofNat 64 j) := by
-  have hsl : (bsrc b).length = b.m.toNat := srcOf_length ok.hm
+  have hsl : (bsrc b).length = b.sourceSize.toNat := srcOf_length ok.hm
   rw [srcOf_get, srcOf_get, decode_eq_iff (ok.cs i (by omega)) (ok.cs j (by omega))]
 
 theorem tgt_junk (_ok : BOk b) {j : Nat} (hj : j < (btgt b).length) :
@@ -229,13 +229,13 @@ theorem tgt_junk (_ok : BOk b) {j : Nat} (hj : j < (btgt b).length) :
 theorem tgt_frl (ok : BOk b) {j : Nat} (hj : j < (btgt b).length) :
     (btgt b)[j].isFunctionReturnLabel ↔
       (get b.target (.ofNat 64 j)).kind = FlatShuffler.FunctionReturnLabel := by
-  have htl : (btgt b).length = b.n.toNat := srcOf_length ok.hn
+  have htl : (btgt b).length = b.targetSize.toNat := srcOf_length ok.hn
   rw [srcOf_get, isFRL_iff (ok.ct j (by omega))]
 
 theorem inWild_eq (ok : BOk b) (i : Fin (bsrc b).length) :
     mb.inWildcardSlot i = FlatShuffler.Flat.inWildcardSlot b (.ofNat 64 i.val) := by
-  have hsl : (bsrc b).length = b.m.toNat := srcOf_length ok.hm
-  have htl : (btgt b).length = b.n.toNat := srcOf_length ok.hn
+  have hsl : (bsrc b).length = b.sourceSize.toNat := srcOf_length ok.hm
+  have htl : (btgt b).length = b.targetSize.toNat := srcOf_length ok.hn
   have hm := ok.hm
   unfold MappingBuilder.inWildcardSlot FlatShuffler.Flat.inWildcardSlot
   by_cases hi : i.val < (btgt b).length
@@ -243,7 +243,7 @@ theorem inWild_eq (ok : BOk b) (i : Fin (bsrc b).length) :
     exact tgt_junk ok hi
   · rw [dite_eq_right hi, decide_eq_false (mt (ofNat_lt_iff (by omega)).mp (by omega)), Bool.false_and]
 
-theorem absDiff_eq {a c : Nat} (ha : a < FlatShuffler.MAX_N) (hc : c < FlatShuffler.MAX_N) :
+theorem absDiff_eq {a c : Nat} (ha : a < FlatShuffler.maxStackSize) (hc : c < FlatShuffler.maxStackSize) :
     (FlatShuffler.Flat.absDiff (.ofNat 64 a) (.ofNat 64 c)).toNat = if a > c then a - c else c - a := by
   have ha' := FlatShuffler.Flat.toNat_ofNat_lt ha
   have hc' := FlatShuffler.Flat.toNat_ofNat_lt hc
@@ -257,8 +257,8 @@ theorem absDiff_eq {a c : Nat} (ha : a < FlatShuffler.MAX_N) (hc : c < FlatShuff
 
 theorem mb_absDiff (ok : BOk b) (i : Fin (bsrc b).length) (t : Fin (btgt b).length) :
     mb.absDiff i t = (FlatShuffler.Flat.absDiff (.ofNat 64 i.val) (.ofNat 64 t.val)).toNat := by
-  have hsl : (bsrc b).length = b.m.toNat := srcOf_length ok.hm
-  have htl : (btgt b).length = b.n.toNat := srcOf_length ok.hn
+  have hsl : (bsrc b).length = b.sourceSize.toNat := srcOf_length ok.hm
+  have htl : (btgt b).length = b.targetSize.toNat := srcOf_length ok.hn
   have := ok.hm; have := ok.hn
   rw [absDiff_eq (by omega) (by omega)]; rfl
 
@@ -275,8 +275,8 @@ theorem closest_corr (ok : BOk b) (h : BR b M saw mb) (t : Fin (btgt b).length)
     (loc : CopyLocation) :
     ∃ c, mb.closestCopy t loc = .ok c ∧
       OptR (FlatShuffler.Flat.closestCopy b M (.ofNat 64 t.val) (decide (loc = .InWildcardSlots))) c := by
-  have hsl : (bsrc b).length = b.m.toNat := srcOf_length ok.hm
-  have htl : (btgt b).length = b.n.toNat := srcOf_length ok.hn
+  have hsl : (bsrc b).length = b.sourceSize.toNat := srcOf_length ok.hm
+  have htl : (btgt b).length = b.targetSize.toNat := srcOf_length ok.hn
   have hm := ok.hm; have hn := ok.hn
   unfold MappingBuilder.closestCopy FlatShuffler.Flat.closestCopy
   dsimp only
@@ -296,7 +296,7 @@ theorem closest_corr (ok : BOk b) (h : BR b M saw mb) (t : Fin (btgt b).length)
     · rw [dite_eq_right (mt (ofNat_lt_iff (by omega)).mp (by omega)), ite_eq_right h1]
   · intro k hk s c hR
     simp only [mappable_eq ok h, Bind.bind, Except.bind]
-    have hk' : k < FlatShuffler.MAX_N := by omega
+    have hk' : k < FlatShuffler.maxStackSize := by omega
     have e1 : ((bsrc b)[(⟨k, hk⟩ : Fin _)] = (btgt b)[t] ∧
         FlatShuffler.Flat.mappable b M (.ofNat 64 k) = true ∧
         mb.inWildcardSlot ⟨k, hk⟩ = decide (loc = .InWildcardSlots)) ↔
@@ -364,8 +364,8 @@ theorem buildMapping_eq :
 
 theorem commonSize_toNat (ok : BOk b) :
     (FlatShuffler.Flat.commonSize b).toNat = min (bsrc b).length (btgt b).length := by
-  have hsl : (bsrc b).length = b.m.toNat := srcOf_length ok.hm
-  have htl : (btgt b).length = b.n.toNat := srcOf_length ok.hn
+  have hsl : (bsrc b).length = b.sourceSize.toNat := srcOf_length ok.hm
+  have htl : (btgt b).length = b.targetSize.toNat := srcOf_length ok.hn
   unfold FlatShuffler.Flat.commonSize
   split <;> rename_i h <;> rw [BitVec.lt_def] at h <;> omega
 
@@ -387,7 +387,7 @@ theorem iwt_eq (ok : BOk b) {k : Nat} (j : Fin k) (hk : k ≤ (btgt b).length) :
   tgt_junk ok (by omega)
 
 -- A PR31 copy and a flat offset: both are none, or both are the same offset.
-theorem optR_cases {s : Nat} (hs : s ≤ FlatShuffler.MAX_N) {w : FlatShuffler.Word} {c : Option (Fin s)}
+theorem optR_cases {s : Nat} (hs : s ≤ FlatShuffler.maxStackSize) {w : FlatShuffler.Word} {c : Option (Fin s)}
     (h : OptR w c) : (c = none ∧ w = NONE) ∨ ∃ p : Fin s, c = some p ∧ w = .ofNat 64 p.val ∧ w ≠ NONE := by
   cases c with
   | none => exact .inl ⟨rfl, FlatShuffler.Flat.optOf_eq_none.mp h⟩
@@ -412,13 +412,13 @@ theorem step_of_fold {σ β γ ε : Type} {R : σ → β → Prop} {r : FlatShuf
 
 theorem buildMapping_corr (ok : BOk b) (h0 : MapR M (⊥ : Mapping (bsrc b).length (btgt b).length)) :
     OptCorr (ResR b) (FlatShuffler.Flat.buildMapping b M)
-      (buildMapping (bsrc b) (btgt b) (drops b.dropped b.m)
+      (buildMapping (bsrc b) (btgt b) (drops b.dropped b.sourceSize)
         (if b.take then .Take else .Leave)) := by
-  have hsl : (bsrc b).length = b.m.toNat := srcOf_length ok.hm
-  have htl : (btgt b).length = b.n.toNat := srcOf_length ok.hn
+  have hsl : (bsrc b).length = b.sourceSize.toNat := srcOf_length ok.hm
+  have htl : (btgt b).length = b.targetSize.toNat := srcOf_length ok.hn
   have hm := ok.hm; have hn := ok.hn
   have hc := commonSize_toNat ok
-  have hsm : (bsrc b).length ≤ FlatShuffler.MAX_N := by omega
+  have hsm : (bsrc b).length ≤ FlatShuffler.maxStackSize := by omega
   rw [buildMapping_eq]
   unfold buildMapping
   rw [requires_of_true _ (by rw [drops_length ok.hm]; omega), ok_bind]
@@ -581,7 +581,7 @@ theorem buildMapping_corr (ok : BOk b) (h0 : MapR M (⊥ : Mapping (bsrc b).leng
             · rw [dite_eq_right (mt (ofNat_lt_iff (by omega)).mp (by omega)), ite_eq_right h1]
           · intro i hi best cb hRb
             rw [mappable_eq ok hR, ok_bind]
-            have hi' : i < FlatShuffler.MAX_N := by omega
+            have hi' : i < FlatShuffler.maxStackSize := by omega
             cases cb with
             | none =>
               have hs : best = NONE := FlatShuffler.Flat.optOf_eq_none.mp hRb

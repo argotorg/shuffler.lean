@@ -30,11 +30,11 @@ theorem toNat_NONE : NONE.toNat = 2 ^ 64 - 1 := by decide
 theorem ne_NONE {a : Word} (h : a.toNat < 2 ^ 64 - 1) : a ≠ NONE :=
   fun he => by subst he; rw [toNat_NONE] at h; omega
 
-theorem get_put_self {α : Type} [Inhabited α] (v : Vector α MAX_N) {i : Word} (x : α)
-    (hi : i.toNat < MAX_N) : get (put v i x) i = x := by
+theorem get_put_self {α : Type} [Inhabited α] (v : Vector α maxStackSize) {i : Word} (x : α)
+    (hi : i.toNat < maxStackSize) : get (put v i x) i = x := by
   simp [get, put, hi]
 
-theorem get_put_ne {α : Type} [Inhabited α] (v : Vector α MAX_N) {i j : Word} (x : α)
+theorem get_put_ne {α : Type} [Inhabited α] (v : Vector α maxStackSize) {i j : Word} (x : α)
     (h : j ≠ i) : get (put v i x) j = get v j := by
   have h' : i.toNat ≠ j.toNat := fun he => h (BitVec.eq_of_toNat_eq he.symm)
   unfold get put
@@ -43,8 +43,8 @@ theorem get_put_ne {α : Type} [Inhabited α] (v : Vector α MAX_N) {i j : Word}
     rw [Vector.getElem_setIfInBounds_ne hj h']
   · rfl
 
-theorem get_put {α : Type} [Inhabited α] (v : Vector α MAX_N) {i : Word} (j : Word) (x : α)
-    (hi : i.toNat < MAX_N) : get (put v i x) j = if j = i then x else get v j := by
+theorem get_put {α : Type} [Inhabited α] (v : Vector α maxStackSize) {i : Word} (j : Word) (x : α)
+    (hi : i.toNat < maxStackSize) : get (put v i x) j = if j = i then x else get v j := by
   split
   · rename_i h; subst h; exact get_put_self v x hi
   · rename_i h; exact get_put_ne v x h
@@ -59,7 +59,7 @@ def optW : Option Nat → Word
 -- The flat state `fs` holds the list state `st` in the environment `e`.
 structure Sim (e : Env) (fs : St) (st : FlatShuffler.St) : Prop where
   env : e = listEnv fs.targetSize.toNat fs.target fs.spills
-  n_le : fs.targetSize.toNat ≤ MAX_N
+  n_le : fs.targetSize.toNat ≤ maxStackSize
   size : fs.size.toNat = st.len
   len_le : st.len ≤ fs.targetSize.toNat
   data : ∀ i : Word, i.toNat < st.len → get fs.data i = st.val i.toNat
@@ -91,7 +91,7 @@ theorem Sim.n (hs : Sim e fs st) : e.n = fs.targetSize.toNat := by
   have := hs.n_le
   omega
 
-theorem Sim.len_lt (hs : Sim e fs st) : st.len ≤ MAX_N := Nat.le_trans hs.len_le hs.n_le
+theorem Sim.len_lt (hs : Sim e fs st) : st.len ≤ maxStackSize := Nat.le_trans hs.len_le hs.n_le
 
 theorem Sim.dest_lt (hs : Sim e fs st) {i : Nat} (hi : i < st.len) : st.dest i < e.n := by
   rw [hs.n, St.dest_eq, getElem!_pos st.dests i (by rw [St.length_dests]; exact hi)]
@@ -102,7 +102,7 @@ theorem Sim.slots (hs : Sim e fs st) : slotsOf fs = st.slots.map Slot.val := by
   · simp [slotsOf, hs.size, St.len]
   · intro i h1 h2
     have hi : i < st.len := by simpa [slotsOf, hs.size] using h1
-    have hl : i < 2 ^ 64 := by have := hs.len_lt; unfold MAX_N at this; omega
+    have hl : i < 2 ^ 64 := by have := hs.len_lt; unfold maxStackSize at this; omega
     simp only [slotsOf, List.getElem_map, List.getElem_range]
     rw [hs.data _ (by rw [toNat_ofNat_of_lt hl]; exact hi), toNat_ofNat_of_lt hl]
     simp [St.val, List.getElem?_eq_getElem (show i < st.slots.length from hi)]
@@ -122,7 +122,7 @@ theorem Sim.target (hs : Sim e fs st) {t : Word} (ht : t.toNat < e.n) :
   rw [hs.env] at ht
   simp only [listEnv, Env.n, List.length_take, Vector.length_toList] at ht ⊢
   rw [getElem!_pos _ _ (by simp; omega)]
-  simp [get, show t.toNat < MAX_N by omega]
+  simp [get, show t.toNat < maxStackSize by omega]
 
 theorem Sim.isSpilled (hs : Sim e fs st) (slot : StackSlot) :
     FlatShuffler.isSpilled e slot = isSpilled fs slot := by

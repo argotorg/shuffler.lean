@@ -15,12 +15,12 @@ structure BuilderLocals where
   tail : Vector Word 2061
 
 def BuilderLocals.toList (l : BuilderLocals) (b : BG) : List Word :=
-  l.head.toList ++ [b.src, b.m, b.tgt, b.n, b.drp, l.stratPad ++ b.strat,
+  l.head.toList ++ [b.src, b.sourceSize, b.tgt, b.targetSize, b.drp, l.stratPad ++ b.strat,
     b.mp, l.sawPad ++ b.saw] ++ b.M.dest.toList ++ b.M.pos.toList ++ l.tail.toList
 
 theorem BuilderLocals.length (l : BuilderLocals) (b : BG) : (l.toList b).length = 4121 := by
-  have hd : b.M.dest.toList.length = MAX_N := Vector.length_toList
-  have hp : b.M.pos.toList.length = MAX_N := Vector.length_toList
+  have hd : b.M.dest.toList.length = maxStackSize := Vector.length_toList
+  have hp : b.M.pos.toList.length = maxStackSize := Vector.length_toList
   simp only [BuilderLocals.toList, List.length_append, List.length_cons, List.length_nil,
     Vector.length_toList, hd, hp]
   rfl
@@ -46,7 +46,7 @@ theorem BuilderLocals.mapping (l : BuilderLocals) (b : BG) :
     simp only [localMapping, hd, hp, Vector.toArray_toList]
 
 def BuilderMembers (B : Addr) (b : BG) : MProp 64 :=
-  Wd B b.src ∗ Wd (B + 8#64) b.m ∗ Wd (B + 16#64) b.tgt ∗ Wd (B + 24#64) b.n
+  Wd B b.src ∗ Wd (B + 8#64) b.sourceSize ∗ Wd (B + 16#64) b.tgt ∗ Wd (B + 24#64) b.targetSize
     ∗ Wd (B + 32#64) b.drp ∗ B8 (B + 40#64) b.strat ∗ Wd (B + 48#64) b.mp
     ∗ B8 (B + 56#64) b.saw
 
@@ -65,7 +65,7 @@ theorem builder_local_frame (sp : Addr) (l : BuilderLocals) (b : BG)
     List.length_cons, List.length_nil, Nat.reduceAdd, Nat.reduceMul,
     BitVec.add_assoc, BitVec.reduceAdd, Arr, MProp.sep_emp]
   rw [hs, hw]
-  simp only [BuilderMembers, MapM, hmp, BitVec.add_assoc, BitVec.reduceAdd, MAX_N]
+  simp only [BuilderMembers, MapM, hmp, BitVec.add_assoc, BitVec.reduceAdd, maxStackSize]
   simp only [Nat.reduceMul, BitVec.reduceAdd]
   ecancel
 

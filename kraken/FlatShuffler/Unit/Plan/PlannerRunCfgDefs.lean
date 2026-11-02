@@ -62,7 +62,7 @@ def RetryFailPhase (P : Addr) (initial : PlannerCallMemory) (F : MProp 64) (s : 
     (ra : Int64) (t : MachineData) : Prop :=
   ∃ current before lo locals, ∃ ctx : ResolvedContext initial current s before,
     ctx.resolution = .dropped ∧
-    ¬ Flat.droppedCount current.p.m current.dropped > before ∧
+    ¬ Flat.droppedCount current.p.sourceSize current.dropped > before ∧
     Bd P current F s ra lo locals t ∧ current.Ok
 
 def RunInv (P : Addr) (g : PlannerCallMemory) (F : MProp 64) (s : MachineData) (ra : Int64)
@@ -97,11 +97,11 @@ def RunInv (P : Addr) (g : PlannerCallMemory) (F : MProp 64) (s : MachineData) (
     else if l = ".LB.Planner.run.4" then CheckBad P (withSaw g 0#8) F s ra t
     else if l = ".LB.Planner.run.12" then RunReturn P g F s ra t
     else if l = ".LB.Planner.run.14" then
-      AttemptPhase g s (fun a M t => a.p.n = 0#64 ∧ EmitMapped P a M F s ra t) t
+      AttemptPhase g s (fun a M t => a.p.targetSize = 0#64 ∧ EmitMapped P a M F s ra t) t
     else if l = ".LB.Planner.run.15" then AttemptPhase g s (fun a M => EmitReady P a M F s ra) t
     else if l = ".LB.Planner.run.18" then RetryPhase P g F s ra t
     else if l = ".LB.Planner.run.28" then
-      AttemptPhase g s (fun a M t => a.p.m = 0#64 ∧
+      AttemptPhase g s (fun a M t => a.p.sourceSize = 0#64 ∧
         ∃ lo locals, AttemptLI P a M F s ra lo locals t) t
     else resolvePhase l t
 

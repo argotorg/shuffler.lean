@@ -45,7 +45,7 @@ theorem b_14 [Host] [FunDecls]
   obtain ⟨w, lo, L, h, hm, h15, hcls, hbest, hspill⟩ := ht
   have hv := (picked_valid r.p.fl r.M w.candidates w.count w.state
     h.ok.bounded h.ok.live).resolve_left hbest
-  have ho : (w.pick r).1.toNat < r.p.m.toNat := BitVec.lt_def.mp hv.1
+  have ho : (w.pick r).1.toNat < r.p.sourceSize.toNat := BitVec.lt_def.mp hv.1
   have hmem := h.bd.kb.mem
   rw [sep_lc] at hmem
   obtain ⟨_, hp⟩ := RView.pv hmem

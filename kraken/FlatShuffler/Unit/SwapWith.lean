@@ -19,7 +19,7 @@ final, and `1 ≤ depth ≤ 16`. Then it swaps the two slots (the top slot gets 
 the other slot), stores the operation, swaps the two destinations, and writes `m_positionOf` at
 each destination that is not `-1`. A failed assertion calls `exit(1)`.
 
-`DestOk` gives that each such destination is below `n ≤ MAX_N`, so the stores to `m_positionOf`
+`DestOk` gives that each such destination is below `n ≤ maxStackSize`, so the stores to `m_positionOf`
 are in the view. The callers are `generate` (`nops + 1 < 6n` after `produce`, and `produce`
 binds the new slot to `t < n`) and `buildBottomUp` (`Inv.lt` and `Inv.pos`). They use the flat
 result (`swapWithQ`).
@@ -125,7 +125,7 @@ theorem isSome5_slot (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.toNa
     (m.loadInt (slotAt g.h.data i + 5#64) 1).isSome = true :=
   let ⟨_, h⟩ := wd_slot h hi; Wd.isSome_byte h (j := 5) (by decide)
 
-theorem rd_dest (h : (View S g ∗ F).get m) {i : Nat} (hi : i < MAX_N) :
+theorem rd_dest (h : (View S g ∗ F).get m) {i : Nat} (hi : i < maxStackSize) :
     rd m (Fld.mapping_destinationOf S i) = g.h.dest[i] := by
   obtain ⟨R, h'⟩ := View.arr_dest h
   exact (Arr.rd h' (by simpa using hi)).trans (by simp)
@@ -226,17 +226,17 @@ theorem al_movl (x : Word) : (BitVec.setWidth 64 (x.take 32)).setWidth 8 = x.set
 `Flat.get` and `Flat.put` take a `Word` index and do nothing out of bounds. The ghost uses
 `Vector.set` with a proof of the bound. -/
 
-theorem put_eq_set {α : Type} (v : Vector α MAX_N) (i : Word) (x : α) (h : i.toNat < MAX_N) :
+theorem put_eq_set {α : Type} (v : Vector α maxStackSize) (i : Word) (x : α) (h : i.toNat < maxStackSize) :
     Flat.put v i x = v.set i.toNat x h := by
   apply Vector.ext; intro j hj
   simp only [Flat.put, Vector.getElem_setIfInBounds hj, Vector.getElem_set h hj]
 
-theorem get_eq {α : Type} [Inhabited α] (v : Vector α MAX_N) (i : Word) (h : i.toNat < MAX_N) :
+theorem get_eq {α : Type} [Inhabited α] (v : Vector α maxStackSize) (i : Word) (h : i.toNat < maxStackSize) :
     Flat.get v i = v[i.toNat] := by
   simp [Flat.get, h]
 
 theorem vec_set {α : Type} [Inhabited α] (l : List α) (i : Nat) (x : α) (hi : i < l.length)
-    (hn : i < MAX_N) : vec (l.set i x) = (vec l).set i x hn := by
+    (hn : i < maxStackSize) : vec (l.set i x) = (vec l).set i x hn := by
   apply Vector.ext; intro j hj
   simp only [vec, Vector.getElem_ofFn, Vector.getElem_set, List.getElem?_set]
   by_cases e : i = j
@@ -244,7 +244,7 @@ theorem vec_set {α : Type} [Inhabited α] (l : List α) (i : Nat) (x : α) (hi 
   · simp [e]
 
 theorem get_vec {α : Type} [Inhabited α] (l : List α) (i : Word) (hi : i.toNat < l.length)
-    (hn : i.toNat < MAX_N) : Flat.get (vec l) i = l[i.toNat] := by
+    (hn : i.toNat < maxStackSize) : Flat.get (vec l) i = l[i.toNat] := by
   simp [Flat.get, hn, vec, hi]
 
 theorem take_set_succ {α : Type} (l : List α) (i : Nat) (r : α) (hi : i < l.length) :
@@ -255,7 +255,7 @@ theorem take_set_succ {α : Type} (l : List α) (i : Nat) (r : α) (hi : i < l.l
 /-! ## The cases of `Flat.swapWith` -/
 
 -- The two stores of `m_destinationOf` in `swapDestinations`.
-def swapD (d : Vector Word MAX_N) (a b : Word) : Vector Word MAX_N :=
+def swapD (d : Vector Word maxStackSize) (a b : Word) : Vector Word maxStackSize :=
   Flat.put (Flat.put d a (Flat.get d b)) b (Flat.get d a)
 
 -- The `m_positionOf` store of `swapDestinations` for the slot `b`.
@@ -313,16 +313,16 @@ theorem sw_ok (fs : Flat.St) (p : Word) (h1 : p.toNat < fs.size.toNat)
 
 theorem none_toNat : Flat.NONE.toNat = 2 ^ 64 - 1 := rfl
 
-theorem posFix_none (g : G) (b : Word) (hb : b.toNat < MAX_N) (h : g.h.dest[b.toNat] = Flat.NONE) :
+theorem posFix_none (g : G) (b : Word) (hb : b.toNat < maxStackSize) (h : g.h.dest[b.toNat] = Flat.NONE) :
     posFix (flat g) b = flat g := by
   simp [posFix, flat, get_eq _ _ hb, h]
 
-theorem posFix_some (g : G) (b : Word) (hb : b.toNat < MAX_N)
-    (hd : g.h.dest[b.toNat].toNat < MAX_N) :
+theorem posFix_some (g : G) (b : Word) (hb : b.toNat < maxStackSize)
+    (hd : g.h.dest[b.toNat].toNat < maxStackSize) :
     posFix (flat g) b
       = flat { g with h := { g.h with pos := g.h.pos.set g.h.dest[b.toNat].toNat b hd } } := by
   have hne : g.h.dest[b.toNat] ≠ Flat.NONE := by
-    intro e; rw [e, none_toNat] at hd; simp [MAX_N] at hd
+    intro e; rw [e, none_toNat] at hd; simp [maxStackSize] at hd
   simp only [posFix, flat, get_eq _ _ hb, ne_eq, hne, not_false_eq_true, ↓reduceIte,
     put_eq_set _ _ _ hd]
 
@@ -336,8 +336,8 @@ theorem ofWord_411 (a b : Word) :
 -- The stores of `Flat.stackSwap` and the two stores of `m_destinationOf`.
 theorem flat_swap (g : G) (hok : g.Ok) (p : Word) (_hp : p.toNat < g.h.len.toNat)
     (hn : g.h.nops.toNat < 6 * g.h.n.toNat + g.xo) (hpn : p.toNat < g.h.n.toNat + g.xs)
-    (ht : (g.h.len - 1).toNat < g.h.n.toNat + g.xs) (hpM : p.toNat < MAX_N)
-    (htM : (g.h.len - 1).toNat < MAX_N) (w : Word)
+    (ht : (g.h.len - 1).toNat < g.h.n.toNat + g.xs) (hpM : p.toNat < maxStackSize)
+    (htM : (g.h.len - 1).toNat < maxStackSize) (w : Word)
     (hw : StackSlot.ofWord w = StackSlot.ofWord g.stk[p.toNat]) (r : OpR)
     (hr : r.op = Op.swapW (g.h.len - 1 - p)) :
     flat { h := { g.h with
@@ -351,7 +351,7 @@ theorem flat_swap (g : G) (hok : g.Ok) (p : Word) (_hp : p.toNat < g.h.len.toNat
   have hN := hok.n
   have hx := hok.xo
   have hs : (g.h.nops + 1#64).toNat = g.h.nops.toNat + 1 := by
-    rw [BitVec.toNat_add, BitVec.toNat_ofNat]; simp only [MAX_N] at hN hx; omega
+    rw [BitVec.toNat_add, BitVec.toNat_ofNat]; simp only [maxStackSize] at hN hx; omega
   have hl : (g.stk.toList.map StackSlot.ofWord).length = g.h.n.toNat + g.xs := by simp
   have e1 := (get_eq _ _ htM).symm.trans
     (get_vec (g.stk.toList.map StackSlot.ofWord) _ (by rw [hl]; exact ht) htM)
@@ -369,8 +369,8 @@ theorem flat_swap (g : G) (hok : g.Ok) (p : Word) (_hp : p.toNat < g.h.len.toNat
     rw [take_set_succ _ _ _ b2, List.map_append, List.map_singleton, hr]
 
 -- `posFix_some` with the destination as a parameter.
-theorem posFix_some' (g : G) (b : Word) (hb : b.toNat < MAX_N) (d : Word)
-    (hdM : d.toNat < MAX_N) (hd : g.h.dest[b.toNat] = d) :
+theorem posFix_some' (g : G) (b : Word) (hb : b.toNat < maxStackSize) (d : Word)
+    (hdM : d.toNat < maxStackSize) (hd : g.h.dest[b.toNat] = d) :
     posFix (flat g) b = flat { g with h := { g.h with pos := g.h.pos.set d.toNat b hdM } } := by
   subst hd; exact posFix_some g b hb hdM
 
@@ -449,8 +449,8 @@ noncomputable def headState (s : MachineData) : MachineData :=
 def inv37 (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
     (fr : List Word) (t : MachineData) : Prop :=
   ∃ g' b, Kp S g' F s ra fr (Dup.unpad t) ∧ g'.Ok ∧ Keep g g'
-    ∧ t.regs.rax.toBitVec = S ∧ t.regs.rcx.toBitVec = b ∧ b.toNat < MAX_N
-    ∧ (Flat.get g'.h.dest b = Flat.NONE ∨ (Flat.get g'.h.dest b).toNat < MAX_N)
+    ∧ t.regs.rax.toBitVec = S ∧ t.regs.rcx.toBitVec = b ∧ b.toNat < maxStackSize
+    ∧ (Flat.get g'.h.dest b = Flat.NONE ∨ (Flat.get g'.h.dest b).toNat < maxStackSize)
     ∧ Flat.swapWith (flat g) (rsi s) = (.done, posFix (flat g') b)
 
 def inv38 (S : Addr) (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
@@ -500,7 +500,7 @@ theorem swapWith_unit [Host] [FunDecls]
   have hx := hok.xo
   have hX := hok.xs
   have hLn := hok.len
-  have hpM {x : Word} (h : x.toNat < g.h.len.toNat) : x.toNat < MAX_N :=
+  have hpM {x : Word} (h : x.toNat < g.h.len.toNat) : x.toNat < maxStackSize :=
     Nat.lt_of_lt_of_le (Nat.lt_of_lt_of_le h hLn) hX
   have hs : UInt64.ofBitVec ((s.pushRa ra).regs.rsp.toBitVec - 8#64 + 8#64) =
       (s.pushRa ra).regs.rsp := by
@@ -657,7 +657,7 @@ theorem swapWith_unit [Host] [FunDecls]
       have hd' : (s.pushRa ra).regs.rsi.toBitVec ≠ g.h.dest[(s.pushRa ra).regs.rsi.toBitVec.toNat] := by
         rw [get_eq _ _ hpM'] at hd; exact Ne.symm hd
       have hnops : (g.h.nops + 1#64).toNat ≤ 6 * g.h.n.toNat + g.xo := by
-        rw [BitVec.toNat_add, BitVec.toNat_ofNat]; simp only [MAX_N] at hN hx; omega
+        rw [BitVec.toNat_add, BitVec.toNat_ofNat]; simp only [maxStackSize] at hN hx; omega
       -- `Flat.swapWith` before the `m_positionOf` stores, on the ghost of `h10`.
       have hres := (sw_ok (flat g) _ hp hd hdep).trans (by
         rw [← flat_swap g hok _ hp hn hpn ht hpM' htM
@@ -732,12 +732,12 @@ theorem swapWith_unit [Host] [FunDecls]
         · simp
       | load =>
         -- `m_positionOf[dest[pos]]`: the new `dest[pos]` is not `NONE`.
-        have hdtM : g.h.dest[(g.h.len - 1#64).toNat].toNat < MAX_N :=
+        have hdtM : g.h.dest[(g.h.len - 1#64).toNat].toNat < maxStackSize :=
           Nat.lt_of_lt_of_le (hdt.resolve_left hc) hN
         exact View.isSome_pos h10 hdtM
       | other =>
         -- The store `pos[dest[pos]] := pos`, then `.LB.Emission.swapWith.0`.
-        have hdtM : g.h.dest[(g.h.len - 1#64).toNat].toNat < MAX_N :=
+        have hdtM : g.h.dest[(g.h.len - 1#64).toNat].toNat < maxStackSize :=
           Nat.lt_of_lt_of_le (hdt.resolve_left hc) hN
         have h11 := View.store_pos h10 hdtM (s.pushRa ra).regs.rsi.toBitVec
         refine ⟨_, _, ⟨h11, hs, rfl, rfl, rfl, rfl, rfl, rfl⟩,
@@ -798,11 +798,11 @@ theorem swapWith_unit [Host] [FunDecls]
       · simp
     | load =>
       -- `m_positionOf[dest[b]]`: `dest[b]` is not `NONE`.
-      have hdM : g'.h.dest[b.toNat].toNat < MAX_N := hdb.resolve_left hc
+      have hdM : g'.h.dest[b.toNat].toNat < maxStackSize := hdb.resolve_left hc
       view_load
     | other =>
       -- The store `pos[dest[b]] := b`.
-      have hdM : g'.h.dest[b.toNat].toNat < MAX_N := hdb.resolve_left hc
+      have hdM : g'.h.dest[b.toNat].toNat < maxStackSize := hdb.resolve_left hc
       have h1 := View.store_pos hm hdM b
       refine ⟨_, ⟨h1, hk.sp, hk.bx, hk.bp, hk.r12, hk.r13, hk.r14, hk.r15⟩,
         Keep.ok (g := g') ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩ hok hok.len hok.nops,

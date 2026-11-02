@@ -37,10 +37,10 @@ def opText (o : Op) : String :=
   else s!"? {o.kind.toNat}"
 
 -- `l` from offset 0, and `d` above it.
-def vecOf {α : Type} (l : Array α) (d : α) : Vector α MAX_N := Vector.ofFn fun i => l[i.val]?.getD d
+def vecOf {α : Type} (l : Array α) (d : α) : Vector α maxStackSize := Vector.ofFn fun i => l[i.val]?.getD d
 
 -- Content for the members that the constructor does not initialize.
-def uninit : Uninit := ⟨Vector.replicate MAX_N 7, Vector.replicate MAX_N 7, 77, 99⟩
+def uninit : Uninit := ⟨Vector.replicate maxStackSize 7, Vector.replicate maxStackSize 7, 77, 99⟩
 
 def render (r : Word) (st : Flat.St) : String :=
   if r = -2 then "assertion"

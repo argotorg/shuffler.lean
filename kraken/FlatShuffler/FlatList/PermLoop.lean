@@ -17,7 +17,7 @@ namespace FlatShuffler.Flat
 open FlatShuffler.Permutation (lastMisplaced target measure Perm)
 
 -- The vector `v` holds the list `l` of length `k`.
-def PermV (k : Nat) (v : Vector Word MAX_N) (l : List Nat) : Prop :=
+def PermV (k : Nat) (v : Vector Word maxStackSize) (l : List Nat) : Prop :=
   l.length = k ∧ ∀ i : Word, i.toNat < k → (get v i).toNat = l[i.toNat]!
 
 /-! ## `misplacedBelow` -/
@@ -28,7 +28,7 @@ theorem lastMisplaced_succ (l : List Nat) (k : Nat) :
   rw [List.range_succ, List.foldl_append]
   rfl
 
-theorem misplacedBelow_eq {n : Nat} {v : Vector Word MAX_N} {l : List Nat} (hn : n ≤ MAX_N)
+theorem misplacedBelow_eq {n : Nat} {v : Vector Word maxStackSize} {l : List Nat} (hn : n ≤ maxStackSize)
     (hv : PermV n v l) (top : Word) :
     ∀ k, k ≤ n → misplacedBelow v top (BitVec.ofNat 64 k) =
       (lastMisplaced l k).elim top (BitVec.ofNat 64) := by
@@ -40,7 +40,7 @@ theorem misplacedBelow_eq {n : Nat} {v : Vector Word MAX_N} {l : List Nat} (hn :
     rfl
   | succ k ih =>
     intro hk
-    have hk' : k < MAX_N := by omega
+    have hk' : k < maxStackSize := by omega
     have hk1' : k + 1 < 2 ^ 64 := by rw [MAX_N_eq] at hn; omega
     rw [misplacedBelow, dite_eq_right (by
       intro h; have := congrArg BitVec.toNat h; rw [toNat_ofNat_of_lt hk1'] at this; simp at this)]
@@ -62,8 +62,8 @@ theorem misplacedBelow_eq {n : Nat} {v : Vector Word MAX_N} {l : List Nat} (hn :
 
 /-! ## `permuteStep` -/
 
-theorem permuteStep_eq {n : Nat} {v : Vector Word MAX_N} (p : Perm) (fs : St) {top : Word}
-    (hn : n ≤ MAX_N) (h0 : 0 < n) (hv : PermV n v p.toList) (htop : top.toNat = n - 1) :
+theorem permuteStep_eq {n : Nat} {v : Vector Word maxStackSize} (p : Perm) (fs : St) {top : Word}
+    (hn : n ≤ maxStackSize) (h0 : 0 < n) (hv : PermV n v p.toList) (htop : top.toNat = n - 1) :
     permuteStep fs top v =
       match target p.toList with
       | none => .ret (.done, fs)
@@ -109,13 +109,13 @@ theorem permuteStep_eq {n : Nat} {v : Vector Word MAX_N} (p : Perm) (fs : St) {t
       eq_of_toNat (by rw [hg, toNat_ofNat_of_lt (by omega)])
     rw [ite_eq_right (c := get v top = top) hx, ite_eq_left (c := p.toList[n - 1]! ≠ n - 1) hm, hx']
 
-theorem permuteStep_none {n : Nat} {v : Vector Word MAX_N} (p : Perm) (fs : St) {top : Word}
-    (hn : n ≤ MAX_N) (h0 : 0 < n) (hv : PermV n v p.toList) (htop : top.toNat = n - 1)
+theorem permuteStep_none {n : Nat} {v : Vector Word maxStackSize} (p : Perm) (fs : St) {top : Word}
+    (hn : n ≤ maxStackSize) (h0 : 0 < n) (hv : PermV n v p.toList) (htop : top.toNat = n - 1)
     (ht : target p.toList = none) : permuteStep fs top v = .ret (.done, fs) := by
   rw [permuteStep_eq p fs hn h0 hv htop, ht]
 
-theorem permuteStep_some {n : Nat} {v : Vector Word MAX_N} (p : Perm) (fs : St) {top : Word}
-    (hn : n ≤ MAX_N) (h0 : 0 < n) (hv : PermV n v p.toList) (htop : top.toNat = n - 1) {pos : Nat}
+theorem permuteStep_some {n : Nat} {v : Vector Word maxStackSize} (p : Perm) (fs : St) {top : Word}
+    (hn : n ≤ maxStackSize) (h0 : 0 < n) (hv : PermV n v p.toList) (htop : top.toNat = n - 1) {pos : Nat}
     (ht : target p.toList = some pos) :
     permuteStep fs top v = exchange fs top v (BitVec.ofNat 64 pos) := by
   rw [permuteStep_eq p fs hn h0 hv htop, ht]
@@ -123,23 +123,23 @@ theorem permuteStep_some {n : Nat} {v : Vector Word MAX_N} (p : Perm) (fs : St) 
 /-! ## `exchange` -/
 
 -- The exchange of the entries `a` and `b` of `permutation`.
-def swapV (v : Vector Word MAX_N) (a b : Word) : Vector Word MAX_N :=
+def swapV (v : Vector Word maxStackSize) (a b : Word) : Vector Word maxStackSize :=
   put (put v a (get v b)) b (get v a)
 
-theorem exchange_same {fs : St} {top pos : Word} (v : Vector Word MAX_N)
+theorem exchange_same {fs : St} {top pos : Word} (v : Vector Word maxStackSize)
     (h : get fs.data pos = get fs.data (fs.size - 1)) :
     exchange fs top v pos = .cont (swapDestinations fs pos top) (swapV v pos top) := by
   unfold exchange
   rw [ite_eq_left h]
   rfl
 
-theorem exchange_block {fs : St} {top pos : Word} (v : Vector Word MAX_N)
+theorem exchange_block {fs : St} {top pos : Word} (v : Vector Word maxStackSize)
     (h : get fs.data pos ≠ get fs.data (fs.size - 1)) (hr : ¬isSwapReachable fs pos = true) :
     exchange fs top v pos = .ret (blockSwapUnreachable fs pos) := by
   unfold exchange
   rw [ite_eq_right h, ite_eq_left (c := (!isSwapReachable fs pos) = true) (by simpa using hr)]
 
-theorem exchange_swap {fs : St} {top pos : Word} (v : Vector Word MAX_N)
+theorem exchange_swap {fs : St} {top pos : Word} (v : Vector Word maxStackSize)
     (h : get fs.data pos ≠ get fs.data (fs.size - 1)) (hr : isSwapReachable fs pos = true) :
     exchange fs top v pos =
       .cont (swapDestinations (stackSwap fs pos) pos top) (swapV v pos top) := by
@@ -147,7 +147,7 @@ theorem exchange_swap {fs : St} {top pos : Word} (v : Vector Word MAX_N)
   rw [ite_eq_right h, ite_eq_right (c := (!isSwapReachable fs pos) = true) (by simpa using hr)]
   rfl
 
-theorem PermV.swap {n : Nat} {v : Vector Word MAX_N} (p : Perm) (hn : n ≤ MAX_N)
+theorem PermV.swap {n : Nat} {v : Vector Word maxStackSize} (p : Perm) (hn : n ≤ maxStackSize)
     (hv : PermV n v p.toList) {w top : Word} {pos : Nat} (hw : w.toNat = pos)
     (htop : top.toNat = n - 1) (hpos : pos < n - 1) (hi hj) :
     PermV n (swapV v w top) (p.swap (p.toList.length - 1) pos hi hj).toList := by
@@ -170,11 +170,11 @@ theorem PermV.swap {n : Nat} {v : Vector Word MAX_N} (p : Perm) (hn : n ≤ MAX_
 
 /-! ## The loop -/
 
-theorem permuteLoop_ret {f : Nat} {fs : St} {top : Word} {v : Vector Word MAX_N} {r : Status × St}
+theorem permuteLoop_ret {f : Nat} {fs : St} {top : Word} {v : Vector Word maxStackSize} {r : Status × St}
     (h : permuteStep fs top v = .ret r) : permuteLoop (f + 1) fs top v = r := by
   simp [permuteLoop, h]
 
-theorem permuteLoop_cont {f : Nat} {fs fs' : St} {top : Word} {v v' : Vector Word MAX_N}
+theorem permuteLoop_cont {f : Nat} {fs fs' : St} {top : Word} {v v' : Vector Word maxStackSize}
     (h : permuteStep fs top v = .cont fs' v') :
     permuteLoop (f + 1) fs top v = permuteLoop f fs' top v' := by
   simp [permuteLoop, h]
@@ -188,7 +188,7 @@ section
 variable {e : Env}
 
 theorem sim_permuteLoop {top : Word} :
-    ∀ (fuel : Nat) (fs : St) (st : FlatShuffler.St) (p : Perm) (v : Vector Word MAX_N),
+    ∀ (fuel : Nat) (fs : St) (st : FlatShuffler.St) (p : Perm) (v : Vector Word maxStackSize),
       Sim e fs st → PermV st.len v p.toList → 0 < st.len → top.toNat = st.len - 1 →
       measure p.toList < fuel → SimR e (permuteLoop fuel fs top v) (go st p) := by
   intro fuel

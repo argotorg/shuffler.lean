@@ -29,7 +29,7 @@ theorem b_13 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨L, p, hF, h13, h14, hcx, h0, hrg, hP⟩ := ht
   have hok := hpre.ok
-  have hn : (flat g).size.toNat ≤ MAX_N := Nat.le_trans hok.len hok.xs
+  have hn : (flat g).size.toNat ≤ maxStackSize := Nat.le_trans hok.len hok.xs
   obtain ⟨hperm, hb⟩ := rg_some hrg (by show g.h.len ≠ 0; bv_omega) hn hpre.args.2.2.1
   kvcgen64
   all_goals try symexec_norm
@@ -99,9 +99,9 @@ theorem b_14 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
   intro t ht
   simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨g', L, p, f, hD, hperm, hmu, hnops, hpt⟩ := ht
-  have hn : g.h.len.toNat ≤ MAX_N := Nat.le_trans hpre.ok.len hpre.ok.xs
+  have hn : g.h.len.toNat ≤ maxStackSize := Nat.le_trans hpre.ok.len hpre.ok.xs
   have hcxN : t.regs.rsi.toBitVec.toNat < 1024 := by
-    rw [hD.si]; have := hD.pos; simp only [MAX_N] at hn; bv_omega
+    rw [hD.si]; have := hD.pos; simp only [maxStackSize] at hn; bv_omega
   kvcgen64
   all_goals try symexec_norm
   case vc1 =>
@@ -123,7 +123,7 @@ theorem b_15 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
   have hsi := hD.r15
   have h0 := hD.pos
   have hcl : c < g.h.len := by bv_omega
-  have hcM : c ≠ 0#64 → (c - 1#64).toNat < MAX_N := fun h => lt_max hok (by bv_omega)
+  have hcM : c ≠ 0#64 → (c - 1#64).toNat < maxStackSize := fun h => lt_max hok (by bv_omega)
   have hcL : c ≠ 0#64 → c - 1#64 < g.h.len := fun h => by bv_omega
   have haP : rsi s + (c - 1#64) * 8#64
       = rsi s + BitVec.ofNat 64 (8 * (c - 1#64).toNat) := idx8 _ _

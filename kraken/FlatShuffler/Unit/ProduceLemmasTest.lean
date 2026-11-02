@@ -21,7 +21,7 @@ open FlatShuffler.Unit.ProduceProof
 abbrev N : Word := Flat.NONE
 
 -- A buffer that holds `l` from offset 0, and `d` above it.
-def vec {α : Type} (l : List α) (d : α) : Vector α MAX_N :=
+def vec {α : Type} (l : List α) (d : α) : Vector α maxStackSize :=
   Vector.ofFn fun i => l[i.val]?.getD d
 
 -- The slots: a value that is not a literal, a literal, a return label, a function return label.
@@ -100,9 +100,9 @@ example : fin (.blocked, sBlk) 0 = (.blocked, sBlk) := fin_ne (by decide)
 def sTop := st [] [val 1, val 2] [1] []
 def sLow := st [] [val 1, val 2] [0] []
 example : fin (.done, sTop) 0 = (.done, { sTop with pend := sTop.pend - 1 }) :=
-  fin_ok rfl (by simp [sTop, st, vec, Flat.get, MAX_N])
+  fin_ok rfl (by simp [sTop, st, vec, Flat.get, maxStackSize])
 example : fin (.done, sLow) 0 = (.assertionFailed, sLow) :=
-  fin_bad rfl (by simp [sLow, st, vec, Flat.get, MAX_N])
+  fin_bad rfl (by simp [sLow, st, vec, Flat.get, maxStackSize])
 #guard obs (fin (.done, sTop) 0) == (.done, 2, 4, 0, 0, [])
 #guard obs (fin (.done, sLow) 0) == (.assertionFailed, 2, 5, 0, 0, [])
 
@@ -236,9 +236,9 @@ example (t : MachineData) (b : Bool) (h : al t = if b then 1#8 else 0#8) (hz : a
 -- Negative: `al` is the byte of `rax`. The word `0x100` has the byte 0, thus `bit_false`.
 #guard (0x100#64 : Word).setWidth 8 == 0#8
 
-/-! ## `get_eq` at the bound `MAX_N` -/
+/-! ## `get_eq` at the bound `maxStackSize` -/
 
-example (v : Vector Word MAX_N) : Flat.get v 1023 = v[1023] := get_eq v (by decide)
+example (v : Vector Word maxStackSize) : Flat.get v 1023 = v[1023] := get_eq v (by decide)
 -- Out of bounds `get` is `default`, not an element.
 #guard Flat.get (vec [] (9 : Word)) 1023 == 9
 #guard Flat.get (vec [] (9 : Word)) 1024 == 0

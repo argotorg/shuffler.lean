@@ -50,7 +50,7 @@ theorem avail_one (hs : FlatShuffler.Flat.Sim e fs st) (h : Rel e st state) (i :
     obtain ⟨q, -, rfl⟩ := Option.map_eq_some_iff.mp hp
     have := q.isLt
     have := hs.len_lt
-    unfold FlatShuffler.MAX_N at this
+    unfold FlatShuffler.maxStackSize at this
     omega
   unfold FlatShuffler.Flat.isAvailable State.isAvailable
   dsimp only
@@ -115,7 +115,7 @@ theorem size_ok (hs : FlatShuffler.Flat.Sim e fs st) (h : Rel e st state)
   have h4 := h.pendingGenerations
   apply BitVec.eq_of_toNat_eq
   rw [BitVec.toNat_add]
-  unfold FlatShuffler.MAX_N at hle
+  unfold FlatShuffler.maxStackSize at hle
   rw [Nat.mod_eq_of_lt (by omega)]
   omega
 
@@ -150,8 +150,8 @@ end
 /-! ## `Emission::run` -/
 
 -- The members of the constructor state that the loop on `m_pendingGenerations` does not write.
-theorem ctorP_fields (data : Vector FlatShuffler.StackSlot FlatShuffler.MAX_N) (m : FlatShuffler.Word)
-    (target : Vector FlatShuffler.StackSlot FlatShuffler.MAX_N) (n : FlatShuffler.Word) (M : FlatShuffler.Flat.Mapping)
+theorem ctorP_fields (data : Vector FlatShuffler.StackSlot FlatShuffler.maxStackSize) (m : FlatShuffler.Word)
+    (target : Vector FlatShuffler.StackSlot FlatShuffler.maxStackSize) (n : FlatShuffler.Word) (M : FlatShuffler.Flat.Mapping)
     (spills : BitVec 32 → BitVec 8) (u : FlatShuffler.Flat.Uninit) :
     let fs := FlatShuffler.Flat.ctorP data m target n M spills u
     fs.size = m ∧ fs.target = target ∧ fs.targetSize = n ∧ fs.spills = spills ∧ fs.data = data := by
@@ -161,12 +161,12 @@ theorem ctorP_fields (data : Vector FlatShuffler.StackSlot FlatShuffler.MAX_N) (
   exact ⟨rfl, rfl, rfl, rfl, rfl⟩
 
 theorem out_pop {e : FlatShuffler.Env} {source : Stack} {fs : FlatShuffler.Flat.St} {state : OState e source}
-    {A : FlatShuffler.Map.Mapping} (h : PopRel (FlatShuffler.Flat.absSt A fs) state) (hs : fs.size.toNat ≤ FlatShuffler.MAX_N)
-    (ht : fs.targetSize.toNat ≤ FlatShuffler.MAX_N) : Out fs state :=
+    {A : FlatShuffler.Map.Mapping} (h : PopRel (FlatShuffler.Flat.absSt A fs) state) (hs : fs.size.toNat ≤ FlatShuffler.maxStackSize)
+    (ht : fs.targetSize.toNat ≤ FlatShuffler.maxStackSize) : Out fs state :=
   ⟨h.mapping, h.stack.symm, h.trace, hs, ht⟩
 
-theorem emissionRun_erel (data target : Vector FlatShuffler.StackSlot FlatShuffler.MAX_N) (m n : FlatShuffler.Word)
-    (hm : m.toNat ≤ FlatShuffler.MAX_N) (hn : n.toNat ≤ FlatShuffler.MAX_N) (M : FlatShuffler.Flat.Mapping)
+theorem emissionRun_erel (data target : Vector FlatShuffler.StackSlot FlatShuffler.maxStackSize) (m n : FlatShuffler.Word)
+    (hm : m.toNat ≤ FlatShuffler.maxStackSize) (hn : n.toNat ≤ FlatShuffler.maxStackSize) (M : FlatShuffler.Flat.Mapping)
     (spills : BitVec 32 → BitVec 8) (u : FlatShuffler.Flat.Uninit) (l : FlatShuffler.Flat.Locals) {e : FlatShuffler.Env}
     (he : e = FlatShuffler.Flat.listEnv n.toNat target spills)
     (P : Mapping ((data.toList.take m.toNat).map decodeStackSlot).length (decodedTargetStack e).length)
@@ -205,8 +205,8 @@ theorem emissionRun_erel (data target : Vector FlatShuffler.StackSlot FlatShuffl
     obtain ⟨⟨hb, hpop⟩, -⟩ := hc
     simp only [hb, Option.isSome_some, ↓reduceIte, ne_eq, reduceCtorEq, not_false_eq_true, pure,
       Except.pure, ERel]
-    have hs1 : fs1.size.toNat ≤ FlatShuffler.MAX_N := by have := hfr.size; rw [hf0s] at this; omega
-    have hn1 : fs1.targetSize.toNat ≤ FlatShuffler.MAX_N := by rw [hfr.tsize, hf0n]; exact hn
+    have hs1 : fs1.size.toNat ≤ FlatShuffler.maxStackSize := by have := hfr.size; rw [hf0s] at this; omega
+    have hn1 : fs1.targetSize.toNat ≤ FlatShuffler.maxStackSize := by rw [hfr.tsize, hf0n]; exact hn
     exact ⟨out_pop hpop hs1 hn1, by simp⟩
   | done =>
     simp only [FlatShuffler.Flat.absOut, Corr, SurplusRel, Option.map_none] at hc
@@ -224,8 +224,8 @@ theorem emissionRun_erel (data target : Vector FlatShuffler.StackSlot FlatShuffl
       intro j
       rw [← boundValue_isSome, hrbound', boundValue_isSome, hrplan]
     -- The list state of the flat state after `removeSurplus`.
-    have hn1 : fs1.targetSize.toNat ≤ FlatShuffler.MAX_N := by rw [hfr.tsize, hf0n]; exact hn
-    have hsz1 : fs1.size.toNat ≤ FlatShuffler.MAX_N := by have := hfr.size; rw [hf0s] at this; omega
+    have hn1 : fs1.targetSize.toNat ≤ FlatShuffler.maxStackSize := by rw [hfr.tsize, hf0n]; exact hn
+    have hsz1 : fs1.size.toNat ≤ FlatShuffler.maxStackSize := by have := hfr.size; rw [hf0s] at this; omega
     have he1 : e = FlatShuffler.Flat.listEnv fs1.targetSize.toNat fs1.target fs1.spills := by
       rw [hfr.tsize, hfr.target, hfr.spills, hf0n, hf0t, hf0p]; exact he
     have hrel1 := listOf_rel hn1 hsz1 hpop.mapping htotal he1 hpop.stack.symm hpop.trace
@@ -244,9 +244,9 @@ theorem emissionRun_erel (data target : Vector FlatShuffler.StackSlot FlatShuffl
       intro d hd
       rw [hfr.tsize, hf0n] at hd
       have hpd : pl[d.toNat]? = some (optOf (get M.pos d)) := by
-        simp [pl, hd, FlatShuffler.Flat.get_toNat _ (show d.toNat < FlatShuffler.MAX_N by omega)]
+        simp [pl, hd, FlatShuffler.Flat.get_toNat _ (show d.toNat < FlatShuffler.maxStackSize by omega)]
         refine ⟨_, ?_, rfl⟩
-        simp [show d.toNat < FlatShuffler.MAX_N by omega]
+        simp [show d.toNat < FlatShuffler.maxStackSize by omega]
       rw [hpd, Option.join_some]
       simp [optOf]
     have hl1 := hrel1.len

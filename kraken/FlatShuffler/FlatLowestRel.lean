@@ -31,7 +31,7 @@ namespace FlatShuffler.Flat
 
 -- The flat planned `m_positionOf` array and the list planned `positionOf` have the same holes below
 -- `n`.
-def PlanR (n : Nat) (planned : Vector Word MAX_N) (pl : List (Option Nat)) : Prop :=
+def PlanR (n : Nat) (planned : Vector Word maxStackSize) (pl : List (Option Nat)) : Prop :=
   ∀ d : Word, d.toNat < n → (get planned d = NONE ↔ (pl[d.toNat]?).join = none)
 
 /-! ## The first loop of the list model -/
@@ -75,7 +75,7 @@ theorem lowestScan_eq {n : Nat} (pl : List (Option Nat)) (st : FlatShuffler.St) 
 
 /-! ## The first loop of the flat model -/
 
-theorem ofNat_eq_iff {i : Nat} {w : Word} (hi : i < MAX_N) : BitVec.ofNat 64 i = w ↔ i = w.toNat :=
+theorem ofNat_eq_iff {i : Nat} {w : Word} (hi : i < maxStackSize) : BitVec.ofNat 64 i = w ↔ i = w.toNat :=
   ⟨fun h => by rw [← h, toNat_ofNat_small hi],
     fun h => eq_of_toNat (by rw [toNat_ofNat_small hi, h])⟩
 
@@ -83,8 +83,8 @@ theorem length_filter_range_le (f : Nat → Bool) (k : Nat) : ((List.range k).fi
   Nat.le_trans (List.length_filter_le f _) (by simp)
 
 -- The entries below `c` of `v` hold `L`. After `v[c] = x` and `c + 1`, they hold `L ++ [x]`.
-theorem push_spec {v : Vector Word MAX_N} {c : Word} {L : List Nat} {x : Nat}
-    (hc : c.toNat = L.length) (hL : L.length < MAX_N) (hx : x < MAX_N)
+theorem push_spec {v : Vector Word maxStackSize} {c : Word} {L : List Nat} {x : Nat}
+    (hc : c.toNat = L.length) (hL : L.length < maxStackSize) (hx : x < maxStackSize)
     (h : ∀ i < c.toNat, (get v (.ofNat 64 i)).toNat = L[i]!) :
     (c + 1).toNat = (L ++ [x]).length ∧
       ∀ i < (c + 1).toNat, (get (put v c (.ofNat 64 x)) (.ofNat 64 i)).toNat = (L ++ [x])[i]! := by
@@ -99,8 +99,8 @@ theorem push_spec {v : Vector Word MAX_N} {c : Word} {L : List Nat} {x : Nat}
       getElem!_append_left (by omega)]
 
 -- The entries below `c'` of `v'` hold `L`, and `L` grows by `k` if `b`.
-theorem grow_spec {v v' : Vector Word MAX_N} {c c' : Word} {L : List Nat} {k : Nat} (b : Bool)
-    (hc : c.toNat = L.length) (hL : L.length ≤ k) (hk : k < MAX_N)
+theorem grow_spec {v v' : Vector Word maxStackSize} {c c' : Word} {L : List Nat} {k : Nat} (b : Bool)
+    (hc : c.toNat = L.length) (hL : L.length ≤ k) (hk : k < maxStackSize)
     (h : ∀ i < c.toNat, (get v (.ofNat 64 i)).toNat = L[i]!)
     (he : if b then v' = put v c (.ofNat 64 k) ∧ c' = c + 1 else v' = v ∧ c' = c) :
     c'.toNat = (L ++ if b then [k] else []).length ∧
@@ -113,12 +113,12 @@ theorem grow_spec {v v' : Vector Word MAX_N} {c c' : Word} {L : List Nat} {k : N
     exact push_spec hc (by omega) hk h
 
 -- The permutation after the slot at `k`: `v[k] = w` if the slot gets a value.
-theorem perm_spec {v v' : Vector Word MAX_N} {f : Nat → Bool} {g : Nat → Nat} {k : Nat}
-    (hk : k < MAX_N) (h : ∀ p < k, f p = true → (get v (.ofNat 64 p)).toNat = g p)
+theorem perm_spec {v v' : Vector Word maxStackSize} {f : Nat → Bool} {g : Nat → Nat} {k : Nat}
+    (hk : k < maxStackSize) (h : ∀ p < k, f p = true → (get v (.ofNat 64 p)).toNat = g p)
     (he : if f k then ∃ w : Word, w.toNat = g k ∧ v' = put v (.ofNat 64 k) w else v' = v) :
     ∀ p < k + 1, f p = true → (get v' (.ofNat 64 p)).toNat = g p := by
   intro p hp hf
-  have hpk : p < MAX_N := by omega
+  have hpk : p < maxStackSize := by omega
   by_cases hpe : p = k
   · subst hpe
     rw [ite_eq_left hf] at he
@@ -151,7 +151,7 @@ theorem scanInv_init (pl : List (Option Nat)) (st : FlatShuffler.St) (l : Locals
 
 -- `ScanInv` at `k + 1` from the changes of the locals at `k`.
 theorem ScanInv.next {pl : List (Option Nat)} {st : FlatShuffler.St} {k : Nat} {sc sc' : Scan}
-    (hk : k < MAX_N) (h : ScanInv pl st k sc)
+    (hk : k < maxStackSize) (h : ScanInv pl st k sc)
     (e1 : if lowHole pl st k then
         sc'.holes = put sc.holes sc.holeCount (.ofNat 64 k) ∧ sc'.holeCount = sc.holeCount + 1
       else sc'.holes = sc.holes ∧ sc'.holeCount = sc.holeCount)
@@ -168,12 +168,12 @@ theorem ScanInv.next {pl : List (Option Nat)} {st : FlatShuffler.St} {k : Nat} {
   rw [← filter_range_succ] at g1 g2
   exact ⟨g1.1, g2.1, g1.2, g2.2, perm_spec hk h.perm e3⟩
 
-theorem scanInv_step {e : Env} {fs : St} {st : FlatShuffler.St} {planned : Vector Word MAX_N}
+theorem scanInv_step {e : Env} {fs : St} {st : FlatShuffler.St} {planned : Vector Word maxStackSize}
     {pl : List (Option Nat)} (hs : Sim e fs st) (hpl : PlanR fs.targetSize.toNat planned pl)
     {k : Nat} (hk : k < st.len) {sc : Scan} (h : ScanInv pl st k sc) :
     ScanInv pl st (k + 1) (scanStep planned fs (.ofNat 64 k) (get fs.dest (.ofNat 64 k)) sc) := by
   have hN := hs.len_lt
-  have hkN : k < MAX_N := by omega
+  have hkN : k < maxStackSize := by omega
   have hkw := toNat_ofNat_small hkN
   have hdk := hs.dest (.ofNat 64 k) (by rw [hkw]; exact hk)
   rw [hkw] at hdk
@@ -192,7 +192,7 @@ theorem scanInv_step {e : Env} {fs : St} {st : FlatShuffler.St} {planned : Vecto
     simp
   all_goals first | exact ⟨_, hdk, rfl⟩ | exact ⟨_, hkw, rfl⟩
 
-theorem scan_spec {e : Env} {fs : St} {st : FlatShuffler.St} {planned : Vector Word MAX_N}
+theorem scan_spec {e : Env} {fs : St} {st : FlatShuffler.St} {planned : Vector Word maxStackSize}
     {pl : List (Option Nat)} (hs : Sim e fs st) (hpl : PlanR fs.targetSize.toNat planned pl) :
     ∀ d k sc, k + d = st.len → ScanInv pl st k sc →
       ∃ sc', scan planned fs (.ofNat 64 k) sc = some sc' ∧ ScanInv pl st st.len sc'
@@ -207,7 +207,7 @@ theorem scan_spec {e : Env} {fs : St} {st : FlatShuffler.St} {planned : Vector W
   | d + 1, k, sc, hd, h => by
     have hk : k < st.len := by omega
     have hN := hs.len_lt
-    have hkN : k < MAX_N := by omega
+    have hkN : k < maxStackSize := by omega
     obtain ⟨sc', h1, h2⟩ := scan_spec hs hpl d (k + 1) _ (by omega) (scanInv_step hs hpl hk h)
     refine ⟨sc', ?_, h2⟩
     have hkw := toNat_ofNat_small hkN
@@ -233,7 +233,7 @@ theorem scan_spec {e : Env} {fs : St} {st : FlatShuffler.St} {planned : Vector W
 /-! ## The second loop of the flat model -/
 
 -- `fill` from `j` keeps the entry at `q` if no parked slot from `j` on is `q`.
-theorem fill_other (sc : Scan) (q j : Word) (v : Vector Word MAX_N)
+theorem fill_other (sc : Scan) (q j : Word) (v : Vector Word maxStackSize)
     (h : ∀ i : Word, j ≤ i → i < sc.parkedCount → get sc.parked i ≠ q) :
     get (fill sc j v) q = get v q := by
   rw [fill]
@@ -250,8 +250,8 @@ decreasing_by bv_omega
 theorem fill_parked (sc : Scan)
     (hd : ∀ a b : Word, a < sc.parkedCount → b < sc.parkedCount →
       get sc.parked a = get sc.parked b → a = b)
-    (i : Word) (hi : i < sc.parkedCount) (hiN : (get sc.parked i).toNat < MAX_N)
-    (j : Word) (v : Vector Word MAX_N) (hj : j ≤ i) :
+    (i : Word) (hi : i < sc.parkedCount) (hiN : (get sc.parked i).toNat < maxStackSize)
+    (j : Word) (v : Vector Word maxStackSize) (hj : j ≤ i) :
     get (fill sc j v) (get sc.parked i) = get sc.holes i := by
   rw [fill, dite_eq_left (show j < sc.parkedCount by bv_omega)]
   by_cases he : j = i
@@ -292,7 +292,7 @@ theorem ofNat_toNat (i : Word) : BitVec.ofNat 64 i.toNat = i := by
 
 -- The permutation after the second loop: the value of the first loop at a slot of `lowSets`, and
 -- the `i`-th free hole at the `i`-th parked slot.
-theorem fill_spec {pl : List (Option Nat)} {st : FlatShuffler.St} {sc : Scan} (hN : st.len ≤ MAX_N)
+theorem fill_spec {pl : List (Option Nat)} {st : FlatShuffler.St} {sc : Scan} (hN : st.len ≤ maxStackSize)
     (hinv : ScanInv pl st st.len sc) (hc : sc.parkedCount = sc.holeCount) :
     (∀ p < st.len, lowSets pl st p = true →
       (get (fill sc 0 sc.permutation) (.ofNat 64 p)).toNat = lowVal st p) ∧
@@ -422,7 +422,7 @@ theorem lowF_bij (F : Nat → Nat)
       rw [getElem!_inj_of_lt hHs (by omega) (by omega) he]
 
 -- If the destinations are distinct and each target offset of a slot is not a hole, `LowOk` holds.
-theorem lowOk_of {e : Env} {fs : St} {planned : Vector Word MAX_N} (hs : Sim e fs st)
+theorem lowOk_of {e : Env} {fs : St} {planned : Vector Word maxStackSize} (hs : Sim e fs st)
     (hpl : PlanR fs.targetSize.toNat planned pl) : LowOk planned fs := by
   intro l sc hscan hc
   have hN := hs.len_lt
@@ -457,7 +457,7 @@ theorem sinv_range (n : Nat) : SInv n (fun _ => True) (· < n) (List.range n) :=
   · rw [List.getElem_range, List.getElem_range] at h; exact h
   · rw [getElem!_pos _ _ (by simp; exact hd), List.getElem_range]
 
-theorem sim_lowest {e : Env} {fs : St} {st : FlatShuffler.St} {planned : Vector Word MAX_N}
+theorem sim_lowest {e : Env} {fs : St} {st : FlatShuffler.St} {planned : Vector Word maxStackSize}
     {pl : List (Option Nat)} (hs : Sim e fs st) (hpl : PlanR fs.targetSize.toNat planned pl)
     (hb : LowOk planned fs) (l : Locals) :
     SimR e (permuteAtLowestHeight planned l fs) (FlatShuffler.lowest e.n pl st) := by
@@ -573,7 +573,7 @@ theorem sim_lowest {e : Env} {fs : St} {st : FlatShuffler.St} {planned : Vector 
 
 /-! ## The entry -/
 
-theorem put_NONE {α : Type} (v : Vector α MAX_N) (x : α) : put v NONE x = v := by
+theorem put_NONE {α : Type} (v : Vector α maxStackSize) (x : α) : put v NONE x = v := by
   unfold put
   apply Vector.ext
   intro i hi
@@ -591,7 +591,7 @@ theorem foldl_proj {α β γ : Type} (g : α → γ) {f : α → β → α} {f' 
 
 -- The planned positions of the entry are the positions of the first two loops of the
 -- constructor.
-theorem plannedPos_eq (m n : Word) (dests up : Vector Word MAX_N) (s0 : St) (h0 : s0.pos = up) :
+theorem plannedPos_eq (m n : Word) (dests up : Vector Word maxStackSize) (s0 : St) (h0 : s0.pos = up) :
     plannedPos m n dests up =
       ((ofs m.toNat).foldl (bindF dests) ((ofs n.toNat).foldl clearF s0)).pos := by
   rw [foldl_proj St.pos (f' := fun p q => if get dests q = NONE then p else put p (get dests q) q)
@@ -603,12 +603,12 @@ theorem plannedPos_eq (m n : Word) (dests up : Vector Word MAX_N) (s0 : St) (h0 
     · rename_i h; rw [h, put_NONE]
     · rfl
 
-theorem planR_ctor {m n : Word} {dest : Vector Word MAX_N} (up : Vector Word MAX_N) (hm : m ≤ n)
-    (hn : n.toNat ≤ MAX_N) (hd : Dests n.toNat (listDests m.toNat dest)) :
+theorem planR_ctor {m n : Word} {dest : Vector Word maxStackSize} (up : Vector Word maxStackSize) (hm : m ≤ n)
+    (hn : n.toNat ≤ maxStackSize) (hd : Dests n.toNat (listDests m.toNat dest)) :
     PlanR n.toNat (plannedPos m n dest up) (initPositionOf n.toNat (listDests m.toNat dest)) := by
   have hmn : m.toNat ≤ n.toNat := hm
-  have hM : m.toNat ≤ MAX_N := by omega
-  let s0 : St := ctor0 (Vector.replicate MAX_N default) 0 (Vector.replicate MAX_N default) 0
+  have hM : m.toNat ≤ maxStackSize := by omega
+  let s0 : St := ctor0 (Vector.replicate maxStackSize default) 0 (Vector.replicate maxStackSize default) 0
     (fun _ => 0) ⟨up, up, 0, 0⟩
   rw [plannedPos_eq m n dest up s0 rfl]
   obtain ⟨-, hb2⟩ := bind_loop hn hmn hd _ (fun d h => clear_pos s0 hn h) (Nat.le_refl _)
@@ -631,12 +631,12 @@ theorem planR_ctor {m n : Word} {dest : Vector Word MAX_N} (up : Vector Word MAX
     omega
 
 -- The planned mapping of the entry is the mapping of the constructor: `LowOk` holds.
-theorem lowOk_ctor {m n : Word} {data target : Vector StackSlot MAX_N} {dest : Vector Word MAX_N}
-    {spilled : BitVec 32 → BitVec 8} (u : Uninit) (up : Vector Word MAX_N) (hm : m ≤ n)
-    (hn : n.toNat ≤ MAX_N) (hd : Dests n.toNat (listDests m.toNat dest)) :
+theorem lowOk_ctor {m n : Word} {data target : Vector StackSlot maxStackSize} {dest : Vector Word maxStackSize}
+    {spilled : BitVec 32 → BitVec 8} (u : Uninit) (up : Vector Word maxStackSize) (hm : m ≤ n)
+    (hn : n.toNat ≤ maxStackSize) (hd : Dests n.toNat (listDests m.toNat dest)) :
     LowOk (plannedPos m n dest up) (ctor data m target n dest spilled u) := by
   have hmn : m.toNat ≤ n.toNat := hm
-  have hM : m.toNat ≤ MAX_N := by omega
+  have hM : m.toNat ≤ maxStackSize := by omega
   have hs := sim_ctor (data := data) (target := target) (spilled := spilled) u hm hn hd
   have htn : (ctor data m target n dest spilled u).targetSize.toNat = n.toNat := by
     rw [← hs.n, listEnv_n target spilled hn]
@@ -659,15 +659,15 @@ theorem lowOk_ctor {m n : Word} {data target : Vector StackSlot MAX_N} {dest : V
     rw [h3]
     rfl
 
-theorem permute_at_lowest_height_rel {m n : Word} {data target : Vector StackSlot MAX_N}
-    {dest : Vector Word MAX_N} {spilled : BitVec 32 → BitVec 8} (u : Uninit)
-    (up : Vector Word MAX_N) (l : Locals) (hm : m ≤ n) (hn : n.toNat ≤ MAX_N)
+theorem permute_at_lowest_height_rel {m n : Word} {data target : Vector StackSlot maxStackSize}
+    {dest : Vector Word maxStackSize} {spilled : BitVec 32 → BitVec 8} (u : Uninit)
+    (up : Vector Word maxStackSize) (l : Locals) (hm : m ≤ n) (hn : n.toNat ≤ maxStackSize)
     (hd : Dests n.toNat (listDests m.toNat dest)) :
     Rel (permute_at_lowest_height m n data target dest spilled u up l)
       (FlatShuffler.lowest n.toNat (initPositionOf n.toNat (listDests m.toNat dest))
         (FlatShuffler.init (listEnv n.toNat target spilled) (listSource m.toNat data)
           (listDests m.toNat dest))) := by
-  have hg : ¬(m > BitVec.ofNat 64 MAX_N ∨ n > BitVec.ofNat 64 MAX_N) := by
+  have hg : ¬(m > BitVec.ofNat 64 maxStackSize ∨ n > BitVec.ofNat 64 maxStackSize) := by
     have hmn : m.toNat ≤ n.toNat := hm
     rw [MAX_N_eq] at hn ⊢
     intro h

@@ -34,13 +34,13 @@ namespace FlatShuffler
 -- The result of `permuteAtLowestHeight` for the planned array `planned`: the members that no
 -- function writes do not change, and the status in `al` and the state of `g'` are a flat result `r`
 -- that holds the list result `FlatShuffler.lowest` of each list state that the flat state of `g` holds.
-def LowestOut (planned : Vector Word MAX_N) (g g' : Sep.G) (t : MachineData) : Prop :=
+def LowestOut (planned : Vector Word maxStackSize) (g g' : Sep.G) (t : MachineData) : Prop :=
   Unit.Keep g g' ∧ al t ≠ ASSERTION_FAILED ∧
     ∃ r : Flat.Status × Flat.St, al t = Unit.code r.1 ∧ Unit.flat g' = r.2
     ∧ ∀ (e : Env) (st : St) (pl : List (Option Nat)), Flat.Sim e (Unit.flat g) st →
       Flat.PlanR (Unit.flat g).targetSize.toNat planned pl → Flat.SimR e r (lowest e.n pl st)
 
-def LowestExit (planned : Vector Word MAX_N) (g g' : Sep.G) : Prop :=
+def LowestExit (planned : Vector Word maxStackSize) (g g' : Sep.G) : Prop :=
   Unit.Keep g g' ∧ ∃ r : Flat.Status × Flat.St,
     r.1 = .assertionFailed ∧ Unit.flat g' = r.2 ∧
     ∀ (e : Env) (st : St) (pl : List (Option Nat)), Flat.Sim e (Unit.flat g) st →

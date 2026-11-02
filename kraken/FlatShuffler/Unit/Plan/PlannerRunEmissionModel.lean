@@ -12,18 +12,18 @@ import all FlatShuffler.Unit.Plan.PlannerRunSafeCtor
 namespace FlatShuffler.Unit.PlannerRunU
 open FlatShuffler.Sep Flat
 
-theorem ctorP_data (data old target : Vector StackSlot MAX_N) (m n : Word)
+theorem ctorP_data (data old target : Vector StackSlot maxStackSize) (m n : Word)
     (M : Flat.Mapping) (spills : BitVec 32 → BitVec 8) (u : Flat.Uninit) :
     Flat.ctorP data m target n M spills u =
       { Flat.ctorP old m target n M spills u with data := data } := by
   simp only [Flat.ctorP, Flat.pend_fold]
 
 theorem mapping_copy_eq {m n : Word} (u M : Flat.Mapping)
-    (hm : m.toNat ≤ MAX_N) (hn : n.toNat ≤ MAX_N)
+    (hm : m.toNat ≤ maxStackSize) (hn : n.toNat ≤ maxStackSize)
     (hd : ∀ p, p < m → get u.dest p = get M.dest p)
     (hp : ∀ p, p < n → get u.pos p = get M.pos p) :
     u.copy M m n = u := by
-  have copy_eq (v w : Vector Word MAX_N) (k : Word) (hk : k.toNat ≤ MAX_N)
+  have copy_eq (v w : Vector Word maxStackSize) (k : Word) (hk : k.toNat ≤ maxStackSize)
       (he : ∀ p, p < k → get v p = get w p) :
       (offsets k).foldl (fun v p => put v p (get w p)) v = v := by
     apply Vector.ext
@@ -37,7 +37,7 @@ theorem mapping_copy_eq {m n : Word} (u M : Flat.Mapping)
   cases u
   simp only [Flat.Mapping.copy, copy_eq _ _ _ hm hd, copy_eq _ _ _ hn hp]
 
-theorem unmapped_range (st : Flat.St) (hn : st.targetSize.toNat ≤ MAX_N)
+theorem unmapped_range (st : Flat.St) (hn : st.targetSize.toNat ≤ maxStackSize)
     (i : Nat) (hi : i ≤ st.targetSize.toNat) (c : Word) :
     Flat.unmappedFrom st (BitVec.ofNat 64 i) c =
       c + BitVec.ofNat 64 ((List.range' i (st.targetSize.toNat - i)).countP
@@ -64,7 +64,7 @@ theorem unmapped_range (st : Flat.St) (hn : st.targetSize.toNat ≤ MAX_N)
 termination_by st.targetSize.toNat - i
 decreasing_by omega
 
-theorem unmapped_offsets (st : Flat.St) (hn : st.targetSize.toNat ≤ MAX_N) :
+theorem unmapped_offsets (st : Flat.St) (hn : st.targetSize.toNat ≤ maxStackSize) :
     Flat.unmappedFrom st 0#64 0#64 =
       BitVec.ofNat 64 ((offsets st.targetSize).countP (fun d => get st.pos d = NONE)) := by
   rw [unmapped_range st hn 0 (Nat.zero_le _)]
@@ -89,9 +89,9 @@ theorem unmapped_congr {st a : Flat.St} (hn : a.targetSize = st.targetSize)
 termination_by (st.targetSize - i).toNat
 decreasing_by exact Flat.sub_succ_lt ‹i < st.targetSize›
 
-theorem ctorP_unmapped (data target : Vector StackSlot MAX_N) (m n : Word)
+theorem ctorP_unmapped (data target : Vector StackSlot maxStackSize) (m n : Word)
     (M : Flat.Mapping) (spills : BitVec 32 → BitVec 8) (u : Flat.Uninit)
-    (hn : n.toNat ≤ MAX_N) :
+    (hn : n.toNat ≤ maxStackSize) :
     let C := (⟨u.dest, u.pos⟩ : Flat.Mapping).copy M m n
     let st : Flat.St :=
       { target := target, targetSize := n, spills := spills, data := data, size := m,
@@ -113,15 +113,15 @@ theorem local_word_eq {locals : List Word} {i : Nat} {w : Word}
 theorem CtorHeader.localHdr {g : PlannerCallMemory} {locals : List Word}
     (h : CtorHeader g locals) (hl : locals.length = 4121) :
     let a := localEmissionHdr locals hl
-    a.tgt = g.p.tgt ∧ a.n = g.p.n ∧ a.spl = g.p.spl ∧ a.data = g.dataPtr ∧
-      a.len = g.p.m ∧ a.ops = g.opsPtr ∧ a.nops = 0#64 :=
+    a.tgt = g.p.tgt ∧ a.n = g.p.targetSize ∧ a.spl = g.p.spl ∧ a.data = g.dataPtr ∧
+      a.len = g.p.sourceSize ∧ a.ops = g.opsPtr ∧ a.nops = 0#64 :=
   ⟨local_word_eq (by omega) h.1, local_word_eq (by omega) h.2.1,
     local_word_eq (by omega) h.2.2.1, local_word_eq (by omega) h.2.2.2.1,
     local_word_eq (by omega) h.2.2.2.2.1, local_word_eq (by omega) h.2.2.2.2.2.1,
     local_word_eq (by omega) h.2.2.2.2.2.2⟩
 
 theorem WordPrefix.localHdr_dest {locals : List Word} (hl : locals.length = 4121)
-    {v : Vector Word MAX_N} {m : Word} (hm : m.toNat ≤ MAX_N)
+    {v : Vector Word maxStackSize} {m : Word} (hm : m.toNat ≤ maxStackSize)
     (h : WordPrefix locals 2067 v m.toNat) {p : Word} (hp : p < m) :
     get (localEmissionHdr locals hl).dest p = get v p := by
   have hpN := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hp) hm
@@ -136,7 +136,7 @@ theorem WordPrefix.localHdr_dest {locals : List Word} (hl : locals.length = 4121
   exact local_word_eq (by change p.toNat < 1024 at hpN; omega) he
 
 theorem WordPrefix.localHdr_pos {locals : List Word} (hl : locals.length = 4121)
-    {v : Vector Word MAX_N} {n : Word} (hn : n.toNat ≤ MAX_N)
+    {v : Vector Word maxStackSize} {n : Word} (hn : n.toNat ≤ maxStackSize)
     (h : WordPrefix locals 3091 v n.toNat) {p : Word} (hp : p < n) :
     get (localEmissionHdr locals hl).pos p = get v p := by
   have hpN := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hp) hn
@@ -152,10 +152,10 @@ theorem WordPrefix.localHdr_pos {locals : List Word} (hl : locals.length = 4121)
 
 def localCtorState (g : PlannerCallMemory) (h : Hdr) : Flat.St where
   target := g.p.fl.target
-  targetSize := g.p.n
+  targetSize := g.p.targetSize
   spills := g.spills
   data := g.data.map StackSlot.ofWord
-  size := g.p.m
+  size := g.p.sourceSize
   trace := []
   dest := h.dest
   pos := h.pos
@@ -168,30 +168,30 @@ theorem EmitCountLI.ctorP {P : Addr} {g : PlannerCallMemory} {M : Flat.Mapping}
     (h : EmitCountLI P g M F s ra lo locals t) (hok : g.Ok)
     (hpending : locals[4115]? = some (Flat.unmappedFrom (countState g M) 0 0)) :
     let a := localEmissionHdr locals h.localLength
-    Flat.ctorP (g.data.map StackSlot.ofWord) g.p.m g.p.fl.target g.p.n M g.spills
+    Flat.ctorP (g.data.map StackSlot.ofWord) g.p.sourceSize g.p.fl.target g.p.targetSize M g.spills
       ⟨a.dest, a.pos, a.blkOff, a.blkExc⟩ = localCtorState g a := by
   let a := localEmissionHdr locals h.localLength
-  have hd : ∀ p, p < g.p.m → get a.dest p = get M.dest p :=
-    fun _ hp => h.dest.localHdr_dest h.localLength hok.planner.m hp
-  have hp : ∀ p, p < g.p.n → get a.pos p = get M.pos p :=
-    fun _ hp => h.pos.localHdr_pos h.localLength hok.planner.n hp
+  have hd : ∀ p, p < g.p.sourceSize → get a.dest p = get M.dest p :=
+    fun _ hp => h.dest.localHdr_dest h.localLength hok.planner.sourceSizeFitsBuffer hp
+  have hp : ∀ p, p < g.p.targetSize → get a.pos p = get M.pos p :=
+    fun _ hp => h.pos.localHdr_pos h.localLength hok.planner.targetSizeFitsBuffer hp
   have hc := mapping_copy_eq (⟨a.dest, a.pos⟩ : Flat.Mapping) M
-    hok.planner.m hok.planner.n hd hp
+    hok.planner.sourceSizeFitsBuffer hok.planner.targetSizeFitsBuffer hd hp
   have hcount : Flat.unmappedFrom ({localCtorState g a with pend := 0}) 0#64 0#64 =
       a.pend := by
     have he := unmapped_congr (st := countState g M)
       (a := {localCtorState g a with pend := 0}) rfl hp 0#64 0#64
     exact he.trans (local_word_eq (by rw [h.localLength]; decide) hpending).symm
-  change Flat.ctorP (g.data.map StackSlot.ofWord) g.p.m g.p.fl.target g.p.n M g.spills
+  change Flat.ctorP (g.data.map StackSlot.ofWord) g.p.sourceSize g.p.fl.target g.p.targetSize M g.spills
     ⟨a.dest, a.pos, a.blkOff, a.blkExc⟩ = localCtorState g a
-  rw [ctorP_unmapped _ _ _ _ _ _ _ hok.planner.n]
+  rw [ctorP_unmapped _ _ _ _ _ _ _ hok.planner.targetSizeFitsBuffer]
   change {localCtorState g a with
-    dest := ((⟨a.dest, a.pos⟩ : Flat.Mapping).copy M g.p.m g.p.n).dest
-    pos := ((⟨a.dest, a.pos⟩ : Flat.Mapping).copy M g.p.m g.p.n).pos
+    dest := ((⟨a.dest, a.pos⟩ : Flat.Mapping).copy M g.p.sourceSize g.p.targetSize).dest
+    pos := ((⟨a.dest, a.pos⟩ : Flat.Mapping).copy M g.p.sourceSize g.p.targetSize).pos
     pend := Flat.unmappedFrom
       {localCtorState g a with
-        dest := ((⟨a.dest, a.pos⟩ : Flat.Mapping).copy M g.p.m g.p.n).dest
-        pos := ((⟨a.dest, a.pos⟩ : Flat.Mapping).copy M g.p.m g.p.n).pos
+        dest := ((⟨a.dest, a.pos⟩ : Flat.Mapping).copy M g.p.sourceSize g.p.targetSize).dest
+        pos := ((⟨a.dest, a.pos⟩ : Flat.Mapping).copy M g.p.sourceSize g.p.targetSize).pos
         pend := 0} 0#64 0#64} = _
   rw [hc]
   change {localCtorState g a with pend := Flat.unmappedFrom ({localCtorState g a with pend := 0}) 0#64 0#64} = _

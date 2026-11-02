@@ -32,7 +32,7 @@ namespace FlatShuffler.Unit
 
 open FlatShuffler.Sep
 
-def closestA (b : BG) (s : MachineData) : Prop := (rsi s).toNat < b.n.toNat
+def closestA (b : BG) (s : MachineData) : Prop := (rsi s).toNat < b.targetSize.toNat
 
 -- `cmpb $1, %dl`: the `CopyLocation` is `InWildcardSlot`.
 abbrev closestW (s : MachineData) : Bool := (rdx s).setWidth 8 == 1#8
@@ -51,7 +51,7 @@ structure CI (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64)
     (t : MachineData) : Prop where
   kb : Kb (BView B b ∗ F) s ra (fr s) 32#64 t
   rdi : t.regs.rdi.toBitVec = B
-  rsi : t.regs.rsi.toBitVec = b.m
+  rsi : t.regs.rsi.toBitVec = b.sourceSize
   r10 : t.regs.r10.toBitVec = s.regs.rsi.toBitVec
   rbx : t.regs.rbx.toBitVec = b.tgt
   r9 : t.regs.r9.toBitVec = b.src
@@ -60,7 +60,7 @@ structure CI (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64)
   bpl : t.regs.rbp.toBitVec.setWidth 8 = BitVec.ofNat 8 (closestW s).toNat
   r12 : t.regs.r12 = s.regs.r12
   r13 : t.regs.r13 = s.regs.r13
-  lt : t.regs.rax.toBitVec.toNat < b.m.toNat
+  lt : t.regs.rax.toBitVec.toNat < b.sourceSize.toNat
 
 -- Position `rax` holds a copy of the target slot that `map` can take.
 def Cand (b : BG) (s t : MachineData) : Prop :=
@@ -77,10 +77,10 @@ abbrev Rest (b : BG) (s t : MachineData) (i : Word) : Prop :=
 section
 variable {fb : Flat.Builder} {M : Flat.Mapping} {p inW : Bool} {t i best : Word}
 
-theorem from_ge (h : ¬ i < fb.m) : Flat.closestFrom fb M t inW i best = best := by
+theorem from_ge (h : ¬ i < fb.sourceSize) : Flat.closestFrom fb M t inW i best = best := by
   rw [Flat.closestFrom, dite_eq_right h]
 
-theorem from_lt (h : i < fb.m) : Flat.closestFrom fb M t inW i best
+theorem from_lt (h : i < fb.sourceSize) : Flat.closestFrom fb M t inW i best
     = Flat.closestFrom fb M t inW (i + 1)
       (if Flat.get fb.source i = Flat.get fb.target t && Flat.mappable fb M i
           && Flat.inWildcardSlot fb i == inW then
@@ -89,14 +89,14 @@ theorem from_lt (h : i < fb.m) : Flat.closestFrom fb M t inW i best
   rw [Flat.closestFrom, dite_eq_left h]
 
 -- Position `i` is not a candidate: the best position does not change.
-theorem from_skip (h : i < fb.m)
+theorem from_skip (h : i < fb.sourceSize)
     (hc : (Flat.get fb.source i = Flat.get fb.target t && Flat.mappable fb M i
       && Flat.inWildcardSlot fb i == inW) = false) :
     Flat.closestFrom fb M t inW i best = Flat.closestFrom fb M t inW (i + 1) best := by
   rw [from_lt h, hc]; rfl
 
 -- Position `i` is a candidate.
-theorem from_take (h : i < fb.m) (hs : Flat.get fb.source i = Flat.get fb.target t)
+theorem from_take (h : i < fb.sourceSize) (hs : Flat.get fb.source i = Flat.get fb.target t)
     (hm : Flat.mappable fb M i = true) (hw : (Flat.inWildcardSlot fb i == inW) = true) :
     Flat.closestFrom fb M t inW i best = Flat.closestFrom fb M t inW (i + 1)
       (if best = Flat.NONE || Flat.absDiff i t ≤ Flat.absDiff best t then i else best) := by
@@ -177,16 +177,16 @@ theorem slot_eq {a y : Word} {X Y : StackSlot} (h8 : StackSlot.ofWord a = X)
 section
 variable {fb : Flat.Builder} {M : Flat.Mapping} {inW : Bool} {t i best : Word}
 
-theorem skip_slot (h : i < fb.m) (hs : Flat.get fb.target t ≠ Flat.get fb.source i) :
+theorem skip_slot (h : i < fb.sourceSize) (hs : Flat.get fb.target t ≠ Flat.get fb.source i) :
     Flat.closestFrom fb M t inW i best = Flat.closestFrom fb M t inW (i + 1) best :=
   from_skip h (by simp [Ne.symm hs])
 
-theorem skip_drop (h : i < fb.m) (hd : (!(Flat.get fb.dropped i == 0)) = true) :
+theorem skip_drop (h : i < fb.sourceSize) (hd : (!(Flat.get fb.dropped i == 0)) = true) :
     Flat.closestFrom fb M t inW i best = Flat.closestFrom fb M t inW (i + 1) best := by
   rw [Bool.not_eq_true'] at hd
   exact from_skip h (by simp only [Flat.mappable, hd, Bool.false_and, Bool.and_false])
 
-theorem skip_dest (h : i < fb.m) (hd : (!(Flat.get M.dest i == Flat.NONE)) = true) :
+theorem skip_dest (h : i < fb.sourceSize) (hd : (!(Flat.get M.dest i == Flat.NONE)) = true) :
     Flat.closestFrom fb M t inW i best = Flat.closestFrom fb M t inW (i + 1) best := by
   rw [Bool.not_eq_true'] at hd
   exact from_skip h (by simp only [Flat.mappable, hd, Bool.false_and, Bool.and_false])
@@ -196,11 +196,11 @@ theorem mappable_of (hd : (!(Flat.get fb.dropped i == 0)) = false)
   rw [Bool.not_eq_false'] at hd hm
   simp only [Flat.mappable, hd, hm, Bool.and_self]
 
-theorem inWS_ge (h : fb.n.toNat ≤ i.toNat) : Flat.inWildcardSlot fb i = false := by
+theorem inWS_ge (h : fb.targetSize.toNat ≤ i.toNat) : Flat.inWildcardSlot fb i = false := by
   simp [Flat.inWildcardSlot, BitVec.lt_def, Nat.not_lt.2 h]
 
 -- `cmpb $1, 4(%rbx,%rax,8)`: the kind of target slot `i` is `Junk`.
-theorem kind_flag {x : BitVec 8} (hn : i.toNat < fb.n.toNat)
+theorem kind_flag {x : BitVec 8} (hn : i.toNat < fb.targetSize.toNat)
     (hk : x = (Flat.get fb.target i).kind) :
     (x - 1#8 == BitVec.zero 8) = Flat.inWildcardSlot fb i := by
   have e : (x - 1#8 == BitVec.zero 8) = (x == Junk) := by
@@ -211,12 +211,12 @@ theorem kind_flag {x : BitVec 8} (hn : i.toNat < fb.n.toNat)
   simp [Flat.inWildcardSlot, Flat.isWildcardTarget, isJunk, BitVec.lt_def, hn]
 
 -- `movl $0, %edx` and `jnb`.
-theorem rdx_ge (h : fb.n.toNat ≤ i.toNat) :
+theorem rdx_ge (h : fb.targetSize.toNat ≤ i.toNat) :
     BitVec.setWidth 8 (0#64) = BitVec.ofNat 8 (Flat.inWildcardSlot fb i).toNat := by
   rw [inWS_ge h]; rfl
 
 -- `movl $0, %edx` and `sete %dl`.
-theorem rdx_kind {x : BitVec 8} (hn : i.toNat < fb.n.toNat) (hk : x = (Flat.get fb.target i).kind) :
+theorem rdx_kind {x : BitVec 8} (hn : i.toNat < fb.targetSize.toNat) (hk : x = (Flat.get fb.target i).kind) :
     BitVec.setWidth 8 ((0#64).replaceLow (BitVec.ofNat 8 (x - 1#8 == BitVec.zero 8).toNat))
       = BitVec.ofNat 8 (Flat.inWildcardSlot fb i).toNat := by
   rw [IsSpilled.setWidth_replaceLow, kind_flag hn hk]
@@ -328,11 +328,11 @@ def Inv (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64) (fr₀
 -- The variant. A turn of the loop decreases `m - rax`.
 def V (b : BG) (l : Label) (t : MachineData) : Nat :=
   if l = Names.closestCopy then 2 ^ 70
-  else if l = ".LB.MappingBuilder.closestCopy.2" then 8 * (b.m.toNat - (rax t).toNat) + 7
-  else if l = ".LB.MappingBuilder.closestCopy.0" then 8 * (b.m.toNat - (rax t).toNat) + 6
-  else if l = ".LB.MappingBuilder.closestCopy.3" then 8 * (b.m.toNat - (rax t).toNat) + 5
-  else if l = ".LB.MappingBuilder.closestCopy.4" then 8 * (b.m.toNat - (rax t).toNat) + 4
-  else if l = ".LB.MappingBuilder.closestCopy.1" then 8 * (b.m.toNat - (rax t).toNat) + 3
+  else if l = ".LB.MappingBuilder.closestCopy.2" then 8 * (b.sourceSize.toNat - (rax t).toNat) + 7
+  else if l = ".LB.MappingBuilder.closestCopy.0" then 8 * (b.sourceSize.toNat - (rax t).toNat) + 6
+  else if l = ".LB.MappingBuilder.closestCopy.3" then 8 * (b.sourceSize.toNat - (rax t).toNat) + 5
+  else if l = ".LB.MappingBuilder.closestCopy.4" then 8 * (b.sourceSize.toNat - (rax t).toNat) + 4
+  else if l = ".LB.MappingBuilder.closestCopy.1" then 8 * (b.sourceSize.toNat - (rax t).toNat) + 3
   else 0
 
 -- The exception continuation of the body triple.
@@ -399,7 +399,7 @@ theorem b_fn (hpre : VPre BView BG.Ok B b F closestA 4 s) (hfr : fr₀.length = 
     simpa [MachineData.pushRa] using hpre.rdi
   have hm0 := hk0.vmem
   have hrsi : (s.pushRa ra).regs.rsi = s.regs.rsi := rfl
-  have hlt : s.regs.rsi.toBitVec.toNat < b.n.toNat := hpre.args
+  have hlt : s.regs.rsi.toBitVec.toNat < b.targetSize.toNat := hpre.args
   have hq : (s.pushRa ra).regs.rsp.toBitVec = rsp s - 8#64 := by
     rw [← Reg64s.get64_rsp, hk0.sp64]
   have hsp4 : (s.pushRa ra).regs.rsp.toBitVec - 8#64 - 8#64 - 8#64 - 8#64
@@ -414,12 +414,12 @@ theorem b_fn (hpre : VPre BView BG.Ok B b F closestA 4 s) (hfr : fr₀.length = 
   obtain ⟨p1, p2, p3, p4, -⟩ := hpo
   have hb4 := hpm
   rw [sep_lc] at hb4
-  have h_m := BView.rd_m hm0
+  have h_m := BView.rd_sourceSize hm0
   have h_tgt := BView.rd_tgt hb4
   have h_src := BView.rd_src hb4
   have h_r8 := BView.rd_tw hb4 hok hlt
   unfold rd at h_m h_tgt h_src h_r8
-  have k_m := BView.isSome_m hm0
+  have k_m := BView.isSome_sourceSize hm0
   have k_tgt := BView.isSome_tgt hb4
   have k_src := BView.isSome_src hb4
   have k_tw := BView.isSome_tw hb4 hok hlt
@@ -444,7 +444,7 @@ theorem b_fn (hpre : VPre BView BG.Ok B b F closestA 4 s) (hfr : fr₀.length = 
     · exact (hk0.next rfl rfl rfl rfl rfl rfl rfl rfl).stack
     · cc_inv
       exact ⟨hk0.next rfl rfl rfl rfl rfl rfl rfl rfl,
-        from_ge (by show ¬ (0 : Word) < b.m; rw [h0]; decide)⟩
+        from_ge (by show ¬ (0 : Word) < b.sourceSize; rw [h0]; decide)⟩
     · simp [V, Names.closestCopy]
   | goto ".LB.MappingBuilder.closestCopy.2" =>
     have h0 := zf_false (by with_reducible assumption)
@@ -456,7 +456,7 @@ theorem b_fn (hpre : VPre BView BG.Ok B b F closestA 4 s) (hfr : fr₀.length = 
         Nat.pos_of_ne_zero fun h => h0 (BitVec.eq_of_toNat_eq h)⟩, rfl⟩
       show BitVec.setWidth 8 (BitVec.replaceLow _ _) = _
       rw [IsSpilled.setWidth_replaceLow, cmp1_byte]; rfl
-    · left; have := b.m.isLt; simp [V, Names.closestCopy]; omega
+    · left; have := b.sourceSize.isLt; simp [V, Names.closestCopy]; omega
 
 theorem b_0 : closestCopyAsm.ForallBlocks fun blk =>
     blk.label = .label ".LB.MappingBuilder.closestCopy.0" → Obl B b F s ra fr₀ blk := by
@@ -465,7 +465,7 @@ theorem b_0 : closestCopyAsm.ForallBlocks fun blk =>
   cc_inv at ht
   obtain ⟨hci, hcand, hdx, hrest⟩ := ht
   have hw := wild_flag hci.bpl hdx
-  have hlt : t.regs.rax.toBitVec < b.fl.m := BitVec.lt_def.2 hci.lt
+  have hlt : t.regs.rax.toBitVec < b.fl.sourceSize := BitVec.lt_def.2 hci.lt
   kvcgen64
   all_goals try symexec_norm
   all_goals try simp only [hw] at *
@@ -516,7 +516,7 @@ theorem b_1 : closestCopyAsm.ForallBlocks fun blk =>
           hci.bpl, hci.r12, hci.r13, ?_⟩, ?_⟩
        · show 1#64 + t.regs.rcx.toBitVec = 1#64 + t.regs.rax.toBitVec - s.regs.rsi.toBitVec
          rw [hci.rcx]; bv_omega
-       · show (1#64 + t.regs.rax.toBitVec).toNat < b.m.toNat
+       · show (1#64 + t.regs.rax.toBitVec).toNat < b.sourceSize.toNat
          bv_omega
        · rw [BitVec.add_comm]; exact hrest)
 
@@ -532,12 +532,12 @@ theorem b_2 (hok : b.Ok) : closestCopyAsm.ForallBlocks fun blk =>
   have h9 := hci.r9
   have hbx := hci.rbx
   have hlt := hci.lt
-  have hlt' : t.regs.rax.toBitVec < b.fl.m := BitVec.lt_def.2 hlt
-  have hmax : t.regs.rax.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hlt hok.m
+  have hlt' : t.regs.rax.toBitVec < b.fl.sourceSize := BitVec.lt_def.2 hlt
+  have hmax : t.regs.rax.toBitVec.toNat < maxStackSize := Nat.lt_of_lt_of_le hlt hok.sourceSizeFitsBuffer
   obtain ⟨_, hM⟩ := BView.mapM hb
   have h_drp := BView.rd_drp hb
   have h_mp := BView.rd_mp hb
-  have h_n := BView.rd_n hb
+  have h_n := BView.rd_targetSize hb
   have h_db := BView.rdb_drp hb hok hlt
   have h_dst := MapM.rd_dest hM hmax
   have h_sw := BView.rd_sw hb hok hlt
@@ -548,9 +548,9 @@ theorem b_2 (hok : b.Ok) : closestCopyAsm.ForallBlocks fun blk =>
   have k_db := BView.isSome_drp_byte hb hok hlt
   have k_mp := BView.isSome_mp hb
   have k_dst := MapM.isSome_dest hM hmax
-  have k_n := BView.isSome_n hb
-  have k_kind := fun (i : Word) (hi : i.toNat < b.n.toNat) => BView.isSome_kind hb hok hi
-  have k_rk := fun (i : Word) (hi : i.toNat < b.n.toNat) => BView.rdb_kind hb hok hi
+  have k_n := BView.isSome_targetSize hb
+  have k_kind := fun (i : Word) (hi : i.toNat < b.targetSize.toNat) => BView.isSome_kind hb hok hi
+  have k_rk := fun (i : Word) (hi : i.toNat < b.targetSize.toNat) => BView.rdb_kind hb hok hi
   clear hb hM
   kvcgen64
   all_goals try symexec_norm
@@ -588,8 +588,8 @@ theorem b_2 (hok : b.Ok) : closestCopyAsm.ForallBlocks fun blk =>
       · with_reducible assumption
       · with_reducible assumption
       · first
-        | (refine rdx_ge (nb_true (c := b.n) ?_); with_reducible assumption)
-        | (refine rdx_kind (nb_false (c := b.n) ?_) (k_rk _ (nb_false (c := b.n) ?_)) <;>
+        | (refine rdx_ge (nb_true (c := b.targetSize) ?_); with_reducible assumption)
+        | (refine rdx_kind (nb_false (c := b.targetSize) ?_) (k_rk _ (nb_false (c := b.targetSize) ?_)) <;>
             with_reducible assumption)
     · left; simp [V, Names.closestCopy]
 
@@ -599,7 +599,7 @@ theorem b_3 : closestCopyAsm.ForallBlocks fun blk =>
   intro t ht
   cc_inv at ht
   obtain ⟨hci, hcand, hw, hrest⟩ := ht
-  have hlt' : t.regs.rax.toBitVec < b.fl.m := BitVec.lt_def.2 hci.lt
+  have hlt' : t.regs.rax.toBitVec < b.fl.sourceSize := BitVec.lt_def.2 hci.lt
   have hcx := hci.rcx
   have h10 := hci.r10
   kvcgen64
@@ -634,7 +634,7 @@ theorem b_4 : closestCopyAsm.ForallBlocks fun blk =>
   intro t ht
   cc_inv at ht
   obtain ⟨hci, hcand, hw, hrest, hn⟩ := ht
-  have hlt' : t.regs.rax.toBitVec < b.fl.m := BitVec.lt_def.2 hci.lt
+  have hlt' : t.regs.rax.toBitVec < b.fl.sourceSize := BitVec.lt_def.2 hci.lt
   kvcgen64
   all_goals try symexec_norm
   vc_by_shape

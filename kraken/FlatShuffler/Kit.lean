@@ -229,7 +229,7 @@ theorem sep_of_disjoint {a b : Addr} {n k : Nat} (h : Mem.Blocks.Disjoint [(a, n
 -- The struct is the union of four blocks of `writable` and `readable`.
 theorem inside_struct {x : Addr} (h : Mem.Blocks.Inside x 1 [(S, 8 * WORDS)]) :
     Mem.Blocks.Inside x 1 (writable m S ++ readable m S) := by
-  simp only [Mem.Blocks.Inside, or_false, WORDS, BLK, PEND, POS, DEST, MAX_N] at h
+  simp only [Mem.Blocks.Inside, or_false, WORDS, BLK, PEND, POS, DEST, maxStackSize] at h
   rw [inside_append]
   by_cases h1 : (x - S).toNat < 32
   · exact Or.inr (Or.inl (by omega))
@@ -237,7 +237,7 @@ theorem inside_struct {x : Addr} (h : Mem.Blocks.Inside x 1 [(S, 8 * WORDS)]) :
   · exact Or.inl (Or.inl (by simp only [wordAt]; bv_omega))
   by_cases h3 : (x - S).toNat < 48
   · exact Or.inr (Or.inr (Or.inl (by simp only [wordAt]; bv_omega)))
-  · exact Or.inl (Or.inr (Or.inl (by simp only [wordAt, WORDS, BLK, PEND, POS, DEST, MAX_N]; bv_omega)))
+  · exact Or.inl (Or.inr (Or.inl (by simp only [wordAt, WORDS, BLK, PEND, POS, DEST, maxStackSize]; bv_omega)))
 
 -- A change outside the struct words 0 to 3 and 5 keeps `writable`.
 theorem writable_congr {m' : Mem 64} {l : List (Addr × Nat)} (h : Mem.UnchangedOutside l m m')
@@ -253,7 +253,7 @@ theorem inside_writable {a : Addr} {n : Nat}
       ∨ (a - dataOf m S).toNat + n ≤ 8 * nOf m S
       ∨ (a - opsOf m S).toNat + n ≤ 72 * nOf m S) :
     Mem.Blocks.Inside a n (writable m S) := by
-  simp only [writable, Mem.Blocks.Inside, wordAt, BLK, PEND, POS, DEST, WORDS, MAX_N, or_false] at h ⊢
+  simp only [writable, Mem.Blocks.Inside, wordAt, BLK, PEND, POS, DEST, WORDS, maxStackSize, or_false] at h ⊢
   bv_omega
 
 -- A load from the struct succeeds.

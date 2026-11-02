@@ -36,7 +36,7 @@ open ProofKit
 namespace FlatShuffler.Flat
 
 section
-variable {planned : Vector Word MAX_N} {st : St} {pos : Word} {sc : Scan}
+variable {planned : Vector Word maxStackSize} {st : St} {pos : Word} {sc : Scan}
 
 theorem scan_lt (h : pos < st.size) (hd : get st.dest pos ≠ NONE) (ht : pos < st.targetSize) :
     scan planned st pos sc
@@ -59,16 +59,16 @@ theorem scan_ge (h : ¬pos < st.size) : scan planned st pos sc = some sc := by
 
 end
 
-theorem fill_lt {sc : Scan} {i : Word} {p : Vector Word MAX_N} (h : i < sc.parkedCount) :
+theorem fill_lt {sc : Scan} {i : Word} {p : Vector Word maxStackSize} (h : i < sc.parkedCount) :
     fill sc i p = fill sc (i + 1) (put p (get sc.parked i) (get sc.holes i)) := by
   rw [fill, dite_eq_left h]
 
-theorem fill_ge {sc : Scan} {i : Word} {p : Vector Word MAX_N} (h : ¬i < sc.parkedCount) :
+theorem fill_ge {sc : Scan} {i : Word} {p : Vector Word maxStackSize} (h : ¬i < sc.parkedCount) :
     fill sc i p = p := by
   rw [fill, dite_eq_right h]
 
 section
-variable {planned : Vector Word MAX_N} {l : Locals} {st : St}
+variable {planned : Vector Word maxStackSize} {l : Locals} {st : St}
 
 theorem lowest_none (h : scan planned st 0 (Scan.init l) = none) :
     permuteAtLowestHeight planned l st = (.assertionFailed, st) := by
@@ -98,7 +98,7 @@ namespace Lowest
 def Lc.scan (L : Lc) (hc pc : Word) : Flat.Scan := ⟨L.perm, L.holes, L.parked, hc, pc⟩
 
 section
-variable {planned : Vector Word MAX_N} {st : Flat.St} {pos d hc pc : Word} {L : Lc}
+variable {planned : Vector Word maxStackSize} {st : Flat.St} {pos d hc pc : Word} {L : Lc}
 
 -- `.2`: a parked slot and a hole: `permutation[pos] = pos`.
 theorem step_ph (hp : ¬d < st.size) (hh : Flat.get planned pos = Flat.NONE) :
@@ -134,7 +134,7 @@ end
 /-! ## The invariants -/
 
 section
-variable (S PM : Addr) (planned : Vector Word MAX_N) (g : G) (F0 : MProp 64) (s : MachineData)
+variable (S PM : Addr) (planned : Vector Word maxStackSize) (g : G) (F0 : MProp 64) (s : MachineData)
   (ra : Int64)
 
 -- A body state with the locals `L`; `rdi` is the struct.
@@ -146,7 +146,7 @@ def Bs (L : Lc) (t : MachineData) : Prop :=
 def Sc (L : Lc) (p : Word) (t : MachineData) : Prop :=
   t.regs.rcx.toBitVec = g.h.len ∧ t.regs.rax.toBitVec < g.h.len
     ∧ t.regs.r8.toBitVec ≤ p ∧ t.regs.rsi.toBitVec ≤ p
-    ∧ ∀ j (hj : j < MAX_N), j < t.regs.rsi.toBitVec.toNat → L.parked[j] < g.h.len
+    ∧ ∀ j (hj : j < maxStackSize), j < t.regs.rsi.toBitVec.toNat → L.parked[j] < g.h.len
 
 -- The result of the first loop for the locals `l0` of the entry.
 abbrev scan0 (l0 : Flat.Locals) : Option Flat.Scan := Flat.scan planned (flat g) 0 (Flat.Scan.init l0)
@@ -189,7 +189,7 @@ def I3 (t : MachineData) : Prop :=
     ∧ sc.parkedCount = sc.holeCount ∧ L.parked = sc.parked ∧ L.holes = sc.holes
     ∧ t.regs.rax.toBitVec.toNat = 8 * k ∧ k < sc.parkedCount.toNat
     ∧ t.regs.rsi.toBitVec.toNat = 8 * sc.parkedCount.toNat ∧ sc.parkedCount.toNat ≤ 1024
-    ∧ (∀ j (hj : j < MAX_N), j < sc.parkedCount.toNat → sc.parked[j] < g.h.len)
+    ∧ (∀ j (hj : j < maxStackSize), j < sc.parkedCount.toNat → sc.parked[j] < g.h.len)
     ∧ Flat.fill sc (BitVec.ofNat 64 k) L.perm = Flat.fill sc 0 sc.permutation
 
 -- `.5`: the array `permutation` is the argument of `permute`.
@@ -252,7 +252,7 @@ macro "lowest_dec" : tactic => `(tactic| (
 /-! ## The obligation of a block -/
 
 -- The exception continuation of the body triple.
-def E [Host] (S PM : Addr) (planned : Vector Word MAX_N) (g : G) (F0 : MProp 64) (s : MachineData)
+def E [Host] (S PM : Addr) (planned : Vector Word maxStackSize) (g : G) (F0 : MProp 64) (s : MachineData)
     (ra : Int64) : Int64 → MachineData → Prop :=
   fun a t => (a = ra ∧ Sep.Post S (Planned S PM planned ∗ F0) lowestD
     (fun g' t => lowestQ planned g g' s t) s t ∧ Sep.mod.Agree s t) ∨
@@ -261,7 +261,7 @@ def E [Host] (S PM : Addr) (planned : Vector Word MAX_N) (g : G) (F0 : MProp 64)
         (fun g' t => lowestX planned g g' s t) s t)
 
 theorem exit_intercept [Host]
-    {S PM : Addr} {planned : Vector Word MAX_N} {g : G} {F0 : MProp 64}
+    {S PM : Addr} {planned : Vector Word maxStackSize} {g : G} {F0 : MProp 64}
     {s t : MachineData} {ra exitRa : Int64} {L : Lc} {lo : List Word} {w : Word}
     {I : CfgLabel → Nat → Unit → MachineData → Prop}
     (hout : ∀ l ∈ Program.labels permuteAtLowestHeightAsm, label l ≠ label "exit")
@@ -280,7 +280,7 @@ theorem exit_intercept [Host]
     exact False.elim (hout l hl ha)
 
 -- The obligation of `Program.WP.cfg` for the block `blk`.
-def Obl [Host] [FunDecls] (S PM : Addr) (planned : Vector Word MAX_N) (g : G) (F0 : MProp 64)
+def Obl [Host] [FunDecls] (S PM : Addr) (planned : Vector Word maxStackSize) (g : G) (F0 : MProp 64)
     (s : MachineData) (ra : Int64) (blk : Program.Block) : Prop :=
   ∀ t, LInv S PM planned g F0 s ra blk.label t →
     let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=

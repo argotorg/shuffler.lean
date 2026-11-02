@@ -20,7 +20,7 @@ namespace FlatShuffler.Flat
 def optOf (w : Word) : Option Nat := if w = NONE then none else some w.toNat
 
 -- The list mapping of the arrays `dest` and `pos`, for `m` slots and `n` target offsets.
-def absMapping (dest pos : Vector Word MAX_N) (m n : Word) : Map.Mapping :=
+def absMapping (dest pos : Vector Word maxStackSize) (m n : Word) : Map.Mapping :=
   ⟨(dest.toList.take m.toNat).map optOf, (pos.toList.take n.toNat).map optOf⟩
 
 -- The list state of the flat state `st`, with the planned mapping `planned`.
@@ -38,12 +38,12 @@ def absRes (planned : Map.Mapping) : Status × St → M Map.State
 
 /-! ## Lemmas on the arrays -/
 
-theorem toNat_ofNat_lt {p : Nat} (h : p < MAX_N) : (BitVec.ofNat 64 p).toNat = p := by
+theorem toNat_ofNat_lt {p : Nat} (h : p < maxStackSize) : (BitVec.ofNat 64 p).toNat = p := by
   rw [BitVec.toNat_ofNat]
   exact Nat.mod_eq_of_lt (Nat.lt_of_lt_of_le h (by decide))
 
--- A word below `MAX_N` is not `NONE`.
-theorem ne_none {w : Word} (h : w.toNat < MAX_N) : w ≠ NONE := by
+-- A word below `maxStackSize` is not `NONE`.
+theorem ne_none {w : Word} (h : w.toNat < maxStackSize) : w ≠ NONE := by
   rintro rfl
   exact absurd h (by decide)
 
@@ -54,32 +54,32 @@ theorem optOf_some {w : Word} (h : w ≠ NONE) : optOf w = some w.toNat := by si
 theorem optOf_eq_none {w : Word} : optOf w = none ↔ w = NONE := by
   unfold optOf; split <;> simp_all
 
-theorem get_ofNat {α : Type} [Inhabited α] (v : Vector α MAX_N) {p : Nat} (h : p < MAX_N) :
+theorem get_ofNat {α : Type} [Inhabited α] (v : Vector α maxStackSize) {p : Nat} (h : p < maxStackSize) :
     get v (BitVec.ofNat 64 p) = v[p] := by
   simp [get, toNat_ofNat_lt h, h]
 
-theorem get_toNat {α : Type} [Inhabited α] (v : Vector α MAX_N) {w : Word} (h : w.toNat < MAX_N) :
+theorem get_toNat {α : Type} [Inhabited α] (v : Vector α maxStackSize) {w : Word} (h : w.toNat < maxStackSize) :
     get v w = v[w.toNat] := by
   simp [get, h]
 
 -- The list of a `put`.
-theorem abs_put (v : Vector Word MAX_N) (i x : Word) (n : Nat) :
+theorem abs_put (v : Vector Word maxStackSize) (i x : Word) (n : Nat) :
     ((put v i x).toList.take n).map optOf = ((v.toList.take n).map optOf).set i.toNat (optOf x) := by
   simp only [put, Vector.toList_setIfInBounds, List.take_set, List.map_set]
 
-theorem getElem_put {α : Type} (v : Vector α MAX_N) {p : Nat} (hp : p < MAX_N) (x : α) {i : Nat}
-    (hi : i < MAX_N) : (put v (BitVec.ofNat 64 p) x)[i] = if p = i then x else v[i] := by
+theorem getElem_put {α : Type} (v : Vector α maxStackSize) {p : Nat} (hp : p < maxStackSize) (x : α) {i : Nat}
+    (hi : i < maxStackSize) : (put v (BitVec.ofNat 64 p) x)[i] = if p = i then x else v[i] := by
   simp only [put, Vector.getElem_setIfInBounds hi, toNat_ofNat_lt hp]
 
 -- `put` at the offsets `p < j` with `c p`.
-theorem fold_put_get {α : Type} (c : Nat → Prop) [DecidablePred c] (f : Nat → α) (v : Vector α MAX_N) {j : Nat}
-    (hj : j ≤ MAX_N) {i : Nat} (hi : i < MAX_N) :
+theorem fold_put_get {α : Type} (c : Nat → Prop) [DecidablePred c] (f : Nat → α) (v : Vector α maxStackSize) {j : Nat}
+    (hj : j ≤ maxStackSize) {i : Nat} (hi : i < maxStackSize) :
     ((List.range j).foldl (fun v p => if c p then put v (BitVec.ofNat 64 p) (f p) else v) v)[i]
       = if i < j ∧ c i then f i else v[i] := by
   induction j with
   | zero => simp
   | succ j ih =>
-    have hjN : j < MAX_N := by omega
+    have hjN : j < maxStackSize := by omega
     rw [List.range_succ, List.foldl_append, List.foldl_cons, List.foldl_nil]
     by_cases hc : c j
     · rw [ite_eq_left hc, getElem_put _ hjN _ hi, ih (by omega)]
@@ -92,15 +92,15 @@ theorem fold_put_get {α : Type} (c : Nat → Prop) [DecidablePred c] (f : Nat �
       · subst hij; simp [hc]
       · simp only [show i < j + 1 ↔ i < j by omega]
 
-theorem fold_put_get' {α : Type} (f : Nat → α) (v : Vector α MAX_N) {j : Nat}
-    (hj : j ≤ MAX_N) {i : Nat} (hi : i < MAX_N) :
+theorem fold_put_get' {α : Type} (f : Nat → α) (v : Vector α maxStackSize) {j : Nat}
+    (hj : j ≤ maxStackSize) {i : Nat} (hi : i < maxStackSize) :
     ((List.range j).foldl (fun v p => put v (BitVec.ofNat 64 p) (f p)) v)[i]
       = if i < j then f i else v[i] := by
   have := fold_put_get (fun _ => True) f v hj hi
   simpa using this
 
 -- Two lists of `optOf` are equal if the arrays agree below `k`.
-theorem abs_ext (v v' : Vector Word MAX_N) {k : Nat} (hk : k ≤ MAX_N)
+theorem abs_ext (v v' : Vector Word maxStackSize) {k : Nat} (hk : k ≤ maxStackSize)
     (h : ∀ i (hi : i < k), v[i]'(by omega) = v'[i]'(by omega)) :
     (v.toList.take k).map optOf = (v'.toList.take k).map optOf := by
   apply List.ext_getElem (by simp)
@@ -110,13 +110,13 @@ theorem abs_ext (v v' : Vector Word MAX_N) {k : Nat} (hk : k ≤ MAX_N)
   rw [h i (by omega)]
 
 -- The number of `NONE` below `k`.
-theorem countP_none (v : Vector Word MAX_N) {k : Nat} (hk : k ≤ MAX_N) :
+theorem countP_none (v : Vector Word maxStackSize) {k : Nat} (hk : k ≤ maxStackSize) :
     ((List.range k).map (BitVec.ofNat 64)).countP (fun d => get v d = NONE)
       = ((v.toList.take k).map optOf).count none := by
   induction k with
   | zero => simp
   | succ k ih =>
-    have hkN : k < MAX_N := by omega
+    have hkN : k < maxStackSize := by omega
     rw [List.range_succ, List.map_append, List.countP_append, ih (by omega), List.take_add_one,
       List.map_append, List.count_append]
     by_cases hv : v[k] = NONE <;> simp [get_ofNat v hkN, hkN, hv, optOf_none, optOf_some]
@@ -132,22 +132,22 @@ theorem foldl_rel {α β γ : Type} (R : α → β → Prop) (f : α → γ → 
 
 /-! ## `pop` -/
 
-theorem take_ne_nil {α : Type} (v : Vector α MAX_N) {k : Nat} (h0 : k ≠ 0) : v.toList.take k ≠ [] := by
+theorem take_ne_nil {α : Type} (v : Vector α maxStackSize) {k : Nat} (h0 : k ≠ 0) : v.toList.take k ≠ [] := by
   rw [ne_eq, List.take_eq_nil_iff]
   rintro (h | h)
   · exact h0 h
-  · have := v.length_toList; rw [h] at this; simp [MAX_N] at this
+  · have := v.length_toList; rw [h] at this; simp [maxStackSize] at this
 
-theorem getLast_abs (v : Vector Word MAX_N) {k : Nat} (h0 : k ≠ 0) (h : k ≤ MAX_N) :
+theorem getLast_abs (v : Vector Word maxStackSize) {k : Nat} (h0 : k ≠ 0) (h : k ≤ maxStackSize) :
     ((v.toList.take k).map optOf).getLast? = some (optOf (v[k - 1]'(by omega))) := by
   rw [List.getLast?_map, List.getLast?_take, ite_eq_right h0]
-  simp [show k - 1 < MAX_N by omega]
+  simp [show k - 1 < maxStackSize by omega]
 
-theorem dropLast_take' {α : Type} (v : Vector α MAX_N) {k : Nat} (h : k ≤ MAX_N) :
+theorem dropLast_take' {α : Type} (v : Vector α maxStackSize) {k : Nat} (h : k ≤ maxStackSize) :
     (v.toList.take k).dropLast = v.toList.take (k - 1) :=
   List.dropLast_take (by simpa using h)
 
-theorem dropLast_abs {α β : Type} (f : α → β) (v : Vector α MAX_N) {k : Nat} (h : k ≤ MAX_N) :
+theorem dropLast_abs {α β : Type} (f : α → β) (v : Vector α maxStackSize) {k : Nat} (h : k ≤ maxStackSize) :
     ((v.toList.take k).map f).dropLast = (v.toList.take (k - 1)).map f := by
   rw [← List.map_dropLast, dropLast_take' v h]
 
@@ -166,7 +166,7 @@ theorem pop_some (st : St) (h : st.size ≠ 0) (hd : get st.dest (st.size - 1) �
   dsimp only
   simp only [ne_eq, not_true_eq_false, ite_false, hd, not_false_eq_true, ite_true]
 
-theorem pop_size (st : St) (h : st.size.toNat ≤ MAX_N) : (pop st).2.size.toNat ≤ MAX_N := by
+theorem pop_size (st : St) (h : st.size.toNat ≤ maxStackSize) : (pop st).2.size.toNat ≤ maxStackSize := by
   by_cases h0 : st.size = 0
   · simp [pop, stackPop, h0]
   · have : (st.size - 1).toNat ≤ st.size.toNat := by bv_omega
@@ -174,7 +174,7 @@ theorem pop_size (st : St) (h : st.size.toNat ≤ MAX_N) : (pop st).2.size.toNat
     · rw [pop_none st h0 hn]; exact Nat.le_trans this h
     · rw [pop_some st h0 hn]; exact Nat.le_trans this h
 
-theorem pop_abs (planned : Map.Mapping) (st : St) (h : st.size.toNat ≤ MAX_N) :
+theorem pop_abs (planned : Map.Mapping) (st : St) (h : st.size.toNat ≤ maxStackSize) :
     (absSt planned st).pop = absRes planned (pop st) := by
   by_cases h0 : st.size = 0
   · have hs : (absSt planned st).stack = [] := by simp [absSt, h0]
@@ -198,7 +198,7 @@ theorem pop_abs (planned : Map.Mapping) (st : St) (h : st.size.toNat ≤ MAX_N) 
         dropLast_abs _ _ h, dropLast_take' _ h, abs_put, optOf_none]
 
 theorem popLoop_abs (planned : Map.Mapping) (st : St) (count : Nat)
-    (h : st.size.toNat ≤ MAX_N) :
+    (h : st.size.toNat ≤ maxStackSize) :
     (absSt planned st).pops count = absRes planned (popLoop st count) := by
   induction count generalizing st with
   | zero => rfl
@@ -215,15 +215,15 @@ theorem popLoop_abs (planned : Map.Mapping) (st : St) (count : Nat)
 
 /-! ## `push` and `dup`: `Mapping::bind` of the new top -/
 
-theorem toNat_add_one {w : Word} (h : w.toNat < MAX_N) : (w + 1).toNat = w.toNat + 1 := by
+theorem toNat_add_one {w : Word} (h : w.toNat < maxStackSize) : (w + 1).toNat = w.toNat + 1 := by
   have h' : w.toNat < 1024 := h
   bv_omega
 
 -- `Mapping::bind` of a new top at `sz` for `d`.
-theorem bind_top_abs (dest pos : Vector Word MAX_N) (sz n d : Word) (hs : sz.toNat < MAX_N)
+theorem bind_top_abs (dest pos : Vector Word maxStackSize) (sz n d : Word) (hs : sz.toNat < maxStackSize)
     (hd : d ≠ NONE) :
     absMapping (put dest sz d) (put pos d sz) (sz + 1) n = (absMapping dest pos sz n).push d.toNat := by
-  have hk : sz.toNat ≤ MAX_N := Nat.le_of_lt hs
+  have hk : sz.toNat ≤ maxStackSize := Nat.le_of_lt hs
   unfold absMapping Map.Mapping.push
   dsimp only
   congr 1
@@ -238,7 +238,7 @@ theorem bind_top_abs (dest pos : Vector Word MAX_N) (sz n d : Word) (hs : sz.toN
     simp [hk]
 
 theorem push_abs {st st' : St} {slot : StackSlot} {d : Word} (h : push st slot d = (.done, st'))
-    (hs : st.size.toNat < MAX_N) (hd : d ≠ NONE) :
+    (hs : st.size.toNat < maxStackSize) (hd : d ≠ NONE) :
     absMapping st'.dest st'.pos st'.size st'.targetSize =
       (absMapping st.dest st.pos st.size st.targetSize).push d.toNat := by
   unfold push at h
@@ -250,7 +250,7 @@ theorem push_abs {st st' : St} {slot : StackSlot} {d : Word} (h : push st slot d
     exact bind_top_abs _ _ _ _ _ hs hd
 
 theorem dup_abs {st st' : St} {copy d : Word} (h : dup st copy d = (.done, st'))
-    (hs : st.size.toNat < MAX_N) (hd : d ≠ NONE) :
+    (hs : st.size.toNat < maxStackSize) (hd : d ≠ NONE) :
     absMapping st'.dest st'.pos st'.size st'.targetSize =
       (absMapping st.dest st.pos st.size st.targetSize).push d.toNat := by
   unfold dup at h
@@ -266,7 +266,7 @@ theorem dup_abs {st st' : St} {copy d : Word} (h : dup st copy d = (.done, st'))
 /-! ## The constructors -/
 
 -- `NONE` at the offsets below `k`.
-theorem fill_abs (v : Vector Word MAX_N) {k : Nat} (hk : k ≤ MAX_N) :
+theorem fill_abs (v : Vector Word maxStackSize) {k : Nat} (hk : k ≤ maxStackSize) :
     ((((List.range k).map (BitVec.ofNat 64)).foldl (fun v p => put v p NONE) v).toList.take k).map optOf
       = List.replicate k none := by
   rw [List.foldl_map]
@@ -278,17 +278,17 @@ theorem fill_abs (v : Vector Word MAX_N) {k : Nat} (hk : k ≤ MAX_N) :
   simp [show i < k by omega, optOf_none]
 
 -- A copy of `w` at the offsets below `k`.
-theorem copy_abs (v w : Vector Word MAX_N) {k : Nat} (hk : k ≤ MAX_N) :
+theorem copy_abs (v w : Vector Word maxStackSize) {k : Nat} (hk : k ≤ maxStackSize) :
     ((((List.range k).map (BitVec.ofNat 64)).foldl (fun v p => put v p (get w p)) v).toList.take k).map optOf
       = (w.toList.take k).map optOf := by
   rw [List.foldl_map]
   apply abs_ext _ _ hk
   intro i hi
   rw [fold_put_get' (fun p => get w (BitVec.ofNat 64 p)) v hk (by omega)]
-  simp [hi, get_ofNat w (show i < MAX_N by omega)]
+  simp [hi, get_ofNat w (show i < maxStackSize by omega)]
 
-theorem plan_abs (u : Mapping) (m n : Word) (dests : Vector Word MAX_N)
-    (hm : m.toNat ≤ MAX_N) (hn : n.toNat ≤ MAX_N) :
+theorem plan_abs (u : Mapping) (m n : Word) (dests : Vector Word maxStackSize)
+    (hm : m.toNat ≤ maxStackSize) (hn : n.toNat ≤ maxStackSize) :
     absMapping (plan u m n dests).dest (plan u m n dests).pos m n =
       Map.plan m.toNat n.toNat ((dests.toList.take m.toNat).map optOf) := by
   unfold plan Map.plan
@@ -297,7 +297,7 @@ theorem plan_abs (u : Mapping) (m n : Word) (dests : Vector Word MAX_N)
     _ _ _ ?_ ?_
   · intro M L p hp hR
     rw [List.mem_range] at hp
-    have hpN : p < MAX_N := by omega
+    have hpN : p < maxStackSize := by omega
     have hg : ((dests.toList.take m.toNat).map optOf).getD p none = optOf dests[p] := by
       simp [hp, hpN]
     rw [get_ofNat dests hpN, hg]
@@ -326,13 +326,13 @@ theorem pend_fold (l : List Word) (st : St) :
       bv_omega
     · simp only [h, ite_false, decide_false, Bool.false_eq_true, Nat.add_zero]
 
-theorem countP_none' (v : Vector Word MAX_N) (k : Word) (hk : k.toNat ≤ MAX_N) :
+theorem countP_none' (v : Vector Word maxStackSize) (k : Word) (hk : k.toNat ≤ maxStackSize) :
     (offsets k).countP (fun d => get v d = NONE) = ((v.toList.take k.toNat).map optOf).count none :=
   countP_none v hk
 
-theorem ctorP_abs (data : Vector StackSlot MAX_N) (m : Word) (target : Vector StackSlot MAX_N)
+theorem ctorP_abs (data : Vector StackSlot maxStackSize) (m : Word) (target : Vector StackSlot maxStackSize)
     (n : Word) (planned : Mapping) (spills : BitVec 32 → BitVec 8) (u : Uninit)
-    (hm : m.toNat ≤ MAX_N) (hn : n.toNat ≤ MAX_N) :
+    (hm : m.toNat ≤ maxStackSize) (hn : n.toNat ≤ maxStackSize) :
     absSt (absMapping planned.dest planned.pos m n) (ctorP data m target n planned spills u) =
       Map.State.init (data.toList.take m.toNat) (absMapping planned.dest planned.pos m n) := by
   unfold ctorP
@@ -353,28 +353,28 @@ theorem ctorP_abs (data : Vector StackSlot MAX_N) (m : Word) (target : Vector St
 
 theorem none_toNat : NONE.toNat = 2 ^ 64 - 1 := by decide
 
-theorem none_toNat_ne {i : Nat} (hi : i < MAX_N) : NONE.toNat ≠ i := by
+theorem none_toNat_ne {i : Nat} (hi : i < maxStackSize) : NONE.toNat ≠ i := by
   have : i < 1024 := hi
   rw [none_toNat]; omega
 
-theorem getElem_put_ne {α : Type} (v : Vector α MAX_N) (a : Word) (x : α) {i : Nat}
-    (hi : i < MAX_N) (h : a.toNat ≠ i) : (put v a x)[i] = v[i] := by
+theorem getElem_put_ne {α : Type} (v : Vector α maxStackSize) (a : Word) (x : α) {i : Nat}
+    (hi : i < maxStackSize) (h : a.toNat ≠ i) : (put v a x)[i] = v[i] := by
   simp only [put, Vector.getElem_setIfInBounds hi, h, ite_false]
 
-theorem getElem_put_eq {α : Type} (v : Vector α MAX_N) (a : Word) (x : α) {i : Nat}
-    (hi : i < MAX_N) (h : a.toNat = i) : (put v a x)[i] = x := by
+theorem getElem_put_eq {α : Type} (v : Vector α maxStackSize) (a : Word) (x : α) {i : Nat}
+    (hi : i < maxStackSize) (h : a.toNat = i) : (put v a x)[i] = x := by
   simp only [put, Vector.getElem_setIfInBounds hi, h, ite_true]
 
 -- `put` at `NONE` does not change the array.
-theorem put_none {α : Type} (v : Vector α MAX_N) (x : α) : put v NONE x = v := by
+theorem put_none {α : Type} (v : Vector α maxStackSize) (x : α) : put v NONE x = v := by
   apply Vector.ext
   intro i hi
   exact getElem_put_ne v NONE x hi (none_toNat_ne hi)
 
 -- Two loops of the same `put`s keep the agreement at the offsets `i` with `S i`.
 theorem fold_agree {γ : Type} (S : Nat → Prop) (l : List γ) (a b : γ → Word)
-    (v w : Vector Word MAX_N) (h : ∀ i (hi : i < MAX_N), S i → v[i] = w[i]) :
-    ∀ i (hi : i < MAX_N), S i →
+    (v w : Vector Word maxStackSize) (h : ∀ i (hi : i < maxStackSize), S i → v[i] = w[i]) :
+    ∀ i (hi : i < maxStackSize), S i →
       (l.foldl (fun v x => put v (a x) (b x)) v)[i] = (l.foldl (fun v x => put v (a x) (b x)) w)[i] := by
   induction l generalizing v w with
   | nil => exact h
@@ -386,8 +386,8 @@ theorem fold_agree {γ : Type} (S : Nat → Prop) (l : List γ) (a b : γ → Wo
     · rw [getElem_put_ne _ _ _ hi e, getElem_put_ne _ _ _ hi e, h i hi hs]
 
 -- A loop of `put`s at offsets other than `i` does not change `v[i]`.
-theorem fold_other {γ : Type} (l : List γ) (a b : γ → Word) (v : Vector Word MAX_N) {i : Nat}
-    (hi : i < MAX_N) (h : ∀ x ∈ l, (a x).toNat ≠ i) :
+theorem fold_other {γ : Type} (l : List γ) (a b : γ → Word) (v : Vector Word maxStackSize) {i : Nat}
+    (hi : i < maxStackSize) (h : ∀ x ∈ l, (a x).toNat ≠ i) :
     (l.foldl (fun v x => put v (a x) (b x)) v)[i] = v[i] := by
   induction l generalizing v with
   | nil => rfl
@@ -395,14 +395,14 @@ theorem fold_other {γ : Type} (l : List γ) (a b : γ → Word) (v : Vector Wor
     rw [List.foldl_cons, ih _ (fun y hy => h y (List.mem_cons_of_mem x hy)),
       getElem_put_ne _ _ _ hi (h x (by simp))]
 
-theorem fill_get (v : Vector Word MAX_N) (k : Word) (hk : k.toNat ≤ MAX_N) {i : Nat}
-    (hi : i < MAX_N) :
+theorem fill_get (v : Vector Word maxStackSize) (k : Word) (hk : k.toNat ≤ maxStackSize) {i : Nat}
+    (hi : i < maxStackSize) :
     ((offsets k).foldl (fun v p => put v p NONE) v)[i] = if i < k.toNat then NONE else v[i] := by
   rw [offsets, List.foldl_map]
   exact fold_put_get' (fun _ => NONE) v hk hi
 
-theorem copy_get (v w : Vector Word MAX_N) (k : Word) (hk : k.toNat ≤ MAX_N) {i : Nat}
-    (hi : i < MAX_N) :
+theorem copy_get (v w : Vector Word maxStackSize) (k : Word) (hk : k.toNat ≤ maxStackSize) {i : Nat}
+    (hi : i < maxStackSize) :
     ((offsets k).foldl (fun v p => put v p (get w p)) v)[i] = if i < k.toNat then w[i] else v[i] := by
   rw [offsets, List.foldl_map, fold_put_get' (fun p => get w (BitVec.ofNat 64 p)) v hk hi]
   by_cases h : i < k.toNat <;> simp only [h, ite_true, ite_false, get_ofNat w hi]
@@ -416,7 +416,7 @@ theorem fill_fold (l : List Word) (st : St) :
   | cons d l ih => simp only [List.foldl_cons, ih]
 
 -- The loop of `ctor` on the bindings.
-theorem bind_fold (l : List Word) (dests : Vector Word MAX_N) (st : St) :
+theorem bind_fold (l : List Word) (dests : Vector Word maxStackSize) (st : St) :
     l.foldl (fun st p => bind st p (get dests p)) st =
       { st with dest := l.foldl (fun v p => put v p (get dests p)) st.dest,
                 pos := l.foldl (fun v p => put v (get dests p) p) st.pos } := by
@@ -425,7 +425,7 @@ theorem bind_fold (l : List Word) (dests : Vector Word MAX_N) (st : St) :
   | cons p l ih => rw [List.foldl_cons, ih]; rfl
 
 -- The loop of `plan`. A `put` at `NONE` does not change `pos`.
-theorem plan_fold (l : List Word) (dests : Vector Word MAX_N) (M : Mapping) :
+theorem plan_fold (l : List Word) (dests : Vector Word maxStackSize) (M : Mapping) :
     l.foldl (fun M p => if get dests p ≠ NONE then M.bind p (get dests p) else M) M =
       ⟨l.foldl (fun v p => if get dests p ≠ NONE then put v p (get dests p) else v) M.dest,
        l.foldl (fun v p => put v (get dests p) p) M.pos⟩ := by
@@ -437,10 +437,10 @@ theorem plan_fold (l : List Word) (dests : Vector Word MAX_N) (M : Mapping) :
     · simp only [hd, ne_eq, not_true_eq_false, ite_false, put_none]
     · simp only [hd, ne_eq, not_false_eq_true, ite_true, Mapping.bind]
 
-theorem plan_dest_get (u : Mapping) (m n : Word) (dests : Vector Word MAX_N)
-    (hm : m.toNat ≤ MAX_N) {i : Nat} (hi : i < m.toNat) :
+theorem plan_dest_get (u : Mapping) (m n : Word) (dests : Vector Word maxStackSize)
+    (hm : m.toNat ≤ maxStackSize) {i : Nat} (hi : i < m.toNat) :
     (plan u m n dests).dest[i]'(by omega) = dests[i]'(by omega) := by
-  have hiN : i < MAX_N := by omega
+  have hiN : i < maxStackSize := by omega
   unfold plan
   rw [plan_fold]
   dsimp only
@@ -452,7 +452,7 @@ theorem plan_dest_get (u : Mapping) (m n : Word) (dests : Vector Word MAX_N)
   simp only [get_ofNat dests hiN, hi, true_and, ite_true]
   by_cases hd : dests[i] = NONE <;> simp [hd]
 
-theorem plan_pos (u : Mapping) (m n : Word) (dests : Vector Word MAX_N) :
+theorem plan_pos (u : Mapping) (m n : Word) (dests : Vector Word maxStackSize) :
     (plan u m n dests).pos =
       (offsets m).foldl (fun v p => put v (get dests p) p) ((offsets n).foldl (fun v d => put v d NONE) u.pos) := by
   unfold plan
@@ -461,9 +461,9 @@ theorem plan_pos (u : Mapping) (m n : Word) (dests : Vector Word MAX_N) :
 
 -- The constructor of `FlatModel.lean` is the constructor of the C++ with `plan`, if each
 -- destination is none or below `n`.
-theorem ctorP_plan (data : Vector StackSlot MAX_N) (m : Word) (target : Vector StackSlot MAX_N)
-    (n : Word) (dests : Vector Word MAX_N) (spills : BitVec 32 → BitVec 8) (u : Uninit)
-    (up : Mapping) (hm : m.toNat ≤ MAX_N) (hn : n.toNat ≤ MAX_N)
+theorem ctorP_plan (data : Vector StackSlot maxStackSize) (m : Word) (target : Vector StackSlot maxStackSize)
+    (n : Word) (dests : Vector Word maxStackSize) (spills : BitVec 32 → BitVec 8) (u : Uninit)
+    (up : Mapping) (hm : m.toNat ≤ maxStackSize) (hn : n.toNat ≤ maxStackSize)
     (hd : ∀ p < m.toNat, get dests (.ofNat 64 p) = NONE ∨ (get dests (.ofNat 64 p)).toNat < n.toNat) :
     ctorP data m target n (plan up m n dests) spills u = ctor data m target n dests spills u := by
   unfold ctorP ctor

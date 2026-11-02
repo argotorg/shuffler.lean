@@ -52,8 +52,8 @@ theorem le_of_na {d : Word}
 -- `m_positionOf` for `pos`.
 theorem flat_ex (g : G) (hok : g.Ok) (p top : Word) (htop : g.h.len - 1 = top)
     (hpt : top.toNat ≠ p.toNat) (hn : g.h.nops.toNat < 6 * g.h.n.toNat + g.xo)
-    (hpn : p.toNat < g.h.n.toNat + g.xs) (ht : top.toNat < g.h.n.toNat + g.xs) (hpM : p.toNat < MAX_N)
-    (htM : top.toNat < MAX_N) (hdM : g.h.dest[top.toNat].toNat < MAX_N) (w : Word)
+    (hpn : p.toNat < g.h.n.toNat + g.xs) (ht : top.toNat < g.h.n.toNat + g.xs) (hpM : p.toNat < maxStackSize)
+    (htM : top.toNat < maxStackSize) (hdM : g.h.dest[top.toNat].toNat < maxStackSize) (w : Word)
     (hw : StackSlot.ofWord w = StackSlot.ofWord g.stk[p.toNat]) (r : OpR)
     (hr : r.op = Op.swapW (top - p)) :
     posAt { Flat.stackSwap (flat g) p with dest := swapD (Flat.stackSwap (flat g) p).dest p top } p
@@ -69,9 +69,9 @@ theorem flat_ex (g : G) (hok : g.Ok) (p top : Word) (htop : g.h.len - 1 = top)
   have hN := hok.n
   have hx := hok.xo
   have hd : g.h.dest[(g.h.len - 1).toNat] ≠ Flat.NONE := by
-    intro e; rw [e, none_toNat] at hdM; simp [MAX_N] at hdM
+    intro e; rw [e, none_toNat] at hdM; simp [maxStackSize] at hdM
   have hs : (g.h.nops + 1#64).toNat = g.h.nops.toNat + 1 := by
-    rw [BitVec.toNat_add, BitVec.toNat_ofNat]; simp only [MAX_N] at hN hx; omega
+    rw [BitVec.toNat_add, BitVec.toNat_ofNat]; simp only [maxStackSize] at hN hx; omega
   have hl : (g.stk.toList.map StackSlot.ofWord).length = g.h.n.toNat + g.xs := by simp
   have e1 := (get_eq _ _ htM).symm.trans
     (get_vec (g.stk.toList.map StackSlot.ofWord) _ (by rw [hl]; exact ht) htM)
@@ -92,8 +92,8 @@ theorem flat_ex (g : G) (hok : g.Ok) (p top : Word) (htop : g.h.len - 1 = top)
 -- `flat_ex` when the new `destinationOf[p]` is `NONE`: `m_positionOf` is not stored.
 theorem flat_ex_none (g : G) (hok : g.Ok) (p top : Word) (htop : g.h.len - 1 = top)
     (hpt : top.toNat ≠ p.toNat) (hn : g.h.nops.toNat < 6 * g.h.n.toNat + g.xo)
-    (hpn : p.toNat < g.h.n.toNat + g.xs) (ht : top.toNat < g.h.n.toNat + g.xs) (hpM : p.toNat < MAX_N)
-    (htM : top.toNat < MAX_N) (hz : g.h.dest[top.toNat] = Flat.NONE) (w : Word)
+    (hpn : p.toNat < g.h.n.toNat + g.xs) (ht : top.toNat < g.h.n.toNat + g.xs) (hpM : p.toNat < maxStackSize)
+    (htM : top.toNat < maxStackSize) (hz : g.h.dest[top.toNat] = Flat.NONE) (w : Word)
     (hw : StackSlot.ofWord w = StackSlot.ofWord g.stk[p.toNat]) (r : OpR)
     (hr : r.op = Op.swapW (top - p)) :
     posAt { Flat.stackSwap (flat g) p with dest := swapD (Flat.stackSwap (flat g) p).dest p top } p
@@ -108,7 +108,7 @@ theorem flat_ex_none (g : G) (hok : g.Ok) (p top : Word) (htop : g.h.len - 1 = t
   have hN := hok.n
   have hx := hok.xo
   have hs : (g.h.nops + 1#64).toNat = g.h.nops.toNat + 1 := by
-    rw [BitVec.toNat_add, BitVec.toNat_ofNat]; simp only [MAX_N] at hN hx; omega
+    rw [BitVec.toNat_add, BitVec.toNat_ofNat]; simp only [maxStackSize] at hN hx; omega
   have hl : (g.stk.toList.map StackSlot.ofWord).length = g.h.n.toNat + g.xs := by simp
   have e1 := (get_eq _ _ htM).symm.trans
     (get_vec (g.stk.toList.map StackSlot.ofWord) _ (by rw [hl]; exact ht) htM)
@@ -174,9 +174,9 @@ theorem b_22 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
   have ht : (g.h.len - 1#64).toNat < g'.h.n.toNat + g'.xs := Nat.lt_of_lt_of_le (BitVec.lt_def.mp htl) hLn
   have hxo' : g'.xo = g.xo := hD.keep.xo
   have hno : g'.h.nops.toNat < 6 * g'.h.n.toNat + g'.xo := by rw [hn', hxo']; omega
-  -- `destinationOf[top]` is `NONE` or below `MAX_N`.
+  -- `destinationOf[top]` is `NONE` or below `maxStackSize`.
   have dest_lt : g'.h.dest[(g.h.len - 1#64).toNat] ≠ Flat.NONE →
-      g'.h.dest[(g.h.len - 1#64).toNat].toNat < MAX_N := fun hn => by
+      g'.h.dest[(g.h.len - 1#64).toNat].toNat < maxStackSize := fun hn => by
     have h := dest_ok hok' hD.dl (x := g.h.len - 1#64) (by rw [hlen]; exact htl)
     rw [get_eq _ _ htM] at h
     exact h.resolve_left hn
@@ -266,7 +266,7 @@ theorem b_22 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
     have hN := hok'.n
     have hx := hok'.xo
     have hs : (g'.h.nops + 1#64).toNat = g'.h.nops.toNat + 1 := by
-      rw [BitVec.toNat_add, BitVec.toNat_ofNat]; simp only [MAX_N] at hN hx; omega
+      rw [BitVec.toNat_add, BitVec.toNat_ofNat]; simp only [maxStackSize] at hN hx; omega
     have hF10 := hF.step h10 (P := { t with dmem := _ }) rfl
     cfg_goto
     · exact Fm.stack (hF.step h10 rfl)
@@ -314,7 +314,7 @@ theorem b_22 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
     have hN := hok'.n
     have hx := hok'.xo
     have hs : (g'.h.nops + 1#64).toNat = g'.h.nops.toNat + 1 := by
-      rw [BitVec.toNat_add, BitVec.toNat_ofNat]; simp only [MAX_N] at hN hx; omega
+      rw [BitVec.toNat_add, BitVec.toNat_ofNat]; simp only [maxStackSize] at hN hx; omega
     simp only [LInv, Names.permute, String.reduceEq, ↓reduceIte]
     refine ⟨_, L, p, f, pos, ⟨hF.step h11 rfl, ?_, ?_, hlen, h0, ?_, hD.r13, hD.r15, hD.cx,
       hD.si, hD.agP, hD.bij⟩, hax, hmis, ?_, hmu, ?_⟩

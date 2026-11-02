@@ -39,9 +39,9 @@ open Loop (Saved sub_sub_ofNat)
 
 -- The local arrays and one word.
 structure Lc where
-  parked : Vector Word MAX_N
-  holes : Vector Word MAX_N
-  perm : Vector Word MAX_N
+  parked : Vector Word maxStackSize
+  holes : Vector Word maxStackSize
+  perm : Vector Word maxStackSize
   pad : Word
 
 -- The 3073 words of the locals, from the body `rsp` up.
@@ -85,9 +85,9 @@ theorem lc_of_length {r : List Word} (hr : r.length = 3073) : ∃ L : Lc, r = L.
   have hd : (r.drop 3072).length = 1 := by simp [hr]
   match e : r.drop 3072, hd with
   | [pad], _ =>
-    refine ⟨⟨⟨(r.take 1024).toArray, by simp [hr, MAX_N]⟩,
-      ⟨((r.drop 1024).take 1024).toArray, by simp [hr, MAX_N]⟩,
-      ⟨((r.drop 2048).take 1024).toArray, by simp [hr, MAX_N]⟩, pad⟩, ?_⟩
+    refine ⟨⟨⟨(r.take 1024).toArray, by simp [hr, maxStackSize]⟩,
+      ⟨((r.drop 1024).take 1024).toArray, by simp [hr, maxStackSize]⟩,
+      ⟨((r.drop 2048).take 1024).toArray, by simp [hr, maxStackSize]⟩, pad⟩, ?_⟩
     have h1 : r = r.take 3072 ++ [pad] := by rw [← e, List.take_append_drop]
     have h2 : r.take 3072
         = r.take 1024 ++ (r.drop 1024).take 1024 ++ (r.drop 2048).take 1024 := by
@@ -226,19 +226,19 @@ abbrev aParked (s : MachineData) : Addr := rsp s - 24592#64
 abbrev aHoles (s : MachineData) : Addr := rsp s - 16400#64
 abbrev aPerm (s : MachineData) : Addr := rsp s - 8208#64
 
-theorem Mid.rdParked {t : MachineData} (h : Mid S g F s ra L lo w t) {i : Nat} (hi : i < MAX_N)
+theorem Mid.rdParked {t : MachineData} (h : Mid S g F s ra L lo w t) {i : Nat} (hi : i < maxStackSize)
     {a : Addr} (ha : a = aParked s + BitVec.ofNat 64 (8 * i)) : rd t.dmem a = L.parked[i] := by
   rw [ha]
   exact (arr_rd L.parked.toList h.mem (by unfold Fr Top; ecancel) (by simpa using hi)).trans
     (by simp)
 
 theorem Mid.isSomeParked {t : MachineData} (h : Mid S g F s ra L lo w t) {i : Nat}
-    (hi : i < MAX_N) {a : Addr} (ha : a = aParked s + BitVec.ofNat 64 (8 * i)) :
+    (hi : i < maxStackSize) {a : Addr} (ha : a = aParked s + BitVec.ofNat 64 (8 * i)) :
     (t.dmem.loadInt a 8).isSome = true := by
   rw [ha]; exact arr_isSome L.parked.toList h.mem (by unfold Fr Top; ecancel) (by simpa using hi)
 
 theorem Mid.storeParked {t P : MachineData} (h : Mid S g F s ra L lo w t) {i : Nat}
-    (hi : i < MAX_N) {a : Addr} (ha : a = aParked s + BitVec.ofNat 64 (8 * i)) (v : Word)
+    (hi : i < maxStackSize) {a : Addr} (ha : a = aParked s + BitVec.ofNat 64 (8 * i)) (v : Word)
     (hm : P.dmem = t.dmem.storeInt a 8 v.toInt) (hsp : P.regs.rsp = t.regs.rsp)
     (hsv : Saved t P := by exact ⟨rfl, rfl, rfl, rfl, rfl, rfl⟩) :
     Mid S g F s ra { L with parked := L.parked.set i v hi } lo w P := by
@@ -247,19 +247,19 @@ theorem Mid.storeParked {t P : MachineData} (h : Mid S g F s ra L lo w t) {i : N
   exact arr_store L.parked.toList h.mem (by unfold Fr Top; ecancel) (by simpa using hi) v
     (by rw [← Vector.toList_set hi]; unfold Fr Top; ecancel)
 
-theorem Mid.rdHoles {t : MachineData} (h : Mid S g F s ra L lo w t) {i : Nat} (hi : i < MAX_N)
+theorem Mid.rdHoles {t : MachineData} (h : Mid S g F s ra L lo w t) {i : Nat} (hi : i < maxStackSize)
     {a : Addr} (ha : a = aHoles s + BitVec.ofNat 64 (8 * i)) : rd t.dmem a = L.holes[i] := by
   rw [ha]
   exact (arr_rd L.holes.toList h.mem (by unfold Fr Top; ecancel) (by simpa using hi)).trans
     (by simp)
 
 theorem Mid.isSomeHoles {t : MachineData} (h : Mid S g F s ra L lo w t) {i : Nat}
-    (hi : i < MAX_N) {a : Addr} (ha : a = aHoles s + BitVec.ofNat 64 (8 * i)) :
+    (hi : i < maxStackSize) {a : Addr} (ha : a = aHoles s + BitVec.ofNat 64 (8 * i)) :
     (t.dmem.loadInt a 8).isSome = true := by
   rw [ha]; exact arr_isSome L.holes.toList h.mem (by unfold Fr Top; ecancel) (by simpa using hi)
 
 theorem Mid.storeHoles {t P : MachineData} (h : Mid S g F s ra L lo w t) {i : Nat}
-    (hi : i < MAX_N) {a : Addr} (ha : a = aHoles s + BitVec.ofNat 64 (8 * i)) (v : Word)
+    (hi : i < maxStackSize) {a : Addr} (ha : a = aHoles s + BitVec.ofNat 64 (8 * i)) (v : Word)
     (hm : P.dmem = t.dmem.storeInt a 8 v.toInt) (hsp : P.regs.rsp = t.regs.rsp)
     (hsv : Saved t P := by exact ⟨rfl, rfl, rfl, rfl, rfl, rfl⟩) :
     Mid S g F s ra { L with holes := L.holes.set i v hi } lo w P := by
@@ -268,19 +268,19 @@ theorem Mid.storeHoles {t P : MachineData} (h : Mid S g F s ra L lo w t) {i : Na
   exact arr_store L.holes.toList h.mem (by unfold Fr Top; ecancel) (by simpa using hi) v
     (by rw [← Vector.toList_set hi]; unfold Fr Top; ecancel)
 
-theorem Mid.rdPerm {t : MachineData} (h : Mid S g F s ra L lo w t) {i : Nat} (hi : i < MAX_N)
+theorem Mid.rdPerm {t : MachineData} (h : Mid S g F s ra L lo w t) {i : Nat} (hi : i < maxStackSize)
     {a : Addr} (ha : a = aPerm s + BitVec.ofNat 64 (8 * i)) : rd t.dmem a = L.perm[i] := by
   rw [ha]
   exact (arr_rd L.perm.toList h.mem (by unfold Fr Top; ecancel) (by simpa using hi)).trans
     (by simp)
 
 theorem Mid.isSomePerm {t : MachineData} (h : Mid S g F s ra L lo w t) {i : Nat}
-    (hi : i < MAX_N) {a : Addr} (ha : a = aPerm s + BitVec.ofNat 64 (8 * i)) :
+    (hi : i < maxStackSize) {a : Addr} (ha : a = aPerm s + BitVec.ofNat 64 (8 * i)) :
     (t.dmem.loadInt a 8).isSome = true := by
   rw [ha]; exact arr_isSome L.perm.toList h.mem (by unfold Fr Top; ecancel) (by simpa using hi)
 
 theorem Mid.storePerm {t P : MachineData} (h : Mid S g F s ra L lo w t) {i : Nat}
-    (hi : i < MAX_N) {a : Addr} (ha : a = aPerm s + BitVec.ofNat 64 (8 * i)) (v : Word)
+    (hi : i < maxStackSize) {a : Addr} (ha : a = aPerm s + BitVec.ofNat 64 (8 * i)) (v : Word)
     (hm : P.dmem = t.dmem.storeInt a 8 v.toInt) (hsp : P.regs.rsp = t.regs.rsp)
     (hsv : Saved t P := by exact ⟨rfl, rfl, rfl, rfl, rfl, rfl⟩) :
     Mid S g F s ra { L with perm := L.perm.set i v hi } lo w P := by
@@ -292,7 +292,7 @@ theorem Mid.storePerm {t P : MachineData} (h : Mid S g F s ra L lo w t) {i : Nat
 /-! ## The planned mapping in the frame -/
 
 section
-variable {PM : Addr} {planned : Vector Word MAX_N} {F0 : MProp 64}
+variable {PM : Addr} {planned : Vector Word maxStackSize} {F0 : MProp 64}
 
 theorem Mid.rdPM {t : MachineData} (h : Mid S g (Planned S PM planned ∗ F0) s ra L lo w t) :
     rd t.dmem (Fld.plannedMapping S) = PM :=
@@ -305,14 +305,14 @@ theorem Mid.isSomePM {t : MachineData} (h : Mid S g (Planned S PM planned ∗ F0
     h.mem (by unfold Fr Top Planned; ecancel)
 
 theorem Mid.rdPlanned {t : MachineData} (h : Mid S g (Planned S PM planned ∗ F0) s ra L lo w t)
-    {i : Nat} (hi : i < MAX_N) {a : Addr} (ha : a = PM + 8192#64 + BitVec.ofNat 64 (8 * i)) :
+    {i : Nat} (hi : i < maxStackSize) {a : Addr} (ha : a = PM + 8192#64 + BitVec.ofNat 64 (8 * i)) :
     rd t.dmem a = planned[i] := by
   rw [ha]
   exact (arr_rd planned.toList h.mem (by unfold Fr Top Planned; ecancel) (by simpa using hi)).trans
     (by simp)
 
 theorem Mid.isSomePlanned {t : MachineData}
-    (h : Mid S g (Planned S PM planned ∗ F0) s ra L lo w t) {i : Nat} (hi : i < MAX_N) {a : Addr}
+    (h : Mid S g (Planned S PM planned ∗ F0) s ra L lo w t) {i : Nat} (hi : i < maxStackSize) {a : Addr}
     (ha : a = PM + 8192#64 + BitVec.ofNat 64 (8 * i)) : (t.dmem.loadInt a 8).isSome = true := by
   rw [ha]
   exact arr_isSome planned.toList h.mem (by unfold Fr Top Planned; ecancel) (by simpa using hi)
@@ -350,7 +350,7 @@ theorem Mid.callW {A : G → MachineData → Prop} {Q : G → G → MachineData 
   · have hm := h.mem
     rw [mid_perm] at hm
     rw [hsp, permW, hsi, e]
-    exact ExArr.intro (n := MAX_N) (by simp) hm
+    exact ExArr.intro (n := maxStackSize) (by simp) hm
   · rintro s' ⟨g', fr', v', hQ, hok', hfl, hm⟩ hag
     rw [hsp, permW, hsi, e] at hm
     obtain ⟨vs, hvs, hm⟩ := ExArr.elim hm
@@ -384,7 +384,7 @@ theorem Mid.callWWithExit {A : G → MachineData → Prop}
   · have hm := h.mem
     rw [mid_perm] at hm
     rw [hsp, permW, hsi, e]
-    exact ExArr.intro (n := MAX_N) (by simp) hm
+    exact ExArr.intro (n := maxStackSize) (by simp) hm
   · rintro t ⟨g', lo', w', hQ, hok', hl, hm⟩ hag
     rw [hsp, permW, hsi, e] at hm
     obtain ⟨vs, hvs, hm⟩ := ExArr.elim hm

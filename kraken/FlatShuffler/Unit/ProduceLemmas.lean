@@ -616,10 +616,10 @@ theorem rd_len' (h : (View S g ∗ R).get m) :
 theorem isSome_len' (h : (View S g ∗ R).get m) : (m.loadInt (S + 32#64) 8).isSome = true := by
   rw [Fld.fold_stack_size]; exact View.isSome_len h
 
-theorem rd_pos' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < MAX_N) :
+theorem rd_pos' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < maxStackSize) :
     BitVec.ofInt 64 (m.loadInt (S + x * 8#64 + 8248#64) 8).get! = g.h.pos[x.toNat] := by
   rw [Fld.fold_mapping_positionOf]; exact View.rd_pos h hx
-theorem isSome_pos' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < MAX_N) :
+theorem isSome_pos' (h : (View S g ∗ R).get m) {x : Word} (hx : x.toNat < maxStackSize) :
     (m.loadInt (S + x * 8#64 + 8248#64) 8).isSome = true := by
   rw [Fld.fold_mapping_positionOf]; exact View.isSome_pos h hx
 
@@ -804,8 +804,8 @@ theorem prodX_of {g g1 : G} {s t : MachineData} {f : Flat.St → Flat.Status × 
   exact hX
 
 -- `Flat.get` in the bound is the vector index.
-theorem get_eq {α : Type} [Inhabited α] (v : Vector α MAX_N) {i : Word}
-    (hi : i.toNat < MAX_N) : Flat.get v i = v[i.toNat] := by
+theorem get_eq {α : Type} [Inhabited α] (v : Vector α maxStackSize) {i : Word}
+    (hi : i.toNat < maxStackSize) : Flat.get v i = v[i.toNat] := by
   simp [Flat.get, hi]
 
 /-! ## `notq` -/

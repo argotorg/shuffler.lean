@@ -44,9 +44,9 @@ theorem sim_loop {e : Env} (hfin : PermR e) (fs : St) (st : FlatShuffler.St) (k 
     (hs : Sim e fs st) (hi : InvS e st k) (hk : k ≤ st.len) :
     SimR e (loop fs (BitVec.ofNat 64 k)) (FlatShuffler.loop finish e st k) := by
   have hn := hs.n
-  have hle : e.n ≤ MAX_N := hs.n ▸ hs.n_le
+  have hle : e.n ≤ maxStackSize := hs.n ▸ hs.n_le
   have hkn := hi.t_le
-  have hkw : (BitVec.ofNat 64 k).toNat = k := toNat_ofNat_of_lt (by unfold MAX_N at hle; omega)
+  have hkw : (BitVec.ofNat 64 k).toNat = k := toNat_ofNat_of_lt (by unfold maxStackSize at hle; omega)
   by_cases ht : k < e.n
   · have ht' : BitVec.ofNat 64 k < fs.targetSize := by bv_omega
     have hb := sim_body hs (t := BitVec.ofNat 64 k) (by rw [hkw]; exact hi)

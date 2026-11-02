@@ -32,7 +32,7 @@ theorem status_eq_of_al_eq {t : MachineData} {st : Flat.Status}
 def BuildFailed (P : Addr) (g : PlannerCallMemory) (F : MProp 64) (s : MachineData) (ra : Int64)
     (M0 : Flat.Mapping) (t : MachineData) : Prop :=
   ∃ lo locals, LoopLI P g F s ra lo locals t ∧
-    M0.init g.p.m g.p.n = M0 ∧
+    M0.init g.p.sourceSize g.p.targetSize = M0 ∧
     Flat.buildMapping (plannerBuilder g s M0 0#8).fl M0 = none
 
 -- The caller memory at an assertion exit from one builder phase.
@@ -40,14 +40,14 @@ def BuildExit (P : Addr) (g : PlannerCallMemory) (F : MProp 64) (s : MachineData
     (M0 : Flat.Mapping) (t : MachineData) : Prop :=
   ∃ lo locals, lo.length = 4113 ∧ locals.length = 4121 ∧
     (Stk (rsp s) (fr s lo locals) ra.toBitVec ∗ (plannerCallOwnedMemory P g ∗ F)).get t.dmem ∧
-    M0.init g.p.m g.p.n = M0 ∧
+    M0.init g.p.sourceSize g.p.targetSize = M0 ∧
     Flat.buildMapping (plannerBuilder g s M0 0#8).fl M0 = none
 
 def BuildDone (P : Addr) (g : PlannerCallMemory) (F : MProp 64) (s : MachineData) (ra : Int64)
     (t : MachineData) : Prop :=
   ∃ M0 M saw lo locals,
     AttemptLI P (withSaw g (mergeSaw g.p.saw saw)) M F s ra lo locals t ∧
-    MapInv g.p.m g.p.n M ∧ M0.init g.p.m g.p.n = M0 ∧
+    MapInv g.p.sourceSize g.p.targetSize M ∧ M0.init g.p.sourceSize g.p.targetSize = M0 ∧
     Flat.buildMapping (plannerBuilder g s M0 0#8).fl M0 = some (M, saw != 0#8) ∧
     Flat.targetsFrom g.p.fl g.spills 0 = true
 
@@ -67,7 +67,7 @@ theorem b_9_calls [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : MPro
     (hstop : ∀ M0 u, BuildExit P g F s ra M0 u → u.regs.get64 .rdi = 1#64 →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label "exit") u)
     (hfinish : ∀ M0 M saw lo l u, BuildLI P g F s ra lo l M saw u →
-      M0.init g.p.m g.p.n = M0 →
+      M0.init g.p.sourceSize g.p.targetSize = M0 →
       Flat.buildMapping (plannerBuilder g s M0 0#8).fl M0 = some (M, saw != 0#8) →
       WP.wp builderTail K (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) u) :
     plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.23" →
@@ -128,8 +128,8 @@ theorem b_9_calls [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : MPro
     simp only [ksrc, ktgt, kdrp, kstrat, k0, k1, k2, k3, k4, k5, k6, k7]
   | other =>
     let M0 := localMapping locals hc.localLength
-    have hi0 : M0.init g.p.m g.p.n = M0 :=
-      localMapping_init locals hc.localLength hok.planner.m hok.planner.n hdest hpos
+    have hi0 : M0.init g.p.sourceSize g.p.targetSize = M0 :=
+      localMapping_init locals hc.localLength hok.planner.sourceSizeFitsBuffer hok.planner.targetSizeFitsBuffer hdest hpos
     let fb := (plannerBuilder g s M0 0#8).fl
     let r1 := Flat.mapInPlace fb M0
     refine BuildLI.callPhase (P := P) (g := g) (F := F) (s := s) (ra := ra)
@@ -358,18 +358,18 @@ theorem b_9 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : MProp 64)
         (label ".LB.Planner.run.6") u)
     (hstop : ∀ M0 u, BuildExit P g F s ra M0 u → u.regs.get64 .rdi = 1#64 →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label "exit") u)
-    (hzero : ∀ u, g.p.m = 0#64 → BuildDone P g F s ra u →
+    (hzero : ∀ u, g.p.sourceSize = 0#64 → BuildDone P g F s ra u →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.28") u)
-    (hnonzero : ∀ u, g.p.m ≠ 0#64 → rax u = 0#64 → BuildDone P g F s ra u → K () u) :
+    (hnonzero : ∀ u, g.p.sourceSize ≠ 0#64 → rax u = 0#64 → BuildDone P g F s ra u → K () u) :
     plannerRunAsm.ForallBlocks fun blk => blk.label = .label ".LB.Planner.run.23" →
       ∀ t, InitDone P g F s ra t → WP.wp blk.body K
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   apply b_9_calls P g F s ra hok hip hclosest hwild hkeep habsorb K I' E hbad hstop
   intro M0 M saw lo l u hb hinit hmodel
-  have hstart : MapInv g.p.m g.p.n M0 := by
+  have hstart : MapInv g.p.sourceSize g.p.targetSize M0 := by
     rw [← hinit]
-    exact mapInv_init M0 hok.planner.m hok.planner.n
-  have hm : MapInv g.p.m g.p.n M := mapInv_buildMapping hstart hmodel
+    exact mapInv_init M0 hok.planner.sourceSizeFitsBuffer hok.planner.targetSizeFitsBuffer
+  have hm : MapInv g.p.sourceSize g.p.targetSize M := mapInv_buildMapping hstart hmodel
   apply builder_tail P g F s ra hok M saw lo l u hb K I' E
   · intro v hz hv
     exact hzero v hz ⟨M0, M, saw, lo, _, hv, hm, hinit, hmodel, hb.targets⟩

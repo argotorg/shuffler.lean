@@ -54,8 +54,8 @@ theorem cfg_10 : plannerRunAsm.ForallBlocks fun blk =>
   obtain ⟨current, M, ctx, ht⟩ := ht
   have h0 := ht.choose_spec.choose_spec.1
   have hi := ht.choose_spec.choose_spec.2.1
-  have hm := congrArg PlannerObjectMemory.m ctx.stable.planner
-  change current.p.m = g.p.m at hm
+  have hm := congrArg PlannerObjectMemory.sourceSize ctx.stable.planner
+  change current.p.sourceSize = g.p.sourceSize at hm
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
       Program.Decreases (runV g) (.label ".LB.Planner.run.24") 26 t b j u
@@ -75,13 +75,13 @@ theorem cfg_10 : plannerRunAsm.ForallBlocks fun blk =>
             EmitDataHead P a M F s ra c.wanted u from
             ⟨{current with data := data}, M, ctx.withData data, hu⟩)
       · have hiN : (rax t).toNat < 1024 :=
-          Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) ctx.ok.planner.m
+          Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) ctx.ok.planner.sourceSizeFitsBuffer
         have hs : (rax u).toNat = (rax t).toNat + 1 := by rw [ha]; bv_omega
         simp only [runV, String.reduceEq, or_false, ↓reduceIte, hb, hs]
-        change rax u < current.p.m at hui
+        change rax u < current.p.sourceSize at hui
         rw [hm] at hi hui
-        change (rax t).toNat < g.p.m.toNat at hi
-        change (rax u).toNat < g.p.m.toNat at hui
+        change (rax t).toNat < g.p.sourceSize.toNat at hi
+        change (rax u).toNat < g.p.sourceSize.toNat at hui
         omega) (by
       intro data u hd hu
       have h1 := hu.choose_spec.choose_spec.1
@@ -91,7 +91,7 @@ theorem cfg_10 : plannerRunAsm.ForallBlocks fun blk =>
       · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte] using
           (show AttemptPhase g s (fun a M => EmitDestHead P a M F s ra) u from
             ⟨{current with data := data}, M, ctx.withData data, hd, hu⟩)
-      · have hmb : g.p.m.toNat ≤ 1024 := by rw [← hm]; exact ctx.ok.planner.m
+      · have hmb : g.p.sourceSize.toNat ≤ 1024 := by rw [← hm]; exact ctx.ok.planner.sourceSizeFitsBuffer
         simp only [runV, String.reduceEq, or_false, ↓reduceIte, hb]
         omega)
   rw [Program.ForallBlocks, hv] at hh
@@ -109,8 +109,8 @@ theorem cfg_11 : plannerRunAsm.ForallBlocks fun blk =>
   obtain ⟨current, M, ctx, hd, ht⟩ := ht
   have h0 := ht.choose_spec.choose_spec.1
   have hi := ht.choose_spec.choose_spec.2.1
-  have hm := congrArg PlannerObjectMemory.m ctx.stable.planner
-  change current.p.m = g.p.m at hm
+  have hm := congrArg PlannerObjectMemory.sourceSize ctx.stable.planner
+  change current.p.sourceSize = g.p.sourceSize at hm
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
       Program.Decreases (runV g) (.label ".LB.Planner.run.25") 27 t b j u
@@ -128,12 +128,12 @@ theorem cfg_11 : plannerRunAsm.ForallBlocks fun blk =>
           (show AttemptPhase g s (fun a M => EmitDestHead P a M F s ra) u from
             ⟨current, M, ctx, hd, hu⟩)
       · have hiN : (rax t).toNat < 1024 :=
-          Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) ctx.ok.planner.m
+          Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) ctx.ok.planner.sourceSizeFitsBuffer
         have hs : (rax u).toNat = (rax t).toNat + 1 := by rw [ha]; bv_omega
         simp only [runV, String.reduceEq, or_false, ↓reduceIte, hb, hs]
         rw [hm] at hi hui
-        change (rax t).toNat < g.p.m.toNat at hi
-        change (rax u).toNat < g.p.m.toNat at hui
+        change (rax t).toNat < g.p.sourceSize.toNat at hi
+        change (rax u).toNat < g.p.sourceSize.toNat at hui
         omega) (by
       intro u ha hu
       have h1 := hu.choose_spec.choose_spec.1
@@ -158,9 +158,9 @@ theorem cfg_12 : plannerRunAsm.ForallBlocks fun blk =>
   simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨current, M, ctx, hd, ht⟩ := ht
   have h0 := ht.choose_spec.choose_spec.1
-  have hn := congrArg PlannerObjectMemory.n ctx.stable.planner
-  change current.p.n = g.p.n at hn
-  have hnb : g.p.n.toNat ≤ 1024 := by rw [← hn]; exact ctx.ok.planner.n
+  have hn := congrArg PlannerObjectMemory.targetSize ctx.stable.planner
+  change current.p.targetSize = g.p.targetSize at hn
+  have hnb : g.p.targetSize.toNat ≤ 1024 := by rw [← hn]; exact ctx.ok.planner.targetSizeFitsBuffer
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
       Program.Decreases (runV g) (.label ".LB.Planner.run.26") 28 t b j u
@@ -175,7 +175,7 @@ theorem cfg_12 : plannerRunAsm.ForallBlocks fun blk =>
       refine ⟨h1.kb.stack (by decide), ?_, Or.inl ?_⟩
       · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte] using
           (show AttemptPhase g s
-            (fun a M u => a.p.n = 0#64 ∧ EmitMapped P a M F s ra u) u from
+            (fun a M u => a.p.targetSize = 0#64 ∧ EmitMapped P a M F s ra u) u from
             ⟨current, M, ctx, hd, hz, hu⟩)
       · simp only [runV, String.reduceEq, or_false, ↓reduceIte, hb]
         omega) (by
@@ -202,11 +202,11 @@ theorem cfg_13 : plannerRunAsm.ForallBlocks fun blk =>
   simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨current, M, ctx, hd, ht⟩ := ht
   obtain ⟨lo, locals, j, h0, hj, hax, hrest⟩ := ht
-  have hn := congrArg PlannerObjectMemory.n ctx.stable.planner
-  change current.p.n = g.p.n at hn
-  have hjN : j.toNat < 1024 := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hj) ctx.ok.planner.n
+  have hn := congrArg PlannerObjectMemory.targetSize ctx.stable.planner
+  change current.p.targetSize = g.p.targetSize at hn
+  have hjN : j.toNat < 1024 := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hj) ctx.ok.planner.targetSizeFitsBuffer
   have hi : indexAt 0#64 t = j.toNat := indexAt_eq (by simpa only [BitVec.zero_add] using hax) hjN
-  have hnb : g.p.n.toNat ≤ 1024 := by rw [← hn]; exact ctx.ok.planner.n
+  have hnb : g.p.targetSize.toNat ≤ 1024 := by rw [← hn]; exact ctx.ok.planner.targetSizeFitsBuffer
   let I' (b : CfgLabel) (k : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
       Program.Decreases (runV g) (.label ".LB.Planner.run.27") 29 t b k u
@@ -215,7 +215,7 @@ theorem cfg_13 : plannerRunAsm.ForallBlocks fun blk =>
       intro u ha hu
       obtain ⟨lo', locals', j', h1, hj', hax', hrest'⟩ := hu
       have hjN' : j'.toNat < 1024 :=
-        Nat.lt_of_lt_of_le (BitVec.lt_def.mp hj') ctx.ok.planner.n
+        Nat.lt_of_lt_of_le (BitVec.lt_def.mp hj') ctx.ok.planner.targetSizeFitsBuffer
       have hi' : indexAt 0#64 u = j'.toNat :=
         indexAt_eq (by simpa only [BitVec.zero_add] using hax') hjN'
       have hstep : j'.toNat = j.toNat + 1 := by rw [hax, hax'] at ha; bv_omega
@@ -229,8 +229,8 @@ theorem cfg_13 : plannerRunAsm.ForallBlocks fun blk =>
             ⟨current, M, ctx, hd, lo', locals', j', h1, hj', hax', hrest'⟩)
       · simp only [runV, String.reduceEq, or_false, ↓reduceIte, hb, hi, hi', hstep]
         rw [hn] at hj hj'
-        change j.toNat < g.p.n.toNat at hj
-        change j'.toNat < g.p.n.toNat at hj'
+        change j.toNat < g.p.targetSize.toNat at hj
+        change j'.toNat < g.p.targetSize.toNat at hj'
         omega) (by
       intro u hu
       have h1 := hu.choose_spec.choose_spec.choose_spec.choose_spec.1
@@ -258,9 +258,9 @@ theorem cfg_14 : plannerRunAsm.ForallBlocks fun blk =>
   simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨current, M, ctx, hd, ht⟩ := ht
   obtain ⟨lo, locals, j, c, h0, hj, hax, hrest⟩ := ht
-  have hn := congrArg PlannerObjectMemory.n ctx.stable.planner
-  change current.p.n = g.p.n at hn
-  have hjN : j.toNat < 1024 := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hj) ctx.ok.planner.n
+  have hn := congrArg PlannerObjectMemory.targetSize ctx.stable.planner
+  change current.p.targetSize = g.p.targetSize at hn
+  have hjN : j.toNat < 1024 := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hj) ctx.ok.planner.targetSizeFitsBuffer
   have hi := indexAt_eq hax hjN
   let I' (b : CfgLabel) (k : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
@@ -282,7 +282,7 @@ theorem cfg_14 : plannerRunAsm.ForallBlocks fun blk =>
       intro u ha hu
       obtain ⟨lo', locals', j', c', h1, hj', hax', hrest'⟩ := hu
       have hjN' : j'.toNat < 1024 :=
-        Nat.lt_of_lt_of_le (BitVec.lt_def.mp hj') ctx.ok.planner.n
+        Nat.lt_of_lt_of_le (BitVec.lt_def.mp hj') ctx.ok.planner.targetSizeFitsBuffer
       have hi' := indexAt_eq hax' hjN'
       have hsp : u.regs.rsp.toBitVec = t.regs.rsp.toBitVec := h1.kb.sp.trans h0.kb.sp.symm
       have hstep : j'.toNat = j.toNat + 1 := by rw [hax, hax', hsp] at ha; bv_omega
@@ -293,8 +293,8 @@ theorem cfg_14 : plannerRunAsm.ForallBlocks fun blk =>
             ⟨current, M, ctx, hd, lo', locals', j', c', h1, hj', hax', hrest'⟩)
       · simp only [runV, String.reduceEq, or_false, ↓reduceIte, hb, hi, hi', hstep]
         rw [hn] at hj hj'
-        change j.toNat < g.p.n.toNat at hj
-        change j'.toNat < g.p.n.toNat at hj'
+        change j.toNat < g.p.targetSize.toNat at hj
+        change j'.toNat < g.p.targetSize.toNat at hj'
         omega)
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
@@ -310,7 +310,7 @@ theorem cfg_15 : plannerRunAsm.ForallBlocks fun blk =>
   simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨current, M, ctx, hd, ht⟩ := ht
   obtain ⟨lo, locals, j, c, h0, hj, hax, hrest⟩ := ht
-  have hjN : j.toNat < 1024 := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hj) ctx.ok.planner.n
+  have hjN : j.toNat < 1024 := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hj) ctx.ok.planner.targetSizeFitsBuffer
   have hi := indexAt_eq hax hjN
   let I' (b : CfgLabel) (k : Nat) (_ : Unit) (u : MachineData) :=
     RunInv P g F s ra resolvePhase b u ∧
@@ -320,7 +320,7 @@ theorem cfg_15 : plannerRunAsm.ForallBlocks fun blk =>
       intro u ha hu
       obtain ⟨lo', locals', j', c', h1, hj', hax', hrest'⟩ := hu
       have hjN' : j'.toNat < 1024 :=
-        Nat.lt_of_lt_of_le (BitVec.lt_def.mp hj') ctx.ok.planner.n
+        Nat.lt_of_lt_of_le (BitVec.lt_def.mp hj') ctx.ok.planner.targetSizeFitsBuffer
       have hi' := indexAt_eq hax' hjN'
       have hsp : u.regs.rsp.toBitVec = t.regs.rsp.toBitVec := h1.kb.sp.trans h0.kb.sp.symm
       have heq : j' = j := by rw [hax, hax', hsp] at ha; bv_omega

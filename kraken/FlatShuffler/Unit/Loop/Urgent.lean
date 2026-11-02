@@ -37,7 +37,7 @@ theorem isSome_blkExc (h : (View S g ∗ F).get m) :
 
 -- The loads of `.5` at the offset `T`, with `d = r12`.
 theorem urg_loads (hm : (View S g ∗ F).get m) {d T : Word} (hd : d = S)
-    (hT : T.toNat < g.h.n.toNat) (hn : g.h.n.toNat ≤ MAX_N) :
+    (hT : T.toNat < g.h.n.toNat) (hn : g.h.n.toNat ≤ maxStackSize) :
     BitVec.ofInt 64 (m.loadInt (d + T * 8#64 + 8248#64) 8).get! = g.h.pos[T.toNat]
     ∧ BitVec.ofInt 64 (m.loadInt d 8).get! = g.h.tgt
     ∧ BitVec.ofInt 64 (m.loadInt (g.h.tgt + T * 8#64) 8).get! = g.tgt[T.toNat]
@@ -52,7 +52,7 @@ theorem urg_loads (hm : (View S g ∗ F).get m) {d T : Word} (hd : d = S)
     View.rdb_tgt_byte hm hT (j := 5) (by decide)⟩
 
 theorem urg_isSome (hm : (View S g ∗ F).get m) {d T : Word} (hd : d = S)
-    (hT : T.toNat < g.h.n.toNat) (hn : g.h.n.toNat ≤ MAX_N) :
+    (hT : T.toNat < g.h.n.toNat) (hn : g.h.n.toNat ≤ maxStackSize) :
     (m.loadInt (d + T * 8#64 + 8248#64) 8).isSome = true
     ∧ (m.loadInt d 8).isSome = true
     ∧ (m.loadInt (g.h.tgt + T * 8#64) 8).isSome = true
@@ -82,7 +82,7 @@ theorem urg_pack (w : Word) :
       ||| (BitVec.setWidth 64 (BitVec.setWidth 32 (w.extractLsb' 40 8))).shiftLeft 40 = w := by
   bv_decide
 
-theorem urg_get_pos {g : G} {i : Word} (hi : i.toNat < MAX_N) :
+theorem urg_get_pos {g : G} {i : Word} (hi : i.toNat < maxStackSize) :
     Flat.get (flat g).pos i = g.h.pos[i.toNat] := by
   simp [Flat.get, flat, hi]
 
@@ -289,7 +289,7 @@ theorem b_5 [Host] [FunDecls] (S g F s ra) (_hpre : Sep.Pre S g F loopA 2068 s)
   obtain ⟨g', u, ⟨x0, x2, lo, w, hM, hok, hk⟩, hHd, hbx, hR⟩ := ht
   obtain ⟨h13, h15, h14, hH, hp⟩ := id hHd
   have hS := hM.r12
-  have hn : g'.h.n.toNat ≤ MAX_N := hok.n
+  have hn : g'.h.n.toNat ≤ maxStackSize := hok.n
   have hT : t.regs.rbx.toBitVec.toNat < g'.h.n.toNat := hbx
   have hbx' : t.regs.rbx.toBitVec < (flat g').targetSize := hbx
   have hgp : Flat.get (flat g').pos t.regs.rbx.toBitVec = g'.h.pos[t.regs.rbx.toBitVec.toNat] :=

@@ -34,7 +34,7 @@ theorem b_10 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ 
   have hok := hpre.ok
   have hm := hF.mem
   have hn := Nat.le_trans hok.len hok.xs
-  simp only [MAX_N] at hn
+  simp only [maxStackSize] at hn
   have hposl : pos < g.h.len := by have := hC.lt; bv_omega
   have hpM := lt_max hok hposl
   have hpN : pos.toNat < g.h.n.toNat + g.xs := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hposl) hok.len
@@ -112,7 +112,7 @@ theorem b_9 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F
   have hC := hG.cc
   have hF := hC.fm
   have hn := Nat.le_trans hpre.ok.len hpre.ok.xs
-  simp only [MAX_N] at hn
+  simp only [maxStackSize] at hn
   have hlt' := BitVec.lt_def.mp hC.lt
   have hr := congrArg BitVec.toNat hcx
   kvcgen64
@@ -191,7 +191,7 @@ theorem b_7 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F
   have hC := hG.cc
   have hF := hC.fm
   have hn := Nat.le_trans hpre.ok.len hpre.ok.xs
-  simp only [MAX_N] at hn
+  simp only [maxStackSize] at hn
   kvcgen64
   all_goals try symexec_norm
   all_goals try rw [hax]
@@ -233,7 +233,7 @@ theorem b_8 [Host] [FunDecls] (S g p0 F s ra) (hpre : Sep.Pre S g (permW s ∗ F
   have hok := hpre.ok
   have hm := hF.mem
   have hn := Nat.le_trans hok.len hok.xs
-  simp only [MAX_N] at hn
+  simp only [maxStackSize] at hn
   have hposl : pos < g.h.len := by have := hC.lt; bv_omega
   have hpM := lt_max hok hposl
   have hp4 : pos.toNat < 1024 := by have := BitVec.lt_def.mp hposl; omega

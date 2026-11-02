@@ -14,8 +14,8 @@ open FlatShuffler.Sep Flat
 
 /-- The mapping words used by one planner attempt. -/
 def MapCells (g : PlannerCallMemory) (M : Flat.Mapping) (locals : List Word) : Prop :=
-  (∀ p, p < g.p.m → locals[12 + p.toNat]? = some (get M.dest p)) ∧
-  (∀ p, p < g.p.n → locals[1036 + p.toNat]? = some (get M.pos p))
+  (∀ p, p < g.p.sourceSize → locals[12 + p.toNat]? = some (get M.dest p)) ∧
+  (∀ p, p < g.p.targetSize → locals[1036 + p.toNat]? = some (get M.pos p))
 
 structure AttemptLI (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapping) (F : MProp 64)
     (s : MachineData) (ra : Int64) (lo locals : List Word) (t : MachineData) : Prop
@@ -34,11 +34,11 @@ theorem MapCells.localMapping (h : Bd P g F s ra lo locals t) (hok : g.Ok) :
   constructor
   · intro p hp
     rw [localMapping_dest locals h.localLength
-      (Nat.lt_of_lt_of_le (BitVec.lt_def.mp hp) hok.planner.m)]
+      (Nat.lt_of_lt_of_le (BitVec.lt_def.mp hp) hok.planner.sourceSizeFitsBuffer)]
     exact List.getElem?_eq_getElem _
   · intro p hp
     rw [localMapping_pos locals h.localLength
-      (Nat.lt_of_lt_of_le (BitVec.lt_def.mp hp) hok.planner.n)]
+      (Nat.lt_of_lt_of_le (BitVec.lt_def.mp hp) hok.planner.targetSizeFitsBuffer)]
     exact List.getElem?_eq_getElem _
 
 theorem localMapping_set_tail (hl : locals.length = 4121) (i : Nat) (hi : 2060 ≤ i)
@@ -81,13 +81,13 @@ theorem AttemptLI.storeLocal (h : AttemptLI P g M F s ra lo locals t)
     exact h.count
   · intro p hp
     rw [unchanged (12 + p.toNat) (by
-      have hpN := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hp) hok.planner.m
+      have hpN := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hp) hok.planner.sourceSizeFitsBuffer
       change p.toNat < 1024 at hpN
       omega)]
     exact h.mapping.1 p hp
   · intro p hp
     rw [unchanged (1036 + p.toNat) (by
-      have hpN := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hp) hok.planner.n
+      have hpN := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hp) hok.planner.targetSizeFitsBuffer
       change p.toNat < 1024 at hpN
       omega)]
     exact h.mapping.2 p hp
@@ -99,15 +99,15 @@ theorem AttemptLI.storeLocal (h : AttemptLI P g M F s ra lo locals t)
 end
 
 /-- The live words copied into the local emission mapping. -/
-def WordPrefix (locals : List Word) (base : Nat) (v : Vector Word MAX_N) (count : Nat) : Prop :=
+def WordPrefix (locals : List Word) (base : Nat) (v : Vector Word maxStackSize) (count : Nat) : Prop :=
   ∀ i, i < count → locals[base + i]? = some (get v (BitVec.ofNat 64 i))
 
-theorem WordPrefix.zero (locals : List Word) (base : Nat) (v : Vector Word MAX_N) :
+theorem WordPrefix.zero (locals : List Word) (base : Nat) (v : Vector Word maxStackSize) :
     WordPrefix locals base v 0 := by
   intro i hi
   exact False.elim (Nat.not_lt_zero i hi)
 
-theorem WordPrefix.step {locals : List Word} {base count : Nat} {v : Vector Word MAX_N}
+theorem WordPrefix.step {locals : List Word} {base count : Nat} {v : Vector Word maxStackSize}
     (h : WordPrefix locals base v count) (hi : base + count < locals.length) :
     WordPrefix (locals.set (base + count) (get v (BitVec.ofNat 64 count)))
       base v (count + 1) := by
@@ -119,7 +119,7 @@ theorem WordPrefix.step {locals : List Word} {base count : Nat} {v : Vector Word
       show base + count ≠ base + i by omega, ↓reduceIte] using h i (by omega)
 
 theorem WordPrefix.set_outside {locals : List Word} {base count index : Nat}
-    {v : Vector Word MAX_N} (h : WordPrefix locals base v count)
+    {v : Vector Word maxStackSize} (h : WordPrefix locals base v count)
     (hout : ∀ i, i < count → base + i ≠ index) (w : Word) :
     WordPrefix (locals.set index w) base v count := by
   intro i hi
@@ -127,9 +127,9 @@ theorem WordPrefix.set_outside {locals : List Word} {base count index : Nat}
     using h i hi
 
 def CtorHeader (g : PlannerCallMemory) (locals : List Word) : Prop :=
-  locals[2060]? = some g.p.tgt ∧ locals[2061]? = some g.p.n ∧
+  locals[2060]? = some g.p.tgt ∧ locals[2061]? = some g.p.targetSize ∧
   locals[2062]? = some g.p.spl ∧ locals[2063]? = some g.dataPtr ∧
-  locals[2064]? = some g.p.m ∧ locals[2065]? = some g.opsPtr ∧
+  locals[2064]? = some g.p.sourceSize ∧ locals[2065]? = some g.opsPtr ∧
   locals[2066]? = some 0#64
 
 theorem CtorHeader.set_tail {g : PlannerCallMemory} {locals : List Word}
@@ -174,37 +174,37 @@ end
 
 def EmitDestHead (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapping) (F : MProp 64)
     (s : MachineData) (ra : Int64) (t : MachineData) : Prop :=
-  ∃ lo locals, EmitLI P g M F s ra lo locals t ∧ rax t < g.p.m ∧
-    rdx t = g.p.m ∧ rcx t = g.p.n ∧ WordPrefix locals 2067 M.dest (rax t).toNat
+  ∃ lo locals, EmitLI P g M F s ra lo locals t ∧ rax t < g.p.sourceSize ∧
+    rdx t = g.p.sourceSize ∧ rcx t = g.p.targetSize ∧ WordPrefix locals 2067 M.dest (rax t).toNat
 
 def EmitDestDone (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapping) (F : MProp 64)
     (s : MachineData) (ra : Int64) (t : MachineData) : Prop :=
   ∃ lo locals, EmitLI P g M F s ra lo locals t ∧
-    rcx t = g.p.n ∧ WordPrefix locals 2067 M.dest g.p.m.toNat
+    rcx t = g.p.targetSize ∧ WordPrefix locals 2067 M.dest g.p.sourceSize.toNat
 
 def EmitMapped (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapping) (F : MProp 64)
     (s : MachineData) (ra : Int64) (t : MachineData) : Prop :=
   ∃ lo locals, EmitLI P g M F s ra lo locals t ∧
-    WordPrefix locals 2067 M.dest g.p.m.toNat ∧ WordPrefix locals 3091 M.pos g.p.n.toNat
+    WordPrefix locals 2067 M.dest g.p.sourceSize.toNat ∧ WordPrefix locals 3091 M.pos g.p.targetSize.toNat
 
 def EmitPosHead (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapping) (F : MProp 64)
     (s : MachineData) (ra : Int64) (t : MachineData) : Prop :=
-  ∃ lo locals j, EmitLI P g M F s ra lo locals t ∧ j < g.p.n ∧
-    rax t = j * 8#64 ∧ rdx t = g.p.n * 8#64 ∧
+  ∃ lo locals j, EmitLI P g M F s ra lo locals t ∧ j < g.p.targetSize ∧
+    rax t = j * 8#64 ∧ rdx t = g.p.targetSize * 8#64 ∧
     t.regs.rsi.toBitVec = t.regs.rsp.toBitVec + 8288#64 ∧
     t.regs.rdi.toBitVec = t.regs.rsp.toBitVec + 24728#64 ∧
-    WordPrefix locals 2067 M.dest g.p.m.toNat ∧ WordPrefix locals 3091 M.pos j.toNat
+    WordPrefix locals 2067 M.dest g.p.sourceSize.toNat ∧ WordPrefix locals 3091 M.pos j.toNat
 
 def countState (g : PlannerCallMemory) (M : Flat.Mapping) : Flat.St :=
-  { target := g.p.fl.target, targetSize := g.p.n, spills := g.spills,
-    data := g.data.map StackSlot.ofWord, size := g.p.m, trace := [],
+  { target := g.p.fl.target, targetSize := g.p.targetSize, spills := g.spills,
+    data := g.data.map StackSlot.ofWord, size := g.p.sourceSize, trace := [],
     dest := M.dest, pos := M.pos, pend := 0, blockedOffset := 0, blockedExcess := 0 }
 
 structure EmitCountLI (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapping) (F : MProp 64)
     (s : MachineData) (ra : Int64) (lo locals : List Word) (t : MachineData) : Prop
     extends EmitLI P g M F s ra lo locals t where
-  dest : WordPrefix locals 2067 M.dest g.p.m.toNat
-  pos : WordPrefix locals 3091 M.pos g.p.n.toNat
+  dest : WordPrefix locals 2067 M.dest g.p.sourceSize.toNat
+  pos : WordPrefix locals 3091 M.pos g.p.targetSize.toNat
   original : locals[4118]? = some (t.regs.rsp.toBitVec + 96#64)
 
 section
@@ -230,12 +230,12 @@ theorem EmitCountLI.storePending (h : EmitCountLI P g M F s ra lo locals t)
   refine ⟨h.toEmitLI.storeLocal hok (by decide) (by decide) w hm hsp hbx h14 h13 hbp h12 h15,
     h.dest.set_outside ?_ w, h.pos.set_outside ?_ w, ?_⟩
   · intro i hi
-    have hm := hok.planner.m
-    change g.p.m.toNat ≤ 1024 at hm
+    have hm := hok.planner.sourceSizeFitsBuffer
+    change g.p.sourceSize.toNat ≤ 1024 at hm
     omega
   · intro i hi
-    have hn := hok.planner.n
-    change g.p.n.toNat ≤ 1024 at hn
+    have hn := hok.planner.targetSizeFitsBuffer
+    change g.p.targetSize.toNat ≤ 1024 at hn
     omega
   · simpa only [List.getElem?_set, show (4115:Nat) ≠ 4118 by decide,
       ↓reduceIte, hsp] using h.original
@@ -244,17 +244,17 @@ end
 
 def EmitCountHead (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapping) (F : MProp 64)
     (s : MachineData) (ra : Int64) (t : MachineData) : Prop :=
-  ∃ lo locals j c, EmitCountLI P g M F s ra lo locals t ∧ j < g.p.n ∧
+  ∃ lo locals j c, EmitCountLI P g M F s ra lo locals t ∧ j < g.p.targetSize ∧
     rax t = t.regs.rsp.toBitVec + 16480#64 + j * 8#64 ∧
-    rdx t = t.regs.rsp.toBitVec + 16480#64 + g.p.n * 8#64 ∧
+    rdx t = t.regs.rsp.toBitVec + 16480#64 + g.p.targetSize * 8#64 ∧
     locals[4115]? = some c ∧
     Flat.unmappedFrom (countState g M) j c = Flat.unmappedFrom (countState g M) 0 0
 
 def EmitCountNext (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapping) (F : MProp 64)
     (s : MachineData) (ra : Int64) (t : MachineData) : Prop :=
-  ∃ lo locals j c, EmitCountLI P g M F s ra lo locals t ∧ j < g.p.n ∧
+  ∃ lo locals j c, EmitCountLI P g M F s ra lo locals t ∧ j < g.p.targetSize ∧
     rax t = t.regs.rsp.toBitVec + 16480#64 + j * 8#64 ∧
-    rdx t = t.regs.rsp.toBitVec + 16480#64 + g.p.n * 8#64 ∧
+    rdx t = t.regs.rsp.toBitVec + 16480#64 + g.p.targetSize * 8#64 ∧
     locals[4115]? = some c ∧
     Flat.unmappedFrom (countState g M) (j + 1#64) c = Flat.unmappedFrom (countState g M) 0 0
 

@@ -15,7 +15,7 @@ theorem Lc.exists_of_length (xs : List Word) (hl : xs.length = 1159) :
   match xs, hl with
   | x0 :: pending :: cls :: excess :: pass :: count :: xs, hl =>
     have hx : xs.length = 1153 := by simpa using hl
-    let cand : Vector Word MAX_N := ⟨(xs.take 1024).toArray, by simp [hx, MAX_N]⟩
+    let cand : Vector Word maxStackSize := ⟨(xs.take 1024).toArray, by simp [hx, maxStackSize]⟩
     let dn : Vector Word 128 := ⟨((xs.drop 1024).take 128).toArray, by simp [hx]⟩
     have hd : (xs.drop 1152).length = 1 := by simp [hx]
     match he : xs.drop 1152, hd with
@@ -58,7 +58,7 @@ theorem Bd.typedWord (h : Bd P r F s ra lo L.toList t) (i : Nat) (hi : i < 1159)
   h.localWord i (by simpa using hi)
 
 theorem Bd.droppedRead (h : Bd P r F s ra lo L.toList t) {o : Word}
-    (ho : o.toNat < MAX_N) :
+    (ho : o.toNat < maxStackSize) :
     Flat.get L.droppedNow o = rdb t.dmem (t.regs.rsp.toBitVec + 8240#64 + o) := by
   obtain ⟨R, hm⟩ := h.kb.arr_hi (lo := lo) (hi := L.toList ++ saved s) h.hi_len
   rw [Lc.dropped_frame] at hm
@@ -78,8 +78,8 @@ theorem Bd.droppedRead (h : Bd P r F s ra lo L.toList t) {o : Word}
   simpa only [Flat.get, dite_eq_left ho, Vector.getElem_toList] using (B8.rdb hm).symm
 
 theorem Bd.droppedZero (h : Bd P r F s ra lo L.toList t)
-    (hz : ZeroPrefix r.p.m t) (hm : r.p.m.toNat ≤ MAX_N) :
-    ∀ o : Word, o < r.p.m → Flat.get L.droppedNow o = 0#8 := by
+    (hz : ZeroPrefix r.p.sourceSize t) (hm : r.p.sourceSize.toNat ≤ maxStackSize) :
+    ∀ o : Word, o < r.p.sourceSize → Flat.get L.droppedNow o = 0#8 := by
   intro o ho
   exact (h.droppedRead (Nat.lt_of_lt_of_le (BitVec.lt_def.mp ho) hm)).trans (hz o ho)
 

@@ -44,8 +44,8 @@ def pop (st : St) : Status × St :=
 
 -- The arrays of a `Mapping`.
 structure Mapping where
-  dest : Vector Word MAX_N
-  pos : Vector Word MAX_N
+  dest : Vector Word maxStackSize
+  pos : Vector Word maxStackSize
 
 -- `Mapping(sourceSize, targetSize)`, on the arrays `u`.
 def Mapping.init (u : Mapping) (m n : Word) : Mapping :=
@@ -58,7 +58,7 @@ def Mapping.bind (M : Mapping) (p d : Word) : Mapping :=
   ⟨put M.dest p d, put M.pos d p⟩
 
 -- The planned mapping of `emission_pop` and `build_bottom_up`, on the arrays `u`.
-def plan (u : Mapping) (m n : Word) (dests : Vector Word MAX_N) : Mapping :=
+def plan (u : Mapping) (m n : Word) (dests : Vector Word maxStackSize) : Mapping :=
   (offsets m).foldl (fun M p => if get dests p ≠ NONE then M.bind p (get dests p) else M)
     (u.init m n)
 
@@ -71,7 +71,7 @@ def Mapping.copy (u other : Mapping) (m n : Word) : Mapping :=
 
 -- The constructor of `Emission`: `data` holds the `m` slots of the source stack, and
 -- `planned` is the planned mapping.
-def ctorP (data : Vector StackSlot MAX_N) (m : Word) (target : Vector StackSlot MAX_N) (n : Word)
+def ctorP (data : Vector StackSlot maxStackSize) (m : Word) (target : Vector StackSlot maxStackSize) (n : Word)
     (planned : Mapping) (spills : BitVec 32 → BitVec 8) (u : Uninit) : St :=
   let M := Mapping.copy ⟨u.dest, u.pos⟩ planned m n
   let st : St := { target, targetSize := n, spills, data, size := m, trace := [],
@@ -92,10 +92,10 @@ def popLoop (st : St) : Nat → Status × St
 -- `Emission` that the constructor does not initialize, and `up` the content of the arrays of
 -- the planned mapping. The C++ writes `dest` below `size`, `pos` below `targetSize` and `pend`
 -- of the final state.
-def emission_pop (m n : Word) (data target : Vector StackSlot MAX_N) (dests : Vector Word MAX_N)
+def emission_pop (m n : Word) (data target : Vector StackSlot maxStackSize) (dests : Vector Word maxStackSize)
     (spilled : BitVec 32 → BitVec 8) (count : Word) (u : Uninit) (up : Mapping) :
     Word × Option St :=
-  if m > .ofNat 64 MAX_N ∨ n > .ofNat 64 MAX_N then (-2, none)
+  if m > .ofNat 64 maxStackSize ∨ n > .ofNat 64 maxStackSize then (-2, none)
   else
     let r := popLoop (ctorP data m target n (plan up m n dests) spilled u) count.toNat
     if r.1 ≠ .done then (-2, some r.2)

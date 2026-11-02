@@ -10,9 +10,9 @@ import all FlatShuffler.Unit.Plan.PlannerRunModel
 namespace FlatShuffler.Unit.PlannerRunU
 
 def emptyRunU : Flat.RunU :=
-  let w : Vector Word MAX_N := Vector.replicate MAX_N 0#64
+  let w : Vector Word maxStackSize := Vector.replicate maxStackSize 0#64
   ⟨⟨w, w⟩, ⟨w, w, 0#64, 0#64⟩, ⟨w, w, w⟩,
-    ⟨Vector.replicate MAX_N 0#8, w⟩⟩
+    ⟨Vector.replicate maxStackSize 0#8, w⟩⟩
 
 theorem plannerRunX_bad_target (g : PlannerCallMemory) (s t : MachineData)
     (h : Flat.targetsFrom g.p.fl g.spills 0 = false) :

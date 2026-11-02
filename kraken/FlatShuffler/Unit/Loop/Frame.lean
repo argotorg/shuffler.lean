@@ -50,7 +50,7 @@ theorem sub_sub_ofNat (a : Addr) (j k : Nat) :
 
 -- The locals above `8(%rsp)`: the array `permutation` and one word.
 structure Lc where
-  A : Vector Word MAX_N
+  A : Vector Word maxStackSize
   pad : Word
 
 -- The words from `sp - 8272` up without the array: the locals `x0`, `u`, `pad`, the six pushed
@@ -100,7 +100,7 @@ theorem stk_frame (sp : Addr) (lo : List Word) (w x0 u : Word) (L : Lc)
   simp only [Arr, MProp.sep_emp]
   rw [show sp - 8272#64 + 8#64 = sp - 8264#64 by bv_omega,
     show sp - 8264#64 + 8#64 = sp - 8256#64 by bv_omega,
-    show sp - 8256#64 + BitVec.ofNat 64 (8 * MAX_N) = sp - 64#64 by simp [MAX_N]; bv_omega,
+    show sp - 8256#64 + BitVec.ofNat 64 (8 * maxStackSize) = sp - 64#64 by simp [maxStackSize]; bv_omega,
     show sp - 64#64 + 8#64 = sp - 56#64 by bv_omega,
     show sp - 56#64 + 8#64 = sp - 48#64 by bv_omega,
     show sp - 48#64 + 8#64 = sp - 40#64 by bv_omega,
@@ -136,7 +136,7 @@ theorem split2068 {fr : List Word} (h : fr.length = 2068) :
     have hd' : (r.drop 1024).length = 7 := by simp [hr]
     match e' : r.drop 1024, hd' with
     | [pad, a3, a4, a5, a6, a7, a8], _ =>
-      refine ⟨fr.take 1034, w, x0, u, ⟨⟨(r.take 1024).toArray, by simp [hr, MAX_N]⟩, pad⟩,
+      refine ⟨fr.take 1034, w, x0, u, ⟨⟨(r.take 1024).toArray, by simp [hr, maxStackSize]⟩, pad⟩,
         a3, a4, a5, a6, a7, a8, ?_, by simp [h]⟩
       have hr' : r = r.take 1024 ++ [pad, a3, a4, a5, a6, a7, a8] := by
         conv => lhs; rw [← List.take_append_drop 1024 r, e']
@@ -381,7 +381,7 @@ theorem mid_A (V X : MProp 64) (s : MachineData) (ra : Int64) (x0 u : Word) (L :
     V ∗ X ∗ Fr s ra x0 u L F = Arr (rsp s - 8256#64) L.A.toList ∗ (V ∗ X ∗ FrR s ra x0 u L.pad F) := by
   unfold Fr FrR Top; ac_rfl
 
-theorem Mid.rdA {t : MachineData} (h : Mid S g F s ra x0 x2 lo w u t) {i : Nat} (hi : i < MAX_N)
+theorem Mid.rdA {t : MachineData} (h : Mid S g F s ra x0 x2 lo w u t) {i : Nat} (hi : i < maxStackSize)
     {a : Addr} (ha : a = rsp s - 8256#64 + BitVec.ofNat 64 (8 * i)) : rd t.dmem a = x2.A[i] := by
   have hm := h.mem
   rw [mid_A] at hm
@@ -389,7 +389,7 @@ theorem Mid.rdA {t : MachineData} (h : Mid S g F s ra x0 x2 lo w u t) {i : Nat} 
   exact (Arr.rd hm (by simpa using hi)).trans (by simp)
 
 theorem Mid.isSomeA {t : MachineData} (h : Mid S g F s ra x0 x2 lo w u t) {i : Nat}
-    (hi : i < MAX_N) {a : Addr} (ha : a = rsp s - 8256#64 + BitVec.ofNat 64 (8 * i)) :
+    (hi : i < maxStackSize) {a : Addr} (ha : a = rsp s - 8256#64 + BitVec.ofNat 64 (8 * i)) :
     (t.dmem.loadInt a 8).isSome = true := by
   have hm := h.mem
   rw [mid_A] at hm
@@ -397,7 +397,7 @@ theorem Mid.isSomeA {t : MachineData} (h : Mid S g F s ra x0 x2 lo w u t) {i : N
   exact Arr.isSome hm (by simpa using hi)
 
 theorem Mid.storeA {t P : MachineData} (h : Mid S g F s ra x0 x2 lo w u t) {i : Nat}
-    (hi : i < MAX_N) {a : Addr} (ha : a = rsp s - 8256#64 + BitVec.ofNat 64 (8 * i)) (v : Word)
+    (hi : i < maxStackSize) {a : Addr} (ha : a = rsp s - 8256#64 + BitVec.ofNat 64 (8 * i)) (v : Word)
     (hm : P.dmem = t.dmem.storeInt a 8 v.toInt) (hsp : P.regs.rsp = t.regs.rsp)
     (h12 : P.regs.r12 = t.regs.r12) :
     Mid S g F s ra x0 { x2 with A := x2.A.set i v hi } lo w u P := by
@@ -510,7 +510,7 @@ theorem Mid.callW {A : G → MachineData → Prop} {Q : G → G → MachineData 
   · have hm := h.mem
     rw [mid_A] at hm
     rw [hsp, permW, hsi, e]
-    exact ExArr.intro (n := MAX_N) (by simp) hm
+    exact ExArr.intro (n := maxStackSize) (by simp) hm
   · rintro s' ⟨g', fr', v', hQ, hok', hfl, hm⟩ hag
     rw [hsp, permW, hsi, e] at hm
     obtain ⟨vs, hvs, hm⟩ := ExArr.elim hm
@@ -546,7 +546,7 @@ theorem Mid.callWExit {A : G → MachineData → Prop}
   · have hm := h.mem
     rw [mid_A] at hm
     rw [hsp, permW, hsi, e]
-    exact ExArr.intro (n := MAX_N) (by simp) hm
+    exact ExArr.intro (n := maxStackSize) (by simp) hm
   · rintro t ⟨g', fr', v', hQ, hok', hfl, hm⟩ hag
     rw [hsp, permW, hsi, e] at hm
     obtain ⟨vs, hvs, hm⟩ := ExArr.elim hm

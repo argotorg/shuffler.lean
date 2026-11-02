@@ -45,10 +45,10 @@ def words : List Word :=
 #guard words.all fun x => x + 1#64 + BitVec.ofInt 64 (-1) == x
 #guard BitVec.allOnes 64 + 1#64 == 0#64
 
-/-! ## `len + 1` and `nops + 1` do not wrap below `6 * MAX_N` (`toNat_succ`) -/
+/-! ## `len + 1` and `nops + 1` do not wrap below `6 * maxStackSize` (`toNat_succ`) -/
 
-#guard (BitVec.ofNat 64 (6 * MAX_N - 1) + 1#64).toNat == 6 * MAX_N
-example (x : Word) (h : x.toNat < 6 * MAX_N) : (x + 1#64).toNat = x.toNat + 1 :=
+#guard (BitVec.ofNat 64 (6 * maxStackSize - 1) + 1#64).toNat == 6 * maxStackSize
+example (x : Word) (h : x.toNat < 6 * maxStackSize) : (x + 1#64).toNat = x.toNat + 1 :=
   toNat_succ x h (by decide)
 -- Negative: with no bound, `2^64 - 1` wraps to `0`.
 #guard (BitVec.allOnes 64 + 1#64).toNat == 0
@@ -82,15 +82,15 @@ def kindAsm (x y w : Word) : BitVec 8 :=
 
 /-! ## `Flat.get` and `Flat.put` in bounds and out of bounds (`get_eq`, `put_eq_set`) -/
 
-def v5 : Vector Word MAX_N := Vector.replicate MAX_N 5
+def v5 : Vector Word maxStackSize := Vector.replicate maxStackSize 5
 
-#guard Flat.get v5 (BitVec.ofNat 64 (MAX_N - 1)) == 5
-#guard Flat.get (Flat.put v5 (BitVec.ofNat 64 (MAX_N - 1)) 9) (BitVec.ofNat 64 (MAX_N - 1)) == 9
-#guard Flat.put v5 (BitVec.ofNat 64 (MAX_N - 1)) 9 == v5.set (MAX_N - 1) 9 (by decide)
+#guard Flat.get v5 (BitVec.ofNat 64 (maxStackSize - 1)) == 5
+#guard Flat.get (Flat.put v5 (BitVec.ofNat 64 (maxStackSize - 1)) 9) (BitVec.ofNat 64 (maxStackSize - 1)) == 9
+#guard Flat.put v5 (BitVec.ofNat 64 (maxStackSize - 1)) 9 == v5.set (maxStackSize - 1) 9 (by decide)
 -- Negative: out of bounds, `get` is `default` and `put` does nothing. `get_eq` and
 -- `put_eq_set` need the bound.
-#guard Flat.get v5 (BitVec.ofNat 64 MAX_N) == 0
-#guard Flat.put v5 (BitVec.ofNat 64 MAX_N) 9 == v5
+#guard Flat.get v5 (BitVec.ofNat 64 maxStackSize) == 0
+#guard Flat.put v5 (BitVec.ofNat 64 maxStackSize) 9 == v5
 #guard Flat.get v5 Flat.NONE == 0
 
 /-! ## `vec` and `take` after `set` (`vec_set`, `take_set_succ`) -/
@@ -110,7 +110,7 @@ def v5 : Vector Word MAX_N := Vector.replicate MAX_N 5
 def opA : Op := ⟨1#8, 2#8, ⟨7#32, 0#8, 1#8⟩⟩
 
 def ghost (p : Word) : G :=
-  ⟨⟨0, 2#64, 0, 0, 1, 0, 1, Vector.replicate MAX_N Flat.NONE, Vector.replicate MAX_N p, 0, 0, 0⟩,
+  ⟨⟨0, 2#64, 0, 0, 1, 0, 1, Vector.replicate maxStackSize Flat.NONE, Vector.replicate maxStackSize p, 0, 0, 0⟩,
     0, 0, Vector.replicate 2 var7, Vector.replicate 12 ⟨opA, 0, 0⟩, Vector.replicate 2 var7,
     fun _ => 0⟩
 
@@ -147,8 +147,8 @@ def stored (g : G) (w : Word) (r : OpR) (hl : g.h.len.toNat < g.h.n.toNat)
 
 -- The ghost after the stores of the fall-through path: also `dest` and `pos`.
 def bound (g : G) (w : Word) (r : OpR) (hl : g.h.len.toNat < g.h.n.toNat)
-    (hn : g.h.nops.toNat < 6 * g.h.n.toNat + g.xo) (dd : Word) (hp : g.h.len.toNat < MAX_N)
-    (hd : dd.toNat < MAX_N) : G :=
+    (hn : g.h.nops.toNat < 6 * g.h.n.toNat + g.xo) (dd : Word) (hp : g.h.len.toNat < maxStackSize)
+    (hd : dd.toNat < maxStackSize) : G :=
   { h := { g.h with len := g.h.len + 1#64, nops := g.h.nops + 1#64,
                     dest := g.h.dest.set g.h.len.toNat dd hp,
                     pos := g.h.pos.set dd.toNat g.h.len hd },

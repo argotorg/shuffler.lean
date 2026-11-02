@@ -13,17 +13,17 @@ private def x : StackSlot := ⟨1, Value, Const⟩
 private def y : StackSlot := ⟨2, Value, Const⟩
 private def z : StackSlot := ⟨3, Value, Const⟩
 
-private def slots (xs : List StackSlot) : Vector StackSlot MAX_N :=
+private def slots (xs : List StackSlot) : Vector StackSlot maxStackSize :=
   Vector.ofFn fun i => xs[i.val]?.getD .junk
 
-private def words (xs : List Word) : Vector Word MAX_N :=
+private def words (xs : List Word) : Vector Word maxStackSize :=
   Vector.ofFn fun i => xs[i.val]?.getD 0
 
 private def st : St :=
   ⟨slots [y, x], 2, fun _ => 0, slots [x, y, x], 2, [],
     words [1, 0], words [1, 0], 0, 0, 0⟩
 
-private def old : Vector StackSlot MAX_N := Vector.replicate MAX_N z
+private def old : Vector StackSlot maxStackSize := Vector.replicate maxStackSize z
 private def locals : Locals := ⟨initial, initial, initial⟩
 
 -- A zero-size call uses no data elements.
@@ -43,10 +43,10 @@ private def locals : Locals := ⟨initial, initial, initial⟩
 #guard (permuteAtLowestHeight (words [0, 1]) locals st).2.targetSize = st.targetSize
 
 -- The maximum capacity includes the last element of the model array.
-#guard get (restoreData MAX_N old {st with data := Vector.replicate MAX_N x}).data
-  (BitVec.ofNat 64 (MAX_N - 1)) = x
+#guard get (restoreData maxStackSize old {st with data := Vector.replicate maxStackSize x}).data
+  (BitVec.ofNat 64 (maxStackSize - 1)) = x
 
-private def bad : Vector Word MAX_N := words [0, 2]
+private def bad : Vector Word maxStackSize := words [0, 2]
 
 -- A malformed permutation can read past the physical capacity.
 -- The bijection premise in the frame theorem rules out this case.
@@ -61,16 +61,16 @@ private def tailY : St := {st with data := slots [x, y, y]}
 #guard (permuteLoop 1 tailY 1 bad).1 = .assertionFailed
 
 -- Arbitrary tail values remain unchanged outside a one-element buffer.
-example (tail : Vector StackSlot MAX_N) :
+example (tail : Vector StackSlot maxStackSize) :
     get (restoreData 1 tail st).data 0 = get st.data 0 :=
   restoreData_get 1 tail st 0 (by decide +kernel)
 
-example (tail : Vector StackSlot MAX_N) :
+example (tail : Vector StackSlot maxStackSize) :
     (restoreData 1 tail st).data[1] = tail[1] := by
   simp only [restoreData, Vector.getElem_ofFn]
   rfl
 
-example (tail : Vector StackSlot MAX_N) : (restoreData 0 tail st).data = tail := by
+example (tail : Vector StackSlot maxStackSize) : (restoreData 0 tail st).data = tail := by
   apply Vector.ext
   intro i hi
   simp only [restoreData, Vector.getElem_ofFn, Nat.not_lt_zero, ↓reduceIte]

@@ -18,7 +18,7 @@ theorem succ_nat {i n : Word} (h : i < n) : (i + 1#64).toNat = i.toNat + 1 := by
 theorem succ_lt {i n : Word} (h : i < n) (hne : n ≠ i + 1#64) : i + 1#64 < n := by bv_omega
 
 section
-variable [Host] [FunDecls] (S PM : Addr) (planned : Vector Word MAX_N)
+variable [Host] [FunDecls] (S PM : Addr) (planned : Vector Word maxStackSize)
     (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
 
 theorem b_3 : runAsm.ForallBlocks fun blk =>
@@ -27,7 +27,7 @@ theorem b_3 : runAsm.ForallBlocks fun blk =>
   intro t ht
   simp only [Inv, Names.run, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨a, l, lo, w, h, h12, hcx, hi, hsize, hscan⟩ := ht
-  have hiM : t.regs.rax.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hi h.ok.n
+  have hiM : t.regs.rax.toBitVec.toNat < maxStackSize := Nat.lt_of_lt_of_le hi h.ok.n
   have hpos := h.bd.rd_pos h.ok hi
   unfold rd at hpos
   have lm := View.isSome_pos h.bd.mem hiM
@@ -63,7 +63,7 @@ theorem b_2 : runAsm.ForallBlocks fun blk =>
   intro t ht
   simp only [Inv, Names.run, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨a, l, lo, w, h, h12, hcx, hi, hsize, hscan⟩ := ht
-  have hin : t.regs.rax.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hi h.ok.n
+  have hin : t.regs.rax.toBitVec.toNat < maxStackSize := Nat.lt_of_lt_of_le hi h.ok.n
   have hn := succ_nat hi
   kvcgen64
   all_goals try symexec_norm

@@ -35,11 +35,11 @@ theorem cfg_29 : plannerRunAsm.ForallBlocks fun blk =>
     RunResolvePhase] at ht
   obtain ⟨current, M, locals, hl, ctx, hblocked, hcells, hin, ht⟩ := ht
   obtain ⟨lo, i, h0, hi, hax, hrest⟩ := ht
-  have hm := congrArg PlannerObjectMemory.m ctx.stable.planner
-  change current.p.m = g.p.m at hm
+  have hm := congrArg PlannerObjectMemory.sourceSize ctx.stable.planner
+  change current.p.sourceSize = g.p.sourceSize at hm
   have hp := congrArg PlannerObjectMemory.drp ctx.stable.planner
   change current.p.drp = g.p.drp at hp
-  have hiN : i.toNat < 1024 := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) h0.ok.planner.m
+  have hiN : i.toNat < 1024 := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) h0.ok.planner.sourceSizeFitsBuffer
   have hidx : (rax t - g.p.drp).toNat = i.toNat := by
     have he : rax t - g.p.drp = i := by rw [hax, hp]; bv_omega
     rw [he]
@@ -50,7 +50,7 @@ theorem cfg_29 : plannerRunAsm.ForallBlocks fun blk =>
     I' (RunExit P g F s ra) (by
       intro u ha hu
       obtain ⟨lo', i', h1, hi', hax', hrest'⟩ := hu
-      have hiN' : i'.toNat < 1024 := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi') h0.ok.planner.m
+      have hiN' : i'.toNat < 1024 := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi') h0.ok.planner.sourceSizeFitsBuffer
       have hidx' : (rax u - g.p.drp).toNat = i'.toNat := by
         have he : rax u - g.p.drp = i' := by rw [hax', hp]; bv_omega
         rw [he]
@@ -68,8 +68,8 @@ theorem cfg_29 : plannerRunAsm.ForallBlocks fun blk =>
             ⟨lo', i', h1, hi', hax', hrest'⟩)
       · simp only [runV, String.reduceEq, or_false, ↓reduceIte, hb, hidx, hidx', hs]
         rw [hm] at hi hi'
-        change i.toNat < g.p.m.toNat at hi
-        change i'.toNat < g.p.m.toNat at hi'
+        change i.toNat < g.p.sourceSize.toNat at hi
+        change i'.toNat < g.p.sourceSize.toNat at hi'
         omega) (by
       intro u hu
       have h1 := hu.choose_spec.1
@@ -98,13 +98,13 @@ theorem cfg_30 (hout : ∀ l ∈ plannerRunAsm.labels, label l ≠ label "exit")
     RunResolvePhase] at ht
   obtain ⟨current, M, locals, hl, ctx, hblocked, hcells, hin, ht⟩ := ht
   obtain ⟨lo, h0, hbp⟩ := ht
-  let scratch : Flat.ResolveU := ⟨Vector.replicate MAX_N 0#8, Vector.replicate MAX_N 0#64⟩
-  let before := Flat.droppedCount current.p.m current.dropped
-  have hm := congrArg PlannerObjectMemory.m ctx.stable.planner
-  change current.p.m = g.p.m at hm
+  let scratch : Flat.ResolveU := ⟨Vector.replicate maxStackSize 0#8, Vector.replicate maxStackSize 0#64⟩
+  let before := Flat.droppedCount current.p.sourceSize current.dropped
+  have hm := congrArg PlannerObjectMemory.sourceSize ctx.stable.planner
+  change current.p.sourceSize = g.p.sourceSize at hm
   have hp := congrArg PlannerObjectMemory.drp ctx.stable.planner
   change current.p.drp = g.p.drp at hp
-  have hmb : g.p.m.toNat ≤ 1024 := by rw [← hm]; exact h0.ok.planner.m
+  have hmb : g.p.sourceSize.toNat ≤ 1024 := by rw [← hm]; exact h0.ok.planner.sourceSizeFitsBuffer
   have hb := dropBudget_eq ctx.stable h0.kb.vmem
   let I' (b : CfgLabel) (j : Nat) (_ : Unit) (u : MachineData) :=
     FullRunInv P g F s ra b u ∧
@@ -137,9 +137,9 @@ theorem cfg_30 (hout : ∀ l ∈ plannerRunAsm.labels, label l ≠ label "exit")
       intro spills dropped res lo' u hr h1 hres hm0
       have hmodel := hcells.resolved hr scratch
       let rc := ctx.afterResolve hblocked scratch res spills dropped hmodel
-      have hnone : ¬ Flat.droppedCount (withResolve current spills dropped).p.m
+      have hnone : ¬ Flat.droppedCount (withResolve current spills dropped).p.sourceSize
           (withResolve current spills dropped).dropped > before := by
-        change ¬ Flat.droppedCount current.p.m dropped > Flat.droppedCount current.p.m current.dropped
+        change ¬ Flat.droppedCount current.p.sourceSize dropped > Flat.droppedCount current.p.sourceSize current.dropped
         simp only [hm0, Flat.droppedCount, dropped_end (by decide : ¬ (0 : Word) < 0#64)]
         decide
       apply Program.Intercept.intro_label (i := 14)
@@ -163,15 +163,15 @@ theorem cfg_30 (hout : ∀ l ∈ plannerRunAsm.labels, label l ≠ label "exit")
       · simp only [FullRunInv, RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte]
         refine ⟨withResolve current spills dropped, M, before, rc, hres,
           lo', locals, (0 : Word), hretry, ?_, ?_, hcx, hbp', ?_⟩
-        · change 0#64 < current.p.m
+        · change 0#64 < current.p.sourceSize
           bv_omega
         · exact hax.trans (by change current.p.drp = current.p.drp + 0#64; bv_omega)
         · rw [hdx]
           rfl
       · simp only [runV, String.reduceEq, or_false, ↓reduceIte, hb, hbp', hax, hp,
           BitVec.sub_self, BitVec.toNat_ofNat, Nat.zero_mod, Nat.sub_zero]
-        change (g.p.m - before).toNat * 65536 + 4096 + g.p.m.toNat <
-          (current.p.m - before).toNat * 65536 + 8000
+        change (g.p.sourceSize - before).toNat * 65536 + 4096 + g.p.sourceSize.toNat <
+          (current.p.sourceSize - before).toNat * 65536 + 8000
         rw [hm]
         omega) (by
       intro spills dropped lo' u hlo hmem hr harg

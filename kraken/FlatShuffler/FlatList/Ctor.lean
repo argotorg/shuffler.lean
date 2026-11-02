@@ -16,19 +16,19 @@ namespace FlatShuffler.Flat
 
 def clearF (st : St) (d : Word) : St := { st with pos := put st.pos d NONE }
 
-def bindF (dests : Vector Word MAX_N) (st : St) (p : Word) : St := bind st p (get dests p)
+def bindF (dests : Vector Word maxStackSize) (st : St) (p : Word) : St := bind st p (get dests p)
 
 def countF (st : St) (d : Word) : St :=
   if get st.pos d = NONE then { st with pend := st.pend + 1 } else st
 
-def ctor0 (data : Vector StackSlot MAX_N) (m : Word) (target : Vector StackSlot MAX_N) (n : Word)
+def ctor0 (data : Vector StackSlot maxStackSize) (m : Word) (target : Vector StackSlot maxStackSize) (n : Word)
     (spills : BitVec 32 → BitVec 8) (u : Uninit) : St :=
   { target, targetSize := n, spills, data, size := m, trace := [],
     dest := u.dest, pos := u.pos, pend := 0,
     blockedOffset := u.blockedOffset, blockedExcess := u.blockedExcess }
 
-theorem ctor_eq (data : Vector StackSlot MAX_N) (m : Word) (target : Vector StackSlot MAX_N)
-    (n : Word) (dests : Vector Word MAX_N) (spills : BitVec 32 → BitVec 8) (u : Uninit) :
+theorem ctor_eq (data : Vector StackSlot maxStackSize) (m : Word) (target : Vector StackSlot maxStackSize)
+    (n : Word) (dests : Vector Word maxStackSize) (spills : BitVec 32 → BitVec 8) (u : Uninit) :
     ctor data m target n dests spills u = (offsets n).foldl countF ((offsets m).foldl (bindF dests)
       ((offsets n).foldl clearF (ctor0 data m target n spills u))) := rfl
 
@@ -42,14 +42,14 @@ theorem foldl_ofs_succ {α : Type} (f : α → Word → α) (a : α) (k : Nat) :
     (ofs (k + 1)).foldl f a = f ((ofs k).foldl f a) (BitVec.ofNat 64 k) := by
   simp [ofs, List.range_succ]
 
-theorem MAX_N_eq : MAX_N = 1024 := rfl
+theorem MAX_N_eq : maxStackSize = 1024 := rfl
 
-theorem toNat_ofNat_small {k : Nat} (hk : k < MAX_N) : (BitVec.ofNat 64 k).toNat = k :=
+theorem toNat_ofNat_small {k : Nat} (hk : k < maxStackSize) : (BitVec.ofNat 64 k).toNat = k :=
   toNat_ofNat_of_lt (by rw [MAX_N_eq] at hk; omega)
 
 
 -- An offset below `k + 1` that is not `k` is below `k`.
-theorem lt_of_ne_ofNat {d : Word} {k : Nat} (hk : k < MAX_N) (hd : d.toNat < k + 1)
+theorem lt_of_ne_ofNat {d : Word} {k : Nat} (hk : k < maxStackSize) (hd : d.toNat < k + 1)
     (h : d ≠ BitVec.ofNat 64 k) : d.toNat < k := by
   have : d.toNat ≠ k := fun he => h (eq_of_toNat (by rw [toNat_ofNat_small hk]; exact he))
   omega
@@ -68,7 +68,7 @@ def frame (st : St) :=
 
 /-! ## The first loop: no destination has a position -/
 
-theorem clear_pos (st : St) {k : Nat} (hk : k ≤ MAX_N) {d : Word} (hd : d.toNat < k) :
+theorem clear_pos (st : St) {k : Nat} (hk : k ≤ maxStackSize) {d : Word} (hd : d.toNat < k) :
     get ((ofs k).foldl clearF st).pos d = NONE := by
   induction k with
   | zero => omega
@@ -81,14 +81,14 @@ theorem clear_pos (st : St) {k : Nat} (hk : k ≤ MAX_N) {d : Word} (hd : d.toNa
 
 /-! ## The second loop: each source slot is bound for its destination -/
 
-theorem listDests_length {M : Nat} (dest : Vector Word MAX_N) (hM : M ≤ MAX_N) :
+theorem listDests_length {M : Nat} (dest : Vector Word maxStackSize) (hM : M ≤ maxStackSize) :
     (listDests M dest).length = M := by
   simp [listDests]; omega
 
-theorem listDests_get {M : Nat} {dest : Vector Word MAX_N} (hM : M ≤ MAX_N) {i : Nat}
+theorem listDests_get {M : Nat} {dest : Vector Word maxStackSize} (hM : M ≤ maxStackSize) {i : Nat}
     (hi : i < M) : (listDests M dest)[i]! = (get dest (BitVec.ofNat 64 i)).toNat := by
   rw [getElem!_pos _ _ (by rw [listDests_length dest hM]; exact hi)]
-  simp [listDests, get, toNat_ofNat_small (show i < MAX_N by omega), show i < MAX_N by omega]
+  simp [listDests, get, toNat_ofNat_small (show i < maxStackSize by omega), show i < maxStackSize by omega]
 
 -- The positions after `k` steps of `initPositionOf`.
 def initPos (n : Nat) (dests : List Nat) (k : Nat) : List (Option Nat) :=
@@ -103,7 +103,7 @@ theorem initPos_length (n : Nat) (dests : List Nat) (k : Nat) : (initPos n dests
   | zero => simp [initPos]
   | succ k ih => rw [initPos_succ, List.length_set, ih]
 
-theorem bind_loop {n M : Nat} (hn : n ≤ MAX_N) (hM : M ≤ n) {dest : Vector Word MAX_N}
+theorem bind_loop {n M : Nat} (hn : n ≤ maxStackSize) (hM : M ≤ n) {dest : Vector Word maxStackSize}
     (hd : Dests n (listDests M dest)) (st : St)
     (h0 : ∀ d : Word, d.toNat < n → get st.pos d = NONE) {k : Nat} (hk : k ≤ M) :
     (∀ i : Word, i.toNat < k → get ((ofs k).foldl (bindF dest) st).dest i = get dest i) ∧
@@ -118,7 +118,7 @@ theorem bind_loop {n M : Nat} (hn : n ≤ MAX_N) (hM : M ≤ n) {dest : Vector W
     rfl
   | succ k ih =>
     obtain ⟨ih1, ih2⟩ := ih (by omega)
-    have hkM : k < MAX_N := by omega
+    have hkM : k < maxStackSize := by omega
     have hx := hd.1 k (by rw [listDests_length dest (by omega)]; omega)
     rw [← getElem!_pos, listDests_get (by omega) (by omega)] at hx
     rw [foldl_ofs_succ]
@@ -138,7 +138,7 @@ theorem bind_loop {n M : Nat} (hn : n ≤ MAX_N) (hM : M ≤ n) {dest : Vector W
 
 /-! ## The third loop: the count of the destinations without a position -/
 
-theorem count_loop (st : St) (h0 : st.pend = 0) {k : Nat} (hk : k ≤ MAX_N) :
+theorem count_loop (st : St) (h0 : st.pend = 0) {k : Nat} (hk : k ≤ maxStackSize) :
     ((ofs k).foldl countF st).pos = st.pos ∧ ((ofs k).foldl countF st).dest = st.dest ∧
     ((ofs k).foldl countF st).pend.toNat =
       (List.range k).countP (fun d => get st.pos (BitVec.ofNat 64 d) == NONE) := by
@@ -168,11 +168,11 @@ theorem count_loop (st : St) (h0 : st.pend = 0) {k : Nat} (hk : k ≤ MAX_N) :
 
 /-! ## The constructor -/
 
-theorem listEnv_n {n : Nat} (target : Vector StackSlot MAX_N) (spills : BitVec 32 → BitVec 8)
-    (hn : n ≤ MAX_N) : (listEnv n target spills).n = n := by
+theorem listEnv_n {n : Nat} (target : Vector StackSlot maxStackSize) (spills : BitVec 32 → BitVec 8)
+    (hn : n ≤ maxStackSize) : (listEnv n target spills).n = n := by
   simp [listEnv, Env.n]; omega
 
-theorem listSource_length {M : Nat} (data : Vector StackSlot MAX_N) (hM : M ≤ MAX_N) :
+theorem listSource_length {M : Nat} (data : Vector StackSlot maxStackSize) (hM : M ≤ maxStackSize) :
     (listSource M data).length = M := by
   simp [listSource]; omega
 
@@ -185,13 +185,13 @@ theorem init_val {e : Env} {source : List StackSlot} {dests : List Nat}
     (init e source dests).val i = source[i] := by
   simp [St.val, init, List.getElem?_zipWith, hi, hl ▸ hi]
 
-theorem sim_ctor {m n : Word} {data target : Vector StackSlot MAX_N} {dest : Vector Word MAX_N}
-    {spilled : BitVec 32 → BitVec 8} (u : Uninit) (hm : m ≤ n) (hn : n.toNat ≤ MAX_N)
+theorem sim_ctor {m n : Word} {data target : Vector StackSlot maxStackSize} {dest : Vector Word maxStackSize}
+    {spilled : BitVec 32 → BitVec 8} (u : Uninit) (hm : m ≤ n) (hn : n.toNat ≤ maxStackSize)
     (hd : Dests n.toNat (listDests m.toNat dest)) :
     Sim (listEnv n.toNat target spilled) (ctor data m target n dest spilled u)
       (init (listEnv n.toNat target spilled) (listSource m.toNat data) (listDests m.toNat dest)) := by
   have hmn : m.toNat ≤ n.toNat := hm
-  have hM : m.toNat ≤ MAX_N := by omega
+  have hM : m.toNat ≤ maxStackSize := by omega
   have hen := listEnv_n target spilled hn
   have hl : (listSource m.toNat data).length = (listDests m.toNat dest).length := by
     rw [listSource_length data hM, listDests_length dest hM]
@@ -240,7 +240,7 @@ theorem sim_ctor {m n : Word} {data target : Vector StackSlot MAX_N} {dest : Vec
   · intro i hi
     rw [hlen] at hi
     rw [hD, init_val hl (by rw [listSource_length data hM]; exact hi)]
-    simp [listSource, get, show i.toNat < MAX_N by omega]
+    simp [listSource, get, show i.toNat < maxStackSize by omega]
   · intro i hi
     rw [hlen] at hi
     rw [hc2, hb1 i hi, St.dest_eq, hds, listDests_get hM hi]

@@ -11,21 +11,21 @@ private def variableSlot : StackSlot := ⟨7, Value, 5⟩
 private def literal : StackSlot := ⟨7, Value, Const⟩
 
 private def planner (slot : StackSlot) (allow : Bool) : Flat.Planner :=
-  ⟨Vector.replicate MAX_N slot, 1, Vector.replicate MAX_N slot, 1, allow⟩
+  ⟨Vector.replicate maxStackSize slot, 1, Vector.replicate maxStackSize slot, 1, allow⟩
 
 private def mapping : Flat.Mapping :=
-  ⟨Vector.replicate MAX_N 0, Vector.replicate MAX_N 0⟩
+  ⟨Vector.replicate maxStackSize 0, Vector.replicate maxStackSize 0⟩
 
 private def emptyMapping : Flat.Mapping :=
-  ⟨Vector.replicate MAX_N Flat.NONE, Vector.replicate MAX_N Flat.NONE⟩
+  ⟨Vector.replicate maxStackSize Flat.NONE, Vector.replicate maxStackSize Flat.NONE⟩
 
 -- Nonzero local bytes test that resolve initializes its own droppedNow array.
 private def locals : Flat.ResolveU :=
-  ⟨Vector.replicate MAX_N 0xff, Vector.replicate MAX_N Flat.NONE⟩
+  ⟨Vector.replicate maxStackSize 0xff, Vector.replicate maxStackSize Flat.NONE⟩
 
 private def resolve (p : Flat.Planner) (M current : Flat.Mapping) (excess size : Word)
     (spilled : BitVec 8) :=
-  Flat.resolve p (fun _ => spilled) (Vector.replicate MAX_N 0) M 0 excess current size locals
+  Flat.resolve p (fun _ => spilled) (Vector.replicate maxStackSize 0) M 0 excess current size locals
 
 -- Zero excess succeeds, including an empty current stack.
 example : (resolve (planner variableSlot false) mapping emptyMapping 0 0 0).1 = .dropped :=
@@ -71,7 +71,7 @@ private def twoMapping : Flat.Mapping :=
 private def twoCurrent : Flat.Mapping := { mapping with dest := Flat.put mapping.dest 2 1 }
 
 private def twoPlanner : Flat.Planner :=
-  { planner literal false with m := 2, n := 2 }
+  { planner literal false with sourceSize := 2, targetSize := 2 }
 
 -- Equal classes use the source with the larger destination.
 example : Flat.get (resolve twoPlanner twoMapping twoCurrent 1 3 0).2.2 0 = 0 :=
@@ -81,7 +81,7 @@ example : Flat.get (resolve twoPlanner twoMapping twoCurrent 1 3 0).2.2 1 = 1 :=
 
 -- A lower class takes priority over the larger destination.
 private def mixedPlanner : Flat.Planner :=
-  { twoPlanner with source := Flat.put (Vector.replicate MAX_N variableSlot) 0 literal }
+  { twoPlanner with source := Flat.put (Vector.replicate maxStackSize variableSlot) 0 literal }
 
 example : Flat.get (resolve mixedPlanner twoMapping twoCurrent 1 3 0xff).2.2 0 = 1 :=
   by decide +kernel

@@ -35,7 +35,7 @@ theorem b_1 [Host] [FunDecls] (S PM planned g F0 s ra)
   simp only [LInv, Names.permuteAtLowestHeight, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨L, l0, ⟨lo, w, hM, hdi⟩, ⟨hcx, hlt, hr8, hsi, hpk⟩, hdx, hr9, hc, hsc⟩ := ht
   have hL := len_le hpre.ok
-  have hr : t.regs.rax.toBitVec.toNat < MAX_N := by
+  have hr : t.regs.rax.toBitVec.toNat < maxStackSize := by
     have := BitVec.lt_def.mp hlt
     show _ < 1024; omega
   have ha : t.regs.rsp.toBitVec + t.regs.rax.toBitVec * 8#64 + 16384#64
@@ -69,10 +69,10 @@ theorem b_7 [Host] [FunDecls] (S PM planned g F0 s ra)
   simp only [LInv, Names.permuteAtLowestHeight, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨L, l0, ⟨lo, w, hM, hdi⟩, ⟨hcx, hlt, hr8, hsi, hpk⟩, hdx, hr9, hc, hsc⟩ := ht
   have hL := len_le hpre.ok
-  have hr : t.regs.rax.toBitVec.toNat < MAX_N := by
+  have hr : t.regs.rax.toBitVec.toNat < maxStackSize := by
     have := BitVec.lt_def.mp hlt
     show _ < 1024; omega
-  have hq : t.regs.r8.toBitVec.toNat < MAX_N := by
+  have hq : t.regs.r8.toBitVec.toNat < maxStackSize := by
     have := BitVec.lt_def.mp hlt; have := BitVec.le_def.mp hr8
     show _ < 1024; omega
   have ha : t.regs.rsp.toBitVec + t.regs.rax.toBitVec * 8#64 + 16384#64
@@ -123,7 +123,7 @@ theorem b_8 [Host] [FunDecls] (S PM planned g F0 s ra)
   simp only [LInv, Names.permuteAtLowestHeight, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨L, l0, ⟨lo, w, hM, hdi⟩, ⟨hcx, hlt, hr8, hsi, hpk⟩, hdx, hr9, ⟨hc, hN⟩, hsc⟩ := ht
   have hL := len_le hpre.ok
-  have hq : t.regs.rsi.toBitVec.toNat < MAX_N := by
+  have hq : t.regs.rsi.toBitVec.toNat < maxStackSize := by
     have := BitVec.lt_def.mp hlt; have := BitVec.le_def.mp hsi
     show _ < 1024; omega
   have hb : t.regs.rsp.toBitVec + t.regs.rsi.toBitVec * 8#64

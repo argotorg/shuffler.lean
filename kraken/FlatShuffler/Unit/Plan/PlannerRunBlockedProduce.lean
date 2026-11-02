@@ -30,7 +30,7 @@ theorem produce_fin_blocked {r : Flat.Status × Flat.St} {t : Word} {out : Flat.
   · split at hr <;> cases hr
 
 theorem produce_blocked {st out : Flat.St} {t : Word}
-    (hm : st.size.toNat ≤ MAX_N) (hd : DestOk st)
+    (hm : st.size.toNat ≤ maxStackSize) (hd : DestOk st)
     (hr : Flat.produce st t = (.blocked, out)) : BlockedBounds st.targetSize out := by
   rw [ProduceProof.produce_eq] at hr
   have ha := produce_fin_blocked hr

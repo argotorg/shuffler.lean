@@ -16,7 +16,7 @@ def InitPayload (s : MachineData) (_ : List Word) (loc : List Word) : Prop :=
   ∃ L : Lc, loc = L.toList ∧ L.excess = rcx s
 
 theorem initPayload_store (s : MachineData) (lo loc : List Word) (o : Word) (w : Word)
-    (ho : o.toNat < MAX_N) (h : InitPayload s lo loc) :
+    (ho : o.toNat < maxStackSize) (h : InitPayload s lo loc) :
     InitPayload s lo (loc.set (1030 + o.toNat / 8) w) := by
   obtain ⟨L, rfl, hL⟩ := h
   have hi : o.toNat / 8 < 128 := by change o.toNat < 1024 at ho; omega

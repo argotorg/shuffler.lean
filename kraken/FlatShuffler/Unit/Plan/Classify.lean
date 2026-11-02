@@ -218,7 +218,7 @@ theorem b_0 (hok : c.Ok) (ha : classifyA c s) : classifyAsm.ForallBlocks fun blk
   obtain ⟨lo, w, q, hli, hr⟩ := ht
   obtain ⟨_, hm⟩ := CView.map hli.kb.vmem
   obtain ⟨_, hp⟩ := CView.pv hli.kb.vmem
-  have hi : (rcx s).toNat < MAX_N := Nat.lt_of_lt_of_le ha.1.2.2 hok.m
+  have hi : (rcx s).toNat < maxStackSize := Nat.lt_of_lt_of_le ha.1.2.2 hok.sourceSizeFitsBuffer
   have h_d := MapM.rd_dest hm hi
   have k_d := MapM.isSome_dest hm hi
   have h_t := plannerObjectOwnedMemory.rd_tgt hp
@@ -269,7 +269,7 @@ theorem b_9 (hok : c.Ok) (ha : classifyA c s) : classifyAsm.ForallBlocks fun blk
   obtain ⟨⟨lo, w, q, hli, hr, hf⟩, hsi⟩ := ht
   obtain ⟨_, hm⟩ := CView.map hli.kb.vmem
   obtain ⟨_, hp⟩ := CView.pv hli.kb.vmem
-  have hi : (rcx s).toNat < MAX_N := Nat.lt_of_lt_of_le ha.1.2.2 hok.m
+  have hi : (rcx s).toNat < maxStackSize := Nat.lt_of_lt_of_le ha.1.2.2 hok.sourceSizeFitsBuffer
   have h_d := MapM.rd_dest hm hi
   have k_d := MapM.isSome_dest hm hi
   have h_t := plannerObjectOwnedMemory.rd_tgt hp
@@ -321,7 +321,7 @@ theorem b_6 (hok : c.Ok) (ha : classifyA c s) : classifyAsm.ForallBlocks fun blk
   obtain ⟨⟨lo, w, q, hli, hr, hf⟩, hsi, hcx⟩ := ht
   obtain ⟨_, hm⟩ := CView.map hli.kb.vmem
   obtain ⟨_, hp⟩ := CView.pv hli.kb.vmem
-  have hi : (rcx s).toNat < MAX_N := Nat.lt_of_lt_of_le ha.1.2.2 hok.m
+  have hi : (rcx s).toNat < maxStackSize := Nat.lt_of_lt_of_le ha.1.2.2 hok.sourceSizeFitsBuffer
   have h_d := MapM.rd_dest hm hi
   have k_d := MapM.isSome_dest hm hi
   have h_t := plannerObjectOwnedMemory.rd_tgt hp
@@ -372,7 +372,7 @@ theorem b_10 (hok : c.Ok) (ha : classifyA c s) : classifyAsm.ForallBlocks fun bl
   obtain ⟨⟨lo, w, q, hli, hf, hn⟩, hsi⟩ := ht
   obtain ⟨_, hm⟩ := CView.map hli.kb.vmem
   obtain ⟨_, hp⟩ := CView.pv hli.kb.vmem
-  have hi : (rcx s).toNat < MAX_N := Nat.lt_of_lt_of_le ha.1.2.2 hok.m
+  have hi : (rcx s).toNat < maxStackSize := Nat.lt_of_lt_of_le ha.1.2.2 hok.sourceSizeFitsBuffer
   have h_d := MapM.rd_dest hm hi
   have k_d := MapM.isSome_dest hm hi
   have h_t := plannerObjectOwnedMemory.rd_tgt hp

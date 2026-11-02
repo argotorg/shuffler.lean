@@ -37,7 +37,7 @@ theorem finRange_drop {n k : Nat} (h : k < n) :
   rw [List.drop_eq_getElem_cons (by simpa using h)]
   simp
 
-theorem loop_corr {σ β ε : Type} {n : Nat} (_hn : n ≤ FlatShuffler.MAX_N)
+theorem loop_corr {σ β ε : Type} {n : Nat} (_hn : n ≤ FlatShuffler.maxStackSize)
     (F st : FlatShuffler.Word → σ → Status × σ)
     (hF : ∀ k s, k ≤ n → F (.ofNat 64 k) s =
       if k < n then
@@ -67,7 +67,7 @@ theorem loop_corr {σ β ε : Type} {n : Nat} (_hn : n ≤ FlatShuffler.MAX_N)
       simp [StepCorr, LoopCorr, Bind.bind, Except.bind]
     exact ih (k + 1) s' b' (by omega)
 
-theorem fold_corr {σ β ε : Type} {n : Nat} (_hn : n ≤ FlatShuffler.MAX_N)
+theorem fold_corr {σ β ε : Type} {n : Nat} (_hn : n ≤ FlatShuffler.maxStackSize)
     (F : FlatShuffler.Word → σ → σ) (g : FlatShuffler.Word → σ → σ)
     (hF : ∀ k s, k ≤ n → F (.ofNat 64 k) s =
       if k < n then F (.ofNat 64 (k + 1)) (g (.ofNat 64 k) s) else s)

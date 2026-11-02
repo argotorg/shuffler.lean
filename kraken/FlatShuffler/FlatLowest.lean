@@ -20,15 +20,15 @@ namespace FlatShuffler.Flat
 
 -- The local arrays of `permuteAtLowestHeight`: their content before the function writes them.
 structure Locals where
-  permutation : Vector Word MAX_N
-  holes : Vector Word MAX_N
-  parked : Vector Word MAX_N
+  permutation : Vector Word maxStackSize
+  holes : Vector Word maxStackSize
+  parked : Vector Word maxStackSize
 
 -- The locals of the first loop of `permuteAtLowestHeight`.
 structure Scan where
-  permutation : Vector Word MAX_N
-  holes : Vector Word MAX_N
-  parked : Vector Word MAX_N
+  permutation : Vector Word maxStackSize
+  holes : Vector Word maxStackSize
+  parked : Vector Word maxStackSize
   holeCount : Word
   parkedCount : Word
 
@@ -36,7 +36,7 @@ def Scan.init (l : Locals) : Scan := ⟨l.permutation, l.holes, l.parked, 0, 0�
 
 -- The body of the first loop for the slot at `pos` and its destination `destination`, after the
 -- assertions.
-def scanStep (planned : Vector Word MAX_N) (st : St) (pos destination : Word) (sc : Scan) : Scan :=
+def scanStep (planned : Vector Word maxStackSize) (st : St) (pos destination : Word) (sc : Scan) : Scan :=
   let isHole : Bool := get planned pos == NONE
   let isParked : Bool := decide (st.size ≤ destination)
   let sc := if !isParked then { sc with permutation := put sc.permutation pos destination } else sc
@@ -49,7 +49,7 @@ def scanStep (planned : Vector Word MAX_N) (st : St) (pos destination : Word) (s
   else sc
 
 -- The first loop from `pos` on; none if an assertion fails.
-def scan (planned : Vector Word MAX_N) (st : St) (pos : Word) (sc : Scan) : Option Scan :=
+def scan (planned : Vector Word maxStackSize) (st : St) (pos : Word) (sc : Scan) : Option Scan :=
   if h : pos < st.size then
     let destination := get st.dest pos
     if destination = NONE then none
@@ -60,7 +60,7 @@ termination_by (st.size - pos).toNat
 decreasing_by bv_omega
 
 -- The second loop from `i` on: `permutation[parked[i]] = holes[i]`.
-def fill (sc : Scan) (i : Word) (permutation : Vector Word MAX_N) : Vector Word MAX_N :=
+def fill (sc : Scan) (i : Word) (permutation : Vector Word maxStackSize) : Vector Word maxStackSize :=
   if h : i < sc.parkedCount then
     fill sc (i + 1) (put permutation (get sc.parked i) (get sc.holes i))
   else permutation
@@ -68,7 +68,7 @@ termination_by (sc.parkedCount - i).toNat
 decreasing_by bv_omega
 
 -- `permuteAtLowestHeight`
-def permuteAtLowestHeight (planned : Vector Word MAX_N) (l : Locals) (st : St) : Status × St :=
+def permuteAtLowestHeight (planned : Vector Word maxStackSize) (l : Locals) (st : St) : Status × St :=
   match scan planned st 0 (Scan.init l) with
   | none => (.assertionFailed, st)
   | some sc =>
@@ -78,7 +78,7 @@ def permuteAtLowestHeight (planned : Vector Word MAX_N) (l : Locals) (st : St) :
 -- The condition of the call of `permute`: if the assertions hold, the permutation below the size
 -- is a bijection of the offsets below the size (the formula of `Unit.Bij`). The entry gives it:
 -- the planned mapping is the mapping, so each offset below the size gets one slot.
-def LowOk (planned : Vector Word MAX_N) (st : St) : Prop :=
+def LowOk (planned : Vector Word maxStackSize) (st : St) : Prop :=
   ∀ l sc, scan planned st 0 (Scan.init l) = some sc → sc.parkedCount = sc.holeCount →
     (∀ i < st.size, get (fill sc 0 sc.permutation) i < st.size) ∧
       ∀ i < st.size, ∀ k < st.size,
@@ -88,7 +88,7 @@ def LowOk (planned : Vector Word MAX_N) (st : St) : Prop :=
 
 -- The `m_positionOf` array of `Mapping planned{m, n}` of the entry after the binds: `up` is its
 -- content before the constructor.
-def plannedPos (m n : Word) (dests up : Vector Word MAX_N) : Vector Word MAX_N :=
+def plannedPos (m n : Word) (dests up : Vector Word maxStackSize) : Vector Word maxStackSize :=
   let p := (offsets n).foldl (fun p d => put p d NONE) up
   (offsets m).foldl (fun p q => if get dests q = NONE then p else put p (get dests q) q) p
 
@@ -96,10 +96,10 @@ def plannedPos (m n : Word) (dests up : Vector Word MAX_N) : Vector Word MAX_N :
 -- `u` is the content of the members that the constructor does not initialize, `up` the content
 -- of the `m_positionOf` array of the planned mapping before its constructor, and `l` the content
 -- of the local arrays.
-def permute_at_lowest_height (m n : Word) (data target : Vector StackSlot MAX_N)
-    (dests : Vector Word MAX_N) (spilled : BitVec 32 → BitVec 8) (u : Uninit)
-    (up : Vector Word MAX_N) (l : Locals) : Word × Option St :=
-  if m > .ofNat 64 MAX_N ∨ n > .ofNat 64 MAX_N then (-2, none)
+def permute_at_lowest_height (m n : Word) (data target : Vector StackSlot maxStackSize)
+    (dests : Vector Word maxStackSize) (spilled : BitVec 32 → BitVec 8) (u : Uninit)
+    (up : Vector Word maxStackSize) (l : Locals) : Word × Option St :=
+  if m > .ofNat 64 maxStackSize ∨ n > .ofNat 64 maxStackSize then (-2, none)
   else
     let r := permuteAtLowestHeight (plannedPos m n dests up) l (ctor data m target n dests spilled u)
     match r.1 with

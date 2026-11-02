@@ -19,7 +19,7 @@ private theorem slot_addr (p i : Word) : p + i * 8#64 = slotAt p i.toNat := by
 set_option maxRecDepth 4096 in
 theorem b_10 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapping)
     (F : MProp 64) (s t : MachineData) (ra : Int64) (hok : g.Ok)
-    (wanted : Vector StackSlot MAX_N)
+    (wanted : Vector StackSlot maxStackSize)
     (K : Unit → MachineData → Prop) (I' : CfgLabel → Nat → Unit → MachineData → Prop)
     (E : Int64 → MachineData → Prop)
     (hnext : ∀ data u, rax u = 1#64 + rax t →
@@ -33,7 +33,7 @@ theorem b_10 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
   cfg_block
   intro ⟨lo, locals, hc, hi, hmodel⟩
   let i := rax t
-  have hiN : i.toNat < MAX_N := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) hok.planner.m
+  have hiN : i.toNat < maxStackSize := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) hok.planner.sourceSizeFitsBuffer
   have hcap : i.toNat < g.dataCapacity :=
     Nat.lt_of_lt_of_le (BitVec.lt_def.mp hi) (Nat.le_max_left _ _)
   obtain ⟨_, hp0⟩ := pv hc.kb.vmem
@@ -62,16 +62,16 @@ theorem b_10 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
   have hok1 : g1.Ok := data_ok hok _
   have hstep := data_copy_step hmodel hi raw hslot
   obtain ⟨_, hp1⟩ := pv hc1.kb.vmem
-  have km := plannerObjectOwnedMemory.isSome_m hp1
-  have hm := plannerObjectOwnedMemory.rd_m hp1
+  have km := plannerObjectOwnedMemory.isSome_sourceSize hp1
+  have hm := plannerObjectOwnedMemory.rd_sourceSize hp1
   have kt : (v.dmem.loadInt (P + 16#64) 8).isSome = true :=
     isSome_of_eq g.p.tgt hp1 (by unfold plannerObjectOwnedMemory; ecancel)
   have kn : (v.dmem.loadInt (P + 24#64) 8).isSome = true :=
-    isSome_of_eq g.p.n hp1 (by unfold plannerObjectOwnedMemory; ecancel)
+    isSome_of_eq g.p.targetSize hp1 (by unfold plannerObjectOwnedMemory; ecancel)
   have ks : (v.dmem.loadInt (P + 32#64) 8).isSome = true :=
     isSome_of_eq g.p.spl hp1 (by unfold plannerObjectOwnedMemory; ecancel)
   have ht : rd v.dmem (P + 16#64) = g.p.tgt := rd_of_eq hp1 (by unfold plannerObjectOwnedMemory; ecancel)
-  have hn : rd v.dmem (P + 24#64) = g.p.n := rd_of_eq hp1 (by unfold plannerObjectOwnedMemory; ecancel)
+  have hn : rd v.dmem (P + 24#64) = g.p.targetSize := rd_of_eq hp1 (by unfold plannerObjectOwnedMemory; ecancel)
   have hs : rd v.dmem (P + 32#64) = g.p.spl := rd_of_eq hp1 (by unfold plannerObjectOwnedMemory; ecancel)
   have k0 := hc1.headerSome hok1 0 (by decide)
   have k1 := hc1.headerSome hok1 1 (by decide)
@@ -101,7 +101,7 @@ theorem b_10 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
     rename_i hb
     symexec_norm at hb
     simp only [hbx, h14, hsrc, slot_addr, hraw, hm, Idioms.cf_sub, decide_eq_true_eq] at hb
-    have hlt : 1#64 + rax t < g.p.m := hb
+    have hlt : 1#64 + rax t < g.p.sourceSize := hb
     apply hnext g1.data
     · rfl
     refine ⟨lo, locals, hc1.next ?_ rfl rfl rfl rfl rfl rfl rfl, hlt, ?_⟩
@@ -112,7 +112,7 @@ theorem b_10 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
     symexec_norm at hz
     simp only [hbx, h14, hsrc, slot_addr, hraw, hm, BitVec.and_self, BitVec.zero_eq,
       beq_iff_eq] at hz
-    have hm0 : g.p.m = 0#64 := hz
+    have hm0 : g.p.sourceSize = 0#64 := hz
     rw [hm0] at hi
     exact False.elim (by bv_omega)
   | other =>
@@ -120,7 +120,7 @@ theorem b_10 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
     symexec_norm at hb
     simp only [hbx, h14, hsrc, slot_addr, hraw, hm, Idioms.cf_sub,
       decide_eq_false_iff_not] at hb
-    have hend : ¬ t.regs.rax.toBitVec + 1#64 < g.p.m := by
+    have hend : ¬ t.regs.rax.toBitVec + 1#64 < g.p.sourceSize := by
       simpa only [BitVec.lt_def, BitVec.add_comm 1#64 t.regs.rax.toBitVec] using hb
     rw [copy_end hend] at hstep
     apply hdone g1.data
@@ -129,7 +129,7 @@ theorem b_10 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
       ?_, ?_, ?_, WordPrefix.zero _ _ _⟩
     · simp only [headerWrites, storeLocalWords, List.foldl_cons, List.foldl_nil,
         Nat.reduceMul, BitVec.toInt_zero, g1, v, i, raw, Reg64s.get64_rax]
-    · have hmpos : 0#64 < g.p.m := by bv_omega
+    · have hmpos : 0#64 < g.p.sourceSize := by bv_omega
       exact hmpos
     · rfl
     · rfl

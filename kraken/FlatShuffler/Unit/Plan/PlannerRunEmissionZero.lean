@@ -14,7 +14,7 @@ open Flat FlatShuffler.Sep
 
 set_option maxRecDepth 4096 in
 theorem b_32 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapping)
-    (F : MProp 64) (s : MachineData) (ra : Int64) (hok : g.Ok) (hm : g.p.m = 0#64)
+    (F : MProp 64) (s : MachineData) (ra : Int64) (hok : g.Ok) (hm : g.p.sourceSize = 0#64)
     (K : Unit → MachineData → Prop) (I' : CfgLabel → Nat → Unit → MachineData → Prop)
     (E : Int64 → MachineData → Prop)
     (hdone : ∀ u, EmitDestDone P g M F s ra u →
@@ -28,11 +28,11 @@ theorem b_32 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
   have kt : (t.dmem.loadInt (P + 16#64) 8).isSome = true :=
     isSome_of_eq g.p.tgt hv (by unfold plannerObjectOwnedMemory; ecancel)
   have kn : (t.dmem.loadInt (P + 24#64) 8).isSome = true :=
-    isSome_of_eq g.p.n hv (by unfold plannerObjectOwnedMemory; ecancel)
+    isSome_of_eq g.p.targetSize hv (by unfold plannerObjectOwnedMemory; ecancel)
   have ks : (t.dmem.loadInt (P + 32#64) 8).isSome = true :=
     isSome_of_eq g.p.spl hv (by unfold plannerObjectOwnedMemory; ecancel)
   have ht : rd t.dmem (P + 16#64) = g.p.tgt := rd_of_eq hv (by unfold plannerObjectOwnedMemory; ecancel)
-  have hn : rd t.dmem (P + 24#64) = g.p.n := rd_of_eq hv (by unfold plannerObjectOwnedMemory; ecancel)
+  have hn : rd t.dmem (P + 24#64) = g.p.targetSize := rd_of_eq hv (by unfold plannerObjectOwnedMemory; ecancel)
   have hs : rd t.dmem (P + 32#64) = g.p.spl := rd_of_eq hv (by unfold plannerObjectOwnedMemory; ecancel)
   have k0 := hc.headerSome hok 0 (by decide)
   have k1 := hc.headerSome hok 1 (by decide)

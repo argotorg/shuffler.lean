@@ -28,7 +28,7 @@ namespace FlatShuffler.Unit
 
 open FlatShuffler.Sep
 
-def isRetainedA (_ : Flat.Mapping) (s : MachineData) : Prop := (rsi s).toNat < MAX_N
+def isRetainedA (_ : Flat.Mapping) (s : MachineData) : Prop := (rsi s).toNat < maxStackSize
 
 def isRetainedQ (M M' : Flat.Mapping) (s t : MachineData) : Prop :=
   M' = M ∧ al t = if Flat.isRetained M (rsi s) then 1#8 else 0#8
@@ -55,7 +55,7 @@ theorem isRetained_unit [Host] [FunDecls] :
   case «_ZN12_GLOBAL__N_17Planner10isRetainedERKNS_7MappingE11StackOffset» t ht =>
     simp only [Names.isRetained, ↓reduceIte] at ht
     subst ht
-    have hp : (rsi s).toNat < MAX_N := hpre.args
+    have hp : (rsi s).toNat < maxStackSize := hpre.args
     have hm := hk0.vmem
     kvcgen64
     all_goals try symexec_norm

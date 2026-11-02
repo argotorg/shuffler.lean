@@ -66,10 +66,10 @@ structure LI (B : Addr) (b : BG) (F : MProp 64) (s : MachineData) (ra : Int64)
 section
 variable {fb : Flat.Builder} {M : Flat.Mapping} {j : Word}
 
-theorem cs_le_m (fb : Flat.Builder) : (Flat.commonSize fb).toNat ≤ fb.m.toNat := by
+theorem cs_le_m (fb : Flat.Builder) : (Flat.commonSize fb).toNat ≤ fb.sourceSize.toNat := by
   unfold Flat.commonSize; split <;> bv_omega
 
-theorem cs_le_n (fb : Flat.Builder) : (Flat.commonSize fb).toNat ≤ fb.n.toNat := by
+theorem cs_le_n (fb : Flat.Builder) : (Flat.commonSize fb).toNat ≤ fb.targetSize.toNat := by
   unfold Flat.commonSize; split <;> bv_omega
 
 -- The carry flag of `cmp b, a`.
@@ -326,11 +326,11 @@ theorem b_fn (hpre : VPre BView BG.Ok B b F mapInPlaceA 6 s) (w₀ w₁ w₂ w�
   change (Stk (rsp s) (fr s ⟨w₀, w₁, w₂, w₃⟩) ra.toBitVec ∗ BView B b ∗ F).get _ at hpm
   simp only [PushOk] at hpo
   obtain ⟨p1, p2, -⟩ := hpo
-  have h_m := BView.rd_m hm0
-  have h_n := BView.rd_n hm0
+  have h_m := BView.rd_sourceSize hm0
+  have h_n := BView.rd_targetSize hm0
   unfold rd at h_m h_n
-  have k_m := BView.isSome_m hm0
-  have k_n := BView.isSome_n hm0
+  have k_m := BView.isSome_sourceSize hm0
+  have k_n := BView.isSome_targetSize hm0
   clear hm0
   kvcgen64
   all_goals try symexec_norm
@@ -350,7 +350,7 @@ theorem b_fn (hpre : VPre BView BG.Ok B b F mapInPlaceA 6 s) (w₀ w₁ w₂ w�
     · exact (hk0.next rfl rfl rfl rfl rfl rfl rfl rfl).stack
     · mi_inv
       exact ⟨hk0.next rfl rfl rfl rfl rfl rfl rfl rfl,
-        from_ge (by show ¬ (0 : Word) < (if b.m < b.n then b.m else b.n); rw [h0]; decide)⟩
+        from_ge (by show ¬ (0 : Word) < (if b.sourceSize < b.targetSize then b.sourceSize else b.targetSize); rw [h0]; decide)⟩
     · simp [V, Names.mapInPlace]
   | goto ".LB.MappingBuilder.mapInPlace.1" =>
     rename_i hc
@@ -375,11 +375,11 @@ theorem b_0 : mapInPlaceAsm.ForallBlocks fun blk =>
   have hb := hli.kb.mem
   rw [sep_lc] at hb
   have hbp := hli.rbp
-  have h_m := BView.rd_m hb
-  have h_n := BView.rd_n hb
+  have h_m := BView.rd_sourceSize hb
+  have h_n := BView.rd_targetSize hb
   unfold rd at h_m h_n
-  have k_m := BView.isSome_m hb
-  have k_n := BView.isSome_n hb
+  have k_m := BView.isSome_sourceSize hb
+  have k_n := BView.isSome_targetSize hb
   clear hb
   kvcgen64
   all_goals try symexec_norm
@@ -418,13 +418,13 @@ theorem b_1 (hout : ∀ l ∈ Program.labels mapInPlaceAsm, label l ≠ label "e
   intro t ht
   mi_inv at ht
   obtain ⟨M, w, hli, hlt, hrest⟩ := ht
-  have hokM : BG.Ok { b with M := M } := ⟨hok.m, hok.n, hok.sw, hok.tw, hok.db⟩
+  have hokM : BG.Ok { b with M := M } := ⟨hok.sourceSizeFitsBuffer, hok.targetSizeFitsBuffer, hok.sw, hok.tw, hok.db⟩
   have hb := hli.kb.mem
   rw [sep_lc] at hb
   have hbp := hli.rbp
-  have hm : t.regs.rbx.toBitVec.toNat < b.m.toNat := Nat.lt_of_lt_of_le hlt (cs_le_m b.fl)
-  have hn : t.regs.rbx.toBitVec.toNat < b.n.toNat := Nat.lt_of_lt_of_le hlt (cs_le_n b.fl)
-  have hmax : t.regs.rbx.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hm hok.m
+  have hm : t.regs.rbx.toBitVec.toNat < b.sourceSize.toNat := Nat.lt_of_lt_of_le hlt (cs_le_m b.fl)
+  have hn : t.regs.rbx.toBitVec.toNat < b.targetSize.toNat := Nat.lt_of_lt_of_le hlt (cs_le_n b.fl)
+  have hmax : t.regs.rbx.toBitVec.toNat < maxStackSize := Nat.lt_of_lt_of_le hm hok.sourceSizeFitsBuffer
   obtain ⟨_, hM⟩ := BView.mapM hb
   have h_src := BView.rd_src hb
   have h_tgt := BView.rd_tgt hb
@@ -561,7 +561,7 @@ theorem b_3 (hok : b.Ok) : mapInPlaceAsm.ForallBlocks fun blk =>
   mi_inv at ht
   obtain ⟨M, w, hli, hal, hM⟩ := ht
   obtain ⟨p0, p1⟩ := hli.pop_isSome
-  have hokM : BG.Ok { b with M := M } := ⟨hok.m, hok.n, hok.sw, hok.tw, hok.db⟩
+  have hokM : BG.Ok { b with M := M } := ⟨hok.sourceSizeFitsBuffer, hok.targetSizeFitsBuffer, hok.sw, hok.tw, hok.db⟩
   kvcgen64
   all_goals try symexec_norm
   vc_by_shape

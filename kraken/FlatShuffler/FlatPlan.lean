@@ -17,7 +17,7 @@ the C++, with the statements in the order of the C++, a loop is a recursive func
 
 - An `Optional<StackOffset>` is a `Word` with the niche `NONE`, and an `Optional<Class>` a byte
   with the niche `0xff`.
-- The buffer `m_dropped` is a `Vector (BitVec 8) MAX_N`, and the spill set the function of its
+- The buffer `m_dropped` is a `Vector (BitVec 8) maxStackSize`, and the spill set the function of its
   bytes, as in `FlatSpill.lean`.
 - The local arrays have no initial value. `RunU` is the content of the locals of one attempt of
   `Planner::run` before the attempt writes them; `run` gets one for each attempt.
@@ -33,11 +33,11 @@ def SPILL : BitVec 8 := 4
 
 -- The members of `MappingBuilder` that do not change. `take` is `m_wildcardSlotsStrategy == Take`.
 structure Builder where
-  source : Vector StackSlot MAX_N
-  m : Word
-  target : Vector StackSlot MAX_N
-  n : Word
-  dropped : Vector (BitVec 8) MAX_N
+  source : Vector StackSlot maxStackSize
+  sourceSize : Word
+  target : Vector StackSlot maxStackSize
+  targetSize : Word
+  dropped : Vector (BitVec 8) maxStackSize
   take : Bool
 
 -- `mappable`
@@ -51,13 +51,13 @@ def hasSourceAssigned (M : Mapping) (t : Word) : Bool := get M.pos t != NONE
 def isWildcardTarget (b : Builder) (t : Word) : Bool := isJunk (get b.target t)
 
 -- `inWildcardSlot`
-def inWildcardSlot (b : Builder) (p : Word) : Bool := decide (p < b.n) && isWildcardTarget b p
+def inWildcardSlot (b : Builder) (p : Word) : Bool := decide (p < b.targetSize) && isWildcardTarget b p
 
 -- `absDiff`
 def absDiff (a c : Word) : Word := if a > c then a - c else c - a
 
 -- `commonSize`
-def commonSize (b : Builder) : Word := if b.m < b.n then b.m else b.n
+def commonSize (b : Builder) : Word := if b.sourceSize < b.targetSize then b.sourceSize else b.targetSize
 
 -- `MappingBuilder::map`
 def mbMap (b : Builder) (M : Mapping) (p t : Word) : Status × Mapping :=
@@ -68,14 +68,14 @@ def mbMap (b : Builder) (M : Mapping) (p t : Word) : Status × Mapping :=
 
 -- The loop of `closestCopy` from `i` on.
 def closestFrom (b : Builder) (M : Mapping) (t : Word) (inW : Bool) (i best : Word) : Word :=
-  if h : i < b.m then
+  if h : i < b.sourceSize then
     let best :=
       if get b.source i = get b.target t && mappable b M i && inWildcardSlot b i == inW then
         if best = NONE || absDiff i t ≤ absDiff best t then i else best
       else best
     closestFrom b M t inW (i + 1) best
   else best
-termination_by (b.m - i).toNat
+termination_by (b.sourceSize - i).toNat
 decreasing_by bv_omega
 
 -- `closestCopy`
@@ -98,13 +98,13 @@ def mapInPlace (b : Builder) (M : Mapping) : Status × Mapping := inPlaceFrom b 
 
 -- The loop of `mapClosestCopies` from `j` on.
 def closestCopiesFrom (b : Builder) (M : Mapping) (j : Word) : Status × Mapping :=
-  if h : j < b.n then
+  if h : j < b.targetSize then
     if !hasSourceAssigned M j && !isWildcardTarget b j && closestCopy b M j false ≠ NONE then
       let r := mbMap b M (closestCopy b M j false) j
       if r.1 ≠ .done then r else closestCopiesFrom b r.2 (j + 1)
     else closestCopiesFrom b M (j + 1)
   else (.done, M)
-termination_by (b.n - j).toNat
+termination_by (b.targetSize - j).toNat
 decreasing_by all_goals bv_omega
 
 -- `mapClosestCopies`
@@ -112,7 +112,7 @@ def mapClosestCopies (b : Builder) (M : Mapping) : Status × Mapping := closestC
 
 -- The loop of `mapWildcardSlotCopies` from `j` on, with `m_sawWildcardCopy`.
 def wildcardFrom (b : Builder) (M : Mapping) (saw : Bool) (j : Word) : Status × Mapping × Bool :=
-  if h : j < b.n then
+  if h : j < b.targetSize then
     if !hasSourceAssigned M j && !isWildcardTarget b j && closestCopy b M j true ≠ NONE then
       let copy := closestCopy b M j true
       if (get b.target j).kind = FunctionReturnLabel then
@@ -124,7 +124,7 @@ def wildcardFrom (b : Builder) (M : Mapping) (saw : Bool) (j : Word) : Status ×
       else wildcardFrom b M true (j + 1)
     else wildcardFrom b M saw (j + 1)
   else (.done, M, saw)
-termination_by (b.n - j).toNat
+termination_by (b.targetSize - j).toNat
 decreasing_by all_goals bv_omega
 
 -- `mapWildcardSlotCopies`
@@ -147,22 +147,22 @@ def keepWildcardSlots (b : Builder) (M : Mapping) : Status × Mapping := keepFro
 
 -- The inner loop of `absorbSurplus` from `o` on.
 def absorbBest (b : Builder) (M : Mapping) (j o best : Word) : Word :=
-  if h : o < b.m then
+  if h : o < b.sourceSize then
     let best := if mappable b M o && (best = NONE || absDiff o j < absDiff best j) then o else best
     absorbBest b M j (o + 1) best
   else best
-termination_by (b.m - o).toNat
+termination_by (b.sourceSize - o).toNat
 decreasing_by bv_omega
 
 -- The outer loop of `absorbSurplus` from `j` on.
 def absorbFrom (b : Builder) (M : Mapping) (j : Word) : Status × Mapping :=
-  if h : j < b.n then
+  if h : j < b.targetSize then
     if isWildcardTarget b j && !hasSourceAssigned M j && absorbBest b M j 0 NONE ≠ NONE then
       let r := mbMap b M (absorbBest b M j 0 NONE) j
       if r.1 ≠ .done then r else absorbFrom b r.2 (j + 1)
     else absorbFrom b M (j + 1)
   else (.done, M)
-termination_by (b.n - j).toNat
+termination_by (b.targetSize - j).toNat
 decreasing_by all_goals bv_omega
 
 -- `absorbSurplus`
@@ -187,38 +187,38 @@ def buildMapping (b : Builder) (M : Mapping) : Option (Mapping × Bool) :=
 -- The members of `Planner` that do not change. `m_spills` and `m_dropped` point to buffers that
 -- the planner writes: they are arguments.
 structure Planner where
-  source : Vector StackSlot MAX_N
-  m : Word
-  target : Vector StackSlot MAX_N
-  n : Word
+  source : Vector StackSlot maxStackSize
+  sourceSize : Word
+  target : Vector StackSlot maxStackSize
+  targetSize : Word
   allowed : Bool
 
 -- `Planner::isRetained`
 def isRetained (M : Mapping) (p : Word) : Bool := get M.dest p != NONE
 
 -- The loop of `hasOtherRetainedCopy` from `o` on.
-def otherFrom (pl : Planner) (M : Mapping) (dn : Vector (BitVec 8) MAX_N) (offset o : Word) :
+def otherFrom (pl : Planner) (M : Mapping) (dn : Vector (BitVec 8) maxStackSize) (offset o : Word) :
     Bool :=
-  if h : o < pl.m then
+  if h : o < pl.sourceSize then
     if o ≠ offset && get pl.source o = get pl.source offset && isRetained M o && get dn o = 0 then
       true
     else otherFrom pl M dn offset (o + 1)
   else false
-termination_by (pl.m - o).toNat
+termination_by (pl.sourceSize - o).toNat
 decreasing_by bv_omega
 
 -- `hasOtherRetainedCopy`
-def hasOtherRetainedCopy (pl : Planner) (M : Mapping) (dn : Vector (BitVec 8) MAX_N)
+def hasOtherRetainedCopy (pl : Planner) (M : Mapping) (dn : Vector (BitVec 8) maxStackSize)
     (offset : Word) : Bool :=
   otherFrom pl M dn offset 0
 
 -- The loop of `isDemanded` from `j` on.
 def demandedFrom (pl : Planner) (slot : StackSlot) (j : Word) : Bool :=
-  if h : j < pl.n then
+  if h : j < pl.targetSize then
     if !isJunk (get pl.target j) && get pl.target j = slot then true
     else demandedFrom pl slot (j + 1)
   else false
-termination_by (pl.n - j).toNat
+termination_by (pl.targetSize - j).toNat
 decreasing_by bv_omega
 
 -- `isDemanded`
@@ -226,7 +226,7 @@ def isDemanded (pl : Planner) (slot : StackSlot) : Bool := demandedFrom pl slot 
 
 -- `classify`
 def classify (pl : Planner) (sp : BitVec 32 → BitVec 8) (M : Mapping)
-    (dn : Vector (BitVec 8) MAX_N) (offset : Word) : BitVec 8 :=
+    (dn : Vector (BitVec 8) maxStackSize) (offset : Word) : BitVec 8 :=
   let slot := get pl.source offset
   if slot.kind = FunctionReturnLabel then NOCLASS
   else
@@ -248,19 +248,19 @@ inductive Resolution where
 
 -- The locals of `resolve`: their content before it writes them.
 structure ResolveU where
-  droppedNow : Vector (BitVec 8) MAX_N
-  candidates : Vector Word MAX_N
+  droppedNow : Vector (BitVec 8) maxStackSize
+  candidates : Vector Word maxStackSize
 
 -- The loop of `resolve` that zeroes `droppedNow` from `o` on.
-def zeroFrom (m o : Word) (dn : Vector (BitVec 8) MAX_N) : Vector (BitVec 8) MAX_N :=
+def zeroFrom (m o : Word) (dn : Vector (BitVec 8) maxStackSize) : Vector (BitVec 8) maxStackSize :=
   if h : o < m then zeroFrom m (o + 1) (put dn o 0) else dn
 termination_by (m - o).toNat
 decreasing_by bv_omega
 
 -- The loop of `resolve` that collects the candidates from `pos` on: the candidates and their
 -- count, or none for the failed check.
-def candidatesFrom (M current : Mapping) (currentSize pos : Word) (cand : Vector Word MAX_N)
-    (count : Word) : Option (Vector Word MAX_N × Word) :=
+def candidatesFrom (M current : Mapping) (currentSize pos : Word) (cand : Vector Word maxStackSize)
+    (count : Word) : Option (Vector Word maxStackSize × Word) :=
   if h : pos < currentSize then
     let destination := get current.dest pos
     if destination ≠ NONE ∧ get M.pos destination ≠ NONE then
@@ -274,7 +274,7 @@ decreasing_by all_goals bv_omega
 
 -- The inner loop of a pass of `resolve` from `i` on: `best` and `bestClass`.
 def pickFrom (pl : Planner) (sp : BitVec 32 → BitVec 8) (M : Mapping)
-    (dn : Vector (BitVec 8) MAX_N) (cand : Vector Word MAX_N) (count i best : Word)
+    (dn : Vector (BitVec 8) maxStackSize) (cand : Vector Word maxStackSize) (count i best : Word)
     (bestClass : BitVec 8) : Word × BitVec 8 :=
   if h : i < count then
     let offset := get cand i
@@ -293,11 +293,11 @@ decreasing_by all_goals bv_omega
 -- The state that `resolve` changes: the spill set, `m_dropped` and `droppedNow`.
 structure RState where
   spills : BitVec 32 → BitVec 8
-  dropped : Vector (BitVec 8) MAX_N
-  droppedNow : Vector (BitVec 8) MAX_N
+  dropped : Vector (BitVec 8) maxStackSize
+  droppedNow : Vector (BitVec 8) maxStackSize
 
 -- The passes of `resolve` from `k` on.
-def passFrom (pl : Planner) (M : Mapping) (cand : Vector Word MAX_N) (count excess k : Word)
+def passFrom (pl : Planner) (M : Mapping) (cand : Vector Word maxStackSize) (count excess k : Word)
     (s : RState) : Resolution × RState :=
   if h : k < excess then
     let r := pickFrom pl s.spills M s.droppedNow cand count 0 NONE 0
@@ -316,10 +316,10 @@ decreasing_by bv_omega
 
 -- `resolve`: `M` is the plan, `current` the working mapping of a stack of `currentSize` slots,
 -- and the slot at `blockedOffset` is blocked by `excess` slots.
-def resolve (pl : Planner) (sp : BitVec 32 → BitVec 8) (dropped : Vector (BitVec 8) MAX_N)
+def resolve (pl : Planner) (sp : BitVec 32 → BitVec 8) (dropped : Vector (BitVec 8) maxStackSize)
     (M : Mapping) (blockedOffset excess : Word) (current : Mapping) (currentSize : Word)
-    (u : ResolveU) : Resolution × (BitVec 32 → BitVec 8) × Vector (BitVec 8) MAX_N :=
-  let dn := zeroFrom pl.m 0 u.droppedNow
+    (u : ResolveU) : Resolution × (BitVec 32 → BitVec 8) × Vector (BitVec 8) maxStackSize :=
+  let dn := zeroFrom pl.sourceSize 0 u.droppedNow
   match candidatesFrom M current currentSize (blockedOffset + 1) u.candidates 0 with
   | none => (.assertionFailed, sp, dropped)
   | some (cand, count) =>
@@ -357,7 +357,7 @@ decreasing_by bv_omega
 
 -- `Emission::run`: `planned` is the `m_positionOf` array of the planned mapping, and `l` the
 -- content of the local arrays of `permuteAtLowestHeight`.
-def emissionRun (planned : Vector Word MAX_N) (l : Locals) (st : St) : Status × St :=
+def emissionRun (planned : Vector Word maxStackSize) (l : Locals) (st : St) : Status × St :=
   let r := removeSurplus st
   if r.1 ≠ .done then r else
   let r := permuteAtLowestHeight planned l r.2
@@ -383,14 +383,14 @@ structure RunU where
 -- of the last attempt.
 structure PSt where
   spills : BitVec 32 → BitVec 8
-  dropped : Vector (BitVec 8) MAX_N
+  dropped : Vector (BitVec 8) maxStackSize
   saw : Bool
-  data : Vector StackSlot MAX_N
+  data : Vector StackSlot maxStackSize
   trace : List Op
-  sources : Vector Word MAX_N
+  sources : Vector Word maxStackSize
 
 -- The loop of `contains` from `i` on.
-def containsFrom (stack : Vector StackSlot MAX_N) (size : Word) (slot : StackSlot) (i : Word) :
+def containsFrom (stack : Vector StackSlot maxStackSize) (size : Word) (slot : StackSlot) (i : Word) :
     Bool :=
   if h : i < size then
     if get stack i = slot then true else containsFrom stack size slot (i + 1)
@@ -400,22 +400,22 @@ decreasing_by bv_omega
 
 -- The check of `Planner::run` for the target slots from `j` on.
 def targetsFrom (pl : Planner) (sp : BitVec 32 → BitVec 8) (j : Word) : Bool :=
-  if h : j < pl.n then
+  if h : j < pl.targetSize then
     let slot := get pl.target j
-    (isJunk slot || canBeFreelyGenerated slot || containsFrom pl.source pl.m slot 0 ||
+    (isJunk slot || canBeFreelyGenerated slot || containsFrom pl.source pl.sourceSize slot 0 ||
       spillIsSpilled sp slot) && targetsFrom pl sp (j + 1)
   else true
-termination_by (pl.n - j).toNat
+termination_by (pl.targetSize - j).toNat
 decreasing_by bv_omega
 
 -- The loop of `run` that counts the dropped bytes from `i` on.
-def droppedFrom (m : Word) (d : Vector (BitVec 8) MAX_N) (i count : Word) : Word :=
+def droppedFrom (m : Word) (d : Vector (BitVec 8) maxStackSize) (i count : Word) : Word :=
   if h : i < m then droppedFrom m d (i + 1) (if get d i ≠ 0 then count + 1 else count)
   else count
 termination_by (m - i).toNat
 decreasing_by bv_omega
 
-theorem droppedFrom_le (m : Word) (d : Vector (BitVec 8) MAX_N) (i count : Word)
+theorem droppedFrom_le (m : Word) (d : Vector (BitVec 8) maxStackSize) (i count : Word)
     (h : count.toNat + (m - i).toNat ≤ m.toNat) (hi : i ≤ m) :
     (droppedFrom m d i count).toNat ≤ m.toNat := by
   unfold droppedFrom
@@ -428,9 +428,9 @@ termination_by (m - i).toNat
 decreasing_by bv_omega
 
 -- The number of dropped bytes below `m`.
-def droppedCount (m : Word) (d : Vector (BitVec 8) MAX_N) : Word := droppedFrom m d 0 0
+def droppedCount (m : Word) (d : Vector (BitVec 8) maxStackSize) : Word := droppedFrom m d 0 0
 
-theorem droppedCount_le (m : Word) (d : Vector (BitVec 8) MAX_N) :
+theorem droppedCount_le (m : Word) (d : Vector (BitVec 8) maxStackSize) :
     (droppedCount m d).toNat ≤ m.toNat :=
   droppedFrom_le m d 0 0 (by simp) (by bv_omega)
 
@@ -439,31 +439,31 @@ theorem sub_lt_sub {m a b : Word} (ha : a.toNat ≤ m.toNat) (_hb : b.toNat ≤ 
   bv_omega
 
 -- The loop of `run` that copies the source to `_data` from `i` on.
-def copyFrom (pl : Planner) (i : Word) (data : Vector StackSlot MAX_N) : Vector StackSlot MAX_N :=
-  if h : i < pl.m then copyFrom pl (i + 1) (put data i (get pl.source i)) else data
-termination_by (pl.m - i).toNat
+def copyFrom (pl : Planner) (i : Word) (data : Vector StackSlot maxStackSize) : Vector StackSlot maxStackSize :=
+  if h : i < pl.sourceSize then copyFrom pl (i + 1) (put data i (get pl.source i)) else data
+termination_by (pl.sourceSize - i).toNat
 decreasing_by bv_omega
 
 -- The loop of `run` that writes `_sources` from `j` on.
-def sourcesFrom (n j : Word) (M : Mapping) (sources : Vector Word MAX_N) : Vector Word MAX_N :=
+def sourcesFrom (n j : Word) (M : Mapping) (sources : Vector Word maxStackSize) : Vector Word maxStackSize :=
   if h : j < n then sourcesFrom n (j + 1) M (put sources j (get M.pos j)) else sources
 termination_by (n - j).toNat
 decreasing_by bv_omega
 
 -- The `for (;;)` loop of `Planner::run`, with the content `us k` of the locals of attempt `k`.
--- Each attempt that does not return drops more slots, and at most `m` slots can be dropped.
+-- Each attempt that does not return drops more slots, up to `pl.sourceSize` slots in total.
 def runLoop (pl : Planner) (take : Bool) (s : PSt) (us : Nat → RunU) : Status × PSt :=
-  let M := (us 0).mapping.init pl.m pl.n
-  match buildMapping ⟨pl.source, pl.m, pl.target, pl.n, s.dropped, take⟩ M with
+  let M := (us 0).mapping.init pl.sourceSize pl.targetSize
+  match buildMapping ⟨pl.source, pl.sourceSize, pl.target, pl.targetSize, s.dropped, take⟩ M with
   | none => (.assertionFailed, s)
   | some (M, saw) =>
     let s := { s with saw := s.saw || saw, data := copyFrom pl 0 s.data }
-    let r := emissionRun M.pos (us 0).l (ctorP s.data pl.m pl.target pl.n M s.spills (us 0).u)
+    let r := emissionRun M.pos (us 0).l (ctorP s.data pl.sourceSize pl.target pl.targetSize M s.spills (us 0).u)
     let s := { s with data := r.2.data, trace := r.2.trace }
     if r.1 ≠ .blocked then
-      if r.1 = .done then (r.1, { s with sources := sourcesFrom pl.n 0 M s.sources }) else (r.1, s)
+      if r.1 = .done then (r.1, { s with sources := sourcesFrom pl.targetSize 0 M s.sources }) else (r.1, s)
     else
-      let before := droppedCount pl.m s.dropped
+      let before := droppedCount pl.sourceSize s.dropped
       let q := resolve pl s.spills s.dropped M r.2.blockedOffset r.2.blockedExcess
         ⟨r.2.dest, r.2.pos⟩ r.2.size (us 0).r
       let s := { s with spills := q.2.1, dropped := q.2.2 }
@@ -471,9 +471,9 @@ def runLoop (pl : Planner) (take : Bool) (s : PSt) (us : Nat → RunU) : Status 
       | .stuck => (.blocked, s)
       | .assertionFailed => (.assertionFailed, s)
       | .dropped =>
-        if h : droppedCount pl.m s.dropped > before then runLoop pl take s fun k => us (k + 1)
+        if h : droppedCount pl.sourceSize s.dropped > before then runLoop pl take s fun k => us (k + 1)
         else (.assertionFailed, s)
-termination_by (pl.m - droppedCount pl.m s.dropped).toNat
+termination_by (pl.sourceSize - droppedCount pl.sourceSize s.dropped).toNat
 decreasing_by exact sub_lt_sub (droppedCount_le _ _) (droppedCount_le _ _) h
 
 -- `Planner::run`
@@ -488,11 +488,11 @@ def plannerRun (pl : Planner) (take : Bool) (s : PSt) (us : Nat → RunU) : Stat
 -- final state. `dropped`, `data` and `sources` are the content of the caller's buffers, and `us`
 -- that of the locals of the attempts. The C++ writes `saw` for `.done` and `.blocked`, and `data`
 -- below `n`, the operations of `trace` and `sources` below `n` for `.done`.
-def planEntry (m n : Word) (source target : Vector StackSlot MAX_N) (spilled : BitVec 32 → BitVec 8)
-    (idCount : Word) (allowed strategy : BitVec 8) (dropped : Vector (BitVec 8) MAX_N)
-    (data : Vector StackSlot MAX_N) (sources : Vector Word MAX_N) (us : Nat → RunU) :
+def planEntry (m n : Word) (source target : Vector StackSlot maxStackSize) (spilled : BitVec 32 → BitVec 8)
+    (idCount : Word) (allowed strategy : BitVec 8) (dropped : Vector (BitVec 8) maxStackSize)
+    (data : Vector StackSlot maxStackSize) (sources : Vector Word maxStackSize) (us : Nat → RunU) :
     Word × Option (Status × PSt) :=
-  if m > .ofNat 64 MAX_N ∨ n > .ofNat 64 MAX_N ∨ allowed > 1 ∨ strategy > 1 then (-2, none)
+  if m > .ofNat 64 maxStackSize ∨ n > .ofNat 64 maxStackSize ∨ allowed > 1 ∨ strategy > 1 then (-2, none)
   else if !((offsets m).all fun i => idOk idCount (get source i)) then (-2, none)
   else if !((offsets n).all fun j => idOk idCount (get target j)) then (-2, none)
   else

@@ -8,7 +8,7 @@ import all FlatShuffler.Unit.Loop.Model
 /-!
 # `buildBottomUp`: the state of the constructor
 
-`FInv.ctor`: for `m ≤ n ≤ MAX_N` and distinct destinations below `n` (`Dests`), the state of the
+`FInv.ctor`: for `m ≤ n ≤ maxStackSize` and distinct destinations below `n` (`Dests`), the state of the
 constructor satisfies `FInv`, and its trace is empty.
 
 The constructor has three folds: it clears `pos` below `n`, binds each slot below `m` to its
@@ -30,20 +30,20 @@ theorem mem_offsets {d k : Word} (h : d < k) : d ∈ offsets k := by
 /-! ## The destinations -/
 
 -- The destinations of the slots below `m` are below `n` and distinct.
-structure DOk (dests : Vector Word MAX_N) (m n : Word) : Prop where
+structure DOk (dests : Vector Word maxStackSize) (m n : Word) : Prop where
   lt : ∀ p, p < m → get dests p < n
   inj : ∀ p q, p < m → q < m → get dests p = get dests q → p = q
 
-theorem listDests_length {m : Nat} (d : Vector Word MAX_N) (hm : m ≤ MAX_N) :
+theorem listDests_length {m : Nat} (d : Vector Word maxStackSize) (hm : m ≤ maxStackSize) :
     (listDests m d).length = m := by
   simp [listDests, hm]
 
-theorem listDests_getElem {m : Nat} {d : Vector Word MAX_N} {p : Word} (hm : m ≤ MAX_N)
+theorem listDests_getElem {m : Nat} {d : Vector Word maxStackSize} {p : Word} (hm : m ≤ maxStackSize)
     (hp : p.toNat < m) (h : p.toNat < (listDests m d).length) :
     (listDests m d)[p.toNat] = (get d p).toNat := by
-  simp [listDests, get, show p.toNat < MAX_N by omega]
+  simp [listDests, get, show p.toNat < maxStackSize by omega]
 
-theorem DOk.of_dests {d : Vector Word MAX_N} {m n : Word} (hm : m.toNat ≤ MAX_N)
+theorem DOk.of_dests {d : Vector Word maxStackSize} {m n : Word} (hm : m.toNat ≤ maxStackSize)
     (hd : Dests n.toNat (listDests m.toNat d)) : DOk d m n := by
   have hl : ∀ p : Word, p < m → p.toNat < (listDests m.toNat d).length := by
     intro p hp; rw [listDests_length d hm]; exact BitVec.lt_def.mp hp
@@ -67,7 +67,7 @@ theorem fold_none_not_mem (l : List Word) (st : St) {j : Word} (hj : j ∉ l) :
     rw [List.foldl_cons, ih _ hj.2]
     exact get_put_ne _ _ hj.1
 
-theorem fold_none_mem (l : List Word) (st : St) {j : Word} (hj : j ∈ l) (hm : j.toNat < MAX_N) :
+theorem fold_none_mem (l : List Word) (st : St) {j : Word} (hj : j ∈ l) (hm : j.toNat < maxStackSize) :
     get (l.foldl (fun st d => { st with pos := put st.pos d NONE }) st).pos j = NONE := by
   induction l generalizing st with
   | nil => cases hj
@@ -83,14 +83,14 @@ theorem fold_none_mem (l : List Word) (st : St) {j : Word} (hj : j ∈ l) (hm : 
 /-! ## The second fold: the bindings -/
 
 section
-variable (dests : Vector Word MAX_N) (n : Word)
+variable (dests : Vector Word maxStackSize) (n : Word)
 
 -- The fold of the bindings of the slots below `k`.
 def binds (st : St) (k : Nat) : St :=
   (List.range k).foldl (fun st i => bind st (BitVec.ofNat 64 i) (get dests (BitVec.ofNat 64 i))) st
 
 -- The mapping after the bindings of the slots below `k`.
-structure BInv (D P : Vector Word MAX_N) (k : Nat) : Prop where
+structure BInv (D P : Vector Word maxStackSize) (k : Nat) : Prop where
   dest : ∀ i : Word, i.toNat < k → get D i = get dests i
   inv : ∀ i : Word, i.toNat < k → get P (get dests i) = i
   pos : ∀ d, d < n → get P d = NONE ∨ ((get P d).toNat < k ∧ get dests (get P d) = d)
@@ -105,7 +105,7 @@ theorem binds_eq (st : St) (k : Nat) :
     rw [ih]
     rfl
 
-theorem binds_inv {m : Word} (st : St) (hmn : m ≤ n) (hn : n.toNat ≤ MAX_N) (hd : DOk dests m n)
+theorem binds_inv {m : Word} (st : St) (hmn : m ≤ n) (hn : n.toNat ≤ maxStackSize) (hd : DOk dests m n)
     (hp : ∀ d, d < n → get st.pos d = NONE) :
     ∀ k, k ≤ m.toNat → BInv dests n (binds dests st k).dest (binds dests st k).pos k := by
   intro k
@@ -115,12 +115,12 @@ theorem binds_inv {m : Word} (st : St) (hmn : m ≤ n) (hn : n.toNat ≤ MAX_N) 
   | succ k ih =>
     intro hk
     obtain ⟨ha, hb, hc⟩ := ih (by omega)
-    have hm : m.toNat ≤ MAX_N := by rw [BitVec.le_def] at hmn; omega
+    have hm : m.toNat ≤ maxStackSize := by rw [BitVec.le_def] at hmn; omega
     have pk : (BitVec.ofNat 64 k).toNat = k := toNat_ofNat_lt (by omega)
     have plt : BitVec.ofNat 64 k < m := by rw [BitVec.lt_def, pk]; omega
     have dlt := hd.lt _ plt
-    have mp : (BitVec.ofNat 64 k).toNat < MAX_N := by rw [pk]; omega
-    have mdp : (get dests (BitVec.ofNat 64 k)).toNat < MAX_N := by
+    have mp : (BitVec.ofNat 64 k).toNat < maxStackSize := by rw [pk]; omega
+    have mdp : (get dests (BitVec.ofNat 64 k)).toNat < maxStackSize := by
       rw [BitVec.lt_def] at dlt; omega
     have e : binds dests st (k + 1) = bind (binds dests st k) (BitVec.ofNat 64 k)
         (get dests (BitVec.ofNat 64 k)) := by
@@ -172,11 +172,11 @@ theorem fold_pend (l : List Word) (st : St) :
 /-! ## The constructor -/
 
 -- The state of the constructor satisfies `FInv`, and its trace is empty.
-theorem FInv.ctor {data target : Vector StackSlot MAX_N} {m n : Word} {dests : Vector Word MAX_N}
-    {spills : BitVec 32 → BitVec 8} {u : Uninit} (hmn : m ≤ n) (hn : n.toNat ≤ MAX_N)
+theorem FInv.ctor {data target : Vector StackSlot maxStackSize} {m n : Word} {dests : Vector Word maxStackSize}
+    {spills : BitVec 32 → BitVec 8} {u : Uninit} (hmn : m ≤ n) (hn : n.toNat ≤ maxStackSize)
     (hd : Dests n.toNat (listDests m.toNat dests)) :
     FInv (ctor data m target n dests spills u) ∧ (ctor data m target n dests spills u).trace = [] := by
-  have hm : m.toNat ≤ MAX_N := by rw [BitVec.le_def] at hmn; omega
+  have hm : m.toNat ≤ maxStackSize := by rw [BitVec.le_def] at hmn; omega
   have hk := DOk.of_dests hm hd
   unfold Flat.ctor
   dsimp only
@@ -216,7 +216,7 @@ theorem FInv.ctor {data target : Vector StackSlot MAX_N} {m n : Word} {dests : V
       have hi : i < m.toNat := by rwa [listDests_length dests hm] at hi0
       have hi' : (BitVec.ofNat 64 i).toNat < m.toNat := by rw [toNat_ofNat_lt (by omega)]; exact hi
       have e := listDests_getElem (d := dests) hm hi' (by rw [listDests_length dests hm]; exact hi')
-      simp only [toNat_ofNat_lt (show i < MAX_N by omega)] at e
+      simp only [toNat_ofNat_lt (show i < maxStackSize by omega)] at e
       rw [e] at he
       have : get dests (BitVec.ofNat 64 i) = BitVec.ofNat 64 d :=
         BitVec.eq_of_toNat_eq (by rw [he, toNat_ofNat_lt (by omega)])
@@ -236,7 +236,7 @@ theorem FInv.ctor {data target : Vector StackSlot MAX_N} {m n : Word} {dests : V
       (fun d hd' => by simpa using hiff d hd')]
     rw [countP_not_mem hd, listDests_length dests hm]
   refine ⟨⟨?_, ?_, fun i hi => ?_, fun i hi => ?_, fun d hd' => ?_⟩, t3⟩
-  · show s1.targetSize.toNat ≤ MAX_N; rw [t1]; exact hn
+  · show s1.targetSize.toNat ≤ maxStackSize; rw [t1]; exact hn
   · show s1.size.toNat + (s1.pend + BitVec.ofNat 64 _).toNat = s1.targetSize.toNat
     rw [t1, t2, t4, hc]
     rw [BitVec.le_def] at hmn; rw [max_n] at hn; bv_omega
@@ -258,9 +258,9 @@ theorem FInv.ctor {data target : Vector StackSlot MAX_N} {m n : Word} {dests : V
 
 
 -- The state of the constructor: `HInv` at `T = 0`.
-theorem HInv.ctor {data target : Vector StackSlot MAX_N} {m n : Word}
-    {dests : Vector Word MAX_N} {spills : BitVec 32 → BitVec 8} {u : Uninit} {x : Nat} (hmn : m ≤ n)
-    (hn : n.toNat ≤ MAX_N) (hd : Dests n.toNat (listDests m.toNat dests)) :
+theorem HInv.ctor {data target : Vector StackSlot maxStackSize} {m n : Word}
+    {dests : Vector Word maxStackSize} {spills : BitVec 32 → BitVec 8} {u : Uninit} {x : Nat} (hmn : m ≤ n)
+    (hn : n.toNat ≤ maxStackSize) (hd : Dests n.toNat (listDests m.toNat dests)) :
     HInv (ctor data m target n dests spills u) 0 x := by
   obtain ⟨hf, ht⟩ := FInv.ctor (data := data) (target := target) (spills := spills) (u := u)
     hmn hn hd

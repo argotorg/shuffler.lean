@@ -14,14 +14,14 @@ namespace FlatShuffler.Unit.ResolveU
 open Flat
 
 def SameBelow {α : Type} [Inhabited α] (n : Word)
-    (a b : Vector α MAX_N) : Prop :=
+    (a b : Vector α maxStackSize) : Prop :=
   ∀ i : Word, i < n → get a i = get b i
 
-def CandidatesBound (m : Word) (c : Vector Word MAX_N) (n : Word) : Prop :=
+def CandidatesBound (m : Word) (c : Vector Word maxStackSize) (n : Word) : Prop :=
   ∀ i : Word, i < n → get c i < m
 
 theorem sameBelow_put {α : Type} [Inhabited α] {n i : Word}
-    {a b : Vector α MAX_N} (h : SameBelow n a b) (hi : i.toNat < MAX_N) (x : α) :
+    {a b : Vector α maxStackSize} (h : SameBelow n a b) (hi : i.toNat < maxStackSize) (x : α) :
     SameBelow n (put a i x) (put b i x) := by
   intro j hj
   rw [get_put _ _ _ hi, get_put _ _ _ hi]
@@ -30,7 +30,7 @@ theorem sameBelow_put {α : Type} [Inhabited α] {n i : Word}
   · exact h j hj
 
 theorem sameBelow_extend {α : Type} [Inhabited α] {n : Word}
-    {a b : Vector α MAX_N} (h : SameBelow n a b) (hn : n.toNat < MAX_N) (x : α) :
+    {a b : Vector α maxStackSize} (h : SameBelow n a b) (hn : n.toNat < maxStackSize) (x : α) :
     SameBelow (n + 1) (put a n x) (put b n x) := by
   intro i hi
   rw [get_put _ _ _ hn, get_put _ _ _ hn]
@@ -38,7 +38,7 @@ theorem sameBelow_extend {α : Type} [Inhabited α] {n : Word}
   · rfl
   · exact h i (by bv_omega)
 
-theorem zeroFrom_before (m o q : Word) (dn : Vector (BitVec 8) MAX_N) (hq : q < o) :
+theorem zeroFrom_before (m o q : Word) (dn : Vector (BitVec 8) maxStackSize) (hq : q < o) :
     get (zeroFrom m o dn) q = get dn q := by
   rw [zeroFrom]
   split
@@ -47,8 +47,8 @@ theorem zeroFrom_before (m o q : Word) (dn : Vector (BitVec 8) MAX_N) (hq : q < 
 termination_by (m - o).toNat
 decreasing_by exact Flat.sub_succ_lt ‹o < m›
 
-theorem zeroFrom_zero (m o q : Word) (dn : Vector (BitVec 8) MAX_N)
-    (hm : m.toNat ≤ MAX_N) (ho : o ≤ q) (hq : q < m) :
+theorem zeroFrom_zero (m o q : Word) (dn : Vector (BitVec 8) maxStackSize)
+    (hm : m.toNat ≤ maxStackSize) (ho : o ≤ q) (hq : q < m) :
     get (zeroFrom m o dn) q = 0#8 := by
   have hom : o < m := by bv_omega
   rw [zeroFrom, dite_eq_left hom]
@@ -60,39 +60,39 @@ theorem zeroFrom_zero (m o q : Word) (dn : Vector (BitVec 8) MAX_N)
 termination_by (m - o).toNat
 decreasing_by exact Flat.sub_succ_lt hom
 
-theorem zeroFrom_independent (m : Word) (hm : m.toNat ≤ MAX_N)
-    (a b : Vector (BitVec 8) MAX_N) : SameBelow m (zeroFrom m 0 a) (zeroFrom m 0 b) := by
+theorem zeroFrom_independent (m : Word) (hm : m.toNat ≤ maxStackSize)
+    (a b : Vector (BitVec 8) maxStackSize) : SameBelow m (zeroFrom m 0 a) (zeroFrom m 0 b) := by
   intro q hq
   rw [zeroFrom_zero m 0 q a hm (by bv_omega) hq,
     zeroFrom_zero m 0 q b hm (by bv_omega) hq]
 
-theorem otherFrom_congr (p : Planner) (M : Mapping) (a b : Vector (BitVec 8) MAX_N)
-    (h : SameBelow p.m a b) (off o : Word) :
+theorem otherFrom_congr (p : Planner) (M : Mapping) (a b : Vector (BitVec 8) maxStackSize)
+    (h : SameBelow p.sourceSize a b) (off o : Word) :
     otherFrom p M a off o = otherFrom p M b off o := by
   conv => lhs; rw [otherFrom]
   conv => rhs; rw [otherFrom]
-  by_cases ho : o < p.m
+  by_cases ho : o < p.sourceSize
   · simp only [dite_eq_left ho, h o ho]
     split
     · rfl
     · exact otherFrom_congr p M a b h off (o + 1)
   · simp only [dite_eq_right ho]
-termination_by (p.m - o).toNat
+termination_by (p.sourceSize - o).toNat
 decreasing_by exact Flat.sub_succ_lt ho
 
 theorem classify_congr (p : Planner) (sp : BitVec 32 → BitVec 8) (M : Mapping)
-    (a b : Vector (BitVec 8) MAX_N) (h : SameBelow p.m a b) (off : Word) :
+    (a b : Vector (BitVec 8) maxStackSize) (h : SameBelow p.sourceSize a b) (off : Word) :
     classify p sp M a off = classify p sp M b off := by
   have he : hasOtherRetainedCopy p M a off = hasOtherRetainedCopy p M b off :=
     otherFrom_congr p M a b h off 0
   simp only [classify, he]
 
 theorem pickFrom_bound (p : Planner) (sp : BitVec 32 → BitVec 8) (M : Mapping)
-    (dn : Vector (BitVec 8) MAX_N) (cand : Vector Word MAX_N) (count i best : Word)
-    (cls : BitVec 8) (hc : CandidatesBound p.m cand count)
-    (hb : best = NONE ∨ best < p.m) :
+    (dn : Vector (BitVec 8) maxStackSize) (cand : Vector Word maxStackSize) (count i best : Word)
+    (cls : BitVec 8) (hc : CandidatesBound p.sourceSize cand count)
+    (hb : best = NONE ∨ best < p.sourceSize) :
     (pickFrom p sp M dn cand count i best cls).1 = NONE ∨
-      (pickFrom p sp M dn cand count i best cls).1 < p.m := by
+      (pickFrom p sp M dn cand count i best cls).1 < p.sourceSize := by
   rw [pickFrom]
   split
   · rename_i hi
@@ -109,10 +109,10 @@ termination_by (count - i).toNat
 decreasing_by all_goals exact Flat.sub_succ_lt ‹i < count›
 
 theorem pickFrom_congr (p : Planner) (sp : BitVec 32 → BitVec 8) (M : Mapping)
-    (a b : Vector (BitVec 8) MAX_N) (cand cand' : Vector Word MAX_N)
+    (a b : Vector (BitVec 8) maxStackSize) (cand cand' : Vector Word maxStackSize)
     (count i best : Word) (cls : BitVec 8)
-    (hd : SameBelow p.m a b) (hc : SameBelow count cand cand')
-    (hb : CandidatesBound p.m cand count) :
+    (hd : SameBelow p.sourceSize a b) (hc : SameBelow count cand cand')
+    (hb : CandidatesBound p.sourceSize cand count) :
     pickFrom p sp M a cand count i best cls = pickFrom p sp M b cand' count i best cls := by
   conv => lhs; rw [pickFrom]
   conv => rhs; rw [pickFrom]
@@ -138,11 +138,11 @@ structure StateRel (m : Word) (a b : RState) : Prop where
 def PassRel (m : Word) (a b : Resolution × RState) : Prop :=
   a.1 = b.1 ∧ StateRel m a.2 b.2
 
-theorem passFrom_congr (p : Planner) (M : Mapping) (cand cand' : Vector Word MAX_N)
-    (count excess k : Word) (a b : RState) (hm : p.m.toNat ≤ MAX_N)
-    (hs : StateRel p.m a b) (hc : SameBelow count cand cand')
-    (hb : CandidatesBound p.m cand count) :
-    PassRel p.m (passFrom p M cand count excess k a) (passFrom p M cand' count excess k b) := by
+theorem passFrom_congr (p : Planner) (M : Mapping) (cand cand' : Vector Word maxStackSize)
+    (count excess k : Word) (a b : RState) (hm : p.sourceSize.toNat ≤ maxStackSize)
+    (hs : StateRel p.sourceSize a b) (hc : SameBelow count cand cand')
+    (hb : CandidatesBound p.sourceSize cand count) :
+    PassRel p.sourceSize (passFrom p M cand count excess k a) (passFrom p M cand' count excess k b) := by
   have hp : pickFrom p a.spills M a.droppedNow cand count 0 NONE 0 =
       pickFrom p b.spills M b.droppedNow cand' count 0 NONE 0 := by
     rw [← hs.spills]
@@ -156,7 +156,7 @@ theorem passFrom_congr (p : Planner) (M : Mapping) (cand cand' : Vector Word MAX
     split
     · exact ⟨rfl, hs⟩
     · rename_i hbest
-      have hlt : (pickFrom p a.spills M a.droppedNow cand count 0 NONE 0).1 < p.m :=
+      have hlt : (pickFrom p a.spills M a.droppedNow cand count 0 NONE 0).1 < p.sourceSize :=
         hbound.resolve_left hbest
       split
       · exact ⟨rfl, hs⟩

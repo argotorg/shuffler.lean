@@ -27,7 +27,7 @@ theorem memVec_eq {S : Addr} {g : G} {F : MProp 64} {s : MachineData} {ra : Int6
   exact h.rdP hi rfl
 
 -- `mu` reads the offsets below `n` only.
-theorem mu_agB {n : Word} {u v : Vector Word MAX_N} (h0 : 0 < n) (h : AgB n u v) :
+theorem mu_agB {n : Word} {u v : Vector Word maxStackSize} (h0 : 0 < n) (h : AgB n u v) :
     mu (n - 1) u = mu (n - 1) v := by
   have e : misplaced (n - 1) u = misplaced (n - 1) v := by
     unfold misplaced
@@ -40,7 +40,7 @@ theorem mu_agB {n : Word} {u v : Vector Word MAX_N} (h0 : 0 < n) (h : AgB n u v)
   unfold mu; rw [e, h _ (by bv_omega)]
 
 theorem mD_eq {S : Addr} {g g' : G} {F : MProp 64} {s : MachineData} {ra : Int64} {L : Lc}
-    {t : MachineData} {p : Vector Word MAX_N} (h : Fm S g' F s ra L t) (h0 : 0 < g.h.len)
+    {t : MachineData} {p : Vector Word maxStackSize} (h : Fm S g' F s ra L t) (h0 : 0 < g.h.len)
     (hag : AgB g.h.len L.P p) : mD s g t = mu (g.h.len - 1) p := by
   rw [mD, memVec_eq h, mu_agB h0 hag]
 
@@ -66,42 +66,42 @@ theorem add_m1i (x : Word) : x + BitVec.ofInt 64 (-1 : Int64).toInt = x - 1#64 :
 
 /-! ## The loop of `permute` -/
 
-theorem loop_succ (f : Nat) (st : Flat.St) (top : Word) (p : Vector Word MAX_N) :
+theorem loop_succ (f : Nat) (st : Flat.St) (top : Word) (p : Vector Word maxStackSize) :
     Flat.permuteLoop (f + 1) st top p = after f top (Flat.permuteStep st top p) := by
   cases h : Flat.permuteStep st top p <;> simp [Flat.permuteLoop, h, after]
 
-theorem after_cont (f : Nat) (top : Word) (st : Flat.St) (p : Vector Word MAX_N) :
+theorem after_cont (f : Nat) (top : Word) (st : Flat.St) (p : Vector Word maxStackSize) :
     after f top (.cont st p) = Flat.permuteLoop f st top p := rfl
 
 theorem after_ret (f : Nat) (top : Word) (r : Flat.Status × Flat.St) :
     after f top (.ret r) = r := rfl
 
 -- `permutation[top] != top`: `exchange` of `permutation[top]`.
-theorem step_ne {st : Flat.St} {top : Word} {p : Vector Word MAX_N} (h : Flat.get p top ≠ top) :
+theorem step_ne {st : Flat.St} {top : Word} {p : Vector Word maxStackSize} (h : Flat.get p top ≠ top) :
     Flat.permuteStep st top p = Flat.exchange st top p (Flat.get p top) := by
   rw [Flat.permuteStep]; dsimp only; rw [ite_eq_right h]
 
 -- `permutation[top] == top`: the `candidate` loop.
-theorem step_eq {st : Flat.St} {top : Word} {p : Vector Word MAX_N} (h : Flat.get p top = top) :
+theorem step_eq {st : Flat.St} {top : Word} {p : Vector Word maxStackSize} (h : Flat.get p top = top) :
     Flat.permuteStep st top p = if Flat.misplacedBelow p top top = top then .ret (.done, st)
       else Flat.exchange st top p (Flat.misplacedBelow p top top) := by
   rw [Flat.permuteStep]; dsimp only; rw [ite_eq_left h]
 
-theorem mb_zero (p : Vector Word MAX_N) (top : Word) : Flat.misplacedBelow p top 0 = top := by
+theorem mb_zero (p : Vector Word maxStackSize) (top : Word) : Flat.misplacedBelow p top 0 = top := by
   rw [Flat.misplacedBelow, dite_eq_left rfl]
 
-theorem mb_in {p : Vector Word MAX_N} {top c : Word} (h0 : c ≠ 0) (h : Flat.get p (c - 1) = c - 1) :
+theorem mb_in {p : Vector Word maxStackSize} {top c : Word} (h0 : c ≠ 0) (h : Flat.get p (c - 1) = c - 1) :
     Flat.misplacedBelow p top c = Flat.misplacedBelow p top (c - 1) := by
   rw [Flat.misplacedBelow, dite_eq_right h0, ite_eq_right (fun e => e h)]
 
-theorem mb_out {p : Vector Word MAX_N} {top c : Word} (h0 : c ≠ 0)
+theorem mb_out {p : Vector Word maxStackSize} {top c : Word} (h0 : c ≠ 0)
     (h : Flat.get p (c - 1) ≠ c - 1) : Flat.misplacedBelow p top c = c - 1 := by
   rw [Flat.misplacedBelow, dite_eq_right h0, ite_eq_left h]
 
 /-! ## `exchange` -/
 
 section
-variable {st : Flat.St} {top pos : Word} {p : Vector Word MAX_N}
+variable {st : Flat.St} {top pos : Word} {p : Vector Word maxStackSize}
 
 -- Equal slots: no swap.
 theorem ex_eq (h : Flat.get st.data pos = Flat.get st.data (st.size - 1)) :
@@ -134,14 +134,14 @@ theorem bsu_eq {st : Flat.St} {pos : Word} (h : ¬(st.size - pos - 1#64 ≤ 16#6
 /-! ## The permutation -/
 
 -- The offset at `.LB.Emission.permute.24` is misplaced: the swap keeps `Bij` and makes `mu` smaller.
-theorem Mis.step {n pos : Word} {p : Vector Word MAX_N} (hn : n.toNat ≤ MAX_N) (hb : Bij n p)
+theorem Mis.step {n pos : Word} {p : Vector Word maxStackSize} (hn : n.toNat ≤ maxStackSize) (hb : Bij n p)
     (h : Mis n pos p) :
     Bij n (swapP p (n - 1) pos) ∧ mu (n - 1) (swapP p (n - 1) pos) < mu (n - 1) p :=
   ⟨swapP_bij hn hb (by have := h.1; bv_omega) h.1, swapP_mu hn hb h.1 h.2.1 h.2.2⟩
 
 -- The two stores of `.LB.Emission.permute.22` into `permutation`.
-theorem agB_swap {n top pos : Word} {P p : Vector Word MAX_N} (h : AgB n P p) (ht : top < n)
-    (hpos : pos < n) (htM : top.toNat < MAX_N) (hpM : pos.toNat < MAX_N) :
+theorem agB_swap {n top pos : Word} {P p : Vector Word maxStackSize} (h : AgB n P p) (ht : top < n)
+    (hpos : pos < n) (htM : top.toNat < maxStackSize) (hpM : pos.toNat < maxStackSize) :
     AgB n ((P.set pos.toNat P[top.toNat] hpM).set top.toNat P[pos.toNat] htM) (swapP p top pos) := by
   have e1 : P[top.toNat] = Flat.get p top := (get_eq _ _ htM).symm.trans (h top ht)
   have e2 : P[pos.toNat] = Flat.get p pos := (get_eq _ _ hpM).symm.trans (h pos hpos)
@@ -149,7 +149,7 @@ theorem agB_swap {n top pos : Word} {P p : Vector Word MAX_N} (h : AgB n P p) (h
   exact agB_set (agB_set h hpM _) htM _
 
 -- `swapD` keeps the destinations below `n`.
-theorem ltB_swapD {n a b : Word} {d : Vector Word MAX_N} (h : LtB n d) (ha : a < n) (hb : b < n) :
+theorem ltB_swapD {n a b : Word} {d : Vector Word maxStackSize} (h : LtB n d) (ha : a < n) (hb : b < n) :
     LtB n (swapD d a b) :=
   ltB_put (ltB_put h a (h b hb)) b (h a ha)
 
@@ -158,7 +158,7 @@ theorem ltB_swapD {n a b : Word} {d : Vector Word MAX_N} (h : LtB n d) (ha : a <
 
 -- `DC` for a state with the same memory, `rsp`, `r13`, `r15`, `rcx` and `rsi`.
 theorem DC.next {S : Addr} {g g' : G} {F : MProp 64} {s : MachineData} {ra : Int64} {L : Lc}
-    {p : Vector Word MAX_N} {t P : MachineData} (h : DC S g F s ra g' L p t)
+    {p : Vector Word maxStackSize} {t P : MachineData} (h : DC S g F s ra g' L p t)
     (hm : P.dmem = t.dmem) (hsp : P.regs.rsp = t.regs.rsp) (h13 : P.regs.r13 = t.regs.r13)
     (h14 : P.regs.r15 = t.regs.r15) (hcx : P.regs.rcx = t.regs.rcx)
     (hsi : P.regs.rsi = t.regs.rsi) : DC S g F s ra g' L p P :=

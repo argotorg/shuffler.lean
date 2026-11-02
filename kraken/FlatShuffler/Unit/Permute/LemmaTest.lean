@@ -84,7 +84,7 @@ example : 2048 * 4 + 1101 < 2048 * 5 := lt20 (by decide)
 19 slots: `y` at 0, 17 and 18, `x` at 1 to 16. The depth of offset `p` is `18 - p`. -/
 
 def st19 : Flat.St := mk ([y] ++ List.replicate 16 x ++ [y, y]) [] (List.range 19)
-def p19 : Vector Word MAX_N := pv (List.range 19)
+def p19 : Vector Word maxStackSize := pv (List.range 19)
 
 def isCont : Flat.PNext → Bool
   | .cont _ _ => true
@@ -116,7 +116,7 @@ def isCont : Flat.PNext → Bool
 
 def st3 : Flat.St := mk [x, y, x] [x, y, x] [2, 0, 1]
 def sd3 : Flat.St := Flat.swapDestinations st3 0 2
-def d3 : Vector Word MAX_N := swapD st3.dest 0 2
+def d3 : Vector Word maxStackSize := swapD st3.dest 0 2
 def q3 : Flat.St := posAt { st3 with dest := d3, pos := Flat.put st3.pos (Flat.get d3 0) 0 } 2
 
 #guard entries 3 sd3.dest == entries 3 q3.dest && entries 3 sd3.pos == entries 3 q3.pos

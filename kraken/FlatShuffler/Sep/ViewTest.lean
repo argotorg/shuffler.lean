@@ -46,16 +46,16 @@ example (h : (View S g ∗ F).get m) :
     rd (m.storeInt (Fld.mapping_positionOf S 3) 8 w.toInt) (Fld.mapping_positionOf S 3) = w
     ∧ rd (m.storeInt (Fld.mapping_positionOf S 3) 8 w.toInt) (Fld.mapping_positionOf S 4)
       = g.h.pos[4]'(by decide) := by
-  have h1 := View.store_pos h (by decide : 3 < MAX_N) w
-  refine ⟨(View.rd_pos h1 (by decide : 3 < MAX_N)).trans ?_,
-    (View.rd_pos h1 (by decide : 4 < MAX_N)).trans ?_⟩ <;> simp
+  have h1 := View.store_pos h (by decide : 3 < maxStackSize) w
+  refine ⟨(View.rd_pos h1 (by decide : 3 < maxStackSize)).trans ?_,
+    (View.rd_pos h1 (by decide : 4 < maxStackSize)).trans ?_⟩ <;> simp
 
 -- The last element of `m_destinationOf` is in the view, the next is not.
 example (h : (View S g ∗ F).get m) :
-    (m.loadInt (Fld.mapping_destinationOf S (MAX_N - 1)) 8).isSome = true :=
+    (m.loadInt (Fld.mapping_destinationOf S (maxStackSize - 1)) 8).isSome = true :=
   View.isSome_dest h (by decide)
 example (_h : (View S g ∗ F).get m) :
-    (m.loadInt (Fld.mapping_destinationOf S MAX_N) 8).isSome = true ∨ True := by
+    (m.loadInt (Fld.mapping_destinationOf S maxStackSize) 8).isSome = true ∨ True := by
   fail_if_success (left; exact View.isSome_dest _h (by decide))
   exact Or.inr trivial
 
@@ -149,7 +149,7 @@ example (d n : Word) : d + n * 8#64 = slotAt d n.toNat := fold_slot d n
 -- Real VCs: two loads and a store. After `symexec_norm`, the folds give the field names, and
 -- `view_load` closes the load VCs.
 example (s : MachineData) (hm : (View S g ∗ F).get s.dmem) (hS : rdi s = S) {i : Nat}
-    (hi : i < MAX_N) (hx : (s.regs.get64 .rsi).toNat = i) :
+    (hi : i < maxStackSize) (hx : (s.regs.get64 .rsi).toNat = i) :
     ⦃ fun t => t = s ⦄ parse("
       movq 32(%rdi), %rax
       movq 8248(%rdi,%rsi,8), %rcx
@@ -173,7 +173,7 @@ example (s : MachineData) (hm : (View S g ∗ F).get s.dmem) (hS : rdi s = S) {i
 
 /-! ## Types of the ghost -/
 
-def hdr4 : Hdr := ⟨0, 4#64, 0, 0, 0, 0, 0, Vector.replicate MAX_N 0, Vector.replicate MAX_N 0, 0, 0, 0⟩
+def hdr4 : Hdr := ⟨0, 4#64, 0, 0, 0, 0, 0, Vector.replicate maxStackSize 0, Vector.replicate maxStackSize 0, 0, 0, 0⟩
 
 -- A stack of `n = 4` slots and `6n = 24` records.
 example : G := ⟨hdr4, 0, 0, Vector.replicate 4 (0 : Word), Vector.replicate 24 ⟨⟨0, 0, ⟨0, 0, 0⟩⟩, 0, 0⟩,

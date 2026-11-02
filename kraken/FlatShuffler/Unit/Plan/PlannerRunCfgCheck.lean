@@ -49,14 +49,14 @@ theorem cfg_0 : plannerRunAsm.ForallBlocks fun blk =>
         have huI := hu.choose_spec.choose_spec.2.1
         have hs : (rcx u).toNat = (rcx t).toNat + 1 := by
           rw [he]
-          change rcx t < g.p.n at hi
+          change rcx t < g.p.targetSize at hi
           bv_omega
         simp only [runV, String.reduceEq, or_false, ↓reduceIte]
         rw [hs]
-        change (rcx t).toNat < g.p.n.toNat at hi
-        change (rcx u).toNat < g.p.n.toNat at huI
-        have hr : g.p.n.toNat - (rcx t).toNat =
-            g.p.n.toNat - ((rcx t).toNat + 1) + 1 := by omega
+        change (rcx t).toNat < g.p.targetSize.toNat at hi
+        change (rcx u).toNat < g.p.targetSize.toNat at huI
+        have hr : g.p.targetSize.toNat - (rcx t).toNat =
+            g.p.targetSize.toNat - ((rcx t).toNat + 1) + 1 := by omega
         rw [hr]
         simp only [Nat.add_mul, Nat.one_mul]
         omega) (by
@@ -69,8 +69,8 @@ theorem cfg_0 : plannerRunAsm.ForallBlocks fun blk =>
       · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, or_true, ↓reduceIte] using hu
       · have hi := ht.choose_spec.choose_spec.2.1
         simp only [runV, String.reduceEq, or_false, ↓reduceIte]
-        change (rcx t).toNat < g.p.n.toNat at hi
-        have hp : 0 < (g.p.n.toNat - (rcx t).toNat) * (g.p.m.toNat + 4) :=
+        change (rcx t).toNat < g.p.targetSize.toNat at hi
+        have hp : 0 < (g.p.targetSize.toNat - (rcx t).toNat) * (g.p.sourceSize.toNat + 4) :=
           Nat.mul_pos (by omega) (by omega)
         omega)
   rw [Program.ForallBlocks, hv] at hh
@@ -135,10 +135,10 @@ theorem cfg_4 (hok : g.Ok) : plannerRunAsm.ForallBlocks fun blk =>
         exact ⟨withSaw g 0#8, withSaw_ok hok _, ⟨ctx⟩, hu⟩
       · simp only [runV, String.reduceEq, or_false, ↓reduceIte]
         rw [dropBudget_eq ctx.stable hu.choose_spec.choose_spec.1.kb.vmem]
-        have hd := Flat.droppedCount_le g.p.m g.dropped
-        have hb : (g.p.m - Flat.droppedCount g.p.m g.dropped).toNat ≤ g.p.m.toNat := by
+        have hd := Flat.droppedCount_le g.p.sourceSize g.dropped
+        have hb : (g.p.sourceSize - Flat.droppedCount g.p.sourceSize g.dropped).toNat ≤ g.p.sourceSize.toNat := by
           bv_omega
-        change (g.p.m - Flat.droppedCount g.p.m g.dropped).toNat * 65536 + 60000 < _
+        change (g.p.sourceSize - Flat.droppedCount g.p.sourceSize g.dropped).toNat * 65536 + 60000 < _
         omega)
   rw [Program.ForallBlocks, hv] at hh
   simp only [Program.forallBlocksFrom, CfgLabel.label.injEq, reduceCtorEq,
@@ -214,8 +214,8 @@ theorem cfg_fn (hp : VPre plannerCallOwnedMemory PlannerCallMemory.Ok P g F plan
       refine ⟨hu.choose_spec.choose_spec.1.toBd.kb.stack (by decide), ?_, Or.inl ?_⟩
       · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, or_true, ↓reduceIte] using hu
       · simp only [runV, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte]
-        have hm := Nat.mul_le_mul_right (g.p.m.toNat + 4)
-          (Nat.sub_le g.p.n.toNat (rcx u).toNat)
+        have hm := Nat.mul_le_mul_right (g.p.sourceSize.toNat + 4)
+          (Nat.sub_le g.p.targetSize.toNat (rcx u).toNat)
         simp only [Nat.add_mul, Nat.one_mul]
         omega) (by
       intro u hu
@@ -224,7 +224,7 @@ theorem cfg_fn (hp : VPre plannerCallOwnedMemory PlannerCallMemory.Ok P g F plan
       refine ⟨hu.choose_spec.choose_spec.1.toBd.kb.stack (by decide), ?_, Or.inl ?_⟩
       · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, or_true, ↓reduceIte] using hu
       · simp only [runV, Names.plannerRun, String.reduceEq, or_false, ↓reduceIte]
-        have hm : 0 < (g.p.n.toNat + 1) * (g.p.m.toNat + 4) :=
+        have hm : 0 < (g.p.targetSize.toNat + 1) * (g.p.sourceSize.toNat + 4) :=
           Nat.mul_pos (by omega) (by omega)
         omega)
   rw [Program.ForallBlocks, hv] at hh
@@ -295,12 +295,12 @@ theorem cfg_2 (hok : g.Ok) : plannerRunAsm.ForallBlocks fun blk =>
       · simpa only [RunInv, Names.plannerRun, String.reduceEq, or_false, or_true, ↓reduceIte] using hu
       · have hi := ht.choose_spec.choose_spec.2.2.2.2.2.2.2.2.1
         have hui := hu.choose_spec.choose_spec.2.2.2.2.2.2.2.2.1
-        change rax t < g.p.m at hi
-        change rax u < g.p.m at hui
+        change rax t < g.p.sourceSize at hi
+        change rax u < g.p.sourceSize at hui
         have hs : (rax u).toNat = (rax t).toNat + 1 := by rw [ha]; bv_omega
         simp only [runV, String.reduceEq, or_false, ↓reduceIte, hc, hs]
-        change (rax t).toNat < g.p.m.toNat at hi
-        change (rax u).toNat < g.p.m.toNat at hui
+        change (rax t).toNat < g.p.sourceSize.toNat at hi
+        change (rax u).toNat < g.p.sourceSize.toNat at hui
         omega) (by
       intro u he hu
       refine ⟨?_, Or.inl ?_⟩

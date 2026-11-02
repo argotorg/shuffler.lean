@@ -68,7 +68,7 @@ theorem b_2 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : MProp 64)
     simp only [rcx, Reg64s.get64_rcx]
     exact he.trans (targets_next (pl := g.p.fl) (sp := g.spills)
       (j := t.regs.rcx.toBitVec) hi (by
-        change (_ || _ || Flat.containsFrom g.p.fl.source g.p.m
+        change (_ || _ || Flat.containsFrom g.p.fl.source g.p.sourceSize
           (Flat.get g.p.fl.target t.regs.rcx.toBitVec) 0 || _) = true
         simp only [hfound, Bool.or_true, Bool.true_or]))
   | goto ".LB.Planner.run.2" =>
@@ -101,7 +101,7 @@ theorem b_2 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : MProp 64)
     refine ⟨lo, locals, hc.next rfl rfl rfl rfl rfl rfl rfl rfl rfl, hi,
       he, hkind, hfree, ?_⟩
     simp only [rcx, Reg64s.get64_rcx]
-    have heq' : t.regs.rax.toBitVec + 1 = g.p.m := (add1 _).symm.trans heq.symm
+    have heq' : t.regs.rax.toBitVec + 1 = g.p.sourceSize := (add1 _).symm.trans heq.symm
     exact hcontains.trans ((contains_next hj (Ne.symm hs)).trans
       (contains_end (by rw [heq']; exact BitVec.lt_irrefl _)))
   | closed => decide

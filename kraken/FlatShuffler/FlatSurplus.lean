@@ -70,9 +70,9 @@ def removeSurplus (st : St) : Status × St := surplusLoop st st.size.toNat
 -- `remove_surplus`: the result and the final status and state. `u` and `up` are as in
 -- `emission_pop`. The C++ writes `blocked` (`0` and `0` for `.done`, else the members
 -- `blockedOffset` and `blockedExcess`), the size to `height`, and `dest` below the size.
-def remove_surplus (m n : Word) (data target : Vector StackSlot MAX_N) (dests : Vector Word MAX_N)
+def remove_surplus (m n : Word) (data target : Vector StackSlot maxStackSize) (dests : Vector Word maxStackSize)
     (spilled : BitVec 32 → BitVec 8) (u : Uninit) (up : Mapping) : Word × Option (Status × St) :=
-  if m > .ofNat 64 MAX_N ∨ n > .ofNat 64 MAX_N then (-2, none)
+  if m > .ofNat 64 maxStackSize ∨ n > .ofNat 64 maxStackSize then (-2, none)
   else
     let r := removeSurplus (ctorP data m target n (plan up m n dests) spilled u)
     if r.1 = .assertionFailed then (-2, some r)

@@ -20,10 +20,10 @@ structure CandidateState (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (r
   r14 : t.regs.r14.toBitVec = P
   r8 : r8 t = r.currentPtr
   r9 : r9 t = r9 s
-  countBound : count.toNat ≤ MAX_N
-  bounded : CandidatesBound r.p.m L.candidates count
+  countBound : count.toNat ≤ maxStackSize
+  bounded : CandidatesBound r.p.sourceSize L.candidates count
   live : CandidatesLive r.M L.candidates count
-  zero : ∀ q : Word, q < r.p.m → Flat.get L.droppedNow q = 0#8
+  zero : ∀ q : Word, q < r.p.sourceSize → Flat.get L.droppedNow q = 0#8
   droppedNow : u0.droppedNow = L.droppedNow
 
 def candidateStart (r : RG) (s : MachineData) (u : Flat.ResolveU) :=
@@ -35,7 +35,7 @@ def Scan (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)
     CandidateState P r F s ra lo L u0 count t ∧ t.regs.rbp.toBitVec = count ∧
     rdx t < r9 s ∧
     let next := if after then rdx t + 1#64 else rdx t
-    count ≤ next ∧ next.toNat ≤ MAX_N ∧
+    count ≤ next ∧ next.toNat ≤ maxStackSize ∧
     candidateStart r s u0 =
       Flat.candidatesFrom r.M r.current (r9 s) next L.candidates count
 
@@ -94,9 +94,9 @@ theorem CandidateState.model (h : CandidateState P r F s ra lo L u0 count t)
   rw [resolve_independent r hok s ha u u0]
   change Flat.candidatesFrom r.M r.current (FlatShuffler.Unit.r9 s) (rdx s + 1)
     u0.candidates 0 = some (L.candidates, count) at he
-  have hz : Flat.zeroFrom r.p.fl.m 0 u0.droppedNow = L.droppedNow := by
+  have hz : Flat.zeroFrom r.p.fl.sourceSize 0 u0.droppedNow = L.droppedNow := by
     rw [h.droppedNow]
-    exact zeroFrom_fixed r.p.m 0 L.droppedNow hok.planner.m h.zero
+    exact zeroFrom_fixed r.p.sourceSize 0 L.droppedNow hok.planner.sourceSizeFitsBuffer h.zero
   rw [Flat.resolve, he]
   simp only [hz]
   rfl

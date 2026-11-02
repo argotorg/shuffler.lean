@@ -105,7 +105,7 @@ theorem ctx_fin (h : Ctx s T st0) (ho : ¬ (T < st0.len ∧ st0.dest T = T))
 
 -- The bounds at a loop head.
 theorem ctx_bounds (h : Ctx s T st0) :
-    st0.len + st0.pendingGenerations = (env s).n ∧ (env s).n ≤ MAX_N ∧ T ≤ st0.len
+    st0.len + st0.pendingGenerations = (env s).n ∧ (env s).n ≤ maxStackSize ∧ T ≤ st0.len
       ∧ st0.trace.length + 2 * st0.pendingGenerations + 2 ≤ 4 * (env s).n := by
   obtain ⟨hT, ⟨hi, hle⟩, -⟩ := h
   have := hi.ops_le
@@ -113,7 +113,7 @@ theorem ctx_bounds (h : Ctx s T st0) :
 
 -- The precondition of `generate` at a loop head.
 theorem ctx_genA (h : Ctx s T st0) (hp : st0.pendingGenerations ≠ 0) :
-    st0.len < MAX_N ∧ st0.trace.length + 2 ≤ 6 * (env s).n := by
+    st0.len < maxStackSize ∧ st0.trace.length + 2 ≤ 6 * (env s).n := by
   obtain ⟨h1, h2, -, h4⟩ := ctx_bounds h
   omega
 

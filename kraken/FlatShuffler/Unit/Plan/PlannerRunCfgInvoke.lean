@@ -52,9 +52,9 @@ theorem cfg_28 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : MProp 6
           dropBudget g w = dropBudget g t := by
         calc
           dropBudget g w =
-              (newg.p.m - Flat.droppedCount newg.p.m newg.dropped).toNat :=
+              (newg.p.sourceSize - Flat.droppedCount newg.p.sourceSize newg.dropped).toNat :=
             dropBudget_eq ec.stable hw.kb.vmem
-          _ = (current.p.m - Flat.droppedCount current.p.m current.dropped).toNat := rfl
+          _ = (current.p.sourceSize - Flat.droppedCount current.p.sourceSize current.dropped).toNat := rfl
           _ = dropBudget g t := (dropBudget_eq ctx.stable h0.kb.vmem).symm
       refine ⟨?_, ?_, ?_⟩
       · intro w hw hpres hn
@@ -74,7 +74,7 @@ theorem cfg_28 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : MProp 6
       · intro w hw he hz hbp
         have hs : ec.status = .blocked := (code_blocked_iff _).mp (hal.symm.trans he)
         have bounds := hc.blockedBounds ctx.ok ctx.map hp a hq he
-        have restored : BlockedBounds newg.p.n ec.out := by
+        have restored : BlockedBounds newg.p.targetSize ec.out := by
           rw [hout]
           exact ⟨bounds.size, bounds.offset, bounds.excess, bounds.current⟩
         have inputs : ResolveInputs newg M ls hpost.localLength := by
@@ -90,7 +90,7 @@ theorem cfg_28 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : MProp 6
           refine ⟨newg, M, ls, hpost.localLength, ec, hs, cells, inputs, lo',
             ⟨hw, ec.targets⟩, ?_⟩
           rw [hbp]
-          change 0#64 = Flat.droppedCount newg.p.m newg.dropped
+          change 0#64 = Flat.droppedCount newg.p.sourceSize newg.dropped
           rw [hz, Flat.droppedCount, dropped_end (by decide)]
           rfl
         · simp only [runV, String.reduceEq, or_false, ↓reduceIte, hb]
@@ -98,7 +98,7 @@ theorem cfg_28 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : MProp 6
       · intro w hw he hn hbp hax hdx
         have hs : ec.status = .blocked := (code_blocked_iff _).mp (hal.symm.trans he)
         have bounds := hc.blockedBounds ctx.ok ctx.map hp a hq he
-        have restored : BlockedBounds newg.p.n ec.out := by
+        have restored : BlockedBounds newg.p.targetSize ec.out := by
           rw [hout]
           exact ⟨bounds.size, bounds.offset, bounds.excess, bounds.current⟩
         have inputs : ResolveInputs newg M ls hpost.localLength := by
@@ -111,15 +111,15 @@ theorem cfg_28 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : MProp 6
             ↓reduceIte, RunResolvePhase]
           refine ⟨newg, M, ls, hpost.localLength, ec, hs, cells, inputs,
             lo', 0#64, ⟨hw, ec.targets⟩, ?_, ?_, hdx, ?_⟩
-          · change 0#64 < newg.p.m
-            change newg.p.m ≠ 0#64 at hn
+          · change 0#64 < newg.p.sourceSize
+            change newg.p.sourceSize ≠ 0#64 at hn
             bv_omega
           · simpa using hax
           · rw [hbp]
             rfl
-        · have hm := congrArg PlannerObjectMemory.m ctx.stable.planner
-          change current.p.m = g.p.m at hm
-          have hmb : g.p.m.toNat ≤ 1024 := by rw [← hm]; exact ctx.ok.planner.m
+        · have hm := congrArg PlannerObjectMemory.sourceSize ctx.stable.planner
+          change current.p.sourceSize = g.p.sourceSize at hm
+          have hmb : g.p.sourceSize.toNat ≤ 1024 := by rw [← hm]; exact ctx.ok.planner.sourceSizeFitsBuffer
           simp only [runV, String.reduceEq, or_false, ↓reduceIte, hb]
           omega) (by
       intro v lo locals hc hp a hk u lo' hl hm hx ha harg

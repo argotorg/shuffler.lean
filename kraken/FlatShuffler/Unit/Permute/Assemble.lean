@@ -33,7 +33,7 @@ theorem labels_cover : finishAsm.ForallBlocks fun blk => blk.label ∈ labels :=
   simp only [labels]
   pm_labels
 
-theorem permute_of_b22 [Host] [FunDecls] (p0 : Vector Word MAX_N)
+theorem permute_of_b22 [Host] [FunDecls] (p0 : Vector Word maxStackSize)
     (hexit : FunDecls.at (label "exit") = none)
     (hout : ∀ l ∈ Program.labels finishAsm, label l ≠ label "exit")
     (hcopy : Sep.Spec Names.shallowestCopyPosition shallowestCopyA 0 shallowestCopyQ)

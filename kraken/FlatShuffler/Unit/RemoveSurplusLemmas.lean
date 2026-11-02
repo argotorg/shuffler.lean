@@ -168,12 +168,12 @@ theorem swap_ne {st : Flat.St} {p : Word} (h : (Flat.swapWith st p).1 ≠ .done)
 section
 variable {st : Flat.St}
 
-theorem destOk_dsw (hd : DestOk st) (hN : st.size.toNat ≤ MAX_N) {a b : Word} (ha : a < st.size)
+theorem destOk_dsw (hd : DestOk st) (hN : st.size.toNat ≤ maxStackSize) {a b : Word} (ha : a < st.size)
     (hb : b < st.size) : DestOk (dsw st a b) := by
   intro i hi
   have hi' : i < st.size.toNat := hi
-  have haN : a.toNat < MAX_N := by have := BitVec.lt_def.mp ha; omega
-  have hbN : b.toNat < MAX_N := by have := BitVec.lt_def.mp hb; omega
+  have haN : a.toNat < maxStackSize := by have := BitVec.lt_def.mp ha; omega
+  have hbN : b.toNat < maxStackSize := by have := BitVec.lt_def.mp hb; omega
   have hda := hd a.toNat (BitVec.lt_def.mp ha)
   have hdb := hd b.toNat (BitVec.lt_def.mp hb)
   simp only [BitVec.ofNat_toNat, BitVec.setWidth_eq] at hda hdb
@@ -195,15 +195,15 @@ theorem destOk_posAt (hd : DestOk st) (i : Word) : DestOk (posAt st i) := hd
 theorem destOk_withDest {g : G} {a b : Word} (h : DestOk (dsw (flat g) a b)) :
     DestOk (flat (withDest g (dsw (flat g) a b).dest)) := h
 
-theorem destOk_withPos {g : G} {p : Vector Word MAX_N} (h : DestOk (flat g)) :
+theorem destOk_withPos {g : G} {p : Vector Word maxStackSize} (h : DestOk (flat g)) :
     DestOk (flat (withPos g p)) := h
 
-theorem destOk_swapDest (hd : DestOk st) (hN : st.size.toNat ≤ MAX_N) {a b : Word}
+theorem destOk_swapDest (hd : DestOk st) (hN : st.size.toNat ≤ maxStackSize) {a b : Word}
     (ha : a < st.size) (hb : b < st.size) : DestOk (Flat.swapDestinations st a b) := by
   rw [swapDestinations_eq]
   exact destOk_posAt (destOk_posAt (destOk_dsw hd hN ha hb) a) b
 
-theorem destOk_swapWith (hd : DestOk st) (hN : st.size.toNat ≤ MAX_N) (p : Word) :
+theorem destOk_swapWith (hd : DestOk st) (hN : st.size.toNat ≤ maxStackSize) (p : Word) :
     DestOk (Flat.swapWith st p).2 := by
   by_cases h : (Flat.swapWith st p).1 = .done
   · obtain ⟨hp, e⟩ := swap_done h
@@ -267,13 +267,13 @@ theorem eqStep_skip (h : q ≠ 0#64)
     eqStep st q top dp = eqStep st (q - 1#64) top dp := by
   unfold eqStep; rw [eqb_ne st h, ite_eq_right hn]
 
-theorem eqStep_hit (h : q ≠ 0#64) (hq : q.toNat ≤ MAX_N)
+theorem eqStep_hit (h : q ≠ 0#64) (hq : q.toNat ≤ maxStackSize)
     (hs : Flat.isSurplus st (q - 1#64) ∧ Flat.get st.data (q - 1#64) = Flat.get st.data (st.size - 1#64)) :
     eqStep st q top dp = (.done, Flat.swapDestinations st (q - 1#64) top) := by
   unfold eqStep
   rw [eqb_ne st h, ite_eq_left hs]
   have : q - 1#64 ≠ Flat.NONE := by
-    unfold Flat.NONE; simp only [MAX_N] at hq; bv_omega
+    unfold Flat.NONE; simp only [maxStackSize] at hq; bv_omega
   rw [ite_eq_left this]
 
 end

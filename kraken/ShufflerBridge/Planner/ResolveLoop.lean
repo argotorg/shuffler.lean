@@ -18,21 +18,21 @@ open FlatShuffler.Flat (get put optOf NONE isVariable spillIsSpilled spillAdd li
 namespace ShufflerBridge.Planner
 
 -- The flat candidates `cand` below `count` are the PR31 candidates `L`.
-def CandR {s : Nat} (L : List (Fin s)) (cand : Vector FlatShuffler.Word FlatShuffler.MAX_N) (count : FlatShuffler.Word) :
+def CandR {s : Nat} (L : List (Fin s)) (cand : Vector FlatShuffler.Word FlatShuffler.maxStackSize) (count : FlatShuffler.Word) :
     Prop :=
   count.toNat = L.length ∧ ∀ i (h : i < L.length), get cand (.ofNat 64 i) = .ofNat 64 L[i].val
 
 theorem ofNat_toNat (w : FlatShuffler.Word) : BitVec.ofNat 64 w.toNat = w := by
   simp
 
-theorem candR_snoc {s : Nat} {L : List (Fin s)} {cand : Vector FlatShuffler.Word FlatShuffler.MAX_N}
-    {count : FlatShuffler.Word} (h : CandR L cand count) (hl : L.length < FlatShuffler.MAX_N) (x : Fin s) :
+theorem candR_snoc {s : Nat} {L : List (Fin s)} {cand : Vector FlatShuffler.Word FlatShuffler.maxStackSize}
+    {count : FlatShuffler.Word} (h : CandR L cand count) (hl : L.length < FlatShuffler.maxStackSize) (x : Fin s) :
     CandR (L ++ [x]) (put cand count (.ofNat 64 x.val)) (count + 1) := by
   obtain ⟨hc, hg⟩ := h
   have hcn : count = .ofNat 64 L.length := by rw [← hc, ofNat_toNat]
   refine ⟨?_, fun i hi => ?_⟩
   · rw [hcn, FlatShuffler.Flat.ofNat_succ, BitVec.toNat_ofNat,
-      Nat.mod_eq_of_lt (by unfold FlatShuffler.MAX_N at hl; omega)]; simp
+      Nat.mod_eq_of_lt (by unfold FlatShuffler.maxStackSize at hl; omega)]; simp
   · simp only [List.length_append, List.length_singleton] at hi
     rw [hcn, get_put _ hl (by omega)]
     by_cases hi' : i = L.length
@@ -44,8 +44,8 @@ def candStep {s t cs : Nat} (P : Mapping s t) (Pc : Mapping cs t) (acc : List (F
     (pos : Fin cs) : List (Fin s) :=
   acc ++ ((Pc pos).bind P.symm).toList
 
-theorem candidates_corr {s t cs : Nat} (hs : s ≤ FlatShuffler.MAX_N) (ht : t ≤ FlatShuffler.MAX_N)
-    {csW : FlatShuffler.Word} (hcs : csW.toNat = cs) (hcsN : cs ≤ FlatShuffler.MAX_N)
+theorem candidates_corr {s t cs : Nat} (hs : s ≤ FlatShuffler.maxStackSize) (ht : t ≤ FlatShuffler.maxStackSize)
+    {csW : FlatShuffler.Word} (hcs : csW.toNat = cs) (hcsN : cs ≤ FlatShuffler.maxStackSize)
     {M : FlatShuffler.Flat.Mapping} {P : Mapping s t} (hR : MapR M P)
     {C : FlatShuffler.Flat.Mapping} {Pc : Mapping cs t} (hC : MapR C Pc) :
     ∀ j k (acc : List (Fin s)) cand count, k + j = cs → acc.length ≤ k → CandR acc cand count →
@@ -92,7 +92,7 @@ theorem candidates_corr {s t cs : Nat} (hs : s ≤ FlatShuffler.MAX_N) (ht : t �
         have hdM := hR.dest x
         rw [hPx, Option.map_some] at hdM
         have hdM' := optOf_eq_some hdM
-        have hne : ∀ {v : Nat}, v < FlatShuffler.MAX_N → BitVec.ofNat 64 v ≠ NONE := fun hv =>
+        have hne : ∀ {v : Nat}, v < FlatShuffler.maxStackSize → BitVec.ofNat 64 v ≠ NONE := fun hv =>
           FlatShuffler.Flat.ne_none (by rw [FlatShuffler.Flat.toNat_ofNat_lt hv]; exact hv)
         simp only [Option.toList_some]
         rw [hpM', ite_eq_left ⟨hne (by omega), hne (by omega)⟩, hdM',
@@ -111,7 +111,7 @@ namespace FlatShuffler.Flat
 
 -- One step of `pickFrom` at the candidate `offset`.
 def pickStep (pl : Planner) (sp : BitVec 32 → BitVec 8) (M : Mapping)
-    (dn : Vector (BitVec 8) MAX_N) (offset : Word) (w : Word × BitVec 8) : Word × BitVec 8 :=
+    (dn : Vector (BitVec 8) maxStackSize) (offset : Word) (w : Word × BitVec 8) : Word × BitVec 8 :=
   if get dn offset ≠ 0 then w
   else
     let cls := classify pl sp M dn offset
@@ -121,7 +121,7 @@ def pickStep (pl : Planner) (sp : BitVec 32 → BitVec 8) (M : Mapping)
     else w
 
 theorem pickFrom_eq (pl : Planner) (sp : BitVec 32 → BitVec 8) (M : Mapping)
-    (dn : Vector (BitVec 8) MAX_N) (cand : Vector Word MAX_N) (count i best : Word)
+    (dn : Vector (BitVec 8) maxStackSize) (cand : Vector Word maxStackSize) (count i best : Word)
     (bestClass : BitVec 8) :
     pickFrom pl sp M dn cand count i best bestClass =
       if i < count then
@@ -149,8 +149,8 @@ def PInv {s t : Nat} (P : Mapping s t) (w : FlatShuffler.Word × BitVec 8) : Pro
   w.1 = NONE ∨ ∃ x : Fin s, w.1 = .ofNat 64 x.val ∧ (P x).isSome
 
 theorem pick_eq {ε : Type} {s t : Nat} {P : Mapping s t} {L : List (Fin s)}
-    {cand : Vector FlatShuffler.Word FlatShuffler.MAX_N} {count : FlatShuffler.Word} (hcr : CandR L cand count)
-    (hL : L.length ≤ FlatShuffler.MAX_N)
+    {cand : Vector FlatShuffler.Word FlatShuffler.maxStackSize} {count : FlatShuffler.Word} (hcr : CandR L cand count)
+    (hL : L.length ≤ FlatShuffler.maxStackSize)
     (g : FlatShuffler.Word → FlatShuffler.Word × BitVec 8 → FlatShuffler.Word × BitVec 8)
     (f : Fin s → Option (Fin s) × Nat → Except ε (ForInStep (Option (Fin s) × Nat)))
     (hstep : ∀ x ∈ L, ∀ w, PInv P w →
@@ -182,8 +182,8 @@ theorem pick_eq {ε : Type} {s t : Nat} {P : Mapping s t} {L : List (Fin s)}
     exact ih (i + 1) _ (by omega) (hinv _ hx w hw)
 
 theorem pick_inv {s t : Nat} {P : Mapping s t} {L : List (Fin s)}
-    {cand : Vector FlatShuffler.Word FlatShuffler.MAX_N} {count : FlatShuffler.Word} (hcr : CandR L cand count)
-    (hL : L.length ≤ FlatShuffler.MAX_N)
+    {cand : Vector FlatShuffler.Word FlatShuffler.maxStackSize} {count : FlatShuffler.Word} (hcr : CandR L cand count)
+    (hL : L.length ≤ FlatShuffler.maxStackSize)
     (g : FlatShuffler.Word → FlatShuffler.Word × BitVec 8 → FlatShuffler.Word × BitVec 8)
     (hinv : ∀ x ∈ L, ∀ w, PInv P w → PInv P (g (.ofNat 64 x.val) w))
     (F : FlatShuffler.Word → FlatShuffler.Word × BitVec 8 → FlatShuffler.Word × BitVec 8)
@@ -211,7 +211,7 @@ end ShufflerBridge.Planner
 namespace FlatShuffler.Flat
 
 -- One pass of `passFrom`: the resolution if it stops there, and the state.
-def passStep (pl : Planner) (M : Mapping) (cand : Vector Word MAX_N) (count : Word) (s : RState) :
+def passStep (pl : Planner) (M : Mapping) (cand : Vector Word maxStackSize) (count : Word) (s : RState) :
     Option Resolution × RState :=
   let r := pickFrom pl s.spills M s.droppedNow cand count 0 NONE 0
   if r.1 = NONE then (some .stuck, s)
@@ -220,7 +220,7 @@ def passStep (pl : Planner) (M : Mapping) (cand : Vector Word MAX_N) (count : Wo
     if r.2 = SPILL ∧ a.1 ≠ .done then (some .assertionFailed, s)
     else (none, ⟨if r.2 = SPILL then a.2 else s.spills, put s.dropped r.1 1, put s.droppedNow r.1 1⟩)
 
-theorem passFrom_eq (pl : Planner) (M : Mapping) (cand : Vector Word MAX_N)
+theorem passFrom_eq (pl : Planner) (M : Mapping) (cand : Vector Word maxStackSize)
     (count excess k : Word) (s : RState) :
     passFrom pl M cand count excess k s =
       if k < excess then
@@ -241,8 +241,8 @@ open FlatShuffler.Flat (Resolution RState)
 
 -- A flat pass and a PR31 pass: both go on with related states, both stop with related states,
 -- or both fail.
-def PStepR {σ D ε : Type} (SR : (BitVec 32 → BitVec 8) → Vector (BitVec 8) FlatShuffler.MAX_N → σ → Prop)
-    (DR : Vector (BitVec 8) FlatShuffler.MAX_N → D → Prop) :
+def PStepR {σ D ε : Type} (SR : (BitVec 32 → BitVec 8) → Vector (BitVec 8) FlatShuffler.maxStackSize → σ → Prop)
+    (DR : Vector (BitVec 8) FlatShuffler.maxStackSize → D → Prop) :
     Option Resolution × RState → Except ε (ForInStep (Option (Bool × σ) × σ × D)) → Prop
   | (none, rs), .ok (.yield b) => b.1 = none ∧ SR rs.spills rs.dropped b.2.1 ∧ DR rs.droppedNow b.2.2
   | (some .stuck, rs), .ok (.done b) => b.1 = some (false, b.2.1) ∧ SR rs.spills rs.dropped b.2.1
@@ -250,7 +250,7 @@ def PStepR {σ D ε : Type} (SR : (BitVec 32 → BitVec 8) → Vector (BitVec 8)
   | _, _ => False
 
 -- The flat passes and the PR31 loop.
-def PassR {σ D ε : Type} (SR : (BitVec 32 → BitVec 8) → Vector (BitVec 8) FlatShuffler.MAX_N → σ → Prop) :
+def PassR {σ D ε : Type} (SR : (BitVec 32 → BitVec 8) → Vector (BitVec 8) FlatShuffler.maxStackSize → σ → Prop) :
     Resolution × RState → Except ε (Option (Bool × σ) × σ × D) → Prop
   | (.dropped, rs), .ok b => b.1 = none ∧ SR rs.spills rs.dropped b.2.1
   | (.stuck, rs), .ok b => b.1 = some (false, b.2.1) ∧ SR rs.spills rs.dropped b.2.1
@@ -258,16 +258,16 @@ def PassR {σ D ε : Type} (SR : (BitVec 32 → BitVec 8) → Vector (BitVec 8) 
   | _, _ => False
 
 -- The flat `resolve` and the PR31 `resolve`.
-def RslvR {σ ε : Type} (SR : (BitVec 32 → BitVec 8) → Vector (BitVec 8) FlatShuffler.MAX_N → σ → Prop) :
-    Resolution × (BitVec 32 → BitVec 8) × Vector (BitVec 8) FlatShuffler.MAX_N → Except ε (Bool × σ) → Prop
+def RslvR {σ ε : Type} (SR : (BitVec 32 → BitVec 8) → Vector (BitVec 8) FlatShuffler.maxStackSize → σ → Prop) :
+    Resolution × (BitVec 32 → BitVec 8) × Vector (BitVec 8) FlatShuffler.maxStackSize → Except ε (Bool × σ) → Prop
   | (.dropped, sp, d), .ok (b, st) => b = true ∧ SR sp d st
   | (.stuck, sp, d), .ok (b, st) => b = false ∧ SR sp d st
   | (.assertionFailed, _), .error _ => True
   | _, _ => False
 
 theorem pass_corr {σ D ε : Type} {e : Nat}
-    (SR : (BitVec 32 → BitVec 8) → Vector (BitVec 8) FlatShuffler.MAX_N → σ → Prop)
-    (DR : Vector (BitVec 8) FlatShuffler.MAX_N → D → Prop)
+    (SR : (BitVec 32 → BitVec 8) → Vector (BitVec 8) FlatShuffler.maxStackSize → σ → Prop)
+    (DR : Vector (BitVec 8) FlatShuffler.maxStackSize → D → Prop)
     (step : RState → Option Resolution × RState)
     (f : Fin e → Option (Bool × σ) × σ × D → Except ε (ForInStep (Option (Bool × σ) × σ × D)))
     (hstep : ∀ k (hk : k < e) rs b, b.1 = none → SR rs.spills rs.dropped b.2.1 →
@@ -314,7 +314,7 @@ theorem forIn_yield_eq {α β ε : Type} (l : List α) (b : β) (f : α → β �
   | cons a l ih => rw [List.forIn_cons, hf, List.foldl_cons, ← ih]; rfl
 
 theorem rslv_of_pass {σ D ε : Type}
-    {SR : (BitVec 32 → BitVec 8) → Vector (BitVec 8) FlatShuffler.MAX_N → σ → Prop}
+    {SR : (BitVec 32 → BitVec 8) → Vector (BitVec 8) FlatShuffler.maxStackSize → σ → Prop}
     {r : Resolution × RState} {x : Except ε (Option (Bool × σ) × σ × D)} (h : PassR SR r x)
     (K : Option (Bool × σ) × σ × D → Except ε (Bool × σ))
     (hK1 : ∀ c st d, K (some c, st, d) = pure c) (hK2 : ∀ st d, K (none, st, d) = pure (true, st)) :
@@ -325,8 +325,8 @@ theorem rslv_of_pass {σ D ε : Type}
   · rw [except_ok_bind, hK1, h.1]; exact ⟨rfl, h.2⟩
   · trivial
 
-theorem zeroFrom_get (m : FlatShuffler.Word) (hm : m.toNat ≤ FlatShuffler.MAX_N) :
-    ∀ j k (dn : Vector (BitVec 8) FlatShuffler.MAX_N), k + j = m.toNat → ∀ i, i < m.toNat →
+theorem zeroFrom_get (m : FlatShuffler.Word) (hm : m.toNat ≤ FlatShuffler.maxStackSize) :
+    ∀ j k (dn : Vector (BitVec 8) FlatShuffler.maxStackSize), k + j = m.toNat → ∀ i, i < m.toNat →
       (i < k → get dn (.ofNat 64 i) = 0) →
       get (FlatShuffler.Flat.zeroFrom m (.ofNat 64 k) dn) (.ofNat 64 i) = 0 := by
   intro j
@@ -362,19 +362,19 @@ theorem foldl_candStep_length {s t cs : Nat} (P : Mapping s t) (Pc : Mapping cs 
       unfold candStep; rw [List.length_append]; cases (Pc a).bind P.symm <;> simp
     simp only [List.length_cons]; omega
 
-theorem finOpt_none {s : Nat} (hs : s ≤ FlatShuffler.MAX_N) : finOpt (s := s) NONE = none := by
+theorem finOpt_none {s : Nat} (hs : s ≤ FlatShuffler.maxStackSize) : finOpt (s := s) NONE = none := by
   unfold finOpt
-  rw [dite_eq_right (by unfold NONE FlatShuffler.MAX_N at *; simp; omega)]
+  rw [dite_eq_right (by unfold NONE FlatShuffler.maxStackSize at *; simp; omega)]
 
-theorem finOpt_ofNat {s : Nat} (hs : s ≤ FlatShuffler.MAX_N) (y : Fin s) :
+theorem finOpt_ofNat {s : Nat} (hs : s ≤ FlatShuffler.maxStackSize) (y : Fin s) :
     finOpt (s := s) (.ofNat 64 y.val) = some y := by
   unfold finOpt
   have : (BitVec.ofNat 64 y.val).toNat = y.val := FlatShuffler.Flat.toNat_ofNat_lt (by omega)
   rw [dite_eq_left (by omega)]
   simp only [this]
 
-theorem dnR_set {k : Nat} (hk : k ≤ FlatShuffler.MAX_N) {dn : Vector Byte k}
-    {fdn : Vector (BitVec 8) FlatShuffler.MAX_N} (h : DnR dn fdn) (y : Nat) (hy : y < k) :
+theorem dnR_set {k : Nat} (hk : k ≤ FlatShuffler.maxStackSize) {dn : Vector Byte k}
+    {fdn : Vector (BitVec 8) FlatShuffler.maxStackSize} (h : DnR dn fdn) (y : Nat) (hy : y < k) :
     DnR (dn.set y 1 hy) (put fdn (.ofNat 64 y) 1) := by
   intro i
   rw [Fin.getElem_fin, Vector.getElem_set, get_put _ (by omega) (by omega)]
@@ -386,28 +386,28 @@ section
 variable {pl : FlatShuffler.Flat.Planner}
 
 -- The PR31 planner state and the flat spill bytes `sp` and dropped bytes `d`.
-def SRpl (pl : FlatShuffler.Flat.Planner) (sp : BitVec 32 → BitVec 8) (d : Vector (BitVec 8) FlatShuffler.MAX_N)
-    (st : State (srcOf pl.source pl.m) (srcOf pl.target pl.n)) : Prop :=
-  st.spills = pSpills (pl.source.toList.take pl.m.toNat) pl.n.toNat pl.target sp ∧
+def SRpl (pl : FlatShuffler.Flat.Planner) (sp : BitVec 32 → BitVec 8) (d : Vector (BitVec 8) FlatShuffler.maxStackSize)
+    (st : State (srcOf pl.source pl.sourceSize) (srcOf pl.target pl.targetSize)) : Prop :=
+  st.spills = pSpills (pl.source.toList.take pl.sourceSize.toNat) pl.targetSize.toNat pl.target sp ∧
     st.spillingAllowed = pl.allowed ∧ DnR st.dropped d
 
-theorem dnR_replicate (hm : pl.m.toNat ≤ FlatShuffler.MAX_N) (dn : Vector (BitVec 8) FlatShuffler.MAX_N) :
-    DnR (Vector.replicate (srcOf pl.source pl.m).length (0 : Byte))
-      (FlatShuffler.Flat.zeroFrom pl.m 0 dn) := by
+theorem dnR_replicate (hm : pl.sourceSize.toNat ≤ FlatShuffler.maxStackSize) (dn : Vector (BitVec 8) FlatShuffler.maxStackSize) :
+    DnR (Vector.replicate (srcOf pl.source pl.sourceSize).length (0 : Byte))
+      (FlatShuffler.Flat.zeroFrom pl.sourceSize 0 dn) := by
   intro i
   have hi := src_lt hm i
   rw [Fin.getElem_fin, Vector.getElem_replicate, show (0 : FlatShuffler.Word) = .ofNat 64 0 from rfl,
-    zeroFrom_get pl.m hm pl.m.toNat 0 dn (by omega) i hi (fun h => absurd h (by omega))]
+    zeroFrom_get pl.sourceSize hm pl.sourceSize.toNat 0 dn (by omega) i hi (fun h => absurd h (by omega))]
   rfl
 
-theorem resolve_corr (hm : pl.m.toNat ≤ FlatShuffler.MAX_N) (hn : pl.n.toNat ≤ FlatShuffler.MAX_N)
-    (ok : SlotsOk (pl.source.toList.take pl.m.toNat ++ pl.target.toList.take pl.n.toNat))
-    {init : State (srcOf pl.source pl.m) (srcOf pl.target pl.n)} {sp : BitVec 32 → BitVec 8}
-    {dropped : Vector (BitVec 8) FlatShuffler.MAX_N} (hinit : SRpl pl sp dropped init)
-    {P : Mapping (srcOf pl.source pl.m).length (srcOf pl.target pl.n).length}
+theorem resolve_corr (hm : pl.sourceSize.toNat ≤ FlatShuffler.maxStackSize) (hn : pl.targetSize.toNat ≤ FlatShuffler.maxStackSize)
+    (ok : SlotsOk (pl.source.toList.take pl.sourceSize.toNat ++ pl.target.toList.take pl.targetSize.toNat))
+    {init : State (srcOf pl.source pl.sourceSize) (srcOf pl.target pl.targetSize)} {sp : BitVec 32 → BitVec 8}
+    {dropped : Vector (BitVec 8) FlatShuffler.maxStackSize} (hinit : SRpl pl sp dropped init)
+    {P : Mapping (srcOf pl.source pl.sourceSize).length (srcOf pl.target pl.targetSize).length}
     {M : FlatShuffler.Flat.Mapping} (hR : MapR M P)
-    {cs : Nat} {current : Mapping cs (srcOf pl.target pl.n).length} {C : FlatShuffler.Flat.Mapping}
-    (hC : MapR C current) {csW : FlatShuffler.Word} (hcs : csW.toNat = cs) (hcsN : cs ≤ FlatShuffler.MAX_N)
+    {cs : Nat} {current : Mapping cs (srcOf pl.target pl.targetSize).length} {C : FlatShuffler.Flat.Mapping}
+    (hC : MapR C current) {csW : FlatShuffler.Word} (hcs : csW.toNat = cs) (hcsN : cs ≤ FlatShuffler.maxStackSize)
     {blocked : Blocked} (hbl : blocked.offset < cs) {boW exW : FlatShuffler.Word}
     (hbo : boW.toNat = blocked.offset) (hex : exW.toNat = blocked.excess)
     (u : FlatShuffler.Flat.ResolveU) :
@@ -434,7 +434,7 @@ theorem resolve_corr (hm : pl.m.toNat ≤ FlatShuffler.MAX_N) (hn : pl.n.toNat �
     u.candidates 0 (by omega) (by simp) ⟨rfl, fun i h => absurd h (by simp)⟩ (by simp)
   rw [hcf]
   dsimp only
-  rw [pure_bind, show (∅ : List (Fin (srcOf pl.source pl.m).length)) = [] from rfl]
+  rw [pure_bind, show (∅ : List (Fin (srcOf pl.source pl.sourceSize).length)) = [] from rfl]
   have hLn := foldl_candStep_length P current (List.drop (blocked.offset + 1) (List.finRange cs)) []
   simp only [List.length_nil, List.length_drop, List.length_finRange] at hLn
   generalize List.foldl (candStep P current) [] (List.drop (blocked.offset + 1) (List.finRange cs))
@@ -446,7 +446,7 @@ theorem resolve_corr (hm : pl.m.toNat ≤ FlatShuffler.MAX_N) (hn : pl.n.toNat �
     simp only at hb1 hsr hdn
     subst hb1
     dsimp only
-    have hs : (srcOf pl.source pl.m).length ≤ FlatShuffler.MAX_N := by rw [hsl]; exact hm
+    have hs : (srcOf pl.source pl.sourceSize).length ≤ FlatShuffler.maxStackSize := by rw [hsl]; exact hm
     have hinv : ∀ x ∈ L, ∀ w, PInv P w →
         PInv P (FlatShuffler.Flat.pickStep pl rs.spills M rs.droppedNow (.ofNat 64 x.val) w) := by
       intro x hx w hw
@@ -457,7 +457,7 @@ theorem resolve_corr (hm : pl.m.toNat ≤ FlatShuffler.MAX_N) (hn : pl.n.toNat �
     have hpi := pick_inv hcr (by omega) _ hinv
       (fun i w => FlatShuffler.Flat.pickFrom pl rs.spills M rs.droppedNow cand count i w.1 w.2)
       (fun i w => FlatShuffler.Flat.pickFrom_eq _ _ _ _ _ _ _ _ _) (NONE, 0) (.inl rfl)
-    rw [show ((none, 0) : Option (Fin (srcOf pl.source pl.m).length) × Nat) =
+    rw [show ((none, 0) : Option (Fin (srcOf pl.source pl.sourceSize).length) × Nat) =
         absPick (NONE, (0 : BitVec 8)) by simp only [absPick, finOpt_none hs]; rfl]
     rw [(pick_eq hcr (by omega) (FlatShuffler.Flat.pickStep pl rs.spills M rs.droppedNow) _ ?hst hinv
       (fun i w => FlatShuffler.Flat.pickFrom pl rs.spills M rs.droppedNow cand count i w.1 w.2)
@@ -484,7 +484,7 @@ theorem resolve_corr (hm : pl.m.toNat ≤ FlatShuffler.MAX_N) (hn : pl.n.toNat �
           have hdM := hR.dest x
           rw [hdx, Option.map_some] at hdM
           rw [optOf_eq_some hdM]
-          have ht : (srcOf pl.target pl.n).length ≤ FlatShuffler.MAX_N := by rw [htl]; exact hn
+          have ht : (srcOf pl.target pl.targetSize).length ≤ FlatShuffler.maxStackSize := by rw [htl]; exact hn
           have hxN := x.isLt
           have hdxN := dx.isLt
           rcases hw with hw | ⟨y, hy, hPy⟩
@@ -530,11 +530,11 @@ theorem resolve_corr (hm : pl.m.toNat ≤ FlatShuffler.MAX_N) (hn : pl.n.toNat �
       subst hy
       have hy := src_lt hm y
       rw [ite_eq_right (FlatShuffler.Flat.ne_none (by rw [FlatShuffler.Flat.toNat_ofNat_lt (by omega)]; omega))]
-      have hab : (absPick (s := (srcOf pl.source pl.m).length) (BitVec.ofNat 64 y.val, r2)).1 =
+      have hab : (absPick (s := (srcOf pl.source pl.sourceSize).length) (BitVec.ofNat 64 y.val, r2)).1 =
           some y := by simp only [absPick, finOpt_ofNat hs]
-      have hg : ∀ h', (absPick (s := (srcOf pl.source pl.m).length)
+      have hg : ∀ h', (absPick (s := (srcOf pl.source pl.sourceSize).length)
           (BitVec.ofNat 64 y.val, r2)).1.get h' = y := by intro h'; simp only [hab, Option.get_some]
-      have h2 : (absPick (s := (srcOf pl.source pl.m).length) (BitVec.ofNat 64 y.val, r2)).2 =
+      have h2 : (absPick (s := (srcOf pl.source pl.sourceSize).length) (BitVec.ofNat 64 y.val, r2)).2 =
           r2.toNat := rfl
       conv => arg 4; rw [ite_eq_right (by rw [hab]; simp), requires_of_true _ (by rw [hab]; rfl),
         except_ok_bind]
@@ -546,7 +546,7 @@ theorem resolve_corr (hm : pl.m.toNat ≤ FlatShuffler.MAX_N) (hn : pl.n.toNat �
         have hac := add_corr ok rs.spills hxS
         revert hac
         generalize spillAdd rs.spills (get pl.source (BitVec.ofNat 64 y.val)) = A
-        generalize (pSpills (pl.source.toList.take pl.m.toNat) pl.n.toNat pl.target rs.spills).add
+        generalize (pSpills (pl.source.toList.take pl.sourceSize.toNat) pl.targetSize.toNat pl.target rs.spills).add
           (decodeStackSlot (get pl.source (BitVec.ofNat 64 y.val))) = B
         intro hac
         rcases A with ⟨a, sp'⟩

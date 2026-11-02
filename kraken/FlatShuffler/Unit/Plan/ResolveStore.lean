@@ -9,19 +9,19 @@ namespace FlatShuffler.Unit.ResolveU
 open FlatShuffler.Sep
 
 theorem store_dropped {P : Addr} {r : RG} {F : MProp 64} {m : Mem 64} {o : Word}
-    (hm : (RView P r ∗ F).get m) (ho : o.toNat < r.p.m.toNat)
-    (hoN : o.toNat < MAX_N) (z : Int) :
+    (hm : (RView P r ∗ F).get m) (ho : o.toNat < r.p.sourceSize.toNat)
+    (hoN : o.toNat < maxStackSize) (z : Int) :
     (RView P { r with dropped := Flat.put r.dropped o (BitVec.ofInt 8 z) } ∗ F).get
       (m.storeInt (r.p.drp + o) 1 z) := by
   let rest := plannerObjectOwnedMemory P r.p ∗ MapM r.mp r.M ∗ MapM r.currentPtr r.current ∗
     Spl r.p.spl r.spills (List.range r.spillCount) ∗ F
-  have he : ∀ d : Vector (BitVec 8) MAX_N,
+  have he : ∀ d : Vector (BitVec 8) maxStackSize,
       RView P { r with dropped := d } ∗ F =
-        Bs r.p.drp (d.toList.take r.p.m.toNat) ∗ rest := by
+        Bs r.p.drp (d.toList.take r.p.sourceSize.toNat) ∗ rest := by
     intro d
     unfold RView rest
     ecancel
-  have hm' : (Bs r.p.drp (r.dropped.toList.take r.p.m.toNat) ∗ rest).get m :=
+  have hm' : (Bs r.p.drp (r.dropped.toList.take r.p.sourceSize.toNat) ∗ rest).get m :=
     he r.dropped ▸ hm
   have hs := Bs.store hm'
     (by simpa only [List.length_take, Vector.length_toList] using
@@ -34,7 +34,7 @@ variable {P : Addr} {r : RG} {F : MProp 64} {s t u : MachineData} {ra : Int64}
     {lo loc : List Word}
 
 theorem Bd.storeDropped (hb : Bd P r F s ra lo loc t) {o : Word}
-    (ho : o.toNat < r.p.m.toNat) (hoN : o.toNat < MAX_N) (z : Int)
+    (ho : o.toNat < r.p.sourceSize.toNat) (hoN : o.toNat < maxStackSize) (z : Int)
     (hm : u.dmem = t.dmem.storeInt (r.p.drp + o) 1 z)
     (hsp : u.regs.rsp = t.regs.rsp) :
     Bd P { r with dropped := Flat.put r.dropped o (BitVec.ofInt 8 z) } F s ra lo loc u := by
@@ -46,7 +46,7 @@ theorem Bd.storeDropped (hb : Bd P r F s ra lo loc t) {o : Word}
   exact (sep_lc _ _ _).symm ▸ hs
 
 theorem Bd.storeDroppedNow (hb : Bd P r F s ra lo loc t) {o : Word}
-    (ho : o.toNat < MAX_N) (z : Int)
+    (ho : o.toNat < maxStackSize) (z : Int)
     (hm : u.dmem = t.dmem.storeInt (t.regs.rsp.toBitVec + 8240#64 + o) 1 z)
     (hsp : u.regs.rsp = t.regs.rsp) :
     ∃ w : Word, Bd P r F s ra lo (loc.set (1030 + o.toNat / 8) w) u := by

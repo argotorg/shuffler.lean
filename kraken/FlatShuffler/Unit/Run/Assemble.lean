@@ -18,7 +18,7 @@ open ProofKit
 namespace FlatShuffler.Unit.RunU
 open FlatShuffler.Sep
 
-theorem run_vthm [Host] [FunDecls] (PM : Addr) (planned : Vector Word MAX_N)
+theorem run_vthm [Host] [FunDecls] (PM : Addr) (planned : Vector Word maxStackSize)
     (hexit : FunDecls.at (label "exit") = none)
     (hout : ∀ l ∈ Program.labels runAsm, label l ≠ label "exit")
     (hsur : VSpecWithExit (RunView PM planned) G.Ok Names.removeSurplus surplusA 4

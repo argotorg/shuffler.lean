@@ -22,8 +22,8 @@ structure Out {e : FlatShuffler.Env} {source : Stack} (fs : FlatShuffler.Flat.St
   map : FlatShuffler.Flat.absMapping fs.dest fs.pos fs.size fs.targetSize = absP state.mapping
   stack : (fs.data.toList.take fs.size.toNat).map decodeStackSlot = state.stack
   trace : fs.trace = (traceOperations state.trace).map encodeTraceOperation
-  size_le : fs.size.toNat ≤ FlatShuffler.MAX_N
-  tsize_le : fs.targetSize.toNat ≤ FlatShuffler.MAX_N
+  size_le : fs.size.toNat ≤ FlatShuffler.maxStackSize
+  tsize_le : fs.targetSize.toNat ≤ FlatShuffler.maxStackSize
 
 -- The flat result `r` and the PR31 result.
 def ERel {e : FlatShuffler.Env} {source : Stack} (r : FlatShuffler.Flat.Status × FlatShuffler.Flat.St) :
@@ -36,8 +36,8 @@ def ERel {e : FlatShuffler.Env} {source : Stack} (r : FlatShuffler.Flat.Status �
 
 /-! ## `Out` from `Sim` and `Rel` -/
 
-theorem take_data {α : Type} [Inhabited α] (v : Vector α FlatShuffler.MAX_N) {k : Nat}
-    (hk : k ≤ FlatShuffler.MAX_N) :
+theorem take_data {α : Type} [Inhabited α] (v : Vector α FlatShuffler.maxStackSize) {k : Nat}
+    (hk : k ≤ FlatShuffler.maxStackSize) :
     v.toList.take k = (List.range k).map fun i => FlatShuffler.Flat.get v (BitVec.ofNat 64 i) := by
   apply List.ext_getElem (by simp; omega)
   intro i h1 h2
@@ -45,7 +45,7 @@ theorem take_data {α : Type} [Inhabited α] (v : Vector α FlatShuffler.MAX_N) 
   simp only [List.getElem_take, Vector.getElem_toList, List.getElem_map, List.getElem_range]
   rw [FlatShuffler.Flat.get_ofNat v (by omega)]
 
-theorem optOf_optW {x : Option Nat} (hx : ∀ i, x = some i → i < FlatShuffler.MAX_N) :
+theorem optOf_optW {x : Option Nat} (hx : ∀ i, x = some i → i < FlatShuffler.maxStackSize) :
     FlatShuffler.Flat.optOf (FlatShuffler.Flat.optW x) = x := by
   cases x with
   | none => exact FlatShuffler.Flat.optOf_none

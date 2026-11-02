@@ -8,7 +8,7 @@ import all FlatShuffler.Unit.Permute.Inv
 /-!
 # `permute`: facts of the model for the blocks
 
-* The destinations of `DestOk` are `NONE` or below `MAX_N`.
+* The destinations of `DestOk` are `NONE` or below `maxStackSize`.
 * `start`: the model vectors at `.LB.Emission.permute.11`, from the locals at the end of the
   loop `.LB.Emission.permute.0`.
 -/
@@ -23,22 +23,22 @@ macro "pm_dec" : tactic => `(tactic| (
     Nat.reduceMul, Nat.reduceLT, true_or, or_true, or_false, false_or, true_and, and_true]
   try omega))
 
-theorem lt_max {g : G} (hok : g.Ok) {x : Word} (hx : x < g.h.len) : x.toNat < MAX_N :=
+theorem lt_max {g : G} (hok : g.Ok) {x : Word} (hx : x < g.h.len) : x.toNat < maxStackSize :=
   Nat.lt_of_lt_of_le (BitVec.lt_def.mp hx) (Nat.le_trans hok.len hok.xs)
 
--- A destination below the size of a `DestOk` state is `NONE` or below `MAX_N`.
+-- A destination below the size of a `DestOk` state is `NONE` or below `maxStackSize`.
 theorem dest_ok {g : G} (hok : g.Ok) (hd : DestOk (flat g)) {x : Word} (hx : x < g.h.len) :
-    Flat.get g.h.dest x = Flat.NONE ∨ (Flat.get g.h.dest x).toNat < MAX_N := by
+    Flat.get g.h.dest x = Flat.NONE ∨ (Flat.get g.h.dest x).toNat < maxStackSize := by
   have h1 := hd x.toNat (BitVec.lt_def.mp hx)
   rw [BitVec.ofNat_toNat, BitVec.setWidth_eq] at h1
   exact h1.imp id fun h => Nat.lt_of_lt_of_le h hok.n
 
 -- `DestOk` is kept by the swap of two destinations below the size.
-theorem destOk_swapD {st : Flat.St} (hd : DestOk st) (hN : st.size.toNat ≤ MAX_N) {a b : Word}
+theorem destOk_swapD {st : Flat.St} (hd : DestOk st) (hN : st.size.toNat ≤ maxStackSize) {a b : Word}
     (ha : a < st.size) (hb : b < st.size) : DestOk { st with dest := swapD st.dest a b } := by
   intro i hi
-  have haN : a.toNat < MAX_N := by have := BitVec.lt_def.mp ha; omega
-  have hbN : b.toNat < MAX_N := by have := BitVec.lt_def.mp hb; omega
+  have haN : a.toNat < maxStackSize := by have := BitVec.lt_def.mp ha; omega
+  have hbN : b.toNat < maxStackSize := by have := BitVec.lt_def.mp hb; omega
   have hda := hd a.toNat (BitVec.lt_def.mp ha)
   have hdb := hd b.toNat (BitVec.lt_def.mp hb)
   simp only [BitVec.ofNat_toNat, BitVec.setWidth_eq] at hda hdb
@@ -61,41 +61,41 @@ theorem destOk_of_eq {st st' : Flat.St} (h : DestOk st) (hd : st'.dest = st.dest
   exact h i hi
 
 -- `permutation[x] = destinationOf[x]`: the agreement goes up to `x + 1`.
-theorem agB_step {P d : Vector Word MAX_N} {x : Word} (hag : AgB x P d) (hx : x.toNat < MAX_N) :
+theorem agB_step {P d : Vector Word maxStackSize} {x : Word} (hag : AgB x P d) (hx : x.toNat < maxStackSize) :
     AgB (x + 1#64) (P.set x.toNat (Flat.get d x) hx) d := by
   intro i hi
-  have hix : i.toNat < MAX_N := by simp only [MAX_N] at hx ⊢; bv_omega
+  have hix : i.toNat < maxStackSize := by simp only [maxStackSize] at hx ⊢; bv_omega
   rw [get_eq _ _ hix]
   by_cases h : i = x
   · subst h; rw [Vector.getElem_set_self]
   · rw [Vector.getElem_set_ne _ _ (by intro e; exact h (BitVec.eq_of_toNat_eq e.symm)),
       ← get_eq _ _ hix]
-    exact hag i (by simp only [MAX_N] at hx; bv_omega)
+    exact hag i (by simp only [maxStackSize] at hx; bv_omega)
 
-theorem AgB.trans {k : Word} {u v w : Vector Word MAX_N} (h1 : AgB k u v) (h2 : AgB k v w) :
+theorem AgB.trans {k : Word} {u v w : Vector Word maxStackSize} (h1 : AgB k u v) (h2 : AgB k v w) :
     AgB k u w := fun i hi => (h1 i hi).trans (h2 i hi)
 
-theorem AgB.symm {k : Word} {u v : Vector Word MAX_N} (h : AgB k u v) : AgB k v u :=
+theorem AgB.symm {k : Word} {u v : Vector Word maxStackSize} (h : AgB k u v) : AgB k v u :=
   fun i hi => (h i hi).symm
 
 -- `.LB.Emission.permute.11` at the start: `permutation` agrees with `p0` and `desiredBy` is `NONE`.
-theorem start {g : G} (hok : g.Ok) {p0 P D : Vector Word MAX_N} (hb : Bij g.h.len p0)
+theorem start {g : G} (hok : g.Ok) {p0 P D : Vector Word maxStackSize} (hb : Bij g.h.len p0)
     (hP : AgB g.h.len P p0) (hD : ∀ i < g.h.len, Flat.get D i = Flat.NONE) :
     RG (flat g) p0 (Flat.regroup (flat g) 0 p0 (Flat.clearDesired (flat g) 0 Flat.initial))
       ∧ AgB g.h.len P p0 ∧ AgB g.h.len D (Flat.clearDesired (flat g) 0 Flat.initial)
       ∧ LtB g.h.len p0 := by
-  have hn : (flat g).size.toNat ≤ MAX_N := Nat.le_trans hok.len hok.xs
+  have hn : (flat g).size.toNat ≤ maxStackSize := Nat.le_trans hok.len hok.xs
   refine ⟨rfl, hP, fun i hi => ?_, hb.1⟩
   rw [hD i hi, clearDesired_spec (flat g) hn 0 _ i hi, ite_eq_left (by bv_omega)]
 
 theorem none_toInt : Flat.NONE.toInt = -1 := by decide
 
 -- `desiredBy[k] = NONE`: the `NONE` part goes up to `k + 1`.
-theorem none_step {D : Vector Word MAX_N} {k : Nat} (hk : k < MAX_N)
+theorem none_step {D : Vector Word maxStackSize} {k : Nat} (hk : k < maxStackSize)
     (hD : ∀ i : Word, i.toNat < k → Flat.get D i = Flat.NONE) :
     ∀ i : Word, i.toNat < k + 1 → Flat.get (D.set k Flat.NONE hk) i = Flat.NONE := by
   intro i hi
-  have hix : i.toNat < MAX_N := by omega
+  have hix : i.toNat < maxStackSize := by omega
   rw [get_eq _ _ hix]
   by_cases h : i.toNat = k
   · subst h; rw [Vector.getElem_set_self]
@@ -105,18 +105,18 @@ theorem none_step {D : Vector Word MAX_N} {k : Nat} (hk : k < MAX_N)
 /-! ## The local arrays and the model vectors -/
 
 -- A store into a local array and a `put` into its model vector.
-theorem agB_set {n : Word} {u w : Vector Word MAX_N} (h : AgB n u w) {k : Word}
-    (hk : k.toNat < MAX_N) (x : Word) : AgB n (u.set k.toNat x hk) (Flat.put w k x) := by
+theorem agB_set {n : Word} {u w : Vector Word maxStackSize} (h : AgB n u w) {k : Word}
+    (hk : k.toNat < maxStackSize) (x : Word) : AgB n (u.set k.toNat x hk) (Flat.put w k x) := by
   intro i hi
   rw [← put_eq_set _ _ _ hk, get_put _ hk, get_put _ hk]
   split
   · rfl
   · exact h i hi
 
-theorem ltB_put {n : Word} {p : Vector Word MAX_N} (h : LtB n p) (k : Word) {x : Word}
+theorem ltB_put {n : Word} {p : Vector Word maxStackSize} (h : LtB n p) (k : Word) {x : Word}
     (hx : x < n) : LtB n (Flat.put p k x) := by
   intro i hi
-  by_cases hk : k.toNat < MAX_N
+  by_cases hk : k.toNat < maxStackSize
   · rw [get_put _ hk]
     split
     · exact hx
@@ -134,17 +134,17 @@ theorem ltB_put {n : Word} {p : Vector Word MAX_N} (h : LtB n p) (k : Word) {x :
 section
 variable {st : Flat.St}
 
-theorem regroup_ge {l : Word} (h : ¬l < st.size) (p dB : Vector Word MAX_N) :
+theorem regroup_ge {l : Word} (h : ¬l < st.size) (p dB : Vector Word maxStackSize) :
     Flat.regroup st l p dB = some p := by
   rw [Flat.regroup, dite_eq_right h]
 
 theorem regroup_skip {l : Word} (h : l < st.size)
-    (hne : Flat.shallowestCopyPosition st (Flat.get st.data l) ≠ l) (p dB : Vector Word MAX_N) :
+    (hne : Flat.shallowestCopyPosition st (Flat.get st.data l) ≠ l) (p dB : Vector Word maxStackSize) :
     Flat.regroup st l p dB = Flat.regroup st (l + 1) p dB := by
   rw [Flat.regroup, dite_eq_left h, ite_eq_left hne]
 
 theorem regroup_lead {l : Word} (h : l < st.size)
-    (he : Flat.shallowestCopyPosition st (Flat.get st.data l) = l) (p dB : Vector Word MAX_N) :
+    (he : Flat.shallowestCopyPosition st (Flat.get st.data l) = l) (p dB : Vector Word maxStackSize) :
     Flat.regroup st l p dB = pg st l h (Flat.get st.data l)
       (Flat.markDesired st l h (Flat.get st.data l) p 0 dB) 0 0 p := by
   rw [Flat.regroup, dite_eq_left h, ite_eq_right (fun h => h he)]
@@ -152,36 +152,36 @@ theorem regroup_lead {l : Word} (h : l < st.size)
 
 variable {l : Word} {hl : l < st.size} {σ : StackSlot}
 
-theorem md_eq {p dB : Vector Word MAX_N} {j : Word} (hj : j ≤ l) (hd : Flat.get st.data j = σ) :
+theorem md_eq {p dB : Vector Word maxStackSize} {j : Word} (hj : j ≤ l) (hd : Flat.get st.data j = σ) :
     Flat.markDesired st l hl σ p j dB
       = Flat.markDesired st l hl σ p (j + 1) (Flat.put dB (Flat.get p j) l) := by
   rw [Flat.markDesired, dite_eq_left hj, ite_eq_left hd]
 
-theorem md_ne {p dB : Vector Word MAX_N} {j : Word} (hj : j ≤ l) (hd : Flat.get st.data j ≠ σ) :
+theorem md_ne {p dB : Vector Word maxStackSize} {j : Word} (hj : j ≤ l) (hd : Flat.get st.data j ≠ σ) :
     Flat.markDesired st l hl σ p j dB = Flat.markDesired st l hl σ p (j + 1) dB := by
   rw [Flat.markDesired, dite_eq_left hj, ite_eq_right hd]
 
-theorem md_end {p dB : Vector Word MAX_N} {j : Word} (hj : ¬j ≤ l) :
+theorem md_end {p dB : Vector Word maxStackSize} {j : Word} (hj : ¬j ≤ l) :
     Flat.markDesired st l hl σ p j dB = dB := by
   rw [Flat.markDesired, dite_eq_right hj]
 
-variable {dB : Vector Word MAX_N}
+variable {dB : Vector Word maxStackSize}
 
-theorem pg_end {pos vac : Word} {pc : Vector Word MAX_N} (hpos : ¬pos ≤ l) :
+theorem pg_end {pos vac : Word} {pc : Vector Word maxStackSize} (hpos : ¬pos ≤ l) :
     pg st l hl σ dB pos vac pc = Flat.regroup st (l + 1) pc dB := by
   unfold pg; rw [Flat.placeGroup, dite_eq_right hpos]
 
-theorem pg_skip {pos vac : Word} {pc : Vector Word MAX_N} (hpos : pos ≤ l)
+theorem pg_skip {pos vac : Word} {pc : Vector Word maxStackSize} (hpos : pos ≤ l)
     (hd : Flat.get st.data pos ≠ σ) :
     pg st l hl σ dB pos vac pc = pg st l hl σ dB (pos + 1) vac pc := by
   unfold pg; rw [Flat.placeGroup, dite_eq_left hpos, ite_eq_left hd]
 
-theorem pg_self {pos vac : Word} {pc : Vector Word MAX_N} (hpos : pos ≤ l)
+theorem pg_self {pos vac : Word} {pc : Vector Word maxStackSize} (hpos : pos ≤ l)
     (hd : Flat.get st.data pos = σ) (hb : Flat.get dB pos = l) :
     pg st l hl σ dB pos vac pc = pg st l hl σ dB (pos + 1) vac (Flat.put pc pos pos) := by
   unfold pg; rw [Flat.placeGroup, dite_eq_left hpos, ite_eq_right (fun h => h hd), ite_eq_left hb]
 
-theorem pg_nv {pos vac : Word} {pc : Vector Word MAX_N} (hpos : pos ≤ l)
+theorem pg_nv {pos vac : Word} {pc : Vector Word maxStackSize} (hpos : pos ≤ l)
     (hd : Flat.get st.data pos = σ) (hb : Flat.get dB pos ≠ l) :
     pg st l hl σ dB pos vac pc = nv st l hl σ dB pos vac pc := by
   unfold pg nv
@@ -190,21 +190,21 @@ theorem pg_nv {pos vac : Word} {pc : Vector Word MAX_N} (hpos : pos ≤ l)
   · simp only [hv, not_true_eq_false, ↓reduceIte]; rfl
   · simp only [hv, not_false_eq_true, ↓reduceIte]
 
-theorem nv_next {pos x : Word} {pc : Vector Word MAX_N} (hx : x < st.size)
+theorem nv_next {pos x : Word} {pc : Vector Word maxStackSize} (hx : x < st.size)
     (hc : ¬(Flat.get dB x = l ∧ ¬Flat.get st.data x = σ)) :
     nv st l hl σ dB pos x pc = nv st l hl σ dB pos (x + 1) pc := by
   have e : Flat.nextVacant st l σ dB x = Flat.nextVacant st l σ dB (x + 1) := by
     rw [Flat.nextVacant, dite_eq_left ⟨hx, hc⟩]
   unfold nv; rw [e]
 
-theorem nv_found {pos x : Word} {pc : Vector Word MAX_N} (hx : x < st.size)
+theorem nv_found {pos x : Word} {pc : Vector Word maxStackSize} (hx : x < st.size)
     (hb : Flat.get dB x = l) (hd : Flat.get st.data x ≠ σ) :
     nv st l hl σ dB pos x pc = pg st l hl σ dB (pos + 1) (x + 1) (Flat.put pc pos x) := by
   have e : Flat.nextVacant st l σ dB x = x := by
     rw [Flat.nextVacant, dite_eq_right (fun h => h.2 ⟨hb, hd⟩)]
   unfold nv; rw [e, ite_eq_left hx]
 
-theorem nv_ge {pos x : Word} {pc : Vector Word MAX_N} (hx : ¬x < st.size) :
+theorem nv_ge {pos x : Word} {pc : Vector Word maxStackSize} (hx : ¬x < st.size) :
     nv st l hl σ dB pos x pc = none := by
   have e : Flat.nextVacant st l σ dB x = x := by
     rw [Flat.nextVacant, dite_eq_right (fun h => hx h.1)]
@@ -215,14 +215,14 @@ end
 /-! ## The end of phase C -/
 
 -- `regroup` fails: `permute` fails.
-theorem rg_none {st : Flat.St} {p0 : Vector Word MAX_N} (h : RG st p0 none) (h0 : st.size ≠ 0) :
+theorem rg_none {st : Flat.St} {p0 : Vector Word maxStackSize} (h : RG st p0 none) (h0 : st.size ≠ 0) :
     Flat.permute st p0 = (.assertionFailed, st) := by
   rw [Flat.permute, ite_eq_right h0]
   simp only [show Flat.regroup st 0 p0 (Flat.clearDesired st 0 Flat.initial) = none from h]
 
 -- `regroup` gives `p`: the loop of `permute` starts with `p`, a bijection.
-theorem rg_some {st : Flat.St} {p0 p : Vector Word MAX_N} (h : RG st p0 (some p))
-    (h0 : st.size ≠ 0) (hn : st.size.toNat ≤ MAX_N) (hb : Bij st.size p0) :
+theorem rg_some {st : Flat.St} {p0 p : Vector Word maxStackSize} (h : RG st p0 (some p))
+    (h0 : st.size ≠ 0) (hn : st.size.toNat ≤ maxStackSize) (hb : Bij st.size p0) :
     Flat.permute st p0 = Flat.permuteLoop (2 * st.size.toNat) st (st.size - 1) p
       ∧ Bij st.size p := by
   refine ⟨?_, regroup_bij hn hb h⟩

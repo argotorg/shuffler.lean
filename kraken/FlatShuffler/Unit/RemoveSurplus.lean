@@ -116,9 +116,9 @@ def At283 : Prop :=
 -- `.LB.Emission.removeSurplus.5`: the destinations are swapped, and `positionOf` is written for
 -- `rax`.
 def At289 : Prop :=
-  ∃ g2 w, Run S g F s ra g2 w t ∧ Budget g2 ∧ t.regs.rdi.toBitVec.toNat < MAX_N
+  ∃ g2 w, Run S g F s ra g2 w t ∧ Budget g2 ∧ t.regs.rdi.toBitVec.toNat < maxStackSize
     ∧ (Flat.get g2.h.dest t.regs.rdi.toBitVec = Flat.NONE
-      ∨ (Flat.get g2.h.dest t.regs.rdi.toBitVec).toNat < MAX_N)
+      ∨ (Flat.get g2.h.dest t.regs.rdi.toBitVec).toNat < maxStackSize)
     ∧ Flat.removeSurplus (flat g) = afterPop (posAt (flat g2) t.regs.rdi.toBitVec)
 
 -- `.LB.Emission.removeSurplus.11`: the call of `swapWith`.
@@ -449,15 +449,15 @@ end
 -- The facts of `.LB.Emission.removeSurplus.4` for `rax ≠ 0`: `q` is `rax`, `d` is `rdi`.
 theorem at283_facts {g1 : G} {q d : Word} (hok : g1.Ok) (h0 : g1.h.len ≠ 0#64) (hq : q ≠ 0#64)
     (hax : q ≤ d) (hdi : d = g1.h.len - 1#64) :
-    (q - 1#64).toNat < MAX_N ∧ (q - 1#64).toNat < g1.h.n.toNat + g1.xs ∧ d.toNat < MAX_N
-      ∧ d.toNat < g1.h.n.toNat + g1.xs ∧ q - 1#64 + 1#64 < g1.h.len ∧ q.toNat ≤ MAX_N
-      ∧ q - 1#64 < (flat g1).size ∧ d < (flat g1).size ∧ (flat g1).size.toNat ≤ MAX_N := by
+    (q - 1#64).toNat < maxStackSize ∧ (q - 1#64).toNat < g1.h.n.toNat + g1.xs ∧ d.toNat < maxStackSize
+      ∧ d.toNat < g1.h.n.toNat + g1.xs ∧ q - 1#64 + 1#64 < g1.h.len ∧ q.toNat ≤ maxStackSize
+      ∧ q - 1#64 < (flat g1).size ∧ d < (flat g1).size ∧ (flat g1).size.toNat ≤ maxStackSize := by
   have hl := hok.len
   have hn := hok.n
   have hx := hok.xs
-  show _ ∧ _ ∧ _ ∧ _ ∧ _ ∧ _ ∧ q - 1#64 < g1.h.len ∧ d < g1.h.len ∧ g1.h.len.toNat ≤ MAX_N
+  show _ ∧ _ ∧ _ ∧ _ ∧ _ ∧ _ ∧ q - 1#64 < g1.h.len ∧ d < g1.h.len ∧ g1.h.len.toNat ≤ maxStackSize
   subst hdi
-  simp only [MAX_N] at *
+  simp only [maxStackSize] at *
   bv_omega
 
 theorem nb {b : Bool} (h : (!b) = true) : b = false := by simpa using h
@@ -485,7 +485,7 @@ theorem rs283_data (hrs : r = afterR (eqStep (flat g1) q (g1.h.len - 1#64) dp)) 
 
 -- No jump: slot `q - 1` is surplus and equal to slot `d`.
 theorem rs283_hit (hrs : r = afterR (eqStep (flat g1) q (g1.h.len - 1#64) dp)) (hq : q ≠ 0#64)
-    (hqN : q.toNat ≤ MAX_N) (hdi : d = g1.h.len - 1#64)
+    (hqN : q.toNat ≤ maxStackSize) (hdi : d = g1.h.len - 1#64)
     (hs : Flat.get g1.h.dest (q - 1#64) = Flat.NONE)
     (he : Flat.get (flat g1).data d = Flat.get (flat g1).data (q - 1#64)) :
     r = afterPop (Flat.swapDestinations (flat g1) (q - 1#64) d) := by
@@ -682,7 +682,7 @@ theorem b_2
   obtain ⟨g1, w1, hr, ⟨hbud, hrs, hr8, hdi⟩, hlt, hsc⟩ := ht
   have hm1 := hr.bx.mem
   have hl1 : lenAt S t = g1.h.len.toNat := hr.bx.lenAt
-  have hax : t.regs.rax.toBitVec.toNat < MAX_N := by
+  have hax : t.regs.rax.toBitVec.toNat < maxStackSize := by
     have := hr.ok.len; have := hr.ok.n; have := hr.ok.xs; have := BitVec.lt_def.mp hlt; omega
   kvcgen64
   all_goals try symexec_norm
@@ -1062,8 +1062,8 @@ theorem b_11
     exact ⟨Keep.trans hr.keep hK3, hf3, hfail⟩)
   intro t3 g3 w3 hb3 hQ3 hok3
   obtain ⟨hK3, hf3, hal3⟩ : Res (Flat.swapWith · t.regs.rsi.toBitVec) g1 g3 t3 := hQ3.1
-  have hN : (flat g1).size.toNat ≤ MAX_N := by
-    show g1.h.len.toNat ≤ MAX_N
+  have hN : (flat g1).size.toNat ≤ maxStackSize := by
+    show g1.h.len.toNat ≤ maxStackSize
     have := hr.ok.len; have := hr.ok.n; have := hr.ok.xs; omega
   kvcgen64
   all_goals try symexec_norm

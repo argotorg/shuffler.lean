@@ -20,7 +20,7 @@ decreasing_by all_goals simp_wf; have := List.length_filter_le (fun b => !b == a
 
 theorem vec_map {n : Nat} (v : Vector Word n) :
     vec (v.toList.map StackSlot.ofWord) =
-      Vector.ofFn fun i : Fin MAX_N => if h : i.val < n then StackSlot.ofWord v[i.val] else default := by
+      Vector.ofFn fun i : Fin maxStackSize => if h : i.val < n then StackSlot.ofWord v[i.val] else default := by
   ext i hi
   by_cases h : i < n <;> simp [vec, h]
 

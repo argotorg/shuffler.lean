@@ -21,8 +21,8 @@ namespace FlatShuffler.Flat
 section
 variable {st : St} {T : Word} {k x : Nat}
 
--- `T + 1` does not overflow below `MAX_N`.
-private theorem toNat_add_one {T : Word} (h : T.toNat < MAX_N) : (T + 1).toNat = T.toNat + 1 := by
+-- `T + 1` does not overflow below `maxStackSize`.
+private theorem toNat_add_one {T : Word} (h : T.toNat < maxStackSize) : (T + 1).toNat = T.toNat + 1 := by
   rw [max_n] at h; bv_omega
 
 -- `swapWith` keeps `pend` and `targetSize`.
@@ -134,7 +134,7 @@ theorem swapWithA_of (ok : g.Ok) (hf : Flat.FInv (flat g))
 -- `hrd`: the ghost `p0` is the result of `readDestinations`. `harr`: the array at `rsi` holds
 -- `dest` below `size` (the copy loop at `.1`), so it holds `p0`.
 theorem permuteA_of (ok : g.Ok) (h : Flat.HInv (flat g) T g.xo) (hp : g.h.pend = 0)
-    {p0 : Vector Word MAX_N} (hrd : Flat.readDestinations (flat g) 0 Flat.initial = some p0)
+    {p0 : Vector Word maxStackSize} (hrd : Flat.readDestinations (flat g) 0 Flat.initial = some p0)
     (harr : ∀ i < g.h.len.toNat,
       rd s.dmem (rsi s + BitVec.ofNat 64 (8 * i)) = Flat.get g.h.dest (BitVec.ofNat 64 i)) :
     permuteA p0 g s := by
@@ -144,12 +144,12 @@ theorem permuteA_of (ok : g.Ok) (h : Flat.HInv (flat g) T g.xo) (hp : g.h.pend =
     ≤ 4 * g.h.n.toNat + g.xo at ho
   have := ok.len
   have : g.h.len.toNat ≤ g.h.n.toNat := h.f.size_le
-  have hn : (flat g).size.toNat ≤ MAX_N := Nat.le_trans ok.len ok.xs
+  have hn : (flat g).size.toNat ≤ maxStackSize := Nat.le_trans ok.len ok.xs
   have hr := Permute.readDestinations_spec (flat g) hn 0 _ _ hrd
   refine ⟨by omega, h.f.destOk, Permute.permOk_bij hn (h.f.permOk (h.f.size_eq hp)) hrd,
     fun i hi => ?_⟩
   have hi' : BitVec.ofNat 64 i < (flat g).size := by
-    simp only [MAX_N] at hn
+    simp only [maxStackSize] at hn
     show BitVec.ofNat 64 i < g.h.len
     rw [BitVec.lt_def, BitVec.toNat_ofNat]
     omega

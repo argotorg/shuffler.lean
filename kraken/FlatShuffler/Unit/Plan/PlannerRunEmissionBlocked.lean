@@ -17,12 +17,12 @@ set_option maxRecDepth 4096 in
 theorem EmitCountLI.blockedBounds {P : Addr} {g : PlannerCallMemory} {M : Flat.Mapping}
     {F : MProp 64} {s t u : MachineData} {ra : Int64} {lo locals : List Word}
     (h : EmitCountLI P g M F s ra lo locals t) (hok : g.Ok)
-    (hm : MapInv g.p.m g.p.n M)
+    (hm : MapInv g.p.sourceSize g.p.targetSize M)
     (hp : locals[4115]? = some (Flat.unmappedFrom (countState g M) 0 0))
     (a : G)
     (hq : runQ (EmissionLocals.ofList locals h.localLength).planned.pos
       (emissionGhost g hok (localEmissionHdr locals h.localLength)) a t u)
-    (hal : al u = 1#8) : BlockedBounds g.p.n (flat a) := by
+    (hal : al u = 1#8) : BlockedBounds g.p.targetSize (flat a) := by
   obtain ⟨l, _, he, hc⟩ := hq.1
   have hs := (code_blocked_iff _).mp (hc.symm.trans hal)
   have hr : Flat.emissionRun (EmissionLocals.ofList locals h.localLength).planned.pos l

@@ -15,7 +15,7 @@ theorem MapInv.destOk {st : Flat.St}
   intro i hi
   exact (h.dest (.ofNat 64 i) (ofNat_lt_word h.m_bound hi)).imp_right BitVec.lt_def.mp
 
-theorem Prep.lowest_ready {planned : Vector Word MAX_N} {m : Nat} {st : Flat.St}
+theorem Prep.lowest_ready {planned : Vector Word maxStackSize} {m : Nat} {st : Flat.St}
     (h : Prep planned m st) (hn : HasNoSurplus st) :
     st.trace.length + 2 * st.size.toNat ≤ 6 * st.targetSize.toNat + 4 * m ∧
       DestOk st ∧ Flat.LowOk planned st := by
@@ -24,9 +24,9 @@ theorem Prep.lowest_ready {planned : Vector Word MAX_N} {m : Nat} {st : Flat.St}
   omega
 
 theorem size_pend_nat {m p n : Word}
-    (hm : m.toNat ≤ MAX_N) (_hn : n.toNat ≤ MAX_N) (hp : p.toNat ≤ n.toNat)
+    (hm : m.toNat ≤ maxStackSize) (_hn : n.toNat ≤ maxStackSize) (hp : p.toNat ≤ n.toNat)
     (hc : m + p = n) : m.toNat + p.toNat = n.toNat := by
-  have hN : MAX_N = 1024 := rfl
+  have hN : maxStackSize = 1024 := rfl
   bv_omega
 
 theorem checked_loop {st : Flat.St} (m : Nat)
@@ -39,7 +39,7 @@ theorem checked_loop {st : Flat.St} (m : Nat)
     omega
 
 theorem ctorP_safe {m n : Word} {M : Flat.Mapping} (h : MapInv m n M)
-    (data target : Vector StackSlot MAX_N) (spills : BitVec 32 → BitVec 8)
+    (data target : Vector StackSlot maxStackSize) (spills : BitVec 32 → BitVec 8)
     (u : Flat.Uninit) :
     RunU.Safe M.pos (Flat.ctorP data m target n M spills u) (4 * m.toNat) := by
   let st := Flat.ctorP data m target n M spills u

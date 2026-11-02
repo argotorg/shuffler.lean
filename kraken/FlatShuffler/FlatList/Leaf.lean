@@ -69,10 +69,10 @@ theorem Sim.pos_ne_NONE (hs : Sim e fs st) {d : Word} (hd : d.toNat < e.n) :
   intro p hp
   have := positionOf_some hs.hpos hp
   have := hs.len_lt
-  unfold MAX_N at this
+  unfold maxStackSize at this
   omega
 
-theorem Sim.size_lt (hs : Sim e fs st) : fs.size.toNat ≤ MAX_N := hs.size ▸ hs.len_lt
+theorem Sim.size_lt (hs : Sim e fs st) : fs.size.toNat ≤ maxStackSize := hs.size ▸ hs.len_lt
 
 /-! ## `add` -/
 
@@ -88,9 +88,9 @@ theorem Sim.add (hs : Sim e fs st) {slot : StackSlot} {d : Word} {op : Op} {st' 
   have hn' := hs.n
   have hsz := hs.size
   have hle := hs.n_le
-  unfold MAX_N at hle
-  have hS : fs.size.toNat < MAX_N := by unfold MAX_N; omega
-  have hD : d.toNat < MAX_N := by unfold MAX_N; omega
+  unfold maxStackSize at hle
+  have hS : fs.size.toNat < maxStackSize := by unfold maxStackSize; omega
+  have hD : d.toNat < maxStackSize := by unfold maxStackSize; omega
   have hl := hs.hpos.length
   refine ⟨hs.env, hs.n_le, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [len_append h1]
@@ -237,8 +237,8 @@ theorem _root_.FlatShuffler.Pos.dest_lt' {n : Nat} {st : FlatShuffler.St} (hp : 
   rw [St.dest_eq, getElem!_pos st.dests i (by rw [St.length_dests]; exact hi)]
   exact hp.dests.1 i _
 
-theorem lt_NONE {a : Word} (h : a.toNat < MAX_N) : a ≠ NONE := by
-  apply ne_NONE; unfold MAX_N at h; omega
+theorem lt_NONE {a : Word} (h : a.toNat < maxStackSize) : a ≠ NONE := by
+  apply ne_NONE; unfold maxStackSize at h; omega
 
 theorem Sim.swapDest (hs : Sim e fs st) {a b : Word} (ha : a.toNat < st.len)
     (hb : b.toNat < st.len) :
@@ -246,8 +246,8 @@ theorem Sim.swapDest (hs : Sim e fs st) {a b : Word} (ha : a.toNat < st.len)
   have hle := hs.n_le
   have hsz := hs.size
   have hlen := hs.len_le
-  have hA : a.toNat < MAX_N := by omega
-  have hB : b.toNat < MAX_N := by omega
+  have hA : a.toNat < maxStackSize := by omega
+  have hB : b.toNat < maxStackSize := by omega
   have hl : (FlatShuffler.swapDestinations st a.toNat b.toNat).len = st.len := swapDest_len _ _ _
   have hp' := hs.hpos.swapDest ha hb
   -- The new destination of each slot.
@@ -421,7 +421,7 @@ theorem copyBelow_eq (hs : Sim e fs st) (slot : StackSlot) :
       copyBelow fs slot (BitVec.ofNat 64 k) =
         optW ((List.range k).reverse.find? (st.val · == slot)) := by
   have hl := hs.len_lt
-  unfold MAX_N at hl
+  unfold maxStackSize at hl
   intro k
   induction k with
   | zero => intro _; rw [copyBelow]; simp [optW]
@@ -444,7 +444,7 @@ theorem sim_copy (hs : Sim e fs st) (slot : StackSlot) :
     shallowestCopyPosition fs slot = optW (FlatShuffler.shallowestCopyPosition st slot) := by
   have h := copyBelow_eq hs slot st.len (Nat.le_refl _)
   have hsz : BitVec.ofNat 64 st.len = fs.size := by
-    apply eq_of_toNat; rw [toNat_ofNat_of_lt (by have := hs.len_lt; unfold MAX_N at this; omega), hs.size]
+    apply eq_of_toNat; rw [toNat_ofNat_of_lt (by have := hs.len_lt; unfold maxStackSize at this; omega), hs.size]
   rw [hsz] at h
   exact h
 

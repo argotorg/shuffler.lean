@@ -13,7 +13,7 @@ Tests of the local lemmas of `Unit/Loop/Bound.lean`:
   pairs of words;
 - `none_eq`;
 - the swap of `dest` (`get_swap_a`, `get_swap_b`, `dest_half`) with `a ≠ b`, `a = b`,
-  `b = MAX_N - 1` and an index out of range, where the result is not the swap;
+  `b = maxStackSize - 1` and an index out of range, where the result is not the swap;
 - `swapRest` with `dest[b] = NONE` and `dest[b] ≠ NONE` (`flat_rest_none`, `flat_rest_pos`).
 
 The states come from `mk` of `FlatModelTest.lean` (the constructor of the flat model).
@@ -86,11 +86,11 @@ def st2 : St := mk [x, y] [x, y] [0, 18446744073709551615]
 #guard get (swapHalf st NONE 0).dest NONE ≠ get st.dest 0
 #guard get (swapHalf st 0 1024).dest 1024 ≠ get st.dest 0
 
--- The lemmas at `MAX_N - 1` and at `a = b`.
-example (v : Vector Word MAX_N) (a : Word) :
+-- The lemmas at `maxStackSize - 1` and at `a = b`.
+example (v : Vector Word maxStackSize) (a : Word) :
     get (put (put v a (get v 1023)) 1023 (get v a)) 1023 = get v a :=
   Bound.get_swap_b v (by decide)
-example (v : Vector Word MAX_N) :
+example (v : Vector Word maxStackSize) :
     get (put (put v 1023 (get v 1023)) 1023 (get v 1023)) 1023 = get v 1023 :=
   Bound.get_swap_a v (by decide) (by decide)
 

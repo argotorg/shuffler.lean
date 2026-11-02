@@ -20,7 +20,7 @@ namespace FlatShuffler.Flat
 -- The mapping of `st`: `dest` maps the slots into the target, `pos` is its inverse, and the
 -- target offsets without a slot are the pending generations.
 structure FInv (st : St) : Prop where
-  n : st.targetSize.toNat ≤ MAX_N
+  n : st.targetSize.toNat ≤ maxStackSize
   cnt : st.size.toNat + st.pend.toNat = st.targetSize.toNat
   dest : ∀ i, i < st.size → get st.dest i < st.targetSize
   inv : ∀ i, i < st.size → get st.pos (get st.dest i) = i

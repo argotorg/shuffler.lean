@@ -18,8 +18,8 @@ variable {P : Addr} {g : PlannerCallMemory} {M : Flat.Mapping} {F : MProp 64}
     {s t u : MachineData} {ra : Int64} {lo locals : List Word}
 
 theorem EmitLI.setupCount (h : EmitLI P g M F s ra lo locals t) (hok : g.Ok)
-    (hd : WordPrefix locals 2067 M.dest g.p.m.toNat)
-    (hp : WordPrefix locals 3091 M.pos g.p.n.toNat)
+    (hd : WordPrefix locals 2067 M.dest g.p.sourceSize.toNat)
+    (hp : WordPrefix locals 3091 M.pos g.p.targetSize.toNat)
     (hm : u.dmem = (t.dmem.storeInt (t.regs.rsp.toBitVec + 32920#64) 8 0).storeInt
       (t.regs.rsp.toBitVec + 32944#64) 8 (t.regs.rsp.toBitVec + 96#64).toInt)
     (hsp : u.regs.rsp = t.regs.rsp)
@@ -33,17 +33,17 @@ theorem EmitLI.setupCount (h : EmitLI P g M F s ra lo locals t) (hok : g.Ok)
   have h2 : EmitLI P g M F s ra lo (setupLocals locals t.regs.rsp.toBitVec) u :=
     h1.storeLocal hok (by decide) (by decide) (t.regs.rsp.toBitVec + 96#64)
       hm hsp hbx h14 h13 hbp h12 h15
-  have hout (base count : Nat) (hb : base + count ≤ 4115) (v : Vector Word MAX_N)
+  have hout (base count : Nat) (hb : base + count ≤ 4115) (v : Vector Word maxStackSize)
       (hh : WordPrefix locals base v count) :
       WordPrefix (setupLocals locals t.regs.rsp.toBitVec) base v count :=
     (hh.set_outside (by intro i hi; omega) 0#64).set_outside
       (by intro i hi; omega) (t.regs.rsp.toBitVec + 96#64)
   refine ⟨h2, hout 2067 _ ?_ _ hd, hout 3091 _ ?_ _ hp, ?_⟩
-  · have hm := hok.planner.m
-    change g.p.m.toNat ≤ 1024 at hm
+  · have hm := hok.planner.sourceSizeFitsBuffer
+    change g.p.sourceSize.toNat ≤ 1024 at hm
     omega
-  · have hn := hok.planner.n
-    change g.p.n.toNat ≤ 1024 at hn
+  · have hn := hok.planner.targetSizeFitsBuffer
+    change g.p.targetSize.toNat ≤ 1024 at hn
     omega
   · rw [setupLocals, hsp]
     exact List.getElem?_set_self (by simp [h.localLength])

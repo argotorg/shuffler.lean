@@ -54,7 +54,7 @@ theorem afterEmission {initial current : PlannerCallMemory} {s t u : MachineData
   have hs := ctx.copiedState hd
   have hemit : Flat.emissionRun M.pos l
       (Flat.ctorP (buildState ctx.before.p.fl ctx.before.state ctx.saw).data
-        ctx.before.p.m ctx.before.p.fl.target ctx.before.p.n M ctx.before.spills u0.u) =
+        ctx.before.p.sourceSize ctx.before.p.fl.target ctx.before.p.targetSize M ctx.before.spills u0.u) =
         (e.1, Flat.restoreData current.dataCapacity
           (current.data.map StackSlot.ofWord) (flat a)) := by
     have he0 : Flat.emissionRun M.pos l
@@ -66,7 +66,7 @@ theorem afterEmission {initial current : PlannerCallMemory} {s t u : MachineData
     have hsafe := h.runA ctx.ok ctx.map hp
     change RunU.Safe (EmissionLocals.ofList locals h.localLength).planned.pos
       (flat (emissionGhost current ctx.ok (localEmissionHdr locals h.localLength)))
-      (4 * current.p.m.toNat) at hsafe
+      (4 * current.p.sourceSize.toNat) at hsafe
     rw [hplan] at hsafe
     have hsize : (flat (emissionGhost current ctx.ok hdr)).size.toNat ≤
         current.dataCapacity := by
@@ -85,10 +85,10 @@ theorem afterEmission {initial current : PlannerCallMemory} {s t u : MachineData
     change current.data.map StackSlot.ofWord = _ at hdata
     have hsp := congrArg Flat.PSt.spills hs
     change current.spills = ctx.before.spills at hsp
-    have hm := congrArg Flat.Planner.m ctx.planner
-    have hn := congrArg Flat.Planner.n ctx.planner
-    change current.p.m = ctx.before.p.m at hm
-    change current.p.n = ctx.before.p.n at hn
+    have hm := congrArg Flat.Planner.sourceSize ctx.planner
+    have hn := congrArg Flat.Planner.targetSize ctx.planner
+    change current.p.sourceSize = ctx.before.p.sourceSize at hm
+    change current.p.targetSize = ctx.before.p.targetSize at hn
     simpa only [hdata, hm, hn, hsp, ctx.planner] using hefull
   have hstate : result.state = emittedState
       (buildState ctx.before.p.fl ctx.before.state ctx.saw)
@@ -108,10 +108,10 @@ theorem afterEmission {initial current : PlannerCallMemory} {s t u : MachineData
     model := by
       intro r us
       have hb : Flat.buildMapping
-          ⟨ctx.before.p.fl.source, ctx.before.p.m, ctx.before.p.fl.target,
-            ctx.before.p.n, ctx.before.dropped, (rsi s).setWidth 8 == 1#8⟩
+          ⟨ctx.before.p.fl.source, ctx.before.p.sourceSize, ctx.before.p.fl.target,
+            ctx.before.p.targetSize, ctx.before.dropped, (rsi s).setWidth 8 == 1#8⟩
           (((prependRun {u0 with r := r} us) 0).mapping.init
-            ctx.before.p.m ctx.before.p.n) = some (M, ctx.saw) := by
+            ctx.before.p.sourceSize ctx.before.p.targetSize) = some (M, ctx.saw) := by
         change Flat.buildMapping _ (ctx.mapping.init _ _) = _
         rw [ctx.init]
         exact ctx.build

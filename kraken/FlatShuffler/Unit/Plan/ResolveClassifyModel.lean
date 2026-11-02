@@ -82,7 +82,7 @@ theorem PickAt.withPending (h : PickAt P r F s ra w lo L i best cls t)
     by rw [hbx, hsp]; exact h.rbx, h15 ▸ h.r15, h.bestClass, h.bestValid⟩
 
 theorem Bd.candidateRead (h : Bd P r F s ra lo L.toList t) {j : Word}
-    (hj : j.toNat < MAX_N) :
+    (hj : j.toNat < maxStackSize) :
     rd t.dmem (t.regs.rsp.toBitVec + 48#64 + 8#64 * j) = Flat.get L.candidates j := by
   have hjN : j.toNat < 1024 := hj
   have hi : 6 + j.toNat < 1159 := by omega
@@ -128,10 +128,10 @@ theorem PickAt.afterCall (h : PickAt P r F s ra w lo L i best cls t)
   · rw [h13, hsp]; exact h.r13
   · rw [hbx, hsp]; exact h.rbx
 
-theorem dropped_eq {dv : Vector (BitVec 8) MAX_N}
+theorem dropped_eq {dv : Vector (BitVec 8) maxStackSize}
     (hb : Bd P (w.ghost r) F s ra lo L.toList t)
     (hd : L.droppedNow = w.droppedNow)
-    (hv : ∀ o : Word, o.toNat < MAX_N →
+    (hv : ∀ o : Word, o.toNat < maxStackSize →
       Flat.get dv o = rdb t.dmem (t.regs.rsp.toBitVec + 8240#64 + o)) :
     dv = w.droppedNow := by
   apply Vector.ext
@@ -140,7 +140,7 @@ theorem dropped_eq {dv : Vector (BitVec 8) MAX_N}
     change j < 1024 at hj
     simp only [BitVec.toNat_ofNat]
     omega
-  have hj' : (BitVec.ofNat 64 j).toNat < MAX_N := by rw [ho]; exact hj
+  have hj' : (BitVec.ofNat 64 j).toNat < maxStackSize := by rw [ho]; exact hj
   have he := (hv (BitVec.ofNat 64 j) hj').trans
     (hb.droppedRead (o := BitVec.ofNat 64 j) hj').symm
   rw [hd] at he

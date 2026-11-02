@@ -11,13 +11,13 @@ namespace FlatShuffler.Flat
 
 set_option maxRecDepth 4096
 
-theorem restoreData_stackPop (cap : Nat) (old : Vector StackSlot MAX_N) (st : St) :
+theorem restoreData_stackPop (cap : Nat) (old : Vector StackSlot maxStackSize) (st : St) :
     stackPop (restoreData cap old st) =
       let r := stackPop st; (r.1, restoreData cap old r.2) := by
   unfold stackPop restoreData
   split <;> rfl
 
-theorem restoreData_mappingPop (cap : Nat) (old : Vector StackSlot MAX_N) (st : St)
+theorem restoreData_mappingPop (cap : Nat) (old : Vector StackSlot maxStackSize) (st : St)
     (top : Word) :
     mappingPop (restoreData cap old st) top = restoreData cap old (mappingPop st top) := by
   unfold mappingPop
@@ -25,7 +25,7 @@ theorem restoreData_mappingPop (cap : Nat) (old : Vector StackSlot MAX_N) (st : 
   rw [restoreData_dest]
   split <;> rfl
 
-theorem restoreData_pop (cap : Nat) (old : Vector StackSlot MAX_N) (st : St) :
+theorem restoreData_pop (cap : Nat) (old : Vector StackSlot maxStackSize) (st : St) :
     pop (restoreData cap old st) =
       let r := pop st; (r.1, restoreData cap old r.2) := by
   simp only [pop, restoreData_size, restoreData_stackPop]
@@ -33,7 +33,7 @@ theorem restoreData_pop (cap : Nat) (old : Vector StackSlot MAX_N) (st : St) :
   · rfl
   · simp only [restoreData_mappingPop]
 
-theorem restoreData_surplusScan (cap : Nat) (old : Vector StackSlot MAX_N) (st : St)
+theorem restoreData_surplusScan (cap : Nat) (old : Vector StackSlot maxStackSize) (st : St)
     (p sh dp : Word) :
     surplusScan (restoreData cap old st) p sh dp = surplusScan st p sh dp := by
   conv => lhs; rw [surplusScan]
@@ -46,7 +46,7 @@ theorem restoreData_surplusScan (cap : Nat) (old : Vector StackSlot MAX_N) (st :
 termination_by p.toNat
 decreasing_by all_goals bv_omega
 
-theorem restoreData_equalBelow (cap : Nat) (old : Vector StackSlot MAX_N) (st : St)
+theorem restoreData_equalBelow (cap : Nat) (old : Vector StackSlot maxStackSize) (st : St)
     (p : Word) (hp : p ≤ st.size) (hs : st.size.toNat ≤ cap) :
     equalBelow (restoreData cap old st) p = equalBelow st p := by
   conv => lhs; rw [equalBelow]
@@ -119,7 +119,7 @@ theorem surplusPass_size_le (st : St) :
         · rw [ite_eq_left he]; exact hp
         · rw [ite_eq_right he]; exact hp
 
-theorem restoreData_surplusTail (cap : Nat) (old : Vector StackSlot MAX_N)
+theorem restoreData_surplusTail (cap : Nat) (old : Vector StackSlot maxStackSize)
     (r : Status × St) :
     (if r.1 ≠ .done then Except.error (r.1, restoreData cap old r.2) else
       if (pop (restoreData cap old r.2)).1 ≠ .done then
@@ -138,7 +138,7 @@ theorem restoreData_surplusTail (cap : Nat) (old : Vector StackSlot MAX_N)
     · rw [ite_eq_left hp, ite_eq_left hp]; rfl
     · rw [ite_eq_right hp, ite_eq_right hp]; rfl
 
-theorem restoreData_surplusPass (cap : Nat) (old : Vector StackSlot MAX_N) (st : St)
+theorem restoreData_surplusPass (cap : Nat) (old : Vector StackSlot maxStackSize) (st : St)
     (h0 : st.size ≠ 0#64) (hs : st.size.toNat ≤ cap) :
     surplusPass (restoreData cap old st) =
       ((surplusPass st).map (restoreData cap old)).mapError
@@ -179,7 +179,7 @@ theorem restoreData_surplusPass (cap : Nat) (old : Vector StackSlot MAX_N) (st :
         else swapWith st (surplusScan st st.size NONE NONE).2) = r
       exact restoreData_surplusTail cap old r
 
-theorem restoreData_surplusLoop (cap : Nat) (old : Vector StackSlot MAX_N)
+theorem restoreData_surplusLoop (cap : Nat) (old : Vector StackSlot maxStackSize)
     (st : St) (fuel : Nat) (hs : st.size.toNat ≤ cap) :
     surplusLoop (restoreData cap old st) fuel =
       let r := surplusLoop st fuel; (r.1, restoreData cap old r.2) := by
@@ -198,7 +198,7 @@ theorem restoreData_surplusLoop (cap : Nat) (old : Vector StackSlot MAX_N)
         rw [he] at hb
         exact ih mid (Nat.le_trans hb hs)
 
-theorem restoreData_removeSurplus (cap : Nat) (old : Vector StackSlot MAX_N)
+theorem restoreData_removeSurplus (cap : Nat) (old : Vector StackSlot maxStackSize)
     (st : St) (hs : st.size.toNat ≤ cap) :
     removeSurplus (restoreData cap old st) =
       let r := removeSurplus st; (r.1, restoreData cap old r.2) := by

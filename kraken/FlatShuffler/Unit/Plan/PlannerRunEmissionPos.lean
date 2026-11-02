@@ -38,7 +38,7 @@ theorem b_13 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
   intro ⟨lo, locals, j, hc, hj, hax, hdx, hsi, hdi, hd, hp⟩
-  have hn := hok.planner.n
+  have hn := hok.planner.targetSizeFitsBuffer
   have hjN := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hj) hn
   have hsrc : 1036 + j.toNat < 4121 := by change j.toNat < 1024 at hjN; omega
   have hdst : 3091 + j.toNat < 4121 := by change j.toNat < 1024 at hjN; omega
@@ -53,24 +53,24 @@ theorem b_13 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
       8 (get M.pos j).toInt }
   have hc1 : EmitLI P g M F s ra lo newloc v :=
     hc.storeLocal hok hdst (by omega) _ rfl rfl rfl rfl rfl rfl rfl rfl
-  have hd1 : WordPrefix newloc 2067 M.dest g.p.m.toNat := hd.set_outside (by
+  have hd1 : WordPrefix newloc 2067 M.dest g.p.sourceSize.toNat := hd.set_outside (by
     intro i hi
-    have hm := hok.planner.m
-    change g.p.m.toNat ≤ 1024 at hm
+    have hm := hok.planner.sourceSizeFitsBuffer
+    change g.p.sourceSize.toNat ≤ 1024 at hm
     omega) _
   have hp1 : WordPrefix newloc 3091 M.pos (j.toNat + 1) := by
     simpa only [BitVec.ofNat_toNat, BitVec.setWidth_eq] using hp.step
       (by rw [hc.localLength]; exact hdst)
-  have hptr (b : Bool) (he : (g.p.n * 8#64 == 8#64 + j * 8#64) = b) :
-      (j + 1#64 == g.p.n) = b := by
-    have heq : (g.p.n * 8#64 == 8#64 + j * 8#64) = (j + 1#64 == g.p.n) := by
+  have hptr (b : Bool) (he : (g.p.targetSize * 8#64 == 8#64 + j * 8#64) = b) :
+      (j + 1#64 == g.p.targetSize) = b := by
+    have heq : (g.p.targetSize * 8#64 == 8#64 + j * 8#64) = (j + 1#64 == g.p.targetSize) := by
       rw [Bool.eq_iff_iff]
       simp only [beq_iff_eq]
-      change g.p.n.toNat ≤ 1024 at hn
+      change g.p.targetSize.toNat ≤ 1024 at hn
       bv_omega
     exact heq.symm.trans he
   have hax' : t.regs.rax.toBitVec = j * 8#64 := hax
-  have hdx' : t.regs.rdx.toBitVec = g.p.n * 8#64 := hdx
+  have hdx' : t.regs.rdx.toBitVec = g.p.targetSize * 8#64 := hdx
   have ks := hc.localSome hsrc
   have kd := hc.localSome hdst
   have kp := hc1.localSome (i := 4115) (by decide)
@@ -89,8 +89,8 @@ theorem b_13 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
     rename_i he
     symexec_norm at he
     simp only [hax', hdx', sub_beq_zero, Bool.not_eq_true', beq_eq_false_iff_ne] at he
-    have hjnext : j + 1#64 < g.p.n := by
-      have hb : (g.p.n * 8#64 == 8#64 + j * 8#64) = false := by
+    have hjnext : j + 1#64 < g.p.targetSize := by
+      have hb : (g.p.targetSize * 8#64 == 8#64 + j * 8#64) = false := by
         simpa only [sub_beq_zero, beq_eq_false_iff_ne] using he
       have hne := beq_eq_false_iff_ne.mp (hptr false hb)
       bv_omega
@@ -104,9 +104,9 @@ theorem b_13 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
     rename_i he
     symexec_norm at he
     simp only [hax', hdx'] at he
-    have hjend : j + 1#64 = g.p.n := beq_iff_eq.mp (hptr true (by
+    have hjend : j + 1#64 = g.p.targetSize := beq_iff_eq.mp (hptr true (by
       simpa only [sub_beq_zero, Bool.not_eq_false'] using he))
-    have hpdone : WordPrefix newloc 3091 M.pos g.p.n.toNat := by
+    have hpdone : WordPrefix newloc 3091 M.pos g.p.targetSize.toNat := by
       rw [← hjend, hsucc]; exact hp1
     apply hdone
     refine ⟨lo, setupLocals newloc t.regs.rsp.toBitVec, (0 : Word), (0 : Word),

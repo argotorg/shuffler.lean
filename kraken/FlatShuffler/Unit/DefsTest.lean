@@ -15,7 +15,7 @@ open FlatShuffler.Sep (G Hdr OpR splIds)
 
 -- A ghost with `n = 2`, one slot and one operation.
 def hdr (len nops : Word) : Hdr :=
-  ⟨0, 2#64, 0, 0, len, 0, nops, Vector.replicate MAX_N 0, Vector.replicate MAX_N 0, 0, 0, 0⟩
+  ⟨0, 2#64, 0, 0, len, 0, nops, Vector.replicate maxStackSize 0, Vector.replicate maxStackSize 0, 0, 0, 0⟩
 
 def opA : Op := ⟨1#8, 2#8, ⟨7#32, 0#8, 1#8⟩⟩
 def opB : Op := ⟨0#8, 3#8, ⟨9#32, 0#8, 0#8⟩⟩

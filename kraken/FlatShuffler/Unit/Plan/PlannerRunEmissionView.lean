@@ -28,14 +28,14 @@ theorem spl_subframe (a : Addr) (f : BitVec 32 → BitVec 8)
     rw [Spl.erase a f him, he, Spl, MProp.sep_assoc]
 
 def emissionIds (g : PlannerCallMemory) : List Nat :=
-  splOut g.p.tgt g.p.spl g.p.n.toNat (splIds g.p.tw)
+  splOut g.p.tgt g.p.spl g.p.targetSize.toNat (splIds g.p.tw)
 
 def Ev (g : PlannerCallMemory) (data : List Word) (ops : List OpR) : MProp 64 :=
   Arr g.dataPtr data ∗ Ops g.opsPtr 0 ops ∗ Arr g.p.tgt g.p.tw ∗
     Spl g.p.spl g.spills (emissionIds g)
 
 theorem emission_view_frame (P : Addr) (g : PlannerCallMemory) (hok : g.Ok) :
-    ∃ EF, ∀ (data : Vector Word MAX_N) (ops : List OpR),
+    ∃ EF, ∀ (data : Vector Word maxStackSize) (ops : List OpR),
       plannerCallOwnedMemory P { g with data := data, ops := ops } =
         Ev g (data.toList.take g.dataCapacity) ops ∗ EF := by
   have hnd : (emissionIds g).Nodup := by
@@ -45,12 +45,12 @@ theorem emission_view_frame (P : Addr) (g : PlannerCallMemory) (hok : g.Ok) :
     intro i hi
     exact List.mem_range.mpr (hok.targetIds i (List.mem_filter.mp hi).1)
   obtain ⟨R, he⟩ := spl_subframe g.p.spl g.spills hnd hsub
-  let headers := Wd P g.p.src ∗ Wd (P + 8#64) g.p.m ∗
-    Wd (P + 16#64) g.p.tgt ∗ Wd (P + 24#64) g.p.n ∗ Wd (P + 32#64) g.p.spl ∗
+  let headers := Wd P g.p.src ∗ Wd (P + 8#64) g.p.sourceSize ∗
+    Wd (P + 16#64) g.p.tgt ∗ Wd (P + 24#64) g.p.targetSize ∗ Wd (P + 32#64) g.p.spl ∗
     B8 (P + 40#64) g.p.allowed ∗ Wd (P + 48#64) g.p.drp ∗ B8 (P + 56#64) g.p.saw
   refine ⟨headers ∗ Arr g.p.src g.p.sw ∗ R ∗
-    Bs g.p.drp (g.dropped.toList.take g.p.m.toNat) ∗
-    Arr g.sourcesPtr (g.sources.toList.take g.p.n.toNat) ∗ Wd g.countPtr g.count, ?_⟩
+    Bs g.p.drp (g.dropped.toList.take g.p.sourceSize.toNat) ∗
+    Arr g.sourcesPtr (g.sources.toList.take g.p.targetSize.toNat) ∗ Wd g.countPtr g.count, ?_⟩
   intro data ops
   simp only [plannerCallOwnedMemory, plannerObjectOwnedMemory, Ev, headers, he, MProp.sep_assoc]
   ac_rfl
@@ -59,18 +59,18 @@ theorem emissionGhost_ok {P : Addr} {g : PlannerCallMemory} (hok : g.Ok) (h : Hd
     {F : MProp 64} {m : Mem 64} (hm : (plannerCallOwnedMemory P g ∗ F).get m)
     (hlen : h.len.toNat ≤ g.dataCapacity) (hops : h.nops.toNat ≤ g.ops.length) :
     (emissionGhost g hok h).Ok := by
-  have hn := hok.planner.n
-  refine ⟨?_, hok.planner.n, ?_, ?_, ?_, ?_⟩
-  · change h.len.toNat ≤ g.p.n.toNat + (g.dataCapacity - g.p.n.toNat)
-    have hc : g.p.n.toNat ≤ g.dataCapacity := Nat.le_max_right _ _
+  have hn := hok.planner.targetSizeFitsBuffer
+  refine ⟨?_, hok.planner.targetSizeFitsBuffer, ?_, ?_, ?_, ?_⟩
+  · change h.len.toNat ≤ g.p.targetSize.toNat + (g.dataCapacity - g.p.targetSize.toNat)
+    have hc : g.p.targetSize.toNat ≤ g.dataCapacity := Nat.le_max_right _ _
     omega
-  · change g.p.n.toNat + (g.dataCapacity - g.p.n.toNat) ≤ MAX_N
-    have hc : g.dataCapacity ≤ MAX_N := Nat.max_le.mpr ⟨hok.planner.m, hok.planner.n⟩
+  · change g.p.targetSize.toNat + (g.dataCapacity - g.p.targetSize.toNat) ≤ maxStackSize
+    have hc : g.dataCapacity ≤ maxStackSize := Nat.max_le.mpr ⟨hok.planner.sourceSizeFitsBuffer, hok.planner.targetSizeFitsBuffer⟩
     omega
-  · change 4 * g.p.m.toNat ≤ 4 * MAX_N
-    have := hok.planner.m
+  · change 4 * g.p.sourceSize.toNat ≤ 4 * maxStackSize
+    have := hok.planner.sourceSizeFitsBuffer
     omega
-  · change h.nops.toNat ≤ 6 * g.p.n.toNat + 4 * g.p.m.toNat
+  · change h.nops.toNat ≤ 6 * g.p.targetSize.toNat + 4 * g.p.sourceSize.toNat
     rw [← hok.ops]
     exact hops
   · intro i hi k hk j hj ha
@@ -117,8 +117,8 @@ theorem emission_keep_capacity {g : PlannerCallMemory} {hok : g.Ok} {h : Hdr}
     {a : G} (hk : Keep (emissionGhost g hok h) a) :
     a.h.n.toNat + a.xs = g.dataCapacity := by
   rw [hk.n, hk.xs]
-  change g.p.n.toNat + (g.dataCapacity - g.p.n.toNat) = g.dataCapacity
-  have hc : g.p.n.toNat ≤ g.dataCapacity := Nat.le_max_right _ _
+  change g.p.targetSize.toNat + (g.dataCapacity - g.p.targetSize.toNat) = g.dataCapacity
+  have hc : g.p.targetSize.toNat ≤ g.dataCapacity := Nat.le_max_right _ _
   omega
 
 def emissionResult (g : PlannerCallMemory) (hok : g.Ok) (h : Hdr)
@@ -126,7 +126,7 @@ def emissionResult (g : PlannerCallMemory) (hok : g.Ok) (h : Hdr)
   { g with
     data := ⟨(a.stk.toList ++ g.data.toList.drop g.dataCapacity).toArray, by
       have hcap := emission_keep_capacity hk
-      have hb : g.dataCapacity ≤ MAX_N := Nat.max_le.mpr ⟨hok.planner.m, hok.planner.n⟩
+      have hb : g.dataCapacity ≤ maxStackSize := Nat.max_le.mpr ⟨hok.planner.sourceSizeFitsBuffer, hok.planner.targetSizeFitsBuffer⟩
       simp only [List.size_toArray, List.length_append, Vector.length_toList,
         List.length_drop]
       omega⟩
@@ -137,7 +137,7 @@ theorem emissionResult_ok {g : PlannerCallMemory} (hok : g.Ok) (h : Hdr)
     {a : G} (hk : Keep (emissionGhost g hok h) a) (ha : a.Ok) :
     (emissionResult g hok h a hk).Ok := by
   refine ⟨hok.planner, hok.spillCount, hok.sourceIds, hok.targetIds, ?_, ?_⟩
-  · change a.ops.toList.length = 6 * g.p.n.toNat + 4 * g.p.m.toNat
+  · change a.ops.toList.length = 6 * g.p.targetSize.toNat + 4 * g.p.sourceSize.toNat
     rw [Vector.length_toList, hk.n, hk.xo]
     rfl
   · change a.h.nops.toNat ≤ a.ops.toList.length
@@ -154,7 +154,7 @@ theorem emissionResult_data_prefix {g : PlannerCallMemory} {hok : g.Ok} {h : Hdr
 
 theorem emission_result_view {P : Addr} {g : PlannerCallMemory} {hok : g.Ok} {h : Hdr}
     {a : G} (hk : Keep (emissionGhost g hok h) a) {EF : MProp 64}
-    (hf : ∀ (data : Vector Word MAX_N) (ops : List OpR),
+    (hf : ∀ (data : Vector Word maxStackSize) (ops : List OpR),
       plannerCallOwnedMemory P { g with data := data, ops := ops } =
         Ev g (data.toList.take g.dataCapacity) ops ∗ EF) :
     plannerCallOwnedMemory P (emissionResult g hok h a hk) = Ev g a.stk.toList a.ops.toList ∗ EF := by
@@ -164,13 +164,13 @@ theorem emission_result_view {P : Addr} {g : PlannerCallMemory} {hok : g.Ok} {h 
 
 theorem emission_restore {P S : Addr} {g : PlannerCallMemory} {hok : g.Ok} {h : Hdr}
     {a : G} (hk : Keep (emissionGhost g hok h) a) {EF : MProp 64}
-    (hf : ∀ (data : Vector Word MAX_N) (ops : List OpR),
+    (hf : ∀ (data : Vector Word maxStackSize) (ops : List OpR),
       plannerCallOwnedMemory P { g with data := data, ops := ops } =
         Ev g (data.toList.take g.dataCapacity) ops ∗ EF) :
     View S a ∗ EF = Em S a.h ∗ plannerCallOwnedMemory P (emissionResult g hok h a hk) := by
   rw [emission_keep_view hk, emission_result_view hk hf, MProp.sep_assoc]
 
-theorem full_data_model (v : Vector Word MAX_N) :
+theorem full_data_model (v : Vector Word maxStackSize) :
     vec (v.toList.map StackSlot.ofWord) = v.map StackSlot.ofWord := by
   rw [vec_map]
   ext i hi
@@ -178,7 +178,7 @@ theorem full_data_model (v : Vector Word MAX_N) :
 
 theorem emissionGhost_flat (g : PlannerCallMemory) (hok : g.Ok) (h : Hdr) :
     flat (emissionGhost g hok h) =
-      { target := g.p.fl.target, targetSize := g.p.n, spills := g.spills,
+      { target := g.p.fl.target, targetSize := g.p.targetSize, spills := g.spills,
         data := vec ((g.data.toList.take g.dataCapacity).map StackSlot.ofWord), size := h.len,
         trace := (g.ops.take h.nops.toNat).map OpR.op, dest := h.dest, pos := h.pos,
         pend := h.pend, blockedOffset := h.blkOff, blockedExcess := h.blkExc } := by
@@ -188,13 +188,13 @@ theorem emissionGhost_flat (g : PlannerCallMemory) (hok : g.Ok) (h : Hdr) :
 theorem emissionGhost_restore (g : PlannerCallMemory) (hok : g.Ok) (h : Hdr) :
     Flat.restoreData g.dataCapacity (g.data.map StackSlot.ofWord)
       (flat (emissionGhost g hok h)) =
-      { target := g.p.fl.target, targetSize := g.p.n, spills := g.spills,
+      { target := g.p.fl.target, targetSize := g.p.targetSize, spills := g.spills,
         data := g.data.map StackSlot.ofWord, size := h.len,
         trace := (g.ops.take h.nops.toNat).map OpR.op, dest := h.dest, pos := h.pos,
         pend := h.pend, blockedOffset := h.blkOff, blockedExcess := h.blkExc } := by
   rw [emissionGhost_flat]
   have hd : (Flat.restoreData g.dataCapacity (g.data.map StackSlot.ofWord)
-      {target := g.p.fl.target, targetSize := g.p.n, spills := g.spills,
+      {target := g.p.fl.target, targetSize := g.p.targetSize, spills := g.spills,
         data := vec ((g.data.toList.take g.dataCapacity).map StackSlot.ofWord), size := h.len,
         trace := (g.ops.take h.nops.toNat).map OpR.op, dest := h.dest, pos := h.pos,
         pend := h.pend, blockedOffset := h.blkOff, blockedExcess := h.blkExc}).data =
@@ -208,8 +208,8 @@ theorem emissionGhost_restore (g : PlannerCallMemory) (hok : g.Ok) (h : Hdr) :
         List.getElem?_map, List.getElem?_eq_getElem hit, Option.map_some,
         Option.getD_some, List.getElem_take, Vector.getElem_toList, Vector.getElem_map]
     · simp only [Flat.restoreData, Vector.getElem_ofFn, hic, ↓reduceIte]
-  exact congrArg (fun data : Vector StackSlot MAX_N =>
-    ({ target := g.p.fl.target, targetSize := g.p.n, spills := g.spills, data := data,
+  exact congrArg (fun data : Vector StackSlot maxStackSize =>
+    ({ target := g.p.fl.target, targetSize := g.p.targetSize, spills := g.spills, data := data,
        size := h.len, trace := (g.ops.take h.nops.toNat).map OpR.op,
        dest := h.dest, pos := h.pos, pend := h.pend,
        blockedOffset := h.blkOff, blockedExcess := h.blkExc } : Flat.St)) hd

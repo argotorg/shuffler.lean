@@ -37,16 +37,16 @@ theorem emission_tail [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory)
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
         (label ".LB.Planner.run.9") u)
     (hzero : ∀ u, PostEmitLI P g M F s ra lo locals u →
-      al t = 1#8 → g.p.m = 0#64 → u.regs.rbp.toBitVec = 0#64 →
+      al t = 1#8 → g.p.sourceSize = 0#64 → u.regs.rbp.toBitVec = 0#64 →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
         (label ".LB.Planner.run.17") u)
     (hmore : ∀ u, PostEmitLI P g M F s ra lo locals u →
-      al t = 1#8 → g.p.m ≠ 0#64 → u.regs.rbp.toBitVec = 0#64 →
-      rax u = g.p.drp → rdx u = g.p.drp + g.p.m → K () u) :
+      al t = 1#8 → g.p.sourceSize ≠ 0#64 → u.regs.rbp.toBitVec = 0#64 →
+      rax u = g.p.drp → rdx u = g.p.drp + g.p.sourceSize → K () u) :
     WP.wp emissionTail K (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   obtain ⟨_, hp⟩ := pv h.kb.vmem
-  have km := plannerObjectOwnedMemory.isSome_m hp
-  have rm := plannerObjectOwnedMemory.rd_m hp
+  have km := plannerObjectOwnedMemory.isSome_sourceSize hp
+  have rm := plannerObjectOwnedMemory.rd_sourceSize hp
   have kd : (t.dmem.loadInt (P + 48#64) 8).isSome = true :=
     isSome_of_eq g.p.drp hp (by unfold plannerObjectOwnedMemory; ecancel)
   have rdrop : rd t.dmem (P + 48#64) = g.p.drp :=
@@ -93,7 +93,7 @@ theorem emission_tail [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory)
     · exact hm
     · rfl
     · rfl
-    · change g.p.m + g.p.drp = g.p.drp + g.p.m
+    · change g.p.sourceSize + g.p.drp = g.p.drp + g.p.sourceSize
       exact BitVec.add_comm _ _
 
 end FlatShuffler.Unit.PlannerRunU

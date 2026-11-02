@@ -14,7 +14,7 @@ open Flat FlatShuffler.Sep
 
 set_option maxRecDepth 4096 in
 theorem b_27 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapping)
-    (F : MProp 64) (s : MachineData) (ra : Int64) (hok : g.Ok) (hn : g.p.n = 0#64)
+    (F : MProp 64) (s : MachineData) (ra : Int64) (hok : g.Ok) (hn : g.p.targetSize = 0#64)
     (K : Unit → MachineData → Prop) (I' : CfgLabel → Nat → Unit → MachineData → Prop)
     (E : Int64 → MachineData → Prop)
     (hdone : ∀ u, EmitReady P g M F s ra u → K () u) :
@@ -43,7 +43,7 @@ theorem b_27 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
     refine ⟨lo, setupLocals locals sp, hv.next rfl rfl rfl rfl rfl rfl rfl rfl, ?_⟩
     have hend : Flat.unmappedFrom (countState g M) 0 0 = 0 := by
       have hz : ¬ (0 : Word) < (countState g M).targetSize := by
-        change ¬ (0 : Word) < g.p.n
+        change ¬ (0 : Word) < g.p.targetSize
         rw [hn]
         decide
       rw [Flat.unmappedFrom, dite_eq_right hz]

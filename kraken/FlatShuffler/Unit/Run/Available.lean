@@ -15,7 +15,7 @@ namespace FlatShuffler.Unit.RunU
 open FlatShuffler.Sep
 
 section
-variable [Host] [FunDecls] (S PM : Addr) (planned : Vector Word MAX_N)
+variable [Host] [FunDecls] (S PM : Addr) (planned : Vector Word maxStackSize)
     (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
 
 theorem b_10
@@ -27,7 +27,7 @@ theorem b_10
   intro t ht
   simp only [Inv, Names.run, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨a, l, lo, w, h, h12, hi, hsize, hcount, hscan⟩ := ht
-  have hin : t.regs.rbx.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hi h.ok.n
+  have hin : t.regs.rbx.toBitVec.toNat < maxStackSize := Nat.lt_of_lt_of_le hi h.ok.n
   have hsuc := succ_nat hi
   kvcgen64 [hav]
   all_goals try symexec_norm at ⊢
@@ -126,7 +126,7 @@ theorem b_10
       · apply hu.next <;> rfl
       · show 0#64 < a.h.n
         bv_omega
-    · simp [V, Names.run, MAX_N]
+    · simp [V, Names.run, maxStackSize]
       omega
 
 end

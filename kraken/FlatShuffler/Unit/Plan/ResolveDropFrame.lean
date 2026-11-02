@@ -15,7 +15,7 @@ variable {P : Addr} {r : RG} {F : MProp 64} {s t u : MachineData} {ra : Int64}
   {lo : List Word} {L : Lc} {best : Word}
 
 theorem Bd.dropLocal (h : Bd P r F s ra lo L.toList t)
-    (ho : best.toNat < MAX_N)
+    (ho : best.toNat < maxStackSize)
     (hmem : u.dmem = t.dmem.storeInt (t.regs.rsp.toBitVec + 8240#64 + best) 1 1)
     (hsp : u.regs.rsp = t.regs.rsp) :
     ∃ v : Word,
@@ -34,7 +34,7 @@ theorem Bd.dropLocal (h : Bd P r F s ra lo L.toList t)
     have hh : j < 1024 := hj
     simp only [BitVec.toNat_ofNat]
     omega
-  have hj' : (BitVec.ofNat 64 j).toNat < MAX_N := by rw [hjo]; exact hj
+  have hj' : (BitVec.ofNat 64 j).toNat < maxStackSize := by rw [hjo]; exact hj
   have hu := hv.droppedRead hj'
   have ht := h.droppedRead hj'
   rw [hmem, hsp] at hu

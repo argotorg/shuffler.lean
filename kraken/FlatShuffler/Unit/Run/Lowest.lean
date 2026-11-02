@@ -15,7 +15,7 @@ namespace FlatShuffler.Unit.RunU
 open FlatShuffler.Sep
 
 section
-variable [Host] [FunDecls] (S PM : Addr) (planned : Vector Word MAX_N)
+variable [Host] [FunDecls] (S PM : Addr) (planned : Vector Word maxStackSize)
     (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
 
 theorem b_1 (hs : Safe planned (flat g) g.xo)
@@ -123,7 +123,7 @@ theorem b_1 (hs : Safe planned (flat g) g.xo)
       · show 0#64 < a'.h.n
         bv_omega
       · simpa only [BitVec.add_comm] using he
-    · simp [V, Names.run, MAX_N]
+    · simp [V, Names.run, maxStackSize]
   | goto ".LB.Emission.run.9" =>
     have hd := code_eq_zero (hal.symm.trans (al_zero (by with_reducible assumption)))
     have hn0 : a'.h.n = 0#64 := by

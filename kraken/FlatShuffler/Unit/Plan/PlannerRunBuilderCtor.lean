@@ -21,8 +21,8 @@ private theorem pack_low (w : Word) : w.extractLsb' 8 56 ++ w.setWidth 8 = w := 
 
 theorem BuilderLocals.ofList_toList (locals : List Word) (hl : locals.length = 4121)
     (b : BG)
-    (hsrc : locals[4]? = some b.src) (hm : locals[5]? = some b.m)
-    (htgt : locals[6]? = some b.tgt) (hn : locals[7]? = some b.n)
+    (hsrc : locals[4]? = some b.src) (hm : locals[5]? = some b.sourceSize)
+    (htgt : locals[6]? = some b.tgt) (hn : locals[7]? = some b.targetSize)
     (hdrp : locals[8]? = some b.drp)
     (hstrat : (locals[9]'(by omega)).setWidth 8 = b.strat)
     (hmp : locals[10]? = some b.mp)
@@ -34,13 +34,13 @@ theorem BuilderLocals.ofList_toList (locals : List Word) (hl : locals.length = 4
     rw [List.getElem?_eq_getElem hi] at h
     exact Option.some.inj h
   have hsrc' := field_eq 4 (by omega) b.src hsrc
-  have hm' := field_eq 5 (by omega) b.m hm
+  have hm' := field_eq 5 (by omega) b.sourceSize hm
   have htgt' := field_eq 6 (by omega) b.tgt htgt
-  have hn' := field_eq 7 (by omega) b.n hn
+  have hn' := field_eq 7 (by omega) b.targetSize hn
   have hdrp' := field_eq 8 (by omega) b.drp hdrp
   have hmp' := field_eq 10 (by omega) b.mp hmp
   have hfields : locals.take 12 = locals.take 4 ++
-      [b.src, b.m, b.tgt, b.n, b.drp,
+      [b.src, b.sourceSize, b.tgt, b.targetSize, b.drp,
         (locals[9]'(by omega)).extractLsb' 8 56 ++ b.strat,
         b.mp, (locals[11]'(by omega)).extractLsb' 8 56 ++ b.saw] := by
     rw [← hstrat, ← hsaw, pack_low, pack_low]
@@ -80,8 +80,8 @@ def BuilderWrite.mem (m : Mem 64) (sp : Addr) : BuilderWrite → Mem 64
   | .byte i v => m.storeInt (sp + BitVec.ofNat 64 (8 * i.val)) 1 v.toInt
 
 def builderStores (g : PlannerCallMemory) (sp : Addr) (strat : BitVec 8) : List BuilderWrite :=
-  [.word ⟨4, by decide⟩ g.p.src, .word ⟨5, by decide⟩ g.p.m,
-    .word ⟨6, by decide⟩ g.p.tgt, .word ⟨7, by decide⟩ g.p.n,
+  [.word ⟨4, by decide⟩ g.p.src, .word ⟨5, by decide⟩ g.p.sourceSize,
+    .word ⟨6, by decide⟩ g.p.tgt, .word ⟨7, by decide⟩ g.p.targetSize,
     .word ⟨8, by decide⟩ g.p.drp, .byte ⟨9, by decide⟩ strat,
     .word ⟨10, by decide⟩ (sp + 96#64), .byte ⟨11, by decide⟩ 0#8]
 

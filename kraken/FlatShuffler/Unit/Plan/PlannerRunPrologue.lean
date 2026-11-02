@@ -72,10 +72,10 @@ theorem b_fn [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : MProp 64)
   have hv2 := hb3.kb.mem
   rw [sep_lc] at hv2
   obtain ⟨_, hp2⟩ := pv hv2
-  have hn : rd u3.dmem (P + 24#64) = g.p.n :=
+  have hn : rd u3.dmem (P + 24#64) = g.p.targetSize :=
     rd_of_eq hp2 (by unfold plannerObjectOwnedMemory; ecancel)
   have kn : (u3.dmem.loadInt (P + 24#64) 8).isSome = true :=
-    isSome_of_eq g.p.n hp2 (by unfold plannerObjectOwnedMemory; ecancel)
+    isSome_of_eq g.p.targetSize hp2 (by unfold plannerObjectOwnedMemory; ecancel)
   have htgt : rd u3.dmem (P + 16#64) = g.p.tgt :=
     rd_of_eq hp2 (by unfold plannerObjectOwnedMemory; ecancel)
   have ktgt : (u3.dmem.loadInt (P + 16#64) 8).isSome = true :=
@@ -115,7 +115,7 @@ theorem b_fn [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : MProp 64)
     · apply UInt64.toBitVec_inj.mp
       simp only [u3, u2, u1, u0, q, Reg64s.get64_rsp, BitVec.sub_sub, BitVec.reduceAdd]
     · apply targets_end
-      change ¬ (0 : Word) < g.p.n
+      change ¬ (0 : Word) < g.p.targetSize
       rw [hz]
       decide
   | goto ".LB.Planner.run.1" =>

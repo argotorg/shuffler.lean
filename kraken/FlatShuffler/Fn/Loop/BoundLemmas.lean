@@ -102,7 +102,7 @@ theorem Base.slot_isSome (hb : Base s ra t) {D x : Word} (hD : D = dataOf t.dmem
   have hl := hb.len_le
   have hd := hw.data_lt
   have hn := hw.n_le
-  have : MAX_N = 1024 := rfl
+  have : maxStackSize = 1024 := rfl
   refine Mem.Mapped.loadInt_isSome hw.mapped (inside_append.mpr (Or.inl
     (inside_writable (Or.inr (Or.inr (Or.inl ?_))))))
   rw [hD]
@@ -140,7 +140,7 @@ variable {T b : Nat}
 theorem Copy.bounds (h : Copy s ra T b t) :
     (st' s t).len ≤ 1024 ∧ T ≤ (st' s t).len ∧ T < (env s).n ∧ (env s).n ≤ 1024 := by
   obtain ⟨h1, h2, h3, -⟩ := ctx_bounds h.2.2.2.2.2.2.2
-  have : MAX_N = 1024 := rfl
+  have : maxStackSize = 1024 := rfl
   exact ⟨by omega, h3, h.2.2.2.2.2.2.2.1, by omega⟩
 
 -- `Copy` of a state literal with the registers of the search of `t`.

@@ -29,17 +29,17 @@ namespace FlatShuffler.Unit
 open FlatShuffler.Sep (G)
 
 -- The pointer `m_plannedMapping` to the planned mapping at `PM`, and its `m_positionOf` array.
-def Planned (S PM : Addr) (planned : Vector Word MAX_N) : MProp 64 :=
+def Planned (S PM : Addr) (planned : Vector Word maxStackSize) : MProp 64 :=
   Sep.Wd (Fld.plannedMapping S) PM ∗ Sep.Arr (PM + 8192#64) planned.toList
 
 -- `permuteAtLowestHeight()`
-def lowestA (planned : Vector Word MAX_N) (g : G) (_s : MachineData) : Prop :=
+def lowestA (planned : Vector Word maxStackSize) (g : G) (_s : MachineData) : Prop :=
   g.h.nops.toNat + 2 * g.h.len.toNat ≤ 6 * g.h.n.toNat + g.xo ∧ DestOk (flat g)
     ∧ Flat.LowOk planned (flat g)
-def lowestQ (planned : Vector Word MAX_N) (g g' : G) (_s t : MachineData) : Prop :=
+def lowestQ (planned : Vector Word maxStackSize) (g g' : G) (_s t : MachineData) : Prop :=
   ∃ l, NormalResult (Flat.permuteAtLowestHeight planned l) g g' t
 
-def lowestX (planned : Vector Word MAX_N) (g g' : G) (_s _t : MachineData) : Prop :=
+def lowestX (planned : Vector Word maxStackSize) (g g' : G) (_s _t : MachineData) : Prop :=
   ∃ l, ExitRes (Flat.permuteAtLowestHeight planned l) g g'
 
 abbrev lowestD : Nat := 3073 + 1 + 1034

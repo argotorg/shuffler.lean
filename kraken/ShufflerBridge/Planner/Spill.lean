@@ -65,7 +65,7 @@ theorem decode_var {v : FlatShuffler.StackSlot} (hk : v.kind.toNat < 4) (i : Var
   · intro h; cases h; exact ⟨⟨hk0, ho⟩, rfl⟩
   · rintro ⟨-, rfl⟩; rfl
 
-theorem isSpilled_listEnv (n : Nat) (t : Vector FlatShuffler.StackSlot FlatShuffler.MAX_N)
+theorem isSpilled_listEnv (n : Nat) (t : Vector FlatShuffler.StackSlot FlatShuffler.maxStackSize)
     (sp : BitVec 32 → BitVec 8) (x : FlatShuffler.StackSlot) :
     FlatShuffler.isSpilled (listEnv n t sp) x = spillIsSpilled sp x := by
   simp only [FlatShuffler.isSpilled, spillIsSpilled, isVariable, listEnv, BitVec.ofNat_toNat,
@@ -78,10 +78,10 @@ theorem mem_spillSet {e : FlatShuffler.Env} {src : Stack} {i : Nat} :
   simp [spilledVariables, Finset.mem_image, Finset.mem_filter, Finset.mem_range]
 
 section
-variable {S : List FlatShuffler.StackSlot} {n : Nat} {t : Vector FlatShuffler.StackSlot FlatShuffler.MAX_N}
+variable {S : List FlatShuffler.StackSlot} {n : Nat} {t : Vector FlatShuffler.StackSlot FlatShuffler.maxStackSize}
 
 -- The PR31 spill set of the bytes `sp`.
-abbrev pSpills (S : List FlatShuffler.StackSlot) (n : Nat) (t : Vector FlatShuffler.StackSlot FlatShuffler.MAX_N)
+abbrev pSpills (S : List FlatShuffler.StackSlot) (n : Nat) (t : Vector FlatShuffler.StackSlot FlatShuffler.maxStackSize)
     (sp : BitVec 32 → BitVec 8) : SpillSet :=
   spilledVariables (listEnv n t sp) (S.map decodeStackSlot)
 
@@ -118,7 +118,7 @@ theorem isSpilled_corr (sp : BitVec 32 → BitVec 8)
 
 -- A result of `spillAdd` and a result of `SpillSet.add`: both are done with the spill set of
 -- the bytes, or both fail.
-def SpCorr (S : List FlatShuffler.StackSlot) (n : Nat) (t : Vector FlatShuffler.StackSlot FlatShuffler.MAX_N) :
+def SpCorr (S : List FlatShuffler.StackSlot) (n : Nat) (t : Vector FlatShuffler.StackSlot FlatShuffler.maxStackSize) :
     FlatShuffler.Flat.Status × (BitVec 32 → BitVec 8) → Except ShuffleErr SpillSet → Prop
   | (.done, sp), .ok s => s = pSpills S n t sp
   | (.assertionFailed, _), .error _ => True

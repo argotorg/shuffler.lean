@@ -586,7 +586,7 @@ theorem step_shape {n : Nat} {e : Env} {st st' : St} {t t' : Nat} (hp : Pos n st
 -- `2 * pending + 2 * (n - targetOffset)` by at least the number of operations it adds.
 structure Inv (e : Env) (st : St) (targetOffset : Nat) : Prop where
   len_pending : st.len + st.pendingGenerations = e.n
-  n_le : e.n ≤ MAX_N
+  n_le : e.n ≤ maxStackSize
   t_le : targetOffset ≤ e.n
   pos : Pos e.n st
   ops_le : st.trace.length + 2 * st.pendingGenerations + 2 * (e.n - targetOffset) ≤ 4 * e.n
@@ -684,7 +684,7 @@ theorem init_pending {e : Env} {source : List StackSlot} {dests : List Nat}
   exact countP_not_mem hd
 
 theorem Inv_init {e : Env} {source : List StackSlot} {dests : List Nat}
-    (hl : source.length = dests.length) (hm : dests.length ≤ e.n) (hn : e.n ≤ MAX_N)
+    (hl : source.length = dests.length) (hm : dests.length ≤ e.n) (hn : e.n ≤ maxStackSize)
     (hd : Dests e.n dests) : Inv e (init e source dests) 0 := by
   have hp := init_pending hl hd
   refine ⟨?_, hn, Nat.zero_le _, Pos_init hl hd, ?_⟩
@@ -718,7 +718,7 @@ theorem step_inv {e : Env} {st st' : St} {t t' : Nat} (hi : Inv e st t) (ht : t 
 -- loop also for a state whose trace has operations from before `buildBottomUp`.
 structure InvS (e : Env) (st : St) (targetOffset : Nat) : Prop where
   len_pending : st.len + st.pendingGenerations = e.n
-  n_le : e.n ≤ MAX_N
+  n_le : e.n ≤ maxStackSize
   t_le : targetOffset ≤ e.n
   pos : Pos e.n st
 

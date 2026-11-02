@@ -44,14 +44,14 @@ structure PlannerCallPrecondition (inputAssumptions : PlannerInput → Prop)
     (plannerAddress : Addr) (memory : PlannerCallMemory) (frame : MProp 64)
     (entry : MachineData) : Prop where
   plannerAddressInRegister : rdi entry = plannerAddress
-  sourceSizeFitsBuffer : memory.p.m.toNat ≤ MAX_N
-  targetSizeFitsBuffer : memory.p.n.toNat ≤ MAX_N
-  sourceBufferLength : memory.p.sw.length = memory.p.m.toNat
-  targetBufferLength : memory.p.tw.length = memory.p.n.toNat
+  sourceSizeFitsBuffer : memory.p.sourceSize.toNat ≤ maxStackSize
+  targetSizeFitsBuffer : memory.p.targetSize.toNat ≤ maxStackSize
+  sourceBufferLength : memory.p.sw.length = memory.p.sourceSize.toNat
+  targetBufferLength : memory.p.tw.length = memory.p.targetSize.toNat
   spillByteCountFitsAddress : memory.spillCount ≤ 2 ^ 32
   sourceVariableIdsFitSpillBuffer : ∀ id ∈ splIds memory.p.sw, id < memory.spillCount
   targetVariableIdsFitSpillBuffer : ∀ id ∈ splIds memory.p.tw, id < memory.spillCount
-  operationBufferLength : memory.ops.length = 6 * memory.p.n.toNat + 4 * memory.p.m.toNat
+  operationBufferLength : memory.ops.length = 6 * memory.p.targetSize.toNat + 4 * memory.p.sourceSize.toNat
   traceLengthFitsBuffer : memory.traceLength ≤ memory.ops.length
   bufferAddressesInRegisters : rdx entry = memory.dataPtr ∧ rcx entry = memory.opsPtr ∧
     r8 entry = memory.sourcesPtr ∧ r9 entry = memory.countPtr
@@ -189,7 +189,7 @@ private theorem reviewPrecondition_iff_nativePrecondition
   · intro pre
     exact ⟨nativePrecondition_of_reviewPrecondition pre, pre.modelInputAssumptions⟩
   · rintro ⟨pre, modelAssumptions⟩
-    exact ⟨pre.rdi, pre.ok.planner.m, pre.ok.planner.n,
+    exact ⟨pre.rdi, pre.ok.planner.sourceSizeFitsBuffer, pre.ok.planner.targetSizeFitsBuffer,
       pre.ok.planner.sw, pre.ok.planner.tw, pre.ok.spillCount,
       pre.ok.sourceIds, pre.ok.targetIds, pre.ok.ops, pre.ok.traceLength,
       ⟨pre.args.1, pre.args.2.1, pre.args.2.2.1, pre.args.2.2.2.1⟩,

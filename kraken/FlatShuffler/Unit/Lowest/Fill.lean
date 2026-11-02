@@ -117,13 +117,13 @@ theorem b_3 [Host] [FunDecls] (S PM planned g F0 s ra)
   simp only [LInv, Names.permuteAtLowestHeight, String.reduceEq, ↓reduceIte] at ht
   obtain ⟨L, l0, sc, k, ⟨lo, w, hM, hdi⟩, hs, heq, hpe, hhe, hrax, hk, hrsi, hpc, hpk, hfill⟩ := ht
   have hL := len_le hpre.ok
-  have hkM : k < MAX_N := by show k < 1024; omega
+  have hkM : k < maxStackSize := by show k < 1024; omega
   have hkw : (BitVec.ofNat 64 k).toNat = k := Nat.mod_eq_of_lt (by omega)
-  have hkw' : (BitVec.ofNat 64 k).toNat < MAX_N := by rw [hkw]; exact hkM
+  have hkw' : (BitVec.ofNat 64 k).toNat < maxStackSize := by rw [hkw]; exact hkM
   have hlt : BitVec.ofNat 64 k < sc.parkedCount := by rw [BitVec.lt_def, hkw]; exact hk
   have hdl : Flat.get sc.parked (BitVec.ofNat 64 k) < g.h.len := by
     rw [get_eq _ _ hkw']; simp only [hkw]; exact hpk k hkM hk
-  have hdM : (Flat.get sc.parked (BitVec.ofNat 64 k)).toNat < MAX_N := by
+  have hdM : (Flat.get sc.parked (BitVec.ofNat 64 k)).toNat < maxStackSize := by
     have := BitVec.lt_def.mp hdl; show _ < 1024; omega
   have haP : t.regs.rsp.toBitVec + t.regs.rax.toBitVec = aParked s + BitVec.ofNat 64 (8 * k) := by
     rw [hM.sp]; simp only [aParked]; bv_omega

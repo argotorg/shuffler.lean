@@ -38,16 +38,16 @@ theorem resolve_tail [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory)
       al u = ResolveU.code res →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
         (label ".LB.Planner.run.12") u)
-    (hzero : ∀ u, PostEmitLI P g M F s ra lo locals u → res = .dropped → g.p.m = 0#64 →
+    (hzero : ∀ u, PostEmitLI P g M F s ra lo locals u → res = .dropped → g.p.sourceSize = 0#64 →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E
         (label ".LB.Planner.run.13") u)
-    (hmore : ∀ u, PostEmitLI P g M F s ra lo locals u → res = .dropped → g.p.m ≠ 0#64 →
+    (hmore : ∀ u, PostEmitLI P g M F s ra lo locals u → res = .dropped → g.p.sourceSize ≠ 0#64 →
       u.regs.rbp.toBitVec = before → rax u = g.p.drp →
-      rcx u = g.p.drp + g.p.m → rdx u = 0#64 → K () u) :
+      rcx u = g.p.drp + g.p.sourceSize → rdx u = 0#64 → K () u) :
     WP.wp resolveTail K (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   obtain ⟨_, hp⟩ := pv h.kb.vmem
-  have km := plannerObjectOwnedMemory.isSome_m hp
-  have rm := plannerObjectOwnedMemory.rd_m hp
+  have km := plannerObjectOwnedMemory.isSome_sourceSize hp
+  have rm := plannerObjectOwnedMemory.rd_sourceSize hp
   have kd : (t.dmem.loadInt (P + 48#64) 8).isSome = true :=
     isSome_of_eq g.p.drp hp (by unfold plannerObjectOwnedMemory; ecancel)
   have rd : FlatShuffler.rd t.dmem (P + 48#64) = g.p.drp :=

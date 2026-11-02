@@ -21,7 +21,7 @@ theorem builder_call_frame (P : Addr) (g : PlannerCallMemory) (hok : g.Ok)
   dsimp
   let sp := rsp s - 8#64 - 33016#64
   let b := builderGhost g (sp + 96#64) strat 0#8
-    ⟨Vector.replicate MAX_N 0#64, Vector.replicate MAX_N 0#64⟩
+    ⟨Vector.replicate maxStackSize 0#64, Vector.replicate maxStackSize 0#64⟩
   obtain ⟨BF, hf⟩ := builder_local_frame sp l b rfl (saved s)
   obtain ⟨PF, hp⟩ := builder_view_frame P (sp + 32#64) g hok (sp + 96#64) strat
   refine ⟨BF ∗ PF ∗ Wd (rsp s - 8#64) ra.toBitVec ∗ F, ?_⟩

@@ -13,7 +13,7 @@ namespace FlatShuffler.Unit.ResolveU
 open FlatShuffler.Sep
 
 section
-variable {m o : Word} {dn : Vector (BitVec 8) MAX_N}
+variable {m o : Word} {dn : Vector (BitVec 8) maxStackSize}
 
 theorem zero_done (h : ¬ o < m) : Flat.zeroFrom m o dn = dn := by
   rw [Flat.zeroFrom, dite_eq_right h]
@@ -25,7 +25,7 @@ end
 
 section
 variable {M current : Flat.Mapping} {size pos count : Word}
-  {cand : Vector Word MAX_N}
+  {cand : Vector Word maxStackSize}
 
 theorem candidates_done (h : ¬ pos < size) :
     Flat.candidatesFrom M current size pos cand count = some (cand, count) := by
@@ -66,7 +66,7 @@ end
 
 section
 variable {p : Flat.Planner} {sp : BitVec 32 → BitVec 8} {M : Flat.Mapping}
-  {dn : Vector (BitVec 8) MAX_N} {cand : Vector Word MAX_N}
+  {dn : Vector (BitVec 8) maxStackSize} {cand : Vector Word maxStackSize}
   {count i best : Word} {cls : BitVec 8}
 
 theorem pick_done (h : ¬ i < count) :
@@ -131,7 +131,7 @@ theorem eval_spill (x : ClassifyU.Inputs) (h : x.eval = Flat.SPILL) :
     · exact rank_spill x h
 
 theorem classify_spill (p : Flat.Planner) (sp : BitVec 32 → BitVec 8) (M : Flat.Mapping)
-    (dn : Vector (BitVec 8) MAX_N) (off : Word)
+    (dn : Vector (BitVec 8) maxStackSize) (off : Word)
     (h : Flat.classify p sp M dn off = Flat.SPILL) :
     p.allowed = true ∧ Flat.isVariable (Flat.get p.source off) = true := by
   exact eval_spill (ClassifyU.inputs p sp M dn off)
@@ -168,10 +168,10 @@ theorem pick_keep (h : i < count) (hd : Flat.get dn (Flat.get cand i) = 0#8)
 end
 
 section
-variable {p : Flat.Planner} {M : Flat.Mapping} {cand : Vector Word MAX_N}
+variable {p : Flat.Planner} {M : Flat.Mapping} {cand : Vector Word maxStackSize}
   {count excess k : Word} {s : Flat.RState}
 
-abbrev picked (p : Flat.Planner) (M : Flat.Mapping) (cand : Vector Word MAX_N)
+abbrev picked (p : Flat.Planner) (M : Flat.Mapping) (cand : Vector Word maxStackSize)
     (count : Word) (s : Flat.RState) : Word × BitVec 8 :=
   Flat.pickFrom p s.spills M s.droppedNow cand count 0#64 Flat.NONE 0#8
 
@@ -223,8 +223,8 @@ end
 
 section
 variable {p : Flat.Planner} {sp : BitVec 32 → BitVec 8} {M current : Flat.Mapping}
-    {dropped : Vector (BitVec 8) MAX_N} {blocked excess size : Word} {u : Flat.ResolveU}
-    {cand : Vector Word MAX_N} {count : Word}
+    {dropped : Vector (BitVec 8) maxStackSize} {blocked excess size : Word} {u : Flat.ResolveU}
+    {cand : Vector Word maxStackSize} {count : Word}
 
 theorem resolve_failed_candidates
     (h : Flat.candidatesFrom M current size (blocked + 1) u.candidates 0 = none) :

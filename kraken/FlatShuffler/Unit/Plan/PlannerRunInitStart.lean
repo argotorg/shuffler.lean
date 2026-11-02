@@ -34,10 +34,10 @@ theorem b_5 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : MProp 64)
   have hv := hc.kb.mem
   rw [sep_lc] at hv
   obtain ⟨_, hp⟩ := pv hv
-  have hm := plannerObjectOwnedMemory.rd_m hp
-  have km := plannerObjectOwnedMemory.isSome_m hp
-  have hn := plannerObjectOwnedMemory.rd_n hp
-  have kn := plannerObjectOwnedMemory.isSome_n hp
+  have hm := plannerObjectOwnedMemory.rd_sourceSize hp
+  have km := plannerObjectOwnedMemory.isSome_sourceSize hp
+  have hn := plannerObjectOwnedMemory.rd_targetSize hp
+  have kn := plannerObjectOwnedMemory.isSome_targetSize hp
   unfold rd at hm hn
   clear hv hp
   kvcgen64

@@ -74,11 +74,11 @@ theorem builder_tail [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : M
     (hb : BuildLI P g F s ra lo l M saw t)
     (K : Unit → MachineData → Prop)
     (I' : CfgLabel → Nat → Unit → MachineData → Prop) (E : Int64 → MachineData → Prop)
-    (hzero : ∀ u, g.p.m = 0#64 →
+    (hzero : ∀ u, g.p.sourceSize = 0#64 →
       AttemptLI P (withSaw g (mergeSaw g.p.saw saw)) M F s ra lo
         (l.toList (plannerBuilder g s M saw)) u →
       Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E (label ".LB.Planner.run.28") u)
-    (hnonzero : ∀ u, g.p.m ≠ 0#64 → rax u = 0#64 →
+    (hnonzero : ∀ u, g.p.sourceSize ≠ 0#64 → rax u = 0#64 →
       AttemptLI P (withSaw g (mergeSaw g.p.saw saw)) M F s ra lo
         (l.toList (plannerBuilder g s M saw)) u → K () u) :
     WP.wp builderTail K (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
@@ -104,8 +104,8 @@ theorem builder_tail [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (F : M
     (u := {t with dmem := t.dmem.storeInt (P + 56#64) 1 (mergeSaw g.p.saw saw).toInt})
     rfl rfl rfl rfl rfl rfl rfl
   obtain ⟨_, hp⟩ := pv hb'.kb.vmem
-  have km := plannerObjectOwnedMemory.isSome_m hp
-  have rm := plannerObjectOwnedMemory.rd_m hp
+  have km := plannerObjectOwnedMemory.isSome_sourceSize hp
+  have rm := plannerObjectOwnedMemory.rd_sourceSize hp
   simp only [withSaw, BitVec.ofInt_toInt] at km rm hb'
   unfold rdb at rsaw rbyte
   unfold rd at rm

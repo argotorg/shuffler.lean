@@ -31,12 +31,12 @@ theorem measure_lt {l : List Nat} (h : 0 < l.length) : FlatShuffler.Permutation.
 
 -- The flat `permute` against the list `FlatShuffler.permute`, for a permutation `l` of the slots that
 -- `v` holds.
-theorem sim_permute {e : Env} {fs : St} {st : FlatShuffler.St} {v : Vector Word MAX_N} {l : List Nat}
+theorem sim_permute {e : Env} {fs : St} {st : FlatShuffler.St} {v : Vector Word maxStackSize} {l : List Nat}
     (hs : Sim e fs st) (hpv : PermV st.len v l) (hperm : IsPerm l) :
     SimR e (permute fs v) (FlatShuffler.permute st l) := by
   have hN := hs.len_lt
   have hsz := hs.size
-  have hn : fs.size.toNat ≤ MAX_N := by rw [hsz]; exact hN
+  have hn : fs.size.toNat ≤ maxStackSize := by rw [hsz]; exact hN
   -- `desiredBy`
   have hdi : DInv st.len 0 (clearDesired fs 0 initial) := fun w hw => by
     rw [clearDesired_spec fs hn st.len 0 initial (by simp [hsz]) (by simp) w,
@@ -75,7 +75,7 @@ theorem permR (e : Env) : PermR e := by
   intro fs st t hs hi hp _
   have hN := hs.len_lt
   have hsz := hs.size
-  have hn : fs.size.toNat ≤ MAX_N := by rw [hsz]; exact hN
+  have hn : fs.size.toNat ≤ maxStackSize := by rw [hsz]; exact hN
   have hperm : IsPerm (st.slots.map Slot.dest) := hi.isPerm hp
   have hall : ((List.range st.len).all fun pos => (st.destinationOf pos).isSome) = true :=
     List.all_eq_true.2 fun pos hpos => by rw [St.destinationOf_eq (List.mem_range.1 hpos)]; rfl

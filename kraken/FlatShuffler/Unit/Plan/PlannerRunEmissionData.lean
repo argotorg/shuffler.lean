@@ -15,7 +15,7 @@ variable {P : Addr} {g : PlannerCallMemory} {M : Flat.Mapping} {F : MProp 64}
     {s t u : MachineData} {ra : Int64} {lo locals : List Word}
 
 theorem AttemptLI.storeData (h : AttemptLI P g M F s ra lo locals t)
-    {i : Word} (hi : i.toNat < MAX_N) (hcap : i.toNat < g.dataCapacity) (w : Word)
+    {i : Word} (hi : i.toNat < maxStackSize) (hcap : i.toNat < g.dataCapacity) (w : Word)
     (hm : u.dmem = t.dmem.storeInt (slotAt g.dataPtr i.toNat) 8 w.toInt)
     (hsp : u.regs.rsp = t.regs.rsp)
     (hbx : u.regs.rbx = t.regs.rbx) (h14 : u.regs.r14 = t.regs.r14)
@@ -29,12 +29,12 @@ theorem AttemptLI.storeData (h : AttemptLI P g M F s ra lo locals t)
   rw [hm]
   exact (sep_lc _ _ _).symm ▸ hnew
 
-theorem data_ok (hok : g.Ok) (v : Vector Word MAX_N) : ({g with data := v}).Ok :=
+theorem data_ok (hok : g.Ok) (v : Vector Word maxStackSize) : ({g with data := v}).Ok :=
   ⟨hok.planner, hok.spillCount, hok.sourceIds, hok.targetIds, hok.ops, hok.traceLength⟩
 
-theorem data_copy_step {wanted : Vector StackSlot MAX_N} {i : Word}
+theorem data_copy_step {wanted : Vector StackSlot maxStackSize} {i : Word}
     (h : Flat.copyFrom g.p.fl i (g.data.map StackSlot.ofWord) = wanted)
-    (hi : i < g.p.m) (w : Word)
+    (hi : i < g.p.sourceSize) (w : Word)
     (hw : StackSlot.ofWord w = Flat.get g.p.fl.source i) :
     Flat.copyFrom g.p.fl (i + 1#64)
       ((Flat.put g.data i w).map StackSlot.ofWord) = wanted := by
@@ -45,8 +45,8 @@ theorem data_copy_step {wanted : Vector StackSlot MAX_N} {i : Word}
 end
 
 def EmitDataHead (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapping) (F : MProp 64)
-    (s : MachineData) (ra : Int64) (wanted : Vector StackSlot MAX_N) (t : MachineData) : Prop :=
-  ∃ lo locals, AttemptLI P g M F s ra lo locals t ∧ rax t < g.p.m ∧
+    (s : MachineData) (ra : Int64) (wanted : Vector StackSlot maxStackSize) (t : MachineData) : Prop :=
+  ∃ lo locals, AttemptLI P g M F s ra lo locals t ∧ rax t < g.p.sourceSize ∧
     Flat.copyFrom g.p.fl (rax t) (g.data.map StackSlot.ofWord) = wanted
 
 end FlatShuffler.Unit.PlannerRunU

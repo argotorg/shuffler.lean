@@ -16,10 +16,10 @@ structure PlannerInput where
 
 /-- The active slots exclude the unused tail of each fixed-size buffer. -/
 def PlannerInput.sourceSlots (input : PlannerInput) : List FlatShuffler.StackSlot :=
-  input.planner.source.toList.take input.planner.m.toNat
+  input.planner.source.toList.take input.planner.sourceSize.toNat
 
 def PlannerInput.targetSlots (input : PlannerInput) : List FlatShuffler.StackSlot :=
-  input.planner.target.toList.take input.planner.n.toNat
+  input.planner.target.toList.take input.planner.targetSize.toNat
 
 /-- The status and final buffers of the flat execution model.
 `.assertionFailed` represents an assertion exit, not a C++ return value. -/

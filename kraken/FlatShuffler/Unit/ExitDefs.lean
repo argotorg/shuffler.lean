@@ -42,7 +42,7 @@ def produceX (g g' : G) (s _t : MachineData) : Prop :=
 def generateX (g g' : G) (s _t : MachineData) : Prop :=
   ExitRes (Flat.generate · (rsi s)) g g'
 
-def permuteX (p : Vector Word MAX_N) (g g' : G) (_s _t : MachineData) : Prop :=
+def permuteX (p : Vector Word maxStackSize) (g g' : G) (_s _t : MachineData) : Prop :=
   ExitRes (Flat.permute · p) g g'
 
 def loopX (g g' : G) (_s _t : MachineData) : Prop :=

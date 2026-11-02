@@ -15,15 +15,15 @@ theorem local_partition (loc : List Word) :
 
 theorem local_bytes (sp : Addr) (loc : List Word) (hl : loc.length = 1159)
     (sv : List Word) :
-    ∃ dv : Vector (BitVec 8) MAX_N,
+    ∃ dv : Vector (BitVec 8) maxStackSize,
       Arr sp (loc ++ sv) =
         Arr sp (loc.take 1030) ∗ Bs (sp + 8240#64) dv.toList ∗
           Arr (sp + 9264#64) (loc.drop 1158 ++ sv) := by
   have hfront : (loc.take 1030).length = 1030 := by simp [hl]
   have hbytes : ((loc.drop 1030).take 128).length = 128 := by simp [hl]
-  let dv : Vector (BitVec 8) MAX_N :=
+  let dv : Vector (BitVec 8) maxStackSize :=
     ⟨(wordsBytes ((loc.drop 1030).take 128)).toArray, by
-      simp [wordsBytes_length, hbytes, MAX_N]⟩
+      simp [wordsBytes_length, hbytes, maxStackSize]⟩
   refine ⟨dv, ?_⟩
   conv => lhs; rw [local_partition loc]
   rw [List.append_assoc, List.append_assoc, Arr.append, hfront]
@@ -36,7 +36,7 @@ theorem local_bytes (sp : Addr) (loc : List Word) (hl : loc.length = 1159)
 theorem classify_frame (P : Addr) (r : RG) (hok : r.Ok) (s : MachineData)
     (ra : Int64) (loc : List Word) (hl : loc.length = 1159) (F : MProp 64) :
     let sp := rsp s - 8#64 - 9320#64
-    ∃ (dv : Vector (BitVec 8) MAX_N) (CF : MProp 64),
+    ∃ (dv : Vector (BitVec 8) maxStackSize) (CF : MProp 64),
       ∀ (lo : List Word) (w : Word),
         Stk (rsp s) (lo ++ w :: (loc ++ saved s)) ra.toBitVec ∗ (RView P r ∗ F) =
           Stk sp lo w ∗ (CView P (classifyGhost r (sp + 8240#64) dv) ∗ CF) := by
@@ -47,7 +47,7 @@ theorem classify_frame (P : Addr) (r : RG) (hok : r.Ok) (s : MachineData)
   refine ⟨dv,
     Arr sp (loc.take 1030) ∗ Arr (sp + 9264#64) (loc.drop 1158 ++ saved s) ∗
       Wd (rsp s - 8#64) ra.toBitVec ∗ MapM r.currentPtr r.current ∗
-      Bs r.p.drp (r.dropped.toList.take r.p.m.toNat) ∗ Spl r.p.spl r.spills rest ∗ F,
+      Bs r.p.drp (r.dropped.toList.take r.p.sourceSize.toNat) ∗ Spl r.p.spl r.spills rest ∗ F,
     fun lo w => ?_⟩
   have hhi : BitVec.ofNat 64 (8 * (loc ++ saved s).length) = 9320#64 := by
     simp [hl, saved]
@@ -57,7 +57,7 @@ theorem classify_frame (P : Addr) (r : RG) (hok : r.Ok) (s : MachineData)
   rw [he]
   have hr' : RView P r ∗ Bs (sp + 8240#64) dv.toList =
       CView P (classifyGhost r (sp + 8240#64) dv) ∗
-        (MapM r.currentPtr r.current ∗ Bs r.p.drp (r.dropped.toList.take r.p.m.toNat) ∗
+        (MapM r.currentPtr r.current ∗ Bs r.p.drp (r.dropped.toList.take r.p.sourceSize.toNat) ∗
           Spl r.p.spl r.spills rest) := hr r.spills
   calc
     _ = Stk sp lo w ∗ ((RView P r ∗ Bs (sp + 8240#64) dv.toList) ∗
@@ -79,10 +79,10 @@ variable {P : Addr} {r : RG} {F : MProp 64} {s t : MachineData} {ra : Int64}
 theorem Bd.callClassify (hb : Bd P r F s ra lo loc t) (hok : r.Ok)
     (hdi : rdi t = P) (hsi : rsi t = r.mp)
     (hdx : rdx t = t.regs.rsp.toBitVec + 8240#64)
-    (hoff : (rcx t).toNat < r.p.m.toNat)
+    (hoff : (rcx t).toNat < r.p.sourceSize.toNat)
     (hret : Flat.get r.M.dest (rcx t) ≠ Flat.NONE)
-    (hK : ∀ (dv : Vector (BitVec 8) MAX_N) (u : MachineData) (lo' : List Word),
-      (∀ o : Word, o.toNat < MAX_N →
+    (hK : ∀ (dv : Vector (BitVec 8) maxStackSize) (u : MachineData) (lo' : List Word),
+      (∀ o : Word, o.toNat < maxStackSize →
         Flat.get dv o = rdb t.dmem (t.regs.rsp.toBitVec + 8240#64 + o)) →
       Bd P r F s ra lo' loc u →
       al u = Flat.classify r.p.fl r.spills r.M dv (rcx t) →
@@ -98,7 +98,7 @@ theorem Bd.callClassify (hb : Bd P r F s ra lo loc t) (hok : r.Ok)
   rw [he, List.append_assoc, List.singleton_append, hf xs w, ← hsp] at hm
   have hcv : (CView P (classifyGhost r (t.regs.rsp.toBitVec + 8240#64) dv) ∗
       (Stk (rsp t) xs w ∗ CF)).get t.dmem := (sep_lc _ _ _) ▸ hm
-  have hdv : ∀ o : Word, o.toNat < MAX_N →
+  have hdv : ∀ o : Word, o.toNat < maxStackSize →
       Flat.get dv o = rdb t.dmem (t.regs.rsp.toBitVec + 8240#64 + o) := by
     intro o ho
     exact (HView.rdb_dn (ClassifyU.CView.hv hcv) ho).symm

@@ -24,17 +24,17 @@ The proof: the state of the constructor holds the initial state of the list mode
 
 namespace FlatShuffler.Flat
 
-theorem build_bottom_up_rel_of_perm {m n : Word} {data target : Vector StackSlot MAX_N}
-    {dest : Vector Word MAX_N} {spilled : BitVec 32 → BitVec 8} (u : Uninit) (hm : m ≤ n)
-    (hn : n.toNat ≤ MAX_N) (hd : Dests n.toNat (listDests m.toNat dest))
+theorem build_bottom_up_rel_of_perm {m n : Word} {data target : Vector StackSlot maxStackSize}
+    {dest : Vector Word maxStackSize} {spilled : BitVec 32 → BitVec 8} (u : Uninit) (hm : m ≤ n)
+    (hn : n.toNat ≤ maxStackSize) (hd : Dests n.toNat (listDests m.toNat dest))
     (hfin : PermR (listEnv n.toNat target spilled)) :
     Rel (build_bottom_up m n data target dest spilled u)
       (FlatShuffler.buildBottomUp (listEnv n.toNat target spilled) (listSource m.toNat data)
         (listDests m.toNat dest)) := by
   have hmn : m.toNat ≤ n.toNat := hm
-  have hM : m.toNat ≤ MAX_N := by omega
+  have hM : m.toNat ≤ maxStackSize := by omega
   have hen := listEnv_n target spilled hn
-  have hg : ¬(m > n ∨ n > BitVec.ofNat 64 MAX_N) := by
+  have hg : ¬(m > n ∨ n > BitVec.ofNat 64 maxStackSize) := by
     rw [MAX_N_eq] at hn ⊢
     intro h
     rcases h with h | h <;> bv_omega
@@ -49,9 +49,9 @@ theorem build_bottom_up_rel_of_perm {m n : Word} {data target : Vector StackSlot
   rw [ite_eq_right hg]
   exact rel_outOf h
 
-theorem build_bottom_up_rel {m n : Word} {data target : Vector StackSlot MAX_N}
-    {dest : Vector Word MAX_N} {spilled : BitVec 32 → BitVec 8} (u : Uninit) (hm : m ≤ n)
-    (hn : n.toNat ≤ MAX_N) (hd : Dests n.toNat (listDests m.toNat dest)) :
+theorem build_bottom_up_rel {m n : Word} {data target : Vector StackSlot maxStackSize}
+    {dest : Vector Word maxStackSize} {spilled : BitVec 32 → BitVec 8} (u : Uninit) (hm : m ≤ n)
+    (hn : n.toNat ≤ maxStackSize) (hd : Dests n.toNat (listDests m.toNat dest)) :
     Rel (build_bottom_up m n data target dest spilled u)
       (FlatShuffler.buildBottomUp (listEnv n.toNat target spilled) (listSource m.toNat data)
         (listDests m.toNat dest)) :=

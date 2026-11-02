@@ -15,7 +15,7 @@ namespace FlatShuffler.Unit.RunU
 open FlatShuffler.Sep
 
 section
-variable [Host] [FunDecls] (S PM : Addr) (planned : Vector Word MAX_N)
+variable [Host] [FunDecls] (S PM : Addr) (planned : Vector Word maxStackSize)
     (g : G) (F : MProp 64) (s : MachineData) (ra : Int64)
 
 theorem b_entry : runAsm.ForallBlocks fun blk =>

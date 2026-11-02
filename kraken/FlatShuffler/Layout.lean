@@ -21,8 +21,8 @@ The model state and environment are functions of the memory and the address `S`
 of the struct (`stOf`, `envOf`), so a spec needs no ghost state. The units read and write
 the first `WORDS` words of the struct, in the order of the members: `m_target` (word 0), `m_targetSize`
 (1), `m_spills` (2), the `Stack` `m_stack` (`m_data` 3, `m_size` 4, `m_trace` 5,
-`m_traceSize` 6), the `Mapping` (`m_destinationOf[MAX_N]` from word `DEST`,
-`m_positionOf[MAX_N]` from word `POS`), `m_pendingGenerations` (word `PEND`) and
+`m_traceSize` 6), the `Mapping` (`m_destinationOf[maxStackSize]` from word `DEST`,
+`m_positionOf[maxStackSize]` from word `POS`), `m_pendingGenerations` (word `PEND`) and
 `m_blocked` (words `BLK` and `BLK + 1`). The last word, `WORDS`, is the reference
 `m_plannedMapping`; only the constructor writes it. An element of `m_destinationOf` or
 `m_positionOf` is an `Optional<StackOffset>`, with `-1` (`SIZE_MAX`) for none (`optOf`).
@@ -53,8 +53,8 @@ def rdb (m : Mem 64) (a : Addr) : BitVec 8 := BitVec.ofInt 8 (m.loadInt a 1).get
 abbrev wordAt (b : Addr) (k : Nat) : Addr := b + BitVec.ofNat 64 (8 * k)
 
 def DEST : Nat := 7
-def POS : Nat := DEST + MAX_N
-def PEND : Nat := POS + MAX_N
+def POS : Nat := DEST + maxStackSize
+def PEND : Nat := POS + maxStackSize
 def BLK : Nat := PEND + 1
 -- The size of the struct in words.
 def WORDS : Nat := BLK + 2
@@ -145,7 +145,7 @@ structure Wf : Prop where
   disj_ops : Mem.Blocks.Disjoint [(opsOf m S, 72 * nOf m S)] ((tgtOf m S, 8 * nOf m S) :: splBlocks m S)
   len_le : (rd m (wordAt S 4)).toNat ≤ nOf m S
   nops_le : (rd m (wordAt S 6)).toNat ≤ 6 * nOf m S
-  n_le : nOf m S ≤ MAX_N
+  n_le : nOf m S ≤ maxStackSize
 
 end
 
@@ -394,7 +394,7 @@ theorem stOf_congr (h : Mem.UnchangedOutside l m m') (hw : Wf m S)
   have hmap : ∀ {k}, 6 ≤ k → k < WORDS → rd m' (wordAt S k) = rd m (wordAt S k) :=
     fun hk1 hk2 => rd_congr h (disjoint_mono (bs' := writable m S) (fun x hx => Or.inr (Or.inl (by
       have := hw.struct_lt
-      simp only [Mem.Blocks.Inside, or_false, BLK, PEND, POS, DEST, WORDS, MAX_N] at hx hk1 hk2 this ⊢
+      simp only [Mem.Blocks.Inside, or_false, BLK, PEND, POS, DEST, WORDS, maxStackSize] at hx hk1 hk2 this ⊢
       bv_omega))) hwr)
   have hdata : ∀ {k}, k < nOf m S → rd m' (wordAt (dataOf m S) k) = rd m (wordAt (dataOf m S) k) :=
     fun hk => rd_congr h (disjoint_mono (bs' := writable m S) (fun x hx => Or.inr (Or.inr (Or.inl (by
@@ -416,12 +416,12 @@ theorem stOf_congr (h : Mem.UnchangedOutside l m m') (hw : Wf m S)
   congr 1
   · refine List.map_congr_left fun i hi => ?_
     have := List.mem_range.mp hi
-    have := hw.n_le; rw [show MAX_N = 1024 from rfl] at this
+    have := hw.n_le; rw [show maxStackSize = 1024 from rfl] at this
     simp only [slotOf, hda, hdata (k := i) (by omega),
       hmap (k := DEST + i) (by simp only [DEST_eq]; omega) (by simp only [WORDS_eq, DEST_eq]; omega)]
   · refine List.map_congr_left fun d hd => ?_
     have := List.mem_range.mp hd
-    have := hw.n_le; rw [show MAX_N = 1024 from rfl] at this
+    have := hw.n_le; rw [show maxStackSize = 1024 from rfl] at this
     rw [hmap (k := POS + d) (by simp only [POS_eq]; omega) (by simp only [WORDS_eq, POS_eq]; omega)]
   · exact List.map_congr_left fun i hi => hop (by have := List.mem_range.mp hi; omega)
 
@@ -464,16 +464,16 @@ theorem Pre.disj {F : Nat} {A : MachineData → Prop} {s : MachineData} (hpre : 
   obtain ⟨hw, hf, -⟩ := hpre
   intro x hr hl
   have hsl := hw.struct_lt
-  simp only [WORDS, BLK, PEND, POS, DEST, MAX_N] at hsl
+  simp only [WORDS, BLK, PEND, POS, DEST, maxStackSize] at hsl
   -- `x` in the struct
   have hst : ∀ c n, c + n ≤ 8 * WORDS → (x - (rdi s + BitVec.ofNat 64 c)).toNat + 1 ≤ n →
       Mem.Blocks.Inside x 1 [(rdi s, 8 * WORDS)] := by
     intro c n hc hx
-    simp only [Mem.Blocks.Inside, or_false, WORDS, BLK, PEND, POS, DEST, MAX_N] at hc ⊢; bv_omega
+    simp only [Mem.Blocks.Inside, or_false, WORDS, BLK, PEND, POS, DEST, maxStackSize] at hc ⊢; bv_omega
   have hw03 : (x - rdi s).toNat + 1 ≤ 32 → Mem.Blocks.Inside x 1 [(rdi s, 8 * WORDS)] :=
-    fun h => by simp only [Mem.Blocks.Inside, or_false, WORDS, BLK, PEND, POS, DEST, MAX_N]; bv_omega
+    fun h => by simp only [Mem.Blocks.Inside, or_false, WORDS, BLK, PEND, POS, DEST, maxStackSize]; bv_omega
   have hw5 : (x - wordAt (rdi s) 5).toNat + 1 ≤ 8 → Mem.Blocks.Inside x 1 [(rdi s, 8 * WORDS)] :=
-    hst (8 * 5) 8 (by simp [WORDS, BLK, PEND, POS, DEST, MAX_N])
+    hst (8 * 5) 8 (by simp [WORDS, BLK, PEND, POS, DEST, maxStackSize])
   simp only [mod] at hl
   rcases hl with hl | hl | hl | hl | hl | hl
   · exact hf.disj x (Or.inl hl) (inside_append.mpr (Or.inr hr))
@@ -481,20 +481,20 @@ theorem Pre.disj {F : Nat} {A : MachineData → Prop} {s : MachineData} (hpre : 
     rcases hr with hr | hr | hr | hr
     · simp only [wordAt] at hl; bv_omega
     · simp only [wordAt] at hr hl; bv_omega
-    · exact hw.disj_struct x (hst (8 * 4) 8 (by simp [WORDS, BLK, PEND, POS, DEST, MAX_N]) hl)
+    · exact hw.disj_struct x (hst (8 * 4) 8 (by simp [WORDS, BLK, PEND, POS, DEST, maxStackSize]) hl)
         (Or.inr (Or.inr (Or.inl hr)))
-    · exact hw.disj_struct x (hst (8 * 4) 8 (by simp [WORDS, BLK, PEND, POS, DEST, MAX_N]) hl)
+    · exact hw.disj_struct x (hst (8 * 4) 8 (by simp [WORDS, BLK, PEND, POS, DEST, maxStackSize]) hl)
         (Or.inr (Or.inr (Or.inr hr)))
   · -- the words from `m_traceSize` to `m_blocked`
-    simp only [WORDS, BLK, PEND, POS, DEST, MAX_N] at hl
+    simp only [WORDS, BLK, PEND, POS, DEST, maxStackSize] at hl
     rcases hr with hr | hr | hr | hr
     · simp only [wordAt] at hl; bv_omega
     · simp only [wordAt] at hr hl; bv_omega
     · exact hw.disj_struct x
-        (hst (8 * 6) (8 * (WORDS - 6)) (by simp [WORDS, BLK, PEND, POS, DEST, MAX_N]) hl)
+        (hst (8 * 6) (8 * (WORDS - 6)) (by simp [WORDS, BLK, PEND, POS, DEST, maxStackSize]) hl)
         (Or.inr (Or.inr (Or.inl hr)))
     · exact hw.disj_struct x
-        (hst (8 * 6) (8 * (WORDS - 6)) (by simp [WORDS, BLK, PEND, POS, DEST, MAX_N]) hl)
+        (hst (8 * 6) (8 * (WORDS - 6)) (by simp [WORDS, BLK, PEND, POS, DEST, maxStackSize]) hl)
         (Or.inr (Or.inr (Or.inr hr)))
   · -- the working stack
     rcases hr with hr | hr | hr | hr

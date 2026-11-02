@@ -95,14 +95,14 @@ theorem flat_pop (g : G) (hok : g.Ok) (hn : g.h.nops.toNat < 6 * g.h.n.toNat + g
   simp only [flat, ht]
 
 -- The store to `m_positionOf`.
-theorem flat_pos (g : G) (d : Word) (hd : d.toNat < MAX_N) :
+theorem flat_pos (g : G) (d : Word) (hd : d.toNat < maxStackSize) :
     flat { g with h := { g.h with pos := g.h.pos.set d.toNat Flat.NONE hd } }
       = { flat g with pos := Flat.put g.h.pos d Flat.NONE } := by
   simp only [flat, put_eq_set _ _ _ hd]
 
 -- The store to `m_size`, the record and the store to `m_positionOf`.
 theorem flat_pop_pos (g : G) (hok : g.Ok) (hn : g.h.nops.toNat < 6 * g.h.n.toNat + g.xo)
-    (r : OpR) (hr : r.op = Op.pop) (w d : Word) (hd : d.toNat < MAX_N) :
+    (r : OpR) (hr : r.op = Op.pop) (w d : Word) (hd : d.toNat < maxStackSize) :
     flat { h := { g.h with len := w, nops := g.h.nops + 1#64,
                            pos := g.h.pos.set d.toNat Flat.NONE hd },
            xs := g.xs, xo := g.xo,
@@ -122,15 +122,15 @@ theorem flat_pop_pos (g : G) (hok : g.Ok) (hn : g.h.nops.toNat < 6 * g.h.n.toNat
 theorem none_toInt : Flat.NONE.toInt = -1 := rfl
 
 theorem rd_dest {S : Addr} {g : G} {F : MProp 64} {m : Mem 64} (h : (View S g ∗ F).get m) {i : Nat}
-    (hi : i < MAX_N) :
+    (hi : i < maxStackSize) :
     rd m (Fld.mapping_destinationOf S i) = g.h.dest[i] := by
   obtain ⟨R, h'⟩ := View.arr_dest h
   exact (Arr.rd h' (by simpa using hi)).trans (by simp)
 
--- The destination of a slot below the size, if it is not `NONE`, is below `MAX_N` (`DestOk`).
-theorem dest_lt (g : G) (hok : g.Ok) (hd : DestOk (flat g)) {w : Word} (hwN : w.toNat < MAX_N)
+-- The destination of a slot below the size, if it is not `NONE`, is below `maxStackSize` (`DestOk`).
+theorem dest_lt (g : G) (hok : g.Ok) (hd : DestOk (flat g)) {w : Word} (hwN : w.toNat < maxStackSize)
     (hw : w.toNat < g.h.len.toNat) (hne : g.h.dest[w.toNat] ≠ Flat.NONE) :
-    g.h.dest[w.toNat].toNat < MAX_N := by
+    g.h.dest[w.toNat].toNat < maxStackSize := by
   have h := hd w.toNat hw
   change Flat.get g.h.dest (BitVec.ofNat 64 w.toNat) = Flat.NONE
     ∨ (Flat.get g.h.dest (BitVec.ofNat 64 w.toNat)).toNat < g.h.n.toNat at h
@@ -208,7 +208,7 @@ theorem pop_unit [Host] [FunDecls]
       have hwl : w.toNat < g.h.len.toNat := by
         have : g.h.len.toNat ≠ 0 := fun h => hl0 (BitVec.eq_of_toNat_eq (by simpa using h))
         rw [hw']; show (g.h.len - 1).toNat < g.h.len.toNat; bv_omega
-      have hwN : w.toNat < MAX_N := by omega
+      have hwN : w.toNat < maxStackSize := by omega
       have hz : (BitVec.ofInt 64 (Mem.loadInt (s.pushRa ra).dmem
             ((s.pushRa ra).regs.rdi.toBitVec + 32#64) 8).get! &&&
           BitVec.ofInt 64 (Mem.loadInt (s.pushRa ra).dmem

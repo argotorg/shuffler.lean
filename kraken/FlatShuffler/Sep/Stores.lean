@@ -82,12 +82,12 @@ theorem View.arr_pos (h : (View S g ∗ F).get m) :
     ⟨_, by unfold View Em; ecancel⟩
   exact ⟨R, e ▸ h⟩
 
-theorem View.rd_pos (h : (View S g ∗ F).get m) {e : Nat} (he : e < MAX_N) :
+theorem View.rd_pos (h : (View S g ∗ F).get m) {e : Nat} (he : e < maxStackSize) :
     rd m (Fld.mapping_positionOf S e) = g.h.pos[e] := by
   obtain ⟨R, h'⟩ := View.arr_pos h
   exact (Arr.rd h' (by simpa using he)).trans (by simp)
 
-theorem View.isSome_pos (h : (View S g ∗ F).get m) {e : Nat} (he : e < MAX_N) :
+theorem View.isSome_pos (h : (View S g ∗ F).get m) {e : Nat} (he : e < maxStackSize) :
     (m.loadInt (Fld.mapping_positionOf S e) 8).isSome = true := by
   obtain ⟨R, h'⟩ := View.arr_pos h
   exact Arr.isSome h' (by simpa using he)
@@ -159,14 +159,14 @@ theorem View.store_stk (h : (View S g ∗ F).get m) {i : Nat} (hi : i < g.h.n.to
     (by unfold View; ecancel) (by unfold View; ecancel)
     fun h => by rw [Vector.toList_set]; exact Arr.store h (by simpa using hi) w
 
-theorem View.store_dest (h : (View S g ∗ F).get m) {i : Nat} (hi : i < MAX_N) (w : Word) :
+theorem View.store_dest (h : (View S g ∗ F).get m) {i : Nat} (hi : i < maxStackSize) (w : Word) :
     (View S { g with h := { g.h with dest := g.h.dest.set i w } } ∗ F).get
       (m.storeInt (Fld.mapping_destinationOf S i) 8 w.toInt) :=
   swap_of_eq h (A := Arr (S + 56#64) g.h.dest.toList) (A' := Arr (S + 56#64) (g.h.dest.set i w).toList)
     (by unfold View Em; ecancel) (by unfold View Em; ecancel)
     fun h => by rw [Vector.toList_set]; exact Arr.store h (by simpa using hi) w
 
-theorem View.store_pos (h : (View S g ∗ F).get m) {i : Nat} (hi : i < MAX_N) (w : Word) :
+theorem View.store_pos (h : (View S g ∗ F).get m) {i : Nat} (hi : i < maxStackSize) (w : Word) :
     (View S { g with h := { g.h with pos := g.h.pos.set i w } } ∗ F).get
       (m.storeInt (Fld.mapping_positionOf S i) 8 w.toInt) :=
   swap_of_eq h (A := Arr (S + 8248#64) g.h.pos.toList) (A' := Arr (S + 8248#64) (g.h.pos.set i w).toList)
@@ -283,7 +283,7 @@ theorem View.rdb_slot (h : (View S g ∗ F).get m) {k : Nat} (hk : k < g.h.n.toN
     (hj : j < 8) : rdb m (slotAt g.h.data k + BitVec.ofNat 64 j) = g.stk[k].extractLsb' (8 * j) 8 :=
   let ⟨_, h⟩ := View.b8_slot h hk hj; B8.rdb h
 
-theorem View.isSome_dest (h : (View S g ∗ F).get m) {i : Nat} (hi : i < MAX_N) :
+theorem View.isSome_dest (h : (View S g ∗ F).get m) {i : Nat} (hi : i < maxStackSize) :
     (m.loadInt (Fld.mapping_destinationOf S i) 8).isSome = true :=
   let ⟨_, h⟩ := View.arr_dest h; Arr.isSome h (by simpa using hi)
 

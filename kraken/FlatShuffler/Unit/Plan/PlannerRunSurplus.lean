@@ -79,11 +79,11 @@ theorem equalBelow_pick (st : Flat.St) (p : Word) (hp : p ≤ st.size) :
 termination_by p.toNat
 decreasing_by all_goals bv_omega
 
-def PlannedSupport (planned : Vector Word MAX_N) (st : Flat.St) : Prop :=
+def PlannedSupport (planned : Vector Word maxStackSize) (st : Flat.St) : Prop :=
   ∀ i, i < st.size → get st.dest i ≠ NONE → get planned (get st.dest i) ≠ NONE
 
-theorem PlannedSupport.swapDestinations {planned : Vector Word MAX_N} {st : Flat.St}
-    (hs : PlannedSupport planned st) (hm : st.size.toNat ≤ MAX_N) {a b : Word}
+theorem PlannedSupport.swapDestinations {planned : Vector Word maxStackSize} {st : Flat.St}
+    (hs : PlannedSupport planned st) (hm : st.size.toNat ≤ maxStackSize) {a b : Word}
     (ha : a < st.size) (hb : b < st.size) :
     PlannedSupport planned (Flat.swapDestinations st a b) := by
   intro i hi hn
@@ -92,20 +92,20 @@ theorem PlannedSupport.swapDestinations {planned : Vector Word MAX_N} {st : Flat
   rw [swap_dest_read ma mb] at hn ⊢
   exact hs _ (exchangeAt_lt ha hb hi) hn
 
-structure Prep (planned : Vector Word MAX_N) (m : Nat) (st : Flat.St) : Prop where
+structure Prep (planned : Vector Word maxStackSize) (m : Nat) (st : Flat.St) : Prop where
   map : MapInv st.size st.targetSize ⟨st.dest, st.pos⟩
   support : PlannedSupport planned st
   pend : st.pend.toNat ≤ st.targetSize.toNat
   size : st.size.toNat ≤ m
   trace : st.trace.length + 2 * st.size.toNat ≤ 2 * m
 
-theorem Prep.swapDestinations {planned : Vector Word MAX_N} {m : Nat} {st : Flat.St}
+theorem Prep.swapDestinations {planned : Vector Word maxStackSize} {m : Nat} {st : Flat.St}
     (h : Prep planned m st) {a b : Word} (ha : a < st.size) (hb : b < st.size) :
     Prep planned m (Flat.swapDestinations st a b) :=
   ⟨h.map.swapDestinations ha hb, h.support.swapDestinations h.map.m_bound ha hb,
     h.pend, h.size, h.trace⟩
 
-theorem Prep.pop_none {planned : Vector Word MAX_N} {m : Nat} {st : Flat.St}
+theorem Prep.pop_none {planned : Vector Word maxStackSize} {m : Nat} {st : Flat.St}
     (h : Prep planned m st) (h0 : st.size ≠ 0#64)
     (hn : get st.dest (st.size - 1#64) = NONE) : Prep planned m (Flat.pop st).2 := by
   have hm := h.map.pop_none h0 hn
@@ -123,7 +123,7 @@ theorem Prep.pop_none {planned : Vector Word MAX_N} {m : Nat} {st : Flat.St}
     simp only [List.length_append, List.length_singleton]
     omega
 
-theorem Prep.swap_pop {planned : Vector Word MAX_N} {m : Nat} {st : Flat.St}
+theorem Prep.swap_pop {planned : Vector Word maxStackSize} {m : Nat} {st : Flat.St}
     (h : Prep planned m st) {i : Word} (hi : i < st.size)
     (hn : get st.dest i = NONE) (hd : (Flat.swapWith st i).1 = .done) :
     Prep planned m (Flat.pop (Flat.swapWith st i).2).2 := by
@@ -164,7 +164,7 @@ theorem Prep.swap_pop {planned : Vector Word MAX_N} {m : Nat} {st : Flat.St}
     simp only [List.length_append, List.length_singleton]
     omega
 
-theorem Prep.pop_step {planned : Vector Word MAX_N} {m : Nat} {st : Flat.St}
+theorem Prep.pop_step {planned : Vector Word maxStackSize} {m : Nat} {st : Flat.St}
     (h : Prep planned m st) (h0 : st.size ≠ 0#64)
     (hn : get st.dest (st.size - 1#64) = NONE) :
     (Flat.pop st).1 = .done ∧ Prep planned m (Flat.pop st).2 ∧
@@ -177,7 +177,7 @@ theorem Prep.pop_step {planned : Vector Word MAX_N} {m : Nat} {st : Flat.St}
     bv_omega
 
 theorem Prep.ctorP {m n : Word} {M : Flat.Mapping} (h : MapInv m n M)
-    (data target : Vector StackSlot MAX_N) (spills : BitVec 32 → BitVec 8)
+    (data target : Vector StackSlot maxStackSize) (spills : BitVec 32 → BitVec 8)
     (u : Flat.Uninit) : Prep M.pos m.toNat (Flat.ctorP data m target n M spills u) := by
   have hm := h.copy ⟨u.dest, u.pos⟩
   simp only [Flat.ctorP, Flat.pend_fold]
@@ -199,7 +199,7 @@ theorem Prep.ctorP {m n : Word} {M : Flat.Mapping} (h : MapInv m n M)
 
 def HasNoSurplus (st : Flat.St) : Prop := ∀ i, i < st.size → get st.dest i ≠ NONE
 
-theorem Prep.surplus_pass {planned : Vector Word MAX_N} {m : Nat} {st : Flat.St}
+theorem Prep.surplus_pass {planned : Vector Word maxStackSize} {m : Nat} {st : Flat.St}
     (h : Prep planned m st) (h0 : st.size ≠ 0#64) :
     match Flat.surplusPass st with
     | .error r => r.1 = .done → Prep planned m r.2 ∧ HasNoSurplus r.2
@@ -276,7 +276,7 @@ theorem Prep.surplus_pass {planned : Vector Word MAX_N} {m : Nat} {st : Flat.St}
     · simp only [hd, ne_eq, not_false_eq_true, ↓reduceIte]
       exact False.elim
 
-theorem Prep.surplusLoop {planned : Vector Word MAX_N} {m : Nat}
+theorem Prep.surplusLoop {planned : Vector Word maxStackSize} {m : Nat}
     (fuel : Nat) {st : Flat.St} (h : Prep planned m st) (hf : st.size.toNat ≤ fuel)
     (hd : (Flat.surplusLoop st fuel).1 = .done) :
     Prep planned m (Flat.surplusLoop st fuel).2 ∧
@@ -303,7 +303,7 @@ theorem Prep.surplusLoop {planned : Vector Word MAX_N} {m : Nat}
       exact hp.1.surplusLoop fuel (by omega) hd
 termination_by fuel
 
-theorem Prep.removeSurplus {planned : Vector Word MAX_N} {m : Nat} {st : Flat.St}
+theorem Prep.removeSurplus {planned : Vector Word maxStackSize} {m : Nat} {st : Flat.St}
     (h : Prep planned m st) (hd : (Flat.removeSurplus st).1 = .done) :
     Prep planned m (Flat.removeSurplus st).2 ∧ HasNoSurplus (Flat.removeSurplus st).2 :=
   h.surplusLoop st.size.toNat (Nat.le_refl _) hd

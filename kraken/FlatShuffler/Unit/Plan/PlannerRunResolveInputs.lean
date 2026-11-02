@@ -24,21 +24,21 @@ theorem EmissionLocals.resolveSize (l : EmissionLocals) (h : Hdr) (PM : Addr)
   apply local_word_eq (i := 2064) (by omega)
   simp only [EmissionLocals.toList, List.append_assoc, List.getElem?_append,
     emissionWords, Vector.length_toList]
-  simp [MAX_N]
+  simp [maxStackSize]
 
 theorem EmissionLocals.resolveOffset (l : EmissionLocals) (h : Hdr) (PM : Addr)
     (hl : (l.toList h PM).length = 4121) : resolveOffset (l.toList h PM) hl = h.blkOff := by
   apply local_word_eq (i := 4116) (by omega)
   simp only [EmissionLocals.toList, List.append_assoc, List.getElem?_append,
     emissionWords, Vector.length_toList]
-  simp [MAX_N]
+  simp [maxStackSize]
 
 theorem EmissionLocals.resolveExcess (l : EmissionLocals) (h : Hdr) (PM : Addr)
     (hl : (l.toList h PM).length = 4121) : resolveExcess (l.toList h PM) hl = h.blkExc := by
   apply local_word_eq (i := 4117) (by omega)
   simp only [EmissionLocals.toList, List.append_assoc, List.getElem?_append,
     emissionWords, Vector.length_toList]
-  simp [MAX_N]
+  simp [maxStackSize]
 
 theorem EmissionLocals.currentDestSlice (l : EmissionLocals) (h : Hdr) (PM : Addr) :
     ((l.toList h PM).drop 2067).take 1024 = h.dest.toList := by
@@ -71,15 +71,15 @@ theorem EmissionLocals.cells (l : EmissionLocals) (a : G) (PM : Addr)
 
 theorem EmissionCells.resolveInputs {g : PlannerCallMemory} {M : Flat.Mapping}
     {locals : List Word} {hl : locals.length = 4121} {out : Flat.St}
-    (h : EmissionCells locals hl out) (hb : BlockedBounds g.p.n out)
-    (hm : MapInv g.p.m g.p.n M) : ResolveInputs g M locals hl := by
+    (h : EmissionCells locals hl out) (hb : BlockedBounds g.p.targetSize out)
+    (hm : MapInv g.p.sourceSize g.p.targetSize M) : ResolveInputs g M locals hl := by
   refine ⟨hm, h.size ▸ hb.size, h.offset ▸ hb.offset, h.excess ▸ hb.excess, ?_⟩
   rw [h.current, h.size]
   exact hb.current
 
 theorem EmissionCells.resolved {g : PlannerCallMemory} {M : Flat.Mapping}
     {locals : List Word} {hl : locals.length = 4121} {out : Flat.St}
-    {spills : BitVec 32 → BitVec 8} {dropped : Vector (BitVec 8) MAX_N}
+    {spills : BitVec 32 → BitVec 8} {dropped : Vector (BitVec 8) maxStackSize}
     {res : Flat.Resolution} (h : EmissionCells locals hl out)
     (hr : Resolved g M locals hl spills dropped res) :
     ∀ scratch : Flat.ResolveU, Flat.resolve g.p.fl g.spills g.dropped M

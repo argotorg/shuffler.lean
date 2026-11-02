@@ -29,7 +29,7 @@ structure EarlyLI (P : Addr) (g : PlannerCallMemory) (F : MProp 64) (s : Machine
 structure CheckLI (P : Addr) (g : PlannerCallMemory) (F : MProp 64) (s : MachineData) (ra : Int64)
     (lo locals : List Word) (t : MachineData) : Prop extends EarlyLI P g F s ra lo locals t where
   r10 : t.regs.r10.toBitVec = g.p.tgt
-  r11 : t.regs.r11.toBitVec = g.p.n
+  r11 : t.regs.r11.toBitVec = g.p.targetSize
 
 section
 variable {P : Addr} {g : PlannerCallMemory} {F : MProp 64} {s t u : MachineData}
@@ -82,12 +82,12 @@ end
 
 def CheckHead (P : Addr) (g : PlannerCallMemory) (F : MProp 64) (s : MachineData) (ra : Int64)
     (t : MachineData) : Prop :=
-  ∃ lo locals, CheckLI P g F s ra lo locals t ∧ rcx t < g.p.n ∧
+  ∃ lo locals, CheckLI P g F s ra lo locals t ∧ rcx t < g.p.targetSize ∧
     Flat.targetsFrom g.p.fl g.spills 0 = Flat.targetsFrom g.p.fl g.spills (rcx t)
 
 def CheckNext (P : Addr) (g : PlannerCallMemory) (F : MProp 64) (s : MachineData) (ra : Int64)
     (t : MachineData) : Prop :=
-  ∃ lo locals, CheckLI P g F s ra lo locals t ∧ rcx t < g.p.n ∧
+  ∃ lo locals, CheckLI P g F s ra lo locals t ∧ rcx t < g.p.targetSize ∧
     Flat.targetsFrom g.p.fl g.spills 0 = Flat.targetsFrom g.p.fl g.spills (rcx t + 1)
 
 def CheckDone (P : Addr) (g : PlannerCallMemory) (F : MProp 64) (s : MachineData) (ra : Int64)

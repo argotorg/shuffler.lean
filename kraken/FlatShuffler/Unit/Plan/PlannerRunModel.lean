@@ -12,8 +12,8 @@ namespace FlatShuffler.Unit.PlannerRunU
 
 section
 variable {pl : Flat.Planner} {sp : BitVec 32 → BitVec 8}
-    {data : Vector StackSlot MAX_N} {M : Flat.Mapping}
-    {sources : Vector Word MAX_N} {d : Vector (BitVec 8) MAX_N}
+    {data : Vector StackSlot maxStackSize} {M : Flat.Mapping}
+    {sources : Vector Word maxStackSize} {d : Vector (BitVec 8) maxStackSize}
     {i j m count : Word} {slot : StackSlot}
 
 theorem contains_end (hi : ¬ i < m) :
@@ -28,21 +28,21 @@ theorem contains_next (hi : i < m) (hs : Flat.get data i ≠ slot) :
     Flat.containsFrom data m slot i = Flat.containsFrom data m slot (i + 1) := by
   rw [Flat.containsFrom, dite_eq_left hi, ite_eq_right hs]
 
-theorem targets_end (hj : ¬ j < pl.n) : Flat.targetsFrom pl sp j = true := by
+theorem targets_end (hj : ¬ j < pl.targetSize) : Flat.targetsFrom pl sp j = true := by
   rw [Flat.targetsFrom, dite_eq_right hj]
 
-theorem targets_next (hj : j < pl.n)
+theorem targets_next (hj : j < pl.targetSize)
     (hs : (isJunk (Flat.get pl.target j) || canBeFreelyGenerated (Flat.get pl.target j) ||
-      Flat.containsFrom pl.source pl.m (Flat.get pl.target j) 0 ||
+      Flat.containsFrom pl.source pl.sourceSize (Flat.get pl.target j) 0 ||
       Flat.spillIsSpilled sp (Flat.get pl.target j)) = true) :
     Flat.targetsFrom pl sp j = Flat.targetsFrom pl sp (j + 1) := by
   rw [Flat.targetsFrom, dite_eq_left hj]
   dsimp only
   rw [hs, Bool.true_and]
 
-theorem targets_fail (hj : j < pl.n)
+theorem targets_fail (hj : j < pl.targetSize)
     (hs : (isJunk (Flat.get pl.target j) || canBeFreelyGenerated (Flat.get pl.target j) ||
-      Flat.containsFrom pl.source pl.m (Flat.get pl.target j) 0 ||
+      Flat.containsFrom pl.source pl.sourceSize (Flat.get pl.target j) 0 ||
       Flat.spillIsSpilled sp (Flat.get pl.target j)) = false) :
     Flat.targetsFrom pl sp j = false := by
   rw [Flat.targetsFrom, dite_eq_left hj]
@@ -63,10 +63,10 @@ theorem dropped_nonzero (hi : i < m) (hd : Flat.get d i ≠ 0#8) :
   change Flat.droppedFrom m d (i + 1) (if Flat.get d i ≠ (0 : BitVec 8) then count + 1 else count) = _
   rw [ite_eq_left (show Flat.get d i ≠ (0 : BitVec 8) from hd)]
 
-theorem copy_end (hi : ¬ i < pl.m) : Flat.copyFrom pl i data = data := by
+theorem copy_end (hi : ¬ i < pl.sourceSize) : Flat.copyFrom pl i data = data := by
   rw [Flat.copyFrom, dite_eq_right hi]
 
-theorem copy_next (hi : i < pl.m) :
+theorem copy_next (hi : i < pl.sourceSize) :
     Flat.copyFrom pl i data =
       Flat.copyFrom pl (i + 1) (Flat.put data i (Flat.get pl.source i)) := by
   rw [Flat.copyFrom, dite_eq_left hi]
@@ -94,8 +94,8 @@ theorem plannerRun_targets_ok (pl : Flat.Planner) (take : Bool) (s : Flat.PSt)
 
 theorem runLoop_mapping_fail (pl : Flat.Planner) (take : Bool) (s : Flat.PSt)
     (us : Nat → Flat.RunU)
-    (h : Flat.buildMapping ⟨pl.source, pl.m, pl.target, pl.n, s.dropped, take⟩
-      ((us 0).mapping.init pl.m pl.n) = none) :
+    (h : Flat.buildMapping ⟨pl.source, pl.sourceSize, pl.target, pl.targetSize, s.dropped, take⟩
+      ((us 0).mapping.init pl.sourceSize pl.targetSize) = none) :
     Flat.runLoop pl take s us = (.assertionFailed, s) := by
   rw [Flat.runLoop, h]
 

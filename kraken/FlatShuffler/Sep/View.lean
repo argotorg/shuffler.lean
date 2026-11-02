@@ -110,8 +110,8 @@ structure Hdr where
   len : Word
   ops : Word
   nops : Word
-  dest : Vector Word MAX_N
-  pos : Vector Word MAX_N
+  dest : Vector Word maxStackSize
+  pos : Vector Word maxStackSize
   pend : Word
   blkOff : Word
   blkExc : Word
@@ -155,9 +155,9 @@ def View (S : Addr) (g : G) : MProp 64 :=
 -- The ghost invariant that the contracts keep.
 structure G.Ok (g : G) : Prop where
   len : g.h.len.toNat ≤ g.h.n.toNat + g.xs
-  n : g.h.n.toNat ≤ MAX_N
-  xs : g.h.n.toNat + g.xs ≤ MAX_N
-  xo : g.xo ≤ 4 * MAX_N
+  n : g.h.n.toNat ≤ maxStackSize
+  xs : g.h.n.toNat + g.xs ≤ maxStackSize
+  xo : g.xo ≤ 4 * maxStackSize
   nops : g.h.nops.toNat ≤ 6 * g.h.n.toNat + g.xo
   -- A spilled byte in target word `k` is byte `j` of that word (see `splOut`).
   spl : ∀ i ∈ splIds g.tgt.toList, ∀ k (hk : k < g.h.n.toNat), ∀ j < 8,

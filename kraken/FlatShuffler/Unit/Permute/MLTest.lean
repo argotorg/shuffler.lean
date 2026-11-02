@@ -59,13 +59,13 @@ theorem ballN_iff {k : Nat} {P : Word → Prop} :
     have := h i.toNat hi
     rwa [ofNat_toNat] at this
 
-instance (k : Word) (v w : Vector Word MAX_N) : Decidable (AgB k v w) :=
+instance (k : Word) (v w : Vector Word maxStackSize) : Decidable (AgB k v w) :=
   decidable_of_iff _ (ballW_iff (P := fun i => Flat.get v i = Flat.get w i)).symm
 
-instance (n : Word) (p : Vector Word MAX_N) : Decidable (LtB n p) :=
+instance (n : Word) (p : Vector Word maxStackSize) : Decidable (LtB n p) :=
   decidable_of_iff _ (ballW_iff (P := fun i => Flat.get p i < n)).symm
 
-theorem bij_iff {n : Word} {p : Vector Word MAX_N} :
+theorem bij_iff {n : Word} {p : Vector Word maxStackSize} :
     Bij n p ↔ (∀ i < n.toNat, Flat.get p (BitVec.ofNat 64 i) < n)
       ∧ ∀ i < n.toNat, ∀ k < n.toNat,
         Flat.get p (BitVec.ofNat 64 i) = Flat.get p (BitVec.ofNat 64 k)
@@ -75,10 +75,10 @@ theorem bij_iff {n : Word} {p : Vector Word MAX_N} :
   rw [ballW_iff]
   exact forall_congr' fun i => forall_congr' fun _ => ballW_iff
 
-instance (n : Word) (p : Vector Word MAX_N) : Decidable (Bij n p) :=
+instance (n : Word) (p : Vector Word maxStackSize) : Decidable (Bij n p) :=
   decidable_of_iff _ bij_iff.symm
 
-instance (n pos : Word) (p : Vector Word MAX_N) : Decidable (Mis n pos p) :=
+instance (n pos : Word) (p : Vector Word maxStackSize) : Decidable (Mis n pos p) :=
   inferInstanceAs (Decidable (_ ∧ _ ∧ _))
 
 instance (fs : Flat.St) : Decidable (PermOk fs) :=
@@ -114,12 +114,12 @@ instance (fs : Flat.St) : Decidable (PermOk fs) :=
 /-! ## Inputs for the kernel -/
 
 -- A vector of words that holds `l` from offset 0 and `0` above it.
-def kw (l : List Nat) : Vector Word MAX_N :=
+def kw (l : List Nat) : Vector Word maxStackSize :=
   l.zipIdx.foldl (fun v (a, i) => Flat.put v (.ofNat 64 i) (.ofNat 64 a)) Flat.initial
 
 -- A vector of slots that holds `l` from offset 0 and `default` above it.
-def kv (l : List StackSlot) : Vector StackSlot MAX_N :=
-  l.zipIdx.foldl (fun v (a, i) => Flat.put v (.ofNat 64 i) a) (Vector.replicate MAX_N default)
+def kv (l : List StackSlot) : Vector StackSlot maxStackSize :=
+  l.zipIdx.foldl (fun v (a, i) => Flat.put v (.ofNat 64 i) a) (Vector.replicate maxStackSize default)
 
 -- A state with the stack `s` (also the target), the destinations `d` and the positions `p`.
 def ks (s : List StackSlot) (d p : List Nat) : Flat.St :=
@@ -129,13 +129,13 @@ def ks (s : List StackSlot) (d p : List Nat) : Flat.St :=
 
 -- The members of a state except `spills` (a function, with no `DecidableEq`).
 structure Full where
-  target : Vector StackSlot MAX_N
+  target : Vector StackSlot maxStackSize
   targetSize : Word
-  data : Vector StackSlot MAX_N
+  data : Vector StackSlot maxStackSize
   size : Word
   trace : List Op
-  dest : Vector Word MAX_N
-  pos : Vector Word MAX_N
+  dest : Vector Word maxStackSize
+  pos : Vector Word maxStackSize
   pend : Word
   blockedOffset : Word
   blockedExcess : Word
@@ -147,7 +147,7 @@ def full (st : Flat.St) : Full :=
 
 def fr (r : Flat.Status × Flat.St) : Flat.Status × Full := (r.1, full r.2)
 
-def nextV : Flat.PNext → Option Flat.Status × Full × Option (Vector Word MAX_N)
+def nextV : Flat.PNext → Option Flat.Status × Full × Option (Vector Word maxStackSize)
   | .ret r => (some r.1, full r.2, none)
   | .cont st p => (none, full st, some p)
 
@@ -182,22 +182,22 @@ def gh (d : List Nat) : G where
 
 def gP : G := gh [1, 0]
 def gNone : G := gh [Flat.NONE.toNat, 0]
--- The destination `2000` is not `NONE` and not below `MAX_N`.
+-- The destination `2000` is not `NONE` and not below `maxStackSize`.
 def gBad : G := gh [0, 2000]
 
 instance (fs : Flat.St) : Decidable (DestOk fs) :=
   inferInstanceAs (Decidable (∀ i < fs.size.toNat, _))
 
 -- The target of `gh` is all `0`: no spilled byte.
-theorem gh_ok (d : List Nat) (hl : d.length ≤ MAX_N)
+theorem gh_ok (d : List Nat) (hl : d.length ≤ maxStackSize)
     (hs : splIds (gh d).tgt.toList = []) : (gh d).Ok where
   len := Nat.le_refl _
   n := by
-    show (BitVec.ofNat 64 d.length).toNat ≤ MAX_N
-    rw [BitVec.toNat_ofNat]; simp only [MAX_N] at hl ⊢; omega
+    show (BitVec.ofNat 64 d.length).toNat ≤ maxStackSize
+    rw [BitVec.toNat_ofNat]; simp only [maxStackSize] at hl ⊢; omega
   xs := by
-    show (BitVec.ofNat 64 d.length).toNat + 0 ≤ MAX_N
-    rw [BitVec.toNat_ofNat]; simp only [MAX_N] at hl ⊢; omega
+    show (BitVec.ofNat 64 d.length).toNat + 0 ≤ maxStackSize
+    rw [BitVec.toNat_ofNat]; simp only [maxStackSize] at hl ⊢; omega
   xo := Nat.zero_le _
   nops := Nat.zero_le _
   spl := by rw [hs]; simp
@@ -206,12 +206,12 @@ theorem okP : gP.Ok := gh_ok _ (by decide) (by decide +kernel)
 theorem okNone : gNone.Ok := gh_ok _ (by decide) (by decide +kernel)
 
 example := dest_ok okP (by decide +kernel : DestOk (flat gP)) (x := 1) (by decide +kernel)
-#guard (Flat.get gP.h.dest 1).toNat < MAX_N
+#guard (Flat.get gP.h.dest 1).toNat < maxStackSize
 example := dest_ok okNone (by decide +kernel : DestOk (flat gNone)) (x := 0) (by decide +kernel)
 #guard Flat.get gNone.h.dest 0 = Flat.NONE
--- Negative: not `DestOk`, and the destination of `1` is not `NONE` and not below `MAX_N`.
+-- Negative: not `DestOk`, and the destination of `1` is not `NONE` and not below `maxStackSize`.
 #guard ¬DestOk (flat gBad)
-#guard ¬(Flat.get gBad.h.dest 1 = Flat.NONE ∨ (Flat.get gBad.h.dest 1).toNat < MAX_N)
+#guard ¬(Flat.get gBad.h.dest 1 = Flat.NONE ∨ (Flat.get gBad.h.dest 1).toNat < maxStackSize)
 
 -- `destOk_swapD`: the swap of the destinations `0` and `1` of `gNone`.
 example := destOk_swapD (st := flat gNone) (by decide +kernel) (by decide) (a := 0) (b := 1)
@@ -238,7 +238,7 @@ example := agB_step (P := kw [1, 9]) (d := kw [1, 0]) (x := 1) (by decide +kerne
 #guard AgB 1 (kw [1, 9]) (kw [1, 0])
 #guard AgB (1 + 1#64) ((kw [1, 9]).set 1 (Flat.get (kw [1, 0]) 1) (by decide)) (kw [1, 0])
 #guard ¬AgB 2 (kw [1, 9]) (kw [1, 0])
--- Edge: `x = 0` and `x = MAX_N - 1`.
+-- Edge: `x = 0` and `x = maxStackSize - 1`.
 example := agB_step (P := kw [9]) (d := kw [1]) (x := 0) (by decide +kernel) (by decide)
 #guard AgB 1023 Flat.initial (kw [0, 0]) ∧
   AgB 1024 (Flat.initial.set 1023 (Flat.get (kw [0, 0]) 1023) (by decide)) (kw [0, 0])
@@ -272,16 +272,16 @@ example : Flat.NONE.toInt = -1 := none_toInt
 #guard Flat.NONE.toNat = 2 ^ 64 - 1
 
 -- The vector with `NONE` at `0`.
-def dN : Vector Word MAX_N := kw [Flat.NONE.toNat]
+def dN : Vector Word maxStackSize := kw [Flat.NONE.toNat]
 
 example := none_step (D := dN) (k := 1) (by decide) (ballN_iff.mpr (by decide +kernel))
 #guard ∀ i < (1 : Nat), Flat.get dN (.ofNat 64 i) = Flat.NONE
 #guard ∀ i < (2 : Nat), Flat.get (dN.set 1 Flat.NONE (by decide)) (.ofNat 64 i) = Flat.NONE
 #guard ¬∀ i < (3 : Nat), Flat.get (dN.set 1 Flat.NONE (by decide)) (.ofNat 64 i) = Flat.NONE
--- Edge: `k = 0` and `k = MAX_N - 1`.
+-- Edge: `k = 0` and `k = maxStackSize - 1`.
 example := none_step (D := Flat.initial) (k := 0) (by decide) (ballN_iff.mpr (by decide +kernel))
 #guard ∀ i < (1024 : Nat),
-  Flat.get ((Vector.replicate MAX_N Flat.NONE).set 1023 Flat.NONE (by decide)) (.ofNat 64 i)
+  Flat.get ((Vector.replicate maxStackSize Flat.NONE).set 1023 Flat.NONE (by decide)) (.ofNat 64 i)
     = Flat.NONE
 -- Negative: `D[0]` is not `NONE`, and it stays so after the step.
 #guard ¬∀ i < (1 : Nat), Flat.get (kw [0]) (.ofNat 64 i) = Flat.NONE
@@ -293,7 +293,7 @@ example := none_step (D := Flat.initial) (k := 0) (by decide) (ballN_iff.mpr (by
 example := agB_set (n := 2) (u := kw [1, 0]) (w := kw [1, 0, 3]) (by decide +kernel) (k := 1)
   (by decide) 5
 #guard AgB 2 ((kw [1, 0]).set 1 5 (by decide)) (Flat.put (kw [1, 0, 3]) 1 5)
--- Edge: a store at `k ≥ n` and at `MAX_N - 1`.
+-- Edge: a store at `k ≥ n` and at `maxStackSize - 1`.
 #guard AgB 2 ((kw [1, 0]).set 3 5 (by decide)) (Flat.put (kw [1, 0]) 3 5)
 #guard AgB 1024 (Flat.initial.set 1023 5 (by decide)) (Flat.put Flat.initial 1023 5)
 -- Negative: no agreement at `0`, and none after a store at `1`.
@@ -302,7 +302,7 @@ example := agB_set (n := 2) (u := kw [1, 0]) (w := kw [1, 0, 3]) (by decide +ker
 
 example := ltB_put (n := 2) (p := kw [1, 0]) (by decide +kernel) 0 (x := 1) (by decide)
 #guard LtB 2 (Flat.put (kw [1, 0]) 0 1)
--- Edge: `k ≥ MAX_N` (no store) and `k = MAX_N - 1`.
+-- Edge: `k ≥ maxStackSize` (no store) and `k = maxStackSize - 1`.
 example := ltB_put (n := 2) (p := kw [1, 0]) (by decide +kernel) 2000 (x := 1) (by decide)
 #guard Flat.put (kw [1, 0]) 2000 1 = kw [1, 0]
 #guard LtB 1024 (Flat.put Flat.initial 1023 1023)
@@ -316,11 +316,11 @@ example := ltB_put (n := 2) (p := kw [1, 0]) (by decide +kernel) 2000 (x := 1) (
 `k3` has the slots `x y x` and the destinations `2 0 1`. The leader of `x` is `2`, of `y` is `1`.
 `regroup` gives `1 0 2`: `0` gets the vacant offset `1`, and `2` keeps `2`. -/
 
-def pR : Vector Word MAX_N := kw [2, 0, 1]
-def dBc : Vector Word MAX_N := Flat.clearDesired k3 0 Flat.initial
+def pR : Vector Word maxStackSize := kw [2, 0, 1]
+def dBc : Vector Word maxStackSize := Flat.clearDesired k3 0 Flat.initial
 theorem h2 : (2 : Word) < k3.size := by decide
 -- `desiredBy` after `markDesired` for the leader `2`: offsets `2` and `1` are desired by `2`.
-def dBm : Vector Word MAX_N := Flat.markDesired k3 2 h2 x pR 0 dBc
+def dBm : Vector Word maxStackSize := Flat.markDesired k3 2 h2 x pR 0 dBc
 
 #guard dBc = kw (List.replicate 3 Flat.NONE.toNat)
 #guard dBm = kw [Flat.NONE.toNat, 2, 2]
@@ -430,13 +430,13 @@ example := nv_ge (st := k3) (l := 2) (hl := h2) (σ := x) (dB := dBm) (pos := 0)
 def kF : Flat.St := ks [x, x] [0, 0] [1, 0]
 
 /- The kernel does not share the value of a term, and its decision of the equality of two vectors
-of `MAX_N` entries takes more than 40 s. Thus the examples get the vectors of `readDestinations`
+of `maxStackSize` entries takes more than 40 s. Thus the examples get the vectors of `readDestinations`
 and `regroup` with `Option.get` (`isSome` takes less than 1 s in the kernel), and a `#guard`
 compares them with the expected vectors. -/
 
 theorem rdFs : (Flat.readDestinations kF 0 Flat.initial).isSome := by decide +kernel
 -- The destinations of `kF`.
-def dF : Vector Word MAX_N := (Flat.readDestinations kF 0 Flat.initial).get rdFs
+def dF : Vector Word maxStackSize := (Flat.readDestinations kF 0 Flat.initial).get rdFs
 #guard dF = kw [0, 0]
 theorem rdF : Flat.readDestinations kF 0 Flat.initial = some dF := (Option.some_get rdFs).symm
 theorem rgFn : (Flat.regroup kF 0 dF (Flat.clearDesired kF 0 Flat.initial)).isNone := by
@@ -452,17 +452,17 @@ example := rg_none (st := kF) (p0 := dF) rgF szF
 #guard Flat.regroup k3 0 pR dBc ≠ none
 #guard (Flat.permute k3 pR).1 ≠ .assertionFailed
 
-def pG : Vector Word MAX_N := kw [1, 0, 2]
+def pG : Vector Word maxStackSize := kw [1, 0, 2]
 
 theorem rd3s : (Flat.readDestinations k3 0 Flat.initial).isSome := by decide +kernel
 -- The destinations of `k3`.
-def d3 : Vector Word MAX_N := (Flat.readDestinations k3 0 Flat.initial).get rd3s
+def d3 : Vector Word maxStackSize := (Flat.readDestinations k3 0 Flat.initial).get rd3s
 #guard d3 = pR
 theorem rd3 : Flat.readDestinations k3 0 Flat.initial = some d3 := (Option.some_get rd3s).symm
 theorem rg3s : (Flat.regroup k3 0 d3 (Flat.clearDesired k3 0 Flat.initial)).isSome := by
   decide +kernel
 -- The result of `regroup` for `k3`.
-def pK : Vector Word MAX_N := (Flat.regroup k3 0 d3 (Flat.clearDesired k3 0 Flat.initial)).get rg3s
+def pK : Vector Word maxStackSize := (Flat.regroup k3 0 d3 (Flat.clearDesired k3 0 Flat.initial)).get rg3s
 #guard pK = pG
 theorem rg3 : Flat.regroup k3 0 d3 (Flat.clearDesired k3 0 Flat.initial) = some pK :=
   (Option.some_get rg3s).symm
@@ -518,8 +518,8 @@ example := after_ret 2 2 (.done, k3)
 
 -- The identity, and a vector where the top is not in place and the offset below the top is not in
 -- place.
-def pI : Vector Word MAX_N := kw [0, 1, 2]
-def pN : Vector Word MAX_N := kw [1, 2, 0]
+def pI : Vector Word maxStackSize := kw [0, 1, 2]
+def pN : Vector Word maxStackSize := kw [1, 2, 0]
 
 example := step_ne (st := k3) (top := 2) (p := pR) (by decide +kernel)
 #guard nextV (Flat.permuteStep k3 2 pR) = nextV (Flat.exchange k3 2 pR (Flat.get pR 2))
@@ -528,7 +528,7 @@ example := step_ne (st := k3) (top := 2) (p := pR) (by decide +kernel)
 #guard nextV (Flat.permuteStep k3 2 pG) ≠ nextV (Flat.exchange k3 2 pG (Flat.get pG 2))
 
 -- The right side of `step_eq`.
-def stepEq (st : Flat.St) (top : Word) (p : Vector Word MAX_N) : Flat.PNext :=
+def stepEq (st : Flat.St) (top : Word) (p : Vector Word maxStackSize) : Flat.PNext :=
   if Flat.misplacedBelow p top top = top then .ret (.done, st)
   else Flat.exchange st top p (Flat.misplacedBelow p top top)
 
@@ -569,7 +569,7 @@ example := mb_out (p := pG) (top := 2) (c := 2) (by decide) (by decide +kernel)
 
 -- `18` different slots: the slot at `0` has the depth `17`, the slot at `1` has the depth `16`.
 def k18 : Flat.St := kd 18
-def p18 : Vector Word MAX_N := kw (List.range 18)
+def p18 : Vector Word maxStackSize := kw (List.range 18)
 
 example := ex_eq (st := k3) (top := 2) (p := pR) (pos := 0) (by decide +kernel)
 #guard nextV (Flat.exchange k3 2 pR 0) = nextV (.cont (Flat.swapDestinations k3 0 2) (swapP pR 2 0))
@@ -639,8 +639,8 @@ example := Mis.step (n := 3) (pos := 1) (p := pG) (by decide) (by decide +kernel
 #guard ¬Bij 3 (swapP (kw [0, 0, 1]) (3 - 1) 1)
 
 -- The left vector of the conclusion of `agB_swap`.
-def set2 (P : Vector Word MAX_N) (top pos : Word) (htM : top.toNat < MAX_N)
-    (hpM : pos.toNat < MAX_N) : Vector Word MAX_N :=
+def set2 (P : Vector Word maxStackSize) (top pos : Word) (htM : top.toNat < maxStackSize)
+    (hpM : pos.toNat < maxStackSize) : Vector Word maxStackSize :=
   (P.set pos.toNat P[top.toNat] hpM).set top.toNat P[pos.toNat] htM
 
 example := agB_swap (n := 3) (top := 2) (pos := 1) (P := kw [2, 0, 1, 7]) (p := pR)
@@ -669,7 +669,7 @@ example := ltB_swapD (n := 3) (a := 0) (b := 2) (d := pR) (by decide +kernel) (b
 
 /-! ## `Inv.lean`: the variant on the back edge of phase D
 
-A concrete `MachineData` has a memory of `2 ^ 64` bytes, and `mD` reads `MAX_N` words of it. Thus
+A concrete `MachineData` has a memory of `2 ^ 64` bytes, and `mD` reads `maxStackSize` words of it. Thus
 these examples are symbolic: `pm_dec` (the tactic of the proofs) unfolds `V`. -/
 
 example (s t : MachineData) (g : G) : V s g ".LB.Emission.permute.22" t = 2048 * mD s g t + 2 := by pm_dec
@@ -700,17 +700,17 @@ At each iteration, `stepsOk` compares the model with the lemmas:
 * at the exchanged offset `pos`: `Bij`, `Mis` and the conclusion of `Mis.step`. -/
 
 -- The right side of `step_ne` or `step_eq`.
-def stepR (st : Flat.St) (top : Word) (p : Vector Word MAX_N) : Flat.PNext :=
+def stepR (st : Flat.St) (top : Word) (p : Vector Word maxStackSize) : Flat.PNext :=
   if Flat.get p top ≠ top then Flat.exchange st top p (Flat.get p top) else stepEq st top p
 
 -- The right side of `ex_eq`, `ex_unr` or `ex_sw`.
-def exR (st : Flat.St) (top : Word) (p : Vector Word MAX_N) (pos : Word) : Flat.PNext :=
+def exR (st : Flat.St) (top : Word) (p : Vector Word maxStackSize) (pos : Word) : Flat.PNext :=
   if Flat.get st.data pos = Flat.get st.data (st.size - 1) then
     .cont (Flat.swapDestinations st pos top) (swapP p top pos)
   else if Flat.isSwapReachable st pos = false then .ret (Flat.blockSwapUnreachable st pos)
   else .cont (Flat.swapDestinations (Flat.stackSwap st pos) pos top) (swapP p top pos)
 
-def stepsOk (top : Word) : Nat → Flat.St → Vector Word MAX_N → Bool
+def stepsOk (top : Word) : Nat → Flat.St → Vector Word maxStackSize → Bool
   | 0, _, _ => true
   | f + 1, st, p =>
     let n := st.size
@@ -741,7 +741,7 @@ def propOk (s : List StackSlot) (d : List Nat) : Bool :=
 
 -- The forms of the iterations of a run: `3 * s + e`, with `s = 0` for `step_ne` and `s = 1` for
 -- `step_eq`, and `e = 0` for `ex_eq`, `e = 1` for `ex_unr` and `e = 2` for `ex_sw`. `6` is the end.
-def forms (top : Word) : Nat → Flat.St → Vector Word MAX_N → List Nat
+def forms (top : Word) : Nat → Flat.St → Vector Word maxStackSize → List Nat
   | 0, _, _ => []
   | f + 1, st, p =>
     let s := if Flat.get p top ≠ top then 0 else 1

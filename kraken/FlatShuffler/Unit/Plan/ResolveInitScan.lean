@@ -29,8 +29,8 @@ theorem b_4 [Host] [FunDecls]
     String.reduceEq, ↓reduceIte, Scan, Bool.false_eq_true] at ht
   obtain ⟨lo, L, u0, count, hc, hbp, hp, hcount, hnext, he⟩ := ht
   have hsize := ha.2.2.1
-  have hpN : (rdx t).toNat < MAX_N := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hp) hsize
-  have hcN : count.toNat < MAX_N := by have hh := BitVec.le_def.mp hcount; omega
+  have hpN : (rdx t).toNat < maxStackSize := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hp) hsize
+  have hcN : count.toNat < maxStackSize := by have hh := BitVec.le_def.mp hcount; omega
   have hm := hc.bd.kb.mem
   rw [sep_lc] at hm
   obtain ⟨_, hcurm⟩ := RView.working hm
@@ -41,25 +41,25 @@ theorem b_4 [Host] [FunDecls]
   have kCur := MapM.isSome_dest hcurm hpN
   let d := Flat.get r.current.dest (rdx t)
   let off := Flat.get r.M.pos d
-  have dBound (hd : d ≠ Flat.NONE) : d.toNat < MAX_N := by
+  have dBound (hd : d ≠ Flat.NONE) : d.toNat < maxStackSize := by
     have hd' := (ha.2.2.2.2.2 _ (BitVec.lt_def.mp hp)).resolve_left hd
-    exact Nat.lt_of_lt_of_le hd' hok.planner.n
-  have offBound (hd : d ≠ Flat.NONE) (ho : off ≠ Flat.NONE) : off.toNat < r.p.m.toNat :=
+    exact Nat.lt_of_lt_of_le hd' hok.planner.targetSizeFitsBuffer
+  have offBound (hd : d ≠ Flat.NONE) (ho : off ≠ Flat.NONE) : off.toNat < r.p.sourceSize.toNat :=
     (hok.planPos d ((ha.2.2.2.2.2 _ (BitVec.lt_def.mp hp)).resolve_left hd)).resolve_left ho
   have rdPos (hd : d ≠ Flat.NONE) := MapM.rd_pos hplanm (dBound hd)
   have kPos (hd : d ≠ Flat.NONE) := MapM.isSome_pos hplanm (dBound hd)
   have rdDest (hd : d ≠ Flat.NONE) (ho : off ≠ Flat.NONE) :=
-    MapM.rd_dest hplanm (Nat.lt_of_lt_of_le (offBound hd ho) hok.planner.m)
+    MapM.rd_dest hplanm (Nat.lt_of_lt_of_le (offBound hd ho) hok.planner.sourceSizeFitsBuffer)
   have kDest (hd : d ≠ Flat.NONE) (ho : off ≠ Flat.NONE) :=
-    MapM.isSome_dest hplanm (Nat.lt_of_lt_of_le (offBound hd ho) hok.planner.m)
+    MapM.isSome_dest hplanm (Nat.lt_of_lt_of_le (offBound hd ho) hok.planner.sourceSizeFitsBuffer)
   obtain ⟨_, hslot⟩ := hc.bd.typedWord (6 + count.toNat) (by change count.toNat < 1024 at hcN; omega)
   have kslot := Wd.isSome hslot
   unfold rd at rdCur rdPos rdDest
   symexec_norm at hp hcount hnext he rdCur kCur rdPos kPos rdDest kDest hpN
   change BitVec.ofInt 64 (t.dmem.loadInt
     (slotAt r.currentPtr t.regs.rdx.toBitVec.toNat) 8).get! = d at rdCur
-  have hposnext : (t.regs.rdx.toBitVec + 1#64).toNat ≤ MAX_N := by
-    change (t.regs.rdx.toBitVec + 1).toNat ≤ MAX_N
+  have hposnext : (t.regs.rdx.toBitVec + 1#64).toNat ≤ maxStackSize := by
+    change (t.regs.rdx.toBitVec + 1).toNat ≤ maxStackSize
     rw [small_succ _ hpN]; omega
   have hcountNext : count ≤ t.regs.rdx.toBitVec + 1#64 := by
     change t.regs.rdx.toBitVec.toNat < 1024 at hpN
@@ -137,7 +137,7 @@ theorem b_4 [Host] [FunDecls]
             simp only [V, initFullVar, zvar, initVar, Names.resolve, String.reduceEq, ↓reduceIte,
               or_false]
             omega
-      · have offSmall : off < r.p.m := BitVec.lt_def.mpr (offBound hd ho)
+      · have offSmall : off < r.p.sourceSize := BitVec.lt_def.mpr (offBound hd ho)
         have append (u : MachineData)
             (hm : u.dmem = t.dmem.storeInt
               (t.regs.rsp.toBitVec + BitVec.ofNat 64 (8 * (6 + count.toNat))) 8 off.toInt)

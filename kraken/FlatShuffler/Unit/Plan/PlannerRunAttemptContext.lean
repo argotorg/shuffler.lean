@@ -23,11 +23,11 @@ theorem mergeSaw_bool (old saw : BitVec 8) :
   by_cases h : old = 0#8 <;> simp [mergeSaw, h]
 
 theorem RunMeta.withData {initial current : PlannerCallMemory} (h : RunMeta initial current)
-    (data : Vector Word MAX_N) : RunMeta initial {current with data := data} :=
+    (data : Vector Word maxStackSize) : RunMeta initial {current with data := data} :=
   ⟨h.planner, h.dataPtr, h.opsPtr, h.sourcesPtr, h.countPtr, h.spillCount⟩
 
 theorem RunMeta.withSources {initial current : PlannerCallMemory} (h : RunMeta initial current)
-    (sources : Vector Word MAX_N) : RunMeta initial {current with sources := sources} :=
+    (sources : Vector Word maxStackSize) : RunMeta initial {current with sources := sources} :=
   ⟨h.planner, h.dataPtr, h.opsPtr, h.sourcesPtr, h.countPtr, h.spillCount⟩
 
 theorem RunMeta.withCount {initial current : PlannerCallMemory} (h : RunMeta initial current)
@@ -41,16 +41,16 @@ structure AttemptContext (initial current : PlannerCallMemory) (s : MachineData)
   loop : LoopContext initial before s
   mapping : Flat.Mapping
   saw : Bool
-  init : mapping.init before.p.m before.p.n = mapping
+  init : mapping.init before.p.sourceSize before.p.targetSize = mapping
   build : Flat.buildMapping
-    ⟨before.p.fl.source, before.p.m, before.p.fl.target, before.p.n, before.dropped,
+    ⟨before.p.fl.source, before.p.sourceSize, before.p.fl.target, before.p.targetSize, before.dropped,
       (rsi s).setWidth 8 == 1#8⟩ mapping = some (M, saw)
   stable : RunMeta initial current
   planner : current.p.fl = before.p.fl
   state : current.state =
     {buildState before.p.fl before.state saw with data := current.state.data}
   count : current.count = initial.count
-  map : MapInv current.p.m current.p.n M
+  map : MapInv current.p.sourceSize current.p.targetSize M
   targets : Flat.targetsFrom current.p.fl current.spills 0 = true
   ok : current.Ok
 
@@ -59,8 +59,8 @@ namespace AttemptContext
 def ofBuild {initial current : PlannerCallMemory} {s : MachineData}
     (ctx : LoopContext initial current s) (hok : current.Ok)
     (M0 M : Flat.Mapping) (saw : BitVec 8)
-    (hm : MapInv current.p.m current.p.n M)
-    (hi : M0.init current.p.m current.p.n = M0)
+    (hm : MapInv current.p.sourceSize current.p.targetSize M)
+    (hi : M0.init current.p.sourceSize current.p.targetSize = M0)
     (hb : Flat.buildMapping (plannerBuilder current s M0 0#8).fl M0 =
       some (M, saw != 0#8))
     (ht : Flat.targetsFrom current.p.fl current.spills 0 = true) :
@@ -81,7 +81,7 @@ def ofBuild {initial current : PlannerCallMemory} {s : MachineData}
   ok := withSaw_ok hok _
 
 def withData {initial current : PlannerCallMemory} {s : MachineData} {M : Flat.Mapping}
-    (h : AttemptContext initial current s M) (data : Vector Word MAX_N) :
+    (h : AttemptContext initial current s M) (data : Vector Word maxStackSize) :
     AttemptContext initial {current with data := data} s M where
   before := h.before
   loop := h.loop
@@ -100,7 +100,7 @@ def withData {initial current : PlannerCallMemory} {s : MachineData} {M : Flat.M
   ok := data_ok h.ok data
 
 def wanted {initial current : PlannerCallMemory} {s : MachineData} {M : Flat.Mapping}
-    (h : AttemptContext initial current s M) : Vector StackSlot MAX_N :=
+    (h : AttemptContext initial current s M) : Vector StackSlot maxStackSize :=
   Flat.copyFrom h.before.p.fl 0 h.before.state.data
 
 theorem copiedState {initial current : PlannerCallMemory} {s : MachineData} {M : Flat.Mapping}

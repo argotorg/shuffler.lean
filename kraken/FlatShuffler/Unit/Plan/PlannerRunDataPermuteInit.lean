@@ -12,9 +12,9 @@ namespace FlatShuffler.Flat
 set_option maxRecDepth 4096
 
 section
-variable (cap : Nat) (old : Vector StackSlot MAX_N) (st : St)
+variable (cap : Nat) (old : Vector StackSlot maxStackSize) (st : St)
 
-theorem restoreData_readDestinations (pos : Word) (p : Vector Word MAX_N) :
+theorem restoreData_readDestinations (pos : Word) (p : Vector Word maxStackSize) :
     readDestinations (restoreData cap old st) pos p = readDestinations st pos p := by
   conv => lhs; rw [readDestinations]
   conv => rhs; rw [readDestinations]
@@ -27,7 +27,7 @@ theorem restoreData_readDestinations (pos : Word) (p : Vector Word MAX_N) :
 termination_by (st.size - pos).toNat
 decreasing_by bv_omega
 
-theorem restoreData_clearDesired (pos : Word) (p : Vector Word MAX_N) :
+theorem restoreData_clearDesired (pos : Word) (p : Vector Word maxStackSize) :
     clearDesired (restoreData cap old st) pos p = clearDesired st pos p := by
   conv => lhs; rw [clearDesired]
   conv => rhs; rw [clearDesired]
@@ -39,7 +39,7 @@ termination_by (st.size - pos).toNat
 decreasing_by bv_omega
 
 theorem restoreData_markDesired (leader : Word) (hl : leader < st.size) (slot : StackSlot)
-    (p : Vector Word MAX_N) (pos : Word) (d : Vector Word MAX_N)
+    (p : Vector Word maxStackSize) (pos : Word) (d : Vector Word maxStackSize)
     (hs : st.size.toNat ≤ cap) :
     markDesired (restoreData cap old st) leader (by simpa only [restoreData_size] using hl) slot p pos d =
       markDesired st leader hl slot p pos d := by
@@ -60,7 +60,7 @@ decreasing_by
   bv_omega
 
 theorem restoreData_nextVacant (leader : Word) (slot : StackSlot)
-    (d : Vector Word MAX_N) (vacant : Word) (hs : st.size.toNat ≤ cap) :
+    (d : Vector Word maxStackSize) (vacant : Word) (hs : st.size.toNat ≤ cap) :
     nextVacant (restoreData cap old st) leader slot d vacant =
       nextVacant st leader slot d vacant := by
   conv => lhs; rw [nextVacant]
@@ -77,7 +77,7 @@ termination_by (st.size - vacant).toNat
 decreasing_by bv_omega
 
 theorem restoreData_placeGroup (leader : Word) (hl : leader < st.size) (slot : StackSlot)
-    (d : Vector Word MAX_N) (pos vacant : Word) (p : Vector Word MAX_N)
+    (d : Vector Word maxStackSize) (pos vacant : Word) (p : Vector Word maxStackSize)
     (hs : st.size.toNat ≤ cap) :
     placeGroup (restoreData cap old st) leader (by simpa only [restoreData_size] using hl) slot d pos vacant p =
       placeGroup st leader hl slot d pos vacant p := by
@@ -105,7 +105,7 @@ decreasing_by all_goals
   have hleader := hl
   bv_omega
 
-theorem restoreData_regroup (leader : Word) (p d : Vector Word MAX_N)
+theorem restoreData_regroup (leader : Word) (p d : Vector Word maxStackSize)
     (hs : st.size.toNat ≤ cap) :
     regroup (restoreData cap old st) leader p d = regroup st leader p d := by
   conv => lhs; rw [regroup]
@@ -129,14 +129,14 @@ theorem restoreData_regroup (leader : Word) (p d : Vector Word MAX_N)
 termination_by (st.size - leader).toNat
 decreasing_by all_goals exact sub_succ_lt (by assumption)
 
-theorem restoreData_scanStep (planned : Vector Word MAX_N) (pos destination : Word)
+theorem restoreData_scanStep (planned : Vector Word maxStackSize) (pos destination : Word)
     (sc : Scan) :
     scanStep planned (restoreData cap old st) pos destination sc =
       scanStep planned st pos destination sc := by
   unfold scanStep
   simp only [restoreData_size]
 
-theorem restoreData_scan (planned : Vector Word MAX_N) (pos : Word) (sc : Scan) :
+theorem restoreData_scan (planned : Vector Word maxStackSize) (pos : Word) (sc : Scan) :
     scan planned (restoreData cap old st) pos sc = scan planned st pos sc := by
   conv => lhs; rw [scan]
   conv => rhs; rw [scan]

@@ -69,7 +69,7 @@ theorem Bd.storeLocalByte (h : Bd P r F s ra lo loc t) {i : Nat} (hi : i < loc.l
   rw [hm, hew]
   exact hmw
 
-theorem Bd.zeroByteSome (h : Bd P r F s ra lo loc t) {o : Word} (ho : o.toNat < MAX_N) :
+theorem Bd.zeroByteSome (h : Bd P r F s ra lo loc t) {o : Word} (ho : o.toNat < maxStackSize) :
     (t.dmem.loadInt (t.regs.rsp.toBitVec + 8240#64 + o) 1).isSome = true := by
   change o.toNat < 1024 at ho
   let i := 1030 + o.toNat / 8
@@ -84,7 +84,7 @@ theorem Bd.zeroByteSome (h : Bd P r F s ra lo loc t) {o : Word} (ho : o.toNat < 
   rw [← he]
   exact Wd.isSome_byte hm (by omega)
 
-theorem Bd.storeZeroByte (h : Bd P r F s ra lo loc t) {o : Word} (ho : o.toNat < MAX_N)
+theorem Bd.storeZeroByte (h : Bd P r F s ra lo loc t) {o : Word} (ho : o.toNat < maxStackSize)
     (hm : u.dmem = t.dmem.storeInt (t.regs.rsp.toBitVec + 8240#64 + o) 1 0)
     (hsp : u.regs.rsp = t.regs.rsp) :
     ∃ w : Word, Bd P r F s ra lo (loc.set (1030 + o.toNat / 8) w) u := by

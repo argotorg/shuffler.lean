@@ -21,7 +21,7 @@ are `Sep.Pre`, `Sep.Post`, `UnitThm` and `Sep.Spec` with `V` in place of `Sep.Vi
 state is `Kg (V S a ∗ F)`.
 
 - `MapM a M`: the two arrays of a `Mapping` at `a` (`m_destinationOf`, then `m_positionOf` at
-  `a + 8192`), `MAX_N` words each.
+  `a + 8192`), `maxStackSize` words each.
 - `BView B b`: a `MappingBuilder` at `B`. The words and bytes of the members, the `m` source
   words, the `n` target words, the `m` dropped bytes and the `Mapping`. The padding of the struct
   is not in the view. `BG.fl b` is the flat `Flat.Builder`.
@@ -164,35 +164,35 @@ def MapM (a : Addr) (M : Flat.Mapping) : MProp 64 :=
 section
 variable {a : Addr} {M : Flat.Mapping} {F : MProp 64} {m : Mem 64} {p : Word}
 
-theorem get_eq {α : Type} [Inhabited α] (v : Vector α MAX_N) (hp : p.toNat < MAX_N) :
+theorem get_eq {α : Type} [Inhabited α] (v : Vector α maxStackSize) (hp : p.toNat < maxStackSize) :
     Flat.get v p = v[p.toNat] := dite_eq_left hp
 
-theorem MapM.rd_dest (h : (MapM a M ∗ F).get m) (hp : p.toNat < MAX_N) :
+theorem MapM.rd_dest (h : (MapM a M ∗ F).get m) (hp : p.toNat < maxStackSize) :
     rd m (slotAt a p.toNat) = Flat.get M.dest p := by
   unfold MapM at h; rw [MProp.sep_assoc] at h
   exact (Arr.rd h (by simpa using hp)).trans (by simp [get_eq _ hp])
 
-theorem MapM.isSome_dest (h : (MapM a M ∗ F).get m) (hp : p.toNat < MAX_N) :
+theorem MapM.isSome_dest (h : (MapM a M ∗ F).get m) (hp : p.toNat < maxStackSize) :
     (m.loadInt (slotAt a p.toNat) 8).isSome = true := by
   unfold MapM at h; rw [MProp.sep_assoc] at h
   exact Arr.isSome h (by simpa using hp)
 
-theorem MapM.rd_pos (h : (MapM a M ∗ F).get m) (hp : p.toNat < MAX_N) :
+theorem MapM.rd_pos (h : (MapM a M ∗ F).get m) (hp : p.toNat < maxStackSize) :
     rd m (slotAt (a + 8192#64) p.toNat) = Flat.get M.pos p := by
   unfold MapM at h; rw [MProp.sep_assoc, sep_lc] at h
   exact (Arr.rd h (by simpa using hp)).trans (by simp [get_eq _ hp])
 
-theorem MapM.isSome_pos (h : (MapM a M ∗ F).get m) (hp : p.toNat < MAX_N) :
+theorem MapM.isSome_pos (h : (MapM a M ∗ F).get m) (hp : p.toNat < maxStackSize) :
     (m.loadInt (slotAt (a + 8192#64) p.toNat) 8).isSome = true := by
   unfold MapM at h; rw [MProp.sep_assoc, sep_lc] at h
   exact Arr.isSome h (by simpa using hp)
 
-theorem MapM.store_dest (h : (MapM a M ∗ F).get m) (hp : p.toNat < MAX_N) (w : Word) :
+theorem MapM.store_dest (h : (MapM a M ∗ F).get m) (hp : p.toNat < maxStackSize) (w : Word) :
     (MapM a ⟨Flat.put M.dest p w, M.pos⟩ ∗ F).get (m.storeInt (slotAt a p.toNat) 8 w.toInt) := by
   unfold MapM at h ⊢; rw [MProp.sep_assoc] at h ⊢
   simpa [Flat.put, slotAt] using Arr.store h (by simpa using hp) w
 
-theorem MapM.store_pos (h : (MapM a M ∗ F).get m) (hp : p.toNat < MAX_N) (w : Word) :
+theorem MapM.store_pos (h : (MapM a M ∗ F).get m) (hp : p.toNat < maxStackSize) (w : Word) :
     (MapM a ⟨M.dest, Flat.put M.pos p w⟩ ∗ F).get
       (m.storeInt (slotAt (a + 8192#64) p.toNat) 8 w.toInt) := by
   unfold MapM at h ⊢; rw [MProp.sep_assoc, sep_lc] at h ⊢
@@ -204,9 +204,9 @@ end
 -- The members of a `MappingBuilder`, the words and bytes that they point to, and the `Mapping`.
 structure BG where
   src : Addr
-  m : Word
+  sourceSize : Word
   tgt : Addr
-  n : Word
+  targetSize : Word
   drp : Addr
   strat : BitVec 8
   mp : Addr
@@ -217,20 +217,20 @@ structure BG where
   M : Flat.Mapping
 
 structure BG.Ok (b : BG) : Prop where
-  m : b.m.toNat ≤ MAX_N
-  n : b.n.toNat ≤ MAX_N
-  sw : b.sw.length = b.m.toNat
-  tw : b.tw.length = b.n.toNat
-  db : b.db.length = b.m.toNat
+  sourceSizeFitsBuffer : b.sourceSize.toNat ≤ maxStackSize
+  targetSizeFitsBuffer : b.targetSize.toNat ≤ maxStackSize
+  sw : b.sw.length = b.sourceSize.toNat
+  tw : b.tw.length = b.targetSize.toNat
+  db : b.db.length = b.sourceSize.toNat
 
 def BView (B : Addr) (b : BG) : MProp 64 :=
-  Wd B b.src ∗ Wd (B + 8#64) b.m ∗ Wd (B + 16#64) b.tgt ∗ Wd (B + 24#64) b.n
+  Wd B b.src ∗ Wd (B + 8#64) b.sourceSize ∗ Wd (B + 16#64) b.tgt ∗ Wd (B + 24#64) b.targetSize
     ∗ Wd (B + 32#64) b.drp ∗ B8 (B + 40#64) b.strat ∗ Wd (B + 48#64) b.mp ∗ B8 (B + 56#64) b.saw
     ∗ Arr b.src b.sw ∗ Arr b.tgt b.tw ∗ Bs b.drp b.db ∗ MapM b.mp b.M
 
 -- The flat `MappingBuilder`.
 def BG.fl (b : BG) : Flat.Builder :=
-  ⟨vec (b.sw.map StackSlot.ofWord), b.m, vec (b.tw.map StackSlot.ofWord), b.n, vec b.db,
+  ⟨vec (b.sw.map StackSlot.ofWord), b.sourceSize, vec (b.tw.map StackSlot.ofWord), b.targetSize, vec b.db,
     b.strat == 1⟩
 
 abbrev BThm [Host] [FunDecls] (prog : Program) (A : BG → MachineData → Prop) (d : Nat)
@@ -258,7 +258,7 @@ end
 
 
 theorem get_vecL {α : Type} [Inhabited α] {l : List α} {i : Word} (hi : i.toNat < l.length)
-    (hl : l.length ≤ MAX_N) : Flat.get (vec l) i = l[i.toNat] := by
+    (hl : l.length ≤ maxStackSize) : Flat.get (vec l) i = l[i.toNat] := by
   simp [Flat.get, vec, Nat.lt_of_lt_of_le hi hl, hi]
 
 /-! ### The dropped bytes and the mapping -/
@@ -266,15 +266,15 @@ theorem get_vecL {α : Type} [Inhabited α] {l : List α} {i : Word} (hi : i.toN
 section
 variable {B : Addr} {b : BG} {F : MProp 64} {m : Mem 64} {p : Word}
 
-theorem BView.rdb_drp (h : (BView B b ∗ F).get m) (hok : b.Ok) (hp : p.toNat < b.m.toNat) :
+theorem BView.rdb_drp (h : (BView B b ∗ F).get m) (hok : b.Ok) (hp : p.toNat < b.sourceSize.toNat) :
     rdb m (b.drp + p) = Flat.get b.fl.dropped p := by
   obtain ⟨R, e⟩ : ∃ R, BView B b ∗ F = Bs b.drp b.db ∗ R := ⟨_, by unfold BView; ecancel⟩
   have hi : p.toNat < b.db.length := hok.db ▸ hp
   have := Bs.rdb (e ▸ h) hi
   rw [BitVec.ofNat_toNat, BitVec.setWidth_eq] at this
-  rw [this]; exact (get_vecL hi (hok.db ▸ hok.m)).symm
+  rw [this]; exact (get_vecL hi (hok.db ▸ hok.sourceSizeFitsBuffer)).symm
 
-theorem BView.isSome_drp_byte (h : (BView B b ∗ F).get m) (hok : b.Ok) (hp : p.toNat < b.m.toNat) :
+theorem BView.isSome_drp_byte (h : (BView B b ∗ F).get m) (hok : b.Ok) (hp : p.toNat < b.sourceSize.toNat) :
     (m.loadInt (b.drp + p) 1).isSome = true := by
   obtain ⟨R, e⟩ : ∃ R, BView B b ∗ F = Bs b.drp b.db ∗ R := ⟨_, by unfold BView; ecancel⟩
   have := Bs.isSome (e ▸ h) (hok.db ▸ hp)
@@ -284,8 +284,8 @@ theorem BView.mapM (h : (BView B b ∗ F).get m) : ∃ R, (MapM b.mp b.M ∗ R).
   ⟨_, (by unfold BView; ecancel : BView B b ∗ F = MapM b.mp b.M ∗ _) ▸ h⟩
 
 -- `movq %rdx, (%rcx,%rsi,8)` then `movq %rsi, 8192(%rcx,%rdx,8)`: `Mapping::bind`.
-theorem BView.store_bind (h : (BView B b ∗ F).get m) {t : Word} (hp : p.toNat < MAX_N)
-    (ht : t.toNat < MAX_N) :
+theorem BView.store_bind (h : (BView B b ∗ F).get m) {t : Word} (hp : p.toNat < maxStackSize)
+    (ht : t.toNat < maxStackSize) :
     (BView B { b with M := b.M.bind p t } ∗ F).get
       ((m.storeInt (slotAt b.mp p.toNat) 8 t.toInt).storeInt (slotAt (b.mp + 8192#64) t.toNat) 8
         p.toInt) := by
@@ -323,18 +323,18 @@ theorem BView.rd_src (h : (BView B b ∗ F).get m) : rd m B = b.src :=
   rd_of_eq h (by unfold BView; ecancel)
 theorem BView.isSome_src (h : (BView B b ∗ F).get m) : (m.loadInt B 8).isSome = true :=
   isSome_of_eq b.src h (by unfold BView; ecancel)
-theorem BView.rd_m (h : (BView B b ∗ F).get m) : rd m (B + 8#64) = b.m :=
+theorem BView.rd_sourceSize (h : (BView B b ∗ F).get m) : rd m (B + 8#64) = b.sourceSize :=
   rd_of_eq h (by unfold BView; ecancel)
-theorem BView.isSome_m (h : (BView B b ∗ F).get m) : (m.loadInt (B + 8#64) 8).isSome = true :=
-  isSome_of_eq b.m h (by unfold BView; ecancel)
+theorem BView.isSome_sourceSize (h : (BView B b ∗ F).get m) : (m.loadInt (B + 8#64) 8).isSome = true :=
+  isSome_of_eq b.sourceSize h (by unfold BView; ecancel)
 theorem BView.rd_tgt (h : (BView B b ∗ F).get m) : rd m (B + 16#64) = b.tgt :=
   rd_of_eq h (by unfold BView; ecancel)
 theorem BView.isSome_tgt (h : (BView B b ∗ F).get m) : (m.loadInt (B + 16#64) 8).isSome = true :=
   isSome_of_eq b.tgt h (by unfold BView; ecancel)
-theorem BView.rd_n (h : (BView B b ∗ F).get m) : rd m (B + 24#64) = b.n :=
+theorem BView.rd_targetSize (h : (BView B b ∗ F).get m) : rd m (B + 24#64) = b.targetSize :=
   rd_of_eq h (by unfold BView; ecancel)
-theorem BView.isSome_n (h : (BView B b ∗ F).get m) : (m.loadInt (B + 24#64) 8).isSome = true :=
-  isSome_of_eq b.n h (by unfold BView; ecancel)
+theorem BView.isSome_targetSize (h : (BView B b ∗ F).get m) : (m.loadInt (B + 24#64) 8).isSome = true :=
+  isSome_of_eq b.targetSize h (by unfold BView; ecancel)
 
 theorem BView.arr_src (h : (BView B b ∗ F).get m) : ∃ R, (Arr b.src b.sw ∗ R).get m :=
   ⟨_, (by unfold BView; ecancel : BView B b ∗ F = Arr b.src b.sw ∗ _) ▸ h⟩
@@ -342,34 +342,34 @@ theorem BView.arr_src (h : (BView B b ∗ F).get m) : ∃ R, (Arr b.src b.sw ∗
 theorem BView.arr_tgt (h : (BView B b ∗ F).get m) : ∃ R, (Arr b.tgt b.tw ∗ R).get m :=
   ⟨_, (by unfold BView; ecancel : BView B b ∗ F = Arr b.tgt b.tw ∗ _) ▸ h⟩
 
-theorem BView.isSome_sw (h : (BView B b ∗ F).get m) (hok : b.Ok) (hi : i.toNat < b.m.toNat) :
+theorem BView.isSome_sw (h : (BView B b ∗ F).get m) (hok : b.Ok) (hi : i.toNat < b.sourceSize.toNat) :
     (m.loadInt (slotAt b.src i.toNat) 8).isSome = true :=
   let ⟨_, h⟩ := BView.arr_src h; Arr.isSome h (hok.sw ▸ hi)
 
 -- Slot `i < m` of the source.
-theorem BView.rd_sw (h : (BView B b ∗ F).get m) (hok : b.Ok) (hi : i.toNat < b.m.toNat) :
+theorem BView.rd_sw (h : (BView B b ∗ F).get m) (hok : b.Ok) (hi : i.toNat < b.sourceSize.toNat) :
     StackSlot.ofWord (rd m (slotAt b.src i.toNat)) = Flat.get b.fl.source i := by
   obtain ⟨_, h⟩ := BView.arr_src h
   have hi' : i.toNat < b.sw.length := hok.sw ▸ hi
   show _ = Flat.get (vec (b.sw.map StackSlot.ofWord)) i
-  rw [get_vecL (by simpa using hi') (by simpa [hok.sw] using hok.m), List.getElem_map]
+  rw [get_vecL (by simpa using hi') (by simpa [hok.sw] using hok.sourceSizeFitsBuffer), List.getElem_map]
   exact congrArg StackSlot.ofWord (Arr.rd h hi')
 
-theorem BView.isSome_tw (h : (BView B b ∗ F).get m) (hok : b.Ok) (hi : i.toNat < b.n.toNat) :
+theorem BView.isSome_tw (h : (BView B b ∗ F).get m) (hok : b.Ok) (hi : i.toNat < b.targetSize.toNat) :
     (m.loadInt (slotAt b.tgt i.toNat) 8).isSome = true :=
   let ⟨_, h⟩ := BView.arr_tgt h; Arr.isSome h (hok.tw ▸ hi)
 
 -- Slot `i < n` of the target.
-theorem BView.rd_tw (h : (BView B b ∗ F).get m) (hok : b.Ok) (hi : i.toNat < b.n.toNat) :
+theorem BView.rd_tw (h : (BView B b ∗ F).get m) (hok : b.Ok) (hi : i.toNat < b.targetSize.toNat) :
     StackSlot.ofWord (rd m (slotAt b.tgt i.toNat)) = Flat.get b.fl.target i := by
   obtain ⟨_, h⟩ := BView.arr_tgt h
   have hi' : i.toNat < b.tw.length := hok.tw ▸ hi
   show _ = Flat.get (vec (b.tw.map StackSlot.ofWord)) i
-  rw [get_vecL (by simpa using hi') (by simpa [hok.tw] using hok.n), List.getElem_map]
+  rw [get_vecL (by simpa using hi') (by simpa [hok.tw] using hok.targetSizeFitsBuffer), List.getElem_map]
   exact congrArg StackSlot.ofWord (Arr.rd h hi')
 
 -- Byte 4 of the target word `i < n`.
-theorem BView.b8_kind (h : (BView B b ∗ F).get m) (hok : b.Ok) (hi : i.toNat < b.n.toNat) :
+theorem BView.b8_kind (h : (BView B b ∗ F).get m) (hok : b.Ok) (hi : i.toNat < b.targetSize.toNat) :
     ∃ R, (B8 (slotAt b.tgt i.toNat + 4#64) (Flat.get b.fl.target i).kind ∗ R).get m := by
   obtain ⟨R, h⟩ := BView.arr_tgt h
   have hi' : i.toNat < b.tw.length := hok.tw ▸ hi
@@ -377,18 +377,18 @@ theorem BView.b8_kind (h : (BView B b ∗ F).get m) (hok : b.Ok) (hi : i.toNat <
   obtain ⟨P, e'⟩ := Wd.focus_byte (slotAt b.tgt i.toNat) b.tw[i.toNat] (j := 4) (by decide)
   have hk : (Flat.get b.fl.target i).kind = b.tw[i.toNat].extractLsb' (8 * 4) 8 := by
     show (Flat.get (vec (b.tw.map StackSlot.ofWord)) i).kind = _
-    rw [get_vecL (by simpa using hi') (by simpa [hok.tw] using hok.n), List.getElem_map]
+    rw [get_vecL (by simpa using hi') (by simpa [hok.tw] using hok.targetSizeFitsBuffer), List.getElem_map]
     rfl
   rw [e] at h
   change ((Wd (slotAt b.tgt i.toNat) b.tw[i.toNat] ∗ Q) ∗ R).get m at h
   rw [e', MProp.sep_assoc, MProp.sep_assoc] at h
   exact ⟨_, hk ▸ h⟩
 
-theorem BView.rdb_kind (h : (BView B b ∗ F).get m) (hok : b.Ok) (hi : i.toNat < b.n.toNat) :
+theorem BView.rdb_kind (h : (BView B b ∗ F).get m) (hok : b.Ok) (hi : i.toNat < b.targetSize.toNat) :
     rdb m (slotAt b.tgt i.toNat + 4#64) = (Flat.get b.fl.target i).kind :=
   let ⟨_, h⟩ := BView.b8_kind h hok hi; B8.rdb h
 
-theorem BView.isSome_kind (h : (BView B b ∗ F).get m) (hok : b.Ok) (hi : i.toNat < b.n.toNat) :
+theorem BView.isSome_kind (h : (BView B b ∗ F).get m) (hok : b.Ok) (hi : i.toNat < b.targetSize.toNat) :
     (m.loadInt (slotAt b.tgt i.toNat + 4#64) 1).isSome = true :=
   let ⟨_, h⟩ := BView.b8_kind h hok hi; B8.isSome h
 end

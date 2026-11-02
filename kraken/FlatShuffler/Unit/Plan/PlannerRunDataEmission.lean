@@ -15,9 +15,9 @@ namespace FlatShuffler.Flat
 
 set_option maxRecDepth 4096
 
-theorem restoreData_eq_of_le (cap : Nat) (old : Vector StackSlot MAX_N)
-    (st : St) (hc : MAX_N ≤ cap) : restoreData cap old st = st := by
-  have hd : (Vector.ofFn fun i : Fin MAX_N =>
+theorem restoreData_eq_of_le (cap : Nat) (old : Vector StackSlot maxStackSize)
+    (st : St) (hc : maxStackSize ≤ cap) : restoreData cap old st = st := by
+  have hd : (Vector.ofFn fun i : Fin maxStackSize =>
       if i.val < cap then st.data[i.val] else old[i.val]) = st.data := by
     apply Vector.ext
     intro i hi
@@ -25,7 +25,7 @@ theorem restoreData_eq_of_le (cap : Nat) (old : Vector StackSlot MAX_N)
   unfold restoreData
   rw [hd]
 
-theorem restoreData_finish (cap : Nat) (old : Vector StackSlot MAX_N)
+theorem restoreData_finish (cap : Nat) (old : Vector StackSlot maxStackSize)
     (st : St) (hs : st.size.toNat ≤ cap) (hn : st.targetSize.toNat ≤ cap)
     (hf : Unit.RunU.checks st → FInv st) :
     Unit.RunU.finish (restoreData cap old st) =
@@ -56,15 +56,15 @@ theorem restoreData_finish (cap : Nat) (old : Vector StackSlot MAX_N)
             (Nat.le_trans hm.size_le hm.n)
             (Nat.le_trans hm.size_le hc) (hm.permOk he)
 
-theorem restoreData_emissionRun (cap : Nat) (old : Vector StackSlot MAX_N)
-    (planned : Vector Word MAX_N) (l : Locals) (st : St) {x : Nat}
+theorem restoreData_emissionRun (cap : Nat) (old : Vector StackSlot maxStackSize)
+    (planned : Vector Word maxStackSize) (l : Locals) (st : St) {x : Nat}
     (hs : st.size.toNat ≤ cap) (hn : st.targetSize.toNat ≤ cap)
     (hsafe : Unit.RunU.Safe planned st x) :
     emissionRun planned l (restoreData cap old st) =
       let r := emissionRun planned l st; (r.1, restoreData cap old r.2) := by
-  by_cases hc : MAX_N ≤ cap
+  by_cases hc : maxStackSize ≤ cap
   · simp only [restoreData_eq_of_le cap old _ hc]
-  have hcap : cap ≤ MAX_N := Nat.le_of_lt (Nat.lt_of_not_ge hc)
+  have hcap : cap ≤ maxStackSize := Nat.le_of_lt (Nat.lt_of_not_ge hc)
   have hsa : (removeSurplus st).2.size.toNat ≤ cap :=
     Nat.le_trans (removeSurplus_size_le st) hs
   have hna : (removeSurplus st).2.targetSize.toNat ≤ cap := by

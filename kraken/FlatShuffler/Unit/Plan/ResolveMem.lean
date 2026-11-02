@@ -26,27 +26,27 @@ structure RG where
   current : Flat.Mapping
   spillCount : Nat
   spills : BitVec 32 → BitVec 8
-  dropped : Vector (BitVec 8) MAX_N
+  dropped : Vector (BitVec 8) maxStackSize
 
 structure RG.Ok (r : RG) : Prop where
   planner : r.p.Ok
   spillCount : r.spillCount ≤ 2 ^ 32
   spillIds : ∀ i ∈ splIds r.p.sw, i < r.spillCount
-  planPos : ∀ t : Word, t.toNat < r.p.n.toNat →
-    Flat.get r.M.pos t = Flat.NONE ∨ (Flat.get r.M.pos t).toNat < r.p.m.toNat
-  planDest : ∀ o : Word, o.toNat < r.p.m.toNat →
-    Flat.get r.M.dest o = Flat.NONE ∨ (Flat.get r.M.dest o).toNat < r.p.n.toNat
+  planPos : ∀ t : Word, t.toNat < r.p.targetSize.toNat →
+    Flat.get r.M.pos t = Flat.NONE ∨ (Flat.get r.M.pos t).toNat < r.p.sourceSize.toNat
+  planDest : ∀ o : Word, o.toNat < r.p.sourceSize.toNat →
+    Flat.get r.M.dest o = Flat.NONE ∨ (Flat.get r.M.dest o).toNat < r.p.targetSize.toNat
 
 def RView (P : Addr) (r : RG) : MProp 64 :=
   plannerObjectOwnedMemory P r.p ∗ MapM r.mp r.M ∗ MapM r.currentPtr r.current
     ∗ Spl r.p.spl r.spills (List.range r.spillCount)
-    ∗ Bs r.p.drp (r.dropped.toList.take r.p.m.toNat)
+    ∗ Bs r.p.drp (r.dropped.toList.take r.p.sourceSize.toNat)
 
 def resolveA (r : RG) (s : MachineData) : Prop :=
-  rsi s = r.mp ∧ r8 s = r.currentPtr ∧ (r9 s).toNat ≤ MAX_N ∧
-    (rdx s).toNat < MAX_N ∧ (rcx s).toNat ≤ MAX_N ∧
+  rsi s = r.mp ∧ r8 s = r.currentPtr ∧ (r9 s).toNat ≤ maxStackSize ∧
+    (rdx s).toNat < maxStackSize ∧ (rcx s).toNat ≤ maxStackSize ∧
     ∀ o : Word, o.toNat < (r9 s).toNat →
-      Flat.get r.current.dest o = Flat.NONE ∨ (Flat.get r.current.dest o).toNat < r.p.n.toNat
+      Flat.get r.current.dest o = Flat.NONE ∨ (Flat.get r.current.dest o).toNat < r.p.targetSize.toNat
 
 -- There are 1165 words in the body and 17 words for the classify call.
 def resolveD : Nat := 1182
@@ -126,17 +126,17 @@ theorem addVSpec [Host] [FunDecls] (hadd : AddSpec) :
     exact e ▸ hm'
 
 theorem update_ok {r : RG} (h : r.Ok) (sp : BitVec 32 → BitVec 8)
-    (d : Vector (BitVec 8) MAX_N) : { r with spills := sp, dropped := d }.Ok :=
+    (d : Vector (BitVec 8) maxStackSize) : { r with spills := sp, dropped := d }.Ok :=
   ⟨h.planner, h.spillCount, h.spillIds, h.planPos, h.planDest⟩
 
 theorem source_id_lt {r : RG} (hok : r.Ok) {off : Word}
-    (ho : off.toNat < r.p.m.toNat)
+    (ho : off.toNat < r.p.sourceSize.toNat)
     (hv : Flat.isVariable (Flat.get r.p.fl.source off) = true) :
     (Flat.get r.p.fl.source off).payload.toNat < r.spillCount := by
   have hi : off.toNat < r.p.sw.length := hok.planner.sw ▸ ho
   have hs : StackSlot.ofWord r.p.sw[off.toNat] = Flat.get r.p.fl.source off := by
     simp only [PlannerObjectMemory.fl]
-    rw [get_vecL (by simpa using hi) (by simpa [hok.planner.sw] using hok.planner.m),
+    rw [get_vecL (by simpa using hi) (by simpa [hok.planner.sw] using hok.planner.sourceSizeFitsBuffer),
       List.getElem_map]
   have hid : spillId (StackSlot.ofWord r.p.sw[off.toNat]) =
       some (Flat.get r.p.fl.source off).payload.toNat := by
@@ -168,18 +168,18 @@ theorem spl_partition (a : Addr) (is js : List Nat) (hnd : js.Nodup)
     rw [Spl.erase a f hi, hrest f]
     simp only [Spl, MProp.sep_assoc]
 
-def classifyGhost (r : RG) (dn : Addr) (dv : Vector (BitVec 8) MAX_N) : CG :=
+def classifyGhost (r : RG) (dn : Addr) (dv : Vector (BitVec 8) maxStackSize) : CG :=
   ⟨⟨r.p, r.mp, r.M, dn, dv⟩, r.spills⟩
 
 theorem classifyGhost_ok {r : RG} (hok : r.Ok) (dn : Addr)
-    (dv : Vector (BitVec 8) MAX_N) : (classifyGhost r dn dv).Ok := hok.planner
+    (dv : Vector (BitVec 8) maxStackSize) : (classifyGhost r dn dv).Ok := hok.planner
 
 theorem classify_split (P : Addr) (r : RG) (hok : r.Ok) (dn : Addr)
-    (dv : Vector (BitVec 8) MAX_N) :
+    (dv : Vector (BitVec 8) maxStackSize) :
     ∃ rest, ∀ f : BitVec 32 → BitVec 8,
       RView P { r with spills := f } ∗ Bs dn dv.toList =
         CView P (classifyGhost { r with spills := f } dn dv) ∗
-          (MapM r.currentPtr r.current ∗ Bs r.p.drp (r.dropped.toList.take r.p.m.toNat) ∗
+          (MapM r.currentPtr r.current ∗ Bs r.p.drp (r.dropped.toList.take r.p.sourceSize.toNat) ∗
             Spl r.p.spl f rest) := by
   obtain ⟨rest, hrest⟩ := spl_partition r.p.spl (List.range r.spillCount) (splIds r.p.sw)
     (nodup_eraseDups _) (fun i hi => List.mem_range.mpr (hok.spillIds i hi))
@@ -192,18 +192,18 @@ theorem add_split (P : Addr) (r : RG) :
     ∃ rest, ∀ f : BitVec 32 → BitVec 8,
       RView P { r with spills := f } =
         Wd (P + 32#64) r.p.spl ∗ Spl r.p.spl f (List.range r.spillCount) ∗ rest := by
-  refine ⟨Wd P r.p.src ∗ Wd (P + 8#64) r.p.m ∗ Wd (P + 16#64) r.p.tgt ∗
-    Wd (P + 24#64) r.p.n ∗ B8 (P + 40#64) r.p.allowed ∗ Wd (P + 48#64) r.p.drp ∗
+  refine ⟨Wd P r.p.src ∗ Wd (P + 8#64) r.p.sourceSize ∗ Wd (P + 16#64) r.p.tgt ∗
+    Wd (P + 24#64) r.p.targetSize ∗ B8 (P + 40#64) r.p.allowed ∗ Wd (P + 48#64) r.p.drp ∗
     B8 (P + 56#64) r.p.saw ∗ Arr r.p.src r.p.sw ∗ Arr r.p.tgt r.p.tw ∗
     MapM r.mp r.M ∗ MapM r.currentPtr r.current ∗
-    Bs r.p.drp (r.dropped.toList.take r.p.m.toNat), fun f => ?_⟩
+    Bs r.p.drp (r.dropped.toList.take r.p.sourceSize.toNat), fun f => ?_⟩
   unfold RView plannerObjectOwnedMemory
   ecancel
 
 theorem classify_args {r : RG} {c : MachineData} {dn : Addr}
-    {dv : Vector (BitVec 8) MAX_N} (hok : r.Ok)
+    {dv : Vector (BitVec 8) maxStackSize} (hok : r.Ok)
     (hsi : rsi c = r.mp) (hdx : rdx c = dn)
-    (hoff : (rcx c).toNat < r.p.m.toNat)
+    (hoff : (rcx c).toNat < r.p.sourceSize.toNat)
     (hret : Flat.get r.M.dest (rcx c) ≠ Flat.NONE) :
     classifyA (classifyGhost r dn dv) c := by
   exact ⟨⟨hsi, hdx, hoff⟩, (hok.planDest _ hoff).resolve_left hret⟩
@@ -222,9 +222,9 @@ theorem RView.working (h : (RView P r ∗ F).get m) :
   ⟨_, (by unfold RView; ecancel : RView P r ∗ F = MapM r.currentPtr r.current ∗ _) ▸ h⟩
 
 theorem RView.dropped (h : (RView P r ∗ F).get m) :
-    ∃ R, (Bs r.p.drp (r.dropped.toList.take r.p.m.toNat) ∗ R).get m :=
+    ∃ R, (Bs r.p.drp (r.dropped.toList.take r.p.sourceSize.toNat) ∗ R).get m :=
   ⟨_, (by unfold RView; ecancel : RView P r ∗ F =
-    Bs r.p.drp (r.dropped.toList.take r.p.m.toNat) ∗ _) ▸ h⟩
+    Bs r.p.drp (r.dropped.toList.take r.p.sourceSize.toNat) ∗ _) ▸ h⟩
 
 theorem RView.spill (h : (RView P r ∗ F).get m) :
     ∃ R, (Spl r.p.spl r.spills (List.range r.spillCount) ∗ R).get m :=

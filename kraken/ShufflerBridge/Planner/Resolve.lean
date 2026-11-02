@@ -16,7 +16,7 @@ The flat `resolve` of `Planner::resolve` and PR31 `Planner.resolve`.
 namespace FlatShuffler.Flat
 
 -- A loop that returns true at the first offset from `o` on below `n` where `P` holds.
-theorem anyFrom_iff {n : Word} (hn : n.toNat ≤ MAX_N) (P F : Word → Bool)
+theorem anyFrom_iff {n : Word} (hn : n.toNat ≤ maxStackSize) (P F : Word → Bool)
     (hF : ∀ o, F o = if o < n then (if P o then true else F (o + 1)) else false) :
     F 0 = true ↔ ∃ d < n.toNat, P (BitVec.ofNat 64 d) = true := by
   have h := allFrom_iff hn (fun o => !P o) (fun o => !F o) fun o => by
@@ -60,23 +60,23 @@ theorem hasOther_eq (source : Stack) {targetSize : ℕ}
     · rw [decide_eq_false h, Bool.false_or, ← ih]; simp only [Fin.getElem_fin] at h; simp [h]
 
 -- The PR31 dropped bytes `dn` are the flat bytes `fdn`.
-def DnR {k : Nat} (dn : Vector Byte k) (fdn : Vector (BitVec 8) FlatShuffler.MAX_N) : Prop :=
+def DnR {k : Nat} (dn : Vector Byte k) (fdn : Vector (BitVec 8) FlatShuffler.maxStackSize) : Prop :=
   ∀ i : Fin k, dn[i] = (get fdn (.ofNat 64 i.val)).toFin
 
-theorem DnR.zero {k : Nat} {dn : Vector Byte k} {fdn : Vector (BitVec 8) FlatShuffler.MAX_N}
+theorem DnR.zero {k : Nat} {dn : Vector Byte k} {fdn : Vector (BitVec 8) FlatShuffler.maxStackSize}
     (h : DnR dn fdn) (i : Fin k) : dn[i] = 0 ↔ get fdn (.ofNat 64 i.val) = 0 := by
   rw [h i]
   constructor
   · intro h'; apply BitVec.eq_of_toFin_eq; exact h'
   · intro h'; rw [h']; rfl
 
-theorem get_mem_take {α : Type} [Inhabited α] (v : Vector α FlatShuffler.MAX_N) {m : FlatShuffler.Word}
-    (hm : m.toNat ≤ FlatShuffler.MAX_N) {d : Nat} (hd : d < m.toNat) :
+theorem get_mem_take {α : Type} [Inhabited α] (v : Vector α FlatShuffler.maxStackSize) {m : FlatShuffler.Word}
+    (hm : m.toNat ≤ FlatShuffler.maxStackSize) {d : Nat} (hd : d < m.toNat) :
     get v (.ofNat 64 d) ∈ v.toList.take m.toNat := by
   rw [FlatShuffler.Flat.get_ofNat v (by omega)]
   exact List.mem_iff_getElem.mpr ⟨d, by simp; omega, by simp⟩
 
-theorem ofNat_inj {a b : Nat} (ha : a < FlatShuffler.MAX_N) (hb : b < FlatShuffler.MAX_N) :
+theorem ofNat_inj {a b : Nat} (ha : a < FlatShuffler.maxStackSize) (hb : b < FlatShuffler.maxStackSize) :
     BitVec.ofNat 64 a = BitVec.ofNat 64 b ↔ a = b := by
   constructor
   · intro h
@@ -103,25 +103,25 @@ section
 variable {pl : FlatShuffler.Flat.Planner}
 
 -- An offset of the source and its flat index.
-theorem src_get (o : Fin (srcOf pl.source pl.m).length) :
-    (srcOf pl.source pl.m)[o] = decodeStackSlot (get pl.source (.ofNat 64 o.val)) := by
+theorem src_get (o : Fin (srcOf pl.source pl.sourceSize).length) :
+    (srcOf pl.source pl.sourceSize)[o] = decodeStackSlot (get pl.source (.ofNat 64 o.val)) := by
   rw [Fin.getElem_fin, srcOf_get]
 
-theorem src_lt (hm : pl.m.toNat ≤ FlatShuffler.MAX_N) (o : Fin (srcOf pl.source pl.m).length) :
-    o.val < pl.m.toNat := by
+theorem src_lt (hm : pl.sourceSize.toNat ≤ FlatShuffler.maxStackSize) (o : Fin (srcOf pl.source pl.sourceSize).length) :
+    o.val < pl.sourceSize.toNat := by
   have := o.isLt; have := srcOf_length (v := pl.source) hm; omega
 
-theorem hasOther_corr (hm : pl.m.toNat ≤ FlatShuffler.MAX_N)
-    (canon : ∀ v ∈ pl.source.toList.take pl.m.toNat, StackSlotHasCanonicalEncoding v) {t : Nat}
-    {P : Mapping (srcOf pl.source pl.m).length t} {M : FlatShuffler.Flat.Mapping} (hR : MapR M P)
-    {dn : Vector Byte (srcOf pl.source pl.m).length} {fdn : Vector (BitVec 8) FlatShuffler.MAX_N}
-    (hdn : DnR dn fdn) (offset : Fin (srcOf pl.source pl.m).length) :
-    hasOtherRetainedCopy (srcOf pl.source pl.m) P dn offset =
+theorem hasOther_corr (hm : pl.sourceSize.toNat ≤ FlatShuffler.maxStackSize)
+    (canon : ∀ v ∈ pl.source.toList.take pl.sourceSize.toNat, StackSlotHasCanonicalEncoding v) {t : Nat}
+    {P : Mapping (srcOf pl.source pl.sourceSize).length t} {M : FlatShuffler.Flat.Mapping} (hR : MapR M P)
+    {dn : Vector Byte (srcOf pl.source pl.sourceSize).length} {fdn : Vector (BitVec 8) FlatShuffler.maxStackSize}
+    (hdn : DnR dn fdn) (offset : Fin (srcOf pl.source pl.sourceSize).length) :
+    hasOtherRetainedCopy (srcOf pl.source pl.sourceSize) P dn offset =
       FlatShuffler.Flat.hasOtherRetainedCopy pl M fdn (.ofNat 64 offset.val) := by
   have hlen := srcOf_length (v := pl.source) hm
   have hoff := src_lt hm offset
-  have key : ∀ o : Fin (srcOf pl.source pl.m).length,
-      (o ≠ offset ∧ (srcOf pl.source pl.m)[o] = (srcOf pl.source pl.m)[offset] ∧
+  have key : ∀ o : Fin (srcOf pl.source pl.sourceSize).length,
+      (o ≠ offset ∧ (srcOf pl.source pl.sourceSize)[o] = (srcOf pl.source pl.sourceSize)[offset] ∧
         isRetained P o = true ∧ dn[o] = 0) ↔
       ((BitVec.ofNat 64 o.val ≠ .ofNat 64 offset.val &&
         get pl.source (.ofNat 64 o.val) = get pl.source (.ofNat 64 offset.val) &&
@@ -141,11 +141,11 @@ theorem hasOther_corr (hm : pl.m.toNat ≤ FlatShuffler.MAX_N)
   · rintro ⟨o, -, hc⟩
     exact ⟨o.val, src_lt hm o, (key o).mp (of_decide_eq_true hc)⟩
   · rintro ⟨d, hd, hc⟩
-    let o : Fin (srcOf pl.source pl.m).length := ⟨d, by omega⟩
+    let o : Fin (srcOf pl.source pl.sourceSize).length := ⟨d, by omega⟩
     exact ⟨o, List.mem_finRange _, decide_eq_true ((key o).mpr hc)⟩
 
-theorem exists_take {α : Type} [Inhabited α] (v : Vector α FlatShuffler.MAX_N) {m : FlatShuffler.Word}
-    (hm : m.toNat ≤ FlatShuffler.MAX_N) (Q : α → Prop) :
+theorem exists_take {α : Type} [Inhabited α] (v : Vector α FlatShuffler.maxStackSize) {m : FlatShuffler.Word}
+    (hm : m.toNat ≤ FlatShuffler.maxStackSize) (Q : α → Prop) :
     (∃ x ∈ v.toList.take m.toNat, Q x) ↔ ∃ d < m.toNat, Q (get v (.ofNat 64 d)) := by
   constructor
   · rintro ⟨x, hx, hq⟩
@@ -157,10 +157,10 @@ theorem exists_take {α : Type} [Inhabited α] (v : Vector α FlatShuffler.MAX_N
   · rintro ⟨d, hd, hq⟩
     exact ⟨_, get_mem_take v hm hd, hq⟩
 
-theorem isDemanded_corr (hn : pl.n.toNat ≤ FlatShuffler.MAX_N)
-    (canon : ∀ v ∈ pl.target.toList.take pl.n.toNat, StackSlotHasCanonicalEncoding v) {x : FlatShuffler.StackSlot}
+theorem isDemanded_corr (hn : pl.targetSize.toNat ≤ FlatShuffler.maxStackSize)
+    (canon : ∀ v ∈ pl.target.toList.take pl.targetSize.toNat, StackSlotHasCanonicalEncoding v) {x : FlatShuffler.StackSlot}
     (hx : StackSlotHasCanonicalEncoding x) :
-    isDemanded (srcOf pl.target pl.n) (decodeStackSlot x) = FlatShuffler.Flat.isDemanded pl x := by
+    isDemanded (srcOf pl.target pl.targetSize) (decodeStackSlot x) = FlatShuffler.Flat.isDemanded pl x := by
   apply Bool.eq_iff_iff.mpr
   rw [isDemanded, List.any_eq_true, FlatShuffler.Flat.isDemanded,
     FlatShuffler.Flat.anyFrom_iff hn (fun j => !FlatShuffler.isJunk (get pl.target j) && get pl.target j = x) _
@@ -200,36 +200,36 @@ theorem isVariable_iff {x : FlatShuffler.StackSlot} (hk : x.kind.toNat < 4) :
 -- The PR31 class of a flat class.
 def clsOf (w : BitVec 8) : Option Nat := if w = FlatShuffler.Flat.NOCLASS then none else some w.toNat
 
-theorem classify_corr (hm : pl.m.toNat ≤ FlatShuffler.MAX_N) (hn : pl.n.toNat ≤ FlatShuffler.MAX_N)
-    (ok : SlotsOk (pl.source.toList.take pl.m.toNat ++ pl.target.toList.take pl.n.toNat))
-    {state : State (srcOf pl.source pl.m) (srcOf pl.target pl.n)} {sp : BitVec 32 → BitVec 8}
-    (hsp : state.spills = pSpills (pl.source.toList.take pl.m.toNat) pl.n.toNat pl.target sp)
+theorem classify_corr (hm : pl.sourceSize.toNat ≤ FlatShuffler.maxStackSize) (hn : pl.targetSize.toNat ≤ FlatShuffler.maxStackSize)
+    (ok : SlotsOk (pl.source.toList.take pl.sourceSize.toNat ++ pl.target.toList.take pl.targetSize.toNat))
+    {state : State (srcOf pl.source pl.sourceSize) (srcOf pl.target pl.targetSize)} {sp : BitVec 32 → BitVec 8}
+    (hsp : state.spills = pSpills (pl.source.toList.take pl.sourceSize.toNat) pl.targetSize.toNat pl.target sp)
     (hal : state.spillingAllowed = pl.allowed)
-    {P : Mapping (srcOf pl.source pl.m).length (srcOf pl.target pl.n).length}
+    {P : Mapping (srcOf pl.source pl.sourceSize).length (srcOf pl.target pl.targetSize).length}
     {M : FlatShuffler.Flat.Mapping} (hR : MapR M P)
-    {dn : Vector Byte (srcOf pl.source pl.m).length} {fdn : Vector (BitVec 8) FlatShuffler.MAX_N}
-    (hdn : DnR dn fdn) (offset : Fin (srcOf pl.source pl.m).length) (hsome : (P offset).isSome) :
+    {dn : Vector Byte (srcOf pl.source pl.sourceSize).length} {fdn : Vector (BitVec 8) FlatShuffler.maxStackSize}
+    (hdn : DnR dn fdn) (offset : Fin (srcOf pl.source pl.sourceSize).length) (hsome : (P offset).isSome) :
     classify state P dn offset = .ok (clsOf (FlatShuffler.Flat.classify pl sp M fdn (.ofNat 64 offset.val))) := by
   have ho := src_lt hm offset
   have hxS := get_mem_take pl.source hm ho
-  have hxL := List.mem_append_left (pl.target.toList.take pl.n.toNat) hxS
+  have hxL := List.mem_append_left (pl.target.toList.take pl.targetSize.toNat) hxS
   have hcx := ok.canon _ hxL
   have hkx := ok.kind _ hxL
-  have hcS : ∀ v ∈ pl.source.toList.take pl.m.toNat, StackSlotHasCanonicalEncoding v :=
+  have hcS : ∀ v ∈ pl.source.toList.take pl.sourceSize.toNat, StackSlotHasCanonicalEncoding v :=
     fun v hv => ok.canon v (List.mem_append_left _ hv)
-  have hcT : ∀ v ∈ pl.target.toList.take pl.n.toNat, StackSlotHasCanonicalEncoding v :=
+  have hcT : ∀ v ∈ pl.target.toList.take pl.targetSize.toNat, StackSlotHasCanonicalEncoding v :=
     fun v hv => ok.canon v (List.mem_append_right _ hv)
   obtain ⟨d, hd⟩ := Option.isSome_iff_exists.mp hsome
   have hdest : get M.dest (.ofNat 64 offset.val) = .ofNat 64 d.val := by
     have := hR.dest offset
     rw [hd, Option.map_some] at this
     exact optOf_eq_some this
-  have htd : (srcOf pl.target pl.n)[d] = decodeStackSlot (get pl.target (.ofNat 64 d.val)) := by
+  have htd : (srcOf pl.target pl.targetSize)[d] = decodeStackSlot (get pl.target (.ofNat 64 d.val)) := by
     rw [Fin.getElem_fin, srcOf_get]
   unfold classify
   dsimp only
   rw [requires_of_true _ (show (P.destinationOf offset).isSome = true from hsome), ok_bind]
-  have htd' : ∀ h', (srcOf pl.target pl.n)[(P.destinationOf offset).get h'] =
+  have htd' : ∀ h', (srcOf pl.target pl.targetSize)[(P.destinationOf offset).get h'] =
       decodeStackSlot (get pl.target (.ofNat 64 d.val)) := fun h' => by
     have : (P.destinationOf offset).get h' = d := by simp [Mapping.destinationOf, hd]
     simp only [this, htd]

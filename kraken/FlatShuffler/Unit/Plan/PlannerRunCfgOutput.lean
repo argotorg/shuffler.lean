@@ -40,7 +40,7 @@ theorem cfg_16 : plannerRunAsm.ForallBlocks fun blk =>
       cases status : ctx.status <;> simp_all) (by
       intro u hu hpres ha hz
       have hs : ctx.status = .done := status_eq_of_al_eq (hpres.trans hal) ha
-      have hend : Flat.sourcesFrom current.p.n 0 M current.sources = current.sources :=
+      have hend : Flat.sourcesFrom current.p.targetSize 0 M current.sources = current.sources :=
         sources_end (by rw [hz]; decide)
       have rr := ctx.terminal hn
       simp only [hs, ↓reduceIte, hend] at rr
@@ -56,13 +56,13 @@ theorem cfg_16 : plannerRunAsm.ForallBlocks fun blk =>
       simp only [hs, ↓reduceIte] at rr
       refine ⟨?_, Or.inl ?_⟩
       · simp only [RunInv, Names.plannerRun, String.reduceEq, ↓reduceIte, SourcePhase]
-        exact ⟨current, M, Flat.sourcesFrom current.p.n 0 M current.sources,
+        exact ⟨current, M, Flat.sourcesFrom current.p.targetSize 0 M current.sources,
           ⟨rr⟩, ctx.count, ha, hu⟩
-      · have hsize := congrArg PlannerObjectMemory.n ctx.stable.planner
-        change current.p.n = g.p.n at hsize
-        have hbound := hu.choose_spec.choose_spec.1.ok.planner.n
+      · have hsize := congrArg PlannerObjectMemory.targetSize ctx.stable.planner
+        change current.p.targetSize = g.p.targetSize at hsize
+        have hbound := hu.choose_spec.choose_spec.1.ok.planner.targetSizeFitsBuffer
         rw [hsize] at hbound
-        change g.p.n.toNat ≤ 1024 at hbound
+        change g.p.targetSize.toNat ≤ 1024 at hbound
         simp only [runV, String.reduceEq, or_false, ↓reduceIte]
         omega)
   rw [Program.ForallBlocks, hv] at hh
@@ -91,15 +91,15 @@ theorem cfg_17 : plannerRunAsm.ForallBlocks fun blk =>
         exact ⟨{current with sources := sources}, M, wanted, ⟨rr⟩, hc, hal.trans ha, hu⟩
       · have hi := ht.choose_spec.choose_spec.2.2.2.1
         have hui := hu.choose_spec.choose_spec.2.2.2.1
-        have hsize := congrArg PlannerObjectMemory.n rr.stable.planner
-        change current.p.n = g.p.n at hsize
-        change rdx t < current.p.n at hi
-        change rdx u < current.p.n at hui
+        have hsize := congrArg PlannerObjectMemory.targetSize rr.stable.planner
+        change current.p.targetSize = g.p.targetSize at hsize
+        change rdx t < current.p.targetSize at hi
+        change rdx u < current.p.targetSize at hui
         rw [hsize] at hi hui
         have hs : (rdx u).toNat = (rdx t).toNat + 1 := by rw [he]; bv_omega
         simp only [runV, String.reduceEq, or_false, ↓reduceIte, hs]
-        change (rdx t).toNat < g.p.n.toNat at hi
-        change (rdx u).toNat < g.p.n.toNat at hui
+        change (rdx t).toNat < g.p.targetSize.toNat at hi
+        change (rdx u).toNat < g.p.targetSize.toNat at hui
         omega) (by
       intro sources u hu he hal
       subst sources

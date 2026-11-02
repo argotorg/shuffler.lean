@@ -56,7 +56,7 @@ theorem al_movl (x : Word) :
 /-! ## The buffers of the flat state -/
 
 theorem get_vec {α : Type} [Inhabited α] {l : List α} {i : Word} (hi : i.toNat < l.length)
-    (hl : l.length ≤ MAX_N) : Flat.get (vec l) i = l[i.toNat] := by
+    (hl : l.length ≤ maxStackSize) : Flat.get (vec l) i = l[i.toNat] := by
   simp [Flat.get, vec, Nat.lt_of_lt_of_le hi hl, hi]
 
 theorem vec_set {α : Type} [Inhabited α] {l : List α} {i : Nat} (hi : i < l.length) (x : α) :
@@ -65,7 +65,7 @@ theorem vec_set {α : Type} [Inhabited α] {l : List α} {i : Nat} (hi : i < l.l
   simp only [vec, Vector.getElem_ofFn, Vector.getElem_setIfInBounds, List.getElem?_set, hi]
   split <;> simp
 
-theorem put_eq {α : Type} (v : Vector α MAX_N) {i : Word} (hi : i.toNat < MAX_N) (x : α) :
+theorem put_eq {α : Type} (v : Vector α maxStackSize) {i : Word} (hi : i.toNat < maxStackSize) (x : α) :
     Flat.put v i x = v.set i.toNat x hi := by
   ext j hj; simp [Flat.put, Vector.getElem_set, Vector.getElem_setIfInBounds]
 
@@ -106,13 +106,13 @@ theorem dup_nfrl {g : G} (hok : g.Ok) {c d : Word} (hc : c.toNat < g.h.n.toNat)
     rw [get_data hok hc]; exact h
   simp only [Flat.dup, this, ↓reduceIte]
 
-theorem pos_dup {g : G} {c d : Word} (hd : d.toNat < MAX_N) :
+theorem pos_dup {g : G} {c d : Word} (hd : d.toNat < maxStackSize) :
     Flat.get (Flat.stackDup (flat g) c).pos d = g.h.pos[d.toNat] := by
   simp [Flat.get, Flat.stackDup, flat, hd]
 
 -- `cmpq $-1, 8248(%rax,%rcx,8); jne .LB.Emission.dup.0`: the destination is used.
 theorem dup_used {g : G} (hok : g.Ok) {c d : Word} (hc : c.toNat < g.h.n.toNat)
-    (hd : d.toNat < MAX_N)
+    (hd : d.toNat < maxStackSize)
     (h : (BitVec.extractLsb' 32 8 g.stk[c.toNat] - 3#8 == BitVec.zero 8) = false)
     (hp : (!(g.h.pos[d.toNat] - 18446744073709551615#64 == BitVec.zero 64)) = true) :
     Flat.dup (flat g) c d = (.assertionFailed, Flat.stackDup (flat g) c) := by
@@ -122,7 +122,7 @@ theorem dup_used {g : G} (hok : g.Ok) {c d : Word} (hc : c.toNat < g.h.n.toNat)
 
 -- The fall-through: the destination is free.
 theorem dup_done {g : G} (hok : g.Ok) {c d : Word} (hc : c.toNat < g.h.n.toNat)
-    (hd : d.toNat < MAX_N)
+    (hd : d.toNat < maxStackSize)
     (h : (BitVec.extractLsb' 32 8 g.stk[c.toNat] - 3#8 == BitVec.zero 8) = false)
     (hp : (!(g.h.pos[d.toNat] - 18446744073709551615#64 == BitVec.zero 64)) = false) :
     Flat.dup (flat g) c d = (.done, Flat.bind (Flat.stackDup (flat g) c) g.h.len d) := by
@@ -155,7 +155,7 @@ theorem flat_dup {g : G} (hok : g.Ok) {c : Word} (hc : c.toNat < g.h.n.toNat)
   have hn := hok.n
   have hx := hok.xo
   have e : (g.h.nops + 1#64).toNat = g.h.nops.toNat + 1 := by
-    simp only [MAX_N] at hn hx; bv_omega
+    simp only [maxStackSize] at hn hx; bv_omega
   simp only [flat, Flat.stackDup, Flat.put, Flat.St.mk.injEq, true_and, and_true]
   refine ⟨?_, rfl, ?_⟩
   · rw [Vector.toList_set, List.map_set, vec_set (by simpa using Nat.lt_add_right g.xs hL)]
@@ -163,7 +163,7 @@ theorem flat_dup {g : G} (hok : g.Ok) {c : Word} (hc : c.toNat < g.h.n.toNat)
   · rw [e, trace_set, dupW_eq]
 
 -- `Mapping::bind`: the two stores of the fall-through.
-theorem flat_bind (g : G) {L d : Word} (hL : L.toNat < MAX_N) (hd : d.toNat < MAX_N) :
+theorem flat_bind (g : G) {L d : Word} (hL : L.toNat < maxStackSize) (hd : d.toNat < maxStackSize) :
     flat { g with h := { g.h with dest := g.h.dest.set L.toNat d hL,
                                   pos := g.h.pos.set d.toNat L hd } }
       = Flat.bind (flat g) L d := by
@@ -172,7 +172,7 @@ theorem flat_bind (g : G) {L d : Word} (hL : L.toNat < MAX_N) (hd : d.toNat < MA
 -- The ghost after `dup`: `Stack::dup` and `Mapping::bind`.
 theorem flat_dup_bind {g : G} (hok : g.Ok) {c d : Word} (hc : c.toNat < g.h.n.toNat)
     (hL : g.h.len.toNat < g.h.n.toNat) (hN : g.h.nops.toNat < 6 * g.h.n.toNat + g.xo)
-    (hLM : g.h.len.toNat < MAX_N) (hd : d.toNat < MAX_N) :
+    (hLM : g.h.len.toNat < maxStackSize) (hd : d.toNat < maxStackSize) :
     flat { h := { g.h with len := g.h.len + 1#64, nops := g.h.nops + 1#64,
                            dest := g.h.dest.set g.h.len.toNat d hLM,
                            pos := g.h.pos.set d.toNat g.h.len hd },
@@ -218,7 +218,7 @@ theorem dup_unit [Host] [FunDecls]
   have hk0 : Kp S g F s ra [x, y] (s.pushRa ra) := Kp.init hm
   have he := ProofKit.external_call_spec "exit" hexit
   have hcN : s.regs.rsi.toBitVec.toNat < g.h.n.toNat + g.xs := Nat.lt_add_right _ hpre.args.1
-  have hdN : s.regs.rdx.toBitVec.toNat < MAX_N := Nat.lt_of_lt_of_le hpre.args.2.2.2 hpre.ok.n
+  have hdN : s.regs.rdx.toBitVec.toNat < maxStackSize := Nat.lt_of_lt_of_le hpre.args.2.2.2 hpre.ok.n
   refine Program.WP.cfg (fun
       | .entry, t => t = s.pushRa ra
       | .label l, t =>
@@ -324,8 +324,8 @@ theorem dup_unit [Host] [FunDecls]
     rw [hcs] at hc
     rw [hds] at hd
     have hok := hpre.ok
-    have hdM : d.toNat < MAX_N := Nat.lt_of_lt_of_le hd hok.n
-    have hLM : g.h.len.toNat < MAX_N := Nat.lt_of_lt_of_le hL hok.n
+    have hdM : d.toNat < maxStackSize := Nat.lt_of_lt_of_le hd hok.n
+    have hLM : g.h.len.toNat < maxStackSize := Nat.lt_of_lt_of_le hL hok.n
     -- The loads of the entry memory.
     have h0 := hk0.mem
     have rD : BitVec.ofInt 64 (Mem.loadInt (s.pushRa ra).dmem (Fld.stack_data S) 8).get!

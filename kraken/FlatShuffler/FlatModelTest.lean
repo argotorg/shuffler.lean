@@ -8,7 +8,7 @@ import all FlatShuffler.FlatModel
 /-!
 Tests of `FlatModel.lean`: each unit on small states, the paths that fail
 (`Status.assertionFailed` and `Status.blocked`), the size_t wraps, the bounds of
-`build_bottom_up` (`n = 0`, `m = n`, `n = MAX_N`, `m > n`, `n > MAX_N`), and the
+`build_bottom_up` (`n = 0`, `m = n`, `n = maxStackSize`, `m > n`, `n > maxStackSize`), and the
 agreement with the list model `FlatShuffler.buildBottomUp` (the solc `permute`) on all inputs with
 `n ≤ 3` (32229) and on 15 deep stacks, with the stack and the operations at a block. The
 members that the constructor does not initialize get two contents, for `n ≤ 2`, and the
@@ -29,12 +29,12 @@ def var (i : Nat) : StackSlot := ⟨.ofNat 32 i, Value, 1⟩
 def J : StackSlot := .junk
 
 -- A buffer that holds `l` from offset 0, and `default` above it.
-def vec {α : Type} [Inhabited α] (l : List α) : Vector α MAX_N :=
+def vec {α : Type} [Inhabited α] (l : List α) : Vector α maxStackSize :=
   Vector.ofFn fun i => l[i.val]?.getD default
 
 -- Content of memory that the C++ does not write before it reads it.
-def junkWords (k : Nat) : Vector Word MAX_N := Vector.ofFn fun i => .ofNat 64 (i.val * k + 5)
-def junkSlots : Vector StackSlot MAX_N := Vector.ofFn fun i => var (i.val + 100)
+def junkWords (k : Nat) : Vector Word maxStackSize := Vector.ofFn fun i => .ofNat 64 (i.val * k + 5)
+def junkSlots : Vector StackSlot maxStackSize := Vector.ofFn fun i => var (i.val + 100)
 def u1 : Uninit := ⟨junkWords 7, junkWords 13, 77, 99⟩
 def u2 : Uninit := ⟨vec [], vec [], 0, 0⟩
 
@@ -215,14 +215,14 @@ def pm (source : List StackSlot) (p : List Nat) : Status × St :=
 -- The slot at 0 is bound for 17: out of swap reach by 1.
 def wideDests : List Nat := [17] ++ (List.range 17).drop 1 ++ [0]
 def wide : St := mk ((List.range 18).map var) ((List.range 18).map var) wideDests
-def widePerm : Vector Word MAX_N := vec (words wideDests)
+def widePerm : Vector Word maxStackSize := vec (words wideDests)
 #guard (permute wide widePerm).1 = .blocked
 #guard ((permute wide widePerm).2.blockedOffset, (permute wide widePerm).2.blockedExcess) = (0, 1)
 #guard (permute wide widePerm).2.trace = []
 -- One swap, then the slot at 0 is out of reach: the trace keeps the swap.
 def lateDests : List Nat := [17, 0] ++ (List.range 17).drop 2 ++ [1]
 def late : St := mk ((List.range 18).map var) ((List.range 18).map var) lateDests
-def latePerm : Vector Word MAX_N := vec (words lateDests)
+def latePerm : Vector Word maxStackSize := vec (words lateDests)
 #guard (permute late latePerm).1 = .blocked
 #guard ((permute late latePerm).2.blockedOffset, (permute late latePerm).2.blockedExcess) = (0, 1)
 #guard (permute late latePerm).2.trace = [⟨Swap, 16, .junk⟩]
@@ -284,7 +284,7 @@ def urgentSt : St :=
 #guard match build_bottom_up 0 0 (vec []) (vec []) (vec []) (spillsOf []) u1 with
   | (_, some st) => st.blockedOffset = 0 ∧ st.blockedExcess = 0
   | (_, none) => False
--- `n = MAX_N`, all slots in place.
+-- `n = maxStackSize`, all slots in place.
 #guard (build_bottom_up 1024 1024 (vec ((List.range 1024).map var)) (vec ((List.range 1024).map var))
   (vec (words (List.range 1024))) (spillsOf []) u1).1 = 0
 -- A result that is not blocked is the number of operations.
@@ -321,7 +321,7 @@ def listOut (source target : List StackSlot) (dests spilled : List Nat) : Out :=
   | .error (.blocked pos excess st) => .blocked pos excess (st.slots.map Slot.val) st.trace
   | .error .assertion => .assertion
 
-def flatOut (u : Uninit) (garbage : Vector StackSlot MAX_N) (source target : List StackSlot)
+def flatOut (u : Uninit) (garbage : Vector StackSlot maxStackSize) (source target : List StackSlot)
     (dests spilled : List Nat) : Out :=
   let data := Vector.ofFn fun i => source[i.val]?.getD garbage[i]
   match build_bottom_up (.ofNat 64 source.length) (.ofNat 64 target.length) data (vec target)

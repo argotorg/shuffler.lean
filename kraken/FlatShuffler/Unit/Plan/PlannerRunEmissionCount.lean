@@ -34,7 +34,7 @@ theorem b_15 [Host] [FunDecls] (P : Addr) (g : PlannerCallMemory) (M : Flat.Mapp
         (Program.Intercept plannerRunAsm.labels (s.pushRa ra) I' E) t := by
   cfg_block
   intro ⟨lo, locals, j, c, hc, hj, hax, hdx, hp, hmodel⟩
-  have hjN := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hj) hok.planner.n
+  have hjN := Nat.lt_of_lt_of_le (BitVec.lt_def.mp hj) hok.planner.targetSizeFitsBuffer
   have hidx : 3091 + j.toNat < 4121 := by change j.toNat < 1024 at hjN; omega
   have hr := hc.localRead hidx
   have he := hc.pos j.toNat (BitVec.lt_def.mp hj)

@@ -27,7 +27,7 @@ theorem EmitCountLI.ghost_ctor (h : EmitCountLI P g M F s ra lo locals t)
     let a := localEmissionHdr locals h.localLength
     flat (emissionGhost g hok a) =
       Flat.ctorP (vec ((g.data.toList.take g.dataCapacity).map StackSlot.ofWord))
-        g.p.m g.p.fl.target g.p.n M g.spills
+        g.p.sourceSize g.p.fl.target g.p.targetSize M g.spills
         ⟨a.dest, a.pos, a.blkOff, a.blkExc⟩ := by
   obtain ⟨_, _, _, _, hlen, _, hnops⟩ := h.header.localHdr h.localLength
   dsimp only
@@ -42,7 +42,7 @@ theorem EmitCountLI.ghost_ctor_full (h : EmitCountLI P g M F s ra lo locals t)
     let a := localEmissionHdr locals h.localLength
     Flat.restoreData g.dataCapacity (g.data.map StackSlot.ofWord)
       (flat (emissionGhost g hok a)) =
-      Flat.ctorP (g.data.map StackSlot.ofWord) g.p.m g.p.fl.target g.p.n M g.spills
+      Flat.ctorP (g.data.map StackSlot.ofWord) g.p.sourceSize g.p.fl.target g.p.targetSize M g.spills
         ⟨a.dest, a.pos, a.blkOff, a.blkExc⟩ := by
   obtain ⟨_, _, _, _, hlen, _, hnops⟩ := h.header.localHdr h.localLength
   dsimp only
@@ -51,12 +51,12 @@ theorem EmitCountLI.ghost_ctor_full (h : EmitCountLI P g M F s ra lo locals t)
   exact (h.ctorP hok hp).symm
 
 theorem EmitCountLI.runA (h : EmitCountLI P g M F s ra lo locals t)
-    (hok : g.Ok) (hm : MapInv g.p.m g.p.n M)
+    (hok : g.Ok) (hm : MapInv g.p.sourceSize g.p.targetSize M)
     (hp : locals[4115]? = some (Flat.unmappedFrom (countState g M) 0 0)) :
     runA (EmissionLocals.ofList locals h.localLength).planned.pos
       (emissionGhost g hok (localEmissionHdr locals h.localLength)) t := by
   change RunU.Safe (localMapping locals h.localLength).pos
-    (flat (emissionGhost g hok (localEmissionHdr locals h.localLength))) (4 * g.p.m.toNat)
+    (flat (emissionGhost g hok (localEmissionHdr locals h.localLength))) (4 * g.p.sourceSize.toNat)
   rw [h.mappingEq _, h.ghost_ctor hok hp]
   exact ctorP_safe hm _ _ _ _
 

@@ -97,10 +97,10 @@ theorem b_8 : resolveAsm.ForallBlocks fun blk =>
   intro t ht
   simp only [Inv, loopPhase, Names.resolve, String.reduceEq, ↓reduceIte, Tie] at ht
   obtain ⟨w, lo, L, i, best, cls, h, hm, heq, hb, hbp, hpend, hsi, hd, hc, hn⟩ := ht
-  have hoff : (Flat.get w.candidates i).toNat < MAX_N :=
-    Nat.lt_of_lt_of_le (BitVec.lt_def.mp (h.ok.bounded i h.index)) hok.planner.m
-  have hbest : best.toNat < MAX_N :=
-    Nat.lt_of_lt_of_le (BitVec.lt_def.mp ((h.bestValid.resolve_left hb).1)) hok.planner.m
+  have hoff : (Flat.get w.candidates i).toNat < maxStackSize :=
+    Nat.lt_of_lt_of_le (BitVec.lt_def.mp (h.ok.bounded i h.index)) hok.planner.sourceSizeFitsBuffer
+  have hbest : best.toNat < maxStackSize :=
+    Nat.lt_of_lt_of_le (BitVec.lt_def.mp ((h.bestValid.resolve_left hb).1)) hok.planner.sourceSizeFitsBuffer
   obtain ⟨R, hmp⟩ := RView.plan h.bd.kb.vmem
   have hso := MapM.isSome_dest hmp hoff
   have hsb := MapM.isSome_dest hmp hbest

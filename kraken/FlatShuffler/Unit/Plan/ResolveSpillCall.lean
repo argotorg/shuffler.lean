@@ -24,7 +24,7 @@ theorem split17_add (lo : List Word) (hl : lo.length = 17) :
 
 theorem Bd.callAdd (hb : Bd P r F s ra lo L.toList t) (hok : r.Ok)
     (hdi : rdi t = P + 32#64) {off : Word}
-    (ho : off.toNat < r.p.m.toNat)
+    (ho : off.toNat < r.p.sourceSize.toNat)
     (hsi : StackSlot.ofWord (rsi t) = Flat.get r.p.fl.source off)
     (hK : ∀ (u : MachineData) (lo' : List Word),
       Bd P { r with spills := (Flat.spillAdd r.spills (Flat.get r.p.fl.source off)).2 }
@@ -114,7 +114,7 @@ theorem Core.callAdd (h : Core P r F s ra w lo L t) (hok : r.Ok)
     (hmem : c.dmem = t.dmem) (hsp : c.regs.rsp = t.regs.rsp)
     (h12 : c.regs.r12 = t.regs.r12) (h14 : c.regs.r14 = t.regs.r14)
     (h13 : c.regs.r13 = t.regs.r13) (h15 : c.regs.r15 = t.regs.r15)
-    (hdi : rdi c = P + 32#64) (ho : off.toNat < r.p.m.toNat)
+    (hdi : rdi c = P + 32#64) (ho : off.toNat < r.p.sourceSize.toNat)
     (hsi : StackSlot.ofWord (rsi c) = Flat.get r.p.fl.source off)
     (hK : ∀ u lo',
       Core P r F s ra { w with spills :=

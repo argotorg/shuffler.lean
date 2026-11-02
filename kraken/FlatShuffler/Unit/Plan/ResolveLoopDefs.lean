@@ -18,9 +18,9 @@ open FlatShuffler.Sep
 
 structure Work where
   spills : BitVec 32 → BitVec 8
-  dropped : Vector (BitVec 8) MAX_N
-  droppedNow : Vector (BitVec 8) MAX_N
-  candidates : Vector Word MAX_N
+  dropped : Vector (BitVec 8) maxStackSize
+  droppedNow : Vector (BitVec 8) maxStackSize
+  candidates : Vector Word maxStackSize
   count : Word
   pass : Word
 
@@ -33,11 +33,11 @@ def Work.pick (w : Work) (r : RG) : Word × BitVec 8 :=
   picked r.p.fl r.M w.candidates w.count w.state
 
 def packResult (q : Flat.Resolution × Flat.RState) :
-    Flat.Resolution × (BitVec 32 → BitVec 8) × Vector (BitVec 8) MAX_N :=
+    Flat.Resolution × (BitVec 32 → BitVec 8) × Vector (BitVec 8) maxStackSize :=
   (q.1, q.2.spills, q.2.dropped)
 
 def Work.result (w : Work) (r : RG) (s : MachineData) :
-    Flat.Resolution × (BitVec 32 → BitVec 8) × Vector (BitVec 8) MAX_N :=
+    Flat.Resolution × (BitVec 32 → BitVec 8) × Vector (BitVec 8) maxStackSize :=
   packResult (Flat.passFrom r.p.fl r.M w.candidates w.count (rcx s) w.pass w.state)
 
 def Work.Model (w : Work) (r : RG) (s : MachineData) : Prop :=
@@ -46,9 +46,9 @@ def Work.Model (w : Work) (r : RG) (s : MachineData) : Prop :=
       w.result r s
 
 structure Work.Ok (w : Work) (r : RG) (s : MachineData) : Prop where
-  count : w.count.toNat ≤ MAX_N
+  count : w.count.toNat ≤ maxStackSize
   pass : w.pass < rcx s
-  bounded : CandidatesBound r.p.m w.candidates w.count
+  bounded : CandidatesBound r.p.sourceSize w.candidates w.count
   live : CandidatesLive r.M w.candidates w.count
 
 structure Core (P : Addr) (r : RG) (F : MProp 64) (s : MachineData) (ra : Int64)

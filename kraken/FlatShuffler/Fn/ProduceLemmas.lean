@@ -636,7 +636,7 @@ theorem at30_isSome (hpre : Pre 72 produceA s) {t : MachineData} (h : Hold s ra 
   have hd : dd s < nOf t.dmem (rdi s) := by
     rw [h.fm.n hpre, ← (fm0 (ra := ra) hpre).n hpre]; exact dd_lt hpre
   have hn := h.fm.wf.n_le
-  simp only [MAX_N] at hn
+  simp only [maxStackSize] at hn
   have hw := fun k (hk : k < WORDS) => h.fm.wf.word_isSome h.fm.wf.mapped hk
   rw [h.rbx, h.r14]
   refine ⟨by simpa [wordAt] using hw 0 (by decide), ?_, hw 1 (by decide)⟩

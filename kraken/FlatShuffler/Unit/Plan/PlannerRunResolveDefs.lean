@@ -21,16 +21,16 @@ def resolveExcess (locals : List Word) (hl : locals.length = 4121) : Word :=
 
 structure ResolveInputs (g : PlannerCallMemory) (M : Flat.Mapping) (locals : List Word)
     (hl : locals.length = 4121) : Prop where
-  mapping : MapInv g.p.m g.p.n M
-  size : (resolveSize locals hl).toNat ≤ MAX_N
-  offset : (resolveOffset locals hl).toNat < MAX_N
-  excess : (resolveExcess locals hl).toNat ≤ MAX_N
+  mapping : MapInv g.p.sourceSize g.p.targetSize M
+  size : (resolveSize locals hl).toNat ≤ maxStackSize
+  offset : (resolveOffset locals hl).toNat < maxStackSize
+  excess : (resolveExcess locals hl).toNat ≤ maxStackSize
   current : ∀ o : Word, o.toNat < (resolveSize locals hl).toNat →
     get (localCurrentMapping locals hl).dest o = NONE ∨
-      (get (localCurrentMapping locals hl).dest o).toNat < g.p.n.toNat
+      (get (localCurrentMapping locals hl).dest o).toNat < g.p.targetSize.toNat
 
 theorem plannerResolve_ok {g : PlannerCallMemory} (hok : g.Ok) (sp : Addr)
-    {M : Flat.Mapping} (current : Flat.Mapping) (hm : MapInv g.p.m g.p.n M) :
+    {M : Flat.Mapping} (current : Flat.Mapping) (hm : MapInv g.p.sourceSize g.p.targetSize M) :
     (plannerResolve g sp M current).Ok := by
   refine ⟨hok.planner, hok.spillCount, hok.sourceIds, ?_, ?_⟩
   · intro t ht
@@ -43,7 +43,7 @@ variable {P : Addr} {g : PlannerCallMemory} {M : Flat.Mapping} {F : MProp 64}
     {s t u : MachineData} {ra : Int64} {lo lo' locals : List Word}
 
 theorem PostEmitLI.afterResolve (h : PostEmitLI P g M F s ra lo locals t)
-    (sp : BitVec 32 → BitVec 8) (d : Vector (BitVec 8) MAX_N)
+    (sp : BitVec 32 → BitVec 8) (d : Vector (BitVec 8) maxStackSize)
     (hb : Bd P (withResolve g sp d) F s ra lo' locals u)
     (hag : Sep.mod.Agree t u) : PostEmitLI P (withResolve g sp d) M F s ra lo' locals u := by
   have hsp := mod_keep hag (by simp [Sep.mod]) Reg64s.get64_rsp
@@ -60,7 +60,7 @@ theorem PostEmitLI.afterResolve (h : PostEmitLI P g M F s ra lo locals t)
 
 def Resolved (g : PlannerCallMemory) (M : Flat.Mapping) (locals : List Word)
     (hl : locals.length = 4121) (spills : BitVec 32 → BitVec 8)
-    (dropped : Vector (BitVec 8) MAX_N) (res : Flat.Resolution) : Prop :=
+    (dropped : Vector (BitVec 8) maxStackSize) (res : Flat.Resolution) : Prop :=
   ∀ scratch : Flat.ResolveU, Flat.resolve g.p.fl g.spills g.dropped M
     (resolveOffset locals hl) (resolveExcess locals hl) (localCurrentMapping locals hl)
     (resolveSize locals hl) scratch = (res, spills, dropped)
@@ -70,7 +70,7 @@ theorem resolved_of_resolveQ {r r' : RG} {v : MachineData}
     ∃ res, al v = ResolveU.code res ∧ res ≠ .assertionFailed ∧
       ∀ scratch : Flat.ResolveU, Flat.resolve r.p.fl r.spills r.dropped r.M
         (rdx t) (rcx t) r.current (r9 t) scratch = (res, r'.spills, r'.dropped) := by
-  let scratch : Flat.ResolveU := ⟨Vector.replicate MAX_N 0#8, Vector.replicate MAX_N 0#64⟩
+  let scratch : Flat.ResolveU := ⟨Vector.replicate maxStackSize 0#8, Vector.replicate maxStackSize 0#64⟩
   let q := Flat.resolve r.p.fl r.spills r.dropped r.M
     (rdx t) (rcx t) r.current (r9 t) scratch
   have h0 := hq scratch

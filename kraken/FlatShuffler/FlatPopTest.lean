@@ -25,18 +25,18 @@ def y : StackSlot := ⟨2, Value, Const⟩
 def var (i : Nat) : StackSlot := ⟨.ofNat 32 i, Value, 1⟩
 
 -- A buffer that holds `l` from offset 0, and `default` above it.
-def vec {α : Type} [Inhabited α] (l : List α) : Vector α MAX_N :=
+def vec {α : Type} [Inhabited α] (l : List α) : Vector α maxStackSize :=
   Vector.ofFn fun i => l[i.val]?.getD default
 
 -- Content of memory that the C++ does not write before it reads it.
-def junkWords (k : Nat) : Vector Word MAX_N := Vector.ofFn fun i => .ofNat 64 (i.val * k + 5)
+def junkWords (k : Nat) : Vector Word maxStackSize := Vector.ofFn fun i => .ofNat 64 (i.val * k + 5)
 def u1 : Uninit := ⟨junkWords 7, junkWords 13, 77, 99⟩
 def up1 : Mapping := ⟨junkWords 3, junkWords 11⟩
 
 def words (l : List Nat) : List Word := l.map (BitVec.ofNat 64)
 
 -- The `dest` argument of `emission_pop`: `NONE` for `none`.
-def destWords (ds : List (Option Nat)) : Vector Word MAX_N :=
+def destWords (ds : List (Option Nat)) : Vector Word maxStackSize :=
   vec (ds.map fun | some d => .ofNat 64 d | none => NONE)
 
 -- The state of the constructor, with the planned mapping of `emission_pop`.
@@ -145,13 +145,13 @@ def ep (m n count : Word) : Word × Option St :=
 #guard (ep 3 3 4).1 = -2
 #guard (ep 0 0 1).1 = -2
 #guard (ep 0 0 0).1 = 0
--- The bounds: `m, n ≤ MAX_N`, with no state.
-#guard (ep (.ofNat 64 (MAX_N + 1)) 3 0).1 = -2 ∧ (ep (.ofNat 64 (MAX_N + 1)) 3 0).2.isNone
-#guard (ep 3 (.ofNat 64 (MAX_N + 1)) 0).1 = -2 ∧ (ep 3 (.ofNat 64 (MAX_N + 1)) 0).2.isNone
+-- The bounds: `m, n ≤ maxStackSize`, with no state.
+#guard (ep (.ofNat 64 (maxStackSize + 1)) 3 0).1 = -2 ∧ (ep (.ofNat 64 (maxStackSize + 1)) 3 0).2.isNone
+#guard (ep 3 (.ofNat 64 (maxStackSize + 1)) 0).1 = -2 ∧ (ep 3 (.ofNat 64 (maxStackSize + 1)) 0).2.isNone
 #guard (ep (-1) 3 0).1 = -2
-#guard (ep (.ofNat 64 MAX_N) (.ofNat 64 MAX_N) 1).1 = 1
-#guard (ep (.ofNat 64 MAX_N) 0 (.ofNat 64 MAX_N)).1 = .ofNat 64 MAX_N
-#guard (ep (.ofNat 64 MAX_N) 0 (.ofNat 64 (MAX_N + 1))).1 = -2
+#guard (ep (.ofNat 64 maxStackSize) (.ofNat 64 maxStackSize) 1).1 = 1
+#guard (ep (.ofNat 64 maxStackSize) 0 (.ofNat 64 maxStackSize)).1 = .ofNat 64 maxStackSize
+#guard (ep (.ofNat 64 maxStackSize) 0 (.ofNat 64 (maxStackSize + 1))).1 = -2
 
 /-! ## The list model -/
 

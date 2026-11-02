@@ -17,12 +17,12 @@ namespace FlatShuffler.Flat
 theorem ofNat_succ (k : Nat) : BitVec.ofNat 64 k + 1 = BitVec.ofNat 64 (k + 1) := by
   rw [BitVec.ofNat_add]; rfl
 
-theorem ofNat_lt_iff {k : Nat} {n : Word} (hk : k ≤ MAX_N) :
+theorem ofNat_lt_iff {k : Nat} {n : Word} (hk : k ≤ maxStackSize) :
     BitVec.ofNat 64 k < n ↔ k < n.toNat := by
-  rw [BitVec.lt_def, BitVec.toNat_ofNat, Nat.mod_eq_of_lt (by unfold MAX_N at hk; omega)]
+  rw [BitVec.lt_def, BitVec.toNat_ofNat, Nat.mod_eq_of_lt (by unfold maxStackSize at hk; omega)]
 
 -- A loop that checks `P` for each offset from `o` on below `n`.
-theorem allFrom_iff {n : Word} (hn : n.toNat ≤ MAX_N) (P F : Word → Bool)
+theorem allFrom_iff {n : Word} (hn : n.toNat ≤ maxStackSize) (P F : Word → Bool)
     (hF : ∀ o, F o = if o < n then P o && F (o + 1) else true) :
     F 0 = true ↔ ∀ d < n.toNat, P (BitVec.ofNat 64 d) = true := by
   suffices h : ∀ j k, k + j = n.toNat →
@@ -47,12 +47,12 @@ theorem allFrom_iff {n : Word} (hn : n.toNat ≤ MAX_N) (P F : Word → Bool)
       exact ⟨by simpa using h 0 (by omega),
         fun i hi => by rw [show k + 1 + i = k + (i + 1) by omega]; exact h (i + 1) (by omega)⟩
 
-theorem availableFrom_iff (st : St) (hn : st.targetSize.toNat ≤ MAX_N) :
+theorem availableFrom_iff (st : St) (hn : st.targetSize.toNat ≤ maxStackSize) :
     availableFrom st 0 = true ↔
       ∀ d < st.targetSize.toNat, isAvailable st (BitVec.ofNat 64 d) = true :=
   allFrom_iff hn _ _ fun o => by rw [availableFrom]; simp only [dite_eq_ite]
 
-theorem labelsFrom_iff (st : St) (hn : st.targetSize.toNat ≤ MAX_N) :
+theorem labelsFrom_iff (st : St) (hn : st.targetSize.toNat ≤ maxStackSize) :
     labelsFrom st 0 = true ↔ ∀ d < st.targetSize.toNat,
       ((get st.target (BitVec.ofNat 64 d)).kind ≠ FunctionReturnLabel ||
         get st.pos (BitVec.ofNat 64 d) ≠ NONE) = true :=
@@ -60,7 +60,7 @@ theorem labelsFrom_iff (st : St) (hn : st.targetSize.toNat ≤ MAX_N) :
     (labelsFrom st) fun o => by rw [labelsFrom]; simp only [dite_eq_ite]
 
 -- `unmappedFrom` adds the stackSlotIdentity of `NONE` entries of `pos` from `o` on below `targetSize`.
-theorem unmappedFrom_eq (st : St) (hn : st.targetSize.toNat ≤ MAX_N) :
+theorem unmappedFrom_eq (st : St) (hn : st.targetSize.toNat ≤ maxStackSize) :
     unmappedFrom st 0 0 = BitVec.ofNat 64
       ((offsets st.targetSize).countP fun d => get st.pos d = NONE) := by
   suffices h : ∀ j k (c : Word), k + j = st.targetSize.toNat →
