@@ -15,8 +15,11 @@ to the instruction proof. `Main.lean` combines this result with `PlannerModel.le
 
 The separation operator `∗` requires disjoint owned regions. `frame` is arbitrary
 caller memory and is preserved. Stack storage is measured in eight-byte words:
-8240 free words plus a return slot. The exit contract stops at external `exit(1)`.
-The final normal-return theorems exclude that outcome for valid inputs.
+8240 free words plus a return slot. The exit contract stops at `label "exit"`
+with argument 1. `ExitBoundary` requires this label to resolve and its address to
+differ from each shuffler label and call return address in the host. The proof
+does not cover the implementation of `exit`. The final normal-return theorems
+exclude assertion exit for valid inputs.
 -/
 
 namespace ShufflerVerification
@@ -85,7 +88,7 @@ def PlannerNormalReturn (resultMatchesModel : PlannerInput → PlannerExecutionR
         else before.count) ∧
       resultMatchesModel (plannerInputAtEntry before entry) execution
 
-/-- An assertion reaches external `exit(1)` with matching model failure.
+/-- The state at an assertion exit, with matching model failure.
 The count word is unchanged. The caller's frame is still present at that boundary. -/
 def PlannerAssertionExit (resultMatchesModel : PlannerInput → PlannerExecutionResult → Prop)
     (plannerAddress : Addr) (before : PlannerCallMemory) (frame : MProp 64)
@@ -101,8 +104,8 @@ def PlannerAssertionExit (resultMatchesModel : PlannerInput → PlannerExecution
 
 /-- Execute the real method with an arbitrary caller return address.
 Normal return preserves the callee-saved registers. Assertion failure transfers control
-to external `exit` with its argument register set to 1. The implementation of
-external `exit` is outside this contract. -/
+to `label "exit"` with its argument register set to 1.
+The implementation of `exit` is outside this contract. -/
 def PlannerCallExecution [Host] [FunDecls] (precondition : MachineData → Prop)
     (normalReturn assertionExit : MachineData → MachineData → Prop) : Prop :=
   ∀ entry returnAddress,
@@ -120,7 +123,8 @@ def PlannerCallNormalReturnExecution [Host] [FunDecls] (precondition : MachineDa
     ⦃ (fun _ _ => False); fun address finished =>
       address = returnAddress ∧ normalReturn entry finished ∧ mod.Agree entry finished ⦄
 
-/-- The call contract in any host with the generated methods and exit boundary. -/
+/-- The call contract in any host with the generated methods and a resolved `exit` label.
+The exit address must differ from each shuffler label and call return address in the host. -/
 public def PlannerAssemblyContract (inputAssumptions : PlannerInput → Prop)
     (resultMatchesModel : PlannerInput → PlannerExecutionResult → Prop) : Prop :=
   ∀ [Host] (linkedMethods : Linked) (_exitBoundary : ExitBoundary),
@@ -142,7 +146,7 @@ public def PlannerBinaryContract (inputAssumptions : PlannerInput → Prop)
       (PlannerNormalReturn resultMatchesModel plannerAddress initialMemory frame)
       (PlannerAssertionExit resultMatchesModel plannerAddress initialMemory frame)
 
-/-- The normal-return contract in any host with the generated methods and exit boundary. -/
+/-- The normal-return contract with the same host requirements as `PlannerAssemblyContract`. -/
 public def PlannerAssemblyNormalReturnContract (inputAssumptions : PlannerInput → Prop)
     (resultMatchesModel : PlannerInput → PlannerExecutionResult → Prop) : Prop :=
   ∀ [Host] (linkedMethods : Linked) (_exitBoundary : ExitBoundary),

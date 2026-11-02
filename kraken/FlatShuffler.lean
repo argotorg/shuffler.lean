@@ -102,6 +102,8 @@ public import FlatShuffler.Layout
 import all FlatShuffler.Layout
 public import FlatShuffler.Link
 import all FlatShuffler.Link
+public import FlatShuffler.LinkTest
+import all FlatShuffler.LinkTest
 public import FlatShuffler.PlannerHelpers
 import all FlatShuffler.PlannerHelpers
 public import FlatShuffler.PlannerHelpersTest

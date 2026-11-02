@@ -121,6 +121,9 @@ The machine conditions in `PlannerCallPrecondition` also apply.
 Each theorem has a `planner_binary_…` form. It uses the same assembly model with
 the host from the recorded binary layout. The assembly form requires a host
 with the proved methods and `ExitBoundary`.
+The `exit` label must resolve to an address other than `-1`, the missing-label
+value. Its address must differ from each shuffler label and each call return
+address in the host.
 
 Normal return preserves the caller's memory frame and callee-saved registers.
 The count word equals the trace length on Done and keeps its entry value on

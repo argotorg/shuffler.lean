@@ -101,8 +101,10 @@ end FlatShuffler
 
 namespace FlatShuffler
 
--- The external symbol has a different address from each shuffler label and call return.
+-- The external exit label resolves to an address other than the missing-label value -1.
+-- Its address differs from each shuffler label and call return.
 structure ExitBoundary [Host] : Prop where
+  resolved : label "exit" ≠ -1
   labels : ∀ l ∈ Program.labels bbuAsm, label l ≠ label "exit"
   returns : ∀ i asz osz f, Host.prog[i]? = some (.instr (.regular asz osz
     (.call (.rel (.sub (.label f) .after_current_instruction))))) →

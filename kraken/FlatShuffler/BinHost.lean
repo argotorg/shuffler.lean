@@ -195,6 +195,14 @@ theorem binExit_before (j : Nat) (hj : 2 ≤ j) : label "exit" ≠ Host.addrOf j
   simpa only [he] using Host.addrOf_ne_of_succ_ne (n := j - 2) hn
 
 theorem binBoundary : ExitBoundary where
+  resolved := by
+    rw [binExit_addr]
+    change Int64.ofNat BinLayout.exit +
+      Int64.ofNat ((binLayout.apply binProg).sizeBefore 1) ≠ -1
+    exact addr_ne (by
+      have := binExe_sizeBefore_le 1
+      have := binProg_fits
+      omega)
   labels l hl := by
     obtain ⟨i, hi⟩ := List.mem_iff_getElem?.mp (Program.mem_labels.mp hl)
     have ha := Host.label_eq binLinked.hb hi
