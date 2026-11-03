@@ -1,0 +1,108 @@
+ClightCorrect.permute_call_correct
+Axioms:
+permute_call_correct :
+  forall (d : nat) (ge : Clight.genv) (memory : Memory.Mem.mem)
+    (bd bp bt bu btrace bo : Values.block)
+    (source : fintype.ordinal (S d) -> nat)
+    (p : perm.perm_of (fintype.ordinal (S d))),
+  S d <= 1024 ->
+  PermuteSpec.separate_arrays bd bp bt bu btrace bo ->
+  (forall x : fintype.ordinal (S d),
+   ClightScalar.uint (BinInt.Z.of_nat (source x))) ->
+  ClightMemory.array_at memory bd (ModelArrays.words source) ->
+  ClightMemory.array_at memory bp
+    (ModelArrays.words
+       (fun x : fintype.ordinal (S d) =>
+        eqtype.isSub.val_subdef
+          (eqtype.SubType.eqtype_isSub_mixin
+             (eqtype.SubType.phant_on_
+                (S:=fintype.SubFinite.Exports.join_fintype_SubFinite_between_fintype_Finite_and_eqtype_SubType
+                      (fintype.fintype_ordinal__canonical__fintype_SubFinite
+                         (S d)))
+                (ssreflect.Phant
+                   (eqtype.SubType.sort
+                      (fintype.SubFinite.Exports.join_fintype_SubFinite_between_fintype_Finite_and_eqtype_SubType
+                         (fintype.fintype_ordinal__canonical__fintype_SubFinite
+                            (S d)))))
+              :
+              eqtype.SubType.axioms_ (T:=nat)
+                (fun x0 : nat => ssrnat.leq (S x0) (S d))
+                (eqtype.SubType.sort
+                   (fintype.SubFinite.Exports.join_fintype_SubFinite_between_fintype_Finite_and_eqtype_SubType
+                      (fintype.fintype_ordinal__canonical__fintype_SubFinite
+                         (S d))))))
+          (perm.fun_of_perm.body p x))) ->
+  ClightMemory.writable_array memory bt (S d) ->
+  ClightMemory.writable_array memory bu (S d) ->
+  ClightMemory.writable_array memory btrace (ssrnat.muln 2 (S d)) ->
+  ClightMemory.writable_array memory bo 3 ->
+  exists
+    (memory' : Memory.Mem.mem) (code : BinNums.Z) 
+  (result : SolcModel.SolcResult
+              (eqtype.Equality.sort
+                 ssrnat.Datatypes_nat__canonical__eqtype_Equality)
+              (S d)),
+    ClightBigstep.eval_funcall Clight.function_entry2 ge memory
+      (Ctypes.Internal Permute.permute)
+      (call_arguments (Integers.Int.repr (BinInt.Z.of_nat (S d)))
+         (Values.Vptr bd Integers.Ptrofs.zero)
+         (Values.Vptr bp Integers.Ptrofs.zero)
+         (Values.Vptr bt Integers.Ptrofs.zero)
+         (Values.Vptr bu Integers.Ptrofs.zero)
+         (Values.Vptr btrace Integers.Ptrofs.zero)
+         (Values.Vptr bo Integers.Ptrofs.zero))
+      Events.E0 memory' (Values.Vint (Integers.Int.repr code)) /\
+    SolcModel.solc_permute
+      (A:=ssrnat.Datatypes_nat__canonical__eqtype_Equality) source p =
+    Some result /\
+    PermuteSpec.result_arrays bd bp btrace bo result memory'
+      (ClightBigstep.Out_return
+         (Some (Values.Vint (Integers.Int.repr code), Permute.u32))) /\
+    ModelSpec.solc_result_spec
+      (A:=ssrnat.Datatypes_nat__canonical__eqtype_Equality) source p result /\
+    (code = BinNums.Z0 \/ code = BinNums.Zpos BinNums.xH)
+ClightCorrect.permute_body_correct
+Axioms:
+ClassicalDedekindReals.sig_not_dec : forall P : Prop, {~ ~ P} + {~ P}
+ClassicalDedekindReals.sig_forall_dec :
+  forall P : nat -> Prop,
+  (forall n : nat, {P n} + {~ P n}) ->
+  {n : nat | ~ P n} + {forall n : nat, P n}
+Events.inline_assembly_sem :
+  String.string -> AST.signature -> Events.extcall_sem
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+Events.external_functions_sem :
+  String.string -> AST.signature -> Events.extcall_sem
+Classical_Prop.classic : forall P : Prop, P \/ ~ P
+ClightCall.permute_empty_call
+Axioms:
+ClassicalDedekindReals.sig_not_dec : forall P : Prop, {~ ~ P} + {~ P}
+ClassicalDedekindReals.sig_forall_dec :
+  forall P : nat -> Prop,
+  (forall n : nat, {P n} + {~ P n}) ->
+  {n : nat | ~ P n} + {forall n : nat, P n}
+Events.inline_assembly_sem :
+  String.string -> AST.signature -> Events.extcall_sem
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+Events.external_functions_sem :
+  String.string -> AST.signature -> Events.extcall_sem
+Classical_Prop.classic : forall P : Prop, P \/ ~ P
+ClightCall.permute_oversized_call
+Axioms:
+ClassicalDedekindReals.sig_not_dec : forall P : Prop, {~ ~ P} + {~ P}
+ClassicalDedekindReals.sig_forall_dec :
+  forall P : nat -> Prop,
+  (forall n : nat, {P n} + {~ P n}) ->
+  {n : nat | ~ P n} + {forall n : nat, P n}
+Events.inline_assembly_sem :
+  String.string -> AST.signature -> Events.extcall_sem
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+Events.external_functions_sem :
+  String.string -> AST.signature -> Events.extcall_sem
+Classical_Prop.classic : forall P : Prop, P \/ ~ P

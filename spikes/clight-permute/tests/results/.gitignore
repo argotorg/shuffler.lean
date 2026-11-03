@@ -1,0 +1,10 @@
+# Keep summaries of these campaigns. Write new raw output under build/.
+/extended-2026-10-06/**
+!/extended-2026-10-06/**/
+!/extended-2026-10-06/**/README.md
+/resumed-2026-10-06/**
+!/resumed-2026-10-06/README.md
+/frama-c-2026-10-07/**
+!/frama-c-2026-10-07/README.md
+!/frama-c-2026-10-07/saved-component-audit.json
+!/frama-c-2026-10-07/tool-tests.log

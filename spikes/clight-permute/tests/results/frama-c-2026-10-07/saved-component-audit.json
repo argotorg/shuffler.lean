@@ -1,0 +1,166 @@
+{
+  "scope": "Read-only audit of separate saved component proofs; no fresh integrated run",
+  "production_sha256": "a120dccaaa1a7783231f7b4482f76f515ef6c099f4e0e73279f1228e634cfb78",
+  "components": {
+    "safety": {
+      "directory": "full-final-20261007/safety",
+      "goals": 641,
+      "report_errors": [],
+      "saved_summary_complete": true,
+      "matches_current_annotations_after_trailing_whitespace_removal": true,
+      "annotated_sha256": "9b29c54543bad9a098ad6dd26d4dcf20dc0a4de2bff77f1f804d6ed8efd3ffe9",
+      "goals_sha256": "758b7af77109f69cfd4c49fcc2599822c36cd38a94a7d8596ff24836e5712ef7",
+      "summary_sha256": "5d8f0a055e0637c1125e1571fa1b65d9fe21d77ab8096d1eb1b943e722d747b1"
+    },
+    "termination": {
+      "directory": "full-final-20261007/termination",
+      "goals": 337,
+      "report_errors": [],
+      "saved_summary_complete": true,
+      "matches_current_annotations_after_trailing_whitespace_removal": true,
+      "annotated_sha256": "66d7af17f7f192999b9732335027a69b1667b23cc50ecfbe7b42e52639cd96dc",
+      "goals_sha256": "21d04e756636b30fc7d5929f8b948c1f92eae65ac6486fe02fdb2df551426ce2",
+      "summary_sha256": "328ea013b6d29a8e9ff95e0064fc502d7ce123f1f0bdc64866e205d3989aa647"
+    },
+    "target": {
+      "directory": "full-final-20261007/target",
+      "goals": 313,
+      "report_errors": [],
+      "saved_summary_complete": true,
+      "matches_current_annotations_after_trailing_whitespace_removal": true,
+      "annotated_sha256": "7cb19c8347ed69400c1801e9e6863cf7f16974234dc25c93277af0a9821cb654",
+      "goals_sha256": "762bea9c12c3201df41521675fc7a85e4877ca5c17f9333f0b8dcb7138050e25",
+      "summary_sha256": "ae56bdfd91e945e949bba8812d30dc0d6dfcb61d684e9113fcd378e628b0ba5e"
+    },
+    "trace": {
+      "directory": "trace-promoted-20261007/trace",
+      "goals": 393,
+      "report_errors": [],
+      "saved_summary_complete": true,
+      "matches_current_annotations_after_trailing_whitespace_removal": true,
+      "annotated_sha256": "fd6dac25081ed17038704e4cbb98b2644cab182f1e89ac2e5a2f5d5c0ac452e1",
+      "goals_sha256": "ed95fc5c1c6a9e687a243eee8c3bf73c0e1910421849d814c5dad9c340326268",
+      "summary_sha256": "b0ad77759bf0cfe80672af08b8a149095c3fa300c8472218928b5a5004bb3b18"
+    },
+    "status": {
+      "directory": "status-promoted-v14-20261007/status",
+      "goals": 495,
+      "report_errors": [],
+      "saved_summary_complete": true,
+      "matches_current_annotations_after_trailing_whitespace_removal": true,
+      "annotated_sha256": "236b364bdf59ecd6a54f4fcefa52b6ef90bfbfa69a3a58b183b317ba17f29e1c",
+      "goals_sha256": "89f7623f142a9782368943afafc794879a1ea2eb458335dd8b2f93c71c8b3ce7",
+      "summary_sha256": "eb89a410ebdd6e0e10b3e1317be87a86eb440df847788415180b6a09345fe610"
+    },
+    "success": {
+      "directory": "success-source-controls-final-20261007/baseline",
+      "goals": 570,
+      "report_errors": [],
+      "saved_summary_complete": true,
+      "matches_current_annotations_after_trailing_whitespace_removal": true,
+      "annotated_sha256": "cb76d840da9a8540a79cdea52c8536016d329956c0311b2073bc1a5b35db13a6",
+      "goals_sha256": "5cc442051042e18e557fd3936f50bd7ba7972d101e09949ed78772b47923c97c",
+      "summary_sha256": "424c92261bb886c1dc84b4333a6205370e1f733980aa5d32ae6bf0c64ac1d382"
+    }
+  },
+  "total_component_goals": 2749,
+  "source_and_domain_checked": true,
+  "contract_coverage": {
+    "status": [
+      "status"
+    ],
+    "count": [
+      "safety"
+    ],
+    "out_initialized": [
+      "safety"
+    ],
+    "target_initialized": [
+      "target"
+    ],
+    "target_definition": [
+      "target"
+    ],
+    "success_data": [
+      "success"
+    ],
+    "success_info": [
+      "success"
+    ],
+    "blocked_info": [
+      "success"
+    ],
+    "trace_initialized": [
+      "safety"
+    ],
+    "trace_bounds": [
+      "trace"
+    ],
+    "trace_replay": [
+      "trace"
+    ],
+    "trace_changes_values": [
+      "trace"
+    ],
+    "success_iff": [
+      "status",
+      "success",
+      "guarded_success_iff"
+    ]
+  },
+  "saved_component_audit_pass": true,
+  "integrated_run_complete": false,
+  "control_suites": {
+    "lemma-controls-final-20261007": {
+      "pass": true,
+      "cases": 7,
+      "results_sha256": "b67877b3aee18fad47a44ab3e5d7baf96a1295154bcc4f333d8bec56dae07352"
+    },
+    "termination-controls-final-20261007": {
+      "pass": true,
+      "cases": 4,
+      "results_sha256": "6d0eb35925a135205743221bdaff5bf2a0fe82a96c03ae38dd818265a60a5d98"
+    },
+    "initialization-final-20261007": {
+      "pass": true,
+      "cases": 3,
+      "results_sha256": "f92a3600e3b7347f6fe808a5170744877878f6f8bf722194036e025723a3b724"
+    },
+    "target-controls-v6-20261007": {
+      "pass": true,
+      "cases": 3,
+      "results_sha256": "6fe0bcba48f1eb1bb597c5105b6ee6b50d5feabe6e61321952e98d7ed209161b"
+    },
+    "trace-controls-20261007": {
+      "pass": true,
+      "cases": 4,
+      "results_sha256": "53e4a617fd0f72cfa8068e3972b8f786de3db10a1a96f0ae3ba75afc92f54dce"
+    },
+    "status-lemma-controls-20261007": {
+      "pass": true,
+      "cases": 4,
+      "results_sha256": "94272cf8bb96066de8d5fd6857bca676c1a3c2038694719c78b76680583c2acf"
+    },
+    "success-lemma-controls-20261007": {
+      "pass": true,
+      "cases": 4,
+      "results_sha256": "6502c05993fa2bc785ac31dae9dfc9eb68a72a512b77fc4ee4d4474562ca0f83"
+    },
+    "status-source-controls-20261007": {
+      "pass": false,
+      "cases": 4,
+      "results_sha256": "eb566f873bb53a97d29ad0399f2bb5e3689a21de9a62b91d2049ecc2df79c4d5"
+    }
+  },
+  "success_source_controls_complete": false,
+  "remaining": [
+    "Fresh full run stopped during trace; root summary is absent.",
+    "Status wrong-target control expects collected_changed; collect_value and injective_selected fail.",
+    "Success source controls stopped during parentheses; two faulty variants were not run."
+  ],
+  "audit_sources": {
+    "annotate.py": "993d6cfdd3537c1e3f988567779ad41977f07271d587d60b9a19fa7cb3dee22a",
+    "composition.py": "7986c9912658d3ba860b1f61e4b0afab60b9f076a3c67328cfe856d209b40bb5",
+    "run.py": "20485eec7d26292096fe0aa34614fdb16b6c3ed915e55dbab9b2ad0b383bcc1f"
+  }
+}

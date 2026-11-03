@@ -1,0 +1,79 @@
+Axioms:
+ClassicalDedekindReals.sig_not_dec : forall P : Prop, {~ ~ P} + {~ P}
+ClassicalDedekindReals.sig_forall_dec :
+  forall P : nat -> Prop,
+  (forall n : nat, {P n} + {~ P n}) ->
+  {n : nat | ~ P n} + {forall n : nat, P n}
+inline_assembly_sem : String.string -> signature -> extcall_sem
+FunctionalExtensionality.functional_extensionality_dep :
+  forall (A : Type) (B : A -> Type) (f g : forall x : A, B x),
+  (forall x : A, f x = g x) -> f = g
+external_functions_sem : String.string -> signature -> extcall_sem
+Classical_Prop.classic : forall P : Prop, P \/ ~ P
+File "./ClightExchange.v", line 144, characters 42-49:
+Error:
+In environment
+ge : genv
+e : env
+le : PTree.tree val
+m : mem
+bd, bo : block
+xs : list Z
+p, t : nat
+x, y, count, old_pos, old_excess : Z
+Separate : bd <> bo
+Data : le ! data = Some (Vptr bd Ptrofs.zero)
+Out : le ! out = Some (Vptr bo Ptrofs.zero)
+Position : le ! pos = Some (Vint (Int.repr (Z.of_nat p)))
+Top : le ! top = Some (Vint (Int.repr (Z.of_nat t)))
+XS : (length xs <= 1024)%nat
+XP : nth_error xs p = Some x
+XT : nth_error xs t = Some y
+X : uint x
+Y : uint y
+Different : x <> y
+Far : (p + 16 < t)%nat
+AD : array_at m bd xs
+AO : array_at m bo [count; old_pos; old_excess]
+PB : (p < length xs)%nat
+TB : (t < length xs)%nat
+PK : 0 <= Z.of_nat p <= 2048
+TK : 0 <= Z.of_nat t <= 2048
+UP : uint (Z.of_nat p)
+UT : uint (Z.of_nat t)
+UD : uint (Z.of_nat t - Z.of_nat p)
+RP : expression ge le m (cell data (reg pos)) = Some (Vint (Int.repr x))
+RT : expression ge le m (cell data (reg top)) = Some (Vint (Int.repr y))
+DifferentC :
+  expression ge le m (ne (cell data (reg pos)) (cell data (reg top))) =
+  Some Vtrue
+Distance :
+  expression ge le m (sub (reg top) (reg pos)) =
+  Some (Vint (Int.repr (Z.of_nat t - Z.of_nat p)))
+le1 := PTree.set depth (Vint (Int.repr (Z.of_nat t - Z.of_nat p))) le
+  : PTree.tree val
+Out1 : le1 ! out = Some (Vptr bo Ptrofs.zero)
+Position1 : le1 ! pos = Some (Vint (Int.repr (Z.of_nat p)))
+Depth1 :
+  forall memory : mem,
+  expression ge le1 memory (reg depth) =
+  Some (Vint (Int.repr (Z.of_nat t - Z.of_nat p)))
+U16 : uint 16
+Blocked : expression ge le1 m (gt (reg depth) (lit 16)) = Some Vtrue
+m1 : mem
+W1 :
+  Mem.store Mint32 m bo (4 * Z.of_nat 1) (Vint (Int.repr (Z.of_nat p))) =
+  Some m1
+A1 : array_at m1 bo (replace_nth 1 (Z.of_nat p) [count; old_pos; old_excess])
+m2 : mem
+W2 :
+  Mem.store Mint32 m1 bo (4 * Z.of_nat 2)
+    (Vint (Int.repr (Z.of_nat t - Z.of_nat p - 16))) =
+  Some m2
+S1 : store ge le1 m (cell out (lit 1)) (reg pos) = Some m1
+S2 : store ge le1 m1 (cell out (lit 2)) (sub (reg depth) (lit 16)) = Some m2
+The term "Blocked" has type
+ "expression ge le1 m (gt (reg depth) (lit 16)) = Some Vtrue"
+while it is expected to have type
+ "expression ge le1 m (gt (reg depth) (lit 17)) = Some Vtrue".
+

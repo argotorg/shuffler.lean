@@ -1,0 +1,17 @@
+clang version 20.1.8 (Fil-C 0.686 git@github.com:pizlonator/fil-c.git 163fae598eaf249b74065b0156f3a7e7ba8c0e5a)
+Target: x86_64-unknown-linux-gnu
+Thread model: posix
+InstalledDir: /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/bin
+Build config: +assertions
+ (in-process)
+ "/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/bin/clang-20" -cc1 -triple x86_64-unknown-linux-gnu -E -disable-free -clear-ast-before-backend -main-file-name null -mrelocation-model pic -pic-level 2 -pic-is-pie -mframe-pointer=all -fmath-errno -ffp-contract=on -fno-rounding-math -mconstructor-aliases -funwind-tables=2 -target-cpu x86-64-v2 -debugger-tuning=gdb -fdebug-compilation-dir=/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo -v -fcoverage-compilation-dir=/home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo -resource-dir /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/lib/clang/20 -internal-isystem /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/bin/../include/x86_64-unknown-linux-gnu/c++/v1 -internal-isystem /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/bin/../include/c++/v1 -internal-isystem /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/bin/../../pizfix/stdfil-include -internal-isystem /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/bin/../../pizfix/os-include -internal-isystem /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/bin/../../pizfix/include -internal-isystem /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/lib/clang/20/include -source-date-epoch 315532800 -std=c++20 -fdeprecated-macro -ferror-limit 19 -pthread -fgnuc-version=4.2.1 -fno-implicit-modules -fskip-odr-check-in-gmf -fcxx-exceptions -fexceptions -faddrsig -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o - -x c++ /dev/null
+clang -cc1 version 20.1.8 based upon LLVM 20.1.8 default target x86_64-unknown-linux-gnu
+#include "..." search starts here:
+#include <...> search starts here:
+ /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/bin/../include/x86_64-unknown-linux-gnu/c++/v1
+ /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/bin/../include/c++/v1
+ /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/bin/../../pizfix/stdfil-include
+ /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/bin/../../pizfix/os-include
+ /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/bin/../../pizfix/include
+ /home/me/.local/state/subagent/2e500090cbba/jpkjfmrfie/repo/spikes/clight-permute/build/filc/filc-0.686-linux-x86_64/build/lib/clang/20/include
+End of search list.

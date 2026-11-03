@@ -1,0 +1,12 @@
+File "./PermuteSpec.v", line 8, characters 0-82:
+Warning: Trying to mask the absolute name "Permute"!
+[masking-absolute-name,deprecated-since-8.8,deprecated,default]
+File "./PermuteSpec.v", line 8, characters 0-82:
+Warning: Trying to mask the absolute name "Permute.exchange"!
+[masking-absolute-name,deprecated-since-8.8,deprecated,default]
+File "./PermuteSpec.v", line 8, characters 0-82:
+Warning: Trying to mask the absolute name "Permute.depth"!
+[masking-absolute-name,deprecated-since-8.8,deprecated,default]
+File "./PermuteSpec.v", line 8, characters 0-82:
+Warning: Trying to mask the absolute name "Permute.permute"!
+[masking-absolute-name,deprecated-since-8.8,deprecated,default]
