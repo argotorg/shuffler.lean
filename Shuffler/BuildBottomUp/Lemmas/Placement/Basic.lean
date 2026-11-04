@@ -16,7 +16,7 @@ theorem Trace.noPop_concat (first : Trace spills source middle)
   induction second with
   | Lit => exact hfirst
   | Pop _ _ => exact False.elim hsecond
-  | Swap _ _ _ _ _ ih | Dup _ _ _ _ _ ih | Push _ _ _ ih | Load _ _ _ ih => exact ih hsecond
+  | Swap _ _ _ _ _ ih | Dup _ _ _ _ _ _ ih | Push _ _ _ ih | Load _ _ _ ih => exact ih hsecond
 
 theorem Trace.additions_concat (first : Trace spills source middle)
     (second : Trace spills middle result) :
@@ -24,7 +24,7 @@ theorem Trace.additions_concat (first : Trace spills source middle)
   induction second with
   | Lit => simp [Trace.concat, Trace.additions]
   | Pop _ _ ih | Swap _ _ _ _ _ ih => exact ih
-  | Dup _ _ _ _ _ ih | Push _ _ _ ih | Load _ _ _ ih =>
+  | Dup _ _ _ _ _ _ ih | Push _ _ _ ih | Load _ _ _ ih =>
     simp only [Trace.concat, Trace.additions, ih, Multiset.add_assoc]
 
 namespace Shuffler.Placement

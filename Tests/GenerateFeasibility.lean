@@ -1,3 +1,6 @@
+module
+
+public meta import Shuffler.BuildBottomUp.Theorems.Feasibility
 import Shuffler.BuildBottomUp.Theorems.Feasibility
 
 open Shuffler.Generate
@@ -48,13 +51,13 @@ example : CanGenerate ∅ atDepth15 (List.replicate 40 a) :=
 private def orderSource : Stack := [a, b] ++ List.replicate 14 (.Lit 0)
 
 private def firstA : Trace ∅ orderSource (orderSource ++ [a]) :=
-  .Dup 16 (by decide) (by decide) (by decide) (.Lit orderSource)
+  .Dup 16 (by decide) (by decide) (by decide) (by decide) (.Lit orderSource)
 
 private def thenB : Trace ∅ orderSource (orderSource ++ [a, b]) :=
-  .Dup 16 (by decide) (by decide) (by decide) firstA
+  .Dup 16 (by decide) (by decide) (by decide) (by decide) firstA
 
 private def thenA : Trace ∅ orderSource (orderSource ++ [a, b, a]) :=
-  .Dup 2 (by decide) (by decide) (by decide) thenB
+  .Dup 2 (by decide) (by decide) (by decide) (by decide) thenB
 
 example : thenA.onlyGenerates := True.intro
 
@@ -68,7 +71,7 @@ example : Ready ∅ orderSource [a, a, b] := by decide
 
 -- Adding both copies of a first leaves b below DUP reach.
 private def wrongOrder : Trace ∅ orderSource (orderSource ++ [a, a]) :=
-  .Dup 1 (by decide) (by decide) (by decide) firstA
+  .Dup 1 (by decide) (by decide) (by decide) (by decide) firstA
 
 example : wrongOrder.onlyGenerates := True.intro
 
@@ -87,3 +90,9 @@ example : ¬withSwap.onlyGenerates := id
 example : ¬withPop.onlyGenerates := id
 
 end GenerateFeasibilityTests
+
+-- A source return label cannot supply an additional label through DUP.
+example : ¬Shuffler.Generate.Ready ∅ [.FunctionReturnLabel] [.FunctionReturnLabel] := by decide
+example : ¬Shuffler.Generate.CanGenerate ∅ [.FunctionReturnLabel] [.FunctionReturnLabel] := by
+  rw [Shuffler.Generate.canGenerate_iff_ready]
+  decide

@@ -119,7 +119,7 @@ def PrimitiveCosts.cppEstimate (loadAddressEncoding : VarId → PushEncoding) : 
 def traceCost (costs : PrimitiveCosts) : Trace spills source target → Cost
   | .Lit _ => Cost.zero
   | .Swap _ _ _ _ trace => (traceCost costs trace).add costs.swap
-  | .Dup _ _ _ _ trace => (traceCost costs trace).add costs.dup
+  | .Dup _ _ _ _ _ trace => (traceCost costs trace).add costs.dup
   | .Pop _ trace => (traceCost costs trace).add costs.pop
   | .Push value _ trace => (traceCost costs trace).add (costs.push value)
   | .Load id _ trace => (traceCost costs trace).add (costs.load id)
@@ -252,7 +252,7 @@ theorem noPop_cost_bound (costs : PrimitiveCosts) (limit : Cost)
       have ih := ih hp
       simp only [traceCost, Trace.swapCount, Trace.additions, Cost.add, Nat.mul_add, Nat.mul_one]
       omega
-  | Dup idx hlen hlo hhi trace ih =>
+  | Dup idx hlen hlo hhi hvalue trace ih =>
       have ih := ih hp
       rcases hdup with ⟨hg,hb⟩
       simp only [traceCost, Trace.swapCount, Trace.additions, Cost.add, Multiset.card_add,

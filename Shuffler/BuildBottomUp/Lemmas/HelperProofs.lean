@@ -81,14 +81,16 @@ private theorem growth_append (state : State source target spills) (slot : Value
 
 @[spec] theorem dup_spec (state : State source target spills) (copy : Fin state.stack.length)
     (dest : Fin target.length) (hdup : state.stack.isDupReachable copy)
-    (hfree : state.mapping.symm dest = none) (hslot : state.stack[copy] = target[dest]) :
+    (hfree : state.mapping.symm dest = none) (hslot : state.stack[copy] = target[dest])
+    (hlabel : ¬ state.stack[copy].isFunctionReturnLabel) :
     ⦃True⦄ state.dup copy.val dest
     ⦃fun next => Growth state next dest state.pending_generations; allowedErrors⦄ := by
   vcgen [State.dup, index] <;> simp_all [Mapping.positionOf]
   simpa only [eqRec_eq_cast] using growth_append _ _ dest hfree hslot _
 
 @[spec high] theorem produce_spec (state : State source target spills) (dest : Fin target.length)
-    (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest) :
+    (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest)
+    (hlabel : ¬ target[dest].isFunctionReturnLabel) :
     ⦃True⦄ (((state.produce dest) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
       if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)
     ⦃fun next => Growth state next dest (state.pending_generations - 1); allowedErrors⦄ := by
@@ -101,8 +103,14 @@ private theorem growth_append (state : State source target spills) (slot : Value
   case vc12 =>
     rename_i hcopy
     exact shallowestCopyPosition_value state.stack target[dest.val] _ hcopy.1
-  case vc19 =>
-    rename_i filtered hsome hnone hfilter _
+  case vc13 =>
+    rename_i hcopy
+    have hv := shallowestCopyPosition_value state.stack target[dest.val] _ hcopy.1
+    simp only [Fin.getElem_fin] at hv
+    rw [hv]
+    exact hlabel
+  case vc20 =>
+    rename_i filtered hsome hjunk hnone hfilter _
     intro hreach
     exact hnone _ (hfilter.symm.trans (Option.filter_eq_some_iff.mpr
       ⟨(Option.some_get hsome).symm, by simpa using hreach⟩))
@@ -159,7 +167,8 @@ theorem Swapped.retag (state : State source target spills) (pos : Fin state.stac
     ⟨state.stack.length - 1, top_lt_length state.stack pos⟩ heq).symm, fun _ => rfl⟩
 
 @[spec] theorem generate_triple (state : State source target spills) (dest : Fin target.length)
-    (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest) :
+    (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest)
+    (hlabel : ¬ target[dest].isFunctionReturnLabel) :
     ⦃True⦄ (((state.generate dest.val) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
       if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)
     ⦃fun next => Generation state next dest; allowedErrors⦄ := by
@@ -178,18 +187,20 @@ theorem Swapped.retag (state : State source target spills) (pos : Fin state.stac
     | (simp only [State.isSwapReachable, State.depthOf, Stack.isSwapReachable, Stack.offsetToDepth] at *; omega)
 
 theorem generate_contract (state : State source target spills) (dest : Fin target.length)
-    (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest) :
+    (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest)
+    (hlabel : ¬ target[dest].isFunctionReturnLabel) :
     Spec ((((state.generate dest.val) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
       if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) (fun next => Generation state next dest) :=
-  (spec_iff_triple _ _).mpr (generate_triple state dest hbound havailable)
+  (spec_iff_triple _ _).mpr (generate_triple state dest hbound havailable hlabel)
 
 @[spec] theorem generate_offset_spec (state : State source target spills) (offset : ℕ)
     (hlt : offset < target.length) (hbound : state.mapping.symm ⟨offset, hlt⟩ = none)
-    (havailable : state.isAvailable ⟨offset, hlt⟩) :
+    (havailable : state.isAvailable ⟨offset, hlt⟩)
+    (hlabel : ¬ (target[offset]'hlt).isFunctionReturnLabel) :
     ⦃True⦄ (((state.generate offset) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
       if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)
     ⦃fun next => Generation state next ⟨offset, hlt⟩; allowedErrors⦄ :=
-  generate_triple state ⟨offset, hlt⟩ hbound havailable
+  generate_triple state ⟨offset, hlt⟩ hbound havailable hlabel
 
 theorem Generation.invariant {state next : State source target spills} {dest : Fin target.length}
     (h : Generation state next dest) (inv : state.invariant cursor) : next.invariant cursor := by
@@ -198,9 +209,15 @@ theorem Generation.invariant {state next : State source target spills} {dest : F
   have hl := h.size
   have hc := h.count
   have hn := h.pending
-  refine .of (fun i hi => h.preserved i (inv.processed i hi)) (by omega) (by omega) ?_
-  intro i
-  exact state.isAvailable_of_subset next h.subset i (inv.available i)
+  refine .of (fun i hi => h.preserved i (inv.processed i hi)) (by omega) (by omega) ?_ ?_
+  · intro i
+    exact state.isAvailable_of_subset next h.subset i (inv.available i)
+  · intro j hj
+    cases hn : next.mapping.symm j with
+    | some pos => rfl
+    | none =>
+      have ho := ((h.unbound j).mp hn).2
+      simpa [ho] using inv.labels_bound j hj
 
 theorem Generation.decreases {state next : State source target spills} {dest : Fin target.length}
     (h : Generation state next dest) (inv : state.invariant cursor) :

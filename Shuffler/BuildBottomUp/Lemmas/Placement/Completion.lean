@@ -18,7 +18,8 @@ theorem canPlace_complete (spills : SpillSet) (fixed working target : Stack)
     (missing : Multiset Value)
     (hsmall : working.length ≤ MAX_DUP_DEPTH + 1)
     (hbalance : (target : Multiset Value) = (working : Multiset Value) + missing)
-    (hseeds : seeds spills missing ≤ (working : Multiset Value)) :
+    (hseeds : seeds spills missing ≤ (working : Multiset Value))
+    (hlabels : ∀ value ∈ missing, ¬value.isFunctionReturnLabel) :
     CanPlace spills (fixed ++ working) (fixed ++ target) missing := by
   induction target generalizing fixed working missing with
   | nil =>
@@ -31,7 +32,7 @@ theorem canPlace_complete (spills : SpillSet) (fixed working target : Stack)
     exact CanPlace.refl spills _
   | cons value tail ih =>
     by_cases hv : value ∈ missing
-    · have happend := CanPlace.append (available_of_suffix hseeds hsmall value hv (fixed := fixed))
+    · have happend := CanPlace.append (available_of_suffix hseeds hsmall value hv hlabels (fixed := fixed))
       have hperm : (working ++ [value]).Perm (value :: working) := by
         exact List.perm_append_comm
       have hlen : (working ++ [value]).length ≤ MAX_SWAP_DEPTH + 1 := by
@@ -47,6 +48,7 @@ theorem canPlace_complete (spills : SpillSet) (fixed working target : Stack)
       have hnext := ih (fixed ++ [value]) working (missing.erase value) hsmall
         (balance_erase_missing hbalance hv)
         ((seeds_mono (Multiset.erase_le _ _)).trans hseeds)
+        (fun other ho => hlabels other (Multiset.mem_of_le (Multiset.erase_le _ _) ho))
       simpa only [List.append_assoc, List.singleton_append, Multiset.singleton_add,
         Multiset.cons_erase hv] using hstep.trans hnext
     · obtain ⟨hw, hbalance'⟩ := balance_erase_source hbalance hv
@@ -58,7 +60,7 @@ theorem canPlace_complete (spills : SpillSet) (fixed working target : Stack)
       have hsmall' : (working.erase value).length ≤ MAX_DUP_DEPTH + 1 :=
         (List.length_erase_le).trans hsmall
       have hnext := ih (fixed ++ [value]) (working.erase value) missing hsmall' hbalance'
-        (seeds_erase_source hseeds hv)
+        (seeds_erase_source hseeds hv) hlabels
       simpa only [List.append_assoc, List.singleton_append, zero_add] using
         hstep.trans (by simpa only [List.append_assoc, List.singleton_append] using hnext)
 

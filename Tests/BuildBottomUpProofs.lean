@@ -21,7 +21,7 @@ private def equalCurrentState : State [.Lit 10, .Lit 10] [.Lit 10, .Lit 7, .Lit 
   pending_generations := 1
 
 example :
-    (((((buildBottomUp equalCurrentState ⟨by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+    (((((buildBottomUp equalCurrentState ⟨by decide, by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
       if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
       pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).toOption.map
         (fun result => (result.1, result.2.swapCount)) =
@@ -39,7 +39,7 @@ private def equalCandidateState :
   pending_generations := 1
 
 example :
-    (((((buildBottomUp equalCandidateState ⟨by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+    (((((buildBottomUp equalCandidateState ⟨by decide, by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
       if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
       pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).toOption.map
         (fun result => (result.1, result.2.swapCount)) =
@@ -57,7 +57,7 @@ private def finalCandidateState :
   pending_generations := 1
 
 example :
-    (((((buildBottomUp finalCandidateState ⟨by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+    (((((buildBottomUp finalCandidateState ⟨by decide, by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
       if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
       pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).toOption.map
         (fun result => (result.1, result.2.swapCount)) =
@@ -82,7 +82,7 @@ private def blockedSwapUpState :
   mapping := by simpa using (retainAll 19).swapDestinations 0 1
   pending_generations := 1
 
-example : (((((buildBottomUp blockedSwapUpState ⟨by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+example : (((((buildBottomUp blockedSwapUpState ⟨by decide, by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
   if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
   pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1) =
     .error (.Blocked ⟨1, 1⟩) := by
@@ -98,7 +98,7 @@ private def blockedSwapDownState :
   mapping := by simpa using (retainAll 18).swapDestinations 0 17
   pending_generations := 1
 
-example : (((((buildBottomUp blockedSwapDownState ⟨by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+example : (((((buildBottomUp blockedSwapDownState ⟨by decide, by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
   if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
   pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1) =
     .error (.Blocked ⟨0, 1⟩) := by
@@ -114,7 +114,7 @@ private def blockedGeneratedState :
   mapping := by simpa using (Mapping.swapDestinations (retainAll 17).symm 0 17).symm
   pending_generations := 1
 
-example : (((((buildBottomUp blockedGeneratedState ⟨by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+example : (((((buildBottomUp blockedGeneratedState ⟨by decide, by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
   if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
   pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1) =
     .error (.Blocked ⟨0, 1⟩) := by
@@ -131,7 +131,7 @@ private def swapLimitState :
   pending_generations := 1
 
 example :
-    (((((buildBottomUp swapLimitState ⟨by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+    (((((buildBottomUp swapLimitState ⟨by decide, by decide, by decide, by decide⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
       if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
       pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).toOption.map
         (fun result => (result.1, result.2.swapCount)) =

@@ -32,6 +32,29 @@ theorem take_swap_of_le (stack : Stack) (cursor a b : Nat)
 
 end Shuffler.Placement
 
+theorem Trace.additions_not_returnLabel (trace : Trace spills source result)
+    (value : Value) (hvalue : value ∈ trace.additions) : ¬value.isFunctionReturnLabel := by
+  induction trace with
+  | Lit => simp [Trace.additions] at hvalue
+  | Swap _ _ _ _ _ ih | Pop _ _ ih => exact ih hvalue
+  | @Dup prev idx hlen hlo hhi hlabel trace ih =>
+    rcases Multiset.mem_add.mp hvalue with hold | hnew
+    · exact ih hold
+    · simpa only [Multiset.mem_singleton.mp hnew] using hlabel
+  | Push added hfree trace ih =>
+    rcases Multiset.mem_add.mp hvalue with hold | hnew
+    · exact ih hold
+    · have he := Multiset.mem_singleton.mp hnew
+      subst value
+      cases added <;> try simp [Value.isFunctionReturnLabel]
+      exact hfree
+  | Load id _ trace ih =>
+    rcases Multiset.mem_add.mp hvalue with hold | hnew
+    · exact ih hold
+    · simp only [Multiset.mem_singleton] at hnew
+      subst value
+      simp [Value.isFunctionReturnLabel]
+
 theorem Trace.noPop_balance (trace : Trace spills source result) (h : trace.noPop) :
     (result : Multiset Value) = (source : Multiset Value) + trace.additions := by
   induction trace with
@@ -40,7 +63,7 @@ theorem Trace.noPop_balance (trace : Trace spills source result) (h : trace.noPo
   | @Swap prev idx hlen hlo hhi trace ih =>
     rw [Multiset.coe_eq_coe.mpr (List.swap_perm _ _ _)]
     exact ih h
-  | Dup _ _ _ _ _ ih | Push _ _ _ ih | Load _ _ _ ih =>
+  | Dup _ _ _ _ _ _ ih | Push _ _ _ ih | Load _ _ _ ih =>
     simpa only [← Multiset.coe_add, Multiset.coe_singleton, Trace.additions, add_assoc] using
       congrArg (fun values : Multiset Value => values + {_}) (ih h)
 
@@ -66,7 +89,7 @@ theorem Trace.noPop_frozen (trace : Trace spills source result) (h : trace.noPop
     · exact ih h
     · unfold Shuffler.Placement.frozen MAX_SWAP_DEPTH at *; omega
     · unfold Shuffler.Placement.frozen MAX_SWAP_DEPTH at *; omega
-  | Dup _ _ _ _ trace ih | Push _ _ trace ih | Load _ _ trace ih =>
+  | Dup _ _ _ _ _ trace ih | Push _ _ trace ih | Load _ _ trace ih =>
     rw [List.take_append_of_le_length]
     · exact ih h
     · have := trace.noPop_length_le h
@@ -115,7 +138,7 @@ private theorem origin_of_noPop (trace : Trace spills source result) (h : trace.
     exact (ih h).swap a b
       (by dsimp [a, frozen]; omega)
       (by dsimp [b, frozen]; unfold MAX_SWAP_DEPTH at *; omega)
-  | @Dup prev idx hlen hlo hhi trace ih =>
+  | @Dup prev idx hlen hlo hhi hvalue trace ih =>
     have hl := trace.noPop_length_le h
     have hi : prev.length - idx < prev.length := by omega
     apply (ih h).append
@@ -135,7 +158,7 @@ theorem addition_free_or_mem_window (trace : Trace spills source result) (h : tr
   | Lit => simp [Trace.additions] at hv
   | Pop _ _ => exact False.elim h
   | Swap _ _ _ _ _ ih => exact ih h hv
-  | @Dup prev idx hlen hlo hhi trace ih =>
+  | @Dup prev idx hlen hlo hhi hvalue trace ih =>
     rcases Multiset.mem_add.mp hv with hold | hnew
     · exact ih h hold
     have he : value = prev[prev.length - idx]'(by omega) := by simpa using hnew

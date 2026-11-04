@@ -3,7 +3,9 @@ module
 public import Shuffler.Planner.Run.Defs
 public import Shuffler.BuildMapping.Theorems
 public import Shuffler.BuildMapping.Lemmas.Availability
+public import Shuffler.BuildMapping.Lemmas.Labels
 public import Shuffler.Resolve.Theorems
+public import Shuffler.Resolve.Lemmas.Labels
 public import Shuffler.Emission.Run.Lemmas.Execution
 
 @[expose] public section
@@ -42,50 +44,59 @@ theorem buildMapping_available (current : State source target)
 
 theorem loop_spec (source target : Stack) (strategy : BuildMapping.WildcardSlotsStrategy)
     (current : State source target) (sawWildcardCopy : Bool)
-    (havailable : current.TargetAvailable) :
+    (havailable : current.TargetAvailable)
+    (hcount : target.count .FunctionReturnLabel ≤ source.count .FunctionReturnLabel)
+    (hlabels : current.LabelsUndropped) :
     ∃ result, run.loop source target strategy current sawWildcardCopy = .ok result ∧
-      result.state.TargetAvailable := by
+      result.state.TargetAvailable ∧ result.state.LabelsUndropped := by
   refine run.loop.induct source target
-    (motive := fun current sawWildcardCopy => current.TargetAvailable →
+    (motive := fun current sawWildcardCopy => current.TargetAvailable → current.LabelsUndropped →
       ∃ result, run.loop source target strategy current sawWildcardCopy = .ok result ∧
-        result.state.TargetAvailable) ?_ current sawWildcardCopy havailable
+        result.state.TargetAvailable ∧ result.state.LabelsUndropped)
+      ?_ current sawWildcardCopy havailable hlabels
   intro current sawWildcardCopy
   dsimp only
-  intro ih havailable
+  intro ih havailable hlabels
   obtain ⟨builder, hbuilder⟩ := (BuildMapping.buildMapping_ok source target
     current.dropped.toList strategy).mpr (by simp)
   have hretained := buildMapping_retainedUndropped current strategy hbuilder
+  have hboundLabels := BuildMapping.buildMapping_labels_bound_of_ok source target _ strategy hbuilder
+    hcount (fun i hi => by simpa [Vector.getElem?_toList, i.isLt] using hlabels i hi)
   obtain ⟨emitted, hemitted, _, hpositive⟩ := Emission.run_spec source target builder.mapping
-    current.spills (buildMapping_available current strategy hbuilder havailable)
+    current.spills (buildMapping_available current strategy hbuilder havailable) hboundLabels
   rw [run.loop.eq_1, hbuilder, except_ok_bind]
   dsimp only
   rw [hemitted, except_ok_bind]
   cases hblocked : emitted.blocked with
-  | none => exact ⟨_, rfl, havailable⟩
+  | none => exact ⟨_, rfl, havailable, hlabels⟩
   | some blocked =>
     obtain ⟨⟨success, resolved⟩, hresolved⟩ := resolve_ok current builder.mapping blocked emitted.state.mapping
     have hravailable := resolve_preserves_target_available current resolved builder.mapping blocked
       emitted.state.mapping success havailable hretained hresolved
+    have hrlabels := resolve_preserves_labelsUndropped current resolved builder.mapping blocked
+      emitted.state.mapping success hlabels hresolved
     simp only [hresolved, except_ok_bind]
     cases success with
-    | false => exact ⟨_, rfl, hravailable⟩
+    | false => exact ⟨_, rfl, hravailable, hrlabels⟩
     | true =>
       have hprogress := resolve_remaining_strict current resolved builder.mapping blocked
         emitted.state.mapping hretained hresolved (hpositive blocked hblocked)
       simp only [not_true_eq_false, ↓reduceIte,
         requires_of_true _ hprogress, except_ok_bind]
-      exact ih builder resolved hprogress hravailable
+      exact ih builder resolved hprogress hravailable hrlabels
 
 theorem run_spec (source target : Stack) (spills : SpillSet) (spillingAllowed : Bool)
     (strategy : BuildMapping.WildcardSlotsStrategy)
     (havailable : ∀ value ∈ target, value.is_junk ∨ value.can_be_freely_generated ∨
-      value ∈ source ∨ spills.is_spilled value) :
+      value ∈ source ∨ spills.is_spilled value)
+    (hlabels : target.count .FunctionReturnLabel ≤ source.count .FunctionReturnLabel) :
     ∃ result, run source target spills spillingAllowed strategy = .ok result ∧
-      result.state.TargetAvailable := by
+      result.state.TargetAvailable ∧ result.state.LabelsUndropped := by
   have hchecks : (forIn target PUnit.unit fun slot _ => do
       _ ← requires (slot.is_junk ∨ slot.can_be_freely_generated ∨ slot ∈ source ∨ spills.is_spilled slot)
         "target slot neither on the stack nor generatable"
       pure (.yield PUnit.unit) : Except ShuffleErr PUnit) = .ok PUnit.unit := by
+    clear hlabels
     induction target with
     | nil => rfl
     | cons value rest ih =>
@@ -102,7 +113,10 @@ theorem run_spec (source target : Stack) (spills : SpillSet) (spillingAllowed : 
     · obtain ⟨i, hi, hv⟩ := List.getElem_of_mem hs
       exact Or.inr (Or.inr ⟨⟨i, hi⟩, by simp [initial], hv⟩)
     · exact Or.inr (Or.inl hspill)
-  obtain ⟨result, hresult, hr⟩ := loop_spec source target strategy initial false hinitial
+  have hinitialLabels : initial.LabelsUndropped := by
+    intro i _
+    simp [initial]
+  obtain ⟨result, hresult, hr⟩ := loop_spec source target strategy initial false hinitial hlabels hinitialLabels
   refine ⟨result, ?_, hr⟩
   unfold run
   rw [hchecks, except_ok_bind]

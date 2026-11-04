@@ -1,4 +1,9 @@
+module
+
+public meta import Shuffler.BuildBottomUp.Defs
 import Shuffler.BuildBottomUp.Defs
+
+@[expose] public section
 
 namespace BuildBottomUpTestSupport
 open Shuffler.Emission
@@ -11,7 +16,7 @@ inductive Operation where
 def operations : Trace spills source result → List Operation
   | .Lit _ => []
   | .Swap depth _ _ _ trace => operations trace ++ [.swap depth]
-  | .Dup index _ _ _ trace => operations trace ++ [.dup index]
+  | .Dup index _ _ _ _ trace => operations trace ++ [.dup index]
   | .Pop _ trace => operations trace ++ [.pop]
   | .Push value _ trace => operations trace ++ [.push value]
   | .Load id _ trace => operations trace ++ [.load id]
