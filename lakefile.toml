@@ -1,9 +1,10 @@
 name = "shuffler-lean"
 version = "0.1.0"
-defaultTargets = ["Shuffler"]
+defaultTargets = ["Shuffler", "Tests"]
 
 [[lean_lib]]
 name = "Shuffler"
+globs = ["Shuffler", "Shuffler.+"]
 
 [[lean_lib]]
 name = "Tests"
