@@ -69,6 +69,11 @@ example : ∀ a b c d : Fin 2, ∀ perm : Equiv.Perm (Fin 4),
     checkLayout (boundaryPositions 16) (2 * fill.val) a b c d perm = true := by
   native_decide
 
+-- All 24 permutations of four slots drawn from two values. Every slot is within SWAP reach.
+example : ∀ a b c d : Fin 2, ∀ perm : Equiv.Perm (Fin 4),
+    check [.Var ⟨a.val⟩, .Var ⟨b.val⟩, .Var ⟨c.val⟩, .Var ⟨d.val⟩] perm = true := by
+  native_decide
+
 example : check [] 1 = true := by native_decide
 example : check [.Var ⟨0⟩] 1 = true := by native_decide
 

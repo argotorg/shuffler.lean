@@ -1,0 +1,55 @@
+name: Fuzz
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  fuzz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          submodules: true
+      - uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31.11.3
+      # gets the Mathlib cache and keeps .lake in the same cache entry as lean_action_ci.yml
+      - uses: leanprover/lean-action@f061402b660e0c34644504b324e830f2991d4865 # v1.6.1
+        with:
+          test: false
+      # the Mathlib cache has no object files, without this Lake compiles about 1200 of them
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .lake/packages/*/.lake/build/ir/**/*.c.o.*
+          key: fuzz-lean-objects-${{ hashFiles('lean-toolchain', 'lake-manifest.json') }}
+      - id: solidity
+        run: echo "rev=$(git rev-parse HEAD:solidity)" >> "$GITHUB_OUTPUT"
+      # solidity uses ccache when it finds it. A cache of the build directory does not work: the
+      # checkout makes every source newer than its object, so ninja builds all of them again.
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .ccache
+          key: fuzz-ccache-${{ hashFiles('flake.lock') }}-${{ steps.solidity.outputs.rev }}
+          restore-keys: fuzz-ccache-${{ hashFiles('flake.lock') }}-
+      - name: Build
+        env:
+          CCACHE_DIR: ${{ github.workspace }}/.ccache
+        run: nix develop -c sh Fuzz/build.sh build/fuzz
+      # each run starts from the corpus of the last saved run, pull requests also from the runs on main
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: build/fuzz/corpus
+          key: fuzz-corpus-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: fuzz-corpus-
+      - name: Fuzz
+        # 30 minutes for each push to main, 2 minutes otherwise
+        run: >-
+          nix develop -c sh Fuzz/ci.sh build/fuzz
+          ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && 1800 || 120 }}
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fuzz-crashes
+          path: build/fuzz/crashes
