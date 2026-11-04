@@ -137,6 +137,7 @@ theorem loop_success (cursor : ℕ) (state : State source target spills)
     rw [requires_of_true (∀ i, (state.mapping.destinationOf i).isSome) hp.2, except_ok_bind]
     obtain ⟨result, heq, _⟩ := Shuffler.Permute.permute_applies_permutation_reachable
       spills state (state.mapping.toPermutation hp.1 hp.2)
+      (Shuffler.Permute.bindings_agree_toPermutation state hp.1 hp.2)
       (inv.permutation_reachable hr hp.1 hp.2).values
     simp only [heq, completedTrace_ok]
     exact ⟨_, rfl, trivial⟩

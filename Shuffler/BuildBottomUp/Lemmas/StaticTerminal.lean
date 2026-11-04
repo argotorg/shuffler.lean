@@ -12,7 +12,8 @@ import Shuffler.Permute.Normalization
 namespace Shuffler.Emission
 
 private theorem permute_success_iff (spills : SpillSet) (state : State source target spills)
-    (perm : Shuffler.Permute.Permutation state.stack) :
+    (perm : Shuffler.Permute.Permutation state.stack)
+    (hagree : Shuffler.Permute.bindings_agree state perm) :
     (∃ result, ((((Shuffler.Permute.permute state perm) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
       if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
       pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) = .ok result) ↔
@@ -21,11 +22,11 @@ private theorem permute_success_iff (spills : SpillSet) (state : State source ta
   · rintro ⟨result, hs⟩
     obtain ⟨next, hrun, _⟩ := completedTrace_ok_inversion hs
     by_contra hn
-    obtain ⟨_, _, _, he, _⟩ := Shuffler.Permute.permute_blocks_unreachable spills state perm hn
+    obtain ⟨_, _, _, he, _⟩ := Shuffler.Permute.permute_blocks_unreachable spills state perm hagree hn
     rw [hrun] at he
     cases he
   · intro hr
-    obtain ⟨result, he, _⟩ := Shuffler.Permute.permute_applies_permutation_reachable spills state perm hr
+    obtain ⟨result, he, _⟩ := Shuffler.Permute.permute_applies_permutation_reachable spills state perm hagree hr
     exact ⟨_, completedTrace_of_ok he⟩
 
 set_option maxRecDepth 16384 in
@@ -59,7 +60,8 @@ theorem loop_success_iff_permutation (cursor : Nat) (state : State source target
   simp only [hp, ↓reduceIte, requires_of_true _ hlen, except_ok_bind]
   rw [requires_of_true (∀ i, (state.mapping.destinationOf i).isSome) hsource, except_ok_bind]
   simpa only [Succeeds, and_true] using
-    (permute_success_iff spills state (state.mapping.toPermutation hlen hsource))
+    (permute_success_iff spills state (state.mapping.toPermutation hlen hsource)
+      (Shuffler.Permute.bindings_agree_toPermutation state hlen hsource))
 termination_by target.length - cursor
 
 end Shuffler.Emission

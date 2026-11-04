@@ -12,24 +12,38 @@ namespace Shuffler.Permute
 
 open Emission
 
+-- The final permutation of buildBottomUp sends every slot to its bound offset.
+theorem bindings_agree_toPermutation (state : State source target spills)
+    (hlen : state.stack.length = target.length) (hsource : ∀ i, (state.mapping i).isSome) :
+    bindings_agree state (state.mapping.toPermutation hlen hsource) := by
+  intro i d h hm
+  have hv := (Mapping.toPermutation_apply state.mapping hlen hsource i).trans hm
+  have hi : (⟨d.val, h⟩ : Fin state.stack.length) = state.mapping.toPermutation hlen hsource i :=
+    Fin.ext (by simpa using congrArg Fin.val (Option.some_injective _ hv).symm)
+  simp [hi]
+
 -- `hnreachable` says that a position below SWAP reach has the wrong value.
 -- The run returns a blocked result and the state, where `excess` is positive.
 -- The reported position `i` is in the input permutation's support.
 -- Its depth, `i.rev.val`, exceeds the limit by exactly `excess`.
+-- `hagree` says that every bound slot is bound to an offset that receives an equal value.
 theorem permute_blocks_unreachable
     (spills : SpillSet)
     (initial : Emission.State source target spills) (perm : Permutation initial.stack)
-    (hnreachable : ¬values_reachable perm) :
+    (hagree : bindings_agree initial perm) (hnreachable : ¬values_reachable perm) :
     ∃ (i : Fin initial.stack.length) (excess : ℕ) (state : State source target spills),
       permute initial perm = .ok ⟨some ⟨i.val, excess⟩, state⟩
         ∧ excess > 0
         ∧ i ∈ perm.support
         ∧ i.rev.val = excess + MAX_SWAP_DEPTH := by
   obtain ⟨q, hq, happly, hsub, _⟩ := normalize_spec initial.stack perm
+  obtain ⟨q', hq', hinv⟩ := normalize_goInv initial perm hagree
+  cases hq.symm.trans hq'
   rw [permute_eq_normalize, hq, except_ok_bind]
   by_cases hne : 0 < initial.stack.length
   · rw [dite_eq_left hne]
-    obtain ⟨result, hrun, hs⟩ := go_spec initial q hne
+    obtain ⟨result, hrun⟩ := go_ok initial q hne _ hinv
+    have hs := go_spec initial q hne result hrun
     cases hb : result.blocked with
     | none =>
       exact (hnreachable ((values_reachable_congr q perm happly).mp
@@ -49,17 +63,21 @@ theorem permute_blocks_unreachable
 -- The equality after `∧` says that the result is the requested permutation of `source`:
 -- the value at each source position `i` goes to target position `perm i`.
 -- This also covers the empty stack, which requires no swaps.
+-- `hagree` says that every bound slot is bound to an offset that receives an equal value.
 theorem permute_applies_permutation_reachable
     (spills : SpillSet)
     (initial : Emission.State source target spills) (perm : Permutation initial.stack)
-    (hreachable : values_reachable perm) :
+    (hagree : bindings_agree initial perm) (hreachable : values_reachable perm) :
     ∃ result : State source target spills,
       permute initial perm = .ok ⟨none, result⟩ ∧ result.stack = apply_permutation initial.stack perm := by
   obtain ⟨q, hq, happly, _, hreach⟩ := normalize_spec initial.stack perm
+  obtain ⟨q', hq', hinv⟩ := normalize_goInv initial perm hagree
+  cases hq.symm.trans hq'
   rw [permute_eq_normalize, hq, except_ok_bind]
   by_cases hne : 0 < initial.stack.length
   · rw [dite_eq_left hne]
-    obtain ⟨result, hrun, hs⟩ := go_spec initial q hne
+    obtain ⟨result, hrun⟩ := go_ok initial q hne _ hinv
+    have hs := go_spec initial q hne result hrun
     have hb := hs.success_of_reachable (hreach.mpr hreachable)
     refine ⟨result.state, ?_, (hs.applies hb).trans happly⟩
     have he : result = ⟨none, result.state⟩ := by cases result; simp_all
@@ -68,14 +86,16 @@ theorem permute_applies_permutation_reachable
     have hz : initial.stack = [] := by simpa using Nat.eq_zero_of_not_pos hne
     exact ⟨initial, rfl, by simp [apply_permutation, hz]⟩
 
--- Permutation can return a blocked error, but cannot return an assertion error.
+-- When the bindings agree with `perm`, permutation can return a blocked result, but cannot
+-- return an assertion error.
 theorem permute_no_assertion
-    (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack) (reason : String) :
+    (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack)
+    (hagree : bindings_agree initial perm) (reason : String) :
     permute initial perm ≠ .error (.assertion reason) := by
   by_cases hreachable : values_reachable perm
-  · obtain ⟨result, heq, _⟩ := permute_applies_permutation_reachable spills initial perm hreachable
+  · obtain ⟨result, heq, _⟩ := permute_applies_permutation_reachable spills initial perm hagree hreachable
     simp [heq]
-  · obtain ⟨_, _, _, heq, _⟩ := permute_blocks_unreachable spills initial perm hreachable
+  · obtain ⟨_, _, _, heq, _⟩ := permute_blocks_unreachable spills initial perm hagree hreachable
     simp [heq]
 
 theorem permute_applies_permutation_of_ok
@@ -83,17 +103,15 @@ theorem permute_applies_permutation_of_ok
     {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
     result.stack = apply_permutation initial.stack perm := by
-  have hreachable : values_reachable perm := by
-    by_contra hn
-    obtain ⟨_, _, _, he, _⟩ := permute_blocks_unreachable spills initial perm hn
-    rw [hresult] at he
-    cases he
-  obtain ⟨state, heq, hres⟩ :=
-    permute_applies_permutation_reachable spills initial perm hreachable
-  have he : result = state := by
-    cases hresult.symm.trans heq
-    rfl
-  exact he ▸ hres
+  obtain ⟨q, hq, happly, _, _⟩ := normalize_spec initial.stack perm
+  rw [permute_eq_normalize, hq, except_ok_bind] at hresult
+  by_cases hne : 0 < initial.stack.length
+  · rw [dite_eq_left hne] at hresult
+    exact ((go_spec initial q hne _ hresult).applies rfl).trans happly
+  · rw [dite_eq_right hne] at hresult
+    cases hresult
+    have hz : initial.stack = [] := by simpa using Nat.eq_zero_of_not_pos hne
+    simp [apply_permutation, hz]
 
 -- `hne` makes the top position, `source.length - 1`, available.
 -- `hresult` says that `permute` successfully returned this stack and trace.

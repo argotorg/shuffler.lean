@@ -87,6 +87,8 @@ def permute
         let idx : ℕ := (perm top).rev.val
         if hdepth : idx > MAX_SWAP_DEPTH then
           state.blockSwapUnreachable (perm top)
+        else if state.isFinal (perm top) then
+          .error (.assertion "swapping a final slot out of place")
         else
           -- We want to swap the top element into position `perm[top]`. But `Trace.Swap`
           -- is parameterised by depth below the top, not an absolute index: it swaps
@@ -141,6 +143,8 @@ def permute
           let idx : ℕ := pos.rev.val
           if hdepth : idx > MAX_SWAP_DEPTH then
             state.blockSwapUnreachable pos
+          else if state.isFinal pos then
+            .error (.assertion "swapping a final slot out of place")
           else
 
             -- `top` is a fixed point, so the out-of-place `pos` is strictly below it
@@ -188,5 +192,11 @@ def all_swaps_reachable (perm : Permutation source) : Prop
 def values_reachable {source : Stack} (perm : Permutation source) : Prop :=
   ∀ i : Fin source.length,
     source[i] ≠ source[perm.symm i] → i.rev.val ≤ MAX_SWAP_DEPTH
+
+-- Every slot bound to a stack offset is bound to one that `perm` fills with an equal value.
+def bindings_agree {source target : Stack} {spills : SpillSet}
+    (state : State source target spills) (perm : Permutation state.stack) : Prop :=
+  ∀ (i : Fin state.stack.length) (d : Fin target.length) (h : d.val < state.stack.length),
+    state.mapping i = some d → state.stack[perm.symm ⟨d.val, h⟩] = state.stack[i]
 
 end Shuffler.Permute
