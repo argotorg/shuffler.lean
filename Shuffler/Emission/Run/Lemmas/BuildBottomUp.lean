@@ -38,9 +38,18 @@ variable {source target : Stack} {spills : SpillSet}
     ⦃True⦄ Permute.permute state p
     ⦃fun result => result.state.planned_mapping = state.planned_mapping ∧ result.Positive;
       (fun err => ∀ b, err ≠ .Blocked b)⦄ := by
-  obtain ⟨result, hr, _, hp, _, _, hb⟩ := Permute.permute_result_spec state p
-  rw [hr]
-  exact ⟨fun _ => ⟨hp, hb⟩⟩
+  obtain ⟨q, hq, _⟩ := Permute.normalize_spec state.stack p
+  rw [Permute.permute_eq_normalize, hq, except_ok_bind]
+  by_cases hne : 0 < state.stack.length
+  · rw [dite_eq_left hne]
+    cases hr : Permute.permute.go state q hne with
+    | ok result =>
+      exact ⟨fun _ => ⟨(Permute.go_frame state q hne hr).1,
+        fun b h => ((Permute.go_spec state q hne result hr).blocked b h).choose_spec.2.1⟩⟩
+    | error err =>
+      exact ⟨fun _ b he => Permute.go_not_error_blocked state q hne b (he ▸ hr)⟩
+  · rw [dite_eq_right hne]
+    exact ⟨fun _ => ⟨rfl, by simp [Result.Positive]⟩⟩
 
 @[spec] theorem generate_attach_frame_triple (state : State source target spills) (offset : ℕ) :
     ⦃True⦄ (state.generate offset).attach
