@@ -123,7 +123,8 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
       cases err with
       | Blocked blocked => change True; trivial
       | assertion reason =>
-        exact (Shuffler.Permute.permute_no_assertion _ _ _ reason hperm).elim
+        exact (Shuffler.Permute.permute_no_assertion _ _ _
+          (Shuffler.Permute.bindings_agree_toPermutation state hp.1 hp.2) reason hperm).elim
     | ok result => cases result with
       | mk blocked next => cases blocked with
         | some blocked => change True; trivial

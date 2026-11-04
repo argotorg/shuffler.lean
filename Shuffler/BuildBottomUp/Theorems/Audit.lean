@@ -9,6 +9,7 @@ import all Batteries.Tactic.PrintOpaques
 import all Init.Data.Nat.Bitwise.Basic
 import all Init.Data.Repr
 import all Init.Data.Range.Basic
+import all Init.Data.List.Sort.Basic
 
 import all Init.Prelude
 

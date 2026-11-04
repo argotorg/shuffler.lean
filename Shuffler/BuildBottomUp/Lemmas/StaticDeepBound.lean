@@ -5,7 +5,7 @@ import Shuffler.BuildBottomUp.Lemmas.Invariants
 import Shuffler.BuildBottomUp.Lemmas.LoopProofs
 import Shuffler.BuildBottomUp.Lemmas.NecessityProofs
 import Shuffler.BuildBottomUp.Lemmas.ReachScan
-import Shuffler.BuildBottomUp.Lemmas.StaticTerminal
+import Shuffler.BuildBottomUp.Lemmas.StaticNoGeneration
 import Shuffler.BuildBottomUp.Lemmas.SuccessProofs
 
 @[expose] public section
@@ -164,25 +164,16 @@ theorem loop_bound_mismatch_deep_noSuccess (cursor : Nat)
       pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) := by
   by_cases hpending : state.pending_generations = 0
   · intro hs
-    have ht : ∀ j, (state.mapping.symm j).isSome :=
-      (Mapping.unmapped_target_slots_eq_zero state.mapping).mp (inv.pending.trans hpending)
-    have hlen : state.stack.length = target.length := by
+    have hvalues := (loop_success_iff_expected_below cursor state inv inv.valid hpending).mp hs
+    have hvalue := hvalues cursor (by
       have := inv.size
-      omega
-    have hsource := (state.mapping.complete_of_target_total hlen.le ht).2
-    have hperm := (loop_success_iff_permutation cursor state inv hpending hlen hsource).mp hs
-    have hnotfixed : state.mapping.toPermutation hlen hsource current ≠ current := by
-      intro hfixed
-      have hmap := (Mapping.toPermutation_apply state.mapping hlen hsource current).symm
-      rw [hfixed] at hmap
-      have hcast : Fin.cast hlen current = (⟨cursor, hc⟩ : Fin target.length) := Fin.ext hcurrent
-      rw [hcast] at hmap
-      have hbcurrent := state.mapping.eq_some_iff.mpr hmap
-      have heq : current = carrier := Option.some.inj (hbcurrent.symm.trans hb)
-      exact hv (heq ▸ rfl)
-    have hdepth := hperm current (by simpa using hnotfixed)
-    dsimp [Fin.rev] at hdepth
-    omega
+      omega)
+    have hactual : state.stack[cursor]? = some state.stack[current] := by
+      simp [← hcurrent, current.isLt]
+    have hexpected : state.expectedStack[cursor]? = some state.stack[carrier] := by
+      simp [State.expectedStack, hc, hb]
+    rw [hactual, hexpected] at hvalue
+    exact hv (Option.some.inj hvalue)
   · exact loop_bound_mismatch_deep_noSuccess_of_pending cursor state inv hw hpending hc
       current hcurrent carrier hb hv
 

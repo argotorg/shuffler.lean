@@ -3,6 +3,8 @@ module
 public import Shuffler.BuildBottomUp.Lemmas.StaticCompletion
 public import Shuffler.BuildBottomUp.Lemmas.ReachActions
 import Shuffler.BuildBottomUp.Lemmas.StaticTerminal
+import Shuffler.BuildBottomUp.Lemmas.Values
+import Shuffler.Permute.Normalization
 
 @[expose] public section
 
@@ -66,16 +68,16 @@ theorem all_swaps_reachable_iff_completedFixed (state : State source target spil
 
 end Success
 
--- With no pending generation, only the deep fixed points of the completed assignment matter.
-theorem loop_success_iff_completedFixed (cursor : Nat) (state : State source target spills)
+-- With no pending generation, every deep position must already have its expected value.
+theorem loop_success_iff_expected_below (cursor : Nat) (state : State source target spills)
     (inv : state.invariant cursor) (h : state.Valid) (hp : state.pending_generations = 0) :
     Succeeds (((((buildBottomUp.loop cursor state) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
       if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
       pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) (fun _ => True) ↔
-      ∀ i : Fin target.length, i.val < target.length - (MAX_SWAP_DEPTH + 1) →
-        Success.completedPermutation state h i = i := by
+      ∀ i, i < target.length - (MAX_SWAP_DEPTH + 1) →
+        state.stack[i]? = state.expectedStack[i]? := by
   have hlen : state.stack.length = target.length := by have := h.size; omega
-  rw [loop_success_iff_permutation cursor state inv hp hlen (Success.source_total state h)]
-  exact Success.all_swaps_reachable_iff_completedFixed state h hlen (Success.source_total state h)
+  rw [loop_success_iff_permutation cursor state inv hp hlen (Success.source_total state h),
+    Shuffler.Permute.values_reachable_iff_deep, expectedStack_permutation, hlen]
 
 end Shuffler.Emission

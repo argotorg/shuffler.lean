@@ -8,7 +8,7 @@ namespace Shuffler.Emission.Success
 
 def Terminal (initial : State source target spills) : Prop :=
   if generationEnd initial ≤ boundary initial then
-    CyclesReady initial (generationEnd initial)
+    ValuesReady initial (generationEnd initial)
   else BoundarySafe initial
 
 -- A suffix of the same finite conjunction used by StaticSuccess.
