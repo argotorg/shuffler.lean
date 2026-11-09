@@ -108,7 +108,7 @@ theorem State.withinReach.swap {state next : State source target spills}
   · exact Or.inr (Or.inl hspill)
   · apply Or.inr ∘ Or.inr
     rw [hs.stack_eq]
-    apply hcopy.swap pos ⟨state.stack.length - 1, top_lt_length state.stack pos⟩
+    apply hcopy.swap pos (state.stack.topOffset pos.pos)
     · have := h.width
       rw [Stack.isDupReachable_iff_length]
       unfold MAX_DUP_DEPTH MAX_SWAP_DEPTH at *

@@ -133,7 +133,7 @@ private theorem origin_of_noPop (trace : Trace spills source result) (h : trace.
   | Pop _ _ => exact False.elim h
   | @Swap prev idx hlen hlo hhi trace ih =>
     have hl := trace.noPop_length_le h
-    let a : Fin prev.length := ⟨prev.length - 1, by omega⟩
+    let a := prev.topOffset (by omega)
     let b : Fin prev.length := ⟨prev.length - 1 - idx, by omega⟩
     exact (ih h).swap a b
       (by dsimp [a, frozen]; omega)

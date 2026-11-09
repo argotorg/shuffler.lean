@@ -150,7 +150,7 @@ theorem Growth.generation_swapped {state produced next : State source target spi
       subst i
       simp [State.exists_isFinal_iff, dest.isLt, hbound] at hi
     have hp := produced.swapDestinations_isFinal pos
-      ⟨produced.stack.length - 1, by have := pos.isLt; omega⟩ i (h.preserved i hi)
+      (produced.stack.topOffset pos.pos) i (h.preserved i hi)
       (fun heq => hne (Fin.ext (heq.trans hpos)))
       (by have := hi.1; have := h.size; dsimp; omega)
     exact (State.exists_isFinal_iff _ _).mpr (by
@@ -160,11 +160,11 @@ theorem Swapped.retag (state : State source target spills) (pos : Fin state.stac
     (heq : state.stack[pos] = state.stack[state.stack.length - 1]'(top_lt_length state.stack pos)) :
     Swapped state
       { state with mapping := (state.mapping.swapDestinations pos
-          ⟨state.stack.length - 1, by have := pos.isLt; omega⟩) } pos := by
+          (state.stack.topOffset pos.pos)) } pos := by
   exact ⟨(swap_eq_of_equal state.stack pos
-    ⟨state.stack.length - 1, top_lt_length state.stack pos⟩ heq).symm,
+    (state.stack.topOffset pos.pos) heq).symm,
     rfl, rfl, by simp, List.Subset.refl _, (expectedStack_retag state pos
-    ⟨state.stack.length - 1, top_lt_length state.stack pos⟩ heq).symm, fun _ => rfl⟩
+    (state.stack.topOffset pos.pos) heq).symm, fun _ => rfl⟩
 
 @[spec] theorem generate_triple (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest)
