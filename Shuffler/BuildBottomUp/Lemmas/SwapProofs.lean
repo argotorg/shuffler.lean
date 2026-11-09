@@ -27,12 +27,9 @@ structure Swapped (state next : State source target spills) (pos : Fin state.sta
         (state.stack.topOffset pos.pos)).symm dest).map Fin.val
 
 theorem swap_triple (state : State source target spills) (pos : Fin state.stack.length)
-    (hbelow : pos.val + 1 < state.stack.length) (hreach : state.stack.isSwapReachable pos)
-    (hnfinal : ¬ state.isFinal pos) :
+    (hvalid : state.stack.isValidSwapTarget pos) (hnfinal : ¬ state.isFinal pos) :
     ⦃True⦄ state.swapWith pos.val
     ⦃fun next => Swapped state next pos; allowedErrors⦄ := by
-  -- Prove the checked preconditions before proving the state update.
-  have hvalid : state.stack.isValidSwapTarget pos := ⟨by dsimp only; omega, hreach⟩
   vcgen [State.swapWith, index] until (requires _ _)
   all_goals simp_all [requires]
   apply WPMonad.pure_le_wp_pure (m := Except ShuffleErr) _ _ _
@@ -47,17 +44,16 @@ theorem swap_triple (state : State source target spills) (pos : Fin state.stack.
     simp [Function.comp_def]
 
 theorem swap_spec (state : State source target spills) (pos : Fin state.stack.length)
-    (hbelow : pos.val + 1 < state.stack.length) (hreach : state.stack.isSwapReachable pos)
-    (hnfinal : ¬ state.isFinal pos) :
+    (hvalid : state.stack.isValidSwapTarget pos) (hnfinal : ¬ state.isFinal pos) :
     Spec (state.swapWith pos.val) (fun next => Swapped state next pos) :=
-  (spec_iff_triple _ _).mpr (swap_triple state pos hbelow hreach hnfinal)
+  (spec_iff_triple _ _).mpr (swap_triple state pos hvalid hnfinal)
 
 @[spec] theorem swapWith_spec (state : State source target spills) (offset : ℕ)
-    (hlt : offset < state.stack.length) (hbelow : offset + 1 < state.stack.length)
-    (hreach : state.stack.isSwapReachable ⟨offset, hlt⟩) (hnfinal : ¬ state.isFinal ⟨offset, hlt⟩) :
+    (hlt : offset < state.stack.length) (hvalid : state.stack.isValidSwapTarget ⟨offset, hlt⟩)
+    (hnfinal : ¬ state.isFinal ⟨offset, hlt⟩) :
     ⦃True⦄ state.swapWith offset
     ⦃fun next => Swapped state next ⟨offset, hlt⟩; allowedErrors⦄ :=
-  swap_triple state ⟨offset, hlt⟩ hbelow hreach hnfinal
+  swap_triple state ⟨offset, hlt⟩ hvalid hnfinal
 
 theorem Swapped.invariant {state next : State source target spills}
     {pos : Fin state.stack.length} (h : Swapped state next pos)

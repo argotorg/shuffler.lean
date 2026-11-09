@@ -57,9 +57,9 @@ macro "finish_reachable " c:term ", " st:term ", " hp:term ", " hn:term ", " hr:
     have hreach := ($hr).swap_reachable pos (by rfl)
     rw [ite_eq_right (not_not_intro (show ($st).isSwapReachable pos from hreach))]
     try simp_loop
-    have hbelow := Stack.belowOfNotTop ($st).stack pos hnotTop
-    try simp_loop
-    apply (($hp).swap_final_success $hr hbelow $hn).bind
+    have hvalid : ($st).stack.isValidSwapTarget pos :=
+      ⟨by have := ($hp).in_bounds; dsimp +zetaDelta only at this ⊢; omega, hreach⟩
+    apply (($hp).swap_final_success $hr hvalid $hn).bind
     rintro next ⟨hi, hreach⟩
     simpa only [bind_assoc] using $advance _ hi hreach
   · try dsimp +zetaDelta only at hnotTop
@@ -248,10 +248,10 @@ theorem loop_success (cursor : ℕ) (state : State source target spills)
       simp only [ne_eq, hnotTop, not_false_eq_true, ↓reduceIte]
       rw [index_eq (size := retag.stack.length) pos]
       simp only [except_ok_bind]
-      have hbelow := Stack.belowOfNotTop retag.stack pos hnotTop
       have hreach := hrt.swap_reachable pos (hi.processed.bound_ge dest pos hd le_rfl)
       rw [ite_eq_right (not_not_intro (show retag.isSwapReachable pos from hreach))]
-      apply (hi.swap_bound_success (dest := dest) hrt pos hd hbelow hplaced).bind
+      apply (hi.swap_bound_success (dest := dest) hrt pos hd
+        ⟨by dsimp +zetaDelta only; omega, hreach⟩ hplaced).bind
       rintro next ⟨hp, hrn⟩
       finish_reachable cursor, next, hp.1, hp.2, hrn, advance
     · dsimp +zetaDelta only at hnotTop

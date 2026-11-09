@@ -184,20 +184,17 @@ theorem Placement.boundary_finish_success_iff {state : State source target spill
       ¬NeedsDup state (state.stack[state.stack.length - 1]'(by have := h.in_bounds; omega)) ∨
       TwoCopies state.stack (state.stack[state.stack.length - 1]'(by have := h.in_bounds; omega)) := by
   let bottom : Fin state.stack.length := ⟨dest.val, h.in_bounds⟩
-  have hbelow : bottom.val + 1 < state.stack.length := by
+  have hvalid : state.stack.isValidSwapTarget bottom := by
+    simp only [Stack.isValidSwapTarget]
     dsimp [bottom]
-    unfold MAX_SWAP_DEPTH at hw
-    omega
-  have hswap : state.stack.isSwapReachable bottom := by
-    simp only [Stack.isSwapReachable]
-    dsimp [bottom]
+    unfold MAX_SWAP_DEPTH at *
     omega
   have hdup : ¬state.stack.isDupReachable bottom := by
     simp only [Stack.isDupReachable]
     dsimp [bottom]
     unfold MAX_DUP_DEPTH MAX_SWAP_DEPTH at *
     omega
-  obtain ⟨next, heq, hs⟩ := swap_success state bottom hbelow hswap (fun hf => hnfinal ⟨_, hf⟩)
+  obtain ⟨next, heq, hs⟩ := swap_success state bottom hvalid (fun hf => hnfinal ⟨_, hf⟩)
   have hi := (hs.invariant h.toInvariant le_rfl).advance
     (hs.final dest rfl (h.position.resolve_left hnfinal))
   have hw' : next.stack.length - (dest.val + 1) ≤ MAX_SWAP_DEPTH := by
@@ -314,8 +311,7 @@ theorem loop_bound_mismatch_boundary_success_iff (cursor : Nat)
       unfold MAX_DUP_DEPTH MAX_SWAP_DEPTH at *
       omega
     rw [ite_eq_right (not_not_intro (show retag.isSwapReachable pos from hreach))]
-    have hbelow := Stack.belowOfNotTop retag.stack pos hnotTop
-    obtain ⟨next, heq, hs⟩ := swap_success retag pos hbelow hreach
+    obtain ⟨next, heq, hs⟩ := swap_success retag pos ⟨by dsimp +zetaDelta only; omega, hreach⟩
       (retag.boundNotFinal dest pos hd hnotcurrent)
     rw [heq, except_ok_bind]
     have hgepos : cursor ≤ pos.val := inv.not_final_ge pos hmovable

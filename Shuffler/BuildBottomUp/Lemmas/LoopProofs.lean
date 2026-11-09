@@ -37,11 +37,12 @@ macro "finish_checked " c:term ", " st:term ", " hp:term ", " hn:term ", " expec
   by_cases hnotTop : $c ≠ ($st).stack.length - 1
   · try dsimp +zetaDelta only at hnotTop
     simp +zetaDelta only [ne_eq, hnotTop, not_false_eq_true, ↓reduceIte]
-    have hbelow := Stack.belowOfNotTop ($st).stack ⟨$c, ($hp).in_bounds⟩ hnotTop
     by_cases hr : ($st).isSwapReachable ⟨$c, ($hp).in_bounds⟩
     · rw [ite_eq_right (not_not_intro hr)]
       try simp_loop
-      apply (($hp).swap_final hbelow hr $hn).bind
+      have hvalid : ($st).stack.isValidSwapTarget ⟨$c, ($hp).in_bounds⟩ :=
+        ⟨by have := ($hp).in_bounds; dsimp +zetaDelta only at this ⊢; omega, hr⟩
+      apply (($hp).swap_final hvalid $hn).bind
       rintro final ⟨hinv, he⟩
       simpa only [bind_assoc] using $advance _ hinv (he.trans $expected)
     · rw [ite_eq_left hr]
@@ -234,10 +235,9 @@ theorem loop_spec (cursor : ℕ) (state : State source target spills)
       simp only [ne_eq, hnotTop, not_false_eq_true, ↓reduceIte]
       rw [index_eq (size := retag.stack.length) pos]
       simp only [except_ok_bind]
-      have hbelow := Stack.belowOfNotTop retag.stack pos hnotTop
       by_cases hr : retag.isSwapReachable pos
       · rw [ite_eq_right (not_not_intro hr)]
-        apply (hi.swap_bound (dest := dest) pos hd hbelow hr hplaced).bind
+        apply (hi.swap_bound (dest := dest) pos hd ⟨by dsimp +zetaDelta only; omega, hr⟩ hplaced).bind
         rintro next ⟨hp, he'⟩
         finish_checked cursor, next, hp.1, hp.2, he'.trans he, advance
       · rw [ite_eq_left hr]

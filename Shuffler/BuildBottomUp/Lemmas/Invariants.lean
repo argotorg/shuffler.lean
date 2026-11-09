@@ -90,11 +90,6 @@ theorem State.not_isFinal_of_val_eq {state : State source target spills}
   subst heq
   exact hnfinal
 
-theorem _root_.Stack.belowOfNotTop (stack : Stack) (pos : Fin stack.length)
-    (hne : pos.val ≠ stack.length - 1) : pos.val + 1 < stack.length := by
-  have := pos.isLt
-  omega
-
 
 theorem State.invariant.size {state : State source target spills} (h : state.invariant cursor) :
     state.stack.length + state.pending_generations = target.length := h.valid.size
