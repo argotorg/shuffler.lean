@@ -38,7 +38,7 @@ structure RunSpec (state : State source target spills) (p : Permutation state.st
     (result : Result source target spills) : Prop where
   length : result.state.stack.length = state.stack.length
   applies : result.blocked = none → result.state.stack = apply_permutation' state.stack p rfl
-  deep : ∀ i : Fin state.stack.length, MAX_SWAP_DEPTH < i.rev.val →
+  deep : ∀ i : Fin state.stack.length, ¬ state.isSwapReachable i →
     result.state.stack[i.val]? = state.stack[i.val]?
   blocked : ∀ b, result.blocked = some b →
     ∃ i : Fin state.stack.length, b.offset = i.val ∧ 0 < b.excess ∧
@@ -67,7 +67,7 @@ theorem RunSpec.equal (state : State source target spills) (p : Permutation stat
 
 theorem RunSpec.swap (state : State source target spills) (p : Permutation state.stack)
     (top pos : Fin state.stack.length) (hpos : p pos ≠ pos)
-    (htop : top.val = state.stack.length - 1) (hdepth : pos.rev.val ≤ MAX_SWAP_DEPTH)
+    (htop : top.val = state.stack.length - 1) (hreach : state.isSwapReachable pos)
     (next : State source target spills)
     (hn : next.stack = state.stack.swap top.val pos.val)
     (result : Result source target spills)
@@ -82,9 +82,12 @@ theorem RunSpec.swap (state : State source target spills) (p : Permutation state
     simpa [hn] using ha.trans (by
       simpa [hn] using apply_permutation'_swap state.stack p rfl top pos)
   · intro i hi
-    have hd := h.deep (Fin.cast hlen.symm i) (by simpa [Fin.rev, hlen] using hi)
-    have hia : i.val ≠ top.val := by dsimp [Fin.rev] at hi; omega
-    have hib : i.val ≠ pos.val := by intro he; have := Fin.ext he; subst i; omega
+    simp only [Stack.isSwapReachable] at hi
+    have hd := h.deep (Fin.cast hlen.symm i) (by
+      simp only [Stack.isSwapReachable]; simpa [hlen] using hi)
+    have hia : i.val ≠ top.val := by omega
+    have hib : i.val ≠ pos.val := by
+      simp only [Stack.isSwapReachable] at hreach; omega
     simpa [hn, List.getElem?_eq_getElem i.isLt, hia, hib] using hd
   · intro b hb
     obtain ⟨i, hi, hp, hm, hd⟩ := h.blocked b hb
@@ -112,12 +115,10 @@ theorem go_spec (state : State source target spills) (p : Permutation state.stac
     exact RunSpec.equal state p top pos hpos htop he.symm
       { state with mapping := state.mapping.swapDestinations pos top } rfl result (ih result hr)
   case swap_top ht perm' he hreach hfinal hvalid ih result hr =>
-    exact RunSpec.swap state p top (p top) (by simpa using ht) htop
-      (by have := not_not.mp hreach; simp only [Stack.isSwapReachable, Fin.val_rev] at this ⊢; omega) _
+    exact RunSpec.swap state p top (p top) (by simpa using ht) htop (not_not.mp hreach) _
       (by rw [htop, List.swap_comm]) result (ih result hr)
   case swap_pos ht search pos hpos hsearch perm' he hreach hfinal hpos_ne hvalid ih result hr =>
-    exact RunSpec.swap state p top pos hpos htop
-      (by have := not_not.mp hreach; simp only [Stack.isSwapReachable, Fin.val_rev] at this ⊢; omega) _
+    exact RunSpec.swap state p top pos hpos htop (not_not.mp hreach) _
       (by rw [htop, List.swap_comm]) result (ih result hr)
   case assert_top result hr | assert_pos result hr => cases hr
   case blocked_top ht he hreach result hr =>
@@ -311,7 +312,7 @@ theorem RunSpec.values_of_success {state : State source target spills}
     (h : RunSpec state p result) (hs : result.blocked = none) : values_reachable p := by
   intro i hne
   by_contra hd
-  have hv := h.deep i (by simp only [Stack.isSwapReachable, Fin.val_rev] at hd ⊢; omega)
+  have hv := h.deep i hd
   rw [h.applies hs] at hv
   have he : state.stack[p.symm i] = state.stack[i] := by
     simpa [apply_permutation', List.getElem?_eq_getElem i.isLt] using hv
