@@ -64,11 +64,8 @@ abbrev State.depthOf (state : State source target spills) (offset : Fin state.st
 
 -- Whether a swap can reach the slot at `offset`; trivially true for the top itself
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:747-750.
-def State.isSwapReachable (state : State source target spills) (offset : Fin state.stack.length) : Prop :=
-  (state.depthOf offset).val ≤ MAX_SWAP_DEPTH
-
-instance (state : State source target spills) (offset : Fin state.stack.length) :
-    Decidable (state.isSwapReachable offset) := by unfold State.isSwapReachable; infer_instance
+abbrev State.isSwapReachable (state : State source target spills) (offset : Fin state.stack.length) : Prop :=
+  state.stack.isSwapReachable offset
 
 -- Whether the slot at `pos` is bound for `pos` itself, i.e., already is at its final target offset
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:735-738.

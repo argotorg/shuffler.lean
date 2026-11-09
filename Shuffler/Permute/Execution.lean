@@ -125,7 +125,7 @@ theorem go_spec (state : State source target spills) (p : Permutation state.stac
   case blocked_top ht he idx hdepth result hr =>
     rw [show state.blockSwapUnreachable (p top) = .ok ⟨some ⟨(p top).val, idx - MAX_SWAP_DEPTH⟩, state⟩ by
       have h := blockSwapUnreachable_eq state (p top)
-        (by rw [State.isSwapReachable, depthOf_eq_rev, not_le]; exact hdepth)
+        (by rw [State.isSwapReachable, Stack.isSwapReachable, ← State.depthOf, depthOf_eq_rev, not_le]; exact hdepth)
       rw [depthOf_eq_rev] at h; exact h] at hr
     cases hr
     refine ⟨rfl, ?_, ?_, ?_⟩
@@ -138,7 +138,7 @@ theorem go_spec (state : State source target spills) (p : Permutation state.stac
   case blocked_pos ht search pos hpos hsearch he idx hdepth result hr =>
     rw [show state.blockSwapUnreachable pos = .ok ⟨some ⟨pos.val, idx - MAX_SWAP_DEPTH⟩, state⟩ by
       have h := blockSwapUnreachable_eq state pos
-        (by rw [State.isSwapReachable, depthOf_eq_rev, not_le]; exact hdepth)
+        (by rw [State.isSwapReachable, Stack.isSwapReachable, ← State.depthOf, depthOf_eq_rev, not_le]; exact hdepth)
       rw [depthOf_eq_rev] at h; exact h] at hr
     cases hr
     refine ⟨rfl, ?_, ?_, ?_⟩
@@ -313,10 +313,10 @@ theorem go_ok (state : State source target spills) (p : Permutation state.stack)
     exact (h.not_final_pos top pos (by omega) (not_not.mp ht) hpos hfinal).elim
   case blocked_top ht he idx hdepth h =>
     exact ⟨_, blockSwapUnreachable_eq state (p top)
-      (by rw [State.isSwapReachable, depthOf_eq_rev, not_le]; exact hdepth)⟩
+      (by rw [State.isSwapReachable, Stack.isSwapReachable, ← State.depthOf, depthOf_eq_rev, not_le]; exact hdepth)⟩
   case blocked_pos ht search pos hpos hsearch he idx hdepth h =>
     exact ⟨_, blockSwapUnreachable_eq state pos
-      (by rw [State.isSwapReachable, depthOf_eq_rev, not_le]; exact hdepth)⟩
+      (by rw [State.isSwapReachable, Stack.isSwapReachable, ← State.depthOf, depthOf_eq_rev, not_le]; exact hdepth)⟩
   case done ht search hsearch h => exact ⟨_, rfl⟩
 
 theorem RunSpec.values_of_success {state : State source target spills}
@@ -386,11 +386,11 @@ theorem go_count (state : State source target spills) (p : Permutation state.sta
     exact hpos (by simpa [hp] using not_not.mp ht) |>.elim
   case blocked_top ht he idx hdepth result hr =>
     rw [blockSwapUnreachable_eq state (p top)
-      (by rw [State.isSwapReachable, depthOf_eq_rev, not_le]; exact hdepth)] at hr
+      (by rw [State.isSwapReachable, Stack.isSwapReachable, ← State.depthOf, depthOf_eq_rev, not_le]; exact hdepth)] at hr
     cases hr
   case blocked_pos ht search pos hpos hsearch he idx hdepth result hr =>
     rw [blockSwapUnreachable_eq state pos
-      (by rw [State.isSwapReachable, depthOf_eq_rev, not_le]; exact hdepth)] at hr
+      (by rw [State.isSwapReachable, Stack.isSwapReachable, ← State.depthOf, depthOf_eq_rev, not_le]; exact hdepth)] at hr
     cases hr
   case assert_top result hr | assert_pos result hr => cases hr
   case swap_top ht perm' he idx hdepth hfinal stack' h1 h2 h3 trace' ih result hr =>

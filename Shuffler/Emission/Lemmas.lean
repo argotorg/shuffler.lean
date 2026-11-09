@@ -205,7 +205,7 @@ theorem blockSwapUnreachable_eq (state : State source target spills)
     state.blockSwapUnreachable pos =
       .ok ⟨some ⟨pos.val, (state.depthOf pos).val - MAX_SWAP_DEPTH⟩, state⟩ := by
   apply block_eq
-  simp only [State.isSwapReachable] at *
+  simp only [Stack.isSwapReachable] at *
   omega
 
 theorem blockDupUnreachable_eq (state : State source target spills)

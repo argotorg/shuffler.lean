@@ -184,7 +184,7 @@ theorem Swapped.retag (state : State source target spills) (pos : Fin state.stac
     | exact State.not_isFinal_of_val_eq (by assumption) (by assumption)
     | solve | simp_all
     | solve | omega
-    | (simp only [State.isSwapReachable, Stack.isSwapReachable] at *; omega)
+    | (simp only [Stack.isSwapReachable] at *; omega)
 
 theorem generate_contract (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest)

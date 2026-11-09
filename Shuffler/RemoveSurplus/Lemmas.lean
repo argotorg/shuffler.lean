@@ -133,7 +133,7 @@ theorem boundValue_pop (state : State source target spills) (hne : 0 < state.sta
     ⦃fun next => next.stack.length = state.stack.length ∧ next.boundValue = state.boundValue ∧
       next.topSurplus; allowedErrors⦄ := by
   vcgen [State.swapWith, index]
-  all_goals simp_all [State.isFinal, State.isSurplus, State.isSwapReachable,
+  all_goals simp_all [State.isFinal, State.isSurplus, Stack.isSwapReachable,
     Stack.isValidSwapTarget]
   all_goals first
     | omega
