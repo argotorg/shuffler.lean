@@ -8,16 +8,6 @@ import Shuffler.Emission.Lemmas
 
 namespace Shuffler.Emission
 
-theorem swap_eq_of_equal (stack : Stack) (a b : Fin stack.length)
-    (heq : stack[a] = stack[b]) : stack.swap a b = stack := by
-  apply List.ext_getElem (by simp)
-  intro i hi hs
-  by_cases ha : i = a.val
-  · subst i; simpa [List.getElem_swap, a.isLt, b.isLt] using heq.symm
-  by_cases hb : i = b.val
-  · subst i; simpa [ha, a.isLt] using heq
-  simp [ha, hb]
-
 theorem expectedStack_pending (state : State source target spills) (pending : ℕ) :
     ({ state with pending_generations := pending } : State source target spills).expectedStack =
       state.expectedStack := by
