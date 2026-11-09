@@ -55,7 +55,7 @@ def slotAt (stack : Stack) (offset : ℕ) : Except ShuffleErr Value := do
 
 -- Depth of the slot at `offset` below the top of the working stack
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:741-744.
-def State.depthOf (state : State source target spills) (offset : Fin state.stack.length) : Fin state.stack.length :=
+abbrev State.depthOf (state : State source target spills) (offset : Fin state.stack.length) : Fin state.stack.length :=
   state.stack.offsetToDepth offset
 
 

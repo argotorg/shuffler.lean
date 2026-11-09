@@ -10,7 +10,7 @@ import Shuffler.BuildBottomUp.Lemmas.Values
 -- implementation of offsetToDepth.
 theorem Stack.offsetToDepth_val (stack : Stack) (pos : Fin stack.length) :
     (stack.offsetToDepth pos).val = stack.length - 1 - pos.val := by
-  simp only [Stack.offsetToDepth, Nat.sub_sub, Nat.add_comm]
+  simp only [Nat.sub_sub, Nat.add_comm]
 
 theorem Stack.isDupReachable_iff_length (stack : Stack) (pos : Fin stack.length) :
     stack.isDupReachable pos ↔ stack.length ≤ pos.val + (MAX_DUP_DEPTH + 1) := by
@@ -128,14 +128,14 @@ theorem State.withinReach.swap_reachable {state : State source target spills}
 
 theorem hasCopy_append_new (stack : Stack) (slot : Value) : Stack.hasCopy (stack ++ [slot]) slot := by
   refine ⟨⟨stack.length, by simp⟩, by simp, ?_⟩
-  simp [Stack.isDupReachable, Stack.offsetToDepth]
+  simp [Stack.isDupReachable]
 
 theorem hasCopy_append_old (stack : Stack) (slot extra : Value) (pos : Fin stack.length)
     (hvalue : stack[pos] = slot) (hdepth : stack.length - pos.val ≤ MAX_DUP_DEPTH) :
     Stack.hasCopy (stack ++ [extra]) slot := by
   refine ⟨⟨pos.val, by have := pos.isLt; simp⟩, ?_, ?_⟩
   · simpa [List.getElem_append_left pos.isLt] using hvalue
-  · simp only [Stack.isDupReachable, Stack.offsetToDepth, List.length_append, List.length_singleton]
+  · simp only [Stack.isDupReachable, List.length_append, List.length_singleton]
     omega
 
 theorem hasCopy_append_swap_moved (stack : Stack) (slot extra : Value) (pos : Fin stack.length)
@@ -144,7 +144,7 @@ theorem hasCopy_append_swap_moved (stack : Stack) (slot extra : Value) (pos : Fi
   refine ⟨⟨stack.length, by simp⟩, ?_, ?_⟩
   · simpa [List.getElem_swap, pos.isLt, Nat.ne_of_gt pos.isLt,
       Nat.ne_of_lt pos.isLt, List.getElem_append_left pos.isLt] using hvalue
-  · simp [Stack.isDupReachable, Stack.offsetToDepth]
+  · simp [Stack.isDupReachable]
 
 theorem hasCopy_append_swap_old (stack : Stack) (slot extra : Value) (pos : Fin stack.length)
     (dest : ℕ) (hvalue : stack[pos] = slot)
@@ -155,7 +155,7 @@ theorem hasCopy_append_swap_old (stack : Stack) (slot extra : Value) (pos : Fin 
   refine ⟨⟨pos.val, by have := pos.isLt; simp⟩, ?_, ?_⟩
   · simpa [List.getElem_swap, heq, Nat.ne_of_lt pos.isLt,
       List.getElem_append_left pos.isLt] using hvalue
-  · simp only [Stack.isDupReachable, Stack.offsetToDepth, List.length_swap,
+  · simp only [Stack.isDupReachable, List.length_swap,
       List.length_append, List.length_singleton]
     omega
 
@@ -165,7 +165,7 @@ theorem hasCopy_append_swap_new (stack : Stack) (slot : Value) (dest : ℕ)
   by_cases hd : dest < (stack ++ [slot]).length
   · refine ⟨⟨dest, by simpa using hd⟩, ?_, ?_⟩
     · simp
-    · simp only [Stack.isDupReachable, Stack.offsetToDepth, List.length_swap,
+    · simp only [Stack.isDupReachable, List.length_swap,
         List.length_append, List.length_singleton]
       omega
   · rw [List.swap_eq_of_ge_left (by omega)]

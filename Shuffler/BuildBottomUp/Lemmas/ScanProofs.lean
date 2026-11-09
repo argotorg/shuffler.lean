@@ -74,6 +74,6 @@ def Chosen (state : State source target spills) (copy : Fin state.stack.length) 
   all_goals try simp_all
   all_goals first
     | exact copy_offset_lt (by assumption)
-    | exact ⟨⟨_, copy_offset_lt (by assumption)⟩, rfl, (by symm; assumption), (by subst_vars; tauto)⟩
+    | exact ⟨⟨_, copy_offset_lt (by assumption)⟩, rfl, (by symm; simpa), (by subst_vars; tauto)⟩
 
 end Shuffler.Emission

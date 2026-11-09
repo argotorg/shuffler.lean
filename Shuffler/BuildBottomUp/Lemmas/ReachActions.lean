@@ -142,7 +142,7 @@ theorem generate_final (state : State source target spills) (dest : Fin target.l
     | exact State.isFinal_of_val_eq (by assumption) (by assumption)
     | omega
     | (have := (‹Growth _ _ _ _›).size
-       simp only [State.isSwapReachable, State.depthOf, Stack.offsetToDepth] at *; omega)
+       simp only [State.isSwapReachable] at *; omega)
 
 theorem generate_reachable (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest)

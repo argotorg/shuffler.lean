@@ -69,13 +69,12 @@ theorem CanPlace.append {source : Stack} {value : Value}
     let trace := Trace.Dup (depth.val + 1) (Nat.succ_le_of_lt depth.isLt)
       (Nat.succ_pos _) (Nat.add_le_add_right hr 1) (by
         have hi : source.length - (depth.val + 1) = pos.val := by
-          dsimp [depth]; rw [Stack.offsetToDepth_val]; have := pos.isLt; omega
+          dsimp [depth]; have := pos.isLt; omega
         simpa only [hi, Fin.getElem_fin] using hlabel) (Trace.Lit (spills := spills) source)
     refine ⟨dup_stack_eq source pos ▸ trace, (Trace.noPop_cast _ _).mpr trivial, ?_⟩
     rw [Trace.additions_cast]
     have hi : source.length - (depth.val + 1) = pos.val := by
       dsimp [depth]
-      rw [Stack.offsetToDepth_val]
       have := pos.isLt
       omega
     simp [trace, Trace.additions, hi]

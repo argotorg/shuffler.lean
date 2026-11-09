@@ -69,12 +69,12 @@ theorem go_frame (state : State source target spills) (p : Permutation state.sta
         hi, Fin.val_ne_of_ne ha, hib]
   case blocked_top ht he idx hdepth result hr =>
     rw [blockSwapUnreachable_eq state (p top)
-      (by simpa only [State.isSwapReachable, depthOf_eq_rev, not_le] using hdepth)] at hr
+      (by rw [State.isSwapReachable, depthOf_eq_rev, not_le]; exact hdepth)] at hr
     cases hr
     exact ⟨rfl, rfl, rfl⟩
   case blocked_pos ht search pos hpos hsearch he idx hdepth result hr =>
     rw [blockSwapUnreachable_eq state pos
-      (by simpa only [State.isSwapReachable, depthOf_eq_rev, not_le] using hdepth)] at hr
+      (by rw [State.isSwapReachable, depthOf_eq_rev, not_le]; exact hdepth)] at hr
     cases hr
     exact ⟨rfl, rfl, rfl⟩
   case done ht search hsearch result hr =>
@@ -96,11 +96,11 @@ theorem go_not_error_blocked (state : State source target spills) (p : Permutati
   case assert_top b hr | assert_pos b hr | done b hr => cases hr
   case blocked_top ht he idx hdepth b hr =>
     rw [blockSwapUnreachable_eq state (p top)
-      (by simpa only [State.isSwapReachable, depthOf_eq_rev, not_le] using hdepth)] at hr
+      (by rw [State.isSwapReachable, depthOf_eq_rev, not_le]; exact hdepth)] at hr
     cases hr
   case blocked_pos ht search pos hpos hsearch he idx hdepth b hr =>
     rw [blockSwapUnreachable_eq state pos
-      (by simpa only [State.isSwapReachable, depthOf_eq_rev, not_le] using hdepth)] at hr
+      (by rw [State.isSwapReachable, depthOf_eq_rev, not_le]; exact hdepth)] at hr
     cases hr
 
 theorem permute_result_spec (state : State source target spills) (p : Permutation state.stack)

@@ -117,7 +117,7 @@ theorem Swapped.reachable_boundary_iff {state next : State source target spills}
       TwoCopies state.stack (state.stack[state.stack.length - 1]'(by have := bottom.isLt; omega)) := by
   let top : Fin state.stack.length := ⟨state.stack.length - 1, by have := bottom.isLt; omega⟩
   have ht : state.stack.isDupReachable top := by
-    simp [Stack.isDupReachable, Stack.offsetToDepth_val, top]
+    simp [Stack.isDupReachable, top]
   have hcopy : Stack.hasCopy next.stack state.stack[top] ↔ TwoCopies state.stack state.stack[top] := by
     rw [hs.stack_eq]
     exact hasCopy_swap_out_iff_twoCopies state.stack bottom top hb ht hv
@@ -169,7 +169,7 @@ theorem Swapped.twoCopies_iff {state next : State source target spills}
   rw [hs.stack_eq]
   apply twoCopies_swap_iff state.stack slot pos
     ⟨state.stack.length - 1, top_lt_length state.stack pos⟩ hp
-  simp [Stack.isDupReachable, Stack.offsetToDepth_val]
+  simp [Stack.isDupReachable]
 
 theorem Placement.boundary_finish_success_iff {state : State source target spills}
     {dest : Fin target.length} (h : Placement dest state) (hr : state.reachable)

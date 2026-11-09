@@ -33,7 +33,7 @@ theorem swap_triple (state : State source target spills) (pos : Fin state.stack.
     ⦃fun next => Swapped state next pos; allowedErrors⦄ := by
   -- Prove the checked preconditions before proving the state update.
   have hdepth : 1 ≤ (state.stack.offsetToDepth pos).val ∧ (state.stack.offsetToDepth pos).val ≤ MAX_SWAP_DEPTH := by
-    simp only [Stack.isSwapReachable, Stack.offsetToDepth] at *; omega
+    simp only [Stack.isSwapReachable] at *; omega
   vcgen [State.swapWith, index] until (requires _ _)
   all_goals simp_all [requires]
   apply WPMonad.pure_le_wp_pure (m := Except ShuffleErr) _ _ _
