@@ -117,6 +117,10 @@ lemma swap_stack_eq (stack : Stack) (pos : Fin stack.length) :
     dsimp [Stack.offsetToDepth]; omega
   rw [hpos, List.swap_comm]
 
+-- The offset of the top slot of a non-empty stack
+abbrev Stack.topOffset (stack : Stack) (h : 0 < stack.length) : Fin stack.length :=
+  ⟨stack.length - 1, by omega⟩
+
 lemma top_lt_length (stack : Stack) (pos : Fin stack.length) :
     stack.length - 1 < stack.length := by
   have := pos.isLt

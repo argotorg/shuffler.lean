@@ -172,7 +172,7 @@ def State.swapWith (state : State source target spills)
     state with
     stack := state.stack.swap pos (state.stack.length - 1)
     mapping := List.length_swap.symm ▸
-      state.mapping.swapDestinations pos ⟨state.stack.length - 1, top_lt_length state.stack pos⟩
+      state.mapping.swapDestinations pos (state.stack.topOffset pos.pos)
     trace := swap_stack_eq state.stack pos ▸
       Trace.Swap depth.val depth.isLt hvalid.1 hvalid.2 state.trace
   }

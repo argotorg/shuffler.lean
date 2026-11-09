@@ -74,7 +74,7 @@ def permute
     go (state : State source target spills) (perm : Permutation state.stack)
         (hne : state.stack.length > 0) :
         Except ShuffleErr (Result source target spills) :=
-      let top : Fin state.stack.length := ⟨state.stack.length - 1, by omega⟩
+      let top := state.stack.topOffset hne
       have htop : top.val = state.stack.length - 1 := rfl
       -- if the top is out of place, we swap it into position
       if ht : perm top ≠ top
@@ -167,7 +167,7 @@ def permute
 
         -- we're done
         | none => .ok ⟨none, state⟩
-    termination_by Permutation.measure perm ⟨state.stack.length - 1, by omega⟩
+    termination_by Permutation.measure perm (state.stack.topOffset hne)
     decreasing_by
       · exact Prod.Lex.left _ _ (Permutation.measure_place_top_lt perm _ ht)
       · simp only [eq_mpr_eq_cast]

@@ -124,7 +124,7 @@ theorem permute_swapCount
     (hnodup : initial.stack.Nodup)
     {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
-    (result.trace.swapCount - initial.trace.swapCount) = Permutation.swapCount perm ⟨initial.stack.length - 1, by omega⟩ := by
+    (result.trace.swapCount - initial.trace.swapCount) = Permutation.swapCount perm (initial.stack.topOffset hne) := by
   rw [permute_eq_normalize, normalize_of_nodup _ _ hnodup, except_ok_bind,
     dite_eq_left hne] at hresult
   have hc := (go_count initial perm hne hresult).2 hnodup
@@ -160,7 +160,7 @@ theorem permute_swapCount_optimal
     (hnodup : initial.stack.Nodup) {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
     IsLeast {n | ∃ swaps : List (Fin initial.stack.length),
-      (swaps.map (Equiv.swap ⟨initial.stack.length - 1, by omega⟩)).prod = perm ∧ swaps.length = n}
+      (swaps.map (Equiv.swap (initial.stack.topOffset hne))).prod = perm ∧ swaps.length = n}
       (result.trace.swapCount - initial.trace.swapCount) := by
   rw [permute_swapCount spills initial perm hne hnodup hresult]
   exact Permutation.swapCount_isLeast perm _
@@ -175,7 +175,7 @@ theorem permute_swapCount_eq_arbitrarySwapCount_add
     (hnodup : initial.stack.Nodup) {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
     (result.trace.swapCount - initial.trace.swapCount) = Permutation.arbitrarySwapCount perm +
-      2 * (Permutation.cyclesAwayFromTop perm ⟨initial.stack.length - 1, by omega⟩).card := by
+      2 * (Permutation.cyclesAwayFromTop perm (initial.stack.topOffset hne)).card := by
   rw [permute_swapCount spills initial perm hne hnodup hresult]
   exact Permutation.swapCount_eq_arbitrarySwapCount_add perm _
 
@@ -196,7 +196,7 @@ theorem permute_swapCount_le_three_mul_arbitrarySwapCount
     have hs := Finset.card_le_card hsub
     have hqcycles := Permutation.two_mul_card_cycles_le_support q
     have hpcycles := Permutation.two_mul_card_cycles_le_support perm
-    have hbound := Permutation.swapCount_le q ⟨initial.stack.length - 1, by omega⟩
+    have hbound := Permutation.swapCount_le q (initial.stack.topOffset hne)
     unfold Permutation.arbitrarySwapCount
     omega
   · rw [dite_eq_right hne] at hresult

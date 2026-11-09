@@ -352,16 +352,16 @@ theorem go_count (state : State source target spills) (p : Permutation state.sta
     (hne : 0 < state.stack.length) {result : State source target spills}
     (hr : permute.go state p hne = .ok ⟨none, result⟩) :
     result.trace.swapCount ≤ state.trace.swapCount +
-      Permutation.swapCount p ⟨state.stack.length - 1, by omega⟩ ∧
+      Permutation.swapCount p (state.stack.topOffset hne) ∧
     (state.stack.Nodup → result.trace.swapCount = state.trace.swapCount +
-      Permutation.swapCount p ⟨state.stack.length - 1, by omega⟩) := by
+      Permutation.swapCount p (state.stack.topOffset hne)) := by
   refine permute.go.induct_unfolding
     (motive := fun state p hne run => ∀ {result : State source target spills},
       run = .ok ⟨none, result⟩ →
       result.trace.swapCount ≤ state.trace.swapCount +
-        Permutation.swapCount p ⟨state.stack.length - 1, by omega⟩ ∧
+        Permutation.swapCount p (state.stack.topOffset hne) ∧
       (state.stack.Nodup → result.trace.swapCount = state.trace.swapCount +
-        Permutation.swapCount p ⟨state.stack.length - 1, by omega⟩))
+        Permutation.swapCount p (state.stack.topOffset hne)))
     ?equal_top ?blocked_top ?assert_top ?swap_top ?equal_pos ?blocked_pos ?assert_pos ?swap_pos ?done
     state p hne hr
     <;> intro state p hne top htop <;> intros
