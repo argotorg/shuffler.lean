@@ -157,7 +157,7 @@ theorem Growth.generation_swapped {state produced next : State source target spi
       simpa only [State.exists_isFinal_iff, i.isLt, dite_true, hs.mapping] using hp)
 
 theorem Swapped.retag (state : State source target spills) (pos : Fin state.stack.length)
-    (heq : state.stack[pos] = state.stack[state.stack.length - 1]'(top_lt_length state.stack pos)) :
+    (heq : state.stack[pos] = state.stack[state.stack.topOffset pos.pos]) :
     Swapped state
       { state with mapping := (state.mapping.swapDestinations pos
           (state.stack.topOffset pos.pos)) } pos := by
