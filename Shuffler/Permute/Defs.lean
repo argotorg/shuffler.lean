@@ -83,48 +83,20 @@ def permute
         -- an equal slot standing at the desired offset serves the top's destination just as well
         if state.stack[perm top] = state.stack[top] then
           go { state with mapping := state.mapping.swapDestinations (perm top) top } perm' hne
-        else
-        let idx : ℕ := (perm top).rev.val
-        if hdepth : idx > MAX_SWAP_DEPTH then
+        else if hreach : ¬ state.isSwapReachable (perm top) then
           state.blockSwapUnreachable (perm top)
         else if state.isFinal (perm top) then
           .error (.assertion "swapping a final slot out of place")
         else
-          -- We want to swap the top element into position `perm[top]`. But `Trace.Swap`
-          -- is parameterised by depth below the top, not an absolute index: it swaps
-          -- position `len-1` with position `len-1-idx`. So we convert the target
-          -- absolute position into a depth.
-          --
-          --   position:  0  1  ...  perm[top]  ...........  top = len-1
-          --                          └─────────── idx ──────────┘        idx = depth below top
-          --
-          --   Trace.Swap idx  swaps  (len-1)  with  (len-1) - idx
-          --   want that lower position to be perm[top]:
-          --       (len-1) - idx = perm[top]  ⟹  idx = (len-1) - perm[top] = top - perm[top]
-
-          let stack' := state.stack.swap (state.stack.length - 1) (state.stack.length - 1 - idx)
-
-          have h1 : idx < state.stack.length := (perm top).rev.isLt
-          have h2 : 1 ≤ idx := by
-            -- we need the isLt proof of it
-            have hlt := (perm top).isLt
-            dsimp [idx, Fin.rev]
-            omega
-          have h3 : idx ≤ MAX_SWAP_DEPTH := by omega
-          let trace' := .Swap idx h1 h2 h3 state.trace
-
-          go {
-            state with
-            stack := stack'
-            trace := trace'
-            mapping := List.length_swap.symm ▸ state.mapping.swapDestinations (perm top) top
-          } (by simpa [Permutation, stack'] using perm')
-            (List.length_swap.symm ▸ hne)
+          -- the top is out of place, so `perm top` is strictly below it
+          have hvalid : state.stack.isValidSwapTarget (perm top) :=
+            ⟨by have := (perm top).isLt; have := Fin.val_ne_of_ne ht; dsimp only; omega, not_not.mp hreach⟩
+          go (state.swap (perm top) hvalid) (by simpa [Permutation] using perm') (by simpa using hne)
 
       -- search for the shallowest out of place element
       else
         -- we make pos a subtype that carries a proof that pos is out of place.
-        -- we need this later for the range proofs when generating the trace
+        -- we need this later to show that swapping it is valid
         let pos : Option {i : Fin state.stack.length // perm i ≠ i} :=
           (List.finRange state.stack.length).foldl
             (λ p (i : Fin state.stack.length) =>
@@ -139,31 +111,16 @@ def permute
           -- one; it then travels to its destination directly instead of dislodging an in-place slot
           if state.stack[pos] = state.stack[top] then
             go { state with mapping := state.mapping.swapDestinations pos top } perm' hne
-          else
-          let idx : ℕ := pos.rev.val
-          if hdepth : idx > MAX_SWAP_DEPTH then
+          else if hreach : ¬ state.isSwapReachable pos then
             state.blockSwapUnreachable pos
           else if state.isFinal pos then
             .error (.assertion "swapping a final slot out of place")
           else
-
             -- `top` is a fixed point, so the out-of-place `pos` is strictly below it
             have hpos_ne : pos ≠ top := fun h => hpos (by rw [h]; exact not_not.mp ht)
-            have hlt : (pos : ℕ) < top := by
-              have := pos.isLt; have := Fin.val_ne_of_ne hpos_ne; omega
-            let stack' := state.stack.swap (state.stack.length - 1) (state.stack.length - 1 - idx)
-
-            have h1 : idx < state.stack.length := pos.rev.isLt
-            have h2 : 1 ≤ idx := by dsimp [idx, Fin.rev]; omega
-            have h3 : idx ≤ MAX_SWAP_DEPTH := by omega
-            let trace' := .Swap idx h1 h2 h3 state.trace
-            go {
-              state with
-              stack := stack'
-              trace := trace'
-              mapping := List.length_swap.symm ▸ state.mapping.swapDestinations pos top
-            } (by simpa [Permutation, stack'] using perm')
-              (List.length_swap.symm ▸ hne)
+            have hvalid : state.stack.isValidSwapTarget pos :=
+              ⟨by have := pos.isLt; have := Fin.val_ne_of_ne hpos_ne; dsimp only; omega, not_not.mp hreach⟩
+            go (state.swap pos hvalid) (by simpa [Permutation] using perm') (by simpa using hne)
 
         -- we're done
         | none => .ok ⟨none, state⟩
@@ -171,13 +128,13 @@ def permute
     decreasing_by
       · exact Prod.Lex.left _ _ (Permutation.measure_place_top_lt perm _ ht)
       · simp only [eq_mpr_eq_cast]
-        rw [Permutation.measure_cast List.length_swap.symm _ hne]
+        rw [Permutation.measure_cast (State.swap_length _ _ hvalid).symm _ hne]
         exact Prod.Lex.left _ _ (Permutation.measure_place_top_lt perm _ ht)
       · obtain ⟨heq, hlt⟩ := Permutation.measure_swap_pos_lt perm _ pos (not_not.mp ht) hpos
         exact Prod.Lex.right' _ heq.le hlt
       · obtain ⟨heq, hlt⟩ := Permutation.measure_swap_pos_lt perm _ pos (not_not.mp ht) hpos
         simp only [eq_mpr_eq_cast]
-        rw [Permutation.measure_cast List.length_swap.symm _ hne]
+        rw [Permutation.measure_cast (State.swap_length _ _ hvalid).symm _ hne]
         exact Prod.Lex.right' _ heq.le hlt
 
 -- applies the permutation perm to the source stack via the inverse equivalence

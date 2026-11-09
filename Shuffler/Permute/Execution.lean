@@ -111,43 +111,35 @@ theorem go_spec (state : State source target spills) (p : Permutation state.stac
   case equal_pos ht search pos hpos hsearch perm' he ih result hr =>
     exact RunSpec.equal state p top pos hpos htop he.symm
       { state with mapping := state.mapping.swapDestinations pos top } rfl result (ih result hr)
-  case swap_top ht perm' he idx hdepth hfinal stack' h1 h2 h3 trace' ih result hr =>
-    refine RunSpec.swap state p top (p top) (by simpa using ht) htop
-      (by omega) _ ?_ result (ih result hr)
-    dsimp [stack', idx, Fin.rev]
-    congr 1; omega
-  case swap_pos ht search pos hpos hsearch perm' he idx hdepth hfinal hpos_ne hlt stack' h1 h2 h3 trace'
-      ih result hr =>
-    refine RunSpec.swap state p top pos hpos htop (by omega) _ ?_ result (ih result hr)
-    dsimp [stack', idx, Fin.rev]
-    congr 1; omega
+  case swap_top ht perm' he hreach hfinal hvalid ih result hr =>
+    exact RunSpec.swap state p top (p top) (by simpa using ht) htop
+      (by have := not_not.mp hreach; simp only [Stack.isSwapReachable, Fin.val_rev] at this ⊢; omega) _
+      (by rw [htop, List.swap_comm]) result (ih result hr)
+  case swap_pos ht search pos hpos hsearch perm' he hreach hfinal hpos_ne hvalid ih result hr =>
+    exact RunSpec.swap state p top pos hpos htop
+      (by have := not_not.mp hreach; simp only [Stack.isSwapReachable, Fin.val_rev] at this ⊢; omega) _
+      (by rw [htop, List.swap_comm]) result (ih result hr)
   case assert_top result hr | assert_pos result hr => cases hr
-  case blocked_top ht he idx hdepth result hr =>
-    rw [show state.blockSwapUnreachable (p top) = .ok ⟨some ⟨(p top).val, idx - MAX_SWAP_DEPTH⟩, state⟩ by
-      have h := blockSwapUnreachable_eq state (p top)
-        (by rw [State.isSwapReachable, Stack.isSwapReachable, ← State.depthOf, depthOf_eq_rev, not_le]; exact hdepth)
-      rw [depthOf_eq_rev] at h; exact h] at hr
+  case blocked_top ht he hreach result hr =>
+    rw [blockSwapUnreachable_eq state (p top) hreach] at hr
     cases hr
     refine ⟨rfl, ?_, ?_, ?_⟩
     · simp
     · intros; rfl
     · intro b hb
       cases hb
-      exact ⟨p top, rfl, by change 0 < idx - MAX_SWAP_DEPTH; omega,
-        by simpa using ht, by change (p top).rev.val = idx - MAX_SWAP_DEPTH + MAX_SWAP_DEPTH; omega⟩
-  case blocked_pos ht search pos hpos hsearch he idx hdepth result hr =>
-    rw [show state.blockSwapUnreachable pos = .ok ⟨some ⟨pos.val, idx - MAX_SWAP_DEPTH⟩, state⟩ by
-      have h := blockSwapUnreachable_eq state pos
-        (by rw [State.isSwapReachable, Stack.isSwapReachable, ← State.depthOf, depthOf_eq_rev, not_le]; exact hdepth)
-      rw [depthOf_eq_rev] at h; exact h] at hr
+      simp only [Stack.isSwapReachable] at hreach ⊢
+      exact ⟨p top, rfl, by omega, by simpa using ht, by simp only [Fin.val_rev]; omega⟩
+  case blocked_pos ht search pos hpos hsearch he hreach result hr =>
+    rw [blockSwapUnreachable_eq state pos hreach] at hr
     cases hr
     refine ⟨rfl, ?_, ?_, ?_⟩
     · simp
     · intros; rfl
     · intro b hb
       cases hb
-      exact ⟨pos, rfl, by change 0 < idx - MAX_SWAP_DEPTH; omega,
-        by simpa using hpos, by change pos.rev.val = idx - MAX_SWAP_DEPTH + MAX_SWAP_DEPTH; omega⟩
+      simp only [Stack.isSwapReachable] at hreach ⊢
+      exact ⟨pos, rfl, by omega, by simpa using hpos, by simp only [Fin.val_rev]; omega⟩
   case done ht search hsearch result hr =>
     cases hr
     refine ⟨rfl, ?_, ?_, ?_⟩
@@ -278,45 +270,40 @@ theorem go_ok (state : State source target spills) (p : Permutation state.stack)
       (fun i j hij => by
         obtain rfl : i = j := Fin.ext hij
         rfl))
-  case swap_top ht perm' he idx hdepth hfinal stack' h1 h2 h3 trace' ih h =>
-    have hidx : state.stack.length - 1 - idx = (p top).val := by dsimp [idx, Fin.rev]; omega
-    exact ih (h.step top (p top) (by omega) (Or.inl rfl) _ _ List.length_swap
+  case swap_top ht perm' he hreach hfinal hvalid ih h =>
+    exact ih (h.step top (p top) (by omega) (Or.inl rfl) _ _ (State.swap_length _ _ _)
       (fun i j hij => by
-        change (state.stack.swap (state.stack.length - 1) (state.stack.length - 1 - idx))[i.val] = _
-        simp only [hidx]; simp only [← htop]
-        exact getElem_list_swap state.stack top (p top) i _ j hij)
+        simp only [Equiv.swap_comm top (p top)]
+        exact getElem_list_swap state.stack (p top) top i _ j hij)
       (fun i j hij => by
-        simp only [Mapping.cast_apply, Mapping.swapDestinations_apply, Equiv.swap_comm (p top)]
+        refine (Mapping.cast_apply _ List.length_swap.symm i).trans ?_
+        simp only [Mapping.swapDestinations_apply, Equiv.swap_comm (p top)]
         exact congrArg (fun k => state.mapping (Equiv.swap top (p top) k)) (Fin.ext hij))
       (fun i j hij => by
         simp only [eq_mpr_eq_cast]
-        exact (Permutation.cast_apply_val _ List.length_swap.symm perm' i).trans
+        exact (Permutation.cast_apply_val _ (State.swap_length _ _ _).symm perm' i).trans
           (congrArg (fun k => (perm' k).val) (Fin.ext hij))))
-  case swap_pos ht search pos hpos hsearch perm' he idx hdepth hfinal hpos_ne hlt stack' h1 h2 h3 trace'
-      ih h =>
-    have hidx : state.stack.length - 1 - idx = pos.val := by dsimp [idx, Fin.rev]; omega
-    exact ih (h.step top pos (by omega) (Or.inr (not_not.mp ht)) _ _ List.length_swap
+  case swap_pos ht search pos hpos hsearch perm' he hreach hfinal hpos_ne hvalid ih h =>
+    exact ih (h.step top pos (by omega) (Or.inr (not_not.mp ht)) _ _ (State.swap_length _ _ _)
       (fun i j hij => by
-        change (state.stack.swap (state.stack.length - 1) (state.stack.length - 1 - idx))[i.val] = _
-        simp only [hidx]; simp only [← htop]
-        exact getElem_list_swap state.stack top pos i _ j hij)
+        simp only [Equiv.swap_comm top pos]
+        exact getElem_list_swap state.stack pos top i _ j hij)
       (fun i j hij => by
-        simp only [Mapping.cast_apply, Mapping.swapDestinations_apply, Equiv.swap_comm pos]
+        refine (Mapping.cast_apply _ List.length_swap.symm i).trans ?_
+        simp only [Mapping.swapDestinations_apply, Equiv.swap_comm pos]
         exact congrArg (fun k => state.mapping (Equiv.swap top pos k)) (Fin.ext hij))
       (fun i j hij => by
         simp only [eq_mpr_eq_cast]
-        exact (Permutation.cast_apply_val _ List.length_swap.symm perm' i).trans
+        exact (Permutation.cast_apply_val _ (State.swap_length _ _ _).symm perm' i).trans
           (congrArg (fun k => (perm' k).val) (Fin.ext hij))))
-  case assert_top ht he idx hdepth hfinal h =>
+  case assert_top ht he hreach hfinal h =>
     exact (h.not_final_top top he hfinal).elim
-  case assert_pos ht search pos hpos hsearch he idx hdepth hfinal h =>
+  case assert_pos ht search pos hpos hsearch he hreach hfinal h =>
     exact (h.not_final_pos top pos (by omega) (not_not.mp ht) hpos hfinal).elim
-  case blocked_top ht he idx hdepth h =>
-    exact ⟨_, blockSwapUnreachable_eq state (p top)
-      (by rw [State.isSwapReachable, Stack.isSwapReachable, ← State.depthOf, depthOf_eq_rev, not_le]; exact hdepth)⟩
-  case blocked_pos ht search pos hpos hsearch he idx hdepth h =>
-    exact ⟨_, blockSwapUnreachable_eq state pos
-      (by rw [State.isSwapReachable, Stack.isSwapReachable, ← State.depthOf, depthOf_eq_rev, not_le]; exact hdepth)⟩
+  case blocked_top ht he hreach h =>
+    exact ⟨_, blockSwapUnreachable_eq state (p top) hreach⟩
+  case blocked_pos ht search pos hpos hsearch he hreach h =>
+    exact ⟨_, blockSwapUnreachable_eq state pos hreach⟩
   case done ht search hsearch h => exact ⟨_, rfl⟩
 
 theorem RunSpec.values_of_success {state : State source target spills}
@@ -347,6 +334,10 @@ theorem Permutation.swapCount_cast {n m : ℕ} (h : n = m) (p : Equiv.Perm (Fin 
       Permutation.swapCount p ⟨n - 1, by omega⟩ := by
   subst m
   rfl
+
+theorem Trace.swapCount_cast (h : result = other) (trace : Trace spills source result) :
+    (h ▸ trace).swapCount = trace.swapCount := by
+  subst h; rfl
 
 theorem go_count (state : State source target spills) (p : Permutation state.stack)
     (hne : 0 < state.stack.length) {result : State source target spills}
@@ -384,19 +375,20 @@ theorem go_count (state : State source target spills) (p : Permutation state.sta
     intro hn
     have hp : pos = top := Fin.ext (hn.getElem_inj_iff.mp he)
     exact hpos (by simpa [hp] using not_not.mp ht) |>.elim
-  case blocked_top ht he idx hdepth result hr =>
-    rw [blockSwapUnreachable_eq state (p top)
-      (by rw [State.isSwapReachable, Stack.isSwapReachable, ← State.depthOf, depthOf_eq_rev, not_le]; exact hdepth)] at hr
+  case blocked_top ht he hreach result hr =>
+    rw [blockSwapUnreachable_eq state (p top) hreach] at hr
     cases hr
-  case blocked_pos ht search pos hpos hsearch he idx hdepth result hr =>
-    rw [blockSwapUnreachable_eq state pos
-      (by rw [State.isSwapReachable, Stack.isSwapReachable, ← State.depthOf, depthOf_eq_rev, not_le]; exact hdepth)] at hr
+  case blocked_pos ht search pos hpos hsearch he hreach result hr =>
+    rw [blockSwapUnreachable_eq state pos hreach] at hr
     cases hr
   case assert_top result hr | assert_pos result hr => cases hr
-  case swap_top ht perm' he idx hdepth hfinal stack' h1 h2 h3 trace' ih result hr =>
+  case swap_top ht perm' he hreach hfinal hvalid ih result hr =>
     obtain ⟨hle, heq⟩ := ih hr
+    have hc : (state.swap (p top) hvalid).trace.swapCount = state.trace.swapCount + 1 :=
+      Trace.swapCount_cast _ _
+    rw [hc] at hle heq
     simp only [eq_mpr_eq_cast] at hle heq
-    rw [Permutation.swapCount_cast List.length_swap.symm _ hne] at hle heq
+    rw [Permutation.swapCount_cast (State.swap_length _ _ _).symm _ hne] at hle heq
     have hs := Permutation.swapCount_place_top p top ht
     change result.trace.swapCount ≤ (state.trace.swapCount + 1) +
       Permutation.swapCount (p * Equiv.swap top (p top)) top at hle
@@ -407,11 +399,13 @@ theorem go_count (state : State source target spills) (p : Permutation state.sta
       Permutation.swapCount (p * Equiv.swap top (p top)) top at heq
     change result.trace.swapCount = state.trace.swapCount + Permutation.swapCount p top
     omega
-  case swap_pos ht search pos hpos hsearch perm' he idx hdepth hfinal hpos_ne hlt stack' h1 h2 h3 trace'
-      ih result hr =>
+  case swap_pos ht search pos hpos hsearch perm' he hreach hfinal hpos_ne hvalid ih result hr =>
     obtain ⟨hle, heq⟩ := ih hr
+    have hc : (state.swap pos hvalid).trace.swapCount = state.trace.swapCount + 1 :=
+      Trace.swapCount_cast _ _
+    rw [hc] at hle heq
     simp only [eq_mpr_eq_cast] at hle heq
-    rw [Permutation.swapCount_cast List.length_swap.symm _ hne] at hle heq
+    rw [Permutation.swapCount_cast (State.swap_length _ _ _).symm _ hne] at hle heq
     have hs := Permutation.swapCount_swap_pos p top pos (not_not.mp ht) hpos
     change result.trace.swapCount ≤ (state.trace.swapCount + 1) +
       Permutation.swapCount (p * Equiv.swap top pos) top at hle

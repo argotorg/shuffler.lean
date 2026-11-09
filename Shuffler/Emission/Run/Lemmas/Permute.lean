@@ -30,51 +30,18 @@ theorem go_frame (state : State source target spills) (p : Permutation state.sta
   case equal_pos ht search pos hpos hsearch perm' he ih result hr =>
     obtain ⟨hp, hg, hb⟩ := ih hr
     exact ⟨hp, hg, hb.trans (boundValue_retag state pos top he)⟩
-  case swap_top ht perm' he idx hdepth hfinal stack' h1 h2 h3 trace' ih result hr =>
+  case swap_top ht perm' he hreach hfinal hvalid ih result hr =>
     obtain ⟨hp, hg, hb⟩ := ih hr
-    refine ⟨hp, hg, hb.trans ?_⟩
-    have hi : state.stack.length - 1 - idx = (p top).val := by dsimp [idx, Fin.rev]; omega
-    have htoplt : state.stack.length - 1 < state.stack.length := by omega
-    funext dest
-    simp only [State.boundValue, Mapping.positionOf, Mapping.cast_symm,
-      Mapping.swapDestinations_symm_apply, Option.map_map]
-    cases state.mapping.symm dest with
-    | none => rfl
-    | some i =>
-      by_cases ha : i = (p top)
-      · subst i; simp [Function.comp_apply, stack', hi, htop]
-      by_cases hb : i = top
-      · subst i; simp [Function.comp_apply, stack', hi, htop, htoplt]
-      have hib : i.val ≠ state.stack.length - 1 := by simpa only [htop] using Fin.val_ne_of_ne hb
-      simp [Function.comp_apply, stack', Equiv.swap_apply_of_ne_of_ne ha hb,
-        hi, Fin.val_ne_of_ne ha, hib]
-  case swap_pos ht search pos hpos hsearch perm' he idx hdepth hfinal hpos_ne hlt stack' h1 h2 h3 trace'
-      ih result hr =>
+    exact ⟨hp, hg, hb.trans (boundValue_swap state (p top) (state.stack.topOffset hne) _)⟩
+  case swap_pos ht search pos hpos hsearch perm' he hreach hfinal hpos_ne hvalid ih result hr =>
     obtain ⟨hp, hg, hb⟩ := ih hr
-    refine ⟨hp, hg, hb.trans ?_⟩
-    have hi : state.stack.length - 1 - idx = pos.val := by dsimp [idx, Fin.rev]; omega
-    have htoplt : state.stack.length - 1 < state.stack.length := by omega
-    funext dest
-    simp only [State.boundValue, Mapping.positionOf, Mapping.cast_symm,
-      Mapping.swapDestinations_symm_apply, Option.map_map]
-    cases state.mapping.symm dest with
-    | none => rfl
-    | some i =>
-      by_cases ha : i = pos
-      · subst i; simp [Function.comp_apply, stack', hi, htop]
-      by_cases hb : i = top
-      · subst i; simp [Function.comp_apply, stack', hi, htop, htoplt]
-      have hib : i.val ≠ state.stack.length - 1 := by simpa only [htop] using Fin.val_ne_of_ne hb
-      simp [Function.comp_apply, stack', Equiv.swap_apply_of_ne_of_ne ha hb,
-        hi, Fin.val_ne_of_ne ha, hib]
-  case blocked_top ht he idx hdepth result hr =>
-    rw [blockSwapUnreachable_eq state (p top)
-      (by rw [State.isSwapReachable, Stack.isSwapReachable, ← State.depthOf, depthOf_eq_rev, not_le]; exact hdepth)] at hr
+    exact ⟨hp, hg, hb.trans (boundValue_swap state pos (state.stack.topOffset hne) _)⟩
+  case blocked_top ht he hreach result hr =>
+    rw [blockSwapUnreachable_eq state (p top) hreach] at hr
     cases hr
     exact ⟨rfl, rfl, rfl⟩
-  case blocked_pos ht search pos hpos hsearch he idx hdepth result hr =>
-    rw [blockSwapUnreachable_eq state pos
-      (by rw [State.isSwapReachable, Stack.isSwapReachable, ← State.depthOf, depthOf_eq_rev, not_le]; exact hdepth)] at hr
+  case blocked_pos ht search pos hpos hsearch he hreach result hr =>
+    rw [blockSwapUnreachable_eq state pos hreach] at hr
     cases hr
     exact ⟨rfl, rfl, rfl⟩
   case done ht search hsearch result hr =>
@@ -90,17 +57,14 @@ theorem go_not_error_blocked (state : State source target spills) (p : Permutati
     <;> intro state p hne top htop <;> intros
   case equal_top ht perm' he ih b hr => exact ih b hr
   case equal_pos ht search pos hpos hsearch perm' he ih b hr => exact ih b hr
-  case swap_top ht perm' he idx hdepth hfinal stack' h1 h2 h3 trace' ih b hr => exact ih b hr
-  case swap_pos ht search pos hpos hsearch perm' he idx hdepth hfinal hpos_ne hlt stack' h1 h2 h3 trace'
-      ih b hr => exact ih b hr
+  case swap_top ht perm' he hreach hfinal hvalid ih b hr => exact ih b hr
+  case swap_pos ht search pos hpos hsearch perm' he hreach hfinal hpos_ne hvalid ih b hr => exact ih b hr
   case assert_top b hr | assert_pos b hr | done b hr => cases hr
-  case blocked_top ht he idx hdepth b hr =>
-    rw [blockSwapUnreachable_eq state (p top)
-      (by rw [State.isSwapReachable, Stack.isSwapReachable, ← State.depthOf, depthOf_eq_rev, not_le]; exact hdepth)] at hr
+  case blocked_top ht he hreach b hr =>
+    rw [blockSwapUnreachable_eq state (p top) hreach] at hr
     cases hr
-  case blocked_pos ht search pos hpos hsearch he idx hdepth b hr =>
-    rw [blockSwapUnreachable_eq state pos
-      (by rw [State.isSwapReachable, Stack.isSwapReachable, ← State.depthOf, depthOf_eq_rev, not_le]; exact hdepth)] at hr
+  case blocked_pos ht search pos hpos hsearch he hreach b hr =>
+    rw [blockSwapUnreachable_eq state pos hreach] at hr
     cases hr
 
 theorem permute_result_spec (state : State source target spills) (p : Permutation state.stack)

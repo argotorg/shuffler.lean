@@ -169,6 +169,10 @@ abbrev State.swap (state : State source target spills) (pos : Fin state.stack.le
     Trace.Swap (state.stack.offsetToDepth pos).val (state.stack.offsetToDepth pos).isLt h.1 h.2 state.trace
 }
 
+theorem State.swap_length (state : State source target spills) (pos : Fin state.stack.length)
+    (h : state.stack.isValidSwapTarget pos) : (state.swap pos h).stack.length = state.stack.length := by
+  simp
+
 -- Swaps the top with the slot at `offset`, the destinations traveling along
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:767-772.
 def State.swapWith (state : State source target spills)
