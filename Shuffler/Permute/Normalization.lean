@@ -281,13 +281,13 @@ theorem values_reachable_iff_deep (stack : Stack) (p : Permutation stack) :
     have he : stack[i] = stack[p.symm ⟨i, hin⟩] := by
       by_contra hne
       have hd := hr ⟨i, hin⟩ hne
-      dsimp [Fin.rev] at hd
+      simp only [Stack.isSwapReachable] at hd
       omega
     simpa [apply_permutation, hin] using he
   · intro hr i hne
     by_contra hd
     have hi : i.val < stack.length - (MAX_SWAP_DEPTH + 1) := by
-      dsimp [Fin.rev] at hd
+      simp only [Stack.isSwapReachable] at hd
       omega
     apply hne
     simpa [apply_permutation, i.isLt] using hr i.val hi

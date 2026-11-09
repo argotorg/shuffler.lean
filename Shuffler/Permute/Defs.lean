@@ -143,12 +143,12 @@ def apply_permutation (source : Stack) (perm : Permutation source) : Stack :=
   List.ofFn (λ k => source[perm.symm k])
 
 def all_swaps_reachable (perm : Permutation source) : Prop
-  := ∀ i ∈ perm.support, i.rev.val ≤ MAX_SWAP_DEPTH
+  := ∀ i ∈ perm.support, source.isSwapReachable i
 
 -- Every position whose value must change is within SWAP reach.
 def values_reachable {source : Stack} (perm : Permutation source) : Prop :=
   ∀ i : Fin source.length,
-    source[i] ≠ source[perm.symm i] → i.rev.val ≤ MAX_SWAP_DEPTH
+    source[i] ≠ source[perm.symm i] → source.isSwapReachable i
 
 -- Every slot bound to a stack offset is bound to one that `perm` fills with an equal value.
 def bindings_agree {source target : Stack} {spills : SpillSet}

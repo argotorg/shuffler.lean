@@ -311,7 +311,7 @@ theorem RunSpec.values_of_success {state : State source target spills}
     (h : RunSpec state p result) (hs : result.blocked = none) : values_reachable p := by
   intro i hne
   by_contra hd
-  have hv := h.deep i (by omega)
+  have hv := h.deep i (by simp only [Stack.isSwapReachable, Fin.val_rev] at hd ⊢; omega)
   rw [h.applies hs] at hv
   have he : state.stack[p.symm i] = state.stack[i] := by
     simpa [apply_permutation', List.getElem?_eq_getElem i.isLt] using hv
@@ -325,6 +325,7 @@ theorem RunSpec.success_of_reachable {state : State source target spills}
   | some b =>
     obtain ⟨i, _, hp, hi, hd⟩ := h.blocked b hb
     have := hr i hi
+    simp only [Stack.isSwapReachable, Fin.val_rev] at this hd
     omega
 
 theorem Permutation.swapCount_cast {n m : ℕ} (h : n = m) (p : Equiv.Perm (Fin n))
