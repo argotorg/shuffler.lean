@@ -28,12 +28,6 @@ theorem mem_support_cast {n m : ℕ} (h : n = m) (perm : Equiv.Perm (Fin n)) (i 
   subst m
   rfl
 
-theorem reachable_cast {n m : ℕ} (h : n = m) (perm : Equiv.Perm (Fin n)) (depth : ℕ) :
-    (∀ i ∈ (cast (congrArg (fun k => Equiv.Perm (Fin k)) h) perm).support, i.rev.val ≤ depth) ↔
-      (∀ i ∈ perm.support, i.rev.val ≤ depth) := by
-  subst m
-  rfl
-
 -- Placing the top fixes exactly one position below it.
 lemma measure_place_top (perm : Equiv.Perm ι)
     (top : ι) (ht : perm top ≠ top) :
@@ -89,29 +83,6 @@ lemma measure_swap_pos_lt (perm : Equiv.Perm ι)
   have : perm pos ≠ top := fun h => hpos (by rw [perm.injective (h.trans ht.symm)]; exact ht)
   simp [measure, hset, ht, this]
 
--- A permutation cannot move just one position. If every position other than
--- `top` is fixed, `top` must be fixed too.
-theorem measure_fst_eq_zero_iff (perm : Equiv.Perm ι) (top : ι) :
-    (measure perm top).1 = 0 ↔ perm = 1 := by
-  constructor
-  · intro h
-    have hzero : (perm.support.erase top).card = 0 := h
-    have hcard : perm.support.card - 1 ≤ (perm.support.erase top).card :=
-      Finset.pred_card_le_card_erase
-    apply Equiv.Perm.card_support_le_one.mp
-    omega
-  · rintro rfl
-    simp [measure]
-
--- The terminal measure identifies the identity permutation.
-theorem measure_eq_terminal_iff (perm : Equiv.Perm ι) (top : ι) :
-    measure perm top = (0, 1) ↔ perm = 1 := by
-  constructor
-  · intro h
-    exact (measure_fst_eq_zero_iff perm top).mp (congrArg Prod.fst h)
-  · rintro rfl
-    simp [measure]
-
 end Permutation
 
 variable {α : Type*}
@@ -150,26 +121,6 @@ theorem apply_permutation'_swap (current : List α) {n : ℕ} (perm : Equiv.Perm
   · simp [hb, hlen]
   simp [Equiv.swap_apply_of_ne_of_ne ha hb, Fin.val_ne_of_ne ha, Fin.val_ne_of_ne hb]
 
--- Express a depth-based swap using the absolute positions in the permutation.
-theorem apply_permutation'_swap_top (current : List α) {n : ℕ}
-    (perm : Equiv.Perm (Fin n)) (hlen : current.length = n)
-    (top : Fin n) (htop : top.val = n - 1) (pos : Fin n) :
-    apply_permutation'
-      (current.swap (current.length - 1) (current.length - 1 - pos.rev.val))
-      (perm * Equiv.swap top pos) (by simp [hlen]) = apply_permutation' current perm hlen := by
-  have hswap : current.swap (current.length - 1) (current.length - 1 - pos.rev.val)
-      = current.swap top.val pos.val := by
-    dsimp [Fin.rev]
-    congr 1 <;> omega
-  simpa only [hswap] using apply_permutation'_swap current perm hlen top pos
-
--- At the terminal measure, applying the remaining permutation does nothing.
-theorem apply_permutation'_terminal (current : List α) {n : ℕ}
-    (perm : Equiv.Perm (Fin n)) (hlen : current.length = n)
-    (top : Fin n) (hterminal : Permutation.measure perm top = (0, 1)) :
-    apply_permutation' current perm hlen = current := by
-  rw [(Permutation.measure_eq_terminal_iff perm top).mp hterminal, apply_permutation'_one]
-
 -- If the linear search for an out-of-place element comes back empty, every element
 -- of the searched list is a fixed point (and the accumulator was empty to begin with).
 theorem foldl_find_out_of_place_none {n : ℕ} (perm : Equiv.Perm (Fin n)) (l : List (Fin n))
@@ -191,41 +142,5 @@ theorem foldl_find_out_of_place_eq_one {n : ℕ} (perm : Equiv.Perm (Fin n))
       none = none) :
     perm = 1 :=
   Equiv.ext fun i => (foldl_find_out_of_place_none perm _ none h).2 i (List.mem_finRange i)
-
--- Swapping reachable positions leaves the support at unreachable positions unchanged.
-theorem unreachable_mem_support_swap {n depth : ℕ}
-    (perm : Equiv.Perm (Fin n)) (a b i : Fin n)
-    (ha : a.rev.val ≤ depth) (hb : b.rev.val ≤ depth)
-    (hi : depth < i.rev.val) :
-    i ∈ (perm * Equiv.swap a b).support ↔ i ∈ perm.support := by
-  have hia : i ≠ a := by rintro rfl; omega
-  have hib : i ≠ b := by rintro rfl; omega
-  simp only [Equiv.Perm.mem_support, Equiv.Perm.mul_apply,
-    Equiv.swap_apply_of_ne_of_ne hia hib]
-
-theorem all_swaps_reachable_swap_iff {n depth : ℕ}
-    (perm : Equiv.Perm (Fin n)) (a b : Fin n)
-    (ha : a.rev.val ≤ depth) (hb : b.rev.val ≤ depth) :
-    (∀ i ∈ (perm * Equiv.swap a b).support, i.rev.val ≤ depth) ↔
-      (∀ i ∈ perm.support, i.rev.val ≤ depth) := by
-  constructor <;> intro h i hi <;> by_contra hdepth
-  · exact hdepth (h i ((unreachable_mem_support_swap perm a b i ha hb
-      (Nat.lt_of_not_ge hdepth)).mpr hi))
-  · exact hdepth (h i ((unreachable_mem_support_swap perm a b i ha hb
-      (Nat.lt_of_not_ge hdepth)).mp hi))
-
--- Transport a blocked result across a reachable swap; the result predicate
--- records the error independently of the remaining permutation.
-theorem blocked_of_reachable_swap {n depth : ℕ} (perm : Equiv.Perm (Fin n))
-    (a b : Fin n) (ha : a.rev.val ≤ depth) (hb : b.rev.val ≤ depth)
-    {blocked : ℕ → Prop}
-    (ih : ¬(∀ i ∈ (perm * Equiv.swap a b).support, i.rev.val ≤ depth) →
-      ∃ x, blocked x ∧ 0 < x ∧ ∃ i ∈ (perm * Equiv.swap a b).support, i.rev.val = x + depth)
-    (hnreach : ¬(∀ i ∈ perm.support, i.rev.val ≤ depth)) :
-    ∃ x, blocked x ∧ 0 < x ∧ ∃ i ∈ perm.support, i.rev.val = x + depth := by
-  obtain ⟨x, hresult, hx, i, hi, hidx⟩ := ih (fun hr =>
-    hnreach ((all_swaps_reachable_swap_iff perm a b ha hb).mp hr))
-  exact ⟨x, hresult, hx, i,
-    (unreachable_mem_support_swap perm a b i ha hb (by omega)).mp hi, hidx⟩
 
 end Shuffler.Permute
