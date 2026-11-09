@@ -42,7 +42,7 @@ structure RunSpec (state : State source target spills) (p : Permutation state.st
     result.state.stack[i.val]? = state.stack[i.val]?
   blocked : ∀ b, result.blocked = some b →
     ∃ i : Fin state.stack.length, b.offset = i.val ∧ 0 < b.excess ∧
-      i ∈ p.support ∧ i.rev.val = b.excess + MAX_SWAP_DEPTH
+      i ∈ p.support ∧ (state.depthOf i).val = b.excess + MAX_SWAP_DEPTH
 
 theorem RunSpec.equal (state : State source target spills) (p : Permutation state.stack)
     (top pos : Fin state.stack.length) (hpos : p pos ≠ pos)
@@ -62,7 +62,7 @@ theorem RunSpec.equal (state : State source target spills) (p : Permutation stat
       refine ⟨i, hi, hp, support_swap_subset_away p top pos i hpos ?_ hm, hd⟩
       intro heq
       subst i
-      dsimp [Fin.rev] at hd
+      dsimp only at hd
       omega
 
 theorem RunSpec.swap (state : State source target spills) (p : Permutation state.stack)
@@ -88,12 +88,12 @@ theorem RunSpec.swap (state : State source target spills) (p : Permutation state
     simpa [hn, List.getElem?_eq_getElem i.isLt, hia, hib] using hd
   · intro b hb
     obtain ⟨i, hi, hp, hm, hd⟩ := h.blocked b hb
-    refine ⟨Fin.cast hlen i, hi, hp, ?_, by simpa [Fin.rev, hlen] using hd⟩
+    dsimp only at hd
+    refine ⟨Fin.cast hlen i, hi, hp, ?_, by simpa [hlen] using hd⟩
     apply support_swap_subset_away p top pos _ hpos
     · intro he
       have hiv := congrArg Fin.val he
       simp only [Fin.val_cast] at hiv
-      dsimp [Fin.rev] at hd
       omega
     · exact (Permutation.mem_support_cast hlen.symm _ _).mp hm
 
@@ -129,7 +129,7 @@ theorem go_spec (state : State source target spills) (p : Permutation state.stac
     · intro b hb
       cases hb
       simp only [Stack.isSwapReachable] at hreach ⊢
-      exact ⟨p top, rfl, by omega, by simpa using ht, by simp only [Fin.val_rev]; omega⟩
+      exact ⟨p top, rfl, by omega, by simpa using ht, by omega⟩
   case blocked_pos ht search pos hpos hsearch he hreach result hr =>
     rw [blockSwapUnreachable_eq state pos hreach] at hr
     cases hr
@@ -139,7 +139,7 @@ theorem go_spec (state : State source target spills) (p : Permutation state.stac
     · intro b hb
       cases hb
       simp only [Stack.isSwapReachable] at hreach ⊢
-      exact ⟨pos, rfl, by omega, by simpa using hpos, by simp only [Fin.val_rev]; omega⟩
+      exact ⟨pos, rfl, by omega, by simpa using hpos, by omega⟩
   case done ht search hsearch result hr =>
     cases hr
     refine ⟨rfl, ?_, ?_, ?_⟩
@@ -325,7 +325,7 @@ theorem RunSpec.success_of_reachable {state : State source target spills}
   | some b =>
     obtain ⟨i, _, hp, hi, hd⟩ := h.blocked b hb
     have := hr i hi
-    simp only [Stack.isSwapReachable, Fin.val_rev] at this hd
+    simp only [Stack.isSwapReachable] at this hd
     omega
 
 theorem Permutation.swapCount_cast {n m : ℕ} (h : n = m) (p : Equiv.Perm (Fin n))

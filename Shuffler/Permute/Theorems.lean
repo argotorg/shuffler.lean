@@ -25,7 +25,7 @@ theorem bindings_agree_toPermutation (state : State source target spills)
 -- `hnreachable` says that a position below SWAP reach has the wrong value.
 -- The run returns a blocked result and the state, where `excess` is positive.
 -- The reported position `i` is in the input permutation's support.
--- Its depth, `i.rev.val`, exceeds the limit by exactly `excess`.
+-- Its depth, `initial.depthOf i`, exceeds the limit by exactly `excess`.
 -- `hagree` says that every bound slot is bound to an offset that receives an equal value.
 theorem permute_blocks_unreachable
     (spills : SpillSet)
@@ -35,7 +35,7 @@ theorem permute_blocks_unreachable
       permute initial perm = .ok ⟨some ⟨i.val, excess⟩, state⟩
         ∧ excess > 0
         ∧ i ∈ perm.support
-        ∧ i.rev.val = excess + MAX_SWAP_DEPTH := by
+        ∧ (initial.depthOf i).val = excess + MAX_SWAP_DEPTH := by
   obtain ⟨q, hq, happly, hsub, _⟩ := normalize_spec initial.stack perm
   obtain ⟨q', hq', hinv⟩ := normalize_goInv initial perm hagree
   cases hq.symm.trans hq'
