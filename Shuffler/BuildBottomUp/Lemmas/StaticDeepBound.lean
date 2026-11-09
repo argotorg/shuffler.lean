@@ -35,8 +35,7 @@ macro "finish_deep_bound " c:term ", " st:term ", " hw:term : tactic => `(tactic
     try dsimp +zetaDelta only at hnotTop
     simp only [ne_eq, hnotTop, not_false_eq_true, ↓reduceIte]
     have hreach : ¬($st).stack.isSwapReachable bottom := by
-      rw [Stack.isSwapReachable_iff_length]
-      change ¬($st).stack.length ≤ $c + (MAX_SWAP_DEPTH + 1)
+      simp only [Stack.isSwapReachable, bottom]
       have hwidth := $hw
       omega
     rw [ite_eq_left (show ¬($st).isSwapReachable bottom from hreach)]

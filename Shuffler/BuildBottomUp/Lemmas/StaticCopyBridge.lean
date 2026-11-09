@@ -29,15 +29,15 @@ theorem PrefixState.twoCopies_iff {initial state : State source target spills} {
     · intro he; exact hne (congrArg Fin.val he)
     · simpa [List.getElem?_eq_getElem hil] using hiv
     · simpa [List.getElem?_eq_getElem hjl] using hjv
-    · exact (Stack.isDupReachable_iff_length _ _).mpr hir
-    · exact (Stack.isDupReachable_iff_length _ _).mpr hjr
+    · simp only [Stack.isDupReachable]; omega
+    · simp only [Stack.isDupReachable]; omega
   · rintro ⟨i, j, hne, hiv, hjv, hir, hjr⟩
     refine ⟨i.val, ?_, j.val, ?_, ?_⟩
     · apply (hp.mem_copyPositions_iff value i.val).mpr
-      exact ⟨i.isLt, (Stack.isDupReachable_iff_length _ _).mp hir,
+      exact ⟨i.isLt, by simp only [Stack.isDupReachable] at hir; omega,
         by simpa [List.getElem?_eq_getElem i.isLt] using hiv⟩
     · apply (hp.mem_copyPositions_iff value j.val).mpr
-      exact ⟨j.isLt, (Stack.isDupReachable_iff_length _ _).mp hjr,
+      exact ⟨j.isLt, by simp only [Stack.isDupReachable] at hjr; omega,
         by simpa [List.getElem?_eq_getElem j.isLt] using hjv⟩
     · intro he; exact hne (Fin.ext he)
 

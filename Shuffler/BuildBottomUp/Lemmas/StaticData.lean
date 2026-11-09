@@ -50,10 +50,10 @@ theorem copies_zero_pos_iff (initial : State source target spills) (value : Valu
   · rintro ⟨i, hi, hdepth, hvalue⟩
     refine ⟨⟨i, hi⟩, ?_, ?_⟩
     · simpa [augmentedStack, List.getElem?_append, hi, List.getElem?_eq_getElem] using hvalue
-    · exact (Stack.isDupReachable_iff_length _ _).mpr hdepth
+    · simp only [Stack.isDupReachable]; omega
   · rintro ⟨i, hvalue, hdepth⟩
     refine ⟨i.val, i.isLt, ?_, ?_⟩
-    · exact (Stack.isDupReachable_iff_length _ _).mp hdepth
+    · simp only [Stack.isDupReachable] at hdepth; omega
     · simpa [augmentedStack, List.getElem?_append, i.isLt, List.getElem?_eq_getElem] using hvalue
 
 theorem ready_zero_iff (initial : State source target spills) :

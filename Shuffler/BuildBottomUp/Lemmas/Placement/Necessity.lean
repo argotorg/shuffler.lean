@@ -28,8 +28,7 @@ private theorem firstGrowth (trace : Trace spills source target)
     · refine ⟨prev, prev[prev.length - idx]'(by omega), trace,
         .Lit _, h, hz, Or.inr (Or.inr ⟨hvalue, ?_⟩), by trivial, ?_⟩
       · refine ⟨⟨prev.length - idx, by omega⟩, rfl, ?_⟩
-        rw [Stack.isDupReachable_iff_length]
-        change prev.length ≤ prev.length - idx + (MAX_DUP_DEPTH + 1)
+        simp only [Stack.isDupReachable]
         omega
       · simp [Trace.additions, hz]
     · obtain ⟨middle, value, before, tail, hp, hzero, hv, ht, he⟩ := ih h hz
@@ -67,7 +66,7 @@ private theorem available_nonfree_mem_drop {stack : Stack} {value : Value}
   · exact False.elim (hf (Or.inr hspill))
   · rw [← he]
     apply getElem_mem_drop_of_le
-    rw [Stack.isDupReachable_iff_length] at hr
+    simp only [Stack.isDupReachable] at hr
     omega
 
 private theorem window_append (stack : Stack) (value : Value) :

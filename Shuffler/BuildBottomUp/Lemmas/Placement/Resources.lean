@@ -51,7 +51,7 @@ theorem available_of_suffix {fixed working : Stack} {missing : Multiset Value}
   let pos : Fin (fixed ++ working).length := ⟨fixed.length + i, by simp; omega⟩
   refine ⟨hlabels value hv, pos, ?_, ?_⟩
   · simpa [pos] using he
-  · rw [Stack.isDupReachable_iff_length]
+  · simp only [Stack.isDupReachable]
     dsimp [pos]
     simp only [List.length_append]
     omega

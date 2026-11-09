@@ -38,7 +38,7 @@ private theorem Critical.unique {source : Stack} {left right : Value}
   obtain ⟨r, hr, hrd⟩ := hr
   have he : l = r := by
     apply Fin.ext
-    rw [Stack.offsetToDepth_val] at hld hrd
+    dsimp only at hld hrd
     have := l.isLt
     have := r.isLt
     omega
@@ -73,8 +73,8 @@ private theorem Ready.after_append {source missing : Stack} (h : Ready spills so
     exact he (hsafe value hm hfree hspill ⟨pos, hp, hd⟩)
   apply Shuffler.Emission.hasCopy_append_old source value chosen pos
     (Shuffler.Emission.shallowestCopyPosition_value source value pos hp)
-  rw [Stack.offsetToDepth_val] at hd
-  rw [Stack.isDupReachable_iff_length] at hr
+  dsimp only at hd
+  simp only [Stack.isDupReachable] at hr
   have := pos.isLt
   omega
 

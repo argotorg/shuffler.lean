@@ -30,7 +30,7 @@ private theorem origin_of_onlyGenerates (trace : Trace spills source result)
   | Lit =>
     refine ⟨le_rfl, ?_⟩
     intro pos hlabel hp
-    exact Or.inr (Or.inr ⟨hlabel, pos, rfl, (Stack.isDupReachable_iff_length _ _).mpr hp⟩)
+    exact Or.inr (Or.inr ⟨hlabel, pos, rfl, by simp only [Stack.isDupReachable]; omega⟩)
   | Swap _ _ _ _ _ => exact False.elim h
   | Pop _ _ => exact False.elim h
   | @Dup prev idx hlen hlo hhi hvalue trace ih =>
