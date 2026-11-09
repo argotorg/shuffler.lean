@@ -92,6 +92,13 @@ def Stack.isSwapReachable (stack : Stack) (pos : Fin stack.length) : Prop :=
 instance (stack : Stack) (pos : Fin stack.length) : Decidable (stack.isSwapReachable pos) :=
   by unfold Stack.isSwapReachable; infer_instance
 
+-- Whether a swap can exchange the top with the slot at `pos`: below the top and within swap reach
+def Stack.isValidSwapTarget (stack : Stack) (pos : Fin stack.length) : Prop :=
+  1 ≤ (stack.offsetToDepth pos).val ∧ stack.offsetToDepth pos ≤ MAX_SWAP_DEPTH
+
+instance (stack : Stack) (pos : Fin stack.length) : Decidable (stack.isValidSwapTarget pos) :=
+  by unfold Stack.isValidSwapTarget; infer_instance
+
 lemma dup_slot_eq (stack : Stack) (copy : Fin stack.length) :
     stack[stack.length - ((stack.offsetToDepth copy).val + 1)] = stack[copy] := by
   have hcopy : stack.length - ((stack.offsetToDepth copy).val + 1) = copy.val := by

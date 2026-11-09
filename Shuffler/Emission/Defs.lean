@@ -169,7 +169,7 @@ def State.swapWith (state : State source target spills)
   let depth := state.stack.offsetToDepth pos
 
   _ ← requires (¬ state.isFinal pos) "swap target is already final"
-  let ⟨hdepth⟩ ← requires (1 ≤ depth.val ∧ depth ≤ MAX_SWAP_DEPTH) "invalid swap target"
+  let ⟨hvalid⟩ ← requires (state.stack.isValidSwapTarget pos) "invalid swap target"
 
   return {
     state with
@@ -177,7 +177,7 @@ def State.swapWith (state : State source target spills)
     mapping := List.length_swap.symm ▸
       state.mapping.swapDestinations pos ⟨state.stack.length - 1, top_lt_length state.stack pos⟩
     trace := swap_stack_eq state.stack pos ▸
-      Trace.Swap depth.val depth.isLt hdepth.1 hdepth.2 state.trace
+      Trace.Swap depth.val depth.isLt hvalid.1 hvalid.2 state.trace
   }
 
 -- Removes the top slot together with its destination, if any
