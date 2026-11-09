@@ -120,7 +120,7 @@ def State.push (state : State source target spills)
       | .Var id  , h => .Load id (by simpa [Value.can_be_freely_generated, SpillSet.is_spilled] using h) state.trace
       | .Lit word, _ => .Push (.Lit word) (by simp [Value.can_be_freely_generated]) state.trace
       | .Wildcard, _ => .Push .Wildcard (by decide) state.trace
-    mapping := by simpa [stack_push_len] using
+    mapping := by simpa using
       state.mapping.push dest hbound
   }
 
@@ -144,7 +144,7 @@ def State.dup (state : State source target spills)
       dup_stack_eq state.stack copy ▸
         Trace.Dup (depth.val + 1) (Nat.succ_le_of_lt depth.isLt) (Nat.succ_pos _)
           (Nat.add_le_add_right hdup 1) (by simpa [depth, dup_slot_eq] using hlabel) state.trace
-    mapping := by simpa [stack_push_len] using
+    mapping := by simpa using
       state.mapping.push dest hbound
   }
 

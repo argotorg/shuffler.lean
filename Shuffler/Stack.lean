@@ -121,9 +121,6 @@ lemma swap_stack_eq (stack : Stack) (pos : Fin stack.length) :
 abbrev Stack.topOffset (stack : Stack) (h : 0 < stack.length) : Fin stack.length :=
   ⟨stack.length - 1, by omega⟩
 
-lemma stack_push_len (stack : Stack) (slot : Value) :
-  stack.length + 1 = (stack ++ [slot]).length := by simp
-
 lemma stack_pop_len (stack : Stack) (h : 0 < stack.length) :
     stack.length = stack.dropLast.length + 1 := by
   simp; omega
