@@ -9,8 +9,9 @@
   inputs.flake-utils.lib.eachDefaultSystem (system:
     let pkgs = import inputs.nixpkgs { inherit system; }; in
     {
-      devShells.default = pkgs.mkShell {
-        buildInputs = [ pkgs.elan ];
+      # clang and AFL++ for the fuzzer builds in Fuzz/
+      devShells.default = pkgs.mkShell.override { stdenv = pkgs.clangStdenv; } {
+        buildInputs = [ pkgs.elan pkgs.ccache pkgs.cmake pkgs.ninja pkgs.boost pkgs.fmt pkgs.nlohmann_json pkgs.range-v3 pkgs.aflplusplus ];
       };
     });
 }

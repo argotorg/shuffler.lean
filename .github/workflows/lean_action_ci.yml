@@ -14,3 +14,4 @@ jobs:
       - uses: leanprover/lean-action@f061402b660e0c34644504b324e830f2991d4865 # v1.6.1
         with:
           build-args: "--wfail"
+          test-args: "--wfail"
