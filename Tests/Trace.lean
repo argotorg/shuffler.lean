@@ -1,3 +1,6 @@
+module
+
+public meta import Shuffler.Trace
 import Shuffler.Trace
 
 namespace TraceTests
@@ -28,5 +31,16 @@ example : (loaded.concat (swapped.concat reloaded)).swapCount = 1 := rfl
 -- Only variable IDs can be loaded, and concatenation preserves the spill set.
 #check_failure (Trace.Load (spills := spills) (Value.Lit 0) (of_decide_eq_true rfl) (.Lit []))
 #check_failure (loaded.concat (Trace.Lit (spills := ∅) [.Var ⟨0⟩, .Var ⟨37⟩]))
+
+-- A reachable function return label still cannot be duplicated.
+#check_failure (Trace.Dup (spills := ∅) (prev := [Value.FunctionReturnLabel]) 1
+  (of_decide_eq_true rfl) (of_decide_eq_true rfl) (of_decide_eq_true rfl)
+  (of_decide_eq_true rfl) (.Lit _))
+
+-- Existing return labels can move through SWAP and concatenation.
+private def movedLabel : Trace ∅ [.FunctionReturnLabel, .Lit 0] [.Lit 0, .FunctionReturnLabel] :=
+  .Swap 1 (by decide) (by decide) (by decide) (.Lit _)
+
+example : ((Trace.Lit _).concat movedLabel).swapCount = 1 := rfl
 
 end TraceTests

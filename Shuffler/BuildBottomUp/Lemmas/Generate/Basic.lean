@@ -17,6 +17,13 @@ theorem Trace.onlyGenerates_concat (first : Trace spills source middle)
   | Lit => exact hfirst
   | Swap _ _ _ _ _ => exact False.elim hsecond
   | Pop _ _ => exact False.elim hsecond
-  | Dup _ _ _ _ _ ih => exact ih hsecond
+  | Dup _ _ _ _ _ _ ih => exact ih hsecond
   | Push _ _ _ ih => exact ih hsecond
   | Load _ _ _ ih => exact ih hsecond
+
+theorem Trace.onlyGenerates_noPop (trace : Trace spills source target) (h : trace.onlyGenerates) :
+    trace.noPop := by
+  induction trace with
+  | Lit => trivial
+  | Swap _ _ _ _ _ | Pop _ _ => exact h.elim
+  | Dup _ _ _ _ _ _ ih | Push _ _ _ ih | Load _ _ _ ih => exact ih h

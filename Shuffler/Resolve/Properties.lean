@@ -19,6 +19,10 @@ def State.Available (state : State source target) (value : Value) : Prop :=
 def State.TargetAvailable (state : State source target) : Prop :=
   ∀ value ∈ target, ¬ value.is_junk → state.Available value
 
+-- Return labels in the source are never marked as dropped.
+def State.LabelsUndropped (state : State source target) : Prop :=
+  ∀ i : Fin source.length, source[i].isFunctionReturnLabel → state.dropped[i] = 0
+
 -- Every source slot with a destination in the mapping has its dropped flag set to zero.
 def State.RetainedUndropped (state : State source target)
     (mapping : Mapping source.length target.length) : Prop :=

@@ -31,11 +31,12 @@ inductive Trace (spills : SpillSet) : Stack → Stack → Type where
     → (hhi : idx ≤ MAX_SWAP_DEPTH)
     → Trace spills start prev
     → Trace spills start (prev.swap (prev.length - 1) (prev.length - 1 - idx))
-  | Dup
+  | Dup {start prev : Stack}
     : (idx : ℕ)
     → (hlen : idx ≤ prev.length)
     → (hlo : 1 ≤ idx)
     → (hhi : idx ≤ MAX_DUP_DEPTH + 1)
+    → (hvalue : ¬prev[prev.length - idx].isFunctionReturnLabel)
     → Trace spills start prev
     → Trace spills start (prev ++ [prev[prev.length - idx]])
   | Pop
@@ -57,7 +58,7 @@ def Trace.concat (t1 : Trace spills a b) (t2 : Trace spills b c) : Trace spills 
   match t2 with
   | .Lit _ => t1
   | .Swap idx hlen hlo hhi t => .Swap idx hlen hlo hhi (t1.concat t)
-  | .Dup idx hlen hlo hhi t => .Dup idx hlen hlo hhi (t1.concat t)
+  | .Dup idx hlen hlo hhi hvalue t => .Dup idx hlen hlo hhi hvalue (t1.concat t)
   | .Pop hlen t => .Pop hlen (t1.concat t)
   | .Push v hfree t => .Push v hfree (t1.concat t)
   | .Load id hspilled t => .Load id hspilled (t1.concat t)
@@ -65,7 +66,7 @@ def Trace.concat (t1 : Trace spills a b) (t2 : Trace spills b c) : Trace spills 
 def Trace.swapCount : Trace spills source result → ℕ
   | .Lit _ => 0
   | .Swap _ _ _ _ trace => trace.swapCount + 1
-  | .Dup _ _ _ _ trace => trace.swapCount
+  | .Dup _ _ _ _ _ trace => trace.swapCount
   | .Pop _ trace => trace.swapCount
   | .Push _ _ trace => trace.swapCount
   | .Load _ _ trace => trace.swapCount
@@ -74,7 +75,7 @@ def Trace.swapCount : Trace spills source result → ℕ
 def Trace.onlyGenerates : Trace spills source result → Prop
   | .Lit _ => True
   | .Swap _ _ _ _ _ => False
-  | .Dup _ _ _ _ trace => trace.onlyGenerates
+  | .Dup _ _ _ _ _ trace => trace.onlyGenerates
   | .Pop _ _ => False
   | .Push _ _ trace => trace.onlyGenerates
   | .Load _ _ trace => trace.onlyGenerates
@@ -82,7 +83,7 @@ def Trace.onlyGenerates : Trace spills source result → Prop
 def Trace.noPop : Trace spills source result → Prop
   | .Lit _ => True
   | .Swap _ _ _ _ trace => trace.noPop
-  | .Dup _ _ _ _ trace => trace.noPop
+  | .Dup _ _ _ _ _ trace => trace.noPop
   | .Pop _ _ => False
   | .Push _ _ trace => trace.noPop
   | .Load _ _ trace => trace.noPop
@@ -91,7 +92,7 @@ def Trace.noPop : Trace spills source result → Prop
 def Trace.additions : Trace spills source result → Multiset Value
   | .Lit _ => 0
   | .Swap _ _ _ _ trace => trace.additions
-  | @Dup _ _ prev idx hlen hlo _ trace =>
+  | @Dup _ _ prev idx hlen hlo _ _ trace =>
       trace.additions + {prev[prev.length - idx]'(by omega)}
   | .Pop _ trace => trace.additions
   | .Push value _ trace => trace.additions + {value}

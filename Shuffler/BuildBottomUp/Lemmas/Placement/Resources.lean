@@ -40,7 +40,8 @@ theorem seeds_erase_source {missing : Multiset Value} {working : Stack} {value :
 theorem available_of_suffix {fixed working : Stack} {missing : Multiset Value}
     (hseeds : seeds spills missing ≤ (working : Multiset Value))
     (hsmall : working.length ≤ MAX_DUP_DEPTH + 1)
-    (value : Value) (hv : value ∈ missing) :
+    (value : Value) (hv : value ∈ missing)
+    (hlabels : ∀ value ∈ missing, ¬value.isFunctionReturnLabel) :
     Shuffler.Generate.Available spills (fixed ++ working) value := by
   by_cases hf : Free spills value
   · exact hf.imp_right Or.inl
@@ -48,7 +49,7 @@ theorem available_of_suffix {fixed working : Stack} {missing : Multiset Value}
   have hm : value ∈ working := (seeds_le_iff _ _ _).mp hseeds value hv hf
   obtain ⟨i, hi, he⟩ := List.mem_iff_getElem.mp hm
   let pos : Fin (fixed ++ working).length := ⟨fixed.length + i, by simp; omega⟩
-  refine ⟨pos, ?_, ?_⟩
+  refine ⟨hlabels value hv, pos, ?_, ?_⟩
   · simpa [pos] using he
   · rw [Stack.isDupReachable_iff_length]
     dsimp [pos]
@@ -58,7 +59,7 @@ theorem available_of_suffix {fixed working : Stack} {missing : Multiset Value}
 theorem CanPlace.append {source : Stack} {value : Value}
     (h : Shuffler.Generate.Available spills source value) :
     CanPlace spills source (source ++ [value]) {value} := by
-  rcases h with hf | hs | ⟨pos, hv, hr⟩
+  rcases h with hf | hs | ⟨hlabel, pos, hv, hr⟩
   · exact ⟨.Push value hf (.Lit source), trivial, by simp [Trace.additions]⟩
   · cases value with
     | Var id => exact ⟨.Load id hs (.Lit source), trivial, by simp [Trace.additions]⟩
@@ -66,7 +67,10 @@ theorem CanPlace.append {source : Stack} {value : Value}
   · subst value
     let depth := source.offsetToDepth pos
     let trace := Trace.Dup (depth.val + 1) (Nat.succ_le_of_lt depth.isLt)
-      (Nat.succ_pos _) (Nat.add_le_add_right hr 1) (Trace.Lit (spills := spills) source)
+      (Nat.succ_pos _) (Nat.add_le_add_right hr 1) (by
+        have hi : source.length - (depth.val + 1) = pos.val := by
+          dsimp [depth]; rw [Stack.offsetToDepth_val]; have := pos.isLt; omega
+        simpa only [hi, Fin.getElem_fin] using hlabel) (Trace.Lit (spills := spills) source)
     refine ⟨dup_stack_eq source pos ▸ trace, (Trace.noPop_cast _ _).mpr trivial, ?_⟩
     rw [Trace.additions_cast]
     have hi : source.length - (depth.val + 1) = pos.val := by

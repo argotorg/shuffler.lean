@@ -21,11 +21,15 @@ private theorem emptyState_valid (target : Stack) (spills : SpillSet)
     (h : ∀ i : Fin target.length,
       target[i].can_be_freely_generated ∨ spills.is_spilled target[i]) :
     (emptyState target spills).Valid := by
-  refine ⟨by simp [emptyState], by simp [emptyState], ?_⟩
-  intro i
-  rcases h i with hfree | hspill
-  · exact Or.inl hfree
-  · exact Or.inr (Or.inl hspill)
+  refine ⟨by simp [emptyState], by simp [emptyState], ?_, ?_⟩
+  · intro i
+    rcases h i with hfree | hspill
+    · exact Or.inl hfree
+    · exact Or.inr (Or.inl hspill)
+  · intro i hi
+    have hf := h i
+    cases hv : target[i] <;>
+      simp_all [Value.isFunctionReturnLabel, Value.can_be_freely_generated, SpillSet.is_spilled]
 
 example (target : Stack) (spills : SpillSet)
     (h : ∀ i : Fin target.length,
@@ -53,8 +57,7 @@ private def deepCopy : State
 
 -- Availability does not require a copy to be within DUP reach.
 private theorem deepCopy_valid : deepCopy.Valid := by
-  refine ⟨by decide, by decide, ?_⟩
-  decide
+  exact ⟨by decide, by decide, by decide, by decide⟩
 
 example (reason : String) : (buildBottomUp deepCopy deepCopy_valid) ≠ .error (.assertion reason) :=
   buildBottomUp_no_assertion deepCopy deepCopy_valid reason
@@ -64,7 +67,7 @@ example : (((((buildBottomUp deepCopy deepCopy_valid) : Except ShuffleErr (Resul
   pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))).map (fun result => result.1) = .error (.Blocked ⟨0, 1⟩) := by
   native_decide
 
--- Each initial condition is needed: size, pending count, and availability.
+-- Each initial condition is needed: size, pending count, availability, and bound return labels.
 private def surplus : State [.Lit 0] [] ∅ where
   planned_mapping := ⊥
   stack := [.Lit 0]
@@ -115,5 +118,27 @@ example : ¬ (emptyState [.FunctionReturnLabel] ∅).Valid := by
   intro h
   have := h.available 0
   contradiction
+
+private def unboundLabel : State [.FunctionReturnLabel]
+    [.FunctionReturnLabel, .FunctionReturnLabel] ∅ where
+  planned_mapping := retainAll 1
+  stack := [.FunctionReturnLabel]
+  trace := .Lit _
+  mapping := retainAll 1
+  pending_generations := 1
+
+-- The size, pending count, and availability conditions hold for this state.
+example : unboundLabel.stack.length + unboundLabel.pending_generations = 2 ∧
+    unboundLabel.mapping.unmapped_target_slots = unboundLabel.pending_generations ∧
+    ∀ i, unboundLabel.isAvailable i := by decide
+
+-- An available return label must be retained for each target position that needs it.
+example : ¬ unboundLabel.Valid := by
+  intro h
+  have hl := h.labels_bound (1 : Fin 2) (by decide)
+  contradiction
+
+example : (buildBottomUp.loop 0 unboundLabel).map (fun result => result.blocked) =
+    .error (.assertion "Cannot dup function return label") := by native_decide
 
 end BuildBottomUpSafetyTests

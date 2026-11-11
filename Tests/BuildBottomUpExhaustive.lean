@@ -31,11 +31,13 @@ private def checkState (state : State source target ∅) : Option Bool :=
   if hsize : state.stack.length + state.pending_generations = target.length then
     if hpending : state.mapping.unmapped_target_slots = state.pending_generations then
       if havailable : ∀ i, state.isAvailable i then
-        some (match ((((buildBottomUp state ⟨hsize, hpending, havailable⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
-          if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
-          pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) with
-          | .ok result => decide (result.1 = expectedStack state)
-          | .error _ => false)
+        if hlabels : ∀ j, target[j].isFunctionReturnLabel → (state.mapping.symm j).isSome then
+          some (match ((((buildBottomUp state ⟨hsize, hpending, havailable, hlabels⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
+            if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>
+            pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack)) with
+            | .ok result => decide (result.1 = expectedStack state)
+            | .error _ => false)
+        else none
       else none
     else none
   else none
