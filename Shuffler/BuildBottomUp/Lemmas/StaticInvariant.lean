@@ -44,12 +44,12 @@ theorem hasCopy_iff_indices (stack : Stack) (value : Value) :
   constructor
   · rintro ⟨i, hv, hr⟩
     refine ⟨i.val, i.isLt, ?_, ?_⟩
-    · exact (Stack.isDupReachable_iff_length _ _).mp hr
+    · simp only [Stack.isDupReachable] at hr; omega
     · simpa [List.getElem?_eq_getElem i.isLt] using hv
   · rintro ⟨i, hi, hr, hv⟩
     refine ⟨⟨i, hi⟩, ?_, ?_⟩
     · simpa [List.getElem?_eq_getElem hi] using hv
-    · exact (Stack.isDupReachable_iff_length _ _).mpr hr
+    · simp only [Stack.isDupReachable]; omega
 
 theorem PrefixState.copies_iff {initial state : State source target spills} {h : initial.Valid}
     (hp : PrefixState initial h cursor state) (value : Value) :

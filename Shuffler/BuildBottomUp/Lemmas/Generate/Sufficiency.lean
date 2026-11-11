@@ -22,7 +22,7 @@ theorem Available.step {source : Stack} {value : Value}
     let trace := Trace.Dup (depth.val + 1) (Nat.succ_le_of_lt depth.isLt)
       (Nat.succ_pos _) (Nat.add_le_add_right hreach 1) (by
         have hi : source.length - (depth.val + 1) = pos.val := by
-          dsimp [depth]; rw [Stack.offsetToDepth_val]; have := pos.isLt; omega
+          dsimp [depth]; have := pos.isLt; omega
         simpa only [hi, Fin.getElem_fin] using hlabel) (Trace.Lit (spills := spills) source)
     refine ⟨dup_stack_eq source pos ▸ trace, ?_⟩
     exact (Trace.onlyGenerates_cast _ _).mpr trivial
@@ -38,7 +38,7 @@ private theorem Critical.unique {source : Stack} {left right : Value}
   obtain ⟨r, hr, hrd⟩ := hr
   have he : l = r := by
     apply Fin.ext
-    rw [Stack.offsetToDepth_val] at hld hrd
+    dsimp only at hld hrd
     have := l.isLt
     have := r.isLt
     omega
@@ -73,8 +73,8 @@ private theorem Ready.after_append {source missing : Stack} (h : Ready spills so
     exact he (hsafe value hm hfree hspill ⟨pos, hp, hd⟩)
   apply Shuffler.Emission.hasCopy_append_old source value chosen pos
     (Shuffler.Emission.shallowestCopyPosition_value source value pos hp)
-  rw [Stack.offsetToDepth_val] at hd
-  rw [Stack.isDupReachable_iff_length] at hr
+  dsimp only at hd
+  simp only [Stack.isDupReachable] at hr
   have := pos.isLt
   omega
 

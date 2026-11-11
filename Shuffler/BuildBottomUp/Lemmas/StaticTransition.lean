@@ -91,8 +91,7 @@ theorem PrefixState.step {initial state : State source target spills} {h : initi
         apply hiff.mpr
         exact hcurrentValue.symm.trans (he.trans htopValue)
       have hdeep : ¬produced.stack.isSwapReachable current' := by
-        rw [Stack.isSwapReachable_iff_length]
-        change ¬produced.stack.length ≤ cursor + (MAX_SWAP_DEPTH + 1)
+        simp only [Stack.isSwapReachable, current']
         unfold MAX_SWAP_DEPTH
         omega
       have hgenerate := generate_eq_after_produce_unequal_deep state produced dest hproduce

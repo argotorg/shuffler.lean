@@ -69,7 +69,7 @@ theorem Value.can_be_freely_generated_of_is_junk (v : Value) (hjunk : v.is_junk)
 
 abbrev Stack := List Value
 
-def Stack.offsetToDepth (stack : Stack) (idx : Fin stack.length) : Fin stack.length :=
+abbrev Stack.offsetToDepth (stack : Stack) (idx : Fin stack.length) : Fin stack.length :=
   ⟨stack.length - 1 - idx, by omega⟩
 
 def Stack.shallowestCopyPosition (stack : Stack) (slot : Value) : Option (Fin stack.length) :=
@@ -92,6 +92,13 @@ def Stack.isSwapReachable (stack : Stack) (pos : Fin stack.length) : Prop :=
 instance (stack : Stack) (pos : Fin stack.length) : Decidable (stack.isSwapReachable pos) :=
   by unfold Stack.isSwapReachable; infer_instance
 
+-- Whether a swap can exchange the top with the slot at `pos`: below the top and within swap reach
+def Stack.isValidSwapTarget (stack : Stack) (pos : Fin stack.length) : Prop :=
+  1 ≤ (stack.offsetToDepth pos).val ∧ stack.offsetToDepth pos ≤ MAX_SWAP_DEPTH
+
+instance (stack : Stack) (pos : Fin stack.length) : Decidable (stack.isValidSwapTarget pos) :=
+  by unfold Stack.isValidSwapTarget; infer_instance
+
 lemma dup_slot_eq (stack : Stack) (copy : Fin stack.length) :
     stack[stack.length - ((stack.offsetToDepth copy).val + 1)] = stack[copy] := by
   have hcopy : stack.length - ((stack.offsetToDepth copy).val + 1) = copy.val := by
@@ -109,6 +116,10 @@ lemma swap_stack_eq (stack : Stack) (pos : Fin stack.length) :
   have hpos : stack.length - 1 - (stack.offsetToDepth pos).val = pos.val := by
     dsimp [Stack.offsetToDepth]; omega
   rw [hpos, List.swap_comm]
+
+-- The offset of the top slot of a non-empty stack
+abbrev Stack.topOffset (stack : Stack) (h : 0 < stack.length) : Fin stack.length :=
+  ⟨stack.length - 1, by omega⟩
 
 lemma top_lt_length (stack : Stack) (pos : Fin stack.length) :
     stack.length - 1 < stack.length := by

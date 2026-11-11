@@ -54,7 +54,7 @@ theorem urgentScan_reachable_on_success (cursor : Nat) (state : State source tar
     ⦃fun result => result.1 = none → CopiesSeen state (List.range' cursor (target.length - cursor));
       (fun _ => True)⦄ := by
   simp only [Std.Legacy.Range.forIn_eq_forIn_range']
-  vcgen [slotAt, index, State.depthOf, State.blockDupUnreachable, State.block, requires] invariants
+  vcgen [slotAt, index, State.blockDupUnreachable, State.block, requires] invariants
   · fun seen remaining result => match result.1 with
       | some _ => remaining = []
       | none => CopiesSeen state seen

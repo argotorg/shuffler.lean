@@ -133,11 +133,11 @@ theorem boundValue_pop (state : State source target spills) (hne : 0 < state.sta
     ⦃fun next => next.stack.length = state.stack.length ∧ next.boundValue = state.boundValue ∧
       next.topSurplus; allowedErrors⦄ := by
   vcgen [State.swapWith, index]
-  all_goals simp_all [State.isFinal, State.isSurplus, State.isSwapReachable, State.depthOf,
-    Stack.offsetToDepth]
+  all_goals simp_all [State.isFinal, State.isSurplus, Stack.isSwapReachable,
+    Stack.isValidSwapTarget]
   all_goals first
     | omega
-    | exact ⟨boundValue_swap state ⟨offset, by assumption⟩ ⟨state.stack.length - 1, by omega⟩ _,
+    | exact ⟨boundValue_swap state ⟨offset, by assumption⟩ (state.stack.topOffset (by omega)) _,
         topSurplus_swap _ ⟨offset, by assumption⟩ (by simp_all [State.isSurplus]) _ _⟩
 
 -- Popping a non-empty stack with a surplus top lowers the height by one and keeps every target's

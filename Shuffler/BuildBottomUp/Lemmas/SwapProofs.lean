@@ -24,7 +24,7 @@ structure Swapped (state next : State source target spills) (pos : Fin state.sta
   mapping : ∀ dest : Fin target.length,
     (next.mapping.symm dest).map Fin.val =
       ((state.mapping.swapDestinations pos
-        ⟨state.stack.length - 1, by have := pos.isLt; omega⟩).symm dest).map Fin.val
+        (state.stack.topOffset pos.pos)).symm dest).map Fin.val
 
 theorem swap_triple (state : State source target spills) (pos : Fin state.stack.length)
     (hbelow : pos.val + 1 < state.stack.length) (hreach : state.stack.isSwapReachable pos)
@@ -32,8 +32,7 @@ theorem swap_triple (state : State source target spills) (pos : Fin state.stack.
     ⦃True⦄ state.swapWith pos.val
     ⦃fun next => Swapped state next pos; allowedErrors⦄ := by
   -- Prove the checked preconditions before proving the state update.
-  have hdepth : 1 ≤ (state.stack.offsetToDepth pos).val ∧ (state.stack.offsetToDepth pos).val ≤ MAX_SWAP_DEPTH := by
-    simp only [Stack.isSwapReachable, Stack.offsetToDepth] at *; omega
+  have hvalid : state.stack.isValidSwapTarget pos := ⟨by dsimp only; omega, hreach⟩
   vcgen [State.swapWith, index] until (requires _ _)
   all_goals simp_all [requires]
   apply WPMonad.pure_le_wp_pure (m := Except ShuffleErr) _ _ _
@@ -43,8 +42,7 @@ theorem swap_triple (state : State source target spills) (pos : Fin state.stack.
   · simp
   · intro slot hslot
     exact (List.mem_swap _ _).mpr hslot
-  · simpa only [eqRec_eq_cast] using
-      expectedStack_swap state pos ⟨state.stack.length - 1, top_lt_length state.stack pos⟩ _
+  · exact expectedStack_swap state pos (state.stack.topOffset pos.pos) _
   · intro dest
     simp [Function.comp_def]
 
@@ -68,7 +66,7 @@ theorem Swapped.invariant {state next : State source target spills}
     (by rw [h.count, h.pending]; exact inv.pending) ?_ ?_
   · intro i hi
     simpa only [State.exists_isFinal_iff, i.isLt, dite_true, h.mapping] using
-      state.swapDestinations_isFinal pos ⟨state.stack.length - 1, by have := pos.isLt; omega⟩
+      state.swapDestinations_isFinal pos (state.stack.topOffset pos.pos)
         i (inv.processed i hi) (by omega) (by have := pos.isLt; dsimp; omega)
   · intro i
     exact state.isAvailable_of_subset next h.subset i (inv.available i)
@@ -89,7 +87,7 @@ theorem Swapped.final {state next : State source target spills}
     (hpos : pos.val = dest.val)
     (hbound : (state.mapping.symm dest).map Fin.val = some (state.stack.length - 1)) :
     ∃ h, next.isFinal ⟨dest, h⟩ := by
-  have htop := state.boundOfVal dest ⟨state.stack.length - 1, by have := pos.isLt; omega⟩ hbound
+  have htop := state.boundOfVal dest (state.stack.topOffset pos.pos) hbound
   simp [State.exists_isFinal_iff, dest.isLt, h.mapping, htop, hpos]
 
 theorem Swapped.unbound {state next : State source target spills}

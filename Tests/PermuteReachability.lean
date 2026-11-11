@@ -16,7 +16,7 @@ open Shuffler.Permute Shuffler.Emission
 
 private instance {source : Stack} (perm : Permutation source) : Decidable (values_reachable perm) :=
   inferInstanceAs (Decidable (∀ i : Fin source.length,
-    source[i] ≠ source[perm.symm i] → i.rev.val ≤ MAX_SWAP_DEPTH))
+    source[i] ≠ source[perm.symm i] → source.isSwapReachable i))
 
 private def stateFor (stack : Stack) : State stack stack ∅ where
   planned_mapping := ⊥

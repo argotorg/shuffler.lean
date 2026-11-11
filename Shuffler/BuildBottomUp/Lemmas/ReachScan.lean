@@ -61,7 +61,7 @@ theorem Urgent.ready {state : State source target spills} {dest : Fin target.len
     apply Fin.ext
     have := copy.isLt
     have := pos.isLt
-    rw [Stack.offsetToDepth_val] at hlast hdepth
+    dsimp only at hlast hdepth
     unfold MAX_DUP_DEPTH at *
     omega
   subst copy
@@ -91,7 +91,7 @@ theorem ScanProgress.ready_none {state : State source target spills}
   intro j hb hfree hspill copy hcopy hdepth
   have hpos := h.no_urgent hp j hb hfree hspill copy hcopy hdepth
   have := copy.isLt
-  rw [Stack.offsetToDepth_val] at hdepth
+  dsimp only at hdepth
   unfold MAX_SWAP_DEPTH MAX_DUP_DEPTH at *
   omega
 
@@ -112,7 +112,7 @@ theorem ScanProgress.ready_cursor {state : State source target spills}
     change copy.val = cursor
     have := hr.width
     have := copy.isLt
-    rw [Stack.offsetToDepth_val] at hdepth
+    dsimp only at hdepth
     unfold MAX_SWAP_DEPTH MAX_DUP_DEPTH at *
     omega
 
@@ -144,7 +144,7 @@ theorem urgentScan_success (cursor : ℕ) (state : State source target spills)
     ⦃fun result => result.1 = none ∧
       ScanProgress cursor state (List.range' cursor (target.length - cursor)) result.2⦄ := by
   simp only [Std.Legacy.Range.forIn_eq_forIn_range']
-  vcgen [slotAt, index, State.depthOf] invariants
+  vcgen [slotAt, index] invariants
   · fun seen _ result => result.1 = none ∧ ScanProgress cursor state seen result.2
   all_goals try simp_all
   case vc1 => exact ⟨by simp, by simp⟩

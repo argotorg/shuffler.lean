@@ -115,9 +115,9 @@ theorem Swapped.reachable_boundary_iff {state next : State source target spills}
     next.reachable ↔
       ¬NeedsDup state (state.stack[state.stack.length - 1]'(by have := bottom.isLt; omega)) ∨
       TwoCopies state.stack (state.stack[state.stack.length - 1]'(by have := bottom.isLt; omega)) := by
-  let top : Fin state.stack.length := ⟨state.stack.length - 1, by have := bottom.isLt; omega⟩
+  let top := state.stack.topOffset bottom.pos
   have ht : state.stack.isDupReachable top := by
-    simp [Stack.isDupReachable, Stack.offsetToDepth_val, top]
+    simp [Stack.isDupReachable, top]
   have hcopy : Stack.hasCopy next.stack state.stack[top] ↔ TwoCopies state.stack state.stack[top] := by
     rw [hs.stack_eq]
     exact hasCopy_swap_out_iff_twoCopies state.stack bottom top hb ht hv
@@ -168,8 +168,8 @@ theorem Swapped.twoCopies_iff {state next : State source target spills}
     TwoCopies next.stack slot ↔ TwoCopies state.stack slot := by
   rw [hs.stack_eq]
   apply twoCopies_swap_iff state.stack slot pos
-    ⟨state.stack.length - 1, top_lt_length state.stack pos⟩ hp
-  simp [Stack.isDupReachable, Stack.offsetToDepth_val]
+    (state.stack.topOffset pos.pos) hp
+  simp [Stack.isDupReachable]
 
 theorem Placement.boundary_finish_success_iff {state : State source target spills}
     {dest : Fin target.length} (h : Placement dest state) (hr : state.reachable)
@@ -189,11 +189,11 @@ theorem Placement.boundary_finish_success_iff {state : State source target spill
     unfold MAX_SWAP_DEPTH at hw
     omega
   have hswap : state.stack.isSwapReachable bottom := by
-    rw [Stack.isSwapReachable_iff_length]
+    simp only [Stack.isSwapReachable]
     dsimp [bottom]
     omega
   have hdup : ¬state.stack.isDupReachable bottom := by
-    rw [Stack.isDupReachable_iff_length]
+    simp only [Stack.isDupReachable]
     dsimp [bottom]
     unfold MAX_DUP_DEPTH MAX_SWAP_DEPTH at *
     omega
@@ -221,8 +221,7 @@ macro "finish_boundary " c:term ", " st:term ", " hp:term ", " hn:term ", " hr:t
   try simp only [ne_eq, hnotTop, not_false_eq_true, ↓reduceIte]
   let bottom : Fin ($st).stack.length := ⟨$c, ($hp).in_bounds⟩
   have hreach : ($st).stack.isSwapReachable bottom := by
-    rw [Stack.isSwapReachable_iff_length]
-    change ($st).stack.length ≤ $c + (MAX_SWAP_DEPTH + 1)
+    simp only [Stack.isSwapReachable, bottom]
     have hwidth := $hw
     omega
   rw [ite_eq_right (not_not_intro (show ($st).isSwapReachable bottom from hreach))]
@@ -295,8 +294,7 @@ theorem loop_bound_mismatch_boundary_success_iff (cursor : Nat)
   simp only [hnotcurrent, ↓reduceIte]
   have hposreach : retag.stack.isDupReachable pos := by
     have := inv.not_final_ge pos hmovable
-    rw [Stack.isDupReachable_iff_length]
-    change state.stack.length ≤ pos.val + (MAX_DUP_DEPTH + 1)
+    simp only [Stack.isDupReachable, retag]
     unfold MAX_DUP_DEPTH MAX_SWAP_DEPTH at *
     omega
   have hrr : retag.withinReach (cursor + 1) := by
@@ -311,8 +309,8 @@ theorem loop_bound_mismatch_boundary_success_iff (cursor : Nat)
     rw [index_eq (size := retag.stack.length) pos]
     simp only [except_ok_bind]
     have hreach : retag.stack.isSwapReachable pos := by
-      rw [Stack.isSwapReachable_iff_length]
-      rw [Stack.isDupReachable_iff_length] at hposreach
+      simp only [Stack.isSwapReachable]
+      simp only [Stack.isDupReachable] at hposreach
       unfold MAX_DUP_DEPTH MAX_SWAP_DEPTH at *
       omega
     rw [ite_eq_right (not_not_intro (show retag.isSwapReachable pos from hreach))]

@@ -55,7 +55,7 @@ def slotAt (stack : Stack) (offset : ℕ) : Except ShuffleErr Value := do
 
 -- Depth of the slot at `offset` below the top of the working stack
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:741-744.
-def State.depthOf (state : State source target spills) (offset : Fin state.stack.length) : Fin state.stack.length :=
+abbrev State.depthOf (state : State source target spills) (offset : Fin state.stack.length) : Fin state.stack.length :=
   state.stack.offsetToDepth offset
 
 
@@ -64,11 +64,8 @@ def State.depthOf (state : State source target spills) (offset : Fin state.stack
 
 -- Whether a swap can reach the slot at `offset`; trivially true for the top itself
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:747-750.
-def State.isSwapReachable (state : State source target spills) (offset : Fin state.stack.length) : Prop :=
-  (state.depthOf offset).val ≤ MAX_SWAP_DEPTH
-
-instance (state : State source target spills) (offset : Fin state.stack.length) :
-    Decidable (state.isSwapReachable offset) := by unfold State.isSwapReachable; infer_instance
+abbrev State.isSwapReachable (state : State source target spills) (offset : Fin state.stack.length) : Prop :=
+  state.stack.isSwapReachable offset
 
 -- Whether the slot at `pos` is bound for `pos` itself, i.e., already is at its final target offset
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:735-738.
@@ -160,25 +157,33 @@ def State.swapDestinations (state : State source target spills) (a b : ℕ)
   let b ← index state.stack.length b
   return { state with mapping := state.mapping.swapDestinations a b }
 
+-- Swaps the top with the slot at `pos`, the destinations traveling along. `swapWith` checks the
+-- preconditions first; `Permute.permute` establishes them itself.
+abbrev State.swap (state : State source target spills) (pos : Fin state.stack.length)
+    (h : state.stack.isValidSwapTarget pos) : State source target spills := {
+  state with
+  stack := state.stack.swap pos (state.stack.length - 1)
+  mapping := List.length_swap.symm ▸
+    state.mapping.swapDestinations pos (state.stack.topOffset pos.pos)
+  trace := swap_stack_eq state.stack pos ▸
+    Trace.Swap (state.stack.offsetToDepth pos).val (state.stack.offsetToDepth pos).isLt h.1 h.2 state.trace
+}
+
+theorem State.swap_length (state : State source target spills) (pos : Fin state.stack.length)
+    (h : state.stack.isValidSwapTarget pos) : (state.swap pos h).stack.length = state.stack.length := by
+  simp
+
 -- Swaps the top with the slot at `offset`, the destinations traveling along
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:767-772.
 def State.swapWith (state : State source target spills)
     (offset : ℕ) : Except ShuffleErr (State source target spills) := do
 
   let pos ← index state.stack.length offset
-  let depth := state.stack.offsetToDepth pos
 
   _ ← requires (¬ state.isFinal pos) "swap target is already final"
-  let ⟨hdepth⟩ ← requires (1 ≤ depth.val ∧ depth ≤ MAX_SWAP_DEPTH) "invalid swap target"
+  let ⟨hvalid⟩ ← requires (state.stack.isValidSwapTarget pos) "invalid swap target"
 
-  return {
-    state with
-    stack := state.stack.swap pos (state.stack.length - 1)
-    mapping := List.length_swap.symm ▸
-      state.mapping.swapDestinations pos ⟨state.stack.length - 1, top_lt_length state.stack pos⟩
-    trace := swap_stack_eq state.stack pos ▸
-      Trace.Swap depth.val depth.isLt hdepth.1 hdepth.2 state.trace
-  }
+  return state.swap pos hvalid
 
 -- Removes the top slot together with its destination, if any
 -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:785-789 (at 6db6505).

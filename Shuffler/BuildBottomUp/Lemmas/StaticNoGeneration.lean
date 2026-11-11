@@ -39,12 +39,12 @@ theorem all_swaps_reachable_iff_fixed_below (stack : Stack)
   · intro hr i hi
     by_contra hn
     have hd := hr i (Equiv.Perm.mem_support.mpr hn)
-    simp only [Fin.val_rev] at hd
+    simp only [Stack.isSwapReachable] at hd
     omega
   · intro hfix i hi
     have hn := Equiv.Perm.mem_support.mp hi
     have hv := i.isLt
-    simp only [Fin.val_rev]
+    simp only [Stack.isSwapReachable]
     by_contra hd
     have := hfix i (by omega)
     contradiction

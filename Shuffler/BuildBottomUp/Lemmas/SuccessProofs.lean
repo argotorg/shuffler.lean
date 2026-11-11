@@ -41,7 +41,7 @@ theorem State.invariant.permutation_reachable {state : State source target spill
       exact he'
     simp [hpos] at hi
   have := hr.width
-  dsimp [Fin.rev]
+  simp only [Stack.isSwapReachable]
   omega
 
 macro "finish_reachable " c:term ", " st:term ", " hp:term ", " hn:term ", " hr:term ", " advance:term : tactic => `(tactic| (

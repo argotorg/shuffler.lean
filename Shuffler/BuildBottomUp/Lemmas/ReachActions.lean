@@ -80,8 +80,7 @@ theorem generate_noBlocked (state : State source target spills) (dest : Fin targ
   apply noBlocked_of_triple
   rw [generate_completed]
   vcgen [-produce_spec, State.produce, State.push, State.dup, State.swapDestinations,
-    State.swapWith, State.blockDupUnreachable, State.block, requires, index, slotAt,
-    State.isSwapReachable, State.depthOf]
+    State.swapWith, State.blockDupUnreachable, State.block, requires, index, slotAt]
   all_goals simp_all [noBlockedErrors]
   all_goals contradiction
 
@@ -114,7 +113,7 @@ theorem Growth.swap_reachable {state produced : State source target spills}
     (hreach : state.stack.length - dest.val ≤ MAX_SWAP_DEPTH)
     (pos : Fin produced.stack.length) (hpos : pos.val = dest.val) :
     produced.stack.isSwapReachable pos := by
-  rw [Stack.isSwapReachable_iff_length]
+  simp only [Stack.isSwapReachable]
   have := h.size
   have := pos.isLt
   omega
@@ -142,7 +141,7 @@ theorem generate_final (state : State source target spills) (dest : Fin target.l
     | exact State.isFinal_of_val_eq (by assumption) (by assumption)
     | omega
     | (have := (‹Growth _ _ _ _›).size
-       simp only [State.isSwapReachable, State.depthOf, Stack.offsetToDepth] at *; omega)
+       simp only [Stack.isSwapReachable] at *; omega)
 
 theorem generate_reachable (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest)
