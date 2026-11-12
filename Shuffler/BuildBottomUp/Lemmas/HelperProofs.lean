@@ -193,15 +193,6 @@ theorem generate_contract (state : State source target spills) (dest : Fin targe
       if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) (fun next => Generation state next dest) :=
   (spec_iff_triple _ _).mpr (generate_triple state dest hbound havailable hlabel)
 
-@[spec] theorem generate_offset_spec (state : State source target spills) (offset : ℕ)
-    (hlt : offset < target.length) (hbound : state.mapping.symm ⟨offset, hlt⟩ = none)
-    (havailable : state.isAvailable ⟨offset, hlt⟩)
-    (hlabel : ¬ (target[offset]'hlt).isFunctionReturnLabel) :
-    ⦃True⦄ (((state.generate offset) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
-      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)
-    ⦃fun next => Generation state next ⟨offset, hlt⟩; allowedErrors⦄ :=
-  generate_triple state ⟨offset, hlt⟩ hbound havailable hlabel
-
 theorem Generation.invariant {state next : State source target spills} {dest : Fin target.length}
     (h : Generation state next dest) (inv : state.invariant cursor) : next.invariant cursor := by
   have hs := inv.size

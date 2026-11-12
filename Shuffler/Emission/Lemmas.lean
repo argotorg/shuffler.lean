@@ -58,18 +58,6 @@ namespace Shuffler.Emission
         pure (⟨state.stack, state.trace⟩ : (stack : Stack) × Trace _ _ stack))) := by
   cases x <;> rfl
 
-theorem completed_continue (run : Except ShuffleErr (Result source target spills))
-    (next : Result source target spills → Except ShuffleErr (Result source target spills)) :
-    (run >>= fun r => (((if r.blocked.isSome then pure r else next r) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
-      if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) =
-      (((run : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
-        if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state => (((next ⟨none, state⟩) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
-            if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state)) := by
-  cases run with
-  | error err => rfl
-  | ok r => cases r with
-    | mk blocked state => cases blocked <;> rfl
-
 @[simp] theorem completed_ite (p : Prop) [Decidable p]
     (a b : Except ShuffleErr (Result source target spills)) :
     (((if p then a else b) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
