@@ -50,7 +50,8 @@ theorem permute_blocks_unreachable
         (hs.values_of_success hb))).elim
     | some blocked =>
       obtain ⟨i, hi, hp, him, hd⟩ := hs.blocked blocked hb
-      refine ⟨i, blocked.excess, result.state, ?_, hp, hsub him, hd⟩
+      refine ⟨i, blocked.excess, result.state, ?_, hp,
+        (hsub i him).resolve_right (fun ht => by dsimp only at hd; omega), hd⟩
       have he : result = ⟨some ⟨i.val, blocked.excess⟩, result.state⟩ := by
         cases result
         cases blocked
@@ -193,10 +194,15 @@ theorem permute_swapCount_le_three_mul_arbitrarySwapCount
   by_cases hne : 0 < initial.stack.length
   · rw [dite_eq_left hne] at hresult
     have hc := (go_count initial q hne hresult).1
-    have hs := Finset.card_le_card hsub
+    have hs : (q.support.erase (initial.stack.topOffset hne)).card ≤ perm.support.card :=
+      Finset.card_le_card fun i hi => (hsub i (Finset.mem_of_mem_erase hi)).resolve_right
+        fun ht => Finset.ne_of_mem_erase hi (Fin.ext (by dsimp only; omega))
+    have herase := Finset.pred_card_le_card_erase (s := q.support) (a := initial.stack.topOffset hne)
+    have haway : (Permutation.cyclesAwayFromTop q (initial.stack.topOffset hne)).card ≤
+        q.cycleFactorsFinset.card := Finset.card_filter_le _ _
     have hqcycles := Permutation.two_mul_card_cycles_le_support q
     have hpcycles := Permutation.two_mul_card_cycles_le_support perm
-    have hbound := Permutation.swapCount_le q (initial.stack.topOffset hne)
+    unfold Permutation.swapCount at hc
     unfold Permutation.arbitrarySwapCount
     omega
   · rw [dite_eq_right hne] at hresult
