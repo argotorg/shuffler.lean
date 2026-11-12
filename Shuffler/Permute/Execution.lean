@@ -10,21 +10,10 @@ namespace Shuffler.Permute
 
 open Emission
 
-theorem swap_equal_values (stack : Stack) (a b : Fin stack.length)
-    (he : stack[a] = stack[b]) : stack.swap a.val b.val = stack := by
-  apply List.ext_getElem
-  · simp
-  · intro i hi hi'
-    by_cases ha : i = a.val
-    · subst i; simpa using he.symm
-    by_cases hb : i = b.val
-    · subst i; simpa using he
-    · simp [ha, hb]
-
 theorem apply_permutation'_equal_exchange (stack : Stack) (p : Permutation stack)
     (a b : Fin stack.length) (he : stack[a] = stack[b]) :
     apply_permutation' stack (p * Equiv.swap a b) rfl = apply_permutation' stack p rfl := by
-  simpa only [swap_equal_values stack a b he] using apply_permutation'_swap stack p rfl a b
+  simpa only [swap_eq_of_equal stack a b he] using apply_permutation'_swap stack p rfl a b
 
 theorem support_swap_subset_away {n : ℕ} (p : Equiv.Perm (Fin n)) (top pos i : Fin n)
     (hpos : p pos ≠ pos) (hi : i ≠ top) (hm : i ∈ (p * Equiv.swap top pos).support) :

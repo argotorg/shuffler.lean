@@ -157,7 +157,7 @@ theorem Growth.generation_swapped {state produced next : State source target spi
       simpa only [State.exists_isFinal_iff, i.isLt, dite_true, hs.mapping] using hp)
 
 theorem Swapped.retag (state : State source target spills) (pos : Fin state.stack.length)
-    (heq : state.stack[pos] = state.stack[state.stack.length - 1]'(top_lt_length state.stack pos)) :
+    (heq : state.stack[pos] = state.stack[state.stack.topOffset pos.pos]) :
     Swapped state
       { state with mapping := (state.mapping.swapDestinations pos
           (state.stack.topOffset pos.pos)) } pos := by
@@ -184,7 +184,7 @@ theorem Swapped.retag (state : State source target spills) (pos : Fin state.stac
     | exact State.not_isFinal_of_val_eq (by assumption) (by assumption)
     | solve | simp_all
     | solve | omega
-    | (simp only [Stack.isSwapReachable] at *; omega)
+    | (simp only [Stack.isValidSwapTarget, Stack.isSwapReachable] at *; omega)
 
 theorem generate_contract (state : State source target spills) (dest : Fin target.length)
     (hbound : state.mapping.symm dest = none) (havailable : state.isAvailable dest)
@@ -248,12 +248,11 @@ theorem Placement.finish_at_top {state : State source target spills} {dest : Fin
   · exact (state.isFinal_of_bound_val_iff dest _ hbound).mpr htop.symm
 
 theorem Placement.swap_final {state : State source target spills} {dest : Fin target.length}
-    (h : Placement dest state) (hbelow : dest.val + 1 < state.stack.length)
-    (hreach : state.stack.isSwapReachable ⟨dest.val, h.in_bounds⟩)
+    (h : Placement dest state) (hvalid : state.stack.isValidSwapTarget ⟨dest.val, h.in_bounds⟩)
     (hnfinal : ¬ ∃ h, state.isFinal ⟨dest, h⟩) :
     Spec (state.swapWith dest.val) (fun next =>
       next.invariant (dest.val + 1) ∧ next.expectedStack = state.expectedStack) := by
-  apply (swap_spec state ⟨dest.val, h.in_bounds⟩ hbelow hreach (fun hf => hnfinal ⟨_, hf⟩)).mono
+  apply (swap_spec state ⟨dest.val, h.in_bounds⟩ hvalid (fun hf => hnfinal ⟨_, hf⟩)).mono
   intro next hs
   exact ⟨(hs.invariant h.toInvariant le_rfl).advance
     (hs.final dest rfl (h.position.resolve_left hnfinal)), hs.expected⟩
@@ -270,12 +269,11 @@ theorem State.invariant.bound_at_top {state : State source target spills} {dest 
 theorem State.invariant.swap_bound {state : State source target spills} {dest : Fin target.length}
     (h : state.invariant dest.val) (pos : Fin state.stack.length)
     (hbound : state.mapping.symm dest = some pos)
-    (hbelow : pos.val + 1 < state.stack.length) (hreach : state.stack.isSwapReachable pos)
-    (hne : pos.val ≠ dest.val) :
+    (hvalid : state.stack.isValidSwapTarget pos) (hne : pos.val ≠ dest.val) :
     Spec (state.swapWith pos.val) (fun next =>
       (Placement dest next ∧ ¬ ∃ h, next.isFinal ⟨dest, h⟩) ∧ next.expectedStack = state.expectedStack) := by
   have hge := h.processed.bound_ge dest pos hbound le_rfl
-  apply (swap_spec state pos hbelow hreach (state.boundNotFinal dest pos hbound hne)).mono
+  apply (swap_spec state pos hvalid (state.boundNotFinal dest pos hbound hne)).mono
   intro next hs
   have htop := hs.bound_top dest hbound
   have hlen := hs.size

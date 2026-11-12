@@ -136,7 +136,7 @@ theorem generate_final (state : State source target spills) (dest : Fin target.l
     | exact Growth.final_swapped (by assumption) rfl (by assumption)
     | exact Growth.final_swapped (by assumption) rfl (Swapped.retag _ _ (by assumption))
     | exact Growth.final_at_exit (by assumption) hle (fun hlt => absurd hlt (by omega))
-    | exact Growth.swap_reachable (by assumption) (by omega) _ rfl
+    | exact ⟨by dsimp only; omega, Growth.swap_reachable (by assumption) (by omega) _ rfl⟩
     | exact State.not_isFinal_of_val_eq (by assumption) (by assumption)
     | exact State.isFinal_of_val_eq (by assumption) (by assumption)
     | omega
@@ -165,18 +165,18 @@ theorem swap_noBlocked (state : State source target spills) (offset : ℕ) :
   all_goals simp_all [noBlockedErrors]
 
 theorem swap_success (state : State source target spills) (pos : Fin state.stack.length)
-    (hbelow : pos.val + 1 < state.stack.length) (hreach : state.stack.isSwapReachable pos)
-    (hnfinal : ¬ state.isFinal pos) :
+    (hvalid : state.stack.isValidSwapTarget pos) (hnfinal : ¬ state.isFinal pos) :
     Succeeds (state.swapWith pos.val) (fun next => Swapped state next pos) :=
-  (swap_spec state pos hbelow hreach hnfinal).success (swap_noBlocked state pos.val)
+  (swap_spec state pos hvalid hnfinal).success (swap_noBlocked state pos.val)
 
 theorem Placement.swap_final_success {state : State source target spills} {dest : Fin target.length}
     (h : Placement dest state) (hr : state.withinReach dest.val)
-    (hbelow : dest.val + 1 < state.stack.length) (hnfinal : ¬ ∃ h, state.isFinal ⟨dest, h⟩) :
+    (hvalid : state.stack.isValidSwapTarget ⟨dest.val, h.in_bounds⟩)
+    (hnfinal : ¬ ∃ h, state.isFinal ⟨dest, h⟩) :
     Succeeds (state.swapWith dest.val) (fun next =>
       next.invariant (dest.val + 1) ∧ next.withinReach (dest.val + 1)) := by
   let pos : Fin state.stack.length := ⟨dest.val, h.in_bounds⟩
-  apply (swap_success state pos hbelow (hr.swap_reachable pos le_rfl) (fun hf => hnfinal ⟨_, hf⟩)).mono
+  apply (swap_success state pos hvalid (fun hf => hnfinal ⟨_, hf⟩)).mono
   intro next hs
   exact ⟨(hs.invariant h.toInvariant le_rfl).advance
     (hs.final dest rfl (h.position.resolve_left hnfinal)), (hr.swap pos le_rfl hs).advance⟩
@@ -184,12 +184,11 @@ theorem Placement.swap_final_success {state : State source target spills} {dest 
 theorem State.invariant.swap_bound_success {state : State source target spills} {dest : Fin target.length}
     (h : state.invariant dest.val) (hr : state.withinReach dest.val)
     (pos : Fin state.stack.length) (hbound : state.mapping.symm dest = some pos)
-    (hbelow : pos.val + 1 < state.stack.length) (hne : pos.val ≠ dest.val) :
+    (hvalid : state.stack.isValidSwapTarget pos) (hne : pos.val ≠ dest.val) :
     Succeeds (state.swapWith pos.val) (fun next =>
       (Placement dest next ∧ ¬ ∃ h, next.isFinal ⟨dest, h⟩) ∧ next.withinReach dest.val) := by
   have hge := h.processed.bound_ge dest pos hbound le_rfl
-  apply (swap_success state pos hbelow (hr.swap_reachable pos hge)
-    (state.boundNotFinal dest pos hbound hne)).mono
+  apply (swap_success state pos hvalid (state.boundNotFinal dest pos hbound hne)).mono
   intro next hs
   have htop := hs.bound_top dest hbound
   have hlen := hs.size

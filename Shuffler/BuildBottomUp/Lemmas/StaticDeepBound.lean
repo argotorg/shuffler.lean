@@ -117,8 +117,7 @@ theorem loop_bound_mismatch_deep_noSuccess_of_reachable (cursor : Nat)
     simp only [except_ok_bind]
     by_cases hreach : retag.stack.isSwapReachable pos
     · rw [ite_eq_right (not_not_intro (show retag.isSwapReachable pos from hreach))]
-      have hbelow := Stack.belowOfNotTop retag.stack pos hnotTop
-      obtain ⟨next, heq, hs⟩ := swap_success retag pos hbelow hreach
+      obtain ⟨next, heq, hs⟩ := swap_success retag pos ⟨by dsimp +zetaDelta only; omega, hreach⟩
         (retag.boundNotFinal dest pos hd hnotcurrent)
       rw [heq, except_ok_bind]
       have hwidth : MAX_SWAP_DEPTH + 2 ≤ next.stack.length - cursor := by

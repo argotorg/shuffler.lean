@@ -121,17 +121,19 @@ lemma swap_stack_eq (stack : Stack) (pos : Fin stack.length) :
 abbrev Stack.topOffset (stack : Stack) (h : 0 < stack.length) : Fin stack.length :=
   ⟨stack.length - 1, by omega⟩
 
-lemma top_lt_length (stack : Stack) (pos : Fin stack.length) :
-    stack.length - 1 < stack.length := by
-  have := pos.isLt
-  omega
-
-lemma stack_push_len (stack : Stack) (slot : Value) :
-  stack.length + 1 = (stack ++ [slot]).length := by simp
-
 lemma stack_pop_len (stack : Stack) (h : 0 < stack.length) :
     stack.length = stack.dropLast.length + 1 := by
   simp; omega
+
+theorem swap_eq_of_equal (stack : Stack) (a b : Fin stack.length)
+    (heq : stack[a] = stack[b]) : stack.swap a b = stack := by
+  apply List.ext_getElem (by simp)
+  intro i hi hs
+  by_cases ha : i = a.val
+  · subst i; simpa [List.getElem_swap, a.isLt, b.isLt] using heq.symm
+  by_cases hb : i = b.val
+  · subst i; simpa [ha, a.isLt] using heq
+  simp [ha, hb]
 
 
 --- Matching ---------------------------------------------------------------------------------------
