@@ -41,36 +41,41 @@ def permute
   := do
     let mut perm := perm
 
-    -- Equal slots are interchangeable: among them, those already at one of their desired offsets stay, the
-    -- others take the remaining offsets. Otherwise equal slots would pass each other in cycles.
-    let positions := List.finRange initial.stack.length
-    -- Each group is in ascending position order. The groups can be processed in any order.
-    for slot in initial.stack.dedup do
-      let group := positions.filter (fun pos => initial.stack[pos] = slot)
-      -- the group is empty or contains only a single element (ie no second, equal slot exists)
-      if group.length < 2 then continue
-      -- the group's desired offsets
-      let desired := (group.map perm).mergeSort (· ≤ ·)
-      -- slots already standing on one of the group's desired offsets stay put
-      -- stayers = group ∩ desired => _permutation[pos] = pos
-      let stayers := group.filter (· ∈ desired)
-      for pos in stayers do
-        perm := perm.setValue pos pos
-      -- the others take the vacant offsets, both sides ascending, so nothing crosses
-      -- movers = group ∖ desired
-      let movers := group.filter (· ∉ desired)
-      -- vacant = desired ∖ group => _permutation[movers[i]] = vacant[i]
-      let vacant := desired.filter (· ∉ group)
-
-      -- desired is built with exactly one entry per group member, so |G| = |D|, i.e.,
-      -- |movers| = |G ∖ D| = |G| − |G ∩ D| and |vacant| = |D ∖ G| = |D| − |D ∩ G|
-      let ⟨hsz⟩ ← requires (movers.length = vacant.length) "movers and vacant must have the same size"
-      for i in List.finRange movers.length do
-        perm := perm.setValue movers[i] vacant[i]
+    perm := minimizePermutationSupport initial.stack perm 0
+    perm := minimizeCyclesWithoutTop initial.stack perm
 
     if hne : 0 < initial.stack.length then go initial perm hne
     else return ⟨none, initial⟩
   where
+    -- Equal slots are interchangeable, so two equal slots may exchange their destinations.
+    -- A slot already holding its target value stays; the slot bound for its offset takes over
+    -- its destination
+    minimizePermutationSupport (stack : Stack) (perm : Permutation stack) (position : ℕ) : Permutation stack :=
+      if h : position < stack.length then
+        let destination := perm ⟨position, h⟩
+        if hd : destination ≠ ⟨position, h⟩ ∧ stack[destination] = stack[position] then
+          minimizePermutationSupport stack (perm * Equiv.swap destination ⟨position, h⟩) position
+        else
+          minimizePermutationSupport stack perm (position + 1)
+      else
+        perm
+    termination_by stack.length - position + perm.support.card
+    decreasing_by
+      · have := Permutation.card_support_mul_swap_lt perm _ hd.1
+        omega
+      · omega
+
+    -- Join all cycles that share a value by exchanging the destinations of equal slots. Each join saves the swap
+    -- that enters a cycle without the top. The top takes part even when it stays in place.
+    minimizeCyclesWithoutTop (stack : Stack) (perm : Permutation stack) : Permutation stack := Id.run do
+      let mut perm := perm
+      for a in List.finRange stack.length do
+        if perm a ≠ a then
+          for b in List.finRange stack.length do
+            if a < b ∧ stack[a] = stack[b] ∧ (if perm b = b then b.val = stack.length - 1 else ¬ perm.SameCycle a b) then
+              perm := perm * Equiv.swap a b
+      return perm
+
     go (state : State source target spills) (perm : Permutation state.stack)
         (hne : state.stack.length > 0) :
         Except ShuffleErr (Result source target spills) :=
