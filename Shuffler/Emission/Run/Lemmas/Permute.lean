@@ -75,8 +75,10 @@ theorem permute_result_spec (state : State source target spills) (p : Permutatio
       result.state.pending_generations = state.pending_generations ∧
       result.state.boundValue = state.boundValue ∧
       ∀ b, result.blocked = some b → 0 < b.excess := by
-  obtain ⟨q, hq, hinv⟩ := normalize_goInv state p hagree
-  rw [permute_eq_normalize, hq, except_ok_bind]
+  have hinv := normalize_goInv state p hagree
+  dsimp only [permute]
+  rw [← Permute.normalize]
+  generalize normalize state.stack p = q at *
   by_cases hne : 0 < state.stack.length
   · rw [dite_eq_left hne]
     obtain ⟨result, hr⟩ := go_ok state q hne _ hinv

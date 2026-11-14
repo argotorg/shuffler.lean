@@ -415,19 +415,19 @@ theorem go_count (state : State source target spills) (p : Permutation state.sta
 -- Normalization establishes the invariant of `go` when the bindings agree with `perm`.
 theorem normalize_goInv (initial : State source target spills) (perm : Permutation initial.stack)
     (hagree : bindings_agree initial perm) :
-    ∃ q, normalize initial.stack perm = .ok q ∧
-      GoInv initial q (fun x => (apply_permutation initial.stack perm)[x]?) := by
-  obtain ⟨q, hq, ha, _, hc⟩ := normalize_assigns initial.stack perm
+    GoInv initial (normalize initial.stack perm) (fun x => (apply_permutation initial.stack perm)[x]?) := by
+  obtain ⟨ha, hc⟩ := normalize_assigns initial.stack perm
     (fun i => initial.stack[perm.symm i]) (by intro i; simp)
+  generalize normalize initial.stack perm = q at *
   have hassigns (i : Fin initial.stack.length) :
       (apply_permutation initial.stack perm)[(q i).val]? = some initial.stack[i] := by
     simpa [apply_permutation] using (ha i).symm
-  refine ⟨q, hq, ⟨hassigns, ?_, ?_⟩⟩
+  refine ⟨hassigns, ?_, ?_⟩
   · intro i d hd hlt
     rw [hassigns i]
     simpa [apply_permutation, hlt] using hagree i d hlt hd
-  · intro i _ he
+  · intro i hi he
     left
-    exact congrArg Fin.val (hc i (by simpa [apply_permutation] using he.symm))
+    exact congrArg Fin.val (hc i hi (by simpa [apply_permutation] using he.symm))
 
 end Shuffler.Permute

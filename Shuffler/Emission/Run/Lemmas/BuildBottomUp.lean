@@ -38,8 +38,9 @@ variable {source target : Stack} {spills : SpillSet}
     ⦃True⦄ Permute.permute state p
     ⦃fun result => result.state.planned_mapping = state.planned_mapping ∧ result.Positive;
       (fun err => ∀ b, err ≠ .Blocked b)⦄ := by
-  obtain ⟨q, hq, _⟩ := Permute.normalize_spec state.stack p
-  rw [Permute.permute_eq_normalize, hq, except_ok_bind]
+  dsimp only [Permute.permute]
+  rw [← Permute.normalize]
+  generalize Permute.normalize state.stack p = q
   by_cases hne : 0 < state.stack.length
   · rw [dite_eq_left hne]
     cases hr : Permute.permute.go state q hne with
