@@ -152,7 +152,7 @@ public:
 	{
 		std::vector<std::string> result;
 		for (auto const& [n, slot]: m_vars)
-			if (_spills.isSpilled(slot.value()))
+			if (_spills.isSpilled(slot))
 				result.push_back(std::to_string(n));
 		return result;
 	}
@@ -231,7 +231,7 @@ spill::SpillSet parseSpills(Slots& _slots, std::string const& _s)
 {
 	spill::SpillSet spills;
 	for (std::string const& var: words(_s))
-		spills.add(_slots.parse("v" + var).value());
+		spills.add(_slots.parse("v" + var));
 	return spills;
 }
 

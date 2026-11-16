@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 project(shuffler-fuzz C CXX)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Set by build.sh: the Lean toolchain, the C files of the Lean model and the object files of its imports
