@@ -43,8 +43,8 @@ theorem permute_blocks_unreachable
   generalize normalize initial.stack perm = q at *
   by_cases hne : 0 < initial.stack.length
   · rw [dite_eq_left hne]
-    obtain ⟨result, hrun⟩ := go_ok initial q hne _ hinv
-    have hs := go_spec initial q hne result hrun
+    obtain ⟨result, hrun⟩ := go_ok initial q hne rfl _ hinv
+    have hs := go_spec initial q hne rfl result hrun
     cases hb : result.blocked with
     | none =>
       exact (hnreachable ((values_reachable_congr q perm happly).mp
@@ -79,8 +79,8 @@ theorem permute_applies_permutation_reachable
   generalize normalize initial.stack perm = q at *
   by_cases hne : 0 < initial.stack.length
   · rw [dite_eq_left hne]
-    obtain ⟨result, hrun⟩ := go_ok initial q hne _ hinv
-    have hs := go_spec initial q hne result hrun
+    obtain ⟨result, hrun⟩ := go_ok initial q hne rfl _ hinv
+    have hs := go_spec initial q hne rfl result hrun
     have hb := hs.success_of_reachable (hreach.mpr hreachable)
     refine ⟨result.state, ?_, (hs.applies hb).trans happly⟩
     have he : result = ⟨none, result.state⟩ := by cases result; simp_all
@@ -112,7 +112,7 @@ theorem permute_applies_permutation_of_ok
   generalize normalize initial.stack perm = q at *
   by_cases hne : 0 < initial.stack.length
   · rw [dite_eq_left hne] at hresult
-    exact ((go_spec initial q hne _ hresult).applies rfl).trans happly
+    exact ((go_spec initial q hne rfl _ hresult).applies rfl).trans happly
   · rw [dite_eq_right hne] at hresult
     cases hresult
     have hz : initial.stack = [] := by simpa using Nat.eq_zero_of_not_pos hne
@@ -132,7 +132,7 @@ theorem permute_swapCount
     (result.trace.swapCount - initial.trace.swapCount) = Permutation.swapCount perm (initial.stack.topOffset hne) := by
   dsimp only [permute] at hresult
   rw [← Permute.normalize, normalize_of_nodup _ _ hnodup, dite_eq_left hne] at hresult
-  have hc := (go_count initial perm hne hresult).2 hnodup
+  have hc := (go_count initial perm hne rfl (initial.stack.topOffset hne) rfl hresult).2 hnodup
   omega
 
 -- Given a successful return in `hresult`, bound the number of emitted swaps by
@@ -199,7 +199,7 @@ theorem permute_swapCount_le_three_mul_arbitrarySwapCount
   generalize normalize initial.stack perm = q at *
   by_cases hne : 0 < initial.stack.length
   · rw [dite_eq_left hne] at hresult
-    have hc := (go_count initial q hne hresult).1
+    have hc := (go_count initial q hne rfl (initial.stack.topOffset hne) rfl hresult).1
     have hs : (q.support.erase (initial.stack.topOffset hne)).card ≤ perm.support.card :=
       Finset.card_le_card fun i hi => (hsub i (Finset.mem_of_mem_erase hi)).resolve_right
         fun ht => Finset.ne_of_mem_erase hi (Fin.ext (by dsimp only; omega))

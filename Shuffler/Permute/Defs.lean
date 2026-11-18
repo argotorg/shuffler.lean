@@ -78,35 +78,30 @@ def permute
               break
       return perm
 
-    go (state : State source target spills) (perm : Permutation state.stack.length)
-        (hne : state.stack.length > 0) :
-        Except ShuffleErr (Result source target spills) :=
-      let top := state.stack.topOffset hne
-      have htop : top.val = state.stack.length - 1 := rfl
+    go {n : ℕ} (state : State source target spills) (perm : Permutation n)
+        (hne : n > 0) :
+        Except ShuffleErr (Result source target spills) := do
+      let top : Fin n := ⟨n - 1, by omega⟩
       -- if the top is out of place, we swap it into position
       if ht : perm top ≠ top
       then
         let perm' := perm * Equiv.swap top (perm top)
         -- an equal slot standing at the desired offset serves the top's destination just as well
-        if state.stack[perm top] = state.stack[top] then
-          go { state with mapping := state.mapping.swapDestinations (perm top) top } perm' hne
-        else if hreach : ¬ state.isSwapReachable (perm top) then
-          state.blockSwapUnreachable (perm top)
-        else if state.isFinal (perm top) then
-          .error (.assertion "swapping a final slot out of place")
+        if (← slotAt state.stack (perm top)) = (← slotAt state.stack top) then
+          go (← state.swapDestinations (perm top) top) perm' hne
         else
-          -- the top is out of place, so `perm top` is strictly below it
-          have hvalid : state.stack.isValidSwapTarget (perm top) :=
-            ⟨by have := (perm top).isLt; have := Fin.val_ne_of_ne ht; dsimp only; omega, not_not.mp hreach⟩
-          go (state.swap (perm top) hvalid) (by simpa [Permutation] using perm') (by simpa using hne)
+          let offset ← index state.stack.length (perm top)
+          if ¬ state.isSwapReachable offset then
+            return ← state.blockSwapUnreachable offset
+          go (← state.swapWith offset) perm' hne
 
       -- search for the shallowest out of place element
       else
         -- we make pos a subtype that carries a proof that pos is out of place.
-        -- we need this later to show that swapping it is valid
-        let pos : Option {i : Fin state.stack.length // perm i ≠ i} :=
-          (List.finRange state.stack.length).foldl
-            (λ p (i : Fin state.stack.length) =>
+        -- we need this later to show that the measure decreases
+        let pos : Option {i : Fin n // perm i ≠ i} :=
+          (List.finRange n).foldl
+            (λ p (i : Fin n) =>
               if h : perm i ≠ i then .some ⟨i, h⟩ else p)
             .none
         match pos with
@@ -116,32 +111,23 @@ def permute
           let perm' := perm * Equiv.swap top pos
           -- a misplaced slot equal to the top takes over the top's destination, making the top the misplaced
           -- one; it then travels to its destination directly instead of dislodging an in-place slot
-          if state.stack[pos] = state.stack[top] then
-            go { state with mapping := state.mapping.swapDestinations pos top } perm' hne
-          else if hreach : ¬ state.isSwapReachable pos then
-            state.blockSwapUnreachable pos
-          else if state.isFinal pos then
-            .error (.assertion "swapping a final slot out of place")
+          if (← slotAt state.stack pos) = (← slotAt state.stack top) then
+            go (← state.swapDestinations pos top) perm' hne
           else
-            -- `top` is a fixed point, so the out-of-place `pos` is strictly below it
-            have hpos_ne : pos ≠ top := fun h => hpos (by rw [h]; exact not_not.mp ht)
-            have hvalid : state.stack.isValidSwapTarget pos :=
-              ⟨by have := pos.isLt; have := Fin.val_ne_of_ne hpos_ne; dsimp only; omega, not_not.mp hreach⟩
-            go (state.swap pos hvalid) (by simpa [Permutation] using perm') (by simpa using hne)
+            let offset ← index state.stack.length pos
+            if ¬ state.isSwapReachable offset then
+              return ← state.blockSwapUnreachable offset
+            go (← state.swapWith offset) perm' hne
 
         -- we're done
         | none => .ok ⟨none, state⟩
-    termination_by Permutation.measure perm (state.stack.topOffset hne)
+    termination_by Permutation.measure perm ⟨n - 1, by omega⟩
     decreasing_by
       · exact Prod.Lex.left _ _ (Permutation.measure_place_top_lt perm _ ht)
-      · simp only [eq_mpr_eq_cast]
-        rw [Permutation.measure_cast (State.swap_length _ _ hvalid).symm _ hne]
-        exact Prod.Lex.left _ _ (Permutation.measure_place_top_lt perm _ ht)
+      · exact Prod.Lex.left _ _ (Permutation.measure_place_top_lt perm _ ht)
       · obtain ⟨heq, hlt⟩ := Permutation.measure_swap_pos_lt perm _ pos (not_not.mp ht) hpos
         exact Prod.Lex.right' _ heq.le hlt
       · obtain ⟨heq, hlt⟩ := Permutation.measure_swap_pos_lt perm _ pos (not_not.mp ht) hpos
-        simp only [eq_mpr_eq_cast]
-        rw [Permutation.measure_cast (State.swap_length _ _ hvalid).symm _ hne]
         exact Prod.Lex.right' _ heq.le hlt
 
 -- applies the permutation perm to the source stack via the inverse equivalence
