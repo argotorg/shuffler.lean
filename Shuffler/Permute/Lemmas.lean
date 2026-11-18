@@ -92,22 +92,20 @@ theorem apply_permutation'_one (current : List α) {n : ℕ} (hlen : current.len
     apply_permutation' current (1 : Equiv.Perm (Fin n)) hlen = current := by
   apply List.ext_getElem <;> simp [apply_permutation', Equiv.Perm.one_def, hlen]
 
--- Swapping two entries of the list and composing the permutation with the same swap
--- leaves the applied result unchanged.
-theorem apply_permutation'_swap (current : List α) {n : ℕ} (perm : Equiv.Perm (Fin n))
-    (hlen : current.length = n) (a b : Fin n) :
-    apply_permutation' (current.swap a.val b.val) (perm * Equiv.swap a b) (by simp [hlen])
-      = apply_permutation' current perm hlen := by
+-- Exchanging two entries of the list together with the same two entries of the permutation leaves the applied
+-- result unchanged.
+theorem apply_permutation'_exchange (current next : List α) (perm : Equiv.Perm (Fin current.length))
+    (a b : Fin current.length) (hnext : next.length = current.length)
+    (h : ∀ i : Fin current.length, next[i.val]? = some current[Equiv.swap a b i]) :
+    apply_permutation' next (perm * Equiv.swap a b) hnext = apply_permutation' current perm rfl := by
   unfold apply_permutation'
   rw [List.ofFn_inj]
   funext k
   have hsymm : (perm * Equiv.swap a b).symm k = Equiv.swap a b (perm.symm k) := rfl
+  have hk := h (Equiv.swap a b (perm.symm k))
+  simp only [Equiv.swap_apply_self] at hk
   simp only [hsymm]
-  by_cases ha : perm.symm k = a
-  · simp [ha, hlen]
-  by_cases hb : perm.symm k = b
-  · simp [hb, hlen]
-  simp [Equiv.swap_apply_of_ne_of_ne ha hb, Fin.val_ne_of_ne ha, Fin.val_ne_of_ne hb]
+  exact Option.some.inj ((List.getElem?_eq_getElem _).symm.trans hk)
 
 -- If the linear search for an out-of-place element comes back empty, every element
 -- of the searched list is a fixed point (and the accumulator was empty to begin with).

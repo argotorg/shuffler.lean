@@ -287,17 +287,4 @@ theorem swapDestinations_result (state : State source target spills)
   simp only [State.swapDestinations, index_eq]
   rfl
 
-theorem swapWith_result (state : State source target spills) (pos : Fin state.stack.length)
-    (hfinal : ¬ state.isFinal pos) (hvalid : state.stack.isValidSwapTarget pos) :
-    state.swapWith pos.val = .ok (state.swap pos hvalid) := by
-  simp only [State.swapWith, index_eq, except_ok_bind, requires_of_true _ hfinal, requires_of_true _ hvalid]
-  rfl
-
-theorem swapWith_final (state : State source target spills) (pos : Fin state.stack.length)
-    (hfinal : state.isFinal pos) : ∃ reason, state.swapWith pos.val = .error (.assertion reason) :=
-  ⟨_, by
-    simp only [State.swapWith, index_eq, except_ok_bind]
-    simp [requires, hfinal, throw, throwThe, MonadExceptOf.throw]
-    rfl⟩
-
 end Shuffler.Emission
