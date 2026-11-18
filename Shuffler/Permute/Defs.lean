@@ -78,6 +78,19 @@ def permute
               break
       return perm
 
+    -- Exchanges the slot at `pos` with the top, the destinations traveling along. The caller exchanges the
+    -- corresponding destinations of the permutation.
+    -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:691-702 (at cc283c9).
+    exchangeWithTop (state : State source target spills) (pos : ℕ) :
+        Except ShuffleErr (Result source target spills) := do
+      let top := state.stack.length - 1
+      if (← slotAt state.stack pos) = (← slotAt state.stack top) then
+        return ⟨none, ← state.swapDestinations pos top⟩
+      let offset ← index state.stack.length pos
+      if ¬ state.isSwapReachable offset then
+        return ← state.blockSwapUnreachable offset
+      return ⟨none, ← state.swapWith offset⟩
+
     go {n : ℕ} (state : State source target spills) (perm : Permutation n)
         (hne : n > 0) :
         Except ShuffleErr (Result source target spills) := do
@@ -87,13 +100,9 @@ def permute
       then
         let perm' := perm * Equiv.swap top (perm top)
         -- an equal slot standing at the desired offset serves the top's destination just as well
-        if (← slotAt state.stack (perm top)) = (← slotAt state.stack top) then
-          go (← state.swapDestinations (perm top) top) perm' hne
-        else
-          let offset ← index state.stack.length (perm top)
-          if ¬ state.isSwapReachable offset then
-            return ← state.blockSwapUnreachable offset
-          go (← state.swapWith offset) perm' hne
+        let result ← exchangeWithTop state (perm top)
+        if result.blocked.isSome then return result
+        go result.state perm' hne
 
       -- search for the shallowest out of place element
       else
@@ -111,22 +120,15 @@ def permute
           let perm' := perm * Equiv.swap top pos
           -- a misplaced slot equal to the top takes over the top's destination, making the top the misplaced
           -- one; it then travels to its destination directly instead of dislodging an in-place slot
-          if (← slotAt state.stack pos) = (← slotAt state.stack top) then
-            go (← state.swapDestinations pos top) perm' hne
-          else
-            let offset ← index state.stack.length pos
-            if ¬ state.isSwapReachable offset then
-              return ← state.blockSwapUnreachable offset
-            go (← state.swapWith offset) perm' hne
+          let result ← exchangeWithTop state pos
+          if result.blocked.isSome then return result
+          go result.state perm' hne
 
         -- we're done
         | none => .ok ⟨none, state⟩
     termination_by Permutation.measure perm ⟨n - 1, by omega⟩
     decreasing_by
       · exact Prod.Lex.left _ _ (Permutation.measure_place_top_lt perm _ ht)
-      · exact Prod.Lex.left _ _ (Permutation.measure_place_top_lt perm _ ht)
-      · obtain ⟨heq, hlt⟩ := Permutation.measure_swap_pos_lt perm _ pos (not_not.mp ht) hpos
-        exact Prod.Lex.right' _ heq.le hlt
       · obtain ⟨heq, hlt⟩ := Permutation.measure_swap_pos_lt perm _ pos (not_not.mp ht) hpos
         exact Prod.Lex.right' _ heq.le hlt
 

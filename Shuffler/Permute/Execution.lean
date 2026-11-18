@@ -88,6 +88,22 @@ theorem RunSpec.swap (state : State source target spills) (p : Permutation state
       omega
     · exact hm
 
+-- Exchanging `pos` with the top: an equal slot exchanges its destination with the top's, an unreachable slot
+-- blocks, and any other slot is swapped with the top.
+theorem exchangeWithTop_eq (state : State source target spills) (top pos : Fin state.stack.length)
+    (htop : top.val = state.stack.length - 1) :
+    permute.exchangeWithTop state pos =
+      if state.stack[pos] = state.stack[top] then
+        .ok ⟨none, { state with mapping := state.mapping.swapDestinations pos top }⟩
+      else if ¬ state.isSwapReachable pos then state.blockSwapUnreachable pos
+      else state.swapWith pos >>= fun next => .ok ⟨none, next⟩ := by
+  simp only [permute.exchangeWithTop, ← htop, slotAt_index, except_ok_bind]
+  by_cases he : state.stack[pos] = state.stack[top]
+  · simp only [he, ↓reduceIte, swapDestinations_result, except_ok_bind]
+    rfl
+  · simp only [he, ↓reduceIte, index_eq, except_ok_bind]
+    rfl
+
 theorem go_spec (state : State source target spills) {n : ℕ} (p : Permutation n) (hne : n > 0)
     (hlen : state.stack.length = n) :
     ∀ result, permute.go state p hne = .ok result → RunSpec state p hlen result := by
@@ -99,25 +115,27 @@ theorem go_spec (state : State source target spills) {n : ℕ} (p : Permutation 
     intro state p top ht perm' ih hlen result hr
     subst hlen
     have htop : top.val = state.stack.length - 1 := rfl
-    simp only [slotAt_index, except_ok_bind] at hr
+    rw [exchangeWithTop_eq state top (p top) htop] at hr
     by_cases he : state.stack[p top] = state.stack[top]
-    · simp only [he, ↓reduceIte, swapDestinations_result, except_ok_bind] at hr
+    · simp only [he, ↓reduceIte, except_ok_bind, Option.isSome_none, Bool.false_eq_true] at hr
       exact RunSpec.equal state p top (p top) (fun h => ht (p.injective h)) htop he.symm
         { state with mapping := state.mapping.swapDestinations (p top) top } rfl result
-        (ih { state with mapping := state.mapping.swapDestinations (p top) top } rfl result hr)
-    simp only [he, ↓reduceIte, index_eq, except_ok_bind] at hr
+        (ih ⟨none, { state with mapping := state.mapping.swapDestinations (p top) top }⟩ rfl result hr)
+    simp only [he, ↓reduceIte] at hr
     by_cases hreach : state.isSwapReachable (p top)
     · have hvalid : state.stack.isValidSwapTarget (p top) :=
         ⟨by have := (p top).isLt; have := Fin.val_ne_of_ne ht; dsimp only; omega, hreach⟩
       simp only [hreach, not_true_eq_false, ↓reduceIte] at hr
       by_cases hfinal : state.isFinal (p top)
       · obtain ⟨_, hf⟩ := swapWith_final state _ hfinal
-        rw [hf, except_error_bind] at hr
+        rw [hf, except_error_bind, except_error_bind] at hr
         cases hr
-      rw [swapWith_result state _ hfinal hvalid, except_ok_bind] at hr
+      rw [swapWith_result state _ hfinal hvalid, except_ok_bind, except_ok_bind] at hr
+      simp only [Option.isSome_none, Bool.false_eq_true, ↓reduceIte] at hr
       exact RunSpec.swap state p top (p top) (fun h => ht (p.injective h)) htop hreach _
-        (by rw [htop, List.swap_comm]) result (ih _ (by simp) result hr)
-    · simp only [hreach, not_false_eq_true, ↓reduceIte, blockSwapUnreachable_eq state (p top) hreach] at hr
+        (by rw [htop, List.swap_comm]) result (ih ⟨none, state.swap (p top) hvalid⟩ (by simp) result hr)
+    · simp only [hreach, not_false_eq_true, ↓reduceIte, blockSwapUnreachable_eq state (p top) hreach,
+        except_ok_bind, Option.isSome_some] at hr
       cases hr
       refine ⟨rfl, ?_, ?_, ?_⟩
       · simp
@@ -130,13 +148,13 @@ theorem go_spec (state : State source target spills) {n : ℕ} (p : Permutation 
     intro state p top ht search pos hpos hsearch perm' ih hlen result hr
     subst hlen
     have htop : top.val = state.stack.length - 1 := rfl
-    simp only [slotAt_index, except_ok_bind] at hr
+    rw [exchangeWithTop_eq state top pos htop] at hr
     by_cases he : state.stack[pos] = state.stack[top]
-    · simp only [he, ↓reduceIte, swapDestinations_result, except_ok_bind] at hr
+    · simp only [he, ↓reduceIte, except_ok_bind, Option.isSome_none, Bool.false_eq_true] at hr
       exact RunSpec.equal state p top pos hpos htop he.symm
         { state with mapping := state.mapping.swapDestinations pos top } rfl result
-        (ih { state with mapping := state.mapping.swapDestinations pos top } rfl result hr)
-    simp only [he, ↓reduceIte, index_eq, except_ok_bind] at hr
+        (ih ⟨none, { state with mapping := state.mapping.swapDestinations pos top }⟩ rfl result hr)
+    simp only [he, ↓reduceIte] at hr
     by_cases hreach : state.isSwapReachable pos
     · have hpos_ne : pos ≠ top := fun h => hpos (by rw [h]; exact not_not.mp ht)
       have hvalid : state.stack.isValidSwapTarget pos :=
@@ -144,12 +162,14 @@ theorem go_spec (state : State source target spills) {n : ℕ} (p : Permutation 
       simp only [hreach, not_true_eq_false, ↓reduceIte] at hr
       by_cases hfinal : state.isFinal pos
       · obtain ⟨_, hf⟩ := swapWith_final state _ hfinal
-        rw [hf, except_error_bind] at hr
+        rw [hf, except_error_bind, except_error_bind] at hr
         cases hr
-      rw [swapWith_result state _ hfinal hvalid, except_ok_bind] at hr
+      rw [swapWith_result state _ hfinal hvalid, except_ok_bind, except_ok_bind] at hr
+      simp only [Option.isSome_none, Bool.false_eq_true, ↓reduceIte] at hr
       exact RunSpec.swap state p top pos hpos htop hreach _
-        (by rw [htop, List.swap_comm]) result (ih _ (by simp) result hr)
-    · simp only [hreach, not_false_eq_true, ↓reduceIte, blockSwapUnreachable_eq state pos hreach] at hr
+        (by rw [htop, List.swap_comm]) result (ih ⟨none, state.swap pos hvalid⟩ (by simp) result hr)
+    · simp only [hreach, not_false_eq_true, ↓reduceIte, blockSwapUnreachable_eq state pos hreach,
+        except_ok_bind, Option.isSome_some] at hr
       cases hr
       refine ⟨rfl, ?_, ?_, ?_⟩
       · simp
@@ -262,10 +282,10 @@ theorem go_ok (state : State source target spills) {n : ℕ} (p : Permutation n)
     intro state p top ht perm' ih hlen h
     subst hlen
     have htop : top.val = state.stack.length - 1 := rfl
-    simp only [slotAt_index, except_ok_bind]
+    rw [exchangeWithTop_eq state top (p top) htop]
     by_cases he : state.stack[p top] = state.stack[top]
-    · simp only [he, ↓reduceIte, swapDestinations_result, except_ok_bind]
-      exact ih { state with mapping := state.mapping.swapDestinations (p top) top } rfl
+    · simp only [he, ↓reduceIte, except_ok_bind, Option.isSome_none, Bool.false_eq_true]
+      exact ih ⟨none, { state with mapping := state.mapping.swapDestinations (p top) top }⟩ rfl
         (h.step top (p top) (by omega) (Or.inl rfl)
         { state with mapping := state.mapping.swapDestinations (p top) top } rfl
         (fun i j hij => by
@@ -274,13 +294,15 @@ theorem go_ok (state : State source target spills) {n : ℕ} (p : Permutation n)
         (fun i j hij => by
           obtain rfl : i = j := Fin.ext hij
           simp [Equiv.swap_comm]))
-    simp only [he, ↓reduceIte, index_eq, except_ok_bind]
+    simp only [he, ↓reduceIte]
     by_cases hreach : state.isSwapReachable (p top)
     · have hvalid : state.stack.isValidSwapTarget (p top) :=
         ⟨by have := (p top).isLt; have := Fin.val_ne_of_ne ht; dsimp only; omega, hreach⟩
       simp only [hreach, not_true_eq_false, ↓reduceIte,
-        swapWith_result state _ (h.not_final_top top he) hvalid, except_ok_bind]
-      exact ih _ (by simp) (h.step top (p top) (by omega) (Or.inl rfl) _ (by simp)
+        swapWith_result state _ (h.not_final_top top he) hvalid, except_ok_bind, Option.isSome_none,
+        Bool.false_eq_true]
+      exact ih ⟨none, state.swap (p top) hvalid⟩ (by simp)
+        (h.step top (p top) (by omega) (Or.inl rfl) (state.swap (p top) hvalid) (by simp)
         (fun i j hij => by
           simp only [Equiv.swap_comm top (p top)]
           exact getElem_list_swap state.stack (p top) top i _ j hij)
@@ -288,16 +310,17 @@ theorem go_ok (state : State source target spills) {n : ℕ} (p : Permutation n)
           refine (Mapping.cast_apply _ List.length_swap.symm i).trans ?_
           simp only [Mapping.swapDestinations_apply, Equiv.swap_comm (p top)]
           exact congrArg (fun k => state.mapping (Equiv.swap top (p top) k)) (Fin.ext hij)))
-    · simp only [hreach, not_false_eq_true, ↓reduceIte]
-      exact ⟨_, blockSwapUnreachable_eq state (p top) hreach⟩
+    · simp only [hreach, not_false_eq_true, ↓reduceIte, blockSwapUnreachable_eq state (p top) hreach,
+        except_ok_bind, Option.isSome_some]
+      exact ⟨_, rfl⟩
   case pos =>
     intro state p top ht search pos hpos hsearch perm' ih hlen h
     subst hlen
     have htop : top.val = state.stack.length - 1 := rfl
-    simp only [slotAt_index, except_ok_bind]
+    rw [exchangeWithTop_eq state top pos htop]
     by_cases he : state.stack[pos] = state.stack[top]
-    · simp only [he, ↓reduceIte, swapDestinations_result, except_ok_bind]
-      exact ih { state with mapping := state.mapping.swapDestinations pos top } rfl
+    · simp only [he, ↓reduceIte, except_ok_bind, Option.isSome_none, Bool.false_eq_true]
+      exact ih ⟨none, { state with mapping := state.mapping.swapDestinations pos top }⟩ rfl
         (h.step top pos (by omega) (Or.inr (not_not.mp ht))
         { state with mapping := state.mapping.swapDestinations pos top } rfl
         (fun i j hij => by
@@ -306,15 +329,16 @@ theorem go_ok (state : State source target spills) {n : ℕ} (p : Permutation n)
         (fun i j hij => by
           obtain rfl : i = j := Fin.ext hij
           simp [Equiv.swap_comm]))
-    simp only [he, ↓reduceIte, index_eq, except_ok_bind]
+    simp only [he, ↓reduceIte]
     by_cases hreach : state.isSwapReachable pos
     · have hpos_ne : pos ≠ top := fun h => hpos (by rw [h]; exact not_not.mp ht)
       have hvalid : state.stack.isValidSwapTarget pos :=
         ⟨by have := pos.isLt; have := Fin.val_ne_of_ne hpos_ne; dsimp only; omega, hreach⟩
       simp only [hreach, not_true_eq_false, ↓reduceIte,
         swapWith_result state _ (h.not_final_pos top pos (by omega) (not_not.mp ht) hpos) hvalid,
-        except_ok_bind]
-      exact ih _ (by simp) (h.step top pos (by omega) (Or.inr (not_not.mp ht)) _ (by simp)
+        except_ok_bind, Option.isSome_none, Bool.false_eq_true]
+      exact ih ⟨none, state.swap pos hvalid⟩ (by simp)
+        (h.step top pos (by omega) (Or.inr (not_not.mp ht)) (state.swap pos hvalid) (by simp)
         (fun i j hij => by
           simp only [Equiv.swap_comm top pos]
           exact getElem_list_swap state.stack pos top i _ j hij)
@@ -322,8 +346,9 @@ theorem go_ok (state : State source target spills) {n : ℕ} (p : Permutation n)
           refine (Mapping.cast_apply _ List.length_swap.symm i).trans ?_
           simp only [Mapping.swapDestinations_apply, Equiv.swap_comm pos]
           exact congrArg (fun k => state.mapping (Equiv.swap top pos k)) (Fin.ext hij)))
-    · simp only [hreach, not_false_eq_true, ↓reduceIte]
-      exact ⟨_, blockSwapUnreachable_eq state pos hreach⟩
+    · simp only [hreach, not_false_eq_true, ↓reduceIte, blockSwapUnreachable_eq state pos hreach,
+        except_ok_bind, Option.isSome_some]
+      exact ⟨_, rfl⟩
   case done =>
     intro state _ _ _ _ _ _ _
     exact ⟨_, rfl⟩
@@ -372,27 +397,29 @@ theorem go_count (state : State source target spills) {n : ℕ} (p : Permutation
     have ht' : (⟨n - 1, by omega⟩ : Fin n) = top := rfl
     simp only [ht'] at ih ⊢
     subst hlen
-    simp only [slotAt_index, except_ok_bind] at hr
+    rw [exchangeWithTop_eq state top (p top) rfl] at hr
     have hs : Permutation.swapCount perm' top + 1 = Permutation.swapCount p top :=
       Permutation.swapCount_place_top p top ht
     by_cases he : state.stack[p top] = state.stack[top]
-    · simp only [he, ↓reduceIte, swapDestinations_result, except_ok_bind] at hr
+    · simp only [he, ↓reduceIte, except_ok_bind, Option.isSome_none, Bool.false_eq_true] at hr
       have hle : result.trace.swapCount ≤ state.trace.swapCount + Permutation.swapCount perm' top :=
-        (ih { state with mapping := state.mapping.swapDestinations (p top) top } rfl hr).1
+        (ih ⟨none, { state with mapping := state.mapping.swapDestinations (p top) top }⟩ rfl hr).1
       refine ⟨by omega, ?_⟩
       intro hn
       exact (ht (Fin.ext (hn.getElem_inj_iff.mp he))).elim
-    simp only [he, ↓reduceIte, index_eq, except_ok_bind] at hr
+    simp only [he, ↓reduceIte] at hr
     by_cases hreach : state.isSwapReachable (p top)
     · have hvalid : state.stack.isValidSwapTarget (p top) :=
         ⟨by have := (p top).isLt; have := Fin.val_ne_of_ne ht; dsimp only; omega, hreach⟩
       simp only [hreach, not_true_eq_false, ↓reduceIte] at hr
       by_cases hfinal : state.isFinal (p top)
       · obtain ⟨_, hf⟩ := swapWith_final state _ hfinal
-        rw [hf, except_error_bind] at hr
+        rw [hf, except_error_bind, except_error_bind] at hr
         cases hr
-      rw [swapWith_result state _ hfinal hvalid, except_ok_bind] at hr
-      obtain ⟨hle, heq⟩ := ih _ (by simp) hr
+      rw [swapWith_result state _ hfinal hvalid, except_ok_bind, except_ok_bind] at hr
+      simp only [Option.isSome_none, Bool.false_eq_true, ↓reduceIte] at hr
+      obtain ⟨hle, heq⟩ := ih ⟨none, state.swap (p top) hvalid⟩ (by simp) hr
+      dsimp only at hle heq
       have hc : (state.swap (p top) hvalid).trace.swapCount = state.trace.swapCount + 1 :=
         Trace.swapCount_cast _ _
       rw [hc] at hle heq
@@ -400,25 +427,26 @@ theorem go_count (state : State source target spills) {n : ℕ} (p : Permutation
       intro hn
       have heq := heq ((List.swap_perm _ _ _).nodup_iff.mpr hn)
       omega
-    · simp only [hreach, not_false_eq_true, ↓reduceIte, blockSwapUnreachable_eq state (p top) hreach] at hr
+    · simp only [hreach, not_false_eq_true, ↓reduceIte, blockSwapUnreachable_eq state (p top) hreach,
+        except_ok_bind, Option.isSome_some] at hr
       cases hr
   case pos =>
     intro state p top ht search pos hpos hsearch perm' ih hlen result hr
     have ht' : (⟨n - 1, by omega⟩ : Fin n) = top := rfl
     simp only [ht'] at ih ⊢
     subst hlen
-    simp only [slotAt_index, except_ok_bind] at hr
+    rw [exchangeWithTop_eq state top pos rfl] at hr
     have hs : Permutation.swapCount perm' top + 1 = Permutation.swapCount p top :=
       Permutation.swapCount_swap_pos p top pos (not_not.mp ht) hpos
     by_cases he : state.stack[pos] = state.stack[top]
-    · simp only [he, ↓reduceIte, swapDestinations_result, except_ok_bind] at hr
+    · simp only [he, ↓reduceIte, except_ok_bind, Option.isSome_none, Bool.false_eq_true] at hr
       have hle : result.trace.swapCount ≤ state.trace.swapCount + Permutation.swapCount perm' top :=
-        (ih { state with mapping := state.mapping.swapDestinations pos top } rfl hr).1
+        (ih ⟨none, { state with mapping := state.mapping.swapDestinations pos top }⟩ rfl hr).1
       refine ⟨by omega, ?_⟩
       intro hn
       have hp : pos = top := Fin.ext (hn.getElem_inj_iff.mp he)
       exact hpos (by simpa [hp] using not_not.mp ht) |>.elim
-    simp only [he, ↓reduceIte, index_eq, except_ok_bind] at hr
+    simp only [he, ↓reduceIte] at hr
     by_cases hreach : state.isSwapReachable pos
     · have hpos_ne : pos ≠ top := fun h => hpos (by rw [h]; exact not_not.mp ht)
       have hvalid : state.stack.isValidSwapTarget pos :=
@@ -426,10 +454,12 @@ theorem go_count (state : State source target spills) {n : ℕ} (p : Permutation
       simp only [hreach, not_true_eq_false, ↓reduceIte] at hr
       by_cases hfinal : state.isFinal pos
       · obtain ⟨_, hf⟩ := swapWith_final state _ hfinal
-        rw [hf, except_error_bind] at hr
+        rw [hf, except_error_bind, except_error_bind] at hr
         cases hr
-      rw [swapWith_result state _ hfinal hvalid, except_ok_bind] at hr
-      obtain ⟨hle, heq⟩ := ih _ (by simp) hr
+      rw [swapWith_result state _ hfinal hvalid, except_ok_bind, except_ok_bind] at hr
+      simp only [Option.isSome_none, Bool.false_eq_true, ↓reduceIte] at hr
+      obtain ⟨hle, heq⟩ := ih ⟨none, state.swap pos hvalid⟩ (by simp) hr
+      dsimp only at hle heq
       have hc : (state.swap pos hvalid).trace.swapCount = state.trace.swapCount + 1 :=
         Trace.swapCount_cast _ _
       rw [hc] at hle heq
@@ -437,7 +467,8 @@ theorem go_count (state : State source target spills) {n : ℕ} (p : Permutation
       intro hn
       have heq := heq ((List.swap_perm _ _ _).nodup_iff.mpr hn)
       omega
-    · simp only [hreach, not_false_eq_true, ↓reduceIte, blockSwapUnreachable_eq state pos hreach] at hr
+    · simp only [hreach, not_false_eq_true, ↓reduceIte, blockSwapUnreachable_eq state pos hreach,
+        except_ok_bind, Option.isSome_some] at hr
       cases hr
   case done =>
     intro state p _ _ search hsearch hlen result hr
