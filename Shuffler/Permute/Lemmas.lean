@@ -83,6 +83,13 @@ lemma measure_swap_pos_lt (perm : Equiv.Perm ι)
   have : perm pos ≠ top := fun h => hpos (by rw [perm.injective (h.trans ht.symm)]; exact ht)
   simp [measure, hset, ht, this]
 
+-- Exchanging the destinations of `pos` and `perm pos` puts `perm pos` in place.
+lemma card_support_mul_swap_lt (perm : Equiv.Perm ι) (pos : ι) (hpos : perm pos ≠ pos) :
+    (perm * Equiv.swap (perm pos) pos).support.card < perm.support.card := by
+  have h := Equiv.Perm.card_support_swap_mul (f := perm⁻¹) (x := perm pos) (by simpa using hpos.symm)
+  rwa [show perm⁻¹ (perm pos) = pos from perm.symm_apply_apply pos, ← Equiv.swap_inv, ← mul_inv_rev,
+    Equiv.Perm.support_inv, Equiv.Perm.support_inv] at h
+
 end Permutation
 
 variable {α : Type*}

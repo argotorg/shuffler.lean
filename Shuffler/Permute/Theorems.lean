@@ -36,10 +36,11 @@ theorem permute_blocks_unreachable
         ∧ excess > 0
         ∧ i ∈ perm.support
         ∧ (initial.depthOf i).val = excess + MAX_SWAP_DEPTH := by
-  obtain ⟨q, hq, happly, hsub, _⟩ := normalize_spec initial.stack perm
-  obtain ⟨q', hq', hinv⟩ := normalize_goInv initial perm hagree
-  cases hq.symm.trans hq'
-  rw [permute_eq_normalize, hq, except_ok_bind]
+  obtain ⟨happly, hsub, _⟩ := normalize_spec initial.stack perm
+  have hinv := normalize_goInv initial perm hagree
+  dsimp only [permute]
+  rw [← Permute.normalize]
+  generalize normalize initial.stack perm = q at *
   by_cases hne : 0 < initial.stack.length
   · rw [dite_eq_left hne]
     obtain ⟨result, hrun⟩ := go_ok initial q hne _ hinv
@@ -50,7 +51,8 @@ theorem permute_blocks_unreachable
         (hs.values_of_success hb))).elim
     | some blocked =>
       obtain ⟨i, hi, hp, him, hd⟩ := hs.blocked blocked hb
-      refine ⟨i, blocked.excess, result.state, ?_, hp, hsub him, hd⟩
+      refine ⟨i, blocked.excess, result.state, ?_, hp,
+        (hsub i him).resolve_right (fun ht => by dsimp only at hd; omega), hd⟩
       have he : result = ⟨some ⟨i.val, blocked.excess⟩, result.state⟩ := by
         cases result
         cases blocked
@@ -70,10 +72,11 @@ theorem permute_applies_permutation_reachable
     (hagree : bindings_agree initial perm) (hreachable : values_reachable perm) :
     ∃ result : State source target spills,
       permute initial perm = .ok ⟨none, result⟩ ∧ result.stack = apply_permutation initial.stack perm := by
-  obtain ⟨q, hq, happly, _, hreach⟩ := normalize_spec initial.stack perm
-  obtain ⟨q', hq', hinv⟩ := normalize_goInv initial perm hagree
-  cases hq.symm.trans hq'
-  rw [permute_eq_normalize, hq, except_ok_bind]
+  obtain ⟨happly, _, hreach⟩ := normalize_spec initial.stack perm
+  have hinv := normalize_goInv initial perm hagree
+  dsimp only [permute]
+  rw [← Permute.normalize]
+  generalize normalize initial.stack perm = q at *
   by_cases hne : 0 < initial.stack.length
   · rw [dite_eq_left hne]
     obtain ⟨result, hrun⟩ := go_ok initial q hne _ hinv
@@ -103,8 +106,10 @@ theorem permute_applies_permutation_of_ok
     {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
     result.stack = apply_permutation initial.stack perm := by
-  obtain ⟨q, hq, happly, _, _⟩ := normalize_spec initial.stack perm
-  rw [permute_eq_normalize, hq, except_ok_bind] at hresult
+  obtain ⟨happly, _, _⟩ := normalize_spec initial.stack perm
+  dsimp only [permute] at hresult
+  rw [← Permute.normalize] at hresult
+  generalize normalize initial.stack perm = q at *
   by_cases hne : 0 < initial.stack.length
   · rw [dite_eq_left hne] at hresult
     exact ((go_spec initial q hne _ hresult).applies rfl).trans happly
@@ -125,8 +130,8 @@ theorem permute_swapCount
     {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
     (result.trace.swapCount - initial.trace.swapCount) = Permutation.swapCount perm (initial.stack.topOffset hne) := by
-  rw [permute_eq_normalize, normalize_of_nodup _ _ hnodup, except_ok_bind,
-    dite_eq_left hne] at hresult
+  dsimp only [permute] at hresult
+  rw [← Permute.normalize, normalize_of_nodup _ _ hnodup, dite_eq_left hne] at hresult
   have hc := (go_count initial perm hne hresult).2 hnodup
   omega
 
@@ -144,8 +149,8 @@ theorem permute_swapCount_le
   by_cases hne : 0 < initial.stack.length
   · rw [permute_swapCount spills initial perm hne hnodup hresult]
     exact Permutation.swapCount_le perm _
-  · rw [permute_eq_normalize, normalize_of_nodup _ _ hnodup, except_ok_bind,
-      dite_eq_right hne] at hresult
+  · dsimp only [permute] at hresult
+    rw [← Permute.normalize, normalize_of_nodup _ _ hnodup, dite_eq_right hne] at hresult
     cases hresult
     simp at *
 
@@ -188,15 +193,22 @@ theorem permute_swapCount_le_three_mul_arbitrarySwapCount
     {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
     (result.trace.swapCount - initial.trace.swapCount) ≤ 3 * Permutation.arbitrarySwapCount perm := by
-  obtain ⟨q, hq, _, hsub, _⟩ := normalize_spec initial.stack perm
-  rw [permute_eq_normalize, hq, except_ok_bind] at hresult
+  obtain ⟨_, hsub, _⟩ := normalize_spec initial.stack perm
+  dsimp only [permute] at hresult
+  rw [← Permute.normalize] at hresult
+  generalize normalize initial.stack perm = q at *
   by_cases hne : 0 < initial.stack.length
   · rw [dite_eq_left hne] at hresult
     have hc := (go_count initial q hne hresult).1
-    have hs := Finset.card_le_card hsub
+    have hs : (q.support.erase (initial.stack.topOffset hne)).card ≤ perm.support.card :=
+      Finset.card_le_card fun i hi => (hsub i (Finset.mem_of_mem_erase hi)).resolve_right
+        fun ht => Finset.ne_of_mem_erase hi (Fin.ext (by dsimp only; omega))
+    have herase := Finset.pred_card_le_card_erase (s := q.support) (a := initial.stack.topOffset hne)
+    have haway : (Permutation.cyclesAwayFromTop q (initial.stack.topOffset hne)).card ≤
+        q.cycleFactorsFinset.card := Finset.card_filter_le _ _
     have hqcycles := Permutation.two_mul_card_cycles_le_support q
     have hpcycles := Permutation.two_mul_card_cycles_le_support perm
-    have hbound := Permutation.swapCount_le q (initial.stack.topOffset hne)
+    unfold Permutation.swapCount at hc
     unfold Permutation.arbitrarySwapCount
     omega
   · rw [dite_eq_right hne] at hresult
