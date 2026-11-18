@@ -12,7 +12,7 @@ import Shuffler.Permute.Normalization
 namespace Shuffler.Emission
 
 private theorem permute_success_iff (spills : SpillSet) (state : State source target spills)
-    (perm : Shuffler.Permute.Permutation state.stack)
+    (perm : Shuffler.Permute.Permutation state.stack.length)
     (hagree : Shuffler.Permute.bindings_agree state perm) :
     (∃ result, ((((Shuffler.Permute.permute state perm) : Except ShuffleErr (Result _ _ _)) >>= fun (r : Result _ _ _) =>
       if h : r.blocked.isSome then throw (.Blocked (r.blocked.get h)) else pure r.state) >>= fun state =>

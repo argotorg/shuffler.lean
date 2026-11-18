@@ -10,7 +10,7 @@ namespace Shuffler.Permute
 
 open Emission
 
-abbrev Permutation (source : Stack) := Equiv.Perm (Fin source.length)
+abbrev Permutation (n : ℕ) := Equiv.Perm (Fin n)
 
 namespace Permutation
 
@@ -36,7 +36,7 @@ end Permutation
 def permute
   {source target : Stack} {spills : SpillSet}
   (initial : State source target spills)
-  (perm : Permutation initial.stack)
+  (perm : Permutation initial.stack.length)
   : Except ShuffleErr (Result source target spills)
   := do
     let mut perm := perm
@@ -50,7 +50,7 @@ def permute
     -- Equal slots are interchangeable, so two equal slots may exchange their destinations.
     -- A slot already holding its target value stays; the slot bound for its offset takes over
     -- its destination
-    minimizePermutationSupport (stack : Stack) (perm : Permutation stack) (position : ℕ) : Permutation stack :=
+    minimizePermutationSupport (stack : Stack) (perm : Permutation stack.length) (position : ℕ) : Permutation stack.length :=
       if h : position < stack.length then
         let destination := perm ⟨position, h⟩
         if hd : destination ≠ ⟨position, h⟩ ∧ stack[destination] = stack[position] then
@@ -67,7 +67,7 @@ def permute
 
     -- Join all cycles that share a value by exchanging the destinations of equal slots. Each join saves the swap
     -- that enters a cycle without the top. The top takes part even when it stays in place.
-    minimizeCyclesWithoutTop (stack : Stack) (perm : Permutation stack) : Permutation stack := Id.run do
+    minimizeCyclesWithoutTop (stack : Stack) (perm : Permutation stack.length) : Permutation stack.length := Id.run do
       let mut perm := perm
       for a in List.finRange stack.length do
         if perm a ≠ a then
@@ -78,7 +78,7 @@ def permute
               break
       return perm
 
-    go (state : State source target spills) (perm : Permutation state.stack)
+    go (state : State source target spills) (perm : Permutation state.stack.length)
         (hne : state.stack.length > 0) :
         Except ShuffleErr (Result source target spills) :=
       let top := state.stack.topOffset hne
@@ -146,20 +146,20 @@ def permute
 
 -- applies the permutation perm to the source stack via the inverse equivalence
 -- every proper permutation has an inverse
-def apply_permutation (source : Stack) (perm : Permutation source) : Stack :=
+def apply_permutation (source : Stack) (perm : Permutation source.length) : Stack :=
   List.ofFn (λ k => source[perm.symm k])
 
-def all_swaps_reachable (perm : Permutation source) : Prop
+def all_swaps_reachable {source : Stack} (perm : Permutation source.length) : Prop
   := ∀ i ∈ perm.support, source.isSwapReachable i
 
 -- Every position whose value must change is within SWAP reach.
-def values_reachable {source : Stack} (perm : Permutation source) : Prop :=
+def values_reachable {source : Stack} (perm : Permutation source.length) : Prop :=
   ∀ i : Fin source.length,
     source[i] ≠ source[perm.symm i] → source.isSwapReachable i
 
 -- Every slot bound to a stack offset is bound to one that `perm` fills with an equal value.
 def bindings_agree {source target : Stack} {spills : SpillSet}
-    (state : State source target spills) (perm : Permutation state.stack) : Prop :=
+    (state : State source target spills) (perm : Permutation state.stack.length) : Prop :=
   ∀ (i : Fin state.stack.length) (d : Fin target.length) (h : d.val < state.stack.length),
     state.mapping i = some d → state.stack[perm.symm ⟨d.val, h⟩] = state.stack[i]
 

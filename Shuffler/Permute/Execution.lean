@@ -10,7 +10,7 @@ namespace Shuffler.Permute
 
 open Emission
 
-theorem apply_permutation'_equal_exchange (stack : Stack) (p : Permutation stack)
+theorem apply_permutation'_equal_exchange (stack : Stack) (p : Permutation stack.length)
     (a b : Fin stack.length) (he : stack[a] = stack[b]) :
     apply_permutation' stack (p * Equiv.swap a b) rfl = apply_permutation' stack p rfl := by
   simpa only [swap_eq_of_equal stack a b he] using apply_permutation'_swap stack p rfl a b
@@ -23,7 +23,7 @@ theorem support_swap_subset_away {n : ℕ} (p : Equiv.Perm (Fin n)) (top pos i :
   · simpa [Equiv.Perm.mem_support, Equiv.Perm.mul_apply,
       Equiv.swap_apply_of_ne_of_ne hi hip] using hm
 
-structure RunSpec (state : State source target spills) (p : Permutation state.stack)
+structure RunSpec (state : State source target spills) (p : Permutation state.stack.length)
     (result : Result source target spills) : Prop where
   length : result.state.stack.length = state.stack.length
   applies : result.blocked = none → result.state.stack = apply_permutation' state.stack p rfl
@@ -33,7 +33,7 @@ structure RunSpec (state : State source target spills) (p : Permutation state.st
     ∃ i : Fin state.stack.length, b.offset = i.val ∧ 0 < b.excess ∧
       i ∈ p.support ∧ (state.depthOf i).val = b.excess + MAX_SWAP_DEPTH
 
-theorem RunSpec.equal (state : State source target spills) (p : Permutation state.stack)
+theorem RunSpec.equal (state : State source target spills) (p : Permutation state.stack.length)
     (top pos : Fin state.stack.length) (hpos : p pos ≠ pos)
     (htop : top.val = state.stack.length - 1) (he : state.stack[top] = state.stack[pos])
     (next : State source target spills) (hn : next.stack = state.stack)
@@ -54,7 +54,7 @@ theorem RunSpec.equal (state : State source target spills) (p : Permutation stat
       dsimp only at hd
       omega
 
-theorem RunSpec.swap (state : State source target spills) (p : Permutation state.stack)
+theorem RunSpec.swap (state : State source target spills) (p : Permutation state.stack.length)
     (top pos : Fin state.stack.length) (hpos : p pos ≠ pos)
     (htop : top.val = state.stack.length - 1) (hreach : state.isSwapReachable pos)
     (next : State source target spills)
@@ -89,7 +89,7 @@ theorem RunSpec.swap (state : State source target spills) (p : Permutation state
       omega
     · exact (Permutation.mem_support_cast hlen.symm _ _).mp hm
 
-theorem go_spec (state : State source target spills) (p : Permutation state.stack)
+theorem go_spec (state : State source target spills) (p : Permutation state.stack.length)
     (hne : 0 < state.stack.length) :
     ∀ result, permute.go state p hne = .ok result → RunSpec state p result := by
   refine permute.go.induct_unfolding
@@ -141,7 +141,7 @@ theorem go_spec (state : State source target spills) (p : Permutation state.stac
 -- `expected x` is the value that offset `x` must receive. Every slot holds the value of its
 -- destination, every bound offset expects the value of the slot's destination, and a slot below
 -- the top that already holds its expected value stays or is the one the top's cycle returns to.
-structure GoInv (state : State source target spills) (p : Permutation state.stack)
+structure GoInv (state : State source target spills) (p : Permutation state.stack.length)
     (expected : ℕ → Option Value) : Prop where
   assigns : ∀ i, expected (p i) = some state.stack[i]
   bound : ∀ i (d : Fin target.length), state.mapping i = some d → d.val < state.stack.length →
@@ -151,10 +151,10 @@ structure GoInv (state : State source target spills) (p : Permutation state.stac
 
 -- One step exchanges the destinations of `top` and `pos` in both the mapping and the permutation.
 -- The step either places the top (`p top = pos`) or starts a new cycle from a fixed top.
-theorem GoInv.step {state : State source target spills} {p : Permutation state.stack}
+theorem GoInv.step {state : State source target spills} {p : Permutation state.stack.length}
     {expected : ℕ → Option Value} (h : GoInv state p expected) (top pos : Fin state.stack.length)
     (htop : top.val + 1 = state.stack.length) (hcase : p top = pos ∨ p top = top)
-    (next : State source target spills) (p' : Permutation next.stack)
+    (next : State source target spills) (p' : Permutation next.stack.length)
     (hlen : next.stack.length = state.stack.length)
     (hstack : ∀ (i : Fin next.stack.length) (j : Fin state.stack.length), i.val = j.val →
       next.stack[i] = state.stack[Equiv.swap top pos j])
@@ -181,7 +181,7 @@ theorem GoInv.step {state : State source target spills} {p : Permutation state.s
       have := h.settled j (by omega) he
       omega
 
-theorem GoInv.not_final_top {state : State source target spills} {p : Permutation state.stack}
+theorem GoInv.not_final_top {state : State source target spills} {p : Permutation state.stack.length}
     {expected : ℕ → Option Value} (h : GoInv state p expected) (top : Fin state.stack.length)
     (hne : ¬state.stack[p top] = state.stack[top]) : ¬state.isFinal (p top) := by
   intro hf
@@ -190,7 +190,7 @@ theorem GoInv.not_final_top {state : State source target spills} {p : Permutatio
   rw [hdv] at hb
   exact hne (Option.some.inj ((h.assigns (p top)).symm.trans (hb.symm.trans (h.assigns top))))
 
-theorem GoInv.not_final_pos {state : State source target spills} {p : Permutation state.stack}
+theorem GoInv.not_final_pos {state : State source target spills} {p : Permutation state.stack.length}
     {expected : ℕ → Option Value} (h : GoInv state p expected) (top pos : Fin state.stack.length)
     (htop : top.val + 1 = state.stack.length) (ht : p top = top) (hpos : p pos ≠ pos) :
     ¬state.isFinal pos := by
@@ -228,7 +228,7 @@ theorem Permutation.cast_apply_val {n m : ℕ} (h : Equiv.Perm (Fin n) = Equiv.P
   subst hnm
   rfl
 
-theorem go_ok (state : State source target spills) (p : Permutation state.stack)
+theorem go_ok (state : State source target spills) (p : Permutation state.stack.length)
     (hne : 0 < state.stack.length) (expected : ℕ → Option Value) (h : GoInv state p expected) :
     ∃ result, permute.go state p hne = .ok result := by
   refine permute.go.induct_unfolding
@@ -297,7 +297,7 @@ theorem go_ok (state : State source target spills) (p : Permutation state.stack)
   case done ht search hsearch h => exact ⟨_, rfl⟩
 
 theorem RunSpec.values_of_success {state : State source target spills}
-    {p : Permutation state.stack} {result : Result source target spills}
+    {p : Permutation state.stack.length} {result : Result source target spills}
     (h : RunSpec state p result) (hs : result.blocked = none) : values_reachable p := by
   intro i hne
   by_contra hd
@@ -308,7 +308,7 @@ theorem RunSpec.values_of_success {state : State source target spills}
   exact hne he.symm
 
 theorem RunSpec.success_of_reachable {state : State source target spills}
-    {p : Permutation state.stack} {result : Result source target spills}
+    {p : Permutation state.stack.length} {result : Result source target spills}
     (h : RunSpec state p result) (hr : all_swaps_reachable p) : result.blocked = none := by
   cases hb : result.blocked with
   | none => rfl
@@ -330,7 +330,7 @@ theorem Trace.swapCount_cast (h : result = other) (trace : Trace spills source r
     (h ▸ trace).swapCount = trace.swapCount := by
   subst h; rfl
 
-theorem go_count (state : State source target spills) (p : Permutation state.stack)
+theorem go_count (state : State source target spills) (p : Permutation state.stack.length)
     (hne : 0 < state.stack.length) {result : State source target spills}
     (hr : permute.go state p hne = .ok ⟨none, result⟩) :
     result.trace.swapCount ≤ state.trace.swapCount +
@@ -413,7 +413,7 @@ theorem go_count (state : State source target spills) (p : Permutation state.sta
 
 
 -- Normalization establishes the invariant of `go` when the bindings agree with `perm`.
-theorem normalize_goInv (initial : State source target spills) (perm : Permutation initial.stack)
+theorem normalize_goInv (initial : State source target spills) (perm : Permutation initial.stack.length)
     (hagree : bindings_agree initial perm) :
     GoInv initial (normalize initial.stack perm) (fun x => (apply_permutation initial.stack perm)[x]?) := by
   obtain ⟨ha, hc⟩ := normalize_assigns initial.stack perm

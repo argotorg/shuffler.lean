@@ -9,7 +9,7 @@ namespace Shuffler.Permute
 
 open Emission
 
-theorem go_frame (state : State source target spills) (p : Permutation state.stack)
+theorem go_frame (state : State source target spills) (p : Permutation state.stack.length)
     (hne : 0 < state.stack.length) :
     ∀ {result}, permute.go state p hne = .ok result →
       result.state.planned_mapping = state.planned_mapping ∧
@@ -48,7 +48,7 @@ theorem go_frame (state : State source target spills) (p : Permutation state.sta
     cases hr
     exact ⟨rfl, rfl, rfl⟩
 
-theorem go_not_error_blocked (state : State source target spills) (p : Permutation state.stack)
+theorem go_not_error_blocked (state : State source target spills) (p : Permutation state.stack.length)
     (hne : 0 < state.stack.length) (b : Blocked) : permute.go state p hne ≠ .error (.Blocked b) := by
   refine permute.go.induct_unfolding
     (motive := fun _ _ _ run => ∀ b, run = .error (.Blocked b) → False)
@@ -67,7 +67,7 @@ theorem go_not_error_blocked (state : State source target spills) (p : Permutati
     rw [blockSwapUnreachable_eq state pos hreach] at hr
     cases hr
 
-theorem permute_result_spec (state : State source target spills) (p : Permutation state.stack)
+theorem permute_result_spec (state : State source target spills) (p : Permutation state.stack.length)
     (hagree : bindings_agree state p) :
     ∃ result, permute state p = .ok result ∧
       result.state.stack.length = state.stack.length ∧

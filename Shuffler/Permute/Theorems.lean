@@ -29,7 +29,7 @@ theorem bindings_agree_toPermutation (state : State source target spills)
 -- `hagree` says that every bound slot is bound to an offset that receives an equal value.
 theorem permute_blocks_unreachable
     (spills : SpillSet)
-    (initial : Emission.State source target spills) (perm : Permutation initial.stack)
+    (initial : Emission.State source target spills) (perm : Permutation initial.stack.length)
     (hagree : bindings_agree initial perm) (hnreachable : ¬values_reachable perm) :
     ∃ (i : Fin initial.stack.length) (excess : ℕ) (state : State source target spills),
       permute initial perm = .ok ⟨some ⟨i.val, excess⟩, state⟩
@@ -68,7 +68,7 @@ theorem permute_blocks_unreachable
 -- `hagree` says that every bound slot is bound to an offset that receives an equal value.
 theorem permute_applies_permutation_reachable
     (spills : SpillSet)
-    (initial : Emission.State source target spills) (perm : Permutation initial.stack)
+    (initial : Emission.State source target spills) (perm : Permutation initial.stack.length)
     (hagree : bindings_agree initial perm) (hreachable : values_reachable perm) :
     ∃ result : State source target spills,
       permute initial perm = .ok ⟨none, result⟩ ∧ result.stack = apply_permutation initial.stack perm := by
@@ -92,7 +92,7 @@ theorem permute_applies_permutation_reachable
 -- When the bindings agree with `perm`, permutation can return a blocked result, but cannot
 -- return an assertion error.
 theorem permute_no_assertion
-    (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack)
+    (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack.length)
     (hagree : bindings_agree initial perm) (reason : String) :
     permute initial perm ≠ .error (.assertion reason) := by
   by_cases hreachable : values_reachable perm
@@ -102,7 +102,7 @@ theorem permute_no_assertion
     simp [heq]
 
 theorem permute_applies_permutation_of_ok
-    (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack)
+    (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack.length)
     {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
     result.stack = apply_permutation initial.stack perm := by
@@ -125,7 +125,7 @@ theorem permute_applies_permutation_of_ok
 -- This is an exact count for the returned trace when the stack values are distinct.
 theorem permute_swapCount
     (spills : SpillSet)
-    (initial : Emission.State source target spills) (perm : Permutation initial.stack) (hne : 0 < initial.stack.length)
+    (initial : Emission.State source target spills) (perm : Permutation initial.stack.length) (hne : 0 < initial.stack.length)
     (hnodup : initial.stack.Nodup)
     {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
@@ -141,7 +141,7 @@ theorem permute_swapCount
 -- For distinct stack values, this also covers the empty stack without requiring a top position.
 theorem permute_swapCount_le
     (spills : SpillSet)
-    (initial : Emission.State source target spills) (perm : Permutation initial.stack)
+    (initial : Emission.State source target spills) (perm : Permutation initial.stack.length)
     (hnodup : initial.stack.Nodup)
     {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
@@ -160,7 +160,7 @@ theorem permute_swapCount_le
 -- For distinct stack values, `permute` attains the minimum for the given position permutation.
 -- The comparison allows every swap depth, so it also covers all permitted top swaps.
 theorem permute_swapCount_optimal
-    (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack)
+    (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack.length)
     (hne : 0 < initial.stack.length)
     (hnodup : initial.stack.Nodup) {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
@@ -175,7 +175,7 @@ theorem permute_swapCount_optimal
 -- For distinct stack values, each cycle of length at least two that excludes the top adds two swaps.
 -- If there are no such cycles, `permute` also attains the arbitrary-swap minimum.
 theorem permute_swapCount_eq_arbitrarySwapCount_add
-    (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack)
+    (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack.length)
     (hne : 0 < initial.stack.length)
     (hnodup : initial.stack.Nodup) {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
@@ -189,7 +189,7 @@ theorem permute_swapCount_eq_arbitrarySwapCount_add
 -- `arbitrarySwapCount_isLeast` proves that `arbitrarySwapCount perm` is that minimum.
 -- The inequality also covers the empty stack and a minimum of zero swaps.
 theorem permute_swapCount_le_three_mul_arbitrarySwapCount
-    (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack)
+    (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack.length)
     {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩) :
     (result.trace.swapCount - initial.trace.swapCount) ≤ 3 * Permutation.arbitrarySwapCount perm := by
@@ -220,7 +220,7 @@ theorem permute_swapCount_le_three_mul_arbitrarySwapCount
 -- Its count is at most three times the length of any such list, even if the list is not shortest.
 -- This applies the factor-three bound using the lower bound on `swaps.length`.
 theorem permute_swapCount_le_three_mul_length_swaps
-    (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack)
+    (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack.length)
     {result : State source target spills}
     (hresult : permute initial perm = .ok ⟨none, result⟩)
     (swaps : List (Fin initial.stack.length × Fin initial.stack.length))
@@ -230,7 +230,7 @@ theorem permute_swapCount_le_three_mul_length_swaps
     (Nat.mul_le_mul_left 3 (Permutation.arbitrarySwapCount_le_length_swaps perm swaps hprod))
 
 -- A successful `permute` returns a stack of the source length.
-theorem permute_length (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack)
+theorem permute_length (spills : SpillSet) (initial : Emission.State source target spills) (perm : Permutation initial.stack.length)
     {result : State source target spills}
     (h : permute initial perm = .ok ⟨none, result⟩) : result.stack.length = initial.stack.length := by
   rw [permute_applies_permutation_of_ok spills initial perm h]

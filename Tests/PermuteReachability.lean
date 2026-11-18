@@ -14,7 +14,7 @@ namespace PermuteReachabilityTests
 
 open Shuffler.Permute Shuffler.Emission
 
-private instance {source : Stack} (perm : Permutation source) : Decidable (values_reachable perm) :=
+private instance {source : Stack} (perm : Permutation source.length) : Decidable (values_reachable perm) :=
   inferInstanceAs (Decidable (∀ i : Fin source.length,
     source[i] ≠ source[perm.symm i] → source.isSwapReachable i))
 
@@ -25,7 +25,7 @@ private def stateFor (stack : Stack) : State stack stack ∅ where
   mapping := ⊥
   pending_generations := 0
 
-private def check (stack : Stack) (perm : Permutation stack) : Bool :=
+private def check (stack : Stack) (perm : Permutation stack.length) : Bool :=
   match permute (stateFor stack) perm with
   | .error _ => false
   | .ok ⟨none, result⟩ => decide (values_reachable perm) &&

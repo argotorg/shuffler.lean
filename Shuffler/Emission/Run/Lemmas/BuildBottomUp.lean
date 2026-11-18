@@ -34,7 +34,7 @@ variable {source target : Stack} {spills : SpillSet}
   all_goals simp_all [Result.Positive]
 
 @[spec] theorem permute_frame_triple (state : State source target spills)
-    (p : Permute.Permutation state.stack) :
+    (p : Permute.Permutation state.stack.length) :
     ⦃True⦄ Permute.permute state p
     ⦃fun result => result.state.planned_mapping = state.planned_mapping ∧ result.Positive;
       (fun err => ∀ b, err ≠ .Blocked b)⦄ := by
