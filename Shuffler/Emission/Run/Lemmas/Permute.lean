@@ -43,7 +43,7 @@ theorem go_frame (state : State source target spills) {n : ℕ} (p : Permutation
     ?_ ?_ state p hlen
   · intro top htop state p pos hpos _ _ ih hlen result hr
     subst hlen
-    rcases exchangeWithTop_cases state top pos htop hpos with ⟨_, _, he⟩ | ⟨_, _, _, he⟩ | ⟨next, hx, he⟩
+    rcases exchangeWithTop_cases state top pos htop hpos with ⟨_, _, he⟩ | ⟨_, _, he⟩ | ⟨next, hx, he⟩
     · simp only [he, except_ok_bind, Option.isSome_some, ↓reduceIte] at hr
       cases hr
       exact ⟨rfl, rfl, rfl⟩
@@ -64,7 +64,7 @@ theorem go_not_error_blocked (state : State source target spills) {n : ℕ} (p :
     ?_ ?_ state p hlen b
   · intro top htop state p pos hpos _ _ ih hlen b hr
     subst hlen
-    rcases exchangeWithTop_cases state top pos htop hpos with ⟨_, _, he⟩ | ⟨_, _, _, he⟩ | ⟨next, hx, he⟩
+    rcases exchangeWithTop_cases state top pos htop hpos with ⟨_, _, he⟩ | ⟨_, _, he⟩ | ⟨next, hx, he⟩
     · simp only [he, except_ok_bind, Option.isSome_some, ↓reduceIte] at hr
       cases hr
     · rw [he, except_error_bind] at hr
