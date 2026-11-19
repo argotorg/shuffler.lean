@@ -132,7 +132,7 @@ theorem permute_swapCount
     (result.trace.swapCount - initial.trace.swapCount) = Permutation.swapCount perm (initial.stack.topOffset hne) := by
   dsimp only [permute] at hresult
   rw [← Permute.normalize, normalize_of_nodup _ _ hnodup, dite_eq_left hne] at hresult
-  have hc := (go_count initial perm hne rfl (initial.stack.topOffset hne) rfl hresult).2 hnodup
+  have hc := go_count initial perm hne rfl (initial.stack.topOffset hne) rfl hresult
   omega
 
 -- Given a successful return in `hresult`, bound the number of emitted swaps by
@@ -199,7 +199,7 @@ theorem permute_swapCount_le_three_mul_arbitrarySwapCount
   generalize normalize initial.stack perm = q at *
   by_cases hne : 0 < initial.stack.length
   · rw [dite_eq_left hne] at hresult
-    have hc := (go_count initial q hne rfl (initial.stack.topOffset hne) rfl hresult).1
+    have hc := go_count initial q hne rfl (initial.stack.topOffset hne) rfl hresult
     have hs : (q.support.erase (initial.stack.topOffset hne)).card ≤ perm.support.card :=
       Finset.card_le_card fun i hi => (hsub i (Finset.mem_of_mem_erase hi)).resolve_right
         fun ht => Finset.ne_of_mem_erase hi (Fin.ext (by dsimp only; omega))

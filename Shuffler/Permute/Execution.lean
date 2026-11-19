@@ -63,7 +63,6 @@ structure Exchanged (state next : State source target spills) (top pos : Fin sta
   stack : ∀ i : Fin state.stack.length, next.stack[i.val]? = some state.stack[Equiv.swap top pos i]
   mapping : ∀ (i : Fin next.stack.length) (j : Fin state.stack.length), i.val = j.val →
     next.mapping i = state.mapping (Equiv.swap top pos j)
-  perm : next.stack.Perm state.stack
   reach : state.isSwapReachable pos
   swapCount : next.trace.swapCount = state.trace.swapCount + 1
   planned : next.planned_mapping = state.planned_mapping
@@ -99,7 +98,7 @@ theorem exchangeWithTop_cases (state : State source target spills) (top pos : Fi
       omega
     rw [requires_of_true _ hfinal, except_ok_bind, requires_of_true _ hvalid, except_ok_bind]
     refine ⟨_, ?_, rfl⟩
-    refine ⟨by simp, fun i => ?_, fun i j hij => ?_, List.swap_perm _ _ _, hreach, ?_, rfl, rfl⟩
+    refine ⟨by simp, fun i => ?_, fun i j hij => ?_, hreach, ?_, rfl, rfl⟩
     · rw [List.getElem?_eq_getElem (by simp)]
       simp only [hlast, Equiv.swap_comm top pos]
       exact congrArg some (getElem_list_swap state.stack pos top i _ i rfl)
@@ -305,15 +304,11 @@ theorem RunSpec.success_of_reachable {state : State source target spills}
 theorem go_count (state : State source target spills) {n : ℕ} (p : Permutation n) (hne : n > 0)
     (hlen : state.stack.length = n) (top : Fin n) (htop : top.val = n - 1) {result : State source target spills}
     (hr : permute.go state p hne = .ok ⟨none, result⟩) :
-    result.trace.swapCount ≤ state.trace.swapCount + Permutation.swapCount p top ∧
-    (state.stack.Nodup →
-      result.trace.swapCount = state.trace.swapCount + Permutation.swapCount p top) := by
+    result.trace.swapCount = state.trace.swapCount + Permutation.swapCount p top := by
   obtain rfl : top = ⟨n - 1, Nat.sub_lt hne Nat.one_pos⟩ := Fin.ext htop
   refine go_induct hne (motive := fun state p run => state.stack.length = n →
       ∀ {result : State source target spills}, run = .ok ⟨none, result⟩ →
-      result.trace.swapCount ≤ state.trace.swapCount + Permutation.swapCount p ⟨n - 1, by omega⟩ ∧
-      (state.stack.Nodup →
-        result.trace.swapCount = state.trace.swapCount + Permutation.swapCount p ⟨n - 1, by omega⟩))
+      result.trace.swapCount = state.trace.swapCount + Permutation.swapCount p ⟨n - 1, by omega⟩)
     ?_ ?_ state p hlen hr
   · intro top htop state p pos hpos hmoved hcase ih hlen result hr
     have ht : (⟨n - 1, by omega⟩ : Fin n) = top := Fin.ext htop.symm
@@ -331,11 +326,9 @@ theorem go_count (state : State source target spills) {n : ℕ} (p : Permutation
     · rw [he, except_error_bind] at hr
       cases hr
     · simp only [he, except_ok_bind, Option.isSome_none, Bool.false_eq_true, ↓reduceIte] at hr
-      obtain ⟨hle, heq⟩ := ih ⟨none, next⟩ hx.length hr
-      dsimp only at hle heq
+      have heq := ih ⟨none, next⟩ hx.length hr
+      dsimp only at heq
       have hc := hx.swapCount
-      refine ⟨by omega, fun hn => ?_⟩
-      have := heq (hx.perm.nodup_iff.mpr hn)
       omega
   · intro state _ result hr
     cases hr
