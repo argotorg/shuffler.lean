@@ -32,7 +32,7 @@ theorem completedPermutation_fixed_iff_toPermutation (state : State source targe
   simp only [Fin.ext_iff, Fin.val_cast, stackIndex_val]
 
 theorem all_swaps_reachable_iff_fixed_below (stack : Stack)
-    (perm : Shuffler.Permute.Permutation stack) :
+    (perm : Shuffler.Permute.Permutation stack.length) :
     Shuffler.Permute.all_swaps_reachable perm ↔
       ∀ i : Fin stack.length, i.val < stack.length - (MAX_SWAP_DEPTH + 1) → perm i = i := by
   constructor

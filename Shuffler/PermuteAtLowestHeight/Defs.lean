@@ -25,7 +25,7 @@ def permuteAtLowestHeight
     (state : State source target spills) :
     Except ShuffleErr (Result source target spills) := do
 
-  let mut permutation : Permutation state.stack := 1
+  let mut permutation : Permutation state.stack.length := 1
 
   -- offsets whose target values will be generated later
   let mut holes : List (Fin state.stack.length) := ∅

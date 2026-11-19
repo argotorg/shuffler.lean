@@ -93,7 +93,7 @@ theorem setValue_apply_of_ne {n : ℕ} (f : Equiv.Perm (Fin n)) (a b x : Fin n)
 
 -- Every slot in `done` whose destination is below the current height is sent there by `perm`.
 def Settled (state : State source target spills) (htotal : ∀ i, (state.mapping.destinationOf i).isSome)
-    (done : List (Fin state.stack.length)) (perm : Shuffler.Permute.Permutation state.stack) : Prop :=
+    (done : List (Fin state.stack.length)) (perm : Shuffler.Permute.Permutation state.stack.length) : Prop :=
   ∀ i ∈ done, ((state.mapping.destinationOf i).get (htotal i)).val < state.stack.length →
     (perm i).val = ((state.mapping.destinationOf i).get (htotal i)).val
 

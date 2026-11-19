@@ -11,7 +11,7 @@ namespace Shuffler.Permute
 open Emission
 
 -- The permutation that `permute` hands to `go`.
-abbrev normalize (stack : Stack) (perm : Permutation stack) : Permutation stack :=
+abbrev normalize (stack : Stack) (perm : Permutation stack.length) : Permutation stack.length :=
   permute.minimizeCyclesWithoutTop stack (permute.minimizePermutationSupport stack perm 0)
 
 def Assigns {n : ℕ} (value expected : Fin n → Value) (p : Equiv.Perm (Fin n)) : Prop :=
@@ -32,7 +32,7 @@ theorem Assigns.mul_swap {n : ℕ} {value expected : Fin n → Value} {p : Equiv
 
 -- The first loop of `normalize`: once every slot before `position` stays or sends its value to an offset that
 -- does not already hold it, every slot holding its expected value ends fixed.
-theorem minimizePermutationSupport_spec (stack : Stack) (expected : Fin stack.length → Value) (p : Permutation stack)
+theorem minimizePermutationSupport_spec (stack : Stack) (expected : Fin stack.length → Value) (p : Permutation stack.length)
     (position : ℕ) (hp : Assigns (fun i => stack[i]) expected p)
     (hvisited : ∀ i : Fin stack.length, i.val < position → p i = i ∨ stack[p i] ≠ stack[i]) :
     Assigns (fun i => stack[i]) expected (permute.minimizePermutationSupport stack p position) ∧
@@ -79,7 +79,7 @@ theorem forIn_invariant {α β : Type} (xs : List α) (init : β) (f : α → β
 
 -- The second loop of `normalize` exchanges destinations only between equal slots, and never between a slot below
 -- the top that stays in place and another one.
-theorem minimizeCyclesWithoutTop_spec (stack : Stack) (expected : Fin stack.length → Value) (p : Permutation stack)
+theorem minimizeCyclesWithoutTop_spec (stack : Stack) (expected : Fin stack.length → Value) (p : Permutation stack.length)
     (hp : Assigns (fun i => stack[i]) expected p) :
     Assigns (fun i => stack[i]) expected (permute.minimizeCyclesWithoutTop stack p) ∧
       ∀ i, i.val + 1 ≠ stack.length → p i = i → permute.minimizeCyclesWithoutTop stack p i = i := by
@@ -111,7 +111,7 @@ theorem minimizeCyclesWithoutTop_spec (stack : Stack) (expected : Fin stack.leng
         · exact hs
     · exact hr
 
-theorem normalize_assigns (stack : Stack) (p : Permutation stack)
+theorem normalize_assigns (stack : Stack) (p : Permutation stack.length)
     (expected : Fin stack.length → Value) (hp : Assigns (fun i => stack[i]) expected p) :
     Assigns (fun i => stack[i]) expected (normalize stack p) ∧
       (∀ i, i.val + 1 ≠ stack.length → stack[i] = expected i → normalize stack p i = i) := by
@@ -119,7 +119,7 @@ theorem normalize_assigns (stack : Stack) (p : Permutation stack)
   obtain ⟨hma, hmf⟩ := minimizeCyclesWithoutTop_spec stack expected _ hfa
   exact ⟨hma, fun i hi he => hmf i hi (hff i he)⟩
 
-theorem all_swaps_reachable.values {stack : Stack} {p : Permutation stack}
+theorem all_swaps_reachable.values {stack : Stack} {p : Permutation stack.length}
     (h : all_swaps_reachable p) : values_reachable p := by
   intro i hne
   apply h i
@@ -132,7 +132,7 @@ theorem all_swaps_reachable.values {stack : Stack} {p : Permutation stack}
   simp only [hi]
 
 -- Only the top can move without being moved by `p`: it joins a cycle that holds its value.
-theorem normalize_spec (stack : Stack) (p : Permutation stack) :
+theorem normalize_spec (stack : Stack) (p : Permutation stack.length) :
     apply_permutation stack (normalize stack p) = apply_permutation stack p ∧
       (∀ i ∈ (normalize stack p).support, i ∈ p.support ∨ i.val + 1 = stack.length) ∧
       (all_swaps_reachable (normalize stack p) ↔ values_reachable p) := by
@@ -162,7 +162,7 @@ theorem normalize_spec (stack : Stack) (p : Permutation stack) :
         · exact ((Equiv.Perm.mem_support.mp hi) (hc i ht he)).elim
       · exact hr i he
 
-theorem normalize_of_nodup (stack : Stack) (p : Permutation stack) (hn : stack.Nodup) :
+theorem normalize_of_nodup (stack : Stack) (p : Permutation stack.length) (hn : stack.Nodup) :
     normalize stack p = p := by
   obtain ⟨ha, _⟩ := normalize_assigns stack p
     (fun i => stack[p.symm i]) (by intro i; simp)
@@ -174,14 +174,14 @@ theorem normalize_of_nodup (stack : Stack) (p : Permutation stack) (hn : stack.N
     exact hn.getElem_inj_iff.mp (by simpa using ha (q.symm i))
   simpa using congrArg Equiv.symm hsymm
 
-theorem values_reachable_congr {stack : Stack} (p q : Permutation stack)
+theorem values_reachable_congr {stack : Stack} (p q : Permutation stack.length)
     (he : apply_permutation stack p = apply_permutation stack q) :
     values_reachable p ↔ values_reachable q := by
   have hv (i : Fin stack.length) : stack[p.symm i] = stack[q.symm i] := by
     simpa [apply_permutation] using congrArg (fun xs => xs[i.val]?) he
   simp only [values_reachable, hv]
 
-theorem values_reachable_iff_deep (stack : Stack) (p : Permutation stack) :
+theorem values_reachable_iff_deep (stack : Stack) (p : Permutation stack.length) :
     values_reachable p ↔ ∀ i, i < stack.length - (MAX_SWAP_DEPTH + 1) →
       stack[i]? = (apply_permutation stack p)[i]? := by
   constructor

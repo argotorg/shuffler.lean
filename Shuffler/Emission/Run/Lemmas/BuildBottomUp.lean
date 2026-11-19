@@ -34,7 +34,7 @@ variable {source target : Stack} {spills : SpillSet}
   all_goals simp_all [Result.Positive]
 
 @[spec] theorem permute_frame_triple (state : State source target spills)
-    (p : Permute.Permutation state.stack) :
+    (p : Permute.Permutation state.stack.length) :
     ⦃True⦄ Permute.permute state p
     ⦃fun result => result.state.planned_mapping = state.planned_mapping ∧ result.Positive;
       (fun err => ∀ b, err ≠ .Blocked b)⦄ := by
@@ -45,10 +45,10 @@ variable {source target : Stack} {spills : SpillSet}
   · rw [dite_eq_left hne]
     cases hr : Permute.permute.go state q hne with
     | ok result =>
-      exact ⟨fun _ => ⟨(Permute.go_frame state q hne hr).1,
-        fun b h => ((Permute.go_spec state q hne result hr).blocked b h).choose_spec.2.1⟩⟩
+      exact ⟨fun _ => ⟨(Permute.go_frame state q hne rfl hr).1,
+        fun b h => ((Permute.go_spec state q hne rfl result hr).blocked b h).choose_spec.2.1⟩⟩
     | error err =>
-      exact ⟨fun _ b he => Permute.go_not_error_blocked state q hne b (he ▸ hr)⟩
+      exact ⟨fun _ b he => Permute.go_not_error_blocked state q hne rfl b (he ▸ hr)⟩
   · rw [dite_eq_right hne]
     exact ⟨fun _ => ⟨rfl, by simp [Result.Positive]⟩⟩
 
