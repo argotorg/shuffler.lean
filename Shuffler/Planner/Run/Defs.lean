@@ -17,7 +17,7 @@ structure Result (source target : Stack) where
   result : Option (Emission.State source target state.spills)
 
 -- Rebuild the mapping and restart emission from the original source after each resolution.
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:830-874.
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:844-879.
 def run (source target : Stack) (spills : SpillSet) (spillingAllowed : Bool)
     (strategy : BuildMapping.WildcardSlotsStrategy) : Except ShuffleErr (Result source target) := do
   for slot in target do

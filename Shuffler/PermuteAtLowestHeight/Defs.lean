@@ -19,7 +19,7 @@ open Shuffler.Permute
 -- above the current height park in the holes (one already in a hole stays, the others take the holes
 -- in order of their targets) and float to the top for free when the hole's slot is generated and
 -- swapped into place.
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:435-471.
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:443-479.
 def permuteAtLowestHeight
     {source target : Stack} {spills : SpillSet}
     (state : State source target spills) :

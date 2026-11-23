@@ -9,7 +9,7 @@ public import Shuffler.BuildBottomUp.Defs
 namespace Shuffler.Emission
 
 -- Each attempt starts from the source and its planned mapping.
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:294-333, 619-627.
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:302-340, 638-646.
 def run (source target : Stack) (mapping : Mapping source.length target.length)
     (spills : SpillSet) : Except ShuffleErr (Result source target spills) := do
   let mut state : State source target spills := {

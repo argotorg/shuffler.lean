@@ -13,7 +13,7 @@ variable {source target : Stack} {spills : SpillSet}
 --
 -- C++ loops `while (!m_stack.empty())`. Every pass either stops or pops one slot, so the stack height
 -- bounds the number of passes: the `for` loop below runs exactly the passes the `while` loop runs.
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:356-397 (at 6db6505).
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:352-393.
 def removeSurplus (initial : State source target spills) : Except ShuffleErr (Result source target spills) := do
   let mut state := initial
   for _ in List.range initial.stack.length do

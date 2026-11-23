@@ -32,7 +32,7 @@ end Permutation
 
 -- permute applies a permutation to the working stack and updates its mapping and trace.
 -- A blocked run returns the state after all preceding swaps.
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:629-715.
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:648-733.
 def permute
   {source target : Stack} {spills : SpillSet}
   (initial : State source target spills)
@@ -80,7 +80,7 @@ def permute
 
     -- Exchanges the slot at `pos` with the top, the destinations traveling along. The caller exchanges the
     -- corresponding destinations of the permutation.
-    -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:691-702 (at cc283c9).
+    -- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:691-705.
     exchangeWithTop (state : State source target spills) (pos : ℕ) :
         Except ShuffleErr (Result source target spills) := do
       let top := state.stack.length - 1
