@@ -84,8 +84,7 @@ def permute
     exchangeWithTop (state : State source target spills) (pos : ℕ) :
         Except ShuffleErr (Result source target spills) := do
       let top := state.stack.length - 1
-      if (← slotAt state.stack pos) = (← slotAt state.stack top) then
-        return ⟨none, ← state.swapDestinations pos top⟩
+      _ ← requires ((← slotAt state.stack pos) ≠ (← slotAt state.stack top)) "exchanging equal slots"
       let offset ← index state.stack.length pos
       if ¬ state.isSwapReachable offset then
         return ← state.blockSwapUnreachable offset
@@ -99,7 +98,6 @@ def permute
       if ht : perm top ≠ top
       then
         let perm' := perm * Equiv.swap top (perm top)
-        -- an equal slot standing at the desired offset serves the top's destination just as well
         let result ← exchangeWithTop state (perm top)
         if result.blocked.isSome then return result
         go result.state perm' hne
@@ -118,8 +116,6 @@ def permute
         -- swap top with pos
         | some ⟨pos, hpos⟩ =>
           let perm' := perm * Equiv.swap top pos
-          -- a misplaced slot equal to the top takes over the top's destination, making the top the misplaced
-          -- one; it then travels to its destination directly instead of dislodging an in-place slot
           let result ← exchangeWithTop state pos
           if result.blocked.isSome then return result
           go result.state perm' hne

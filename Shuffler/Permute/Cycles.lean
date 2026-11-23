@@ -229,4 +229,66 @@ lemma arbitrarySwapCount_le_mul_swap_add_one (perm : Equiv.Perm ι) (a b : ι) :
     have hq := arbitrarySwapCount_add_cyclesAwayFromTop (perm * Equiv.swap a b) a
     omega
 
+omit [DecidableEq ι] in
+-- A reflexive and transitive relation that relates every element to its image relates the elements of each cycle.
+lemma sameCycle_induction {perm : Equiv.Perm ι} (R : ι → ι → Prop) (hrefl : ∀ x, R x x)
+    (htrans : ∀ x y z, R x y → R y z → R x z) (hstep : ∀ x, R x (perm x)) {x y : ι}
+    (h : perm.SameCycle x y) : R x y := by
+  obtain ⟨k, rfl⟩ := h.exists_nat_pow_eq
+  clear h
+  induction k with
+  | zero => exact hrefl x
+  | succ k ih =>
+    rw [pow_succ', Equiv.Perm.mul_apply]
+    exact htrans _ _ _ ih (hstep _)
+
+-- Exchanging the images of two elements in different cycles joins the cycles.
+lemma sameCycle_mul_swap_self {perm : Equiv.Perm ι} {a b : ι} (hab : ¬perm.SameCycle a b) :
+    (perm * Equiv.swap a b).SameCycle a b := by
+  -- from `perm b` the cycle of `b` leads back to `b` without meeting `a`, and the exchange keeps that path
+  have hpath (k : ℕ) : (perm * Equiv.swap a b).SameCycle (perm b) b ∨
+      ((perm * Equiv.swap a b) ^ k) (perm b) = (perm ^ k) (perm b) := by
+    induction k with
+    | zero => exact Or.inr rfl
+    | succ k ih =>
+      refine ih.elim Or.inl fun h => ?_
+      by_cases hz : (perm ^ k) (perm b) = b
+      · have hc : (perm * Equiv.swap a b).SameCycle (perm b) (((perm * Equiv.swap a b) ^ k) (perm b)) :=
+          Equiv.Perm.sameCycle_pow_right.mpr .rfl
+        rw [h, hz] at hc
+        exact Or.inl hc
+      · have hza : (perm ^ k) (perm b) ≠ a := by
+          intro hz'
+          have hc : perm.SameCycle b ((perm ^ k) (perm b)) :=
+            Equiv.Perm.sameCycle_pow_right.mpr (Equiv.Perm.sameCycle_apply_right.mpr .rfl)
+          rw [hz'] at hc
+          exact hab hc.symm
+        refine Or.inr ?_
+        rw [pow_succ', Equiv.Perm.mul_apply, h, pow_succ', Equiv.Perm.mul_apply, Equiv.Perm.mul_apply,
+          Equiv.swap_apply_of_ne_of_ne hza hz]
+  obtain ⟨k, hk⟩ := (Equiv.Perm.sameCycle_apply_left.mpr (Equiv.Perm.SameCycle.refl perm b)).exists_nat_pow_eq
+  have hb : (perm * Equiv.swap a b).SameCycle (perm b) b := by
+    refine (hpath k).elim id fun h => ?_
+    have hc : (perm * Equiv.swap a b).SameCycle (perm b) (((perm * Equiv.swap a b) ^ k) (perm b)) :=
+      Equiv.Perm.sameCycle_pow_right.mpr .rfl
+    rwa [h, hk] at hc
+  have ha : (perm * Equiv.swap a b) a = perm b := by simp
+  exact Equiv.Perm.sameCycle_apply_left.mp (ha ▸ hb)
+
+-- Joining two cycles keeps the elements of every cycle together.
+lemma sameCycle_mul_swap {perm : Equiv.Perm ι} {a b x y : ι} (hab : ¬perm.SameCycle a b)
+    (h : perm.SameCycle x y) : (perm * Equiv.swap a b).SameCycle x y := by
+  have hj := sameCycle_mul_swap_self hab
+  refine sameCycle_induction _ (fun _ => .rfl) (fun _ _ _ => .trans) (fun z => ?_) h
+  by_cases hza : z = a
+  · subst hza
+    have : perm z = (perm * Equiv.swap z b) b := by simp
+    exact this ▸ Equiv.Perm.sameCycle_apply_right.mpr hj
+  by_cases hzb : z = b
+  · subst hzb
+    have : perm z = (perm * Equiv.swap a z) a := by simp
+    exact this ▸ Equiv.Perm.sameCycle_apply_right.mpr hj.symm
+  · have : perm z = (perm * Equiv.swap a b) z := by simp [Equiv.swap_apply_of_ne_of_ne hza hzb]
+    exact this ▸ Equiv.Perm.sameCycle_apply_right.mpr .rfl
+
 end Shuffler.Permute.Permutation
