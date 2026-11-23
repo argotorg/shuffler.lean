@@ -296,10 +296,13 @@ std::string runPlanner(Slots& _slots, std::vector<std::string> const& _fields)
 {
 	StackData const source = _slots.parseStack(_fields.at(3));
 	StackData const target = _slots.parseStack(_fields.at(4));
+	spill::SpillSet spills = parseSpills(_slots, _fields.at(5));
+	// the check of stack::shuffle before it runs the Planner, which Planner.run in Lean makes too
+	yulAssert(ranges::all_of(target, [&](StackSlot const& _slot) { return isAvailable(_slot, source, spills); }));
 	Planner planner(
 		source,
 		target,
-		parseSpills(_slots, _fields.at(5)),
+		std::move(spills),
 		_fields.at(2) == "1",
 		parseStrategy(_fields.at(1)),
 		maxSwapDepth
