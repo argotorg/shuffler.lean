@@ -9,11 +9,11 @@ namespace Shuffler.Planner
 
 variable {source target : Stack}
 
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:912-914.
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:917-919.
 def isRetained {sourceSize targetSize : ℕ} (mapping : Mapping sourceSize targetSize) (sourceOffset : Fin sourceSize) : Bool :=
   (mapping.destinationOf sourceOffset).isSome
 
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:916-926.
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:921-931.
 def hasOtherRetainedCopy (source : Stack) {targetSize : ℕ}
     (mapping : Mapping source.length targetSize) (droppedNow : Vector Byte source.length)
     (offset : Fin source.length) : Bool := Id.run do
@@ -28,7 +28,7 @@ def hasOtherRetainedCopy (source : Stack) {targetSize : ℕ}
   return false
 
 -- This slot is needed somewhere in the target.
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:928-934.
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:934-939.
 def isDemanded (target : Stack) (value : Value) : Bool :=
   target.any (λ slot => ¬ slot.is_junk ∧ slot = value)
 
@@ -38,7 +38,7 @@ def isDemanded (target : Stack) (value : Value) : Bool :=
 -- - 2 = reloaded from existing spill,
 -- - 3 = duplicated from another copy,
 -- - 4 = reloaded after a planned spill
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:936-958.
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:947-963.
 def classify (state : State source target) (mapping : Mapping source.length target.length)
     (droppedNow : Vector Byte source.length) (offset : Fin source.length) :
     Except ShuffleErr (Option ℕ) := do
@@ -69,7 +69,7 @@ def classify (state : State source target) (mapping : Mapping source.length targ
 -- finally values that get a planned spill. Function return labels cannot be regenerated and are never
 -- dropped.
 -- Returns the success flag and updated planner state.
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:900-998.
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:909-1003.
 def resolve (init : State source target)
     (mapping : Mapping source.length target.length)
     (blocked : Blocked)
@@ -116,13 +116,13 @@ def resolve (init : State source target)
         best := some offset
         bestClass := cls.get hcls
 
-    -- See Shuffler.cpp:990-991.
+    -- See Shuffler.cpp:995-996.
     if ¬ best.isSome then
       return ⟨false, state⟩ -- couldn't drop anything
 
     let ⟨hbst⟩ ← requires best.isSome "best must have a value"
 
-    -- See Shuffler.cpp:992-995.
+    -- See Shuffler.cpp:997-998.
     if bestClass = 4 then
       let spills ← state.spills.add source[best.get hbst]
       state := { state with spills }

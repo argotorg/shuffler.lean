@@ -19,7 +19,7 @@ c++ compares Lits by instructionId, not by literal value, but since the Lits
 are all deduped so every same value Lit has the same instId, this is a valid
 model.
 
-https://github.com/argotorg/solidity/blob/6db6505030e17ce9a9c1dd9525fee509ad6cc2ac/libyul/backends/evm/ssa/InstructionStore.h#L199-L212
+https://github.com/argotorg/solidity/blob/56e349d8fe52612c406e21b1af9e4a50eda50943/libyul/backends/evm/ssa/InstructionStore.h#L199-L212
 -/
 inductive Value : Type where
   | Var (id : VarId)

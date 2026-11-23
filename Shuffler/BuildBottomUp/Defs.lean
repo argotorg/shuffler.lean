@@ -78,7 +78,7 @@ def State.expectedStack (state : State source target spills) : Stack :=
 
 
 -- Produces the slot for `targetOffset`
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:388-405.
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:396-413.
 def State.produce (current : State source target spills)
     (targetOffset : Fin target.length) : Except ShuffleErr (Result source target spills) := do
 
@@ -104,7 +104,7 @@ def State.produce (current : State source target spills)
 -- Produces the slot for `targetOffset` and moves it toward its place right away: if the offset exists
 -- already and holds a slot that is not final, a single swap places the produced slot and floats the other
 -- one, which may be its own placement. An equal slot there just takes over the destination.
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:410-426.
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:418-434.
 def State.generate (current : State source target spills)
     (targetOffset : ℕ) : Except ShuffleErr (Result source target spills) := do
 
@@ -150,7 +150,7 @@ private theorem generate_pending_generations (state next : State source target s
 -- Once everything is generated the rest is one final permutation.
 --
 -- Loop invariant: every offset below `targetOffset` is final, i.e., holds the slot bound for it.
--- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:478-617.
+-- See solidity/libyul/backends/evm/ssa/stack/Shuffler.cpp:486-636.
 def buildBottomUp
   (initial : State source target spills)
   (_hvalid : initial.Valid)
