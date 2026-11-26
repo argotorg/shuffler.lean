@@ -2,6 +2,11 @@
 
 This repo contains a work in progress formalization of the new plan based shuffler in solc.
 
+The independent [Zig verification package](zig-verification/README.md) contains
+partial machine-code proofs and the obligation generator and proof-worker tools.
+Its [status](zig-verification/STATUS.md) lists the closed and open contracts.
+Run its commands from `zig-verification/` to select its separate Lean toolchain.
+
 ## Development
 
 Either run `nix develop` or install [elan](https://github.com/leanprover/elan).

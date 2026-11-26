@@ -1,0 +1,67 @@
+module
+
+/-
+The small examples of the baseline, through the state wp: the straight-line
+programs `p1`, `p4`, `p5` and `swap`, and `p2`, whose conditional jump back to
+its start is not taken. Each theorem states the baseline proposition over the
+baseline's own program text, as an `Eventually` statement.
+-/
+public import Kraken.StateCfg
+import Kraken.X64.Examples.Examples
+
+open Std.WP
+open Lean.Order
+open scoped Program.WP
+
+set_option experimental.vcgen true
+
+namespace State
+
+theorem p1_correct [Host] (hp : p1.IsInfix Host.prog) (s : MachineData) :
+    Eventually (step1 Host.exe) (fun s => s.data.regs.rax = 1) ⟨s, startAddr hp⟩ := by
+  apply Program.WP.step1_of_wp hp
+  vcgen [p1]
+    invariants
+    · fun _ s' => s' = s
+    · fun _ _ => 0
+    with kfinish
+
+theorem swap_correct [Host] (hp : swap.IsInfix Host.prog) (d : MachineData) :
+    Eventually (step1 Host.exe)
+      (fun s' =>
+          s'.data.regs.get Reg.rax = d.regs.get Reg.rbx ∧
+          s'.data.regs.get Reg.rbx = d.regs.get Reg.rax)
+      ⟨d, startAddr hp⟩ := by
+  apply Program.WP.step1_of_wp hp
+  vcgen [swap] with kfinish
+
+theorem p2_correct [Host] (hp : p2.IsInfix Host.prog) (s : MachineData) :
+    Eventually (step1 Host.exe) (fun s => s.data.regs.rax = 2) ⟨s, startAddr hp⟩ := by
+  apply Program.WP.step1_of_wp hp
+  vcgen [p2]
+    invariants
+    · fun _ s' => s' = s
+    · fun _ _ => 0
+    with kfinish
+
+theorem p4_correct [Host] (hp : p4.IsInfix Host.prog) (s : MachineData) :
+    Eventually (step1 Host.exe) (fun s => s.data.regs.rax = 1) ⟨s, startAddr hp⟩ := by
+  apply Program.WP.step1_of_wp hp
+  vcgen [p4]
+    invariants
+    · fun _ s' => s' = s
+    · fun _ _ => 0
+    with kfinish
+
+theorem p5_correct [Host] (hp : p5.IsInfix Host.prog) (s : MachineData) :
+    Eventually (step1 Host.exe) (fun s => s.data.regs.rax = 0) ⟨s, startAddr hp⟩ := by
+  apply Program.WP.step1_of_wp hp
+  vcgen [p5]
+    invariants
+    · fun l s' => match l with
+      | "start" => s' = s
+      | _ => s'.regs.rax = 1 ∧ s'.regs.rsp = s.regs.rsp
+    · fun _ _ => 0
+    with kfinish
+
+end State

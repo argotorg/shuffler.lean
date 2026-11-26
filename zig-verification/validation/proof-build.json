@@ -1,0 +1,965 @@
+{
+  "sourceModules": [
+    {
+      "module": "LeanTools.Axioms",
+      "exitCode": 0,
+      "seconds": 1.968
+    },
+    {
+      "module": "Lift.P2.Total.System",
+      "exitCode": 0,
+      "seconds": 0.816
+    },
+    {
+      "module": "Kraken.Attribute",
+      "exitCode": 0,
+      "seconds": 1.167
+    },
+    {
+      "module": "Kraken.Float32Fma",
+      "exitCode": 0,
+      "seconds": 0.866
+    },
+    {
+      "module": "Kraken.Layout",
+      "exitCode": 0,
+      "seconds": 1.468
+    },
+    {
+      "module": "Kraken.ToBytes",
+      "exitCode": 0,
+      "seconds": 1.167
+    },
+    {
+      "module": "Kraken.Mem",
+      "exitCode": 0,
+      "seconds": 1.267
+    },
+    {
+      "module": "Kraken.X64.Syntax",
+      "exitCode": 0,
+      "seconds": 5.78
+    },
+    {
+      "module": "Kraken.X64.Semantics",
+      "exitCode": 0,
+      "seconds": 4.675
+    },
+    {
+      "module": "Lift.P1.Spec",
+      "exitCode": 0,
+      "seconds": 1.067
+    },
+    {
+      "module": "Lift.P1.Execution",
+      "exitCode": 0,
+      "seconds": 0.766
+    },
+    {
+      "module": "Lift.P2.Total.Machine",
+      "exitCode": 0,
+      "seconds": 0.766
+    },
+    {
+      "module": "Lift.Sem.Reaches",
+      "exitCode": 0,
+      "seconds": 0.766
+    },
+    {
+      "module": "Lift.Sem.Model",
+      "exitCode": 0,
+      "seconds": 0.766
+    },
+    {
+      "module": "Lift.Sem.Blocks",
+      "exitCode": 0,
+      "seconds": 1.066
+    },
+    {
+      "module": "Lift.Sem.Sim",
+      "exitCode": 0,
+      "seconds": 0.866
+    },
+    {
+      "module": "Lift.P2.Total.Spec",
+      "exitCode": 0,
+      "seconds": 0.866
+    },
+    {
+      "module": "Lift.P2.Total.Rules",
+      "exitCode": 0,
+      "seconds": 0.766
+    },
+    {
+      "module": "Lift.P2.Total.Memory",
+      "exitCode": 0,
+      "seconds": 0.866
+    },
+    {
+      "module": "Lift.P2.Total.Footprint",
+      "exitCode": 0,
+      "seconds": 0.666
+    },
+    {
+      "module": "Lift.Sem.Heap",
+      "exitCode": 0,
+      "seconds": 1.267
+    },
+    {
+      "module": "Lift.Sem.HeapLemmas",
+      "exitCode": 0,
+      "seconds": 1.467
+    },
+    {
+      "module": "Kraken.Separation",
+      "exitCode": 0,
+      "seconds": 1.017
+    },
+    {
+      "module": "Kraken.SeparationMem",
+      "exitCode": 0,
+      "seconds": 2.32
+    },
+    {
+      "module": "Lift.Sem.MappedMemory",
+      "exitCode": 0,
+      "seconds": 0.866
+    },
+    {
+      "module": "Lift.Sem.SysV",
+      "exitCode": 0,
+      "seconds": 0.716
+    },
+    {
+      "module": "Lift.Sem.StackRoom",
+      "exitCode": 0,
+      "seconds": 1.218
+    },
+    {
+      "module": "Lift.Sem.SimAt",
+      "exitCode": 0,
+      "seconds": 0.866
+    },
+    {
+      "module": "Lift.Sem.StackPush",
+      "exitCode": 0,
+      "seconds": 1.567
+    },
+    {
+      "module": "Lift.Sem.SepRoom",
+      "exitCode": 0,
+      "seconds": 1.167
+    },
+    {
+      "module": "Lift.Sem.Hidden",
+      "exitCode": 0,
+      "seconds": 0.916
+    },
+    {
+      "module": "Lift.Tactic.FrameMemLemmas",
+      "exitCode": 0,
+      "seconds": 2.27
+    },
+    {
+      "module": "Kraken.OmniSemantics",
+      "exitCode": 0,
+      "seconds": 0.867
+    },
+    {
+      "module": "Kraken.X64.OmniSemantics",
+      "exitCode": 0,
+      "seconds": 0.967
+    },
+    {
+      "module": "Kraken.X64.Inert",
+      "exitCode": 0,
+      "seconds": 0.767
+    },
+    {
+      "module": "Kraken.Data.List.Infix",
+      "exitCode": 0,
+      "seconds": 0.767
+    },
+    {
+      "module": "Kraken.X64.WP.Host",
+      "exitCode": 0,
+      "seconds": 1.769
+    },
+    {
+      "module": "Kraken.X64.WP.Step",
+      "exitCode": 0,
+      "seconds": 4.675
+    },
+    {
+      "module": "Kraken.X64.WP.Basic",
+      "exitCode": 0,
+      "seconds": 1.468
+    },
+    {
+      "module": "Kraken.X64.WP",
+      "exitCode": 0,
+      "seconds": 0.766
+    },
+    {
+      "module": "Kraken.X64.Registers",
+      "exitCode": 0,
+      "seconds": 4.675
+    },
+    {
+      "module": "Kraken.KVCGen",
+      "exitCode": 0,
+      "seconds": 1.116
+    },
+    {
+      "module": "Kraken.X64.WP.Instance",
+      "exitCode": 0,
+      "seconds": 1.167
+    },
+    {
+      "module": "Kraken.GrindFold",
+      "exitCode": 0,
+      "seconds": 0.866
+    },
+    {
+      "module": "Kraken.Specs",
+      "exitCode": 0,
+      "seconds": 1.868
+    },
+    {
+      "module": "Kraken.Blocks",
+      "exitCode": 0,
+      "seconds": 1.167
+    },
+    {
+      "module": "Kraken.X64.WP.Spec",
+      "exitCode": 0,
+      "seconds": 1.969
+    },
+    {
+      "module": "VerifiedNix.MemSimp",
+      "exitCode": 0,
+      "seconds": 3.221
+    },
+    {
+      "module": "Lift.Tactic.MemLemmas",
+      "exitCode": 0,
+      "seconds": 1.067
+    },
+    {
+      "module": "Lift.Tactic.Mem",
+      "exitCode": 0,
+      "seconds": 2.069
+    },
+    {
+      "module": "Kraken.SeparationTactics",
+      "exitCode": 0,
+      "seconds": 1.97
+    },
+    {
+      "module": "Lift.Tactic.FrameMem",
+      "exitCode": 0,
+      "seconds": 2.571
+    },
+    {
+      "module": "Lift.Sem.CallMem",
+      "exitCode": 0,
+      "seconds": 0.867
+    },
+    {
+      "module": "Lift.P1.Command",
+      "exitCode": 0,
+      "seconds": 2.773
+    },
+    {
+      "module": "Kraken.X64.Parser.Basic",
+      "exitCode": 0,
+      "seconds": 8.559
+    },
+    {
+      "module": "Kraken.X64.Parser",
+      "exitCode": 0,
+      "seconds": 1.621
+    },
+    {
+      "module": "Lift.Shuffler.Code",
+      "exitCode": 0,
+      "seconds": 4.226
+    },
+    {
+      "module": "Lift.Shuffler.L1",
+      "exitCode": 0,
+      "seconds": 326.808
+    },
+    {
+      "module": "Lift.P2.Total.Primitive",
+      "exitCode": 0,
+      "seconds": 0.766
+    },
+    {
+      "module": "Lift.Spike.Sites",
+      "exitCode": 0,
+      "seconds": 0.867
+    },
+    {
+      "module": "Lift.Tactic.Simp",
+      "exitCode": 0,
+      "seconds": 0.866
+    },
+    {
+      "module": "Lift.Tactic.SignedFlags",
+      "exitCode": 0,
+      "seconds": 0.867
+    },
+    {
+      "module": "Lift.Tactic.SimState",
+      "exitCode": 0,
+      "seconds": 1.869
+    },
+    {
+      "module": "Lift.Tactic.Block",
+      "exitCode": 0,
+      "seconds": 3.774
+    },
+    {
+      "module": "Skel.Gen.Derive.Site",
+      "exitCode": 0,
+      "seconds": 1.767
+    },
+    {
+      "module": "Lift.Tactic.RunN",
+      "exitCode": 0,
+      "seconds": 1.067
+    },
+    {
+      "module": "Lift.Tactic.Cond",
+      "exitCode": 0,
+      "seconds": 1.868
+    },
+    {
+      "module": "Lift.Tactic.Compose",
+      "exitCode": 0,
+      "seconds": 4.024
+    },
+    {
+      "module": "Lift.Shuffler.Entry",
+      "exitCode": 0,
+      "seconds": 10.486
+    },
+    {
+      "module": "Skel.Gen.Sites.Shuffler",
+      "exitCode": 0,
+      "seconds": 347.554
+    },
+    {
+      "module": "Lift.Trusted.Object",
+      "exitCode": 0,
+      "seconds": 0.766
+    },
+    {
+      "module": "Lift.Trusted.Call",
+      "exitCode": 0,
+      "seconds": 0.766
+    },
+    {
+      "module": "Lift.Trusted.Encode",
+      "exitCode": 0,
+      "seconds": 0.716
+    },
+    {
+      "module": "Lift.Meta.MatchCache",
+      "exitCode": 0,
+      "seconds": 0.816
+    },
+    {
+      "module": "Lift.Sem.HeapBytes",
+      "exitCode": 0,
+      "seconds": 1.167
+    },
+    {
+      "module": "VerifiedNix.ProofLemmas",
+      "exitCode": 0,
+      "seconds": 1.167
+    },
+    {
+      "module": "Lift.Sem.ByteLemmas",
+      "exitCode": 0,
+      "seconds": 1.468
+    },
+    {
+      "module": "Lift.Sem.HeapBytesSound",
+      "exitCode": 0,
+      "seconds": 1.167
+    },
+    {
+      "module": "Lift.Sem.HeapBytesStore",
+      "exitCode": 0,
+      "seconds": 1.167
+    },
+    {
+      "module": "Lift.Sem.HeapBytesObj",
+      "exitCode": 0,
+      "seconds": 1.267
+    },
+    {
+      "module": "Lift.Sem.HeapBytesStoreSound",
+      "exitCode": 0,
+      "seconds": 1.267
+    },
+    {
+      "module": "Lift.Sem.HeapBytesFrame",
+      "exitCode": 0,
+      "seconds": 1.167
+    },
+    {
+      "module": "Lift.Pilot.Call",
+      "exitCode": 0,
+      "seconds": 0.866
+    },
+    {
+      "module": "Lift.Sem.Cut",
+      "exitCode": 0,
+      "seconds": 1.267
+    },
+    {
+      "module": "Lift.Sem.PrivateStack",
+      "exitCode": 0,
+      "seconds": 0.866
+    },
+    {
+      "module": "Lift.Sem.StackArgs",
+      "exitCode": 0,
+      "seconds": 0.866
+    },
+    {
+      "module": "Lift.Sem.Split",
+      "exitCode": 0,
+      "seconds": 0.967
+    },
+    {
+      "module": "Lift.Sem.HeapWF",
+      "exitCode": 0,
+      "seconds": 0.967
+    },
+    {
+      "module": "Lift.Sem.HeapSplit",
+      "exitCode": 0,
+      "seconds": 1.217
+    },
+    {
+      "module": "Lift.Sem.CallFrame",
+      "exitCode": 0,
+      "seconds": 0.966
+    },
+    {
+      "module": "Lift.Sem.CallArm",
+      "exitCode": 0,
+      "seconds": 0.966
+    },
+    {
+      "module": "Lift.Sem.CallArmBytes",
+      "exitCode": 0,
+      "seconds": 1.067
+    },
+    {
+      "module": "Lift.Sem.Bridge",
+      "exitCode": 0,
+      "seconds": 1.969
+    },
+    {
+      "module": "Lift.Sem.FinalCases",
+      "exitCode": 0,
+      "seconds": 1.016
+    },
+    {
+      "module": "Lift.Sem.Final",
+      "exitCode": 0,
+      "seconds": 1.067
+    },
+    {
+      "module": "Lift.Sem.Loop",
+      "exitCode": 0,
+      "seconds": 0.766
+    },
+    {
+      "module": "Lift.Tactic.Loop",
+      "exitCode": 0,
+      "seconds": 2.018
+    },
+    {
+      "module": "Lift.Tactic.LoopSimpAttr",
+      "exitCode": 0,
+      "seconds": 0.966
+    },
+    {
+      "module": "Lift.Sem.HeapChain",
+      "exitCode": 0,
+      "seconds": 0.967
+    },
+    {
+      "module": "Lift.Tactic.LoopSimp",
+      "exitCode": 0,
+      "seconds": 1.067
+    },
+    {
+      "module": "Lift.Sem.HeapFields",
+      "exitCode": 0,
+      "seconds": 1.269
+    },
+    {
+      "module": "Lift.Sem.HeapSpan",
+      "exitCode": 0,
+      "seconds": 1.67
+    },
+    {
+      "module": "Lift.Tactic.HeapField",
+      "exitCode": 0,
+      "seconds": 4.327
+    },
+    {
+      "module": "Lift.Sem.HeapSlice",
+      "exitCode": 0,
+      "seconds": 1.118
+    },
+    {
+      "module": "Lift.Sem.HeapFrame",
+      "exitCode": 0,
+      "seconds": 1.268
+    },
+    {
+      "module": "Lift.Tactic.HeapSlice",
+      "exitCode": 0,
+      "seconds": 1.969
+    },
+    {
+      "module": "Lift.Tactic.HeapFrame",
+      "exitCode": 0,
+      "seconds": 3.772
+    },
+    {
+      "module": "Lift.Tactic.FlagNorm",
+      "exitCode": 0,
+      "seconds": 1.668
+    },
+    {
+      "module": "Lift.Tactic.SpecDecide",
+      "exitCode": 0,
+      "seconds": 1.668
+    },
+    {
+      "module": "Lift.Tactic.ArrayUpdate",
+      "exitCode": 0,
+      "seconds": 1.267
+    },
+    {
+      "module": "Lift.Tactic.WordArith",
+      "exitCode": 0,
+      "seconds": 1.718
+    },
+    {
+      "module": "Lift.Tactic.ResStep",
+      "exitCode": 0,
+      "seconds": 1.667
+    },
+    {
+      "module": "Lift.Tactic.HeapStep",
+      "exitCode": 0,
+      "seconds": 1.968
+    },
+    {
+      "module": "Lift.Tactic.BridgeStep",
+      "exitCode": 0,
+      "seconds": 1.367
+    },
+    {
+      "module": "Lift.Sem.HeapReadShape",
+      "exitCode": 0,
+      "seconds": 0.966
+    },
+    {
+      "module": "Lift.Sem.HeapValueView",
+      "exitCode": 0,
+      "seconds": 0.866
+    },
+    {
+      "module": "Lift.Tactic.HeapPermStepTyped",
+      "exitCode": 0,
+      "seconds": 1.818
+    },
+    {
+      "module": "Lift.Tactic.HeapPartitionExact",
+      "exitCode": 0,
+      "seconds": 1.367
+    },
+    {
+      "module": "Lift.Sem.HeapBytesPerm",
+      "exitCode": 0,
+      "seconds": 1.167
+    },
+    {
+      "module": "Lift.Tactic.HeapPermStep",
+      "exitCode": 0,
+      "seconds": 1.819
+    },
+    {
+      "module": "Lift.Sem.PermReplay",
+      "exitCode": 0,
+      "seconds": 0.716
+    },
+    {
+      "module": "Lift.Sem.PermReplayAt",
+      "exitCode": 0,
+      "seconds": 0.666
+    },
+    {
+      "module": "Lift.Tactic.LoopClose",
+      "exitCode": 0,
+      "seconds": 6.377
+    },
+    {
+      "module": "Lift.Pilot.Encode",
+      "exitCode": 0,
+      "seconds": 0.766
+    },
+    {
+      "module": "Lift.Pilot.Slot",
+      "exitCode": 0,
+      "seconds": 0.916
+    },
+    {
+      "module": "Lift.Shuffler.Ext.Permutation.Model",
+      "exitCode": 0,
+      "seconds": 1.868
+    },
+    {
+      "module": "Lift.Shuffler.Ext.Model",
+      "exitCode": 0,
+      "seconds": 2.222
+    },
+    {
+      "module": "Lift.Shuffler.Zig.Basic",
+      "exitCode": 0,
+      "seconds": 0.917
+    },
+    {
+      "module": "Lift.Shuffler.Ext.FlatModel",
+      "exitCode": 0,
+      "seconds": 4.573
+    },
+    {
+      "module": "Lift.Shuffler.Ext.FlatSpill",
+      "exitCode": 0,
+      "seconds": 0.866
+    },
+    {
+      "module": "Lift.Shuffler.Ext.MapModel",
+      "exitCode": 0,
+      "seconds": 1.016
+    },
+    {
+      "module": "Lift.Shuffler.Ext.FlatPop",
+      "exitCode": 0,
+      "seconds": 0.866
+    },
+    {
+      "module": "Lift.Shuffler.Ext.FlatSurplus",
+      "exitCode": 0,
+      "seconds": 0.766
+    },
+    {
+      "module": "Lift.Shuffler.Ext.FlatLowest",
+      "exitCode": 0,
+      "seconds": 0.866
+    },
+    {
+      "module": "Lift.Shuffler.Zig.Emission",
+      "exitCode": 0,
+      "seconds": 4.523
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.Layout",
+      "exitCode": 0,
+      "seconds": 1.167
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.DupStatement",
+      "exitCode": 0,
+      "seconds": 1.166
+    },
+    {
+      "module": "Skel.ProofScope",
+      "exitCode": 0,
+      "seconds": 1.166
+    },
+    {
+      "module": "Lift.Shuffler.Proved.emissionDup",
+      "exitCode": 0,
+      "seconds": 27.38
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.IsAvailableStatement",
+      "exitCode": 0,
+      "seconds": 1.168
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.IsSpilledStatement",
+      "exitCode": 0,
+      "seconds": 1.269
+    },
+    {
+      "module": "Lift.Shuffler.Proved.emissionIsSpilled",
+      "exitCode": 0,
+      "seconds": 8.934
+    },
+    {
+      "module": "Lift.Pilot.IsRetainedSpec",
+      "exitCode": 0,
+      "seconds": 0.666
+    },
+    {
+      "module": "Lift.Pilot.ShallowestSpec",
+      "exitCode": 0,
+      "seconds": 0.816
+    },
+    {
+      "module": "Lift.Shuffler.Internal.ShallowestStatement",
+      "exitCode": 0,
+      "seconds": 1.517
+    },
+    {
+      "module": "Lift.Shuffler.Proved.emissionShallowestCopyPosition",
+      "exitCode": 0,
+      "seconds": 15.709
+    },
+    {
+      "module": "Lift.Shuffler.Proved.emissionIsAvailable",
+      "exitCode": 0,
+      "seconds": 21.209
+    },
+    {
+      "module": "Lift.Pilot.PopSpec",
+      "exitCode": 0,
+      "seconds": 0.866
+    },
+    {
+      "module": "Lift.Shuffler.Internal.PopStatement",
+      "exitCode": 0,
+      "seconds": 2.22
+    },
+    {
+      "module": "Lift.Shuffler.Proved.emissionPop",
+      "exitCode": 0,
+      "seconds": 25.579
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.PushStatement",
+      "exitCode": 0,
+      "seconds": 1.571
+    },
+    {
+      "module": "Lift.Shuffler.Proved.emissionPush",
+      "exitCode": 0,
+      "seconds": 46.808
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.SwapWithStatement",
+      "exitCode": 0,
+      "seconds": 1.268
+    },
+    {
+      "module": "Lift.Shuffler.Proved.emissionSwapWith",
+      "exitCode": 0,
+      "seconds": 40.129
+    },
+    {
+      "module": "Lift.Shuffler.Ext.FlatPlan",
+      "exitCode": 0,
+      "seconds": 3.874
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.AbsorbSurplusStatement",
+      "exitCode": 0,
+      "seconds": 1.167
+    },
+    {
+      "module": "Lift.Pilot.MapSpec",
+      "exitCode": 0,
+      "seconds": 0.666
+    },
+    {
+      "module": "Lift.Shuffler.Internal.MapStatement",
+      "exitCode": 0,
+      "seconds": 1.669
+    },
+    {
+      "module": "Lift.Shuffler.Proved.mappingBuilderMap",
+      "exitCode": 0,
+      "seconds": 8.884
+    },
+    {
+      "module": "Lift.Shuffler.Proved.mappingBuilderAbsorbSurplus",
+      "exitCode": 0,
+      "seconds": 64.047
+    },
+    {
+      "module": "Lift.Pilot.ClosestCopySpec",
+      "exitCode": 0,
+      "seconds": 0.868
+    },
+    {
+      "module": "Lift.Shuffler.Internal.ClosestCopyStatement",
+      "exitCode": 0,
+      "seconds": 2.173
+    },
+    {
+      "module": "Lift.Shuffler.Proved.mappingBuilderClosestCopy",
+      "exitCode": 0,
+      "seconds": 48.435
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.KeepWildcardSlotsStatement",
+      "exitCode": 0,
+      "seconds": 1.87
+    },
+    {
+      "module": "Lift.Shuffler.Proved.mappingBuilderKeepWildcardSlots",
+      "exitCode": 0,
+      "seconds": 33.899
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.MapClosestCopiesStatement",
+      "exitCode": 0,
+      "seconds": 1.57
+    },
+    {
+      "module": "Lift.Shuffler.Proved.mappingBuilderMapClosestCopies",
+      "exitCode": 0,
+      "seconds": 48.734
+    },
+    {
+      "module": "Lift.Pilot.MapInPlaceSpec",
+      "exitCode": 0,
+      "seconds": 1.067
+    },
+    {
+      "module": "Lift.Shuffler.Internal.MapInPlaceStatement",
+      "exitCode": 0,
+      "seconds": 1.969
+    },
+    {
+      "module": "Lift.Shuffler.Proved.mappingBuilderMapInPlace",
+      "exitCode": 0,
+      "seconds": 25.575
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.MapWildcardSlotCopiesStatement",
+      "exitCode": 0,
+      "seconds": 1.417
+    },
+    {
+      "module": "Lift.Shuffler.Proved.mappingBuilderMapWildcardSlotCopies",
+      "exitCode": 0,
+      "seconds": 50.695
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.ClassifyStatement",
+      "exitCode": 0,
+      "seconds": 1.27
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.HasOtherRetainedCopyStatement",
+      "exitCode": 0,
+      "seconds": 1.368
+    },
+    {
+      "module": "Lift.Shuffler.Internal.IsRetainedStatement",
+      "exitCode": 0,
+      "seconds": 1.92
+    },
+    {
+      "module": "Lift.Shuffler.Proved.plannerIsRetained",
+      "exitCode": 0,
+      "seconds": 3.674
+    },
+    {
+      "module": "Lift.Shuffler.Proved.plannerHasOtherRetainedCopy",
+      "exitCode": 0,
+      "seconds": 41.218
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.IsDemandedStatement",
+      "exitCode": 0,
+      "seconds": 1.067
+    },
+    {
+      "module": "Lift.Shuffler.Proved.plannerIsDemanded",
+      "exitCode": 0,
+      "seconds": 18.059
+    },
+    {
+      "module": "Lift.Shuffler.Proved.plannerClassify",
+      "exitCode": 0,
+      "seconds": 89.514
+    },
+    {
+      "module": "Lift.Pilot.AddSpec",
+      "exitCode": 0,
+      "seconds": 0.867
+    },
+    {
+      "module": "Lift.Shuffler.Internal.AddStatement",
+      "exitCode": 0,
+      "seconds": 1.367
+    },
+    {
+      "module": "Lift.Shuffler.Proved.spillSetAdd",
+      "exitCode": 0,
+      "seconds": 9.986
+    },
+    {
+      "module": "Lift.Pilot.AlignmentSpec",
+      "exitCode": 0,
+      "seconds": 0.916
+    },
+    {
+      "module": "Lift.Shuffler.Internal.AlignmentStatement",
+      "exitCode": 0,
+      "seconds": 1.668
+    },
+    {
+      "module": "Lift.Shuffler.Proved.workspaceAlignment",
+      "exitCode": 0,
+      "seconds": 4.523
+    },
+    {
+      "module": "Lift.Shuffler.Zig.Planner",
+      "exitCode": 0,
+      "seconds": 1.517
+    },
+    {
+      "module": "Lift.Shuffler.Zig.Shuffle",
+      "exitCode": 0,
+      "seconds": 1.167
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.WorkspaceSizeStatement",
+      "exitCode": 0,
+      "seconds": 1.718
+    },
+    {
+      "module": "Lift.Shuffler.Proved.workspaceSize",
+      "exitCode": 0,
+      "seconds": 3.273
+    }
+  ],
+  "audit": {
+    "module": "Review.Closed",
+    "exitCode": 0,
+    "closedContracts": 21
+  },
+  "initialAuditFailure": "The wrapper omitted skel_semantic in the final theorem namespace. Only the wrapper was corrected.",
+  "defaultTarget": {
+    "command": "lake --no-cache build",
+    "exitCode": 0,
+    "dependencyArtifacts": "cached from this package source build"
+  }
+}

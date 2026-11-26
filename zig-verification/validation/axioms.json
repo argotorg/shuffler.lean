@@ -1,0 +1,399 @@
+[
+  {
+    "function": "emissionDup",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound",
+      "Skel.Gen.Level3.Shuffler.emissionDup.skel_semantic.block.entry._native.bv_decide.ax_1_16",
+      "Skel.Gen.Level3.Shuffler.emissionDup.skel_semantic.block.entry._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.emissionDup.skel_semantic.block.o58._native.bv_decide.ax_1_14",
+      "Skel.Gen.Level3.Shuffler.emissionDup.skel_semantic.refines_l3.skel_proof.kind_eq_of_shift._native.bv_decide.ax_1_6",
+      "Skel.Gen.Level3.Shuffler.emissionDup.skel_semantic.refines_l3.skel_proof.rax_low._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.emissionDup.skel_semantic.refines_l3.skel_proof.trunc_depth._native.bv_decide.ax_1_5"
+    ]
+  },
+  {
+    "function": "emissionIsAvailable",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound",
+      "Skel.Gen.Level3.Shuffler.emissionShallowestCopyPosition.block.o12._native.bv_decide.ax_1_18",
+      "Skel.Gen.Level3.Shuffler.emissionShallowestCopyPosition.block.o12._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.emissionIsAvailable.skel_semantic.block.LBB8_4._native.bv_decide.ax_1_40",
+      "Skel.Gen.Level3.Shuffler.emissionIsAvailable.skel_semantic.block.entry._native.bv_decide.ax_1_31",
+      "Skel.Gen.Level3.Shuffler.emissionIsAvailable.skel_semantic.block.entry._native.bv_decide.ax_1_38",
+      "Skel.Gen.Level3.Shuffler.emissionIsAvailable.skel_semantic.block.o64._native.bv_decide.ax_1_8",
+      "Skel.Gen.Level3.Shuffler.emissionIsSpilled.skel_semantic.block.LBB13_3._native.bv_decide.ax_1_14",
+      "Skel.Gen.Level3.Shuffler.emissionIsSpilled.skel_semantic.block.LBB13_3._native.bv_decide.ax_1_19",
+      "Skel.Gen.Level3.Shuffler.emissionIsSpilled.skel_semantic.block.entry._native.bv_decide.ax_1_14",
+      "Skel.Gen.Level3.Shuffler.emissionIsSpilled.skel_semantic.block.entry._native.bv_decide.ax_1_19",
+      "Skel.Gen.Level3.Shuffler.emissionIsSpilled.skel_semantic.block.entry._native.bv_decide.ax_1_31",
+      "Skel.Gen.Level3.Shuffler.emissionIsSpilled.skel_semantic.block.entry._native.bv_decide.ax_1_36",
+      "Skel.Gen.Level3.Shuffler.emissionIsSpilled.skel_semantic.block.entry._native.bv_decide.ax_1_41",
+      "Skel.Gen.Level3.Shuffler.emissionIsSpilled.skel_semantic.block.entry._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.emissionIsAvailable.skel_semantic.refines_l3.skel_proof.isSpilled_word._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.emissionIsAvailable.skel_semantic.refines_l3.skel_proof.lowByte_or._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.emissionIsAvailable.skel_semantic.refines_l3.skel_proof.lowByte_or_mask._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.emissionIsAvailable.skel_semantic.refines_l3.skel_proof.rbx_or_mask._native.bv_decide.ax_1_10",
+      "Skel.Gen.Level3.Shuffler.emissionIsAvailable.skel_semantic.refines_l3.skel_proof.rbx_or_mask._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.emissionIsAvailable.skel_semantic.refines_l3.skel_proof.slotWord_low48_eq._native.bv_decide.ax_1_10",
+      "Skel.Gen.Level3.Shuffler.emissionIsAvailable.skel_semantic.refines_l3.skel_proof.slotWord_low48_eq._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.emissionIsAvailable.skel_semantic.block.o25.skel_proof.block.o25._native.bv_decide.ax_1_19",
+      "Skel.Gen.Level3.Shuffler.emissionIsAvailable.skel_semantic.block.o25.skel_proof.block.o25._native.bv_decide.ax_1_32"
+    ]
+  },
+  {
+    "function": "emissionIsSpilled",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound",
+      "Skel.Gen.Level3.Shuffler.emissionIsSpilled.skel_semantic.block.LBB13_3._native.bv_decide.ax_1_14",
+      "Skel.Gen.Level3.Shuffler.emissionIsSpilled.skel_semantic.block.LBB13_3._native.bv_decide.ax_1_19",
+      "Skel.Gen.Level3.Shuffler.emissionIsSpilled.skel_semantic.block.entry._native.bv_decide.ax_1_14",
+      "Skel.Gen.Level3.Shuffler.emissionIsSpilled.skel_semantic.block.entry._native.bv_decide.ax_1_19",
+      "Skel.Gen.Level3.Shuffler.emissionIsSpilled.skel_semantic.block.entry._native.bv_decide.ax_1_31",
+      "Skel.Gen.Level3.Shuffler.emissionIsSpilled.skel_semantic.block.entry._native.bv_decide.ax_1_36",
+      "Skel.Gen.Level3.Shuffler.emissionIsSpilled.skel_semantic.block.entry._native.bv_decide.ax_1_41",
+      "Skel.Gen.Level3.Shuffler.emissionIsSpilled.skel_semantic.block.entry._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.emissionIsSpilled.skel_semantic.refines_l3.skel_proof.isVariable_of_cond_eq_zero._native.bv_decide.ax_1_11",
+      "Skel.Gen.Level3.Shuffler.emissionIsSpilled.skel_semantic.refines_l3.skel_proof.isVariable_of_cond_ne_zero._native.bv_decide.ax_1_11",
+      "Skel.Gen.Level3.Shuffler.emissionIsSpilled.skel_semantic.refines_l3.skel_proof.refines_l3._native.bv_decide.ax_1_20"
+    ]
+  },
+  {
+    "function": "emissionPop",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound",
+      "Skel.Gen.Level3.Shuffler.emissionPop.skel_semantic.block.entry._native.bv_decide.ax_1_15",
+      "Skel.Gen.Level3.Shuffler.emissionPop.skel_semantic.block.entry._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.emissionPop.skel_semantic.refines_l3.skel_proof.refines_l3._native.bv_decide.ax_1_52",
+      "Skel.Gen.Level3.Shuffler.emissionPop.skel_semantic.refines_l3.skel_proof.refines_l3._native.bv_decide.ax_1_6"
+    ]
+  },
+  {
+    "function": "emissionPush",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound",
+      "Skel.Gen.Level3.Shuffler.emissionPush.skel_semantic.block.entry._native.bv_decide.ax_1_16",
+      "Skel.Gen.Level3.Shuffler.emissionPush.skel_semantic.block.entry._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.emissionPush.skel_semantic.refines_l3.skel_proof.refines_l3._native.bv_decide.ax_1_20",
+      "Skel.Gen.Level3.Shuffler.emissionPush.skel_semantic.refines_l3.skel_proof.refines_l3._native.bv_decide.ax_1_25",
+      "Skel.Gen.Level3.Shuffler.emissionPush.skel_semantic.refines_l3.skel_proof.refines_l3._native.bv_decide.ax_1_39",
+      "Skel.Gen.Level3.Shuffler.emissionPush.skel_semantic.refines_l3.skel_proof.refines_l3._native.bv_decide.ax_1_47",
+      "Skel.Gen.Level3.Shuffler.emissionPush.block.o46.skel_proof.block.push_byte._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.emissionPush.block.o46.skel_proof.block.push_r9._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.emissionPush.skel_semantic.refines_l3.skel_proof.Aux4.kind_cond._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.emissionPush.skel_semantic.refines_l3.skel_proof.Aux4.opcode_cond._native.bv_decide.ax_1_5"
+    ]
+  },
+  {
+    "function": "emissionShallowestCopyPosition",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound",
+      "Skel.Gen.Level3.Shuffler.emissionShallowestCopyPosition.skel_semantic.block.o12._native.bv_decide.ax_1_18",
+      "Skel.Gen.Level3.Shuffler.emissionShallowestCopyPosition.skel_semantic.block.o12._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.emissionShallowestCopyPosition.skel_semantic.loop.LBB11_1.skel_proof.search_skip._native.bv_decide.ax_1_26",
+      "Skel.Gen.Level3.Shuffler.emissionShallowestCopyPosition.skel_semantic.loop.LBB11_1.skel_proof.search_step._native.bv_decide.ax_1_18"
+    ]
+  },
+  {
+    "function": "emissionSwapWith",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound",
+      "Skel.Gen.Level3.Shuffler.emissionSwapWith.skel_semantic.block.entry._native.bv_decide.ax_1_15",
+      "Skel.Gen.Level3.Shuffler.emissionSwapWith.skel_semantic.block.entry._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.emissionSwapWith.skel_semantic.refines_l3.skel_proof.from_o59._native.bv_decide.ax_1_16",
+      "Skel.Gen.Level3.Shuffler.emissionSwapWith.skel_semantic.refines_l3.skel_proof.from_o59._native.bv_decide.ax_1_23",
+      "Skel.Gen.Level3.Shuffler.emissionSwapWith.skel_semantic.refines_l3.skel_proof.from_o59._native.bv_decide.ax_1_40",
+      "Skel.Gen.Level3.Shuffler.emissionSwapWith.skel_semantic.refines_l3.skel_proof.refines_l3._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.emissionSwapWith.skel_semantic.refines_l3.skel_proof.SwapRecord.from_record._native.bv_decide.ax_1_13",
+      "Skel.Gen.Level3.Shuffler.emissionSwapWith.skel_semantic.refines_l3.skel_proof.SwapRecord.from_record._native.bv_decide.ax_1_18",
+      "Skel.Gen.Level3.Shuffler.emissionSwapWith.skel_semantic.refines_l3.skel_proof.SwapRepair.assertion_out._native.bv_decide.ax_1_7"
+    ]
+  },
+  {
+    "function": "mappingBuilderAbsorbSurplus",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMap.block.entry._native.bv_decide.ax_1_16",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMap.block.entry._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderAbsorbSurplus.skel_semantic.block.LBB23_18._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderAbsorbSurplus.skel_semantic.regions.skel_proof.kind_test._native.bv_decide.ax_1_5"
+    ]
+  },
+  {
+    "function": "mappingBuilderClosestCopy",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o114._native.bv_decide.ax_1_14",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o114._native.bv_decide.ax_1_19",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o114._native.bv_decide.ax_1_29",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o114._native.bv_decide.ax_1_34",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o114._native.bv_decide.ax_1_39",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o114._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o51._native.bv_decide.ax_1_10",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o51._native.bv_decide.ax_1_19",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.loop.LBB29_1.skel_proof.loop.eql_iff_and._native.bv_decide.ax_1_6",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.loop.LBB29_1.skel_proof.loop.kind_bridge._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.loop.LBB29_1.skel_proof.loop.toUInt8_bridge._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.loop.LBB29_1.skel_proof.loop.zero_bridge._native.bv_decide.ax_1_5"
+    ]
+  },
+  {
+    "function": "mappingBuilderKeepWildcardSlots",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMap.block.entry._native.bv_decide.ax_1_16",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMap.block.entry._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderKeepWildcardSlots.skel_semantic.block.LBB26_10._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderKeepWildcardSlots.skel_semantic.loop.LBB26_1.skel_proof.loop.isWildcardTarget_iff._native.bv_decide.ax_1_5"
+    ]
+  },
+  {
+    "function": "mappingBuilderMap",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMap.skel_semantic.block.entry._native.bv_decide.ax_1_16",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMap.skel_semantic.block.entry._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMap.skel_semantic.refines_l3.skel_proof.refines_l3._native.bv_decide.ax_1_15",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMap.skel_semantic.refines_l3.skel_proof.refines_l3._native.bv_decide.ax_1_20",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMap.skel_semantic.refines_l3.skel_proof.refines_l3._native.bv_decide.ax_1_25",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMap.skel_semantic.refines_l3.skel_proof.refines_l3._native.bv_decide.ax_1_31"
+    ]
+  },
+  {
+    "function": "mappingBuilderMapClosestCopies",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMap.block.entry._native.bv_decide.ax_1_16",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMap.block.entry._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o114._native.bv_decide.ax_1_14",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o114._native.bv_decide.ax_1_19",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o114._native.bv_decide.ax_1_29",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o114._native.bv_decide.ax_1_34",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o114._native.bv_decide.ax_1_39",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o114._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o51._native.bv_decide.ax_1_10",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o51._native.bv_decide.ax_1_19",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapClosestCopies.skel_semantic.block.LBB28_9._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapClosestCopies.skel_semantic.loop.LBB28_1.skel_proof.loop.c0_get_dropped_eq._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapClosestCopies.skel_semantic.loop.LBB28_1.skel_proof.loop.loop_main._native.bv_decide.ax_1_26",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapClosestCopies.skel_semantic.loop.LBB28_1.skel_proof.loop.map_exit_dropped._native.bv_decide.ax_1_8",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapClosestCopies.skel_semantic.loop.LBB28_1.skel_proof.loop.setWidth16_or_one._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapClosestCopies.skel_semantic.loop.LBB28_1.skel_proof.loop.shift32_eq._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapClosestCopies.skel_semantic.loop.LBB28_1.skel_proof.loop.slotWord_inj._native.bv_decide.ax_1_7",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapClosestCopies.skel_semantic.loop.LBB28_1.skel_proof.loop.slotWord_mask._native.bv_decide.ax_1_7"
+    ]
+  },
+  {
+    "function": "mappingBuilderMapInPlace",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMap.skel_semantic.block.entry._native.bv_decide.ax_1_16",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMap.skel_semantic.block.entry._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapInPlace.skel_semantic.block.LBB30_9._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapInPlace.skel_semantic.block.o31._native.bv_decide.ax_1_10",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapInPlace.skel_semantic.block.o31._native.bv_decide.ax_1_19",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMap.skel_semantic.refines_l3.skel_proof.refines_l3._native.bv_decide.ax_1_15",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMap.skel_semantic.refines_l3.skel_proof.refines_l3._native.bv_decide.ax_1_20",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMap.skel_semantic.refines_l3.skel_proof.refines_l3._native.bv_decide.ax_1_25",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMap.skel_semantic.refines_l3.skel_proof.refines_l3._native.bv_decide.ax_1_31",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapInPlace.skel_semantic.loop.LBB30_1.skel_proof.MapInPlaceHeap.eq_slots._native.bv_decide.ax_1_6",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapInPlace.skel_semantic.loop.LBB30_1.skel_proof.MapInPlaceLoop.byte_zero._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapInPlace.skel_semantic.loop.LBB30_1.skel_proof.MapInPlaceLoop.code_zero._native.bv_decide.ax_1_6",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapInPlace.skel_semantic.loop.LBB30_1.skel_proof.MapInPlaceLoop.error_code._native.bv_decide.ax_1_5"
+    ]
+  },
+  {
+    "function": "mappingBuilderMapWildcardSlotCopies",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMap.block.entry._native.bv_decide.ax_1_16",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMap.block.entry._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o114._native.bv_decide.ax_1_14",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o114._native.bv_decide.ax_1_19",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o114._native.bv_decide.ax_1_29",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o114._native.bv_decide.ax_1_34",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o114._native.bv_decide.ax_1_39",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o114._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o51._native.bv_decide.ax_1_10",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.block.o51._native.bv_decide.ax_1_19",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapWildcardSlotCopies.skel_semantic.block.LBB27_10._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapWildcardSlotCopies.skel_semantic.block.o73._native.bv_decide.ax_1_17",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.loop.LBB29_1.skel_proof.loop.eql_iff_and._native.bv_decide.ax_1_6",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.loop.LBB29_1.skel_proof.loop.kind_bridge._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.loop.LBB29_1.skel_proof.loop.toUInt8_bridge._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderClosestCopy.skel_semantic.loop.LBB29_1.skel_proof.loop.zero_bridge._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapWildcardSlotCopies.skel_semantic.loop.LBB27_1.skel_proof.aux.kind_shift_junk._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapWildcardSlotCopies.skel_semantic.loop.LBB27_1.skel_proof.aux.kind_shift_ret._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapWildcardSlotCopies.skel_semantic.loop.LBB27_1.skel_proof.aux.map_exit_rax._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapWildcardSlotCopies.skel_semantic.loop.LBB27_1.skel_proof.aux.or_one_low16._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.mappingBuilderMapWildcardSlotCopies.skel_semantic.loop.LBB27_1.skel_proof.aux.slotWord_and._native.bv_decide.ax_1_7"
+    ]
+  },
+  {
+    "function": "plannerClassify",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound",
+      "Skel.Gen.Level3.Shuffler.plannerIsRetained.block.entry._native.bv_decide.ax_1_8",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.LBB19_10._native.bv_decide.ax_1_15",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.LBB19_10._native.bv_decide.ax_1_20",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.LBB19_10._native.bv_decide.ax_1_27",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.LBB19_10._native.bv_decide.ax_1_32",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.LBB19_3._native.bv_decide.ax_1_15",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.LBB19_3._native.bv_decide.ax_1_22",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.LBB19_8._native.bv_decide.ax_1_13",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.LBB19_8._native.bv_decide.ax_1_6",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.entry._native.bv_decide.ax_1_39",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.entry._native.bv_decide.ax_1_46",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.o203._native.bv_decide.ax_1_12",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.o203._native.bv_decide.ax_1_17",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.o203._native.bv_decide.ax_1_26",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.o203._native.bv_decide.ax_1_31",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.o237._native.bv_decide.ax_1_20",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.o237._native.bv_decide.ax_1_27",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.o237._native.bv_decide.ax_1_32",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.o237._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.o250._native.bv_decide.ax_1_13",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.o250._native.bv_decide.ax_1_8",
+      "Skel.Gen.Level3.Shuffler.plannerHasOtherRetainedCopy.skel_semantic.block.o40._native.bv_decide.ax_1_10",
+      "Skel.Gen.Level3.Shuffler.plannerHasOtherRetainedCopy.skel_semantic.block.o40._native.bv_decide.ax_1_18",
+      "Skel.Gen.Level3.Shuffler.plannerIsDemanded.skel_semantic.block.o50._native.bv_decide.ax_1_17",
+      "Skel.Gen.Level3.Shuffler.plannerIsDemanded.skel_semantic.block.o50._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.plannerHasOtherRetainedCopy.skel_semantic.block.LBB22_7.skel_proof.setcc_field._native.bv_decide.ax_1_10",
+      "Skel.Gen.Level3.Shuffler.plannerHasOtherRetainedCopy.skel_semantic.block.LBB22_7.skel_proof.setcc_field._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.LBB19_1.skel_proof.block.LBB19_1._native.bv_decide.ax_1_13",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.LBB19_1.skel_proof.block.LBB19_1._native.bv_decide.ax_1_8",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.LBB19_1.skel_proof.block.cond_iff._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.LBB19_1.skel_proof.block.rax_bridge._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.block.LBB19_1.skel_proof.block.setcc_eq._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.cond_cfg._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.flag_cond_iff._native.bv_decide.ax_1_10",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.flag_cond_iff._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.junk_test._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.kind_three._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.kind_zero._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.low48_eq._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.low_byte_255._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.low_byte_mask_or._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.low_byte_mask_or'._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.low_byte_one._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.low_byte_r15._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.low_byte_rax1._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.low_byte_self_flag._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.low_byte_three._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.low_byte_two._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.o203_test._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.o250Rax_ne._native.bv_decide.ax_1_6",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.o250Rax_one._native.bv_decide.ax_1_6",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.o250Rax_zero._native.bv_decide.ax_1_6",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.r15_ne._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.r15_zero._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerClassify.skel_semantic.refines_l3.skel_proof.refines_l3.skel_proof.slotWord_isJunk._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerIsDemanded.skel_semantic.block.LBB21_5.skel_proof.block.replaceLow_mask._native.bv_decide.ax_1_5"
+    ]
+  },
+  {
+    "function": "plannerHasOtherRetainedCopy",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound",
+      "Skel.Gen.Level3.Shuffler.plannerIsRetained.block.entry._native.bv_decide.ax_1_8",
+      "Skel.Gen.Level3.Shuffler.plannerHasOtherRetainedCopy.skel_semantic.block.o40._native.bv_decide.ax_1_10",
+      "Skel.Gen.Level3.Shuffler.plannerHasOtherRetainedCopy.skel_semantic.block.o40._native.bv_decide.ax_1_18",
+      "Skel.Gen.Level3.Shuffler.plannerHasOtherRetainedCopy.skel_semantic.block.LBB22_7.skel_proof.setcc_field._native.bv_decide.ax_1_10",
+      "Skel.Gen.Level3.Shuffler.plannerHasOtherRetainedCopy.skel_semantic.block.LBB22_7.skel_proof.setcc_field._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerHasOtherRetainedCopy.skel_semantic.loop.LBB22_1.skel_proof.loop.loop_returns._native.bv_decide.ax_1_26",
+      "Skel.Gen.Level3.Shuffler.plannerHasOtherRetainedCopy.skel_semantic.loop.LBB22_1.skel_proof.loop.low_byte_or._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerHasOtherRetainedCopy.skel_semantic.loop.LBB22_1.skel_proof.loop.slotWord_low48_iff._native.bv_decide.ax_1_12",
+      "Skel.Gen.Level3.Shuffler.plannerHasOtherRetainedCopy.skel_semantic.loop.LBB22_1.skel_proof.loop.slotWord_low48_iff._native.bv_decide.ax_1_17",
+      "Skel.Gen.Level3.Shuffler.plannerHasOtherRetainedCopy.skel_semantic.loop.LBB22_1.skel_proof.loop.slotWord_low48_iff._native.bv_decide.ax_1_22",
+      "Skel.Gen.Level3.Shuffler.plannerHasOtherRetainedCopy.skel_semantic.loop.LBB22_1.skel_proof.loop.slotWord_low48_iff._native.bv_decide.ax_1_7"
+    ]
+  },
+  {
+    "function": "plannerIsDemanded",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound",
+      "Skel.Gen.Level3.Shuffler.plannerIsDemanded.skel_semantic.block.o50._native.bv_decide.ax_1_17",
+      "Skel.Gen.Level3.Shuffler.plannerIsDemanded.skel_semantic.block.o50._native.bv_decide.ax_1_9",
+      "Skel.Gen.Level3.Shuffler.plannerIsDemanded.skel_semantic.block.LBB21_5.skel_proof.block.replaceLow_mask._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerIsDemanded.skel_semantic.loop.LBB21_1.skel_proof.loop.low_byte_bv._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.plannerIsDemanded.skel_semantic.loop.LBB21_1.skel_proof.loop.slotWord_junk._native.bv_decide.ax_1_8",
+      "Skel.Gen.Level3.Shuffler.plannerIsDemanded.skel_semantic.loop.LBB21_1.skel_proof.loop.slotWord_low48._native.bv_decide.ax_1_12",
+      "Skel.Gen.Level3.Shuffler.plannerIsDemanded.skel_semantic.loop.LBB21_1.skel_proof.loop.slotWord_low48._native.bv_decide.ax_1_7"
+    ]
+  },
+  {
+    "function": "plannerIsRetained",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound",
+      "Skel.Gen.Level3.Shuffler.plannerIsRetained.skel_semantic.block.entry._native.bv_decide.ax_1_8"
+    ]
+  },
+  {
+    "function": "spillSetAdd",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound",
+      "Skel.Gen.Level3.Shuffler.spillSetAdd.skel_semantic.block.entry._native.bv_decide.ax_1_13",
+      "Skel.Gen.Level3.Shuffler.spillSetAdd.skel_semantic.block.entry._native.bv_decide.ax_1_6",
+      "Skel.Gen.Level3.Shuffler.spillSetAdd.skel_semantic.block.o30._native.bv_decide.ax_1_15",
+      "Skel.Gen.Level3.Shuffler.spillSetAdd.skel_semantic.block.o30._native.bv_decide.ax_1_22",
+      "Skel.Gen.Level3.Shuffler.spillSetAdd.skel_semantic.refines_l3.skel_proof.byte_zero._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.spillSetAdd.skel_semantic.refines_l3.skel_proof.kind_test._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.spillSetAdd.skel_semantic.refines_l3.skel_proof.opcode_test._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.spillSetAdd.skel_semantic.refines_l3.skel_proof.opcode_test_ne._native.bv_decide.ax_1_5",
+      "Skel.Gen.Level3.Shuffler.spillSetAdd.skel_semantic.refines_l3.skel_proof.rax_err._native.bv_decide.ax_1_5"
+    ]
+  },
+  {
+    "function": "workspaceAlignment",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ]
+  },
+  {
+    "function": "workspaceSize",
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ]
+  }
+]

@@ -1,0 +1,22 @@
+{
+  "baseUrl": "https://MODEL-ENDPOINT.invalid/v1",
+  "model": "SET_MODEL",
+  "apiKeyEnv": "SHUFFLER_MODEL_KEY",
+  "extra": {
+    "provider": {
+      "only": [
+        "deepinfra"
+      ],
+      "allow_fallbacks": false
+    },
+    "reasoning": {
+      "effort": "high"
+    }
+  },
+  "price": {
+    "input": 0.098,
+    "cachedInput": 0.00294,
+    "output": 0.294
+  },
+  "maxTokens": 393216
+}

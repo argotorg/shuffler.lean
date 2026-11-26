@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+review_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$review_root"
+unset LEAN_PATH LEAN_SRC_PATH
+export LEANTOOLS_ROOT="$review_root"
+export LEANTOOLS_LOOGLE="$review_root/vendor/loogle/.lake/build/bin/loogle"
+exec lake env "$review_root/pkgs/leantools/.lake/build/bin/leantools" "$@"

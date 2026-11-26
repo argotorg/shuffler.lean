@@ -1,0 +1,5 @@
+{"version": "cvc5 1.4.0",
+ "solver": "cvc5",
+ "hash": "2857199240460080848",
+ "answer":
+ "(\n(define-fun inv ((fst Int) (snd Int)) Bool true)\n(define-fun rho ((fst Int) (snd Int)) Int (- (+ fst fst) snd))\n)\n"}

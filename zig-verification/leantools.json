@@ -1,0 +1,21 @@
+{
+  "loogleModule": "SkelNeeded",
+  "fuzzModule": "VerifiedNix.Fuzz",
+  "grepRoots": [
+    ".",
+    "vendor/Kraken"
+  ],
+  "maxOpen": 2,
+  "maxConcurrentChecks": 1,
+  "checkSeconds": 180,
+  "maxHeartbeats": 400000,
+  "deny": [
+    "Lift/Shuffler/Fuel.lean",
+    "Lift/Shuffler/FuelRun.lean",
+    "Lift/Shuffler/Regroup.lean",
+    "Lift/Shuffler/Test/Fuel.lean",
+    "Lift/Shuffler/Test/Regroup.lean",
+    "docs/records/SH-FUEL1.md",
+    "docs/records/SH-FUEL2.md"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "pythonTests": {
+    "contractGate": 5,
+    "sourceChecks": 10,
+    "nativePort": 6,
+    "skelTerminal": 65,
+    "coordinatorTerminal": 49,
+    "generationReceipts": 5,
+    "workerWrapper": 1
+  },
+  "zigRebuild": {
+    "exitCode": 0,
+    "compilerVersion": "0.17.1",
+    "sourceSha256": "fd2d09d73e1224ff06449ac9560907a32382b18be2f47f18c9423e332dcd07e6",
+    "assemblySha256": "ffe4a91548cb1e133611b419a285b2e4118ee2564c4c9efcf020c4260db795d9"
+  },
+  "nativeFixtures": {
+    "bodiesUnchanged": 4,
+    "headersUseSourceManifest": true
+  },
+  "paidCalls": 0
+}

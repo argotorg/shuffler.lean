@@ -1,0 +1,3459 @@
+{
+  "modules": [
+    {
+      "module": "Kraken.Attribute",
+      "exitCode": 0,
+      "seconds": 1.106
+    },
+    {
+      "module": "Kraken.Float32Fma",
+      "exitCode": 0,
+      "seconds": 1.025
+    },
+    {
+      "module": "Kraken.Layout",
+      "exitCode": 0,
+      "seconds": 1.139
+    },
+    {
+      "module": "Kraken.ToBytes",
+      "exitCode": 0,
+      "seconds": 1.039
+    },
+    {
+      "module": "Kraken.Mem",
+      "exitCode": 0,
+      "seconds": 1.643
+    },
+    {
+      "module": "Kraken.X64.Syntax",
+      "exitCode": 0,
+      "seconds": 15.068
+    },
+    {
+      "module": "Kraken.X64.Semantics",
+      "exitCode": 0,
+      "seconds": 26.38
+    },
+    {
+      "module": "Lift.P1.Spec",
+      "exitCode": 0,
+      "seconds": 11.858
+    },
+    {
+      "module": "Lift.P1.Command",
+      "exitCode": 0,
+      "seconds": 12.484
+    },
+    {
+      "module": "Kraken.X64.Parser.Basic",
+      "exitCode": 0,
+      "seconds": 25.464
+    },
+    {
+      "module": "Kraken.X64.Parser",
+      "exitCode": 0,
+      "seconds": 1.253
+    },
+    {
+      "module": "Lift.Level3.Fast.Code",
+      "exitCode": 0,
+      "seconds": 4.361
+    },
+    {
+      "module": "Lift.P2.Total.System",
+      "exitCode": 0,
+      "seconds": 0.639
+    },
+    {
+      "module": "Lift.P1.Execution",
+      "exitCode": 0,
+      "seconds": 0.547
+    },
+    {
+      "module": "Lift.P2.Total.Machine",
+      "exitCode": 0,
+      "seconds": 0.97
+    },
+    {
+      "module": "Lift.Sem.Reaches",
+      "exitCode": 0,
+      "seconds": 0.635
+    },
+    {
+      "module": "Lift.P2.Total.Spec",
+      "exitCode": 0,
+      "seconds": 0.625
+    },
+    {
+      "module": "Lift.P2.Total.Rules",
+      "exitCode": 0,
+      "seconds": 0.643
+    },
+    {
+      "module": "Lift.P2.Total.Memory",
+      "exitCode": 0,
+      "seconds": 0.943
+    },
+    {
+      "module": "Lift.Trusted.Object",
+      "exitCode": 0,
+      "seconds": 0.751
+    },
+    {
+      "module": "Lift.Trusted.Call",
+      "exitCode": 0,
+      "seconds": 0.651
+    },
+    {
+      "module": "Lift.Trusted.Encode",
+      "exitCode": 0,
+      "seconds": 0.738
+    },
+    {
+      "module": "Lift.Pilot.Encode",
+      "exitCode": 0,
+      "seconds": 1.034
+    },
+    {
+      "module": "Lift.Pilot.Slot",
+      "exitCode": 0,
+      "seconds": 0.86
+    },
+    {
+      "module": "Lift.Pilot.AddSpec",
+      "exitCode": 0,
+      "seconds": 0.69
+    },
+    {
+      "module": "Lift.Level3.Fast.Statements.AddStatement",
+      "exitCode": 0,
+      "seconds": 0.647
+    },
+    {
+      "module": "Lift.Pilot.AlignmentSpec",
+      "exitCode": 0,
+      "seconds": 0.539
+    },
+    {
+      "module": "Lift.Level3.Fast.Statements.AlignmentStatement",
+      "exitCode": 0,
+      "seconds": 0.544
+    },
+    {
+      "module": "Lift.Pilot.IsRetainedSpec",
+      "exitCode": 0,
+      "seconds": 0.549
+    },
+    {
+      "module": "Lift.Pilot.MapSpec",
+      "exitCode": 0,
+      "seconds": 0.639
+    },
+    {
+      "module": "Lift.Level3.Fast.Statements.MapStatement",
+      "exitCode": 0,
+      "seconds": 0.743
+    },
+    {
+      "module": "Lift.Pilot.ShallowestSpec",
+      "exitCode": 0,
+      "seconds": 0.749
+    },
+    {
+      "module": "Lift.Pilot.MapInPlaceSpec",
+      "exitCode": 0,
+      "seconds": 0.739
+    },
+    {
+      "module": "Lift.Level3.Fast.Statements.MapInPlaceStatement",
+      "exitCode": 0,
+      "seconds": 0.756
+    },
+    {
+      "module": "Lift.P2.Total.Control",
+      "exitCode": 0,
+      "seconds": 0.955
+    },
+    {
+      "module": "Lift.P2.Total.Rmw",
+      "exitCode": 0,
+      "seconds": 0.747
+    },
+    {
+      "module": "Lift.P2.Total.Ranked",
+      "exitCode": 0,
+      "seconds": 0.545
+    },
+    {
+      "module": "Lift.P2.Total.Simulation",
+      "exitCode": 0,
+      "seconds": 0.544
+    },
+    {
+      "module": "Lift.P2.Total.Pure",
+      "exitCode": 0,
+      "seconds": 0.54
+    },
+    {
+      "module": "Lift.P2.Total.Unroll",
+      "exitCode": 0,
+      "seconds": 0.644
+    },
+    {
+      "module": "Lift.P2.Total.Finite",
+      "exitCode": 0,
+      "seconds": 0.542
+    },
+    {
+      "module": "Lift.P2.Total.Footprint",
+      "exitCode": 0,
+      "seconds": 0.649
+    },
+    {
+      "module": "Lift.P2.Total.Primitive",
+      "exitCode": 0,
+      "seconds": 0.564
+    },
+    {
+      "module": "Kraken.X64.Registers",
+      "exitCode": 0,
+      "seconds": 3.253
+    },
+    {
+      "module": "Lift.P2.Total.WordRules",
+      "exitCode": 0,
+      "seconds": 0.651
+    },
+    {
+      "module": "Lift.P2.Total.GuardedFootprint",
+      "exitCode": 0,
+      "seconds": 5.751
+    },
+    {
+      "module": "Lift.P2.Total.ConditionalFootprint",
+      "exitCode": 0,
+      "seconds": 9.645
+    },
+    {
+      "module": "Lift.P2.Total.Normalize",
+      "exitCode": 0,
+      "seconds": 10.89
+    },
+    {
+      "module": "Lift.P2.Total.MachineOrder",
+      "exitCode": 0,
+      "seconds": 1.049
+    },
+    {
+      "module": "Lift.P2.Total.ConstantRmw",
+      "exitCode": 0,
+      "seconds": 0.845
+    },
+    {
+      "module": "Lift.P2.Total.Projection",
+      "exitCode": 0,
+      "seconds": 0.762
+    },
+    {
+      "module": "Lift.P2.Total.ProjectionRules",
+      "exitCode": 0,
+      "seconds": 0.645
+    },
+    {
+      "module": "Kraken.Separation",
+      "exitCode": 0,
+      "seconds": 0.643
+    },
+    {
+      "module": "Kraken.SeparationMem",
+      "exitCode": 0,
+      "seconds": 1.155
+    },
+    {
+      "module": "Lift.P2.Total.StackResources",
+      "exitCode": 0,
+      "seconds": 1.044
+    },
+    {
+      "module": "Lift.P2.Total.PointerGraph",
+      "exitCode": 0,
+      "seconds": 0.718
+    },
+    {
+      "module": "Lift.P2.Total.ControlRules",
+      "exitCode": 0,
+      "seconds": 0.642
+    },
+    {
+      "module": "Lift.P2.Total.Calls",
+      "exitCode": 0,
+      "seconds": 1.032
+    },
+    {
+      "module": "Lift.P2.Total.CheckedCmd",
+      "exitCode": 0,
+      "seconds": 1.543
+    },
+    {
+      "module": "Lift.P2.Total.CallsCmd",
+      "exitCode": 0,
+      "seconds": 1.946
+    },
+    {
+      "module": "Lift.P2.Total.CallsContinuation",
+      "exitCode": 0,
+      "seconds": 1.247
+    },
+    {
+      "module": "Lift.P2.Total.FiniteCmd",
+      "exitCode": 0,
+      "seconds": 4.931
+    },
+    {
+      "module": "Lift.P2.Total.Next",
+      "exitCode": 0,
+      "seconds": 1.346
+    },
+    {
+      "module": "Lift.P2.Total.NextCmd",
+      "exitCode": 0,
+      "seconds": 1.754
+    },
+    {
+      "module": "Lift.P2.Total.PcClosure",
+      "exitCode": 0,
+      "seconds": 0.54
+    },
+    {
+      "module": "Lift.P2.Total.PcClosureCmd",
+      "exitCode": 0,
+      "seconds": 3.86
+    },
+    {
+      "module": "Lift.P2.Total.Segment",
+      "exitCode": 0,
+      "seconds": 0.64
+    },
+    {
+      "module": "Lift.P2.Total.Block",
+      "exitCode": 0,
+      "seconds": 0.645
+    },
+    {
+      "module": "Lift.P2.Total.BlockFinite",
+      "exitCode": 0,
+      "seconds": 0.623
+    },
+    {
+      "module": "Lift.P2.Total.BlockEntry",
+      "exitCode": 0,
+      "seconds": 0.569
+    },
+    {
+      "module": "Lift.P2.Total.BlockNormalize",
+      "exitCode": 0,
+      "seconds": 0.647
+    },
+    {
+      "module": "Lift.P2.Total.BlockStage",
+      "exitCode": 0,
+      "seconds": 4.864
+    },
+    {
+      "module": "Lift.P2.Total.ChunkStage",
+      "exitCode": 0,
+      "seconds": 6.058
+    },
+    {
+      "module": "Lift.P2.Total.CallsFacts",
+      "exitCode": 0,
+      "seconds": 0.587
+    },
+    {
+      "module": "Lift.P2.Total.CallsNormalize",
+      "exitCode": 0,
+      "seconds": 5.272
+    },
+    {
+      "module": "Lift.P2.Total.PointerReach",
+      "exitCode": 0,
+      "seconds": 0.605
+    },
+    {
+      "module": "Lift.P2.Total.CallsSpecialize",
+      "exitCode": 0,
+      "seconds": 5.619
+    },
+    {
+      "module": "Lift.P2.Total.BlockSafety",
+      "exitCode": 0,
+      "seconds": 0.654
+    },
+    {
+      "module": "Lift.P2.Total.BlockSafetyTactic",
+      "exitCode": 0,
+      "seconds": 5.955
+    },
+    {
+      "module": "Lift.P2.Total.BlockCmd",
+      "exitCode": 0,
+      "seconds": 62.101
+    },
+    {
+      "module": "Lift.P2.Total.StackConstantCmd",
+      "exitCode": 0,
+      "seconds": 2.721
+    },
+    {
+      "module": "Lift.P2.Total",
+      "exitCode": 0,
+      "seconds": 0.645
+    },
+    {
+      "module": "Lift.Level3.Code",
+      "exitCode": 0,
+      "seconds": 3.717
+    },
+    {
+      "module": "Lift.Pilot.AddStatement",
+      "exitCode": 0,
+      "seconds": 0.694
+    },
+    {
+      "module": "Lift.Pilot.AlignmentStatement",
+      "exitCode": 0,
+      "seconds": 0.635
+    },
+    {
+      "module": "Lift.Pilot.Call",
+      "exitCode": 0,
+      "seconds": 0.637
+    },
+    {
+      "module": "Lift.Pilot.PopSpec",
+      "exitCode": 0,
+      "seconds": 0.946
+    },
+    {
+      "module": "Lift.Pilot.ClosestCopySpec",
+      "exitCode": 0,
+      "seconds": 0.955
+    },
+    {
+      "module": "Lift.Pilot.ClosestCopyStatement",
+      "exitCode": 0,
+      "seconds": 0.811
+    },
+    {
+      "module": "Lift.Pilot.IsRetainedStatement",
+      "exitCode": 0,
+      "seconds": 0.74
+    },
+    {
+      "module": "Lift.Pilot.MapStatement",
+      "exitCode": 0,
+      "seconds": 0.758
+    },
+    {
+      "module": "Lift.Pilot.MapInPlaceStatement",
+      "exitCode": 0,
+      "seconds": 0.745
+    },
+    {
+      "module": "Lift.Pilot.PopStatement",
+      "exitCode": 0,
+      "seconds": 0.859
+    },
+    {
+      "module": "Lift.Pilot.ShallowestStatement",
+      "exitCode": 0,
+      "seconds": 0.66
+    },
+    {
+      "module": "Kraken.OmniSemantics",
+      "exitCode": 0,
+      "seconds": 0.547
+    },
+    {
+      "module": "Kraken.X64.OmniSemantics",
+      "exitCode": 0,
+      "seconds": 0.646
+    },
+    {
+      "module": "Kraken.X64.Inert",
+      "exitCode": 0,
+      "seconds": 0.733
+    },
+    {
+      "module": "Kraken.Data.List.Infix",
+      "exitCode": 0,
+      "seconds": 0.545
+    },
+    {
+      "module": "Kraken.X64.WP.Host",
+      "exitCode": 0,
+      "seconds": 0.839
+    },
+    {
+      "module": "Kraken.X64.WP.Step",
+      "exitCode": 0,
+      "seconds": 52.791
+    },
+    {
+      "module": "Kraken.X64.WP.Basic",
+      "exitCode": 0,
+      "seconds": 1.043
+    },
+    {
+      "module": "Kraken.X64.WP",
+      "exitCode": 0,
+      "seconds": 0.644
+    },
+    {
+      "module": "Kraken.KVCGen",
+      "exitCode": 0,
+      "seconds": 0.867
+    },
+    {
+      "module": "Kraken.X64.WP.Instance",
+      "exitCode": 0,
+      "seconds": 1.254
+    },
+    {
+      "module": "Kraken.GrindFold",
+      "exitCode": 0,
+      "seconds": 1.627
+    },
+    {
+      "module": "Kraken.Specs",
+      "exitCode": 0,
+      "seconds": 2.896
+    },
+    {
+      "module": "Kraken.Blocks",
+      "exitCode": 0,
+      "seconds": 1.738
+    },
+    {
+      "module": "Kraken.X64.WP.Spec",
+      "exitCode": 0,
+      "seconds": 1.344
+    },
+    {
+      "module": "Kraken.StateCfg",
+      "exitCode": 0,
+      "seconds": 0.746
+    },
+    {
+      "module": "Lift.Core",
+      "exitCode": 0,
+      "seconds": 0.712
+    },
+    {
+      "module": "VerifiedNix.Fuzz",
+      "exitCode": 0,
+      "seconds": 26.989
+    },
+    {
+      "module": "VerifiedNix.MemSimp",
+      "exitCode": 0,
+      "seconds": 11.856
+    },
+    {
+      "module": "VerifiedNix.ProofLemmas",
+      "exitCode": 0,
+      "seconds": 0.638
+    },
+    {
+      "module": "VerifiedNix.Tactics",
+      "exitCode": 0,
+      "seconds": 0.848
+    },
+    {
+      "module": "Kraken.SeparationTactics",
+      "exitCode": 0,
+      "seconds": 9.559
+    },
+    {
+      "module": "VerifiedNix.KBlock",
+      "exitCode": 0,
+      "seconds": 19.97
+    },
+    {
+      "module": "VerifiedNix.X64Specs",
+      "exitCode": 0,
+      "seconds": 8.262
+    },
+    {
+      "module": "Lift.Sem",
+      "exitCode": 0,
+      "seconds": 2.224
+    },
+    {
+      "module": "Lift.Sem.Model",
+      "exitCode": 0,
+      "seconds": 0.644
+    },
+    {
+      "module": "Lift.Sem.Heap",
+      "exitCode": 0,
+      "seconds": 1.51
+    },
+    {
+      "module": "Lift.Sem.HeapLemmas",
+      "exitCode": 0,
+      "seconds": 0.827
+    },
+    {
+      "module": "Lift.Sem.MappedMemory",
+      "exitCode": 0,
+      "seconds": 0.743
+    },
+    {
+      "module": "Lift.Sem.SysV",
+      "exitCode": 0,
+      "seconds": 0.645
+    },
+    {
+      "module": "Lift.Sem.StackRoom",
+      "exitCode": 0,
+      "seconds": 0.624
+    },
+    {
+      "module": "Lift.Sem.Hidden",
+      "exitCode": 0,
+      "seconds": 0.862
+    },
+    {
+      "module": "Lift.Meta.MatchCache",
+      "exitCode": 0,
+      "seconds": 1.107
+    },
+    {
+      "module": "Lift.Sem.HeapBytes",
+      "exitCode": 0,
+      "seconds": 1.153
+    },
+    {
+      "module": "Lift.Sem.ByteLemmas",
+      "exitCode": 0,
+      "seconds": 0.66
+    },
+    {
+      "module": "Lift.Sem.HeapBytesSound",
+      "exitCode": 0,
+      "seconds": 1.05
+    },
+    {
+      "module": "Lift.Sem.HeapBytesStore",
+      "exitCode": 0,
+      "seconds": 0.549
+    },
+    {
+      "module": "Lift.Sem.HeapBytesObj",
+      "exitCode": 0,
+      "seconds": 0.642
+    },
+    {
+      "module": "Lift.Sem.HeapBytesStoreSound",
+      "exitCode": 0,
+      "seconds": 0.535
+    },
+    {
+      "module": "Lift.Sem.Blocks",
+      "exitCode": 0,
+      "seconds": 1.141
+    },
+    {
+      "module": "Lift.Sem.Sim",
+      "exitCode": 0,
+      "seconds": 0.558
+    },
+    {
+      "module": "Lift.Sem.SimAt",
+      "exitCode": 0,
+      "seconds": 0.638
+    },
+    {
+      "module": "Lift.Sem.StackPush",
+      "exitCode": 0,
+      "seconds": 0.685
+    },
+    {
+      "module": "Lift.Sem.HeapBytesFrame",
+      "exitCode": 0,
+      "seconds": 0.635
+    },
+    {
+      "module": "Lift.Sem.Cut",
+      "exitCode": 0,
+      "seconds": 1.555
+    },
+    {
+      "module": "Lift.Sem.PrivateStack",
+      "exitCode": 0,
+      "seconds": 0.923
+    },
+    {
+      "module": "Lift.Sem.StackArgs",
+      "exitCode": 0,
+      "seconds": 0.838
+    },
+    {
+      "module": "Lift.Sem.Split",
+      "exitCode": 0,
+      "seconds": 0.745
+    },
+    {
+      "module": "Lift.Sem.HeapWF",
+      "exitCode": 0,
+      "seconds": 1.048
+    },
+    {
+      "module": "Lift.Sem.HeapSplit",
+      "exitCode": 0,
+      "seconds": 0.648
+    },
+    {
+      "module": "Lift.Sem.CallFrame",
+      "exitCode": 0,
+      "seconds": 0.686
+    },
+    {
+      "module": "Lift.Sem.CallMem",
+      "exitCode": 0,
+      "seconds": 0.655
+    },
+    {
+      "module": "Lift.Sem.CallArm",
+      "exitCode": 0,
+      "seconds": 0.647
+    },
+    {
+      "module": "Lift.Sem.CallArmBytes",
+      "exitCode": 0,
+      "seconds": 0.572
+    },
+    {
+      "module": "Lift.Sem.Bridge",
+      "exitCode": 0,
+      "seconds": 0.849
+    },
+    {
+      "module": "Lift.Level2z.Code",
+      "exitCode": 0,
+      "seconds": 5.457
+    },
+    {
+      "module": "Lift.Level2z.L1",
+      "exitCode": 0,
+      "seconds": 108.442
+    },
+    {
+      "module": "Lift.Level2z.Exit3Spec",
+      "exitCode": 0,
+      "seconds": 0.645
+    },
+    {
+      "module": "Lift.Spike.Sites",
+      "exitCode": 0,
+      "seconds": 1.236
+    },
+    {
+      "module": "Lift.Spike.Code",
+      "exitCode": 0,
+      "seconds": 1.75
+    },
+    {
+      "module": "Lift.Spike.L1",
+      "exitCode": 0,
+      "seconds": 67.942
+    },
+    {
+      "module": "Lift.Spike.Sites.Stack",
+      "exitCode": 0,
+      "seconds": 0.794
+    },
+    {
+      "module": "Lift.Toys.Code",
+      "exitCode": 0,
+      "seconds": 2.551
+    },
+    {
+      "module": "Lift.Toys.L1",
+      "exitCode": 0,
+      "seconds": 76.076
+    },
+    {
+      "module": "Lift.Tactic.Simp",
+      "exitCode": 0,
+      "seconds": 0.84
+    },
+    {
+      "module": "Lift.Tactic.SignedFlags",
+      "exitCode": 0,
+      "seconds": 0.541
+    },
+    {
+      "module": "Lift.Tactic.SimState",
+      "exitCode": 0,
+      "seconds": 7.451
+    },
+    {
+      "module": "Lift.Tactic.Block",
+      "exitCode": 0,
+      "seconds": 18.576
+    },
+    {
+      "module": "Lift.Sem.SepRoom",
+      "exitCode": 0,
+      "seconds": 0.944
+    },
+    {
+      "module": "Lift.Tactic.FrameMemLemmas",
+      "exitCode": 0,
+      "seconds": 0.546
+    },
+    {
+      "module": "Lift.Tactic.MemLemmas",
+      "exitCode": 0,
+      "seconds": 0.639
+    },
+    {
+      "module": "Lift.Tactic.Mem",
+      "exitCode": 0,
+      "seconds": 10.848
+    },
+    {
+      "module": "Lift.Tactic.FrameMem",
+      "exitCode": 0,
+      "seconds": 19.583
+    },
+    {
+      "module": "Lift.Spike.OuterMem",
+      "exitCode": 0,
+      "seconds": 1.334
+    },
+    {
+      "module": "Lift.Spike.Sites.Sum",
+      "exitCode": 0,
+      "seconds": 0.551
+    },
+    {
+      "module": "Lift.Spike.Sum",
+      "exitCode": 0,
+      "seconds": 1.292
+    },
+    {
+      "module": "Lift.Spike.SumSpec",
+      "exitCode": 0,
+      "seconds": 0.642
+    },
+    {
+      "module": "Skel.Gen.Derive.Site",
+      "exitCode": 0,
+      "seconds": 3.236
+    },
+    {
+      "module": "Lift.Tactic.RunN",
+      "exitCode": 0,
+      "seconds": 1.755
+    },
+    {
+      "module": "Lift.Tactic.Cond",
+      "exitCode": 0,
+      "seconds": 0.642
+    },
+    {
+      "module": "Lift.Tactic.Compose",
+      "exitCode": 0,
+      "seconds": 24.504
+    },
+    {
+      "module": "Lift.Toys.Fast.Code",
+      "exitCode": 0,
+      "seconds": 3.653
+    },
+    {
+      "module": "Lift.Toys.Fast.L1",
+      "exitCode": 0,
+      "seconds": 85.125
+    },
+    {
+      "module": "Lift.Toys.FillSpec",
+      "exitCode": 0,
+      "seconds": 0.733
+    },
+    {
+      "module": "Lift.Toys.WalkSpec",
+      "exitCode": 0,
+      "seconds": 0.625
+    },
+    {
+      "module": "Skel.Gen.Sites.Level2z",
+      "exitCode": 0,
+      "seconds": 0.557
+    },
+    {
+      "module": "Lift.Level3.L1",
+      "exitCode": 0,
+      "seconds": 85.559
+    },
+    {
+      "module": "Skel.Gen.Sites.Pilot",
+      "exitCode": 0,
+      "seconds": 0.557
+    },
+    {
+      "module": "Lift.Level3.Fast.L1",
+      "exitCode": 0,
+      "seconds": 91.171
+    },
+    {
+      "module": "Skel.Gen.Sites.PilotFast",
+      "exitCode": 0,
+      "seconds": 0.627
+    },
+    {
+      "module": "Skel.Gen.Sites.Spike",
+      "exitCode": 0,
+      "seconds": 0.64
+    },
+    {
+      "module": "Skel.Gen.Sites.Toys",
+      "exitCode": 0,
+      "seconds": 0.623
+    },
+    {
+      "module": "Skel.Gen.Sites.ToysFast",
+      "exitCode": 0,
+      "seconds": 0.56
+    },
+    {
+      "module": "Coordinator.Dst.Rng",
+      "exitCode": 0,
+      "seconds": 1.136
+    },
+    {
+      "module": "Skel.Lean.Refute",
+      "exitCode": 0,
+      "seconds": 9.368
+    },
+    {
+      "module": "Skel.Lean.Sum",
+      "exitCode": 0,
+      "seconds": 0.924
+    },
+    {
+      "module": "Skel.Test.CallMem.Code",
+      "exitCode": 0,
+      "seconds": 1.245
+    },
+    {
+      "module": "Skel.Test.CallMem.L1",
+      "exitCode": 0,
+      "seconds": 65.192
+    },
+    {
+      "module": "Lift.Shuffler.Ext.Permutation.Model",
+      "exitCode": 0,
+      "seconds": 1.656
+    },
+    {
+      "module": "Lift.Shuffler.Ext.Model",
+      "exitCode": 0,
+      "seconds": 5.819
+    },
+    {
+      "module": "Lift.Shuffler.Zig.Basic",
+      "exitCode": 0,
+      "seconds": 0.941
+    },
+    {
+      "module": "Lift.Shuffler.Ext.FlatModel",
+      "exitCode": 0,
+      "seconds": 3.954
+    },
+    {
+      "module": "Lift.Shuffler.Ext.FlatSpill",
+      "exitCode": 0,
+      "seconds": 1.055
+    },
+    {
+      "module": "Lift.Shuffler.Ext.MapModel",
+      "exitCode": 0,
+      "seconds": 2.136
+    },
+    {
+      "module": "Lift.Shuffler.Ext.FlatPop",
+      "exitCode": 0,
+      "seconds": 1.161
+    },
+    {
+      "module": "Lift.Shuffler.Ext.FlatSurplus",
+      "exitCode": 0,
+      "seconds": 1.076
+    },
+    {
+      "module": "Lift.Shuffler.Ext.FlatLowest",
+      "exitCode": 0,
+      "seconds": 1.151
+    },
+    {
+      "module": "Lift.Shuffler.Zig.Emission",
+      "exitCode": 0,
+      "seconds": 4.433
+    },
+    {
+      "module": "Skel.Eval.D15Support",
+      "exitCode": 0,
+      "seconds": 0.944
+    },
+    {
+      "module": "Lift.Shuffler.Code",
+      "exitCode": 0,
+      "seconds": 25.186
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Fns",
+      "exitCode": 0,
+      "seconds": 1.628
+    },
+    {
+      "module": "Lift.Shuffler.Internal.AddStatement",
+      "exitCode": 0,
+      "seconds": 0.748
+    },
+    {
+      "module": "Lift.Shuffler.Internal.AlignmentStatement",
+      "exitCode": 0,
+      "seconds": 0.646
+    },
+    {
+      "module": "Lift.Shuffler.Internal.ClosestCopyStatement",
+      "exitCode": 0,
+      "seconds": 0.825
+    },
+    {
+      "module": "Lift.Shuffler.Internal.IsRetainedStatement",
+      "exitCode": 0,
+      "seconds": 0.649
+    },
+    {
+      "module": "Lift.Shuffler.Internal.MapStatement",
+      "exitCode": 0,
+      "seconds": 0.756
+    },
+    {
+      "module": "Lift.Shuffler.Internal.MapInPlaceStatement",
+      "exitCode": 0,
+      "seconds": 0.827
+    },
+    {
+      "module": "Lift.Shuffler.Internal.PopStatement",
+      "exitCode": 0,
+      "seconds": 0.852
+    },
+    {
+      "module": "Lift.Shuffler.Internal.ShallowestStatement",
+      "exitCode": 0,
+      "seconds": 0.656
+    },
+    {
+      "module": "Lift.Sem.Loop",
+      "exitCode": 0,
+      "seconds": 0.554
+    },
+    {
+      "module": "Lift.Tactic.Loop",
+      "exitCode": 0,
+      "seconds": 7.707
+    },
+    {
+      "module": "Lift.Tactic.LoopSimpAttr",
+      "exitCode": 0,
+      "seconds": 1.086
+    },
+    {
+      "module": "Lift.Sem.HeapChain",
+      "exitCode": 0,
+      "seconds": 1.416
+    },
+    {
+      "module": "Lift.Tactic.LoopSimp",
+      "exitCode": 0,
+      "seconds": 0.633
+    },
+    {
+      "module": "Lift.Sem.HeapFields",
+      "exitCode": 0,
+      "seconds": 1.036
+    },
+    {
+      "module": "Lift.Sem.HeapSpan",
+      "exitCode": 0,
+      "seconds": 0.932
+    },
+    {
+      "module": "Lift.Tactic.HeapField",
+      "exitCode": 0,
+      "seconds": 19.863
+    },
+    {
+      "module": "Lift.Sem.HeapSlice",
+      "exitCode": 0,
+      "seconds": 0.93
+    },
+    {
+      "module": "Lift.Sem.HeapFrame",
+      "exitCode": 0,
+      "seconds": 0.748
+    },
+    {
+      "module": "Lift.Tactic.HeapSlice",
+      "exitCode": 0,
+      "seconds": 9.943
+    },
+    {
+      "module": "Lift.Tactic.HeapFrame",
+      "exitCode": 0,
+      "seconds": 20.786
+    },
+    {
+      "module": "Lift.Tactic.FlagNorm",
+      "exitCode": 0,
+      "seconds": 2.442
+    },
+    {
+      "module": "Lift.Tactic.SpecDecide",
+      "exitCode": 0,
+      "seconds": 7.492
+    },
+    {
+      "module": "Lift.Tactic.ArrayUpdate",
+      "exitCode": 0,
+      "seconds": 1.24
+    },
+    {
+      "module": "Lift.Tactic.WordArith",
+      "exitCode": 0,
+      "seconds": 4.347
+    },
+    {
+      "module": "Lift.Tactic.ResStep",
+      "exitCode": 0,
+      "seconds": 5.659
+    },
+    {
+      "module": "Lift.Tactic.HeapStep",
+      "exitCode": 0,
+      "seconds": 7.004
+    },
+    {
+      "module": "Lift.Tactic.BridgeStep",
+      "exitCode": 0,
+      "seconds": 2.847
+    },
+    {
+      "module": "Lift.Sem.HeapReadShape",
+      "exitCode": 0,
+      "seconds": 0.549
+    },
+    {
+      "module": "Lift.Sem.HeapValueView",
+      "exitCode": 0,
+      "seconds": 0.625
+    },
+    {
+      "module": "Lift.Tactic.HeapPermStepTyped",
+      "exitCode": 0,
+      "seconds": 6.642
+    },
+    {
+      "module": "Lift.Tactic.HeapPartitionExact",
+      "exitCode": 0,
+      "seconds": 3.665
+    },
+    {
+      "module": "Lift.Sem.HeapBytesPerm",
+      "exitCode": 0,
+      "seconds": 0.543
+    },
+    {
+      "module": "Lift.Tactic.HeapPermStep",
+      "exitCode": 0,
+      "seconds": 6.664
+    },
+    {
+      "module": "Lift.Sem.PermReplay",
+      "exitCode": 0,
+      "seconds": 0.645
+    },
+    {
+      "module": "Lift.Sem.PermReplayAt",
+      "exitCode": 0,
+      "seconds": 0.604
+    },
+    {
+      "module": "Lift.Tactic.LoopClose",
+      "exitCode": 0,
+      "seconds": 42.032
+    },
+    {
+      "module": "Lift.Sem.FinalCases",
+      "exitCode": 0,
+      "seconds": 2.151
+    },
+    {
+      "module": "Lift.Sem.Final",
+      "exitCode": 0,
+      "seconds": 0.748
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.Layout",
+      "exitCode": 0,
+      "seconds": 1.181
+    },
+    {
+      "module": "Lift.Shuffler.Ext.FlatPlan",
+      "exitCode": 0,
+      "seconds": 4.139
+    },
+    {
+      "module": "Lift.Shuffler.Zig.Planner",
+      "exitCode": 0,
+      "seconds": 1.446
+    },
+    {
+      "module": "Lift.Shuffler.Zig.Shuffle",
+      "exitCode": 0,
+      "seconds": 1.408
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.WorkspaceSizeStatement",
+      "exitCode": 0,
+      "seconds": 0.65
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.IsSpilledStatement",
+      "exitCode": 0,
+      "seconds": 0.649
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.PermuteStatement",
+      "exitCode": 0,
+      "seconds": 0.939
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.AbsorbSurplusStatement",
+      "exitCode": 0,
+      "seconds": 0.949
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.BuildBottomUpStatement",
+      "exitCode": 0,
+      "seconds": 1.219
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.ClassifyStatement",
+      "exitCode": 0,
+      "seconds": 0.943
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.DupStatement",
+      "exitCode": 0,
+      "seconds": 1.044
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.EmissionRunStatement",
+      "exitCode": 0,
+      "seconds": 1.332
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.GenerateStatement",
+      "exitCode": 0,
+      "seconds": 1.056
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.HasOtherRetainedCopyStatement",
+      "exitCode": 0,
+      "seconds": 0.901
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.IsAvailableStatement",
+      "exitCode": 0,
+      "seconds": 0.639
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.IsDemandedStatement",
+      "exitCode": 0,
+      "seconds": 0.844
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.KeepWildcardSlotsStatement",
+      "exitCode": 0,
+      "seconds": 1.056
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.MapClosestCopiesStatement",
+      "exitCode": 0,
+      "seconds": 1.04
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.MapWildcardSlotCopiesStatement",
+      "exitCode": 0,
+      "seconds": 1.235
+    },
+    {
+      "module": "Lift.Level2z.ArithSpec",
+      "exitCode": 0,
+      "seconds": 0.727
+    },
+    {
+      "module": "Lift.Level2z.Args8Spec",
+      "exitCode": 0,
+      "seconds": 0.738
+    },
+    {
+      "module": "Lift.Level2z.Args8Statement",
+      "exitCode": 0,
+      "seconds": 0.683
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.PlannerRunStatement",
+      "exitCode": 0,
+      "seconds": 1.933
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.ProduceStatement",
+      "exitCode": 0,
+      "seconds": 1.068
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.PushStatement",
+      "exitCode": 0,
+      "seconds": 1.145
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.RemoveSurplusStatement",
+      "exitCode": 0,
+      "seconds": 1.033
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.ResolveStatement",
+      "exitCode": 0,
+      "seconds": 1.088
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.SwapWithStatement",
+      "exitCode": 0,
+      "seconds": 1.044
+    },
+    {
+      "module": "Lift.Shuffler.L1",
+      "exitCode": 0,
+      "seconds": 232.739
+    },
+    {
+      "module": "Lift.Shuffler.Entry",
+      "exitCode": 0,
+      "seconds": 0.718
+    },
+    {
+      "module": "Skel.Gen.Sites.Shuffler",
+      "exitCode": 0,
+      "seconds": 0.623
+    },
+    {
+      "module": "Lift.Shuffler.Spec",
+      "exitCode": 0,
+      "seconds": 1.342
+    },
+    {
+      "module": "Lift.Shuffler.Statement",
+      "exitCode": 0,
+      "seconds": 0.941
+    },
+    {
+      "module": "Lift.Shuffler.Test.Planner",
+      "exitCode": 0,
+      "seconds": 5.452
+    },
+    {
+      "module": "Lift.Toys.Test.Run",
+      "exitCode": 0,
+      "seconds": 1.654
+    },
+    {
+      "module": "Kraken.X64.PrintIntel",
+      "exitCode": 0,
+      "seconds": 5.774
+    },
+    {
+      "module": "Kraken.X64.PrintATT",
+      "exitCode": 0,
+      "seconds": 3.107
+    },
+    {
+      "module": "Lift.Shuffler.Test.Run",
+      "exitCode": 0,
+      "seconds": 5.558
+    },
+    {
+      "module": "Skel.IntQ.Refute",
+      "exitCode": 0,
+      "seconds": 3.658
+    },
+    {
+      "module": "Skel.Discover.Rand",
+      "exitCode": 0,
+      "seconds": 5.661
+    },
+    {
+      "module": "Skel.IntQ.RefuteDraw",
+      "exitCode": 0,
+      "seconds": 2.07
+    },
+    {
+      "module": "SkelNeeded",
+      "exitCode": 0,
+      "seconds": 0.742
+    },
+    {
+      "module": "NxLift.LeanWorker",
+      "exitCode": 0,
+      "seconds": 0.508
+    },
+    {
+      "module": "NxLift.LeanWorkerMain",
+      "exitCode": 0,
+      "seconds": 0.45
+    },
+    {
+      "module": "Skel.Types",
+      "exitCode": 0,
+      "seconds": 8.164
+    },
+    {
+      "module": "Skel.Gate",
+      "exitCode": 0,
+      "seconds": 0.653
+    },
+    {
+      "module": "NxLift.Basic",
+      "exitCode": 0,
+      "seconds": 1.947
+    },
+    {
+      "module": "NxLift.Build",
+      "exitCode": 0,
+      "seconds": 4.153
+    },
+    {
+      "module": "Skel.Parse",
+      "exitCode": 0,
+      "seconds": 2.268
+    },
+    {
+      "module": "Skel.Replies",
+      "exitCode": 0,
+      "seconds": 1.443
+    },
+    {
+      "module": "NxLift.Proc",
+      "exitCode": 0,
+      "seconds": 4.757
+    },
+    {
+      "module": "Skel.Io",
+      "exitCode": 0,
+      "seconds": 1.35
+    },
+    {
+      "module": "Skel.ProofScope",
+      "exitCode": 0,
+      "seconds": 1.024
+    },
+    {
+      "module": "Skel.Source",
+      "exitCode": 0,
+      "seconds": 3.571
+    },
+    {
+      "module": "Skel.Render",
+      "exitCode": 0,
+      "seconds": 1.786
+    },
+    {
+      "module": "Skel.Prove",
+      "exitCode": 0,
+      "seconds": 17.754
+    },
+    {
+      "module": "Skel.Ask",
+      "exitCode": 0,
+      "seconds": 4.459
+    },
+    {
+      "module": "Skel.Cli",
+      "exitCode": 0,
+      "seconds": 2.827
+    },
+    {
+      "module": "Skel.Discover.Lang",
+      "exitCode": 0,
+      "seconds": 17.566
+    },
+    {
+      "module": "Skel.Discover.Houdini",
+      "exitCode": 0,
+      "seconds": 2.667
+    },
+    {
+      "module": "Skel.Houdini",
+      "exitCode": 0,
+      "seconds": 2.139
+    },
+    {
+      "module": "Skel.Ledger",
+      "exitCode": 0,
+      "seconds": 1.651
+    },
+    {
+      "module": "Skel.Prompt",
+      "exitCode": 0,
+      "seconds": 0.938
+    },
+    {
+      "module": "Skel.Rungs",
+      "exitCode": 0,
+      "seconds": 3.899
+    },
+    {
+      "module": "Skel.Report",
+      "exitCode": 0,
+      "seconds": 1.927
+    },
+    {
+      "module": "Skel.Loop",
+      "exitCode": 0,
+      "seconds": 2.14
+    },
+    {
+      "module": "Skel.Gen.Derive.Run",
+      "exitCode": 0,
+      "seconds": 2.051
+    },
+    {
+      "module": "Skel.Gen.Types",
+      "exitCode": 0,
+      "seconds": 2.153
+    },
+    {
+      "module": "Skel.Gen.Derive.Walk",
+      "exitCode": 0,
+      "seconds": 4.849
+    },
+    {
+      "module": "Skel.Gen.Derive.Read",
+      "exitCode": 0,
+      "seconds": 14.76
+    },
+    {
+      "module": "Lift.V2.Machine",
+      "exitCode": 0,
+      "seconds": 2.644
+    },
+    {
+      "module": "Lift.V2.Lifter",
+      "exitCode": 0,
+      "seconds": 11.169
+    },
+    {
+      "module": "Lift.P2.Gen.Asm",
+      "exitCode": 0,
+      "seconds": 8.352
+    },
+    {
+      "module": "Skel.Cfg",
+      "exitCode": 0,
+      "seconds": 0.836
+    },
+    {
+      "module": "Skel.Gen.Asm",
+      "exitCode": 0,
+      "seconds": 0.899
+    },
+    {
+      "module": "Skel.Gen.Frame",
+      "exitCode": 0,
+      "seconds": 6.471
+    },
+    {
+      "module": "Skel.Gen.Split",
+      "exitCode": 0,
+      "seconds": 2.038
+    },
+    {
+      "module": "Skel.Gen.Derive.Blocks",
+      "exitCode": 0,
+      "seconds": 6.456
+    },
+    {
+      "module": "Skel.Gen.Derived.Spike",
+      "exitCode": 0,
+      "seconds": 0.547
+    },
+    {
+      "module": "Skel.Gen.Vars",
+      "exitCode": 0,
+      "seconds": 1.842
+    },
+    {
+      "module": "Skel.Gen.Model",
+      "exitCode": 0,
+      "seconds": 9.353
+    },
+    {
+      "module": "Skel.Gen.Stmt",
+      "exitCode": 0,
+      "seconds": 20.687
+    },
+    {
+      "module": "Skel.Gen.Sym",
+      "exitCode": 0,
+      "seconds": 3.994
+    },
+    {
+      "module": "Skel.Gen.Generate",
+      "exitCode": 0,
+      "seconds": 2.751
+    },
+    {
+      "module": "Skel.Toy.Sum",
+      "exitCode": 0,
+      "seconds": 2.365
+    },
+    {
+      "module": "Skel.Toy.RefuteCommon",
+      "exitCode": 0,
+      "seconds": 1.417
+    },
+    {
+      "module": "Skel.Toy.SumRefute",
+      "exitCode": 0,
+      "seconds": 0.925
+    },
+    {
+      "module": "Skel.Driver",
+      "exitCode": 0,
+      "seconds": 2.25
+    },
+    {
+      "module": "Skel.Recover",
+      "exitCode": 0,
+      "seconds": 3.152
+    },
+    {
+      "module": "Skel.Gen.Shape",
+      "exitCode": 0,
+      "seconds": 5.049
+    },
+    {
+      "module": "Skel.Gen.Upper",
+      "exitCode": 0,
+      "seconds": 3.946
+    },
+    {
+      "module": "Skel.Gen.Hint",
+      "exitCode": 0,
+      "seconds": 5.786
+    },
+    {
+      "module": "Skel.Gen.HeadTerm",
+      "exitCode": 0,
+      "seconds": 1.827
+    },
+    {
+      "module": "Skel.Gen.UpperPlan",
+      "exitCode": 0,
+      "seconds": 10.965
+    },
+    {
+      "module": "Skel.Gen.UpperModel",
+      "exitCode": 0,
+      "seconds": 3.853
+    },
+    {
+      "module": "Skel.Gen.UpperRel",
+      "exitCode": 0,
+      "seconds": 2.836
+    },
+    {
+      "module": "Skel.Gen.Regions",
+      "exitCode": 0,
+      "seconds": 0.922
+    },
+    {
+      "module": "Skel.Gen.UpperRows",
+      "exitCode": 0,
+      "seconds": 2.236
+    },
+    {
+      "module": "Skel.Gen.UpperProof",
+      "exitCode": 0,
+      "seconds": 11.061
+    },
+    {
+      "module": "Skel.Lean.Admission",
+      "exitCode": 0,
+      "seconds": 1.195
+    },
+    {
+      "module": "Skel.Gen.Sampler",
+      "exitCode": 0,
+      "seconds": 7.843
+    },
+    {
+      "module": "Skel.Gen.Link",
+      "exitCode": 0,
+      "seconds": 1.608
+    },
+    {
+      "module": "Skel.Gen.Template",
+      "exitCode": 0,
+      "seconds": 4.355
+    },
+    {
+      "module": "Skel.Gen.RefinesL3",
+      "exitCode": 0,
+      "seconds": 1.739
+    },
+    {
+      "module": "Skel.Gen.Final",
+      "exitCode": 0,
+      "seconds": 2.234
+    },
+    {
+      "module": "Skel.Gen.CallSummary",
+      "exitCode": 0,
+      "seconds": 2.307
+    },
+    {
+      "module": "Skel.Gen.GenerateUpper",
+      "exitCode": 0,
+      "seconds": 6.18
+    },
+    {
+      "module": "Skel.RungFlags",
+      "exitCode": 0,
+      "seconds": 2.653
+    },
+    {
+      "module": "Skel.Discover.Joint",
+      "exitCode": 0,
+      "seconds": 2.342
+    },
+    {
+      "module": "Skel.Discover.Regions",
+      "exitCode": 0,
+      "seconds": 2.616
+    },
+    {
+      "module": "Skel.Gen.Derived.Toys",
+      "exitCode": 0,
+      "seconds": 0.642
+    },
+    {
+      "module": "Skel.Lean.Shape",
+      "exitCode": 0,
+      "seconds": 10.352
+    },
+    {
+      "module": "Lift.Toys.FindSpec",
+      "exitCode": 0,
+      "seconds": 0.74
+    },
+    {
+      "module": "Lift.Toys.FindStatement",
+      "exitCode": 0,
+      "seconds": 0.648
+    },
+    {
+      "module": "Lift.Toys.WalkStatement",
+      "exitCode": 0,
+      "seconds": 0.925
+    },
+    {
+      "module": "Lift.Toys.FillStatement",
+      "exitCode": 0,
+      "seconds": 0.682
+    },
+    {
+      "module": "Lift.Spike.SumStatement",
+      "exitCode": 0,
+      "seconds": 0.667
+    },
+    {
+      "module": "Skel.Toy.Held",
+      "exitCode": 0,
+      "seconds": 4.736
+    },
+    {
+      "module": "Skel.RowExec",
+      "exitCode": 0,
+      "seconds": 3.542
+    },
+    {
+      "module": "Skel.Discover.RegionTasks",
+      "exitCode": 0,
+      "seconds": 5.164
+    },
+    {
+      "module": "Skel.Gen.ZigHint",
+      "exitCode": 0,
+      "seconds": 2.942
+    },
+    {
+      "module": "Skel.Gen.Derived.Pilot",
+      "exitCode": 0,
+      "seconds": 0.627
+    },
+    {
+      "module": "Skel.Gen.Derived.PilotFast",
+      "exitCode": 0,
+      "seconds": 0.726
+    },
+    {
+      "module": "Skel.Report.Level3",
+      "exitCode": 0,
+      "seconds": 16.054
+    },
+    {
+      "module": "Skel.Gen.Derived.Level2z",
+      "exitCode": 0,
+      "seconds": 0.75
+    },
+    {
+      "module": "Skel.Report.Level3Pilot",
+      "exitCode": 0,
+      "seconds": 15.244
+    },
+    {
+      "module": "Skel.Toy.Job",
+      "exitCode": 0,
+      "seconds": 1.052
+    },
+    {
+      "module": "Skel.Discover.Site",
+      "exitCode": 0,
+      "seconds": 16.44
+    },
+    {
+      "module": "Skel.Discover.Trace",
+      "exitCode": 0,
+      "seconds": 3.758
+    },
+    {
+      "module": "Skel.Discover.Dynamic",
+      "exitCode": 0,
+      "seconds": 3.155
+    },
+    {
+      "module": "Skel.Discover.Samples",
+      "exitCode": 0,
+      "seconds": 2.855
+    },
+    {
+      "module": "Skel.Discover.Cover",
+      "exitCode": 0,
+      "seconds": 1.445
+    },
+    {
+      "module": "Skel.Discover.Goals",
+      "exitCode": 0,
+      "seconds": 2.63
+    },
+    {
+      "module": "Skel.Discover.Close",
+      "exitCode": 0,
+      "seconds": 3.736
+    },
+    {
+      "module": "Skel.Discover.Prompt",
+      "exitCode": 0,
+      "seconds": 2.754
+    },
+    {
+      "module": "Skel.Discover.Ladder",
+      "exitCode": 0,
+      "seconds": 7.861
+    },
+    {
+      "module": "Skel.Discover.Features",
+      "exitCode": 0,
+      "seconds": 16.485
+    },
+    {
+      "module": "Skel.Discover.Machine",
+      "exitCode": 0,
+      "seconds": 7.252
+    },
+    {
+      "module": "Skel.Discover.SpecFeatures",
+      "exitCode": 0,
+      "seconds": 2.68
+    },
+    {
+      "module": "Lift.Inv.Gen.SExp",
+      "exitCode": 0,
+      "seconds": 1.212
+    },
+    {
+      "module": "Lift.Inv.Gen.TS",
+      "exitCode": 0,
+      "seconds": 4.062
+    },
+    {
+      "module": "Lift.Smt.Term",
+      "exitCode": 0,
+      "seconds": 3.447
+    },
+    {
+      "module": "Skel.Discover.Smt.Ts",
+      "exitCode": 0,
+      "seconds": 33.821
+    },
+    {
+      "module": "Lift.Heap.Layout",
+      "exitCode": 0,
+      "seconds": 1.739
+    },
+    {
+      "module": "Lift.P2.Gimple",
+      "exitCode": 0,
+      "seconds": 20.127
+    },
+    {
+      "module": "Lift.Plus.Layout",
+      "exitCode": 0,
+      "seconds": 4.231
+    },
+    {
+      "module": "Lift.Heap.SchemaInfo",
+      "exitCode": 0,
+      "seconds": 3.068
+    },
+    {
+      "module": "Lift.Inv.Gen.Univ",
+      "exitCode": 0,
+      "seconds": 3.836
+    },
+    {
+      "module": "Lift.Inv.Gen.Term",
+      "exitCode": 0,
+      "seconds": 2.258
+    },
+    {
+      "module": "Lift.Inv.Gen.Sygus",
+      "exitCode": 0,
+      "seconds": 7.148
+    },
+    {
+      "module": "Lift.Smt.Sexp",
+      "exitCode": 0,
+      "seconds": 2.632
+    },
+    {
+      "module": "Lift.Smt.Solver",
+      "exitCode": 0,
+      "seconds": 3.139
+    },
+    {
+      "module": "Skel.Discover.Smt.Query",
+      "exitCode": 0,
+      "seconds": 7.053
+    },
+    {
+      "module": "Skel.Discover.Smt.Back",
+      "exitCode": 0,
+      "seconds": 8.755
+    },
+    {
+      "module": "Skel.Discover.Smt.Rung",
+      "exitCode": 0,
+      "seconds": 3.353
+    },
+    {
+      "module": "Skel.Toy.MachineDiscover",
+      "exitCode": 0,
+      "seconds": 3.242
+    },
+    {
+      "module": "Skel.Toy.SumDiscover",
+      "exitCode": 0,
+      "seconds": 0.844
+    },
+    {
+      "module": "Skel.Lean.ResultFit",
+      "exitCode": 0,
+      "seconds": 0.945
+    },
+    {
+      "module": "Skel.Lean.ResultProbe",
+      "exitCode": 0,
+      "seconds": 5.452
+    },
+    {
+      "module": "Skel.Lean.BoundProbe",
+      "exitCode": 0,
+      "seconds": 3.002
+    },
+    {
+      "module": "Lift.Sem.HeapDec",
+      "exitCode": 0,
+      "seconds": 1.165
+    },
+    {
+      "module": "Skel.Lean.Sample",
+      "exitCode": 0,
+      "seconds": 2.156
+    },
+    {
+      "module": "Skel.Lean.SampleObj",
+      "exitCode": 0,
+      "seconds": 5.641
+    },
+    {
+      "module": "Skel.Discover.Result",
+      "exitCode": 0,
+      "seconds": 4.852
+    },
+    {
+      "module": "Skel.Discover.Upper",
+      "exitCode": 0,
+      "seconds": 13.886
+    },
+    {
+      "module": "Skel.Toy.UpperDiscover",
+      "exitCode": 0,
+      "seconds": 1.244
+    },
+    {
+      "module": "Skel.Toy.HeldFast",
+      "exitCode": 0,
+      "seconds": 1.149
+    },
+    {
+      "module": "Skel.Discover.L3Plan",
+      "exitCode": 0,
+      "seconds": 5.347
+    },
+    {
+      "module": "Skel.Discover.L3",
+      "exitCode": 0,
+      "seconds": 1.236
+    },
+    {
+      "module": "Skel.Full.Graph",
+      "exitCode": 0,
+      "seconds": 0.943
+    },
+    {
+      "module": "Skel.Full.GraphJson",
+      "exitCode": 0,
+      "seconds": 1.448
+    },
+    {
+      "module": "Skel.Full.Ledger",
+      "exitCode": 0,
+      "seconds": 3.249
+    },
+    {
+      "module": "Skel.Full.Module",
+      "exitCode": 0,
+      "seconds": 0.939
+    },
+    {
+      "module": "Skel.Full.Interface",
+      "exitCode": 0,
+      "seconds": 0.64
+    },
+    {
+      "module": "Skel.Gen.Derived.ShufflerA",
+      "exitCode": 0,
+      "seconds": 0.734
+    },
+    {
+      "module": "Skel.Gen.Derived.ShufflerB",
+      "exitCode": 0,
+      "seconds": 0.746
+    },
+    {
+      "module": "Skel.Gen.Derived.ShufflerC",
+      "exitCode": 0,
+      "seconds": 0.635
+    },
+    {
+      "module": "Skel.Gen.Derived.Shuffler",
+      "exitCode": 0,
+      "seconds": 0.537
+    },
+    {
+      "module": "Skel.TempDir",
+      "exitCode": 0,
+      "seconds": 0.546
+    },
+    {
+      "module": "Skel.IntQ.Context",
+      "exitCode": 0,
+      "seconds": 4.552
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Unit",
+      "exitCode": 0,
+      "seconds": 0.845
+    },
+    {
+      "module": "Skel.IntQ",
+      "exitCode": 0,
+      "seconds": 13.564
+    },
+    {
+      "module": "Skel.Full.Driver",
+      "exitCode": 0,
+      "seconds": 9.753
+    },
+    {
+      "module": "Skel.Targets.Discover",
+      "exitCode": 0,
+      "seconds": 4.048
+    },
+    {
+      "module": "Skel.Discover.Targets",
+      "exitCode": 0,
+      "seconds": 0.564
+    },
+    {
+      "module": "Skel.Main",
+      "exitCode": 0,
+      "seconds": 3.147
+    },
+    {
+      "module": "Skel.Test.Types",
+      "exitCode": 0,
+      "seconds": 0.944
+    },
+    {
+      "module": "Skel.Test.Cfg",
+      "exitCode": 0,
+      "seconds": 1.15
+    },
+    {
+      "module": "Skel.Test.Source",
+      "exitCode": 0,
+      "seconds": 1.842
+    },
+    {
+      "module": "Skel.Test.Gate",
+      "exitCode": 0,
+      "seconds": 1.119
+    },
+    {
+      "module": "Skel.Test.Render",
+      "exitCode": 0,
+      "seconds": 1.846
+    },
+    {
+      "module": "Skel.Test.AnswerExport",
+      "exitCode": 0,
+      "seconds": 2.244
+    },
+    {
+      "module": "Skel.Test.Rungs",
+      "exitCode": 0,
+      "seconds": 2.309
+    },
+    {
+      "module": "Skel.Test.Parse",
+      "exitCode": 0,
+      "seconds": 2.946
+    },
+    {
+      "module": "Skel.Test.Ledger",
+      "exitCode": 0,
+      "seconds": 2.641
+    },
+    {
+      "module": "Skel.Test.Io",
+      "exitCode": 0,
+      "seconds": 3.047
+    },
+    {
+      "module": "Skel.Test.Report",
+      "exitCode": 0,
+      "seconds": 2.225
+    },
+    {
+      "module": "Skel.Test.ToySum",
+      "exitCode": 0,
+      "seconds": 5.745
+    },
+    {
+      "module": "Skel.Test.RefuteGen",
+      "exitCode": 0,
+      "seconds": 0.677
+    },
+    {
+      "module": "Skel.Test.SumRefute",
+      "exitCode": 0,
+      "seconds": 3.458
+    },
+    {
+      "module": "Skel.Test.Loop",
+      "exitCode": 0,
+      "seconds": 6.529
+    },
+    {
+      "module": "Skel.Test.Cli",
+      "exitCode": 0,
+      "seconds": 2.757
+    },
+    {
+      "module": "Skel.Test.Driver",
+      "exitCode": 0,
+      "seconds": 4.358
+    },
+    {
+      "module": "Skel.Test.GenTypes",
+      "exitCode": 0,
+      "seconds": 1.541
+    },
+    {
+      "module": "Skel.Test.Prompt",
+      "exitCode": 0,
+      "seconds": 2.149
+    },
+    {
+      "module": "Skel.Test.Houdini",
+      "exitCode": 0,
+      "seconds": 4.211
+    },
+    {
+      "module": "Skel.Test.GenAsm",
+      "exitCode": 0,
+      "seconds": 1.548
+    },
+    {
+      "module": "Skel.Test.FindRefute",
+      "exitCode": 0,
+      "seconds": 3.257
+    },
+    {
+      "module": "Skel.Test.GenSplit",
+      "exitCode": 0,
+      "seconds": 2.647
+    },
+    {
+      "module": "Skel.Test.WalkRefute",
+      "exitCode": 0,
+      "seconds": 3.349
+    },
+    {
+      "module": "Skel.Test.FillRefute",
+      "exitCode": 0,
+      "seconds": 3.149
+    },
+    {
+      "module": "Skel.Test.Model",
+      "exitCode": 0,
+      "seconds": 5.238
+    },
+    {
+      "module": "Skel.Test.GenSym",
+      "exitCode": 0,
+      "seconds": 4.645
+    },
+    {
+      "module": "Skel.Test.GenVars",
+      "exitCode": 0,
+      "seconds": 4.56
+    },
+    {
+      "module": "Skel.Test.GenUpper",
+      "exitCode": 0,
+      "seconds": 3.448
+    },
+    {
+      "module": "Lift.Trusted.Toy",
+      "exitCode": 0,
+      "seconds": 0.753
+    },
+    {
+      "module": "Lift.Spike.JobSpec",
+      "exitCode": 0,
+      "seconds": 1.182
+    },
+    {
+      "module": "Lift.Spike.JobStatement",
+      "exitCode": 0,
+      "seconds": 0.847
+    },
+    {
+      "module": "Lift.Spike.Sites.Job",
+      "exitCode": 0,
+      "seconds": 0.584
+    },
+    {
+      "module": "Lift.Spike.Sites.Mark",
+      "exitCode": 0,
+      "seconds": 0.547
+    },
+    {
+      "module": "Lift.Spike.Mark",
+      "exitCode": 0,
+      "seconds": 0.97
+    },
+    {
+      "module": "Lift.Spike.Job",
+      "exitCode": 0,
+      "seconds": 2.055
+    },
+    {
+      "module": "Skel.Test.Shape",
+      "exitCode": 0,
+      "seconds": 9.255
+    },
+    {
+      "module": "Skel.Test.GenUpperPlan",
+      "exitCode": 0,
+      "seconds": 6.271
+    },
+    {
+      "module": "Skel.Test.GenHint",
+      "exitCode": 0,
+      "seconds": 4.834
+    },
+    {
+      "module": "Skel.Test.GenFrame",
+      "exitCode": 0,
+      "seconds": 6.26
+    },
+    {
+      "module": "Skel.Test.GenModel",
+      "exitCode": 0,
+      "seconds": 2.944
+    },
+    {
+      "module": "Skel.Test.Par",
+      "exitCode": 0,
+      "seconds": 0.84
+    },
+    {
+      "module": "Skel.Test.GenStmt",
+      "exitCode": 0,
+      "seconds": 4.456
+    },
+    {
+      "module": "Skel.Test.GenUpperModel",
+      "exitCode": 0,
+      "seconds": 1.733
+    },
+    {
+      "module": "Skel.Test.PostShape",
+      "exitCode": 0,
+      "seconds": 3.356
+    },
+    {
+      "module": "Skel.Test.SharedBudget",
+      "exitCode": 0,
+      "seconds": 4.633
+    },
+    {
+      "module": "Skel.Test.RefuteSpec",
+      "exitCode": 0,
+      "seconds": 2.953
+    },
+    {
+      "module": "Skel.Test.Sample",
+      "exitCode": 0,
+      "seconds": 4.729
+    },
+    {
+      "module": "Skel.Test.HintPilot",
+      "exitCode": 0,
+      "seconds": 2.351
+    },
+    {
+      "module": "Skel.Test.ZigHint",
+      "exitCode": 0,
+      "seconds": 3.549
+    },
+    {
+      "module": "Lift.Sem.HeapFast",
+      "exitCode": 0,
+      "seconds": 2.25
+    },
+    {
+      "module": "Skel.Test.HeapTime",
+      "exitCode": 0,
+      "seconds": 1.85
+    },
+    {
+      "module": "Skel.Test.GenGen",
+      "exitCode": 0,
+      "seconds": 3.541
+    },
+    {
+      "module": "Skel.Test.GenPrivateStack",
+      "exitCode": 0,
+      "seconds": 2.05
+    },
+    {
+      "module": "Skel.Test.GenStackArgs",
+      "exitCode": 0,
+      "seconds": 1.543
+    },
+    {
+      "module": "Skel.Test.GenSampler",
+      "exitCode": 0,
+      "seconds": 7.133
+    },
+    {
+      "module": "Skel.Gen.Mutants",
+      "exitCode": 0,
+      "seconds": 3.945
+    },
+    {
+      "module": "Skel.Test.GenMutants",
+      "exitCode": 0,
+      "seconds": 3.155
+    },
+    {
+      "module": "Skel.Test.HeldFast",
+      "exitCode": 0,
+      "seconds": 1.433
+    },
+    {
+      "module": "Skel.Test.RefuteSeeded",
+      "exitCode": 0,
+      "seconds": 4.617
+    },
+    {
+      "module": "Lift.Level2z.NestSpec",
+      "exitCode": 0,
+      "seconds": 0.729
+    },
+    {
+      "module": "Lift.Level2z.NestStatement",
+      "exitCode": 0,
+      "seconds": 0.764
+    },
+    {
+      "module": "Skel.Test.GenUpperRel",
+      "exitCode": 0,
+      "seconds": 2.661
+    },
+    {
+      "module": "Skel.Test.SamplerRung",
+      "exitCode": 0,
+      "seconds": 3.147
+    },
+    {
+      "module": "Skel.Test.Asker",
+      "exitCode": 0,
+      "seconds": 5.653
+    },
+    {
+      "module": "Skel.Test.ToyJob",
+      "exitCode": 0,
+      "seconds": 2.113
+    },
+    {
+      "module": "Skel.Test.Held",
+      "exitCode": 0,
+      "seconds": 2.648
+    },
+    {
+      "module": "Skel.Test.GenUpperProof",
+      "exitCode": 0,
+      "seconds": 4.182
+    },
+    {
+      "module": "Skel.Test.GenUpperRows",
+      "exitCode": 0,
+      "seconds": 2.24
+    },
+    {
+      "module": "Skel.Test.UpperWire",
+      "exitCode": 0,
+      "seconds": 6.258
+    },
+    {
+      "module": "Skel.Test.Saved.Code",
+      "exitCode": 0,
+      "seconds": 1.847
+    },
+    {
+      "module": "Skel.Test.Saved.L1",
+      "exitCode": 0,
+      "seconds": 70.711
+    },
+    {
+      "module": "Skel.Test.GenL2Gate",
+      "exitCode": 0,
+      "seconds": 2.158
+    },
+    {
+      "module": "Skel.Test.GenSaved",
+      "exitCode": 0,
+      "seconds": 1.998
+    },
+    {
+      "module": "Skel.Test.ChainSumSpec",
+      "exitCode": 0,
+      "seconds": 0.645
+    },
+    {
+      "module": "Skel.Test.ChainSum",
+      "exitCode": 0,
+      "seconds": 1.01
+    },
+    {
+      "module": "Skel.Test.GenLoop",
+      "exitCode": 0,
+      "seconds": 8.258
+    },
+    {
+      "module": "Skel.Test.GenVal",
+      "exitCode": 0,
+      "seconds": 4.854
+    },
+    {
+      "module": "Skel.Test.GenUpperNarrow",
+      "exitCode": 0,
+      "seconds": 3.258
+    },
+    {
+      "module": "Skel.Test.FlatFindSpec",
+      "exitCode": 0,
+      "seconds": 0.724
+    },
+    {
+      "module": "Skel.Test.GenUpperInputs",
+      "exitCode": 0,
+      "seconds": 5.748
+    },
+    {
+      "module": "Skel.Test.GenUpperBoth",
+      "exitCode": 0,
+      "seconds": 3.933
+    },
+    {
+      "module": "Skel.Test.GenUpperResult",
+      "exitCode": 0,
+      "seconds": 5.257
+    },
+    {
+      "module": "Skel.Test.FinalSpec",
+      "exitCode": 0,
+      "seconds": 1.13
+    },
+    {
+      "module": "Skel.Test.GenUpperRoom",
+      "exitCode": 0,
+      "seconds": 7.357
+    },
+    {
+      "module": "Skel.Test.GenFinal",
+      "exitCode": 0,
+      "seconds": 3.357
+    },
+    {
+      "module": "Skel.Test.GenUpperRet",
+      "exitCode": 0,
+      "seconds": 2.852
+    },
+    {
+      "module": "Skel.Test.GenUpperStraight",
+      "exitCode": 0,
+      "seconds": 2.164
+    },
+    {
+      "module": "Skel.Test.GenCallMem",
+      "exitCode": 0,
+      "seconds": 2.044
+    },
+    {
+      "module": "Skel.Test.GenUpperMemRoom",
+      "exitCode": 0,
+      "seconds": 2.508
+    },
+    {
+      "module": "Skel.Test.GenUpperCall",
+      "exitCode": 0,
+      "seconds": 5.587
+    },
+    {
+      "module": "Skel.Test.NarrowFindSpec",
+      "exitCode": 0,
+      "seconds": 0.643
+    },
+    {
+      "module": "Skel.Test.BothFillSpec",
+      "exitCode": 0,
+      "seconds": 0.736
+    },
+    {
+      "module": "Skel.Test.GenUpperLoops",
+      "exitCode": 0,
+      "seconds": 4.151
+    },
+    {
+      "module": "Skel.Test.GenUpperB",
+      "exitCode": 0,
+      "seconds": 3.304
+    },
+    {
+      "module": "Skel.Test.Prove",
+      "exitCode": 0,
+      "seconds": 21.376
+    },
+    {
+      "module": "Skel.Test.Recover",
+      "exitCode": 0,
+      "seconds": 3.286
+    },
+    {
+      "module": "Skel.Test.LiveInputs",
+      "exitCode": 0,
+      "seconds": 0.947
+    },
+    {
+      "module": "Skel.Test.GenL2CallBlk",
+      "exitCode": 0,
+      "seconds": 2.727
+    },
+    {
+      "module": "Skel.Test.GenMultiCallee",
+      "exitCode": 0,
+      "seconds": 6.545
+    },
+    {
+      "module": "Skel.Test.CalleeScope",
+      "exitCode": 0,
+      "seconds": 2.057
+    },
+    {
+      "module": "Skel.IntQ.Replay",
+      "exitCode": 0,
+      "seconds": 1.695
+    },
+    {
+      "module": "Skel.Test.IntQStack",
+      "exitCode": 0,
+      "seconds": 2.478
+    },
+    {
+      "module": "Lift.Trusted.Test.Mem",
+      "exitCode": 0,
+      "seconds": 0.572
+    },
+    {
+      "module": "Lift.Sem.Test.Bridge",
+      "exitCode": 0,
+      "seconds": 0.851
+    },
+    {
+      "module": "Skel.Test.MixedWidth",
+      "exitCode": 0,
+      "seconds": 3.715
+    },
+    {
+      "module": "Skel.Test.ABFindSpec",
+      "exitCode": 0,
+      "seconds": 0.646
+    },
+    {
+      "module": "Skel.Test.PolYSpec",
+      "exitCode": 0,
+      "seconds": 0.747
+    },
+    {
+      "module": "Skel.Test.GenAf2b",
+      "exitCode": 0,
+      "seconds": 2.542
+    },
+    {
+      "module": "Skel.Test.DiscoverLang",
+      "exitCode": 0,
+      "seconds": 6.951
+    },
+    {
+      "module": "Skel.Test.DiscoverSite",
+      "exitCode": 0,
+      "seconds": 5.567
+    },
+    {
+      "module": "Skel.Test.DiscoverTrace",
+      "exitCode": 0,
+      "seconds": 5.333
+    },
+    {
+      "module": "Skel.Test.DiscoverDynamic",
+      "exitCode": 0,
+      "seconds": 4.156
+    },
+    {
+      "module": "Skel.Test.ReportLevel3",
+      "exitCode": 0,
+      "seconds": 6.686
+    },
+    {
+      "module": "Skel.Test.DiscoverFeatures",
+      "exitCode": 0,
+      "seconds": 5.151
+    },
+    {
+      "module": "Skel.Test.DiscoverGoals",
+      "exitCode": 0,
+      "seconds": 3.35
+    },
+    {
+      "module": "Skel.Test.DiscoverHoudini",
+      "exitCode": 0,
+      "seconds": 2.935
+    },
+    {
+      "module": "Skel.Test.DiscoverBlind",
+      "exitCode": 0,
+      "seconds": 3.552
+    },
+    {
+      "module": "Skel.Test.DiscoverPrompt",
+      "exitCode": 0,
+      "seconds": 2.751
+    },
+    {
+      "module": "Skel.Test.RungWire",
+      "exitCode": 0,
+      "seconds": 5.284
+    },
+    {
+      "module": "Skel.Test.AskCount",
+      "exitCode": 0,
+      "seconds": 6.836
+    },
+    {
+      "module": "Skel.Test.Fallback",
+      "exitCode": 0,
+      "seconds": 10.456
+    },
+    {
+      "module": "Skel.Test.DriverFix",
+      "exitCode": 0,
+      "seconds": 7.42
+    },
+    {
+      "module": "Skel.Test.HarnessLoop",
+      "exitCode": 0,
+      "seconds": 3.146
+    },
+    {
+      "module": "Skel.Test.HarnessLoop2",
+      "exitCode": 0,
+      "seconds": 4.34
+    },
+    {
+      "module": "Skel.Test.HarnessLoop3",
+      "exitCode": 0,
+      "seconds": 10.07
+    },
+    {
+      "module": "Skel.Test.DiscoverJoint",
+      "exitCode": 0,
+      "seconds": 1.851
+    },
+    {
+      "module": "Lift.Level2z.TwoLoopsSpec",
+      "exitCode": 0,
+      "seconds": 0.745
+    },
+    {
+      "module": "Lift.Level2z.TwoLoopsStatement",
+      "exitCode": 0,
+      "seconds": 0.716
+    },
+    {
+      "module": "Lift.Level2z.Exit3Statement",
+      "exitCode": 0,
+      "seconds": 0.648
+    },
+    {
+      "module": "Skel.Test.GenL2Loops",
+      "exitCode": 0,
+      "seconds": 3.053
+    },
+    {
+      "module": "Skel.Test.DiscoverRegions",
+      "exitCode": 0,
+      "seconds": 4.946
+    },
+    {
+      "module": "Skel.Test.FullRegions",
+      "exitCode": 0,
+      "seconds": 1.249
+    },
+    {
+      "module": "Skel.Test.DiscoverSamples",
+      "exitCode": 0,
+      "seconds": 4.169
+    },
+    {
+      "module": "Skel.Test.DiscoverClose",
+      "exitCode": 0,
+      "seconds": 4.453
+    },
+    {
+      "module": "Skel.Test.DiscoverSmt",
+      "exitCode": 0,
+      "seconds": 7.618
+    },
+    {
+      "module": "Skel.Test.DiscoverSmtQuery",
+      "exitCode": 0,
+      "seconds": 6.795
+    },
+    {
+      "module": "Skel.Test.Proc",
+      "exitCode": 0,
+      "seconds": 2.65
+    },
+    {
+      "module": "Skel.Test.TempDir",
+      "exitCode": 0,
+      "seconds": 1.756
+    },
+    {
+      "module": "Skel.Test.DiscoverLadderSite",
+      "exitCode": 0,
+      "seconds": 0.699
+    },
+    {
+      "module": "Skel.Test.DiscoverLadder",
+      "exitCode": 0,
+      "seconds": 5.955
+    },
+    {
+      "module": "Skel.Test.DiscoverRun",
+      "exitCode": 0,
+      "seconds": 4.456
+    },
+    {
+      "module": "Skel.Discover.Mutants",
+      "exitCode": 0,
+      "seconds": 3.154
+    },
+    {
+      "module": "Skel.Test.DiscoverMutantSite",
+      "exitCode": 0,
+      "seconds": 1.552
+    },
+    {
+      "module": "Skel.Test.DiscoverMutants",
+      "exitCode": 0,
+      "seconds": 2.355
+    },
+    {
+      "module": "Skel.Test.DiscoverLinSite",
+      "exitCode": 0,
+      "seconds": 1.042
+    },
+    {
+      "module": "Skel.Test.DiscoverLin",
+      "exitCode": 0,
+      "seconds": 1.396
+    },
+    {
+      "module": "Skel.Test.DiscoverSpec",
+      "exitCode": 0,
+      "seconds": 3.654
+    },
+    {
+      "module": "Skel.Test.GenCases",
+      "exitCode": 0,
+      "seconds": 1.943
+    },
+    {
+      "module": "Skel.Test.DiscoverUpper",
+      "exitCode": 0,
+      "seconds": 3.252
+    },
+    {
+      "module": "Lift.Level2.Code",
+      "exitCode": 0,
+      "seconds": 5.563
+    },
+    {
+      "module": "Skel.Test.DeriveFlags",
+      "exitCode": 0,
+      "seconds": 2.839
+    },
+    {
+      "module": "Skel.Test.GenL2Flags",
+      "exitCode": 0,
+      "seconds": 1.669
+    },
+    {
+      "module": "Skel.Test.GenL2Stack",
+      "exitCode": 0,
+      "seconds": 3.75
+    },
+    {
+      "module": "Skel.Test.GenArgs8",
+      "exitCode": 0,
+      "seconds": 2.253
+    },
+    {
+      "module": "Skel.Test.MapHead",
+      "exitCode": 0,
+      "seconds": 1.725
+    },
+    {
+      "module": "Skel.Test.DiscoverForms",
+      "exitCode": 0,
+      "seconds": 2.609
+    },
+    {
+      "module": "Skel.Test.DiscoverResult",
+      "exitCode": 0,
+      "seconds": 5.469
+    },
+    {
+      "module": "Skel.Test.DiscoverBound",
+      "exitCode": 0,
+      "seconds": 3.449
+    },
+    {
+      "module": "Skel.Test.DiscoverCover",
+      "exitCode": 0,
+      "seconds": 12.924
+    },
+    {
+      "module": "Skel.Test.DiscoverCall",
+      "exitCode": 0,
+      "seconds": 5.862
+    },
+    {
+      "module": "Skel.Test.DiscoverSmtBack",
+      "exitCode": 0,
+      "seconds": 6.555
+    },
+    {
+      "module": "Skel.Test.Needed",
+      "exitCode": 0,
+      "seconds": 2.149
+    },
+    {
+      "module": "Skel.Test.DiscoverFuel",
+      "exitCode": 0,
+      "seconds": 2.555
+    },
+    {
+      "module": "Skel.Test.DiscoverSolver",
+      "exitCode": 0,
+      "seconds": 3.656
+    },
+    {
+      "module": "Skel.Test.DiscoverGhostSite",
+      "exitCode": 0,
+      "seconds": 1.137
+    },
+    {
+      "module": "Skel.Test.DiscoverGhost",
+      "exitCode": 0,
+      "seconds": 3.547
+    },
+    {
+      "module": "Skel.Test.DiscoverL3Site",
+      "exitCode": 0,
+      "seconds": 3.658
+    },
+    {
+      "module": "Skel.Test.DiscoverL3",
+      "exitCode": 0,
+      "seconds": 2.245
+    },
+    {
+      "module": "Skel.Test.DiscoverStructSite",
+      "exitCode": 0,
+      "seconds": 1.532
+    },
+    {
+      "module": "Skel.Test.DiscoverStruct",
+      "exitCode": 0,
+      "seconds": 3.156
+    },
+    {
+      "module": "Skel.Test.RungMem",
+      "exitCode": 0,
+      "seconds": 1.445
+    },
+    {
+      "module": "Skel.Test.DiscoverRandToy",
+      "exitCode": 0,
+      "seconds": 4.749
+    },
+    {
+      "module": "Skel.Test.DiscoverRand",
+      "exitCode": 0,
+      "seconds": 9.268
+    },
+    {
+      "module": "Skel.Test.IntStmt",
+      "exitCode": 0,
+      "seconds": 4.651
+    },
+    {
+      "module": "Skel.Test.IntQ",
+      "exitCode": 0,
+      "seconds": 11.764
+    },
+    {
+      "module": "Skel.Test.TraceLayout",
+      "exitCode": 0,
+      "seconds": 2.958
+    },
+    {
+      "module": "Skel.Test.IntQGenerate",
+      "exitCode": 0,
+      "seconds": 1.51
+    },
+    {
+      "module": "Skel.Test.IntQPlanner",
+      "exitCode": 0,
+      "seconds": 1.539
+    },
+    {
+      "module": "Lift.Level2.L1",
+      "exitCode": 0,
+      "seconds": 106.337
+    },
+    {
+      "module": "Skel.Test.DeriveSite",
+      "exitCode": 0,
+      "seconds": 1.446
+    },
+    {
+      "module": "Skel.Test.DeriveRun",
+      "exitCode": 0,
+      "seconds": 1.552
+    },
+    {
+      "module": "Skel.Test.DeriveWalk",
+      "exitCode": 0,
+      "seconds": 2.444
+    },
+    {
+      "module": "Skel.Test.DeriveRead",
+      "exitCode": 0,
+      "seconds": 8.774
+    },
+    {
+      "module": "Skel.Test.DeriveReadForms",
+      "exitCode": 0,
+      "seconds": 36.067
+    },
+    {
+      "module": "Skel.Test.DeriveReader",
+      "exitCode": 0,
+      "seconds": 6.355
+    },
+    {
+      "module": "Skel.Test.GenReader",
+      "exitCode": 0,
+      "seconds": 0.804
+    },
+    {
+      "module": "Skel.Test.Full",
+      "exitCode": 0,
+      "seconds": 5.726
+    },
+    {
+      "module": "Skel.Test.PrivateStack",
+      "exitCode": 0,
+      "seconds": 1.544
+    },
+    {
+      "module": "Skel.Test.LeanWorker",
+      "exitCode": 0,
+      "seconds": 4.733
+    },
+    {
+      "module": "Skel.Test.StmtShape",
+      "exitCode": 0,
+      "seconds": 3.947
+    },
+    {
+      "module": "Skel.Test.L2Wire",
+      "exitCode": 0,
+      "seconds": 3.347
+    },
+    {
+      "module": "Skel.RecoverConditional",
+      "exitCode": 0,
+      "seconds": 2.154
+    },
+    {
+      "module": "Skel.Test.ProvePar",
+      "exitCode": 0,
+      "seconds": 13.064
+    },
+    {
+      "module": "Skel.Test.GenRegions",
+      "exitCode": 0,
+      "seconds": 2.554
+    },
+    {
+      "module": "Skel.Test.CallSummary",
+      "exitCode": 0,
+      "seconds": 7.033
+    },
+    {
+      "module": "Skel.Test.CallSummaryModule",
+      "exitCode": 0,
+      "seconds": 3.659
+    },
+    {
+      "module": "Skel.Test.FullSummary",
+      "exitCode": 0,
+      "seconds": 1.631
+    },
+    {
+      "module": "Skel.Test.RegionTasks",
+      "exitCode": 0,
+      "seconds": 8.452
+    },
+    {
+      "module": "Skel.Test.Main",
+      "exitCode": 0,
+      "seconds": 5.96
+    },
+    {
+      "module": "Lift.Shuffler.Internal.Proposed.PermuteAtLowestHeightStatement",
+      "exitCode": 0,
+      "seconds": 1.139
+    },
+    {
+      "module": "Review.Contracts",
+      "exitCode": 0,
+      "seconds": 0.626
+    },
+    {
+      "module": "LeanTools.Text",
+      "exitCode": 0,
+      "seconds": 2.106
+    },
+    {
+      "module": "LeanTools.Policy",
+      "exitCode": 0,
+      "seconds": 0.946
+    },
+    {
+      "module": "LeanTools.RunMetadata",
+      "exitCode": 0,
+      "seconds": 3.254
+    },
+    {
+      "module": "LeanTools.History",
+      "exitCode": 0,
+      "seconds": 0.937
+    },
+    {
+      "module": "LeanTools.Pos",
+      "exitCode": 0,
+      "seconds": 0.758
+    },
+    {
+      "module": "LeanTools.Lsp",
+      "exitCode": 0,
+      "seconds": 6.055
+    },
+    {
+      "module": "LeanTools.Axioms",
+      "exitCode": 0,
+      "seconds": 4.769
+    },
+    {
+      "module": "LeanTools.Validate",
+      "exitCode": 0,
+      "seconds": 3.546
+    },
+    {
+      "module": "LeanTools.Deny",
+      "exitCode": 0,
+      "seconds": 0.94
+    },
+    {
+      "module": "LeanTools.Workspace",
+      "exitCode": 0,
+      "seconds": 17.014
+    },
+    {
+      "module": "LeanTools.Tools",
+      "exitCode": 0,
+      "seconds": 3.417
+    },
+    {
+      "module": "LeanTools.Daemon",
+      "exitCode": 0,
+      "seconds": 3.438
+    },
+    {
+      "module": "LeanTools.Http",
+      "exitCode": 0,
+      "seconds": 1.144
+    },
+    {
+      "module": "LeanTools.Chat",
+      "exitCode": 0,
+      "seconds": 2.442
+    },
+    {
+      "module": "LeanTools.Responses",
+      "exitCode": 0,
+      "seconds": 2.672
+    },
+    {
+      "module": "LeanTools.Anthropic",
+      "exitCode": 0,
+      "seconds": 2.152
+    },
+    {
+      "module": "LeanTools.OpenAI",
+      "exitCode": 0,
+      "seconds": 2.354
+    },
+    {
+      "module": "LeanTools.Prompts",
+      "exitCode": 0,
+      "seconds": 0.619
+    },
+    {
+      "module": "LeanTools.Prove",
+      "exitCode": 0,
+      "seconds": 13.153
+    },
+    {
+      "module": "LeanTools.ProveConfig",
+      "exitCode": 0,
+      "seconds": 2.942
+    },
+    {
+      "module": "LeanTools.Ask",
+      "exitCode": 0,
+      "seconds": 3.242
+    },
+    {
+      "module": "LeanTools.ProveBudget",
+      "exitCode": 0,
+      "seconds": 1.037
+    },
+    {
+      "module": "LeanTools.ProveMain",
+      "exitCode": 0,
+      "seconds": 3.348
+    },
+    {
+      "module": "LeanTools.AskMain",
+      "exitCode": 0,
+      "seconds": 3.532
+    },
+    {
+      "module": "LeanTools",
+      "exitCode": 0,
+      "seconds": 0.628
+    },
+    {
+      "module": "Main",
+      "exitCode": 0,
+      "seconds": 3.025
+    },
+    {
+      "module": "Test.Harness",
+      "exitCode": 0,
+      "seconds": 1.34
+    },
+    {
+      "module": "Test.Text",
+      "exitCode": 0,
+      "seconds": 4.321
+    },
+    {
+      "module": "Test.History",
+      "exitCode": 0,
+      "seconds": 1.518
+    },
+    {
+      "module": "Test.HoleFeedback",
+      "exitCode": 0,
+      "seconds": 1.742
+    },
+    {
+      "module": "Test.Pos",
+      "exitCode": 0,
+      "seconds": 1.147
+    },
+    {
+      "module": "Test.Validate",
+      "exitCode": 0,
+      "seconds": 3.94
+    },
+    {
+      "module": "Test.Config",
+      "exitCode": 0,
+      "seconds": 1.333
+    },
+    {
+      "module": "Test.Http",
+      "exitCode": 0,
+      "seconds": 2.511
+    },
+    {
+      "module": "Test.Chat",
+      "exitCode": 0,
+      "seconds": 2.833
+    },
+    {
+      "module": "Test.OpenAI",
+      "exitCode": 0,
+      "seconds": 4.045
+    },
+    {
+      "module": "Test.Responses",
+      "exitCode": 0,
+      "seconds": 3.636
+    },
+    {
+      "module": "Test.Anthropic",
+      "exitCode": 0,
+      "seconds": 2.355
+    },
+    {
+      "module": "Test.Prove",
+      "exitCode": 0,
+      "seconds": 12.953
+    },
+    {
+      "module": "Test.ProveBudget",
+      "exitCode": 0,
+      "seconds": 1.549
+    },
+    {
+      "module": "Test.ProveConfig",
+      "exitCode": 0,
+      "seconds": 2.604
+    },
+    {
+      "module": "Test.Tools",
+      "exitCode": 0,
+      "seconds": 8.153
+    },
+    {
+      "module": "Test.Deny",
+      "exitCode": 0,
+      "seconds": 5.554
+    },
+    {
+      "module": "Test.Report",
+      "exitCode": 0,
+      "seconds": 3.945
+    },
+    {
+      "module": "Test.RunMetadata",
+      "exitCode": 0,
+      "seconds": 4.661
+    },
+    {
+      "module": "Test.AxiomsLemma",
+      "exitCode": 0,
+      "seconds": 1.042
+    },
+    {
+      "module": "Test.Axioms",
+      "exitCode": 0,
+      "seconds": 6.649
+    },
+    {
+      "module": "Test.Ask",
+      "exitCode": 0,
+      "seconds": 25.765
+    },
+    {
+      "module": "Test",
+      "exitCode": 0,
+      "seconds": 1.845
+    },
+    {
+      "module": "Loogle.Pickle",
+      "exitCode": 0,
+      "seconds": 0.992
+    },
+    {
+      "module": "Loogle.Cache",
+      "exitCode": 0,
+      "seconds": 2.959
+    },
+    {
+      "module": "Loogle.NameRel",
+      "exitCode": 0,
+      "seconds": 0.935
+    },
+    {
+      "module": "Loogle.TreeMap",
+      "exitCode": 0,
+      "seconds": 2.65
+    },
+    {
+      "module": "Loogle.BlackListed",
+      "exitCode": 0,
+      "seconds": 1.346
+    },
+    {
+      "module": "Loogle.Trie",
+      "exitCode": 0,
+      "seconds": 3.569
+    },
+    {
+      "module": "Loogle.Parsers",
+      "exitCode": 0,
+      "seconds": 1.223
+    },
+    {
+      "module": "Loogle.Find",
+      "exitCode": 0,
+      "seconds": 14.059
+    },
+    {
+      "module": "Seccomp",
+      "exitCode": 0,
+      "seconds": 1.722
+    },
+    {
+      "module": "Loogle",
+      "exitCode": 0,
+      "seconds": 6.564
+    },
+    {
+      "module": "LoogleMain",
+      "exitCode": 0,
+      "seconds": 7.763
+    }
+  ],
+  "sourceAndNative": true,
+  "memoryEvents": {
+    "events": [],
+    "exitCode": 0
+  }
+}

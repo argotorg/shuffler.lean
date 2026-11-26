@@ -1,0 +1,5 @@
+{"version": "cvc5 1.4.0",
+ "solver": "cvc5",
+ "hash": "1070766686889539243",
+ "answer":
+ "(\n(define-fun inv ((fst_len Int) (snd Int) (steps Int) (fuel0 Int)) Bool (not (<= fuel0 (+ fst_len steps))))\n)\n"}

@@ -1,0 +1,171 @@
+{
+  "checks": [
+    {
+      "check": "link-skel",
+      "command": [
+        "lake",
+        "--no-cache",
+        "build",
+        "skel"
+      ],
+      "directory": ".",
+      "exitCode": 0,
+      "seconds": 13.168
+    },
+    {
+      "check": "link-skel-test",
+      "command": [
+        "lake",
+        "--no-cache",
+        "build",
+        "skel-test"
+      ],
+      "directory": ".",
+      "exitCode": 0,
+      "seconds": 16.16
+    },
+    {
+      "check": "link-lean-worker",
+      "command": [
+        "lake",
+        "--no-cache",
+        "build",
+        "lean-worker"
+      ],
+      "directory": ".",
+      "exitCode": 0,
+      "seconds": 0.541
+    },
+    {
+      "check": "link-leantools",
+      "command": [
+        "lake",
+        "--no-cache",
+        "build",
+        "@leantools/leantools"
+      ],
+      "directory": ".",
+      "exitCode": 0,
+      "seconds": 10.656
+    },
+    {
+      "check": "link-worker-tests",
+      "command": [
+        "lake",
+        "--no-cache",
+        "build",
+        "@leantools/tests"
+      ],
+      "directory": ".",
+      "exitCode": 0,
+      "seconds": 11.012
+    },
+    {
+      "check": "link-loogle",
+      "command": [
+        "lake",
+        "--no-cache",
+        "build",
+        "@loogle/loogle"
+      ],
+      "directory": ".",
+      "exitCode": 0,
+      "seconds": 11.035
+    },
+    {
+      "check": "skel-campaign",
+      "command": [
+        "lake",
+        "env",
+        ".lake/build/bin/skel-test",
+        "--only",
+        "provepar,full,recover,answerexport,regiontasks",
+        "--jobs",
+        "1"
+      ],
+      "directory": ".",
+      "exitCode": 0,
+      "seconds": 29.563
+    },
+    {
+      "check": "skel-generation",
+      "command": [
+        "lake",
+        "env",
+        ".lake/build/bin/skel-test",
+        "--only",
+        "callsummary,callsummarymodule,fullsummary,calleescope,mixedwidth,source,render,genstmt,genuppercall,l2callblk,multicallee,stmtshape,leanworker,needed",
+        "--jobs",
+        "1"
+      ],
+      "directory": ".",
+      "exitCode": 124,
+      "seconds": 1200.039
+    },
+    {
+      "check": "worker-prove",
+      "command": [
+        "lake",
+        "env",
+        ".lake/build/bin/tests",
+        "--prove"
+      ],
+      "directory": "pkgs/leantools",
+      "exitCode": 0,
+      "seconds": 1.029
+    },
+    {
+      "check": "worker-validation",
+      "command": [
+        "lake",
+        "env",
+        ".lake/build/bin/tests",
+        "--validation"
+      ],
+      "directory": "pkgs/leantools",
+      "exitCode": 0,
+      "seconds": 6.186
+    },
+    {
+      "check": "worker-module-validation",
+      "command": [
+        "lake",
+        "env",
+        ".lake/build/bin/tests",
+        "--module-validation"
+      ],
+      "directory": "pkgs/leantools",
+      "exitCode": 0,
+      "seconds": 1.031
+    },
+    {
+      "check": "worker-holes",
+      "command": [
+        "lake",
+        "env",
+        ".lake/build/bin/tests",
+        "--holes"
+      ],
+      "directory": "pkgs/leantools",
+      "exitCode": 0,
+      "seconds": 6.77
+    },
+    {
+      "check": "worker-concurrency",
+      "command": [
+        "lake",
+        "env",
+        ".lake/build/bin/tests",
+        "--concurrency"
+      ],
+      "directory": "pkgs/leantools",
+      "exitCode": 0,
+      "seconds": 1.589
+    }
+  ],
+  "passedChecks": 12,
+  "incompleteChecks": 1,
+  "additionalBatchLimitSeconds": 1200,
+  "additionalBatchSummary": "No complete suite summary was produced before the outer timeout.",
+  "paidCalls": 0
+}

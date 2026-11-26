@@ -1,0 +1,7 @@
+.lake/
+.leantools/
+.leantools-test/
+.skel/
+/local/
+__pycache__/
+*.pyc

@@ -1,3 +1,6 @@
 [submodule "solidity"]
 	path = solidity
 	url = https://github.com/argotorg/solidity
+[submodule "solidity-zig"]
+	path = zig-verification/source/solidity-zig
+	url = https://github.com/argotorg/solidity.git
