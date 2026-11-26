@@ -1,0 +1,4 @@
+{"version": "cvc5 1.4.0",
+ "solver": "cvc5",
+ "hash": "5740207179787362112",
+ "answer": "(\n(define-fun inv ((i Int) (lim Int)) Bool true)\n(define-fun rho ((i Int) (lim Int)) Int (- 8 i))\n)\n"}

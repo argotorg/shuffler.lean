@@ -1,0 +1,14 @@
+{"schema":"nx-zig-types","version":2,"zig":"0.17.1","target":"x86_64-linux","input":"Skel/Test/data/methods.zig","types":[
+{"id":0,"name":"*input.Set","kind":"ptr","zig_kind":"pointer-one","to":1,"const":false,"size":8,"align":8},
+{"id":1,"name":"input.Set","kind":"record","zig_kind":"struct","layout":"extern","fields":[{"name":"n","uid":1001,"type":2,"size":8,"offset":0}],"size":8,"align":8},
+{"id":2,"name":"u64","kind":"int","bits":64,"signed":false,"size":8,"align":8},
+{"id":3,"name":"void","kind":"void","size":0,"align":1},
+{"id":4,"name":"*const input.Set","kind":"ptr","zig_kind":"pointer-one","to":1,"const":true,"size":8,"align":8},
+{"id":5,"name":"*const input.Set.Inner","kind":"ptr","zig_kind":"pointer-one","to":6,"const":true,"size":8,"align":8},
+{"id":6,"name":"input.Set.Inner","kind":"record","zig_kind":"struct","layout":"auto","fields":[{"name":"m","uid":6001,"type":2,"size":8,"offset":0}],"size":8,"align":8}
+],"units":[
+{"name":"Set.add","exported":true,"names":["self","x"],"regs":["rdi","rsi"],"params":[0,2],"ret":3},
+{"name":"Set.size","exported":false,"names":["self"],"regs":[""],"params":[4],"ret":2},
+{"name":"Set.Inner.get","exported":true,"names":["self"],"regs":["rdi"],"params":[5],"ret":2},
+{"name":"total","exported":true,"names":["s","x"],"regs":["rdi","rsi"],"params":[4,2],"ret":2}
+]}

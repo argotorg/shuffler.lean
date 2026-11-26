@@ -1,0 +1,68 @@
+name: Zig verification
+
+on:
+  push:
+    paths: ['zig-verification/**', '.github/workflows/zig-verification.yml']
+  pull_request:
+    paths: ['zig-verification/**', '.github/workflows/zig-verification.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-and-proofs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      LEAN_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          submodules: false
+      - uses: leanprover/lean-action@f061402b660e0c34644504b324e830f2991d4865
+        with:
+          lake-package-directory: zig-verification
+          build: 'false'
+          test: 'false'
+          use-mathlib-cache: 'false'
+          use-github-cache: 'false'
+      - name: Check source and assembly
+        working-directory: zig-verification
+        run: python3 -B scripts/check_source.py
+      - name: Build closed proofs and audit axioms
+        working-directory: zig-verification
+        run: python3 -B scripts/build.py
+      - name: Test proof rejection and terminal views
+        working-directory: zig-verification
+        run: |
+          python3 -B -m unittest discover -s scripts -p 'test_*.py'
+          python3 -B -m unittest discover -s Skel/Test -p 'test_watch*.py'
+          python3 -B -m unittest discover -s Coordinator/Test -p 'test_*watch.py'
+
+  tools:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      LEAN_NUM_THREADS: '2'
+    defaults:
+      run:
+        working-directory: zig-verification
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          submodules: false
+      - run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
+      - uses: leanprover/lean-action@f061402b660e0c34644504b324e830f2991d4865
+        with:
+          lake-package-directory: zig-verification
+          build: 'false'
+          test: 'false'
+          use-mathlib-cache: 'false'
+          use-github-cache: 'false'
+      - run: python3 -B scripts/build.py --facet o Skel.Main Skel.Test.Main SkelNeeded NxLift.LeanWorkerMain Review.Contracts Main Test LoogleMain
+      - run: timeout 600s lake build skel skel-test lean-worker @leantools/leantools @leantools/tests @loogle/loogle
+      - run: timeout -k 5s 600s python3 -B scripts/generate.py
+      - run: timeout 1200s lake env .lake/build/bin/skel-test --only provepar,full,recover,answerexport,regiontasks --jobs 1
+      - run: timeout 600s lake env .lake/build/bin/tests --prove
+        working-directory: zig-verification/pkgs/leantools

@@ -1,0 +1,5 @@
+{"version": "Z3 version 5.3.2 - 64 bit",
+ "solver": "z3",
+ "hash": "4565484088782672518",
+ "answer":
+ "sat\n(\n  (define-fun inv ((x!0 Int) (x!1 Int) (x!2 Int)) Bool\n    (let ((a!1 (not (<= (+ x!0 (* (- 1) x!1) x!2) 8)))\n          (a!2 (not (>= (+ x!1 (* (- 1) x!2)) 0))))\n      (and a!1 a!2)))\n)\n"}

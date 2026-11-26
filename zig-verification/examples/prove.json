@@ -1,0 +1,12 @@
+{
+  "baseUrl": "https://MODEL-ENDPOINT.invalid/v1",
+  "model": "SET_MODEL",
+  "apiKeyEnv": "SHUFFLER_MODEL_KEY",
+  "extra": {"max_tokens": 8192, "reasoning_effort": "high"},
+  "price": {"input": 1, "cachedInput": 1, "output": 1},
+  "turns": 100,
+  "maxIterations": 5,
+  "budgetUsd": 1,
+  "reflectionChars": 400000,
+  "primer": "KRAKEN.md"
+}

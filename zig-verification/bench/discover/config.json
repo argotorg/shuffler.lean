@@ -1,0 +1,147 @@
+{
+  "skel": [
+    "lake",
+    "exe",
+    "skel"
+  ],
+  "budget": "docs/deepseek-budget.json",
+  "limitSeconds": 1800,
+  "discoverFlag": "--discover",
+  "solverFlag": "--solver",
+  "sets": {
+    "dev": {
+      "sites": [
+        {
+          "site": "sum",
+          "args": [
+            "run",
+            "sum",
+            "--no-templates"
+          ]
+        },
+        {
+          "site": "find",
+          "args": [
+            "run",
+            "find"
+          ]
+        },
+        {
+          "site": "walk",
+          "args": [
+            "run",
+            "walk"
+          ]
+        },
+        {
+          "site": "fill",
+          "args": [
+            "run",
+            "fill"
+          ]
+        }
+      ]
+    },
+    "heldout": {
+      "note": "Not run by the implementing tasks. The evaluation agent (task D15) runs it with --allow-heldout. A site with null args has no skel command yet: its line has the status no-command. The fueled L3 sites run skel discover <fn> --module <M> (task DISC-FUEL; not run by that task). The level 2 sites run skel discover on their function (task DISC-WIRE). The pilot loop sites have no command yet; skel discover pilot runs every loop head of the pilot.",
+      "sites": [
+        {
+          "site": "permuteLoop",
+          "args": [
+            "discover",
+            "Lift.Shuffler.Zig.permuteLoop",
+            "--module",
+            "Lift.Shuffler.Zig.Emission"
+          ]
+        },
+        {
+          "site": "surplusLoop",
+          "args": [
+            "discover",
+            "Lift.Shuffler.Zig.surplusLoop",
+            "--module",
+            "Lift.Shuffler.Zig.Emission"
+          ]
+        },
+        {
+          "site": "runLoop",
+          "args": null
+        },
+        {
+          "site": "copyFrom",
+          "args": null
+        },
+        {
+          "site": "l2TwoLoops",
+          "args": [
+            "discover",
+            "l2zTwoLoops"
+          ]
+        },
+        {
+          "site": "l2Nest",
+          "args": [
+            "discover",
+            "l2zNest"
+          ]
+        },
+        {
+          "site": "l2Exit3",
+          "args": [
+            "discover",
+            "l2zExit3"
+          ]
+        },
+        {
+          "site": "l2CallLoop",
+          "args": [
+            "discover",
+            "l2zCallLoop"
+          ]
+        }
+      ]
+    },
+    "general": {
+      "note": "The four toys through the general entry (skel discover, task DISC-WIRE).",
+      "sites": [
+        {
+          "site": "toys",
+          "args": [
+            "discover",
+            "toys",
+            "--no-templates"
+          ]
+        }
+      ]
+    },
+    "pilot": {
+      "note": "The loop sites of the pilot (ReleaseSmall), from the plan of skel discover (task DISC-WIRE2). One loop head each: shallowestCopyPosition LBB11_1, closestCopy LBB29_1, mapInPlace LBB30_1 (a call on its cycle).",
+      "sites": [
+        {
+          "site": "shallowestCopyPosition.LBB11_1",
+          "args": [
+            "discover",
+            "shallowestCopyPosition",
+            "--no-templates"
+          ]
+        },
+        {
+          "site": "closestCopy.LBB29_1",
+          "args": [
+            "discover",
+            "closestCopy",
+            "--no-templates"
+          ]
+        },
+        {
+          "site": "mapInPlace.LBB30_1",
+          "args": [
+            "discover",
+            "mapInPlace",
+            "--no-templates"
+          ]
+        }
+      ]
+    }
+  }
+}

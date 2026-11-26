@@ -1,0 +1,62 @@
+name = "ShufflerZigVerification"
+version = "0.1.0"
+defaultTargets = ["Review"]
+
+[leanOptions]
+autoImplicit = false
+relaxedAutoImplicit = false
+
+[[require]]
+name = "Kraken"
+path = "vendor/Kraken"
+
+[[require]]
+name = "leantools"
+path = "pkgs/leantools"
+
+[[lean_lib]]
+name = "Review"
+globs = ["Review.Closed", "Review.Contracts"]
+
+[[lean_lib]]
+name = "Lift"
+globs = ["Lift.+"]
+
+[[lean_lib]]
+name = "Skel"
+globs = ["Skel.+"]
+
+[[lean_lib]]
+name = "SkelNeeded"
+
+[[lean_lib]]
+name = "NxLift"
+globs = ["NxLift.+"]
+
+[[lean_lib]]
+name = "Coordinator"
+globs = ["Coordinator.+"]
+
+[[lean_lib]]
+name = "VerifiedNix"
+globs = ["VerifiedNix.+"]
+
+[[lean_lib]]
+name = "FuzzTest"
+
+[[lean_exe]]
+name = "skel"
+root = "Skel.Main"
+needs = ["SkelNeeded", "lean-worker"]
+supportInterpreter = true
+
+[[lean_exe]]
+name = "lean-worker"
+root = "NxLift.LeanWorkerMain"
+supportInterpreter = true
+
+[[lean_exe]]
+name = "skel-test"
+root = "Skel.Test.Main"
+needs = ["SkelNeeded", "lean-worker"]
+supportInterpreter = true

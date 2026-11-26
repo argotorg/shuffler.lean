@@ -1,0 +1,26 @@
+[
+  {
+    "check": "wrapper-tools",
+    "exitCode": 0,
+    "seconds": 0.539
+  },
+  {
+    "check": "wrapper-view",
+    "exitCode": 0,
+    "seconds": 1.117
+  },
+  {
+    "check": "wrapper-scratch",
+    "exitCode": 0,
+    "seconds": 1.25
+  },
+  {
+    "check": "wrapper-loogle",
+    "exitCode": 0,
+    "seconds": 19.915
+  },
+  {
+    "check": "wrapper-stop",
+    "exitCode": 0
+  }
+]

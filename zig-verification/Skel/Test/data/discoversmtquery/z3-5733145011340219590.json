@@ -1,0 +1,4 @@
+{"version": "Z3 version 5.3.2 - 64 bit",
+ "solver": "z3",
+ "hash": "5733145011340219590",
+ "answer": "unsat\n(error \"line 7 column 10: model is not available\")\n"}

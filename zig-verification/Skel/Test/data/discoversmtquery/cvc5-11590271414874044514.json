@@ -1,0 +1,5 @@
+{"version": "cvc5 1.4.0",
+ "solver": "cvc5",
+ "hash": "11590271414874044514",
+ "answer":
+ "(\n(define-fun inv ((k Int) (acc Int) (steps Int) (fuel0 Int)) Bool (let ((_let_1 (* (- 1) fuel0))) (and (or (not (>= k 0)) (not (>= acc 0)) (not (>= steps 0)) (not (>= fuel0 0)) (not (>= (+ steps _let_1) 0))) (not (>= (+ k steps _let_1) 0)))))\n)\n"}

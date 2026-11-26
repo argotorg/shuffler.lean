@@ -1,0 +1,253 @@
+{
+  "functions": 31,
+  "statementShapes": 31,
+  "batches": 4,
+  "generated": [
+    {
+      "rowsWithoutGeneratedProof": [
+        "emissionGenerate.refines_l2p",
+        "emissionGenerate.shape",
+        "emissionPermute.refines_l2p",
+        "refines_l2p",
+        "above_l2p"
+      ],
+      "lowerRows": 76,
+      "function": "emissionBuildBottomUp",
+      "allRows": 99
+    },
+    {
+      "rowsWithoutGeneratedProof": [],
+      "lowerRows": 7,
+      "function": "emissionDup",
+      "allRows": 21
+    },
+    {
+      "rowsWithoutGeneratedProof": [
+        "emissionProduce.refines_l2p",
+        "emissionProduce.shape",
+        "refines_l2p",
+        "above_l2p"
+      ],
+      "lowerRows": 17,
+      "function": "emissionGenerate",
+      "allRows": 35
+    },
+    {
+      "rowsWithoutGeneratedProof": [
+        "refines_l2p"
+      ],
+      "lowerRows": 8,
+      "function": "emissionIsAvailable",
+      "allRows": 22
+    },
+    {
+      "rowsWithoutGeneratedProof": [],
+      "lowerRows": 4,
+      "function": "emissionIsSpilled",
+      "allRows": 16
+    },
+    {
+      "rowsWithoutGeneratedProof": [
+        "refines_l2p",
+        "above_l2p"
+      ],
+      "lowerRows": 49,
+      "function": "emissionPermute",
+      "allRows": 65
+    },
+    {
+      "rowsWithoutGeneratedProof": [
+        "emissionPermute.refines_l2p",
+        "refines_l2p"
+      ],
+      "lowerRows": 19,
+      "function": "emissionPermuteAtLowestHeight",
+      "allRows": 36
+    },
+    {
+      "rowsWithoutGeneratedProof": [],
+      "lowerRows": 7,
+      "function": "emissionPop",
+      "allRows": 21
+    },
+    {
+      "rowsWithoutGeneratedProof": [
+        "refines_l2p"
+      ],
+      "lowerRows": 20,
+      "function": "emissionProduce",
+      "allRows": 40
+    },
+    {
+      "rowsWithoutGeneratedProof": [],
+      "lowerRows": 6,
+      "function": "emissionPush",
+      "allRows": 20
+    },
+    {
+      "rowsWithoutGeneratedProof": [],
+      "lowerRows": 29,
+      "function": "emissionRemoveSurplus",
+      "allRows": 48
+    },
+    {
+      "rowsWithoutGeneratedProof": [
+        "emissionRemoveSurplus.shape",
+        "emissionPermuteAtLowestHeight.refines_l2p",
+        "emissionPermuteAtLowestHeight.shape",
+        "emissionIsAvailable.refines_l2p",
+        "emissionBuildBottomUp.refines_l2p",
+        "emissionBuildBottomUp.shape",
+        "refines_l2p"
+      ],
+      "lowerRows": 23,
+      "function": "emissionRun",
+      "allRows": 45
+    },
+    {
+      "rowsWithoutGeneratedProof": [],
+      "lowerRows": 6,
+      "function": "emissionShallowestCopyPosition",
+      "allRows": 19
+    },
+    {
+      "rowsWithoutGeneratedProof": [],
+      "lowerRows": 12,
+      "function": "emissionSwapWith",
+      "allRows": 26
+    },
+    {
+      "rowsWithoutGeneratedProof": [],
+      "lowerRows": 21,
+      "function": "mappingBuilderAbsorbSurplus",
+      "allRows": 38
+    },
+    {
+      "rowsWithoutGeneratedProof": [],
+      "lowerRows": 16,
+      "function": "mappingBuilderClosestCopy",
+      "allRows": 29
+    },
+    {
+      "rowsWithoutGeneratedProof": [],
+      "lowerRows": 13,
+      "function": "mappingBuilderKeepWildcardSlots",
+      "allRows": 30
+    },
+    {
+      "rowsWithoutGeneratedProof": [],
+      "lowerRows": 6,
+      "function": "mappingBuilderMap",
+      "allRows": 20
+    },
+    {
+      "rowsWithoutGeneratedProof": [
+        "refines_l2p"
+      ],
+      "lowerRows": 13,
+      "function": "mappingBuilderMapClosestCopies",
+      "allRows": 31
+    },
+    {
+      "rowsWithoutGeneratedProof": [],
+      "lowerRows": 12,
+      "function": "mappingBuilderMapInPlace",
+      "allRows": 29
+    },
+    {
+      "rowsWithoutGeneratedProof": [
+        "refines_l2p"
+      ],
+      "lowerRows": 15,
+      "function": "mappingBuilderMapWildcardSlotCopies",
+      "allRows": 33
+    },
+    {
+      "rowsWithoutGeneratedProof": [
+        "refines_l2p",
+        "above_l2p"
+      ],
+      "lowerRows": 21,
+      "function": "plannerClassify",
+      "allRows": 35
+    },
+    {
+      "rowsWithoutGeneratedProof": [],
+      "lowerRows": 10,
+      "function": "plannerHasOtherRetainedCopy",
+      "allRows": 24
+    },
+    {
+      "rowsWithoutGeneratedProof": [],
+      "lowerRows": 7,
+      "function": "plannerIsDemanded",
+      "allRows": 20
+    },
+    {
+      "rowsWithoutGeneratedProof": [],
+      "lowerRows": 2,
+      "function": "plannerIsRetained",
+      "allRows": 14
+    },
+    {
+      "rowsWithoutGeneratedProof": [
+        "plannerClassify.refines_l2p",
+        "refines_l2p",
+        "above_l2p"
+      ],
+      "lowerRows": 34,
+      "function": "plannerResolve",
+      "allRows": 52
+    },
+    {
+      "rowsWithoutGeneratedProof": [
+        "mappingBuilderMapInPlace.shape",
+        "mappingBuilderMapClosestCopies.refines_l2p",
+        "mappingBuilderMapClosestCopies.shape",
+        "mappingBuilderMapWildcardSlotCopies.refines_l2p",
+        "mappingBuilderMapWildcardSlotCopies.shape",
+        "mappingBuilderKeepWildcardSlots.shape",
+        "mappingBuilderAbsorbSurplus.shape",
+        "emissionRun.refines_l2p",
+        "emissionRun.shape",
+        "plannerResolve.refines_l2p",
+        "plannerResolve.shape",
+        "refines_l2p",
+        "above_l2p"
+      ],
+      "lowerRows": 63,
+      "function": "plannerRun",
+      "allRows": 92
+    },
+    {
+      "rowsWithoutGeneratedProof": [
+        "plannerRun.refines_l2p",
+        "plannerRun.shape",
+        "refines_l2p",
+        "above_l2p"
+      ],
+      "lowerRows": 79,
+      "function": "shuffle",
+      "allRows": 96
+    },
+    {
+      "rowsWithoutGeneratedProof": [],
+      "lowerRows": 6,
+      "function": "spillSetAdd",
+      "allRows": 20
+    },
+    {
+      "rowsWithoutGeneratedProof": [],
+      "lowerRows": 2,
+      "function": "workspaceAlignment",
+      "allRows": 14
+    },
+    {
+      "rowsWithoutGeneratedProof": [],
+      "lowerRows": 2,
+      "function": "workspaceSize",
+      "allRows": 14
+    }
+  ],
+  "paidCalls": 0
+}
